@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -178,15 +179,27 @@ func worktreeRegistered(entries []worktreeInfo, path string) bool {
 	return false
 }
 
-// normalizePath canonicalises a path for equality comparisons: cleaned,
-// separator-normalised, and case-folded on Windows where paths are
-// case-preserving but case-insensitive.
+// normalizePath canonicalises a path for equality comparisons. Native paths
+// use the host filesystem's semantics. Windows-style absolute/UNC paths are
+// normalised lexically even when tests or persisted Git output are inspected
+// on another OS, so forward-slash Git paths and backslash manager paths still
+// compare as the same Windows location.
 func normalizePath(p string) string {
-	p = filepath.Clean(p)
-	if runtime.GOOS == "windows" {
-		p = strings.ToLower(p)
+	if runtime.GOOS == "windows" || isWindowsStylePath(p) {
+		p = strings.ReplaceAll(p, `\`, "/")
+		return strings.ToLower(path.Clean(p))
 	}
-	return filepath.ToSlash(p)
+	return filepath.ToSlash(filepath.Clean(p))
+}
+
+func isWindowsStylePath(p string) bool {
+	if strings.HasPrefix(p, `\\`) || strings.HasPrefix(p, "//") {
+		return true
+	}
+	if len(p) < 3 || p[1] != ':' || (p[2] != '/' && p[2] != '\\') {
+		return false
+	}
+	return (p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')
 }
 
 // samePath reports whether a and b name the same filesystem path.

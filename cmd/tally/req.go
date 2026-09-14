@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -15,7 +14,6 @@ import (
 	git "github.com/go-git/go-git/v5"
 
 	"tally/cmd/internal/airuntimelegacy"
-	"tally/internal/airuntime"
 	"tally/internal/requirement"
 )
 

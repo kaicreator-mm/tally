@@ -37,7 +37,6 @@ import (
 	"time"
 
 	"tally/cmd/internal/airuntimelegacy"
-	"tally/internal/airuntime"
 	"tally/internal/environment"
 	"tally/internal/exec"
 	"tally/internal/failure"

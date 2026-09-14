@@ -7,6 +7,7 @@ package dsh
 // launcher 本身,子进程树会存活成孤儿。
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"syscall"
@@ -20,10 +21,23 @@ func setProcAttr(cmd *exec.Cmd) {
 	cmd.SysProcAttr.Setpgid = true
 }
 
-// killTree 终止以 p 为根的整个进程组(负 pid = 组)。
+// killTree 终止 p 所在的整个进程组。正常生产调用传入 launcher(组长),
+// 但崩溃清理/诊断可能只剩 surviving child；此时不能假设 p.Pid == PGID，
+// 必须先查询实际 PGID，再向该组发 SIGKILL。这样 launcher 已死但同组子进程
+// 仍存活时也能可靠收敛，不留下孤儿。
 func killTree(p *os.Process) error {
 	if p == nil {
 		return nil
 	}
-	return syscall.Kill(-p.Pid, syscall.SIGKILL)
+	pgid, err := syscall.Getpgid(p.Pid)
+	if err != nil {
+		if errors.Is(err, syscall.ESRCH) {
+			return nil
+		}
+		return err
+	}
+	if err := syscall.Kill(-pgid, syscall.SIGKILL); err != nil && !errors.Is(err, syscall.ESRCH) {
+		return err
+	}
+	return nil
 }
