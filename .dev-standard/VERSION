@@ -1,0 +1,4 @@
+version: 1.2.1
+source: https://github.com/kaicreator-mm/ai-development-standard
+commit: e836f7a4e1f1c7fcf4530a811af235c8c8dba8a1
+adopted_for: tally-v1.5.0
