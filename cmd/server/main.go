@@ -1,6 +1,8 @@
 // Command server 是 tally 的 HTTP 服务:界面、接收 webhook、入队任务。
 //
-// 无状态;状态都在 Postgres 和 git 里。路由(含登录/CSRF)在 internal/web。
+// 主要持久状态仍在 Postgres 和 git；v1.5.0 Engineering Control Plane 的
+// compatibility snapshot 明确落在 TALLY_V15_STATE_ROOT，供 v1.5.1 存储迁移前
+// 保证 Active TaskDAG/restart 状态可恢复。路由(含登录/CSRF)在 internal/web。
 package main
 
 import (
@@ -43,7 +45,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// server 端只入队、不执行(执行在 cmd/worker):handlers 表为空即可。
+	// server 端旧路径只入队、不执行(执行在 cmd/worker):handlers 表为空即可。
 	queue := jobs.New(st, nil)
 
 	// P0-05:v1.4 意图入口的生产推理出口(PRD §28 / DECISION_LOCKS #17 /
@@ -64,6 +66,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	// v1.5 Engineering Control Plane 始终装配本地 compatibility snapshot；
+	// Agent 执行只有显式配置 TALLY_V15_RUNTIME=fake|codex|dsh 才启用。
+	// 未接 verifier/review adapter 时 completed Agent claim 会 fail-safe 阻塞，
+	// 绝不被当成验证/Acceptance 事实。
+	controlPlane, v15Runtime, err := v15ControlPlaneFromEnv()
+	if err != nil {
+		slog.Error("v1.5 Engineering Control Plane 装配失败", "err", err)
+		os.Exit(1)
+	}
+	if v15Runtime == "" {
+		slog.Warn("v1.5 Control Plane 已启用生命周期/状态 API，但 Local AgentExecutor 未启用；设置 TALLY_V15_RUNTIME 后才能 dispatch")
+	} else {
+		slog.Info("v1.5 Control Plane Local AgentExecutor 已接入", "runtime", v15Runtime)
+	}
+
 	deps := web.Deps{
 		Sessions:     web.PGSessions(st.Queries()),
 		PasswordHash: passwordHash(),
@@ -77,6 +94,8 @@ func main() {
 		Tasks:     handlers.NewExecTaskSource(st.Queries()),
 		Knowledge: knowledge.NewStore(contentRepo, st.Queries()),
 		Trace:     st.Queries(),
+
+		ControlPlane: controlPlane,
 
 		// T11d webhook 运输层:CI 构建结果 POST 进来即完成录入。
 		// TALLY_WEBHOOK_TOKEN 未设置 → 路由整体 503(明确未启用,不做默认放行)。
