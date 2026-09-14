@@ -64,3 +64,59 @@ func TestDAGRestartRoundTripPreservesReadiness(t *testing.T) {
 		t.Fatalf("restored ready=%v", restored.ReadyNodes())
 	}
 }
+
+func TestDAGOperationalBlockedAndInterruptedStayExplicit(t *testing.T) {
+	d, err := ActivateTaskDAG(TaskDAGProposal{RevisionID: "d", Nodes: []TaskNode{{ID: "a"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err = d.Transition("a", TaskRunning, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err = d.Transition("a", TaskBlocked, "runtime unavailable")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Nodes[0].State != TaskBlocked || d.RefreshReadiness().Nodes[0].State != TaskBlocked {
+		t.Fatalf("operational blocked was lost: %+v", d.Nodes[0])
+	}
+	d, err = d.Transition("a", TaskReady, "")
+	if err != nil {
+		t.Fatalf("explicit retry should be allowed: %v", err)
+	}
+	d, err = d.Transition("a", TaskRunning, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	d, err = d.Transition("a", TaskInterrupted, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Nodes[0].State != TaskInterrupted || d.RefreshReadiness().Nodes[0].State != TaskInterrupted {
+		t.Fatalf("interrupted state was lost: %+v", d.Nodes[0])
+	}
+	d, err = d.Transition("a", TaskReady, "")
+	if err != nil {
+		t.Fatalf("explicit restart should be allowed: %v", err)
+	}
+	if d.Nodes[0].State != TaskReady {
+		t.Fatalf("state=%s", d.Nodes[0].State)
+	}
+}
+
+func TestDependencyBlockedStillAutoRefreshes(t *testing.T) {
+	d, err := ActivateTaskDAG(TaskDAGProposal{RevisionID: "d", Nodes: []TaskNode{{ID: "a"}, {ID: "b", Dependencies: []ID{"a"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d.Nodes[1].State != TaskBlocked {
+		t.Fatalf("state=%s", d.Nodes[1].State)
+	}
+	d, _ = d.Transition("a", TaskRunning, "")
+	d, _ = d.Transition("a", TaskAccepted, "")
+	d, _ = d.Transition("a", TaskDone, "")
+	if d.Nodes[1].State != TaskReady {
+		t.Fatalf("state=%s reason=%s", d.Nodes[1].State, d.Nodes[1].BlockedReason)
+	}
+}
