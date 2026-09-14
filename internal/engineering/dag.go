@@ -56,6 +56,8 @@ var (
 	ErrIllegalTaskTransition = errors.New("engineering: illegal task transition")
 )
 
+const dependencyBlockedPrefix = "waiting for: "
+
 func ActivateTaskDAG(p TaskDAGProposal) (ActiveTaskDAG, error) {
 	if err := p.RevisionID.Validate("task DAG revision"); err != nil {
 		return ActiveTaskDAG{}, err
@@ -131,7 +133,13 @@ func (d ActiveTaskDAG) RefreshReadiness() ActiveTaskDAG {
 	}
 	for i := range out.Nodes {
 		n := &out.Nodes[i]
-		if n.State == TaskDone || n.State == TaskAccepted || n.State == TaskRunning {
+		// Running/terminal states are explicit. Interrupted and operationally
+		// blocked states are also explicit and must survive refresh/restart;
+		// only dependency-derived blocking is recalculated automatically.
+		if n.State == TaskDone || n.State == TaskAccepted || n.State == TaskRunning || n.State == TaskInterrupted {
+			continue
+		}
+		if n.State == TaskBlocked && !strings.HasPrefix(n.BlockedReason, dependencyBlockedPrefix) {
 			continue
 		}
 		var unmet []ID
@@ -150,7 +158,7 @@ func (d ActiveTaskDAG) RefreshReadiness() ActiveTaskDAG {
 				parts[j] = string(id)
 			}
 			n.State = TaskBlocked
-			n.BlockedReason = "waiting for: " + strings.Join(parts, ",")
+			n.BlockedReason = dependencyBlockedPrefix + strings.Join(parts, ",")
 		}
 	}
 	return out
@@ -190,13 +198,8 @@ func (d ActiveTaskDAG) Transition(id ID, to TaskState, reason string) (ActiveTas
 	if !legalTaskTransition(from, to) {
 		return d, fmt.Errorf("%w: %s -> %s", ErrIllegalTaskTransition, from, to)
 	}
-	if to == TaskReady {
-		r := out.RefreshReadiness()
-		for _, n := range r.Nodes {
-			if n.ID == id && n.State != TaskReady {
-				return d, fmt.Errorf("%w: dependencies not satisfied", ErrIllegalTaskTransition)
-			}
-		}
+	if to == TaskReady && !out.dependenciesDone(out.Nodes[idx]) {
+		return d, fmt.Errorf("%w: dependencies not satisfied", ErrIllegalTaskTransition)
 	}
 	if to == TaskBlocked && strings.TrimSpace(reason) == "" {
 		return d, errors.New("engineering: blocked transition requires reason")
@@ -210,6 +213,18 @@ func (d ActiveTaskDAG) Transition(id ID, to TaskState, reason string) (ActiveTas
 		out.Nodes[idx].Acceptance = AcceptanceAccepted
 	}
 	return out.RefreshReadiness(), nil
+}
+func (d ActiveTaskDAG) dependenciesDone(n TaskNode) bool {
+	states := map[ID]TaskState{}
+	for _, candidate := range d.Nodes {
+		states[candidate.ID] = candidate.State
+	}
+	for _, dep := range n.Dependencies {
+		if states[dep] != TaskDone {
+			return false
+		}
+	}
+	return true
 }
 func legalTaskTransition(from, to TaskState) bool {
 	switch from {
