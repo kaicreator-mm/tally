@@ -1,7 +1,9 @@
 # Tally PRD v1.5.5 — Re-plan & Engineering Learning
 
 - Status: **FROZEN EXECUTABLE SCOPE**
-- Depends on: v1.5.4
+- Implementation dependency: **v1.5.0 PlanningRevision / TaskDAG / Evidence / IntelligenceProvider / Authority contracts only**
+- Release baseline dependency: v1.5.4
+- Parallel lane: may be implemented concurrently with v1.5.1–v1.5.4 after v1.5.0 contracts are frozen.
 
 ## Goal
 
@@ -14,11 +16,15 @@ Close the project-level learning loop: detect when the accepted plan is no longe
 3. Engineering Harness performs impact analysis and validates the proposal.
 4. Re-plan creates a new immutable PlanningRevision/TaskDAG baseline; history is never overwritten.
 5. Preserve accepted work when compatible; explicitly supersede/invalidate affected Tasks when necessary.
-6. Re-evaluate dependencies, readiness, parallelism, verification, Git mappings and environment constraints.
+6. Re-evaluate dependencies, readiness, parallelism, verification, runtime/environment requirements and Git requirements through existing v1.5.0 contracts; optional adapters may be absent during development.
 7. Policy determines AUTO, SUPERVISED or AUTHORITY_REQUIRED activation.
 8. Outcome records feed engineering learning.
 9. Candidate Engineering Rules cite supporting evidence/outcomes.
 10. High-impact/shared rule promotion requires configured authority; AI proposes but does not self-authorize.
+
+## Parallel-development rule
+
+Re-plan operates on abstract TaskDAG, PlanningRevision, evidence and authority contracts. It must not require v1.5.1 storage internals, v1.5.2 SSH/Docker implementations, v1.5.3 GitHub automation or v1.5.4 multi-Agent orchestration to be implemented first.
 
 ## Out of scope
 

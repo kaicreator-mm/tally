@@ -119,9 +119,20 @@ Material Git operations are formal engineering actions: Issue, Branch, Commit, P
 
 Git operations may be required by a CompletionContract. A Task whose policy requires merge is not `DONE` merely because its code passed tests.
 
-## 9. Thin Task Harness
+## 9. Thin Task Harness and shared execution abstraction
 
 Thin Task Harness receives a frozen TaskContract, engineering context, selected runtime, selected execution environment and workspace reference. It starts/cancels/waits for the Agent, captures events and the Agent claim/candidate, supports bounded concurrency and task-level restart, then returns control to Engineering Harness.
+
+v1.5 freezes these shared execution contracts in v1.5.0:
+
+- `AgentExecutor`;
+- existing Agent Runtime boundary (`internal/agentruntime` remains authoritative);
+- `ExecutionEnvironment`;
+- `ExecutionTarget`;
+- `WorkspaceRef`;
+- capability requirements/descriptors;
+- `TaskExecutionRequest` / `TaskExecutionResult`;
+- cancel/interruption/task-level restart semantics.
 
 It does not own Project flow, verification authority, acceptance authority, generic workflow, Agent thoughts, conversation recovery or a generic distributed scheduler.
 
@@ -136,7 +147,9 @@ Future Agent               Docker
                            Future Sandbox / Remote Host
 ```
 
-Runtime defines how to interact with the Agent. Environment defines where and how the process/workspace executes. Workspace references must become environment-aware; Tally Core must not assume every workspace is a locally readable path.
+Runtime defines how to interact with the Agent. Environment defines where and how the process/workspace executes. Workspace references are environment-aware; Tally Core must not assume every workspace is a locally readable path.
+
+v1.5.0 freezes the contracts and exercises Local compatibility. v1.5.2 implements SSH/Docker and deeper environment capability behavior.
 
 ## 11. Task-level restartability
 
@@ -144,7 +157,7 @@ Correctness derives from Frozen TaskContract + Git/workspace state + Engineering
 
 ## 12. Multi-Agent
 
-Multi-Agent collaboration is an Engineering Workflow / TaskDAG concern, not a database queue concern. Tally controls roles, gates, dependencies, readiness and evidence. Agents control how they perform assigned work.
+Multi-Agent collaboration is an Engineering Workflow / TaskDAG concern, not a database queue concern. Tally controls roles, gates, dependencies, readiness and evidence. Agents control how they perform assigned work. v1.5.4 uses the v1.5.0 TaskDAG and AgentExecutor contracts and therefore does not require SSH/Docker or Git authority to be implemented first.
 
 ## 13. Persistence and execution infrastructure
 
@@ -154,18 +167,40 @@ Target profile: SQLite default; PostgreSQL optional adapter. A database Job Queu
 
 ## 14. Version slicing
 
-1. **v1.5.0 Engineering Control Plane Core** — lifecycle/domain model, requirements→plan→architecture→validated TaskDAG, EngineeringNode, CompletionContract, artifacts/evidence/audit, intelligence-provider boundary, authority modes.
-2. **v1.5.1 Persistence & Execution Simplification** — persistence ports, SQLite default, PostgreSQL adapter, remove PostgreSQL-specific core semantics and default DB Job Queue execution.
-3. **v1.5.2 Execution Environments** — Runtime/Environment decoupling, Local/SSH/Docker, WorkspaceRef and capability-aware scheduling.
-4. **v1.5.3 Git Engineering Authority** — formal Issue/Branch/Commit/Push/PR/Review/Merge/Tag/Release linkage and authority.
-5. **v1.5.4 Multi-Agent Engineering Workflow** — engineering roles, independent review/verification, parallel and sequential collaboration.
-6. **v1.5.5 Re-plan & Engineering Learning** — controlled re-plan revisions, impact analysis, outcome learning and governed rule promotion.
+### v1.5.0 — Engineering Control Plane Foundation
 
-## 15. Non-goals for v1.5
+Own/freeze the common contracts: Requirements/Planning/Architecture lifecycle, validated Active TaskDAG, EngineeringNode, CompletionContract, artifacts/evidence/audit, IntelligenceProvider, Human Authority, AgentExecutor, Runtime boundary, ExecutionEnvironment/ExecutionTarget, WorkspaceRef, capabilities, execution request/result and restart semantics. Local execution remains functional.
+
+### Parallel capability slices after v1.5.0
+
+1. **v1.5.1 Persistence & Execution Simplification** — persistence ports, SQLite default, PostgreSQL adapter, remove PostgreSQL-specific core semantics and default DB Job Queue execution.
+2. **v1.5.2 Execution Environments** — implement/harden Local/SSH/Docker and environment-aware workspace/capability operations against v1.5.0 contracts.
+3. **v1.5.3 Git Engineering Authority** — formal Issue/Branch/Commit/Push/PR/Review/Merge/Tag/Release linkage and authority against v1.5.0 EngineeringNode/CompletionContract.
+4. **v1.5.4 Multi-Agent Engineering Workflow** — engineering roles, independent review/verification, parallel/sequential collaboration using v1.5.0 TaskDAG/AgentExecutor.
+5. **v1.5.5 Re-plan & Engineering Learning** — controlled planning revisions, impact analysis, outcome learning and governed rule promotion using v1.5.0 Planning/DAG/Evidence/Intelligence/Authority contracts.
+
+## 15. Parallel development and serial qualification
+
+Implementation dependency graph:
+
+```text
+                         v1.5.0
+             Engineering Control Plane Foundation
+                         │
+        ┌────────────────┼────────────────┬────────────────┬────────────────┬────────────────┐
+        ▼                ▼                ▼                ▼                ▼
+     v1.5.1           v1.5.2           v1.5.3           v1.5.4           v1.5.5
+```
+
+After v1.5.0 shared contracts are frozen/integrated, v1.5.1–v1.5.5 may perform L2, Task DAG, L3, implementation and local validation concurrently. Each lane owns a separate concern and must not redefine shared contracts unilaterally.
+
+Release Qualification remains cumulative/ordered by version number so `main`, tags and release provenance remain reproducible. Development parallelism must not be confused with simultaneous unqualified merges.
+
+## 16. Non-goals for v1.5
 
 Generic BPM/workflow DSL, Agent thought-state persistence, Agent checkpoint framework, conversation recovery, generic Job System as product core, Kubernetes-style Agent fleet management, HA/multi-region control plane, Redis/Kafka/NATS/SQS as baseline requirements, a second Agent Runtime abstraction, or a second Closed Loop/Rule Engine.
 
-## 16. Release discipline
+## 17. Release discipline
 
 Each version follows:
 
@@ -180,5 +215,7 @@ L2 Architecture Evidence
 → Release Qualification
 → Tag / Baseline
 ```
+
+Parallel lanes may execute these steps concurrently up to their own integration boundary. Cross-lane integration conflicts are resolved against v1.5.0 contracts and the latest accepted `main` baseline.
 
 **PR PASS ≠ Release PASS.**

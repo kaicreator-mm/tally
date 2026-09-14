@@ -1,11 +1,13 @@
 # Tally PRD v1.5.1 — Persistence & Execution Simplification
 
 - Status: **FROZEN EXECUTABLE SCOPE**
-- Depends on: v1.5.0
+- Implementation dependency: **v1.5.0 Foundation contracts only**
+- Release baseline dependency: v1.5.0
+- Parallel lane: may be implemented concurrently with v1.5.2–v1.5.5 after v1.5.0 contracts are frozen.
 
 ## Goal
 
-Make Engineering Control Plane semantics database-independent and remove the PostgreSQL Job Queue from the default correctness/execution path.
+Make Engineering Control Plane semantics database-independent and remove the PostgreSQL Job Queue from the default correctness/execution path without redefining v1.5.0 domain/execution contracts.
 
 ## In scope
 
@@ -16,13 +18,17 @@ Make Engineering Control Plane semantics database-independent and remove the Pos
 5. SQLite becomes default clean-install storage.
 6. PostgreSQL remains an optional conforming adapter.
 7. Storage conformance suite runs against both adapters.
-8. Replace default DB Job Queue/worker claim path with application-local TaskDAG readiness scheduling + Thin Task Harness/existing executor path.
+8. Replace default DB Job Queue/worker claim path with application-local TaskDAG readiness scheduling plus the v1.5.0 `AgentExecutor` path.
 9. Remove default correctness dependency on leases, heartbeat, stale ownership and `FOR UPDATE SKIP LOCKED`.
 10. Run remains provenance/history/evidence/state linkage, not a generic workflow engine.
 
+## Contract ownership
+
+This version consumes `TaskDAG`, `EngineeringNode`, `CompletionContract`, `AgentExecutor`, execution request/result and interruption semantics from v1.5.0. It may add persistence adapters but must not redefine those contracts.
+
 ## Out of scope
 
-Distributed worker fleet, Redis/NATS/Kafka/SQS, SSH/Docker environments, Git authority automation and multi-Agent roles.
+Distributed worker fleet, Redis/NATS/Kafka/SQS, SSH/Docker implementations, Git authority automation and multi-Agent role semantics.
 
 ## Acceptance criteria
 
@@ -30,9 +36,9 @@ Distributed worker fleet, Redis/NATS/Kafka/SQS, SSH/Docker environments, Git aut
 - PostgreSQL passes the same persistence conformance contract.
 - Core exposes no PostgreSQL driver types.
 - Correctness does not depend on PostgreSQL JSONB, triggers, DB `now()`, identity sequence, SKIP LOCKED, lease or heartbeat semantics.
-- Ready Tasks execute through local scheduling with bounded concurrency.
+- Ready Tasks execute through application-local scheduling using v1.5.0 AgentExecutor with bounded concurrency.
 - Restart recomputes ready/interrupted work from semantic persisted state rather than queue leases.
-- v1.5.0 lifecycle behavior remains unchanged.
+- v1.5.0 lifecycle and execution contracts remain unchanged.
 
 ## Hidden Validation
 
