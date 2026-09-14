@@ -5,6 +5,7 @@ package codex
 
 import (
 	"context"
+	"time"
 
 	"tally/internal/agentruntime"
 )
@@ -55,15 +56,22 @@ func (s *Session) emitEvent(kind agentruntime.EventKind, id agentruntime.RunID, 
 	s.emitLocked(kind, id, text, native)
 }
 
-// emitLocked 追加事件并广播;调用方必须持有 s.mu。
+// emitLocked 追加事件并广播;调用方必须持有 s.mu。事件面属于旁路观察,
+// claim/失败摘要等权威结果不能因为事件时钟或广播通道尚未初始化而 panic；
+// 正常 Start/Fork 会始终注入 runtime + notify，这里的零值兜底只保证内部
+// 收尾/诊断路径 fail-safe。
 func (s *Session) emitLocked(kind agentruntime.EventKind, id agentruntime.RunID, text string, native *agentruntime.NativeEvent) {
+	now := time.Now()
+	if s.runtime != nil {
+		now = s.runtime.now()
+	}
 	s.seq++
 	s.events = append(s.events, agentruntime.Event{
 		Kind:      kind,
 		SessionID: agentruntime.SessionID(s.threadID),
 		RunID:     id,
 		Seq:       s.seq,
-		Time:      s.runtime.now(),
+		Time:      now,
 		Text:      text,
 		Native:    native,
 	})
@@ -72,11 +80,13 @@ func (s *Session) emitLocked(kind agentruntime.EventKind, id agentruntime.RunID,
 
 // broadcastLocked 唤醒所有事件流等待者:换入新广播通道后关闭旧通道。这是
 // 本会话内唯一的通道关闭点(所有状态变化都在持有 s.mu 时经过它),因此每代
-// 通道恰好被关闭一次。
+// 已初始化的通道恰好被关闭一次。零值通道没有等待者,只需建立新一代。
 func (s *Session) broadcastLocked() {
 	old := s.notify
 	s.notify = make(chan struct{})
-	close(old)
+	if old != nil {
+		close(old)
+	}
 }
 
 // terminalKind 把 runtime 自述终态映射到规范化终态事件。
