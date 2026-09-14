@@ -1,11 +1,13 @@
 # Tally PRD v1.5.2 — Execution Environments
 
 - Status: **FROZEN EXECUTABLE SCOPE**
-- Depends on: v1.5.1
+- Implementation dependency: **v1.5.0 execution contracts only**
+- Release baseline dependency: v1.5.1
+- Parallel lane: may be implemented concurrently with v1.5.1, v1.5.3, v1.5.4 and v1.5.5.
 
 ## Goal
 
-Decouple Agent Runtime from where the Agent executes, and make Local, SSH and Docker first-class execution environments.
+Implement first-class SSH and Docker execution using the Runtime/Environment/Workspace contracts already frozen in v1.5.0.
 
 ## Architecture rule
 
@@ -21,17 +23,16 @@ Runtime defines Agent protocol/interaction. Environment defines workspace/proces
 
 ## In scope
 
-1. Small `ExecutionEnvironment` abstraction.
-2. Preserve `internal/agentruntime` as the runtime-neutral Agent protocol.
-3. LocalEnvironment.
-4. SSHEnvironment for remote build/dev hosts.
-5. DockerEnvironment for isolated/reproducible execution.
-6. Environment capability model: OS, tools, Docker, network, secrets/policy and optional resources.
-7. Engineering Harness selects/validates runtime + environment before execution.
-8. Replace local-path assumptions with environment-aware `WorkspaceRef`.
-9. Environment-aware workspace operations required by Thin Task Harness.
-10. Task-level restart for local, remote or container-backed workspaces.
-11. Runtime session resume remains optional.
+1. Keep v1.5.0 `ExecutionEnvironment`, `ExecutionTarget`, `WorkspaceRef` and capability contracts unchanged unless an explicit cross-version contract change is approved.
+2. Harden LocalEnvironment against the shared contract.
+3. SSHEnvironment for remote build/dev hosts.
+4. DockerEnvironment for isolated/reproducible execution.
+5. Environment capability discovery/profile: OS, tools, Docker, network, secrets/policy and optional resources.
+6. Engineering Harness selects/validates runtime + environment before execution.
+7. Environment-aware workspace operations required by Thin Task Harness.
+8. Remote/container cancellation and cleanup.
+9. Task-level restart for local, remote or container-backed workspaces.
+10. Runtime session resume remains optional.
 
 ## Execution context
 
@@ -39,7 +40,7 @@ Git/base revision + Frozen TaskContract + Engineering Context + Required Evidenc
 
 ## Out of scope
 
-Remote Agent fleet scheduling, Kubernetes orchestration, cross-host distributed queue, automatic cloud provisioning, GitHub lifecycle authority and multi-Agent role workflow.
+Remote Agent fleet scheduling, Kubernetes orchestration, cross-host distributed queue, automatic cloud provisioning, GitHub lifecycle authority and multi-Agent role orchestration.
 
 ## Acceptance criteria
 
@@ -50,6 +51,7 @@ Remote Agent fleet scheduling, Kubernetes orchestration, cross-host distributed 
 - Capability mismatch blocks dispatch before Agent start.
 - Cancellation/cleanup works per environment.
 - Interrupted Task can restart with retained WorkspaceRef or recreate from accepted base revision.
+- No runtime×environment class explosion is introduced.
 
 ## Hidden Validation
 
@@ -57,4 +59,4 @@ Local, SSH unreachable/auth failure, remote tool missing, Docker mismatch, cance
 
 ## Release qualification
 
-Local PASS; SSH PASS or qualified ENV-BLOCKED evidence; Docker PASS or qualified ENV-BLOCKED evidence; no runtime×environment class explosion; no correctness dependence on session resume.
+Local PASS; SSH PASS or qualified ENV-BLOCKED evidence; Docker PASS or qualified ENV-BLOCKED evidence; v1.5.0 execution contracts remain compatible; no correctness dependence on session resume.
