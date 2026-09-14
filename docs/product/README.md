@@ -2,7 +2,14 @@
 
 ## Current implementation authority
 
-- `Tally_PRD_v1.4.1_Final.md`
+- `Tally_PRD_v1.4.1_Final.md` — current implemented/baseline PRD until a v1.5 release is qualified.
+
+## Frozen next-line PRDs
+
+- `v1.5/Tally_PRD_v1.5_FROZEN.md` — frozen architecture/product authority for the v1.5 line.
+- `v1.5/README.md` — executable version map for v1.5.0 through v1.5.5.
+
+The v1.5 line is intentionally split into independently closable versions. Freezing the PRDs does not by itself claim implementation or Release Qualification.
 
 ## Completed prior release
 
@@ -10,6 +17,4 @@
 
 ## Long-term direction
 
-- `Tally_Product_Direction.md` — non-binding unless promoted by a Final PRD.
-
-The v1.4.1 Final PRD incorporates the L2/L3 architecture corrections, including the out-of-process Codex/DeepSeek Harness Runtime Adapter model.
+- `Tally_Product_Direction.md` — non-binding unless promoted by a Final/Frozen PRD.
