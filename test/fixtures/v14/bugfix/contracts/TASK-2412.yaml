@@ -1,0 +1,18 @@
+# P3-01 Bug Fix Harness 冻结语料 · 场景 3(对照):
+# 文档笔误修订 —— 不是代码缺陷,不引用缺陷需求 REQ-2410/2411,也无风险信号;
+# 内置束不得命中(触发器确定性,不扩大作用面,支持 P3-01 AC1/AC3)。
+id: TASK-2412
+profile: light
+
+title: Fix install command typo in README
+
+objective: >
+  Correct the copy-pasted wrong package name in the README install command.
+
+requirement_refs:
+  - .tally/requirements/REQ-2412.md
+
+scope:
+  allowed_paths:
+    - README.md
+    - docs/**

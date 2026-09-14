@@ -1,0 +1,44 @@
+{{define "content"}}
+{{if .Found}}
+<div class="head">
+  <h1><span class="fp">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></span></h1>
+  <span class="meta">诊断状态 · 精确指纹</span>
+  <span class="meta"><a href="/fingerprint?fp={{.Fp}}">← 指纹详情</a></span>
+</div>
+<p class="lede">诊断是「提方案 → 验证 → 不过再提」的循环,最多三轮,超了就归档「暂时没有自动修复」。第几轮、五分类都从索引算出来;重诊断只入队,三轮上限由后端守,这里改不了。</p>
+
+<section>
+  <h2>状态</h2>
+  <div class="grid grid-3">
+    <div class="cell"><div class="k">处置(五分类)</div><div class="v"><span class="tag {{.TagClass}}">{{.StatusText}}</span></div><div class="foot">从指纹索引算出</div></div>
+    <div class="cell"><div class="k">诊断轮数</div><div class="v">{{.Attempts}}</div><div class="foot">{{.RoundText}} · 上限 3 轮</div></div>
+    <div class="cell"><div class="k">预算</div><div class="v">{{.BudgetState}}</div><div class="foot">{{if .ConcludedText}}已有定论:{{.ConcludedText}}{{else}}三轮上限由后端守{{end}}</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>重诊断 <span class="hint">只入队 jobs,worker 执行时写新记录</span></h2>
+  {{if .CanDiagnose}}
+  <form method="post" action="/diagnose">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <input type="hidden" name="fp" value="{{.Fp}}">
+    <input type="hidden" name="project" value="{{.Project}}">
+    <div class="actions">
+      <button type="submit">触发重诊断</button>
+      <span class="note-inline">入队一个 diagnose job:对该指纹重新走一遍「提方案 → 四道闸验证」。结果稍后刷新从索引读出。</span>
+    </div>
+  </form>
+  {{else}}
+  <div class="empty">
+    {{if .ConcludedText}}已有定论({{.ConcludedText}}),不再诊断。{{else}}已达上限,不再诊断。{{end}}
+    <span class="do">三轮预算是后端守的,界面没有也不提供绕过。要再试,改完代码或配置让它重新失败出新指纹,或按<a href="/knowledge">已验证修复</a>的复现命令手工验证。</span>
+  </div>
+  {{end}}
+</section>
+{{else}}
+<div class="empty">
+  这个指纹还没有诊断记录。
+  <span class="do">诊断针对已索引的指纹:先去<a href="/failures">失败列表</a>进入一个指纹,或跑 <code>tally reindex</code> 重算索引。</span>
+</div>
+{{end}}
+{{end}}

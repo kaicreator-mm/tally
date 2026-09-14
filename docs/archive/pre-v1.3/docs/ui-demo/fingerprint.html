@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>指纹 a3f9c2 · tally</title>
+<link rel="stylesheet" href="tally.css">
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail">
+  <div class="brand">tally</div>
+  <div class="brand-sub">构建 · 部署 · 失败登记</div>
+  <div class="rail-label">视图</div>
+  <a href="index.html">总览</a>
+  <a href="failures.html">失败 <span class="n bad">31</span></a>
+  <a href="fingerprint.html" aria-current="page">指纹库 <span class="n">86</span></a>
+  <a href="requirement.html">需求 <span class="n">142</span></a>
+  <div class="rail-label">项目</div>
+  <a href="#">forge <span class="n bad">9</span></a>
+  <a href="#">hsk <span class="n bad">7</span></a>
+  <a href="#">restudio <span class="n">2</span></a>
+  <a href="#">orienta <span class="n">1</span></a>
+</nav>
+
+<main>
+  <div class="head">
+    <h1><span class="fp">
+      <span class="fp-strip"><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#9C3328"></i><i style="background:#8A928A"></i><i style="background:#2C4A61"></i><i style="background:#9C3328"></i></span>
+      a3f9c2e1
+    </span></h1>
+    <span class="meta">精确指纹 · 流水线规则 v4</span>
+  </div>
+  <p class="lede">原生模块 ABI 与 Node 22 不匹配。视图 B:这个问题影响了哪些地方,以及之前的修复今天还成不成立。</p>
+
+  <section>
+    <h2>影响面</h2>
+    <div class="grid grid-4">
+      <div class="cell"><div class="k">出现</div><div class="v">6</div><div class="foot">首次 5 月 28 日 · 最近 4 小时前</div></div>
+      <div class="cell"><div class="k">项目</div><div class="v">4</div><div class="foot">forge hsk restudio orienta</div></div>
+      <div class="cell"><div class="k">关联条款</div><div class="v">3</div><div class="foot">跨三个项目的需求</div></div>
+      <div class="cell"><div class="k">诊断次数</div><div class="v">1</div><div class="foot">上限 3 · 还剩 2</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>已验证修复 <span class="hint">存在 git,不在数据库</span></h2>
+    <div class="rec">
+      <div class="rec-head">
+        <strong>把原生依赖钉到预编译版本,并在构建镜像里对齐 Node ABI</strong>
+        <span class="tag warn">当前版本组合下可能过期</span>
+      </div>
+      <dl>
+        <dt>验证于</dt><dd>2026-06-14 09:22 · 连跑 5 次红,修复后连跑 5 次绿</dd>
+        <dt>验证时的组合</dt><dd>node 22.3.0 · pnpm 9.4.0 · debian bookworm · linux/amd64</dd>
+        <dt>当前组合</dt><dd><span class="st st-warn">node 22.8.1 · pnpm 9.12.0 —— 与验证时不一致</span></dd>
+        <dt>复现命令</dt><dd><code>git checkout 4b19c7 &amp;&amp; pnpm i --frozen-lockfile &amp;&amp; pnpm build</code></dd>
+        <dt>改动范围</dt><dd>package.json · pnpm-lock.yaml · Dockerfile</dd>
+        <dt>签署</dt><dd>人工签署 · commit 8f2c04a</dd>
+      </dl>
+      <p class="note">版本组合对不上,所以这条修复不会被直接套用,只作为线索交给诊断。要恢复直接可用,重跑一次复现命令即可。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>验证记录 <span class="hint">四道闸,全过才入库</span></h2>
+    <div class="gates">
+      <div class="gate"><div class="g">G1 稳定复现</div><div class="d">连跑 5 次全红 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">G2 修复有效</div><div class="d">连跑 5 次全绿 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">G3 无回归</div><div class="d">其余 9 个构建目标不受影响 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">G4 改动范围</div><div class="d">仅依赖清单与 Dockerfile <span class="st st-ok"></span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>关键片段 <span class="hint">脱敏后 · 规范化前</span></h2>
+    <pre>npm ERR! code 1
+npm ERR! path &lt;项目根&gt;/node_modules/better-sqlite3
+npm ERR! command failed
+npm ERR! gyp ERR! build error
+npm ERR! Error: Module did not self-register: NODE_MODULE_VERSION 115.
+npm ERR! This version of Node.js requires NODE_MODULE_VERSION 127.
+npm ERR! registry https://npm.internal.example/ token=<span class="mask">〔已脱敏〕</span>
+exit status 1</pre>
+    <p class="note">路径已归一为 <code>&lt;项目根&gt;</code>,时间戳与临时目录已洗掉;<code>NODE_MODULE_VERSION</code> 的数字和 <code>exit status</code> 保留 —— 它们承载语义,洗掉就失真。</p>
+  </section>
+
+  <section>
+    <h2>发生记录 <span class="hint">事实面,只追加</span></h2>
+    <table>
+      <thead><tr><th>时间</th><th>项目</th><th>来源</th><th>提交</th><th>关联条款</th><th>组合</th></tr></thead>
+      <tbody>
+        <tr><td class="nowrap">07-21 10:14</td><td>hsk</td><td class="dim">构建</td><td class="dim">e77a02</td>
+            <td><a href="requirement.html">REQ-31</a></td><td class="dim nowrap">node 22.8.1</td></tr>
+        <tr><td class="nowrap">07-09 16:41</td><td>restudio</td><td class="dim">构建</td><td class="dim">1c3fd8</td>
+            <td><a href="requirement.html">REQ-4</a></td><td class="dim nowrap">node 22.8.1</td></tr>
+        <tr><td class="nowrap">06-14 09:02</td><td>forge</td><td class="dim">构建</td><td class="dim">4b19c7</td>
+            <td><a href="requirement.html">REQ-7</a></td><td class="dim nowrap">node 22.3.0</td></tr>
+        <tr><td class="nowrap">06-13 21:55</td><td>forge</td><td class="dim">构建</td><td class="dim">4b19c7</td>
+            <td><a href="requirement.html">REQ-7</a></td><td class="dim nowrap">node 22.3.0</td></tr>
+        <tr><td class="nowrap">06-02 11:30</td><td>orienta</td><td class="dim">构建</td><td class="dim">9ad441</td>
+            <td class="dim">—</td><td class="dim nowrap">node 22.1.0</td></tr>
+        <tr><td class="nowrap">05-28 08:17</td><td>forge</td><td class="dim">构建</td><td class="dim">2e08bb</td>
+            <td class="dim">—</td><td class="dim nowrap">node 22.1.0</td></tr>
+      </tbody>
+    </table>
+    <p class="note">「关联条款」这一列来自需求层。没有需求层的时候这一列为空,页面其余部分照常工作。</p>
+  </section>
+
+  <section>
+    <h2>模糊指纹邻居 <span class="hint">只作为诊断线索,不能当答案</span></h2>
+    <table>
+      <thead><tr><th>指纹</th><th>摘要</th><th class="num">次数</th><th>处置</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="fp">
+            <span class="fp-strip"><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#8A928A"></i><i style="background:#8A928A"></i><i style="background:#2C4A61"></i><i style="background:#9C3328"></i></span>
+            <span class="fp-hex">a3f9d7</span></span></td>
+          <td>同类模块在 Node 20 下的 ABI 不匹配</td>
+          <td class="num">3</td><td><span class="tag ok">已验证修复</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">模糊匹配只说明「看起来像」。它的修复不会被自动套用 —— 数据层的外键只允许精确指纹关联修复,这条路在 SQL 层面就写不出来。</p>
+  </section>
+</main>
+
+</div>
+<div class="proto-note">原型 · 非实现</div>
+</body>
+</html>

@@ -1,0 +1,368 @@
+/* tally —— 界面样式(由 web/prototype/tally.css 转正,并为 T05a 的表单/登录/提示扩展)
+ *
+ * 设计方向:维护日志本,不是监控仪表盘。
+ * 这个工具记录的是「发生过什么」,不是「现在控制什么」——
+ * 所以视觉参考取自工程制图纸和设备维护记录簿,不是 SaaS dashboard。
+ *
+ * 等宽字体是主字体,不是点缀。屏幕上几乎每个值都是
+ * 哈希、版本号、退出码、次数,需要纵向对齐。
+ *
+ * 三个语义色各自对应一个明确语义,不要拿它们当装饰用:
+ *   --verified 绿  已验证 / 成功        (T05c 已验证修复库用它)
+ *   --failed   红  失败
+ *   --stale    赭石 过期 / 漂移 / 笔记·未验证 (T05c 双层区分靠它)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --paper:     #E9EBE4;
+  --paper-2:   #F2F3EE;
+  --paper-3:   #DFE2D9;
+  --ink:       #1C211C;
+  --ink-2:     #5A625A;
+  --ink-3:     #8A928A;
+  --rule:      #C5CAC0;
+  --rule-2:    #D6DAD1;
+
+  --verified:  #2C6146;
+  --failed:    #9C3328;
+  --stale:     #A5731A;
+  --accent:    #2C4A61;
+
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --sans: 'IBM Plex Sans', system-ui, sans-serif;
+
+  --u: 4px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  /* 制图纸的横向刻度 */
+  background-image: repeating-linear-gradient(
+    to bottom, transparent 0 27px, rgba(28,33,28,.028) 27px 28px
+  );
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 28px;
+}
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid rgba(44,74,97,.3); }
+a:hover { border-bottom-color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+/* ---------- 骨架 ---------- */
+
+.shell { display: grid; grid-template-columns: 208px 1fr; min-height: 100vh; }
+
+.rail {
+  border-right: 1px solid var(--rule);
+  padding: 20px 0;
+  background: var(--paper-2);
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+
+.brand {
+  font-family: var(--sans); font-weight: 600; font-size: 15px;
+  letter-spacing: .16em; text-transform: uppercase;
+  padding: 0 20px 4px;
+}
+.brand-sub {
+  padding: 0 20px 20px; color: var(--ink-3); font-size: 11px;
+  line-height: 16px; letter-spacing: .04em;
+}
+
+.rail-label {
+  padding: 16px 20px 4px; color: var(--ink-3);
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+}
+
+.rail a, .rail .rail-todo {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 2px 20px; border-bottom: 0; color: var(--ink-2);
+}
+.rail a:hover { background: var(--paper-3); color: var(--ink); }
+.rail a[aria-current] { color: var(--ink); font-weight: 600; box-shadow: inset 3px 0 0 var(--ink); }
+.rail .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.rail .n.bad { color: var(--failed); }
+/* 还没落地的导航占位(T05b/c):不可点,灰显,保留位置骨架 */
+.rail .rail-todo { color: var(--ink-3); opacity: .6; cursor: default; }
+.rail .rail-todo .soon { font-size: 9px; letter-spacing: .08em; }
+
+.rail-foot { padding: 16px 20px 0; border-top: 1px solid var(--rule-2); margin-top: 16px; }
+
+main { padding: 20px 28px 72px; max-width: 1180px; }
+
+/* ---------- 页头 ---------- */
+
+.head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+h1 { font-family: var(--sans); font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+.head .meta { color: var(--ink-3); font-size: 11px; }
+
+.lede {
+  font-family: var(--sans); color: var(--ink-2); font-size: 13px;
+  max-width: 62ch; margin: 0 0 24px;
+}
+
+/* ---------- 分区 ---------- */
+
+section { margin-bottom: 40px; }
+
+h2 {
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 600; margin: 0 0 8px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--rule);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+h2 .hint { text-transform: none; letter-spacing: 0; color: var(--ink-3); font-weight: 400; font-size: 11px; }
+
+/* ---------- 表 ---------- */
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  text-align: left; font-weight: 500; color: var(--ink-3);
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 0 12px 2px 0; border-bottom: 1px solid var(--rule-2);
+}
+td { padding: 0 12px 0 0; border-bottom: 1px solid var(--rule-2); vertical-align: baseline; }
+tbody tr:hover { background: var(--paper-2); }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; padding-right: 16px; }
+.dim { color: var(--ink-3); }
+.nowrap { white-space: nowrap; }
+
+/* ---------- 状态 ---------- */
+
+.st { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.st::before { content: ''; width: 7px; height: 7px; flex: none; }
+.st-ok::before   { background: var(--verified); }
+.st-bad::before  { background: var(--failed); }
+.st-warn::before { background: var(--stale); }
+.st-off::before  { background: var(--ink-3); opacity: .45; }
+.st-ok   { color: var(--verified); }
+.st-bad  { color: var(--failed); }
+.st-warn { color: var(--stale); }
+.st-off  { color: var(--ink-3); }
+
+/* ---------- 签名元素:指纹条 ---------- *
+ * 由指纹字符串确定性派生的固定宽度色块(纯函数,见 render.go)。
+ * 同一个反复出现的失败在扫列表时先被形状认出来,再去读十六进制。
+ */
+
+.fp { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.fp-strip { display: inline-grid; grid-auto-flow: column; gap: 1px; }
+.fp-strip i { width: 4px; height: 15px; display: block; }
+.fp-hex { color: var(--ink-2); letter-spacing: .02em; }
+
+/* ---------- 卡片 ---------- */
+
+.grid { display: grid; gap: 1px; background: var(--rule-2); border: 1px solid var(--rule-2); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+.cell { background: var(--paper-2); padding: 12px 14px 14px; }
+.cell .k { color: var(--ink-3); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; }
+.cell .v { font-size: 25px; line-height: 34px; font-variant-numeric: tabular-nums; }
+.cell .v.bad { color: var(--failed); }
+.cell .v.ok  { color: var(--verified); }
+.cell .foot  { color: var(--ink-3); font-size: 11px; line-height: 16px; }
+
+/* ---------- 失败时间线 × 依赖升级对齐(T05b) ---------- *
+ * 失败按天画柱,依赖变更在下面画刻度,同一日刻度对齐:
+ * 哪根失败柱子旁边有依赖刻度,哪次升级就可能是元凶。
+ * 柱色取 --failed(失败语义),依赖刻度取 --accent(变更语义),不当装饰用。
+ */
+
+.timeline { border: 1px solid var(--rule-2); background: var(--paper-2); padding: 16px 14px 8px; }
+.tl-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 12px; }
+.tl-bars { display: flex; align-items: flex-end; gap: 2px; height: 46px; }
+.tl-bars i { flex: 1; background: var(--failed); opacity: .8; display: block; min-height: 2px; }
+.tl-bars i.zero { background: var(--rule); opacity: 1; height: 2px; }
+.tl-marks { display: flex; gap: 2px; margin-top: 3px; }
+.tl-marks i { flex: 1; height: 3px; display: block; }
+.tl-marks i.dep { background: var(--accent); }
+.tl-axis { display: flex; justify-content: space-between; color: var(--ink-3); font-size: 10px; }
+
+/* 行内动作组(表格里的拉起/推倒/重建/回滚):整页提交的原生 form,关 JS 照样可用 */
+.rowact { display: flex; gap: 8px; flex-wrap: wrap; }
+.rowact form { margin: 0; }
+.rowact button { padding: 1px 10px; font-size: 11px; }
+.note-inline { font-size: 11px; display: inline-block; margin-top: 2px; }
+
+/* ---------- 记录块 ---------- */
+
+.rec { border: 1px solid var(--rule-2); background: var(--paper-2); padding: 14px 16px; margin-bottom: 8px; }
+.rec-head { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+.rec dl { display: grid; grid-template-columns: 132px 1fr; gap: 0 16px; margin: 10px 0 0; }
+.rec dt { color: var(--ink-3); font-size: 11px; }
+.rec dd { margin: 0; }
+
+pre, .md pre {
+  font-family: var(--mono); font-size: 12px; line-height: 20px;
+  background: var(--paper-3); border-left: 2px solid var(--rule);
+  padding: 10px 12px; margin: 8px 0 0; overflow-x: auto;
+  white-space: pre-wrap; word-break: break-word;
+}
+pre .mask { background: var(--rule); color: var(--ink-3); padding: 0 3px; }
+
+/* ---------- 闸门(需求五闸 / 验证四道闸) ---------- */
+
+.gates { display: flex; gap: 1px; background: var(--rule-2); border: 1px solid var(--rule-2); margin-top: 8px; flex-wrap: wrap; }
+.gate { background: var(--paper-2); padding: 8px 12px 10px; flex: 1; min-width: 96px; }
+.gate .g { font-size: 10px; letter-spacing: .14em; color: var(--ink-3); text-transform: uppercase; }
+.gate .d { font-family: var(--sans); font-size: 12px; line-height: 17px; color: var(--ink-2); }
+
+/* ---------- 杂项 ---------- */
+
+.tag {
+  display: inline-block; padding: 0 6px; border: 1px solid var(--rule);
+  font-size: 11px; color: var(--ink-2); background: var(--paper-3);
+}
+.tag.ok   { border-color: var(--verified); color: var(--verified); background: transparent; }
+.tag.bad  { border-color: var(--failed);   color: var(--failed);   background: transparent; }
+.tag.warn { border-color: var(--stale);    color: var(--stale);    background: transparent; }
+
+.note {
+  font-family: var(--sans); font-size: 12px; line-height: 19px;
+  color: var(--ink-2); border-left: 2px solid var(--rule);
+  padding: 2px 0 2px 12px; margin: 12px 0;
+}
+
+/* 空状态是行动提示,不是「暂无数据」 */
+.empty {
+  font-family: var(--sans); color: var(--ink-2); font-size: 13px;
+  border: 1px dashed var(--rule); padding: 20px; text-align: center;
+}
+.empty .do { display: block; margin-top: 6px; color: var(--ink); }
+.empty a { font-weight: 500; }
+
+/* ---------- 提示条(登录失败 / 保存成功 / 冲突) ---------- */
+
+.flash {
+  font-family: var(--sans); font-size: 12px; line-height: 18px;
+  padding: 8px 12px; margin: 0 0 16px; border-left: 3px solid var(--accent);
+  background: var(--paper-2);
+}
+.flash.ok   { border-left-color: var(--verified); color: var(--verified); }
+.flash.bad  { border-left-color: var(--failed);   color: var(--failed); }
+.flash.warn { border-left-color: var(--stale);    color: var(--stale); }
+
+/* ---------- 表单(写 git 用户内容) ---------- *
+ * 关掉 JS 时表单退化为整页提交(htmx 只是渐进增强,不是依赖),
+ * 所以每个表单本身就是一个能独立工作的 <form method="post">。
+ */
+
+form.form { max-width: 720px; }
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-2); margin-bottom: 2px;
+}
+.field .help { font-family: var(--sans); font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+
+input[type=text], input[type=password], textarea, select {
+  width: 100%; font-family: var(--mono); font-size: 13px; line-height: 22px;
+  color: var(--ink); background: var(--paper-2);
+  border: 1px solid var(--rule); padding: 6px 10px;
+}
+textarea { resize: vertical; min-height: 180px; line-height: 20px; }
+input:focus, textarea:focus, select:focus { background: var(--paper); border-color: var(--accent); }
+
+.actions { display: flex; gap: 12px; align-items: baseline; margin-top: 8px; flex-wrap: wrap; }
+
+button, .btn {
+  font-family: var(--mono); font-size: 12px; letter-spacing: .04em;
+  color: var(--paper); background: var(--ink); border: 1px solid var(--ink);
+  padding: 6px 16px; cursor: pointer;
+}
+button:hover, .btn:hover { background: var(--accent); border-color: var(--accent); }
+button.secondary, .btn.secondary { background: transparent; color: var(--ink-2); border-color: var(--rule); }
+button.secondary:hover, .btn.secondary:hover { color: var(--ink); border-color: var(--ink-2); background: transparent; }
+/* 破坏性动作:推倒/回滚类,用失败红(T05b 用),配二次确认文案 */
+button.danger, .btn.danger { background: transparent; color: var(--failed); border-color: var(--failed); }
+button.danger:hover, .btn.danger:hover { background: var(--failed); color: var(--paper); }
+
+a.btn { display: inline-block; border-bottom-width: 1px; }
+
+/* 行内的小动作按钮(列表里的「编辑」) */
+.rowedit { font-size: 11px; }
+
+/* ---------- Wiki / 文档 的「笔记·未验证」标 ---------- *
+ * 赭石色 --stale:和已验证修复库的绿色在视觉上绝不能长得一样(见 06-ui-spec 双层)。
+ */
+.badge-note {
+  display: inline-block; padding: 0 8px; font-size: 11px;
+  color: var(--stale); border: 1px solid var(--stale); background: transparent;
+}
+.badge-verified {
+  display: inline-block; padding: 0 8px; font-size: 11px;
+  color: var(--verified); border: 1px solid var(--verified); background: transparent;
+}
+
+/* ---------- 极简 markdown 渲染(无第三方依赖,全部转义) ---------- */
+.md { font-family: var(--sans); font-size: 13px; line-height: 22px; max-width: 70ch; }
+.md h1, .md h2, .md h3 { font-family: var(--sans); color: var(--ink); margin: 18px 0 6px; line-height: 26px; }
+.md h1 { font-size: 17px; } .md h2 { font-size: 15px; } .md h3 { font-size: 13px; }
+.md p { margin: 8px 0; }
+.md ul { margin: 8px 0; padding-left: 22px; }
+.md code { font-family: var(--mono); font-size: 12px; background: var(--paper-3); padding: 0 4px; }
+.md pre code { background: none; padding: 0; }
+.md a { color: var(--accent); }
+
+/* ---------- 登录页 ---------- */
+
+.login-shell { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { width: 100%; max-width: 360px; background: var(--paper-2); border: 1px solid var(--rule); padding: 28px 28px 24px; }
+.login-card .brand { padding: 0 0 4px; }
+.login-card .brand-sub { padding: 0 0 20px; }
+
+/* ---------- 响应式与可达性 ---------- */
+
+@media (max-width: 820px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: static; height: auto; }
+  .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); }
+  main { padding: 16px; }
+  .rec dl { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ---------- v14-launch/task(P3-08:v1.4 最小 Launch / 闭环详情面)---------- */
+/* 草案与意图表单的紧凑字段:全局 textarea 的 180px 最小高度面向编辑器场景,
+   意图/边界路径/验收陈述只需要行式高度;label 用小字提示,不引入新组件。 */
+.v14-form textarea { min-height: 0; }
+.v14-form label { display: inline-block; font-size: 11px; color: var(--ink-3); }
+.v14-form p { margin: 0; }
+.v14-form p + p { margin-top: 6px; }
+/* 澄清动态表单(P0-04):有界呈现 schema → 原生控件。fieldset/legend 给每个
+   问题一个可访问分组;选项标签保持正文观感,不被上面的表单小字 label 规则压小。 */
+.v14-form fieldset { min-inline-size: 0; margin: 0 0 8px; }
+.v14-form legend { padding: 0 4px; font-weight: 600; }
+.v14-form .opt { margin-top: 6px; }
+.v14-form .opt label { font-size: inherit; color: inherit; }
+
+/* ---------- v14-change/attention(P3-09:Change Detail + Attention 投影)---------- */
+/* 结论依据四维度(coverage/assurance/unmatched/waiver):两列卡片,未接入维度
+   与已接入维度同版式 —— 缺席必须可见,不做折叠或弱化。 */
+.v14-basis-dims { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0 14px; }
+.v14-basis-dims .cell { margin: 0; }
+.v14-basis-dims .k { display: flex; gap: 6px; align-items: baseline; }
+/* hunk / 验证 Run 卡片:与全局 .cell 同语言,只收敛内边距与溢出。 */
+.v14-hunk pre { font-size: 12px; line-height: 18px; }
+@media (max-width: 820px) {
+  .v14-basis-dims { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,96 @@
+{
+  "arm": "bare",
+  "task_id": "db-02-account-email-unique",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T20:12:38.4546407Z",
+    "wall_seconds": 355.4359351,
+    "per_attempt_seconds": [
+      355.4359351
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "db-02-account-email-unique",
+    "harness": "database_migration",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\db-02-account-email-unique\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "fresh_database",
+        "status": "pass",
+        "detail": "delivered chain applies cleanly to an empty database"
+      },
+      {
+        "key": "n_minus_1_upgrade",
+        "status": "pass",
+        "detail": "delivered chain applies to the seeded N-1 upgrade path"
+      },
+      {
+        "key": "data_integrity",
+        "status": "pass",
+        "detail": "every frozen data-integrity assertion holds on the upgraded database"
+      }
+    ],
+    "migration": {
+      "assertions": [
+        {
+          "query": "SELECT count(*) FROM accounts",
+          "want": "3",
+          "got": "3",
+          "pass": true,
+          "detail": "no seeded account row deleted"
+        },
+        {
+          "query": "SELECT count(*) - count(DISTINCT email) FROM accounts",
+          "want": "0",
+          "got": "0",
+          "pass": true,
+          "detail": "duplicate addresses disambiguated, not deleted"
+        },
+        {
+          "query": "SELECT count(*) FROM events",
+          "want": "3",
+          "got": "3",
+          "pass": true,
+          "detail": "linked event rows intact"
+        }
+      ],
+      "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "judged_at": "2026-09-09T20:18:36.5576401Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "7829428d4d7483b88b879925591b29fb324d5ec2c50e066dc7d6b48233900278",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:41.1667387Z"
+}

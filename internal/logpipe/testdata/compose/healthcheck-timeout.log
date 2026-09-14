@@ -1,0 +1,8 @@
+db_1   | 2026-07-21 10:00:01.123 UTC [1] LOG:  database system is ready to accept connections
+app_1  | 2026-07-21T10:00:05Z starting server, listening on :8080
+app_1  | 2026-07-21T10:00:06Z ERROR: health check failed: Get "http://localhost:8080/healthz": dial tcp 127.0.0.1:8080: connect: connection refused
+app_1  | ERROR: service app did not become healthy after 3 retries
+web_1  | nginx: serving static files, everything normal here
+db_1   | 2026-07-21 10:00:09.000 UTC [1] LOG:  checkpoint starting: time
+web_1  | nginx: worker process running normally
+app_1  | exit status 1

@@ -1,0 +1,7 @@
+Running /usr/local/bin/kamal deploy on app
+      0.51s  INFO Deploying with kamal 2.3.0 to production...
+      2.03s  INFO [9f3c2d1e] Starting container app-9f3c2d1e on 192.0.2.10
+     30.02s ERROR Timed out waiting for app to become healthy on 192.0.2.10 after 30s
+     30.03s ERROR Health check failed: container app-9f3c2d1e did not become ready
+      0.12s  INFO Rolling back to last healthy version...
+exit status 1

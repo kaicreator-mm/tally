@@ -1,0 +1,290 @@
+{
+  "arm": "tally",
+  "task_id": "bf-05-currency-rounding-halfup",
+  "contract_task_id": "TASK-9104",
+  "outcome": "accepted",
+  "outcome_detail": "accepted at attempt 1 (verify run 5)",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "finished_at": "2026-09-09T21:39:35.8099015Z",
+    "wall_seconds": 239.7151334,
+    "per_attempt_seconds": [
+      233.8401726
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "bf-05-currency-rounding-halfup",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-05-currency-rounding-halfup\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "exact-values",
+          "want": "1.50",
+          "got": "1.50",
+          "pass": true
+        },
+        {
+          "name": "half-cent-up",
+          "want": "0.01",
+          "got": "0.01",
+          "pass": true
+        },
+        {
+          "name": "half-cent-negative",
+          "want": "-0.01",
+          "got": "-0.01",
+          "pass": true
+        },
+        {
+          "name": "near-dollar",
+          "want": "1.00",
+          "got": "1.00",
+          "pass": true
+        },
+        {
+          "name": "below-half",
+          "want": "0.00",
+          "got": "0.00",
+          "pass": true
+        },
+        {
+          "name": "one-dollar",
+          "want": "1.00",
+          "got": "1.00",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T21:39:34.4968581Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "2698e1d58dd7012a6a99241d8be13f7f45c0c6a5df084e1bee6c7461b1abbe8d",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "bf-05-currency-rounding-halfup",
+    "contract_task_id": "TASK-9104",
+    "started_at": "",
+    "finished_at": "2026-09-09T21:39:35.8099015Z",
+    "wall_seconds": 239.7151334,
+    "loop_phase": "accepted",
+    "outcome": "accepted",
+    "outcome_detail": "accepted at attempt 1 (verify run 5)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-9104/attempt/001",
+        "changeset": "sha256:897fdf1c546098247d0ffac587e193eb87e27416b1fb7bddaff27d7fafb2ee52",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Done. The formatter fix is delivered in `test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/baseline/currency.go:14`.\n\n**What Changed**\n- `FormatDollars` now rounds half away from zero at the cent: `cents := (n + 5000) / 10000` on the absolute micro value, with the sign reapplied afterward. Public signature `FormatDollars(micros string) string` is unchanged.\n- Made the file self-contained by adding the previously elided helpers `atoi64`, `formatSigned`, `itoa`, and `pad2` so the fixture compiles standalone in package `billing` (2-decimal output like `\"1.50\"`, `\"-0.01\"`).\n\n**Verification**\n- Replicated the frozen oracle against the delivered fix: all cases pass, including `half-cent-up` (`5000` → `\"0.01\"`), `half-cent-negative` (`-5000` → `\"-0.01\"`), `near-dollar` (`999999`…",
+        "wall_seconds": 233.8401726,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-05-currency-rounding-halfup\\worktrees\\wt-3197b8ca-987deac0"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "5",
+        "changeset": "sha256:897fdf1c546098247d0ffac587e193eb87e27416b1fb7bddaff27d7fafb2ee52",
+        "status": "verified",
+        "binding_ids": [
+          "bug_repro_failed_before",
+          "regression_check_passes_after"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "bf-05-currency-rounding-halfup",
+      "contract_task_id": "TASK-9104",
+      "pinned_contract": false,
+      "bundle_id": "POL-BUG-FIX-REGRESSION",
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "bindings": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/baseline/**"
+      ],
+      "requirement_refs": null,
+      "risk_signals": null,
+      "risk_basis": null,
+      "objective_sha256": "6f63021ededebfe1e5cb7236bf2233671abc61e6073a174cc5f7244f3339da3f"
+    },
+    "policy_match_coverage": {
+      "matched_policies": null,
+      "gate_keys": null,
+      "confidence": "none",
+      "detected_risk_signals": null,
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": null
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:307aa47d7ffd0b17a29e500b1e5e240bf756dd183664fcaaa73b9bc5381e3166",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-05-currency-rounding-halfup\\candidate-ws",
+    "judge_result": {
+      "task_id": "bf-05-currency-rounding-halfup",
+      "harness": "bug_fix",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-05-currency-rounding-halfup\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "bug_repro_failed_before",
+          "status": "pass",
+          "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+        },
+        {
+          "key": "regression_check_passes_after",
+          "status": "pass",
+          "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+        }
+      ],
+      "bug": {
+        "compile_ok": true,
+        "cases": [
+          {
+            "name": "exact-values",
+            "want": "1.50",
+            "got": "1.50",
+            "pass": true
+          },
+          {
+            "name": "half-cent-up",
+            "want": "0.01",
+            "got": "0.01",
+            "pass": true
+          },
+          {
+            "name": "half-cent-negative",
+            "want": "-0.01",
+            "got": "-0.01",
+            "pass": true
+          },
+          {
+            "name": "near-dollar",
+            "want": "1.00",
+            "got": "1.00",
+            "pass": true
+          },
+          {
+            "name": "below-half",
+            "want": "0.00",
+            "got": "0.00",
+            "pass": true
+          },
+          {
+            "name": "one-dollar",
+            "want": "1.00",
+            "got": "1.00",
+            "pass": true
+          }
+        ]
+      },
+      "judged_at": "2026-09-09T21:39:34.4968581Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "2698e1d58dd7012a6a99241d8be13f7f45c0c6a5df084e1bee6c7461b1abbe8d",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": null
+  },
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:41.0227789Z"
+}

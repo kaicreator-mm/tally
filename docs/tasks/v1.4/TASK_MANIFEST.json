@@ -1,0 +1,2278 @@
+{
+  "source_sha256": "93577bdd56db181e8a81bd36c0f49b991f5dea599767000a74a8c0f66ca820ba",
+  "source_head": "18193d5ff9ff9b6699a4d9b16b6429e2e084094e",
+  "prd_sha256": "35474f42422222d339214a69c3153547e4a4c8d616f573f1d50af9c371b38907",
+  "l2_prompt_sha256": "8285fd567bc1ad4198fc8b25ab3c7724f866321e82f74adbc6ebe4efbc4c5115",
+  "architecture_freeze": "READY_AFTER_FIXES",
+  "task_count": 55,
+  "tasks": [
+    {
+      "id": "A0-01",
+      "title": "Source baseline and v1.4 Architecture Claim Register",
+      "phase": "A0",
+      "kind": "research",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "S",
+      "allowed": [
+        "docs/tasks/v1.4/SOURCE_BASELINE.md",
+        "docs/tasks/v1.4/research/A0-01-*"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Record the exact source/PRD hashes, current HEAD, line-ending-only dirty state, historical gates, and finalize the source-backed architecture claim register. No production change.",
+      "source_facts": [
+        "HEAD is 18193d5...",
+        "Archive dirty paths are CRLF/LF-only under --ignore-cr-at-eol.",
+        "Fresh Go validation is unavailable in the review environment because dependencies cannot be fetched."
+      ],
+      "prd_refs": [
+        "PRD §0, §29, §34",
+        "L2 Phase 1/2/17"
+      ],
+      "acceptance": [
+        "Baseline names exact HEAD and SHA256 inputs.",
+        "Separates historical PASS evidence from current NOT_RUN validation.",
+        "No product/runtime source is changed."
+      ],
+      "validation": [
+        "git diff --check",
+        "git diff --ignore-cr-at-eol --quiet"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "A0-02",
+      "title": "Codex Session Isolation Spike",
+      "phase": "A0",
+      "kind": "spike",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "runtimes/codex/isolation_spike_test.go",
+        "test/runtimeconformance/**",
+        "docs/tasks/v1.4/research/A0-02-*"
+      ],
+      "forbidden": [
+        "runtimes/codex/runtime.go production behavior",
+        "cmd/worker/**"
+      ],
+      "goal": "Experimentally determine a production-viable per-run Codex home/session boundary before declaring session.isolation.",
+      "source_facts": [
+        "CodexRuntime does not currently declare session.isolation.",
+        "Source comments explicitly call shared CODEX_HOME rollout files an observable isolation risk.",
+        "Generic session-isolation canary already exists."
+      ],
+      "prd_refs": [
+        "PRD §29 item 1-3",
+        "PRD §13 assurance",
+        "L2 Spike Decision"
+      ],
+      "acceptance": [
+        "Spike compares Fake and Codex isolation semantics.",
+        "Authentication/config behavior under isolated home is recorded.",
+        "No production capability is declared by this task.",
+        "Report gives PASS path or explicit BLOCKED architecture alternative."
+      ],
+      "validation": [
+        "go test ./test/runtimeconformance/...",
+        "go test ./runtimes/codex/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "A0-03",
+      "title": "Assurance L1/L2/L3 Bake-off",
+      "phase": "A0",
+      "kind": "spike",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "L",
+      "allowed": [
+        "test/eval/v14_assurance/**",
+        "scripts/v14_assurance/**",
+        "docs/tasks/v1.4/research/A0-03-*"
+      ],
+      "forbidden": [
+        "internal/verification/** production semantics",
+        "internal/taskstate/** production semantics"
+      ],
+      "goal": "Compare deterministic checks, independent LLM judge + mutation detection, and held-out verification on a fixed existing task/fixture set; produce cost/capture evidence for default assurance mapping.",
+      "source_facts": [
+        "SpecBench supports visible/held-out gaps as a reward-hacking signal.",
+        "EvilGenie reports strong detection from LLM judge + test-file mutation detection with limited held-out incremental benefit in unambiguous cases.",
+        "Exact v1.4 assurance defaults are therefore an empirical question."
+      ],
+      "prd_refs": [
+        "PRD §13, §16",
+        "L2 Benchmark/Spike phases"
+      ],
+      "acceptance": [
+        "Task set is frozen before results are inspected.",
+        "Report separates unique defects caught by L1/L2/L3.",
+        "Latency and cost are reported with environment/model identity.",
+        "No production selector is modified."
+      ],
+      "validation": [
+        "go test ./test/eval/v14_assurance/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "A0-04",
+      "title": "Closed-loop Repair and held-out feedback ADR",
+      "phase": "A0",
+      "kind": "architecture",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "docs/architecture/ADR-*-v14-closed-loop-repair.md",
+        "docs/tasks/v1.4/research/A0-04-*"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Freeze outer-vs-inner retry semantics, repair candidate base/lineage, failure classes, cancellation, and the information-independence boundary for held-out feedback.",
+      "source_facts": [
+        "v13 workflow has inner Codegen iterations; Verification is composed after candidate creation.",
+        "changeset_superseded_fact already supports reason=rework.",
+        "Raw held-out feedback can destroy information independence if fed to implementation."
+      ],
+      "prd_refs": [
+        "PRD §17 Repair",
+        "PRD Invariants 2-12",
+        "L2 Invariants/Spike"
+      ],
+      "acceptance": [
+        "ADR explicitly distinguishes inner retry from outer Repair.",
+        "Every Repair is a new Run + ChangeSet.",
+        "Safe feedback rules for held-out failures are explicit.",
+        "Exposure downgrade/escalation behavior is explicit.",
+        "Default MaxRepairAttempts=2 is policy default, not immutable architecture constant."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "A0-05",
+      "title": "Product value experiment preregistration",
+      "phase": "A0",
+      "kind": "eval-design",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "docs/evals/v1.4/PRE_REGISTRATION.md",
+        "docs/evals/v1.4/task-set-manifest.schema.json"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Pre-register the Bare Agent vs Tally closed-loop evaluation before implementation results can bias the experiment.",
+      "source_facts": [
+        "PRD requires Hands-off Completion, time, interventions, 14-day rework and slow guardrails.",
+        "Previous adversarial review identified self-evaluation bias."
+      ],
+      "prd_refs": [
+        "PRD §30-33",
+        "L2 Spike Decision"
+      ],
+      "acceptance": [
+        "Metrics and thresholds are defined before trial.",
+        "Task inclusion/exclusion rules are fixed.",
+        "Arm/environment/model parity requirements are explicit.",
+        "No post-hoc task replacement is allowed without invalidating the trial."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "A0-06",
+      "title": "Architecture Freeze Gate",
+      "phase": "A0",
+      "kind": "gate",
+      "wave": "W01",
+      "deps": [
+        "A0-01",
+        "A0-02",
+        "A0-03",
+        "A0-04",
+        "A0-05"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "docs/tasks/v1.4/ARCHITECTURE_EVIDENCE.md",
+        "docs/tasks/v1.4/DECISION_LOCKS.md",
+        "docs/tasks/v1.4/reports/A0_ARCHITECTURE_GATE.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Convert the L2 evidence and spike outcomes into frozen implementation decisions or explicit blockers before P0/P1 code work proceeds.",
+      "source_facts": [
+        "L2 recommendation is READY_AFTER_FIXES."
+      ],
+      "prd_refs": [
+        "L2 Phase 12-20"
+      ],
+      "acceptance": [
+        "Every HIGH/CRITICAL claim is KEEP/CHANGE/REJECT/DEFER/SPIKE with a resolved next action.",
+        "Assurance default policy references A0-03 results.",
+        "Codex isolation decision references A0-02.",
+        "Repair ADR is accepted.",
+        "Gate returns READY_TO_IMPLEMENT or BLOCKED, never ambiguous prose."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P0-01",
+      "title": "Propagate requested ModelProfile and capture generic runtime identity",
+      "phase": "P0",
+      "kind": "implementation",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/agentruntime/**",
+        "internal/workflow/v13.go",
+        "internal/workflow/v13_test.go"
+      ],
+      "forbidden": [
+        "runtimes/codex/**",
+        "cmd/worker/**",
+        "migrations/**"
+      ],
+      "goal": "Ensure the runtime is started with the selected model profile and define a runtime-neutral way for workflow to carry observed runtime identity without branching on runtime name.",
+      "source_facts": [
+        "workflow currently starts runtime with Workspace only.",
+        "StartRequest already has ModelProfile and Codex Start honors it.",
+        "Descriptor is a claim, not actual CLI identity."
+      ],
+      "prd_refs": [
+        "PRD §11.3",
+        "PRD §29 item 4-5"
+      ],
+      "acceptance": [
+        "target model profile is passed in StartRequest.",
+        "No `if runtime == codex` branch is introduced.",
+        "Observed identity interface/value is optional/capability-safe for FakeRuntime.",
+        "Tests prove recorded desired model cannot silently differ from StartRequest model."
+      ],
+      "validation": [
+        "go test ./internal/agentruntime/...",
+        "go test ./internal/workflow/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-02",
+      "title": "Persist actual Codex runtime/model/session snapshot",
+      "phase": "P0",
+      "kind": "implementation",
+      "wave": "W03",
+      "deps": [
+        "P0-01"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "runtimes/codex/**",
+        "internal/runstore/codegen.go",
+        "internal/runstore/runstore_test.go"
+      ],
+      "forbidden": [
+        "internal/workflow/v13.go",
+        "migrations/**",
+        "cmd/worker/**"
+      ],
+      "goal": "Map Codex actual CLI/binary/session/model facts into the runtime-neutral identity snapshot and persist them with the CodegenRun without relabeling adapter version as CLI version.",
+      "source_facts": [
+        "Codex RuntimeSnapshot already exposes actual CLI version/binary/capabilities.",
+        "codegen_run already has runtime_version, model, session and capability snapshot fields."
+      ],
+      "prd_refs": [
+        "PRD §11.3",
+        "PRD §29 item 5"
+      ],
+      "acceptance": [
+        "Actual CLI version is distinguishable from adapter version.",
+        "Actual session ID is persisted when available.",
+        "Actual model/profile used is represented.",
+        "Existing codegen_run append/control semantics remain valid."
+      ],
+      "validation": [
+        "go test ./runtimes/codex/...",
+        "go test ./internal/runstore/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-03",
+      "title": "Implement Codex per-run session/home isolation",
+      "phase": "P0",
+      "kind": "implementation",
+      "wave": "W04",
+      "deps": [
+        "A0-02",
+        "P0-02"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "runtimes/codex/**",
+        "test/runtimeconformance/**"
+      ],
+      "forbidden": [
+        "cmd/worker/**",
+        "internal/verification/**"
+      ],
+      "goal": "Implement the isolation design selected by A0-02 and declare `session.isolation` only when the runtime actually satisfies the shared conformance canary.",
+      "source_facts": [
+        "Codex currently deliberately withholds session.isolation.",
+        "Codex instruction aggregation reads CODEX_HOME AGENTS files."
+      ],
+      "prd_refs": [
+        "PRD §29 item 1-2",
+        "INV-V14-07"
+      ],
+      "acceptance": [
+        "Per-run state boundary follows A0-02 decision.",
+        "Authentication remains usable or a documented supported handoff is used.",
+        "Capability declaration is truthful.",
+        "Isolation canary fails if cross-run state becomes observable."
+      ],
+      "validation": [
+        "go test ./runtimes/codex/...",
+        "go test ./test/runtimeconformance/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P0-04",
+      "title": "Real Codex standard + held-out trust E2E",
+      "phase": "P0",
+      "kind": "gate-implementation",
+      "wave": "W05",
+      "deps": [
+        "P0-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v14_codex_trust/**",
+        "docs/tasks/v1.4/reports/P0_CODEX_TRUST.md"
+      ],
+      "forbidden": [
+        "runtimes/codex/** production code",
+        "internal/verification/** production code"
+      ],
+      "goal": "Run and record at least one real Codex standard + held-out path using the new isolation and actual-runtime identity facts.",
+      "source_facts": [
+        "FakeRuntime already carries most trust E2E evidence; Codex real held-out path was blocked by missing isolation."
+      ],
+      "prd_refs": [
+        "PRD §29 item 2-5"
+      ],
+      "acceptance": [
+        "Real Codex candidate is produced in disposable workspace.",
+        "Held-out verifier runs under required isolation.",
+        "Actual runtime/model/session evidence is captured.",
+        "Owner worktree remains clean.",
+        "If credentials/environment unavailable, report NOT_RUN and keep closeout blocked."
+      ],
+      "validation": [
+        "go test -tags=integration ./test/e2e/v14_codex_trust/..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P0-05",
+      "title": "Measurement SQL contract for unknown usage calls",
+      "phase": "P0",
+      "kind": "db-contract",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0022_v14_measurement_usage.sql",
+        "internal/store/queries/measurement.sql",
+        "test/arch/v14_measurement_contract_test.go"
+      ],
+      "forbidden": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go",
+        "internal/measurement/**"
+      ],
+      "goal": "Evolve the append-only measurement contract so a Runtime/LLM call can be durably recorded when tokens/cost are unavailable, without representing unknown as reported zero.",
+      "source_facts": [
+        "0021 llm_usage token/cost columns are NOT NULL.",
+        "Current unavailable usage can be omitted from durable rows."
+      ],
+      "prd_refs": [
+        "PRD §11.3",
+        "PRD §29 item 6-7",
+        "INV-V14-12"
+      ],
+      "acceptance": [
+        "Schema represents usage availability explicitly or with unambiguous nullable semantics.",
+        "Unknown != zero-reported.",
+        "Rows remain append-only.",
+        "Queries can aggregate total/reported/missing calls.",
+        "Generated sqlc files are not edited in this task."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-06",
+      "title": "Measurement recorder/store correctness and sqlc regeneration",
+      "phase": "P0",
+      "kind": "implementation",
+      "wave": "W03",
+      "deps": [
+        "P0-05"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go",
+        "internal/measurement/**"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "internal/store/queries/**"
+      ],
+      "goal": "Regenerate sqlc for P0-05 and fix aggregation so one missing-usage call makes aggregate availability remain false while preserving every call fact.",
+      "source_facts": [
+        "Recorder can set UsageAvailable=false and later flip it true.",
+        "Unavailable runtime usage currently lacks durable call representation."
+      ],
+      "prd_refs": [
+        "PRD §29 item 6-7"
+      ],
+      "acceptance": [
+        "Total/reported/missing calls are reconstructable.",
+        "UsageAvailable is derived monotonically from missing count, not last writer.",
+        "Unknown tokens do not become false zero-reported values.",
+        "Existing cost-plane behavior remains intact."
+      ],
+      "validation": [
+        "sqlc generate",
+        "go test ./internal/measurement/...",
+        "go test ./internal/store/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-07",
+      "title": "Ancestor exposure lineage projection and review visibility",
+      "phase": "P0",
+      "kind": "read-model-ui",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/runstore/evidence.go",
+        "internal/runstore/runstore_test.go",
+        "internal/web/handlers/v13_review.go",
+        "internal/web/handlers/v13_changes.go",
+        "web/templates/v13_review.tmpl",
+        "web/templates/v13_change.tmpl",
+        "test/e2e/v13_changeset_supersession_test.go"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "internal/evidence/** semantics"
+      ],
+      "goal": "Show evidence exposure not only on the current ChangeSet but across superseded ancestor candidates so Repair cannot hide prior information leakage.",
+      "source_facts": [
+        "Exposure facts and supersession facts exist.",
+        "Current review projection is primarily candidate-local."
+      ],
+      "prd_refs": [
+        "PRD §29 item 8",
+        "INV-V14-08",
+        "INV-V14-28 architecture claim"
+      ],
+      "acceptance": [
+        "Read model walks supersession ancestors deterministically.",
+        "UI distinguishes current vs ancestor exposure.",
+        "An ancestor held-out exposure cannot disappear when current candidate is clean.",
+        "No mutable exposure status is added."
+      ],
+      "validation": [
+        "go test ./internal/runstore/...",
+        "go test ./internal/web/handlers/...",
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-08",
+      "title": "Operationalize baseline report on real history",
+      "phase": "P0",
+      "kind": "cli",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "cmd/tally/**",
+        "internal/measurement/report.go",
+        "internal/measurement/report_test.go",
+        "docs/guides/**"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "web/**"
+      ],
+      "goal": "Expose the existing measurement baseline report as an operational CLI/read path over real stored history rather than a test-only capability.",
+      "source_facts": [
+        "Measurement reporting exists in code/tests but is not yet a normal operator workflow."
+      ],
+      "prd_refs": [
+        "PRD §29 item 9",
+        "PRD §31 metrics"
+      ],
+      "acceptance": [
+        "CLI can produce baseline report for real task/project history.",
+        "Missing data is explicit, not zero-filled.",
+        "Output includes source period/sample counts.",
+        "No write-side lifecycle mutation."
+      ],
+      "validation": [
+        "go test ./internal/measurement/...",
+        "go test ./cmd/tally/..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-09",
+      "title": "Common AI Runtime domain adapter boundary",
+      "phase": "P0",
+      "kind": "integration-contract",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/airuntime/**",
+        "docs/architecture/ADR-*-ai-runtime-boundary.md",
+        "test/arch/ai_runtime_boundary_test.go",
+        "go.mod",
+        "go.sum",
+        "docs/04-code-standards.md"
+      ],
+      "forbidden": [
+        "runtimes/**",
+        "internal/agentruntime/**",
+        "internal/verification/**"
+      ],
+      "goal": "Introduce the thin Tally Domain AI Adapter against the common AI Runtime contract without reimplementing provider/model routing and without moving Coding Agent Runtime semantics out of Tally.",
+      "source_facts": [
+        "internal/llm currently owns base URL/API key/model chat-completions details.",
+        "Cross-project baseline requires generic inference through AI Runtime."
+      ],
+      "prd_refs": [
+        "PRD §28",
+        "INV-V14-14"
+      ],
+      "acceptance": [
+        "Adapter declares operation/intent/input/budget, not provider/model/tier.",
+        "Domain validation remains in Tally.",
+        "No Codex/AgentRuntime workspace/session semantics enter AI Runtime adapter.",
+        "If the external SDK/contract is unavailable, task returns BLOCKED rather than rebuilding it locally."
+      ],
+      "validation": [
+        "go test ./internal/airuntime/...",
+        "go test ./test/arch/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-10",
+      "title": "Migrate requirement and harvest generic LLM consumers to AI Runtime",
+      "phase": "P0",
+      "kind": "migration",
+      "wave": "W03",
+      "deps": [
+        "P0-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/requirement/**",
+        "internal/harvest/**",
+        "cmd/tally/harvest.go",
+        "cmd/tally/req.go"
+      ],
+      "forbidden": [
+        "runtimes/**",
+        "internal/agentruntime/**",
+        "internal/llm/llm.go deletion"
+      ],
+      "goal": "Move requirement/interview and harvest inference calls behind the Tally AI Runtime adapter while preserving domain schemas/validators.",
+      "source_facts": [
+        "Requirement and harvest packages currently depend on generic internal/llm behavior."
+      ],
+      "prd_refs": [
+        "PRD §28",
+        "PRD §29 item 10"
+      ],
+      "acceptance": [
+        "No direct provider/model/tier selection remains in migrated domains.",
+        "Operation IDs/traces are preserved where SDK supports them.",
+        "Domain output validation behavior is unchanged or strengthened."
+      ],
+      "validation": [
+        "go test ./internal/requirement/...",
+        "go test ./internal/harvest/...",
+        "go test ./cmd/tally/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-11",
+      "title": "Migrate failure/diagnose/worker generic LLM consumers and retire direct provider path",
+      "phase": "P0",
+      "kind": "migration",
+      "wave": "W04",
+      "deps": [
+        "P0-10"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/failure/**",
+        "internal/exec/**",
+        "cmd/worker/main.go",
+        "internal/llm/**",
+        "test/arch/**"
+      ],
+      "forbidden": [
+        "runtimes/**",
+        "internal/agentruntime/**"
+      ],
+      "goal": "Move remaining generic inference consumers to AI Runtime and remove/deprecate the direct provider implementation once no production consumer remains.",
+      "source_facts": [
+        "internal/failure and internal/exec use generic LLM functions; worker wiring owns shared construction."
+      ],
+      "prd_refs": [
+        "PRD §28",
+        "PRD §29 item 10"
+      ],
+      "acceptance": [
+        "No production package imports direct provider SDK/client logic.",
+        "Architecture test prevents provider/model routing from returning to Domain packages.",
+        "AgentRuntime remains unchanged.",
+        "Legacy internal/llm compatibility code is removed only when unused."
+      ],
+      "validation": [
+        "go test ./internal/failure/...",
+        "go test ./internal/exec/...",
+        "go test ./cmd/worker/...",
+        "go test ./test/arch/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-12",
+      "title": "Repository EOL hygiene and v1.4 source baseline docs",
+      "phase": "P0",
+      "kind": "docs-hygiene",
+      "wave": "W02",
+      "deps": [
+        "A0-06"
+      ],
+      "complexity": "S",
+      "allowed": [
+        ".gitattributes",
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "AGENT.md",
+        "docs/README.md",
+        "docs/tasks/v1.4/SOURCE_BASELINE.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Eliminate CRLF/LF-only dirty noise and align root documentation with the v1.4 Final/Direction split without claiming unimplemented features.",
+      "source_facts": [
+        "Current archive appears dirty only from line-ending normalization and has no .gitattributes."
+      ],
+      "prd_refs": [
+        "PRD §0",
+        "PRD §29 item 11"
+      ],
+      "acceptance": [
+        "Text files have an explicit line-ending policy.",
+        "No content-only source changes are smuggled into EOL normalization.",
+        "Root docs distinguish implemented v1.3 core, v1.4 authorized work, and deferred direction."
+      ],
+      "validation": [
+        "git diff --check",
+        "git diff --ignore-cr-at-eol --check"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P0-13",
+      "title": "v1.3.1 Trust Closeout Gate",
+      "phase": "P0",
+      "kind": "gate",
+      "wave": "W06",
+      "deps": [
+        "P0-04",
+        "P0-06",
+        "P0-07",
+        "P0-08",
+        "P0-11",
+        "P0-12"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.4/reports/P0_TRUST_CLOSEOUT.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Re-run the full v1.3 trust gate plus new identity/isolation/measurement checks and decide whether v1.4 foundation work may proceed.",
+      "source_facts": [
+        "PRD makes v1.3.1 Trust Closeout a hard prerequisite."
+      ],
+      "prd_refs": [
+        "PRD §29"
+      ],
+      "acceptance": [
+        "Every one of the 11 closeout items is PASS or explicitly BLOCKED.",
+        "Fresh build/vet/unit/integration/E2E results are reported.",
+        "No historical PASS is mislabeled as fresh PASS.",
+        "Critical Codex isolation/identity gaps block the gate if NOT_RUN."
+      ],
+      "validation": [
+        "go build ./...",
+        "go vet ./...",
+        "go test ./...",
+        "go test -tags=integration ./..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P1-01",
+      "title": "ContractSnapshot aggregate over existing Task + Verification contracts",
+      "phase": "P1",
+      "kind": "domain",
+      "wave": "W07",
+      "deps": [
+        "P0-13"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/contract/**",
+        "internal/artifacts/**"
+      ],
+      "forbidden": [
+        "internal/taskcontract/** semantics",
+        "internal/verification/** semantics",
+        "migrations/**"
+      ],
+      "goal": "Provide the v1.4 semantic Contract aggregate by pinning existing TaskContract and frozen VerificationContract revisions instead of physically migrating their on-disk formats.",
+      "source_facts": [
+        "Both existing contract formats are mature and heavily referenced.",
+        "PRD wants one semantic Contract."
+      ],
+      "prd_refs": [
+        "PRD §7",
+        "Decision Lock 5"
+      ],
+      "acceptance": [
+        "Snapshot contains task/verification pins and rejects mismatch.",
+        "No field overrides the source contracts.",
+        "Hash/identity is deterministic.",
+        "Existing v1.3 artifact loader remains compatible."
+      ],
+      "validation": [
+        "go test ./internal/contract/...",
+        "go test ./internal/artifacts/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-02",
+      "title": "EngineeringPolicy schema, parser and deterministic gate validation",
+      "phase": "P1",
+      "kind": "domain",
+      "wave": "W07",
+      "deps": [
+        "P0-13"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/engineeringpolicy/**"
+      ],
+      "forbidden": [
+        "internal/policy/**",
+        "migrations/**"
+      ],
+      "goal": "Define v1.4 EngineeringPolicy separately from runtime ExecutionPolicy, with `enforcement`, rationale, trigger, requires, gate condition and bundle tags; implement gate semantics only.",
+      "source_facts": [
+        "Existing internal/policy is runtime/network/budget authority and must not be conflated with acceptance policy."
+      ],
+      "prd_refs": [
+        "PRD §8",
+        "Decision Lock 6"
+      ],
+      "acceptance": [
+        "Strict parser rejects unknown/invalid gate fields.",
+        "`guidance` is representable but cannot gain blocking authority in v1.4.",
+        "No provider/tool execution is embedded in policy types.",
+        "Content revision/hash is deterministic."
+      ],
+      "validation": [
+        "go test ./internal/engineeringpolicy/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-03",
+      "title": "Git artifact loading for EngineeringPolicy",
+      "phase": "P1",
+      "kind": "artifact",
+      "wave": "W08",
+      "deps": [
+        "P1-02"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/artifacts/v14_policy_loader.go",
+        "internal/artifacts/v14_policy_loader_test.go"
+      ],
+      "forbidden": [
+        "internal/artifacts/v13_loader.go behavior outside additive extension",
+        "internal/project/**",
+        "migrations/**"
+      ],
+      "goal": "Load versioned `.tally/policies/*.yaml` from a Git commit snapshot using the same Git-first authority discipline as existing task/verification artifacts.",
+      "source_facts": [
+        "v13 loader already reads Git tree snapshots and rejects invalid artifacts without reading worktree state."
+      ],
+      "prd_refs": [
+        "PRD §8",
+        "PRD §30 desired/observed"
+      ],
+      "acceptance": [
+        "Policies load from commit tree, not working tree.",
+        "Invalid policy is rejected deterministically.",
+        "Duplicate current policy identity is rejected, not guessed.",
+        "Existing task/verification loading remains unchanged."
+      ],
+      "validation": [
+        "go test ./internal/artifacts/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-04",
+      "title": "Derived RiskSignals model",
+      "phase": "P1",
+      "kind": "domain",
+      "wave": "W07",
+      "deps": [
+        "P0-13"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/risk/**"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "web/**"
+      ],
+      "goal": "Define stable, append-input/derived risk signals needed for policy matching and assurance selection without creating a persisted RiskProfile object.",
+      "source_facts": [
+        "PRD explicitly treats risk as derived signals; policy matching false negatives are a known failure mode."
+      ],
+      "prd_refs": [
+        "PRD §10",
+        "Decision Lock 11"
+      ],
+      "acceptance": [
+        "Signal IDs/types are stable machine enums.",
+        "Signals can carry basis refs.",
+        "No mutable risk score is authoritative.",
+        "Unknown signals remain visible rather than coerced to low risk."
+      ],
+      "validation": [
+        "go test ./internal/risk/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-05",
+      "title": "Policy matching and PolicyMatchCoverage",
+      "phase": "P1",
+      "kind": "domain",
+      "wave": "W09",
+      "deps": [
+        "P1-02",
+        "P1-04"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/engineeringpolicy/match*.go",
+        "internal/engineeringpolicy/match*_test.go"
+      ],
+      "forbidden": [
+        "web/**",
+        "migrations/**"
+      ],
+      "goal": "Match deterministic EngineeringPolicy triggers against task/change/risk inputs and derive matched policies, match basis, detected signals, unmatched risk signals and confidence.",
+      "source_facts": [
+        "A policy false-negative can make an empty required set look complete."
+      ],
+      "prd_refs": [
+        "PRD §10",
+        "INV-V14-09"
+      ],
+      "acceptance": [
+        "Every match has machine-readable basis.",
+        "Unmatched risk signals are explicit.",
+        "No match result directly writes lifecycle state.",
+        "Order-independent inputs produce deterministic output."
+      ],
+      "validation": [
+        "go test ./internal/engineeringpolicy/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-06",
+      "title": "Assurance model and selector from bake-off decision",
+      "phase": "P1",
+      "kind": "domain",
+      "wave": "W07",
+      "deps": [
+        "P0-13",
+        "A0-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/assurance/**"
+      ],
+      "forbidden": [
+        "internal/verification/** semantics",
+        "migrations/**"
+      ],
+      "goal": "Implement L0-L4 required/achieved assurance values and deterministic selection rules using the A0-03 decision; do not encode universal held-out.",
+      "source_facts": [
+        "PRD defines L0-L4 as MVP simplification.",
+        "Exact default mapping must come from bake-off."
+      ],
+      "prd_refs": [
+        "PRD §13",
+        "PRD §16"
+      ],
+      "acceptance": [
+        "Required vs achieved are distinct.",
+        "Satisfied vs waived are distinct.",
+        "Unmatched risk cannot silently choose L0/L1.",
+        "Selector emits basis for its decision."
+      ],
+      "validation": [
+        "go test ./internal/assurance/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-07",
+      "title": "Contract compiler: policy bindings, required evidence and pre-execution requires context",
+      "phase": "P1",
+      "kind": "domain-integration",
+      "wave": "W10",
+      "deps": [
+        "P1-01",
+        "P1-03",
+        "P1-05",
+        "P1-06"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/contract/**",
+        "internal/contextpack/**"
+      ],
+      "forbidden": [
+        "internal/taskcontract/**",
+        "internal/verification/** physical formats",
+        "internal/workflow/**"
+      ],
+      "goal": "Compile a frozen v1.4 ContractSnapshot that binds matched policies and assurance to the existing frozen contracts, and expose policy `requires[]` as pre-execution context without leaking hidden verifier contents.",
+      "source_facts": [
+        "PRD uses the same requirements for Assurance and Prevention."
+      ],
+      "prd_refs": [
+        "PRD §7-10",
+        "INV-V14-02",
+        "INV-V14-07"
+      ],
+      "acceptance": [
+        "Compiler pins exact desired revisions.",
+        "Required evidence cannot be weaker than frozen VerificationContract.",
+        "Requires context is human-readable but does not include held-out paths/content.",
+        "Compilation is deterministic for same inputs."
+      ],
+      "validation": [
+        "go test ./internal/contract/...",
+        "go test ./internal/contextpack/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-08",
+      "title": "Extend taskstate with v1.4 VerifiedBasis projection",
+      "phase": "P1",
+      "kind": "read-model",
+      "wave": "W11",
+      "deps": [
+        "P1-06",
+        "P1-07"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/taskstate/**"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "internal/store/**"
+      ],
+      "goal": "Extend the existing derived `Result.Basis/Gaps` model to expose verdict, required/achieved assurance, evidence/policy coverage, unmatched risks, waived requirements and residual risk without adding a mutable state table.",
+      "source_facts": [
+        "taskstate already derives state, strict satisfied/waived, Basis and Gaps."
+      ],
+      "prd_refs": [
+        "PRD §14",
+        "Decision Lock 12"
+      ],
+      "acceptance": [
+        "Existing v1.3 states remain backward-compatible.",
+        "VERIFIED cannot hide unmatched risk or waiver.",
+        "Basis is deterministically reproducible from authoritative inputs.",
+        "No new direct state setter is introduced."
+      ],
+      "validation": [
+        "go test ./internal/taskstate/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-09",
+      "title": "v1.4 foundation architecture invariants",
+      "phase": "P1",
+      "kind": "architecture-test",
+      "wave": "W11",
+      "deps": [
+        "P1-05",
+        "P1-07",
+        "P1-08"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/arch/v14_*.go"
+      ],
+      "forbidden": [
+        "Production implementation packages"
+      ],
+      "goal": "Turn the frozen v1.4 architecture locks into executable architecture tests before the closed-loop implementation starts.",
+      "source_facts": [
+        "L2 requires invariants to become tests/validators/static rules."
+      ],
+      "prd_refs": [
+        "L2 Phase 12",
+        "PRD §35"
+      ],
+      "acceptance": [
+        "Tests prevent direct lifecycle state writes.",
+        "Tests protect AgentRuntime vs AI Runtime boundary.",
+        "Tests prevent EngineeringPolicy from importing Runtime/provider execution.",
+        "Tests assert Contract aggregate does not replace/overwrite underlying authority.",
+        "Tests assert no low assurance with unmatched risk."
+      ],
+      "validation": [
+        "go test ./test/arch/..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P1-10",
+      "title": "Contract/Policy/Assurance Foundation Gate",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W12",
+      "deps": [
+        "P1-08",
+        "P1-09"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "docs/tasks/v1.4/reports/P1_FOUNDATION_GATE.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Verify the v1.4 Contract/Policy/Assurance foundation is deterministic and compatible with v1.3 before adding Repair orchestration.",
+      "source_facts": [
+        "Closed-loop safety depends on frozen contract and basis semantics."
+      ],
+      "prd_refs": [
+        "PRD §7-16"
+      ],
+      "acceptance": [
+        "All P1 acceptance criteria are checked.",
+        "v1.3 E2E remains green.",
+        "No physical contract migration occurred.",
+        "No new mutable lifecycle state was added."
+      ],
+      "validation": [
+        "go test ./internal/contract/... ./internal/engineeringpolicy/... ./internal/risk/... ./internal/assurance/... ./internal/taskstate/...",
+        "go test ./test/arch/...",
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P2-01",
+      "title": "Extract reusable candidate verification service from worker v1.3 composition",
+      "phase": "P2",
+      "kind": "refactor",
+      "wave": "W13",
+      "deps": [
+        "P1-10"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/candidateverify/**",
+        "cmd/worker/v13.go",
+        "cmd/worker/v13_test.go"
+      ],
+      "forbidden": [
+        "internal/verification/** semantics",
+        "internal/workflow/v13.go",
+        "migrations/**"
+      ],
+      "goal": "Extract candidate materialization + Verification Orchestrator composition from the worker into a reusable internal service while preserving the v1.3 path.",
+      "source_facts": [
+        "v13 worker currently owns production composition of frozen candidate verification, which the new outer loop must reuse."
+      ],
+      "prd_refs": [
+        "PRD §12-16",
+        "Decision Lock 1"
+      ],
+      "acceptance": [
+        "v13 behavior is preserved by tests.",
+        "New service accepts an exact immutable ChangeSet/Contract context.",
+        "No verification authority moves into coding workflow.",
+        "Worker remains thin."
+      ],
+      "validation": [
+        "go test ./internal/candidateverify/...",
+        "go test ./cmd/worker/...",
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-02",
+      "title": "Closed-loop orchestrator domain skeleton",
+      "phase": "P2",
+      "kind": "domain",
+      "wave": "W13",
+      "deps": [
+        "P1-10"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/closedloop/**"
+      ],
+      "forbidden": [
+        "cmd/worker/**",
+        "internal/workflow/v13.go",
+        "internal/verification/**"
+      ],
+      "goal": "Define the outer closed-loop state/ports: Execute -> Verify -> Repair -> Accept/Escalate, keeping v1.3 codegen and verification as injected services.",
+      "source_facts": [
+        "Existing codegen loop and verification are separate, which is the correct seam for an outer orchestrator."
+      ],
+      "prd_refs": [
+        "PRD §5",
+        "PRD §17-18",
+        "Decision Lock 7"
+      ],
+      "acceptance": [
+        "No generic workflow DSL is introduced.",
+        "Outer loop has explicit cancellation and terminal states.",
+        "Codegen inner retry remains opaque to outer loop.",
+        "Orchestrator is testable with fake ports."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-03",
+      "title": "Verification failure classification",
+      "phase": "P2",
+      "kind": "domain",
+      "wave": "W13",
+      "deps": [
+        "P1-10"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/closedloop/failure*.go",
+        "internal/closedloop/failure*_test.go"
+      ],
+      "forbidden": [
+        "internal/verification/**"
+      ],
+      "goal": "Classify verification/infra outcomes into stable closed-loop actions instead of retrying every FAIL.",
+      "source_facts": [
+        "PRD requires repairable, contract_defect, policy_conflict, environment_failure, provider_failure, verification_inconclusive, requires_human_judgment."
+      ],
+      "prd_refs": [
+        "PRD §17.4"
+      ],
+      "acceptance": [
+        "Each class has deterministic routing: repair/escalate/retry-provider/stop.",
+        "Unknown classification fails safe to escalation.",
+        "Classification does not reinterpret acceptance semantics."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-04",
+      "title": "Structured safe RepairFeedback builder",
+      "phase": "P2",
+      "kind": "domain",
+      "wave": "W14",
+      "deps": [
+        "P2-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/closedloop/feedback*.go",
+        "internal/closedloop/feedback*_test.go"
+      ],
+      "forbidden": [
+        "internal/verification/**",
+        "internal/evidence/**"
+      ],
+      "goal": "Convert eligible failed evidence into a bounded structured feedback object for the Repair Agent while filtering hidden/protected details by policy.",
+      "source_facts": [
+        "Structured validator feedback can improve bounded repair; raw diagnostics may be noisy or secret."
+      ],
+      "prd_refs": [
+        "PRD §17",
+        "INV-V14-07"
+      ],
+      "acceptance": [
+        "Feedback can identify acceptance/gate, observed failure class and safe diagnostic summary.",
+        "Raw held-out path/content is absent by default.",
+        "Feedback size is bounded.",
+        "Unsafe evidence yields escalate or redacted feedback, never silent leak."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-05",
+      "title": "Repair continuation from prior candidate with immutable supersession lineage",
+      "phase": "P2",
+      "kind": "implementation",
+      "wave": "W14",
+      "deps": [
+        "P2-02",
+        "P2-03"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/closedloop/**",
+        "internal/workspace/**",
+        "internal/runstore/changeset.go",
+        "internal/runstore/runstore_test.go"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "internal/changeset/** identity semantics"
+      ],
+      "goal": "Start each outer Repair from the prior candidate state (as frozen by ADR), create a new CodegenRun + ChangeSet, and append a rework supersession fact.",
+      "source_facts": [
+        "changeset_superseded_fact already supports rework; current one-run workflow creates one candidate."
+      ],
+      "prd_refs": [
+        "PRD §17.3",
+        "INV-V14-04"
+      ],
+      "acceptance": [
+        "Prior candidate is materialized deterministically according to ADR.",
+        "Contract pins do not change.",
+        "New candidate has distinct identity.",
+        "Supersession old->new reason=rework is append-only.",
+        "Owner worktree is never used as writable repair workspace."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/...",
+        "go test ./internal/workspace/...",
+        "go test ./internal/runstore/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-06",
+      "title": "Held-out Repair safety and exposure accounting",
+      "phase": "P2",
+      "kind": "security-trust",
+      "wave": "W15",
+      "deps": [
+        "A0-04",
+        "P2-04",
+        "P2-05",
+        "P0-07"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/closedloop/**",
+        "internal/evidence/**",
+        "internal/verification/holdout_*",
+        "test/e2e/v14_holdout_repair_*"
+      ],
+      "forbidden": [
+        "runtimes/**",
+        "web/**"
+      ],
+      "goal": "Enforce the ADR boundary for L3/held-out failures: safe abstract feedback only, with append-only exposure and assurance degradation/escalation if hidden details cross authority boundaries.",
+      "source_facts": [
+        "Held-out information independence can be invalidated by repair diagnostics."
+      ],
+      "prd_refs": [
+        "PRD §13-17",
+        "INV-V14-07/08"
+      ],
+      "acceptance": [
+        "Raw held-out content cannot appear in coding instruction/context in strict path.",
+        "Any deliberate diagnostic exposure creates evidence_exposure.",
+        "Strict satisfied cannot survive a compromising exposure unless semantics explicitly say it remains non-compromising.",
+        "Insufficient safe feedback escalates rather than leaks."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/... ./internal/evidence/... ./internal/verification/...",
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P2-07",
+      "title": "Separate bounded outer RepairPolicy from ExecutionPolicy retry",
+      "phase": "P2",
+      "kind": "policy",
+      "wave": "W14",
+      "deps": [
+        "P2-02",
+        "P2-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/closedloop/repair_policy*.go",
+        "internal/closedloop/repair_policy*_test.go"
+      ],
+      "forbidden": [
+        "internal/policy/execution.go semantics"
+      ],
+      "goal": "Implement a bounded outer RepairPolicy with default max attempts=2, cancellation and exhaustion rules, without reusing inner Codegen retry MaxIterations.",
+      "source_facts": [
+        "Existing ExecutionPolicy Retry.MaxIterations=4 controls same-run/codegen behavior."
+      ],
+      "prd_refs": [
+        "PRD §17.2",
+        "Decision Lock 7"
+      ],
+      "acceptance": [
+        "MaxRepairAttempts is independently configurable within hard bounds.",
+        "Default is 2.",
+        "Zero/negative/unbounded values are rejected.",
+        "Repair exhaustion produces explicit escalation reason."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-08",
+      "title": "Integrate Execute -> Verify -> Repair closed-loop engine",
+      "phase": "P2",
+      "kind": "integration",
+      "wave": "W16",
+      "deps": [
+        "P2-01",
+        "P2-04",
+        "P2-05",
+        "P2-06",
+        "P2-07"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/closedloop/**"
+      ],
+      "forbidden": [
+        "cmd/worker/**",
+        "web/**"
+      ],
+      "goal": "Compose existing TaskExecution and candidate verification services into one bounded closed-loop engine that returns Acceptable or Escalation with VerifiedBasis.",
+      "source_facts": [
+        "This is the core missing product loop."
+      ],
+      "prd_refs": [
+        "PRD §5, §17-18"
+      ],
+      "acceptance": [
+        "First-pass PASS terminates without Repair.",
+        "Repairable FAIL creates next attempt and re-verifies.",
+        "Non-repairable failures escalate.",
+        "Cancellation stops current work and produces no fake verdict.",
+        "All terminal outcomes include basis/reason."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-09",
+      "title": "Worker v1.4 closed-loop job integration",
+      "phase": "P2",
+      "kind": "hotspot-integration",
+      "wave": "W17",
+      "deps": [
+        "P2-08"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "cmd/worker/v14.go",
+        "cmd/worker/v14_test.go",
+        "cmd/worker/main.go",
+        "internal/jobs/**"
+      ],
+      "forbidden": [
+        "cmd/worker/v13.go except minimal reuse hook",
+        "web/**",
+        "migrations/** unless job schema bug proven"
+      ],
+      "goal": "Add a v1.4 worker path/job kind that runs the closed-loop engine while keeping the v1.3 baseline path available for comparison.",
+      "source_facts": [
+        "cmd/worker is a serialized hotspot; v13 legacy jobs must remain registered."
+      ],
+      "prd_refs": [
+        "PRD §5",
+        "PRD §34 Roadmap"
+      ],
+      "acceptance": [
+        "v1.4 job can execute closed loop end-to-end.",
+        "v1.3 job path remains callable.",
+        "No runtime-name branching in domain logic.",
+        "Lease/reclaim semantics remain intact.",
+        "Job cancellation propagates to closed-loop engine."
+      ],
+      "validation": [
+        "go test ./cmd/worker/...",
+        "go test ./internal/jobs/...",
+        "go test -tags=integration ./cmd/worker/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-10",
+      "title": "FakeRuntime closed-loop E2E matrix",
+      "phase": "P2",
+      "kind": "e2e",
+      "wave": "W18",
+      "deps": [
+        "P2-09"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "test/e2e/v14_closedloop_*",
+        "runtimes/fake/**"
+      ],
+      "forbidden": [
+        "Production closed-loop packages except bug fixes required to make tests pass"
+      ],
+      "goal": "Prove the closed loop deterministically with FakeRuntime before depending on real model behavior.",
+      "source_facts": [
+        "FakeRuntime is the protocol/conformance reference and can deterministically script attempts."
+      ],
+      "prd_refs": [
+        "PRD §17",
+        "PRD Success Criteria"
+      ],
+      "acceptance": [
+        "Covers first-pass PASS.",
+        "Covers fail -> repair -> PASS.",
+        "Covers repair exhaustion.",
+        "Covers provider/environment failure routing.",
+        "Covers held-out failure without hidden leak.",
+        "Covers supersession + exposure ancestor lineage.",
+        "Owner worktree remains clean."
+      ],
+      "validation": [
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P2-11",
+      "title": "Closed Loop Gate",
+      "phase": "P2",
+      "kind": "gate",
+      "wave": "W19",
+      "deps": [
+        "P2-10"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.4/reports/P2_CLOSED_LOOP_GATE.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Decide whether the core product loop is correct enough to authorize MVP harness/UI work.",
+      "source_facts": [
+        "v1.4 product value depends on removing the human failure-copy/retry loop."
+      ],
+      "prd_refs": [
+        "PRD §32 Success Criteria 1-5"
+      ],
+      "acceptance": [
+        "All closed-loop E2E cases pass or explicit blockers remain.",
+        "Inner vs outer retry metrics/identity are distinguishable.",
+        "No held-out leakage false-positive assurance exists.",
+        "No v1.3 trust regression."
+      ],
+      "validation": [
+        "go test ./internal/closedloop/...",
+        "go test ./test/e2e/...",
+        "go test ./..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P3-01",
+      "title": "Built-in Bug Fix EngineeringPolicy bundle and fixtures",
+      "phase": "P3",
+      "kind": "harness",
+      "wave": "W20",
+      "deps": [
+        "P2-11"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "catalog/v14/policies/bug_fix.yaml",
+        "test/fixtures/v14/bugfix/**",
+        "internal/engineeringpolicy/** tests"
+      ],
+      "forbidden": [
+        "web/**",
+        "migrations/**"
+      ],
+      "goal": "Define the first real policy bundle for defects: reproducible failure/regression evidence and appropriate assurance without building a generic policy marketplace.",
+      "source_facts": [
+        "PRD MVP change type #1 is Bug Fix."
+      ],
+      "prd_refs": [
+        "PRD §24.1"
+      ],
+      "acceptance": [
+        "Policy trigger and requires are deterministic.",
+        "Regression evidence is required for applicable code bugs.",
+        "Low-risk defects do not accidentally require L3 unless bake-off/risk rules say so.",
+        "Fixture has a known repairable failure."
+      ],
+      "validation": [
+        "go test ./internal/engineeringpolicy/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-02",
+      "title": "Built-in Database Migration EngineeringPolicy bundle and fixtures",
+      "phase": "P3",
+      "kind": "harness",
+      "wave": "W20",
+      "deps": [
+        "P2-11"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "catalog/v14/policies/database_migration.yaml",
+        "test/fixtures/v14/migration/**",
+        "internal/engineeringpolicy/** tests"
+      ],
+      "forbidden": [
+        "web/**",
+        "migrations/ product schema unrelated to Tally itself"
+      ],
+      "goal": "Define the migration harness requiring fresh DB, N-1 upgrade and data-integrity evidence; rollback/recovery remains conditional when contract/policy says required.",
+      "source_facts": [
+        "PRD MVP change type #2 is Database Migration."
+      ],
+      "prd_refs": [
+        "PRD §24.2"
+      ],
+      "acceptance": [
+        "Policy detects migration task/risk inputs without path-only false confidence.",
+        "Required evidence maps to fresh DB, N-1 upgrade, integrity.",
+        "Fixture includes at least one repairable migration defect.",
+        "Assurance level follows A0-03/P1 selector."
+      ],
+      "validation": [
+        "go test ./internal/engineeringpolicy/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-03",
+      "title": "Bug Fix closed-loop E2E",
+      "phase": "P3",
+      "kind": "e2e",
+      "wave": "W21",
+      "deps": [
+        "P3-01",
+        "P2-11"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v14_bugfix_*"
+      ],
+      "forbidden": [
+        "Production packages except minimal bug fixes"
+      ],
+      "goal": "Run a realistic defect from Contract through automatic Repair and acceptable verdict using the bug-fix harness.",
+      "source_facts": [
+        "MVP must prove more than synthetic state transitions."
+      ],
+      "prd_refs": [
+        "PRD §24.1",
+        "PRD §32"
+      ],
+      "acceptance": [
+        "Baseline failure is reproduced.",
+        "Agent candidate can fail regression and auto-repair.",
+        "Final accepted candidate satisfies required evidence.",
+        "Hands-off/intervention events are measurable."
+      ],
+      "validation": [
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-04",
+      "title": "Database Migration closed-loop E2E",
+      "phase": "P3",
+      "kind": "e2e",
+      "wave": "W21",
+      "deps": [
+        "P3-02",
+        "P2-11"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "test/e2e/v14_migration_*"
+      ],
+      "forbidden": [
+        "Production packages except minimal bug fixes"
+      ],
+      "goal": "Run a migration task through fresh DB + N-1 upgrade + integrity verification, including at least one Repair and strict-assurance path.",
+      "source_facts": [
+        "Migration is the best MVP case for Contract-as-prevention and high-strength verification."
+      ],
+      "prd_refs": [
+        "PRD §24.2",
+        "PRD §32"
+      ],
+      "acceptance": [
+        "Fresh DB path passes only after correct migration.",
+        "N-1 upgrade is exercised.",
+        "Data integrity is asserted.",
+        "Repair does not modify hidden/protected verifier.",
+        "Final basis exposes achieved assurance."
+      ],
+      "validation": [
+        "go test ./test/e2e/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-05",
+      "title": "Append-only OutcomeEvent SQL/store",
+      "phase": "P3",
+      "kind": "db+store",
+      "wave": "W20",
+      "deps": [
+        "P2-11"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0023_v14_outcome_event.sql",
+        "internal/store/queries/outcome_event.sql",
+        "internal/store/*outcome*",
+        "internal/outcome/**",
+        "test/arch/v14_outcome_event_test.go"
+      ],
+      "forbidden": [
+        "web/**"
+      ],
+      "goal": "Start capturing accepted/reverted/hotfixed/regression_found/human_correction as append-only events, without building an Outcome UI or mutable status row.",
+      "source_facts": [
+        "PRD requires immediate outcome capture because history cannot be reconstructed later."
+      ],
+      "prd_refs": [
+        "PRD §23",
+        "Decision Lock 14"
+      ],
+      "acceptance": [
+        "Event kind is a closed enum.",
+        "Events bind task/change when available and timestamp.",
+        "UPDATE/DELETE are prevented.",
+        "sqlc-generated code is produced from query/schema source.",
+        "No derived outcome status becomes mutable authority."
+      ],
+      "validation": [
+        "sqlc generate",
+        "go test ./internal/outcome/...",
+        "go test ./test/arch/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-06",
+      "title": "Closed-loop product metric projections",
+      "phase": "P3",
+      "kind": "measurement",
+      "wave": "W21",
+      "deps": [
+        "P3-05",
+        "P2-11"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/measurement/v14_*.go",
+        "internal/measurement/v14_*_test.go"
+      ],
+      "forbidden": [
+        "web/**",
+        "migrations/**"
+      ],
+      "goal": "Derive Hands-off Completion Rate inputs, Time to Accepted, Human Intervention counts, repair attempts and 14-day rework roots from existing facts + OutcomeEvent without inventing mutable counters.",
+      "source_facts": [
+        "PRD defines three primary metrics and fast/slow guardrails."
+      ],
+      "prd_refs": [
+        "PRD §31"
+      ],
+      "acceptance": [
+        "Metrics expose sample counts and missing data.",
+        "Human diff viewing is not incorrectly counted as intervention.",
+        "Manual repair/rerun/waiver/clarification are distinguishable.",
+        "14-day rework uses outcome/change history and documents its attribution limitations."
+      ],
+      "validation": [
+        "go test ./internal/measurement/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-07",
+      "title": "Minimal intent intake and Contract proposal via AI Runtime",
+      "phase": "P3",
+      "kind": "product-domain",
+      "wave": "W20",
+      "deps": [
+        "P1-07",
+        "P0-11"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/intake/**"
+      ],
+      "forbidden": [
+        "internal/requirement/** broad redesign",
+        "web/**",
+        "runtimes/**"
+      ],
+      "goal": "Accept one-line intent + optional source_ref and produce a validated Contract proposal for the two MVP task types through common AI Runtime, without building a Requirement authoring subsystem.",
+      "source_facts": [
+        "PRD input is natural-language first and records are structured.",
+        "Generic LLM calls must already use AI Runtime."
+      ],
+      "prd_refs": [
+        "PRD §6",
+        "PRD §27"
+      ],
+      "acceptance": [
+        "No manual required fields for low-risk supported cases.",
+        "Proposal is not authoritative until frozen.",
+        "Unknown/ambiguous intent produces clarification, not invented acceptance.",
+        "Only bug/migration MVP flows are required.",
+        "No provider/model selection in Domain code."
+      ],
+      "validation": [
+        "go test ./internal/intake/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-08",
+      "title": "Minimal Launch and Closed Loop task detail UI",
+      "phase": "P3",
+      "kind": "ui",
+      "wave": "W22",
+      "deps": [
+        "P3-07",
+        "P2-09"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/web/handlers/v14_*.go",
+        "web/templates/v14_launch.tmpl",
+        "web/templates/v14_task.tmpl",
+        "web/static/tally.css",
+        "internal/web/handlers/v14_*_test.go"
+      ],
+      "forbidden": [
+        "requirements full module",
+        "release/quality/knowledge UI"
+      ],
+      "goal": "Provide the smallest UI to enter intent/source_ref, review generated Contract diff, launch closed loop, and watch current execute/verify/repair/verdict state.",
+      "source_facts": [
+        "PRD explicitly limits v1.4 UI to Launch/Closed Loop/Change/Attention."
+      ],
+      "prd_refs": [
+        "PRD §26-27"
+      ],
+      "acceptance": [
+        "Natural-language entry is primary.",
+        "Structured Contract diff is confirmable/editable.",
+        "Run state derives from facts.",
+        "Repair attempts and current candidate are visible.",
+        "No Jira-style required field form is introduced."
+      ],
+      "validation": [
+        "go test ./internal/web/handlers/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-09",
+      "title": "Change Detail + minimal Attention projection",
+      "phase": "P3",
+      "kind": "ui",
+      "wave": "W22",
+      "deps": [
+        "P1-08",
+        "P2-09",
+        "P0-07"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/web/handlers/v14_*.go",
+        "web/templates/v14_change.tmpl",
+        "web/templates/v14_attention.tmpl",
+        "web/static/tally.css",
+        "internal/web/handlers/v14_*_test.go"
+      ],
+      "forbidden": [
+        "new attention table",
+        "full notification center"
+      ],
+      "goal": "Make one Change Detail answer what changed, why it is trustworthy, what remains uncertain and what decision is needed; derive Attention from blocking facts only.",
+      "source_facts": [
+        "Attention is a projection, not a business object.",
+        "Ancestor exposure must stay visible."
+      ],
+      "prd_refs": [
+        "PRD §18-19",
+        "PRD §26"
+      ],
+      "acceptance": [
+        "Basis includes assurance/coverage/unmatched/waiver.",
+        "Repair/supersession lineage is visible.",
+        "Current and ancestor exposure are visible.",
+        "Attention only contains legal blocking sources.",
+        "Dismiss/snooze may persist separately; lifecycle state is not duplicated."
+      ],
+      "validation": [
+        "go test ./internal/web/handlers/..."
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P3-10",
+      "title": "MVP Product Gate",
+      "phase": "P3",
+      "kind": "gate",
+      "wave": "W23",
+      "deps": [
+        "P3-03",
+        "P3-04",
+        "P3-06",
+        "P3-08",
+        "P3-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.4/reports/P3_MVP_GATE.md"
+      ],
+      "forbidden": [
+        "Production Go source"
+      ],
+      "goal": "Verify the two supported harnesses and minimal UI deliver the authorized v1.4 product loop before real comparative trials.",
+      "source_facts": [
+        "Product proof is Bug Fix + Migration, not full SDLC."
+      ],
+      "prd_refs": [
+        "PRD §24-32"
+      ],
+      "acceptance": [
+        "Bug and migration E2E pass.",
+        "Launch-to-verdict path works without manual failure-copy/retry.",
+        "Metrics are generated from facts.",
+        "No deferred module was accidentally activated."
+      ],
+      "validation": [
+        "go test ./...",
+        "go test -tags=integration ./..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P4-01",
+      "title": "Freeze dogfood evaluation task set and fixtures",
+      "phase": "P4",
+      "kind": "eval",
+      "wave": "W24",
+      "deps": [
+        "P3-10",
+        "A0-05"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/evals/v1.4/TASK_SET.md",
+        "docs/evals/v1.4/task_set.json",
+        "test/eval/v14_product/**"
+      ],
+      "forbidden": [
+        "Production implementation source"
+      ],
+      "goal": "Instantiate the preregistered fixed evaluation set with real/representative bug and migration tasks before comparing arms.",
+      "source_facts": [
+        "A0-05 defines selection rules; P3 provides functioning harness."
+      ],
+      "prd_refs": [
+        "PRD §30"
+      ],
+      "acceptance": [
+        "Task set satisfies preregistration rules.",
+        "Each task has stable acceptance/oracle assets.",
+        "Arm labels are not embedded in evaluator-facing assets.",
+        "Task replacement policy is explicit."
+      ],
+      "validation": [
+        "go test ./test/eval/v14_product/..."
+      ],
+      "notes": [],
+      "l3_reference": "yes",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P4-02",
+      "title": "Bare-Agent control runner with parity controls",
+      "phase": "P4",
+      "kind": "eval-harness",
+      "wave": "W25",
+      "deps": [
+        "P4-01"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "scripts/v14_trial/bare/**",
+        "docs/evals/v1.4/RUN_PROTOCOL.md"
+      ],
+      "forbidden": [
+        "internal/closedloop/**",
+        "runtimes/codex/** production code"
+      ],
+      "goal": "Create a reproducible bare-agent arm using the same agent/model/repository/task inputs and record human orchestration actions separately.",
+      "source_facts": [
+        "Comparative evidence is invalid if environment/model/context differs between arms."
+      ],
+      "prd_refs": [
+        "PRD §30"
+      ],
+      "acceptance": [
+        "Same source baseline/model/profile/task input can be demonstrated.",
+        "Control arm does not secretly receive Tally verification feedback.",
+        "Human retry/correction events can be recorded."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "optional",
+      "model_hint": "low_cost"
+    },
+    {
+      "id": "P4-03",
+      "title": "Real Codex Tally closed-loop comparative trial",
+      "phase": "P4",
+      "kind": "eval-run",
+      "wave": "W26",
+      "deps": [
+        "P4-02",
+        "P0-04"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "scripts/v14_trial/tally/**",
+        "docs/evals/v1.4/results/raw/**"
+      ],
+      "forbidden": [
+        "Production source except fixes needed for experiment validity"
+      ],
+      "goal": "Run the Tally arm on the frozen task set with actual runtime identity, assurance basis, repair lineage, cost and interventions recorded.",
+      "source_facts": [
+        "Product value must be measured with real Coding Agent behavior, not FakeRuntime only."
+      ],
+      "prd_refs": [
+        "PRD §30-33"
+      ],
+      "acceptance": [
+        "Actual Codex runtime/model identity is captured.",
+        "No failed task is silently dropped.",
+        "All NOT_RUN/environment failures are retained in raw results.",
+        "Trial does not alter preregistered metrics after seeing results."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P4-04",
+      "title": "v1.4 Comparative Product Value Report and kill/pivot decision",
+      "phase": "P4",
+      "kind": "analysis",
+      "wave": "W27",
+      "deps": [
+        "P4-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/evals/v1.4/RESULTS.md",
+        "docs/tasks/v1.4/reports/P4_PRODUCT_VALUE_GATE.md"
+      ],
+      "forbidden": [
+        "Production source"
+      ],
+      "goal": "Compute preregistered product metrics and explicitly apply v1.4 kill/pivot signals instead of interpreting anecdotal wins.",
+      "source_facts": [
+        "PRD defines Hands-off Completion, time, interventions, rework and quality guardrails."
+      ],
+      "prd_refs": [
+        "PRD §31-33"
+      ],
+      "acceptance": [
+        "Report compares both arms with sample counts and missing data.",
+        "Hands-off, time, intervention and assurance results are explicit.",
+        "14-day rework is marked pending until window closes when necessary.",
+        "Decision is CONTINUE / SIMPLIFY / PIVOT / STOP with criteria."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    },
+    {
+      "id": "P4-05",
+      "title": "v1.4 Final Closeout and next-scope promotion gate",
+      "phase": "P4",
+      "kind": "closeout",
+      "wave": "W28",
+      "deps": [
+        "P4-04"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.4/reports/V1.4_FINAL_GATE.md",
+        "docs/tasks/v1.4/STATUS.md",
+        "README.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/README.md",
+        "Tally_Product_Direction.md"
+      ],
+      "forbidden": [
+        "Production source unless a documented release-blocking doc bug requires it"
+      ],
+      "goal": "Close v1.4 with factual code/test/value status and decide which Direction items, if any, may be promoted to a future implementation PRD.",
+      "source_facts": [
+        "Direction document is non-binding until product evidence promotes scope."
+      ],
+      "prd_refs": [
+        "PRD §34-36"
+      ],
+      "acceptance": [
+        "Every task is DONE/BLOCKED/DEFERRED with evidence.",
+        "Fresh validation status is explicit.",
+        "No Direction feature is marked implemented without code evidence.",
+        "Next scope is proposed, not auto-authorized."
+      ],
+      "validation": [
+        "go build ./...",
+        "go vet ./...",
+        "go test ./...",
+        "go test -tags=integration ./..."
+      ],
+      "notes": [],
+      "l3_reference": "no",
+      "model_hint": "strong_review"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tally/evals/v1.4/task-set-manifest.schema.json",
+  "title": "Tally v1.4 product value experiment task-set manifest",
+  "description": "Schema for the frozen task set consumed by P4-02/P4-03. A manifest is valid only if every task carries pinned fixtures and freeze identity; any byte change after freeze invalidates the trial unless both arms re-run (PRE_REGISTRATION §5).",
+  "type": "object",
+  "required": ["manifest_version", "frozen_at", "trial_ref", "tasks"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": { "const": 1 },
+    "frozen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the task set was frozen (before arm A execution)."
+    },
+    "trial_ref": {
+      "type": "string",
+      "description": "Git commit or tag hash the manifest was frozen at."
+    },
+    "environment_parity": {
+      "type": "object",
+      "description": "Identity that must be identical across arms (PRE_REGISTRATION §6).",
+      "required": ["runtime", "model", "repo_baseline"],
+      "additionalProperties": true,
+      "properties": {
+        "runtime": { "type": "string", "description": "Runtime + adapter + CLI version." },
+        "model": { "type": "string", "description": "Model id used by both arms." },
+        "repo_baseline": { "type": "string", "description": "Base commit of fixture repos." },
+        "os": { "type": "string" },
+        "go_version": { "type": "string" },
+        "db_version": { "type": "string" }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "minItems": 10,
+      "description": "Frozen task set. No additions/removals after freeze.",
+      "items": { "$ref": "#/$defs/task" }
+    }
+  },
+  "$defs": {
+    "task": {
+      "type": "object",
+      "required": ["task_id", "harness", "difficulty", "inclusion_rationale", "fixture_hashes", "acceptance_frozen"],
+      "additionalProperties": false,
+      "properties": {
+        "task_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "harness": { "enum": ["bug_fix", "database_migration"] },
+        "difficulty": { "enum": ["S", "M", "L"] },
+        "inclusion_rationale": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Why this task is in the set; assigned at freeze, immutable."
+        },
+        "fixture_hashes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "description": "path → sha256 of every fixture the task depends on."
+        },
+        "acceptance_frozen": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of the frozen Contract acceptance used by BOTH arms."
+        },
+        "intent_text_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash of the verbatim intent text given to both arms."
+        },
+        "excluded": {
+          "type": ["boolean", "null"],
+          "default": null,
+          "description": "May only be set true with a PRE_REGISTRATION §5 exclusion reason, recorded in exclusion_reason, applying to BOTH arms."
+        },
+        "exclusion_reason": { "type": "string" }
+      }
+    }
+  }
+}

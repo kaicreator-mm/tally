@@ -1,0 +1,11 @@
+# P3-01 夹具 · TASK-2411 的确定性事实(执行期匹配输入)。
+# 候选触碰认证表面 → auth_symbol_change(冻结枚举,basis 引用派生来源)。
+changed_paths:
+  - internal/auth/logout.go
+  - internal/auth/session.go
+  - internal/auth/session_test.go
+risk_signals:
+  - id: auth_symbol_change
+    basis:
+      - intent:logout-session-still-valid
+      - change:internal/auth/session.go

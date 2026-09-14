@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "name": "exact-values", "in": "1500000", "want": "1.50" },
+    { "name": "half-cent-up", "in": "5000", "want": "0.01" },
+    { "name": "half-cent-negative", "in": "-5000", "want": "-0.01" },
+    { "name": "near-dollar", "in": "999999", "want": "1.00" },
+    { "name": "below-half", "in": "2499", "want": "0.00" },
+    { "name": "one-dollar", "in": "1000000", "want": "1.00" }
+  ],
+  "expected": {
+    "baseline_failures": ["half-cent-up", "half-cent-negative", "near-dollar"],
+    "reference_passes_all": true
+  }
+}

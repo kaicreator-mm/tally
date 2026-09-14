@@ -1,0 +1,24 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - gosimple
+    - ineffassign
+    - bodyclose
+    - contextcheck
+    - errorlint      # 抓 err == ErrFoo 这种漏掉 errors.Is 的写法
+    - nilerr
+
+linters-settings:
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters: [errcheck]

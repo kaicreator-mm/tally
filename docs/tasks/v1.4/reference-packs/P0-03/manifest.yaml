@@ -1,0 +1,57 @@
+task_id: P0-03
+title: "Implement Codex per-run session/home isolation"
+local_authority:
+  task_contract: docs/tasks/v1.4/P0/P0-03.md
+  architecture:
+    - docs/tasks/v1.4/DECISION_LOCKS.md
+    - docs/tasks/v1.4/ARCHITECTURE_EVIDENCE.md
+references:
+  - id: REF-CODEX-INSTR
+    project: openai/codex
+    commit: "553df1c691fe8bf7747e50da22f1342984495ae0"
+    license: "Apache-2.0"
+    url: "https://github.com/openai/codex/blob/553df1c691fe8bf7747e50da22f1342984495ae0/codex-rs/codex-home/src/instructions/mod.rs"
+    relevant_paths:
+      - "codex-rs/codex-home/src/instructions/mod.rs"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Codex loads global AGENTS.md / AGENTS.override.md from CODEX_HOME; CODEX_HOME is observable instruction state, not merely a cache directory."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration
+  - id: REF-CODEX-AUTH
+    project: openai/codex
+    commit: "553df1c691fe8bf7747e50da22f1342984495ae0"
+    license: "Apache-2.0"
+    url: "https://github.com/openai/codex/blob/553df1c691fe8bf7747e50da22f1342984495ae0/codex-rs/login/src/auth/storage.rs"
+    relevant_paths:
+      - "codex-rs/login/src/auth/storage.rs"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "File auth lives at CODEX_HOME/auth.json; keyring storage derives a key from the codex_home path, so per-run CODEX_HOME can change authentication behavior."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration
+  - id: REF-CODEX-ROLLOUT
+    project: openai/codex
+    commit: "553df1c691fe8bf7747e50da22f1342984495ae0"
+    license: "Apache-2.0"
+    url: "https://github.com/openai/codex/blob/553df1c691fe8bf7747e50da22f1342984495ae0/codex-rs/rollout/src/lib.rs"
+    relevant_paths:
+      - "codex-rs/rollout/src/lib.rs"
+      - "codex-rs/rollout/src/metadata.rs"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Active and archived session/rollout data are rooted under CODEX_HOME/sessions and CODEX_HOME/archived_sessions."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration

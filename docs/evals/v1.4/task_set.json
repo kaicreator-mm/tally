@@ -1,0 +1,211 @@
+{
+ "environment_parity": {
+  "db_version": "recorded per result row at trial time for database_migration tasks",
+  "go_version": "recorded per result row at trial time",
+  "model": "identical model id for every trial participant; observed model recorded per result row, never the requested profile alone",
+  "os": "recorded per result row at trial time",
+  "repo_baseline": "every trial participant starts from the same fixture file set pinned per task below; the pinned fixture hashes are the baseline identity",
+  "runtime": "identical coding runtime, adapter and CLI versions for every trial participant; observed identity recorded per task result row (Decision Lock 15)"
+ },
+ "frozen_at": "2026-09-09T00:00:00Z",
+ "manifest_version": 1,
+ "tasks": [
+  {
+   "acceptance_frozen": "01c4964df5ce8b50856ed4fc937456a4cbe6b17dcff620a9f137c27ca3e55d66",
+   "difficulty": "S",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/acceptance.yaml": "01c4964df5ce8b50856ed4fc937456a4cbe6b17dcff620a9f137c27ca3e55d66",
+    "test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/baseline/token_bucket.go": "d4b569a436071926c2986b3017e8a55bd576486de1a0e2c7e46eff53888932d4",
+    "test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/intent.md": "65198c2e96ad4d8df88129fef1e5b89808ed460a23b77014685c17acbb7a3d60",
+    "test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/oracle/oracle.json": "197e8044ef817acd470e5dfa333fc292f673d6a038747589878c94adc7cc7996",
+    "test/fixtures/v14/bugfix/contracts/TASK-2410.yaml": "8a7fd548343b20d8a06d4cbc890d19cf931462173f016775f865e34aa9111b2d",
+    "test/fixtures/v14/bugfix/facts/TASK-2410.yaml": "400eb7fb4649d91ba27ac15bb133a7512dd0404e4ccc0b1e48773606d41fe992"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Boundary defect from the real bug-fix harness corpus (TASK-2410 token bucket); deterministic single-point regression with a reproducible failing baseline.",
+   "intent_text_sha256": "65198c2e96ad4d8df88129fef1e5b89808ed460a23b77014685c17acbb7a3d60",
+   "task_id": "bf-01-token-bucket-offbyone"
+  },
+  {
+   "acceptance_frozen": "97a5cf524e0c56ff9b2db10cd8b8e213df2268cfa8464ede3911027929d76cb1",
+   "difficulty": "L",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-02-logout-session-invalidation/acceptance.yaml": "97a5cf524e0c56ff9b2db10cd8b8e213df2268cfa8464ede3911027929d76cb1",
+    "test/eval/v14_product/testdata/tasks/bf-02-logout-session-invalidation/baseline/session_store.go": "daa9b1dc3172873f05010f6b0bd8653db4c203ca3b49e56bf5bc31c79286f218",
+    "test/eval/v14_product/testdata/tasks/bf-02-logout-session-invalidation/intent.md": "12c6ee9bc30ee23c4a00985c244d3f94be6893ad980a5b6619eae3b1df31e38f",
+    "test/eval/v14_product/testdata/tasks/bf-02-logout-session-invalidation/oracle/oracle.json": "661a48f44320ee51d2337c654a8108eb95da858ecb9bb1d498128714945fc5d8",
+    "test/fixtures/v14/bugfix/contracts/TASK-2411.yaml": "09f9f3c60966b5f146be2eb82d5d1cfc41fdb0d657049acf65cb98241d078f4e",
+    "test/fixtures/v14/bugfix/facts/TASK-2411.yaml": "176413740091cfb96eccadbcaf587eff6a51a2601eb17ca23bbe1a0c003e96f0"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Auth-surface defect from the bug-fix harness corpus (TASK-2411 session invalidation); exercises sequence semantics and source-independent regression evidence.",
+   "intent_text_sha256": "12c6ee9bc30ee23c4a00985c244d3f94be6893ad980a5b6619eae3b1df31e38f",
+   "task_id": "bf-02-logout-session-invalidation"
+  },
+  {
+   "acceptance_frozen": "ec60a51a0f91111ed1ed4073de372ae02c7e14d7b593525b26a7c8379904f194",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/acceptance.yaml": "ec60a51a0f91111ed1ed4073de372ae02c7e14d7b593525b26a7c8379904f194",
+    "test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/baseline/pagination.go": "9171a2b54c1189d493cf3ecbe9842d966b49e5efa53dceb01703062e63d592c1",
+    "test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/intent.md": "c1e3900fd9cdadd240284ff83dfd844dc5fc3879158ea22ebf2dacbd1294d909",
+    "test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/oracle/oracle.json": "56fc6d1719ee119de99d3ce8b730600552916d196e249c9686788a54f26860dd"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Representative page-accounting off-by-one; partial-page reasoning must hold across several oracle cases at realistic scale.",
+   "intent_text_sha256": "c1e3900fd9cdadd240284ff83dfd844dc5fc3879158ea22ebf2dacbd1294d909",
+   "task_id": "bf-03-pagination-partial-page"
+  },
+  {
+   "acceptance_frozen": "728bba4f1d9caa269bcc97fb3c58be542236ec4e8dce2f11c768060b6385377f",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/acceptance.yaml": "728bba4f1d9caa269bcc97fb3c58be542236ec4e8dce2f11c768060b6385377f",
+    "test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/baseline/datevalidate.go": "dbd3e9dd6c761b235fdb20bc8c0185fefb906d79a6f6bb35cc3705bdce1a395d",
+    "test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/intent.md": "32fe092dbfd3576d5d8ca172125b8cddde126132f6a81df8c84740e1b11493fe",
+    "test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/oracle/oracle.json": "a22d4c75689d686deadeebd6587e47af79f3aca7688a5f22002857254f91ef85"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Calendar validation matrix defect; exercises rule completeness (month lengths, leap centuries, strict formatting) without any infrastructure.",
+   "intent_text_sha256": "32fe092dbfd3576d5d8ca172125b8cddde126132f6a81df8c84740e1b11493fe",
+   "task_id": "bf-04-date-validation-calendar"
+  },
+  {
+   "acceptance_frozen": "2698e1d58dd7012a6a99241d8be13f7f45c0c6a5df084e1bee6c7461b1abbe8d",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/acceptance.yaml": "2698e1d58dd7012a6a99241d8be13f7f45c0c6a5df084e1bee6c7461b1abbe8d",
+    "test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/baseline/currency.go": "aeec1daac3818b8641877fc2c90a0e38bc2c8f4bf068bfa8b11f2d022486336b",
+    "test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/intent.md": "6f63021ededebfe1e5cb7236bf2233671abc61e6073a174cc5f7244f3339da3f",
+    "test/eval/v14_product/testdata/tasks/bf-05-currency-rounding-halfup/oracle/oracle.json": "caf9dbee1f4e4d4cbb37ec5157a0d48817ca53499ac943092d85e791fe9988ea"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Numeric rounding defect with sign symmetry; representative billing-precision regression that silently loses fractions of a cent.",
+   "intent_text_sha256": "6f63021ededebfe1e5cb7236bf2233671abc61e6073a174cc5f7244f3339da3f",
+   "task_id": "bf-05-currency-rounding-halfup"
+  },
+  {
+   "acceptance_frozen": "eb6698b99b89917822d6b5b4de1ad7ca63819ba62275142c3b735c124de4194e",
+   "difficulty": "S",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/acceptance.yaml": "eb6698b99b89917822d6b5b4de1ad7ca63819ba62275142c3b735c124de4194e",
+    "test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/baseline/emails.go": "a710b9d41ea93fc5efe5c7bca605b6f1ca8d17db893d1a8bf6040259a132024c",
+    "test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/intent.md": "e455c294414d6e8bf0b1b688ab14b994c75093622802b78ab8ad4feb77446440",
+    "test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/oracle/oracle.json": "b0fac71afd6c9f758a2e7d25db0ebabfa9fda15a4947d8d974332e51aeefaaf3"
+   },
+   "harness": "bug_fix",
+   "inclusion_rationale": "Case-sensitivity dedupe defect; representative normalization regression with a deterministic total order on the output.",
+   "intent_text_sha256": "e455c294414d6e8bf0b1b688ab14b994c75093622802b78ab8ad4feb77446440",
+   "task_id": "bf-06-email-dedupe-casefold"
+  },
+  {
+   "acceptance_frozen": "1e71e0f8c09b8c5fb24f1de13c81af1fc973999e21394256071fc5856389dd34",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-01-orders-total-backfill/acceptance.yaml": "1e71e0f8c09b8c5fb24f1de13c81af1fc973999e21394256071fc5856389dd34",
+    "test/eval/v14_product/testdata/tasks/db-01-orders-total-backfill/intent.md": "0e0ed3a44fa95cc604d114a7ab8c662d45053ce483be28701292ae509ae17aec",
+    "test/eval/v14_product/testdata/tasks/db-01-orders-total-backfill/oracle/oracle.json": "ca0f32bb5c93a7e6c075de91aada6b00e273ec5e5962ec545ffdbcecb0d53e22",
+    "test/fixtures/v14/migration/migrations/0001_init.sql": "8dcfc0991f5ba3cfaff0337ae89f6a51893956722b5751ea26965c4e966468fd",
+    "test/fixtures/v14/migration/migrations/0002_add_orders.sql": "7854995d166c0c83a56b84fe0462ff690b0f3b7fa039ad2c2f2c4c8906917dd1",
+    "test/fixtures/v14/migration/migrations/0003_orders_total_not_null.sql": "f5018fe85e43a40261472a9b489ba0a4f91b15a256891c0bcf7053f883662a85",
+    "test/fixtures/v14/migration/repair/0003_orders_total_not_null.sql": "64b94606650c06a4c509e157faeb15058ccc3f235258ca8ec27b586fbca0495a",
+    "test/fixtures/v14/migration/seed/n_minus_1.sql": "f49e6d3f236f4b49bf5c88cc237fa8b63c946b94ad77e78e98e9bb7ee111b2f3"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Materializes the P3-02 migration corpus (orders.total_cents NOT NULL without DEFAULT); the canonical fresh-versus-upgraded false-confidence scenario, pinned to the existing test/fixtures/v14/migration files.",
+   "intent_text_sha256": "0e0ed3a44fa95cc604d114a7ab8c662d45053ce483be28701292ae509ae17aec",
+   "task_id": "db-01-orders-total-backfill"
+  },
+  {
+   "acceptance_frozen": "7829428d4d7483b88b879925591b29fb324d5ec2c50e066dc7d6b48233900278",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/acceptance.yaml": "7829428d4d7483b88b879925591b29fb324d5ec2c50e066dc7d6b48233900278",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0001_init.sql": "6bc31052f1b413e66bbdf59f9e782befe957196587e7392a655f2993c5c23a3c",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0002_add_events.sql": "5bb871292e1cfc061612f3d4607dea51830fec69718ec271c0ceaa07579f5f75",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0003_email_unique.sql": "a2d1b16b0e2358db0b89fec38a9877bf459064fcacf475ec9f3446e627153cd9",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/seed/seed.sql": "5061212e3c5471ac1b3d180888f2948e977834db35dc56a8715a6c9d7262cea0",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/intent.md": "50f2dae726c859de23e5e3afbbed7678074c10eb9adde8988812a98a5c9b3a93",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/oracle/oracle.json": "efc24f0a64e619a6f11317496b044eecc5beea746db14799c2b9f1e31325b2c0",
+    "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/oracle/reference_repair.sql": "5564b564e4fc783983ae5f63953a034f4fb8801f851acae715d5c51aad419c01"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Unique constraint over seeded duplicates; exercises pre-constraint data repair while preserving every seeded row (no destructive deletion).",
+   "intent_text_sha256": "50f2dae726c859de23e5e3afbbed7678074c10eb9adde8988812a98a5c9b3a93",
+   "task_id": "db-02-account-email-unique"
+  },
+  {
+   "acceptance_frozen": "83c3fec33259b54cc22af1f606c87531b805da3867c39b7ae75c83dc8b6b32cd",
+   "difficulty": "L",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/acceptance.yaml": "83c3fec33259b54cc22af1f606c87531b805da3867c39b7ae75c83dc8b6b32cd",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0001_init.sql": "a1e04a9535c7f91bc02cbdca8513ce2c7e1eb7df2ef3a3cdc59e46dfc7a0bc30",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0002_rename_email.sql": "5e8fc09ed5e3ed601fe616061f29a92d7831412f892326d1584b66cfd30a17b5",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0003_index_email.sql": "44e8ef76c03b9863f96eefd4e55f157a17ef8c13227ec0f66f48816822a0e303",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/seed/seed.sql": "a7bfc2fef8bbe114ed7dba253566e1565d54cd3abca90a8ab3bc2860d0c87dcd",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/intent.md": "4dfe51d80f54d694088f864e3d18813265596aab62001e1f5bfdbc58f185ea4e",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/oracle/oracle.json": "e6c3505a0eb8081ca3690c7f404601ee5a1a6bcef5d61f6e7e8b85382ce2aec1",
+    "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/oracle/reference_repair.sql": "1e650cb95af9f062ef013092b20162563e8b3e2eaceb1b9981aa78c824f83f48"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Cross-revision rename breakage; the only task whose defect fails both evidence paths, exercising static coupling between successive revisions.",
+   "intent_text_sha256": "4dfe51d80f54d694088f864e3d18813265596aab62001e1f5bfdbc58f185ea4e",
+   "task_id": "db-03-rename-breaks-downstream"
+  },
+  {
+   "acceptance_frozen": "bbb1ea2ecd83687857569efa61108568d827febdc68fe56450fa5d0b1a9d4ac2",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/acceptance.yaml": "bbb1ea2ecd83687857569efa61108568d827febdc68fe56450fa5d0b1a9d4ac2",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/baseline/migrations/0001_init.sql": "78f3b4a6d03bcc545bdc7e6c8c71b7cb043e1a9b9557c6f0b5c86da09d742604",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/baseline/migrations/0002_add_orders.sql": "1176ac8663c40a62308d32ca5fbeea3ea4aeb996a0e10c3105f82a4914f1e008",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/baseline/migrations/0003_orders_account_fk.sql": "62732bc75b174670df6d3a09700aa845b4f2d28093489b5f3403b9a0994627ca",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/baseline/seed/seed.sql": "5aeb3d0e59bbc7112c6c464845717ade993a1e8e06b5ef9830b006258aecb2cb",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/intent.md": "2fa44a5b599288a41374967ba92f65d7045e061bb1119702321046c7b58f078c",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/oracle/oracle.json": "5ddc3d04bfabd3d3001a893f31b024415ea261b2aaf6b1399fab56e2e8882280",
+    "test/eval/v14_product/testdata/tasks/db-04-orders-fk-orphan/oracle/reference_repair.sql": "0c2d26c33c55461aa08ca65f2e36a5c8632703c5ad3181e03a64bbe67dbfa201"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Foreign key over seeded orphans; exercises referential cleanup before constraint creation while preserving every seeded order row.",
+   "intent_text_sha256": "2fa44a5b599288a41374967ba92f65d7045e061bb1119702321046c7b58f078c",
+   "task_id": "db-04-orders-fk-orphan"
+  },
+  {
+   "acceptance_frozen": "5b04382f83513512ac07a9833860104a43b1cc9a16c5265c881b076d1d7e8554",
+   "difficulty": "L",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/acceptance.yaml": "5b04382f83513512ac07a9833860104a43b1cc9a16c5265c881b076d1d7e8554",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0001_init.sql": "568168c1233529f7b946451917a4e2ebe0038819996a6f5a013246bca120995a",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0002_add_sessions.sql": "3b77c40782a1e905d642059dca5a2ac99012d73fa56bf12ef616a494cdb9efed",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0003_drop_legacy_token.sql": "92b2770d335172db02bc2429aa1511125911f0fe073451b54178f73681130a7e",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/seed/seed.sql": "c4997bb73304ed166ae86c52852f22b2a1a8f126372285c86d57b7dcf90f088a",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/intent.md": "f2477f81cf009168c635f9416107ffcb00fdc9acdc6aadbf74671700976fbd91",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/oracle/oracle.json": "6d4e61ce6abb5752647563f7c4c2d2d5340c068df3e6e14b76beb257bb2a2d14",
+    "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/oracle/reference_repair.sql": "8ed079faef2abf982a01d9787d36261dd4bf9f61a06b87f61cce6dc390c620fc"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Silent data loss via column drop; the upgrade SQL succeeds on both paths while data integrity fails, so the three-evidence gate cannot be satisfied by green SQL alone.",
+   "intent_text_sha256": "f2477f81cf009168c635f9416107ffcb00fdc9acdc6aadbf74671700976fbd91",
+   "task_id": "db-05-drop-column-data-loss"
+  },
+  {
+   "acceptance_frozen": "d8b00c318714023258640f45e95adb1e5a3212506d7abdd755a3470c09cd83b2",
+   "difficulty": "M",
+   "fixture_hashes": {
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/acceptance.yaml": "d8b00c318714023258640f45e95adb1e5a3212506d7abdd755a3470c09cd83b2",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0001_init.sql": "90658bc16235ca34df9002eebb150a99d4d3835b92459509caf52260403c5bd7",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0002_add_orders.sql": "aa463551130096ee0085a54be3011adb9660220c9fecd3c258fcf377d74765fb",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0003_narrow_total.sql": "5e80603f4b14ac057e446004a7a303e7e5686f2cacc0e892aaa633e3d944ab13",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/seed/seed.sql": "c0ea5986fd982f432219258758e5217d6a3e70c4c4887e908a0b6d2016cd7176",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/intent.md": "1de07bc6eb363936d3d7cf3be32c353908b743636f07f24abe0445de79e81029",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/oracle/oracle.json": "d329add23cbaa1c04c7c560696ab4662f99a680d8639c4d0a56df45c15457d66",
+    "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/oracle/reference_repair.sql": "f45e041f8499f162d2b04a377a1fdde1f32383dbe265b14478fe8ab6e3891580"
+   },
+   "harness": "database_migration",
+   "inclusion_rationale": "Unsafe type narrowing over out-of-range seed data; exercises choosing an invariant-preserving constraint instead of a breaking column type change.",
+   "intent_text_sha256": "1de07bc6eb363936d3d7cf3be32c353908b743636f07f24abe0445de79e81029",
+   "task_id": "db-06-total-type-narrowing"
+  }
+ ],
+ "trial_ref": "3b389d8168ada40948b9c6566a69f85ae395a589"
+}

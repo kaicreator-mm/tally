@@ -1,0 +1,95 @@
+{{define "content"}}
+{{if .Detail}}
+<div class="head">
+  <h1>覆盖率 <span class="dim">{{.Project}}</span></h1>
+  <span class="meta">只读 · 条款 × 测试</span>
+  <span class="meta"><a href="/coverage">← 全部项目</a></span>
+</div>
+<p class="lede">签署的当前条款里,有多少被测试 <code>@covers</code> 引用。下游引用(commit trailer / 测试注解)记的是条款某历史版本的内容哈希;条款一改哈希就变,旧引用对不上当前版 → 「依据已变更」。失效是哈希比对的自然结果(INV-4),没有额外的失效表。</p>
+
+<section>
+  <h2>覆盖率</h2>
+  <div class="grid grid-3">
+    <div class="cell"><div class="k">覆盖率</div><div class="v">{{.RatePct}}%</div><div class="foot">{{.Covered}} / {{.Total}} 条款被测试覆盖</div></div>
+    <div class="cell"><div class="k">已覆盖</div><div class="v">{{.Covered}}</div><div class="foot">有测试 @covers 其当前版本</div></div>
+    <div class="cell"><div class="k">未覆盖</div><div class="v">{{len .Uncovered}}</div><div class="foot">共 {{.Total}} 条当前条款</div></div>
+  </div>
+</section>
+
+{{if .Uncovered}}
+<section>
+  <h2>未被覆盖的条款 <span class="hint">{{len .Uncovered}} 条</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th></tr></thead>
+    <tbody>
+      {{range .Uncovered}}
+      <tr>
+        <td>{{.ClauseID}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{end}}
+
+<section>
+  <h2>依据已变更 <span class="hint">INV-4:条款哈希对不上当前版</span></h2>
+  {{if .Changed}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>来源</th><th>引用时哈希</th><th>条款</th><th>状态</th></tr></thead>
+    <tbody>
+      {{range .Changed}}
+      <tr>
+        <td class="dim">{{.Kind}}</td>
+        <td class="dim">{{.RefHash}}</td>
+        <td>{{.ClauseID}}</td>
+        <td><span class="tag warn">{{.StatusText}}</span></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">这些 commit / 测试挂钩记的是条款的旧版本哈希,条款内容改过之后它们自动对不上当前版 —— 下游该重新确认依据了。</p>
+  {{else}}
+  <div class="empty">
+    没有「依据已变更」的下游引用。
+    <span class="do">下游引用都还指向条款的当前版本。条款一旦改动,引用旧哈希的 commit / 测试会自动出现在这里。</span>
+  </div>
+  {{end}}
+</section>
+
+{{else}}
+<div class="head">
+  <h1>条款覆盖率</h1>
+  <span class="meta">只读 · 需求层</span>
+</div>
+<p class="lede">每个项目的条款被测试 <code>@covers</code> 引用的比例,以及哪些下游引用因为条款改动而「依据已变更」。覆盖率从索引面算出,不是谁填的。</p>
+
+{{if .Projects}}
+<div class="table-wrap">
+<table>
+  <thead><tr><th>项目</th><th class="num">已覆盖</th><th class="num">条款总数</th><th class="num">覆盖率</th><th></th></tr></thead>
+  <tbody>
+    {{range .Projects}}
+    <tr>
+      <td>{{.Slug}}</td>
+      <td class="num">{{.Covered}}</td>
+      <td class="num">{{.Total}}</td>
+      <td class="num">{{.RatePct}}%</td>
+      <td><a class="rowedit" href="/coverage?project={{.Slug}}">详情 →</a></td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+<div class="empty">
+  还没有需求层。
+  <span class="do">先在 <a href="/requirements">需求</a> 里签一份需求,跑 <code>tally reindex</code> 把条款与挂钩索引进库,这里就会出现每个项目的覆盖率。</span>
+</div>
+{{end}}
+{{end}}
+{{end}}

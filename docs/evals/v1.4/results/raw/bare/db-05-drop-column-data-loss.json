@@ -1,0 +1,102 @@
+{
+  "arm": "bare",
+  "task_id": "db-05-drop-column-data-loss",
+  "outcome": "accepted",
+  "attempts": 2,
+  "interventions": [
+    {
+      "type": "prompt_reissue",
+      "note": "operator re-issued the same verbatim frozen intent after the previous attempt was not accepted; workspace state continued from attempt 1"
+    }
+  ],
+  "timing": {
+    "started_at": "2026-09-09T20:38:48.4091476Z",
+    "wall_seconds": 1315.9728340000001,
+    "per_attempt_seconds": [
+      258.6745697,
+      1057.2982643
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "db-05-drop-column-data-loss",
+    "harness": "database_migration",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\db-05-drop-column-data-loss\\attempt-2\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "fresh_database",
+        "status": "pass",
+        "detail": "delivered chain applies cleanly to an empty database"
+      },
+      {
+        "key": "n_minus_1_upgrade",
+        "status": "pass",
+        "detail": "delivered chain applies to the seeded N-1 upgrade path"
+      },
+      {
+        "key": "data_integrity",
+        "status": "pass",
+        "detail": "every frozen data-integrity assertion holds on the upgraded database"
+      }
+    ],
+    "migration": {
+      "assertions": [
+        {
+          "query": "SELECT count(*) FROM accounts",
+          "want": "2",
+          "got": "2",
+          "pass": true,
+          "detail": "seeded account rows survive"
+        },
+        {
+          "query": "SELECT count(*) FROM accounts WHERE to_jsonb(accounts)::text LIKE '%tok-1%'",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "legacy token value 1 preserved by the change"
+        },
+        {
+          "query": "SELECT count(*) FROM accounts WHERE to_jsonb(accounts)::text LIKE '%tok-2%'",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "legacy token value 2 preserved by the change"
+        }
+      ],
+      "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "judged_at": "2026-09-09T21:01:31.9680281Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "5b04382f83513512ac07a9833860104a43b1cc9a16c5265c881b076d1d7e8554",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:41.290526Z"
+}

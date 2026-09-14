@@ -1,0 +1,54 @@
+{{define "content"}}
+{{if .Found}}
+<div class="head">
+  <h1>视图 A <span class="dim">{{.Clause}}</span></h1>
+  <span class="meta">条款累计失败 · {{.Project}}</span>
+  <span class="meta"><a href="/coverage?project={{.Project}}">← 覆盖率</a></span>
+</div>
+<p class="lede">某条需求的实现一共炸了多少次。失败老是集中在一条需求上,通常说明这条需求当初没写清楚 —— 这是需求层面的信号,不是实现层面的。</p>
+
+<section>
+  <h2>累计失败</h2>
+  <div class="grid grid-4">
+    <div class="cell"><div class="k">实现提交</div><div class="v">{{.ImplCommits}}</div><div class="foot">挂到本条款任一版本的 commit 数</div></div>
+    <div class="cell"><div class="k">构建失败</div><div class="v">{{.BuildFailures}}</div><div class="foot">构建链上的失败次数</div></div>
+    <div class="cell"><div class="k">部署失败</div><div class="v">{{.DeployFailures}}</div><div class="foot">部署链上的失败次数</div></div>
+    <div class="cell"><div class="k">同一指纹最多</div><div class="v">{{.SameFingerprint}}</div><div class="foot">失败越集中,越可能是需求没写清</div></div>
+  </div>
+  <div class="grid grid-2" style="grid-template-columns:repeat(2,1fr);margin-top:1px">
+    <div class="cell"><div class="k">条款年龄</div><div class="v">{{.AgeDays}} 天</div><div class="foot">首次签署 {{.FirstSigned}}</div></div>
+    <div class="cell"><div class="k">变更次数</div><div class="v">{{.ChangeCount}}</div><div class="foot">签署过的版本数</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>失败构成 <span class="hint">按指纹,标注处置分类</span></h2>
+  {{if .Failures}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>指纹</th><th class="num">次数</th><th>处置</th></tr></thead>
+    <tbody>
+      {{range .Failures}}
+      <tr>
+        <td><a class="fp" href="/fingerprint?fp={{.Fp}}">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></a></td>
+        <td class="num">{{.Count}}</td>
+        <td class="dim">{{.Classification}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <div class="empty">
+    这条条款的实现链上还没有失败。
+    <span class="do">它有 {{.ImplCommits}} 次实现提交。构建或部署在这些提交上失败时,失败会按指纹归到这里。</span>
+  </div>
+  {{end}}
+</section>
+{{else}}
+<div class="empty">
+  找不到这个条款的签署版本。
+  <span class="do">视图 A 要条款已经签过署(有版本记录)。确认 <code>?project=</code> 与 <code>&clause=</code> 都对,并跑过 <code>tally reindex</code> 把条款索引进库;或回 <a href="/coverage">覆盖率</a> 挑一条条款进入。</span>
+</div>
+{{end}}
+{{end}}

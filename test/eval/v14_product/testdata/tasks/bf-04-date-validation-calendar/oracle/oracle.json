@@ -1,0 +1,18 @@
+{
+  "cases": [
+    { "name": "jan-31-valid", "in": "2026-01-31", "want": "valid" },
+    { "name": "feb-30-common-year", "in": "2026-02-30", "want": "invalid:day" },
+    { "name": "apr-31", "in": "2026-04-31", "want": "invalid:day" },
+    { "name": "feb-29-leap", "in": "2024-02-29", "want": "valid" },
+    { "name": "feb-29-common-year", "in": "2023-02-29", "want": "invalid:day" },
+    { "name": "feb-29-century-non-leap", "in": "1900-02-29", "want": "invalid:day" },
+    { "name": "feb-29-century-leap", "in": "2000-02-29", "want": "valid" },
+    { "name": "month-13", "in": "2026-13-01", "want": "invalid:month" },
+    { "name": "unpadded-format", "in": "2026-1-05", "want": "invalid:format" },
+    { "name": "day-zero", "in": "2026-01-00", "want": "invalid:day" }
+  ],
+  "expected": {
+    "baseline_failures": ["feb-30-common-year", "apr-31", "feb-29-common-year", "feb-29-century-non-leap"],
+    "reference_passes_all": true
+  }
+}

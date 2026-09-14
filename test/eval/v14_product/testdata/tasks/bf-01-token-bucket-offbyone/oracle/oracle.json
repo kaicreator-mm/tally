@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "name": "first-immediate", "in": "3,0,1", "want": "allow" },
+    { "name": "third-immediate", "in": "3,0,3", "want": "allow" },
+    { "name": "fourth-immediate", "in": "3,0,4", "want": "reject" },
+    { "name": "first-after-refill", "in": "3,1,4", "want": "allow" },
+    { "name": "fifth-after-refill", "in": "3,1,5", "want": "reject" },
+    { "name": "capacity-two-third", "in": "2,0,3", "want": "reject" }
+  ],
+  "expected": {
+    "baseline_failures": ["fourth-immediate", "fifth-after-refill", "capacity-two-third"],
+    "reference_passes_all": true
+  }
+}

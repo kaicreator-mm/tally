@@ -1,0 +1,36 @@
+{{define "content"}}
+<div class="head">
+  <h1>已验证修复</h1>
+  <span class="meta"><span class="badge-verified">已验证</span></span>
+  <span class="meta">只读 · 只能经失败处理流程入库</span>
+</div>
+<p class="lede">这里每一条都过了四道闸(稳定复现 / 修复有效 / 无回归 / 改动范围),以精确指纹为键存在 git 里。界面只读 —— 未验证的东西进不来(铁律 2)。它和 <a href="/wiki">Wiki 笔记</a> 不是一回事:笔记是人写的、未验证的,标赭石色。</p>
+
+{{if .Entries}}
+{{range .Entries}}
+<section class="rec">
+  <div class="rec-head">
+    <strong><a class="fp" href="/fingerprint?fp={{.Fp}}">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></a></strong>
+    <span>
+      <span class="badge-verified">已验证</span>
+      {{if .Stale}}<span class="tag warn">当前版本组合下可能过期</span>{{end}}
+    </span>
+  </div>
+  <dl>
+    <dt>验证于</dt><dd>{{.VerifiedAt}}</dd>
+    <dt>验证时组合</dt><dd>{{if .Combo}}{{.Combo}}{{else}}—{{end}}</dd>
+    <dt>影响项目</dt><dd>{{if .Projects}}{{.Projects}}({{.Count}} 次){{else}}—{{end}}</dd>
+    <dt>四道闸</dt><dd class="dim">{{if .Gates}}{{.Gates}}{{else}}—{{end}}</dd>
+  </dl>
+  {{if .Summary}}<h2>修复内容</h2><div class="md">{{markdown .Summary}}</div>{{end}}
+  {{if .Repro}}<h2>复现命令</h2><pre>{{.Repro}}</pre>{{end}}
+  {{if .Stale}}<p class="note">这条修复验证时的版本组合与现在对不上(或修复后又复发),只作为线索,不会被直接套用。要恢复直接可用,按上面的复现命令重跑验证即可。</p>{{end}}
+</section>
+{{end}}
+{{else}}
+<div class="empty">
+  还没有已验证修复。
+  <span class="do">修复过四道闸验证后,以精确指纹为键自动入库 —— 只能由失败处理流程写入,界面不提供任何新增或编辑入口。先去<a href="/failures">失败列表</a>看哪些在等修。</span>
+</div>
+{{end}}
+{{end}}

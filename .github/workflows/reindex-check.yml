@@ -1,0 +1,43 @@
+# 定期重建索引面并与现有数据 diff(单向数据流自检)。
+#
+# reindex 从 git + 事实面重算 trace_edge / commit_clause / test_clause;若有人手改了这些
+# 索引表(绕过「事实 → 派生」的单向数据流),重算就对不上,`reindex -check` 以非零退出,本检查失败。
+#
+# 跑在自部署主机(self-hosted runner)上,因为它要连到真实的 tally 数据库。
+# 需要的配置:
+#   secrets.DATABASE_URL   Postgres 连接串
+#   vars.TALLY_REPO        (可选)要重挂挂钩的 git 仓库路径;不给则只查 trace_edge
+#   vars.TALLY_PROJECT     (与 TALLY_REPO 配合)项目 id
+name: reindex-check
+
+on:
+  schedule:
+    - cron: '17 3 * * 1' # 每周一凌晨(避开整点,降低同时段负载)
+  workflow_dispatch: {} # 允许手动触发
+
+jobs:
+  reindex-check:
+    runs-on: [self-hosted]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: 迁移到最新(幂等)
+        run: go run ./cmd/tally migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: 重算索引面并与现有数据 diff
+        run: |
+          if [ -n "$TALLY_REPO" ]; then
+            go run ./cmd/tally reindex -check -repo "$TALLY_REPO" -project "$TALLY_PROJECT"
+          else
+            go run ./cmd/tally reindex -check
+          fi
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TALLY_REPO: ${{ vars.TALLY_REPO }}
+          TALLY_PROJECT: ${{ vars.TALLY_PROJECT }}

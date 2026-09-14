@@ -1,0 +1,7 @@
+worker_1 | Traceback (most recent call last):
+worker_1 |   File "/app/worker.py", line 42, in <module>
+worker_1 |     conn = psycopg2.connect(dsn)
+worker_1 |   File "/usr/lib/python3/dist-packages/psycopg2/__init__.py", line 122, in connect
+worker_1 |     conn = _connect(dsn, connection_factory=connection_factory, **kwasync)
+worker_1 | psycopg2.OperationalError: could not connect to server: Connection refused
+worker_1 | exit status 1

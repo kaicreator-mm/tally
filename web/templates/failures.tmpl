@@ -1,0 +1,81 @@
+{{define "content"}}
+<div class="head">
+  <h1>失败</h1>
+  <span class="meta">{{.Window}} · 按指纹归并</span>
+</div>
+<p class="lede">按指纹归并:同一个问题出现二十次,是一行不是二十行。排行告诉你该先修哪个;时间线和依赖刻度对齐,告诉你哪次升级把东西搞坏了。</p>
+
+{{if .Rows}}
+{{if .Timeline}}
+<section>
+  <h2>失败时间线 <span class="hint">蓝色刻度是依赖变更</span></h2>
+  <div class="timeline">
+    <div class="tl-row">
+      <span class="dim">失败 / 天</span>
+      <div>
+        <div class="tl-bars">
+          {{range .Timeline}}{{if .Failures}}<i style="height:{{.Pct}}%" title="{{.Full}}:{{.Failures}} 次失败"></i>{{else}}<i class="zero" title="{{.Full}}"></i>{{end}}{{end}}
+        </div>
+        <div class="tl-marks">
+          {{range .Timeline}}<i{{if .HasDep}} class="dep" title="{{.DepTitle}}"{{end}}></i>{{end}}
+        </div>
+        <div class="tl-axis"><span>{{.AxisFirst}}</span><span>{{.AxisLast}}</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">哪根失败柱子旁边有依赖刻度,哪次升级就可能是元凶 —— 这条对齐关系是这个视图存在的唯一理由。</p>
+</section>
+{{end}}
+
+<section>
+  <h2>归并列表 <span class="hint">最近出现在前 · 指纹条同指纹同色</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>指纹</th><th>摘要</th><th>来源</th><th class="num">次数</th><th class="num">项目</th><th class="num">最近</th><th>处置</th></tr></thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td><a class="fp" href="/fingerprint?fp={{.Fp}}">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></a></td>
+        <td>{{.Excerpt}}</td>
+        <td class="dim">{{.SourceText}}</td>
+        <td class="num">{{.Count}}</td>
+        <td class="num" title="{{.ProjectNames}}">{{.Projects}}</td>
+        <td class="num dim nowrap">{{.LastSeen}}</td>
+        <td><span class="tag {{.TagClass}}">{{.StatusText}}</span></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+{{if .Ranking}}
+<section>
+  <h2>修复排行 <span class="hint">出现次数 × 影响项目数</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th class="num">#</th><th>指纹</th><th>摘要</th><th class="num">次数</th><th class="num">项目</th><th class="num">排行分</th></tr></thead>
+    <tbody>
+      {{range $i, $row := .Ranking}}
+      <tr>
+        <td class="num dim">{{inc $i}}</td>
+        <td><a class="fp" href="/fingerprint?fp={{$row.Fp}}">{{fpbar $row.Fp}}<span class="fp-hex">{{fpshort $row.Fp}}</span></a></td>
+        <td>{{$row.Excerpt}}</td>
+        <td class="num">{{$row.Count}}</td>
+        <td class="num">{{$row.Projects}}</td>
+        <td class="num"><strong>{{$row.Rank}}</strong></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">跨项目的同指纹排在前面:同样的失败炸到更多项目,修一次收益更大。</p>
+</section>
+{{end}}
+{{else}}
+<div class="empty">
+  还没有失败记录。
+  <span class="do">构建 / 部署 / 环境拉起的失败日志经 logpipe 产出指纹后,会在这里按指纹归并成行、按「次数 × 项目数」排行。先跑一次构建,或拉起一个环境试试。</span>
+</div>
+{{end}}
+{{end}}

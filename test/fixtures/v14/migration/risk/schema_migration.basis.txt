@@ -1,0 +1,6 @@
+# P3-02 fixture — risk derivation candidates for the migration task/change.
+# Format: one basis ref per line, "<kind>:<id>" (internal/risk Signal.Basis).
+# The schema_migration signal is derived from task AND change facts; a bare
+# path touch is never a candidate on its own.
+task:TASK-MIG-001
+change:migrations/0003_orders_total_not_null.sql

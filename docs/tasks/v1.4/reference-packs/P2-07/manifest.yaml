@@ -1,0 +1,43 @@
+task_id: P2-07
+title: "Separate bounded outer RepairPolicy from ExecutionPolicy retry"
+local_authority:
+  task_contract: docs/tasks/v1.4/P2/P2-07.md
+  architecture:
+    - docs/tasks/v1.4/DECISION_LOCKS.md
+    - docs/tasks/v1.4/ARCHITECTURE_EVIDENCE.md
+references:
+  - id: REF-SWE-RETRY
+    project: SWE-agent/SWE-agent
+    commit: "3ea751c087f32b16e039a2233dd6eefecef325d5"
+    license: "MIT"
+    url: "https://github.com/SWE-agent/SWE-agent/blob/3ea751c087f32b16e039a2233dd6eefecef325d5/sweagent/agent/reviewer.py"
+    relevant_paths:
+      - "sweagent/agent/reviewer.py"
+      - "sweagent/agent/agents.py"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Defines an explicit outer Review/Retry loop with max_attempts and cost limits, distinct from the inner agent step loop; each attempt is finalized before deciding to start the next."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration
+  - id: REF-TEMPORAL-ERR
+    project: temporalio/sdk-go
+    commit: "82c8087ecd03722e2b8e7c6c892784095fa94e73"
+    license: "MIT"
+    url: "https://github.com/temporalio/sdk-go/blob/82c8087ecd03722e2b8e7c6c892784095fa94e73/temporal/error.go"
+    relevant_paths:
+      - "temporal/error.go"
+      - "internal/error.go"
+      - "internal/internal_task_handlers.go"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Uses typed application errors plus explicit non-retryable classification and RetryPolicy; useful for deterministic routing without string-matching error messages."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration

@@ -1,0 +1,49 @@
+{{define "content"}}
+{{if .Found}}
+<div class="head">
+  <h1><span class="fp">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></span></h1>
+  <span class="meta">视图 B · 指纹影响面</span>
+  <span class="meta"><a href="/fingerprint?fp={{.Fp}}">← 指纹详情</a></span>
+</div>
+<p class="lede">某个指纹影响了哪些地方。「横跨几个项目」不需要需求层就能答;「影响了哪几条需求」要靠关联条款(LEFT JOIN)—— 没有需求层时那部分为空,页面其余照常。</p>
+
+<section>
+  <h2>影响面</h2>
+  <div class="grid grid-4">
+    <div class="cell"><div class="k">出现</div><div class="v">{{.Occurrences}}</div><div class="foot">跨 {{.ProjectCount}} 个项目</div></div>
+    <div class="cell"><div class="k">项目</div><div class="v">{{.ProjectCount}}</div><div class="foot">{{.Projects}}</div></div>
+    <div class="cell"><div class="k">处置</div><div class="v"><span class="tag {{.TagClass}}">{{.StatusText}}</span></div><div class="foot">{{if .Drifted}}修复验证后又复发:可能已过期{{else}}未漂移{{end}}</div></div>
+    <div class="cell"><div class="k">已验证修复</div><div class="v">{{if .HasFix}}有{{else}}无{{end}}</div><div class="foot">{{if .HasFix}}验证于 {{.VerifiedAt}}{{else}}还没有{{end}}</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>关联条款 <span class="hint">LEFT JOIN:无需求层时为空</span></h2>
+  {{if .RelatedClause}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th><th>挂钩哈希</th></tr></thead>
+    <tbody>
+      {{range .RelatedClause}}
+      <tr>
+        <td>{{.ClauseID}}</td>
+        <td class="dim">{{.Hash}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <div class="empty">
+    关联条款为空(没有需求层,或推不出条款)。
+    <span class="do">上面的影响面照常可用。条款来自「指纹的失败 → 提交 → 挂钩」:签需求、在 commit 里写条款编号(trailer)、跑 <code>tally reindex</code> 后,这里会列出受影响的条款。</span>
+  </div>
+  {{end}}
+</section>
+{{else}}
+<div class="empty">
+  这个指纹还没有索引进库。
+  <span class="do">视图 B 从指纹索引算。跑 <code>tally reindex</code> 重算索引;或回 <a href="/failures">失败列表</a> 从归并列表里重新进入。</span>
+</div>
+{{end}}
+{{end}}

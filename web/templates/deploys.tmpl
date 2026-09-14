@@ -1,0 +1,49 @@
+{{define "content"}}
+<div class="head">
+  <h1>部署</h1>
+  <span class="meta">历史来自 deploy_run · 回滚只入队</span>
+</div>
+<p class="lede">每次部署留一行(事实面,只追加)。回滚 = 把某个部署成功过的制品再部一次:点按钮只入队 job,由 worker 调工具(Kamal / Ansible / Compose)执行并写一条新的部署记录。</p>
+
+{{if .Rows}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>时间</th><th>项目</th><th>环境</th><th>工具</th><th>制品</th><th>结果</th><th class="num">退出码</th><th>版本组合</th><th>动作</th></tr></thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td class="nowrap">{{.Started}}</td>
+        <td>{{.Project}}</td>
+        <td>{{.TargetEnv}}</td>
+        <td class="dim">{{.Tool}}</td>
+        <td class="dim">{{fpshort .Digest}}</td>
+        <td><span class="st {{.StateClass}}">{{.StatusText}}</span></td>
+        <td class="num">{{.ExitCode}}</td>
+        <td class="dim">{{.Combo}}</td>
+        <td>
+          {{if .RollbackDef}}
+          <form method="post" action="/deploys/rollback">
+            <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+            <input type="hidden" name="def" value="{{.RollbackDef}}">
+            <input type="hidden" name="project" value="{{.Project}}">
+            <input type="hidden" name="target_env" value="{{.TargetEnv}}">
+            <input type="hidden" name="digest" value="{{.Digest}}">
+            <button class="danger" type="submit" onclick="return confirm('将把 {{.Project}}/{{.TargetEnv}} 回滚到制品 {{fpshort .Digest}}:工具会重新部署这个制品,当前版本立即被替换,并记一条新的部署记录。确定继续?')">回滚到此版本</button>
+          </form>
+          {{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">只有「部署成功」且内容仓库里还有对应部署定义(.tally/deploys/)的行有回滚按钮 —— 回滚要靠定义调工具,定义没了就无从滚起。</p>
+</section>
+{{else}}
+<div class="empty">
+  还没有部署记录。
+  <span class="do">用 <code>tally deploy</code> 或由 worker 执行入队的部署之后,这里会逐条记下每次部署;部署成功过的版本都能一键回滚回去。</span>
+</div>
+{{end}}
+{{end}}

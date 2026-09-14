@@ -1,0 +1,96 @@
+{
+  "arm": "bare",
+  "task_id": "db-06-total-type-narrowing",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T21:02:04.0643129Z",
+    "wall_seconds": 281.9249832,
+    "per_attempt_seconds": [
+      281.9249832
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "db-06-total-type-narrowing",
+    "harness": "database_migration",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\db-06-total-type-narrowing\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "fresh_database",
+        "status": "pass",
+        "detail": "delivered chain applies cleanly to an empty database"
+      },
+      {
+        "key": "n_minus_1_upgrade",
+        "status": "pass",
+        "detail": "delivered chain applies to the seeded N-1 upgrade path"
+      },
+      {
+        "key": "data_integrity",
+        "status": "pass",
+        "detail": "every frozen data-integrity assertion holds on the upgraded database"
+      }
+    ],
+    "migration": {
+      "assertions": [
+        {
+          "query": "SELECT count(*) FROM orders",
+          "want": "2",
+          "got": "2",
+          "pass": true,
+          "detail": "every seeded order row survives"
+        },
+        {
+          "query": "SELECT count(*) FROM orders WHERE id = 100 AND total_micros = 1500000",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "in-range total unchanged"
+        },
+        {
+          "query": "SELECT count(*) FROM orders WHERE id = 101 AND total_micros = 9999999999",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "out-of-32-bit-range total survives unchanged"
+        }
+      ],
+      "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "judged_at": "2026-09-09T21:06:47.6161075Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "d8b00c318714023258640f45e95adb1e5a3212506d7abdd755a3470c09cd83b2",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:41.3285939Z"
+}

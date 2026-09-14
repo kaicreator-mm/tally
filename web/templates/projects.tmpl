@@ -1,0 +1,31 @@
+{{define "content"}}
+<div class="head">
+  <h1>项目</h1>
+  <span class="meta"><a href="/projects/new">+ 新建项目</a></span>
+</div>
+<p class="lede">项目登记存在 git 的 <code>projects/</code> 里,每次增改都是一个 commit,可 diff、可回滚。</p>
+
+{{if .Projects}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>项目</th><th>说明</th><th></th></tr></thead>
+    <tbody>
+      {{range .Projects}}
+      <tr>
+        <td><a href="/projects/{{.Slug}}">{{.Name}}</a></td>
+        <td class="dim">{{.Description}}</td>
+        <td class="rowedit"><a href="/projects/{{.Slug}}/edit">编辑</a></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{else}}
+<div class="empty">
+  还没有项目。
+  <span class="do"><a href="/projects/new">建第一个项目</a> —— 给它一个人认得的名字和一句话说明,之后需求、文档、笔记都能挂到它名下。</span>
+</div>
+{{end}}
+{{end}}

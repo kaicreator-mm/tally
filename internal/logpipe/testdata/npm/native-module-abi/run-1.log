@@ -1,0 +1,12 @@
+2026-07-20T09:12:33Z npm info run build
+npm ERR! code ELIFECYCLE
+npm ERR! errno 1
+npm ERR! bcrypt@5.1.1 install: `node-pre-gyp install --fallback-to-build`
+npm ERR! Exit status 1
+npm ERR! Failed at the bcrypt@5.1.1 install script.
+Error: The module '/home/alice/app/node_modules/bcrypt/lib/binding/napi_v3/bcrypt_lib.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 108. This version of Node.js uses
+NODE_MODULE_VERSION 115. Please try re-compiling or re-installing
+the module (for example, using `npm rebuild` or `npm install`).
+2026-07-20T09:12:34Z npm ERR! pid=48213 exited with code 1

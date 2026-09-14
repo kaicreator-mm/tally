@@ -1,0 +1,222 @@
+{{define "content"}}
+<div class="head">
+  <h1>Launch</h1>
+  <span class="meta">v1.4 最小界面 · 闭环启动 + 意图入口(PRD §26.1)</span>
+</div>
+<p class="lede">这里是 v1.4 的最小 Launch 面:上半部分对 Git 里已冻结验收的 standard 任务<b>入队 v1.4 闭环</b>(Execute → Verify → Repair → Accept/Escalate,事实由 worker 写入,本页只入队);下半部分用<b>一句自然语言</b>提交新意图,经 AI Runtime 结构化成可确认的合同草案。草案永远只是提案 —— 只有 owner 在确认表单里显式选择治理等级、并为每条验收声明 planned evidence 后,确认才会把<b>FrozenIntent + TaskContract + 冻结 VerificationContract</b> 三件套以单一期望基线原子提交进 Git;Tally 绝不伪造冻结、绝不发明治理属性。</p>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库(.tally/ 的 TaskContract / 冻结 VerificationContract)。两者接好后,这里会列出可进入闭环的任务。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">Git 制品装载失败:{{.LoadErr}}</div>
+{{else}}
+
+<p class="note">项目 <b>{{.ProjectID}}</b> · 制品快照提交 <span class="dim">{{short .SourceCommit}}</span>(Git 是 desired 制品唯一来源)。闭环任务列表只列 standard profile 的 TaskContract —— 闭环路径只执行 standard(与 worker 同一判据)。</p>
+
+<section>
+  <h2>闭环任务</h2>
+  {{if .Tasks}}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Task</th><th>派生状态</th><th>当前候选</th><th>尝试 / 验证</th><th>闭环</th></tr>
+    </thead>
+    <tbody>
+      {{range .Tasks}}
+      <tr>
+        <td>
+          <b>{{.TaskID}}</b>
+          {{if .Title}}<div class="dim">{{.Title}}</div>{{end}}
+          <div class="dim nowrap">profile {{.Profile}} · 合同 {{short .ContractHash}}{{if .HasFrozen}} · 验证契约已冻结{{else}} · 无冻结验证契约{{end}}</div>
+        </td>
+        <td class="nowrap">
+          {{if .DeriveErr}}
+            <span class="st st-off">派生失败</span>
+          {{else if .NeedsAttention}}
+            <span class="st st-bad">{{.State}}</span>
+          {{else}}
+            <span class="st st-ok">{{.State}}</span>
+          {{end}}
+          {{if .Class}}<div class="dim">{{.Class}}</div>{{end}}
+        </td>
+        <td class="nowrap">
+          {{if .CandidateID}}<a href="/v13/changes/{{.CandidateID}}">{{short .CandidateID}}</a><div class="dim">共 {{.CandidateCount}} 份</div>{{else}}<span class="dim">—</span>{{end}}
+        </td>
+        <td class="nowrap">
+          {{if .RunCount}}<span class="nowrap">Run {{.CurrentRun}} <span class="dim">({{.CurrentStat}})</span></span><div class="dim">共 {{.RunCount}} 次</div>{{else}}<span class="dim">未执行</span>{{end}}
+          {{if .VerifyTotal}}<div class="dim">验证 pass {{.VerifyPass}} · fail {{.VerifyFail}} · error {{.VerifyError}}</div>{{end}}
+        </td>
+        <td class="nowrap">
+          {{if .Launchable}}
+          <div class="rowact">
+            <form method="post" action="/v14/launch/run">
+              <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+              <input type="hidden" name="task" value="{{.TaskID}}">
+              <button type="submit">启动闭环</button>
+            </form>
+          </div>
+          {{else if .DeriveErr}}
+            <span class="st st-off">事实面异常,不可启动</span>
+          {{else}}
+            <span class="st st-off">无冻结验证契约</span>
+            <div class="dim">验收必须在执行前冻结(INV-02)</div>
+          {{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">「启动闭环」只向 jobs 队列写入一条 v14_task job:worker 会开一次性 worktree 执行代码生成,候选经独立验证后 Accept 或带类型化原因 Escalate;过程与结论都是 append-only 事实,稍后刷新本页或进入任务详情即可看到。状态列由 taskstate 引擎从证据派生,没有任何手动状态控件。</p>
+  {{else}}
+  <div class="empty">
+    Git 制品快照里没有 standard profile 的 TaskContract。
+    <span class="do">TaskContract 与冻结 VerificationContract 是 Git 里的版本化制品(.tally/tasks/ 与 .tally/verifications/)。提交一份并通过确定性校验后,这里会列出它并提供闭环启动。</span>
+  </div>
+  {{end}}
+</section>
+{{end}}
+
+<section>
+  <h2>新意图(自然语言)</h2>
+  {{if not .ExecutorWired}}
+  <div class="flash warn">AI Runtime 推理出口未接入:组合根尚未注入 airuntime.Executor,提交意图不会产出草案。</div>
+  {{end}}
+  {{if .ProposeErr}}<div class="flash bad">{{.ProposeErr}}</div>{{end}}
+  <form method="post" action="/v14/launch/intent" class="v14-form">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <p><label for="v14-intent">意图(一句自然语言,唯一必填项)</label></p>
+    <p><textarea id="v14-intent" name="intent" rows="3" style="width:100%">{{.Intent}}</textarea></p>
+    <p><label for="v14-source">外部来源引用(可选,如 "GitHub Issue #142";只作参考,不搬进 Tally)</label></p>
+    <p><input id="v14-source" type="text" name="source_ref" value="{{.SourceRef}}" style="width:100%"></p>
+    <p><button type="submit">结构化为合同草案</button></p>
+  </form>
+  <p class="note">记录是结构化的,输入是自然语言的(PRD §27):推理要么产出完整草案,要么提出澄清问题 —— 含糊时绝不发明验收。</p>
+</section>
+
+{{if .Questions}}
+<section>
+  <h2>澄清(意图含糊,推理拒绝发明验收)</h2>
+  <p class="note">每个问题按其字段类型渲染为原生表单控件(无脚本,关 JS 完全可用):推荐项只是建议、可以改选;数值问题带声明区间。提交后服务端会复核全部答案;页面内容都是纯文本数据,不是可执行页面。</p>
+  <form method="post" action="/v14/launch/intent" class="v14-form">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <input type="hidden" name="intent" value="{{.Intent}}">
+    <input type="hidden" name="source_ref" value="{{.SourceRef}}">
+    {{range .Questions}}
+    {{ $q := . }}
+    <input type="hidden" name="v14q.{{$q.Index}}" value="{{$q.Question}}">
+    <input type="hidden" name="v14k.{{$q.Index}}" value="{{$q.Kind}}">
+    {{range .Candidates}}<input type="hidden" name="v14c.{{$q.Index}}" value="{{.}}">{{end}}
+    {{if $q.HasMin}}<input type="hidden" name="v14min.{{$q.Index}}" value="{{$q.Min}}">{{end}}
+    {{if $q.HasMax}}<input type="hidden" name="v14max.{{$q.Index}}" value="{{$q.Max}}">{{end}}
+    {{if $q.HasRecommended}}<input type="hidden" name="v14r.{{$q.Index}}" value="{{$q.Recommended}}">{{end}}
+    {{if $q.RecommendationReason}}<input type="hidden" name="v14rr.{{$q.Index}}" value="{{$q.RecommendationReason}}">{{end}}
+    <fieldset class="rec">
+      <legend><b>{{$q.Question}}</b> <span class="dim">[{{$q.KindLabel}}]</span></legend>
+      {{if eq $q.Kind "multichoice"}}
+        {{range $j, $c := $q.Candidates}}<div class="opt"><label><input type="checkbox" name="v14a.{{$q.Index}}" value="{{$c}}"> {{$c}}{{if and $q.HasRecommended (eq $j $q.Recommended)}} <span class="dim">(推荐)</span>{{end}}</label></div>{{end}}
+      {{else if eq $q.Kind "boolean"}}
+        <div class="opt"><label><input type="radio" name="v14a.{{$q.Index}}" value="是"> 是</label></div>
+        <div class="opt"><label><input type="radio" name="v14a.{{$q.Index}}" value="否"> 否</label></div>
+      {{else if eq $q.Kind "confirmation"}}
+        <div class="opt"><label><input type="radio" name="v14a.{{$q.Index}}" value="确认"> 确认</label></div>
+        <div class="opt"><label><input type="radio" name="v14a.{{$q.Index}}" value="否决"> 否决</label></div>
+      {{else if eq $q.Kind "number"}}
+        <p><label for="v14f-{{$q.Index}}">数值答案{{if $q.HasMin}}(下界 {{$q.Min}}){{end}}{{if $q.HasMax}}(上界 {{$q.Max}}){{end}}</label></p>
+        <p><input id="v14f-{{$q.Index}}" type="number" name="v14f.{{$q.Index}}" step="any"{{if $q.HasMin}} min="{{$q.Min}}"{{end}}{{if $q.HasMax}} max="{{$q.Max}}"{{end}}></p>
+      {{else if eq $q.Kind "free_text"}}
+        <p><label for="v14f-{{$q.Index}}">答案(一句自然语言)</label></p>
+        <p><input id="v14f-{{$q.Index}}" type="text" name="v14f.{{$q.Index}}" style="width:80%"></p>
+      {{else}}
+        {{range $j, $c := $q.Candidates}}<div class="opt"><label><input type="radio" name="v14a.{{$q.Index}}" value="{{$c}}"> {{$c}}{{if and $q.HasRecommended (eq $j $q.Recommended)}} <span class="dim">(推荐)</span>{{end}}</label></div>{{end}}
+      {{end}}
+      {{if $q.HasRecommended}}<p class="dim">推荐 {{$q.RecommendedChoice}}{{if $q.RecommendationReason}}:{{$q.RecommendationReason}}{{end}}(仅供参考,建议不是决定)</p>{{end}}
+      {{if not (or (eq $q.Kind "number") (eq $q.Kind "free_text"))}}<div class="opt"><label>其他(填写后优先于选项):<input type="text" name="v14f.{{$q.Index}}" style="width:60%"></label></div>{{end}}
+    </fieldset>
+    {{end}}
+    <p><button type="submit">回答并重新提案</button></p>
+  </form>
+</section>
+{{end}}
+
+{{if .Draft}}
+<section>
+  <h2>合同草案(可编辑后确认冻结)</h2>
+  {{if .Draft.SourceRef}}<p class="note">外部来源:<span class="dim">{{.Draft.SourceRef}}</span></p>{{end}}
+  <form method="post" action="/v14/launch/confirm" class="v14-form">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <input type="hidden" name="task_type" value="{{.Draft.TaskType}}">
+    <input type="hidden" name="source_ref" value="{{.Draft.SourceRef}}">
+    {{range .Draft.RiskSignals}}<input type="hidden" name="risk" value="{{.}}">{{end}}
+    <div class="rec">
+      <div class="rec-head">
+        <b>意图摘要 / 目标 / 冻结身份</b>
+        <span class="st st-off">任务类型 {{.Draft.TaskType}}(MVP 只支持 bug_fix / db_migration)</span>
+      </div>
+      <p><label>任务 id(TASK-&lt;数字&gt;;冻结三件套共享这一身份)</label></p>
+      <p><input type="text" name="task_id" value="{{.Draft.TaskID}}" placeholder="如 TASK-0042" style="width:40%"></p>
+      <p><label>治理等级 profile(冻结路径的治理决策,必须显式选择;闭环只执行 standard)</label></p>
+      <p><select name="profile">
+        <option value=""{{if eq .Draft.Profile ""}} selected{{end}}>选择治理等级</option>
+        <option value="light"{{if eq .Draft.Profile "light"}} selected{{end}}>light</option>
+        <option value="standard"{{if eq .Draft.Profile "standard"}} selected{{end}}>standard</option>
+        <option value="strict"{{if eq .Draft.Profile "strict"}} selected{{end}}>strict</option>
+      </select></p>
+      <p><label>摘要</label></p>
+      <p><input type="text" name="summary" value="{{.Draft.Summary}}" style="width:100%"></p>
+      <p><label>目标</label></p>
+      <p><textarea name="objective" rows="3" style="width:100%">{{.Draft.Objective}}</textarea></p>
+    </div>
+    <div class="rec">
+      <div class="rec-head"><b>实现边界(scope,每行一条仓库相对路径)</b></div>
+      <p><label>允许改动的路径(allowed_paths,必须非空)</label></p>
+      <p><textarea name="allowed_paths" rows="4" style="width:100%">{{.Draft.AllowedPaths}}</textarea></p>
+      <p><label>禁止改动的路径(forbidden_paths,可为空)</label></p>
+      <p><textarea name="forbidden_paths" rows="2" style="width:100%">{{.Draft.ForbiddenPaths}}</textarea></p>
+    </div>
+    <div class="rec">
+      <div class="rec-head"><b>初始验收条款与 planned evidence(每条验收至少声明一条证据,缺失阻止执行就绪冻结)</b></div>
+      {{range $i, $a := .Draft.Acceptance}}
+      <input type="hidden" name="acid.{{$i}}" value="{{$a.ID}}">
+      <p><label>{{$a.ID}}</label></p>
+      <p><textarea name="acstmt.{{$i}}" rows="2" style="width:100%">{{$a.Statement}}</textarea></p>
+      <p><label>证据类型与仓库内路径(repo 路径型可见证据,二者必须同时声明;选择器可选)</label></p>
+      <p><select name="ev_kind.{{$i}}">
+        <option value=""{{if eq $a.EvidenceKind ""}} selected{{end}}>未声明</option>
+        <option value="test"{{if eq $a.EvidenceKind "test"}} selected{{end}}>test(仓库测试)</option>
+        <option value="build"{{if eq $a.EvidenceKind "build"}} selected{{end}}>build(构建)</option>
+        <option value="schema_check"{{if eq $a.EvidenceKind "schema_check"}} selected{{end}}>schema_check(结构校验)</option>
+        <option value="static_rule"{{if eq $a.EvidenceKind "static_rule"}} selected{{end}}>static_rule(静态规则)</option>
+        <option value="human_verification"{{if eq $a.EvidenceKind "human_verification"}} selected{{end}}>human_verification(人工验证)</option>
+        <option value="deployment_verification"{{if eq $a.EvidenceKind "deployment_verification"}} selected{{end}}>deployment_verification(部署验证)</option>
+        <option value="runtime_observation"{{if eq $a.EvidenceKind "runtime_observation"}} selected{{end}}>runtime_observation(运行观察)</option>
+      </select>
+      <input type="text" name="ev_path.{{$i}}" value="{{$a.EvidencePath}}" placeholder="仓库内证据路径,如 internal/session/logout_test.go" style="width:55%">
+      <input type="text" name="ev_selector.{{$i}}" value="{{$a.EvidenceSelector}}" placeholder="选择器(可选)" style="width:25%"></p>
+      {{end}}
+    </div>
+    {{if .Draft.RiskSignals}}
+    <div class="rec">
+      <div class="rec-head"><b>候选风险信号(勾选 = 确认保留进冻结证据;不勾只是展示,不作数)</b></div>
+      {{range .Draft.RiskSignals}}
+      <div class="opt"><label><input type="checkbox" name="risk_hint" value="{{.}}" {{if has $.Draft.RiskHints .}}checked{{end}}> {{.}}</label></div>
+      {{end}}
+    </div>
+    {{end}}
+    {{if or .Draft.NonScope .Draft.Constraints}}
+    <div class="rec">
+      <div class="rec-head"><b>非目标 / 约束(冻结制品无字段承载;必须先解析进目标/边界/验收或留空)</b></div>
+      {{if .Draft.NonScope}}<p><label>非目标(non_scope)</label></p><p><textarea name="non_scope" rows="2" style="width:100%">{{.Draft.NonScope}}</textarea></p>{{end}}
+      {{if .Draft.Constraints}}<p><label>约束(constraints)</label></p><p><textarea name="constraints" rows="2" style="width:100%">{{.Draft.Constraints}}</textarea></p>{{end}}
+    </div>
+    {{end}}
+    <p><button type="submit">确认并冻结进 Git</button></p>
+  </form>
+  <p class="note">这是推理产出的 <b>DRAFT</b>:确认前可任意编辑。确认动作会把 FrozenIntent(.tally/intents)+ TaskContract(.tally/tasks)+ 冻结 VerificationContract(.tally/verifications)<b>三件套以单一期望基线原子提交为一个 Git 提交</b>:基线冲突类型化拒绝、绝不静默改基;失败不留半套制品;重复确认按内容幂等;提交后即可从该提交确定性读回。治理等级与 planned evidence 全部来自你在本表单的显式声明。</p>
+</section>
+{{end}}
+
+{{end}}

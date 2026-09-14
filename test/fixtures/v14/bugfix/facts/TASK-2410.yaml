@@ -1,0 +1,8 @@
+# P3-01 夹具 · TASK-2410 的确定性事实(执行期匹配输入)。
+# changed_paths 是变更轴原始事实;risk_signals 是派生候选(id 必须是冻结枚举
+# 或原样 unknown,basis 引用派生来源)。测试把它们喂给 risk.Derive +
+# engineeringpolicy.Match,顺序无关、逐字节确定。
+changed_paths:
+  - internal/limiter/token_bucket.go
+  - internal/limiter/token_bucket_test.go
+risk_signals: [] # 低风险缺陷:无任何冻结信号

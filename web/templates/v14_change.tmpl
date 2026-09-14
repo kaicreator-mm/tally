@@ -1,0 +1,231 @@
+{{define "content"}}
+<div class="head">
+  <h1>Change Detail <span class="dim">{{short .ID}}</span></h1>
+  <span class="meta">v1.4 Change Detail · 派生只读 · 无写动作(PRD §26.3)</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库。接好后,这里按候选回答:改了什么(确定性 hunk 清单)、为什么可信(验证事实 + 依据引用)、哪里不确定(缺口/失效证据/暴露)、谱系(取代链与祖先暴露)。</span>
+</div>
+{{else if .NotFound}}
+<div class="empty">没有这份 ChangeSet:<span class="dim">{{.ID}}</span>(候选身份由内容推导;请从任务页或 Launch 列表的候选链接进入)。</div>
+{{else if .LoadErr}}
+<div class="flash bad">读取失败:{{.LoadErr}}</div>
+{{else}}
+
+<section>
+  <div class="grid grid-4">
+    <div class="cell"><div class="k">ChangeSet 身份</div><div class="v" style="font-size:13px;line-height:20px;word-break:break-all">{{.ID}}</div></div>
+    <div class="cell"><div class="k">项目 / 产生 Run</div><div class="v" style="font-size:13px;line-height:20px">{{.Project}}<div class="dim">run {{.ProducerRun}} · {{.CreatedAt}}</div></div></div>
+    <div class="cell"><div class="k">谱系位置</div><div class="v" style="font-size:13px;line-height:20px">
+      {{if .Current}}<span class="st st-ok">当前候选</span>{{end}}
+      {{if .SupersededBy}}<span class="st st-bad">已被取代</span>{{end}}
+      {{if and (not .Current) (not .SupersededBy)}}<span class="dim">历史候选</span>{{end}}
+    </div></div>
+    <div class="cell"><div class="k">归属任务</div><div class="v" style="font-size:13px;line-height:20px">
+      {{if .TaskLink}}<a href="/v14/tasks/{{.TaskID}}">{{.TaskID}}</a>{{if not .HasTask}} <span class="dim">(HEAD 制品快照里无此任务)</span>{{end}}
+      {{else}}<span class="dim">无从归属(无验证 Run、产生 Run 记录缺失)</span>{{end}}
+    </div></div>
+  </div>
+  <p class="note">候选是<b>不可变快照</b>(验证 / 评审 / 集成的固定单元);base <span class="dim nowrap">{{.Base}}</span> → candidate <span class="dim nowrap">{{if .Candidate}}{{.Candidate}}{{end}}</span>{{if .PatchID}} · patch <span class="dim">{{short .PatchID}}</span>{{end}}。取代关系是独立的 append-only 事实,见下方谱系。</p>
+  {{if .Entities}}<p class="note">受影响 SoftwareEntity:{{join .Entities "、 "}}</p>{{end}}
+</section>
+
+<section>
+  <h2>改了什么</h2>
+  {{if .Files}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>路径(快照固定)</th><th>可执行代码</th><th>hunk 落点</th></tr></thead>
+    <tbody>
+      {{range .Files}}
+      <tr>
+        <td>{{.Path}}</td>
+        <td>{{if .Executable}}是{{else}}<span class="dim">否</span>{{end}}</td>
+        <td class="dim">
+          {{if .Hunks}}{{range .Hunks}}<div class="nowrap">-{{.OldStart}},{{.OldLines}} +{{.NewStart}},{{.NewLines}}</div>{{end}}
+          {{else}}<span class="dim">—</span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}<p class="note">快照没有改动文件(只有 revision 身份)。</p>{{end}}
+
+  {{if .InventoryNotice}}<div class="flash warn">{{.InventoryNotice}}</div>{{end}}
+  {{if .Inventory}}
+  <p class="note">确定性 hunk 清单:共 {{.FileCount}} 个改动文件、{{.HunkCount}} 个文本 hunk —— 从 Git base..candidate diff 确定性重建,同一候选重算必得同一清单(§19.2)。</p>
+  {{range .Inventory}}
+  <div class="cell v14-hunk" style="margin-bottom:8px">
+    <div class="k">{{.Path}}</div>
+    <div class="dim">kind {{.Kind}} · content {{.Content}}</div>
+    {{range .Hunks}}
+    <div>
+      <span class="dim nowrap">{{.Coord}}</span> <span class="dim nowrap">hunk {{short .ID}}</span>
+      <pre style="margin:4px 0;overflow-x:auto">{{range .Body}}{{.}}
+{{end}}</pre>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  {{end}}
+</section>
+
+<section>
+  <h2>为什么可信</h2>
+  {{if .RowErr}}<div class="flash bad">事实面读取失败:{{.RowErr}}(以下依据可能不完整)</div>{{end}}
+  <p>
+    {{if or .VerifyPass .VerifyFail .VerifyError}}
+      验证观测:<span class="st st-ok">pass {{.VerifyPass}}</span> <span class="st st-bad">fail {{.VerifyFail}}</span><span class="st st-warn">error {{.VerifyError}}</span>
+      <span class="dim">(error 是验证侧不可信,不是候选失败;FAIL ≠ ERROR,ADR-0001 §3)</span>
+    {{else}}<span class="dim">该候选还没有验证 Run(未验证的候选不可能支撑 VERIFIED 类结论)。</span>{{end}}
+  </p>
+
+  {{if .BasisAvailable}}
+    <p>
+      任务结论(派生,非声明):<span class="st {{if .WaivedClass}}st-warn{{else}}st-ok{{end}}">{{.State}}</span>
+      {{if .ClassText}}{{if .WaivedClass}}<span class="st st-warn">{{.ClassText}}(经 Waiver 放行,不是严格满足)</span>{{else}}<span class="dim">{{.ClassText}}</span>{{end}}{{end}}
+      {{if .Current}}<span class="st st-ok">本候选即当前候选</span>{{end}}
+    </p>
+    {{if .HasVerdict}}
+    <p>
+      验证结论(VerifiedBasis,PRD §14):
+      {{if .VerdictLimited}}<span class="st st-warn">{{.Verdict}}(limited 结论 —— 存在未匹配风险 / 被豁免条款 / 保证缺口之一,不得显示成普通 VERIFIED)</span>
+      {{else if .VerdictOK}}<span class="st st-ok">{{.Verdict}}(验证门全部满足,且无未匹配风险、无被豁免条款、无保证缺口)</span>
+      {{else}}<span class="st st-off">{{.Verdict}}(主线未达 VERIFIED,门槛缺口说明原因)</span>{{end}}
+      <span class="dim nowrap">结论依据已编译合同 compiled:{{.CompiledHash}}</span>
+    </p>
+    {{end}}
+    <p class="note">依据(Basis,{{len .Basis}} 条事实/证据引用):{{if .Basis}}{{range .Basis}}<span class="dim nowrap">{{.}}</span> {{end}}{{else}}<span class="dim">—</span>{{end}}</p>
+    <p class="note">任何 VERIFIED 类结论都以这些事实引用为据(INV-11);Agent 的「我做完了」永远只是 claim,不出现在依据里。</p>
+  {{else if .DeriveErr}}
+    <div class="flash bad">结论派生失败:{{.DeriveErr}} —— 没有可信结论,不猜测。</div>
+  {{else}}
+    <p class="note dim">归属任务的结论依据未投影({{if .TaskID}}HEAD 快照没有任务 {{.TaskID}}{{else}}候选无从归属{{end}})。</p>
+  {{end}}
+
+  {{if .CompiledNote}}<p class="note dim">{{.CompiledNote}}(展示缺席不放宽任何验证门;本页不冒充档位)</p>{{end}}
+  <p class="note"><b>依据维度(PRD §14 VerifiedBasis 的四维度;未接入的维度如实标注,展示缺席不放宽任何门):</b></p>
+  <div class="v14-basis-dims">
+    {{range .BasisDims}}
+    <div class="cell">
+      <div class="k">{{.Name}}{{if .Wired}}<span class="st st-ok">已接入</span>{{else}}<span class="st st-off">未接入</span>{{end}}</div>
+      <div class="v" style="font-size:12px;line-height:19px">{{if .Value}}{{.Value}}{{end}}{{if .Note}}<div class="dim">{{.Note}}</div>{{end}}</div>
+    </div>
+    {{end}}
+  </div>
+
+  {{if .Runs}}
+  {{range .Runs}}
+  <div class="cell v14-hunk" style="margin-bottom:8px">
+    <div class="k">验证 Run {{.ID}}</div>
+    <div>
+      <span class="st {{if eq .Status "pass"}}st-ok{{else if eq .Status "fail"}}st-bad{{else}}st-warn{{end}}">{{.Status}}</span>
+      <span class="dim">契约 rev {{.ContractRevision}} · {{short .ContractHash}} · 环境 {{.EnvName}} · {{.Runtime}} · {{.StartedAt}} → {{.FinishedAt}}</span>
+    </div>
+    {{if .Evidence}}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>证据事实(fact 引用,INV-11)</th><th>binding / 条款</th><th>可见性</th><th>判定</th><th>记录通道</th><th>validity</th><th>时刻</th></tr></thead>
+      <tbody>
+        {{range .Evidence}}
+        <tr>
+          <td class="dim nowrap">{{.FactID}}</td>
+          <td>{{.BindingID}} <span class="dim">({{.Acceptance}})</span></td>
+          <td>{{.Visibility}}</td>
+          <td class="nowrap {{if eq .Verdict "pass"}}st-ok{{else if eq .Verdict "fail"}}st-bad{{else}}st-warn{{end}}">{{.Verdict}}</td>
+          <td class="dim">{{.Recorder}}</td>
+          <td>{{if .Valid}}<span class="st st-ok">valid</span>{{else}}<span class="st st-bad">invalidated({{.Invalidated}})</span>{{end}}</td>
+          <td class="dim nowrap">{{.RecordedAt}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    </div>
+    {{else}}<p class="note dim">该 Run 没有证据行。</p>{{end}}
+  </div>
+  {{end}}
+  {{end}}
+
+  <h3>覆盖(功能 + independence,两个独立维度 §8.8.3)</h3>
+  {{if .Coverage.Notice}}<div class="flash warn">{{.Coverage.Notice}}</div>{{end}}
+  {{if .Coverage.Available}}
+  <p class="note">针对冻结契约 <span class="dim">{{short .Coverage.ContractRef}}</span> 推导。</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th><th>功能覆盖</th><th>缺口 / 满足者</th><th>independence 要求</th><th>independence 覆盖</th></tr></thead>
+    <tbody>
+      {{range $i, $f := .Coverage.Functional}}
+      <tr>
+        <td>{{$f.ID}}</td>
+        <td>{{if $f.Covered}}<span class="st st-ok">覆盖</span>{{else}}<span class="st st-bad">未覆盖</span>{{end}}</td>
+        <td class="dim">
+          {{if $f.Gap}}<div>缺口:{{$f.Gap}}</div>{{end}}
+          {{if $f.SatisfiedBy}}<div>满足者:{{join $f.SatisfiedBy "、"}}</div>{{end}}
+          {{if $f.Blocking}}<div>阻断 FAIL:{{join $f.Blocking "、"}}</div>{{end}}
+          {{if and (not $f.Gap) (not $f.SatisfiedBy) (not $f.Blocking)}}—{{end}}
+        </td>
+        <td class="dim">{{with $ind := index $.Coverage.Independence $i}}{{.Required}}{{end}}</td>
+        <td>{{with $ind := index $.Coverage.Independence $i}}{{if .Covered}}<span class="st st-ok">覆盖</span><div class="dim">{{join .SatisfiedBy "、"}}</div>{{else}}<span class="st st-bad">未覆盖</span>{{end}}{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+</section>
+
+<section>
+  <h2>哪里不确定(可见,绝不隐藏)</h2>
+  <ul>
+    {{if .DeriveErr}}<li><span class="st st-bad">结论派生失败</span> <span class="dim">{{.DeriveErr}}</span></li>{{end}}
+    {{if .RowErr}}<li><span class="st st-bad">事实面读取失败</span> <span class="dim">{{.RowErr}}</span></li>{{end}}
+    {{if .InvalidEvidence}}<li><span class="st st-bad">{{.InvalidEvidence}} 条证据被裁定失效</span> <span class="dim">(见上表 validity 列;失效证据不参与验证门,§8.8.1)</span></li>{{end}}
+    {{range .Gaps}}<li><span class="st st-warn">门槛缺口 {{.Requirement}}</span> <span class="dim">{{.Detail}}{{range .Refs}} {{.}}{{end}}</span></li>{{end}}
+    {{if .Exposures}}<li><span class="st st-warn">{{len .Exposures}} 条暴露事实在账</span><span class="dim">{{if .AncestorExposure}}(其中 {{.AncestorExposure}} 条锚定在取代祖先上){{end}} —— held-out 材料进入过实现侧可见通道;独立覆盖按整条 lineage 消费这些事实,保证只降不升(P0-07)。</span></li>{{end}}
+    {{if .SupersededBy}}<li><span class="st st-warn">候选已被取代</span> <span class="dim">本页只是历史候选;任务结论以当前候选为据。</span></li>{{end}}
+    {{if and (not .DeriveErr) (not .RowErr) (not .InvalidEvidence) (not .Gaps) (not .Exposures) (not .SupersededBy)}}
+      <li class="dim">没有已知的确定性不确定项;assurance/unmatched 维度未接入(见上)仍是结论的既知边界。</li>
+    {{end}}
+  </ul>
+</section>
+
+<section>
+  <h2>谱系(取代链 · lineage 暴露)</h2>
+  <p class="note">Lineage(候选在前,取代祖先随后):{{range $i, $id := .Lineage}}{{if $i}} · {{end}}<a class="dim nowrap" href="/v14/changes/{{$id}}">{{short $id}}</a>{{end}}</p>
+  <p class="dim nowrap">
+    {{if .SupersededBy}}被 {{range .SupersededBy}}<a href="/v14/changes/{{.}}">{{short .}}</a> {{end}}取代{{end}}
+    {{if .Supersedes}}取代 {{range .Supersedes}}<a href="/v14/changes/{{.}}">{{short .}}</a> {{end}}{{end}}
+    {{if and (not .SupersededBy) (not .Supersedes)}}<span class="dim">没有取代事实(append-only 账面:修复产生新候选,绝不改写旧候选)。</span>{{end}}
+  </p>
+  {{if .Exposures}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>位置</th><th>binding / 条款</th><th>通道</th><th>作用域</th><th>时刻</th><th>追溯</th></tr></thead>
+    <tbody>
+      {{range .Exposures}}
+      <tr>
+        <td class="nowrap">{{if .Current}}<span class="st st-warn">当前候选</span>{{else}}<span class="st st-bad">祖先 · 第 {{.Depth}} 代</span> <a class="dim nowrap" href="/v14/changes/{{.Anchor}}">{{short .Anchor}}</a>{{end}}</td>
+        <td>{{.BindingID}}{{if .Acceptance}} <span class="dim">({{.Acceptance}})</span>{{end}}</td>
+        <td class="nowrap">{{.Channel}}</td>
+        <td class="dim nowrap">{{.Scope}}</td>
+        <td class="dim nowrap">{{.ExposedAt}}</td>
+        <td class="dim">{{if .Reason}}{{.Reason}}{{else}}—{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{if .AncestorExposure}}
+  <div class="flash warn">{{.AncestorExposure}} 条暴露锚定在取代祖先上:当前候选自身的记录是否干净不影响它们的存在(祖先暴露可见,P0-07/AC3);修复不能掩盖既有信息泄漏。</div>
+  {{end}}
+  {{else}}
+  <p class="note dim">该候选及其全部取代祖先上没有暴露事实。</p>
+  {{end}}
+</section>
+
+{{end}}
+{{end}}

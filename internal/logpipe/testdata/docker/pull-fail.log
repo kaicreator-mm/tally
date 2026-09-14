@@ -1,0 +1,9 @@
+[+] Building 2.1s (5/5) FINISHED
+ => [internal] load build definition from Dockerfile
+ => ERROR [internal] load metadata for docker.io/library/node:22-alpine
+------
+ > [internal] load metadata for docker.io/library/node:22-alpine:
+------
+pull access denied for node, repository does not exist or may require authentication.
+Error response from daemon: Get "https://registry-1.docker.io/v2/": net/http: request canceled while waiting for connection
+exit status 1

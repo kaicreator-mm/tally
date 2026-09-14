@@ -1,0 +1,26 @@
+task_id: P2-03
+title: "Verification failure classification"
+local_authority:
+  task_contract: docs/tasks/v1.4/P2/P2-03.md
+  architecture:
+    - docs/tasks/v1.4/DECISION_LOCKS.md
+    - docs/tasks/v1.4/ARCHITECTURE_EVIDENCE.md
+references:
+  - id: REF-TEMPORAL-ERR
+    project: temporalio/sdk-go
+    commit: "82c8087ecd03722e2b8e7c6c892784095fa94e73"
+    license: "MIT"
+    url: "https://github.com/temporalio/sdk-go/blob/82c8087ecd03722e2b8e7c6c892784095fa94e73/temporal/error.go"
+    relevant_paths:
+      - "temporal/error.go"
+      - "internal/error.go"
+      - "internal/internal_task_handlers.go"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Uses typed application errors plus explicit non-retryable classification and RetryPolicy; useful for deterministic routing without string-matching error messages."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration

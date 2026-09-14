@@ -1,0 +1,106 @@
+{
+  "arm": "bare",
+  "task_id": "bf-03-pagination-partial-page",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T19:37:18.6459872Z",
+    "wall_seconds": 418.2207926,
+    "per_attempt_seconds": [
+      418.2207926
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "bf-03-pagination-partial-page",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\bf-03-pagination-partial-page\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "full-pages",
+          "want": "items=3,total_pages=4",
+          "got": "items=3,total_pages=4",
+          "pass": true
+        },
+        {
+          "name": "partial-page-exists",
+          "want": "items=1,total_pages=4",
+          "got": "items=1,total_pages=4",
+          "pass": true
+        },
+        {
+          "name": "beyond-total",
+          "want": "out-of-range",
+          "got": "out-of-range",
+          "pass": true
+        },
+        {
+          "name": "exact-multiple",
+          "want": "items=3,total_pages=3",
+          "got": "items=3,total_pages=3",
+          "pass": true
+        },
+        {
+          "name": "partial-page-seven-of-nine",
+          "want": "items=1,total_pages=3",
+          "got": "items=1,total_pages=3",
+          "pass": true
+        },
+        {
+          "name": "empty-collection",
+          "want": "out-of-range",
+          "got": "out-of-range",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T19:44:18.5027479Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "ec60a51a0f91111ed1ed4073de372ae02c7e14d7b593525b26a7c8379904f194",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:40.9304362Z"
+}

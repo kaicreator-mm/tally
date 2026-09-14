@@ -1,0 +1,50 @@
+# Tally v1.4 内置 Bug Fix EngineeringPolicy 束(PRD §24.1,任务 P3-01)。
+#
+# v1.4 只有两个 MVP Harness(PRD §24);本束服务第一个:缺陷修复闭环
+#   Intent → reproduce → acceptance → Agent → regression evidence
+#   → Repair if needed → verdict
+#
+# 确定性纪律(P3-01 AC1):
+#   - trigger 只用精确值(requirement_refs 的 REQ 文件名、risk_signals 的
+#     冻结枚举 id);匹配器是精确值相等,没有 glob/正则 —— 这里声明什么,
+#     什么就是全部触发条件,不猜测;
+#   - risk_signals 只声明缺陷回归攸关的两个冻结信号(auth/protected 表面);
+#     schema_migration 属 P3-02 迁移束的触发面,本束不重复声明,避免跨束
+#     给迁移任务叠加缺陷回归要求;
+#   - requires/gate_condition 只要求 L1 可满足的确定性回归证据(决策锁 21:
+#     默认地板 L1,不是 universal held-out)。L3 是风险调整上调,由风险规则
+#     (risk signals 上调 / unmatched fail-safe,assurance.Select)决定,
+#     本束不把 held-out 写成默认要求(P3-01 AC3:低风险缺陷不得被意外抬到
+#     L3,除非 bake-off/风险规则如此判定);
+#   - requires[] 双重用途(PRD §8.3):执行前作为 Prevention 告知实现权威
+#     「最终会按这些条件验收」,执行后作为 Assurance 编译门禁;
+#     gate_condition.all_of ⊆ requires[] 由 Parse/Validate 强制。
+#
+# 内置束按 Git-first 纪律经 internal/artifacts.LoadPolicies 从项目提交树的
+# .tally/policies/ 装载;Revision 由 engineeringpolicy.Parse 从内容推导,
+# 不在 YAML 里声明。
+id: POL-BUG-FIX-REGRESSION
+enforcement: gate
+rationale: >-
+  命中本策略的缺陷修复必须以可复现的回归证据收口:缺陷复现在修复前失败,
+  同一回归检查在修复后通过(PRD §24.1)。验收在 L1 确定性地板上进行;
+  L3 held-out 不是默认要求,只在风险信号或 unmatched fail-safe 如此判定时
+  由风险规则上调(决策锁 21)。
+trigger:
+  requirement_refs:
+    # Bug Fix Harness 冻结语料的缺陷需求(任务合同 requirement_refs 轴):
+    - .tally/requirements/REQ-2410.md # REQ-2410 低风险功能缺陷(令牌桶边界 off-by-one)
+    - .tally/requirements/REQ-2411.md # REQ-2411 认证表面缺陷(logout 后会话仍有效)
+  risk_signals:
+    # 缺陷回归攸关的冻结风险信号(P1-04 枚举,变更/任务轴任一命中即命中):
+    - auth_symbol_change
+    - protected_surface_change
+requires:
+  - bug_repro_failed_before # 缺陷复现已确立:回归检查在未修复代码上确定性失败
+  - regression_check_passes_after # 同一回归检查在修复候选上通过
+gate_condition:
+  all_of:
+    - bug_repro_failed_before
+    - regression_check_passes_after
+bundle_tags:
+  - bug_fix

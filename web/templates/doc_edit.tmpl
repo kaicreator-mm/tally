@@ -1,0 +1,27 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{if .IsNew}}新建文档{{else}}编辑文档 · {{.Slug}}{{end}}</h1>
+  <span class="meta"><a href="/docs">← 文档列表</a></span>
+</div>
+<p class="lede">保存会写 git <code>docs/</code> 并 commit。</p>
+
+{{if .FormError}}<div class="flash bad">{{.FormError}}</div>{{end}}
+
+<form class="form" method="post" action="{{.Action}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+  {{if .IsNew}}
+  <div class="field">
+    <label for="slug">标识(slug)</label>
+    <input type="text" id="slug" name="slug" value="{{.Slug}}" required>
+  </div>
+  {{end}}
+  <div class="field">
+    <label for="content">正文(markdown)</label>
+    <textarea id="content" name="content" rows="20">{{.Content}}</textarea>
+  </div>
+  <div class="actions">
+    <button type="submit">{{if .IsNew}}写入 git{{else}}保存并 commit{{end}}</button>
+    <a class="btn secondary" href="/docs">取消</a>
+  </div>
+</form>
+{{end}}

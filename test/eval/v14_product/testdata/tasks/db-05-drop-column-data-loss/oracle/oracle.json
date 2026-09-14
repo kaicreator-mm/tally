@@ -1,0 +1,29 @@
+{
+  "layout": {
+    "migrations": [
+      "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0001_init.sql",
+      "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0002_add_sessions.sql",
+      "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0003_drop_legacy_token.sql"
+    ],
+    "seed": "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/seed/seed.sql",
+    "seed_after_revision": "0002",
+    "reference_repair": "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/oracle/reference_repair.sql",
+    "reference_replaces": "test/eval/v14_product/testdata/tasks/db-05-drop-column-data-loss/baseline/migrations/0003_drop_legacy_token.sql"
+  },
+  "expected": {
+    "baseline": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "pass",
+      "data_integrity": "fail",
+      "violations": {
+        "data_integrity": ["dropped-column-data:accounts.legacy_token"]
+      }
+    },
+    "reference": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "pass",
+      "data_integrity": "pass",
+      "violations": {}
+    }
+  }
+}

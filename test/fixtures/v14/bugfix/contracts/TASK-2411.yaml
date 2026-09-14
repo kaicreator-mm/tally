@@ -1,0 +1,26 @@
+# P3-01 Bug Fix Harness 冻结语料 · 场景 2(PRD §24.1):
+# 认证表面缺陷 —— logout 后会话仍然有效(intake 示例意图)。触碰认证表面,
+# 派生 auth_symbol_change 风险信号;经 REQ-2411 与信号轴双轴命中内置束,
+# 且按风险规则上调 L3(P3-01 AC3:unless bake-off/risk rules say so)。
+id: TASK-2411
+profile: standard
+
+title: Fix sessions staying valid after logout
+
+objective: >
+  Sessions created before logout keep authenticating afterwards; logout
+  must invalidate the session so post-logout requests are rejected.
+
+requirement_refs:
+  - .tally/requirements/REQ-2411.md
+
+scope:
+  allowed_paths:
+    - internal/auth/**
+
+acceptance:
+  - id: AC-01
+    statement: a request carrying a session token revoked by logout is rejected with an authentication error
+  - id: AC-02
+    statement: a regression check fails on the pre-fix auth flow and passes after the fix
+    independence_required: source

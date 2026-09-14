@@ -1,0 +1,25 @@
+{
+  "arm": "tally",
+  "task_id": "db-05-drop-column-data-loss",
+  "outcome": "interrupted",
+  "outcome_detail": "trial runner died before the closed loop reached a terminal state, before candidate materialization and before the arm-neutral judge; partial artifacts preserved untouched under the tally runs root (AUDIT_RESUME.md §3); the runner has no loop resumption, so per the resume discipline the task was recorded as interrupted, not re-run",
+  "attempts": 2,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-10T00:16:49.0578437Z",
+    "finished_at": "2026-09-10T00:37:45.1571865Z",
+    "per_attempt_seconds": [
+      470.8,
+      615.4
+    ]
+  },
+  "not_run_reasons": [
+    "loop terminal state: never reached (interrupted after the attempts recorded above)",
+    "judge: never executed by the runner",
+    "run-record.json: never written (runner death); per-attempt identity record therefore absent — trial-level environment identity is in trial-environment.json",
+    "disclosure: agent-executed arm-neutral judge during attempt (journalled; agent-produced evidence, not the trial judge): ACCEPTED (basis: frozen acceptance + oracle results in C:\\Users\\15549\\AppData\\Local\\Temp\\judge-db05-current.json)",
+    "disclosure: agent-executed arm-neutral judge during attempt (journalled; agent-produced evidence, not the trial judge): ACCEPTED (basis: frozen acceptance + oracle results in C:\\Users\\15549\\AppData\\Local\\Temp\\judge-db05-reworked.json)"
+  ],
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:41.2894555Z"
+}

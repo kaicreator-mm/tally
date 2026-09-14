@@ -1,0 +1,304 @@
+{
+  "arm": "tally",
+  "task_id": "bf-01-token-bucket-offbyone",
+  "contract_task_id": "TASK-2410",
+  "outcome": "accepted",
+  "outcome_detail": "accepted at attempt 1 (verify run 1)",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "finished_at": "2026-09-09T21:22:39.9245848Z",
+    "wall_seconds": 166.9376331,
+    "per_attempt_seconds": [
+      158.5233148
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "bf-01-token-bucket-offbyone",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-01-token-bucket-offbyone\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "first-immediate",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "third-immediate",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "fourth-immediate",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        },
+        {
+          "name": "first-after-refill",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "fifth-after-refill",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        },
+        {
+          "name": "capacity-two-third",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T21:22:38.4913723Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "01c4964df5ce8b50856ed4fc937456a4cbe6b17dcff620a9f137c27ca3e55d66",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "bf-01-token-bucket-offbyone",
+    "contract_task_id": "TASK-2410",
+    "started_at": "",
+    "finished_at": "2026-09-09T21:22:39.9245848Z",
+    "wall_seconds": 166.9376331,
+    "loop_phase": "accepted",
+    "outcome": "accepted",
+    "outcome_detail": "accepted at attempt 1 (verify run 1)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-2410/attempt/001",
+        "changeset": "sha256:b77131c814619b2d0e36e3f25008baa3c16eb94e46e8522ea9aa11c6d9af6626",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Fixed the token bucket off-by-one boundary defect.\n\n**Change**\n- Edited `test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/baseline/token_bucket.go`: removed the `+1` in the availability check, so the bucket admits exactly `capacity+refilled` requests and rejects the next immediate request until a token refills. Signature (`func Allow(capacity, refilled, requestIndex int) bool`) and package path are unchanged; also refreshed the stale `BUG:` comment and gofmt is clean.\n\n**Evidence**\n- `repro` (unfixed frozen baseline): fails exactly the frozen baseline failures — `fourth-immediate`, `fifth-after-refill`, `capacity-two-third` → AC-01/AC-03 reproduced.\n- `after` (delivered fix): all 6 frozen oracle cases pass, covering AC-01 (`fourth-immediate` rejected) and AC-02 (`first-afte…",
+        "wall_seconds": 158.5233148,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-01-token-bucket-offbyone\\worktrees\\wt-3c62b08c-364f06f3"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "1",
+        "changeset": "sha256:b77131c814619b2d0e36e3f25008baa3c16eb94e46e8522ea9aa11c6d9af6626",
+        "status": "verified",
+        "binding_ids": [
+          "bug_repro_failed_before",
+          "regression_check_passes_after"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "bf-01-token-bucket-offbyone",
+      "contract_task_id": "TASK-2410",
+      "pinned_contract": true,
+      "bundle_id": "POL-BUG-FIX-REGRESSION",
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "bindings": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/bf-01-token-bucket-offbyone/baseline/**",
+        "test/fixtures/v14/bugfix/contracts/**",
+        "test/fixtures/v14/bugfix/facts/**"
+      ],
+      "requirement_refs": [
+        ".tally/requirements/REQ-2410.md"
+      ],
+      "risk_signals": null,
+      "risk_basis": null,
+      "objective_sha256": "65198c2e96ad4d8df88129fef1e5b89808ed460a23b77014685c17acbb7a3d60"
+    },
+    "policy_match_coverage": {
+      "matched_policies": [
+        "POL-BUG-FIX-REGRESSION"
+      ],
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "confidence": "full",
+      "detected_risk_signals": null,
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": [
+        "POL-BUG-FIX-REGRESSION"
+      ]
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:27b3a3948598327f1e8eaa79a592a4cf1cb22c4acc2287469da9ccab319bb926",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-01-token-bucket-offbyone\\candidate-ws",
+    "judge_result": {
+      "task_id": "bf-01-token-bucket-offbyone",
+      "harness": "bug_fix",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-01-token-bucket-offbyone\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "bug_repro_failed_before",
+          "status": "pass",
+          "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+        },
+        {
+          "key": "regression_check_passes_after",
+          "status": "pass",
+          "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+        }
+      ],
+      "bug": {
+        "compile_ok": true,
+        "cases": [
+          {
+            "name": "first-immediate",
+            "want": "allow",
+            "got": "allow",
+            "pass": true
+          },
+          {
+            "name": "third-immediate",
+            "want": "allow",
+            "got": "allow",
+            "pass": true
+          },
+          {
+            "name": "fourth-immediate",
+            "want": "reject",
+            "got": "reject",
+            "pass": true
+          },
+          {
+            "name": "first-after-refill",
+            "want": "allow",
+            "got": "allow",
+            "pass": true
+          },
+          {
+            "name": "fifth-after-refill",
+            "want": "reject",
+            "got": "reject",
+            "pass": true
+          },
+          {
+            "name": "capacity-two-third",
+            "want": "reject",
+            "got": "reject",
+            "pass": true
+          }
+        ]
+      },
+      "judged_at": "2026-09-09T21:22:38.4913723Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "01c4964df5ce8b50856ed4fc937456a4cbe6b17dcff620a9f137c27ca3e55d66",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": null
+  },
+  "not_run_reasons": [
+    "provenance: superseded infra-failure artifacts preserved under the task record's not_run-infra/ (see AUDIT_RESUME.md §5)"
+  ],
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:40.8203427Z"
+}

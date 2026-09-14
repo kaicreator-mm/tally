@@ -1,0 +1,39 @@
+# P3-01 AC4 · 已知可修复缺陷(确定性数据,不做任何执行):
+#
+# TASK-2410 的令牌桶边界缺陷:bucket.Allow 在桶被取空后仍放行当次请求
+# (> 误写为 >= 的边界反转)。regression_check.cases 里 buggy_candidate_got
+# 是修复前候选的确定性输出 —— 与 want 不同的行就是「已知的修复前失败」。
+#
+# pre/post_repair_fulfillments 是修复前后两个候选在 POL-BUG-FIX-REGRESSION
+# requires 键上的满足投影:修复前 gate 必须不满足(未满足键
+# regression_check_passes_after)→ 进入 Repair;修复后同一 gate 满足。
+# 测试经 engineeringpolicy.EvaluateGate(真实门禁语义)逐态求值证明。
+task: TASK-2410
+requirement_ref: .tally/requirements/REQ-2410.md
+policy_id: POL-BUG-FIX-REGRESSION
+defect: >-
+  token_bucket.Allow admits one immediate request beyond capacity after the
+  bucket is emptied (boundary comparison inverted); the regression check
+  below reproduces it deterministically.
+regression_check:
+  name: TestTokenBucketBoundary
+  cases:
+    - input: capacity=3, no refill elapsed, 4th immediate request
+      want: reject
+      buggy_candidate_got: allow
+    - input: capacity=3, no refill elapsed, 1st immediate request
+      want: allow
+      buggy_candidate_got: allow
+    - input: capacity=3, one token refilled, next request
+      want: allow
+      buggy_candidate_got: allow
+pre_repair_fulfillments:
+  - key: bug_repro_failed_before
+    satisfied: true
+  - key: regression_check_passes_after
+    satisfied: false
+post_repair_fulfillments:
+  - key: bug_repro_failed_before
+    satisfied: true
+  - key: regression_check_passes_after
+    satisfied: true

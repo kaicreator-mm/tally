@@ -1,0 +1,290 @@
+{
+  "arm": "tally",
+  "task_id": "bf-03-pagination-partial-page",
+  "contract_task_id": "TASK-9102",
+  "outcome": "accepted",
+  "outcome_detail": "accepted at attempt 1 (verify run 3)",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "finished_at": "2026-09-09T21:32:47.5016483Z",
+    "wall_seconds": 249.3682658,
+    "per_attempt_seconds": [
+      243.7379008
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "bf-03-pagination-partial-page",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-03-pagination-partial-page\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "full-pages",
+          "want": "items=3,total_pages=4",
+          "got": "items=3,total_pages=4",
+          "pass": true
+        },
+        {
+          "name": "partial-page-exists",
+          "want": "items=1,total_pages=4",
+          "got": "items=1,total_pages=4",
+          "pass": true
+        },
+        {
+          "name": "beyond-total",
+          "want": "out-of-range",
+          "got": "out-of-range",
+          "pass": true
+        },
+        {
+          "name": "exact-multiple",
+          "want": "items=3,total_pages=3",
+          "got": "items=3,total_pages=3",
+          "pass": true
+        },
+        {
+          "name": "partial-page-seven-of-nine",
+          "want": "items=1,total_pages=3",
+          "got": "items=1,total_pages=3",
+          "pass": true
+        },
+        {
+          "name": "empty-collection",
+          "want": "out-of-range",
+          "got": "out-of-range",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T21:32:46.2660825Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "ec60a51a0f91111ed1ed4073de372ae02c7e14d7b593525b26a7c8379904f194",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "bf-03-pagination-partial-page",
+    "contract_task_id": "TASK-9102",
+    "started_at": "",
+    "finished_at": "2026-09-09T21:32:47.5016483Z",
+    "wall_seconds": 249.3682658,
+    "loop_phase": "accepted",
+    "outcome": "accepted",
+    "outcome_detail": "accepted at attempt 1 (verify run 3)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-9102/attempt/001",
+        "changeset": "sha256:c70908a9fcc2118cb37d6673370167f4f3febc88cd87d9deabe1de6da79b406c",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Done. The fix is delivered in the task fixture:\n\n**Changes**\n- `test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/baseline/pagination.go`\n  - Total pages now use ceiling division `(total + pageSize - 1) / pageSize` instead of floor division, so a 10-item/3-per-page collection reports `total_pages=4`.\n  - The last page reports its real item count (`total - (page-1)*pageSize`) instead of assuming every page is full; full pages and `out-of-range` checks are unchanged.\n  - `func Page(total, pageSize, page int) string` signature is untouched.\n- `test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/baseline/itoa.go` (new)\n  - Restores the `itoa` helper elided from the snapshot so the delivered `baseline` package compiles standalone in the judge sandbox.\n\n**Verifica…",
+        "wall_seconds": 243.7379008,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-03-pagination-partial-page\\worktrees\\wt-c922c967-48bad47d"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "3",
+        "changeset": "sha256:c70908a9fcc2118cb37d6673370167f4f3febc88cd87d9deabe1de6da79b406c",
+        "status": "verified",
+        "binding_ids": [
+          "bug_repro_failed_before",
+          "regression_check_passes_after"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "bf-03-pagination-partial-page",
+      "contract_task_id": "TASK-9102",
+      "pinned_contract": false,
+      "bundle_id": "POL-BUG-FIX-REGRESSION",
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "bindings": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/bf-03-pagination-partial-page/baseline/**"
+      ],
+      "requirement_refs": null,
+      "risk_signals": null,
+      "risk_basis": null,
+      "objective_sha256": "c1e3900fd9cdadd240284ff83dfd844dc5fc3879158ea22ebf2dacbd1294d909"
+    },
+    "policy_match_coverage": {
+      "matched_policies": null,
+      "gate_keys": null,
+      "confidence": "none",
+      "detected_risk_signals": null,
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": null
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:655a937552a94243dde277c606fbed065afe25f5fdba39a096f8ffe93d6c6551",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-03-pagination-partial-page\\candidate-ws",
+    "judge_result": {
+      "task_id": "bf-03-pagination-partial-page",
+      "harness": "bug_fix",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-03-pagination-partial-page\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "bug_repro_failed_before",
+          "status": "pass",
+          "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+        },
+        {
+          "key": "regression_check_passes_after",
+          "status": "pass",
+          "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+        }
+      ],
+      "bug": {
+        "compile_ok": true,
+        "cases": [
+          {
+            "name": "full-pages",
+            "want": "items=3,total_pages=4",
+            "got": "items=3,total_pages=4",
+            "pass": true
+          },
+          {
+            "name": "partial-page-exists",
+            "want": "items=1,total_pages=4",
+            "got": "items=1,total_pages=4",
+            "pass": true
+          },
+          {
+            "name": "beyond-total",
+            "want": "out-of-range",
+            "got": "out-of-range",
+            "pass": true
+          },
+          {
+            "name": "exact-multiple",
+            "want": "items=3,total_pages=3",
+            "got": "items=3,total_pages=3",
+            "pass": true
+          },
+          {
+            "name": "partial-page-seven-of-nine",
+            "want": "items=1,total_pages=3",
+            "got": "items=1,total_pages=3",
+            "pass": true
+          },
+          {
+            "name": "empty-collection",
+            "want": "out-of-range",
+            "got": "out-of-range",
+            "pass": true
+          }
+        ]
+      },
+      "judged_at": "2026-09-09T21:32:46.2660825Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "ec60a51a0f91111ed1ed4073de372ae02c7e14d7b593525b26a7c8379904f194",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": null
+  },
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:40.9299266Z"
+}

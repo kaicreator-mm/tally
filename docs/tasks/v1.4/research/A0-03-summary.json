@@ -1,0 +1,53 @@
+{
+  "by_layer": {
+    "L1": [
+      "t1-m2-no-lower",
+      "t2-m2-shifted",
+      "t4-m2-strip-all-space",
+      "t5-m2-int-division",
+      "t6-m2-no-lower"
+    ],
+    "L2": [
+      "t1-m2-no-lower",
+      "t2-m2-shifted",
+      "t4-m2-strip-all-space",
+      "t5-m2-int-division",
+      "t6-m2-no-lower"
+    ],
+    "L3": [
+      "t1-m1-hi-offbyone",
+      "t1-m2-no-lower",
+      "t2-m1-fib0-eq-1",
+      "t2-m2-shifted",
+      "t3-m1-sorted",
+      "t3-m2-adjacent-only",
+      "t4-m1-split-all",
+      "t4-m2-strip-all-space",
+      "t5-m1-empty-on-overflow",
+      "t5-m2-int-division",
+      "t6-m1-no-collapse",
+      "t6-m2-no-lower"
+    ]
+  },
+  "l2_minus_l1": null,
+  "l3_minus_l2": [
+    "t1-m1-hi-offbyone",
+    "t2-m1-fib0-eq-1",
+    "t3-m1-sorted",
+    "t3-m2-adjacent-only",
+    "t4-m1-split-all",
+    "t5-m1-empty-on-overflow",
+    "t6-m1-no-collapse"
+  ],
+  "l3_minus_l1": [
+    "t1-m1-hi-offbyone",
+    "t2-m1-fib0-eq-1",
+    "t3-m1-sorted",
+    "t3-m2-adjacent-only",
+    "t4-m1-split-all",
+    "t5-m1-empty-on-overflow",
+    "t6-m1-no-collapse"
+  ],
+  "l2_complete": false,
+  "judge_note": "L2 judge 未真实执行:L2 捕获只含确定性下界,L2\\L1 与 L3\\L2 差集记 NOT_RUN 语义,不作默认映射证据"
+}

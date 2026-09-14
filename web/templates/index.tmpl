@@ -1,0 +1,45 @@
+{{define "content"}}
+<div class="head">
+  <h1>总览</h1>
+</div>
+<p class="lede">这是你十来个项目的管理台:写需求、拆任务、记文档与笔记。环境、部署、失败在 T05b/c 接上。状态永远从执行记录算出,这里没有一个能改状态的开关。</p>
+
+<section>
+  <h2>四个入口</h2>
+  <div class="grid grid-4">
+    <div class="cell">
+      <div class="k">项目</div>
+      <div class="v">{{.ProjectCount}}</div>
+      <div class="foot"><a href="/projects">管理项目登记</a></div>
+    </div>
+    <div class="cell">
+      <div class="k">需求条款</div>
+      <div class="v">{{.RequirementCount}}</div>
+      <div class="foot"><a href="/requirements">写清楚要做什么</a></div>
+    </div>
+    <div class="cell">
+      <div class="k">文档</div>
+      <div class="v">{{.DocCount}}</div>
+      <div class="foot"><a href="/docs">沉淀说明</a></div>
+    </div>
+    <div class="cell">
+      <div class="k">Wiki 笔记</div>
+      <div class="v">{{.WikiCount}}</div>
+      <div class="foot"><a href="/wiki">记下来,未验证</a></div>
+    </div>
+  </div>
+  <p class="note">项目、需求、文档、笔记都是 git 里的文件 —— 这里的每次保存都是一个可 diff、可回滚的 commit。</p>
+</section>
+
+<section>
+  <h2>任务 <span class="hint">状态算出来的,不能点</span></h2>
+  {{if .TaskCount}}
+    <p>有 {{.TaskCount}} 个从执行链算出的任务。<a href="/tasks">去看任务列表</a>。</p>
+  {{else}}
+    <div class="empty">
+      还没有可算出的任务。任务状态由合并/构建/测试/部署记录推导 ——
+      <span class="do">接上执行数据(T05b)后,这里会自动出现每个任务「合了没 / 建了没 / 部了没 / 稳不稳」。<a href="/tasks">打开任务页</a></span>
+    </div>
+  {{end}}
+</section>
+{{end}}

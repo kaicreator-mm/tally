@@ -1,0 +1,19 @@
+{
+  "arms": "A=bare (scripts/v14_trial/bare), B=tally closed loop (scripts/v14_trial/tally)",
+  "date": "2026-09-10",
+  "frozen_at": "2026-09-09T00:00:00Z",
+  "host_os": "Windows_NT",
+  "integrity_notes": [
+    "DISCLOSED: codex-cli 0.153.0 on this host cannot enforce a writable-workspace sandbox; under the adjudicated danger-full-access mode agents in BOTH arms had read access to the whole host, including verification-side assets (frozen oracle, reference repairs, trial scripts). Agent stdout streams in both arms contain oracle/reference-repair path references (discovery evidence recorded in the runs roots).",
+    "DISCLOSED (tally arm): under that mode the implementing agents of db-02, db-03 and db-05 discovered and executed the trial's own arm-neutral judge (go run ./scripts/v14_trial/bare judge) with custom --out paths during their attempts; every invocation is journalled and its output preserved (Temp/judge-db02-repair1.json, tally-v14-trial/judge-db03-repair1.json, tally-v14-trial/judge-db03-repair1-final.json, Temp/judge-db05-current.json, Temp/judge-db05-reworked.json). They did not and could not alter the loop verdicts (probe-based) or the recorded final judge results (the runner's own invocations at 23:00:04Z for db-02, 23:37:38Z for db-03). db-05's runner died before its runner judge; its row is interrupted.",
+    "Row outcomes are loop-governed for arm B (accepted/escalated) with the external judge verdict recorded alongside; disagreements are retained, never resolved in favor of either signal."
+  ],
+  "judge": "arm-neutral: go run ./scripts/v14_trial/bare judge (identical command both arms)",
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "model_policy": "requested model recorded separately; observed model not self-reported by the codex exec JSONL surface (unknown, never backfilled)",
+  "preregistration": "docs/evals/v1.4/PRE_REGISTRATION.md",
+  "protocol": "docs/evals/v1.4/RUN_PROTOCOL.md",
+  "sandbox_adjudication": "DEVIATION DISCLOSED: codex-cli 0.153.0 on this Windows host enforces -s workspace-write as READ-ONLY (every agent command rejected 'blocked by policy'; verified by minimal write test). Coordinator adjudicated 2026-09-10 pre-trial: both arms run -s danger-full-access (identical mode both arms, parity preserved; disposable-workspace discipline unchanged). The one task attempted under the broken mode (bf-06, arm A only, 3 attempts + 2 prompt_reissue) was VOIDED and is preserved untouched under \u003cbare runs root\u003e/superseded-environment-workspace-write-readonly-defect/ with its adjudication note; both arms re-ran the full set under the corrected environment.",
+  "sandbox_mode": "danger-full-access (both arms, identical)",
+  "trial": "P4-03 real Codex Tally closed-loop comparative trial"
+}

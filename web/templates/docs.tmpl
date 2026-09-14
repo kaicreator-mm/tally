@@ -1,0 +1,50 @@
+{{define "content"}}
+<div class="head">
+  <h1>文档</h1>
+</div>
+<p class="lede">文档是 git <code>docs/</code> 里的 markdown。渲染是轻量只读视图,编辑落回 git 并可回滚。</p>
+
+{{if .Docs}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>文档</th><th></th></tr></thead>
+    <tbody>
+      {{range .Docs}}
+      <tr>
+        <td><a href="/docs/{{.Slug}}">{{.Title}}</a></td>
+        <td class="rowedit"><a href="/docs/{{.Slug}}/edit">编辑</a></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{else}}
+<div class="empty">
+  还没有文档。
+  <span class="do"><a href="/docs/new">写第一篇文档</a> —— 架构说明、运行手册、踩坑记录,都放这里。</span>
+</div>
+{{end}}
+
+<section>
+  <h2>新建文档</h2>
+  <form class="form" method="post" action="/docs">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <div class="field">
+      <label for="slug">标识(slug)</label>
+      <input type="text" id="slug" name="slug" placeholder="architecture" required>
+      <div class="help">小写字母、数字、连字符;落在 <code>docs/&lt;slug&gt;.md</code>。</div>
+    </div>
+    <div class="field">
+      <label for="content">正文(markdown)</label>
+      <textarea id="content" name="content" rows="8"># 标题
+
+正文……</textarea>
+    </div>
+    <div class="actions">
+      <button type="submit">写入 git</button>
+    </div>
+  </form>
+</section>
+{{end}}

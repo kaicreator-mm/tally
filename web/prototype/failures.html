@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>失败 · tally</title>
+<link rel="stylesheet" href="tally.css">
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail">
+  <div class="brand">tally</div>
+  <div class="brand-sub">构建 · 部署 · 失败登记</div>
+  <div class="rail-label">视图</div>
+  <a href="index.html">总览</a>
+  <a href="failures.html" aria-current="page">失败 <span class="n bad">31</span></a>
+  <a href="fingerprint.html">指纹库 <span class="n">86</span></a>
+  <a href="requirement.html">需求 <span class="n">142</span></a>
+  <div class="rail-label">项目</div>
+  <a href="#">forge <span class="n bad">9</span></a>
+  <a href="#">hsk <span class="n bad">7</span></a>
+  <a href="#">restudio <span class="n">2</span></a>
+  <a href="#">orienta <span class="n">1</span></a>
+</nav>
+
+<main>
+  <div class="head">
+    <h1>失败</h1>
+    <span class="meta">全部项目 · 近 90 天</span>
+  </div>
+  <p class="lede">按指纹归并,不按发生次数排。同一个问题出现二十次,是一行不是二十行。</p>
+
+  <section>
+    <h2>失败次数与依赖升级 <span class="hint">蓝色刻度是依赖变更</span></h2>
+    <div class="timeline">
+      <div class="tl-row">
+        <span class="dim">构建失败</span>
+        <div>
+          <div class="tl-bars">
+            <i style="height:14%"></i><i style="height:8%"></i><i class="zero" style="height:2px"></i>
+            <i style="height:20%"></i><i style="height:11%"></i><i style="height:6%"></i>
+            <i style="height:9%"></i><i class="zero" style="height:2px"></i><i style="height:16%"></i>
+            <i style="height:76%"></i><i style="height:94%"></i><i style="height:61%"></i>
+            <i style="height:38%"></i><i style="height:22%"></i><i style="height:17%"></i>
+            <i style="height:12%"></i><i class="zero" style="height:2px"></i><i style="height:9%"></i>
+          </div>
+          <div class="tl-marks">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="dep"></i>
+            <i class="dep"></i><i></i><i></i><i></i><i class="dep"></i><i></i><i></i><i></i><i></i>
+          </div>
+          <div class="tl-axis"><span>4 月 22 日</span><span>6 月 3 日</span><span>7 月 21 日</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">6 月 3 日那根柱子和它左边的依赖刻度对齐 —— Node 22 升级。这条对齐关系是这个视图存在的唯一理由,别的图表工具给不了。</p>
+  </section>
+
+  <section>
+    <h2>排行 <span class="hint">出现次数 × 影响项目数</span></h2>
+    <table>
+      <thead>
+        <tr><th>指纹</th><th>摘要</th><th>来源</th><th class="num">次数</th><th class="num">项目</th><th class="num">最近</th><th>处置</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#2C6146"></i><i style="background:#2C6146"></i><i style="background:#8A928A"></i><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#8A928A"></i></span>
+            <span class="fp-hex">7b1e04</span></a></td>
+          <td>Prisma 迁移与既有 schema 冲突</td>
+          <td class="dim">构建</td><td class="num">14</td><td class="num">1</td><td class="num dim">2 天前</td>
+          <td><span class="tag ok">已验证修复</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#9C3328"></i><i style="background:#8A928A"></i><i style="background:#2C4A61"></i><i style="background:#9C3328"></i></span>
+            <span class="fp-hex">a3f9c2</span></a></td>
+          <td>原生模块 ABI 与 Node 22 不匹配</td>
+          <td class="dim">构建</td><td class="num">6</td><td class="num">4</td><td class="num dim">4 小时前</td>
+          <td><span class="tag warn">修复可能过期</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#A5731A"></i><i style="background:#9C3328"></i><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#8A928A"></i><i style="background:#2C6146"></i><i style="background:#A5731A"></i><i style="background:#2C4A61"></i></span>
+            <span class="fp-hex">c50d8a</span></a></td>
+          <td>容器健康检查在 60 秒内未就绪</td>
+          <td class="dim">部署</td><td class="num">3</td><td class="num">2</td><td class="num dim">11 分钟前</td>
+          <td><span class="tag">未诊断</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#8A928A"></i><i style="background:#A5731A"></i><i style="background:#2C4A61"></i><i style="background:#2C6146"></i><i style="background:#9C3328"></i><i style="background:#9C3328"></i><i style="background:#8A928A"></i><i style="background:#A5731A"></i></span>
+            <span class="fp-hex">f21b76</span></a></td>
+          <td>私有源在 CI 中鉴权失败</td>
+          <td class="dim">构建</td><td class="num">2</td><td class="num">1</td><td class="num dim">8 天前</td>
+          <td><span class="tag">基础设施</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#2C4A61"></i><i style="background:#8A928A"></i><i style="background:#2C6146"></i><i style="background:#A5731A"></i><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#8A928A"></i><i style="background:#2C6146"></i></span>
+            <span class="fp-hex">04c7e9</span></a></td>
+          <td>集成测试在并发下超时</td>
+          <td class="dim">构建</td><td class="num">9</td><td class="num">1</td><td class="num dim">5 天前</td>
+          <td><span class="tag">偶发,不入库</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#9C3328"></i><i style="background:#9C3328"></i><i style="background:#A5731A"></i><i style="background:#8A928A"></i><i style="background:#2C6146"></i><i style="background:#2C4A61"></i><i style="background:#9C3328"></i><i style="background:#A5731A"></i></span>
+            <span class="fp-hex">bd3312</span></a></td>
+          <td>上游镜像移除了旧标签</td>
+          <td class="dim">环境</td><td class="num">2</td><td class="num">2</td><td class="num dim">16 天前</td>
+          <td><span class="tag warn">等上游</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>五种出口 <span class="hint">未通过验证的失败必须显式归类,不能静默重试</span></h2>
+    <div class="grid grid-3">
+      <div class="cell"><div class="k">已验证修复</div><div class="v ok">42</div><div class="foot">过了四道闸,进知识库</div></div>
+      <div class="cell"><div class="k">偶发</div><div class="v">17</div><div class="foot">G1 未全红 · 不进知识库</div></div>
+      <div class="cell"><div class="k">等上游</div><div class="v">6</div><div class="foot">版本已锁,附恢复计划</div></div>
+      <div class="cell"><div class="k">基础设施</div><div class="v">11</div><div class="foot">进运维待办 · 不进知识库</div></div>
+      <div class="cell"><div class="k">需求缺陷</div><div class="v bad">3</div><div class="foot">已退回需求层,触发失效传播</div></div>
+      <div class="cell"><div class="k">暂无自动修复</div><div class="v">7</div><div class="foot">三轮上限已用尽</div></div>
+    </div>
+    <p class="note">「需求缺陷」这一格是追溯图存在的意义。没有图的时候,这三个问题会被当成代码 bug 反复修。</p>
+  </section>
+</main>
+
+</div>
+<div class="proto-note">原型 · 非实现</div>
+</body>
+</html>

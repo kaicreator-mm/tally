@@ -1,0 +1,42 @@
+task_id: P0-01
+title: "Propagate requested ModelProfile and capture generic runtime identity"
+local_authority:
+  task_contract: docs/tasks/v1.4/P0/P0-01.md
+  architecture:
+    - docs/tasks/v1.4/DECISION_LOCKS.md
+    - docs/tasks/v1.4/ARCHITECTURE_EVIDENCE.md
+references:
+  - id: REF-SLSA-PROV
+    project: slsa-framework/slsa
+    commit: "spec v1.1/v1.2 family"
+    license: "Study-only; verify exact spec terms before copying"
+    url: "https://github.com/slsa-framework/slsa/blob/main/spec/build-provenance.md"
+    relevant_paths:
+      - "spec/build-provenance.md"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Separates builder identity from per-invocation metadata such as invocationId/start/finish; useful for observed runtime identity versus desired configuration."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration
+  - id: REF-INTOTO
+    project: in-toto/attestation
+    commit: "Attestation Framework v1.2"
+    license: "Apache-2.0"
+    url: "https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md"
+    relevant_paths:
+      - "spec/v1/statement.md"
+      - "spec/predicates/link.md"
+      - "spec/predicates/test-result.md"
+    relevance:
+      behavioral_similarity: high
+      contract_similarity: high
+      failure_model_similarity: high
+      technology_similarity: medium
+    use_for:
+      - "Binds claims to immutable subjects by digest and keeps execution metadata/evidence as typed attestations; useful for ChangeSet-bound runtime/evidence provenance."
+    do_not_copy:
+      - unrelated persistence/auth/telemetry/UI/orchestration

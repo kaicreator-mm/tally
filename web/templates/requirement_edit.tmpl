@@ -1,0 +1,63 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{.Project}} / {{.File}}</h1>
+  <span class="meta"><a href="/requirements?project={{.Project}}">← 需求列表</a></span>
+</div>
+<p class="lede">下面是解析出的结构(只读展示)与五闸检查。改正文用最后的编辑区 —— 保存会写 git 并 commit。</p>
+
+{{if .FormError}}<div class="flash bad">{{.FormError}}</div>{{end}}
+
+<section>
+  <h2>条款 <span class="hint">EARS 记法 · 内容哈希见 INV-4</span></h2>
+  {{if .Clauses}}
+    {{range .Clauses}}
+    <div class="rec">
+      <div class="rec-head">
+        <strong>{{.ID}}{{if .Title}} · {{.Title}}{{end}}</strong>
+        <span class="dim">内容哈希 {{.Hash}}</span>
+      </div>
+      <pre>{{.Statement}}</pre>
+      <dl>
+        <dt>怎么算完成</dt><dd>{{.Mechanism}}</dd>
+        {{range .Criteria}}<dt>验收条件</dt><dd>{{.}}</dd>{{end}}
+      </dl>
+    </div>
+    {{end}}
+  {{else}}
+    <div class="empty">解析不出条款。<span class="do">在下方编辑区用 <code>## REQ-1 …</code> 写第一条 EARS 条款。</span></div>
+  {{end}}
+</section>
+
+<section>
+  <h2>五闸 <span class="hint">机械判断,有缺口不能签署</span></h2>
+  <div class="gates">
+    {{range .Gates}}
+    <div class="gate">
+      <div class="g">{{.Level}}</div>
+      <div class="d">{{if .OK}}<span class="st st-ok">通过</span>{{else}}<span class="st st-bad">{{.Count}} 处缺口</span>{{end}}</div>
+    </div>
+    {{end}}
+  </div>
+  {{if .Issues}}
+  <p class="note">
+    {{range .Issues}}[{{.Level}}{{if .Clause}} · {{.Clause}}{{end}}] {{.Message}}<br>{{end}}
+  </p>
+  {{end}}
+</section>
+
+<section>
+  <h2>编辑正文 <span class="hint">写 git <code>.tally/requirements/{{.Project}}/{{.File}}</code></span></h2>
+  <form class="form" method="post" action="/requirements/{{.Project}}/{{.File}}">
+    <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+    <div class="field">
+      <label for="content">markdown 正文</label>
+      <textarea id="content" name="content" rows="20">{{.Content}}</textarea>
+      <div class="help">格式见需求解析约定:条款用 <code>## REQ-n</code>,必须有「非目标」与「术语表」两节。</div>
+    </div>
+    <div class="actions">
+      <button type="submit">保存并 commit</button>
+      <a class="btn secondary" href="/requirements?project={{.Project}}">取消</a>
+    </div>
+  </form>
+</section>
+{{end}}

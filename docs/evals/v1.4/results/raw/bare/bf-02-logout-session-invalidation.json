@@ -1,0 +1,100 @@
+{
+  "arm": "bare",
+  "task_id": "bf-02-logout-session-invalidation",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T19:32:54.1842063Z",
+    "wall_seconds": 261.3118729,
+    "per_attempt_seconds": [
+      261.3118729
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "bf-02-logout-session-invalidation",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\bf-02-logout-session-invalidation\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 5 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "valid-session",
+          "want": "created;ok:u1",
+          "got": "created;ok:u1",
+          "pass": true
+        },
+        {
+          "name": "auth-after-logout",
+          "want": "created;logged-out;reject",
+          "got": "created;logged-out;reject",
+          "pass": true
+        },
+        {
+          "name": "other-session-survives",
+          "want": "created;created;logged-out;reject;ok:u2",
+          "got": "created;created;logged-out;reject;ok:u2",
+          "pass": true
+        },
+        {
+          "name": "unknown-token",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        },
+        {
+          "name": "logout-unknown-token",
+          "want": "logged-out;reject",
+          "got": "logged-out;reject",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T19:37:17.2451196Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "97a5cf524e0c56ff9b2db10cd8b8e213df2268cfa8464ede3911027929d76cb1",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:40.8892753Z"
+}

@@ -1,0 +1,36 @@
+# Frozen acceptance (P4-01). Identical text and identical oracle for the
+# whole experiment; Tally derives its Contract from this file and the shared
+# verification harness judges every candidate against exactly these clauses.
+task_id: bf-01-token-bucket-offbyone
+harness: bug_fix
+policy_ref: POL-BUG-FIX-REGRESSION # catalog/v14/policies/bug_fix.yaml
+requires:
+  - bug_repro_failed_before
+  - regression_check_passes_after
+gate_condition:
+  all_of:
+    - bug_repro_failed_before
+    - regression_check_passes_after
+acceptance:
+  - id: AC-01
+    statement: >-
+      With capacity=3 and no refill elapsed, immediate requests 1..3 are
+      allowed and request 4 is rejected (oracle case fourth-immediate).
+    oracle_ref: oracle/oracle.json
+  - id: AC-02
+    statement: >-
+      With capacity=3 and one token refilled, request 4 is allowed and
+      request 5 is rejected (oracle cases first-after-refill,
+      fifth-after-refill).
+    oracle_ref: oracle/oracle.json
+  - id: AC-03
+    statement: >-
+      bug_repro_failed_before: the oracle cases named in
+      expected.baseline_failures fail against the unfixed baseline behavior
+      shipped with this task.
+    oracle_ref: oracle/oracle.json
+  - id: AC-04
+    statement: >-
+      regression_check_passes_after: every oracle case passes against the
+      delivered fix; no case regressed relative to the baseline-allowed set.
+    oracle_ref: oracle/oracle.json

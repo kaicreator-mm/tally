@@ -1,0 +1,13 @@
+{
+  "cases": [
+    { "name": "valid-session", "in": "create:a|u1;auth:a", "want": "created;ok:u1" },
+    { "name": "auth-after-logout", "in": "create:a|u1;logout:a;auth:a", "want": "created;logged-out;reject" },
+    { "name": "other-session-survives", "in": "create:a|u1;create:b|u2;logout:a;auth:a;auth:b", "want": "created;created;logged-out;reject;ok:u2" },
+    { "name": "unknown-token", "in": "auth:ghost", "want": "reject" },
+    { "name": "logout-unknown-token", "in": "logout:never;auth:never", "want": "logged-out;reject" }
+  ],
+  "expected": {
+    "baseline_failures": ["auth-after-logout", "other-session-survives"],
+    "reference_passes_all": true
+  }
+}

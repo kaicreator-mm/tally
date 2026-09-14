@@ -1,0 +1,96 @@
+{
+  "arm": "bare",
+  "task_id": "db-03-rename-breaks-downstream",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T20:19:09.5222937Z",
+    "wall_seconds": 380.4105925,
+    "per_attempt_seconds": [
+      380.4105925
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "db-03-rename-breaks-downstream",
+    "harness": "database_migration",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\db-03-rename-breaks-downstream\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "fresh_database",
+        "status": "pass",
+        "detail": "delivered chain applies cleanly to an empty database"
+      },
+      {
+        "key": "n_minus_1_upgrade",
+        "status": "pass",
+        "detail": "delivered chain applies to the seeded N-1 upgrade path"
+      },
+      {
+        "key": "data_integrity",
+        "status": "pass",
+        "detail": "every frozen data-integrity assertion holds on the upgraded database"
+      }
+    ],
+    "migration": {
+      "assertions": [
+        {
+          "query": "SELECT count(*) FROM accounts",
+          "want": "2",
+          "got": "2",
+          "pass": true,
+          "detail": "seeded account rows survive the rename and indexing"
+        },
+        {
+          "query": "SELECT count(*) FROM accounts WHERE to_jsonb(accounts)::text LIKE '%a@example.test%'",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "first seeded e-mail value survives"
+        },
+        {
+          "query": "SELECT count(*) FROM accounts WHERE to_jsonb(accounts)::text LIKE '%b@example.test%'",
+          "want": "1",
+          "got": "1",
+          "pass": true,
+          "detail": "second seeded e-mail value survives"
+        }
+      ],
+      "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "judged_at": "2026-09-09T20:25:32.2670901Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "83c3fec33259b54cc22af1f606c87531b805da3867c39b7ae75c83dc8b6b32cd",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:41.2053033Z"
+}

@@ -1,0 +1,86 @@
+{{define "content"}}
+<div class="head">
+  <h1>工作</h1>
+  <span class="meta">Work · 任务列表 · 派生状态 · 只读(PRD §7/§29)</span>
+</div>
+<p class="lede">这里是工作(Work)列表:每一行是一份 Git 里的任务合同(.tally/tasks/ 的 TaskContract),点开任务查看它的概览 / 计划 / 变更 / 验证 / 评审 / 动态。状态列由 <b>taskstate 引擎从证据派生</b>(PLANNED → … → VERIFIED/APPROVED;异常态需要人工关注)。它没有也不允许有任何手动状态控件 —— 决定是证据(HumanApprovalEvidence),状态是派生。旧的 <a href="/tasks">执行摘要(legacy)</a> 是项目级构建/部署记录视图,不是 Task 完成语义。</p>
+
+{{if .Unavailable}}
+<div class="empty">
+  {{/* 与执行引擎页同一模式:数据源未接入时给行动提示,不给假数据。 */}}
+  v1.3 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库(.tally/ 的 TaskContract / VerificationContract)。两者接好后,这里会列出全部 TaskContract 及其派生状态。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">Git 制品装载失败:{{.LoadErr}}</div>
+{{else}}
+
+{{if .ProjectID}}
+<p class="note">项目 <b>{{.ProjectID}}</b> · 制品快照提交 <span class="dim">{{short .SourceCommit}}</span>(Git 是 desired 制品唯一来源;装载经确定性校验,无效制品被拒于快照之外)。</p>
+{{end}}
+
+{{if .Tasks}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Task</th><th>派生状态</th><th>当前 Run</th><th>当前候选</th><th>验证摘要</th><th>最近审批记录</th><th>门槛缺口 / 注意</th></tr>
+    </thead>
+    <tbody>
+      {{range .Tasks}}
+      <tr>
+        <td>
+          <b><a href="/v14/tasks/{{.TaskID}}">{{.TaskID}}</a></b>
+          {{if .Title}}<div class="dim">{{.Title}}</div>{{end}}
+          <div class="dim nowrap">profile {{.Profile}} · 合同 {{short .ContractHash}}{{if .HasFrozen}} · 验证契约已冻结{{else}} · 无冻结验证契约{{end}}</div>
+        </td>
+        <td class="nowrap">
+          {{if .DeriveErr}}
+            <span class="st st-off">派生失败</span>
+          {{else if .NeedsAttention}}
+            <span class="st st-bad">{{.State}}</span>
+          {{else}}
+            <span class="st st-ok">{{.State}}</span>
+          {{end}}
+          {{if .Class}}<div class="dim">{{.Class}}</div>{{end}}
+        </td>
+        <td class="nowrap">
+          {{if .CurrentRun}}<span class="nowrap">{{.CurrentRun}}</span><div class="dim">{{.CurrentStat}}</div>{{else}}<span class="dim">—</span>{{end}}
+          <div class="dim">共 {{.RunCount}} 次</div>
+        </td>
+        <td class="nowrap">
+          {{if .CandidateID}}<a href="/v13/changes/{{.CandidateID}}">{{short .CandidateID}}</a>{{else}}<span class="dim">—</span>{{end}}
+          <div class="dim">共 {{.CandidateCount}} 份</div>
+        </td>
+        <td class="nowrap">
+          {{if .VerifyTotal}}
+            <span class="st {{if .VerifyFail}}st-bad{{else}}st-ok{{end}}">pass {{.VerifyPass}} · fail {{.VerifyFail}} · error {{.VerifyError}}</span>
+          {{else}}<span class="dim">无验证 Run</span>{{end}}
+        </td>
+        <td class="nowrap">{{if .ApprovalText}}{{.ApprovalText}}{{else}}<span class="dim">—</span>{{end}}</td>
+        <td>
+          {{if .RowErr}}<div class="st st-bad">事实面读取失败:{{.RowErr}}</div>{{end}}
+          {{if .DeriveErr}}<div class="st st-off">{{.DeriveErr}}</div>{{end}}
+          {{if .Gaps}}
+            {{range .Gaps}}
+            <div class="dim">{{.Requirement}}:{{.Detail}}</div>
+            {{end}}
+          {{end}}
+          {{if and (not .Gaps) (not .DeriveErr) (not .RowErr)}}<span class="dim">—</span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">「派生状态」由生命周期事实(task_planned / verification_frozen / 实现 Run / 候选 / 验证 Run / 审批证据)推导;派生状态未达 VERIFIED 时,缺口列逐条说明缺哪道门。异常态(BLOCKED / FAILED / NEEDS_REVIEW / CANCELLED)需要人工关注。</p>
+</section>
+{{else}}
+<div class="empty">
+  Git 制品快照里没有 TaskContract。
+  <span class="do">TaskContract 是 Git 里的版本化制品(.tally/tasks/TASK-*.yaml)。提交一份并通过确定性校验后,这里会列出它及其派生状态。</span>
+</div>
+{{end}}
+
+{{end}}
+{{end}}

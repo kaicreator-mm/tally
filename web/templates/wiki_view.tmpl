@@ -1,0 +1,11 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{.Title}}</h1>
+  <span class="badge-note">笔记 · 未验证</span>
+  <span class="meta"><a href="/wiki/{{.Slug}}/edit">编辑</a> · <a href="/wiki">← 笔记列表</a></span>
+</div>
+<p class="note">这是未验证笔记,只作线索。确认真实有效后,验证过的修复会进「已验证修复库」(T05c),不在这层。</p>
+<section>
+  <div class="md">{{markdown .Content}}</div>
+</section>
+{{end}}

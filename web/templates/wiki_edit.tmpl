@@ -1,0 +1,28 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{if .IsNew}}新建笔记{{else}}编辑笔记 · {{.Slug}}{{end}}</h1>
+  <span class="badge-note">笔记 · 未验证</span>
+  <span class="meta"><a href="/wiki">← 笔记列表</a></span>
+</div>
+<p class="lede">保存会写 git <code>wiki/</code> 并 commit。这层的笔记永远标「未验证」。</p>
+
+{{if .FormError}}<div class="flash bad">{{.FormError}}</div>{{end}}
+
+<form class="form" method="post" action="{{.Action}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+  {{if .IsNew}}
+  <div class="field">
+    <label for="slug">标识(slug)</label>
+    <input type="text" id="slug" name="slug" value="{{.Slug}}" required>
+  </div>
+  {{end}}
+  <div class="field">
+    <label for="content">正文(markdown)</label>
+    <textarea id="content" name="content" rows="20">{{.Content}}</textarea>
+  </div>
+  <div class="actions">
+    <button type="submit">{{if .IsNew}}写入 git{{else}}保存并 commit{{end}}</button>
+    <a class="btn secondary" href="/wiki">取消</a>
+  </div>
+</form>
+{{end}}

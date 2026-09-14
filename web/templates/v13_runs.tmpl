@@ -1,0 +1,69 @@
+{{define "content"}}
+<div class="head">
+  <h1>运行</h1>
+  <span class="meta">Runs · 实现 Run 时间线 · 只读(PRD §6.1/§29)</span>
+</div>
+<p class="lede">这里是运行(Runs)列表:每一行是一次实现 Run 的<b>过程事实</b>(状态 / 迭代 / 用量 / 升级链 / 失败原因,来自事实面的 codegen_run 记录)。它与「工作」页的任务派生状态分开:这里只陈述实际发生了什么,不下任务结论 —— 运行状态是记录在案的 run-control 事实,不是本页可以写的字段,状态机不因展示而改变。</p>
+
+{{if .Unavailable}}
+<div class="empty">
+  {{/* 与工作页同一模式:数据源未接入时给行动提示,不给假数据。 */}}
+  v1.3 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库。两者接好后,这里会按任务清单列出全部实现 Run 及其过程事实。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">Git 制品装载失败:{{.LoadErr}}</div>
+{{else}}
+
+{{if .ProjectID}}
+<p class="note">项目 <b>{{.ProjectID}}</b> · 制品快照提交 <span class="dim">{{short .SourceCommit}}</span>(运行清单按 HEAD 快照里的任务展开,逐任务读取事实面;不在快照里的历史任务,其运行不在此页 —— 与工作列表同一读取纪律)。</p>
+{{end}}
+
+{{if .TaskErrs}}
+{{range .TaskErrs}}
+<div class="flash bad">任务 {{.Task}} 的实现 Run 读取失败:{{.Err}}(该任务的运行此页缺席,原因如实呈现在此,不静默。)</div>
+{{end}}
+{{end}}
+
+{{if .Runs}}
+<p class="note">共 {{.Total}} 次运行 · running {{.NRunning}} · completed {{.NCompleted}} · escalated {{.NEscalated}} · failed {{.NFailed}} · cancelled {{.NCancelled}}(计数由下列行汇总,不是第二状态源)。</p>
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Run</th><th>任务</th><th>状态</th><th>Runtime / 模型</th><th>迭代 · 用量</th><th>升级链</th><th>失败原因</th><th>固定候选</th></tr>
+    </thead>
+    <tbody>
+      {{range .Runs}}
+      <tr>
+        <td class="nowrap"><b>#{{.ID}}</b><div class="dim">开始 {{.Started}}</div><div class="dim">结束 {{.Finished}}</div></td>
+        <td>
+          <b><a href="/v14/tasks/{{.Task}}">{{.Task}}</a></b>
+          {{if .Title}}<div class="dim">{{.Title}}</div>{{end}}
+        </td>
+        <td class="nowrap"><span class="st {{.StatusClass}}">{{.Status}}</span></td>
+        <td>
+          <span class="nowrap">{{.Runtime}} / {{.Model}}</span>
+          <div class="dim">期望坐标(开跑写定)</div>
+          {{if .Observed}}<div class="dim">{{.Observed}}(runtime 自报)</div>{{else if .ObservedNote}}<div class="st st-bad">{{.ObservedNote}}</div>{{else}}<div class="dim">实际身份未观察</div>{{end}}
+        </td>
+        <td class="nowrap">{{.Iterations}} 次迭代{{if .Tokens}}<div class="dim">{{.Tokens}}</div>{{else}}<div class="dim">用量未上报</div>{{end}}</td>
+        <td class="nowrap">{{if .EscalatedFrom}}升级自 Run #{{.EscalatedFrom}}{{else}}<span class="dim">—</span>{{end}}</td>
+        <td>{{if .FailureReason}}<span class="nowrap">{{.FailureReason}}</span>{{else}}<span class="dim">—</span>{{end}}</td>
+        <td class="nowrap">{{if .CandidateID}}<a href="/v13/changes/{{.CandidateID}}">{{short .CandidateID}}</a>{{else}}<span class="dim">—</span>{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">「Runtime / 模型」列是开跑时写定的<b>期望</b>坐标;runtime 现场自报的实际身份(如有)单列在下,两者分开呈现、互不回填。失败 / 升级 / 取消的 Run 不产生候选(升级即换 Run,新 Run 记升级链来源);escalated 行的失败原因是升级去向。任务派生状态见<a href="/v13/tasks">工作</a>页。</p>
+</section>
+{{else if not .TaskErrs}}
+<div class="empty">
+  HEAD 制品快照里的任务还没有任何实现 Run。
+  <span class="do">实现 Run 由闭环执行(发起 → 任务执行)写入事实面;跑过之后,这里会列出每次运行的状态、迭代、用量与升级链。本页不提供任何手动运行状态控件。</span>
+</div>
+{{end}}
+
+{{end}}
+{{end}}

@@ -1,0 +1,77 @@
+{{define "content"}}
+<div class="head">
+  <h1>集成</h1>
+  <span class="meta">v1.4 Integration · 验收与集成是两个可分别观察的工程状态 · 只读无写(PRD §24/§25)</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库。接好后:验收区呈现审批证据事实,集成区呈现 Git 集成分支事实 —— 两个分区独立来源,永不互相等同。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">{{.LoadErr}}</div>
+{{else}}
+
+<p class="note">项目 <b>{{.ProjectID}}</b> · 扫描 {{.TaskCount}} 个 standard TaskContract(HEAD 快照)· 集成分支命名空间 refs/heads/tally/integration/(确定性命名,ref 内嵌候选 sha256)。</p>
+
+<section>
+  <h2>已验收(Accepted · 审批证据事实)</h2>
+  {{if .Accepted}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>任务</th><th>候选</th><th>决定</th><th>裁决人</th><th>原因</th><th>时刻</th><th>集成状态</th></tr></thead>
+    <tbody>
+      {{range .Accepted}}
+      <tr>
+        <td class="nowrap"><a href="/v14/tasks/{{.TaskID}}">{{.TaskID}}</a></td>
+        <td class="dim nowrap">{{if .ChangeSet}}{{.ChangeSet}}{{else}}—{{end}}</td>
+        <td class="nowrap">{{.Decision}}</td>
+        <td class="nowrap">{{.DecidedBy}}</td>
+        <td>{{.Reason}}</td>
+        <td class="dim nowrap">{{.At}}</td>
+        <td class="nowrap">{{.Integrated}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">HEAD 快照的 standard 任务尚无已录得的验收决定。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>已集成(Integrated · Git 集成分支事实)</h2>
+  {{if .Integrated}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>集成分支</th><th>指向提交</th><th>提交主题</th><th>时刻</th></tr></thead>
+    <tbody>
+      {{range .Integrated}}
+      <tr>
+        <td class="dim nowrap">{{.Ref}}</td>
+        <td class="dim nowrap">{{.Commit}}</td>
+        <td>{{.Subject}}</td>
+        <td class="dim nowrap">{{.Date}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">尚无集成分支事实(集成分支由治理链的具名集成操作落地)。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>本页的边界(如实声明)</h2>
+  <ul>
+    <li class="dim"><b>验收 ≠ 集成</b>:验收是审批证据事实(HumanApprovalEvidence,append-only);集成是 Git 集成分支事实(refs/heads/tally/integration/*)。两个分区来源独立、互不推导 —— 已验收不暗示已集成,集成分支的存在不暗示任何验收结论。</li>
+    <li class="dim">集成状态标注经确定性命名对账(ref 内嵌候选 sha256);「尚未集成」是事实面缺集成分支的如实呈现,不是错误。</li>
+    <li class="dim">本页零写路由(DL-19):集成分支由治理链具名操作落地,本页绝不创建或修改任何引用。</li>
+  </ul>
+</section>
+
+{{end}}
+{{end}}

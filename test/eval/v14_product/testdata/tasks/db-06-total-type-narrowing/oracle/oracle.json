@@ -1,0 +1,29 @@
+{
+  "layout": {
+    "migrations": [
+      "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0001_init.sql",
+      "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0002_add_orders.sql",
+      "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0003_narrow_total.sql"
+    ],
+    "seed": "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/seed/seed.sql",
+    "seed_after_revision": "0002",
+    "reference_repair": "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/oracle/reference_repair.sql",
+    "reference_replaces": "test/eval/v14_product/testdata/tasks/db-06-total-type-narrowing/baseline/migrations/0003_narrow_total.sql"
+  },
+  "expected": {
+    "baseline": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "fail",
+      "data_integrity": "pass",
+      "violations": {
+        "n_minus_1_upgrade": ["type-narrow-overflow:orders.total_micros=9999999999"]
+      }
+    },
+    "reference": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "pass",
+      "data_integrity": "pass",
+      "violations": {}
+    }
+  }
+}

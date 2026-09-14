@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "name": "mixed-case-dupes", "in": "A@x.com,b@x.com,a@X.com", "want": "a@x.com,b@x.com" },
+    { "name": "ordering-and-case", "in": "B@y.com,a@y.com", "want": "a@y.com,b@y.com" },
+    { "name": "exact-dupes", "in": "z@z.com,z@z.com", "want": "z@z.com" },
+    { "name": "single-entry", "in": "Same@x.com", "want": "same@x.com" }
+  ],
+  "expected": {
+    "baseline_failures": ["mixed-case-dupes", "ordering-and-case", "single-entry"],
+    "reference_passes_all": true
+  }
+}

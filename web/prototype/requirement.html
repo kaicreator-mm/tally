@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REQ-12 · tally</title>
+<link rel="stylesheet" href="tally.css">
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail">
+  <div class="brand">tally</div>
+  <div class="brand-sub">构建 · 部署 · 失败登记</div>
+  <div class="rail-label">视图</div>
+  <a href="index.html">总览</a>
+  <a href="failures.html">失败 <span class="n bad">31</span></a>
+  <a href="fingerprint.html">指纹库 <span class="n">86</span></a>
+  <a href="requirement.html" aria-current="page">需求 <span class="n">142</span></a>
+  <div class="rail-label">项目</div>
+  <a href="#">forge <span class="n bad">9</span></a>
+  <a href="#">hsk <span class="n bad">7</span></a>
+  <a href="#">restudio <span class="n">2</span></a>
+  <a href="#">orienta <span class="n">1</span></a>
+</nav>
+
+<main>
+  <div class="head">
+    <h1>REQ-12 多租户数据隔离</h1>
+    <span class="meta">forge · 第 3 版 · 内容哈希 9f21ac</span>
+  </div>
+  <p class="lede">视图 A:这条需求的实现一共炸了多少次。失败反复集中在一条需求上,通常说明这条需求当初没写清楚,不是实现的人不行。</p>
+
+  <section>
+    <h2>累计</h2>
+    <div class="grid grid-4">
+      <div class="cell"><div class="k">实现提交</div><div class="v">8</div><div class="foot">首次 6 月 10 日</div></div>
+      <div class="cell"><div class="k">构建失败</div><div class="v bad">23</div><div class="foot">其中 14 次同一指纹</div></div>
+      <div class="cell"><div class="k">部署失败</div><div class="v bad">5</div><div class="foot"></div></div>
+      <div class="cell"><div class="k">条款年龄</div><div class="v">41</div><div class="foot">天 · 变更过 2 次</div></div>
+    </div>
+    <p class="note">23 次失败里 14 次是同一个指纹。这个比例本身就是信号 —— 不需要逐案判断「这算不算需求问题」。</p>
+  </section>
+
+  <section>
+    <h2>条款 <span class="hint">EARS 记法 · 权威版本在 git</span></h2>
+    <div class="rec">
+      <div class="rec-head">
+        <strong>第 3 版</strong>
+        <span class="tag ok">已签署 · 07-02</span>
+      </div>
+      <pre>WHEN 请求携带租户标识, THE 系统 SHALL 只返回该租户的数据。
+IF 请求未携带租户标识, THEN THE 系统 SHALL 返回 400 且不查询数据库。
+WHILE 后台任务运行中, THE 系统 SHALL 在每次查询前显式绑定租户上下文。</pre>
+      <dl>
+        <dt>怎么算完成</dt><dd>自动化测试 —— <code>tenant_isolation_test.go</code> 全绿</dd>
+        <dt>不做什么</dt><dd>不做跨租户数据迁移;不做租户级配额;不做行级加密</dd>
+        <dt>术语</dt><dd>租户 = 组织账号,不是用户;数据 = 业务表,不含审计日志</dd>
+        <dt>签署</dt><dd>人工签署 · commit c31f809</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <h2>检查清单 <span class="hint">机械判断,不是评价写得好不好</span></h2>
+    <div class="gates">
+      <div class="gate"><div class="g">L1 条款化</div><div class="d">3 条,可单独引用 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">L2 验收条件</div><div class="d">3/3 已写,机制为自动化测试 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">L3 零未决</div><div class="d">无 TBD <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">L4 非目标</div><div class="d">已写 3 条 <span class="st st-ok"></span></div></div>
+      <div class="gate"><div class="g">L5 术语唯一</div><div class="d">已建术语表 <span class="st st-ok"></span></div></div>
+    </div>
+    <p class="note">第 1 版曾在 L4 卡住 —— 没写「不做什么」。补上非目标之后,越界改动从每周 3 次降到 0 次。</p>
+  </section>
+
+  <section>
+    <h2>失败构成 <span class="hint">按指纹</span></h2>
+    <table>
+      <thead><tr><th>指纹</th><th>摘要</th><th class="num">次数</th><th>处置</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#2C6146"></i><i style="background:#2C6146"></i><i style="background:#8A928A"></i><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#8A928A"></i></span>
+            <span class="fp-hex">7b1e04</span></a></td>
+          <td>Prisma 迁移与既有 schema 冲突</td>
+          <td class="num">14</td><td><span class="tag ok">已验证修复</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#A5731A"></i><i style="background:#2C6146"></i><i style="background:#9C3328"></i><i style="background:#8A928A"></i><i style="background:#2C4A61"></i><i style="background:#9C3328"></i></span>
+            <span class="fp-hex">a3f9c2</span></a></td>
+          <td>原生模块 ABI 与 Node 22 不匹配</td>
+          <td class="num">4</td><td><span class="tag warn">修复可能过期</span></td>
+        </tr>
+        <tr>
+          <td><a class="fp" href="fingerprint.html">
+            <span class="fp-strip"><i style="background:#A5731A"></i><i style="background:#9C3328"></i><i style="background:#9C3328"></i><i style="background:#2C4A61"></i><i style="background:#8A928A"></i><i style="background:#2C6146"></i><i style="background:#A5731A"></i><i style="background:#2C4A61"></i></span>
+            <span class="fp-hex">c50d8a</span></a></td>
+          <td>容器健康检查在 60 秒内未就绪</td>
+          <td class="num">5</td><td><span class="tag bad">需求缺陷</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="note">最后一行已归类为需求缺陷:代码符合任务,任务符合条款,是条款本身没规定后台任务的租户绑定时机。第 3 版补了第三句,之后未再出现。</p>
+  </section>
+
+  <section>
+    <h2>变更与失效 <span class="hint">边指向内容哈希,条款一改旧记录自动对不上</span></h2>
+    <table>
+      <thead><tr><th>版本</th><th>内容哈希</th><th>签署</th><th class="num">当时的提交</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>第 3 版</td><td class="dim">9f21ac</td><td class="dim">07-02</td><td class="num">3</td>
+            <td><span class="st st-ok">当前</span></td></tr>
+        <tr><td>第 2 版</td><td class="dim">4e80d1</td><td class="dim">06-19</td><td class="num">4</td>
+            <td><span class="st st-warn">依据已变更</span></td></tr>
+        <tr><td>第 1 版</td><td class="dim">b7c033</td><td class="dim">06-10</td><td class="num">1</td>
+            <td><span class="st st-warn">依据已变更</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note">5 个提交挂在旧版本上,它们的测试与部署记录都标了「依据已变更」。这不需要额外机制 —— 挂钩记的是内容哈希,内容一变自然对不上。</p>
+  </section>
+
+  <section>
+    <h2>测试引用 <span class="hint">条款覆盖率,不是行覆盖率</span></h2>
+    <table>
+      <thead><tr><th>条款</th><th>引用它的测试</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr><td>REQ-12.1</td><td class="dim">tenant_isolation_test.go:TestScopedQuery</td><td><span class="st st-ok">有引用</span></td></tr>
+        <tr><td>REQ-12.2</td><td class="dim">tenant_isolation_test.go:TestMissingTenantHeader</td><td><span class="st st-ok">有引用</span></td></tr>
+        <tr><td>REQ-12.3</td><td class="dim">—</td><td><span class="st st-bad">无测试引用</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note">第三句是第 3 版新加的,还没有测试挂上来。这就是「签署了但没人认领」—— 覆盖率工具看不到这一层,因为它们不认识条款。</p>
+  </section>
+</main>
+
+</div>
+<div class="proto-note">原型 · 非实现</div>
+</body>
+</html>

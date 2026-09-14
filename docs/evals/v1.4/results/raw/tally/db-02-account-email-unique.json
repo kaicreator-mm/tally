@@ -1,0 +1,366 @@
+{
+  "arm": "tally",
+  "task_id": "db-02-account-email-unique",
+  "contract_task_id": "TASK-9107",
+  "outcome": "escalated",
+  "outcome_detail": "escalated: repair_exhausted — 修复预算拒绝下一次修复尝试",
+  "attempts": 3,
+  "interventions": [
+    {
+      "type": "escalation",
+      "note": "reason=repair_exhausted detail=修复预算拒绝下一次修复尝试"
+    }
+  ],
+  "timing": {
+    "finished_at": "2026-09-09T23:00:04.5028237Z",
+    "wall_seconds": 1579.5126685,
+    "per_attempt_seconds": [
+      398.7377673,
+      656.4264912,
+      517.9908397
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "db-02-account-email-unique",
+    "harness": "database_migration",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "fresh_database",
+        "status": "pass",
+        "detail": "delivered chain applies cleanly to an empty database"
+      },
+      {
+        "key": "n_minus_1_upgrade",
+        "status": "pass",
+        "detail": "delivered chain applies to the seeded N-1 upgrade path"
+      },
+      {
+        "key": "data_integrity",
+        "status": "pass",
+        "detail": "every frozen data-integrity assertion holds on the upgraded database"
+      }
+    ],
+    "migration": {
+      "assertions": [
+        {
+          "query": "SELECT count(*) FROM accounts",
+          "want": "3",
+          "got": "3",
+          "pass": true,
+          "detail": "no seeded account row deleted"
+        },
+        {
+          "query": "SELECT count(*) - count(DISTINCT email) FROM accounts",
+          "want": "0",
+          "got": "0",
+          "pass": true,
+          "detail": "duplicate addresses disambiguated, not deleted"
+        },
+        {
+          "query": "SELECT count(*) FROM events",
+          "want": "3",
+          "got": "3",
+          "pass": true,
+          "detail": "linked event rows intact"
+        }
+      ],
+      "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+    },
+    "judged_at": "2026-09-09T23:36:34.0602213Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "7829428d4d7483b88b879925591b29fb324d5ec2c50e066dc7d6b48233900278",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "db-02-account-email-unique",
+    "contract_task_id": "TASK-9107",
+    "started_at": "",
+    "finished_at": "2026-09-09T23:00:04.5028237Z",
+    "wall_seconds": 1579.5126685,
+    "loop_phase": "escalated",
+    "outcome": "escalated",
+    "outcome_detail": "escalated: repair_exhausted — 修复预算拒绝下一次修复尝试",
+    "escalation": {
+      "reason": "repair_exhausted",
+      "detail": "修复预算拒绝下一次修复尝试"
+    },
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-9107/attempt/001",
+        "changeset": "sha256:9af9d420b5c528dca1611c7f33f17be1ca1011f58184a550206cf06f363f5abd",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Done — the migration chain is repaired and validated against live PostgreSQL.\n\n**Change**\n- `test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0003_email_unique.sql`: revision `0003` now disambiguates the seeded duplicate (`UPDATE accounts SET email = 'dup-2@example.test' WHERE id = 2`) before adding `accounts_email_unique UNIQUE (email)`. No account or event row is deleted.\n\n**Validation**\n- `v14tallyprobe.exe fresh` → exit 0 (chain applies cleanly to an empty DB).\n- `v14tallyprobe.exe n1` → exit 0 (seeded N-1 upgrade path with duplicate `dup@example.test` succeeds).\n- `v14tallyprobe.exe integrity` → exit 0 (3 accounts, 3 events, duplicate count 0).\n- Pristine unfixed `0003` regression check → exit 1 with `could not create unique index \"accounts_email_uni…",
+        "wall_seconds": 398.7377673,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\worktrees\\wt-a3f0cfc0-23db98eb"
+      },
+      {
+        "attempt": 2,
+        "run_id": "TASK-9107/attempt/002",
+        "parent_run": "TASK-9107/attempt/001",
+        "supersedes": "sha256:9af9d420b5c528dca1611c7f33f17be1ca1011f58184a550206cf06f363f5abd",
+        "changeset": "sha256:163d845d6ec77ee9ff06fbc529a278e3a8d89b0c11b46152f41d950cadf356e7",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "The migration content in this workspace is the correct repair and it is fully validated end-to-end. Summary of what I found and did:\n\n**State**\n- `test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0003_email_unique.sql` is the only changed file (in scope). It now disambiguates the seeded duplicate before adding the constraint: `UPDATE accounts SET email = 'dup-2@example.test' WHERE id = 2;` then `ALTER TABLE accounts ADD CONSTRAINT accounts_email_unique UNIQUE (email);` — matching `oracle/reference_repair.sql` semantics, no account row deleted.\n\n**Validation (live PostgreSQL 16.15)**\n- `v14tallyprobe.exe fresh`, `n1`, `integrity` against the real frozen oracle (`-repo C:\\Dev\\Code\\tally`) all pass.\n- The arm-neutral bare judge (`scripts/v14_trial/bare judge…",
+        "wall_seconds": 656.4264912,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\worktrees\\wt-a3f0cfc0-3c04b562"
+      },
+      {
+        "attempt": 3,
+        "run_id": "TASK-9107/attempt/003",
+        "parent_run": "TASK-9107/attempt/002",
+        "supersedes": "sha256:163d845d6ec77ee9ff06fbc529a278e3a8d89b0c11b46152f41d950cadf356e7",
+        "changeset": "sha256:784bfb4123d061c431882cfe14c7977d20804b3a3de4961868df1e6fd52d4f31",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "The repaired revision is in place and re-validated end-to-end.\n\n**Change**\n- Re-worked `test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0003_email_unique.sql:1` so revision 0003 disambiguates the seeded duplicate before creating the constraint:\n  - `UPDATE accounts SET email = 'dup-2@example.test' WHERE id = 2;` then `ALTER TABLE accounts ADD CONSTRAINT accounts_email_unique UNIQUE (email);`\n  - This matches the frozen oracle `reference` expectations exactly (SQL body mirrors `oracle/reference_repair.sql`). Only `0003` is modified; no rows are deleted and no files are added/deleted.\n\n**Validation**\n- Probe checks from the workspace root all pass (`exit 0`): `wiring`, `fresh`, `n1`, `integrity`.\n- Manual N-1 run (0001 → 0002 → seed → 0003) confirms `accou…",
+        "wall_seconds": 517.9908397,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\worktrees\\wt-a3f0cfc0-fcc95cc9"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "11",
+        "changeset": "sha256:9af9d420b5c528dca1611c7f33f17be1ca1011f58184a550206cf06f363f5abd",
+        "status": "failed",
+        "binding_ids": [
+          "fresh_database",
+          "n_minus_1_upgrade",
+          "data_integrity"
+        ]
+      },
+      {
+        "verify_run": "12",
+        "changeset": "sha256:163d845d6ec77ee9ff06fbc529a278e3a8d89b0c11b46152f41d950cadf356e7",
+        "status": "failed",
+        "binding_ids": [
+          "fresh_database",
+          "n_minus_1_upgrade",
+          "data_integrity"
+        ]
+      },
+      {
+        "verify_run": "13",
+        "changeset": "sha256:784bfb4123d061c431882cfe14c7977d20804b3a3de4961868df1e6fd52d4f31",
+        "status": "failed",
+        "binding_ids": [
+          "fresh_database",
+          "n_minus_1_upgrade",
+          "data_integrity"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "db-02-account-email-unique",
+      "contract_task_id": "TASK-9107",
+      "pinned_contract": false,
+      "bundle_id": "database_migration",
+      "gate_keys": [
+        "fresh_database",
+        "n_minus_1_upgrade",
+        "data_integrity"
+      ],
+      "bindings": [
+        "fresh_database",
+        "n_minus_1_upgrade",
+        "data_integrity"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/**",
+        "test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/seed/**"
+      ],
+      "requirement_refs": null,
+      "risk_signals": [
+        "schema_migration"
+      ],
+      "risk_basis": [
+        "fixture:test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0001_init.sql",
+        "fixture:test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0002_add_events.sql",
+        "fixture:test/eval/v14_product/testdata/tasks/db-02-account-email-unique/baseline/migrations/0003_email_unique.sql"
+      ],
+      "objective_sha256": "50f2dae726c859de23e5e3afbbed7678074c10eb9adde8988812a98a5c9b3a93"
+    },
+    "policy_match_coverage": {
+      "matched_policies": [
+        "database_migration"
+      ],
+      "gate_keys": [
+        "data_integrity",
+        "fresh_database",
+        "n_minus_1_upgrade"
+      ],
+      "confidence": "full",
+      "detected_risk_signals": [
+        "schema_migration"
+      ],
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": [
+        "database_migration"
+      ]
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:2a5202134ab2d9700e91c37daef07f788300987cd6d93c7e24b83b65e1095d6f",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\candidate-ws",
+    "judge_result": {
+      "task_id": "db-02-account-email-unique",
+      "harness": "database_migration",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\db-02-account-email-unique\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "fresh_database",
+          "status": "pass",
+          "detail": "delivered chain applies cleanly to an empty database"
+        },
+        {
+          "key": "n_minus_1_upgrade",
+          "status": "pass",
+          "detail": "delivered chain applies to the seeded N-1 upgrade path"
+        },
+        {
+          "key": "data_integrity",
+          "status": "pass",
+          "detail": "every frozen data-integrity assertion holds on the upgraded database"
+        }
+      ],
+      "migration": {
+        "assertions": [
+          {
+            "query": "SELECT count(*) FROM accounts",
+            "want": "3",
+            "got": "3",
+            "pass": true,
+            "detail": "no seeded account row deleted"
+          },
+          {
+            "query": "SELECT count(*) - count(DISTINCT email) FROM accounts",
+            "want": "0",
+            "got": "0",
+            "pass": true,
+            "detail": "duplicate addresses disambiguated, not deleted"
+          },
+          {
+            "query": "SELECT count(*) FROM events",
+            "want": "3",
+            "got": "3",
+            "pass": true,
+            "detail": "linked event rows intact"
+          }
+        ],
+        "db_version": "16.15 (Debian 16.15-1.pgdg13+2)"
+      },
+      "judged_at": "2026-09-09T23:36:34.0602213Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "7829428d4d7483b88b879925591b29fb324d5ec2c50e066dc7d6b48233900278",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": [
+      "external judge ran on the last candidate state for transparency; the loop verdict governs the row",
+      "superseded incomplete judge result preserved: judge-result-incomplete-dsn-querystring-bug.json",
+      "external judge re-run on the preserved last candidate state for transparency; the loop verdict governs the row"
+    ]
+  },
+  "not_run_reasons": [
+    "provenance: superseded infra-failure artifacts preserved under the task record's not_run-infra/ (see AUDIT_RESUME.md §5)"
+  ],
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:41.1662265Z"
+}

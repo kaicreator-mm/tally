@@ -1,0 +1,30 @@
+{
+  "layout": {
+    "migrations": [
+      "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0001_init.sql",
+      "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0002_rename_email.sql",
+      "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0003_index_email.sql"
+    ],
+    "seed": "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/seed/seed.sql",
+    "seed_after_revision": "0002",
+    "reference_repair": "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/oracle/reference_repair.sql",
+    "reference_replaces": "test/eval/v14_product/testdata/tasks/db-03-rename-breaks-downstream/baseline/migrations/0003_index_email.sql"
+  },
+  "expected": {
+    "baseline": {
+      "fresh_database": "fail",
+      "n_minus_1_upgrade": "fail",
+      "data_integrity": "pass",
+      "violations": {
+        "fresh_database": ["dangling-reference:accounts.email"],
+        "n_minus_1_upgrade": ["dangling-reference:accounts.email"]
+      }
+    },
+    "reference": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "pass",
+      "data_integrity": "pass",
+      "violations": {}
+    }
+  }
+}

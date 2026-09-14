@@ -1,0 +1,29 @@
+{
+  "layout": {
+    "migrations": [
+      "test/fixtures/v14/migration/migrations/0001_init.sql",
+      "test/fixtures/v14/migration/migrations/0002_add_orders.sql",
+      "test/fixtures/v14/migration/migrations/0003_orders_total_not_null.sql"
+    ],
+    "seed": "test/fixtures/v14/migration/seed/n_minus_1.sql",
+    "seed_after_revision": "0002",
+    "reference_repair": "test/fixtures/v14/migration/repair/0003_orders_total_not_null.sql",
+    "reference_replaces": "test/fixtures/v14/migration/migrations/0003_orders_total_not_null.sql"
+  },
+  "expected": {
+    "baseline": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "fail",
+      "data_integrity": "pass",
+      "violations": {
+        "n_minus_1_upgrade": ["not-null-no-default:orders.total_cents"]
+      }
+    },
+    "reference": {
+      "fresh_database": "pass",
+      "n_minus_1_upgrade": "pass",
+      "data_integrity": "pass",
+      "violations": {}
+    }
+  }
+}

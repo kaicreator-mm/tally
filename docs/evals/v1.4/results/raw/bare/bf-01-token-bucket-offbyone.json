@@ -1,0 +1,112 @@
+{
+  "arm": "bare",
+  "task_id": "bf-01-token-bucket-offbyone",
+  "outcome": "accepted",
+  "attempts": 2,
+  "interventions": [
+    {
+      "type": "prompt_reissue",
+      "note": "operator re-issued the same verbatim frozen intent after the previous attempt was not accepted; workspace state continued from attempt 1"
+    }
+  ],
+  "timing": {
+    "started_at": "2026-09-09T19:23:26.8858694Z",
+    "wall_seconds": 559.9533452000001,
+    "per_attempt_seconds": [
+      156.812308,
+      403.1410372
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "bf-01-token-bucket-offbyone",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\bf-01-token-bucket-offbyone\\attempt-2\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "first-immediate",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "third-immediate",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "fourth-immediate",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        },
+        {
+          "name": "first-after-refill",
+          "want": "allow",
+          "got": "allow",
+          "pass": true
+        },
+        {
+          "name": "fifth-after-refill",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        },
+        {
+          "name": "capacity-two-third",
+          "want": "reject",
+          "got": "reject",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T19:32:52.5151647Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "01c4964df5ce8b50856ed4fc937456a4cbe6b17dcff620a9f137c27ca3e55d66",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:40.8219748Z"
+}

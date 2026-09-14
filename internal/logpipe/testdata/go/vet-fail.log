@@ -1,0 +1,6 @@
+# tally/internal/store
+internal/store/store.go:33:2: fmt.Errorf format %v reads arg #1, but call has 0 args
+internal/store/db.go:19:9: unreachable code
+internal/store/models.go:88:1: method Marshal(b []byte) has a receiver that is never used
+exit status 1
+FAIL	tally/internal/store [build failed]

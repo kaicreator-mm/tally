@@ -1,0 +1,72 @@
+{{define "base"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{.Title}} · tally</title>
+<link rel="stylesheet" href="/static/tally.css">
+<script src="/static/htmx.min.js" defer></script>
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail">
+  <div class="brand">tally</div>
+  <div class="brand-sub">构建 · 部署 · 失败登记</div>
+
+  <div class="rail-label">视图</div>
+  <a href="/" {{if eq .Active "index"}}aria-current="page"{{end}}>总览</a>
+
+  <div class="rail-label">项目</div>
+  <a href="/projects" {{if eq .Active "projects"}}aria-current="page"{{end}}>项目</a>
+  <a href="/requirements" {{if eq .Active "requirements"}}aria-current="page"{{end}}>需求</a>
+  <a href="/tasks" {{if eq .Active "tasks"}}aria-current="page"{{end}}>执行摘要 <span class="n">非 Task 完成</span></a>
+  <a href="/coverage" {{if eq .Active "coverage"}}aria-current="page"{{end}}>条款覆盖率</a>
+
+  {{/* 研发导航(P2-01,PRD §3.1/§6.1 人类心智模型):每一项都是既有领域读模型的
+       projection / view,只读、不新增状态、不改状态机(DL-19:导航是读/投影关注点)。
+       纪律:只列真实存在且有真实读模型数据支撑的路由;没有背书的条目宁可不出现,
+       绝不放占位入口。Runs(运行清单)已由属主 P2-03 落地(/v13/runs,实现 Run
+       过程事实时间线);Rules 尚无 EngineeringPolicy 读取路由(属主 P3),由属主
+       任务落地路由时再补导航条目。 */}}
+  <div class="rail-label">研发</div>
+  <a href="/v14/launch" {{if eq .Active "v14-launch"}}aria-current="page"{{end}}>发起</a>
+  <a href="/v13/tasks" {{if eq .Active "v13"}}aria-current="page"{{end}}>工作</a>
+  <a href="/v13/runs" {{if eq .Active "v13-runs"}}aria-current="page"{{end}}>运行</a>
+  <a href="/v14/attention" {{if eq .Active "v14-attention"}}aria-current="page"{{end}}>需人工</a>
+  <a href="/v14/rules" {{if eq .Active "v14-rules"}}aria-current="page"{{end}}>规则</a>
+  <a href="/v14/integration" {{if eq .Active "v14-integration"}}aria-current="page"{{end}}>集成</a>
+
+  <div class="rail-label">内容</div>
+  <a href="/docs" {{if eq .Active "docs"}}aria-current="page"{{end}}>文档</a>
+  <a href="/wiki" {{if eq .Active "wiki"}}aria-current="page"{{end}}>Wiki 笔记 <span class="n">未验证</span></a>
+
+  {{/* 执行引擎(T05b):状态只读,动作入队。知识区(指纹库/已验证修复)在 T05c 落地。 */}}
+  <div class="rail-label">执行</div>
+  <a href="/environments" {{if eq .Active "environments"}}aria-current="page"{{end}}>环境</a>
+  <a href="/deploys" {{if eq .Active "deploys"}}aria-current="page"{{end}}>部署</a>
+  <a href="/failures" {{if eq .Active "failures"}}aria-current="page"{{end}}>失败</a>
+
+  <div class="rail-label">知识</div>
+  <a href="/failures" {{if eq .Active "failures"}}aria-current="page"{{end}}>指纹库</a>
+  <a href="/knowledge" {{if eq .Active "knowledge"}}aria-current="page"{{end}}>已验证修复 <span class="n">已验证</span></a>
+
+  <div class="rail-foot">
+    <form method="post" action="/logout">
+      <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+      <button class="secondary" type="submit">登出</button>
+    </form>
+  </div>
+</nav>
+
+<main>
+  {{if .Flash.Msg}}<div class="flash {{.Flash.Kind}}">{{.Flash.Msg}}</div>{{end}}
+  {{template "content" .}}
+</main>
+
+</div>
+</body>
+</html>
+{{end}}
+{{/* 默认空 content:页面各自覆盖。必须经 {{define}} 定义,克隆后才能被覆盖。 */}}
+{{define "content"}}{{end}}

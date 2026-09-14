@@ -1,0 +1,11 @@
+#9 [internal] load build definition from Dockerfile
+#9 DONE 0.1s
+#12 [build 3/7] RUN go build -o /app ./cmd/server
+#12 4.215 cmd/server/main.go:15:2: no required module provides package tally/internal/web; to add it:
+#12 4.216 	go get tally/internal/web
+#12 ERROR: process "/bin/sh -c go build -o /app ./cmd/server" did not complete successfully: exit code: 1
+------
+ > [build 3/7] RUN go build -o /app ./cmd/server:
+#12 4.215 cmd/server/main.go:15:2: no required module provides package tally/internal/web
+------
+ERROR: failed to solve: process "/bin/sh -c go build -o /app ./cmd/server" did not complete successfully: exit code: 1

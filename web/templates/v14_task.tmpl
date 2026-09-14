@@ -1,0 +1,250 @@
+{{define "content"}}
+<div class="head">
+  <h1>闭环任务 {{.TaskID}}</h1>
+  <span class="meta">Work → Task · 概览 / 计划 / 变更 / 验证 / 评审 / 动态 · 只读派生(PRD §7/§26.2/§29)</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库(.tally/ 的 TaskContract / 冻结 VerificationContract)。接好后,这里显示一个任务的完整闭环现状:概览、计划、变更、验证、评审与动态,全部由事实派生。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">Git 制品装载失败:{{.LoadErr}}</div>
+{{else if .NotFound}}
+<div class="empty">HEAD 快照里没有 TaskContract <span class="dim">{{.TaskID}}</span>。Git 是 desired 侧唯一来源:未提交或未通过静态校验的合同不会出现在这里。</div>
+{{else}}
+
+<p class="note">项目 <b>{{.ProjectID}}</b> · 快照提交 <span class="dim">{{short .SourceCommit}}</span> · 合同 {{short .ContractHash}}{{if .HasFrozen}} · 冻结验证契约 {{short .FrozenHash}}{{else}} · <b>无冻结验证契约</b>(闭环不会执行该任务,INV-02){{end}}</p>
+
+{{if .RowErr}}<div class="flash bad">事实面读取失败:{{.RowErr}}(以下派生结论可能不完整)</div>{{end}}
+
+<section>
+  <h2>概览 Overview</h2>
+  {{if .Title}}<p><b>{{.Title}}</b></p>{{end}}
+  {{if .Objective}}<p class="note">{{.Objective}}</p>{{end}}
+  {{if .DeriveErr}}
+    <div class="flash bad">结论派生失败:{{.DeriveErr}} —— 没有可信结论,不猜测。</div>
+  {{else}}
+    <p>
+      执行现状(派生,非声明):
+      {{if .NeedsAttention}}<span class="st st-bad">{{.State}}</span>
+      {{else}}<span class="st st-ok">{{.State}}</span>{{end}}
+      {{if .ClassText}}
+        {{if .WaivedClass}}<span class="st st-warn">{{.ClassText}}(经 Waiver 放行,不是严格满足)</span>
+        {{else}}<span class="dim">{{.ClassText}}</span>{{end}}
+      {{end}}
+      <span class="dim">当前 Run {{if .CurrentRun}}{{.CurrentRun}}{{else}}—{{end}} · 当前候选 {{if .CurrentCandidate}}<a href="/v13/changes/{{.CurrentCandidate}}">{{short .CurrentCandidate}}</a>{{else}}—{{end}}</span>
+    </p>
+    {{if .HasVerdict}}
+    <p>
+      验证结论(VerifiedBasis,PRD §14):
+      {{if .VerdictLimited}}<span class="st st-warn">{{.Verdict}}(limited 结论 —— 存在未匹配风险 / 被豁免条款 / 保证缺口之一,不得显示成普通 VERIFIED)</span>
+      {{else if .VerdictOK}}<span class="st st-ok">{{.Verdict}}(验证门全部满足,且无未匹配风险、无被豁免条款、无保证缺口)</span>
+      {{else}}<span class="st st-off">{{.Verdict}}(主线未达 VERIFIED,验证节的门槛缺口说明原因)</span>{{end}}
+      <span class="dim nowrap">结论依据已编译合同 compiled:{{.CompiledHash}}</span>
+    </p>
+    {{end}}
+    {{if .NeedsAttention}}<div class="flash bad">该任务处于异常态 {{.State}},需要人工关注(见「评审」节的行动说明)。</div>{{end}}
+  {{end}}
+</section>
+
+<section>
+  <h2>计划 Plan</h2>
+  <p class="note">计划的权威是 Git 里的冻结合同:目标与验收条款在此呈现,完成与否由事实推导,页面不改写。</p>
+  {{if .Acceptance}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>验收条款</th><th>陈述(冻结面)</th></tr></thead>
+    <tbody>
+      {{range .Acceptance}}
+      <tr><td class="nowrap"><b>{{.ID}}</b></td><td>{{.Statement}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}<p class="note dim">冻结合同没有验收条款。</p>{{end}}
+</section>
+
+<section>
+  <h2>变更 Changes</h2>
+  {{if .Candidates}}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>候选</th><th>创建 / 产生 Run</th><th>改动文件</th><th>验证 Run</th><th>取代关系</th></tr>
+    </thead>
+    <tbody>
+      {{range .Candidates}}
+      <tr>
+        <td class="nowrap">
+          {{if .Current}}<span class="st st-ok">当前候选</span>{{end}}
+          <a href="/v13/changes/{{.ID}}">{{short .ID}}</a>
+        </td>
+        <td class="dim nowrap">{{.CreatedAt}}<div>run {{.ProducerRun}}</div></td>
+        <td class="num">{{.FileCount}}</td>
+        <td class="nowrap">
+          {{if or .VerifyPass .VerifyFail .VerifyError .VerifyRunning}}
+            {{if .VerifyPass}}<span class="st st-ok">pass {{.VerifyPass}}</span> {{end}}
+            {{if .VerifyFail}}<span class="st st-bad">fail {{.VerifyFail}}</span> {{end}}
+            {{if .VerifyError}}<span class="st st-warn">error {{.VerifyError}}</span> {{end}}
+            {{if .VerifyRunning}}<span class="st st-off">验证中</span>{{end}}
+          {{else}}<span class="dim">未验证</span>{{end}}
+        </td>
+        <td class="dim">
+          {{if .SupersededBy}}<div>被 {{range .SupersededBy}}{{.}} {{end}}取代</div>{{end}}
+          {{if .Supersedes}}<div>取代 {{range .Supersedes}}{{.}} {{end}}</div>{{end}}
+          {{if and (not .SupersededBy) (not .Supersedes)}}—{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">候选不可变(验证与评审的固定单元);「改了什么」看 Change 详情(diff / 证据 / hunk 清单)。取代关系是 append-only 事实 —— 修复产生新候选,绝不改写旧候选。验证 ERROR 是验证侧不可信,不是候选失败,不会被算成修复依据。</p>
+  {{else}}
+  <p class="note dim">还没有候选快照。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>验证 Verification</h2>
+  {{if .CompiledNote}}<p class="note dim">{{.CompiledNote}}(展示缺席不放宽任何验证门;本页不冒充档位)</p>{{end}}
+  {{if .BasisDims}}
+  <p class="note"><b>依据维度(PRD §14 VerifiedBasis 的四维度;未接入的维度如实标注,展示缺席不放宽任何门):</b></p>
+  <div class="v14-basis-dims">
+    {{range .BasisDims}}
+    <div class="cell">
+      <div class="k">{{.Name}}{{if .Wired}}<span class="st st-ok">已接入</span>{{else}}<span class="st st-off">未接入</span>{{end}}</div>
+      <div class="v" style="font-size:12px;line-height:19px">{{if .Value}}{{.Value}}{{end}}{{if .Note}}<div class="dim">{{.Note}}</div>{{end}}</div>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+  {{if .Coverage.Notice}}<div class="flash warn">{{.Coverage.Notice}}</div>{{end}}
+  {{if .Coverage.Available}}
+  <p class="note">当前候选的覆盖(功能 + independence,两个独立维度 §8.8.3),针对冻结契约 <span class="dim">{{short .Coverage.ContractRef}}</span> 推导。</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th><th>功能覆盖</th><th>缺口 / 满足者</th><th>independence 要求</th><th>independence 覆盖</th></tr></thead>
+    <tbody>
+      {{range $i, $f := .Coverage.Functional}}
+      <tr>
+        <td>{{$f.ID}}</td>
+        <td>{{if $f.Covered}}<span class="st st-ok">覆盖</span>{{else}}<span class="st st-bad">未覆盖</span>{{end}}</td>
+        <td class="dim">
+          {{if $f.Gap}}<div>缺口:{{$f.Gap}}</div>{{end}}
+          {{if $f.SatisfiedBy}}<div>满足者:{{join $f.SatisfiedBy "、"}}</div>{{end}}
+          {{if $f.Blocking}}<div>阻断 FAIL:{{join $f.Blocking "、"}}</div>{{end}}
+          {{if and (not $f.Gap) (not $f.SatisfiedBy) (not $f.Blocking)}}—{{end}}
+        </td>
+        <td class="dim">{{with $ind := index $.Coverage.Independence $i}}{{.Required}}{{end}}</td>
+        <td>{{with $ind := index $.Coverage.Independence $i}}{{if .Covered}}<span class="st st-ok">覆盖</span><div class="dim">{{join .SatisfiedBy "、"}}</div>{{else}}<span class="st st-bad">未覆盖</span>{{end}}{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+  {{if not .DeriveErr}}
+  <p class="note">依据(Basis,{{len .Basis}} 条事实/证据引用):
+    {{if .Basis}}{{range .Basis}}<span class="dim nowrap">{{.}}</span> {{end}}
+    {{else}}<span class="dim">—</span>{{end}}
+  </p>
+  <p class="note">任何 VERIFIED 类结论都以这些事实引用为据(INV-11);Agent 的「我做完了」永远只是 claim,不会出现在依据里。</p>
+  {{if .Gaps}}
+  <p><b>门槛缺口(主线未达 VERIFIED 的原因):</b></p>
+  <ul>
+    {{range .Gaps}}<li class="dim">{{.Requirement}}:{{.Detail}}</li>{{end}}
+  </ul>
+  {{end}}
+  {{if .IgnoredClaims}}
+  <p><b>被拒绝消费的声明(通道不具备事实资格,列出以供审计):</b></p>
+  <ul>
+    {{range .IgnoredClaims}}<li class="dim">{{.Ref}}:{{.Reason}}</li>{{end}}
+  </ul>
+  {{end}}
+  {{end}}
+  <h3>暴露事实(held-out 进入实现侧可见通道的 append-only 账面)</h3>
+  {{if .Exposures}}
+  <div class="flash warn">存在 {{len .Exposures}} 条暴露事实:independence 覆盖按整条候选谱系消费这些事实,保证只能维持或降低,不会因新候选干净而消失。</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>binding / 条款</th><th>通道</th><th>候选</th><th>时刻</th><th>追溯原因</th></tr></thead>
+    <tbody>
+      {{range .Exposures}}
+      <tr>
+        <td>{{.BindingID}}{{if .Acceptance}} <span class="dim">({{.Acceptance}})</span>{{end}}</td>
+        <td class="nowrap">{{.Channel}}</td>
+        <td class="dim nowrap">{{.ChangeSet}}</td>
+        <td class="dim nowrap">{{.At}}</td>
+        <td class="dim">{{if .Reason}}{{.Reason}}{{else}}—{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">没有暴露事实。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>评审 Reviews</h2>
+  <p class="note">人的决定在这里是证据(记录式呈现,不是状态);没有人类通道的批准证据,状态推不到 APPROVED。</p>
+  {{if .Approvals}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>决定</th><th>裁决人</th><th>时刻</th></tr></thead>
+    <tbody>
+      {{range .Approvals}}
+      <tr><td>{{if eq .Decision "approve"}}<span class="st st-ok">{{.Decision}}</span>{{else}}<span class="st st-bad">{{.Decision}}</span>{{end}}</td><td>{{.By}}</td><td class="dim nowrap">{{.At}}</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}<p class="note dim">没有人类审批证据。</p>{{end}}
+  <h3>需要我做什么</h3>
+  {{if .NeedsAttention}}
+    <div class="flash bad">该任务处于异常态 {{.State}},需要人工关注。验证节的门槛缺口与失败原因是结论的完整依据;处理动作(修复 / 换基线 / 放弃)在链路外完成后,新事实会改变派生结论。</div>
+  {{else if .DeriveErr}}
+    <p class="note dim">派生失败时没有可信结论可给行动建议;先解决事实面/制品装载错误。</p>
+  {{else if .Gaps}}
+    <p class="note">主线尚未达 VERIFIED:按验证节列出的门槛缺口推进(缺口由事实补齐,状态随之派生,无需任何手动状态操作)。</p>
+  {{else}}
+    <p class="note dim">当前没有需要人工介入的事项。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>动态 Activity</h2>
+  {{if .Attempts}}
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Run</th><th>观测状态</th><th>失败原因</th><th>迭代</th><th>起止</th><th>固定候选</th><th>Agent 自述</th></tr>
+    </thead>
+    <tbody>
+      {{range .Attempts}}
+      <tr>
+        <td class="nowrap">{{if gt .No 1}}<span class="st st-warn">修复 #{{.No}}</span>{{else}}<span class="dim">首次</span>{{end}}{{if .ChainTruncated}}<div class="st st-bad">链超限截断</div>{{end}}</td>
+        <td class="nowrap">{{.ID}}</td>
+        <td class="nowrap">{{if eq .Status "completed"}}<span class="st st-ok">{{.Status}}</span>{{else if or (eq .Status "failed") (eq .Status "cancelled")}}<span class="st st-bad">{{.Status}}</span>{{else}}{{.Status}}{{end}}</td>
+        <td>{{if .FailureReason}}<span class="dim">{{.FailureReason}}</span>{{else}}—{{end}}</td>
+        <td class="num">{{.Iterations}}</td>
+        <td class="dim nowrap">{{.StartedAt}} → {{.FinishedAt}}</td>
+        <td class="nowrap">{{if .CandidateID}}<span class="dim">{{short .CandidateID}}</span>{{else}}<span class="dim">无候选</span>{{end}}</td>
+        <td class="dim">{{if .Claim}}claim:{{.Claim}}{{else}}—{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">序号沿 EscalatedFrom 父链接推导(ADR-0001 §2),不是可写状态;内层迭代预算与外层修复预算互不相通(决策锁 7)。</p>
+  {{else}}
+  <p class="note dim">还没有实现 Run:该任务尚未进入闭环,或事实面未接入。</p>
+  {{end}}
+</section>
+
+{{end}}
+{{end}}

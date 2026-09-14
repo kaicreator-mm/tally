@@ -1,0 +1,53 @@
+{{define "content"}}
+<div class="head">
+  <h1>需人工评审</h1>
+  <span class="meta">v1.4 Attention · 需人工事项的聚合投影 · 只读无写(PRD §26.4)</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库。接好后,这里只列真正需要人的事项:派生异常态(需要评审 / 显式阻塞 / 终态失败 / 取消)与在账暴露事实 —— 全部从阻断事实派生,不是存储的任务列表。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">Git 制品装载失败:{{.LoadErr}}</div>
+{{else}}
+
+<p class="note">项目 <b>{{.ProjectID}}</b> · 扫描 {{.TaskCount}} 个 standard TaskContract(HEAD 快照;Git 是 desired 侧唯一来源)。</p>
+
+{{if .Items}}
+<p class="note">聚合 {{len .Items}} 项需人工事项:{{range $i, $c := .Summary}}{{if $i}} · {{end}}{{$c.Label}} ×{{$c.Count}}{{end}}。</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>任务</th><th>类型</th><th>说明</th><th>目标动作</th><th>依据引用</th><th>最近观测</th></tr></thead>
+  <tbody>
+    {{range .Items}}
+    <tr>
+      <td class="nowrap"><a href="/v14/tasks/{{.TaskID}}">{{.TaskID}}</a></td>
+      <td class="nowrap">{{if eq .Kind "projection_error"}}<span class="st st-warn">{{.Label}}</span>{{else}}<span class="st st-bad">{{.Label}}</span>{{end}} <span class="dim">{{.Kind}}</span></td>
+      <td>{{.Detail}}</td>
+      <td class="nowrap">{{.Action}}</td>
+      <td class="dim">{{if .Refs}}{{range .Refs}}<span class="nowrap">{{.}}</span> {{end}}{{else}}—{{end}}</td>
+      <td class="dim nowrap">{{if .At}}{{.At}}{{else}}—{{end}}</td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+</div>
+{{else}}
+<p class="note dim">当前没有需要人工介入的事项。</p>
+{{end}}
+
+<section>
+  <h2>本页的边界(如实声明)</h2>
+  <ul>
+    <li class="dim">Attention 是<b>投影</b>,不是业务对象:全部条目从阻断事实派生,可由底层事实稳定重算(PRD §22),本页不落库、无任何写路由。</li>
+    <li class="dim">只包含合法阻断来源(封闭词表):needs_review / blocked / failed_run / cancelled(派生异常态)与 exposure_compromise(在账暴露事实);外加 projection_error(投影本身失败的任务不静默缺席)。聚合小计与每条的裁决动作都从同一事实派生,不引入第二种来源。</li>
+    <li class="dim">闭环升级原因词(repair_exhausted / router_unavailable 等)目前是闭环终态日志,还没有可读取的事实面投影;它们的既存事实形态(终态失败 Run + 失败原因)照常呈现,本页不发明第二种来源。</li>
+    <li class="dim">waiver 裁决请求没有独立事实来源:其事实面形态是 NEEDS_REVIEW 异常态与覆盖门槛缺口(见任务详情页),不另造来源。</li>
+    <li class="dim">Dismiss / snooze 未接线:接入时必须落在独立持久层;生命周期状态不从本页复制、不从本页写(INV-STATE-01:状态由事实派生)。</li>
+  </ul>
+</section>
+
+{{end}}
+{{end}}

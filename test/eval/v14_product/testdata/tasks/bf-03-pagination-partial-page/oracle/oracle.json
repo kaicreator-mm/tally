@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "name": "full-pages", "in": "10,3,1", "want": "items=3,total_pages=4" },
+    { "name": "partial-page-exists", "in": "10,3,4", "want": "items=1,total_pages=4" },
+    { "name": "beyond-total", "in": "10,3,5", "want": "out-of-range" },
+    { "name": "exact-multiple", "in": "9,3,3", "want": "items=3,total_pages=3" },
+    { "name": "partial-page-seven-of-nine", "in": "7,3,3", "want": "items=1,total_pages=3" },
+    { "name": "empty-collection", "in": "0,5,1", "want": "out-of-range" }
+  ],
+  "expected": {
+    "baseline_failures": ["full-pages", "partial-page-exists", "partial-page-seven-of-nine"],
+    "reference_passes_all": true
+  }
+}

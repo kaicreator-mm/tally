@@ -1,0 +1,8 @@
+# tally/internal/web
+internal/web/handler.go:47:12: undefined: renderTemplate
+internal/web/handler.go:52:6: cannot use w (variable of type http.ResponseWriter) as *App value in argument to h.serve
+internal/web/handler.go:61:2: too many arguments in call to render
+	have (http.ResponseWriter, string, map[string]string, int)
+	want (http.ResponseWriter, string)
+Makefile:18: recipe for target 'build' failed
+make: *** [build] Error 2

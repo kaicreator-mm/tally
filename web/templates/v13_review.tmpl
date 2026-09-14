@@ -1,0 +1,204 @@
+{{define "content"}}
+<div class="head">
+  <h1>Patch Review</h1>
+  <span class="meta">确定性归账 · Unattributed 非空不得 Approve · 决定只写证据</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.3 数据源未接入。
+  <span class="do">Patch Review 需要事实面与 Git 制品仓库:对固定 revision 的 ChangeSet 做确定性 hunk 归账,Owner 决定落 HumanApprovalEvidence。</span>
+</div>
+{{else if .NotFound}}
+<div class="empty">没有这份 ChangeSet:<span class="dim">{{.ID}}</span>。</div>
+{{else if .LoadErr}}
+<div class="flash bad">读取失败:{{.LoadErr}}</div>
+{{else}}
+
+<p class="lede">Review 输入是<b>固定 revision 的 ChangeSet</b>,不是正在变化的 workspace(§19)。下方归账由确定性规则生成:每个 hunk 恰好一个 primary bucket;规则之外的残差如实落在 <b>Unattributed</b> —— Unattributed 非空时 Owner 不得 Approve(§19.2)。</p>
+
+<section>
+  <div class="grid grid-4">
+    <div class="cell"><div class="k">候选</div><div class="v" style="font-size:13px;line-height:20px;word-break:break-all">{{short .ID}}</div></div>
+    <div class="cell"><div class="k">项目 / 任务</div><div class="v" style="font-size:13px;line-height:20px">{{.Project}}<div class="dim">{{.TaskID}}</div></div></div>
+    <div class="cell"><div class="k">Base</div><div class="v" style="font-size:13px;line-height:20px;word-break:break-all">{{short .Base}}</div></div>
+    <div class="cell"><div class="k">Candidate</div><div class="v" style="font-size:13px;line-height:20px;word-break:break-all">{{short .Candidate}}</div></div>
+  </div>
+  <p><a class="btn secondary" href="/v13/changes/{{.ID}}">← 完整 Change 详情</a></p>
+</section>
+
+<section>
+  <h2>归账报告</h2>
+  {{if .Report.Notice}}<div class="flash bad">{{.Report.Notice}}</div>{{end}}
+
+  {{if .Report.Available}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条目</th><th>路径</th><th>primary bucket</th><th>semantic tags</th><th>归账来源</th></tr></thead>
+    <tbody>
+      {{range .Report.Entries}}
+      <tr>
+        <td class="dim nowrap">{{if .HunkID}}{{short .HunkID}}{{else}}<span class="dim">(零 hunk 条目)</span>{{end}}</td>
+        <td>{{.Path}}{{if .Unattributed}} <span class="st st-bad">未归账</span>{{end}}</td>
+        <td class="nowrap {{if .Unattributed}}st-bad{{end}}">{{.Bucket}}</td>
+        <td class="dim">{{if .Tags}}{{join .Tags "、"}}{{else}}—{{end}}</td>
+        <td>{{if .ByRule}}确定性规则{{else}}显式归属{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Unattributed 条目:<b>{{.Report.UnattributedCount}}</b>。bucket 词表:acceptance_code 只能由显式归属分配;P1 界面没有残差归属输入通道,规则之外的条目保持 Unattributed 并阻断 Approve。</p>
+
+  {{if .Report.Protected}}
+  <h3>Protected Evidence 被触及(§19.3)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>路径</th><th>binding / 条款</th><th>期望基线哈希</th><th>状态</th></tr></thead>
+    <tbody>
+      {{range .Report.Protected}}
+      <tr>
+        <td>{{.Path}}</td>
+        <td>{{.BindingID}} <span class="dim">({{.AcceptanceID}})</span></td>
+        <td class="dim nowrap">{{if .ExpectedHash}}{{.ExpectedHash}}{{else}}未声明{{end}}</td>
+        <td><span class="st st-warn">MODIFIED</span>(出现在候选 diff 中;哈希比对归验证域)</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+
+  {{if .Report.Acceptances}}
+  <h3>Acceptance Coverage(§19.3)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th><th>相关 hunk</th><th>功能覆盖</th><th>independence 要求 / 覆盖</th><th>strict 结论</th></tr></thead>
+    <tbody>
+      {{range .Report.Acceptances}}
+      <tr>
+        <td>{{.ID}}<div class="dim">{{.Statement}}</div></td>
+        <td class="dim">{{if .RelatedHunks}}{{range .RelatedHunks}}<div class="nowrap">{{short .}}</div>{{end}}{{else}}—{{end}}</td>
+        <td>
+          {{if .FunctionalCovered}}<span class="st st-ok">覆盖</span>
+          {{else}}<span class="st st-bad">未覆盖{{if .FunctionalGap}}({{.FunctionalGap}}){{end}}</span>{{end}}
+          {{if .FunctionalSatisfiedBy}}<div class="dim">满足者:{{join .FunctionalSatisfiedBy "、"}}</div>{{end}}
+          {{if .FunctionalBlocking}}<div class="dim">阻断 FAIL:{{join .FunctionalBlocking "、"}}</div>{{end}}
+        </td>
+        <td>{{.IndependenceRequired}}
+          {{if .IndependenceCovered}}<span class="st st-ok">覆盖</span>
+          {{else}}<span class="st st-bad">未覆盖</span>{{end}}
+          {{if .IndependenceSatisfiedBy}}<div class="dim">{{join .IndependenceSatisfiedBy "、"}}</div>{{end}}
+        </td>
+        <td class="nowrap {{if eq .Strict "strict_unmet"}}st-bad{{else if eq .Strict "strict_satisfied"}}st-ok{{else}}dim{{end}}">{{.Strict}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{end}}
+
+  {{if .Report.Blockers}}
+  <h3>Approve 阻断项({{len .Report.Blockers}})</h3>
+  <div class="flash bad">
+    {{range .Report.Blockers}}<div>[{{.Kind}}] {{.Describe}}</div>{{end}}
+  </div>
+  {{else}}
+  <div class="flash ok">没有阻断项:归账完整、验收 strict 结论无未豁免缺口。</div>
+  {{end}}
+  {{if .Report.StrictOutcome}}<p class="note">候选级 strict 结论:<b>{{.Report.StrictOutcome}}</b>。strict_waived 永远不会呈现为 strict_satisfied(§8.10)。</p>{{end}}
+  {{end}}
+</section>
+
+<section>
+  <h2>Lineage 暴露</h2>
+  <p class="note">评审输入包含候选<b>整条取代 lineage</b> 上的暴露事实(当前 + 祖先):祖先暴露不会被新候选的干净记录抹掉;independence 覆盖按 lineage 消费它们(§8.6.1)。暴露是 append-only 事实,本区不含任何可改写的暴露状态。</p>
+  {{if .Exposures}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>位置</th><th>binding / 条款</th><th>通道</th><th>作用域</th><th>时刻</th><th>追溯</th></tr></thead>
+    <tbody>
+      {{range .Exposures}}
+      <tr>
+        <td class="nowrap">{{if .Current}}<span class="st st-warn">当前候选</span>{{else}}<span class="st st-bad">祖先 · 第 {{.Depth}} 代</span> <span class="dim nowrap">({{short .Anchor}})</span>{{end}}</td>
+        <td>{{.BindingID}}{{if .Acceptance}} <span class="dim">({{.Acceptance}})</span>{{end}}</td>
+        <td class="nowrap">{{.Channel}}</td>
+        <td class="dim nowrap">{{.Scope}}</td>
+        <td class="dim nowrap">{{.ExposedAt}}</td>
+        <td class="dim">{{if .Reason}}{{.Reason}}{{else}}—{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{if .AncestorExposure}}
+  <div class="flash warn">{{.AncestorExposure}} 条暴露来自取代祖先:修复(repair)不能掩盖既有信息泄漏;受影响 binding 的 independence 覆盖在归账报告中如实收口。</div>
+  {{end}}
+  {{else}}
+  <p class="note dim">该候选 lineage(含全部取代祖先)上没有暴露事实。</p>
+  {{end}}
+</section>
+
+<section>
+  <h2>Owner 决定</h2>
+  <p class="note">决定以 <b>HumanApprovalEvidence</b> 追加进事实面(append-only 证据,含决定方向 / 原因 / 裁决人 / 时刻);本界面不写、也不存在任何任务状态字段 —— APPROVED 由 State Engine 从证据派生(§18.1)。批准被阻断时服务端同样拒绝落证据。<b>这是「仅此一次」的决定:只对本候选生效,绝不自动创建或修改任何策略。</b></p>
+
+  {{if not .CanDecide}}
+  <div class="flash warn">本候选当前不能做决定:{{if .DecideBlocker}}{{.DecideBlocker}}{{else}}归账报告不可用。{{end}}</div>
+  {{end}}
+  {{if and .CanDecide .Report.ApproveBlocked}}
+  <div class="flash warn">Approve 被阻断:{{.DecideBlocker}}</div>
+  {{end}}
+
+  <form class="form" method="post" action="/v13/review/{{.ID}}/decide">
+    <div class="field">
+      <label for="decision">决定方向</label>
+      <select name="decision" id="decision">
+        <option value="approve" {{if or (not .CanDecide) .Report.ApproveBlocked}}disabled{{end}}>approve(批准)</option>
+        <option value="reject">reject(否决 / 暂不批准)</option>
+      </select>
+      <div class="help">缺席的决定不是默认批准;批准只记证据,状态另行派生。</div>
+    </div>
+    <div class="field">
+      <label for="reason">决定原因(必填)</label>
+      <textarea name="reason" id="reason" placeholder="为什么批准 / 否决:对照验收条款与阻断项说明"></textarea>
+    </div>
+    <div class="field">
+      <label for="decided_by">裁决人(必填)</label>
+      <input type="text" name="decided_by" id="decided_by" placeholder="Owner 身份(证据的 recorder 侧写)">
+    </div>
+    <button type="submit">记录决定证据(仅此一次)</button>
+  </form>
+</section>
+
+<section>
+  <h2>提议新规(独立动作,不解决本案例)</h2>
+  {{if .GovernanceAvailable}}
+  <p class="note">如果本案让你认为「这一类情况应当有一条工程策略」,在这里把它落成一条<b>治理提案草稿</b>(DRAFT):候选内容出生即经运行时解析器正典校验,证据引用指向本案;提案绝不写审批证据、绝不批准本候选,运行时策略在治理链批准并经 Git 提交前不受任何影响(激活是独立后续动作)。</p>
+  <form class="form" method="post" action="/v13/review/{{.ID}}/propose-rule">
+    <div class="field">
+      <label for="rule_yaml">候选策略 YAML(必填;EngineeringPolicy 正典格式)</label>
+      <textarea name="rule_yaml" id="rule_yaml" rows="8" placeholder="id: POL-EXAMPLE&#10;enforcement: gate&#10;..."></textarea>
+      <div class="help">出生即校验:不是合法 EngineeringPolicy 的内容会被拒绝;治理字段(status/approved_by 等)不属于策略 YAML,混入即拒。</div>
+    </div>
+    <div class="field">
+      <label for="proposed_by">提案人(必填)</label>
+      <input type="text" name="proposed_by" id="proposed_by" placeholder="提议者身份">
+    </div>
+    <div class="field">
+      <label for="rule_note">适用范围说明(可选)</label>
+      <input type="text" name="rule_note" id="rule_note" placeholder="这条规则针对哪类情况(治理说明,不是运行时匹配语义)">
+    </div>
+    <div class="field">
+      <label for="supersedes">取代的既有提案 ID(可选)</label>
+      <input type="text" name="supersedes" id="supersedes" placeholder="留空 = 全新提案">
+    </div>
+    <button type="submit">记录治理提案草稿(不解决本案例)</button>
+  </form>
+  {{else}}
+  <div class="flash warn">治理存储未接入:提议新规暂不可用。仅此一次的决定(上一节)不受影响。</div>
+  {{end}}
+</section>
+
+{{end}}
+{{end}}

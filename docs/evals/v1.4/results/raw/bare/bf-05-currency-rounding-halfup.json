@@ -1,0 +1,106 @@
+{
+  "arm": "bare",
+  "task_id": "bf-05-currency-rounding-halfup",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T19:50:41.6302478Z",
+    "wall_seconds": 263.2973373,
+    "per_attempt_seconds": [
+      263.2973373
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "bf-05-currency-rounding-halfup",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\bf-05-currency-rounding-halfup\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 6 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "exact-values",
+          "want": "1.50",
+          "got": "1.50",
+          "pass": true
+        },
+        {
+          "name": "half-cent-up",
+          "want": "0.01",
+          "got": "0.01",
+          "pass": true
+        },
+        {
+          "name": "half-cent-negative",
+          "want": "-0.01",
+          "got": "-0.01",
+          "pass": true
+        },
+        {
+          "name": "near-dollar",
+          "want": "1.00",
+          "got": "1.00",
+          "pass": true
+        },
+        {
+          "name": "below-half",
+          "want": "0.00",
+          "got": "0.00",
+          "pass": true
+        },
+        {
+          "name": "one-dollar",
+          "want": "1.00",
+          "got": "1.00",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T19:55:06.8296448Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "2698e1d58dd7012a6a99241d8be13f7f45c0c6a5df084e1bee6c7461b1abbe8d",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:41.0238434Z"
+}

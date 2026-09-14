@@ -1,0 +1,2808 @@
+{
+  "source_sha256": "6581c27893a9a7ff800bb81da3de10cf98abe6c4880f16e5d8ca101a9306f75f",
+  "prd_sha256": "bed4d8f69b387d1e5ab3dc8878498e94679fd308d314ff23cd601311265952b0",
+  "task_count": 75,
+  "tasks": [
+    {
+      "id": "P0-01",
+      "title": "Job lease / heartbeat schema and SQL contract",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "S",
+      "allowed": [
+        "migrations/0014_job_lease.sql",
+        "internal/store/queries/job.sql",
+        "test/arch/job_lease_contract_test.go"
+      ],
+      "forbidden": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go",
+        "cmd/worker/main.go"
+      ],
+      "goal": "Add the database/query contract needed to recover jobs left in running state after worker failure. Do not wire the worker yet.",
+      "source_facts": [
+        "migrations/0010_jobs.sql has pending/running/done/failed but no owner, heartbeat or lease_until.",
+        "internal/jobs.Queue marks running in one transaction but has no stale-running reclaim."
+      ],
+      "prd_refs": [
+        "§17 Minimal Workflow Kernel [P0 lease / P1 vertical subset]",
+        "§37 P0 correctness"
+      ],
+      "acceptance": [
+        "Job rows can record lease owner, lease expiry and heartbeat.",
+        "SQL exposes atomic claim/reclaim primitives using SKIP LOCKED.",
+        "A live lease cannot be reclaimed by the SQL predicate.",
+        "No sqlc-generated Go file is edited in this task."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-02",
+      "title": "Trace tuple correctness and project namespace SQL contract",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0015_trace_project_namespace.sql",
+        "internal/store/queries/trace.sql",
+        "test/arch/trace_namespace_contract_test.go"
+      ],
+      "forbidden": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go",
+        "internal/project/**"
+      ],
+      "goal": "Fix trace identity at the schema/query contract level: project-specific nodes must be namespaced and stale-edge deletion must compare complete edge tuples.",
+      "source_facts": [
+        "DeleteStaleTraceEdges currently compares from_type/from_key/to_type/to_key independently, allowing Cartesian false matches.",
+        "commit_clause/test_clause/trace_edge identities do not consistently carry project namespace."
+      ],
+      "prd_refs": [
+        "INV-STATE-03",
+        "§22 Evidence Graph",
+        "§37 P0"
+      ],
+      "acceptance": [
+        "Trace edge identity cannot collide across projects.",
+        "Stale deletion is tuple/NOT-EXISTS based, not independent NOT IN lists.",
+        "Migration preserves/rebuilds derived index semantics.",
+        "Generated sqlc Go files remain untouched."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-03",
+      "title": "Structured CommandSpec core",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "S",
+      "allowed": [
+        "internal/command/spec.go",
+        "internal/command/spec_test.go",
+        "internal/command/json.go",
+        "internal/command/json_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Introduce one structured executable command value for repro/validation paths: argv, cwd, env, timeout and explicit shell flag.",
+      "source_facts": [
+        "internal/runner.Command already uses Argv/Dir/Env.",
+        "Failure/deps paths still persist or execute command strings with strings.Fields."
+      ],
+      "prd_refs": [
+        "§8 structured required gates",
+        "§21.6 Structured Repro",
+        "§32 safety model"
+      ],
+      "acceptance": [
+        "CommandSpec rejects empty argv when shell=false.",
+        "Shell semantics are explicit and false by default.",
+        "JSON round-trip is stable.",
+        "No process execution is added here."
+      ],
+      "validation": [
+        "go test ./internal/command/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-04",
+      "title": "Failure repro persistence: structured columns/query contract",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W01",
+      "deps": [
+        "P0-03"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0016_failure_command_spec.sql",
+        "internal/store/queries/failure_event.sql",
+        "test/arch/failure_repro_contract_test.go"
+      ],
+      "forbidden": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go",
+        "internal/failure/**",
+        "cmd/worker/main.go"
+      ],
+      "goal": "Replace the failure fact persistence contract from workdir/repro string/other_targets strings toward structured command JSON while keeping old rows migratable.",
+      "source_facts": [
+        "0013_failure_repro.sql stores workdir TEXT, repro TEXT and other_targets JSONB.",
+        "failure_event is append-only and must remain so."
+      ],
+      "prd_refs": [
+        "§21.6 Structured Repro",
+        "INV-FACT-01",
+        "§33 storage"
+      ],
+      "acceptance": [
+        "New structured repro representation can encode CommandSpec and structured other targets.",
+        "Existing failure rows remain readable through a defined compatibility path.",
+        "No UPDATE/DELETE query is added for failure_event.",
+        "Generated sqlc files are not edited."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-05",
+      "title": "Disposable Git worktree manager",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "internal/workspace/manager.go",
+        "internal/workspace/manager_test.go",
+        "internal/workspace/git.go",
+        "internal/workspace/git_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Provide a reusable disposable-worktree lifecycle so execution never mutates an owner primary worktree.",
+      "source_facts": [
+        "cmd/worker failureRunner currently writes candidate files directly into spec.Workdir.",
+        "Latest PRD requires one disposable worktree per CodegenRun and no execution in primary worktree."
+      ],
+      "prd_refs": [
+        "INV-EXEC-01",
+        "§13 Workspace",
+        "§21.5 Failure Diagnosis"
+      ],
+      "acceptance": [
+        "Creates a worktree at an exact base revision.",
+        "Cleanup is idempotent after success, failure and cancellation.",
+        "Refuses to treat the owner primary worktree as disposable.",
+        "Tests use temporary Git repos and no network."
+      ],
+      "validation": [
+        "go test ./internal/workspace/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-06",
+      "title": "Single GitWriter lock foundation",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "internal/gitwriter/writer.go",
+        "internal/gitwriter/writer_test.go",
+        "internal/gitwriter/lock.go",
+        "internal/gitwriter/lock_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Create the single Git-write boundary with per-repository in-process and cross-process serialization, explicit base revision and atomic commit semantics.",
+      "source_facts": [
+        "harvest, knowledge, requirement signing and ContentStore all open/write/commit Git independently.",
+        "PRD requires Single Git Writer and per-repo serialization."
+      ],
+      "prd_refs": [
+        "§23 Single Git Writer",
+        "INV-ART-01"
+      ],
+      "acceptance": [
+        "Two writers for the same repo cannot commit concurrently.",
+        "Different repositories do not block one another.",
+        "Commit requires/validates expected base revision.",
+        "Lock release is guaranteed on error/cancel.",
+        "No existing writer is migrated in this task."
+      ],
+      "validation": [
+        "go test ./internal/gitwriter/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-07",
+      "title": "Role-aware LLM proposal client",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "S",
+      "allowed": [
+        "internal/llm/llm.go",
+        "internal/llm/llm_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Remove the hard-coded “requirements interview assistant” system prompt and require caller-declared proposal role/purpose without giving the LLM Fact Authority.",
+      "source_facts": [
+        "internal/llm.HTTPClient.Propose uses the same Chinese requirement-interview system prompt for requirement, harvest and failure.",
+        "The current Proposer interface is intentionally proposal-only and should stay proposal-only."
+      ],
+      "prd_refs": [
+        "INV-AUTH-02",
+        "§9 Agent Roles",
+        "§30 observability"
+      ],
+      "acceptance": [
+        "Requirement/failure/harvest can provide distinct role instructions.",
+        "The public interface still exposes proposal semantics only; no Judge/Verify method is introduced.",
+        "Output shape enforcement and redaction remain.",
+        "Existing callers can be migrated with minimal adapters."
+      ],
+      "validation": [
+        "go test ./internal/llm/...",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-08",
+      "title": "Derived project registry / ghost-project guard SQL contract",
+      "phase": "P0",
+      "kind": "contract",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0017_project_index.sql",
+        "internal/store/queries/project_index.sql",
+        "test/arch/project_identity_contract_test.go"
+      ],
+      "forbidden": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go"
+      ],
+      "goal": "Create a rebuildable project index that can be used to reject facts for projects not present in the Git project registry.",
+      "source_facts": [
+        "Current fact tables accept arbitrary project_id text.",
+        "Latest PRD requires all ingest to validate project identity and avoid ghost project facts."
+      ],
+      "prd_refs": [
+        "§33.3 Derived Index",
+        "§6 Git-first Artifact",
+        "INV-STATE-01"
+      ],
+      "acceptance": [
+        "project_index is explicitly derived/rebuildable, not the author source.",
+        "Queries support upsert/rebuild/list/exists semantics.",
+        "No fact table is made mutable.",
+        "Generated sqlc files remain untouched."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-09",
+      "title": "Regenerate sqlc for P0 contracts",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W02",
+      "deps": [
+        "P0-01",
+        "P0-02",
+        "P0-04",
+        "P0-08"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go"
+      ],
+      "forbidden": [
+        "migrations/**",
+        "internal/store/queries/**"
+      ],
+      "goal": "Run one serialized sqlc generation after all P0 SQL contract leaves are merged.",
+      "source_facts": [
+        "Parallel leaves intentionally do not edit generated store files."
+      ],
+      "prd_refs": [
+        "§33 PostgreSQL/sqlc implementation baseline"
+      ],
+      "acceptance": [
+        "sqlc generate succeeds.",
+        "Generated diff corresponds only to merged migration/query contracts.",
+        "No hand edits are made to generated files."
+      ],
+      "validation": [
+        "sqlc generate",
+        "go test ./internal/store/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-10",
+      "title": "Lease-aware Queue claim, heartbeat and stale reclaim",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W03",
+      "deps": [
+        "P0-01",
+        "P0-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/jobs/jobs.go",
+        "internal/jobs/jobs_test.go",
+        "internal/jobs/lease_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Use the new job SQL contract to make Queue recoverable after worker crash without stealing live work.",
+      "source_facts": [
+        "Queue currently marks a job running and can leave it there forever.",
+        "Concurrency currently relies only on SKIP LOCKED at initial dequeue."
+      ],
+      "prd_refs": [
+        "§17 Minimal Workflow Kernel",
+        "§37 P0"
+      ],
+      "acceptance": [
+        "Claim writes owner and lease.",
+        "Heartbeat extends only the current owner lease.",
+        "Expired running jobs are reclaimable.",
+        "Live leases are never reclaimed.",
+        "Cancellation does not mark successful completion."
+      ],
+      "validation": [
+        "go test ./internal/jobs/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-11",
+      "title": "Trace reindex adapts to project-namespaced identity",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W03",
+      "deps": [
+        "P0-02",
+        "P0-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/project/reindex.go",
+        "internal/project/trace.go",
+        "internal/project/reindex_integration_test.go",
+        "internal/project/trace_integration_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Adapt trace construction/reindex to the new namespaced SQL contract and prove cross-project isolation.",
+      "source_facts": [
+        "project.BuildEdges currently builds unnamespaced TraceEdge values.",
+        "Reindex is the rebuild path for derived trace data."
+      ],
+      "prd_refs": [
+        "§22 Evidence Graph",
+        "INV-STATE-01",
+        "INV-STATE-03"
+      ],
+      "acceptance": [
+        "Same commit SHA in two projects cannot merge nodes.",
+        "Reindex twice is idempotent.",
+        "A removed edge is actually deleted even when its individual fields exist in other edges.",
+        "Existing clause coverage behavior remains."
+      ],
+      "validation": [
+        "go test ./internal/project/...",
+        "go test -tags=integration ./internal/project/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-12",
+      "title": "Failure RunSpec uses structured commands end-to-end in domain layer",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W03",
+      "deps": [
+        "P0-03",
+        "P0-04",
+        "P0-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/failure/ports.go",
+        "internal/failure/gates.go",
+        "internal/failure/gates_test.go",
+        "internal/failure/handle.go",
+        "internal/failure/handle_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Replace failure domain command strings with structured CommandSpec while preserving deterministic G1/G2/G3 gates.",
+      "source_facts": [
+        "failure.RunSpec.Command and Event.Repro are strings.",
+        "Existing failure gates are valuable and must not be weakened."
+      ],
+      "prd_refs": [
+        "§21.5-21.6",
+        "§14 Validation",
+        "INV-VER-03"
+      ],
+      "acceptance": [
+        "No strings.Fields/shell-string parsing remains in failure domain.",
+        "G1/G2/G3 semantics and protected-test/source scope checks remain.",
+        "Structured other targets are supported.",
+        "Existing Proof remains non-forgeable."
+      ],
+      "validation": [
+        "go test ./internal/failure/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-13",
+      "title": "Project identity validation at failure/environment/deploy ingest boundaries",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W03",
+      "deps": [
+        "P0-08",
+        "P0-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/ingest/ingest.go",
+        "internal/ingest/ingest_integration_test.go",
+        "internal/exec/exec.go",
+        "internal/exec/exec_integration_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Reject new machine facts for unknown project IDs using the derived project registry, without turning PostgreSQL into the author source.",
+      "source_facts": [
+        "Current facts carry free-form project_id.",
+        "exec/ingest are centralized machine-fact creation boundaries."
+      ],
+      "prd_refs": [
+        "§33.3 Derived Index",
+        "INV-FACT-01"
+      ],
+      "acceptance": [
+        "Known project fact ingest still works.",
+        "Unknown project ingest is rejected before fact INSERT.",
+        "Registry failure is fail-closed for new facts.",
+        "No existing fact row is mutated."
+      ],
+      "validation": [
+        "go test ./internal/ingest/... ./internal/exec/...",
+        "go test -tags=integration ./internal/ingest/... ./internal/exec/..."
+      ],
+      "notes": [
+        "If exec.go conflict with P0-20 occurs, integrator merges P0-13 first and P0-20 resolves only handler registration."
+      ]
+    },
+    {
+      "id": "P0-14",
+      "title": "Production SpecDefect sink adapter",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "internal/requirement/specdefect.go",
+        "internal/requirement/specdefect_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement failure.SpecDefectSink using existing requirement/index semantics: verify clause exists, record the proposal/decision path and trigger invalidation rather than silently accepting LLM claims.",
+      "source_facts": [
+        "failure.Handle supports SpecSink but worker leaves it nil.",
+        "requirement package already has parse/sign/invalidate capabilities."
+      ],
+      "prd_refs": [
+        "INV-VER-04",
+        "§20 SpecDefect"
+      ],
+      "acceptance": [
+        "Unknown clause returns an error.",
+        "Known clause records a deterministic spec-defect signal using existing requirement mechanisms.",
+        "No direct VERIFIED/state write is introduced.",
+        "Unit tests cover existing/missing clause."
+      ],
+      "validation": [
+        "go test ./internal/requirement/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-15",
+      "title": "Dependency command execution stops using strings.Fields",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W01",
+      "deps": [
+        "P0-03"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "cmd/tally/deps.go",
+        "cmd/tally/deps_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Migrate dependency retirement/repro command execution to CommandSpec without changing dependency analysis behavior.",
+      "source_facts": [
+        "cmd/tally/deps.go executes command strings with strings.Fields."
+      ],
+      "prd_refs": [
+        "§21.6 Structured Repro",
+        "§32 safety"
+      ],
+      "acceptance": [
+        "No strings.Fields command splitting remains in this path.",
+        "argv/cwd/env/timeout semantics are preserved.",
+        "Existing CLI behavior/tests remain."
+      ],
+      "validation": [
+        "go test ./cmd/tally/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-16",
+      "title": "ContentStore Git writes through GitWriter",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W01",
+      "deps": [
+        "P0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/web/handlers/content.go",
+        "internal/web/handlers/handlers_http_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Route ContentStore init/commit through the single GitWriter boundary without redesigning web handlers.",
+      "source_facts": [
+        "ContentStore currently opens worktree and commits directly."
+      ],
+      "prd_refs": [
+        "§23 Single Git Writer"
+      ],
+      "acceptance": [
+        "ContentStore no longer commits directly.",
+        "Expected-base mismatch is surfaced, not silently overwritten.",
+        "Existing project/docs/wiki commit behavior remains."
+      ],
+      "validation": [
+        "go test ./internal/web/handlers/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-17",
+      "title": "Requirement signing Git writes through GitWriter",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W01",
+      "deps": [
+        "P0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/requirement/sign.go",
+        "internal/requirement/sign_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Route requirement signing commits through GitWriter while preserving content hash/signature semantics.",
+      "source_facts": [
+        "internal/requirement/sign.go directly opens worktree and commits."
+      ],
+      "prd_refs": [
+        "§23 Single Git Writer",
+        "INV-ART-01"
+      ],
+      "acceptance": [
+        "Requirement signed_commit remains correct.",
+        "Concurrent base mismatch is rejected.",
+        "Signing tests remain green."
+      ],
+      "validation": [
+        "go test ./internal/requirement/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-18",
+      "title": "Harvest catalog Git writes through GitWriter",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W01",
+      "deps": [
+        "P0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/harvest/catalog.go",
+        "internal/harvest/catalog_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Route harvest catalog file writes/commit through GitWriter.",
+      "source_facts": [
+        "internal/harvest/catalog.go writes three files then commits directly."
+      ],
+      "prd_refs": [
+        "§23 Single Git Writer"
+      ],
+      "acceptance": [
+        "Catalog commit remains atomic from caller perspective.",
+        "No direct git.Worktree.Commit remains in production catalog path.",
+        "Existing harvest tests remain."
+      ],
+      "validation": [
+        "go test ./internal/harvest/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-19",
+      "title": "Knowledge Store Git writes through GitWriter",
+      "phase": "P0",
+      "kind": "leaf",
+      "wave": "W01",
+      "deps": [
+        "P0-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/knowledge/store.go",
+        "internal/knowledge/store_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Route verified knowledge persistence Git commits through GitWriter while preserving proof requirements.",
+      "source_facts": [
+        "internal/knowledge/store.go directly writes multiple files and commits.",
+        "Knowledge Store already requires verification proof."
+      ],
+      "prd_refs": [
+        "§23 Single Git Writer",
+        "INV-AUTH-01"
+      ],
+      "acceptance": [
+        "No knowledge commit bypasses GitWriter.",
+        "Verification proof requirement is unchanged.",
+        "Existing knowledge tests remain."
+      ],
+      "validation": [
+        "go test ./internal/knowledge/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-20",
+      "title": "Implement declared deploy job handler or retire unsupported declaration consistently",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "internal/jobs/jobs.go",
+        "internal/exec/exec.go",
+        "internal/exec/exec_test.go",
+        "internal/web/handlers/deploys.go",
+        "web/templates/deploys.tmpl",
+        "docs/07-operations.md"
+      ],
+      "forbidden": [],
+      "goal": "Close the inconsistency where KindDeploy/docs exist but exec.Handlers only wires rollback. Prefer implementing the already-documented deploy job using existing deploy.Deployer; do not invent a new deploy engine.",
+      "source_facts": [
+        "jobs.KindDeploy exists.",
+        "exec.Handlers omits KindDeploy.",
+        "docs/07-operations.md documents deploy -def and UI currently only exposes rollback."
+      ],
+      "prd_refs": [
+        "§37 P0 declared capability consistency",
+        "INV-AUTH-01"
+      ],
+      "acceptance": [
+        "KindDeploy has a real handler using existing deploy package OR the declaration/docs/UI are consistently retired if source constraints prove implementation impossible.",
+        "No direct UI writes to deploy_run.",
+        "Focused exec/web tests cover the chosen consistent behavior."
+      ],
+      "validation": [
+        "go test ./internal/exec/... ./internal/web/handlers/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-21",
+      "title": "Worker P0 consolidated wiring: leases, structured failure runner, disposable workspace, SpecDefect, LLM roles",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W04",
+      "deps": [
+        "P0-05",
+        "P0-07",
+        "P0-10",
+        "P0-12",
+        "P0-14"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "cmd/worker/main.go",
+        "cmd/worker/main_test.go",
+        "internal/exec/diagnose.go",
+        "internal/exec/diagnose_integration_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Make the worker the single serialized integration point for P0 foundations; remove real-workdir mutation and wire production SpecDefect.",
+      "source_facts": [
+        "cmd/worker failureRunner applies candidate files directly to spec.Workdir and uses strings.Fields.",
+        "Worker DiagnoseDeps omits SpecSink.",
+        "Worker instantiates shared LLM client without role-specific intent."
+      ],
+      "prd_refs": [
+        "INV-EXEC-01",
+        "INV-VER-04",
+        "§17 lease recovery",
+        "§21 failure diagnosis"
+      ],
+      "acceptance": [
+        "Failure candidate execution occurs only in disposable worktree.",
+        "Structured command is passed to runner without strings.Fields.",
+        "SpecDefect sink is non-nil in production wiring.",
+        "Queue lease owner/heartbeat lifecycle is wired.",
+        "Requirement/failure LLM calls use correct roles.",
+        "Cleanup occurs after failures and cancellation."
+      ],
+      "validation": [
+        "go test ./cmd/worker/... ./internal/exec/...",
+        "go test -tags=integration ./internal/exec/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-22",
+      "title": "Retire legacy /tasks false-green semantics from authoritative Task language",
+      "phase": "P0",
+      "kind": "integration",
+      "wave": "W00",
+      "deps": [],
+      "complexity": "M",
+      "allowed": [
+        "internal/web/handlers/tasks.go",
+        "internal/web/handlers/taskstatus.go",
+        "internal/web/handlers/taskstatus_internal_test.go",
+        "web/templates/tasks.tmpl",
+        "web/templates/base.tmpl"
+      ],
+      "forbidden": [],
+      "goal": "Stop presenting project build/deploy summary as authoritative engineering Task completion before the v1.3 Task domain exists.",
+      "source_facts": [
+        "Current /tasks defines one task per project and marks merged from any build record; tested from any partial clause coverage.",
+        "This conflicts with v1.3 TaskContract/Verification semantics."
+      ],
+      "prd_refs": [
+        "§7 Task model",
+        "INV-STATE-02",
+        "§36 P1"
+      ],
+      "acceptance": [
+        "Legacy page is explicitly labeled execution/project summary, not TaskContract completion.",
+        "No “tested/merged” wording can be mistaken for VERIFIED/APPROVED.",
+        "No direct state mutation is added.",
+        "Existing summary remains available until P1 replacement."
+      ],
+      "validation": [
+        "go test ./internal/web/handlers/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P0-23",
+      "title": "P0 correctness integration gate",
+      "phase": "P0",
+      "kind": "gate",
+      "wave": "W05",
+      "deps": [
+        "P0-11",
+        "P0-13",
+        "P0-15",
+        "P0-16",
+        "P0-17",
+        "P0-18",
+        "P0-19",
+        "P0-20",
+        "P0-21",
+        "P0-22"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.3/reports/P0_GATE.md"
+      ],
+      "forbidden": [],
+      "goal": "Verify all known P0 correctness holes are closed before P1 core work begins.",
+      "source_facts": [
+        "P0 is explicitly a correctness/safety gate; no new product features should be introduced."
+      ],
+      "prd_refs": [
+        "§37 P0 exit",
+        "all P0 invariants"
+      ],
+      "acceptance": [
+        "No known P0 hole remains from SOURCE_BASELINE.",
+        "All changed paths stay within task scopes.",
+        "Architecture/unit/integration suites are green, or environment blockers are recorded exactly.",
+        "No P1 domain implementation is smuggled into P0."
+      ],
+      "validation": [
+        "make check"
+      ],
+      "notes": [
+        "Gate task is read/verify/report only. Do not implement fixes; failed criteria return FAIL/BLOCKED."
+      ]
+    },
+    {
+      "id": "P1-01",
+      "title": "TaskContract types, parsing and revision hash",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/taskcontract/types.go",
+        "internal/taskcontract/parse.go",
+        "internal/taskcontract/hash.go",
+        "internal/taskcontract/types_test.go",
+        "internal/taskcontract/parse_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement the P1 TaskContract data contract as a new bounded package; do not reuse legacy web TaskRow.",
+      "source_facts": [
+        "No current TaskContract domain exists.",
+        "Git remains author source for versioned task artifacts."
+      ],
+      "prd_refs": [
+        "§7 Task model",
+        "§6 Git-first Artifact",
+        "INV-ART-01"
+      ],
+      "acceptance": [
+        "Supports objective, refs, dependencies, allowed/forbidden scope, profile, acceptance clauses, documentation impact.",
+        "Acceptance owns independence_required none/source/information.",
+        "Stable canonical revision/hash is derived from content.",
+        "No execution budgets/network fields live in TaskContract."
+      ],
+      "validation": [
+        "go test ./internal/taskcontract/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-02",
+      "title": "VerificationContract types, binding provenance and frozen revision",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/types.go",
+        "internal/verification/parse.go",
+        "internal/verification/hash.go",
+        "internal/verification/types_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement immutable VerificationContract representation including bindings, authoring_mode, visibility policy, required gates and runtime capability requirements.",
+      "source_facts": [
+        "No generic VerificationContract domain exists; legacy failure gates are special-purpose and should not be repurposed as the new type."
+      ],
+      "prd_refs": [
+        "§8 Verification Contract",
+        "INV-VER-01/02/03/05"
+      ],
+      "acceptance": [
+        "Binding provenance/source basis and visible/held_out are represented.",
+        "Execution protocol can be frozen with binding.",
+        "Implementation runtime requirements declare capabilities, not concrete runtime identity.",
+        "Revision/hash is stable and immutable after freeze."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-03",
+      "title": "ExecutionPolicy minimal P1 contract",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/policy/execution.go",
+        "internal/policy/execution_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Create the single runtime-boundary authority for retries, budgets, network, shell, credentials, stop conditions and escalation.",
+      "source_facts": [
+        "Old code has execution controls scattered; latest PRD removes them from TaskContract."
+      ],
+      "prd_refs": [
+        "§11 AgentProfile/ExecutionPolicy",
+        "§32 safety"
+      ],
+      "acceptance": [
+        "Default coding network is deny.",
+        "Structured shell=false is default.",
+        "Retry/escalation budget is finite.",
+        "Policy can tighten but no LLM result can weaken hard minima."
+      ],
+      "validation": [
+        "go test ./internal/policy/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-04",
+      "title": "Agent Runtime Protocol core types and capability registry",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/agentruntime/protocol.go",
+        "internal/agentruntime/events.go",
+        "internal/agentruntime/capability.go",
+        "internal/agentruntime/protocol_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Define the Tally-owned runtime-neutral protocol used by FakeRuntime and CodexRuntime.",
+      "source_facts": [
+        "Current project has no coding Agent Runtime abstraction.",
+        "PRD requires runtime portability without Codex-specific core conditionals."
+      ],
+      "prd_refs": [
+        "§10 Agent Runtime Protocol",
+        "INV-AUTH-01"
+      ],
+      "acceptance": [
+        "Core supports descriptor/start/execute/cancel.",
+        "Capabilities are negotiated data, not agent-name switches.",
+        "AgentRunResult is explicitly a claim, not TaskResult/Fact.",
+        "Normalized events preserve optional raw/native type."
+      ],
+      "validation": [
+        "go test ./internal/agentruntime/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-05",
+      "title": "Immutable ChangeSet domain and identity",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/changeset/types.go",
+        "internal/changeset/identity.go",
+        "internal/changeset/types_test.go",
+        "internal/changeset/identity_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Represent one fixed base/candidate code snapshot as the stable verification/review unit.",
+      "source_facts": [
+        "Latest PRD rejects mutable aggregation of multiple runs into one ChangeSet.",
+        "Existing code has no ChangeSet domain."
+      ],
+      "prd_refs": [
+        "§6.4.2 ChangeSet",
+        "INV-CHANGE-02"
+      ],
+      "acceptance": [
+        "Requires project, base revision and candidate revision/patch identity.",
+        "Object is immutable by API after construction.",
+        "Candidate identity changes when executable code changes.",
+        "Supersession is not stored by mutating ChangeSet."
+      ],
+      "validation": [
+        "go test ./internal/changeset/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-06",
+      "title": "Evidence core: fact, validity, applicability and provenance",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/evidence/types.go",
+        "internal/evidence/applicability.go",
+        "internal/evidence/types_test.go",
+        "internal/evidence/applicability_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Create evidence primitives that separate immutable historical validity from applicability to a current desired revision.",
+      "source_facts": [
+        "Latest PRD requires old FAIL facts to remain append-only while legitimate Requirement/Verification revisions can change gating applicability."
+      ],
+      "prd_refs": [
+        "§8 Verification Evidence",
+        "INV-FACT-01",
+        "INV-STATE-03"
+      ],
+      "acceptance": [
+        "Historical evidence cannot be deleted/mutated by domain API.",
+        "Validity and applicability are separate.",
+        "Applicability is scoped to project/task/acceptance/verification/change revisions.",
+        "LLM proposal cannot construct confirmed machine fact without recorder path."
+      ],
+      "validation": [
+        "go test ./internal/evidence/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-07",
+      "title": "Deterministic Hunk Inventory",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/review/hunks.go",
+        "internal/review/hunks_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Build complete deterministic hunk inventory from a ChangeSet/diff before LLM review classification.",
+      "source_facts": [
+        "Current project has no Patch Review accounting model.",
+        "PRD requires every changed hunk accounted."
+      ],
+      "prd_refs": [
+        "§19 Patch Review",
+        "INV-CHANGE-01"
+      ],
+      "acceptance": [
+        "Every textual diff hunk receives stable-in-review ID.",
+        "Binary/rename/delete cases are represented instead of dropped.",
+        "Inventory contains all changed files/hunks.",
+        "No LLM classification occurs here."
+      ],
+      "validation": [
+        "go test ./internal/review/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-08",
+      "title": "Measurement and cost-plane fact model",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/measurement/types.go",
+        "internal/measurement/timing.go",
+        "internal/measurement/types_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Define P1 human/wall/LLM usage records with cost_plane stored at write time.",
+      "source_facts": [
+        "Existing code lacks v1.3 lifecycle measurement schema.",
+        "PRD requires control vs execution cost to remain historically stable."
+      ],
+      "prd_refs": [
+        "§25 Human Control Overhead",
+        "§30 observability",
+        "§38 metrics"
+      ],
+      "acceptance": [
+        "cost_plane is control|execution and required on LLM usage.",
+        "Human active and wall durations are distinct.",
+        "Lifecycle phase names are stable enums.",
+        "No query-time role→plane remapping is required."
+      ],
+      "validation": [
+        "go test ./internal/measurement/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-09",
+      "title": "Holdout Evidence Store abstraction",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/holdout/store.go",
+        "internal/holdout/store_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Define a Tally-controlled held-out evidence store whose content cannot be addressed through implementation workspace paths.",
+      "source_facts": [
+        "PRD explicitly rejects tracked repo path + forbidden_paths as a hiding mechanism."
+      ],
+      "prd_refs": [
+        "INV-VER-05",
+        "§8 Evidence Visibility"
+      ],
+      "acceptance": [
+        "Store API uses opaque refs, not project filesystem paths.",
+        "Read capability is separable for verification authority vs implementation authority.",
+        "No P2 recovery workflow is introduced."
+      ],
+      "validation": [
+        "go test ./internal/holdout/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-10",
+      "title": "Task/Verification derived-index SQL contract",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "migrations/0018_task_verification_index.sql",
+        "internal/store/queries/task_index.sql",
+        "internal/store/queries/verification_index.sql"
+      ],
+      "forbidden": [],
+      "goal": "Add rebuildable DB indexes for Git-authored TaskContract/VerificationContract revisions.",
+      "source_facts": [
+        "PRD stores Task/Verification intent in Git and DB only as derived indexes."
+      ],
+      "prd_refs": [
+        "§33.3 Derived Index",
+        "INV-STATE-01"
+      ],
+      "acceptance": [
+        "Indexes identify project/id/revision/hash/path/current projection.",
+        "They are explicitly rebuildable/mutable index plane.",
+        "No authoritative Task status column is introduced.",
+        "Generated files not edited."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-11",
+      "title": "CodegenRun / ChangeSet persistence SQL contract",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0019_codegen_changeset.sql",
+        "internal/store/queries/codegen_run.sql",
+        "internal/store/queries/changeset.sql"
+      ],
+      "forbidden": [],
+      "goal": "Persist CodegenRun facts/process records and immutable ChangeSet snapshots/supersession facts.",
+      "source_facts": [
+        "No current CodegenRun/ChangeSet persistence exists."
+      ],
+      "prd_refs": [
+        "§15 CodegenRun",
+        "§6.4.2 ChangeSet",
+        "INV-CHANGE-02"
+      ],
+      "acceptance": [
+        "CodegenRun records runtime/model/behavior/context/workspace/status/iterations/escalated_from.",
+        "ChangeSet stores fixed base/candidate identity and no mutable superseded_by field.",
+        "Supersession is append-only fact.",
+        "Generated sqlc files not edited."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-12",
+      "title": "VerificationRun / Evidence / Exposure persistence SQL contract",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "migrations/0020_verification_evidence.sql",
+        "internal/store/queries/verification_run.sql",
+        "internal/store/queries/verification_evidence.sql",
+        "internal/store/queries/evidence_exposure.sql"
+      ],
+      "forbidden": [],
+      "goal": "Persist verification executions and append-only observed evidence/exposure facts.",
+      "source_facts": [
+        "Latest PRD separates Contract, Run and Evidence and treats exposure as Fact, not Contract mutation."
+      ],
+      "prd_refs": [
+        "§8.13 VerificationRun",
+        "INV-FACT-01",
+        "INV-VER-05"
+      ],
+      "acceptance": [
+        "VerificationRun binds contract revision + immutable ChangeSet + environment identity.",
+        "Evidence records result/provenance/validity/applicability refs.",
+        "Exposure facts are append-only and include channel/lineage/binding refs.",
+        "Fact tables reject UPDATE/DELETE via trigger.",
+        "Generated sqlc files not edited."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-13",
+      "title": "HumanApproval / review timing / LLM usage persistence SQL contract",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W06",
+      "deps": [
+        "P0-23"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "migrations/0021_approval_measurement.sql",
+        "internal/store/queries/approval.sql",
+        "internal/store/queries/measurement.sql"
+      ],
+      "forbidden": [],
+      "goal": "Persist human decision evidence and measurement facts without direct authoritative status writes.",
+      "source_facts": [
+        "Latest PRD requires HumanApprovalEvidence and strict_satisfied/strict_waived distinction plus human/cost metrics."
+      ],
+      "prd_refs": [
+        "§19 Review",
+        "§25 metrics",
+        "INV-STATE-02"
+      ],
+      "acceptance": [
+        "Approval record carries decision/reason/waiver provenance and refs.",
+        "No UPDATE Task status query is introduced.",
+        "LLM usage includes stored cost_plane.",
+        "Human timing rows can be appended."
+      ],
+      "validation": [
+        "git diff --check",
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-14",
+      "title": "TaskContract static validator and scope rules",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-01"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/taskcontract/validate.go",
+        "internal/taskcontract/validate_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Deterministically validate refs syntax, IDs, scope overlap and P1 standard Task requirements.",
+      "source_facts": [
+        "PRD requires Tally validator to reject malformed task proposals before execution."
+      ],
+      "prd_refs": [
+        "§7.4 Task generation",
+        "§31.1 Admission"
+      ],
+      "acceptance": [
+        "Rejects invalid IDs/empty objective/missing acceptance.",
+        "Forbidden/allowed scope contradictions fail.",
+        "Acceptance IDs unique and independence_required valid.",
+        "No LLM decision is needed."
+      ],
+      "validation": [
+        "go test ./internal/taskcontract/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-15",
+      "title": "Verification freeze validator and planned independence coverage",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-01",
+        "P1-02",
+        "P1-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/freeze.go",
+        "internal/verification/freeze_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Validate a VerificationContract before freeze, including authoring provenance, protected hashes and acceptance-level planned independence coverage.",
+      "source_facts": [
+        "Design-time missing independence must FREEZE FAIL; waiver is only for runtime loss."
+      ],
+      "prd_refs": [
+        "§8.2/8.6",
+        "INV-VER-01/02/03"
+      ],
+      "acceptance": [
+        "Every required acceptance has functional evidence plan.",
+        "Every acceptance with source/information independence has at least one planned binding capable of satisfying it.",
+        "Post-hoc rules are rejected in P1 standard path unless explicitly enabled by policy later.",
+        "Protected hash required where applicable."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-16",
+      "title": "Evidence Qualification evaluator",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-02",
+        "P1-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/qualification.go",
+        "internal/verification/qualification_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Evaluate baseline sensitivity classes and minimum mechanical qualification without pretending it proves business semantics.",
+      "source_facts": [
+        "PRD distinguishes strong assertion-red from compile/panic weak, baseline pass and n/a."
+      ],
+      "prd_refs": [
+        "§8 Evidence Qualification"
+      ],
+      "acceptance": [
+        "Classifies assertion/compile/panic-error/pass/n-a.",
+        "Candidate green is separate from baseline class.",
+        "change_overlap is represented as a signal, not universal semantic proof.",
+        "Weak/pass paths request explicit review according to contract."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-17",
+      "title": "Effective source-independence derivation",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-06"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/evidence/source_independence.go",
+        "internal/evidence/source_independence_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Derive source independence from authoring activity/provenance relative to actual implementation contributors, not actor identity.",
+      "source_facts": [
+        "Solo developer may author a pre-existing test historically and later implement code; identity equality alone must not destroy source independence.",
+        "Different person looking at candidate can still be source-dependent."
+      ],
+      "prd_refs": [
+        "§8 Source Independence",
+        "Authority model §3.1"
+      ],
+      "acceptance": [
+        "Pre-existing evidence can be independent if not authored/changed in current implementation decision lineage.",
+        "Implementation-authored current-run evidence is source-dependent.",
+        "Human role/name alone is neither sufficient nor disqualifying.",
+        "Derivation is deterministic from provenance inputs."
+      ],
+      "validation": [
+        "go test ./internal/evidence/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-18",
+      "title": "Information independence: content exposure, selection exposure and applicability",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-05",
+        "P1-06"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/evidence/information_independence.go",
+        "internal/evidence/information_independence_test.go",
+        "internal/evidence/exposure.go",
+        "internal/evidence/exposure_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Derive information independence for a binding/ChangeSet using held-out policy, exposure facts, candidate lineage and precommit timing.",
+      "source_facts": [
+        "PRD requires conservative time-based selection exposure rather than unverifiable causal claims.",
+        "Task ID must not reset holdout consumption."
+      ],
+      "prd_refs": [
+        "INV-VER-05",
+        "§8 Information Independence"
+      ],
+      "acceptance": [
+        "Held-out content exposure makes relevant lineage compromised.",
+        "First verdict causes later unfixed descendants to default selection-exposed unless mechanically proven precommit exists.",
+        "New Task ID alone does not reset lineage.",
+        "Validity/applicability revision scope is respected.",
+        "Policy cannot redefine compromised as independent."
+      ],
+      "validation": [
+        "go test ./internal/evidence/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-19",
+      "title": "Functional acceptance coverage",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-01",
+        "P1-06"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/verification/coverage_functional.go",
+        "internal/verification/coverage_functional_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Derive whether each current Acceptance Clause has applicable passing required evidence.",
+      "source_facts": [
+        "Latest PRD separates functional coverage from independence coverage."
+      ],
+      "prd_refs": [
+        "§8 Acceptance/Evidence model",
+        "INV-STATE-02"
+      ],
+      "acceptance": [
+        "Coverage is per acceptance, not evidence count.",
+        "Invalid or inapplicable evidence cannot satisfy current revision.",
+        "One valid failed required evidence keeps that candidate non-VERIFIED unless formally invalidated/inapplicable."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-20",
+      "title": "Acceptance-level independence coverage",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W08",
+      "deps": [
+        "P1-17",
+        "P1-18",
+        "P1-19"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/coverage_independence.go",
+        "internal/verification/coverage_independence_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Derive independence coverage at Acceptance level: none/source/information, with fresh bindings able to provide independence without erasing prior valid evidence.",
+      "source_facts": [
+        "Putting independence requirement on each binding creates recovery self-lock; latest PRD places it on Acceptance Clause."
+      ],
+      "prd_refs": [
+        "§7.3 Acceptance independence",
+        "§8 independence coverage"
+      ],
+      "acceptance": [
+        "none requires no independent evidence.",
+        "source requires at least one applicable source-independent evidence.",
+        "information requires source + information independent evidence.",
+        "Prior compromised binding may remain a functional regression gate while fresh binding supplies independence.",
+        "Count alone is never a gate input."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-21",
+      "title": "ContextPack redacted projection and context hash",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-01",
+        "P1-02",
+        "P1-04"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/contextpack/types.go",
+        "internal/contextpack/build.go",
+        "internal/contextpack/redact.go",
+        "internal/contextpack/contextpack_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Build minimal P1 ContextPack with VerificationContract redaction before hashing.",
+      "source_facts": [
+        "held-out bindings must not expose store/ref/baseline/test content to Implementation Authority.",
+        "Context hash must describe what Agent actually saw."
+      ],
+      "prd_refs": [
+        "§12 Context Engine",
+        "INV-VER-05"
+      ],
+      "acceptance": [
+        "Held-out projection exposes acceptance statement/evidence type only.",
+        "Visible evidence remains available as policy allows.",
+        "Historical failures/knowledge inputs can be filtered by binding provenance.",
+        "context_hash is computed after redaction."
+      ],
+      "validation": [
+        "go test ./internal/contextpack/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-22",
+      "title": "Evidence-derived Task state engine",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W09",
+      "deps": [
+        "P1-19",
+        "P1-20"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/taskstate/state.go",
+        "internal/taskstate/state_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Derive P1 TaskExecutionState from current desired revisions and observed evidence; no UI/Agent directly writes authoritative status.",
+      "source_facts": [
+        "Current legacy task status is unrelated project summary and must not be reused.",
+        "PRD defines PLANNED/READY/RUNNING/CANDIDATE/VALIDATING/VERIFIED/APPROVED/MERGED plus exceptions."
+      ],
+      "prd_refs": [
+        "§18 Task State",
+        "INV-STATE-01/02/03"
+      ],
+      "acceptance": [
+        "Agent claim cannot produce VERIFIED.",
+        "VERIFIED requires functional gates and applicable verification evidence.",
+        "Approval requires HumanApprovalEvidence.",
+        "Strict waived is distinguishable from strict satisfied.",
+        "State rebuild from same facts is deterministic."
+      ],
+      "validation": [
+        "go test ./internal/taskstate/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-23",
+      "title": "HumanApprovalEvidence and Independence Waiver domain",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W09",
+      "deps": [
+        "P1-20"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/approval/types.go",
+        "internal/approval/waiver.go",
+        "internal/approval/waiver_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Represent Owner decisions and policy-governed independence waiver without pretending the unmet strict requirement was satisfied.",
+      "source_facts": [
+        "PRD allows runtime independence loss to be waived only when Project Verification Policy permits; design-time planned coverage cannot be waived."
+      ],
+      "prd_refs": [
+        "§8.10 Waiver",
+        "§19 Human Approval"
+      ],
+      "acceptance": [
+        "Waiver lists compromised acceptances/bindings/exposure refs/coverage gap/reason.",
+        "Outputs strict_satisfied or strict_waived distinctly.",
+        "Waiver availability is policy input.",
+        "No waiver can fix failed planned coverage."
+      ],
+      "validation": [
+        "go test ./internal/approval/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-24",
+      "title": "FakeRuntime reference adapter",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-04"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "runtimes/fake/runtime.go",
+        "runtimes/fake/runtime_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement intentionally simple deterministic FakeRuntime as reference/conformance target with no Codex-specific assumptions.",
+      "source_facts": [
+        "PRD requires FakeRuntime before CodexRuntime and warns against leaking Codex assumptions into core."
+      ],
+      "prd_refs": [
+        "§10 Runtime Protocol",
+        "§35 Conformance"
+      ],
+      "acceptance": [
+        "Can start/execute/cancel.",
+        "Emits normalized events.",
+        "Can simulate crash/failure/usage.",
+        "Capabilities are explicit.",
+        "No native session tricks are assumed."
+      ],
+      "validation": [
+        "go test ./runtimes/fake/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-25",
+      "title": "Runtime conformance harness",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W07",
+      "deps": [
+        "P1-04"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/runtimeconformance/harness.go",
+        "test/runtimeconformance/harness_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Create reusable conformance tests for any AgentRuntime.",
+      "source_facts": [
+        "PRD lists core and capability-specific conformance tests."
+      ],
+      "prd_refs": [
+        "§35 Runtime Conformance"
+      ],
+      "acceptance": [
+        "Covers start/cwd/execute/events/cancel/result/crash/workspace/usage/capability truth.",
+        "Capability-specific tests run only when declared.",
+        "Harness can be used by FakeRuntime and CodexRuntime."
+      ],
+      "validation": [
+        "go test ./test/runtimeconformance/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-26",
+      "title": "Verification execution protocol and environment identity",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-02"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/execution_context.go",
+        "internal/verification/execution_context_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Model frozen repetitions/stopping/aggregation and verification environment identity so rerun-until-pass or environment-shopping cannot masquerade as one verdict.",
+      "source_facts": [
+        "Latest PRD binds information-independent verdict to immutable candidate + binding revision + execution protocol + environment identity."
+      ],
+      "prd_refs": [
+        "§8 Evidence execution integrity"
+      ],
+      "acceptance": [
+        "Stopping rule is frozen before first run.",
+        "Seed/randomness belongs to frozen protocol.",
+        "Semantic environment change changes execution-context identity.",
+        "Old/new environment runs cannot be silently aggregated."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-27",
+      "title": "P1 filesystem Holdout Store implementation outside project worktree",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P1-09"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/holdout/filesystem.go",
+        "internal/holdout/filesystem_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Provide the minimal P1 concrete Holdout Store using a configured Tally-owned filesystem root outside managed project repos/worktrees.",
+      "source_facts": [
+        "P1 must actually execute at least one held-out scenario; a concrete store is needed.",
+        "PRD leaves future storage pluggable."
+      ],
+      "prd_refs": [
+        "INV-VER-05",
+        "§36 P1 Trust capability"
+      ],
+      "acceptance": [
+        "Root cannot resolve inside implementation workspace/project root.",
+        "Opaque refs resolve only through verification-capable store reader.",
+        "Traversal is rejected.",
+        "Implementation ContextPack never receives filesystem path."
+      ],
+      "validation": [
+        "go test ./internal/holdout/..."
+      ],
+      "notes": [
+        "This is a P1 implementation choice, not a permanent product requirement. Future stores remain behind the interface."
+      ]
+    },
+    {
+      "id": "P1-28",
+      "title": "Visible incremental validation executor",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W08",
+      "deps": [
+        "P1-03",
+        "P1-16",
+        "P1-26"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/verification/visible_executor.go",
+        "internal/verification/visible_executor_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Execute only visible required/protected validation during Agent iteration and record claims/results without running held-out evidence.",
+      "source_facts": [
+        "PRD explicitly excludes held-out evidence from incremental validation."
+      ],
+      "prd_refs": [
+        "§14.1 Incremental Validation",
+        "INV-VER-05"
+      ],
+      "acceptance": [
+        "Only visible bindings run.",
+        "Commands honor ExecutionPolicy and structured CommandSpec.",
+        "Results are recordable but do not directly set Task status.",
+        "Held-out refs/results never appear in returned Agent-visible output."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-29",
+      "title": "Held-out final validation executor",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W08",
+      "deps": [
+        "P1-05",
+        "P1-26",
+        "P1-27"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/verification/holdout_executor.go",
+        "internal/verification/holdout_executor_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Inject held-out evidence only into Tally-controlled final verification for an immutable ChangeSet and frozen execution context.",
+      "source_facts": [
+        "P1 requires hidden final validation but not automated recovery ladder."
+      ],
+      "prd_refs": [
+        "§14.2 Final Validation",
+        "INV-VER-05",
+        "§36 P1"
+      ],
+      "acceptance": [
+        "Implementation workspace cannot read held-out content.",
+        "Agent-visible output does not reveal path/selector/assertion/expected/actual.",
+        "FAIL is recordable and blocks VERIFIED.",
+        "Any executable code mutation requires a new ChangeSet/verdict.",
+        "No P2 recovery automation is implemented."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-30",
+      "title": "Session Isolation Canary",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W08",
+      "deps": [
+        "P1-24",
+        "P1-25"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/runtimeconformance/session_isolation.go",
+        "test/runtimeconformance/session_isolation_test.go",
+        "runtimes/fake/isolation_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement the protocol-observable session/thread/memory canary used to qualify runtimes for VerificationPlanner role.",
+      "source_facts": [
+        "PRD says role separation must be session separation; canary is conformance evidence, not proof of provider internals."
+      ],
+      "prd_refs": [
+        "INV-VER-05",
+        "§35 Session Isolation Canary"
+      ],
+      "acceptance": [
+        "Unique canary injected in verification session cannot be retrieved by coding/debug session through declared protocol paths.",
+        "Failure marks conformance capability unavailable.",
+        "Provider opaque state remains declared residual risk."
+      ],
+      "validation": [
+        "go test ./test/runtimeconformance/... ./runtimes/fake/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-31",
+      "title": "Regenerate sqlc for P1 contracts",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W07",
+      "deps": [
+        "P1-10",
+        "P1-11",
+        "P1-12",
+        "P1-13"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/store/*.sql.go",
+        "internal/store/models.go",
+        "internal/store/querier.go"
+      ],
+      "forbidden": [],
+      "goal": "Run one serialized sqlc generation for all P1 database contracts.",
+      "source_facts": [
+        "Parallel DB contract tasks intentionally do not edit generated files."
+      ],
+      "prd_refs": [
+        "§33 PostgreSQL/sqlc"
+      ],
+      "acceptance": [
+        "sqlc generate succeeds.",
+        "No hand edits.",
+        "Generated APIs match all new query contracts."
+      ],
+      "validation": [
+        "sqlc generate",
+        "go test ./internal/store/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-32",
+      "title": "Git artifact loader and task/verification derived indexing",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W08",
+      "deps": [
+        "P1-01",
+        "P1-02",
+        "P1-10",
+        "P1-14",
+        "P1-15",
+        "P1-31"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/artifacts/v13_loader.go",
+        "internal/artifacts/v13_loader_test.go",
+        "internal/project/v13_index.go",
+        "internal/project/v13_index_integration_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Load Git-authored .tally TaskContract/VerificationContract artifacts, validate/freeze metadata and rebuild DB indexes.",
+      "source_facts": [
+        "Existing project reindex handles legacy requirements/trace, not v1.3 Task/Verification artifacts."
+      ],
+      "prd_refs": [
+        "§6 Git-first Artifact",
+        "§33.3 Derived Index"
+      ],
+      "acceptance": [
+        "Git remains source of truth.",
+        "Invalid artifact is rejected from current index.",
+        "Reindex is idempotent/rebuildable.",
+        "Project identity guard applies.",
+        "No authoritative state is stored in artifact index."
+      ],
+      "validation": [
+        "go test ./internal/artifacts/... ./internal/project/...",
+        "go test -tags=integration ./internal/project/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-33",
+      "title": "Run/ChangeSet/Verification/Evidence persistence adapters",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W08",
+      "deps": [
+        "P1-05",
+        "P1-06",
+        "P1-11",
+        "P1-12",
+        "P1-31"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/runstore/codegen.go",
+        "internal/runstore/changeset.go",
+        "internal/runstore/verification.go",
+        "internal/runstore/evidence.go",
+        "internal/runstore/runstore_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Provide thin typed persistence adapters over generated sqlc for observed P1 runtime/evidence objects.",
+      "source_facts": [
+        "Observed process/fact data belongs in PostgreSQL; domain packages should not import generated query details everywhere."
+      ],
+      "prd_refs": [
+        "§33 PostgreSQL",
+        "INV-FACT-01"
+      ],
+      "acceptance": [
+        "Append-only evidence/exposure/supersession writes have no update/delete API.",
+        "CodegenRun mutable process fields, if any, are confined to non-fact run-control semantics.",
+        "ChangeSet is inserted once as immutable snapshot.",
+        "Reads reconstruct domain values."
+      ],
+      "validation": [
+        "go test ./internal/runstore/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-34",
+      "title": "Approval and measurement persistence adapters",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W10",
+      "deps": [
+        "P1-08",
+        "P1-13",
+        "P1-23",
+        "P1-31"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/measurement/store.go",
+        "internal/measurement/store_test.go",
+        "internal/approval/store.go",
+        "internal/approval/store_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Persist HumanApprovalEvidence, human timing and usage/cost facts through narrow adapters.",
+      "source_facts": [
+        "No current v1.3 approval/measurement persistence path exists."
+      ],
+      "prd_refs": [
+        "§19",
+        "§25",
+        "§30"
+      ],
+      "acceptance": [
+        "Approval is append-only evidence.",
+        "Stored usage includes cost_plane.",
+        "Human timing can be aggregated without manual data entry field on Task.",
+        "No direct task status update occurs."
+      ],
+      "validation": [
+        "go test ./internal/measurement/... ./internal/approval/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-35",
+      "title": "Codegen workspace session and dependency-cache boundary",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W07",
+      "deps": [
+        "P0-05",
+        "P1-03",
+        "P1-05"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/workspace/codegen.go",
+        "internal/workspace/cache.go",
+        "internal/workspace/codegen_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Extend disposable worktree manager for P1 CodegenRun ownership and shared dependency caches without sharing mutable source workspace.",
+      "source_facts": [
+        "PRD wants one disposable worktree per CodegenRun reused across iterations and cache keyed by toolchain/lock/platform."
+      ],
+      "prd_refs": [
+        "§13 Workspace and cache",
+        "INV-EXEC-01"
+      ],
+      "acceptance": [
+        "One Run owns one disposable source worktree.",
+        "Iterations reuse it until Run termination.",
+        "Dependency cache path is outside source worktree and keyable.",
+        "Cleanup cannot delete shared cache.",
+        "Owner primary worktree untouched."
+      ],
+      "validation": [
+        "go test ./internal/workspace/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-36",
+      "title": "Codex runtime surface probe",
+      "phase": "P1",
+      "kind": "spike",
+      "wave": "W07",
+      "deps": [
+        "P1-04"
+      ],
+      "complexity": "XS",
+      "allowed": [
+        "docs/tasks/v1.3/runtime/CODEX_RUNTIME_PROBE.md"
+      ],
+      "forbidden": [],
+      "goal": "Record the actual Codex runtime surface available in the Codex App environment before implementing an adapter; do not guess CLI/SDK flags.",
+      "source_facts": [
+        "Tally must support CodexRuntime but current source has no adapter.",
+        "Runtime surfaces can change; the task pack should not freeze invented flags."
+      ],
+      "prd_refs": [
+        "§10 Runtime Protocol",
+        "§35 Conformance"
+      ],
+      "acceptance": [
+        "Probe records exact installed command/SDK/app-server surface, version/help/schema evidence.",
+        "Chooses the narrowest structured integration surface supported locally.",
+        "If no callable surface exists, records BLOCKED with evidence instead of inventing one."
+      ],
+      "validation": [
+        "codex --help || true",
+        "codex --version || true"
+      ],
+      "notes": [
+        "Read-only probe. No production code changes."
+      ]
+    },
+    {
+      "id": "P1-37",
+      "title": "CodexRuntime adapter against probed surface",
+      "phase": "P1",
+      "kind": "leaf",
+      "wave": "W08",
+      "deps": [
+        "P1-04",
+        "P1-25",
+        "P1-35",
+        "P1-36"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "runtimes/codex/runtime.go",
+        "runtimes/codex/process.go",
+        "runtimes/codex/events.go",
+        "runtimes/codex/runtime_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement CodexRuntime strictly against P1-36 observed surface and Tally AgentRuntime Protocol.",
+      "source_facts": [
+        "No current coding runtime exists.",
+        "Do not introduce Codex conditionals into core domain packages."
+      ],
+      "prd_refs": [
+        "§10 Runtime Protocol",
+        "§35 Conformance"
+      ],
+      "acceptance": [
+        "Start/execute/cancel/cwd/workspace/events/result work.",
+        "Process crash is handled.",
+        "Runtime identity/version/capability snapshot can be recorded.",
+        "No unsupported capability is advertised.",
+        "Core conformance suite passes where local Codex surface permits."
+      ],
+      "validation": [
+        "go test ./runtimes/codex/... ./test/runtimeconformance/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-38",
+      "title": "Verification orchestration for one immutable ChangeSet",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W09",
+      "deps": [
+        "P1-16",
+        "P1-19",
+        "P1-20",
+        "P1-28",
+        "P1-29",
+        "P1-33"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/verification/orchestrator.go",
+        "internal/verification/orchestrator_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Run required visible/final/held-out gates for one contract revision + ChangeSet and persist VerificationRun/Evidence.",
+      "source_facts": [
+        "P1 needs one deterministic verification path; P2 recovery automation is excluded."
+      ],
+      "prd_refs": [
+        "§14 Validation Strategy",
+        "§36 P1"
+      ],
+      "acceptance": [
+        "Creates one VerificationRun tied to exact contract/change/environment.",
+        "Final functional and independence coverage are derivable.",
+        "Held-out FAIL returns non-VERIFIED/needs review signal without diagnostic disclosure.",
+        "Existing valid failed evidence cannot be replaced by a passing new binding without invalidation provenance."
+      ],
+      "validation": [
+        "go test ./internal/verification/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-39",
+      "title": "P1 vertical workflow kernel",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W09",
+      "deps": [
+        "P1-03",
+        "P1-05",
+        "P1-24",
+        "P1-33",
+        "P1-35"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/workflow/v13.go",
+        "internal/workflow/v13_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Implement only the P1 single-Task orchestration abstraction: Run lifecycle, finite retry/escalation hooks, candidate ChangeSet creation and stop conditions.",
+      "source_facts": [
+        "PRD explicitly forbids a generic workflow DSL and defers DAG/autopilot/generalized kernel to P2."
+      ],
+      "prd_refs": [
+        "§17 Minimal Workflow Kernel",
+        "§29 Debug"
+      ],
+      "acceptance": [
+        "Single Task sequential lifecycle is testable.",
+        "A CodegenRun may produce zero or one fixed candidate ChangeSet.",
+        "Runtime/model escalation terminates current Run and opens a new Run.",
+        "No Task DAG, parallel task scheduler or generic workflow language is added."
+      ],
+      "validation": [
+        "go test ./internal/workflow/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-40",
+      "title": "Patch Review accounting and acceptance mapping",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W10",
+      "deps": [
+        "P1-07",
+        "P1-19",
+        "P1-20",
+        "P1-23",
+        "P1-33"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/review/accounting.go",
+        "internal/review/classify_rules.go",
+        "internal/review/accounting_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Produce the deterministic review model around ChangeSet: hunk inventory, rule buckets, acceptance coverage, independence coverage and unattributed blockers.",
+      "source_facts": [
+        "Patch Review is a P1 core product surface; LLM residual classification is optional assistance, not authority."
+      ],
+      "prd_refs": [
+        "§19 Patch Review",
+        "INV-CHANGE-01"
+      ],
+      "acceptance": [
+        "Every hunk has exactly one primary bucket.",
+        "Scope/protected/docs/supplementary-test rules are deterministic where possible.",
+        "Unattributed >0 blocks approve.",
+        "Acceptance independence gaps are explicit.",
+        "strict_waived can never display as strict_satisfied."
+      ],
+      "validation": [
+        "go test ./internal/review/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-41",
+      "title": "Runtime usage and human-control measurement recorder",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W11",
+      "deps": [
+        "P1-08",
+        "P1-33",
+        "P1-34"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/measurement/recorder.go",
+        "internal/measurement/recorder_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Automatically record P1 phase timing, runtime usage and control/execution LLM cost attribution.",
+      "source_facts": [
+        "P1 Trust Gate requires automatic human/control/cost/latency baseline."
+      ],
+      "prd_refs": [
+        "§25",
+        "§30",
+        "§38"
+      ],
+      "acceptance": [
+        "Recorder writes phase start/end/active/wall facts.",
+        "LLM usage stores cost_plane at call time.",
+        "No manual Task fields are needed to produce metrics.",
+        "Missing provider usage is represented as unavailable, not zero."
+      ],
+      "validation": [
+        "go test ./internal/measurement/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-42",
+      "title": "P1 Context builder from refs and redacted verification projection",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W09",
+      "deps": [
+        "P1-21",
+        "P1-32"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "internal/contextpack/selector.go",
+        "internal/contextpack/selector_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Assemble minimal real ContextPack from Task refs, relevant docs/code/tests and redacted VerificationContract.",
+      "source_facts": [
+        "Current repo has requirement/project knowledge but no v1.3 ContextPack selection path."
+      ],
+      "prd_refs": [
+        "§12 Context Engine",
+        "§36 P1"
+      ],
+      "acceptance": [
+        "Includes requested product/requirement/ADR refs.",
+        "Records included/excluded refs and selection reason.",
+        "Held-out internals are filtered from all sources.",
+        "Token budget is enforced deterministically enough for P1."
+      ],
+      "validation": [
+        "go test ./internal/contextpack/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-43",
+      "title": "Worker integration for v1.3 Codegen/Verify vertical path",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W12",
+      "deps": [
+        "P1-30",
+        "P1-37",
+        "P1-38",
+        "P1-39",
+        "P1-41",
+        "P1-42"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "cmd/worker/main.go",
+        "cmd/worker/v13.go",
+        "cmd/worker/v13_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Wire the P1 vertical path into worker without replacing legacy environment/failure jobs and without implementing P2 automation.",
+      "source_facts": [
+        "cmd/worker is a high-conflict hotspot intentionally serialized.",
+        "P0 legacy functionality must continue working."
+      ],
+      "prd_refs": [
+        "§36 P1 Vertical Trust Loop"
+      ],
+      "acceptance": [
+        "Worker can execute one approved standard TaskContract through CodegenRun→ChangeSet→Verification.",
+        "Legacy jobs remain registered.",
+        "Codex/Fake selection is configuration, not core conditional logic.",
+        "No primary worktree mutation.",
+        "Held-out isolation/canary prerequisite enforced."
+      ],
+      "validation": [
+        "go test ./cmd/worker/...",
+        "go test -tags=integration ./cmd/worker/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-44",
+      "title": "Minimal P1 Tasks/Changes web UI",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W11",
+      "deps": [
+        "P1-22",
+        "P1-32",
+        "P1-33",
+        "P1-40"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "internal/web/handlers/v13_tasks.go",
+        "internal/web/handlers/v13_changes.go",
+        "internal/web/handlers/v13_review.go",
+        "internal/web/handlers/v13_http_test.go",
+        "web/templates/v13_tasks.tmpl",
+        "web/templates/v13_change.tmpl",
+        "web/templates/v13_review.tmpl",
+        "internal/web/handlers/server.go"
+      ],
+      "forbidden": [],
+      "goal": "Add minimal P1 UI for real TaskContract/ChangeSet/Verification/Patch Review, keeping old execution summary clearly legacy.",
+      "source_facts": [
+        "P1 UI scope is Tasks + Changes/Run Detail + Patch Review only."
+      ],
+      "prd_refs": [
+        "§26 UI P1 minimal",
+        "§19 Patch Review"
+      ],
+      "acceptance": [
+        "Task page shows derived state/current Run/verification summary.",
+        "Change page shows immutable ChangeSet, VerificationRun/Evidence, hunk inventory, functional+independence coverage.",
+        "Unattributed changes disable approve.",
+        "Approval writes HumanApprovalEvidence, not status.",
+        "No Inbox/Saved Views/Failures redesign."
+      ],
+      "validation": [
+        "go test ./internal/web/handlers/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-45",
+      "title": "v1.3 architecture invariant tests",
+      "phase": "P1",
+      "kind": "contract",
+      "wave": "W11",
+      "deps": [
+        "P1-15",
+        "P1-18",
+        "P1-22",
+        "P1-30",
+        "P1-40"
+      ],
+      "complexity": "L",
+      "allowed": [
+        "test/arch/v13_authority_test.go",
+        "test/arch/v13_changeset_test.go",
+        "test/arch/v13_verification_test.go",
+        "test/arch/v13_state_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Land machine-checkable architecture tests for P1-active stable invariant IDs.",
+      "source_facts": [
+        "Latest PRD requires invariant IDs and activation-stage tests."
+      ],
+      "prd_refs": [
+        "§3.2 Architecture Invariants"
+      ],
+      "acceptance": [
+        "Tests cover no direct authoritative state write, ChangeSet immutability, held-out boundary at observable channels, proposal/fact separation, hunk accounting entry points.",
+        "P2/P4/P5 inactive invariants are not forced into fake implementations."
+      ],
+      "validation": [
+        "go test ./test/arch/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-46",
+      "title": "Update implementation-facing project instructions to v1.3 baseline",
+      "phase": "P1",
+      "kind": "integration",
+      "wave": "W13",
+      "deps": [
+        "P1-43",
+        "P1-44",
+        "P1-45"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "CLAUDE.md",
+        "README.md",
+        "docs/00-PRD.md",
+        "docs/01-architecture.md",
+        "docs/02-invariants.md",
+        "docs/03-data-model.md",
+        "docs/04-code-standards.md",
+        "docs/05-test-standards.md",
+        "docs/07-operations.md"
+      ],
+      "forbidden": [],
+      "goal": "Remove old v3/legacy guidance that would cause future Codex runs to implement against stale semantics; point to v1.3 and document only shipped P0/P1 behavior.",
+      "source_facts": [
+        "Current CLAUDE.md/docs predate v1.3 and describe legacy task/failure platform.",
+        "Do not claim P2+ features are implemented."
+      ],
+      "prd_refs": [
+        "§45 docs boundary",
+        "all P1"
+      ],
+      "acceptance": [
+        "Latest PRD is clearly authoritative.",
+        "Old iron rules are reconciled with stable v1.3 invariants.",
+        "Operations/test docs match actual commands/schema.",
+        "P2+ remains explicitly deferred."
+      ],
+      "validation": [
+        "git diff --check"
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-47",
+      "title": "E2E: standard Task with visible + held-out PASS",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W13",
+      "deps": [
+        "P1-43",
+        "P1-44",
+        "P1-45"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v13_standard_holdout_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Prove one real P1 standard task travels end-to-end with held-out final verification.",
+      "source_facts": [
+        "P1 Trust Gate explicitly requires this scenario."
+      ],
+      "prd_refs": [
+        "§36.3 P1 Trust Gate"
+      ],
+      "acceptance": [
+        "TaskContract and VerificationContract revisions trace to Run/ChangeSet/Evidence.",
+        "Implementation context cannot resolve held-out content.",
+        "Visible incremental checks can run.",
+        "Held-out final PASS contributes information independence.",
+        "Derived state reaches VERIFIED only after required evidence."
+      ],
+      "validation": [
+        "go test -tags=integration ./test/e2e/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-48",
+      "title": "E2E: held-out FAIL blocks VERIFIED",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W13",
+      "deps": [
+        "P1-43",
+        "P1-45"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v13_holdout_fail_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Construct one controlled held-out failure and prove it cannot silently become VERIFIED.",
+      "source_facts": [
+        "P1 requires blocking behavior, not automated recovery."
+      ],
+      "prd_refs": [
+        "§36.3 P1 Trust Gate",
+        "INV-VER-05"
+      ],
+      "acceptance": [
+        "Held-out failure details remain control-plane only.",
+        "Task derives NEEDS_REVIEW/non-VERIFIED.",
+        "No automatic Rung-1/Rung-2 recovery is implemented.",
+        "Failure evidence remains append-only."
+      ],
+      "validation": [
+        "go test -tags=integration ./test/e2e/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-49",
+      "title": "E2E: exposure fact flips information independence",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W13",
+      "deps": [
+        "P1-18",
+        "P1-43",
+        "P1-45"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v13_exposure_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Prove an observable exposure is recorded and effective information independence becomes compromised for the applicable ChangeSet lineage.",
+      "source_facts": [
+        "P1 Trust Gate requires at least one exposure flip scenario."
+      ],
+      "prd_refs": [
+        "§36.3",
+        "INV-VER-05"
+      ],
+      "acceptance": [
+        "ExposureEvent is append-only.",
+        "Frozen VerificationContract visibility policy is unchanged.",
+        "Derived independence flips to compromised.",
+        "Review shows the gap."
+      ],
+      "validation": [
+        "go test -tags=integration ./test/e2e/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-50",
+      "title": "E2E: immutable ChangeSet and supersession fact",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W10",
+      "deps": [
+        "P1-05",
+        "P1-33",
+        "P1-39"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "test/e2e/v13_changeset_supersession_test.go"
+      ],
+      "forbidden": [],
+      "goal": "Prove a new candidate is a new immutable ChangeSet and prior snapshot is related only by append-only supersession fact.",
+      "source_facts": [
+        "Latest PRD fixed earlier multi-run mutable ChangeSet ambiguity."
+      ],
+      "prd_refs": [
+        "INV-CHANGE-02"
+      ],
+      "acceptance": [
+        "Run with no candidate creates no ChangeSet.",
+        "Candidate A and B are distinct immutable records.",
+        "Supersession does not mutate A.",
+        "Verification is bound to exact snapshot."
+      ],
+      "validation": [
+        "go test -tags=integration ./test/e2e/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-51",
+      "title": "P1 metric baseline report generation",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W14",
+      "deps": [
+        "P1-41",
+        "P1-47",
+        "P1-48",
+        "P1-49"
+      ],
+      "complexity": "S",
+      "allowed": [
+        "internal/measurement/report.go",
+        "internal/measurement/report_test.go",
+        "docs/tasks/v1.3/reports/P1_METRIC_BASELINE.md"
+      ],
+      "forbidden": [],
+      "goal": "Produce the P1 baseline distributions/readouts without inventing readiness thresholds.",
+      "source_facts": [
+        "P1 records distributions but does not decide economic value vs bare agent."
+      ],
+      "prd_refs": [
+        "§25",
+        "§38",
+        "§36.3"
+      ],
+      "acceptance": [
+        "Reports human/control/wall/cost data.",
+        "Reports qualification strength, authoring mode, visibility, source/info independence.",
+        "Reports first-pass visible-only vs with-holdout where data exists.",
+        "Missing/low-sample metrics are marked insufficient, not zero or pass."
+      ],
+      "validation": [
+        "go test ./internal/measurement/..."
+      ],
+      "notes": []
+    },
+    {
+      "id": "P1-52",
+      "title": "P1 Vertical Trust Gate review",
+      "phase": "P1",
+      "kind": "gate",
+      "wave": "W15",
+      "deps": [
+        "P1-46",
+        "P1-47",
+        "P1-48",
+        "P1-49",
+        "P1-50",
+        "P1-51"
+      ],
+      "complexity": "M",
+      "allowed": [
+        "docs/tasks/v1.3/reports/P1_TRUST_GATE.md"
+      ],
+      "forbidden": [],
+      "goal": "Perform the closed P1 Trust Readiness review. This task may PASS, FAIL or BLOCKED; it does not implement fixes.",
+      "source_facts": [
+        "P1 exit is trust/readiness only, not “Tally beats bare Codex”."
+      ],
+      "prd_refs": [
+        "§36.3 Trust Gate",
+        "§37 P1"
+      ],
+      "acceptance": [
+        "Primary worktree contamination=0.",
+        "Protected evidence silent modification=0.",
+        "Known false VERIFIED=0.",
+        "Traceability and hunk accounting=100% for P1 scenarios.",
+        "Fake/Codex conformance evidence recorded.",
+        "Required holdout/exposure scenarios executed.",
+        "Human/cost/latency baseline exists.",
+        "No P2 scope is required for PASS."
+      ],
+      "validation": [
+        "make check"
+      ],
+      "notes": [
+        "Use GATE_REVIEW_PROMPT.md. Do not patch failing code in this task."
+      ]
+    }
+  ]
+}

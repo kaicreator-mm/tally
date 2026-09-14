@@ -1,0 +1,31 @@
+{{define "content"}}
+<div class="head">
+  <h1>Wiki 笔记</h1>
+  <span class="badge-note">笔记 · 未验证</span>
+</div>
+<p class="lede">这是你的草稿层:随手记的想法、线索、还没验证的修法。和「已验证修复库」不同 —— 那里只收过了四道闸的(绿色),这里什么都可以记(赭石色),但一律标「未验证」,别把它当结论。</p>
+
+{{if .Notes}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>笔记</th><th>层级</th><th></th></tr></thead>
+    <tbody>
+      {{range .Notes}}
+      <tr>
+        <td><a href="/wiki/{{.Slug}}">{{.Title}}</a></td>
+        <td><span class="badge-note">笔记 · 未验证</span></td>
+        <td class="rowedit"><a href="/wiki/{{.Slug}}/edit">编辑</a></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{else}}
+<div class="empty">
+  还没有笔记。
+  <span class="do"><a href="/wiki/new">记第一条笔记</a> —— 存在 git <code>wiki/</code>,可编辑、可回滚,但永远标「未验证」。</span>
+</div>
+{{end}}
+{{end}}

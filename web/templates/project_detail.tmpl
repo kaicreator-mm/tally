@@ -1,0 +1,35 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{.Project.Name}}</h1>
+  <span class="meta"><a href="/projects/{{.Project.Slug}}/edit">编辑</a> · <a href="/projects">← 项目列表</a></span>
+</div>
+{{if .Project.Description}}<p class="lede">{{.Project.Description}}</p>{{end}}
+
+<section>
+  <h2>这个项目下的内容</h2>
+  <div class="grid grid-3">
+    <div class="cell">
+      <div class="k">需求条款</div>
+      <div class="v">{{.RequirementCount}}</div>
+      <div class="foot"><a href="/requirements?project={{.Project.Slug}}">查看 / 编辑</a></div>
+    </div>
+    <div class="cell">
+      <div class="k">任务</div>
+      <div class="v">—</div>
+      <div class="foot"><a href="/tasks">状态从执行链算出</a></div>
+    </div>
+    <div class="cell">
+      <div class="k">环境 / 部署</div>
+      <div class="v">—</div>
+      <div class="foot">T05b 接上</div>
+    </div>
+  </div>
+</section>
+
+{{if .LastCommit}}
+<section>
+  <h2>最近一次写入 <span class="hint">git</span></h2>
+  <p class="dim">commit {{.LastCommit}}</p>
+</section>
+{{end}}
+{{end}}

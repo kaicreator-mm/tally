@@ -1,0 +1,43 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{if .IsNew}}新建项目{{else}}编辑项目 · {{.Name}}{{end}}</h1>
+  <span class="meta"><a href="/projects">← 项目列表</a></span>
+</div>
+<p class="lede">保存会在 git 的 <code>projects/</code> 下写一个 commit。版本与回滚由 git 管。</p>
+
+{{if .FormError}}<div class="flash bad">{{.FormError}}</div>{{end}}
+
+<form class="form" method="post" action="{{.Action}}">
+  <input type="hidden" name="csrf_token" value="{{.CSRF}}">
+
+  {{if .IsNew}}
+  <div class="field">
+    <label for="slug">标识(slug)</label>
+    <input type="text" id="slug" name="slug" value="{{.Slug}}" required>
+    <div class="help">小写字母、数字、连字符,如 <code>forge</code>。建好后不可改名(改名请新建)。</div>
+  </div>
+  {{else}}
+  <div class="field">
+    <label>标识(slug)</label>
+    <input type="text" value="{{.Slug}}" disabled>
+    <div class="help">标识不可改 —— 它是 git 里的文件路径。</div>
+  </div>
+  {{end}}
+
+  <div class="field">
+    <label for="name">名称</label>
+    <input type="text" id="name" name="name" value="{{.Name}}" required>
+    <div class="help">人认得的名字。</div>
+  </div>
+
+  <div class="field">
+    <label for="description">一句话说明</label>
+    <input type="text" id="description" name="description" value="{{.Description}}">
+  </div>
+
+  <div class="actions">
+    <button type="submit">{{if .IsNew}}建项目{{else}}保存{{end}}</button>
+    <a class="btn secondary" href="/projects">取消</a>
+  </div>
+</form>
+{{end}}

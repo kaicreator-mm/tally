@@ -1,0 +1,34 @@
+# Frozen acceptance (P4-01). Identical text and identical oracle for the
+# whole experiment; Tally derives its Contract from this file and the shared
+# verification harness judges every candidate against exactly these clauses.
+task_id: bf-06-email-dedupe-casefold
+harness: bug_fix
+policy_ref: POL-BUG-FIX-REGRESSION # catalog/v14/policies/bug_fix.yaml
+requires:
+  - bug_repro_failed_before
+  - regression_check_passes_after
+gate_condition:
+  all_of:
+    - bug_repro_failed_before
+    - regression_check_passes_after
+acceptance:
+  - id: AC-01
+    statement: >-
+      Addresses differing only by case collapse to one lowercased entry
+      (oracle cases mixed-case-dupes, ordering-and-case).
+    oracle_ref: oracle/oracle.json
+  - id: AC-02
+    statement: >-
+      Exact duplicates collapse and single entries pass through unchanged in
+      normalized form (oracle cases exact-dupes, single-entry).
+    oracle_ref: oracle/oracle.json
+  - id: AC-03
+    statement: >-
+      bug_repro_failed_before: the oracle cases named in
+      expected.baseline_failures fail against the unfixed baseline behavior.
+    oracle_ref: oracle/oracle.json
+  - id: AC-04
+    statement: >-
+      regression_check_passes_after: every oracle case passes against the
+      delivered fix; no case regressed relative to the baseline-allowed set.
+    oracle_ref: oracle/oracle.json

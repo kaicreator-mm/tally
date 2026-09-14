@@ -1,0 +1,36 @@
+# Frozen acceptance (P4-01). Identical text and identical oracle for the
+# whole experiment; Tally derives its Contract from this file and the shared
+# verification harness judges every candidate against exactly these clauses.
+task_id: bf-04-date-validation-calendar
+harness: bug_fix
+policy_ref: POL-BUG-FIX-REGRESSION # catalog/v14/policies/bug_fix.yaml
+requires:
+  - bug_repro_failed_before
+  - regression_check_passes_after
+gate_condition:
+  all_of:
+    - bug_repro_failed_before
+    - regression_check_passes_after
+acceptance:
+  - id: AC-01
+    statement: >-
+      Impossible dates in short months are rejected (oracle cases
+      feb-30-common-year, apr-31); February 29 is accepted only in leap
+      years (oracle cases feb-29-leap, feb-29-common-year).
+    oracle_ref: oracle/oracle.json
+  - id: AC-02
+    statement: >-
+      Valid dates still validate and malformed input is rejected with the
+      frozen reason codes (oracle cases jan-31-valid, month-13,
+      unpadded-format, day-zero).
+    oracle_ref: oracle/oracle.json
+  - id: AC-03
+    statement: >-
+      bug_repro_failed_before: the oracle cases named in
+      expected.baseline_failures fail against the unfixed baseline behavior.
+    oracle_ref: oracle/oracle.json
+  - id: AC-04
+    statement: >-
+      regression_check_passes_after: every oracle case passes against the
+      delivered fix; no case regressed relative to the baseline-allowed set.
+    oracle_ref: oracle/oracle.json

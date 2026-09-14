@@ -1,0 +1,130 @@
+{
+  "arm": "bare",
+  "task_id": "bf-04-date-validation-calendar",
+  "outcome": "accepted",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "started_at": "2026-09-09T19:44:20.0307842Z",
+    "wall_seconds": 378.5744972,
+    "per_attempt_seconds": [
+      378.5744972
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false
+  },
+  "requested": {
+    "codex_bin": "C:/Users/15549/AppData/Local/OpenAI/Codex/bin/9ba750cce02d5e5c/codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "timeout_seconds": 1800,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true,
+      "env_key": ""
+    }
+  },
+  "judge": {
+    "task_id": "bf-04-date-validation-calendar",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\bare\\bf-04-date-validation-calendar\\attempt-1\\ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 10 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "jan-31-valid",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "feb-30-common-year",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "apr-31",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-leap",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "feb-29-common-year",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-century-non-leap",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-century-leap",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "month-13",
+          "want": "invalid:month",
+          "got": "invalid:month",
+          "pass": true
+        },
+        {
+          "name": "unpadded-format",
+          "want": "invalid:format",
+          "got": "invalid:format",
+          "pass": true
+        },
+        {
+          "name": "day-zero",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T19:50:40.0168957Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "728bba4f1d9caa269bcc97fb3c58be542236ec4e8dce2f11c768060b6385377f",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "recorded_at": "2026-09-10T01:14:40.9811548Z"
+}

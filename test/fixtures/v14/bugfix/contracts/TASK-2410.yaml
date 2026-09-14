@@ -1,0 +1,26 @@
+# P3-01 Bug Fix Harness 冻结语料 · 场景 1(PRD §24.1):
+# 低风险功能缺陷 —— 令牌桶边界 off-by-one。无 auth/protected/schema 风险信号,
+# 经 REQ-2410 命中内置束 POL-BUG-FIX-REGRESSION(要求回归证据),保证档维持
+# 决策锁 21 的 L1 默认地板(P3-01 AC2/AC3)。
+id: TASK-2410
+profile: standard
+
+title: Fix token bucket boundary off-by-one
+
+objective: >
+  The token bucket limiter admits one extra immediate request after the
+  bucket is emptied; requests beyond capacity must be rejected until
+  tokens refill.
+
+requirement_refs:
+  - .tally/requirements/REQ-2410.md
+
+scope:
+  allowed_paths:
+    - internal/limiter/**
+
+acceptance:
+  - id: AC-01
+    statement: with capacity=3 and no refill elapsed, the first three immediate requests are allowed and the fourth is rejected
+  - id: AC-02
+    statement: a regression check fails on the pre-fix limiter and passes after the fix

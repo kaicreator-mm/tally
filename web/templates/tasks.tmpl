@@ -1,0 +1,38 @@
+{{define "content"}}
+<div class="head">
+  <h1>执行摘要</h1>
+  <span class="meta">项目级执行记录摘要 · 只读 · 非 TaskContract 完成视图</span>
+</div>
+<p class="lede">本页是<b>项目执行 / 构建 / 部署记录摘要</b>,不是工程 Task(TaskContract)的完成状态:每一栏只说明「存在哪种执行记录」,不代表代码已合并,不代表验证通过(VERIFIED),更不代表 Task 完成(APPROVED)。v1.3 的 Task 域在 P1 落地;在此之前本页保持只读 —— 没有勾选框,也没有任何能改状态的控件。</p>
+
+{{if .Rows}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>项目</th><th>名称</th><th>构建记录</th><th>末次构建</th><th>条款覆盖</th><th>末次部署</th><th>部署后</th></tr>
+    </thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td class="dim">{{.Project}}</td>
+        <td>{{.Title}}</td>
+        <td>{{.Merged}}</td>
+        <td>{{.Built}}</td>
+        <td>{{.Tested}}</td>
+        <td>{{.Deployed}}</td>
+        <td>{{.Stable}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">每一栏都是从事实面(build_run / deploy_run / failure_event)推导的记录现状:「有记录 / 有覆盖」只表示存在对应的机器记录,不是完成判定。</p>
+</section>
+{{else}}
+<div class="empty">
+  还没有可展示的执行摘要。
+  <span class="do">摘要由构建 / 部署 / 条款覆盖等执行记录推导。接上执行数据(T05b)并跑过一次构建之后,这里会逐个项目列出记录摘要 —— 无需也不能手动标记。</span>
+</div>
+{{end}}
+{{end}}

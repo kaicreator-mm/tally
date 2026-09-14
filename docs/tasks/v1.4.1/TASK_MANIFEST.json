@@ -1,0 +1,2737 @@
+{
+  "schema_version": "1.0",
+  "project": "Tally",
+  "release": "v1.4.1",
+  "source_head": "979a55ad3ba5e514bb80f0e012aa36e0e6577eba",
+  "l2_verdict": "SUPPORTED_WITH_CHANGES",
+  "implementation_readiness": "READY_AFTER_FIXES",
+  "task_count": 57,
+  "decision_locks": "DECISION_LOCKS.md",
+  "prd_input": "docs/product/Tally_PRD_v1.4.1_Final.md",
+  "prd_amendments": "PRD_AMENDMENTS.md",
+  "tasks": [
+    {
+      "id": "A0-01",
+      "phase": "A0",
+      "title": "Current source-to-PRD authority map",
+      "kind": "docs",
+      "wave": "W00",
+      "complexity": "S",
+      "model_hint": "cheap",
+      "deps": [],
+      "l3_required": false,
+      "paths": [
+        "docs/tasks/v1.4.1/**"
+      ],
+      "forbidden": [],
+      "goal": "Create a precise map from every v1.4.1 requirement to the existing source seam and mark reuse/new/change/defer.",
+      "facts": [
+        "v1.4 already has Closed Loop, agentruntime, Git writer, Contract/Policy/Risk/Assurance/Outcome modules.",
+        "L2 found several PRD items that would duplicate existing abstractions."
+      ],
+      "requirements": [
+        "Map every PRD section to package/file owners.",
+        "List all L2 amendments and their source rationale.",
+        "No production code changes."
+      ],
+      "acceptance": [
+        "No requirement is left with an ambiguous owner.",
+        "Duplicate-architecture risks are explicitly marked."
+      ],
+      "verify": [
+        "Review against L2_ARCHITECTURE_EVIDENCE.md and DECISION_LOCKS.md."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `test/arch/v14_contract_authority_test.go`, `v14_runtime_boundary_test.go`, `v14_outcome_event_test.go`",
+        "Contract: `DECISION_LOCKS.md`, `PRD_AMENDMENTS.md`, source `docs/tasks/v1.4/STATUS.md`",
+        "Core: `cmd/worker/v14.go`, `internal/closedloop/*`, `internal/agentruntime/*`, `internal/contract/*`",
+        "Failure evidence: stale current docs vs v1.4 final gate; record only, do not alter production code"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "A0-02",
+      "phase": "A0",
+      "title": "Freeze v1.4.1 architecture decision locks",
+      "kind": "architecture",
+      "wave": "W00",
+      "complexity": "M",
+      "model_hint": "strong",
+      "deps": [
+        "A0-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "docs/tasks/v1.4.1/**",
+        "docs/architecture/**"
+      ],
+      "forbidden": [],
+      "goal": "Publish the implementation constraints that low-cost agents are forbidden to violate.",
+      "facts": [],
+      "requirements": [
+        "Lock existing Closed Loop/runtime/Git/policy/outcome authorities.",
+        "Mark unresolved seams as SPIKE_REQUIRED instead of inventing APIs."
+      ],
+      "acceptance": [
+        "Decision locks are referenced by every later task template.",
+        "No lock contradicts current source semantics."
+      ],
+      "verify": [
+        "Architecture review."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `test/arch/v14_runtime_boundary_test.go`, `v14_contract_authority_test.go`, `v14_assurance_failsafe_test.go`, `v14_outcome_event_test.go`",
+        "Interfaces: `internal/closedloop/ports.go`, `internal/agentruntime/protocol.go`",
+        "Core authority: `internal/engineeringpolicy/policy.go`, `internal/outcome/types.go`, `internal/gitwriter/writer.go`",
+        "Failure handling: architecture tests already reject trust-core/runtime and policy/execution-policy leakage"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Architecture authority and cross-package invariants; a wrong lock creates downstream rework."
+    },
+    {
+      "id": "A0-03",
+      "phase": "A0",
+      "title": "Validation and dependency preflight",
+      "kind": "test-infra",
+      "wave": "W01",
+      "complexity": "S",
+      "model_hint": "cheap",
+      "deps": [],
+      "l3_required": false,
+      "paths": [
+        "scripts/**",
+        "docs/tasks/v1.4.1/**"
+      ],
+      "forbidden": [],
+      "goal": "Provide a deterministic preflight that distinguishes dependency/network failures from source test failures.",
+      "facts": [],
+      "requirements": [
+        "Check Go/tool versions and module availability.",
+        "Run focused baseline when dependencies are available.",
+        "Emit machine-readable status."
+      ],
+      "acceptance": [
+        "Offline dependency failure is classified, not reported as code regression."
+      ],
+      "verify": [
+        "Run in one connected and one deliberately offline environment where possible."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `test/arch/deps_test.go` plus focused package tests",
+        "Interface: `Makefile` targets `test`, `test-integration`, `check`",
+        "Core: `go.mod` dependency whitelist comment; `.github/workflows/*`",
+        "Failure: classify module-fetch/network errors separately from compile/test assertion failures"
+      ],
+      "external_reference_ids": [
+        "EXT-UBER-GO-TEST"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "A0-04",
+      "phase": "A0",
+      "title": "Architecture guard tests",
+      "kind": "tests",
+      "wave": "W01",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "A0-02"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/**",
+        "cmd/**",
+        "docs/tasks/v1.4.1/**"
+      ],
+      "forbidden": [],
+      "goal": "Add low-cost structural tests/checks that detect accidental creation of duplicate authorities.",
+      "facts": [],
+      "requirements": [
+        "Guard no second runtime core protocol.",
+        "Guard EngineeringPolicy runtime schema from governance fields where practical.",
+        "Guard Outcome kind set from accidental expansion in v1.4.1.",
+        "Document checks that cannot be automated."
+      ],
+      "acceptance": [
+        "Known forbidden architecture changes fail a guard or documented review gate."
+      ],
+      "verify": [
+        "Run architecture guard suite."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: use existing architecture-test idiom in `test/arch/*.go`",
+        "Contracts: `v14_runtime_boundary_test.go`, `v14_outcome_event_test.go`, `v14_contract_authority_test.go`",
+        "Core: AST/source-inspection helpers in `test/arch/helpers_test.go`",
+        "Failure: guard only stable architecture locks; avoid brittle exact-source-string tests where semantic test is possible"
+      ],
+      "external_reference_ids": [
+        "EXT-UBER-GO-TEST"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "A0-05",
+      "phase": "A0",
+      "title": "Architecture readiness gate",
+      "kind": "gate",
+      "wave": "W02",
+      "complexity": "S",
+      "model_hint": "strong",
+      "deps": [
+        "A0-02",
+        "A0-03",
+        "A0-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Issue the pre-implementation verdict and freeze the brownfield baseline.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Report says READY_TO_IMPLEMENT or BLOCKED with exact blocker.",
+        "Baseline commit and unresolved L3 items recorded."
+      ],
+      "verify": [
+        "Human/strong-model review of A0 evidence."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Evidence inputs: outputs from A0-01..04",
+        "Tests: `make test`/focused arch suite result",
+        "Contract: `DECISION_LOCKS.md`",
+        "Failure: gate must emit exact blocker IDs; no vague READY verdict"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-01",
+      "phase": "P0",
+      "title": "Define immutable FrozenIntent evidence",
+      "kind": "implementation",
+      "wave": "W03",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/intentevidence/**"
+      ],
+      "forbidden": [],
+      "goal": "Persist confirmed intake facts needed for deterministic downstream risk derivation without turning risk into mutable source state.",
+      "facts": [
+        "Current intake risk signals are proposal-only.",
+        "risk.Result is derived-only and requires basis refs."
+      ],
+      "requirements": [
+        "Strict schema: task identity, task type, source ref, confirmed declared/risk hints only.",
+        "Deterministic canonicalization/hash/revision.",
+        "No provider/model prose blobs as authority."
+      ],
+      "acceptance": [
+        "Round-trip is deterministic.",
+        "Invalid/unknown authoritative fields fail closed."
+      ],
+      "verify": [
+        "Unit tests for canonicalization, validation, hash stability."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `internal/intake/propose_test.go::TestDraftHasNoAuthorityFields`, `internal/risk/risk_test.go`, `internal/contract/compile_test.go`",
+        "Interfaces: `intake.Draft` candidate `RiskSignals`; `risk.Result` derived facts; `contract.Bind(... risk.Result)`",
+        "Core: `internal/intake/intake.go`, `internal/risk/risk.go`, `internal/risk/derive.go`",
+        "Failure: unknown/unsupported confirmed facts must fail closed or remain explicit unknown; never silently disappear"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-02",
+      "phase": "P0",
+      "title": "FrozenIntent Git artifact loader",
+      "kind": "implementation",
+      "wave": "W04",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P0-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/artifacts/**",
+        "internal/intentevidence/**"
+      ],
+      "forbidden": [],
+      "goal": "Load FrozenIntent from the exact pinned Git commit using the same artifact-authority pattern as existing v1.4 artifacts.",
+      "facts": [],
+      "requirements": [
+        "Do not read working tree as runtime authority.",
+        "Reject malformed or identity-mismatched artifacts."
+      ],
+      "acceptance": [
+        "Given source commit, loader returns deterministic FrozenIntent or typed rejection."
+      ],
+      "verify": [
+        "Commit-tree fixture tests incl. working-tree divergence."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `internal/artifacts/v13_loader_test.go::TestLoadReadsGitSnapshotNotWorkingTree`, `v14_policy_loader_test.go`",
+        "Interface: `artifacts.Load(repoPath, rev)`, `LoadPolicies(repoPath, rev)`",
+        "Core pattern: `internal/artifacts/v13_loader.go`, `v14_policy_loader.go`",
+        "Failure: unresolved revision, duplicate identity, malformed blob, working-tree divergence"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-03",
+      "phase": "P0",
+      "title": "Bounded dynamic clarification schema",
+      "kind": "implementation",
+      "wave": "W03",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/intake/**"
+      ],
+      "forbidden": [],
+      "goal": "Extend existing Clarification/Candidates into a typed presentation schema without creating dynamic domain contracts.",
+      "facts": [],
+      "requirements": [
+        "Support bounded field types required by v1.4.1.",
+        "Preserve strict structured AI output.",
+        "Allow optional natural-language escape hatch.",
+        "No arbitrary HTML/JS."
+      ],
+      "acceptance": [
+        "Old simple candidate clarification remains compatible or has explicit migration.",
+        "Unknown field kinds reject."
+      ],
+      "verify": [
+        "Schema parsing/validation tests; injection-shaped values rendered as data."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `internal/intake/propose_test.go::{TestProposeClarificationOnly,TestProposeRejectsInvalidShapes}`, `v14_launch_test.go::TestV14ProposeClarificationLoopFoldsAnswersIntoNewIntent`",
+        "Interfaces: `intake.Clarification`, `wireProposal`, strict `decodeStrict`",
+        "Core: `internal/intake/intake.go`, `propose.go`",
+        "Failure: reject unknown control kinds/fields; presentation data cannot become authority without mapper validation"
+      ],
+      "external_reference_ids": [
+        "EXT-JSONSCHEMA"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-04",
+      "phase": "P0",
+      "title": "Render dynamic forms in v1.4 Launch UI",
+      "kind": "implementation",
+      "wave": "W05",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P0-03"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/v14_launch.go",
+        "web/templates/v14_launch.tmpl",
+        "web/static/**"
+      ],
+      "forbidden": [],
+      "goal": "Render typed LLM-generated clarification choices with familiar form controls.",
+      "facts": [],
+      "requirements": [
+        "Recommended option is advisory.",
+        "Free-text escape hatch is optional.",
+        "Server revalidates all submitted values."
+      ],
+      "acceptance": [
+        "No raw generated HTML is executed.",
+        "Keyboard/basic accessibility works."
+      ],
+      "verify": [
+        "Handler/template tests for all supported field kinds."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `internal/web/handlers/v14_launch_test.go` clarification/draft cases; `execution_http_test.go::TestActionFormsArePlainNoJSUsable`",
+        "Interface: `V14QuestionView`, `v14QuestionViews`, server-side form parsing",
+        "Core: `internal/web/handlers/v14_launch.go`, `web/templates/v14_launch.tmpl`",
+        "Failure: render model-originated strings as escaped data; server must revalidate submitted option IDs/values"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML",
+        "EXT-JSONSCHEMA"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-05",
+      "phase": "P0",
+      "title": "Wire production Intent AI executor",
+      "kind": "implementation",
+      "wave": "W04",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": true,
+      "paths": [
+        "cmd/server/**",
+        "internal/web/**",
+        "internal/airuntime/**",
+        "internal/intake/**"
+      ],
+      "forbidden": [
+        "Do not add direct provider SDK if project public AI Runtime integration already owns this boundary."
+      ],
+      "goal": "Replace nil/test-only proposal executor injection with the real configured AI Runtime execution path.",
+      "facts": [
+        "`SetV14ProposeExecutor` exists; production composition wiring is incomplete."
+      ],
+      "requirements": [
+        "Use existing AI Runtime client/transport seam.",
+        "Typed unavailable/config errors.",
+        "No provider routing logic in handler."
+      ],
+      "acceptance": [
+        "Server startup establishes executor when configured; unavailable runtime is explicit and non-panicking."
+      ],
+      "verify": [
+        "Composition test with fake transport; connected integration where available."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `internal/airuntime/executor_test.go`, `request_test.go`, `test/arch/ai_runtime_boundary_test.go`, `ai_runtime_domain_migration_test.go`",
+        "Interface: `airuntime.Executor.Execute`, `airuntime.Validated`, `intake.Propose`",
+        "Core: `internal/airuntime/*`, `internal/web/handlers/v14_launch.go::SetV14ProposeExecutor`, `cmd/server/main.go`",
+        "Failure: missing/unavailable executor is explicit; handler never adds model/provider routing or legacy `internal/llm` path"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Crosses AI Runtime composition and production server wiring; duplicate-provider logic is a silent architecture regression."
+    },
+    {
+      "id": "P0-06",
+      "phase": "P0",
+      "title": "Draft-to-frozen domain mapper",
+      "kind": "implementation",
+      "wave": "W05",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P0-01",
+        "P0-03"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/intakefreeze/**",
+        "internal/intake/**",
+        "internal/contract/**"
+      ],
+      "forbidden": [],
+      "goal": "Map a confirmed structured draft to FrozenIntent and TaskContract using pure deterministic code.",
+      "facts": [],
+      "requirements": [
+        "No Git writes in pure mapper.",
+        "Stable IDs/revisions under identical input.",
+        "Reject unsupported task semantics."
+      ],
+      "acceptance": [
+        "Mapper output is deterministic and contains no unresolved presentation-only fields."
+      ],
+      "verify": [
+        "Golden tests; invalid drafts fail before artifact commit."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `internal/taskcontract/{parse_test,validate_test,types_test}.go`, `verification/freeze_test.go`",
+        "Interfaces: `intake.Draft`, `taskcontract.TaskContract`, `verification.Contract`",
+        "Core: `taskcontract.Parse/Validate/RevisionHash`, `verification.FreezeContract`",
+        "Failure: pure mapper must reject presentation-only unresolved values and invalid scope/acceptance semantics"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P0-07",
+      "phase": "P0",
+      "title": "Verification authoring and freeze admission",
+      "kind": "implementation",
+      "wave": "W05",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P0-03",
+        "P0-06"
+      ],
+      "l3_required": true,
+      "paths": [
+        "internal/intakefreeze/**",
+        "internal/verification/**",
+        "internal/intake/**"
+      ],
+      "forbidden": [],
+      "goal": "Ensure Confirm→Freeze cannot invent or omit required evidence bindings.",
+      "facts": [
+        "Verification freeze requires acceptance/evidence bindings; held-out evidence has stricter semantics."
+      ],
+      "requirements": [
+        "Map supported acceptance/evidence declarations.",
+        "If evidence is missing, return a typed clarification/blocker.",
+        "Never auto-label model-generated evidence as held-out."
+      ],
+      "acceptance": [
+        "Every frozen acceptance has a valid planned evidence binding.",
+        "Missing evidence prevents execution-ready freeze."
+      ],
+      "verify": [
+        "Unit tests for normal, missing-evidence, held-out, invalid binding cases."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `verification/freeze_test.go`, `types_test.go::TestFrozenImmutableAfterFreeze`, `holdout_path_leak_test.go`, `holdout_executor_test.go`",
+        "Interface: `verification.FreezePolicy`, `ValidateFreeze`, `FreezeContract`, binding visibility/authoring provenance",
+        "Core: `verification/freeze.go`, `types.go`, `coverage_*`",
+        "Failure: no post-hoc evidence by default; held-out identifiers/content never invented or exposed; missing required evidence blocks freeze"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Held-out verification and freeze admission are trust-boundary semantics; mistakes can leak or fabricate evidence."
+    },
+    {
+      "id": "P0-08",
+      "phase": "P0",
+      "title": "Atomic Confirm-to-Freeze Git transaction",
+      "kind": "implementation",
+      "wave": "W06",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P0-02",
+        "P0-04",
+        "P0-05",
+        "P0-06",
+        "P0-07"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/v14_launch.go",
+        "internal/gitwriter/**",
+        "internal/artifacts/**",
+        "internal/intakefreeze/**"
+      ],
+      "forbidden": [],
+      "goal": "Turn user confirmation into immutable Git-backed FrozenIntent + TaskContract + VerificationContract at one expected base.",
+      "facts": [],
+      "requirements": [
+        "One expected-base CAS boundary.",
+        "All artifacts refer to same task/source commit semantics.",
+        "Failure leaves no partial durable artifact set.",
+        "PRG-safe handler behavior."
+      ],
+      "acceptance": [
+        "Stale HEAD conflicts instead of silently rebasing.",
+        "Successful confirm is reloadable from committed artifacts."
+      ],
+      "verify": [
+        "Integration tests: success, stale base, partial failure rollback, duplicate confirm idempotency semantics."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `gitwriter/writer_test.go::{TestCommitValidatesExpectedBase,...}`, `v14_launch_test.go`, artifact loader tests",
+        "Interfaces: `gitwriter.CommitRequest{ExpectedBase,Files}`, immutable artifact loaders",
+        "Core: `gitwriter.Writer.Commit`, `V14ConfirmDraft`, new mapper outputs",
+        "Failure: stale HEAD, partial write, retry/idempotency, rollback; one confirm cannot leave a half-frozen artifact set"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "Atomic multi-artifact Git transaction with stale-base and rollback semantics; partial success is dangerous."
+    },
+    {
+      "id": "P0-09",
+      "phase": "P0",
+      "title": "Intent-to-Freeze E2E gate",
+      "kind": "gate",
+      "wave": "W07",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P0-08"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Prove the complete human intent → dynamic clarification → immutable freeze path on a real temporary Git repository.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "At least bugfix and migration/intake-risk scenario freeze correctly.",
+        "Missing verification evidence blocks freeze.",
+        "All artifacts load from pinned commit."
+      ],
+      "verify": [
+        "Run E2E and record commit/artifact hashes."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `v14_launch_test.go::{TestV14ProposeRendersEditableDraftAndConfirmBoundary,TestV14LaunchRunBlocksWithoutFrozenVerification}`, `test/e2e/*` patterns",
+        "Contract: FrozenIntent + TaskContract + Frozen Verification must all resolve from pinned commit",
+        "Core: public launch/confirm route and Git-backed loaders",
+        "Failure: missing evidence, stale base and invalid clarification must be exercised as negative E2E cases"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P1-01",
+      "phase": "P1",
+      "title": "Same-source execution bundle loader",
+      "kind": "implementation",
+      "wave": "W08",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P0-09"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/artifacts/**",
+        "internal/contract/**",
+        "internal/intentevidence/**"
+      ],
+      "forbidden": [],
+      "goal": "Resolve TaskContract, VerificationContract, FrozenIntent and EngineeringPolicies from one pinned source commit.",
+      "facts": [],
+      "requirements": [
+        "No mixed working-tree/source-commit reads.",
+        "Typed rejection for missing/mismatched artifact."
+      ],
+      "acceptance": [
+        "Bundle identity includes one source commit and all loaded revisions."
+      ],
+      "verify": [
+        "Tests with intentionally divergent commits."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `artifacts/v13_loader_test.go::TestLoadReadsGitSnapshotNotWorkingTree`, `v14_policy_loader_test.go`",
+        "Interface: single `sourceCommit` identity on artifact snapshots",
+        "Core: compose existing task/verification/policy loaders + FrozenIntent loader",
+        "Failure: mixed-commit artifacts are a hard error, never auto-upgraded to HEAD"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P1-02",
+      "phase": "P1",
+      "title": "Authoritative risk input derivation",
+      "kind": "implementation",
+      "wave": "W09",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/risk/**",
+        "internal/intentevidence/**",
+        "internal/contract/**"
+      ],
+      "forbidden": [],
+      "goal": "Derive risk.Result from confirmed immutable facts plus deterministic repository/task facts, preserving basis references.",
+      "facts": [],
+      "requirements": [
+        "Candidate LLM risk output is not trusted unless confirmed into FrozenIntent.",
+        "Unknown/unmatched signals remain visible.",
+        "No persisted mutable RiskProfile."
+      ],
+      "acceptance": [
+        "Known migration/auth/protected-surface facts produce deterministic signals+basis.",
+        "Missing basis is rejected per risk invariants."
+      ],
+      "verify": [
+        "Risk derivation table tests."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `risk/risk_test.go`, `engineeringpolicy/match_test.go`, `contract/compile_test.go`, `test/arch/v14_assurance_failsafe_test.go`",
+        "Interfaces: `risk.Result` with basis refs; `engineeringpolicy.MatchInput`; FrozenIntent facts",
+        "Core: `risk/derive.go`, `engineeringpolicy/match.go`, `contract.Bind` riskBand logic",
+        "Failure: unknown/unmatched signals stay observable and trigger fail-safe uplift rather than being dropped"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Defines the authoritative source-to-risk derivation chain; silent under-classification is worse than loud failure."
+    },
+    {
+      "id": "P1-03",
+      "phase": "P1",
+      "title": "Production contract compilation assembler",
+      "kind": "implementation",
+      "wave": "W10",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-02"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/contract/**",
+        "internal/artifacts/**",
+        "internal/engineeringpolicy/**"
+      ],
+      "forbidden": [],
+      "goal": "Create the production seam that compiles and binds the same-source task bundle before runtime execution.",
+      "facts": [],
+      "requirements": [
+        "Use existing `contract.Compile/Bind`.",
+        "Policy loader rejections are fail-safe.",
+        "Compiled identity/hash exposed to caller."
+      ],
+      "acceptance": [
+        "No supported task starts execution without Compiled contract.",
+        "Inputs are reproducible from source commit."
+      ],
+      "verify": [
+        "Integration tests across policy match/no-match/invalid policy/unknown risk."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `contract/compile_test.go::{TestBindPinsSnapshotAndIsDeterministic,TestBindCompilesRequiresDoubleDuty}`, `test/arch/v14_contract_authority_test.go`",
+        "Interface: `contract.Compile`, `contract.Bind`, `Compiled.Hash/Pins/Coverage/Requires/GateKeys`",
+        "Core: `contract/compile.go`, policy snapshot loader, risk derivation",
+        "Failure: unpinned policy, rejected policy artifact, source mismatch and invalid risk basis stop execution"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Creates the production compilation authority and combines policy/risk/assurance inputs from one source snapshot."
+    },
+    {
+      "id": "P1-04",
+      "phase": "P1",
+      "title": "Wire worker to compiled authority",
+      "kind": "implementation",
+      "wave": "W11",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-03"
+      ],
+      "l3_required": false,
+      "paths": [
+        "cmd/worker/v14.go",
+        "internal/artifacts/**",
+        "internal/taskstate/**"
+      ],
+      "forbidden": [],
+      "goal": "Make production v1.4 worker obtain CompiledContract before creating an execution workspace/runtime session.",
+      "facts": [],
+      "requirements": [
+        "Fail before execution on compilation authority errors.",
+        "Record compiled identity/basis in run facts/read model."
+      ],
+      "acceptance": [
+        "Runtime start spy proves no session starts before successful compilation."
+      ],
+      "verify": [
+        "Worker tests for compile success/failure and no-runtime-on-failure."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `cmd/worker/v14_test.go`, `test/arch/v14_runtime_boundary_test.go`",
+        "Interface: worker config/deps + compiled assembler result",
+        "Core: `cmd/worker/v14.go` composition order before workspace/runtime start",
+        "Failure: prove runtime/session/worktree is not started on compilation failure"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P1-05",
+      "phase": "P1",
+      "title": "Compiled prevention context projection",
+      "kind": "implementation",
+      "wave": "W12",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P1-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/contextpack/**",
+        "cmd/worker/v14.go",
+        "internal/contract/**"
+      ],
+      "forbidden": [],
+      "goal": "Expose compiled prevention requirements to the coding runtime without exposing held-out verification material.",
+      "facts": [],
+      "requirements": [
+        "Use `Compiled.Requires()` or existing canonical projection.",
+        "Separate prevention context from verification evidence/holdouts."
+      ],
+      "acceptance": [
+        "Runtime receives required implementation constraints but cannot see held-out content."
+      ],
+      "verify": [
+        "Prompt/context snapshot tests and exposure regression tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `internal/contextpack/requires_test.go`, `contextpack_test.go::TestHeldOutProjectionExposesStatementAndTypeOnly`, `selector_test.go::TestSelectFiltersHeldOutInternals`",
+        "Interface: `contract.Compiled.Requires()`, `contextpack.Input/Build`",
+        "Core: `contextpack/build.go`, `redact.go`, worker context construction",
+        "Failure: prevention context may include policy requirements, never held-out store/ref/content"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P1-06",
+      "phase": "P1",
+      "title": "Risk-adjusted acceptance guard",
+      "kind": "implementation",
+      "wave": "W12",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "P1-04"
+      ],
+      "l3_required": true,
+      "paths": [
+        "internal/closedloop/**",
+        "internal/taskstate/**",
+        "internal/assurance/**",
+        "cmd/worker/v14.go"
+      ],
+      "forbidden": [
+        "Do not duplicate assurance math in a second implementation."
+      ],
+      "goal": "Prevent a base FinalVerified candidate from becoming Accepted when compiled assurance/risk coverage is insufficient.",
+      "facts": [
+        "VerifiedBasis already represents required/achieved/unmatched semantics; current Closed Loop verifier maps FinalVerified to Verified."
+      ],
+      "requirements": [
+        "Reuse or extract one pure semantic evaluator.",
+        "Insufficient assurance/unmatched required risk must fail-safe to non-Accept path.",
+        "Do not rewrite Closed Loop engine."
+      ],
+      "acceptance": [
+        "Required L3 + achieved L1 never returns Accepted.",
+        "Unmatched high-risk signal never silently passes."
+      ],
+      "verify": [
+        "Focused adversarial tests including VERIFIED_LIMITED semantics."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `taskstate/basis_test.go::{TestBasisVerifiedLimitedUnmatchedRisk,TestBasisVerifiedLimitedWaiver}`, `test/arch/v14_assurance_failsafe_test.go`",
+        "Interfaces: `assurance.Select` = required; `assurance.Achieved` = achieved; `taskstate.VerifiedBasis.Verdict`",
+        "Core seam to adapt: `closedloop/verify.go::verdictForStatus`, worker verifier composition; reuse `taskstate` semantic evaluator/extracted pure helper",
+        "Failure: `FinalVerified` with required>achieved, unmatched risk or valid waiver must never return normal Accepted"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Direct acceptance-safety change: FinalVerified must not bypass required assurance or unmatched risk."
+    },
+    {
+      "id": "P1-07",
+      "phase": "P1",
+      "title": "Compiled basis in task/read projections",
+      "kind": "implementation",
+      "wave": "W13",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P1-04",
+        "P1-06"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/taskstate/**",
+        "internal/web/handlers/v14_change.go",
+        "web/templates/**"
+      ],
+      "forbidden": [],
+      "goal": "Show actual compiled policy/risk/required-vs-achieved assurance basis in read models/UI.",
+      "facts": [],
+      "requirements": [
+        "Projection only; no new mutable state.",
+        "Do not claim assurance when Compiled is absent."
+      ],
+      "acceptance": [
+        "UI/read result distinguishes VERIFIED vs VERIFIED_LIMITED and lists basis."
+      ],
+      "verify": [
+        "Projection/handler tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `taskstate/basis_test.go`, `v14_task_test.go::TestV14TaskDetailShowsRepairChainBasisAndUncertainty`, `v14_change_test.go`",
+        "Interface: `VerifiedBasis`, `Compiled.Coverage`, projections only",
+        "Core: existing v1.4 task/change handlers and templates",
+        "Failure: absent Compiled must render unknown/not available, never fabricate normal VERIFIED"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P1-08",
+      "phase": "P1",
+      "title": "Compiled-authority no-bypass gate",
+      "kind": "gate",
+      "wave": "W14",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-05",
+        "P1-06",
+        "P1-07"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Prove compilation, prevention context, risk coverage and assurance all constrain real acceptance.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Same-source invariant tested.",
+        "L3-required/L1-achieved blocked.",
+        "Held-out content not leaked.",
+        "Unknown/unmatched required risk is fail-safe."
+      ],
+      "verify": [
+        "Run focused integration/E2E suite and archive evidence."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `test/arch/v14_contract_authority_test.go`, `v14_assurance_failsafe_test.go`, `verification/holdout_path_leak_test.go`",
+        "Contract: one source commit + Compiled authority + no held-out leakage + assurance guard",
+        "Core: E2E through worker/Closed Loop, not isolated unit-only checks",
+        "Failure: add deliberate bypass fixtures and assert they fail before acceptance"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P2-01",
+      "phase": "P2",
+      "title": "Human-centered navigation projection",
+      "kind": "implementation",
+      "wave": "W15",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P1-08"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/**",
+        "web/templates/base.tmpl",
+        "web/static/**"
+      ],
+      "forbidden": [],
+      "goal": "Add familiar engineering navigation without changing domain state machine.",
+      "facts": [],
+      "requirements": [
+        "Work/Runs/Reviews/Rules routes only when backed by real data.",
+        "Do not introduce fake feature placeholders."
+      ],
+      "acceptance": [
+        "Existing routes remain valid; navigation maps to existing/read-model data."
+      ],
+      "verify": [
+        "Routing/template tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: existing handler route/template tests and `v14_task_test.go`",
+        "Interface: current task/run/attention read models; no lifecycle writes",
+        "Core: `internal/web/handlers/server.go`, `views.go`, `web/templates/base.tmpl`",
+        "Failure: navigation item must not imply unavailable capability or introduce status mutation"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P2-02",
+      "phase": "P2",
+      "title": "Work list and task detail projection",
+      "kind": "implementation",
+      "wave": "W16",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P2-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/taskstate/**"
+      ],
+      "forbidden": [],
+      "goal": "Present Task as Overview/Plan/Changes/Verification/Reviews/Activity over existing facts.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "No lifecycle mutation introduced by projection.",
+        "Compiled/risk/assurance basis appears where available."
+      ],
+      "verify": [
+        "Handler/read-model tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `v14_task_test.go`, `v14_change_test.go`, `taskstatus_internal_test.go`",
+        "Interface: existing Task/Change/VerifiedBasis projections",
+        "Core: `v14_task.go`, `v14_change.go`, derived-state helpers",
+        "Failure: render unknown/limited states explicitly; no duplicate mutable Task state"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P2-03",
+      "phase": "P2",
+      "title": "Runs projection",
+      "kind": "implementation",
+      "wave": "W16",
+      "complexity": "S",
+      "model_hint": "cheap",
+      "deps": [
+        "P2-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/workflow/**"
+      ],
+      "forbidden": [],
+      "goal": "Expose actual execution/run facts separately from Work/Task state.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Run status is derived from existing workflow/runtime facts; no duplicate run state."
+      ],
+      "verify": [
+        "Handler tests with real run fixtures."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: worker/runstore/workflow tests plus web handler projection tests",
+        "Interface: existing run facts / runtime identities / workflow outcomes",
+        "Core: `internal/workflow`, `internal/runstore`, v1.4 handlers",
+        "Failure: Runs page is read-only derived projection; do not create a second run lifecycle"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P2-04",
+      "phase": "P2",
+      "title": "Reviews projection with human-needed reason",
+      "kind": "implementation",
+      "wave": "W17",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P2-01",
+        "P2-02"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/approval/**",
+        "internal/review/**"
+      ],
+      "forbidden": [],
+      "goal": "Aggregate exception/high-risk/pending decisions and explain why human input is required.",
+      "facts": [],
+      "requirements": [
+        "Reuse existing approval/review/attention facts.",
+        "Do not rename existing `internal/review` semantics into generic governance."
+      ],
+      "acceptance": [
+        "Every listed review item includes reason/basis and target action."
+      ],
+      "verify": [
+        "Projection tests across exception/high-risk/no-review."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `v14_attention_test.go::TestV14AttentionListsBlockingFactsOnly`, `v13_http_test.go::TestV13ApproveWritesHumanApprovalEvidenceNotStatus`",
+        "Interface: approval/attention/review evidence already present",
+        "Core: `internal/approval/*`, `v14_attention.go`, `internal/review/*` only for its existing hunk-accounting meaning",
+        "Failure: every review item must explain the blocking basis; no generic manual status override"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P2-05",
+      "phase": "P2",
+      "title": "Human-centered UX gate",
+      "kind": "gate",
+      "wave": "W18",
+      "complexity": "M",
+      "model_hint": "strong",
+      "deps": [
+        "P2-02",
+        "P2-03",
+        "P2-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Verify structured decision flow is primary and internal state-machine terminology does not dominate user navigation.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Core task can be created/reviewed without Chat-first flow.",
+        "Keyboard/basic form accessibility checked.",
+        "No arbitrary LLM-generated UI executes."
+      ],
+      "verify": [
+        "UI integration tests + structured review checklist."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: all P2 handler tests + `execution_http_test.go::TestActionFormsArePlainNoJSUsable`",
+        "Contract: Project/Work/Run/Review is navigation projection, not domain state",
+        "Core: browser-level flow using real derived fixtures",
+        "Failure: fail if task requires Chat-only interaction or if AI data becomes executable HTML"
+      ],
+      "external_reference_ids": [
+        "EXT-GO-HTML"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-01",
+      "phase": "P3",
+      "title": "Policy governance proposal domain",
+      "kind": "implementation",
+      "wave": "W19",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P2-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**"
+      ],
+      "forbidden": [],
+      "goal": "Represent proposed policy content, evidence refs and governance identity without modifying runtime EngineeringPolicy schema.",
+      "facts": [],
+      "requirements": [
+        "Candidate policy content/revision immutable.",
+        "Proposal lifecycle is governance state, not runtime policy state."
+      ],
+      "acceptance": [
+        "Proposal references canonical parseable policy candidate and evidence."
+      ],
+      "verify": [
+        "Domain validation tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `engineeringpolicy/{parse_test,policy_test,hash_test}.go`, `test/arch/v14_runtime_boundary_test.go::TestV14EngineeringPolicyRejectsExecutionPolicyFields`",
+        "Interface: canonical `engineeringpolicy.Policy` remains runtime schema",
+        "Core: new governance proposal wraps/references candidate policy content rather than extending Policy",
+        "Failure: proposal status/evidence must not appear in runtime policy YAML"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-02",
+      "phase": "P3",
+      "title": "Append-only policy governance store",
+      "kind": "implementation",
+      "wave": "W20",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P3-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**",
+        "migrations/**"
+      ],
+      "forbidden": [],
+      "goal": "Persist proposal, approval/rejection and replay facts without creating an authoritative ACTIVE policy DB table.",
+      "facts": [],
+      "requirements": [
+        "Append-only where practical.",
+        "Runtime policy activation is not derived solely from DB flag."
+      ],
+      "acceptance": [
+        "Proposal history reconstructable; no mutable runtime policy source-of-truth introduced."
+      ],
+      "verify": [
+        "Store/migration tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: append-only patterns in `test/arch/append_only_test.go`, `v14_outcome_event_test.go`",
+        "Interface: append-only proposal/review/replay facts",
+        "Core: existing migration/sqlc conventions under `migrations/`, `internal/store/queries/`",
+        "Failure: no mutable `active=true` database authority for runtime policy"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-03",
+      "phase": "P3",
+      "title": "Policy candidate canonicalization and validation",
+      "kind": "implementation",
+      "wave": "W20",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P3-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**",
+        "internal/engineeringpolicy/**"
+      ],
+      "forbidden": [],
+      "goal": "Validate proposed rule content through the existing EngineeringPolicy parser and content-derived revision semantics.",
+      "facts": [],
+      "requirements": [
+        "Do not create a second policy DSL.",
+        "Invalid/duplicate identity fails closed."
+      ],
+      "acceptance": [
+        "Candidate revision equals actual canonical policy content revision semantics."
+      ],
+      "verify": [
+        "Golden parse/revision tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `engineeringpolicy/parse_test.go`, `hash_test.go`, `policy_test.go`, `v14_policy_loader_test.go`",
+        "Interface: `engineeringpolicy.Parse` supplies content-derived Revision",
+        "Core: candidate validation must call existing parser; no second DSL",
+        "Failure: duplicate ID, unknown fields, invalid enforcement/gate content reject before replay"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-04",
+      "phase": "P3",
+      "title": "Evidence-bounded historical replay",
+      "kind": "implementation",
+      "wave": "W21",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "P3-02",
+        "P3-03"
+      ],
+      "l3_required": true,
+      "paths": [
+        "internal/policygovernance/**",
+        "internal/engineeringpolicy/**",
+        "internal/outcome/**",
+        "internal/taskstate/**"
+      ],
+      "forbidden": [],
+      "goal": "Replay candidate policy matching/effects against historical facts without fabricating counterfactual execution outcomes.",
+      "facts": [],
+      "requirements": [
+        "Output matched/unmatched, requirement/gate/assurance deltas, conflicts, insufficient evidence.",
+        "Do not claim historical code would pass/fail unless recorded facts make it deterministic."
+      ],
+      "acceptance": [
+        "Insufficient evidence is first-class.",
+        "Replay is deterministic for same evidence snapshot."
+      ],
+      "verify": [
+        "Historical fixture tests incl. missing evidence."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `engineeringpolicy/match_test.go`, `contract/compile_test.go`, `outcome/store_test.go`, `taskstate/basis_test.go`",
+        "Interface: candidate policy + frozen historical facts → replay result with matched/effect/insufficient-evidence",
+        "Core: reuse `engineeringpolicy.Match`, `assurance.Select`, stored historical facts/projections",
+        "Failure: if evidence needed for a counterfactual was not recorded, emit `INSUFFICIENT_EVIDENCE`; never guess pass/fail"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "Historical replay must remain evidence-bounded and avoid unsound counterfactual inference."
+    },
+    {
+      "id": "P3-05",
+      "phase": "P3",
+      "title": "Policy conflict analysis",
+      "kind": "implementation",
+      "wave": "W21",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P3-03"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**",
+        "internal/engineeringpolicy/**"
+      ],
+      "forbidden": [],
+      "goal": "Detect candidate interactions that require human attention without inventing a generic Boolean rule engine.",
+      "facts": [],
+      "requirements": [
+        "Use existing trigger/requires/gate/enforcement vocabulary.",
+        "Prefer conservative warning over unsound auto-resolution."
+      ],
+      "acceptance": [
+        "Known contradictory/overlapping fixtures produce explicit conflict/warning."
+      ],
+      "verify": [
+        "Table-driven conflict tests."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: policy gate/match/parser tests; build explicit overlapping/contradictory fixtures",
+        "Interface: existing Trigger/Requires/Gate/Enforcement vocabulary only",
+        "Core: compare normalized policy effects conservatively; warnings are preferable to automatic resolution",
+        "Failure: no generic Boolean/rule interpreter; unknown interaction must require review"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "Policy conflict semantics are ambiguous and must stay conservative without inventing a new rule engine."
+    },
+    {
+      "id": "P3-06",
+      "phase": "P3",
+      "title": "Rules UI projections",
+      "kind": "implementation",
+      "wave": "W22",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P3-02",
+        "P3-04",
+        "P3-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/policygovernance/**",
+        "internal/artifacts/**"
+      ],
+      "forbidden": [],
+      "goal": "Show Proposed/Active/Conflicts/History where Active is derived from actual Git policy snapshot.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "UI cannot show DB-only proposal as Active.",
+        "Replay evidence and uncertainty are visible."
+      ],
+      "verify": [
+        "Handler tests with diverged governance/Git fixtures."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `v14_policy_loader_test.go` + new governance projection tests",
+        "Interface: Proposed from governance store; Active from exact Git policy snapshot",
+        "Core: handlers/templates compose both read sources without merging their authority",
+        "Failure: DB-only proposal must never display as runtime Active"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-07",
+      "phase": "P3",
+      "title": "Approve and activate policy via GitWriter",
+      "kind": "implementation",
+      "wave": "W23",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P3-03",
+        "P3-06"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**",
+        "internal/gitwriter/**",
+        "internal/artifacts/**",
+        "internal/web/handlers/**"
+      ],
+      "forbidden": [],
+      "goal": "Convert a human-approved RuleProposal into canonical `.tally/policies/*.yaml` through expected-base Git commit.",
+      "facts": [],
+      "requirements": [
+        "Record governance approval evidence.",
+        "Commit canonical policy through existing GitWriter.",
+        "Reload committed revision from exact new source commit.",
+        "Stale base fails safely."
+      ],
+      "acceptance": [
+        "A proposal becomes runtime-active only after committed policy is observable from source snapshot."
+      ],
+      "verify": [
+        "Integration test success/stale base/invalid candidate/commit failure."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `gitwriter/writer_test.go` stale-base/rollback cases; `v14_policy_loader_test.go`",
+        "Interface: approved candidate → `gitwriter.CommitRequest` → reload exact policy revision from new commit",
+        "Core: existing GitWriter; canonical EngineeringPolicy serialization",
+        "Failure: stale base, failed commit, reloaded revision mismatch all leave proposal non-active"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-08",
+      "phase": "P3",
+      "title": "Apply Once vs Propose Rule review action",
+      "kind": "implementation",
+      "wave": "W23",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P2-04",
+        "P3-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/approval/**",
+        "internal/policygovernance/**"
+      ],
+      "forbidden": [],
+      "goal": "Let a human resolve one case or create a separate rule proposal without auto-activating policy.",
+      "facts": [],
+      "requirements": [
+        "Apply Once uses existing task approval evidence semantics where applicable.",
+        "Propose Rule creates governance proposal only."
+      ],
+      "acceptance": [
+        "No one-off decision mutates policy automatically."
+      ],
+      "verify": [
+        "Review action tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `v13_http_test.go::TestV13ApproveWritesHumanApprovalEvidenceNotStatus`, approval store tests",
+        "Interface: one-off human approval evidence vs independent RuleProposal creation",
+        "Core: existing approval facts + policygovernance create proposal",
+        "Failure: `Apply Once` never mutates policy; `Propose Rule` never auto-approves"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P3-09",
+      "phase": "P3",
+      "title": "Rule-governance gate",
+      "kind": "gate",
+      "wave": "W24",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P3-04",
+        "P3-05",
+        "P3-07",
+        "P3-08"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Prove rule governance can evaluate, approve and activate without split-brain policy authority.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Git snapshot remains runtime authority.",
+        "Replay emits insufficient evidence when needed.",
+        "No EngineeringPolicy governance fields added.",
+        "Stale activation rejected."
+      ],
+      "verify": [
+        "End-to-end rule proposal/replay/activate/reload test."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: P3 E2E plus `test/arch/v14_runtime_boundary_test.go` policy-boundary guards",
+        "Contract: Active runtime policy must be observable from pinned Git commit",
+        "Core: proposal→replay→human decision→GitWriter→reload",
+        "Failure: deliberately diverge governance DB and Git snapshot and ensure runtime follows Git"
+      ],
+      "external_reference_ids": [
+        "EXT-GITHUB-RULESETS",
+        "EXT-GITLAB-APPROVAL"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P4-01",
+      "phase": "P4",
+      "title": "Runtime composition registry/factory",
+      "kind": "implementation",
+      "wave": "W25",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-08"
+      ],
+      "l3_required": false,
+      "paths": [
+        "cmd/worker/**",
+        "internal/agentruntime/**"
+      ],
+      "forbidden": [],
+      "goal": "Replace hard-coded fake/codex composition branching with a small runtime factory/registry while preserving `agentruntime.Runtime`.",
+      "facts": [],
+      "requirements": [
+        "No new execution core interface.",
+        "Runtime name only selects adapter at composition boundary.",
+        "Capability logic remains runtime-neutral."
+      ],
+      "acceptance": [
+        "Existing fake/codex paths behave identically through factory."
+      ],
+      "verify": [
+        "Worker composition regression tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `internal/agentruntime/protocol_test.go`, `runtimes/fake/runtime_test.go`, `runtimes/codex/runtime_test.go`",
+        "Interface: existing `agentruntime.Runtime` only",
+        "Core: worker composition selects runtime implementation; no new lifecycle protocol",
+        "Failure: unknown runtime/config rejected before task execution"
+      ],
+      "external_reference_ids": [
+        "EXT-CODEX-MULTI",
+        "EXT-CODEX-CONFIG"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P4-02",
+      "phase": "P4",
+      "title": "Codex runtime regression through factory",
+      "kind": "implementation",
+      "wave": "W26",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P4-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "runtimes/codex/**",
+        "cmd/worker/**",
+        "test/**"
+      ],
+      "forbidden": [],
+      "goal": "Prove adapter refactor does not alter Codex identity, cancellation, workspace, event or ChangeSet behavior.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Existing Codex-focused tests remain green; no new Git/acceptance authority moves into runtime."
+      ],
+      "verify": [
+        "Codex conformance/regression suite."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `runtimes/codex/runtime_test.go::TestCodexRuntimeConformance`, cancellation/close/structured-output tests",
+        "Interface: `agentruntime.Runtime/Session`, Codex Descriptor/Capabilities",
+        "Core: existing `runtimes/codex/runtime.go` must remain behaviorally unchanged",
+        "Failure: factory refactor cannot alter cwd, cancellation, result, identity or ChangeSet behavior"
+      ],
+      "external_reference_ids": [
+        "EXT-CODEX-MULTI",
+        "EXT-CODEX-CONFIG"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P4-03",
+      "phase": "P4",
+      "title": "DeepSeek Harness integration spike",
+      "kind": "spike",
+      "wave": "W25",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": true,
+      "paths": [
+        "docs/tasks/v1.4.1/spikes/**",
+        "tools/**"
+      ],
+      "forbidden": [],
+      "goal": "Establish the actual supported headless integration protocol/lifecycle for current DeepSeek Harness before production adapter code.",
+      "facts": [],
+      "requirements": [
+        "Determine CLI/SDK/process protocol, cwd semantics, output/result, cancel/kill, provider/model config, auth shape.",
+        "Test keyless/local/fake route if possible.",
+        "Record upstream version/commit and breaking-change risk.",
+        "No production runtime adapter until GO verdict."
+      ],
+      "acceptance": [
+        "Report returns GO / GO_WITH_LIMITS / NO_GO and a minimal protocol transcript."
+      ],
+      "verify": [
+        "Reproducible spike commands; process cleanup confirmed."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests/evidence first: build a keyless minimal subprocess probe and pin exact DSH version/commit",
+        "Interface target: Tally `agentruntime.Runtime`; inspect DSH headless/subagent/process seams only after pinning",
+        "Core external source: DSH subagent registry, tool-subagent route selection, Codex backend ownership note",
+        "Failure: verify cancellation/process teardown, cwd, provider/model selection on the exact installed build; developer-preview breakage is expected"
+      ],
+      "external_reference_ids": [
+        "EXT-DSH-SAFETY",
+        "EXT-DSH-SUBAGENT",
+        "EXT-DSH-TOOL",
+        "EXT-DSH-CODEX"
+      ],
+      "model_reason": "External runtime is developer-preview and rapidly changing; integration protocol must be verified against the exact version."
+    },
+    {
+      "id": "P4-04",
+      "phase": "P4",
+      "title": "DeepSeek Harness agentruntime adapter skeleton",
+      "kind": "implementation",
+      "wave": "W27",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P4-01",
+        "P4-03"
+      ],
+      "l3_required": false,
+      "paths": [
+        "runtimes/dsh/**"
+      ],
+      "forbidden": [],
+      "goal": "Implement DSH as an `agentruntime.Runtime/Session` adapter only.",
+      "facts": [],
+      "requirements": [
+        "No Git writer, verifier, acceptance or policy ownership.",
+        "Map runtime identity and supported stable capabilities conservatively."
+      ],
+      "acceptance": [
+        "Adapter compiles against current agentruntime without changing core protocol unless separately approved by ADR."
+      ],
+      "verify": [
+        "Contract tests with fake/subprocess stub."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `agentruntime/protocol_test.go` conformance style and `runtimes/codex/runtime_test.go` adapter structure",
+        "Interface: implement exactly `agentruntime.Runtime/Session`; no new core fields without ADR",
+        "Core: follow Codex adapter package layout for Descriptor/Capabilities/Start/Session methods",
+        "Failure: unsupported capability fails at `CheckStart`/adapter preflight rather than silent ignore"
+      ],
+      "external_reference_ids": [
+        "EXT-DSH-SAFETY",
+        "EXT-DSH-SUBAGENT",
+        "EXT-DSH-TOOL",
+        "EXT-GO-EXEC"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P4-05",
+      "phase": "P4",
+      "title": "DeepSeek session lifecycle and conformance",
+      "kind": "implementation",
+      "wave": "W28",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P4-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "runtimes/dsh/**",
+        "test/**"
+      ],
+      "forbidden": [],
+      "goal": "Make DSH process/session lifecycle obey Tally cancellation/result/cleanup semantics.",
+      "facts": [],
+      "requirements": [
+        "cwd is disposable workspace.",
+        "Cancel/Close leaves no managed child process.",
+        "Failures map to typed runtime result/error semantics."
+      ],
+      "acceptance": [
+        "No orphan process in cancellation/timeout tests.",
+        "No owner-repo mutation outside assigned workspace."
+      ],
+      "verify": [
+        "Lifecycle/conformance test matrix."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: agentruntime cancellation/close tests; Codex runtime process cancellation/close tests",
+        "Interface: Execute/Cancel/Result/Close and terminal event stream semantics",
+        "Core: DSH subprocess/session adapter plus `os/exec` CommandContext/process-group strategy",
+        "Failure: timeout/cancel/close must leave no managed child; partial output is not a successful claim"
+      ],
+      "external_reference_ids": [
+        "EXT-DSH-SAFETY",
+        "EXT-DSH-SUBAGENT",
+        "EXT-GO-EXEC"
+      ],
+      "model_reason": "Process lifecycle, cancellation and cleanup across Go↔Node/CLI boundaries are failure-prone and security-sensitive."
+    },
+    {
+      "id": "P4-06",
+      "phase": "P4",
+      "title": "DeepSeek configuration and canary policy",
+      "kind": "implementation",
+      "wave": "W28",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P4-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "runtimes/dsh/**",
+        "cmd/worker/**",
+        "docs/**"
+      ],
+      "forbidden": [],
+      "goal": "Configure DSH provider/model/delegation options at adapter/composition level without destabilizing core capability vocabulary.",
+      "facts": [],
+      "requirements": [
+        "Disabled by default unless explicitly configured.",
+        "Canary/bounded-task policy documented.",
+        "Do not add speculative provider-specific fields to core TaskContract."
+      ],
+      "acceptance": [
+        "Invalid configuration fails before task execution.",
+        "Current Codex default unaffected."
+      ],
+      "verify": [
+        "Config tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: agentruntime capability negotiation tests + DSH adapter config tests",
+        "Interface: adapter/composition config only; core TaskContract stays provider-neutral",
+        "Core: explicit canary enablement, provider/model configuration in DSH-owned extension config",
+        "Failure: invalid/unavailable route fails before execution; Codex default remains unchanged"
+      ],
+      "external_reference_ids": [
+        "EXT-DSH-SAFETY",
+        "EXT-DSH-SUBAGENT",
+        "EXT-DSH-TOOL",
+        "EXT-GO-EXEC"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P4-07",
+      "phase": "P4",
+      "title": "DeepSeek limited-readiness gate",
+      "kind": "gate",
+      "wave": "W29",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "P4-02",
+        "P4-05",
+        "P4-06"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Run a bounded real-repository candidate flow through DSH under Tally-owned isolation and issue LIMITED_READY or BLOCKED.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Candidate ChangeSet returns through existing Closed Loop bridge.",
+        "No direct protected/durable Git authority.",
+        "Cancellation cleanup passes.",
+        "Security assumptions match upstream developer-preview status."
+      ],
+      "verify": [
+        "Real bounded task + negative permission/cancel tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: generic agentruntime conformance + DSH lifecycle tests + real bounded repo scenario",
+        "Contract: DSH remains candidate producer under Tally workspace/verification/acceptance",
+        "Core: one primary runtime owner",
+        "Failure: gate LIMITED_READY if any cancellation, isolation or version-pinning uncertainty remains"
+      ],
+      "external_reference_ids": [
+        "EXT-DSH-SAFETY",
+        "EXT-DSH-SUBAGENT",
+        "EXT-DSH-TOOL",
+        "EXT-GO-EXEC"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P5-01",
+      "phase": "P5",
+      "title": "Semantic local Git integration service",
+      "kind": "implementation",
+      "wave": "W30",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-08"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/gitintegration/**",
+        "internal/gitwriter/**",
+        "internal/changeset/**"
+      ],
+      "forbidden": [],
+      "goal": "Add controlled local integration semantics on top of existing GitWriter/workspace/ChangeSet without exposing raw model-controlled Git.",
+      "facts": [],
+      "requirements": [
+        "Semantic operations only.",
+        "Expected-base and accepted ChangeSet required."
+      ],
+      "acceptance": [
+        "Service cannot integrate an unaccepted/unidentified candidate."
+      ],
+      "verify": [
+        "Unit tests around validation/CAS."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `gitwriter/writer_test.go`, `workspace/manager_test.go`, `changeset/*_test.go`",
+        "Interfaces: accepted immutable ChangeSet + ExpectedBase; semantic service, no model-facing raw argv",
+        "Core: compose GitWriter/workspace/ChangeSet rather than moving their authority",
+        "Failure: reject unaccepted/unknown changeset, stale base, protected target"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "Defines Git integration authority and semantic API; wrong design can re-expose raw Git or duplicate GitWriter."
+    },
+    {
+      "id": "P5-02",
+      "phase": "P5",
+      "title": "Controlled integration branch creation",
+      "kind": "implementation",
+      "wave": "W31",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P5-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/gitintegration/**"
+      ],
+      "forbidden": [],
+      "goal": "Create an integration branch/reference from the expected accepted base/change using deterministic naming/ownership.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Base drift is typed conflict; no silent branch overwrite."
+      ],
+      "verify": [
+        "Temporary repo tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: Git fixture style from `gitwriter/writer_test.go` and `workspace/manager_test.go`",
+        "Interface: deterministic integration ref/branch identity from expected base/change",
+        "Core: Git command/plumbing isolated in gitintegration package",
+        "Failure: existing target mismatch must fail; do not silently reset/overwrite"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P5-03",
+      "phase": "P5",
+      "title": "Safe local merge integration",
+      "kind": "implementation",
+      "wave": "W32",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P5-02"
+      ],
+      "l3_required": true,
+      "paths": [
+        "internal/gitintegration/**",
+        "internal/gitwriter/**"
+      ],
+      "forbidden": [],
+      "goal": "Integrate an accepted ChangeSet locally with typed conflict handling and no autonomous conflict resolution.",
+      "facts": [],
+      "requirements": [
+        "Fail safe on merge conflict.",
+        "No force/history rewrite.",
+        "Preserve audit refs."
+      ],
+      "acceptance": [
+        "Clean merge succeeds; conflict returns structured result without partial hidden state."
+      ],
+      "verify": [
+        "Git fixture tests incl. conflict/base drift."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: conflict/base-drift repo fixtures; no-conflict and rename/file-dir conflict cases",
+        "Interface: merge preflight/result + accepted ChangeSet + expected target ref",
+        "Core: prefer `git merge-tree --write-tree` for preflight where installed Git supports it, then controlled merge/ref update strategy",
+        "Failure: conflict is a structured non-success; no autonomous resolution, force, or history rewrite"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-MERGE-TREE",
+        "EXT-GIT-MERGE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "Merge/conflict/base-drift correctness is repository-safety critical."
+    },
+    {
+      "id": "P5-04",
+      "phase": "P5",
+      "title": "Protected-branch and Git permission policy L0-L3",
+      "kind": "implementation",
+      "wave": "W32",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P5-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/gitintegration/**",
+        "internal/engineeringpolicy/**",
+        "internal/contract/**"
+      ],
+      "forbidden": [],
+      "goal": "Enforce that runtime execution never receives integration authority and protected branches require policy-approved local integration.",
+      "facts": [],
+      "requirements": [
+        "Keep permission decision in Tally domain/composition.",
+        "L4 remote and L5 destructive remain out of release scope."
+      ],
+      "acceptance": [
+        "Agent runtime cannot request L3 operation through runtime protocol."
+      ],
+      "verify": [
+        "Permission matrix tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: architecture runtime-boundary tests + policy matching tests + new permission matrix",
+        "Interface: Git permission decisions belong to Tally policy/compiled contract, not agentruntime",
+        "Core: L0–L3 enums/decision projection at integration layer",
+        "Failure: runtime cannot request L3 by adding a tool/capability; L4/L5 remain out of release scope"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P5-05",
+      "phase": "P5",
+      "title": "Integration audit/read projection",
+      "kind": "implementation",
+      "wave": "W33",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P5-03",
+        "P5-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/web/handlers/**",
+        "web/templates/**",
+        "internal/gitintegration/**"
+      ],
+      "forbidden": [],
+      "goal": "Show Accepted and Integrated as separate observable engineering states/facts.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "UI never equates candidate acceptance with successful integration."
+      ],
+      "verify": [
+        "Read projection tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: v1.4 task/change projection test patterns",
+        "Interface: Accepted and Integrated are separate derived facts",
+        "Core: read model over integration audit facts",
+        "Failure: failed/conflicted integration must never rewrite task acceptance history"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P5-06",
+      "phase": "P5",
+      "title": "Local Git control-plane gate",
+      "kind": "gate",
+      "wave": "W34",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P5-03",
+        "P5-04",
+        "P5-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**"
+      ],
+      "forbidden": [],
+      "goal": "Validate L0–L3 scope under drift, conflict, protected branch and concurrent writer conditions.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "No remote credential/push requirement in gate.",
+        "Concurrent writes respect existing lock/CAS semantics."
+      ],
+      "verify": [
+        "Full local Git integration matrix."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: concurrent/stale lock tests in `gitwriter`, worktree cleanup tests, new merge conflict matrix",
+        "Contract: local L0–L3 only",
+        "Core: E2E on temporary repositories",
+        "Failure: no remote credentials/network dependency allowed in release gate"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE",
+        "EXT-GIT-UPDATE-REF"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P6-01",
+      "phase": "P6",
+      "title": "Accepted Outcome production writer",
+      "kind": "implementation",
+      "wave": "W35",
+      "complexity": "L",
+      "model_hint": "strong",
+      "deps": [
+        "P1-08"
+      ],
+      "l3_required": true,
+      "paths": [
+        "internal/outcome/**",
+        "internal/closedloop/**",
+        "cmd/worker/**"
+      ],
+      "forbidden": [],
+      "goal": "Append `outcome.KindAccepted` at the correct durable acceptance seam without creating two acceptance authorities.",
+      "facts": [],
+      "requirements": [
+        "Identify exact transaction/order semantics before code.",
+        "No duplicate event on retry/replay.",
+        "Failure policy for audit append is explicit/fail-safe."
+      ],
+      "acceptance": [
+        "One durable accepted task yields one valid accepted Outcome event tied to task/changeset."
+      ],
+      "verify": [
+        "Integration tests incl. retry/idempotency/failure."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: `closedloop/engine_test.go` accepted path, `outcome/store_test.go`, `test/arch/v14_outcome_event_test.go`",
+        "Interface: existing `outcome.KindAccepted`, append-only store, task/changeset binding",
+        "Core: attach writer immediately after authoritative durable acceptance seam, not runtime self-report",
+        "Failure: retry/idempotency must not append duplicate semantic accepted event; store failure policy must be explicit"
+      ],
+      "external_reference_ids": [
+        "EXT-POSTGRES-INSERT"
+      ],
+      "model_reason": "Must attach append-only Outcome to the exact durable acceptance seam with correct retry/idempotency behavior."
+    },
+    {
+      "id": "P6-02",
+      "phase": "P6",
+      "title": "Remaining existing Outcome event capture",
+      "kind": "implementation",
+      "wave": "W36",
+      "complexity": "L",
+      "model_hint": "cheap",
+      "deps": [
+        "P6-01"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/outcome/**",
+        "internal/**",
+        "cmd/**"
+      ],
+      "forbidden": [],
+      "goal": "Wire existing `reverted`, `hotfixed`, `regression_found`, `human_correction` events to real hooks or explicit capture APIs.",
+      "facts": [],
+      "requirements": [
+        "Do not fake automatic detection where source events do not exist.",
+        "Do not add rejected/escalated/integration_failed kinds."
+      ],
+      "acceptance": [
+        "Each supported event has a documented authoritative producer."
+      ],
+      "verify": [
+        "Event producer tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: `outcome/types_test.go`, `store_test.go`, architecture closed-enum test",
+        "Interface: exactly five existing Outcome kinds",
+        "Core: map only real authoritative producers; expose explicit capture API if automatic hook does not exist",
+        "Failure: do not infer regression/hotfix/revert from names or generic workflow failure"
+      ],
+      "external_reference_ids": [
+        "EXT-POSTGRES-INSERT"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P6-03",
+      "phase": "P6",
+      "title": "Outcome evidence projection for Rules",
+      "kind": "implementation",
+      "wave": "W37",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P3-01",
+        "P6-02"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/policygovernance/**",
+        "internal/outcome/**"
+      ],
+      "forbidden": [],
+      "goal": "Expose Outcome references as evidence inputs for rule proposals/replay without coupling runtime policy to mutable analytics.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Governance reads append-only events; runtime policy matching does not query Outcome directly."
+      ],
+      "verify": [
+        "Projection/query tests."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: outcome queries + policy governance replay tests",
+        "Interface: read-only Outcome evidence refs into governance",
+        "Core: projection/query layer, not EngineeringPolicy runtime matcher",
+        "Failure: analytics/history unavailability cannot alter active runtime policy semantics"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P6-04",
+      "phase": "P6",
+      "title": "Migration false-negative reproduction",
+      "kind": "spike",
+      "wave": "W35",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": true,
+      "paths": [
+        "test/**",
+        "internal/verification/**",
+        "docs/tasks/v1.4.1/spikes/**"
+      ],
+      "forbidden": [],
+      "goal": "Reproduce and classify the v1.4 experiment disagreement where internal verification failed but external judging accepted migration candidates.",
+      "facts": [],
+      "requirements": [
+        "Classify contract/fixture/DB lifecycle/environment/oracle/timeout/setup-teardown/state leakage.",
+        "Do not patch production verifier before root cause is demonstrated."
+      ],
+      "acceptance": [
+        "At least one reproducible minimal case or a documented evidence-backed inability to reproduce."
+      ],
+      "verify": [
+        "Reproduction matrix and logs."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests/evidence first: v1.4 trial/experiment migration fixtures, `verification/orchestrator_test.go`, visible/holdout executors, execution_context tests",
+        "Interface: exact frozen verification contract + environment identity + run records",
+        "Core: reproduce before edit; classify fixture, DB lifecycle, environment, oracle, timeout, setup/teardown, state leakage",
+        "Failure: if not reproducible, report evidence gap; do not 'fix' verifier based on hypothesis"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Root-cause diagnosis task; requires discriminating verifier, fixture, DB lifecycle, environment and oracle failures."
+    },
+    {
+      "id": "P6-05",
+      "phase": "P6",
+      "title": "Fix migration verification root cause",
+      "kind": "implementation",
+      "wave": "W36",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "P6-04"
+      ],
+      "l3_required": false,
+      "paths": [
+        "internal/verification/**",
+        "test/**",
+        "docs/**"
+      ],
+      "forbidden": [],
+      "goal": "Fix only the demonstrated root cause and add regression coverage.",
+      "facts": [],
+      "requirements": [
+        "If root cause is experiment fixture only, do not change production verification semantics.",
+        "If production bug, preserve held-out/exposure invariants."
+      ],
+      "acceptance": [
+        "Former false-negative fixture behaves correctly without weakening true-negative tests."
+      ],
+      "verify": [
+        "Before/after reproduction plus existing verification suite."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: minimal reproduction from P6-04 becomes permanent regression test plus existing true-negative verifier tests",
+        "Interface: change only the demonstrated failing seam",
+        "Core: verifier/fixture/environment code identified by reproduction",
+        "Failure: fix must not weaken held-out, required gate, stopping-rule or baseline protections"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Fix depends on diagnosed root cause and must avoid weakening verifier semantics."
+    },
+    {
+      "id": "P6-06",
+      "phase": "P6",
+      "title": "Safe project export",
+      "kind": "implementation",
+      "wave": "W35",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "A0-05"
+      ],
+      "l3_required": false,
+      "paths": [
+        "scripts/**",
+        "Makefile",
+        "docs/**"
+      ],
+      "forbidden": [],
+      "goal": "Create deterministic source export for external code review/agent analysis without local runtime state or credentials.",
+      "facts": [],
+      "requirements": [
+        "Deny `.git`, `.worktrees`, `.e2e`, `.codegraph`, `bin`, caches, credentials/secrets.",
+        "Archive inspection test."
+      ],
+      "acceptance": [
+        "Generated archive contains required source/docs and zero denied paths."
+      ],
+      "verify": [
+        "Automated manifest/denylist scan."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: archive manifest/denylist scanner; current source archive demonstrates undesired `.git/.e2e/.worktrees` inclusion",
+        "Interface: deterministic export command/target",
+        "Core: `git archive` or explicit allowlist-first exporter plus required untracked fixtures if needed",
+        "Failure: deny secrets/runtime dirs even if `.gitignore` changes"
+      ],
+      "external_reference_ids": [
+        "EXT-GIT-WORKTREE"
+      ],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P6-07",
+      "phase": "P6",
+      "title": "Current documentation synchronization",
+      "kind": "docs",
+      "wave": "W38",
+      "complexity": "M",
+      "model_hint": "cheap",
+      "deps": [
+        "P3-09",
+        "P4-07",
+        "P5-06",
+        "P6-02",
+        "P6-05",
+        "P6-06"
+      ],
+      "l3_required": false,
+      "paths": [
+        "README.md",
+        "CLAUDE.md",
+        "AGENTS.md",
+        "docs/**"
+      ],
+      "forbidden": [],
+      "goal": "Make current docs describe the actual v1.4.1 system and clearly archive/supersede stale v1.4 status documents.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "No CURRENT/STATUS doc says production capability is not started when source/gates say otherwise.",
+        "Runtime/Rules/Git/Outcome boundaries documented."
+      ],
+      "verify": [
+        "Docs link/status consistency check."
+      ],
+      "notes": [],
+      "execution_model": "LOW",
+      "review_model": "LOW",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests: docs/status consistency checker from A0 patterns",
+        "Interface: README/current-status docs reflect gate reports and actual source",
+        "Core: update only after final feature gates to avoid repeated drift",
+        "Failure: archive/supersede historical docs instead of silently rewriting history"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "The implementation is bounded and deterministic when the supplied tests/contracts/core references are followed; low-cost execution is preferred."
+    },
+    {
+      "id": "P6-08",
+      "phase": "P6",
+      "title": "Final hidden validation and release gate",
+      "kind": "gate",
+      "wave": "W39",
+      "complexity": "XL",
+      "model_hint": "strong",
+      "deps": [
+        "P3-09",
+        "P4-07",
+        "P5-06",
+        "P6-03",
+        "P6-05",
+        "P6-07"
+      ],
+      "l3_required": false,
+      "paths": [
+        "test/**",
+        "docs/tasks/v1.4.1/reports/**",
+        "docs/tasks/v1.4.1/hidden/**"
+      ],
+      "forbidden": [],
+      "goal": "Run adversarial and end-to-end release validation across authority bypass, policy, runtime, Git, verification, outcome and docs.",
+      "facts": [],
+      "requirements": [],
+      "acceptance": [
+        "Final verdict is PASS / PASS_WITH_KNOWN_LIMITATIONS / FAIL with explicit evidence.",
+        "No unexplained P0/P1 authority gap remains."
+      ],
+      "verify": [
+        "Connected full test suite + hidden scenarios + artifact audit."
+      ],
+      "notes": [],
+      "execution_model": "HIGH",
+      "review_model": "HIGH",
+      "l3_completed": true,
+      "l3_reference_pack": [
+        "Tests first: all phase gates + `test/arch/*` + hidden/adversarial scenarios",
+        "Contract: Decision Locks and PRD Amendments are release authority",
+        "Core: connected `make check` plus E2E/hidden validation and export audit",
+        "Failure: verdict must preserve known limitations; no PASS if P0/P1 authority bypass remains"
+      ],
+      "external_reference_ids": [],
+      "model_reason": "Final adversarial release judgment spans all authority boundaries and must detect subtle bypasses."
+    }
+  ],
+  "l3_status": "COMPLETE",
+  "model_allocation": {
+    "low_execution": 40,
+    "high_execution": 17
+  },
+  "external_reference_catalog": {
+    "EXT-JSONSCHEMA": {
+      "name": "santhosh-tekuri/jsonschema — bounded declarative validation reference",
+      "url": "https://github.com/santhosh-tekuri/jsonschema",
+      "license": "Apache-2.0",
+      "version": "current repository; use as pattern only",
+      "use": "Reference for strict declarative shape validation. Do NOT add this dependency unless dependency whitelist/ADR explicitly approves it."
+    },
+    "EXT-GO-HTML": {
+      "name": "Go html/template",
+      "url": "https://pkg.go.dev/html/template",
+      "license": "BSD-3-Clause (Go project)",
+      "version": "Go standard library",
+      "use": "Context-aware escaping reference for rendering LLM-originated values as data, never raw HTML."
+    },
+    "EXT-GO-EXEC": {
+      "name": "Go os/exec",
+      "url": "https://pkg.go.dev/os/exec",
+      "license": "BSD-3-Clause (Go project)",
+      "version": "Go standard library",
+      "use": "Subprocess context cancellation, Wait/Process lifecycle and command execution semantics."
+    },
+    "EXT-GIT-WORKTREE": {
+      "name": "Git worktree documentation",
+      "url": "https://git-scm.com/docs/git-worktree",
+      "license": "Documentation/reference only",
+      "version": "current Git manual",
+      "use": "Disposable linked/detached worktree semantics; no code copying required."
+    },
+    "EXT-GIT-MERGE-TREE": {
+      "name": "Git merge-tree documentation",
+      "url": "https://git-scm.com/docs/git-merge-tree",
+      "license": "Documentation/reference only",
+      "version": "current Git manual",
+      "use": "Preflight merge/conflict evaluation without touching working tree/index; inspect exit status and conflict records."
+    },
+    "EXT-GIT-MERGE": {
+      "name": "Git merge documentation",
+      "url": "https://git-scm.com/docs/git-merge",
+      "license": "Documentation/reference only",
+      "version": "current Git manual",
+      "use": "Authoritative merge/abort/conflict behavior."
+    },
+    "EXT-GIT-UPDATE-REF": {
+      "name": "Git update-ref documentation",
+      "url": "https://git-scm.com/docs/git-update-ref",
+      "license": "Documentation/reference only",
+      "version": "current Git manual",
+      "use": "Compare-and-swap style ref update semantics using expected old object IDs."
+    },
+    "EXT-GITHUB-RULESETS": {
+      "name": "GitHub Repository Rulesets — evaluate/rule insights pattern",
+      "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/managing-rulesets-for-a-repository",
+      "license": "Documentation/reference only",
+      "version": "current GitHub Docs",
+      "use": "Pattern for rule proposal/evaluate-before-enforce and inspecting affected historical/current actions."
+    },
+    "EXT-GITLAB-APPROVAL": {
+      "name": "GitLab Merge Request Approval Policies",
+      "url": "https://docs.gitlab.com/user/application_security/policies/merge_request_approval_policies/",
+      "license": "Documentation/reference only",
+      "version": "current GitLab Docs",
+      "use": "Pattern for condition-based approval, fail-safe behavior when required evidence/scans are unavailable."
+    },
+    "EXT-CODEX-MULTI": {
+      "name": "OpenAI Codex spawn_agent implementation",
+      "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/tools/handlers/multi_agents_spec.rs",
+      "license": "Apache-2.0",
+      "version": "main; pin inspected commit before implementation",
+      "use": "Reference current child model/reasoning surface; do not assume arbitrary provider routing."
+    },
+    "EXT-CODEX-CONFIG": {
+      "name": "OpenAI Codex runtime config",
+      "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/config/mod.rs",
+      "license": "Apache-2.0",
+      "version": "main; pin inspected commit",
+      "use": "Reference current provider map, multi-agent enablement, subagent model/thread config."
+    },
+    "EXT-DSH-SAFETY": {
+      "name": "DeepSeek Harness SAFETY",
+      "url": "https://github.com/deepseek-ai/deepseek-harness/blob/master/SAFETY.md",
+      "license": "MIT repository",
+      "version": "master; developer preview",
+      "use": "Hard constraint: do not treat DSH as sole security control; least privilege and disposable isolation."
+    },
+    "EXT-DSH-SUBAGENT": {
+      "name": "DeepSeek Harness subagent seam",
+      "url": "https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/subagent.md",
+      "license": "MIT",
+      "version": "master; pin commit",
+      "use": "Named provider registry, capability preflight, child lifecycle and result semantics."
+    },
+    "EXT-DSH-TOOL": {
+      "name": "DeepSeek Harness tool-subagent implementation",
+      "url": "https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/subagent/tool-subagent/src/index.ts",
+      "license": "MIT",
+      "version": "master; pin commit",
+      "use": "Current provider/model/reasoning selection surface. Must verify exact installed build because developer-preview behavior has changed."
+    },
+    "EXT-DSH-CODEX": {
+      "name": "DeepSeek Harness Codex/Claude Code backend design note",
+      "url": "https://github.com/deepseek-ai/deepseek-harness/blob/master/.agents/notes/implemented/feature/2026-08-04-claude-code-and-codex-subagent-backends.md",
+      "license": "MIT",
+      "version": "master",
+      "use": "Reference ownership boundaries for task text, cwd, cancellation, result settlement and process teardown."
+    },
+    "EXT-POSTGRES-INSERT": {
+      "name": "PostgreSQL INSERT / ON CONFLICT",
+      "url": "https://www.postgresql.org/docs/current/sql-insert.html",
+      "license": "PostgreSQL documentation",
+      "version": "current PostgreSQL docs",
+      "use": "Reference idempotent insert patterns where a unique semantic key is appropriate; do not mutate append-only events."
+    },
+    "EXT-UBER-GO-TEST": {
+      "name": "Uber Go Style Guide — table-driven tests",
+      "url": "https://github.com/uber-go/guide/blob/master/style.md",
+      "license": "CC BY 3.0 / repository terms; pattern only",
+      "version": "master",
+      "use": "Reference table-driven test structure for deterministic validation matrices."
+    }
+  },
+  "prd_status": "Final / L2+L3 Aligned / Implementation Authorized",
+  "runtime_integration": {
+    "core_protocol": "internal/agentruntime.Runtime",
+    "codex": "out-of-process Runtime Adapter",
+    "deepseek_harness": "out-of-process Runtime Adapter (subprocess/headless or subprocess bridge)",
+    "no_parallel_executionbackend": true
+  }
+}

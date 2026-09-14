@@ -1,0 +1,64 @@
+{{define "content"}}
+<div class="head">
+  <h1>环境</h1>
+  <span class="meta">状态从 environment_run 算出 · 动作只入队</span>
+</div>
+<p class="lede">状态是算出来的:这里展示的是最近一次拉起的结果。点「拉起 / 推倒 / 重建」只是入队一个 job,由 worker 去执行、写新的拉起记录,执行完刷新即可看到结果 —— 界面不直接改任何东西。</p>
+
+{{if .Rows}}
+<section>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>项目</th><th>环境</th><th>类型</th><th>上次拉起</th><th>时间</th><th>定义</th><th>版本组合</th><th>动作</th></tr></thead>
+    <tbody>
+      {{range .Rows}}
+      <tr>
+        <td>{{.Project}}</td>
+        <td>{{.Name}}</td>
+        <td class="dim">{{.Kind}}</td>
+        <td><span class="st {{.StateClass}}">{{.StatusText}}</span></td>
+        <td class="dim nowrap">{{.LastAt}}</td>
+        <td class="dim">{{.DefHash}}</td>
+        <td class="dim">{{.Combo}}</td>
+        <td>
+          {{if .Def}}
+          <div class="rowact">
+            <form method="post" action="/environments/up">
+              <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+              <input type="hidden" name="def" value="{{.Def}}">
+              <input type="hidden" name="project" value="{{.Project}}">
+              <input type="hidden" name="name" value="{{.Name}}">
+              <button type="submit">拉起环境</button>
+            </form>
+            <form method="post" action="/environments/down">
+              <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+              <input type="hidden" name="def" value="{{.Def}}">
+              <input type="hidden" name="project" value="{{.Project}}">
+              <input type="hidden" name="name" value="{{.Name}}">
+              <button class="danger" type="submit" onclick="return confirm('将推倒 {{.Project}}/{{.Name}}:compose down --volumes 会清掉容器、卷和网络,未持久化到卷外的数据将丢失。确定继续?')">推倒</button>
+            </form>
+            <form method="post" action="/environments/rebuild">
+              <input type="hidden" name="csrf_token" value="{{$.CSRF}}">
+              <input type="hidden" name="def" value="{{.Def}}">
+              <input type="hidden" name="project" value="{{.Project}}">
+              <input type="hidden" name="name" value="{{.Name}}">
+              <button class="danger" type="submit" onclick="return confirm('将销毁当前 {{.Project}}/{{.Name}} 并重建,约 2 分钟,期间服务不可用。确定继续?')">重建</button>
+            </form>
+          </div>
+          {{end}}
+          {{if .Note}}<span class="dim note-inline">{{.Note}}</span>{{end}}
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">推倒不写事实面(environment_run 只记拉起),所以「推倒成功」体现在 job 执行结果里,不是状态列的变化;拉起 / 重建执行完会写一条新的拉起记录。</p>
+</section>
+{{else}}
+<div class="empty">
+  还没有环境定义。
+  <span class="do">在内容仓库放一份环境定义(<code>.tally/environments/*.yaml</code>),点「拉起」或跑 <code>tally env up</code> 之后,这里会按拉起记录逐行算出每个环境的状态。定义必须带健康检查,否则会被拒绝登记。</span>
+</div>
+{{end}}
+{{end}}

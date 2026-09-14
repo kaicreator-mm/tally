@@ -1,0 +1,28 @@
+# Tally line-ending policy — docs/tasks/v1.4/P0/P0-12.md
+#
+# All text files are stored LF in the repository and checked out LF in the
+# working tree, independent of local core.autocrlf.
+#
+# Fact at introduction (2026-09-09): every tracked blob was already stored
+# LF-only (673 LF, 1 without EOLs), so this policy introduces no
+# renormalization diff and must not be bundled with content changes.
+* text=auto eol=lf
+
+# Windows-only scripts require CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary assets: never normalize
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.zip   binary
+*.gz    binary
+*.woff  binary
+*.woff2 binary
+
+# Vendored minified assets: keep byte-exact
+*.min.js -text

@@ -1,0 +1,153 @@
+{{define "content"}}
+<div class="head">
+  <h1>规则</h1>
+  <span class="meta">v1.4 Rules · 策略治理投影 · Active 只从 Git 快照派生(DL-09) · 只读无写(PRD §8/§17)</span>
+</div>
+
+{{if .Unavailable}}
+<div class="empty">
+  v1.4 数据源未接入。
+  <span class="do">本页需要事实面(数据库)与 Git 制品仓库。接好后:生效策略从 HEAD 快照的 Git 制品派生,治理提案/历史从治理事件面投影,分歧与不确定性显式呈现。</span>
+</div>
+{{else if .LoadErr}}
+<div class="flash bad">{{.LoadErr}}</div>
+{{else}}
+
+<p class="note">项目 <b>{{.ProjectID}}</b> · 生效面 = HEAD 快照的 Git 制品(.tally/policies);治理面 = append-only 事件投影。{{if not .GovernanceAvailable}}<b>治理存储未接入:Proposed/History/分歧区暂不可用,生效面照常呈现。</b>{{end}}</p>
+
+<section>
+  <h2>生效策略(Active · 只从 Git 快照派生)</h2>
+  {{if .ActivePolicies}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>策略</th><th>强度</th><th>内容修订</th><th>门禁键</th><th>制品路径</th><th>治理一致性</th></tr></thead>
+    <tbody>
+      {{range .ActivePolicies}}
+      <tr>
+        <td class="nowrap"><b>{{.ID}}</b></td>
+        <td class="nowrap"><span class="st {{if eq .Enforcement "gate"}}st-bad{{else}}st-warn{{end}}">{{.Enforcement}}</span></td>
+        <td class="dim nowrap">{{.Revision}}</td>
+        <td>{{range .GateKeys}}<span class="nowrap">{{.}} </span>{{end}}</td>
+        <td class="dim nowrap">{{.Path}}</td>
+        <td>{{.GovernanceNote}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">HEAD 快照中没有任何生效策略(治理链批准 + Git 提交后才会出现在这里)。</p>
+  {{end}}
+</section>
+
+{{if .GovernanceAvailable}}
+{{if .Diverged}}
+<section>
+  <h2>治理分歧(治理面 ACTIVE 但 HEAD 不可观察)</h2>
+  <div class="flash warn">以下提案在治理面记录为 ACTIVE,但<b>不能</b>从 HEAD 快照观察 —— 运行时不受其影响(DL-09);分歧需要人裁决(治理记录补记 / 重新激活 / 撤销)。</div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>提案</th><th>策略</th><th>候选修订</th><th>批准人</th><th>分歧原因</th></tr></thead>
+    <tbody>
+      {{range .Diverged}}
+      <tr>
+        <td class="nowrap">{{.ProposalID}}</td>
+        <td class="nowrap">{{.PolicyID}}</td>
+        <td class="dim nowrap">{{.CandidateRev}}</td>
+        <td class="nowrap">{{.ApprovedBy}}</td>
+        <td>{{.Reason}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+</section>
+{{end}}
+
+<section>
+  <h2>治理提案(Proposed · 未激活)</h2>
+  {{if .Proposed}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>提案</th><th>状态</th><th>策略</th><th>候选修订</th><th>提案人</th><th>证据数</th><th>范围说明</th></tr></thead>
+    <tbody>
+      {{range .Proposed}}
+      <tr>
+        <td class="nowrap">{{.ID}}</td>
+        <td class="nowrap">{{.Status}}</td>
+        <td class="nowrap">{{.PolicyID}}</td>
+        <td class="dim nowrap">{{.CandidateRev}}</td>
+        <td class="nowrap">{{.ProposedBy}}</td>
+        <td class="nowrap">{{.EvidenceN}}</td>
+        <td>{{if .Scope}}{{.Scope}}{{else}}—{{end}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">当前没有待处理的治理提案。</p>
+  {{end}}
+</section>
+{{end}}
+
+<section>
+  <h2>冲突分析(Active 集合 · 只呈现不消解)</h2>
+  {{if .Conflicts}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>严重度</th><th>类型</th><th>涉及策略</th><th>说明</th></tr></thead>
+    <tbody>
+      {{range .Conflicts}}
+      <tr>
+        <td class="nowrap"><span class="st {{if eq .Severity "conflict"}}st-bad{{else if eq .Severity "warning"}}st-warn{{else}}st{{end}}">{{.Severity}}</span></td>
+        <td class="nowrap dim">{{.Kind}}</td>
+        <td class="nowrap">{{range .PolicyIDs}}{{.}} {{end}}</td>
+        <td>{{.Detail}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">生效策略集未检出需要人工关注的交互(P3-05 封闭词表)。</p>
+  {{end}}
+</section>
+
+{{if .GovernanceAvailable}}
+<section>
+  <h2>治理历史(事件流 · 倒序,最多 20 条 / 全流 {{.HistoryTotal}} 条)</h2>
+  {{if .History}}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>提案</th><th>治理动作</th><th>批准人</th><th>时刻</th></tr></thead>
+    <tbody>
+      {{range .History}}
+      <tr>
+        <td class="nowrap">{{.ProposalID}}</td>
+        <td class="nowrap">{{.ActionKind}}</td>
+        <td class="nowrap">{{if .ApprovedBy}}{{.ApprovedBy}}{{else}}—{{end}}</td>
+        <td class="dim nowrap">{{.OccurredAt}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  {{else}}
+  <p class="note dim">治理事件流为空。</p>
+  {{end}}
+</section>
+{{end}}
+
+<section>
+  <h2>本页的边界(如实声明)</h2>
+  <ul>
+    <li class="dim">Active 分区<b>只</b>从 HEAD 快照的 Git 制品派生(DL-09):仅存在于治理面的提案永远不会出现在生效列表 —— 治理面记为 ACTIVE 但快照不可观察的,进「治理分歧」区并注明运行时不受影响。</li>
+    <li class="dim">HEAD 里存在但治理面无对应记录(或修订不一致)的策略,逐条携带不确定标注 —— 不确定性是一等呈现,不做静默美化。</li>
+    <li class="dim">冲突分析(P3-05)在封闭词汇内只呈现、不消解;历史是 append-only 事件流的截断投影,全长度如实声明。</li>
+    <li class="dim">本页零写路由:提案在评审页创建(P3-08),激活走治理链 + Git 提交(P3-07),不在本页发生。</li>
+  </ul>
+</section>
+
+{{end}}
+{{end}}

@@ -1,0 +1,30 @@
+{{/* 登录页是公开页,无会话也无导航,故覆盖 base 外壳为一个极简居中卡片。 */}}
+{{define "base"}}<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>登录 · tally</title>
+<link rel="stylesheet" href="/static/tally.css">
+</head>
+<body>
+<div class="login-shell">
+  <div class="login-card">
+    <div class="brand">tally</div>
+    <div class="brand-sub">构建 · 部署 · 失败登记</div>
+    {{if .Error}}<div class="flash bad">密码不对。再试一次。</div>{{end}}
+    <form class="form" method="post" action="/login">
+      <div class="field">
+        <label for="password">密码</label>
+        <input type="password" id="password" name="password" autofocus autocomplete="current-password">
+      </div>
+      <div class="actions">
+        <button type="submit">登录</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>
+{{end}}
+{{define "content"}}{{end}}

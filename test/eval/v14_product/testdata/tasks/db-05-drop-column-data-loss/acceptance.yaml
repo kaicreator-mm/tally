@@ -1,0 +1,40 @@
+# Frozen acceptance (P4-01). Identical text and identical oracle for the
+# whole experiment; Tally derives its Contract from this file and the shared
+# verification harness judges every candidate against exactly these clauses.
+task_id: db-05-drop-column-data-loss
+harness: database_migration
+policy_ref: database_migration # catalog/v14/policies/database_migration.yaml
+requires:
+  - fresh_database
+  - n_minus_1_upgrade
+  - data_integrity
+gate_condition:
+  all_of:
+    - fresh_database
+    - n_minus_1_upgrade
+    - data_integrity
+acceptance:
+  - id: AC-01
+    statement: >-
+      fresh_database: the revision chain applies cleanly to an empty
+      database and legacy_token is gone afterwards
+      (oracle path fresh_database).
+    oracle_ref: oracle/oracle.json
+  - id: AC-02
+    statement: >-
+      n_minus_1_upgrade: the chain applies to a database upgraded from
+      revision 0002 with seeded accounts and sessions rows and the column
+      is gone afterwards (oracle path n_minus_1_upgrade).
+    oracle_ref: oracle/oracle.json
+  - id: AC-03
+    statement: >-
+      data_integrity: no seeded account value is destroyed; values still
+      held by legacy_token are preserved by the change before the column is
+      dropped (oracle path data_integrity).
+    oracle_ref: oracle/oracle.json
+  - id: AC-04
+    statement: >-
+      The delivered revision reproduces the frozen oracle expectations:
+      derived evidence and violation sets match oracle/oracle.json for both
+      the shipped candidate and the repaired chain.
+    oracle_ref: oracle/oracle.json

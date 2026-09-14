@@ -1,0 +1,266 @@
+{
+  "arm": "tally",
+  "task_id": "bf-06-email-dedupe-casefold",
+  "contract_task_id": "TASK-9105",
+  "outcome": "accepted",
+  "outcome_detail": "accepted at attempt 1 (verify run 6)",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "finished_at": "2026-09-09T21:43:57.7461133Z",
+    "wall_seconds": 260.6664694,
+    "per_attempt_seconds": [
+      253.5675234
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "bf-06-email-dedupe-casefold",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-06-email-dedupe-casefold\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 4 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "mixed-case-dupes",
+          "want": "a@x.com,b@x.com",
+          "got": "a@x.com,b@x.com",
+          "pass": true
+        },
+        {
+          "name": "ordering-and-case",
+          "want": "a@y.com,b@y.com",
+          "got": "a@y.com,b@y.com",
+          "pass": true
+        },
+        {
+          "name": "exact-dupes",
+          "want": "z@z.com",
+          "got": "z@z.com",
+          "pass": true
+        },
+        {
+          "name": "single-entry",
+          "want": "same@x.com",
+          "got": "same@x.com",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T21:43:56.3682253Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "eb6698b99b89917822d6b5b4de1ad7ca63819ba62275142c3b735c124de4194e",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "bf-06-email-dedupe-casefold",
+    "contract_task_id": "TASK-9105",
+    "started_at": "",
+    "finished_at": "2026-09-09T21:43:57.7461133Z",
+    "wall_seconds": 260.6664694,
+    "loop_phase": "accepted",
+    "outcome": "accepted",
+    "outcome_detail": "accepted at attempt 1 (verify run 6)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-9105/attempt/001",
+        "changeset": "sha256:5dd0a8bfd6fb550683240344f4ef98ccddce90ba749d959171869e28c41fe900",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Fixed the case-sensitive email dedupe defect.\n\n**Change**\n- Modified `test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/baseline/emails.go` to make dedupe case-insensitive while keeping the `UniqueEmails(in string) string` signature unchanged.\n- Now normalizes each address with `strings.ToLower(strings.TrimSpace(part))`, dedupes via a lowercase-keyed map, sorts in ascending byte order, and joins with commas (stdlib only, so it compiles in the judge sandbox).\n\n**Verification**\n- Replicated the judge driver locally (module `v14judgesandbox`, generated `v14Drive` + 4 frozen oracle cases): all pass — `mixed-case-dupes` → `a@x.com,b@x.com`, `ordering-and-case` → `a@y.com,b@y.com`, `exact-dupes` → `z@z.com`, `single-entry` → `same@x.com`.\n- Simulated the unfixed baseline behavior:…",
+        "wall_seconds": 253.5675234,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-06-email-dedupe-casefold\\worktrees\\wt-c0d90852-c7507ce8"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "6",
+        "changeset": "sha256:5dd0a8bfd6fb550683240344f4ef98ccddce90ba749d959171869e28c41fe900",
+        "status": "verified",
+        "binding_ids": [
+          "bug_repro_failed_before",
+          "regression_check_passes_after"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "bf-06-email-dedupe-casefold",
+      "contract_task_id": "TASK-9105",
+      "pinned_contract": false,
+      "bundle_id": "POL-BUG-FIX-REGRESSION",
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "bindings": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/bf-06-email-dedupe-casefold/baseline/**"
+      ],
+      "requirement_refs": null,
+      "risk_signals": null,
+      "risk_basis": null,
+      "objective_sha256": "e455c294414d6e8bf0b1b688ab14b994c75093622802b78ab8ad4feb77446440"
+    },
+    "policy_match_coverage": {
+      "matched_policies": null,
+      "gate_keys": null,
+      "confidence": "none",
+      "detected_risk_signals": null,
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": null
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:38584a2a8efac371c71ff0a84ade1b65a853bcbe2bb8f6c114007735278f310c",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-06-email-dedupe-casefold\\candidate-ws",
+    "judge_result": {
+      "task_id": "bf-06-email-dedupe-casefold",
+      "harness": "bug_fix",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-06-email-dedupe-casefold\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "bug_repro_failed_before",
+          "status": "pass",
+          "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+        },
+        {
+          "key": "regression_check_passes_after",
+          "status": "pass",
+          "detail": "all 4 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+        }
+      ],
+      "bug": {
+        "compile_ok": true,
+        "cases": [
+          {
+            "name": "mixed-case-dupes",
+            "want": "a@x.com,b@x.com",
+            "got": "a@x.com,b@x.com",
+            "pass": true
+          },
+          {
+            "name": "ordering-and-case",
+            "want": "a@y.com,b@y.com",
+            "got": "a@y.com,b@y.com",
+            "pass": true
+          },
+          {
+            "name": "exact-dupes",
+            "want": "z@z.com",
+            "got": "z@z.com",
+            "pass": true
+          },
+          {
+            "name": "single-entry",
+            "want": "same@x.com",
+            "got": "same@x.com",
+            "pass": true
+          }
+        ]
+      },
+      "judged_at": "2026-09-09T21:43:56.3682253Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "eb6698b99b89917822d6b5b4de1ad7ca63819ba62275142c3b735c124de4194e",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": null
+  },
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:41.0704639Z"
+}

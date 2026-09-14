@@ -1,0 +1,5 @@
+2026-07-20T08:01:12Z make build
+# tally/internal/web
+internal/web/handler.go:47:12: undefined: renderTemplate
+Makefile:18: recipe for target 'build' failed
+make: *** [build] Error 2

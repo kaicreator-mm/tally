@@ -1,0 +1,9 @@
+{{define "content"}}
+<div class="head">
+  <h1>{{.Title}}</h1>
+  <span class="meta"><a href="/docs/{{.Slug}}/edit">编辑</a> · <a href="/docs">← 文档列表</a></span>
+</div>
+<section>
+  <div class="md">{{markdown .Content}}</div>
+</section>
+{{end}}

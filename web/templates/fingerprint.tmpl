@@ -1,0 +1,112 @@
+{{define "content"}}
+{{if .Found}}
+<div class="head">
+  <h1><span class="fp">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></span></h1>
+  <span class="meta">精确指纹 · 视图 B 执行侧</span>
+  <span class="meta"><a href="/failures">← 失败列表</a></span>
+</div>
+<p class="lede">这个问题影响了哪些地方,以及之前的修复今天还成不成立。关联条款一列由需求层 LEFT JOIN 补上;没有需求层时,页面其余部分照常工作。</p>
+
+<section>
+  <h2>影响面</h2>
+  <div class="grid grid-4">
+    <div class="cell"><div class="k">出现</div><div class="v">{{.Count}}</div><div class="foot">首次 {{.FirstSeen}} · 最近 {{.LastSeen}}</div></div>
+    <div class="cell"><div class="k">项目</div><div class="v">{{.ProjectCount}}</div><div class="foot">{{.ProjectNames}}</div></div>
+    <div class="cell"><div class="k">处置</div><div class="v"><span class="tag {{.TagClass}}">{{.StatusText}}</span></div><div class="foot">{{if .Drifted}}修复验证后又复发:可能已过期{{else}}未漂移{{end}}</div></div>
+    <div class="cell"><div class="k">诊断次数</div><div class="v">{{.DiagnoseAttempts}}</div><div class="foot">上限 3 轮 · {{if lt .DiagnoseAttempts 3}}预算未用尽{{else}}预算已用尽{{end}}</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>已验证修复 <span class="hint">存在 git,不在数据库</span></h2>
+  {{if .HasFix}}
+  <div class="rec">
+    <div class="rec-head">
+      <strong>{{.FixRef}}</strong>
+      {{if .Drifted}}<span class="tag warn">当前版本组合下可能过期</span>{{else}}<span class="tag ok">已验证</span>{{end}}
+    </div>
+    <dl>
+      <dt>验证于</dt><dd>{{.FixVerifiedAt}}</dd>
+      <dt>验证时的组合</dt><dd>{{.FixCombo}}</dd>
+    </dl>
+    {{if .Drifted}}<p class="note">末次出现晚于修复验证时刻,这条修复不会被直接套用,只作为线索交给诊断。要恢复直接可用,按修复里的复现步骤重跑验证即可。</p>{{end}}
+  </div>
+  {{else}}
+  <div class="empty">
+    还没有已验证修复。
+    <span class="do">修复经四道闸(G1 稳定复现 / G2 修复有效 / G3 无回归 / G4 改动范围)验证后,会以这个精确指纹为键入库。模糊指纹关联不进修复 —— 这是数据层写死的。</span>
+  </div>
+  {{end}}
+</section>
+
+{{if .RelatedClauses}}
+<section>
+  <h2>关联条款 <span class="hint">LEFT JOIN:指纹的失败 → 提交 → 挂钩</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>条款</th><th>挂钩哈希</th></tr></thead>
+    <tbody>
+      {{range .RelatedClauses}}
+      <tr>
+        <td>{{.ClauseID}}</td>
+        <td class="dim">{{.Hash}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">没有需求层时这一区不出现,页面其余照常 —— 「影响了哪几条需求」要签了需求、在 commit 里写条款编号(trailer)、跑过 <code>tally reindex</code> 才能答。</p>
+</section>
+{{end}}
+
+{{if .Events}}
+<section>
+  <h2>发生记录 <span class="hint">事实面,只追加</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>时间</th><th>项目</th><th>来源</th><th>提交</th><th>摘要</th></tr></thead>
+    <tbody>
+      {{range .Events}}
+      <tr>
+        <td class="nowrap">{{.Time}}</td>
+        <td>{{.Project}}</td>
+        <td class="dim">{{.SourceText}}</td>
+        <td class="dim">{{if .Commit}}{{.Commit}}{{else}}—{{end}}</td>
+        <td class="dim">{{.Excerpt}}</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">环境来源的失败没有 commit 链,提交列为空。</p>
+</section>
+{{end}}
+
+{{if .Neighbors}}
+<section>
+  <h2>模糊指纹邻居 <span class="hint">只作为诊断线索,不能当答案</span></h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>指纹</th><th>摘要</th><th class="num">次数</th><th>处置</th></tr></thead>
+    <tbody>
+      {{range .Neighbors}}
+      <tr>
+        <td><a class="fp" href="/fingerprint?fp={{.Fp}}">{{fpbar .Fp}}<span class="fp-hex">{{fpshort .Fp}}</span></a></td>
+        <td>{{.Excerpt}}</td>
+        <td class="num">{{.Count}}</td>
+        <td><span class="tag {{.TagClass}}">{{.StatusText}}</span></td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">模糊匹配只说明「看起来像」。它的修复不会被自动套用 —— 外键只允许精确指纹关联修复,这条路在 SQL 层面就写不出来。</p>
+</section>
+{{end}}
+{{else}}
+<div class="empty">
+  这个指纹还没有索引进库。
+  <span class="do">可能尚未索引,或链接来自过期页面。跑 <code>tally reindex</code> 重算指纹索引;或回<a href="/failures">失败列表</a>从归并列表里重新进入。</span>
+</div>
+{{end}}
+{{end}}

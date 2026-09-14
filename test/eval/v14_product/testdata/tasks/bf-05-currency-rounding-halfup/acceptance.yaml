@@ -1,0 +1,35 @@
+# Frozen acceptance (P4-01). Identical text and identical oracle for the
+# whole experiment; Tally derives its Contract from this file and the shared
+# verification harness judges every candidate against exactly these clauses.
+task_id: bf-05-currency-rounding-halfup
+harness: bug_fix
+policy_ref: POL-BUG-FIX-REGRESSION # catalog/v14/policies/bug_fix.yaml
+requires:
+  - bug_repro_failed_before
+  - regression_check_passes_after
+gate_condition:
+  all_of:
+    - bug_repro_failed_before
+    - regression_check_passes_after
+acceptance:
+  - id: AC-01
+    statement: >-
+      Exact half-cent values round away from zero, including the credit
+      direction (oracle cases half-cent-up, half-cent-negative).
+    oracle_ref: oracle/oracle.json
+  - id: AC-02
+    statement: >-
+      Sub-half truncation-styled values still round to the nearest cent and
+      exact values are unchanged (oracle cases near-dollar, exact-values,
+      below-half).
+    oracle_ref: oracle/oracle.json
+  - id: AC-03
+    statement: >-
+      bug_repro_failed_before: the oracle cases named in
+      expected.baseline_failures fail against the unfixed baseline behavior.
+    oracle_ref: oracle/oracle.json
+  - id: AC-04
+    statement: >-
+      regression_check_passes_after: every oracle case passes against the
+      delivered fix; no case regressed relative to the baseline-allowed set.
+    oracle_ref: oracle/oracle.json

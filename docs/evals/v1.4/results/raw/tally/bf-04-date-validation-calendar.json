@@ -1,0 +1,338 @@
+{
+  "arm": "tally",
+  "task_id": "bf-04-date-validation-calendar",
+  "contract_task_id": "TASK-9103",
+  "outcome": "accepted",
+  "outcome_detail": "accepted at attempt 1 (verify run 4)",
+  "attempts": 1,
+  "interventions": null,
+  "timing": {
+    "finished_at": "2026-09-09T21:35:34.8164902Z",
+    "wall_seconds": 166.0656453,
+    "per_attempt_seconds": [
+      160.2594659
+    ]
+  },
+  "identity": {
+    "host_os": "windows",
+    "host_arch": "amd64",
+    "go_version": "go1.27.1",
+    "trial_date": "2026-09-09",
+    "db_version_recorded": false,
+    "runtime_name": "codex",
+    "adapter_version": "1",
+    "cli_version": "0.153.0",
+    "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model_observed": false,
+    "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+  },
+  "requested": {
+    "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+    "model": "deepseek-v4-flash",
+    "sandbox": "danger-full-access",
+    "attempt_ceiling_seconds": 1800,
+    "task_ceiling_seconds": 7200,
+    "provider": {
+      "id": "custom",
+      "name": "deepseek",
+      "base_url": "https://api.deepseek.com",
+      "wire_api": "responses",
+      "requires_openai_auth": true
+    },
+    "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+  },
+  "judge": {
+    "task_id": "bf-04-date-validation-calendar",
+    "harness": "bug_fix",
+    "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-04-date-validation-calendar\\candidate-ws",
+    "accepted": true,
+    "complete": true,
+    "gate": [
+      {
+        "key": "bug_repro_failed_before",
+        "status": "pass",
+        "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+      },
+      {
+        "key": "regression_check_passes_after",
+        "status": "pass",
+        "detail": "all 10 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+      }
+    ],
+    "bug": {
+      "compile_ok": true,
+      "cases": [
+        {
+          "name": "jan-31-valid",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "feb-30-common-year",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "apr-31",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-leap",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "feb-29-common-year",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-century-non-leap",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        },
+        {
+          "name": "feb-29-century-leap",
+          "want": "valid",
+          "got": "valid",
+          "pass": true
+        },
+        {
+          "name": "month-13",
+          "want": "invalid:month",
+          "got": "invalid:month",
+          "pass": true
+        },
+        {
+          "name": "unpadded-format",
+          "want": "invalid:format",
+          "got": "invalid:format",
+          "pass": true
+        },
+        {
+          "name": "day-zero",
+          "want": "invalid:day",
+          "got": "invalid:day",
+          "pass": true
+        }
+      ]
+    },
+    "judged_at": "2026-09-09T21:35:33.4898423Z",
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "acceptance_sha256": "728bba4f1d9caa269bcc97fb3c58be542236ec4e8dce2f11c768060b6385377f",
+    "environment": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false
+    }
+  },
+  "judge_note": "judge executed (identical command as the bare arm)",
+  "loop_record": {
+    "task_id": "bf-04-date-validation-calendar",
+    "contract_task_id": "TASK-9103",
+    "started_at": "",
+    "finished_at": "2026-09-09T21:35:34.8164902Z",
+    "wall_seconds": 166.0656453,
+    "loop_phase": "accepted",
+    "outcome": "accepted",
+    "outcome_detail": "accepted at attempt 1 (verify run 4)",
+    "attempts": [
+      {
+        "attempt": 1,
+        "run_id": "TASK-9103/attempt/001",
+        "changeset": "sha256:81338dea985d35dd786f458b3624f20a04a6d27311f2328257ef5b80fbffb675",
+        "has_candidate": true,
+        "status": "completed",
+        "iterations": 1,
+        "agent_claim": "Done. The validator fix is in `test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/baseline/datevalidate.go:8`.\n\n**What changed**\n- Format gate now requires all-digit `yyyy-mm-dd` segments in the strict 10-char layout, keeping `invalid:format` semantics for malformed/unpadded input.\n- Day validation now uses `monthLen(y, mo)`: 31-day/30-day months, and February returns 29 only when `y%4 == 0 \u0026\u0026 (y%100 != 0 || y%400 == 0)`.\n- Added the previously elided helpers (`allDigits`, `atoi`, `monthLen`) so the file compiles standalone; the public `ValidateDate(s string) string` signature is unchanged.\n\n**Verification**\n- `probe after` — all 10 frozen oracle cases pass against the delivered fix (includes `feb-29-century-leap` 2000 and rejects `feb-29-century-non-leap` 1900).\n- `probe …",
+        "wall_seconds": 160.2594659,
+        "observed_identity": {
+          "RuntimeName": "codex-cli",
+          "RuntimeVersion": "0.153.0",
+          "Model": "",
+          "SessionID": ""
+        },
+        "workspace_id": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-04-date-validation-calendar\\worktrees\\wt-cad1c39f-21caa119"
+      }
+    ],
+    "verification_lineage": [
+      {
+        "verify_run": "4",
+        "changeset": "sha256:81338dea985d35dd786f458b3624f20a04a6d27311f2328257ef5b80fbffb675",
+        "status": "verified",
+        "binding_ids": [
+          "bug_repro_failed_before",
+          "regression_check_passes_after"
+        ]
+      }
+    ],
+    "composition": {
+      "task_id": "bf-04-date-validation-calendar",
+      "contract_task_id": "TASK-9103",
+      "pinned_contract": false,
+      "bundle_id": "POL-BUG-FIX-REGRESSION",
+      "gate_keys": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "bindings": [
+        "bug_repro_failed_before",
+        "regression_check_passes_after"
+      ],
+      "allowed_paths": [
+        "test/eval/v14_product/testdata/tasks/bf-04-date-validation-calendar/baseline/**"
+      ],
+      "requirement_refs": null,
+      "risk_signals": null,
+      "risk_basis": null,
+      "objective_sha256": "32fe092dbfd3576d5d8ca172125b8cddde126132f6a81df8c84740e1b11493fe"
+    },
+    "policy_match_coverage": {
+      "matched_policies": null,
+      "gate_keys": null,
+      "confidence": "none",
+      "detected_risk_signals": null,
+      "unmatched_risk_signals": null,
+      "requires_policy_ids": null
+    },
+    "identity": {
+      "host_os": "windows",
+      "host_arch": "amd64",
+      "go_version": "go1.27.1",
+      "trial_date": "2026-09-09",
+      "db_version_recorded": false,
+      "runtime_name": "codex",
+      "adapter_version": "1",
+      "cli_version": "0.153.0",
+      "binary_path": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model_observed": false,
+      "model_note": "the codex exec JSONL surface does not self-report the model; the requested -m value is recorded separately under requested.model and never backfilled (Decision Lock 15, RUN_PROTOCOL §5)"
+    },
+    "requested": {
+      "codex_bin": "C:\\Users\\15549\\AppData\\Local\\OpenAI\\Codex\\bin\\9ba750cce02d5e5c\\codex.exe",
+      "model": "deepseek-v4-flash",
+      "sandbox": "danger-full-access",
+      "attempt_ceiling_seconds": 1800,
+      "task_ceiling_seconds": 7200,
+      "provider": {
+        "id": "custom",
+        "name": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "wire_api": "responses",
+        "requires_openai_auth": true
+      },
+      "auth_handoff": "auth.json copied from the minimal owner home (contents never recorded); present=true"
+    },
+    "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+    "frozen_verification_contract_hash": "sha256:0ae512ff4ebd842bb49f0a7105be2f325467042da367e65c9e71420d5de4f70b",
+    "candidate_workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-04-date-validation-calendar\\candidate-ws",
+    "judge_result": {
+      "task_id": "bf-04-date-validation-calendar",
+      "harness": "bug_fix",
+      "workspace": "C:\\Users\\15549\\AppData\\Local\\Temp\\tally-v14-trial\\tally\\bf-04-date-validation-calendar\\candidate-ws",
+      "accepted": true,
+      "complete": true,
+      "gate": [
+        {
+          "key": "bug_repro_failed_before",
+          "status": "pass",
+          "detail": "frozen baseline bytes hash-identical to the set P4-01 proved reproducibly failing (manifest bbf381be07a0); frozen failure set carried by oracle/oracle.json"
+        },
+        {
+          "key": "regression_check_passes_after",
+          "status": "pass",
+          "detail": "all 10 frozen oracle cases pass against the delivered fix (judge sandbox, go toolchain)"
+        }
+      ],
+      "bug": {
+        "compile_ok": true,
+        "cases": [
+          {
+            "name": "jan-31-valid",
+            "want": "valid",
+            "got": "valid",
+            "pass": true
+          },
+          {
+            "name": "feb-30-common-year",
+            "want": "invalid:day",
+            "got": "invalid:day",
+            "pass": true
+          },
+          {
+            "name": "apr-31",
+            "want": "invalid:day",
+            "got": "invalid:day",
+            "pass": true
+          },
+          {
+            "name": "feb-29-leap",
+            "want": "valid",
+            "got": "valid",
+            "pass": true
+          },
+          {
+            "name": "feb-29-common-year",
+            "want": "invalid:day",
+            "got": "invalid:day",
+            "pass": true
+          },
+          {
+            "name": "feb-29-century-non-leap",
+            "want": "invalid:day",
+            "got": "invalid:day",
+            "pass": true
+          },
+          {
+            "name": "feb-29-century-leap",
+            "want": "valid",
+            "got": "valid",
+            "pass": true
+          },
+          {
+            "name": "month-13",
+            "want": "invalid:month",
+            "got": "invalid:month",
+            "pass": true
+          },
+          {
+            "name": "unpadded-format",
+            "want": "invalid:format",
+            "got": "invalid:format",
+            "pass": true
+          },
+          {
+            "name": "day-zero",
+            "want": "invalid:day",
+            "got": "invalid:day",
+            "pass": true
+          }
+        ]
+      },
+      "judged_at": "2026-09-09T21:35:33.4898423Z",
+      "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+      "acceptance_sha256": "728bba4f1d9caa269bcc97fb3c58be542236ec4e8dce2f11c768060b6385377f",
+      "environment": {
+        "host_os": "windows",
+        "host_arch": "amd64",
+        "go_version": "go1.27.1",
+        "trial_date": "2026-09-09",
+        "db_version_recorded": false
+      }
+    },
+    "judge_invoked": true,
+    "judge_note": "judge executed (identical command as the bare arm)",
+    "notes": null
+  },
+  "manifest_sha256": "bbf381be07a0859328f8f39a3a5cdef4ce453b6fa05a244163438e2b6bcd4e4d",
+  "recorded_at": "2026-09-10T01:14:40.9800594Z"
+}

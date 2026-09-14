@@ -1,0 +1,24 @@
+# 提交 trailer 存在性检查(required status check)。
+#
+# 每个进入 PR 的非合并提交都必须带 `Refs:` 挂钩 —— 追溯链(条款→提交→…→失败)的数据来源。
+# 缺了挂钩的提交会阻断合并。这是 GitHub 的 required status check(在仓库 Settings →
+# Branches → Branch protection rules 里把 job 名 `trailer-check` 勾为 required),
+# 不是服务端 hook:服务端 hook 对 PR 流程不可见,也难审计。
+#
+# 无对应条款的提交写 `Refs: N/A` 即可通过(挂钩存在即声明了「我想过这事」)。
+name: trailer-check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  trailer-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 需要完整历史来枚举 base..head 的提交
+
+      - name: 检查每个提交都带 Refs 挂钩
+        run: ./scripts/check-trailers.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"

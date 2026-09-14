@@ -1,0 +1,7 @@
+Running /usr/local/bin/kamal deploy on app
+  Running the pre-connect hook...
+      0.41s  INFO [9f3c2d1e] Running /usr/local/bin/docker push registry.example.com/app:9f3c2d1e on 192.0.2.10
+      1.88s ERROR push access denied for registry.example.com/app, repository does not exist or may require authentication
+      1.89s ERROR Deploy failed: Failed to push image registry.example.com/app:9f3c2d1e
+      0.10s  INFO Rolling back to previous version...
+exit status 1

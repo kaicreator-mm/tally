@@ -1,0 +1,36 @@
+# P3-02 — 内置数据库迁移 EngineeringPolicy(PRD §24.2 Database Migration harness)。
+#
+# 本文件是 v1.4 的内置工程策略束,一份合法的 P1-02 schema 策略(字段与
+# PRD §8.1 一一对应;revision 由内容推导,不得声明)。凡派生出
+# schema_migration 风险信号(internal/risk 冻结信号集,PRD §13.1/§24.2)的
+# 任务/变更,验收必须同时具备 fresh DB、N-1 升级与数据完整性三类证据。
+#
+# 触发设计(无路径-only 假置信):
+#   - 只按 risk_signals 触发:信号由任务/变更事实派生(risk.Derive),
+#     「碰过迁移目录/文件」本身不是迁移交付事实,不得据此触发验收;
+#   - 刻意不声明 trigger.paths:路径触碰不是迁移正确性的证据来源。
+#
+# requires[](PRD §8.3 双重用途):既是执行前 Prevention 上下文(Agent 开始前
+# 就知道最终按这些条件验收),也是执行后 Assurance 的 required evidence 编译面。
+# gate_condition 对三类证据全量门禁:缺任何一类(例如只跑了 fresh DB)都不放行。
+#
+# rollback/恢复证据保持条件性:仅当项目合同/策略声明要求时才必需(Phase P3
+# 契约),因此不在内置默认键集内;项目可用自己的策略叠加。
+id: database_migration
+enforcement: gate
+rationale: 数据库迁移必须以 fresh DB、N-1 升级与数据完整性三类证据验收;迁移正确性不能由路径触碰或实现方自检推断(PRD §24.2)
+trigger:
+  risk_signals:
+    - schema_migration
+requires:
+  - fresh_database
+  - n_minus_1_upgrade
+  - data_integrity
+gate_condition:
+  all_of:
+    - fresh_database
+    - n_minus_1_upgrade
+    - data_integrity
+bundle_tags:
+  - database_migration
+  - migration
