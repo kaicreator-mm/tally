@@ -24,18 +24,18 @@ type Conflict struct {
 }
 
 type Proposal struct {
-	ID                 string                              `json:"id"`
-	Candidate          policygovernance.Candidate          `json:"-"`
-	Evidence           []policygovernance.EvidenceRef      `json:"evidence"`
-	SupportingOutcomes []string                            `json:"supporting_outcomes"`
-	ApplicableScope    string                              `json:"applicable_scope"`
-	Confidence         float64                             `json:"confidence"`
-	Conflicts          []Conflict                          `json:"conflicts,omitempty"`
-	Provenance         engineering.Provenance              `json:"provenance"`
-	ProposedBy         string                              `json:"proposed_by"`
-	Provider           *intelligence.ProviderProvenance    `json:"provider,omitempty"`
-	Shared             bool                                `json:"shared,omitempty"`
-	HighImpact         bool                                `json:"high_impact,omitempty"`
+	ID                 string                           `json:"id"`
+	Candidate          policygovernance.Candidate       `json:"-"`
+	Evidence           []policygovernance.EvidenceRef   `json:"evidence"`
+	SupportingOutcomes []string                         `json:"supporting_outcomes"`
+	ApplicableScope    string                           `json:"applicable_scope"`
+	Confidence         float64                          `json:"confidence"`
+	Conflicts          []Conflict                       `json:"conflicts,omitempty"`
+	Provenance         engineering.Provenance           `json:"provenance"`
+	ProposedBy         string                           `json:"proposed_by"`
+	Provider           *intelligence.ProviderProvenance `json:"provider,omitempty"`
+	Shared             bool                             `json:"shared,omitempty"`
+	HighImpact         bool                             `json:"high_impact,omitempty"`
 }
 
 func NewProposal(
@@ -94,8 +94,8 @@ func (p Proposal) Validate() error {
 	}
 	outcomeEvidence := map[string]bool{}
 	for _, evidence := range p.Evidence {
-		if !evidence.Kind.Valid() || strings.TrimSpace(evidence.Ref) == "" {
-			return fmt.Errorf("%w: invalid evidence reference", ErrInvalidProposal)
+		if _, err := policygovernance.NewEvidenceRef(evidence.Kind, evidence.Ref); err != nil {
+			return fmt.Errorf("%w: invalid evidence reference: %v", ErrInvalidProposal, err)
 		}
 		if evidence.Kind == policygovernance.EvidenceOutcome {
 			outcomeEvidence[evidence.Ref] = true
@@ -104,8 +104,8 @@ func (p Proposal) Validate() error {
 	seenOutcomes := map[string]bool{}
 	for _, outcomeID := range p.SupportingOutcomes {
 		outcomeID = strings.TrimSpace(outcomeID)
-		if outcomeID == "" || seenOutcomes[outcomeID] {
-			return fmt.Errorf("%w: supporting outcomes must be unique non-blank ids", ErrInvalidProposal)
+		if outcomeID == "" || strings.ContainsAny(outcomeID, " \t\r\n") || seenOutcomes[outcomeID] {
+			return fmt.Errorf("%w: supporting outcomes must be unique non-blank tokens", ErrInvalidProposal)
 		}
 		seenOutcomes[outcomeID] = true
 		if !outcomeEvidence[outcomeID] {
@@ -196,6 +196,10 @@ func Promote(p Proposal, decisions []engineering.AuthorityDecision, actor string
 	if err != nil {
 		return policygovernance.Proposal{}, fmt.Errorf("%w: policy governance proposal: %v", ErrInvalidProposal, err)
 	}
+	// ApplicableScope is governance metadata only. Runtime matching remains
+	// defined by the canonical candidate itself, exactly as policygovernance
+	// specifies.
+	governance.Scope = p.ApplicableScope
 	active, err := governance.Activate(actor)
 	if err != nil {
 		return policygovernance.Proposal{}, err
