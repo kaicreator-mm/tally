@@ -66,19 +66,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	// v1.5 Engineering Control Plane 始终装配本地 compatibility snapshot；
-	// Agent 执行只有显式配置 TALLY_V15_RUNTIME=fake|codex|dsh 才启用。
-	// 未接 verifier/review adapter 时 completed Agent claim 会 fail-safe 阻塞，
-	// 绝不被当成验证/Acceptance 事实。
-	controlPlane, v15Runtime, err := v15ControlPlaneFromEnv()
+	// v1.5 lifecycle/state API 始终可用。执行仍需显式选择 runtime；一旦
+	// 启用，dispatch 通过 Engineering Harness 复用既有 brownfield
+	// Closed Loop + candidateverify，并使用 Tally-owned disposable worktree。
+	controlPlane, v15Runtime, err := v15ControlPlaneFromEnv(contentRepo, st.Queries())
 	if err != nil {
 		slog.Error("v1.5 Engineering Control Plane 装配失败", "err", err)
 		os.Exit(1)
 	}
 	if v15Runtime == "" {
-		slog.Warn("v1.5 Control Plane 已启用生命周期/状态 API，但 Local AgentExecutor 未启用；设置 TALLY_V15_RUNTIME 后才能 dispatch")
+		slog.Warn("v1.5 Control Plane 已启用生命周期/状态 API，但 Engineering Harness 未启用；设置 TALLY_V15_RUNTIME 后才能 dispatch")
 	} else {
-		slog.Info("v1.5 Control Plane Local AgentExecutor 已接入", "runtime", v15Runtime)
+		slog.Info("v1.5 Engineering Harness 已接入", "runtime", v15Runtime, "environment", "local")
 	}
 
 	deps := web.Deps{
@@ -102,7 +101,7 @@ func main() {
 		IngestStore:  st,
 		LogDir:       envOr("TALLY_LOG_DIR", "./tally-logs"),
 		WebhookToken: os.Getenv("TALLY_WEBHOOK_TOKEN"),
-		// T11e 自动诊断(默认关,D-e1):webhook 录入失败后按指纹入队 diagnose,worker 消费。
+		// T11e 自动诊断(默认关,D-e1):webhook 录入失败后按指纹自动入队 diagnose,worker 消费。
 		DiagnoseAuto:  os.Getenv("TALLY_DIAGNOSE_AUTO") == "1",
 		DiagnoseQueue: queue,
 	}
