@@ -123,13 +123,6 @@ func (e *Engine) Run(ctx context.Context, req taskexecution.TaskExecutionRequest
 		return resultFromState(state), nil
 	}
 
-	select {
-	case e.sem <- struct{}{}:
-		defer func() { <-e.sem }()
-	case <-ctx.Done():
-		return Result{State: state, Reason: ctx.Err().Error()}, ctx.Err()
-	}
-
 	runCtx, cancel := context.WithCancel(ctx)
 	if err := e.register(req.TaskID, cancel); err != nil {
 		cancel()
@@ -139,6 +132,15 @@ func (e *Engine) Run(ctx context.Context, req taskexecution.TaskExecutionRequest
 		cancel()
 		e.unregister(req.TaskID)
 	}()
+
+	// Register before waiting for a concurrency slot so Cancel/Restart can
+	// reliably stop collaborations that are queued on the bounded semaphore.
+	select {
+	case e.sem <- struct{}{}:
+		defer func() { <-e.sem }()
+	case <-runCtx.Done():
+		return Result{State: state, Reason: runCtx.Err().Error()}, runCtx.Err()
+	}
 
 	if recovered, ok := recoverRunningRole(&state, e.now()); ok {
 		if err := emit(runCtx, checkpoint, state, Event{Kind: "role.recovered_interrupted", Role: recovered.Role, RunID: recovered.ID, Reason: recovered.Reason}); err != nil {
