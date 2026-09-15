@@ -29,7 +29,7 @@ func TestV151CoreServerDoesNotDependOnLegacyQueueOrPostgresStore(t *testing.T) {
 	}
 }
 
-func TestV151CoreServerMakesLocalSchedulerAgentExecutorReachable(t *testing.T) {
+func TestV151CoreServerMakesHarnessedLocalSchedulerAgentExecutorReachable(t *testing.T) {
 	data, err := os.ReadFile("../../cmd/v15server/main.go")
 	if err != nil {
 		t.Fatalf("read v1.5 Core server: %v", err)
@@ -37,11 +37,13 @@ func TestV151CoreServerMakesLocalSchedulerAgentExecutorReachable(t *testing.T) {
 	source := string(data)
 	for _, required := range []string{
 		"taskexecution.NewRuntimeExecutor",
+		"controlplane.NewExecutionOnlyHarness",
+		"controlplane.NewServiceWithHarness",
 		"controlplane.NewGitTaskRequestFactory",
 		"controlplane.NewLocalScheduler",
 		"controlplane.NewSchedulerHTTPHandler",
 		"TALLY_V15_SCHEDULER_MAX_CONCURRENT",
-		"local_scheduler+agent_executor",
+		"local_scheduler+harness+agent_executor",
 	} {
 		if !strings.Contains(source, required) {
 			t.Errorf("v1.5 Core production execution path is missing %q", required)
@@ -49,6 +51,27 @@ func TestV151CoreServerMakesLocalSchedulerAgentExecutorReachable(t *testing.T) {
 	}
 	if strings.Contains(source, "NewBrownfieldHarness") {
 		t.Fatal("SQLite-first v1.5 Core must not pull the legacy PostgreSQL-backed BrownfieldHarness into default production composition")
+	}
+}
+
+func TestV151ExecutionOnlyHarnessIsFailClosed(t *testing.T) {
+	data, err := os.ReadFile("../../internal/controlplane/execution_only_harness.go")
+	if err != nil {
+		t.Fatalf("read execution-only harness: %v", err)
+	}
+	source := string(data)
+	for _, required := range []string{
+		"AgentExecutor",
+		"independent verification/review workflow unavailable",
+		"ExecutionCompleted",
+		"Accepted",
+	} {
+		if !strings.Contains(source, required) {
+			t.Errorf("execution-only harness is missing fail-closed guard %q", required)
+		}
+	}
+	if strings.Contains(source, "Accepted: true") {
+		t.Fatal("execution-only harness must never manufacture acceptance from an Agent claim")
 	}
 }
 
@@ -61,8 +84,10 @@ func TestV151SchedulerRequestFactoryUsesPinnedExistingAuthority(t *testing.T) {
 	for _, required := range []string{
 		"artifacts.LoadBundle",
 		"TaskExecutionRequest",
+		"pinnedCommit",
 		"bundle.SourceCommit",
 		"bundle.Task.Contract.RevisionHash()",
+		"RequiredCapabilities",
 		"request.Validate()",
 	} {
 		if !strings.Contains(source, required) {
