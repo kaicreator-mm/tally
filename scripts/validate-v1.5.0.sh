@@ -27,6 +27,7 @@ GO_VERSION="$(go version 2>/dev/null || printf unavailable)"
 } | tee -a "$LOG"
 
 failures=0
+blockers=0
 run() {
   local name="$1"; shift
   local printable
@@ -42,16 +43,18 @@ run() {
   fi
 }
 
-record_not_run() {
+record_env_blocked() {
   local name="$1" reason="$2"
-  printf 'NOT_RUN(%s)\t%s\t-\n' "$reason" "$name" | tee -a "$SUMMARY"
-  echo "NOT_RUN $name: $reason" >>"$LOG"
+  printf 'ENV-BLOCKED(%s)\t%s\t-\n' "$reason" "$name" | tee -a "$SUMMARY"
+  echo "ENV-BLOCKED $name: $reason" >>"$LOG"
+  blockers=$((blockers+1))
 }
 
 # Focused v1.5 domain/contracts/control-plane slices.
 run engineering-domain go test ./internal/engineering/...
 run intelligence-execution go test ./internal/intelligence/... ./internal/taskexecution/...
 run control-plane go test ./internal/controlplane/...
+run web-control-plane go test ./internal/web/...
 
 # Brownfield authorities that v1.5 reuses rather than replaces.
 run brownfield-safety go test ./internal/changeset/... ./internal/workspace/... ./internal/closedloop/... ./internal/workflow/...
@@ -67,20 +70,25 @@ run race-focused go test -race ./internal/engineering/... ./internal/intelligenc
 # Full visible regression. This is distinct from Release PASS and from Hidden Validation.
 run full-regression go test ./...
 
-# Integration/E2E requires an explicit database/environment. Absence is never PASS.
+# Integration/E2E is required release evidence and needs an explicit database.
+# Missing environment is a blocker, never a successful validation run.
 if [[ -n "${DATABASE_URL:-}" ]]; then
   run integration-e2e go test -tags=integration ./test/e2e/...
 else
-  record_not_run integration-e2e "DATABASE_URL not configured"
+  record_env_blocked integration-e2e "DATABASE_URL not configured"
 fi
 
 {
   echo "finished_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "failures=$failures"
+  echo "environment_blockers=$blockers"
   echo "summary=$SUMMARY"
 } | tee -a "$LOG"
 
 if (( failures > 0 )); then
   exit 1
+fi
+if (( blockers > 0 )); then
+  exit 3
 fi
 exit 0
