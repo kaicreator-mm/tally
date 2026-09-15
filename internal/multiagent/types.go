@@ -278,7 +278,10 @@ func (s WorkflowState) LatestRun(role Role) (RoleRun, bool) {
 }
 
 func (s WorkflowState) Facts() engineering.CompletionFacts {
-	facts := engineering.CompletionFacts{State: engineering.NodeComplete}
+	// The role workflow has verified the candidate and is presenting an
+	// acceptance fact to the frozen v1.5.0 CompletionContract. The existing
+	// Control Plane remains responsible for TaskAccepted -> TaskDone.
+	facts := engineering.CompletionFacts{State: engineering.NodeAccepted}
 	seenA := map[engineering.ID]bool{}
 	seenE := map[engineering.ID]bool{}
 	for _, run := range s.Runs {
