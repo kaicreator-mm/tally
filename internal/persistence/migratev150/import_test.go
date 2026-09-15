@@ -2,7 +2,9 @@ package migratev150
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -70,6 +72,38 @@ func TestImportIsIdempotentAndDoesNotOverwriteExistingTarget(t *testing.T) {
 	}
 	if !got.UpdatedAt.Equal(newer.UpdatedAt) {
 		t.Fatalf("migration overwrote existing target: updated_at=%s want=%s", got.UpdatedAt, newer.UpdatedAt)
+	}
+}
+
+func TestImportChoosesLatestGenerationPerProject(t *testing.T) {
+	ctx := context.Background()
+	root := t.TempDir()
+	old := snapshot("project-1", time.Unix(100, 0).UTC())
+	newer := snapshot("project-1", time.Unix(200, 0).UTC())
+	for _, s := range []controlplane.ProjectSnapshot{old, newer} {
+		raw, err := json.Marshal(s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		name := fmt.Sprintf("%s.%020d.json", s.ProjectID, s.UpdatedAt.UnixNano())
+		if err := os.WriteFile(filepath.Join(root, name), raw, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	target, err := sqlite.Open(ctx, filepath.Join(t.TempDir(), "tally.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer target.Close()
+	if _, err := Import(ctx, root, target); err != nil {
+		t.Fatal(err)
+	}
+	got, err := target.Load(ctx, "project-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.UpdatedAt.Equal(newer.UpdatedAt) {
+		t.Fatalf("imported stale generation: updated_at=%s want=%s", got.UpdatedAt, newer.UpdatedAt)
 	}
 }
 
