@@ -316,8 +316,11 @@ func (s *Service) ReviewPullRequest(ctx context.Context, meta ActionMeta, pullRe
 	if err != nil {
 		return s.failed(meta, action, engineering.GitArtifactPullRequest, pullRequestID, uri, a, err)
 	}
-	// Review actions refer to a PR/head revision but do not create a new result
-	// revision required by CompletionContract. Keep ResultRevision empty.
+	// Review actions keep the Pull Request as the material artifact. Provider review
+	// IDs remain available through the review URI/Trace.ReviewID; they must not
+	// replace the PR identity in GitArtifactRef. Reviews also do not create a new
+	// result revision required by CompletionContract.
+	out.ExternalID = pullRequestID
 	out.Revision = ""
 	return s.success(meta, action, engineering.GitArtifactPullRequest, out, pullRequestID, a)
 }
