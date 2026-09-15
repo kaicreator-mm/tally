@@ -7,19 +7,25 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 // SSHConfig describes a remote target. Host may include an explicit port.
+// Password and private key material are transport-only secrets and must never
+// be copied into provenance/log output.
 type SSHConfig struct {
-	Host     string
-	User     string
-	Password string
-	KeyFile  string
+	Host                string
+	User                string
+	Password            string
+	KeyFile             string
+	KnownHostsFile      string
+	InsecureSkipHostKey bool
 }
 
 // SSHRunner executes Command in a remote POSIX shell. Dir, Env and Argv are
@@ -139,16 +145,20 @@ func dialSSH(ctx context.Context, cfg SSHConfig) (*ssh.Client, error) {
 }
 
 func dialSSHWithHostKey(ctx context.Context, cfg SSHConfig, callback ssh.HostKeyCallback) (*ssh.Client, error) {
+	if strings.TrimSpace(cfg.Host) == "" || strings.TrimSpace(cfg.User) == "" {
+		return nil, errors.New("SSH 配置缺少 Host 或 User")
+	}
 	auth, err := authMethods(cfg)
+	if err != nil {
+		return nil, err
+	}
+	callback, err = resolveHostKeyCallback(cfg, callback)
 	if err != nil {
 		return nil, err
 	}
 	host := cfg.Host
 	if !strings.Contains(host, ":") {
 		host += ":22"
-	}
-	if callback == nil {
-		callback = ssh.InsecureIgnoreHostKey()
 	}
 	clientCfg := &ssh.ClientConfig{User: cfg.User, Auth: auth, HostKeyCallback: callback, Timeout: 15 * time.Second}
 	var d net.Dialer
@@ -162,6 +172,32 @@ func dialSSHWithHostKey(ctx context.Context, cfg SSHConfig, callback ssh.HostKey
 		return nil, fmt.Errorf("SSH 握手 %s: %w", host, err)
 	}
 	return ssh.NewClient(c, chans, reqs), nil
+}
+
+func resolveHostKeyCallback(cfg SSHConfig, explicit ssh.HostKeyCallback) (ssh.HostKeyCallback, error) {
+	if explicit != nil {
+		return explicit, nil
+	}
+	knownHostsFile := strings.TrimSpace(cfg.KnownHostsFile)
+	if knownHostsFile == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			candidate := filepath.Join(home, ".ssh", "known_hosts")
+			if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+				knownHostsFile = candidate
+			}
+		}
+	}
+	if knownHostsFile != "" {
+		callback, err := knownhosts.New(knownHostsFile)
+		if err != nil {
+			return nil, fmt.Errorf("读取 SSH known_hosts %s: %w", knownHostsFile, err)
+		}
+		return callback, nil
+	}
+	if cfg.InsecureSkipHostKey {
+		return ssh.InsecureIgnoreHostKey(), nil // explicit opt-in only
+	}
+	return nil, errors.New("SSH host-key policy 未配置: 提供 KnownHostsFile/HostKeyCallback，或显式设置 InsecureSkipHostKey")
 }
 
 func authMethods(cfg SSHConfig) ([]ssh.AuthMethod, error) {
