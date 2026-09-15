@@ -3,6 +3,7 @@ package taskexecution
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -39,6 +40,9 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	}
 	if e.Environment.Kind() != req.Environment.Kind {
 		return TaskExecutionResult{}, ErrUnsupportedEnvironment
+	}
+	if err := e.preflightEnvironment(ctx, req.Environment.Target); err != nil {
+		return TaskExecutionResult{}, err
 	}
 	// Environment capabilities, including discovered OS/architecture/toolchain,
 	// are validated before workspace resolution and before Agent start.
@@ -114,6 +118,28 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		status = ExecutionInterrupted
 	}
 	return TaskExecutionResult{AgentClaim: claim, Workspace: req.Workspace, Runtime: req.Runtime, Environment: req.Environment, Status: status}, nil
+}
+
+// preflightEnvironment distinguishes transport/placement unavailability from
+// capability mismatch. A selected SSH/Docker environment must be able to run a
+// trivial POSIX command before discovery, workspace recovery or Agent start.
+// Local skips this additive v1.5.2 probe to preserve the frozen Local path.
+func (e *RuntimeExecutor) preflightEnvironment(ctx context.Context, target string) error {
+	if e.Environment.Kind() == EnvironmentLocal {
+		return nil
+	}
+	processEnv, ok := e.Environment.(ProcessExecutionEnvironment)
+	if !ok || processEnv.ProcessRunner() == nil {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: errors.New("environment does not expose a process runner")}
+	}
+	res, err := processEnv.ProcessRunner().Run(ctx, runner.Command{Argv: []string{"true"}})
+	if err != nil {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: err}
+	}
+	if res.ExitCode != 0 {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: fmt.Errorf("availability probe exited %d: %s", res.ExitCode, res.Stderr)}
+	}
+	return nil
 }
 
 func (e *RuntimeExecutor) sessionCleanupError(req TaskExecutionRequest, err error) error {
