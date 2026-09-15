@@ -43,6 +43,21 @@ func TestV152SSHRunnerRejectsInvalidEnvName(t *testing.T) {
 	}
 }
 
+func TestV152SSHHostKeyPolicyFailsClosedByDefault(t *testing.T) {
+	cfg := SSHConfig{KnownHostsFile: "/definitely/missing/tally-known-hosts"}
+	if _, err := resolveHostKeyCallback(cfg, nil); err == nil {
+		t.Fatal("expected missing host-key policy/known_hosts error")
+	}
+}
+
+func TestV152SSHHostKeyPolicyAllowsExplicitInsecureOptIn(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	cfg := SSHConfig{InsecureSkipHostKey: true}
+	if cb, err := resolveHostKeyCallback(cfg, nil); err != nil || cb == nil {
+		t.Fatalf("callback=%v err=%v", cb, err)
+	}
+}
+
 func TestV152DockerTaskRunnerBuildsProfileArgs(t *testing.T) {
 	f := &v152CaptureRunner{}
 	d := &DockerTaskRunner{Exec: f, NamePrefix: "case", Profile: DockerTaskProfile{Image: "golang:1.23", Workdir: "/workspace", WorkspaceSource: "volume-name", WorkspaceTarget: "/workspace", Network: "none", User: "1000:1000", ReadOnly: true, ExtraArgs: []string{"--cpus", "2"}}}
