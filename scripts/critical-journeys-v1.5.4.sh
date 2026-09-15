@@ -5,13 +5,13 @@ set -euo pipefail
 
 echo '== CJ1: implement -> review -> verify -> accept =='
 go test ./internal/multiagent -run '^TestEngineSequentialHappyPath$' -count=1
-go test ./internal/controlplane -run '^TestMultiAgentDispatchPersistsWorkflowAndUsesCompletionContract$' -count=1
+go test ./internal/controlplane -run '^TestMultiAgentDispatchUsesExistingCompletionContractForAcceptance$' -count=1
 
 echo '== CJ2: review finding -> repair -> review -> verify =='
 go test ./internal/multiagent -run '^TestEngineReviewerRepairLoop$|^TestEngineVerifierDisagreementReturnsToRepair$' -count=1
 
 echo '== CJ3: bounded parallel collaboration without collisions =='
-go test ./internal/multiagent -run '^TestEngineEnforcesGlobalConcurrencyLimit$|Scheduler' -count=1
+go test ./internal/multiagent -run '^TestEngineEnforcesGlobalConcurrencyLimit$|^TestSelectReady' -count=1
 go test ./internal/controlplane -run 'Parallel|Conflict' -count=1
 
 echo '== CJ4: restart/cancel keeps semantic state recoverable =='
