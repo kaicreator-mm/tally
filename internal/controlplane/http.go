@@ -39,6 +39,10 @@ func NewHTTPHandler(service ControlPlane) (http.Handler, error) {
 		return nil, errors.New("controlplane: HTTP service is required")
 	}
 	h := &HTTPHandler{service: service, mux: http.NewServeMux()}
+	// Thin browser console. The outer web router mounts this under the same
+	// authenticated + CSRF-protected group as the JSON API.
+	h.mux.HandleFunc("GET /v15/control-plane", h.console)
+
 	h.mux.HandleFunc("GET /api/v15/projects/{project}/control-plane", h.snapshot)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/requirements", h.requirements)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/plan", h.plan)
