@@ -77,7 +77,7 @@ func TestGitTaskRequestFactoryBuildsPinnedV150Request(t *testing.T) {
 	}
 }
 
-func TestGitTaskRequestFactoryPinsMovingRevisionAfterFirstRequest(t *testing.T) {
+func TestGitTaskRequestFactoryPinsMovingRevisionAfterFirstValidRequest(t *testing.T) {
 	root := t.TempDir()
 	for _, id := range []string{"TASK-1", "TASK-2"} {
 		if err := os.MkdirAll(filepath.Join(root, id), 0o755); err != nil {
@@ -117,7 +117,7 @@ func TestGitTaskRequestFactoryPinsMovingRevisionAfterFirstRequest(t *testing.T) 
 	}
 }
 
-func TestGitTaskRequestFactoryRejectsProjectDriftBeforeDispatch(t *testing.T) {
+func TestGitTaskRequestFactoryRejectsProjectDriftWithoutPoisoningPin(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "TASK-1"), 0o755); err != nil {
 		t.Fatal(err)
@@ -131,13 +131,31 @@ func TestGitTaskRequestFactoryRejectsProjectDriftBeforeDispatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	factory.loadBundle = func(_, _, taskID string) (*artifacts.ExecutionBundle, error) {
+	calls := 0
+	factory.loadBundle = func(_, revision, taskID string) (*artifacts.ExecutionBundle, error) {
+		calls++
 		contract := taskcontract.TaskContract{ID: taskID, Profile: taskcontract.ProfileLight, Objective: "x", Scope: taskcontract.Scope{AllowedPaths: []string{"internal/**"}}}
-		return executionBundleForTest("other-project", "0123456789abcdef", contract), nil
+		if calls == 1 {
+			if revision != "frozen-ref" {
+				t.Fatalf("unexpected first revision %q", revision)
+			}
+			return executionBundleForTest("other-project", "bad-commit", contract), nil
+		}
+		if revision != "frozen-ref" {
+			t.Fatalf("rejected bundle poisoned commit pin; second revision=%q", revision)
+		}
+		return executionBundleForTest("project-1", "good-commit", contract), nil
 	}
 	_, err = factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: "TASK-1"})
 	if err == nil || !strings.Contains(err.Error(), "project mismatch") {
 		t.Fatalf("expected project drift rejection, got %v", err)
+	}
+	req, err := factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: "TASK-1"})
+	if err != nil {
+		t.Fatalf("valid retry after rejected bundle: %v", err)
+	}
+	if req.Workspace.BaseRevision != "good-commit" {
+		t.Fatalf("base revision=%q, want good-commit", req.Workspace.BaseRevision)
 	}
 }
 
