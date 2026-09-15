@@ -35,6 +35,7 @@ func Run(t *testing.T, adapter Adapter) {
 	t.Helper()
 	ctx := context.Background()
 	at := time.Date(2026, 9, 15, 10, 0, 0, 0, time.UTC)
+	projectID := engineering.ID(fmt.Sprintf("project-conformance-%d", time.Now().UTC().UnixNano()))
 
 	mutable := []struct {
 		name   string
@@ -43,7 +44,7 @@ func Run(t *testing.T, adapter Adapter) {
 		load   func(context.Context, engineering.ID, engineering.ID) (persistence.Document, error)
 		isProj bool
 	}{
-		{name: "project", id: "project-conformance", isProj: true, save: adapter.SaveProject, load: func(ctx context.Context, projectID, _ engineering.ID) (persistence.Document, error) { return adapter.LoadProject(ctx, projectID) }},
+		{name: "project", id: projectID, isProj: true, save: adapter.SaveProject, load: func(ctx context.Context, projectID, _ engineering.ID) (persistence.Document, error) { return adapter.LoadProject(ctx, projectID) }},
 		{name: "requirements", id: "requirements-1", save: adapter.SaveRequirements, load: adapter.LoadRequirements},
 		{name: "planning", id: "planning-1", save: adapter.SavePlanning, load: adapter.LoadPlanning},
 		{name: "task-graph", id: "graph-1", save: adapter.SaveTaskGraph, load: adapter.LoadTaskGraph},
@@ -54,7 +55,6 @@ func Run(t *testing.T, adapter Adapter) {
 	for _, tc := range mutable {
 		tc := tc
 		t.Run("mutable/"+tc.name, func(t *testing.T) {
-			projectID := engineering.ID("project-conformance")
 			recordID := tc.id
 			if tc.isProj {
 				recordID = projectID
@@ -100,7 +100,6 @@ func Run(t *testing.T, adapter Adapter) {
 	for _, tc := range appendOnly {
 		tc := tc
 		t.Run("append-only/"+tc.name, func(t *testing.T) {
-			projectID := engineering.ID("project-conformance")
 			first := mustDocument(t, projectID, tc.id, `{"revision":1}`, at)
 			if err := tc.append(ctx, first); err != nil {
 				t.Fatalf("append: %v", err)
@@ -121,7 +120,7 @@ func Run(t *testing.T, adapter Adapter) {
 
 	t.Run("transaction-rollback", func(t *testing.T) {
 		rollback := errors.New("persistencetest rollback")
-		doc := mustDocument(t, "project-conformance", "evidence-tx-rollback", `{"passed":true}`, at)
+		doc := mustDocument(t, projectID, "evidence-tx-rollback", `{"passed":true}`, at)
 		err := adapter.WithinTransaction(ctx, func(stores persistence.Stores) error {
 			if err := stores.Verify(); err != nil {
 				return err
