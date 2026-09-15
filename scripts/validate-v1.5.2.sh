@@ -56,19 +56,35 @@ run focused-v15server-composition go test ./cmd/v15server/...
 run architecture-tests go test ./test/arch/...
 run full-regression go test ./...
 
-# Transport-level external probes. These prove the selected environment can
-# resolve the pinned workspace and bind a generic EnvironmentRuntime. They do
-# not pretend to be a production Agent claim.
+ssh_ready=0
 if [[ -n "${TALLY_V152_SSH_HOST:-}" && -n "${TALLY_V152_SSH_USER:-}" && -n "${TALLY_V152_SSH_WORKSPACE:-}" && -n "${TALLY_V152_SSH_BASE_REVISION:-}" && ( -n "${TALLY_V152_SSH_KEY_FILE:-}" || -n "${TALLY_V152_SSH_PASSWORD:-}" ) ]]; then
+  ssh_ready=1
   run real-ssh-transport go test ./internal/taskexecution -run '^TestV152ExternalSSHEnvironment$' -count=1
 else
   record_env_blocked real-ssh-transport "SSH target/user/workspace/revision/auth not configured"
 fi
 
+docker_ready=0
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && [[ -n "${TALLY_V152_DOCKER_IMAGE:-}" && -n "${TALLY_V152_DOCKER_WORKSPACE_SOURCE:-}" && -n "${TALLY_V152_DOCKER_BASE_REVISION:-}" ]]; then
+  docker_ready=1
   run real-docker-transport go test ./internal/taskexecution -run '^TestV152ExternalDockerEnvironment$' -count=1
 else
   record_env_blocked real-docker-transport "Docker daemon/profile/workspace/revision not configured"
+fi
+
+# Production Runtime critical journeys are explicit opt-in because they invoke
+# the real DSH provider. Release qualification requires them; ordinary focused
+# development does not silently spend credentials or call an external model.
+if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $ssh_ready -eq 1 && -n "${DEEPSEEK_API_KEY:-}" ]]; then
+  run real-dsh-ssh go test ./runtimes/dsh -run '^TestV152RealDSHOverSSH$' -count=1
+else
+  record_env_blocked real-dsh-ssh "set TALLY_V152_RUN_REAL_DSH=1 and configure SSH plus DEEPSEEK_API_KEY"
+fi
+
+if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $docker_ready -eq 1 && -n "${DEEPSEEK_API_KEY:-}" && "${TALLY_V152_DOCKER_NETWORK:-}" != "none" ]]; then
+  run real-dsh-docker go test ./runtimes/dsh -run '^TestV152RealDSHInDocker$' -count=1
+else
+  record_env_blocked real-dsh-docker "set TALLY_V152_RUN_REAL_DSH=1 and configure Docker/network plus DEEPSEEK_API_KEY"
 fi
 
 {
