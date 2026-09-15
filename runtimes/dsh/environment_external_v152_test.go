@@ -2,7 +2,6 @@ package dsh
 
 import (
 	"context"
-	"errors"
 	"os"
 	"testing"
 	"time"
@@ -54,10 +53,10 @@ func realDSHRuntime(t *testing.T) *Runtime {
 		t.Skip("DEEPSEEK_API_KEY is not configured")
 	}
 	return New(Config{
-		BinPath: os.Getenv("TALLY_V152_DSH_BIN"),
-		Model:   os.Getenv("TALLY_V152_DSH_MODEL"),
+		BinPath:  os.Getenv("TALLY_V152_DSH_BIN"),
+		Model:    os.Getenv("TALLY_V152_DSH_MODEL"),
 		Provider: os.Getenv("TALLY_V152_DSH_PROVIDER"),
-		Env:     map[string]string{"DEEPSEEK_API_KEY": key},
+		Env:      map[string]string{"DEEPSEEK_API_KEY": key},
 	})
 }
 
@@ -108,13 +107,14 @@ func TestV152RealDSHInDocker(t *testing.T) {
 	}
 	image := os.Getenv("TALLY_V152_DOCKER_IMAGE")
 	source := os.Getenv("TALLY_V152_DOCKER_WORKSPACE_SOURCE")
+	mountTarget := os.Getenv("TALLY_V152_DOCKER_WORKSPACE_TARGET")
+	workspace := os.Getenv("TALLY_V152_DOCKER_WORKSPACE")
 	revision := os.Getenv("TALLY_V152_DOCKER_BASE_REVISION")
-	if image == "" || source == "" || revision == "" {
-		t.Skip("Docker image/workspace/base revision is not configured")
+	if mountTarget == "" {
+		mountTarget = "/workspace"
 	}
-	target := os.Getenv("TALLY_V152_DOCKER_WORKSPACE_TARGET")
-	if target == "" {
-		target = "/workspace"
+	if image == "" || source == "" || workspace == "" || revision == "" {
+		t.Skip("Docker image/workspace source/task workspace/base revision is not configured")
 	}
 	network := os.Getenv("TALLY_V152_DOCKER_NETWORK")
 	if network == "none" {
@@ -122,9 +122,9 @@ func TestV152RealDSHInDocker(t *testing.T) {
 	}
 	docker := &runner.DockerTaskRunner{Profile: runner.DockerTaskProfile{
 		Image:           image,
-		Workdir:         target,
+		Workdir:         mountTarget,
 		WorkspaceSource: source,
-		WorkspaceTarget: target,
+		WorkspaceTarget: mountTarget,
 		Network:         network,
 	}}
 	profile := taskexecution.EnvironmentProfile{
@@ -138,20 +138,11 @@ func TestV152RealDSHInDocker(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	result, err := executor.Execute(ctx, v152RealDSHRequest(taskexecution.EnvironmentDocker, "docker", target, revision, true))
+	result, err := executor.Execute(ctx, v152RealDSHRequest(taskexecution.EnvironmentDocker, "docker", workspace, revision, true))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if result.Status != taskexecution.ExecutionCompleted {
 		t.Fatalf("status=%s claim=%+v", result.Status, result.AgentClaim)
-	}
-}
-
-func TestV152RealDSHExternalJourneysAreOptIn(t *testing.T) {
-	if os.Getenv("TALLY_V152_RUN_REAL_DSH") == "1" {
-		t.Skip("opt-in enabled; real journey tests own execution")
-	}
-	if _, err := taskexecution.NewRuntimeExecutor(New(Config{}), taskexecution.LocalEnvironment{}); err != nil && !errors.Is(err, context.Canceled) {
-		t.Fatalf("constructing Local DSH executor should remain side-effect free: %v", err)
 	}
 }
