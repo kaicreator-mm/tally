@@ -109,10 +109,7 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 	for _, requirement := range node.RuntimeRequirements {
 		runtimeCaps = append(runtimeCaps, agentruntime.Capability(requirement))
 	}
-	environmentCaps := make([]taskexecution.EnvironmentCapability, 0, len(node.EnvironmentRequirements))
-	for _, requirement := range node.EnvironmentRequirements {
-		environmentCaps = append(environmentCaps, taskexecution.EnvironmentCapability(requirement))
-	}
+	environmentCaps := requiredEnvironmentCapabilities(f.cfg.RuntimeID, f.cfg.EnvironmentKind, node.EnvironmentRequirements)
 
 	request := taskexecution.TaskExecutionRequest{
 		TaskID: node.ID,
@@ -147,6 +144,39 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: composed execution request for %s is invalid: %w", node.ID, err)
 	}
 	return request, nil
+}
+
+func requiredEnvironmentCapabilities(runtimeID string, kind taskexecution.EnvironmentKind, explicit []string) []taskexecution.EnvironmentCapability {
+	out := make([]taskexecution.EnvironmentCapability, 0, len(explicit)+8)
+	seen := map[taskexecution.EnvironmentCapability]bool{}
+	add := func(capability taskexecution.EnvironmentCapability) {
+		if capability == "" || seen[capability] {
+			return
+		}
+		seen[capability] = true
+		out = append(out, capability)
+	}
+	for _, requirement := range explicit {
+		add(taskexecution.EnvironmentCapability(requirement))
+	}
+	if kind == taskexecution.EnvironmentLocal {
+		return out
+	}
+	add(taskexecution.CapabilityProcess)
+	add(taskexecution.CapabilityCancel)
+	add(taskexecution.CapabilityWorkspaceRead)
+	add(taskexecution.CapabilityWorkspaceWrite)
+	add(taskexecution.EnvironmentCapability("git"))
+	if runtimeID != "" {
+		add(taskexecution.EnvironmentCapability("tool:" + runtimeID))
+	}
+	if kind == taskexecution.EnvironmentDocker {
+		add(taskexecution.EnvironmentCapability("docker"))
+	}
+	if runtimeID == "dsh" {
+		add(taskexecution.EnvironmentCapability("secret:DEEPSEEK_API_KEY"))
+	}
+	return out
 }
 
 func executionContextArtifacts(snapshot ProjectSnapshot) ([]engineering.ArtifactRef, error) {
