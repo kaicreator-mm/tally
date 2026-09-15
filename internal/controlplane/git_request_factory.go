@@ -64,6 +64,10 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 	if snapshot.ProjectID == "" {
 		return taskexecution.TaskExecutionRequest{}, errors.New("controlplane: scheduler snapshot is missing project id")
 	}
+	contextArtifacts, err := executionContextArtifacts(snapshot)
+	if err != nil {
+		return taskexecution.TaskExecutionRequest{}, err
+	}
 	bundle, err := f.loadValidatedPinnedBundle(snapshot.ProjectID, node.ID)
 	if err != nil {
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: load frozen execution bundle for %s: %w", node.ID, err)
@@ -99,7 +103,8 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 			Revision: bundle.Task.Contract.RevisionHash(),
 			Digest:   bundle.Task.Contract.RevisionHash(),
 		},
-		Runtime: taskexecution.RuntimeRef{ID: f.cfg.RuntimeID},
+		EngineeringContext: contextArtifacts,
+		Runtime:            taskexecution.RuntimeRef{ID: f.cfg.RuntimeID},
 		Environment: taskexecution.EnvironmentRef{
 			Kind:   taskexecution.EnvironmentLocal,
 			Target: f.cfg.EnvironmentTarget,
@@ -122,6 +127,23 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: composed execution request for %s is invalid: %w", node.ID, err)
 	}
 	return request, nil
+}
+
+func executionContextArtifacts(snapshot ProjectSnapshot) ([]engineering.ArtifactRef, error) {
+	if snapshot.Requirements == nil || snapshot.Plan == nil || snapshot.Architecture == nil {
+		return nil, errors.New("controlplane: active execution requires requirements, plan and architecture context")
+	}
+	refs := []engineering.ArtifactRef{
+		snapshot.Requirements.Artifact,
+		snapshot.Plan.AcceptedRevision.Artifact,
+		snapshot.Architecture.Artifact,
+	}
+	for _, ref := range refs {
+		if err := ref.Validate(); err != nil {
+			return nil, fmt.Errorf("controlplane: invalid engineering context artifact: %w", err)
+		}
+	}
+	return refs, nil
 }
 
 // loadValidatedPinnedBundle resolves the configured revision expression once.
