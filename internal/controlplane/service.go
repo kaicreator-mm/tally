@@ -16,6 +16,7 @@ type Service struct {
 	Repo     Repository
 	Executor taskexecution.AgentExecutor
 	Workflow TaskWorkflow
+	Harness  TaskHarness
 	Actor    string
 	Now      func() time.Time
 
@@ -27,6 +28,22 @@ func NewService(repo Repository, exec taskexecution.AgentExecutor, workflow Task
 		return nil, errors.New("controlplane: repository is required")
 	}
 	return &Service{Repo: repo, Executor: exec, Workflow: workflow, Actor: "tally-controlplane", Now: time.Now}, nil
+}
+
+// NewServiceWithHarness builds the production v1.5 composition in which the
+// Engineering Harness owns implementation → verification/repair → acceptance.
+// The legacy Executor+TaskWorkflow seam remains for bounded tests/compatibility,
+// but production must not execute both paths for one dispatch.
+func NewServiceWithHarness(repo Repository, harness TaskHarness) (*Service, error) {
+	if harness == nil {
+		return nil, errors.New("controlplane: Engineering Harness is required")
+	}
+	s, err := NewService(repo, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	s.Harness = harness
+	return s, nil
 }
 
 func (s *Service) Snapshot(ctx context.Context, projectID engineering.ID) (ProjectSnapshot, error) {
@@ -182,6 +199,14 @@ func (s *Service) RestartTask(ctx context.Context, projectID, taskID engineering
 	}
 	dag := *snap.ActiveDAG
 	if node.State == engineering.TaskRunning {
+		// Best-effort cancel of an in-process run. Restart correctness never
+		// depends on a resumable Agent session: persisted running is first
+		// recovered to interrupted and then explicitly returned to ready.
+		if s.Harness != nil {
+			_ = s.Harness.Cancel(taskID)
+		} else if s.Executor != nil {
+			_ = s.Executor.Cancel(taskID)
+		}
 		dag, err = dag.Transition(taskID, engineering.TaskInterrupted, "")
 		if err != nil {
 			return ProjectSnapshot{}, err
