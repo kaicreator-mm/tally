@@ -321,11 +321,25 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 	base := DispatchResult{Execution: result.CandidateExecution, Workflow: &wf, Collaboration: &result.State, Snapshot: snap}
 
 	if result.State.Status == multiagent.WorkflowInterrupted || errors.Is(runErr, context.Canceled) {
-		next, trErr := snap.ActiveDAG.Transition(taskID, engineering.TaskInterrupted, "")
-		if trErr != nil {
-			return DispatchResult{}, trErr
+		node, found := findNode(*snap.ActiveDAG, taskID)
+		if !found {
+			return DispatchResult{}, fmt.Errorf("controlplane: unknown task %s", taskID)
 		}
-		snap.ActiveDAG = &next
+		switch node.State {
+		case engineering.TaskRunning:
+			next, trErr := snap.ActiveDAG.Transition(taskID, engineering.TaskInterrupted, "")
+			if trErr != nil {
+				return DispatchResult{}, trErr
+			}
+			snap.ActiveDAG = &next
+		case engineering.TaskInterrupted, engineering.TaskReady:
+			// RestartTask may already have cancelled the Engine and completed
+			// Running -> Interrupted -> Ready while this run was unwinding.
+			// Preserve that authoritative TaskDAG state rather than applying a
+			// stale second transition.
+		default:
+			return DispatchResult{}, fmt.Errorf("controlplane: interrupted collaboration cannot finalize task %s from state %s", taskID, node.State)
+		}
 		_ = s.record(&snap, "multiagent.task.interrupted", taskID, "multiagent")
 		if err := s.save(ctx, &snap); err != nil {
 			return DispatchResult{}, err
