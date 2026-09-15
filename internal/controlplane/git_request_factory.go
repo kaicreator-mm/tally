@@ -247,8 +247,8 @@ func taskWorkspaceLocation(root string, taskID engineering.ID, kind taskexecutio
 	// v1.5.2 SSH/Docker profiles target POSIX execution environments. The Core
 	// must not use host filepath semantics for an environment-native locator.
 	cleanRoot := path.Clean(strings.TrimSpace(root))
-	if cleanRoot == "." || cleanRoot == "/" {
-		return "", fmt.Errorf("controlplane: non-local workspace root %q is unsafe", root)
+	if !path.IsAbs(cleanRoot) || cleanRoot == "/" {
+		return "", fmt.Errorf("controlplane: non-local workspace root %q must be an absolute non-root POSIX path", root)
 	}
 	return path.Join(cleanRoot, id), nil
 }
