@@ -197,7 +197,7 @@ VALUES ($1, $2::jsonb, $3)
 ON CONFLICT(project_id) DO UPDATE SET
     payload = EXCLUDED.payload,
     updated_at = EXCLUDED.updated_at
-`, string(snapshot.ProjectID), payload, snapshot.UpdatedAt.UTC())
+`, string(snapshot.ProjectID), string(payload), snapshot.UpdatedAt.UTC())
 	if err != nil {
 		return fmt.Errorf("postgres persistence: save project snapshot: %w", err)
 	}
@@ -214,7 +214,7 @@ VALUES ($1, $2, $3, $4::jsonb, $5)
 ON CONFLICT(kind, project_id, record_id) DO UPDATE SET
     payload = EXCLUDED.payload,
     recorded_at = EXCLUDED.recorded_at
-`, kind, string(d.ProjectID), string(d.RecordID), []byte(d.Payload), d.RecordedAt.UTC())
+`, kind, string(d.ProjectID), string(d.RecordID), string(d.Payload), d.RecordedAt.UTC())
 	if err != nil {
 		return fmt.Errorf("postgres persistence: save %s: %w", kind, err)
 	}
@@ -229,7 +229,7 @@ func (s *Store) appendDocument(ctx context.Context, kind string, d persistence.D
 INSERT INTO tally_v15_documents(kind, project_id, record_id, payload, recorded_at)
 VALUES ($1, $2, $3, $4::jsonb, $5)
 ON CONFLICT(kind, project_id, record_id) DO NOTHING
-`, kind, string(d.ProjectID), string(d.RecordID), []byte(d.Payload), d.RecordedAt.UTC())
+`, kind, string(d.ProjectID), string(d.RecordID), string(d.Payload), d.RecordedAt.UTC())
 	if err != nil {
 		return fmt.Errorf("postgres persistence: append %s: %w", kind, err)
 	}
