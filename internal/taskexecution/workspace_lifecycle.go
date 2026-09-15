@@ -68,9 +68,14 @@ func NewGitWorkspaceRecreator(exec runner.Runner, repo string) (WorkspaceRecreat
 func runWorkspaceCommand(ctx context.Context, exec runner.Runner, w WorkspaceRef, operation string, argv []string) error {
 	res, err := exec.Run(ctx, runner.Command{Argv: argv})
 	if err != nil {
-		return &EnvironmentError{Kind: FailureWorkspaceUnavailable, Environment: w.Environment, Target: w.Target, Operation: "workspace.recreate." + operation, Err: err}
+		// Runner errors mean the environment/transport did not execute the
+		// command. Do not misclassify an SSH disconnect or missing Docker daemon
+		// as a lost workspace; callers must not recreate again in response.
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: w.Environment, Target: w.Target, Operation: "workspace.recreate." + operation, Err: err}
 	}
 	if res.ExitCode != 0 {
+		// A command that actually ran but could not clean/clone/checkout the
+		// accepted workspace is a workspace-level recovery failure.
 		return &EnvironmentError{Kind: FailureWorkspaceUnavailable, Environment: w.Environment, Target: w.Target, Operation: "workspace.recreate." + operation, Err: fmt.Errorf("exit %d: %s", res.ExitCode, strings.TrimSpace(res.Stderr))}
 	}
 	return nil
