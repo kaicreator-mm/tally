@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -122,15 +123,24 @@ func TestConcurrentAppendUsesBoundedSQLiteWriter(t *testing.T) {
 	}
 	defer store.Close()
 
+	docs := make([]persistence.Document, 8)
+	for i := range docs {
+		docs[i] = mustDocument(
+			t,
+			"project-1",
+			engineering.ID(fmt.Sprintf("evidence-%02d", i)),
+			`{"ok":true}`,
+			time.Now().UTC(),
+		)
+	}
+
 	var wg sync.WaitGroup
-	errCh := make(chan error, 8)
-	for i := 0; i < 8; i++ {
-		i := i
+	errCh := make(chan error, len(docs))
+	for _, doc := range docs {
+		doc := doc
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			id := engineering.ID("evidence-" + string(rune('a'+i)))
-			doc := mustDocument(t, "project-1", id, `{"ok":true}`, time.Now().UTC())
 			if err := store.AppendEvidence(ctx, doc); err != nil {
 				errCh <- err
 			}
