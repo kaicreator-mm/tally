@@ -92,8 +92,11 @@ func (d *DockerTaskRunner) Run(ctx context.Context, cmd Command) (Result, error)
 	envByKey := map[string]string{}
 	for _, entry := range cmd.Env {
 		key, _, ok := strings.Cut(entry, "=")
-		if !ok || !envNameRE.MatchString(key) {
-			return Result{}, fmt.Errorf("runner: 无效环境变量 %q", entry)
+		if !ok {
+			return Result{}, errors.New("runner: environment entry must use KEY=VALUE form")
+		}
+		if !envNameRE.MatchString(key) {
+			return Result{}, fmt.Errorf("runner: invalid environment variable name %q", key)
 		}
 		envByKey[key] = entry
 	}
