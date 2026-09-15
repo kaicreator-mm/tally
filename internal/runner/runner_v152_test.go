@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -64,9 +65,27 @@ func TestV152DockerTaskRunnerBuildsProfileArgs(t *testing.T) {
 	if _, err := d.Run(context.Background(), Command{Argv: []string{"go", "test", "./..."}, Env: []string{"Z=2", "A=1"}}); err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"docker", "run", "--rm", "--name", "case-1", "--volume", "volume-name:/workspace", "--workdir", "/workspace", "--network", "none", "--user", "1000:1000", "--read-only", "--env", "A=1", "--env", "Z=2", "--cpus", "2", "golang:1.23", "go", "test", "./..."}
+	want := []string{"docker", "run", "--rm", "--name", "case-1", "--volume", "volume-name:/workspace", "--workdir", "/workspace", "--network", "none", "--user", "1000:1000", "--read-only", "--env", "A", "--env", "Z", "--cpus", "2", "golang:1.23", "go", "test", "./..."}
 	if !reflect.DeepEqual(f.calls[0].Argv, want) {
 		t.Fatalf("got %#v\nwant %#v", f.calls[0].Argv, want)
+	}
+	if !reflect.DeepEqual(f.calls[0].Env, []string{"A=1", "Z=2"}) {
+		t.Fatalf("docker client env=%v", f.calls[0].Env)
+	}
+}
+
+func TestV152DockerTaskRunnerDoesNotExposeSecretValueInArgv(t *testing.T) {
+	f := &v152CaptureRunner{}
+	d := &DockerTaskRunner{Exec: f, Profile: DockerTaskProfile{Image: "dsh:test"}}
+	const secret = "super-secret-token"
+	if _, err := d.Run(context.Background(), Command{Argv: []string{"dsh", "--version"}, Env: []string{"DEEPSEEK_API_KEY=" + secret}}); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(strings.Join(f.calls[0].Argv, " "), secret) {
+		t.Fatal("secret value leaked into docker argv")
+	}
+	if !reflect.DeepEqual(f.calls[0].Env, []string{"DEEPSEEK_API_KEY=" + secret}) {
+		t.Fatalf("docker client env=%v", f.calls[0].Env)
 	}
 }
 
