@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -26,15 +27,17 @@ type GitTaskRequestFactoryConfig struct {
 	BaseRevision      string
 	RuntimeID         string
 	WorkspaceRoot     string
+	EnvironmentKind   taskexecution.EnvironmentKind
 	EnvironmentTarget string
 	ModelProfile      string
 }
 
 // GitTaskRequestFactory constructs execution requests from the same frozen Git
-// authority already consumed by the v1.5 brownfield harness. Workspace
-// preparation itself is intentionally outside v1.5.1 (Git authority/workspace
-// automation belongs to later slices); each task therefore expects a prepared
-// local workspace at <WorkspaceRoot>/<task-id>.
+// authority already consumed by the v1.5 brownfield harness. The control-plane
+// checkout used to load the frozen ExecutionBundle remains local authority, but
+// the execution workspace locator belongs to the selected Environment. Local
+// workspaces are checked on the host; SSH/Docker locators are verified later by
+// the selected ExecutionEnvironment and are never os.Stat'ed by Core.
 type GitTaskRequestFactory struct {
 	cfg        GitTaskRequestFactoryConfig
 	loadBundle func(string, string, string) (*artifacts.ExecutionBundle, error)
@@ -54,8 +57,23 @@ func NewGitTaskRequestFactory(cfg GitTaskRequestFactoryConfig) (*GitTaskRequestF
 	case strings.TrimSpace(cfg.WorkspaceRoot) == "":
 		return nil, errors.New("controlplane: execution workspace root is required")
 	}
+	if cfg.EnvironmentKind == "" {
+		cfg.EnvironmentKind = taskexecution.EnvironmentLocal
+	}
+	switch cfg.EnvironmentKind {
+	case taskexecution.EnvironmentLocal, taskexecution.EnvironmentSSH, taskexecution.EnvironmentDocker:
+	default:
+		return nil, fmt.Errorf("controlplane: unsupported execution environment %q", cfg.EnvironmentKind)
+	}
 	if strings.TrimSpace(cfg.EnvironmentTarget) == "" {
-		cfg.EnvironmentTarget = "local"
+		switch cfg.EnvironmentKind {
+		case taskexecution.EnvironmentLocal:
+			cfg.EnvironmentTarget = "local"
+		case taskexecution.EnvironmentDocker:
+			cfg.EnvironmentTarget = "docker"
+		default:
+			return nil, errors.New("controlplane: non-local execution environment target is required")
+		}
 	}
 	return &GitTaskRequestFactory{cfg: cfg, loadBundle: artifacts.LoadBundle}, nil
 }
@@ -73,16 +91,18 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: load frozen execution bundle for %s: %w", node.ID, err)
 	}
 
-	workspacePath, err := taskWorkspacePath(f.cfg.WorkspaceRoot, node.ID)
+	workspacePath, err := taskWorkspaceLocation(f.cfg.WorkspaceRoot, node.ID, f.cfg.EnvironmentKind)
 	if err != nil {
 		return taskexecution.TaskExecutionRequest{}, err
 	}
-	info, err := os.Stat(workspacePath)
-	if err != nil {
-		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is unavailable at %s: %w", node.ID, workspacePath, err)
-	}
-	if !info.IsDir() {
-		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is not a directory: %s", node.ID, workspacePath)
+	if f.cfg.EnvironmentKind == taskexecution.EnvironmentLocal {
+		info, statErr := os.Stat(workspacePath)
+		if statErr != nil {
+			return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is unavailable at %s: %w", node.ID, workspacePath, statErr)
+		}
+		if !info.IsDir() {
+			return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is not a directory: %s", node.ID, workspacePath)
+		}
 	}
 
 	runtimeCaps := make([]agentruntime.Capability, 0, len(node.RuntimeRequirements))
@@ -106,11 +126,11 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		EngineeringContext: contextArtifacts,
 		Runtime:            taskexecution.RuntimeRef{ID: f.cfg.RuntimeID},
 		Environment: taskexecution.EnvironmentRef{
-			Kind:   taskexecution.EnvironmentLocal,
+			Kind:   f.cfg.EnvironmentKind,
 			Target: f.cfg.EnvironmentTarget,
 		},
 		Workspace: taskexecution.WorkspaceRef{
-			Environment:  taskexecution.EnvironmentLocal,
+			Environment:  f.cfg.EnvironmentKind,
 			Target:       f.cfg.EnvironmentTarget,
 			Identity:     string(snapshot.ProjectID) + ":" + string(node.ID) + ":" + bundle.SourceCommit,
 			Path:         workspacePath,
@@ -182,7 +202,7 @@ func (f *GitTaskRequestFactory) loadValidatedPinnedBundle(projectID, taskID engi
 	return bundle, nil
 }
 
-func taskWorkspacePath(root string, taskID engineering.ID) (string, error) {
+func taskWorkspaceLocation(root string, taskID engineering.ID, kind taskexecution.EnvironmentKind) (string, error) {
 	id := string(taskID)
 	if err := taskID.Validate("workspace task"); err != nil {
 		return "", err
@@ -190,7 +210,22 @@ func taskWorkspacePath(root string, taskID engineering.ID) (string, error) {
 	if id == "." || id == ".." || strings.ContainsAny(id, `/\\`) || filepath.Base(id) != id {
 		return "", fmt.Errorf("controlplane: task id %q is unsafe for prepared workspace path", id)
 	}
-	return filepath.Join(root, id), nil
+	if kind == taskexecution.EnvironmentLocal {
+		return filepath.Join(root, id), nil
+	}
+	// v1.5.2 SSH/Docker profiles target POSIX execution environments. The Core
+	// must not use host filepath semantics for an environment-native locator.
+	cleanRoot := path.Clean(strings.TrimSpace(root))
+	if cleanRoot == "." || cleanRoot == "/" {
+		return "", fmt.Errorf("controlplane: non-local workspace root %q is unsafe", root)
+	}
+	return path.Join(cleanRoot, id), nil
+}
+
+// taskWorkspacePath is retained for v1.5.1 tests/callers and is explicitly the
+// Local compatibility edge.
+func taskWorkspacePath(root string, taskID engineering.ID) (string, error) {
+	return taskWorkspaceLocation(root, taskID, taskexecution.EnvironmentLocal)
 }
 
 func frozenTaskInstruction(bundle *artifacts.ExecutionBundle, node engineering.TaskNode) string {
