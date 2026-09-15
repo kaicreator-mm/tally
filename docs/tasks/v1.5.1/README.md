@@ -16,6 +16,12 @@ Artifacts:
 - `DECISION_LOCKS.md`
 - `TASK_DAG.md`
 - `L3_IMPLEMENTATION_EVIDENCE.md`
+- `PRODUCTION_PROFILE.md` — SQLite-first / PostgreSQL-optional production composition, migration and scheduler boundary
+- `VALIDATION_AND_CLOSURE.md` — implementation state, validation ledger, Critical Journeys, Hidden Validation contract and Release Qualification rule
+
+Local / Build Host carriers:
+- `scripts/validate-v1.5.1.sh`
+- `scripts/run-v1.5.1-hidden.sh`
 
 Issues:
 - #18 persistence contracts / architecture evidence
@@ -24,4 +30,6 @@ Issues:
 - #21 local TaskDAG scheduler / default queue removal
 - #22 production wiring / validation / release qualification
 
-Validation carrier for v1.5.1 is explicit Local / Build Host. GitHub Actions and all CI systems are prohibited. PR merge is not Release Qualification.
+Current implementation state: T151-01 through T151-06 are code-complete. T151-07/T151-08 remain evidence-gated because executable Local/Build Host, independent review and external held-out validation evidence are not available in the current ChatGPT Web environment.
+
+Validation carrier for v1.5.1 is explicit Local / Build Host. GitHub Actions and all CI systems are prohibited. PR merge is not Release Qualification; no tag/release is allowed while mandatory gates remain `ENV-BLOCKED` or `NOT_RUN`.
