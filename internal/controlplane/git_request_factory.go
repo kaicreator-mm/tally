@@ -147,7 +147,7 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 }
 
 func requiredEnvironmentCapabilities(runtimeID string, kind taskexecution.EnvironmentKind, explicit []string) []taskexecution.EnvironmentCapability {
-	out := make([]taskexecution.EnvironmentCapability, 0, len(explicit)+8)
+	out := make([]taskexecution.EnvironmentCapability, 0, len(explicit)+9)
 	seen := map[taskexecution.EnvironmentCapability]bool{}
 	add := func(capability taskexecution.EnvironmentCapability) {
 		if capability == "" || seen[capability] {
@@ -174,6 +174,7 @@ func requiredEnvironmentCapabilities(runtimeID string, kind taskexecution.Enviro
 		add(taskexecution.EnvironmentCapability("docker"))
 	}
 	if runtimeID == "dsh" {
+		add(taskexecution.EnvironmentCapability("network"))
 		add(taskexecution.EnvironmentCapability("secret:DEEPSEEK_API_KEY"))
 	}
 	return out
