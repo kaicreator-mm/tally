@@ -64,7 +64,21 @@ func main() {
 		}
 	}
 
-	service, err := controlplane.NewService(adapter, executor, nil)
+	var service *controlplane.Service
+	if executor == nil {
+		service, err = controlplane.NewService(adapter, nil, nil)
+	} else {
+		// The production path stays behind the frozen TaskHarness authority.
+		// v1.5.1 can execute through AgentExecutor without PostgreSQL, but it
+		// cannot manufacture independent verification facts. This harness is
+		// therefore deliberately fail-closed until a verifier is composed.
+		harness, harnessErr := controlplane.NewExecutionOnlyHarness(executor)
+		if harnessErr != nil {
+			slog.Error("v1.5 execution harness startup failed", "err", harnessErr)
+			os.Exit(1)
+		}
+		service, err = controlplane.NewServiceWithHarness(adapter, harness)
+	}
 	if err != nil {
 		slog.Error("v1.5 control plane startup failed", "err", err)
 		os.Exit(1)
@@ -109,12 +123,8 @@ func main() {
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/recover", schedulerHTTP)
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/run-once", schedulerHTTP)
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/run", schedulerHTTP)
-		executionState = "local_scheduler+agent_executor"
-		// v1.5.1 deliberately does not pull the legacy PostgreSQL-backed
-		// BrownfieldHarness into SQLite-first Core. Agent completion therefore
-		// remains a claim and is BLOCKED if no independent verification workflow
-		// is composed; this is explicit degradation, never false acceptance.
-		verificationState = "legacy_brownfield_not_composed"
+		executionState = "local_scheduler+harness+agent_executor"
+		verificationState = "fail_closed_unavailable"
 	}
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
