@@ -47,7 +47,22 @@ func (w WorkspaceRef) Validate() error {
 	return nil
 }
 
-type ResolvedWorkspace struct{ LocalPath string }
+// ResolvedWorkspace preserves LocalPath for v1.5.0 compatibility while
+// Location is the path/locator meaningful inside the selected environment.
+type ResolvedWorkspace struct {
+	LocalPath string
+	Location  string
+}
+
+func (w ResolvedWorkspace) RuntimeLocation(kind EnvironmentKind) (string, error) {
+	if strings.TrimSpace(w.Location) != "" {
+		return w.Location, nil
+	}
+	if kind == EnvironmentLocal && strings.TrimSpace(w.LocalPath) != "" {
+		return w.LocalPath, nil
+	}
+	return "", errors.New("taskexecution: resolved workspace has no environment-local location")
+}
 
 type ExecutionEnvironment interface {
 	Kind() EnvironmentKind
@@ -73,7 +88,7 @@ func (LocalEnvironment) Resolve(_ context.Context, w WorkspaceRef) (ResolvedWork
 	if strings.TrimSpace(w.Path) == "" {
 		return ResolvedWorkspace{}, errors.New("taskexecution: local workspace path is required at Local compatibility edge")
 	}
-	return ResolvedWorkspace{LocalPath: w.Path}, nil
+	return ResolvedWorkspace{LocalPath: w.Path, Location: w.Path}, nil
 }
 
 type CapabilityRequirement struct {
@@ -81,9 +96,7 @@ type CapabilityRequirement struct {
 	Environment []EnvironmentCapability            `json:"environment,omitempty"`
 }
 
-type RuntimeRef struct {
-	ID string `json:"id"`
-}
+type RuntimeRef struct{ ID string `json:"id"` }
 type EnvironmentRef struct {
 	Kind   EnvironmentKind `json:"kind"`
 	Target string          `json:"target"`
@@ -150,6 +163,13 @@ type AgentExecutor interface {
 	Cancel(engineering.ID) error
 }
 
+// EnvironmentCapabilityError makes pre-dispatch rejection classifiable.
+type EnvironmentCapabilityError struct{ Missing []EnvironmentCapability }
+
+func (e *EnvironmentCapabilityError) Error() string {
+	return fmt.Sprintf("taskexecution: missing environment capabilities: %v", e.Missing)
+}
+
 func checkEnvironmentCapabilities(env ExecutionEnvironment, required []EnvironmentCapability) error {
 	have := map[EnvironmentCapability]bool{}
 	for _, c := range env.Capabilities() {
@@ -162,7 +182,7 @@ func checkEnvironmentCapabilities(env ExecutionEnvironment, required []Environme
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf("taskexecution: missing environment capabilities: %v", missing)
+		return &EnvironmentCapabilityError{Missing: missing}
 	}
 	return nil
 }

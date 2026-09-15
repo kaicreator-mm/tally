@@ -43,6 +43,10 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	if err != nil {
 		return TaskExecutionResult{}, err
 	}
+	workspace, err := resolved.RuntimeLocation(req.Environment.Kind)
+	if err != nil {
+		return TaskExecutionResult{}, err
+	}
 
 	runCtx, cancel := context.WithCancel(ctx)
 	e.mu.Lock()
@@ -55,7 +59,7 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	e.mu.Unlock()
 	defer func() { cancel(); e.mu.Lock(); delete(e.active, req.TaskID); e.mu.Unlock() }()
 
-	start := agentruntime.StartRequest{Workspace: resolved.LocalPath, ModelProfile: req.Policy.ModelProfile, ResumeOf: req.Policy.ResumeSession}
+	start := agentruntime.StartRequest{Workspace: workspace, ModelProfile: req.Policy.ModelProfile, ResumeOf: req.Policy.ResumeSession}
 	if start.ResumeOf != "" && !e.Runtime.Descriptor().Capabilities.Has(agentruntime.CapSessionResume) {
 		if !req.Policy.FallbackToFresh {
 			return TaskExecutionResult{}, &agentruntime.CapabilityError{Missing: []agentruntime.Capability{agentruntime.CapSessionResume}}
