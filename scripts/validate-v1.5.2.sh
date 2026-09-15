@@ -46,20 +46,21 @@ record_env_blocked() {
   blockers=$((blockers+1))
 }
 
-# Focused slices first. These are intentionally explicit so a failure points to
-# the environment seam before the full regression obscures it.
-run focused-runner go test ./internal/runner/...
-run focused-taskexecution go test ./internal/taskexecution/...
-run focused-controlplane go test ./internal/controlplane/...
-run focused-dsh-runtime go test ./runtimes/dsh/...
-run focused-v15server-composition go test ./cmd/v15server/...
-run architecture-tests go test ./test/arch/...
-run full-regression go test ./...
+# Focused slices first. External real-DSH tests are forced off here even when
+# the caller has opted in globally; only the named Critical Journey gates below
+# may invoke the provider. This prevents duplicate/unattributed external calls.
+run focused-runner env TALLY_V152_RUN_REAL_DSH=0 go test ./internal/runner/...
+run focused-taskexecution env TALLY_V152_RUN_REAL_DSH=0 go test ./internal/taskexecution/...
+run focused-controlplane env TALLY_V152_RUN_REAL_DSH=0 go test ./internal/controlplane/...
+run focused-dsh-runtime env TALLY_V152_RUN_REAL_DSH=0 go test ./runtimes/dsh/...
+run focused-v15server-composition env TALLY_V152_RUN_REAL_DSH=0 go test ./cmd/v15server/...
+run architecture-tests env TALLY_V152_RUN_REAL_DSH=0 go test ./test/arch/...
+run full-regression env TALLY_V152_RUN_REAL_DSH=0 go test ./...
 
 ssh_ready=0
 if [[ -n "${TALLY_V152_SSH_HOST:-}" && -n "${TALLY_V152_SSH_USER:-}" && -n "${TALLY_V152_SSH_WORKSPACE:-}" && -n "${TALLY_V152_SSH_BASE_REVISION:-}" && ( -n "${TALLY_V152_SSH_KEY_FILE:-}" || -n "${TALLY_V152_SSH_PASSWORD:-}" ) ]]; then
   ssh_ready=1
-  run real-ssh-transport go test ./internal/taskexecution -run '^TestV152ExternalSSHEnvironment$' -count=1
+  run real-ssh-transport env TALLY_V152_RUN_REAL_DSH=0 go test ./internal/taskexecution -run '^TestV152ExternalSSHEnvironment$' -count=1
 else
   record_env_blocked real-ssh-transport "SSH target/user/workspace/revision/auth not configured"
 fi
@@ -67,7 +68,7 @@ fi
 docker_ready=0
 if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && [[ -n "${TALLY_V152_DOCKER_IMAGE:-}" && -n "${TALLY_V152_DOCKER_WORKSPACE_SOURCE:-}" && -n "${TALLY_V152_DOCKER_BASE_REVISION:-}" ]]; then
   docker_ready=1
-  run real-docker-transport go test ./internal/taskexecution -run '^TestV152ExternalDockerEnvironment$' -count=1
+  run real-docker-transport env TALLY_V152_RUN_REAL_DSH=0 go test ./internal/taskexecution -run '^TestV152ExternalDockerEnvironment$' -count=1
 else
   record_env_blocked real-docker-transport "Docker daemon/profile/workspace/revision not configured"
 fi
@@ -76,13 +77,13 @@ fi
 # the real DSH provider. Release qualification requires them; ordinary focused
 # development does not silently spend credentials or call an external model.
 if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $ssh_ready -eq 1 && -n "${DEEPSEEK_API_KEY:-}" ]]; then
-  run real-dsh-ssh go test ./runtimes/dsh -run '^TestV152RealDSHOverSSH$' -count=1
+  run real-dsh-ssh env TALLY_V152_RUN_REAL_DSH=1 go test ./runtimes/dsh -run '^TestV152RealDSHOverSSH$' -count=1
 else
   record_env_blocked real-dsh-ssh "set TALLY_V152_RUN_REAL_DSH=1 and configure SSH plus DEEPSEEK_API_KEY"
 fi
 
 if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $docker_ready -eq 1 && -n "${DEEPSEEK_API_KEY:-}" && "${TALLY_V152_DOCKER_NETWORK:-}" != "none" ]]; then
-  run real-dsh-docker go test ./runtimes/dsh -run '^TestV152RealDSHInDocker$' -count=1
+  run real-dsh-docker env TALLY_V152_RUN_REAL_DSH=1 go test ./runtimes/dsh -run '^TestV152RealDSHInDocker$' -count=1
 else
   record_env_blocked real-dsh-docker "set TALLY_V152_RUN_REAL_DSH=1 and configure Docker/network plus DEEPSEEK_API_KEY"
 fi
