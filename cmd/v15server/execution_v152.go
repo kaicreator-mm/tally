@@ -149,6 +149,17 @@ func runtimeFromEnv(runtimeName string) (agentruntime.Runtime, error) {
 	}
 }
 
+// DSH's observed headless protocol does not declare agentruntime model.select;
+// its requested model/provider are applied by the DSH runtime's generated patch
+// overlay. Propagating TALLY_V15_MODEL into StartRequest.ModelProfile would make
+// CheckStart correctly reject DSH before execution, so DSH keeps this field empty.
+func requestModelProfile(runtimeName string) string {
+	if runtimeName == "dsh" {
+		return ""
+	}
+	return os.Getenv("TALLY_V15_MODEL")
+}
+
 func environmentProfileFromEnv(runtimeName string) (taskexecution.EnvironmentProfile, error) {
 	profile := taskexecution.EnvironmentProfile{
 		Network:   envBool("TALLY_V15_ENV_NETWORK"),
