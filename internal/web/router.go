@@ -34,8 +34,9 @@ type Deps struct {
 	// 追溯/覆盖率读取来源(T05c):project/requirement 算法要 *store.Queries。nil → 视图/覆盖率页空状态。
 	Trace *store.Queries
 
-	// v1.5 Engineering Control Plane API. The handler is mounted inside the
-	// authenticated + CSRF protected browser group. nil keeps the API disabled.
+	// v1.5 Engineering Control Plane API + thin browser console. Both are
+	// mounted inside the authenticated + CSRF protected browser group. nil
+	// keeps the v1.5 control-plane surfaces disabled.
 	ControlPlane http.Handler
 
 	// T11d webhook 运输层:CI 构建结果 POST 进来即完成录入(D-d5 复用 ingest.IngestBuild)。
@@ -98,6 +99,7 @@ func NewRouter(deps Deps) chi.Router {
 			// The stdlib mux inside controlplane rematches the full request path;
 			// chi only provides the authenticated/CSRF-protected outer boundary.
 			r.Handle("/api/v15/*", deps.ControlPlane)
+			r.Handle("/v15/*", deps.ControlPlane)
 		}
 		r.Post("/logout", deps.logout)
 	})
