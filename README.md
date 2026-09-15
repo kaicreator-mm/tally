@@ -2,101 +2,140 @@
 
 **Software Engineering Harness for Coding Agents**
 
-Tally turns planning output and software-engineering practice into executable control over coding agents.
+Tally turns planning output and software-engineering practice into executable, evidence-gated control over coding agents.
 
 ```text
-PlanningResult
+Requirements
   ↓
-Intent / Contract
+Project Plan / PlanningRevision
   ↓
-Policy / Risk / Assurance
+Architecture
   ↓
-Coding Harness Runtime
+TaskDAGProposal → validated Active TaskDAG
   ↓
-ChangeSet
+Ready Task
   ↓
-Verification / Repair
+Engineering Harness
   ↓
-Acceptance
+AgentExecutor → existing Agent Runtime × Execution Environment
   ↓
-Git Integration
+immutable ChangeSet
   ↓
-Outcome / Rule Learning
+Independent Verification / Repair / Review
+  ↓
+CompletionContract / Human Authority
+  ↓
+Accept → Active TaskDAG advance
 ```
 
-> Tally does not trust an Agent because it says “done”. Tally freezes what done means, executes in an isolated workspace, independently verifies the immutable candidate, controls durable Git state, and escalates only when judgment is required.
+> Agent output is a Claim, not a Project Fact. Tally freezes engineering authority, runs executable changes in disposable workspaces, independently verifies immutable candidates, and advances Project Flow only when deterministic completion and authority gates are satisfied.
 
-## Repository state
+## Current repository state
 
-This is an existing Go brownfield system. The current source contains the v1.4.1 implementation plus closure-repair hardening; it is suitable as a **development baseline**, not yet as a fully release-qualified artifact because external Hidden Validation remains pending.
+**Current development program: v1.5.0 Engineering Control Plane Foundation.**
+
+The source now contains the v1.5.0 lifecycle/domain/execution foundation on top of the v1.4.1 brownfield implementation. It is suitable as the continuing **development baseline**, but it is **NOT RELEASE QUALIFIED** because required closure-candidate Full Regression, real Local Critical Journeys and external Hidden Validation remain `ENV-BLOCKED` in the current ChatGPT Web environment.
+
+No GitHub Actions or CI system is part of the v1.5.0 validation carrier. Validation is explicit Local / Build Host execution only.
 
 Current stack:
 
 - Go 1.23;
-- PostgreSQL + pgx + sqlc + goose;
+- PostgreSQL + pgx + sqlc + goose for existing fact stores;
+- v1.5.0 DB-neutral/file-snapshot compatibility repository for Active TaskDAG/restart state (storage redesign deferred to v1.5.1);
 - `net/http` + chi;
-- Go templates + HTMX;
+- Go templates + HTMX plus the thin v1.5 Control Plane console;
 - Git-backed engineering artifacts;
-- out-of-process Codex / DeepSeek Harness runtime adapters.
+- out-of-process Codex / DeepSeek Harness runtime adapters behind one `internal/agentruntime.Runtime` protocol.
 
-### v1.4.1 baseline
+## v1.5.0 implemented foundation
 
-Implemented and strengthened:
+- Requirements Baseline, Project Plan / immutable PlanningRevision and ArchitectureRevision;
+- validated `TaskDAGProposal → Active TaskDAG` with deterministic dependency/readiness and restart persistence;
+- `Active TaskDAG = Project Flow`; no second Project Flow state authority;
+- typed Artifact/Evidence/Audit/Authority models;
+- deterministic CompletionContract over required state, artifacts, PASS evidence/checks, records, authority and Git operations;
+- common IntelligenceProvider contract for Direct and AI Runtime adapters;
+- thin AgentExecutor plus Runtime × ExecutionEnvironment contracts;
+- Local execution compatibility for v1.5.0; SSH/Docker remain deferred;
+- project-level Engineering Control Plane + protected JSON API;
+- minimal protected browser console at `/v15/control-plane`;
+- production brownfield bridge that reuses existing `internal/agentruntime`, `internal/closedloop` and `internal/candidateverify` rather than creating replacements;
+- Tally-owned disposable linked worktrees and owner-checkout rejection;
+- immutable/durable CodegenRun → ChangeSet → verification lineage;
+- task-level interruption/restart semantics that do not depend on Agent session resume.
 
-- Intent → Dynamic Form → Confirm → atomic Freeze;
-- Contract / Risk / Assurance production authority;
-- risk-adjusted Acceptance;
-- human-centered Work / Review / Rules / Integration UI;
-- Rule-first EngineeringPolicy governance;
-- local Git Control Plane L0–L3;
-- append-only Outcome capture with atomic replay idempotency;
-- deterministic Safe Export and repository hygiene gates;
-- centralized transitional AI Runtime transport adapter.
+The v1.4.1 implementation remains the brownfield base and historical evidence. Its Contract/Risk/Assurance, ChangeSet, verification, closed-loop, runtime and append-only fact invariants continue to be reused where v1.5.0 intentionally builds on them.
 
-DeepSeek Harness is **Strong-ready** but its real launcher/provider gate still requires external `TALLY_DSH_BIN` + `DEEPSEEK_API_KEY` evidence. P6-08 **Hidden Validation is PENDING_EXTERNAL**. See `docs/releases/v1.4.1_STRONG_BASELINE.md`.
+## Engineering authority model
+
+```text
+LLM output       = Proposal / Assessment / Recommendation
+Agent output     = Claim
+Validator output = Evidence / Fact
+Active TaskDAG   = Project Flow authority
+Completion       = deterministic CompletionContract evaluation
+Human            = Judgment / authority where policy requires
+```
+
+Neither an LLM nor an Agent can directly mark a task complete.
 
 ## Runtime integration
 
-Tally embeds the Harness protocol, not the Harness implementation.
+Tally embeds one Agent Runtime protocol, not runtime-specific project logic.
 
 ```text
-Tally Go
+Engineering Harness
   ↓
-internal/agentruntime.Runtime
-  ├── runtimes/codex → external Codex CLI
-  └── runtimes/dsh   → external DSH process / subprocess bridge
+AgentExecutor
+  ↓
+internal/agentruntime.Runtime  ×  ExecutionEnvironment
+  ├── runtimes/codex              Local in v1.5.0
+  └── runtimes/dsh
 ```
 
-Tally keeps authority over:
-- workspace isolation;
-- ChangeSet;
-- Git durability/integration;
-- Verification;
-- Acceptance;
-- Outcome.
+For the production brownfield Local path:
+
+```text
+pinned Git execution bundle
+→ CompileAuthority
+→ disposable worktree
+→ AgentExecutor / Agent claim
+→ immutable durable ChangeSet
+→ candidateverify
+→ existing closedloop repair / accept / escalate
+→ CompletionFacts
+→ CompletionContract
+→ Active TaskDAG advance/block
+```
 
 ## Start here
 
 ### Coding agents
 
 1. `AGENTS.md`
-2. `docs/product/Tally_PRD_v1.4.1_Final.md`
-3. `docs/tasks/v1.4.1/DECISION_LOCKS.md`
-4. assigned v1.4.1 Task + appended L3 pack
+2. `docs/product/v1.5/Tally_PRD_v1.5_FROZEN.md`
+3. `docs/product/v1.5/Tally_PRD_v1.5.0_Engineering_Control_Plane_Core.md`
+4. `docs/tasks/v1.5.0/DECISION_LOCKS.md`
+5. assigned GitHub Issue / `docs/tasks/v1.5.0/TASK_DAG.md`
+6. `docs/tasks/v1.5.0/L3_IMPLEMENTATION_EVIDENCE.md`
 
-### Current source/target/status
+### Current implementation / closure
 
 - `docs/STATUS.md`
 - `docs/architecture/CURRENT_CODEBASE.md`
-- `docs/architecture/V1.4.1_TARGET.md`
 - `docs/implementation/CURRENT_IMPLEMENTATION_STATUS.md`
-- `docs/implementation/V1.4.1_GAP_MAP.md`
-- `docs/tasks/v1.4.1/README.md`
+- `docs/releases/v1.5.0_DEVELOPMENT_BASELINE.md`
+- `docs/tasks/v1.5.0/VALIDATION_MATRIX.md`
+- `docs/tasks/v1.5.0/CRITICAL_JOURNEYS.md`
+- `docs/tasks/v1.5.0/HIDDEN_VALIDATION_PROTOCOL.md`
+- `docs/tasks/v1.5.0/RELEASE_QUALIFICATION.md`
 
-Historical v1.4 PRD/tasks/gates remain evidence and are intentionally retained.
+Historical v1.4/v1.4.1 PRD/tasks/gates remain evidence and are intentionally retained.
 
+## Build and explicit validation
 
-## Build and validation
+Normal local development commands remain available:
 
 ```bash
 make migrate
@@ -106,21 +145,20 @@ make test-integration
 make check
 ```
 
-Useful focused commands:
+The v1.5.0 closure carrier is explicit Local / Build Host execution:
 
 ```bash
-go test ./test/arch/...
-go test ./internal/...
-go test ./runtimes/...
-go test ./test/runtimeconformance/...
-go test -tags=integration ./test/e2e/...
+bash scripts/validate-v1.5.0.sh
 ```
 
-Integration tests require reachable PostgreSQL via `DATABASE_URL`.
+Held-out validation runs only from an external pack after visible implementation freezes:
 
-**Never report PASS for a command that did not execute successfully.**
+```bash
+TALLY_V15_HIDDEN_ROOT=/secure/held-out/tally-v1.5.0 \
+  bash scripts/run-v1.5-hidden.sh
+```
 
-The v1.4 final gate recorded fresh full-suite PASS evidence on 2026-09-10. Any new v1.4.1 run must still record its own actual result; environment dependency failures are `NOT_RUN(reason)`, never inherited PASS.
+**Never report PASS for a command that did not actually execute successfully.** `PR PASS != Release PASS`; missing required release evidence is `NOT_RUN(...)` or `ENV-BLOCKED(...)`, not inherited PASS.
 
 ## Run
 
@@ -138,42 +176,25 @@ make build
 Default endpoints:
 
 - server/UI: `http://localhost:8080`
+- v1.5 Engineering Control Plane: `http://localhost:8080/v15/control-plane`
 - worker health: `http://localhost:8081/healthz`
 
-See [`docs/guides/deployment.md`](docs/guides/deployment.md) and [`docs/guides/operations.md`](docs/guides/operations.md).
+The v1.5 execution runtime is opt-in through `TALLY_V15_RUNTIME=fake|codex|dsh`; when unset, lifecycle/state API remains available but dispatch is unavailable rather than silently selecting a fake runtime.
 
-## Engineering authority model
+## Product boundary and deferred slices
 
-```text
-LLM output       = Proposal
-Agent output     = Claim
-Validator output = Evidence / Fact
-Lifecycle state  = Derived
-Human            = Judgment / authority where policy requires
-```
+v1.5.0 establishes the Engineering Control Plane and shared execution contracts. It does **not** claim completion of:
 
-A coding agent is never trusted merely because it produced the code.
+- v1.5.1 SQLite-default / PostgreSQL-optional storage redesign and DB queue removal;
+- v1.5.2 SSH/Docker environments;
+- v1.5.3 full GitHub Issue/PR/Merge/Tag/Release authority automation;
+- v1.5.4 full multi-Agent role workflow;
+- v1.5.5 automatic re-plan / governed learning.
 
-Likewise, a Tally development task is not DONE merely because a class exists and a unit test passes. Current task completion should prove, as applicable:
+AI Runtime may provide project/task planning intelligence, but persistent engineering state and Coding Task completion authority remain in Tally's Engineering Control Plane / Harness.
 
-```text
-IMPLEMENTED
-→ WIRED
-→ TESTED
-→ PRODUCTION_REACHABLE
-→ E2E_PROVEN
-```
+## Qualification
 
-## Product boundary
+Current overall v1.5.0 status: **NOT RELEASE QUALIFIED**.
 
-Tally owns the coding-task engineering loop.
-
-AI Runtime owns Project Planning / Task Planning and can internally use DIRECT/AUTO/ORCHESTRATED planning. Tally consumes the resulting planning contract. Concrete Coding Task execution remains in Tally's `AgentRuntime`, with Codex and DeepSeek Harness running out-of-process behind `internal/agentruntime.Runtime`.
-
-## Long-term direction
-
-The long-term thesis remains:
-
-> **Vibe Coding × Software Engineering**
-
-But `Tally_Product_Direction.md` is deliberately non-binding. v1.4.1 only implements capabilities explicitly promoted by the Final PRD and task program.
+See `docs/tasks/v1.5.0/RELEASE_QUALIFICATION.md` for the 20 qualification assertions and exact blocked gates.
