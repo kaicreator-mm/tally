@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
+	"tally/internal/agentruntime"
 	"tally/internal/artifacts"
 	"tally/internal/engineering"
 	"tally/internal/taskexecution"
@@ -15,9 +17,10 @@ import (
 
 // GitTaskRequestFactoryConfig binds the application-local scheduler to the
 // existing v1.5.0 TaskExecutionRequest contract without inventing a second
-// durable execution queue or task contract. BaseRevision is resolved through
-// artifacts.LoadBundle and every produced request is pinned to the observed Git
-// commit returned by that loader.
+// durable execution queue or task contract. BaseRevision may be any Git
+// revision expression understood by the existing artifact loader; the factory
+// resolves it on the first request and pins every later request to that exact
+// observed source commit.
 type GitTaskRequestFactoryConfig struct {
 	Repo              string
 	BaseRevision      string
@@ -35,6 +38,9 @@ type GitTaskRequestFactoryConfig struct {
 type GitTaskRequestFactory struct {
 	cfg        GitTaskRequestFactoryConfig
 	loadBundle func(string, string, string) (*artifacts.ExecutionBundle, error)
+
+	pinMu        sync.Mutex
+	pinnedCommit string
 }
 
 func NewGitTaskRequestFactory(cfg GitTaskRequestFactoryConfig) (*GitTaskRequestFactory, error) {
@@ -42,7 +48,7 @@ func NewGitTaskRequestFactory(cfg GitTaskRequestFactoryConfig) (*GitTaskRequestF
 	case strings.TrimSpace(cfg.Repo) == "":
 		return nil, errors.New("controlplane: execution content repo is required")
 	case strings.TrimSpace(cfg.BaseRevision) == "":
-		return nil, errors.New("controlplane: pinned execution base revision is required")
+		return nil, errors.New("controlplane: execution base revision is required")
 	case strings.TrimSpace(cfg.RuntimeID) == "":
 		return nil, errors.New("controlplane: execution runtime id is required")
 	case strings.TrimSpace(cfg.WorkspaceRoot) == "":
@@ -58,7 +64,7 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 	if snapshot.ProjectID == "" {
 		return taskexecution.TaskExecutionRequest{}, errors.New("controlplane: scheduler snapshot is missing project id")
 	}
-	bundle, err := f.loadBundle(f.cfg.Repo, f.cfg.BaseRevision, string(node.ID))
+	bundle, err := f.loadPinnedBundle(string(node.ID))
 	if err != nil {
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: load frozen execution bundle for %s: %w", node.ID, err)
 	}
@@ -72,13 +78,25 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: frozen task identity mismatch: node=%s contract=%s", node.ID, bundle.Task.Contract.ID)
 	}
 
-	workspacePath := filepath.Join(f.cfg.WorkspaceRoot, filepath.FromSlash(string(node.ID)))
+	workspacePath, err := taskWorkspacePath(f.cfg.WorkspaceRoot, node.ID)
+	if err != nil {
+		return taskexecution.TaskExecutionRequest{}, err
+	}
 	info, err := os.Stat(workspacePath)
 	if err != nil {
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is unavailable at %s: %w", node.ID, workspacePath, err)
 	}
 	if !info.IsDir() {
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: prepared workspace for %s is not a directory: %s", node.ID, workspacePath)
+	}
+
+	runtimeCaps := make([]agentruntime.Capability, 0, len(node.RuntimeRequirements))
+	for _, requirement := range node.RuntimeRequirements {
+		runtimeCaps = append(runtimeCaps, agentruntime.Capability(requirement))
+	}
+	environmentCaps := make([]taskexecution.EnvironmentCapability, 0, len(node.EnvironmentRequirements))
+	for _, requirement := range node.EnvironmentRequirements {
+		environmentCaps = append(environmentCaps, taskexecution.EnvironmentCapability(requirement))
 	}
 
 	request := taskexecution.TaskExecutionRequest{
@@ -102,6 +120,10 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 			Path:         workspacePath,
 			BaseRevision: bundle.SourceCommit,
 		},
+		RequiredCapabilities: taskexecution.CapabilityRequirement{
+			Runtime:     agentruntime.CapabilityRequirement{Required: runtimeCaps},
+			Environment: environmentCaps,
+		},
 		Policy:      taskexecution.ExecutionPolicy{ModelProfile: f.cfg.ModelProfile},
 		Instruction: frozenTaskInstruction(bundle, node),
 	}
@@ -109,6 +131,43 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: composed execution request for %s is invalid: %w", node.ID, err)
 	}
 	return request, nil
+}
+
+// loadPinnedBundle resolves the configured revision expression once. The first
+// successful bundle establishes the factory-wide source commit; subsequent
+// tasks are loaded from that exact commit even if the original branch/tag moves.
+func (f *GitTaskRequestFactory) loadPinnedBundle(taskID string) (*artifacts.ExecutionBundle, error) {
+	f.pinMu.Lock()
+	defer f.pinMu.Unlock()
+
+	revision := f.cfg.BaseRevision
+	if f.pinnedCommit != "" {
+		revision = f.pinnedCommit
+	}
+	bundle, err := f.loadBundle(f.cfg.Repo, revision, taskID)
+	if err != nil {
+		return nil, err
+	}
+	if f.pinnedCommit == "" {
+		if strings.TrimSpace(bundle.SourceCommit) == "" {
+			return nil, errors.New("controlplane: execution bundle did not report an observed source commit")
+		}
+		f.pinnedCommit = bundle.SourceCommit
+	} else if bundle.SourceCommit != f.pinnedCommit {
+		return nil, fmt.Errorf("controlplane: execution authority drift: pinned=%s observed=%s", f.pinnedCommit, bundle.SourceCommit)
+	}
+	return bundle, nil
+}
+
+func taskWorkspacePath(root string, taskID engineering.ID) (string, error) {
+	id := string(taskID)
+	if err := taskID.Validate("workspace task"); err != nil {
+		return "", err
+	}
+	if id == "." || id == ".." || strings.ContainsAny(id, `/\\`) || filepath.Base(id) != id {
+		return "", fmt.Errorf("controlplane: task id %q is unsafe for prepared workspace path", id)
+	}
+	return filepath.Join(root, id), nil
 }
 
 func frozenTaskInstruction(bundle *artifacts.ExecutionBundle, node engineering.TaskNode) string {
