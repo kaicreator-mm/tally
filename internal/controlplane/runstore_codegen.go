@@ -28,7 +28,7 @@ type runstoreCodegenRecorder struct {
 	taskRevision         string
 	verificationRevision string
 	runtime              agentruntime.RuntimeDescriptor
-	contextHash          string
+	baseContextHash      string
 	model                string
 	now                  func() time.Time
 }
@@ -45,19 +45,23 @@ func newRunstoreCodegenRecorder(inner *agentExecutorCodegen, store *runstore.Sto
 	}
 	model := strings.TrimSpace(req.Policy.ModelProfile)
 	if model == "" {
-		// This is an expected-coordinate label, not an observed model fact. The
-		// Runtime's observed identity stays empty unless the runtime reports it.
+		// Expected-coordinate label only; observed model identity remains empty
+		// unless the runtime actually reports it.
 		model = "runtime-default"
 	}
 	return &runstoreCodegenRecorder{
 		inner: inner, store: store, project: project,
 		taskRevision: taskRevision, verificationRevision: verificationRevision,
-		runtime: runtime, contextHash: contextHash, model: model, now: now,
+		runtime: runtime, baseContextHash: contextHash, model: model, now: now,
 	}, nil
 }
 
 func (r *runstoreCodegenRecorder) RunCodegen(ctx context.Context, call closedloop.CodegenRunRequest) (*changeset.ChangeSet, error) {
 	capabilities, err := runtimeCapabilitySnapshot(r.runtime)
+	if err != nil {
+		return nil, err
+	}
+	contextHash, err := attemptContextHash(r.baseContextHash, call)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +77,7 @@ func (r *runstoreCodegenRecorder) RunCodegen(ctx context.Context, call closedloo
 		BaseCommit:                call.BaseRevision,
 		TaskRevision:              r.taskRevision,
 		VerificationRevision:      r.verificationRevision,
-		ContextPackHash:           r.contextHash,
+		ContextPackHash:           contextHash,
 		WorkspaceID:               string(call.RunID),
 		RuntimeCapabilitySnapshot: capabilities,
 		StartedAt:                 r.now().UTC(),
@@ -165,7 +169,7 @@ func (r *runstoreCodegenRecorder) finish(ctx context.Context, runID int64, statu
 
 func runtimeCapabilitySnapshot(runtime agentruntime.RuntimeDescriptor) (json.RawMessage, error) {
 	raw, err := json.Marshal(map[string]any{
-		"adapter_version":      runtime.Version,
+		"adapter_version":       runtime.Version,
 		"declared_capabilities": runtime.Capabilities.Sorted(),
 	})
 	if err != nil {
@@ -180,7 +184,25 @@ func taskExecutionContextHash(req taskexecution.TaskExecutionRequest) (string, e
 		Context []engineering.ArtifactRef `json:"context,omitempty"`
 		Prompt  string                    `json:"prompt"`
 	}{Task: req.FrozenTaskContract, Context: req.EngineeringContext, Prompt: req.Instruction}
-	raw, err := json.Marshal(projection)
+	return hashJSON(projection)
+}
+
+func attemptContextHash(base string, call closedloop.CodegenRunRequest) (string, error) {
+	repairBase := ""
+	if call.RepairBase != nil {
+		repairBase = string(call.RepairBase.ID())
+	}
+	projection := struct {
+		Base       string                     `json:"base"`
+		ParentRun  closedloop.RunID           `json:"parent_run,omitempty"`
+		RepairBase string                     `json:"repair_base,omitempty"`
+		Feedback   *closedloop.RepairFeedback `json:"feedback,omitempty"`
+	}{Base: base, ParentRun: call.ParentRun, RepairBase: repairBase, Feedback: call.Feedback}
+	return hashJSON(projection)
+}
+
+func hashJSON(value any) (string, error) {
+	raw, err := json.Marshal(value)
 	if err != nil {
 		return "", fmt.Errorf("controlplane: encode execution context identity: %w", err)
 	}
