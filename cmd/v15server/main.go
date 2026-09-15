@@ -104,7 +104,7 @@ func main() {
 			WorkspaceRoot:     workspaceRoot,
 			EnvironmentKind:   environmentKind,
 			EnvironmentTarget: environmentTarget,
-			ModelProfile:      os.Getenv("TALLY_V15_MODEL"),
+			ModelProfile:      requestModelProfile(runtimeName),
 		})
 		if reqErr != nil {
 			slog.Error("v1.5 scheduler request composition failed", "err", reqErr)
