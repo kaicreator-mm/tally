@@ -8,16 +8,22 @@ import (
 
 	"tally/internal/engineering"
 	"tally/internal/intelligence"
+	"tally/internal/outcome"
 	"tally/internal/policygovernance"
 )
 
+type OutcomeFact struct {
+	ID    string        `json:"id"`
+	Event outcome.Event `json:"event"`
+}
+
 type IntelligenceInput struct {
-	SupportingOutcomes []string                       `json:"supporting_outcomes"`
-	Evidence           []policygovernance.EvidenceRef `json:"evidence"`
-	ApplicableScope    string                         `json:"applicable_scope"`
-	Shared             bool                           `json:"shared,omitempty"`
-	HighImpact         bool                           `json:"high_impact,omitempty"`
-	ExistingRuleIDs    []string                       `json:"existing_rule_ids,omitempty"`
+	Outcomes        []OutcomeFact                     `json:"outcomes"`
+	Evidence        []policygovernance.EvidenceRef    `json:"evidence"`
+	ApplicableScope string                            `json:"applicable_scope"`
+	Shared          bool                              `json:"shared,omitempty"`
+	HighImpact      bool                              `json:"high_impact,omitempty"`
+	ExistingRuleIDs []string                          `json:"existing_rule_ids,omitempty"`
 }
 
 type intelligenceWireProposal struct {
@@ -28,24 +34,27 @@ type intelligenceWireProposal struct {
 }
 
 func (in IntelligenceInput) Validate() error {
-	if len(in.SupportingOutcomes) == 0 || len(in.Evidence) == 0 {
+	if len(in.Outcomes) == 0 || len(in.Evidence) == 0 {
 		return fmt.Errorf("%w: outcomes and evidence are required", ErrInvalidProposal)
 	}
 	if strings.TrimSpace(in.ApplicableScope) == "" {
 		return fmt.Errorf("%w: applicable scope is required", ErrInvalidProposal)
 	}
 	allowedOutcomes := map[string]bool{}
-	for _, id := range in.SupportingOutcomes {
-		id = strings.TrimSpace(id)
-		if id == "" || allowedOutcomes[id] {
-			return fmt.Errorf("%w: supporting outcome ids must be unique", ErrInvalidProposal)
+	for _, fact := range in.Outcomes {
+		id := strings.TrimSpace(fact.ID)
+		if id == "" || strings.ContainsAny(id, " \t\r\n") || allowedOutcomes[id] {
+			return fmt.Errorf("%w: outcome fact ids must be unique non-blank tokens", ErrInvalidProposal)
+		}
+		if err := fact.Event.Validate(); err != nil {
+			return fmt.Errorf("%w: outcome %s: %v", ErrInvalidProposal, id, err)
 		}
 		allowedOutcomes[id] = true
 	}
 	backed := map[string]bool{}
 	for _, evidence := range in.Evidence {
-		if !evidence.Kind.Valid() || strings.TrimSpace(evidence.Ref) == "" {
-			return fmt.Errorf("%w: invalid evidence", ErrInvalidProposal)
+		if _, err := policygovernance.NewEvidenceRef(evidence.Kind, evidence.Ref); err != nil {
+			return fmt.Errorf("%w: invalid evidence: %v", ErrInvalidProposal, err)
 		}
 		if evidence.Kind == policygovernance.EvidenceOutcome {
 			backed[evidence.Ref] = true
@@ -53,15 +62,24 @@ func (in IntelligenceInput) Validate() error {
 	}
 	for id := range allowedOutcomes {
 		if !backed[id] {
-			return fmt.Errorf("%w: supporting outcome %s has no outcome evidence", ErrInvalidProposal, id)
+			return fmt.Errorf("%w: outcome %s has no outcome evidence", ErrInvalidProposal, id)
 		}
 	}
 	return nil
 }
 
+func (in IntelligenceInput) outcomeIDs() []string {
+	ids := make([]string, len(in.Outcomes))
+	for i, fact := range in.Outcomes {
+		ids[i] = strings.TrimSpace(fact.ID)
+	}
+	return ids
+}
+
 // GenerateProposal lets Direct LLM and AI Runtime use the same frozen Provider
-// contract. Outcome/evidence/scope/impact inputs are pinned by Tally; the model
-// may propose only rule content, confidence and conflict analysis.
+// contract. Structured Outcome facts plus evidence/scope/impact inputs are
+// pinned by Tally; the model may propose only rule content, confidence and
+// conflict analysis.
 func GenerateProposal(ctx context.Context, provider intelligence.Provider, in IntelligenceInput) (Proposal, error) {
 	if provider == nil {
 		return Proposal{}, fmt.Errorf("%w: intelligence provider is required", ErrInvalidProposal)
@@ -75,7 +93,7 @@ func GenerateProposal(ctx context.Context, provider intelligence.Provider, in In
 	}
 	result, err := provider.Generate(ctx, intelligence.Request{
 		Operation: intelligence.OperationEngineeringRuleProposal,
-		Instruction: "Propose a Tally Engineering Rule only. Return canonical policy YAML, confidence and conflict analysis. Do not claim authority, promotion or runtime activation.",
+		Instruction: "Analyze the supplied immutable Tally Outcome facts and evidence, then propose an Engineering Rule only. Return canonical policy YAML, confidence and conflict analysis. Do not claim authority, promotion or runtime activation.",
 		Input: rawInput,
 		OutputShape: json.RawMessage([]byte("{\"type\":\"object\",\"title\":\"EngineeringRuleProposal\"}")),
 	})
@@ -98,7 +116,7 @@ func GenerateProposal(ctx context.Context, provider intelligence.Provider, in In
 		wire.ID,
 		candidate,
 		in.Evidence,
-		in.SupportingOutcomes,
+		in.outcomeIDs(),
 		in.ApplicableScope,
 		wire.Confidence,
 		wire.Conflicts,
