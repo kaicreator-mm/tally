@@ -10,179 +10,180 @@ import (
 	"tally/internal/taskexecution"
 )
 
+var ErrDispatchConflict = errors.New("controlplane: dispatch finalization conflicts with current task state")
+
+// Dispatch claims one READY task under the project mutation lock, executes the
+// Engineering Harness/Agent without holding that lock, then commits the result
+// against the latest persisted snapshot. Long-running Agent work must never
+// serialize otherwise independent project mutations.
 func (s *Service) Dispatch(ctx context.Context, projectID engineering.ID, req taskexecution.TaskExecutionRequest) (DispatchResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	if s.Harness == nil && s.Executor == nil {
 		return DispatchResult{}, errors.New("controlplane: Engineering Harness/AgentExecutor is not configured")
 	}
-	snap, err := s.Repo.Load(ctx, projectID)
+
+	claimed, err := s.claimDispatch(ctx, projectID, req.TaskID)
 	if err != nil {
-		return DispatchResult{}, err
-	}
-	if snap.ActiveDAG == nil {
-		return DispatchResult{}, ErrDAGNotActive
-	}
-	node, ok := findNode(*snap.ActiveDAG, req.TaskID)
-	if !ok {
-		return DispatchResult{}, fmt.Errorf("controlplane: unknown task %s", req.TaskID)
-	}
-	if node.State != engineering.TaskReady {
-		return DispatchResult{}, fmt.Errorf("%w: task %s state=%s", ErrTaskNotReady, req.TaskID, node.State)
-	}
-	contract, ok := snap.Contracts[req.TaskID]
-	if !ok {
-		return DispatchResult{}, fmt.Errorf("controlplane: task %s has no CompletionContract", req.TaskID)
-	}
-	running, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskRunning, "")
-	if err != nil {
-		return DispatchResult{}, err
-	}
-	snap.ActiveDAG = &running
-	if err := s.record(&snap, "task.execution.started", req.TaskID, "engineering_harness"); err != nil {
-		return DispatchResult{}, err
-	}
-	if err := s.save(ctx, &snap); err != nil {
 		return DispatchResult{}, err
 	}
 
 	if s.Harness != nil {
-		return s.dispatchHarness(ctx, projectID, req, contract, snap)
+		return s.dispatchHarness(ctx, projectID, req, claimed)
 	}
-	return s.dispatchLegacy(ctx, req, contract, snap)
+	return s.dispatchLegacy(ctx, projectID, req, claimed)
 }
 
-func (s *Service) dispatchHarness(ctx context.Context, projectID engineering.ID, req taskexecution.TaskExecutionRequest, contract engineering.CompletionContract, snap ProjectSnapshot) (DispatchResult, error) {
+func (s *Service) claimDispatch(ctx context.Context, projectID, taskID engineering.ID) (ProjectSnapshot, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	snap, err := s.Repo.Load(ctx, projectID)
+	if err != nil {
+		return ProjectSnapshot{}, err
+	}
+	if snap.ActiveDAG == nil {
+		return ProjectSnapshot{}, ErrDAGNotActive
+	}
+	node, ok := findNode(*snap.ActiveDAG, taskID)
+	if !ok {
+		return ProjectSnapshot{}, fmt.Errorf("controlplane: unknown task %s", taskID)
+	}
+	if node.State != engineering.TaskReady {
+		return ProjectSnapshot{}, fmt.Errorf("%w: task %s state=%s", ErrTaskNotReady, taskID, node.State)
+	}
+	if _, ok := snap.Contracts[taskID]; !ok {
+		return ProjectSnapshot{}, fmt.Errorf("controlplane: task %s has no CompletionContract", taskID)
+	}
+	running, err := snap.ActiveDAG.Transition(taskID, engineering.TaskRunning, "")
+	if err != nil {
+		return ProjectSnapshot{}, err
+	}
+	snap.ActiveDAG = &running
+	if err := s.record(&snap, "task.execution.started", taskID, "engineering_harness"); err != nil {
+		return ProjectSnapshot{}, err
+	}
+	if err := s.save(ctx, &snap); err != nil {
+		return ProjectSnapshot{}, err
+	}
+	return snap, nil
+}
+
+func (s *Service) dispatchHarness(ctx context.Context, projectID engineering.ID, req taskexecution.TaskExecutionRequest, claimed ProjectSnapshot) (DispatchResult, error) {
 	h, runErr := s.Harness.Run(ctx, projectID, req)
 	wf := TaskWorkflowResult{Accepted: h.Accepted, Reason: h.Reason, Facts: h.Facts}
-	base := DispatchResult{Execution: h.Execution, Workflow: &wf, Snapshot: snap}
+	base := DispatchResult{Execution: h.Execution, Workflow: &wf, Snapshot: claimed}
 
 	if runErr != nil {
 		if h.Interrupted || errors.Is(runErr, context.Canceled) {
-			return s.persistInterrupted(ctx, req.TaskID, h.Execution, &wf, snap, runErr)
+			return s.persistInterrupted(ctx, projectID, req.TaskID, h.Execution, &wf, runErr)
 		}
-		next, trErr := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "engineering harness error: "+classifyError(runErr))
-		if trErr == nil {
-			snap.ActiveDAG = &next
-			_ = s.record(&snap, "task.harness.error", req.TaskID, "engineering_harness")
-			_ = s.save(context.WithoutCancel(ctx), &snap)
-			base.Snapshot = snap
+		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "engineering harness error: "+classifyError(runErr), "task.harness.error", "engineering_harness")
+		if commitErr != nil {
+			return base, errors.Join(runErr, commitErr)
 		}
+		base.Snapshot = snap
 		return base, runErr
 	}
 	if h.Interrupted {
-		return s.persistInterrupted(ctx, req.TaskID, h.Execution, &wf, snap, nil)
+		return s.persistInterrupted(ctx, projectID, req.TaskID, h.Execution, &wf, nil)
 	}
 	if !h.Accepted {
 		reason := strings.TrimSpace(h.Reason)
 		if reason == "" {
 			reason = "engineering harness did not accept candidate"
 		}
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, reason)
+		snap, err := s.persistBlocked(ctx, projectID, req.TaskID, reason, "task.harness.blocked", "closedloop")
 		if err != nil {
-			return DispatchResult{}, err
-		}
-		snap.ActiveDAG = &next
-		if err := s.record(&snap, "task.harness.blocked", req.TaskID, "closedloop"); err != nil {
-			return DispatchResult{}, err
-		}
-		if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
-			return DispatchResult{}, err
+			return base, err
 		}
 		base.Snapshot = snap
 		return base, nil
 	}
-	return s.finishAccepted(ctx, req.TaskID, h.Execution, &wf, contract, snap, "closedloop")
+	return s.finishAccepted(ctx, projectID, req.TaskID, h.Execution, &wf, "closedloop")
 }
 
-func (s *Service) dispatchLegacy(ctx context.Context, req taskexecution.TaskExecutionRequest, contract engineering.CompletionContract, snap ProjectSnapshot) (DispatchResult, error) {
+func (s *Service) dispatchLegacy(ctx context.Context, projectID engineering.ID, req taskexecution.TaskExecutionRequest, claimed ProjectSnapshot) (DispatchResult, error) {
 	execution, execErr := s.Executor.Execute(ctx, req)
+	base := DispatchResult{Execution: execution, Snapshot: claimed}
 	if execErr != nil {
-		blocked, trErr := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "execution error: "+classifyError(execErr))
-		if trErr == nil {
-			snap.ActiveDAG = &blocked
-			_ = s.record(&snap, "task.execution.error", req.TaskID, "agent_executor")
-			_ = s.save(context.WithoutCancel(ctx), &snap)
+		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "execution error: "+classifyError(execErr), "task.execution.error", "agent_executor")
+		if commitErr != nil {
+			return base, errors.Join(execErr, commitErr)
 		}
-		return DispatchResult{Execution: execution, Snapshot: snap}, execErr
+		base.Snapshot = snap
+		return base, execErr
 	}
 
 	switch execution.Status {
 	case taskexecution.ExecutionInterrupted:
-		return s.persistInterrupted(ctx, req.TaskID, execution, nil, snap, nil)
+		return s.persistInterrupted(ctx, projectID, req.TaskID, execution, nil, nil)
 	case taskexecution.ExecutionFailed:
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "agent runtime reported failure; no verification fact produced")
+		snap, err := s.persistBlocked(ctx, projectID, req.TaskID, "agent runtime reported failure; no verification fact produced", "task.execution.claim_failed", "agent_claim")
 		if err != nil {
-			return DispatchResult{}, err
+			return base, err
 		}
-		snap.ActiveDAG = &next
-		if err := s.record(&snap, "task.execution.claim_failed", req.TaskID, "agent_claim"); err != nil {
-			return DispatchResult{}, err
-		}
-		if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
-			return DispatchResult{}, err
-		}
-		return DispatchResult{Execution: execution, Snapshot: snap}, nil
+		base.Snapshot = snap
+		return base, nil
 	case taskexecution.ExecutionCompleted:
 		// Agent completion is only a claim. Legacy compatibility still requires
 		// an independent workflow before CompletionContract evaluation.
 	default:
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "unknown execution status")
-		if err == nil {
-			snap.ActiveDAG = &next
-			_ = s.record(&snap, "task.execution.invalid_status", req.TaskID, "agent_executor")
-			_ = s.save(context.WithoutCancel(ctx), &snap)
+		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "unknown execution status", "task.execution.invalid_status", "agent_executor")
+		if commitErr == nil {
+			base.Snapshot = snap
 		}
-		return DispatchResult{Execution: execution, Snapshot: snap}, fmt.Errorf("controlplane: unknown execution status %q", execution.Status)
+		err := fmt.Errorf("controlplane: unknown execution status %q", execution.Status)
+		if commitErr != nil {
+			err = errors.Join(err, commitErr)
+		}
+		return base, err
 	}
 
 	if s.Workflow == nil {
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "verification/review workflow unavailable")
+		snap, err := s.persistBlocked(ctx, projectID, req.TaskID, "verification/review workflow unavailable", "task.verification.unavailable", "verification")
 		if err != nil {
-			return DispatchResult{}, err
+			return base, err
 		}
-		snap.ActiveDAG = &next
-		if err := s.record(&snap, "task.verification.unavailable", req.TaskID, "verification"); err != nil {
-			return DispatchResult{}, err
-		}
-		if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
-			return DispatchResult{}, err
-		}
-		return DispatchResult{Execution: execution, Snapshot: snap}, ErrWorkflowUnavailable
+		base.Snapshot = snap
+		return base, ErrWorkflowUnavailable
 	}
 
 	wf, wfErr := s.Workflow.VerifyAndAccept(ctx, req.TaskID, execution)
+	base.Workflow = &wf
 	if wfErr != nil {
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, "verification workflow error: "+classifyError(wfErr))
-		if err == nil {
-			snap.ActiveDAG = &next
-			_ = s.record(&snap, "task.verification.error", req.TaskID, "verification")
-			_ = s.save(context.WithoutCancel(ctx), &snap)
+		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "verification workflow error: "+classifyError(wfErr), "task.verification.error", "verification")
+		if commitErr != nil {
+			return base, errors.Join(wfErr, commitErr)
 		}
-		return DispatchResult{Execution: execution, Workflow: &wf, Snapshot: snap}, wfErr
+		base.Snapshot = snap
+		return base, wfErr
 	}
 	if !wf.Accepted {
 		reason := strings.TrimSpace(wf.Reason)
 		if reason == "" {
 			reason = "verification/review did not accept candidate"
 		}
-		next, err := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskBlocked, reason)
+		snap, err := s.persistBlocked(ctx, projectID, req.TaskID, reason, "task.verification.rejected", "verification")
 		if err != nil {
-			return DispatchResult{}, err
+			return base, err
 		}
-		snap.ActiveDAG = &next
-		if err := s.record(&snap, "task.verification.rejected", req.TaskID, "verification"); err != nil {
-			return DispatchResult{}, err
-		}
-		if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
-			return DispatchResult{}, err
-		}
-		return DispatchResult{Execution: execution, Workflow: &wf, Snapshot: snap}, nil
+		base.Snapshot = snap
+		return base, nil
 	}
-	return s.finishAccepted(ctx, req.TaskID, execution, &wf, contract, snap, "verification")
+	return s.finishAccepted(ctx, projectID, req.TaskID, execution, &wf, "verification")
 }
 
-func (s *Service) persistInterrupted(ctx context.Context, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, snap ProjectSnapshot, retErr error) (DispatchResult, error) {
+func (s *Service) persistInterrupted(ctx context.Context, projectID, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, retErr error) (DispatchResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	persistCtx := context.WithoutCancel(ctx)
+	snap, err := s.loadRunningForCommit(persistCtx, projectID, taskID)
+	if err != nil {
+		if retErr != nil {
+			return DispatchResult{Execution: execution, Workflow: wf}, errors.Join(retErr, err)
+		}
+		return DispatchResult{Execution: execution, Workflow: wf}, err
+	}
 	next, err := snap.ActiveDAG.Transition(taskID, engineering.TaskInterrupted, "")
 	if err != nil {
 		return DispatchResult{}, err
@@ -191,15 +192,52 @@ func (s *Service) persistInterrupted(ctx context.Context, taskID engineering.ID,
 	if err := s.record(&snap, "task.execution.interrupted", taskID, "engineering_harness"); err != nil {
 		return DispatchResult{}, err
 	}
-	if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
+	if err := s.save(persistCtx, &snap); err != nil {
 		return DispatchResult{}, err
 	}
 	return DispatchResult{Execution: execution, Workflow: wf, Snapshot: snap}, retErr
 }
 
-func (s *Service) finishAccepted(ctx context.Context, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, contract engineering.CompletionContract, snap ProjectSnapshot, source string) (DispatchResult, error) {
-	// Human authority is project fact owned by the control plane. Only decisions
-	// scoped to this node join independently produced Harness/workflow facts.
+func (s *Service) persistBlocked(ctx context.Context, projectID, taskID engineering.ID, reason, kind, source string) (ProjectSnapshot, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	persistCtx := context.WithoutCancel(ctx)
+	snap, err := s.loadRunningForCommit(persistCtx, projectID, taskID)
+	if err != nil {
+		return ProjectSnapshot{}, err
+	}
+	next, err := snap.ActiveDAG.Transition(taskID, engineering.TaskBlocked, reason)
+	if err != nil {
+		return ProjectSnapshot{}, err
+	}
+	snap.ActiveDAG = &next
+	if err := s.record(&snap, kind, taskID, source); err != nil {
+		return ProjectSnapshot{}, err
+	}
+	if err := s.save(persistCtx, &snap); err != nil {
+		return ProjectSnapshot{}, err
+	}
+	return snap, nil
+}
+
+func (s *Service) finishAccepted(ctx context.Context, projectID, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, source string) (DispatchResult, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	persistCtx := context.WithoutCancel(ctx)
+	snap, err := s.loadRunningForCommit(persistCtx, projectID, taskID)
+	if err != nil {
+		return DispatchResult{Execution: execution, Workflow: wf}, err
+	}
+	contract, ok := snap.Contracts[taskID]
+	if !ok {
+		return DispatchResult{Execution: execution, Workflow: wf, Snapshot: snap}, fmt.Errorf("%w: task %s CompletionContract changed or disappeared", ErrDispatchConflict, taskID)
+	}
+
+	// Human authority is project fact owned by the control plane. Decisions are
+	// read from the latest snapshot so authority recorded while the Agent runs is
+	// neither lost nor overwritten by stale dispatch state.
 	authority := append([]engineering.AuthorityDecision(nil), wf.Facts.Authority...)
 	for _, record := range snap.AuthorityDecisions {
 		if record.NodeID == taskID {
@@ -217,7 +255,7 @@ func (s *Service) finishAccepted(ctx context.Context, taskID engineering.ID, exe
 		if err := s.record(&snap, "task.completion.blocked", taskID, "completion_contract"); err != nil {
 			return DispatchResult{}, err
 		}
-		if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
+		if err := s.save(persistCtx, &snap); err != nil {
 			return DispatchResult{}, err
 		}
 		return DispatchResult{Execution: execution, Workflow: wf, Completion: &completion, Snapshot: snap}, nil
@@ -238,8 +276,26 @@ func (s *Service) finishAccepted(ctx context.Context, taskID engineering.ID, exe
 	if err := s.record(&snap, "task.completed", taskID, "completion_contract"); err != nil {
 		return DispatchResult{}, err
 	}
-	if err := s.save(context.WithoutCancel(ctx), &snap); err != nil {
+	if err := s.save(persistCtx, &snap); err != nil {
 		return DispatchResult{}, err
 	}
 	return DispatchResult{Execution: execution, Workflow: wf, Completion: &completion, Snapshot: snap}, nil
+}
+
+func (s *Service) loadRunningForCommit(ctx context.Context, projectID, taskID engineering.ID) (ProjectSnapshot, error) {
+	snap, err := s.Repo.Load(ctx, projectID)
+	if err != nil {
+		return ProjectSnapshot{}, err
+	}
+	if snap.ActiveDAG == nil {
+		return ProjectSnapshot{}, fmt.Errorf("%w: active DAG disappeared while task %s was executing", ErrDispatchConflict, taskID)
+	}
+	node, ok := findNode(*snap.ActiveDAG, taskID)
+	if !ok {
+		return ProjectSnapshot{}, fmt.Errorf("%w: task %s no longer exists in current DAG", ErrDispatchConflict, taskID)
+	}
+	if node.State != engineering.TaskRunning {
+		return ProjectSnapshot{}, fmt.Errorf("%w: task %s state=%s, expected running", ErrDispatchConflict, taskID, node.State)
+	}
+	return snap, nil
 }
