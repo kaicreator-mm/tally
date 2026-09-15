@@ -102,7 +102,8 @@ func (a *environmentAdapter) Resolve(ctx context.Context, w WorkspaceRef) (Resol
 		return ResolvedWorkspace{}, &EnvironmentError{Kind: FailureWorkspaceUnavailable, Environment: a.kind, Target: w.Target, Operation: "resolve", Err: errors.New("environment-local workspace path is required")}
 	}
 	if err := a.verifyWorkspace(ctx, w); err != nil {
-		if a.recreate == nil {
+		var typed *EnvironmentError
+		if a.recreate == nil || !errors.As(err, &typed) || typed.Kind != FailureWorkspaceUnavailable {
 			return ResolvedWorkspace{}, err
 		}
 		if recErr := a.recreate(ctx, w); recErr != nil {
@@ -146,6 +147,9 @@ func (a *environmentAdapter) InspectWorkspace(ctx context.Context, w WorkspaceRe
 	if err := a.validateWorkspaceTarget(w); err != nil {
 		return WorkspaceInspection{}, err
 	}
+	if strings.TrimSpace(w.Path) == "" {
+		return WorkspaceInspection{}, &EnvironmentError{Kind: FailureWorkspaceUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.inspect", Err: errors.New("workspace path is required")}
+	}
 	if a.exec == nil {
 		return WorkspaceInspection{}, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.inspect", Err: errors.New("process runner is not configured")}
 	}
@@ -170,14 +174,13 @@ func (a *environmentAdapter) CleanupWorkspace(ctx context.Context, w WorkspaceRe
 	if err := a.validateWorkspaceTarget(w); err != nil {
 		return err
 	}
-	path := strings.TrimSpace(w.Path)
-	if path == "" || path == "/" || path == "." {
-		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("refusing unsafe workspace cleanup path")}
+	if unsafeCleanupPath(a.kind, w.Path) {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: fmt.Errorf("refusing unsafe workspace cleanup path %q", w.Path)}
 	}
 	if a.exec == nil {
 		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("process runner is not configured")}
 	}
-	res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"rm", "-rf", "--", path}})
+	res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"rm", "-rf", "--", w.Path}})
 	if err != nil {
 		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: err}
 	}
@@ -433,11 +436,10 @@ func (LocalEnvironment) CleanupWorkspace(_ context.Context, w WorkspaceRef) erro
 	if w.Environment != EnvironmentLocal {
 		return ErrUnsupportedEnvironment
 	}
-	path := strings.TrimSpace(w.Path)
-	if path == "" || path == "/" || path == "." {
-		return &EnvironmentError{Kind: FailureCleanup, Environment: EnvironmentLocal, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("refusing unsafe workspace cleanup path")}
+	if unsafeCleanupPath(EnvironmentLocal, w.Path) {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: EnvironmentLocal, Target: w.Target, Operation: "workspace.cleanup", Err: fmt.Errorf("refusing unsafe workspace cleanup path %q", w.Path)}
 	}
-	if err := os.RemoveAll(path); err != nil {
+	if err := os.RemoveAll(w.Path); err != nil {
 		return &EnvironmentError{Kind: FailureCleanup, Environment: EnvironmentLocal, Target: w.Target, Operation: "workspace.cleanup", Err: err}
 	}
 	return nil
