@@ -71,8 +71,11 @@ func remoteShellCommand(cmd Command) (string, error) {
 		parts = append(parts, "env")
 		for _, entry := range cmd.Env {
 			key, _, ok := strings.Cut(entry, "=")
-			if !ok || !envNameRE.MatchString(key) {
-				return "", fmt.Errorf("runner: 无效环境变量 %q", entry)
+			if !ok {
+				return "", errors.New("runner: environment entry must use KEY=VALUE form")
+			}
+			if !envNameRE.MatchString(key) {
+				return "", fmt.Errorf("runner: invalid environment variable name %q", key)
 			}
 			parts = append(parts, shellQuote(entry))
 		}
