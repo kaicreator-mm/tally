@@ -9,25 +9,28 @@ import (
 	"time"
 
 	"tally/internal/engineering"
+	"tally/internal/multiagent"
 	"tally/internal/taskexecution"
 )
 
 type Service struct {
-	Repo     Repository
-	Executor taskexecution.AgentExecutor
-	Workflow TaskWorkflow
-	Harness  TaskHarness
-	Actor    string
-	Now      func() time.Time
+	Repo       Repository
+	Executor   taskexecution.AgentExecutor
+	Workflow   TaskWorkflow
+	Harness    TaskHarness
+	MultiAgent *multiagent.Engine
+	Actor      string
+	Now        func() time.Time
 
-	mu sync.Mutex // serializes project mutations in this process; repository remains truth.
+	mu          sync.Mutex // serializes project mutations in this process; repository remains truth.
+	multiActive map[engineering.ID]bool
 }
 
 func NewService(repo Repository, exec taskexecution.AgentExecutor, workflow TaskWorkflow) (*Service, error) {
 	if repo == nil {
 		return nil, errors.New("controlplane: repository is required")
 	}
-	return &Service{Repo: repo, Executor: exec, Workflow: workflow, Actor: "tally-controlplane", Now: time.Now}, nil
+	return &Service{Repo: repo, Executor: exec, Workflow: workflow, Actor: "tally-controlplane", Now: time.Now, multiActive: map[engineering.ID]bool{}}, nil
 }
 
 // NewServiceWithHarness builds the production v1.5 composition in which the
@@ -43,6 +46,20 @@ func NewServiceWithHarness(repo Repository, harness TaskHarness) (*Service, erro
 		return nil, err
 	}
 	s.Harness = harness
+	return s, nil
+}
+
+// NewServiceWithMultiAgent composes the v1.5.4 role workflow above the frozen
+// v1.5.0 AgentExecutor contract. It does not create a second Agent runtime.
+func NewServiceWithMultiAgent(repo Repository, engine *multiagent.Engine) (*Service, error) {
+	if engine == nil {
+		return nil, ErrMultiAgentUnavailable
+	}
+	s, err := NewService(repo, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	s.MultiAgent = engine
 	return s, nil
 }
 
@@ -202,7 +219,9 @@ func (s *Service) RestartTask(ctx context.Context, projectID, taskID engineering
 		// Best-effort cancel of an in-process run. Restart correctness never
 		// depends on a resumable Agent session: persisted running is first
 		// recovered to interrupted and then explicitly returned to ready.
-		if s.Harness != nil {
+		if s.MultiAgent != nil && s.multiActive[taskID] {
+			_ = s.MultiAgent.Cancel(taskID)
+		} else if s.Harness != nil {
 			_ = s.Harness.Cancel(taskID)
 		} else if s.Executor != nil {
 			_ = s.Executor.Cancel(taskID)
@@ -237,7 +256,14 @@ func (s *Service) loadOrNew(ctx context.Context, id engineering.ID) (ProjectSnap
 	if !errors.Is(err, ErrProjectNotFound) {
 		return ProjectSnapshot{}, err
 	}
-	return ProjectSnapshot{SchemaVersion: SnapshotSchemaVersion, ProjectID: id, Contracts: map[engineering.ID]engineering.CompletionContract{}, UpdatedAt: s.now()}, nil
+	return ProjectSnapshot{
+		SchemaVersion:       SnapshotSchemaVersion,
+		ProjectID:           id,
+		Contracts:           map[engineering.ID]engineering.CompletionContract{},
+		MultiAgentPolicies:  map[engineering.ID]multiagent.TaskPolicy{},
+		MultiAgentWorkflows: map[engineering.ID]multiagent.WorkflowState{},
+		UpdatedAt:           s.now(),
+	}, nil
 }
 
 func (s *Service) save(ctx context.Context, snap *ProjectSnapshot) error {
