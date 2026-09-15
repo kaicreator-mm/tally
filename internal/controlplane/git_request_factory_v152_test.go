@@ -38,6 +38,19 @@ func TestV152GitTaskRequestFactoryBuildsSSHLocatorWithoutHostStat(t *testing.T) 
 	if req.Workspace.Path != "/remote/tally/workspaces/TASK-SSH" || req.Workspace.Environment != taskexecution.EnvironmentSSH {
 		t.Fatalf("workspace=%+v", req.Workspace)
 	}
+	for _, required := range []taskexecution.EnvironmentCapability{
+		taskexecution.CapabilityProcess,
+		taskexecution.CapabilityCancel,
+		taskexecution.CapabilityWorkspaceRead,
+		taskexecution.CapabilityWorkspaceWrite,
+		"git",
+		"tool:dsh",
+		"secret:DEEPSEEK_API_KEY",
+	} {
+		if !hasEnvironmentCapability(req.RequiredCapabilities.Environment, required) {
+			t.Fatalf("missing implicit SSH execution capability %q in %v", required, req.RequiredCapabilities.Environment)
+		}
+	}
 }
 
 func TestV152GitTaskRequestFactoryBuildsDockerLocatorWithoutHostStat(t *testing.T) {
@@ -64,6 +77,31 @@ func TestV152GitTaskRequestFactoryBuildsDockerLocatorWithoutHostStat(t *testing.
 	if req.Workspace.Path != "/workspace/TASK-DOCKER" || req.Workspace.Environment != taskexecution.EnvironmentDocker {
 		t.Fatalf("workspace=%+v", req.Workspace)
 	}
+	for _, required := range []taskexecution.EnvironmentCapability{"docker", "git", "tool:dsh", "secret:DEEPSEEK_API_KEY"} {
+		if !hasEnvironmentCapability(req.RequiredCapabilities.Environment, required) {
+			t.Fatalf("missing implicit Docker execution capability %q in %v", required, req.RequiredCapabilities.Environment)
+		}
+	}
+}
+
+func TestV152LocalRequirementsRemainTaskDefined(t *testing.T) {
+	got := requiredEnvironmentCapabilities("dsh", taskexecution.EnvironmentLocal, []string{"workspace.write"})
+	if len(got) != 1 || got[0] != taskexecution.CapabilityWorkspaceWrite {
+		t.Fatalf("local requirements changed unexpectedly: %v", got)
+	}
+}
+
+func TestV152RemoteRequirementsDeduplicateTaskRequirements(t *testing.T) {
+	got := requiredEnvironmentCapabilities("dsh", taskexecution.EnvironmentSSH, []string{"git", "process", "git"})
+	count := 0
+	for _, capability := range got {
+		if capability == "git" {
+			count++
+		}
+	}
+	if count != 1 {
+		t.Fatalf("git requirement count=%d in %v", count, got)
+	}
 }
 
 func TestV152NonLocalWorkspaceRootRejectsRoot(t *testing.T) {
@@ -82,4 +120,13 @@ func TestV152NonLocalWorkspaceRootRejectsRoot(t *testing.T) {
 	if _, err := taskWorkspaceLocation("/", engineering.ID("TASK-1"), taskexecution.EnvironmentSSH); err == nil || !strings.Contains(err.Error(), "unsafe") {
 		t.Fatalf("err=%v", err)
 	}
+}
+
+func hasEnvironmentCapability(have []taskexecution.EnvironmentCapability, want taskexecution.EnvironmentCapability) bool {
+	for _, capability := range have {
+		if capability == want {
+			return true
+		}
+	}
+	return false
 }
