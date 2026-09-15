@@ -195,7 +195,7 @@ func (a *environmentAdapter) Discover(ctx context.Context) (EnvironmentProfile, 
 		p.OS = strings.TrimSpace(res.Stdout)
 	}
 	if res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"uname", "-m"}}); err == nil && res.ExitCode == 0 {
-		p.Architecture = strings.TrimSpace(res.Stdout)
+		p.Architecture = normalizeArchitecture(strings.TrimSpace(res.Stdout))
 	}
 	tools := append([]string{"git", "docker"}, a.probeTools...)
 	seen := map[string]bool{}
@@ -236,6 +236,7 @@ func cloneEnvironmentProfile(in EnvironmentProfile) EnvironmentProfile {
 	for k, v := range in.Resources {
 		out.Resources[k] = v
 	}
+	out.Architecture = normalizeArchitecture(out.Architecture)
 	return out
 }
 
@@ -257,6 +258,24 @@ func (a *environmentAdapter) ValidateCapabilities(ctx context.Context, required 
 		profile, err = a.Discover(ctx)
 		if err != nil {
 			return err
+		}
+		for _, c := range required {
+			tool, ok := strings.CutPrefix(strings.TrimSpace(string(c)), "tool:")
+			tool = strings.TrimSpace(tool)
+			if !ok || tool == "" {
+				continue
+			}
+			if _, exists := profile.Tools[tool]; exists {
+				continue
+			}
+			res, runErr := a.exec.Run(ctx, runner.Command{Argv: []string{tool, "--version"}})
+			if runErr == nil && res.ExitCode == 0 {
+				value := strings.TrimSpace(res.Stdout)
+				if value == "" {
+					value = strings.TrimSpace(res.Stderr)
+				}
+				profile.Tools[tool] = value
+			}
 		}
 	}
 	var missing []EnvironmentCapability
@@ -286,7 +305,7 @@ func profileHasCapability(p EnvironmentProfile, capability EnvironmentCapability
 		return strings.EqualFold(strings.TrimSpace(p.OS), strings.TrimSpace(value))
 	}
 	if value, ok := strings.CutPrefix(raw, "arch:"); ok {
-		return strings.EqualFold(strings.TrimSpace(p.Architecture), strings.TrimSpace(value))
+		return normalizeArchitecture(p.Architecture) == normalizeArchitecture(value)
 	}
 	if value, ok := strings.CutPrefix(raw, "tool:"); ok {
 		_, exists := p.Tools[strings.TrimSpace(value)]
@@ -304,6 +323,17 @@ func profileHasCapability(p EnvironmentProfile, capability EnvironmentCapability
 		return !hasExpected || strings.TrimSpace(actual) == strings.TrimSpace(expected)
 	}
 	return false
+}
+
+func normalizeArchitecture(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "x86_64", "x64", "amd64":
+		return "amd64"
+	case "aarch64", "arm64":
+		return "arm64"
+	default:
+		return strings.ToLower(strings.TrimSpace(value))
+	}
 }
 
 type SSHEnvironment struct{ adapter environmentAdapter }
