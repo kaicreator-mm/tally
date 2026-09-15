@@ -34,19 +34,22 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		}
 	} else {
 		var runtime agentruntime.Runtime
+		isolationVerified := os.Getenv("TALLY_V15_SESSION_ISOLATION_VERIFIED") == "1"
 		switch runtimeName {
 		case "fake":
 			runtime = fake.New(fake.Config{})
 		case "codex":
 			runtime = codex.New(codex.Config{
-				BinPath: os.Getenv("TALLY_V15_CODEX_BIN"),
-				Model:   os.Getenv("TALLY_V15_MODEL"),
+				BinPath:                  os.Getenv("TALLY_V15_CODEX_BIN"),
+				Model:                    os.Getenv("TALLY_V15_MODEL"),
+				SessionIsolationVerified: isolationVerified,
 			})
 		case "dsh":
 			runtime = dsh.New(dsh.Config{
-				BinPath:  os.Getenv("TALLY_V15_DSH_BIN"),
-				Model:    os.Getenv("TALLY_V15_MODEL"),
-				Provider: os.Getenv("TALLY_V15_DSH_PROVIDER"),
+				BinPath:                  os.Getenv("TALLY_V15_DSH_BIN"),
+				Model:                    os.Getenv("TALLY_V15_MODEL"),
+				Provider:                 os.Getenv("TALLY_V15_DSH_PROVIDER"),
+				SessionIsolationVerified: isolationVerified,
 			})
 		default:
 			return nil, "", fmt.Errorf("v1.5 control plane: unsupported TALLY_V15_RUNTIME %q (want fake|codex|dsh)", runtimeName)
