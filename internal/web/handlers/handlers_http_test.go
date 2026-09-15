@@ -22,6 +22,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"golang.org/x/crypto/bcrypt"
 
+	"tally/internal/controlplane"
 	"tally/internal/gitwriter"
 	"tally/internal/knowledge"
 	"tally/internal/web"
@@ -87,6 +88,20 @@ func newTestServerFull(t *testing.T, tasks handlers.TaskSource, q handlers.JobQu
 	if err != nil {
 		t.Fatalf("bcrypt: %v", err)
 	}
+	// 生产组合(cmd/server)始终挂载 v1.5 Control Plane;测试服务器保持同一
+	// 拓扑,导航里的 /v15/control-plane 才指向真实路由而不是占位。
+	cpRepo, err := controlplane.NewFileRepository(t.TempDir())
+	if err != nil {
+		t.Fatalf("controlplane file repository: %v", err)
+	}
+	cpService, err := controlplane.NewService(cpRepo, nil, nil)
+	if err != nil {
+		t.Fatalf("controlplane service: %v", err)
+	}
+	cpHandler, err := controlplane.NewHTTPHandler(cpService)
+	if err != nil {
+		t.Fatalf("controlplane http handler: %v", err)
+	}
 	deps := web.Deps{
 		Sessions:     &fakeSessions{tokens: map[string]bool{sessionToken: true}},
 		PasswordHash: string(pw),
@@ -95,6 +110,7 @@ func newTestServerFull(t *testing.T, tasks handlers.TaskSource, q handlers.JobQu
 		Tasks:        tasks,
 		Queue:        q,
 		Knowledge:    kb,
+		ControlPlane: cpHandler,
 	}
 	srv := httptest.NewServer(web.NewRouter(deps))
 	t.Cleanup(srv.Close)
