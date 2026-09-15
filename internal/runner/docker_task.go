@@ -84,22 +84,35 @@ func (d *DockerTaskRunner) Run(ctx context.Context, cmd Command) (Result, error)
 	if d.Profile.ReadOnly {
 		args = append(args, "--read-only")
 	}
-	env := append([]string(nil), cmd.Env...)
-	for _, entry := range env {
+
+	// Keep environment values (which may contain credentials) out of Docker CLI
+	// argv. `docker run --env KEY` copies KEY from the docker client's environment,
+	// so values travel through exec.Cmd.Env rather than process arguments/loggable
+	// command lines. Duplicate keys are deterministic last-wins.
+	envByKey := map[string]string{}
+	for _, entry := range cmd.Env {
 		key, _, ok := strings.Cut(entry, "=")
 		if !ok || !envNameRE.MatchString(key) {
 			return Result{}, fmt.Errorf("runner: 无效环境变量 %q", entry)
 		}
+		envByKey[key] = entry
 	}
-	sort.Strings(env)
-	for _, entry := range env {
-		args = append(args, "--env", entry)
+	keys := make([]string, 0, len(envByKey))
+	for key := range envByKey {
+		keys = append(keys, key)
 	}
+	sort.Strings(keys)
+	outerEnv := make([]string, 0, len(keys))
+	for _, key := range keys {
+		args = append(args, "--env", key)
+		outerEnv = append(outerEnv, envByKey[key])
+	}
+
 	args = append(args, d.Profile.ExtraArgs...)
 	args = append(args, d.Profile.Image)
 	args = append(args, cmd.Argv...)
 
-	res, err := d.exec().Run(ctx, Command{Argv: args})
+	res, err := d.exec().Run(ctx, Command{Argv: args, Env: outerEnv})
 	if err != nil && ctx.Err() != nil {
 		d.cleanup(name)
 	}
