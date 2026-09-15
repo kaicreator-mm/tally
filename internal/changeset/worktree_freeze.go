@@ -16,12 +16,12 @@ import (
 var (
 	ErrUnsafeWorktreePath = errors.New("changeset: unsafe worktree candidate path")
 	ErrCandidateDeletion  = errors.New("changeset: candidate deletion is not representable as full post-change content")
+	ErrPrimaryWorktree    = errors.New("changeset: owner primary worktree cannot be frozen as an execution candidate")
 )
 
 // WorktreeFreezeSpec identifies one completed implementation attempt whose
 // Tally-owned disposable Git worktree should be frozen into an immutable
-// ChangeSet. The owner worktree is never accepted here: callers are expected
-// to pass a workspace created by internal/workspace.
+// ChangeSet.
 type WorktreeFreezeSpec struct {
 	Project       core.ProjectID
 	BaseRevision  string
@@ -31,10 +31,12 @@ type WorktreeFreezeSpec struct {
 }
 
 // FreezeWorktree captures the complete post-change content of every modified
-// or untracked file in a disposable Git worktree and returns one immutable
-// ChangeSet. No changes means (nil, false, nil): a completed Agent claim alone
-// is not a candidate. File deletions remain fail-closed because the current
-// ChangeSet model represents changed files by complete post-change content.
+// or untracked file in a disposable linked Git worktree and returns one
+// immutable ChangeSet. The boundary refuses a primary checkout (.git directory)
+// so caller mistakes cannot turn the owner worktree into an execution candidate.
+// No changes means (nil, false, nil): a completed Agent claim alone is not a
+// candidate. File deletions remain fail-closed because the current ChangeSet
+// model represents changed files by complete post-change content.
 func FreezeWorktree(ctx context.Context, spec WorktreeFreezeSpec) (*ChangeSet, bool, error) {
 	if strings.TrimSpace(spec.WorkspacePath) == "" {
 		return nil, false, errors.New("changeset: workspace path is required")
@@ -44,6 +46,9 @@ func FreezeWorktree(ctx context.Context, spec WorktreeFreezeSpec) (*ChangeSet, b
 	}
 	if strings.TrimSpace(spec.ProducerRun) == "" {
 		return nil, false, ErrNoProducerRun
+	}
+	if err := requireDisposableLinkedWorktree(spec.WorkspacePath); err != nil {
+		return nil, false, err
 	}
 
 	local := runner.LocalRunner{}
@@ -112,6 +117,20 @@ func FreezeWorktree(ctx context.Context, spec WorktreeFreezeSpec) (*ChangeSet, b
 		return nil, false, err
 	}
 	return candidate, true, nil
+}
+
+func requireDisposableLinkedWorktree(path string) error {
+	info, err := os.Lstat(filepath.Join(path, ".git"))
+	if err != nil {
+		return fmt.Errorf("%w: inspect .git entry: %v", ErrUnsafeWorktreePath, err)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("%w: %s", ErrPrimaryWorktree, path)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%w: .git entry is not a linked-worktree gitfile", ErrUnsafeWorktreePath)
+	}
+	return nil
 }
 
 type worktreeStatusEntry struct {
