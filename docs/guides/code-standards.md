@@ -12,13 +12,14 @@ Go 的通用规范以 [Effective Go](https://go.dev/doc/effective_go) 和 [Googl
 INV-6 的检查从这里读。**加依赖 = 改这个清单**,改动会出现在 diff 里。
 
 ```
-github.com/jackc/pgx/v5           数据库驱动
+github.com/jackc/pgx/v5           PostgreSQL adapter / brownfield 数据库驱动
 github.com/pressly/goose/v3       迁移
 github.com/go-chi/chi/v5          HTTP 中间件
 github.com/go-git/go-git/v5       读 git
 golang.org/x/crypto               SSH
 golang.org/x/sync                 errgroup
 gopkg.in/yaml.v3                  环境定义 YAML 解析(.tally/environments/*.yaml)
+modernc.org/sqlite                 v1.5 默认 SQLite，纯 Go driver
 ```
 
 工具(不进 go.mod 的 require,用 `tools.go` 管):`sqlc`、`golangci-lint`、`goose` CLI。
@@ -299,3 +300,23 @@ Unknown classifications route to escalation, not automatic repair.
 ### Production reachability
 
 For production behavior, a component is not complete merely because direct unit tests instantiate it. The owned integration task must prove it is reachable from the real composition root.
+
+---
+
+## v1.5 persistence additions
+
+### Core persistence is database-neutral
+
+`internal/persistence` and the v1.5 Control Plane must not expose `pgx`, `pgtype`, JSONB query semantics, database-generated domain IDs, database clock semantics, row locks, leases or heartbeats through Core contracts.
+
+### SQLite is the default adapter
+
+The v1.5 default persistence profile uses pure-Go SQLite so a fresh Core install does not require PostgreSQL or CGO. PostgreSQL remains an optional adapter/brownfield dependency.
+
+### Application owns identity and semantic time
+
+Core supplies durable identifiers and UTC semantic timestamps to adapters. Database sequences, `now()` and trigger-only rules are never the sole source of Core correctness.
+
+### Immutable evidence is append-only in Core
+
+Fact, Evidence, Action/Audit and Outcome stores expose append/read behavior. Adapter constraints reinforce this invariant but never replace it.

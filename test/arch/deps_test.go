@@ -17,6 +17,7 @@ func TestDepsWhitelist(t *testing.T) {
 		"golang.org/x/crypto":         true,
 		"golang.org/x/sync":           true,
 		"gopkg.in/yaml.v3":            true, // 环境定义 YAML 解析
+		"modernc.org/sqlite":           true, // v1.5 默认 SQLite，纯 Go driver
 	}
 
 	data, err := os.ReadFile("../../go.mod")
