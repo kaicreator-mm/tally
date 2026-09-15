@@ -101,7 +101,7 @@ func TestV152SSHResolveUsesEnvironmentPathWithoutLocalPath(t *testing.T) {
 }
 
 func TestV152ExecutorBindsRemoteRuntimeToEnvironmentRunner(t *testing.T) {
-	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}}}
+	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}, {ExitCode: 0}}}
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152Runtime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
@@ -114,10 +114,13 @@ func TestV152ExecutorBindsRemoteRuntimeToEnvironmentRunner(t *testing.T) {
 	if runtime.bound != f {
 		t.Fatal("remote runtime was not bound to selected environment runner")
 	}
+	if !reflect.DeepEqual(f.calls[0].Argv, []string{"true"}) {
+		t.Fatalf("preflight=%v", f.calls[0].Argv)
+	}
 }
 
 func TestV152NonLocalRuntimeCannotSilentlyFallBackToLocal(t *testing.T) {
-	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}}}
+	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}, {ExitCode: 0}}}
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152LocalOnlyRuntime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
@@ -128,6 +131,24 @@ func TestV152NonLocalRuntimeCannotSilentlyFallBackToLocal(t *testing.T) {
 	}
 	if runtime.starts != 0 {
 		t.Fatal("local Start was called for a non-local environment")
+	}
+}
+
+func TestV152NonLocalPreflightClassifiesTransportFailure(t *testing.T) {
+	f := &v152ScriptedRunner{errs: []error{errors.New("ssh unavailable")}}
+	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
+	runtime := &v152Runtime{}
+	ex, _ := NewRuntimeExecutor(runtime, env)
+	_, err := ex.Execute(context.Background(), v152RemoteReq())
+	var typed *EnvironmentError
+	if !errors.As(err, &typed) || typed.Kind != FailureEnvironmentUnavailable || typed.Operation != "environment.preflight" {
+		t.Fatalf("err=%T %v", err, err)
+	}
+	if len(runtime.starts) != 0 {
+		t.Fatal("runtime started despite unavailable environment")
+	}
+	if len(f.calls) != 1 || !reflect.DeepEqual(f.calls[0].Argv, []string{"true"}) {
+		t.Fatalf("calls=%v", f.calls)
 	}
 }
 
@@ -177,6 +198,7 @@ func TestV152ProfileCapabilityDiscoveryCoversArchitectureToolingAndSecrets(t *te
 
 func TestV152ProfileMismatchBlocksBeforeRuntimeStart(t *testing.T) {
 	f := &v152ScriptedRunner{results: []runner.Result{
+		{ExitCode: 0},
 		{Stdout: "Linux\n"},
 		{Stdout: "x86_64\n"},
 		{Stdout: "git version 2.45.0\n"},
@@ -195,7 +217,7 @@ func TestV152ProfileMismatchBlocksBeforeRuntimeStart(t *testing.T) {
 	if len(runtime.starts) != 0 {
 		t.Fatal("runtime started despite capability mismatch")
 	}
-	if len(f.calls) != 4 {
+	if len(f.calls) != 5 {
 		t.Fatalf("unexpected calls after capability rejection: %d", len(f.calls))
 	}
 }
