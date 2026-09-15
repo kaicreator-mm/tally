@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"tally/internal/intelligence"
+	"tally/internal/outcome"
 	"tally/internal/policygovernance"
 )
 
@@ -45,10 +46,17 @@ func TestGenerateProposalDirectAndAIRuntimeUseSameContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	outcome := evidence(t, policygovernance.EvidenceOutcome, "out-1")
+	outcomeEvidence := evidence(t, policygovernance.EvidenceOutcome, "out-1")
 	input := IntelligenceInput{
-		SupportingOutcomes: []string{"out-1"},
-		Evidence: []policygovernance.EvidenceRef{outcome},
+		Outcomes: []OutcomeFact{{
+			ID: "out-1",
+			Event: outcome.Event{
+				TaskID: "task-1",
+				Kind: outcome.KindRegressionFound,
+				RecordedAt: time.Date(2026, 9, 15, 9, 45, 0, 0, time.UTC),
+			},
+		}},
+		Evidence: []policygovernance.EvidenceRef{outcomeEvidence},
 		ApplicableScope: "tally/project",
 		Shared: true,
 		HighImpact: true,
@@ -74,7 +82,7 @@ func TestGenerateProposalDirectAndAIRuntimeUseSameContract(t *testing.T) {
 		t.Fatal("provider provenance was not preserved independently")
 	}
 	if len(a.SupportingOutcomes) != 1 || a.SupportingOutcomes[0] != "out-1" || a.ApplicableScope != input.ApplicableScope {
-		t.Fatal("accepted outcome/scope inputs were not pinned into proposal")
+		t.Fatal("accepted Outcome/scope inputs were not pinned into proposal")
 	}
 	if !a.RequiresAuthority() || !b.RequiresAuthority() {
 		t.Fatal("AI rule proposals must require independent authority")
