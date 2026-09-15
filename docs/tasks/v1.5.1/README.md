@@ -16,7 +16,7 @@ Artifacts:
 - `DECISION_LOCKS.md`
 - `TASK_DAG.md`
 - `L3_IMPLEMENTATION_EVIDENCE.md`
-- `PRODUCTION_PROFILE.md` — SQLite-first / PostgreSQL-optional production composition, migration and scheduler boundary
+- `PRODUCTION_PROFILE.md` — SQLite-first / PostgreSQL-optional production composition, pinned-Git request composition, fail-closed TaskHarness and local scheduler boundary
 - `VALIDATION_AND_CLOSURE.md` — implementation state, validation ledger, Critical Journeys, Hidden Validation contract and Release Qualification rule
 
 Local / Build Host carriers:
@@ -30,6 +30,8 @@ Issues:
 - #21 local TaskDAG scheduler / default queue removal
 - #22 production wiring / validation / release qualification
 
-Current implementation state: T151-01 through T151-06 are code-complete. T151-07/T151-08 remain evidence-gated because executable Local/Build Host, independent review and external held-out validation evidence are not available in the current ChatGPT Web environment.
+Current implementation state: T151-01 through T151-06 are code-complete. The SQLite-first production server can remain lifecycle-only with execution disabled, or explicitly compose `Active TaskDAG → LocalScheduler → Service.Dispatch → fail-closed TaskHarness → v1.5.0 AgentExecutor` when a Local runtime, Git content authority and prepared workspaces are configured. No PostgreSQL queue/BrownfieldHarness is required for that execution reachability, and Agent completion is not falsely promoted to acceptance while independent verification is absent.
+
+T151-07/T151-08 remain evidence-gated because executable Local/Build Host, independent review and external held-out validation evidence are not available in the current ChatGPT Web environment.
 
 Validation carrier for v1.5.1 is explicit Local / Build Host. GitHub Actions and all CI systems are prohibited. PR merge is not Release Qualification; no tag/release is allowed while mandatory gates remain `ENV-BLOCKED` or `NOT_RUN`.
