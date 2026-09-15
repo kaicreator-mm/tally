@@ -8,9 +8,16 @@ import (
 
 	"tally/internal/agentruntime"
 	"tally/internal/engineering"
+	"tally/internal/runner"
 )
 
 var ErrExecutionNotRunning = errors.New("taskexecution: task is not running")
+
+// EnvironmentRuntime is an additive v1.5.2 extension. A runtime that can be
+// launched outside Local accepts a generic Runner rather than SSH/Docker types.
+type EnvironmentRuntime interface {
+	StartInEnvironment(context.Context, agentruntime.StartRequest, runner.Runner) (agentruntime.Session, error)
+}
 
 type RuntimeExecutor struct {
 	Runtime     agentruntime.Runtime
@@ -66,10 +73,10 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		}
 		start.ResumeOf = ""
 	}
-	session, err := e.Runtime.Start(runCtx, start)
+	session, err := e.startSession(runCtx, start)
 	if err != nil && req.Policy.ResumeSession != "" && req.Policy.FallbackToFresh {
 		start.ResumeOf = ""
-		session, err = e.Runtime.Start(runCtx, start)
+		session, err = e.startSession(runCtx, start)
 	}
 	if err != nil {
 		if runCtx.Err() != nil {
@@ -94,6 +101,21 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		status = ExecutionInterrupted
 	}
 	return TaskExecutionResult{AgentClaim: claim, Workspace: req.Workspace, Runtime: req.Runtime, Environment: req.Environment, Status: status}, nil
+}
+
+func (e *RuntimeExecutor) startSession(ctx context.Context, start agentruntime.StartRequest) (agentruntime.Session, error) {
+	if e.Environment.Kind() == EnvironmentLocal {
+		return e.Runtime.Start(ctx, start)
+	}
+	processEnv, ok := e.Environment.(ProcessExecutionEnvironment)
+	if !ok || processEnv.ProcessRunner() == nil {
+		return nil, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Operation: "runtime.bind", Err: errors.New("environment does not expose a process runner")}
+	}
+	bound, ok := e.Runtime.(EnvironmentRuntime)
+	if !ok {
+		return nil, &EnvironmentError{Kind: FailureProcess, Environment: e.Environment.Kind(), Operation: "runtime.bind", Err: errors.New("runtime does not support non-local environment binding")}
+	}
+	return bound.StartInEnvironment(ctx, start, processEnv.ProcessRunner())
 }
 
 func (e *RuntimeExecutor) Cancel(id engineering.ID) error {

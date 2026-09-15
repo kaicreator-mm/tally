@@ -22,16 +22,15 @@ func (s *v152ScriptedRunner) Run(_ context.Context, c runner.Command) (runner.Re
 	i := len(s.calls) - 1
 	var r runner.Result
 	var err error
-	if i < len(s.results) {
-		r = s.results[i]
-	}
-	if i < len(s.errs) {
-		err = s.errs[i]
-	}
+	if i < len(s.results) { r = s.results[i] }
+	if i < len(s.errs) { err = s.errs[i] }
 	return r, err
 }
 
-type v152Runtime struct{ starts []agentruntime.StartRequest }
+type v152Runtime struct {
+	starts []agentruntime.StartRequest
+	bound  runner.Runner
+}
 
 func (r *v152Runtime) Descriptor() agentruntime.RuntimeDescriptor {
 	return agentruntime.RuntimeDescriptor{Name: "v152-fake", Capabilities: agentruntime.NewCapabilitySet()}
@@ -40,6 +39,15 @@ func (r *v152Runtime) Start(_ context.Context, s agentruntime.StartRequest) (age
 	r.starts = append(r.starts, s)
 	return &v152Session{}, nil
 }
+func (r *v152Runtime) StartInEnvironment(_ context.Context, s agentruntime.StartRequest, exec runner.Runner) (agentruntime.Session, error) {
+	r.starts = append(r.starts, s)
+	r.bound = exec
+	return &v152Session{}, nil
+}
+
+type v152LocalOnlyRuntime struct{ starts int }
+func (r *v152LocalOnlyRuntime) Descriptor() agentruntime.RuntimeDescriptor { return agentruntime.RuntimeDescriptor{Name: "local-only", Capabilities: agentruntime.NewCapabilitySet()} }
+func (r *v152LocalOnlyRuntime) Start(context.Context, agentruntime.StartRequest) (agentruntime.Session, error) { r.starts++; return &v152Session{}, nil }
 
 type v152Session struct{}
 func (*v152Session) Execute(context.Context, agentruntime.ExecuteRequest) (agentruntime.AgentRunResult, error) { return agentruntime.AgentRunResult{RunID: "r", SessionID: "s", Status: agentruntime.RunCompleted}, nil }
@@ -69,13 +77,25 @@ func TestV152SSHResolveUsesEnvironmentPathWithoutLocalPath(t *testing.T) {
 	if !reflect.DeepEqual(f.calls[0].Argv, want) { t.Fatalf("call=%v", f.calls[0].Argv) }
 }
 
-func TestV152ExecutorPassesEnvironmentLocation(t *testing.T) {
+func TestV152ExecutorBindsRemoteRuntimeToEnvironmentRunner(t *testing.T) {
 	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}}}
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152Runtime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
 	if _, err := ex.Execute(context.Background(), v152RemoteReq()); err != nil { t.Fatal(err) }
 	if len(runtime.starts) != 1 || runtime.starts[0].Workspace != "/remote/w" { t.Fatalf("starts=%+v", runtime.starts) }
+	if runtime.bound != f { t.Fatal("remote runtime was not bound to selected environment runner") }
+}
+
+func TestV152NonLocalRuntimeCannotSilentlyFallBackToLocal(t *testing.T) {
+	f := &v152ScriptedRunner{results: []runner.Result{{ExitCode: 0}}}
+	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
+	runtime := &v152LocalOnlyRuntime{}
+	ex, _ := NewRuntimeExecutor(runtime, env)
+	_, err := ex.Execute(context.Background(), v152RemoteReq())
+	var typed *EnvironmentError
+	if !errors.As(err, &typed) || typed.Kind != FailureProcess { t.Fatalf("err=%T %v", err, err) }
+	if runtime.starts != 0 { t.Fatal("local Start was called for a non-local environment") }
 }
 
 func TestV152LostWorkspaceCanRecreate(t *testing.T) {
