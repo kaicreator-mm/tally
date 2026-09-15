@@ -6,16 +6,24 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
+	"tally/internal/agentruntime"
 	"tally/internal/controlplane"
 	"tally/internal/persistence/migratev150"
 	"tally/internal/persistence/profile"
+	"tally/internal/taskexecution"
+	"tally/runtimes/codex"
+	"tally/runtimes/dsh"
+	"tally/runtimes/fake"
 )
 
 func main() {
@@ -43,7 +51,20 @@ func main() {
 		slog.Info("v1.5.0 snapshot import completed", "source_root", sourceRoot, "imported", len(report.Imported), "skipped_existing", len(report.Skipped))
 	}
 
-	service, err := controlplane.NewService(adapter, nil, nil)
+	runtimeName := strings.TrimSpace(os.Getenv("TALLY_V15_RUNTIME"))
+	var executor taskexecution.AgentExecutor
+	var scheduler *controlplane.LocalScheduler
+	executionState := "disabled"
+	verificationState := "not_configured"
+	if runtimeName != "" {
+		executor, err = localExecutorFromEnv(runtimeName)
+		if err != nil {
+			slog.Error("v1.5 Local AgentExecutor startup failed", "err", err)
+			os.Exit(1)
+		}
+	}
+
+	service, err := controlplane.NewService(adapter, executor, nil)
 	if err != nil {
 		slog.Error("v1.5 control plane startup failed", "err", err)
 		os.Exit(1)
@@ -56,13 +77,55 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", controlPlane)
+
+	if executor != nil {
+		requests, reqErr := controlplane.NewGitTaskRequestFactory(controlplane.GitTaskRequestFactoryConfig{
+			Repo:              os.Getenv("TALLY_V15_CONTENT_REPO"),
+			BaseRevision:      os.Getenv("TALLY_V15_BASE_REVISION"),
+			RuntimeID:         runtimeName,
+			WorkspaceRoot:     os.Getenv("TALLY_V15_WORKSPACE_ROOT"),
+			EnvironmentTarget: envOr("TALLY_V15_ENV_TARGET", "local"),
+			ModelProfile:      os.Getenv("TALLY_V15_MODEL"),
+		})
+		if reqErr != nil {
+			slog.Error("v1.5 scheduler request composition failed", "err", reqErr)
+			os.Exit(1)
+		}
+		maxConcurrent, parseErr := schedulerConcurrencyFromEnv()
+		if parseErr != nil {
+			slog.Error("v1.5 scheduler configuration failed", "err", parseErr)
+			os.Exit(1)
+		}
+		scheduler, err = controlplane.NewLocalScheduler(service, requests, maxConcurrent)
+		if err != nil {
+			slog.Error("v1.5 local scheduler startup failed", "err", err)
+			os.Exit(1)
+		}
+		schedulerHTTP, handlerErr := controlplane.NewSchedulerHTTPHandler(scheduler)
+		if handlerErr != nil {
+			slog.Error("v1.5 scheduler HTTP startup failed", "err", handlerErr)
+			os.Exit(1)
+		}
+		mux.Handle("POST /api/v15/projects/{project}/scheduler/recover", schedulerHTTP)
+		mux.Handle("POST /api/v15/projects/{project}/scheduler/run-once", schedulerHTTP)
+		mux.Handle("POST /api/v15/projects/{project}/scheduler/run", schedulerHTTP)
+		executionState = "local_scheduler+agent_executor"
+		// v1.5.1 deliberately does not pull the legacy PostgreSQL-backed
+		// BrownfieldHarness into SQLite-first Core. Agent completion therefore
+		// remains a claim and is BLOCKED if no independent verification workflow
+		// is composed; this is explicit degradation, never false acceptance.
+		verificationState = "legacy_brownfield_not_composed"
+	}
+
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{
-			"status":      "ok",
-			"component":   "tally-v1.5-core",
-			"persistence": string(selected),
-			"execution":   "not_configured",
+			"status":       "ok",
+			"component":    "tally-v1.5-core",
+			"persistence":  string(selected),
+			"execution":    executionState,
+			"runtime":      runtimeName,
+			"verification": verificationState,
 		})
 	})
 
@@ -75,11 +138,52 @@ func main() {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected, "execution", "not_configured")
+	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected, "execution", executionState, "runtime", runtimeName, "verification", verificationState)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("v1.5 Core server failed", "err", err)
 		os.Exit(1)
 	}
+}
+
+func localExecutorFromEnv(runtimeName string) (taskexecution.AgentExecutor, error) {
+	isolationVerified := os.Getenv("TALLY_V15_SESSION_ISOLATION_VERIFIED") == "1"
+	var runtime agentruntime.Runtime
+	switch runtimeName {
+	case "fake":
+		runtime = fake.New(fake.Config{})
+	case "codex":
+		runtime = codex.New(codex.Config{
+			BinPath:                  os.Getenv("TALLY_V15_CODEX_BIN"),
+			Model:                    os.Getenv("TALLY_V15_MODEL"),
+			SessionIsolationVerified: isolationVerified,
+		})
+	case "dsh":
+		runtime = dsh.New(dsh.Config{
+			BinPath:                  os.Getenv("TALLY_V15_DSH_BIN"),
+			Model:                    os.Getenv("TALLY_V15_MODEL"),
+			Provider:                 os.Getenv("TALLY_V15_DSH_PROVIDER"),
+			SessionIsolationVerified: isolationVerified,
+		})
+	default:
+		return nil, fmt.Errorf("v1.5 core: unsupported TALLY_V15_RUNTIME %q (want fake|codex|dsh)", runtimeName)
+	}
+	executor, err := taskexecution.NewRuntimeExecutor(runtime, taskexecution.LocalEnvironment{})
+	if err != nil {
+		return nil, fmt.Errorf("v1.5 core: build Local AgentExecutor: %w", err)
+	}
+	return executor, nil
+}
+
+func schedulerConcurrencyFromEnv() (int, error) {
+	raw := strings.TrimSpace(os.Getenv("TALLY_V15_SCHEDULER_MAX_CONCURRENT"))
+	if raw == "" {
+		return 2, nil
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil || n <= 0 {
+		return 0, fmt.Errorf("TALLY_V15_SCHEDULER_MAX_CONCURRENT must be a positive integer")
+	}
+	return n, nil
 }
 
 func envOr(key, fallback string) string {
