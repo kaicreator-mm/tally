@@ -45,7 +45,7 @@ func TestGitTaskRequestFactoryBuildsPinnedV150Request(t *testing.T) {
 		return executionBundleForTest("project-1", "0123456789abcdef", contract), nil
 	}
 
-	req, err := factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{
+	req, err := factory.BuildTaskExecutionRequest(context.Background(), executionSnapshotForTest("project-1"), engineering.TaskNode{
 		ID:                       "TASK-1",
 		RuntimeRequirements:      []string{"session.isolation"},
 		EnvironmentRequirements:  []string{"workspace.write"},
@@ -59,6 +59,9 @@ func TestGitTaskRequestFactoryBuildsPinnedV150Request(t *testing.T) {
 	}
 	if req.FrozenTaskContract.Kind != engineering.ArtifactTaskContract || req.FrozenTaskContract.Revision != contract.RevisionHash() {
 		t.Fatalf("request is not pinned to frozen TaskContract: %#v", req.FrozenTaskContract)
+	}
+	if len(req.EngineeringContext) != 3 || req.EngineeringContext[0].Kind != engineering.ArtifactRequirements || req.EngineeringContext[1].Kind != engineering.ArtifactProjectPlan || req.EngineeringContext[2].Kind != engineering.ArtifactArchitecture {
+		t.Fatalf("engineering context was not propagated: %#v", req.EngineeringContext)
 	}
 	if req.Workspace.BaseRevision != "0123456789abcdef" || req.Workspace.Path != workspace || req.Workspace.Environment != taskexecution.EnvironmentLocal {
 		t.Fatalf("unexpected workspace: %#v", req.Workspace)
@@ -107,7 +110,7 @@ func TestGitTaskRequestFactoryPinsMovingRevisionAfterFirstValidRequest(t *testin
 		return executionBundleForTest("project-1", "commit-1", contract), nil
 	}
 	for _, id := range []engineering.ID{"TASK-1", "TASK-2"} {
-		req, err := factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: id})
+		req, err := factory.BuildTaskExecutionRequest(context.Background(), executionSnapshotForTest("project-1"), engineering.TaskNode{ID: id})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -146,11 +149,11 @@ func TestGitTaskRequestFactoryRejectsProjectDriftWithoutPoisoningPin(t *testing.
 		}
 		return executionBundleForTest("project-1", "good-commit", contract), nil
 	}
-	_, err = factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: "TASK-1"})
+	_, err = factory.BuildTaskExecutionRequest(context.Background(), executionSnapshotForTest("project-1"), engineering.TaskNode{ID: "TASK-1"})
 	if err == nil || !strings.Contains(err.Error(), "project mismatch") {
 		t.Fatalf("expected project drift rejection, got %v", err)
 	}
-	req, err := factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: "TASK-1"})
+	req, err := factory.BuildTaskExecutionRequest(context.Background(), executionSnapshotForTest("project-1"), engineering.TaskNode{ID: "TASK-1"})
 	if err != nil {
 		t.Fatalf("valid retry after rejected bundle: %v", err)
 	}
@@ -159,11 +162,39 @@ func TestGitTaskRequestFactoryRejectsProjectDriftWithoutPoisoningPin(t *testing.
 	}
 }
 
+func TestGitTaskRequestFactoryRejectsMissingEngineeringContext(t *testing.T) {
+	factory, err := NewGitTaskRequestFactory(GitTaskRequestFactoryConfig{
+		Repo: "/content", BaseRevision: "main", RuntimeID: "fake", WorkspaceRoot: t.TempDir(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = factory.BuildTaskExecutionRequest(context.Background(), ProjectSnapshot{ProjectID: "project-1"}, engineering.TaskNode{ID: "TASK-1"})
+	if err == nil || !strings.Contains(err.Error(), "requirements, plan and architecture context") {
+		t.Fatalf("expected missing engineering context rejection, got %v", err)
+	}
+}
+
 func TestTaskWorkspacePathRejectsPathTraversal(t *testing.T) {
 	for _, id := range []engineering.ID{"../escape", `..\\escape`, "a/b"} {
 		if _, err := taskWorkspacePath(t.TempDir(), id); err == nil {
 			t.Fatalf("task id %q should be rejected as an unsafe workspace path", id)
 		}
+	}
+}
+
+func executionSnapshotForTest(projectID engineering.ID) ProjectSnapshot {
+	return ProjectSnapshot{
+		ProjectID: projectID,
+		Requirements: &engineering.RequirementsBaseline{Artifact: engineering.ArtifactRef{
+			ID: "req-art", Kind: engineering.ArtifactRequirements, URI: "mem:req",
+		}},
+		Plan: &engineering.ProjectPlan{AcceptedRevision: engineering.PlanningRevision{Artifact: engineering.ArtifactRef{
+			ID: "plan-art", Kind: engineering.ArtifactProjectPlan, URI: "mem:plan",
+		}}},
+		Architecture: &engineering.ArchitectureRevision{Artifact: engineering.ArtifactRef{
+			ID: "arch-art", Kind: engineering.ArtifactArchitecture, URI: "mem:arch",
+		}},
 	}
 }
 
