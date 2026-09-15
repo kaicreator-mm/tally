@@ -18,16 +18,16 @@ type OutcomeRef struct {
 }
 
 type IntelligenceInput struct {
-	Requirements       engineering.RequirementsBaseline                       `json:"requirements"`
-	Planning           engineering.PlanningRevision                           `json:"planning_revision"`
-	Architecture       engineering.ArchitectureRevision                       `json:"architecture"`
-	ActiveDAG          engineering.ActiveTaskDAG                              `json:"active_task_dag"`
-	Contracts          map[engineering.ID]engineering.CompletionContract      `json:"completion_contracts"`
-	Evidence           []engineering.EvidenceRef                              `json:"evidence,omitempty"`
-	Outcomes           []OutcomeRef                                           `json:"outcomes,omitempty"`
-	RuntimeConstraints []string                                               `json:"runtime_constraints,omitempty"`
-	GitRequirements    []string                                               `json:"git_requirements,omitempty"`
-	Triggers           []Trigger                                              `json:"triggers"`
+	Requirements       engineering.RequirementsBaseline                  `json:"requirements"`
+	Planning           engineering.PlanningRevision                      `json:"planning_revision"`
+	Architecture       engineering.ArchitectureRevision                  `json:"architecture"`
+	ActiveDAG          engineering.ActiveTaskDAG                         `json:"active_task_dag"`
+	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts"`
+	Evidence           []engineering.EvidenceRef                         `json:"evidence,omitempty"`
+	Outcomes           []OutcomeRef                                      `json:"outcomes,omitempty"`
+	RuntimeConstraints []string                                          `json:"runtime_constraints,omitempty"`
+	GitRequirements    []string                                          `json:"git_requirements,omitempty"`
+	Triggers           []Trigger                                         `json:"triggers"`
 }
 
 func (in IntelligenceInput) Validate() error {
@@ -65,14 +65,7 @@ func GenerateProposal(ctx context.Context, provider intelligence.Provider, in In
 	if err != nil {
 		return Proposal{}, fmt.Errorf("replan: marshal intelligence input: %w", err)
 	}
-	outputShape := json.RawMessage(`{"type":"ReplanProposal"}`)
-	// RawMessage above is replaced below with canonical JSON to keep the request
-	// independent from provider-specific schema dialects.
-	outputShape = json.RawMessage(`{"required":[]}`)
-	outputShape = json.RawMessage([]byte(`{"type":"ReplanProposal"}`))
-	// The Provider contract only requires valid JSON; the typed Go decoder is
-	// the actual output authority.
-	outputShape = json.RawMessage([]byte(`{"type":"object","title":"ReplanProposal"}`))
+	outputShape := json.RawMessage([]byte("{\"type\":\"object\",\"title\":\"ReplanProposal\"}"))
 	result, err := provider.Generate(ctx, intelligence.Request{
 		Operation:   intelligence.OperationReplanProposal,
 		Instruction: "Produce a ReplanProposal only. Preserve compatible accepted work, explicitly disposition every old/new task, and do not claim authority or activation.",
