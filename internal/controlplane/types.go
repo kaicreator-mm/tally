@@ -38,6 +38,8 @@ type ProjectSnapshot struct {
 	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts,omitempty"`
 	AuthorityDecisions []AuthorityRecord                                 `json:"authority_decisions,omitempty"`
 	ReplanHistory      []replan.ActivationRecord                         `json:"replan_history,omitempty"`
+	GitActions         engineering.GitActionLog                          `json:"git_actions"`
+	CompletionFacts    map[engineering.ID]engineering.CompletionFacts    `json:"completion_facts,omitempty"`
 	Audit              engineering.AuditLog                              `json:"audit"`
 	UpdatedAt          time.Time                                         `json:"updated_at"`
 }
@@ -156,6 +158,22 @@ func validateSnapshot(s ProjectSnapshot) error {
 			return fmt.Errorf("controlplane: authority decision references unknown task %s", d.NodeID)
 		}
 	}
+	for i, r := range s.GitActions.Records {
+		if err := r.Validate(); err != nil {
+			return fmt.Errorf("controlplane: invalid git action record[%d]: %w", i, err)
+		}
+		if r.Trace.ProjectID != s.ProjectID {
+			return fmt.Errorf("controlplane: git action record[%d] references project %s, expected %s", i, r.Trace.ProjectID, s.ProjectID)
+		}
+		if !snapshotHasTask(s, r.Trace.TaskNodeID) {
+			return fmt.Errorf("controlplane: git action record[%d] references unknown task %s", i, r.Trace.TaskNodeID)
+		}
+	}
+	for taskID := range s.CompletionFacts {
+		if !snapshotHasTask(s, taskID) {
+			return fmt.Errorf("controlplane: completion facts reference unknown task %s", taskID)
+		}
+	}
 	for _, r := range s.Audit.Records {
 		if err := r.Validate(); err != nil {
 			return fmt.Errorf("controlplane: invalid audit record: %w", err)
@@ -177,7 +195,6 @@ func validateReplanHistory(s ProjectSnapshot) error {
 			if record.PreviousPlanning.ID != previous.ActivatedPlanning.ID || record.PreviousDAG.RevisionID != previous.ActivatedDAG.RevisionID {
 				return fmt.Errorf("controlplane: replan history[%d] does not continue previous activation", i)
 			}
-		}
 	}
 	if len(s.ReplanHistory) == 0 {
 		return nil
