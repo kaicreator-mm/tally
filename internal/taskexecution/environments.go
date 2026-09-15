@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"tally/internal/runner"
@@ -32,13 +33,17 @@ func (e *EnvironmentError) Error() string {
 }
 func (e *EnvironmentError) Unwrap() error { return e.Err }
 
-// EnvironmentProfile is discovery output, not a second source of execution state.
+// EnvironmentProfile is discovered/declared capability output. Secret values are
+// never stored here; Secrets only records availability by logical name.
 type EnvironmentProfile struct {
 	OS            string            `json:"os,omitempty"`
+	Architecture  string            `json:"architecture,omitempty"`
 	Tools         map[string]string `json:"tools,omitempty"`
+	Git           bool              `json:"git"`
 	Docker        bool              `json:"docker"`
 	Network       bool              `json:"network"`
 	SecretsPolicy string            `json:"secrets_policy,omitempty"`
+	Secrets       map[string]bool   `json:"secrets,omitempty"`
 	Resources     map[string]string `json:"resources,omitempty"`
 }
 
@@ -54,10 +59,12 @@ type WorkspaceRecreator func(context.Context, WorkspaceRef) error
 // without acquiring SSH/Docker-specific classes.
 type ProcessExecutionEnvironment interface {
 	ExecutionEnvironment
+	EnvironmentCapabilityValidator
 	ProcessRunner() runner.Runner
 	RunProcess(context.Context, runner.Command) (runner.Result, error)
 	Discover(context.Context) (EnvironmentProfile, error)
 	InspectWorkspace(context.Context, WorkspaceRef) (WorkspaceInspection, error)
+	CleanupWorkspace(context.Context, WorkspaceRef) error
 }
 
 type environmentAdapter struct {
@@ -87,14 +94,8 @@ func (a *environmentAdapter) RunProcess(ctx context.Context, cmd runner.Command)
 }
 
 func (a *environmentAdapter) Resolve(ctx context.Context, w WorkspaceRef) (ResolvedWorkspace, error) {
-	if err := w.Validate(); err != nil {
+	if err := a.validateWorkspaceTarget(w); err != nil {
 		return ResolvedWorkspace{}, err
-	}
-	if w.Environment != a.kind {
-		return ResolvedWorkspace{}, ErrUnsupportedEnvironment
-	}
-	if a.target != "" && w.Target != a.target {
-		return ResolvedWorkspace{}, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "resolve", Err: errors.New("target does not match configured environment")}
 	}
 	if strings.TrimSpace(w.Path) == "" {
 		return ResolvedWorkspace{}, &EnvironmentError{Kind: FailureWorkspaceUnavailable, Environment: a.kind, Target: w.Target, Operation: "resolve", Err: errors.New("environment-local workspace path is required")}
@@ -113,6 +114,19 @@ func (a *environmentAdapter) Resolve(ctx context.Context, w WorkspaceRef) (Resol
 	return ResolvedWorkspace{Location: w.Path}, nil
 }
 
+func (a *environmentAdapter) validateWorkspaceTarget(w WorkspaceRef) error {
+	if err := w.Validate(); err != nil {
+		return err
+	}
+	if w.Environment != a.kind {
+		return ErrUnsupportedEnvironment
+	}
+	if a.target != "" && w.Target != a.target {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "target.validate", Err: errors.New("target does not match configured environment")}
+	}
+	return nil
+}
+
 func (a *environmentAdapter) verifyWorkspace(ctx context.Context, w WorkspaceRef) error {
 	if a.exec == nil {
 		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.verify", Err: errors.New("process runner is not configured")}
@@ -128,11 +142,8 @@ func (a *environmentAdapter) verifyWorkspace(ctx context.Context, w WorkspaceRef
 }
 
 func (a *environmentAdapter) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) {
-	if err := w.Validate(); err != nil {
+	if err := a.validateWorkspaceTarget(w); err != nil {
 		return WorkspaceInspection{}, err
-	}
-	if w.Environment != a.kind {
-		return WorkspaceInspection{}, ErrUnsupportedEnvironment
 	}
 	if a.exec == nil {
 		return WorkspaceInspection{}, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.inspect", Err: errors.New("process runner is not configured")}
@@ -154,20 +165,39 @@ func (a *environmentAdapter) InspectWorkspace(ctx context.Context, w WorkspaceRe
 	return WorkspaceInspection{Revision: strings.TrimSpace(rev.Stdout), Dirty: strings.TrimSpace(status.Stdout) != ""}, nil
 }
 
+func (a *environmentAdapter) CleanupWorkspace(ctx context.Context, w WorkspaceRef) error {
+	if err := a.validateWorkspaceTarget(w); err != nil {
+		return err
+	}
+	path := strings.TrimSpace(w.Path)
+	if path == "" || path == "/" || path == "." {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("refusing unsafe workspace cleanup path")}
+	}
+	if a.exec == nil {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("process runner is not configured")}
+	}
+	res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"rm", "-rf", "--", path}})
+	if err != nil {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: err}
+	}
+	if res.ExitCode != 0 {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: a.kind, Target: w.Target, Operation: "workspace.cleanup", Err: fmt.Errorf("cleanup exited %d: %s", res.ExitCode, strings.TrimSpace(res.Stderr))}
+	}
+	return nil
+}
+
 func (a *environmentAdapter) Discover(ctx context.Context) (EnvironmentProfile, error) {
 	if a.exec == nil {
 		return EnvironmentProfile{}, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: a.kind, Target: a.target, Operation: "capability.discover", Err: errors.New("process runner is not configured")}
 	}
-	p := a.declared
-	copyTools := make(map[string]string, len(p.Tools))
-	for k, v := range p.Tools {
-		copyTools[k] = v
-	}
-	p.Tools = copyTools
+	p := cloneEnvironmentProfile(a.declared)
 	if res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"uname", "-s"}}); err == nil && res.ExitCode == 0 {
 		p.OS = strings.TrimSpace(res.Stdout)
 	}
-	tools := append([]string{"git"}, a.probeTools...)
+	if res, err := a.exec.Run(ctx, runner.Command{Argv: []string{"uname", "-m"}}); err == nil && res.ExitCode == 0 {
+		p.Architecture = strings.TrimSpace(res.Stdout)
+	}
+	tools := append([]string{"git", "docker"}, a.probeTools...)
 	seen := map[string]bool{}
 	for _, tool := range tools {
 		if tool == "" || seen[tool] {
@@ -181,23 +211,127 @@ func (a *environmentAdapter) Discover(ctx context.Context) (EnvironmentProfile, 
 				value = strings.TrimSpace(res.Stderr)
 			}
 			p.Tools[tool] = value
+			if tool == "git" {
+				p.Git = true
+			}
+			if tool == "docker" {
+				p.Docker = true
+			}
 		}
 	}
 	return p, nil
 }
 
+func cloneEnvironmentProfile(in EnvironmentProfile) EnvironmentProfile {
+	out := in
+	out.Tools = make(map[string]string, len(in.Tools))
+	for k, v := range in.Tools {
+		out.Tools[k] = v
+	}
+	out.Secrets = make(map[string]bool, len(in.Secrets))
+	for k, v := range in.Secrets {
+		out.Secrets[k] = v
+	}
+	out.Resources = make(map[string]string, len(in.Resources))
+	for k, v := range in.Resources {
+		out.Resources[k] = v
+	}
+	return out
+}
+
+func (a *environmentAdapter) ValidateCapabilities(ctx context.Context, required []EnvironmentCapability) error {
+	static := map[EnvironmentCapability]bool{}
+	for _, c := range a.Capabilities() {
+		static[c] = true
+	}
+	needsProfile := false
+	for _, c := range required {
+		if !static[c] {
+			needsProfile = true
+			break
+		}
+	}
+	var profile EnvironmentProfile
+	var err error
+	if needsProfile {
+		profile, err = a.Discover(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	var missing []EnvironmentCapability
+	for _, c := range required {
+		if static[c] || profileHasCapability(profile, c) {
+			continue
+		}
+		missing = append(missing, c)
+	}
+	if len(missing) > 0 {
+		return &EnvironmentCapabilityError{Missing: missing}
+	}
+	return nil
+}
+
+func profileHasCapability(p EnvironmentProfile, capability EnvironmentCapability) bool {
+	raw := strings.TrimSpace(string(capability))
+	switch raw {
+	case "git":
+		return p.Git
+	case "docker":
+		return p.Docker
+	case "network":
+		return p.Network
+	}
+	if value, ok := strings.CutPrefix(raw, "os:"); ok {
+		return strings.EqualFold(strings.TrimSpace(p.OS), strings.TrimSpace(value))
+	}
+	if value, ok := strings.CutPrefix(raw, "arch:"); ok {
+		return strings.EqualFold(strings.TrimSpace(p.Architecture), strings.TrimSpace(value))
+	}
+	if value, ok := strings.CutPrefix(raw, "tool:"); ok {
+		_, exists := p.Tools[strings.TrimSpace(value)]
+		return exists
+	}
+	if value, ok := strings.CutPrefix(raw, "secret:"); ok {
+		return p.Secrets[strings.TrimSpace(value)]
+	}
+	if value, ok := strings.CutPrefix(raw, "resource:"); ok {
+		name, expected, hasExpected := strings.Cut(value, "=")
+		actual, exists := p.Resources[strings.TrimSpace(name)]
+		if !exists {
+			return false
+		}
+		return !hasExpected || strings.TrimSpace(actual) == strings.TrimSpace(expected)
+	}
+	return false
+}
+
 type SSHEnvironment struct{ adapter environmentAdapter }
 
 func NewSSHEnvironment(target string, exec runner.Runner, declared EnvironmentProfile, recreate WorkspaceRecreator) *SSHEnvironment {
-	return &SSHEnvironment{adapter: environmentAdapter{kind: EnvironmentSSH, target: target, exec: exec, declared: declared, probeTools: []string{"docker"}, recreate: recreate}}
+	return &SSHEnvironment{adapter: environmentAdapter{kind: EnvironmentSSH, target: target, exec: exec, declared: declared, recreate: recreate}}
 }
-func (e *SSHEnvironment) Kind() EnvironmentKind { return e.adapter.Kind() }
+func (e *SSHEnvironment) Kind() EnvironmentKind                  { return e.adapter.Kind() }
 func (e *SSHEnvironment) Capabilities() []EnvironmentCapability { return e.adapter.Capabilities() }
-func (e *SSHEnvironment) Resolve(ctx context.Context, w WorkspaceRef) (ResolvedWorkspace, error) { return e.adapter.Resolve(ctx, w) }
+func (e *SSHEnvironment) Resolve(ctx context.Context, w WorkspaceRef) (ResolvedWorkspace, error) {
+	return e.adapter.Resolve(ctx, w)
+}
 func (e *SSHEnvironment) ProcessRunner() runner.Runner { return e.adapter.ProcessRunner() }
-func (e *SSHEnvironment) RunProcess(ctx context.Context, cmd runner.Command) (runner.Result, error) { return e.adapter.RunProcess(ctx, cmd) }
-func (e *SSHEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error) { return e.adapter.Discover(ctx) }
-func (e *SSHEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) { return e.adapter.InspectWorkspace(ctx, w) }
+func (e *SSHEnvironment) RunProcess(ctx context.Context, cmd runner.Command) (runner.Result, error) {
+	return e.adapter.RunProcess(ctx, cmd)
+}
+func (e *SSHEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error) {
+	return e.adapter.Discover(ctx)
+}
+func (e *SSHEnvironment) ValidateCapabilities(ctx context.Context, c []EnvironmentCapability) error {
+	return e.adapter.ValidateCapabilities(ctx, c)
+}
+func (e *SSHEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) {
+	return e.adapter.InspectWorkspace(ctx, w)
+}
+func (e *SSHEnvironment) CleanupWorkspace(ctx context.Context, w WorkspaceRef) error {
+	return e.adapter.CleanupWorkspace(ctx, w)
+}
 
 type DockerEnvironment struct{ adapter environmentAdapter }
 
@@ -205,13 +339,27 @@ func NewDockerEnvironment(target string, exec runner.Runner, declared Environmen
 	declared.Docker = true
 	return &DockerEnvironment{adapter: environmentAdapter{kind: EnvironmentDocker, target: target, exec: exec, declared: declared, recreate: recreate}}
 }
-func (e *DockerEnvironment) Kind() EnvironmentKind { return e.adapter.Kind() }
+func (e *DockerEnvironment) Kind() EnvironmentKind                  { return e.adapter.Kind() }
 func (e *DockerEnvironment) Capabilities() []EnvironmentCapability { return e.adapter.Capabilities() }
-func (e *DockerEnvironment) Resolve(ctx context.Context, w WorkspaceRef) (ResolvedWorkspace, error) { return e.adapter.Resolve(ctx, w) }
+func (e *DockerEnvironment) Resolve(ctx context.Context, w WorkspaceRef) (ResolvedWorkspace, error) {
+	return e.adapter.Resolve(ctx, w)
+}
 func (e *DockerEnvironment) ProcessRunner() runner.Runner { return e.adapter.ProcessRunner() }
-func (e *DockerEnvironment) RunProcess(ctx context.Context, cmd runner.Command) (runner.Result, error) { return e.adapter.RunProcess(ctx, cmd) }
-func (e *DockerEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error) { return e.adapter.Discover(ctx) }
-func (e *DockerEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) { return e.adapter.InspectWorkspace(ctx, w) }
+func (e *DockerEnvironment) RunProcess(ctx context.Context, cmd runner.Command) (runner.Result, error) {
+	return e.adapter.RunProcess(ctx, cmd)
+}
+func (e *DockerEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error) {
+	return e.adapter.Discover(ctx)
+}
+func (e *DockerEnvironment) ValidateCapabilities(ctx context.Context, c []EnvironmentCapability) error {
+	return e.adapter.ValidateCapabilities(ctx, c)
+}
+func (e *DockerEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) {
+	return e.adapter.InspectWorkspace(ctx, w)
+}
+func (e *DockerEnvironment) CleanupWorkspace(ctx context.Context, w WorkspaceRef) error {
+	return e.adapter.CleanupWorkspace(ctx, w)
+}
 
 // Local gains the same optional v1.5.2 extension without changing the frozen
 // ExecutionEnvironment interface or its zero-value compatibility behavior.
@@ -227,7 +375,27 @@ func (LocalEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error
 	a := environmentAdapter{kind: EnvironmentLocal, target: "local", exec: runner.LocalRunner{}}
 	return a.Discover(ctx)
 }
+func (LocalEnvironment) ValidateCapabilities(ctx context.Context, c []EnvironmentCapability) error {
+	a := environmentAdapter{kind: EnvironmentLocal, target: "local", exec: runner.LocalRunner{}}
+	return a.ValidateCapabilities(ctx, c)
+}
 func (LocalEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) {
 	a := environmentAdapter{kind: EnvironmentLocal, target: w.Target, exec: runner.LocalRunner{}}
 	return a.InspectWorkspace(ctx, w)
+}
+func (LocalEnvironment) CleanupWorkspace(_ context.Context, w WorkspaceRef) error {
+	if err := w.Validate(); err != nil {
+		return err
+	}
+	if w.Environment != EnvironmentLocal {
+		return ErrUnsupportedEnvironment
+	}
+	path := strings.TrimSpace(w.Path)
+	if path == "" || path == "/" || path == "." {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: EnvironmentLocal, Target: w.Target, Operation: "workspace.cleanup", Err: errors.New("refusing unsafe workspace cleanup path")}
+	}
+	if err := os.RemoveAll(path); err != nil {
+		return &EnvironmentError{Kind: FailureCleanup, Environment: EnvironmentLocal, Target: w.Target, Operation: "workspace.cleanup", Err: err}
+	}
+	return nil
 }
