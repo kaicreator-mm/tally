@@ -57,9 +57,10 @@ func (r *Runtime) StartInEnvironment(ctx context.Context, req agentruntime.Start
 	n := r.seq
 	r.mu.Unlock()
 
-	// Remote/container session state belongs inside the selected workspace so it
-	// is visible to that environment and remains isolated per Tally session.
-	home := path.Join(req.Workspace, ".tally", "runtime", "dsh", fmt.Sprintf("session-%06d", n))
+	// Keep runtime session state outside the candidate Git workspace so DSH_HOME
+	// cannot dirty the ChangeSet. It remains under the same environment-visible
+	// workspace root, which is also shared by the Docker workspace mount.
+	home := path.Join(path.Dir(req.Workspace), ".tally-runtime", "dsh", fmt.Sprintf("session-%06d", n))
 	if err := environmentMkdir(ctx, exec, home); err != nil {
 		return nil, err
 	}
