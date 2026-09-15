@@ -20,10 +20,13 @@ func main() {
 			file: "README.md",
 			forbidden: []string{
 				"v1.4.1 is authorized but not implemented",
+				"Current development program: v1.4.1",
 			},
 			required: []string{
 				"Software Engineering Harness for Coding Agents",
-				"v1.4.1",
+				"v1.5.0",
+				"Engineering Control Plane",
+				"NOT RELEASE QUALIFIED",
 				"Hidden Validation",
 			},
 		},
@@ -31,22 +34,48 @@ func main() {
 			file: "docs/STATUS.md",
 			forbidden: []string{
 				"visible implementation          NOT STARTED",
+				"Current program:** v1.4.1",
 				"Rule-first governance UI is not implemented",
 				"DeepSeek Harness Runtime Adapter is not implemented",
 			},
 			required: []string{
-				"v1.4.1",
-				"P6-08",
-				"PENDING_EXTERNAL",
+				"v1.5.0",
+				"Engineering Control Plane",
+				"ENV-BLOCKED",
+				"NOT RELEASE QUALIFIED",
 			},
 		},
 		{
-			file:     "docs/architecture/CURRENT_CODEBASE.md",
-			required: []string{"v1.4.1"},
+			file: "docs/architecture/CURRENT_CODEBASE.md",
+			forbidden: []string{
+				"Current version program:** v1.4.1",
+			},
+			required: []string{
+				"v1.5.0",
+				"Active TaskDAG",
+				"BrownfieldHarness",
+				"NOT RELEASE QUALIFIED",
+			},
 		},
 		{
-			file:     "docs/implementation/CURRENT_IMPLEMENTATION_STATUS.md",
-			required: []string{"v1.4.1"},
+			file: "docs/implementation/CURRENT_IMPLEMENTATION_STATUS.md",
+			forbidden: []string{
+				"Current program:** v1.4.1",
+			},
+			required: []string{
+				"v1.5.0",
+				"Issue #9",
+				"ENV-BLOCKED",
+				"NOT RELEASE QUALIFIED",
+			},
+		},
+		{
+			file: "docs/tasks/v1.5.0/RELEASE_QUALIFICATION.md",
+			required: []string{
+				"NOT RELEASE QUALIFIED",
+				"Full visible regression",
+				"Hidden Validation",
+			},
 		},
 	}
 
