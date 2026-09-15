@@ -86,15 +86,26 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		}
 		return TaskExecutionResult{}, err
 	}
-	defer closeSession(session)
 
-	claim, err := session.Execute(runCtx, agentruntime.ExecuteRequest{Instruction: req.Instruction})
-	if err != nil {
+	claim, execErr := session.Execute(runCtx, agentruntime.ExecuteRequest{Instruction: req.Instruction})
+	closeErr := closeSession(session)
+	if execErr != nil {
+		if closeErr != nil && e.Environment.Kind() != EnvironmentLocal {
+			cleanupErr := e.sessionCleanupError(req, closeErr)
+			if runCtx.Err() != nil {
+				return interruptedResult(req), cleanupErr
+			}
+			return TaskExecutionResult{}, errors.Join(execErr, cleanupErr)
+		}
 		if runCtx.Err() != nil {
 			return interruptedResult(req), nil
 		}
-		return TaskExecutionResult{}, err
+		return TaskExecutionResult{}, execErr
 	}
+	if closeErr != nil && e.Environment.Kind() != EnvironmentLocal {
+		return TaskExecutionResult{}, e.sessionCleanupError(req, closeErr)
+	}
+
 	status := ExecutionCompleted
 	if claim.Status == agentruntime.RunFailed {
 		status = ExecutionFailed
@@ -103,6 +114,16 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		status = ExecutionInterrupted
 	}
 	return TaskExecutionResult{AgentClaim: claim, Workspace: req.Workspace, Runtime: req.Runtime, Environment: req.Environment, Status: status}, nil
+}
+
+func (e *RuntimeExecutor) sessionCleanupError(req TaskExecutionRequest, err error) error {
+	return &EnvironmentError{
+		Kind:        FailureCleanup,
+		Environment: e.Environment.Kind(),
+		Target:      req.Environment.Target,
+		Operation:   "runtime.session.close",
+		Err:         err,
+	}
 }
 
 func (e *RuntimeExecutor) startSession(ctx context.Context, start agentruntime.StartRequest) (agentruntime.Session, error) {
@@ -133,10 +154,10 @@ func (e *RuntimeExecutor) Cancel(id engineering.ID) error {
 
 const sessionCloseTimeout = 5 * time.Second
 
-func closeSession(session agentruntime.Session) {
+func closeSession(session agentruntime.Session) error {
 	ctx, cancel := context.WithTimeout(context.Background(), sessionCloseTimeout)
 	defer cancel()
-	_ = session.Close(ctx)
+	return session.Close(ctx)
 }
 
 func interruptedResult(req TaskExecutionRequest) TaskExecutionResult {
