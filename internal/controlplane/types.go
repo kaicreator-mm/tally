@@ -55,6 +55,27 @@ type TaskWorkflow interface {
 	VerifyAndAccept(context.Context, engineering.ID, taskexecution.TaskExecutionResult) (TaskWorkflowResult, error)
 }
 
+// HarnessResult is the project-level result of one task run through the
+// Engineering Harness. The Harness, not an Agent claim, owns the transition
+// from implementation to verification/repair/acceptance. Interrupted is a
+// first-class execution outcome; a non-accepted non-interrupted result is a
+// governed block/escalation and is not a Go error.
+type HarnessResult struct {
+	Execution   taskexecution.TaskExecutionResult `json:"execution"`
+	Accepted    bool                              `json:"accepted"`
+	Interrupted bool                              `json:"interrupted,omitempty"`
+	Reason      string                            `json:"reason,omitempty"`
+	Facts       engineering.CompletionFacts       `json:"facts"`
+}
+
+// TaskHarness is the production v1.5 task-level control-loop port. Its
+// implementation may compose the brownfield closed loop, but the Control
+// Plane only consumes the bounded outcome and CompletionFacts.
+type TaskHarness interface {
+	Run(context.Context, engineering.ID, taskexecution.TaskExecutionRequest) (HarnessResult, error)
+	Cancel(engineering.ID) error
+}
+
 type DispatchResult struct {
 	Execution  taskexecution.TaskExecutionResult `json:"execution"`
 	Workflow   *TaskWorkflowResult               `json:"workflow,omitempty"`
