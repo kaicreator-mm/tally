@@ -19,8 +19,8 @@ import (
 // existing v1.5.0 TaskExecutionRequest contract without inventing a second
 // durable execution queue or task contract. BaseRevision may be any Git
 // revision expression understood by the existing artifact loader; the factory
-// resolves it on the first request and pins every later request to that exact
-// observed source commit.
+// resolves it on the first identity-valid request and pins every later request
+// to that exact observed source commit.
 type GitTaskRequestFactoryConfig struct {
 	Repo              string
 	BaseRevision      string
@@ -64,18 +64,9 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 	if snapshot.ProjectID == "" {
 		return taskexecution.TaskExecutionRequest{}, errors.New("controlplane: scheduler snapshot is missing project id")
 	}
-	bundle, err := f.loadPinnedBundle(string(node.ID))
+	bundle, err := f.loadValidatedPinnedBundle(snapshot.ProjectID, node.ID)
 	if err != nil {
 		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: load frozen execution bundle for %s: %w", node.ID, err)
-	}
-	if bundle.ProjectID == "" {
-		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: frozen execution bundle for %s has no project identity", node.ID)
-	}
-	if bundle.ProjectID != string(snapshot.ProjectID) {
-		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: frozen execution project mismatch: snapshot=%s bundle=%s", snapshot.ProjectID, bundle.ProjectID)
-	}
-	if bundle.Task.Contract.ID != string(node.ID) {
-		return taskexecution.TaskExecutionRequest{}, fmt.Errorf("controlplane: frozen task identity mismatch: node=%s contract=%s", node.ID, bundle.Task.Contract.ID)
 	}
 
 	workspacePath, err := taskWorkspacePath(f.cfg.WorkspaceRoot, node.ID)
@@ -133,10 +124,11 @@ func (f *GitTaskRequestFactory) BuildTaskExecutionRequest(_ context.Context, sna
 	return request, nil
 }
 
-// loadPinnedBundle resolves the configured revision expression once. The first
-// successful bundle establishes the factory-wide source commit; subsequent
-// tasks are loaded from that exact commit even if the original branch/tag moves.
-func (f *GitTaskRequestFactory) loadPinnedBundle(taskID string) (*artifacts.ExecutionBundle, error) {
+// loadValidatedPinnedBundle resolves the configured revision expression once.
+// A bundle can establish the factory-wide source commit only after its project
+// and task identities match the persisted scheduling authority. This prevents
+// rejected/mismatched input from poisoning the later execution pin.
+func (f *GitTaskRequestFactory) loadValidatedPinnedBundle(projectID, taskID engineering.ID) (*artifacts.ExecutionBundle, error) {
 	f.pinMu.Lock()
 	defer f.pinMu.Unlock()
 
@@ -144,14 +136,23 @@ func (f *GitTaskRequestFactory) loadPinnedBundle(taskID string) (*artifacts.Exec
 	if f.pinnedCommit != "" {
 		revision = f.pinnedCommit
 	}
-	bundle, err := f.loadBundle(f.cfg.Repo, revision, taskID)
+	bundle, err := f.loadBundle(f.cfg.Repo, revision, string(taskID))
 	if err != nil {
 		return nil, err
 	}
+	if strings.TrimSpace(bundle.SourceCommit) == "" {
+		return nil, errors.New("controlplane: execution bundle did not report an observed source commit")
+	}
+	if bundle.ProjectID == "" {
+		return nil, fmt.Errorf("controlplane: frozen execution bundle for %s has no project identity", taskID)
+	}
+	if bundle.ProjectID != string(projectID) {
+		return nil, fmt.Errorf("controlplane: frozen execution project mismatch: snapshot=%s bundle=%s", projectID, bundle.ProjectID)
+	}
+	if bundle.Task.Contract.ID != string(taskID) {
+		return nil, fmt.Errorf("controlplane: frozen task identity mismatch: node=%s contract=%s", taskID, bundle.Task.Contract.ID)
+	}
 	if f.pinnedCommit == "" {
-		if strings.TrimSpace(bundle.SourceCommit) == "" {
-			return nil, errors.New("controlplane: execution bundle did not report an observed source commit")
-		}
 		f.pinnedCommit = bundle.SourceCommit
 	} else if bundle.SourceCommit != f.pinnedCommit {
 		return nil, fmt.Errorf("controlplane: execution authority drift: pinned=%s observed=%s", f.pinnedCommit, bundle.SourceCommit)
