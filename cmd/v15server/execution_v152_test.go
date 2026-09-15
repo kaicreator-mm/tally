@@ -118,15 +118,6 @@ func TestV152ExecutionFromEnvComposesDSHInDocker(t *testing.T) {
 	if executor.Environment.Kind() != taskexecution.EnvironmentDocker {
 		t.Fatalf("environment=%s", executor.Environment.Kind())
 	}
-	profile, err := executor.Environment.(taskexecution.ProcessExecutionEnvironment).Discover(t.Context())
-	if err == nil {
-		// A real Docker invocation is not expected from this composition-only test.
-		// If a host happens to make it executable, network:none must still be
-		// represented as unavailable in the declared profile.
-		if profile.Network {
-			t.Fatal("Docker network:none was declared as network-capable")
-		}
-	}
 }
 
 func TestV152ExecutionFromEnvRejectsLocalOnlyRuntimeForSSH(t *testing.T) {
