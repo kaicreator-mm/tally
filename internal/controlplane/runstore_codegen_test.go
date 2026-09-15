@@ -32,7 +32,7 @@ func TestTaskExecutionContextHashIsDeterministic(t *testing.T) {
 
 func TestAttemptContextHashSeparatesRepairLineage(t *testing.T) {
 	base := "sha256:base"
-	initial := closedloop.CodegenRunRequest{TaskID: "A", Attempt: 1, RunID: closedloop.RunIDFor("A", 1)}
+	initial := closedloop.CodegenRunRequest{TaskID: "A", RunID: closedloop.RunIDFor("A", 1)}
 	first, err := attemptContextHash(base, initial)
 	if err != nil {
 		t.Fatal(err)
@@ -51,7 +51,7 @@ func TestAttemptContextHashSeparatesRepairLineage(t *testing.T) {
 		DiagnosticSummary: "visible verification failed",
 	}
 	repair := closedloop.CodegenRunRequest{
-		TaskID: "A", Attempt: 2, RunID: closedloop.RunIDFor("A", 2), ParentRun: closedloop.RunIDFor("A", 1),
+		TaskID: "A", RunID: closedloop.RunIDFor("A", 2), ParentRun: closedloop.RunIDFor("A", 1),
 		RepairBase: prior, Feedback: feedback,
 	}
 	repairHash, err := attemptContextHash(base, repair)
