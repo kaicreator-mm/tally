@@ -13,4 +13,15 @@ The v1.4.1 task program remains historical/brownfield evidence and does not over
 
 Validation carrier for this version is explicit Local / Build Host execution. GitHub Actions and all CI systems are prohibited by `.dev-standard/PROJECT_OVERRIDES.md`.
 
+## Closure evidence
+
+- `VALIDATION_MATRIX.md` — exact executed/blocked validation ledger.
+- `CRITICAL_JOURNEYS.md` — release-level lifecycle and brownfield journeys.
+- `HIDDEN_VALIDATION_PROTOCOL.md` — external held-out pack contract and information-separation rules.
+- `RELEASE_QUALIFICATION.md` — 20 release assertions and current qualification state.
+- `scripts/validate-v1.5.0.sh` — explicit Local / Build Host visible validation carrier.
+- `scripts/run-v1.5-hidden.sh` — explicit external held-out validation carrier.
+
+A focused/PR PASS is not a Release PASS. As long as required executable gates remain `ENV-BLOCKED` or `NOT_RUN`, v1.5.0 remains **NOT RELEASE QUALIFIED**.
+
 Issues: #5 authority/L2, #6 engineering domain/DAG, #7 intelligence/execution contracts, #8 integration, #9 validation/closure.
