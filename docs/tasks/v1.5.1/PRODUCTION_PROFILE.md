@@ -8,7 +8,16 @@ Version: **v1.5.1 — Persistence & Execution Simplification**
 
 The legacy `cmd/server` remains a brownfield v1.4-compatible composition and may still require PostgreSQL for legacy web/session/job/fact-store capabilities. Its requirements are not the correctness boundary of v1.5.1 Core.
 
-The standalone `cmd/v15server` always exposes the Engineering Control Plane persistence/lifecycle surface. With no `TALLY_V15_RUNTIME`, execution is explicitly disabled and no FakeRuntime is selected silently. When a supported runtime is configured, the same SQLite-first Core composes the frozen v1.5.0 `AgentExecutor` through `RuntimeExecutor`, a pinned-Git `TaskRequestFactory`, and the v1.5.1 application-local `LocalScheduler`.
+The standalone `cmd/v15server` always exposes the Engineering Control Plane persistence/lifecycle surface. With no `TALLY_V15_RUNTIME`, execution is explicitly disabled and no FakeRuntime is selected silently. When a supported runtime is configured, the same SQLite-first Core composes the canonical production topology:
+
+```text
+Active TaskDAG
+  → LocalScheduler
+  → Service.Dispatch
+  → TaskHarness (fail-closed execution bridge)
+  → v1.5.0 AgentExecutor / RuntimeExecutor
+  → existing Agent Runtime
+```
 
 This production path contains no durable DB job queue. `Active TaskDAG` remains the scheduling state authority.
 
@@ -34,12 +43,12 @@ PostgreSQL is opened only when explicitly selected. A missing PostgreSQL DSN is 
 
 ## Local execution profile
 
-Execution is opt-in. Configure a frozen runtime and execution authority explicitly:
+Execution is opt-in. Configure a runtime and execution authority explicitly:
 
 ```text
 TALLY_V15_RUNTIME=codex                 # fake | codex | dsh
 TALLY_V15_CONTENT_REPO=/srv/project     # Git content repository
-TALLY_V15_BASE_REVISION=<revision>      # resolved once per request to an observed commit
+TALLY_V15_BASE_REVISION=<revision>      # resolved once, then pinned to observed commit
 TALLY_V15_WORKSPACE_ROOT=/srv/tally-workspaces
 TALLY_V15_SCHEDULER_MAX_CONCURRENT=2    # optional; default 2
 TALLY_V15_ENV_TARGET=local              # optional; default local
@@ -51,7 +60,11 @@ For each scheduled task, v1.5.1 expects an already prepared local workspace at:
 <TALLY_V15_WORKSPACE_ROOT>/<TASK-ID>
 ```
 
-Workspace creation/Git authority automation is deliberately not invented here; those mechanics are outside v1.5.1. The request factory loads the existing same-source `ExecutionBundle` from `TALLY_V15_CONTENT_REPO` and `TALLY_V15_BASE_REVISION`, checks project/task identity, pins the request to the observed source commit and existing TaskContract revision, then emits the already-frozen v1.5.0 `TaskExecutionRequest` contract.
+Workspace creation/Git authority automation is deliberately not invented here; those mechanics are outside v1.5.1. The request factory loads the existing same-source `ExecutionBundle`, verifies project/task identity, and on the first successful request pins the configured revision expression to the exact observed source commit. All later requests from that scheduler instance load from the same commit even if the original branch/tag moves.
+
+The factory emits the already-frozen v1.5.0 `TaskExecutionRequest`: TaskContract revision/digest, runtime/environment requirements, local workspace reference, execution policy and implementation instruction are carried through existing contracts. Runtime/environment capability requirements from the Active TaskDAG are propagated into `RequiredCapabilities`; unsupported capability combinations therefore fail through the existing v1.5.0 negotiation path instead of being reduced to prompt text.
+
+Task IDs containing path separators/traversal forms are rejected before they are used as prepared-workspace paths.
 
 Runtime-specific optional settings remain the existing Local compatibility settings, including `TALLY_V15_CODEX_BIN`, `TALLY_V15_DSH_BIN`, `TALLY_V15_MODEL`, `TALLY_V15_DSH_PROVIDER`, and `TALLY_V15_SESSION_ISOLATION_VERIFIED`.
 
@@ -63,13 +76,15 @@ POST /api/v15/projects/{project}/scheduler/run-once
 POST /api/v15/projects/{project}/scheduler/run
 ```
 
-`recover` converts persisted `RUNNING` work to `INTERRUPTED`. `run-once` executes one deterministic bounded READY batch. `run` drains READY batches until the project is idle or execution reports an error.
+`recover` converts persisted `RUNNING` work to `INTERRUPTED`. `run-once` executes one deterministic bounded READY batch. `run` performs startup recovery and then drains READY batches until the project is idle or a batch reports an execution/build failure.
 
 ## Verification degradation boundary
 
 The default SQLite-first Core does **not** pull the PostgreSQL-backed legacy `BrownfieldHarness` into its composition. This is intentional: v1.5.1 removes PostgreSQL as a default correctness/execution dependency rather than hiding it behind startup configuration.
 
-When the Local `AgentExecutor` completes but no independent verification/review workflow is composed, Agent completion remains only an implementation claim. `Service.Dispatch` persists the task as `BLOCKED` and returns `ErrWorkflowUnavailable`; it never promotes the task to accepted/done. The legacy brownfield composition may still provide the full existing closed loop when its legacy PostgreSQL fact-store dependencies are explicitly available.
+Instead, runtime-configured Core uses `ExecutionOnlyHarness`, a fail-closed `TaskHarness` implementation around the frozen v1.5.0 `AgentExecutor`. It preserves the canonical Harness → AgentExecutor boundary but never manufactures independent verification facts. A completed Agent claim is therefore returned as non-accepted; `Service.Dispatch` persists the task as `BLOCKED` with reason `independent verification/review workflow unavailable`. Failed execution also blocks, and interruption remains `INTERRUPTED`.
+
+The legacy brownfield composition may still provide the full existing closed loop when its legacy PostgreSQL fact-store dependencies are explicitly available. That compatibility path is not required for v1.5.1 Core scheduling/Agent execution correctness.
 
 `GET /healthz` reports the boundary explicitly. Typical values are:
 
@@ -81,8 +96,8 @@ verification=not_configured
 or, with the runtime/scheduler profile configured:
 
 ```text
-execution=local_scheduler+agent_executor
-verification=legacy_brownfield_not_composed
+execution=local_scheduler+harness+agent_executor
+verification=fail_closed_unavailable
 ```
 
 ## v1.5.0 state migration
