@@ -46,18 +46,18 @@ type Store struct {
 }
 
 var (
-	_ controlplane.Repository          = (*Store)(nil)
-	_ persistence.ProjectStore         = (*Store)(nil)
-	_ persistence.RequirementStore     = (*Store)(nil)
-	_ persistence.PlanningStore        = (*Store)(nil)
-	_ persistence.TaskGraphStore       = (*Store)(nil)
-	_ persistence.TaskContractStore    = (*Store)(nil)
-	_ persistence.RunStore             = (*Store)(nil)
-	_ persistence.FactStore            = (*Store)(nil)
-	_ persistence.EvidenceStore        = (*Store)(nil)
-	_ persistence.ActionAuditStore     = (*Store)(nil)
-	_ persistence.OutcomeStore         = (*Store)(nil)
-	_ persistence.TransactionBoundary  = (*Store)(nil)
+	_ controlplane.Repository         = (*Store)(nil)
+	_ persistence.ProjectStore        = (*Store)(nil)
+	_ persistence.RequirementStore    = (*Store)(nil)
+	_ persistence.PlanningStore       = (*Store)(nil)
+	_ persistence.TaskGraphStore      = (*Store)(nil)
+	_ persistence.TaskContractStore   = (*Store)(nil)
+	_ persistence.RunStore            = (*Store)(nil)
+	_ persistence.FactStore           = (*Store)(nil)
+	_ persistence.EvidenceStore       = (*Store)(nil)
+	_ persistence.ActionAuditStore    = (*Store)(nil)
+	_ persistence.OutcomeStore        = (*Store)(nil)
+	_ persistence.TransactionBoundary = (*Store)(nil)
 )
 
 // Open creates or opens a SQLite database and applies the v1.5 adapter schema.
@@ -123,25 +123,27 @@ func (s *Store) configure(ctx context.Context) error {
 }
 
 func (s *Store) migrate(ctx context.Context) error {
-	const schema = `
-CREATE TABLE IF NOT EXISTS tally_v15_documents (
+	statements := []string{
+		`CREATE TABLE IF NOT EXISTS tally_v15_documents (
     kind TEXT NOT NULL,
     project_id TEXT NOT NULL,
     record_id TEXT NOT NULL,
     payload TEXT NOT NULL,
     recorded_at TEXT NOT NULL,
     PRIMARY KEY (kind, project_id, record_id)
-) WITHOUT ROWID;
-CREATE INDEX IF NOT EXISTS tally_v15_documents_project_kind
-    ON tally_v15_documents(project_id, kind);
-CREATE TABLE IF NOT EXISTS tally_v15_snapshots (
+) WITHOUT ROWID`,
+		`CREATE INDEX IF NOT EXISTS tally_v15_documents_project_kind
+    ON tally_v15_documents(project_id, kind)`,
+		`CREATE TABLE IF NOT EXISTS tally_v15_snapshots (
     project_id TEXT PRIMARY KEY,
     payload TEXT NOT NULL,
     updated_at TEXT NOT NULL
-) WITHOUT ROWID;
-`
-	if _, err := s.q.ExecContext(ctx, schema); err != nil {
-		return fmt.Errorf("sqlite persistence: migrate schema: %w", err)
+) WITHOUT ROWID`,
+	}
+	for _, statement := range statements {
+		if _, err := s.q.ExecContext(ctx, statement); err != nil {
+			return fmt.Errorf("sqlite persistence: migrate schema: %w", err)
+		}
 	}
 	return nil
 }
