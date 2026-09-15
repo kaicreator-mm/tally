@@ -82,10 +82,10 @@ else
   record_env_blocked real-dsh-ssh "set TALLY_V152_RUN_REAL_DSH=1 and configure SSH plus DEEPSEEK_API_KEY"
 fi
 
-if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $docker_ready -eq 1 && -n "${DEEPSEEK_API_KEY:-}" && "${TALLY_V152_DOCKER_NETWORK:-}" != "none" ]]; then
+if [[ "${TALLY_V152_RUN_REAL_DSH:-0}" == "1" && $docker_ready -eq 1 && -n "${TALLY_V152_DOCKER_WORKSPACE:-}" && -n "${DEEPSEEK_API_KEY:-}" && "${TALLY_V152_DOCKER_NETWORK:-}" != "none" ]]; then
   run real-dsh-docker env TALLY_V152_RUN_REAL_DSH=1 go test ./runtimes/dsh -run '^TestV152RealDSHInDocker$' -count=1
 else
-  record_env_blocked real-dsh-docker "set TALLY_V152_RUN_REAL_DSH=1 and configure Docker/network plus DEEPSEEK_API_KEY"
+  record_env_blocked real-dsh-docker "set TALLY_V152_RUN_REAL_DSH=1 and configure Docker task workspace/network plus DEEPSEEK_API_KEY"
 fi
 
 {
