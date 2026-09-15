@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"tally/internal/engineering"
+	"tally/internal/replan"
 	"tally/internal/taskexecution"
 )
 
@@ -36,6 +37,7 @@ type ProjectSnapshot struct {
 	ActiveDAG          *engineering.ActiveTaskDAG                        `json:"active_task_dag,omitempty"`
 	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts,omitempty"`
 	AuthorityDecisions []AuthorityRecord                                 `json:"authority_decisions,omitempty"`
+	ReplanHistory      []replan.ActivationRecord                         `json:"replan_history,omitempty"`
 	Audit              engineering.AuditLog                              `json:"audit"`
 	UpdatedAt          time.Time                                         `json:"updated_at"`
 }
@@ -137,6 +139,9 @@ func validateSnapshot(s ProjectSnapshot) error {
 			}
 		}
 	}
+	if err := validateReplanHistory(s); err != nil {
+		return err
+	}
 	for _, d := range s.AuthorityDecisions {
 		if err := d.NodeID.Validate("authority node"); err != nil {
 			return err
@@ -144,10 +149,11 @@ func validateSnapshot(s ProjectSnapshot) error {
 		if err := d.Decision.Validate(); err != nil {
 			return fmt.Errorf("controlplane: invalid authority decision: %w", err)
 		}
-		if s.ActiveDAG != nil {
-			if _, ok := findNode(*s.ActiveDAG, d.NodeID); !ok {
-				return fmt.Errorf("controlplane: authority decision references unknown task %s", d.NodeID)
-			}
+		// Before v1.5.5 every authority record had to reference the current DAG.
+		// Re-plan can explicitly supersede/invalidate a task, so durable authority
+		// history is valid if the task exists in either current or retained DAG history.
+		if !snapshotHasTask(s, d.NodeID) {
+			return fmt.Errorf("controlplane: authority decision references unknown task %s", d.NodeID)
 		}
 	}
 	for _, r := range s.Audit.Records {
@@ -159,4 +165,46 @@ func validateSnapshot(s ProjectSnapshot) error {
 		return errors.New("controlplane: updated_at is required")
 	}
 	return nil
+}
+
+func validateReplanHistory(s ProjectSnapshot) error {
+	for i, record := range s.ReplanHistory {
+		if err := record.Validate(); err != nil {
+			return fmt.Errorf("controlplane: invalid replan history[%d]: %w", i, err)
+		}
+		if i > 0 {
+			previous := s.ReplanHistory[i-1]
+			if record.PreviousPlanning.ID != previous.ActivatedPlanning.ID || record.PreviousDAG.RevisionID != previous.ActivatedDAG.RevisionID {
+				return fmt.Errorf("controlplane: replan history[%d] does not continue previous activation", i)
+			}
+		}
+	}
+	if len(s.ReplanHistory) == 0 {
+		return nil
+	}
+	last := s.ReplanHistory[len(s.ReplanHistory)-1]
+	if s.Plan == nil || s.ActiveDAG == nil {
+		return errors.New("controlplane: replan history requires current plan and DAG")
+	}
+	if s.Plan.AcceptedRevision.ID != last.ActivatedPlanning.ID || s.ActiveDAG.RevisionID != last.ActivatedDAG.RevisionID {
+		return errors.New("controlplane: current plan/DAG do not match latest replan activation")
+	}
+	return nil
+}
+
+func snapshotHasTask(s ProjectSnapshot, id engineering.ID) bool {
+	if s.ActiveDAG != nil {
+		if _, ok := findNode(*s.ActiveDAG, id); ok {
+			return true
+		}
+	}
+	for _, record := range s.ReplanHistory {
+		if _, ok := findNode(record.PreviousDAG, id); ok {
+			return true
+		}
+		if _, ok := findNode(record.ActivatedDAG, id); ok {
+			return true
+		}
+	}
+	return false
 }
