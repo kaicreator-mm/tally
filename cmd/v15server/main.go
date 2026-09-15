@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"tally/internal/controlplane"
+	"tally/internal/persistence/migratev150"
 	"tally/internal/persistence/profile"
 )
 
@@ -32,6 +33,15 @@ func main() {
 		os.Exit(1)
 	}
 	defer adapter.Close()
+
+	if sourceRoot := os.Getenv("TALLY_V15_IMPORT_V150_STATE_ROOT"); sourceRoot != "" {
+		report, err := migratev150.Import(ctx, sourceRoot, adapter)
+		if err != nil {
+			slog.Error("v1.5.0 snapshot import failed", "source_root", sourceRoot, "err", err)
+			os.Exit(1)
+		}
+		slog.Info("v1.5.0 snapshot import completed", "source_root", sourceRoot, "imported", len(report.Imported), "skipped_existing", len(report.Skipped))
+	}
 
 	service, err := controlplane.NewService(adapter, nil, nil)
 	if err != nil {
@@ -52,6 +62,7 @@ func main() {
 			"status":      "ok",
 			"component":   "tally-v1.5-core",
 			"persistence": string(selected),
+			"execution":   "not_configured",
 		})
 	})
 
@@ -64,7 +75,7 @@ func main() {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected)
+	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected, "execution", "not_configured")
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("v1.5 Core server failed", "err", err)
 		os.Exit(1)
