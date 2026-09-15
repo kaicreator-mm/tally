@@ -2,17 +2,14 @@ package controlplane
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"tally/internal/agentruntime"
 	"tally/internal/artifacts"
 	"tally/internal/candidateverify"
-	"tally/internal/changeset"
 	"tally/internal/closedloop"
 	"tally/internal/core"
 	"tally/internal/engineering"
@@ -45,8 +42,9 @@ type BrownfieldHarnessConfig struct {
 // BrownfieldHarness is the v1.5 production bridge over the existing v1.4
 // authorities. It does not implement a second closed loop: one Run loads and
 // compiles the pinned Git execution bundle, delegates attempts to AgentExecutor
-// inside closedloop-owned disposable worktrees, freezes immutable ChangeSets,
-// and reuses closedloop.NewLoop + candidateverify for verify/repair/accept.
+// inside closedloop-owned disposable worktrees, freezes and persists immutable
+// ChangeSets, and reuses closedloop.NewLoop + candidateverify for
+// verify/repair/accept.
 type BrownfieldHarness struct {
 	repo         string
 	worktreeRoot string
@@ -65,12 +63,19 @@ func NewBrownfieldHarness(cfg BrownfieldHarnessConfig) (*BrownfieldHarness, erro
 		return nil, fmt.Errorf("%w: content repo is required", ErrInvalidBrownfieldHarness)
 	case strings.TrimSpace(cfg.WorktreeRoot) == "":
 		return nil, fmt.Errorf("%w: disposable worktree root is required", ErrInvalidBrownfieldHarness)
-	case strings.TrimSpace(cfg.Runtime.Name) == "":
-		return nil, fmt.Errorf("%w: runtime descriptor is required", ErrInvalidBrownfieldHarness)
+	case strings.TrimSpace(cfg.EnvName) == "":
+		return nil, fmt.Errorf("%w: verification environment name is required", ErrInvalidBrownfieldHarness)
+	case strings.TrimSpace(cfg.Runtime.Name) == "", strings.TrimSpace(cfg.Runtime.Version) == "":
+		return nil, fmt.Errorf("%w: runtime descriptor name/version is required", ErrInvalidBrownfieldHarness)
 	case cfg.Executor == nil:
 		return nil, fmt.Errorf("%w: AgentExecutor is required", ErrInvalidBrownfieldHarness)
 	case cfg.Queries == nil:
 		return nil, fmt.Errorf("%w: fact store queries are required", ErrInvalidBrownfieldHarness)
+	}
+	if cfg.MaxRepair != 0 {
+		if _, err := closedloop.NewRepairPolicy(cfg.MaxRepair); err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrInvalidBrownfieldHarness, err)
+		}
 	}
 	now := cfg.Now
 	if now == nil {
@@ -109,9 +114,8 @@ func (h *BrownfieldHarness) Run(ctx context.Context, projectID engineering.ID, r
 		}
 	}
 
-	// Load one pinned execution bundle before opening any runtime session or
-	// disposable workspace. A moving branch expression is resolved once by the
-	// loader; all authority below uses bundle.SourceCommit.
+	// Resolve the moving revision exactly once and load all execution authority
+	// from that pinned Git tree before any runtime session or disposable worktree.
 	bundle, err := artifacts.LoadBundle(h.repo, req.Workspace.BaseRevision, string(req.TaskID))
 	if err != nil {
 		return HarnessResult{}, fmt.Errorf("controlplane: load execution bundle: %w", err)
@@ -142,7 +146,6 @@ func (h *BrownfieldHarness) Run(ctx context.Context, projectID engineering.ID, r
 		return HarnessResult{}, fmt.Errorf("controlplane: create disposable workspace manager: %w", err)
 	}
 	worktrees := workspace.NewRunTable(manager)
-
 	verify := candidateverify.New(candidateverify.Config{
 		Repo:         h.repo,
 		WorktreeRoot: h.worktreeRoot,
@@ -184,10 +187,24 @@ func (h *BrownfieldHarness) Run(ctx context.Context, projectID engineering.ID, r
 		runtime:  h.runtime.Name,
 		now:      h.now,
 	}
+	recordedCodegen, err := newRunstoreCodegenRecorder(
+		codegen,
+		runs,
+		core.ProjectID(bundle.ProjectID),
+		req,
+		bundle.Task.Contract.RevisionHash(),
+		frozen.Hash(),
+		h.runtime,
+		h.now,
+	)
+	if err != nil {
+		return HarnessResult{}, fmt.Errorf("controlplane: compose CodegenRun recorder: %w", err)
+	}
+
 	loop, err := closedloop.NewLoop(closedloop.LoopConfig{
-		Codegen:  codegen,
-		Verify:   verify,
-		Contract: frozen,
+		Codegen:   recordedCodegen,
+		Verify:    verify,
+		Contract:  frozen,
 		Authority: authority.Compiled,
 		Runtime:   h.runtime.Name,
 		Worktrees: worktrees,
@@ -236,114 +253,24 @@ func (h *BrownfieldHarness) Run(ctx context.Context, projectID engineering.ID, r
 	}
 }
 
-type agentExecutorCodegen struct {
-	executor taskexecution.AgentExecutor
-	template taskexecution.TaskExecutionRequest
-	project  core.ProjectID
-	runtime  string
-	now      func() time.Time
-
-	mu   sync.Mutex
-	last taskexecution.TaskExecutionResult
+func VerificationArtifactID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":verification-artifact")
 }
-
-var _ closedloop.CodegenRunner = (*agentExecutorCodegen)(nil)
-
-func (r *agentExecutorCodegen) RunCodegen(ctx context.Context, call closedloop.CodegenRunRequest) (*changeset.ChangeSet, error) {
-	req := r.template
-	req.TaskID = engineering.ID(call.TaskID)
-	req.Runtime = taskexecution.RuntimeRef{ID: r.runtime}
-	target := strings.TrimSpace(req.Environment.Target)
-	if target == "" {
-		target = "local"
-	}
-	req.Environment = taskexecution.EnvironmentRef{Kind: taskexecution.EnvironmentLocal, Target: target}
-	req.Workspace = taskexecution.WorkspaceRef{
-		Environment:  taskexecution.EnvironmentLocal,
-		Target:       target,
-		Identity:     string(call.RunID),
-		Path:         call.WorkspacePath,
-		BaseRevision: call.BaseRevision,
-	}
-	// Each closed-loop attempt is a fresh task-level execution. Correctness is
-	// independent of Agent session resume; the prior candidate is already
-	// materialized in the new disposable worktree by WorkspaceExecutor.
-	req.Policy.ResumeSession = ""
-	req.Policy.FallbackToFresh = true
-	instruction, err := repairInstruction(req.Instruction, call.Feedback)
-	if err != nil {
-		return nil, err
-	}
-	req.Instruction = instruction
-
-	execution, err := r.executor.Execute(ctx, req)
-	r.setLast(execution)
-	if err != nil {
-		return nil, err
-	}
-	switch execution.Status {
-	case taskexecution.ExecutionInterrupted:
-		if ctx.Err() != nil {
-			return nil, ctx.Err()
-		}
-		return nil, errors.New("controlplane: AgentExecutor reported interruption without caller cancellation")
-	case taskexecution.ExecutionFailed:
-		// A failed Agent claim creates no immutable candidate. The brownfield
-		// closed loop deterministically escalates no_candidate; no verdict is
-		// fabricated and repair budget is not consumed.
-		return nil, nil
-	case taskexecution.ExecutionCompleted:
-	default:
-		return nil, fmt.Errorf("controlplane: unknown task execution status %q", execution.Status)
-	}
-
-	candidate, ok, err := changeset.FreezeWorktree(ctx, changeset.WorktreeFreezeSpec{
-		Project:       r.project,
-		BaseRevision:  call.BaseRevision,
-		ProducerRun:   string(call.RunID),
-		WorkspacePath: call.WorkspacePath,
-		CreatedAt:     r.now().UTC(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, nil
-	}
-	execution.CandidateRef = string(candidate.ID())
-	r.setLast(execution)
-	return candidate, nil
+func ReviewArtifactID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":review-artifact")
 }
-
-func (r *agentExecutorCodegen) LastExecution() taskexecution.TaskExecutionResult {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.last
+func AcceptanceArtifactID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":acceptance-artifact")
 }
-
-func (r *agentExecutorCodegen) setLast(result taskexecution.TaskExecutionResult) {
-	r.mu.Lock()
-	r.last = result
-	r.mu.Unlock()
+func VerificationEvidenceID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":verification-evidence")
 }
-
-func repairInstruction(base string, feedback *closedloop.RepairFeedback) (string, error) {
-	if feedback == nil {
-		return base, nil
-	}
-	raw, err := json.Marshal(feedback)
-	if err != nil {
-		return "", fmt.Errorf("controlplane: encode safe repair feedback: %w", err)
-	}
-	return base + "\n\nTally repair feedback (safe structured projection):\n" + string(raw), nil
+func ClosedLoopCheckID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":closedloop-check")
 }
-
-func VerificationArtifactID(task engineering.ID) engineering.ID { return engineering.ID(string(task) + ":verification-artifact") }
-func ReviewArtifactID(task engineering.ID) engineering.ID       { return engineering.ID(string(task) + ":review-artifact") }
-func AcceptanceArtifactID(task engineering.ID) engineering.ID   { return engineering.ID(string(task) + ":acceptance-artifact") }
-func VerificationEvidenceID(task engineering.ID) engineering.ID { return engineering.ID(string(task) + ":verification-evidence") }
-func ClosedLoopCheckID(task engineering.ID) engineering.ID      { return engineering.ID(string(task) + ":closedloop-check") }
-func AcceptanceRecordID(task engineering.ID) engineering.ID     { return engineering.ID(string(task) + ":acceptance-record") }
+func AcceptanceRecordID(task engineering.ID) engineering.ID {
+	return engineering.ID(string(task) + ":acceptance-record")
+}
 
 func acceptedCompletionFacts(req taskexecution.TaskExecutionRequest, verificationRevision string, basis closedloop.Basis, at time.Time) engineering.CompletionFacts {
 	task := req.TaskID
@@ -361,16 +288,26 @@ func acceptedCompletionFacts(req taskexecution.TaskExecutionRequest, verificatio
 		State:     engineering.NodeAccepted,
 		Artifacts: artifactsOut,
 		Evidence: []engineering.EvidenceRef{{
-			ID: VerificationEvidenceID(task), Kind: "closedloop.final_verification", URI: verifyURI,
-			Revision: verificationRevision, Status: engineering.EvidencePass,
+			ID:       VerificationEvidenceID(task),
+			Kind:     "closedloop.final_verification",
+			URI:      verifyURI,
+			Revision: verificationRevision,
+			Status:   engineering.EvidencePass,
 		}},
 		Checks: []engineering.CheckResult{{
-			ID: ClosedLoopCheckID(task), Status: engineering.CheckPass,
-			Basis: fmt.Sprintf("closedloop accepted immutable changeset %s via verification %s attempt %d", basis.ChangeSet, basis.VerifyRun, basis.Attempt),
+			ID:     ClosedLoopCheckID(task),
+			Status: engineering.CheckPass,
+			Basis:  fmt.Sprintf("closedloop accepted immutable changeset %s via verification %s attempt %d", basis.ChangeSet, basis.VerifyRun, basis.Attempt),
 		}},
 		Records: []engineering.ActionRecord{{
-			ID: AcceptanceRecordID(task), NodeID: task, Kind: "closedloop.accepted", Actor: "tally-closedloop", At: at,
-			Provenance: engineering.Provenance{Actor: "tally-closedloop", Source: verifyURI, Revision: verificationRevision, At: at},
+			ID:     AcceptanceRecordID(task),
+			NodeID: task,
+			Kind:   "closedloop.accepted",
+			Actor:  "tally-closedloop",
+			At:     at,
+			Provenance: engineering.Provenance{
+				Actor: "tally-closedloop", Source: verifyURI, Revision: verificationRevision, At: at,
+			},
 		}},
 	}
 }
