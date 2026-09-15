@@ -12,11 +12,12 @@ import (
 // Command 是一次要执行的命令。
 //
 // Argv 是程序名 + 参数。本地执行(LocalRunner)时 Argv[0] 是可执行文件;
-// DockerRunner 会在前面补上 docker 二进制名;SSHRunner 把 Argv 拼成一条远端 shell 命令。
+// DockerRunner/DockerTaskRunner 会在前面补 docker 运行参数; SSHRunner 会将
+// Dir/Env/Argv 安全映射为一条远端 POSIX shell 命令。
 type Command struct {
 	Argv []string
-	Dir  string   // 工作目录(本地执行用;SSH 忽略)
-	Env  []string // 追加的环境变量(本地执行用;SSH 忽略)
+	Dir  string   // 工作目录；由具体 Runner 映射到对应执行环境
+	Env  []string // 追加的环境变量；由具体 Runner 映射到对应执行环境
 }
 
 // Result 是一次执行的原始结果。Runner 不解释它(见 doc.go):
