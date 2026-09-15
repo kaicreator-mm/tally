@@ -86,7 +86,7 @@ func TestStartInEnvironmentExecutesDSHThroughGenericRunner(t *testing.T) {
 		t.Fatalf("argv=%q", got)
 	}
 	joinedEnv := strings.Join(execCall.Env, "\n")
-	if !strings.Contains(joinedEnv, "DSH_HOME=/workspace/task/.tally/runtime/dsh/session-000001") ||
+	if !strings.Contains(joinedEnv, "DSH_HOME=/workspace/.tally-runtime/dsh/session-000001") ||
 		!strings.Contains(joinedEnv, "DSH_TELEMETRY_MODE=DISABLED") ||
 		!strings.Contains(joinedEnv, "DSH_PERMISSION_MODE=workspace-write") {
 		t.Fatalf("environment hardening missing: %s", joinedEnv)
