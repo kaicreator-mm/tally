@@ -251,8 +251,33 @@ func (s *Service) finishAccepted(ctx context.Context, projectID, taskID engineer
 		}
 	}
 	wf.Facts.Authority = authority
+
+	// Git operations can occur before or after the verification/review loop. Fold
+	// any already-persisted authorized successes into the same CompletionFacts;
+	// GitHub state never becomes a second workflow authority.
+	wf.Facts = applyPersistedGitOperations(wf.Facts, snap.GitActions, taskID)
+	if snap.CompletionFacts == nil {
+		snap.CompletionFacts = map[engineering.ID]engineering.CompletionFacts{}
+	}
+	snap.CompletionFacts[taskID] = wf.Facts
+
 	completion := contract.Evaluate(wf.Facts)
 	if !completion.Satisfied {
+		if onlyGitOperationsMissing(completion) {
+			accepted, err := snap.ActiveDAG.Transition(taskID, engineering.TaskAccepted, "")
+			if err != nil {
+				return DispatchResult{}, err
+			}
+			snap.ActiveDAG = &accepted
+			if err := s.record(&snap, "task.accepted.awaiting_git", taskID, source); err != nil {
+				return DispatchResult{}, err
+			}
+			if err := s.save(persistCtx, &snap); err != nil {
+				return DispatchResult{}, err
+			}
+			return DispatchResult{Execution: execution, Workflow: wf, Completion: &completion, Snapshot: snap}, nil
+		}
+
 		next, err := snap.ActiveDAG.Transition(taskID, engineering.TaskBlocked, "CompletionContract not satisfied")
 		if err != nil {
 			return DispatchResult{}, err
