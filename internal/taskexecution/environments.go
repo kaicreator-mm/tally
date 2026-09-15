@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"tally/internal/runner"
@@ -401,16 +402,28 @@ func (LocalEnvironment) RunProcess(ctx context.Context, cmd runner.Command) (run
 	}
 	return res, nil
 }
+func localEnvironmentAdapter() environmentAdapter {
+	return environmentAdapter{
+		kind:   EnvironmentLocal,
+		target: "local",
+		exec:   runner.LocalRunner{},
+		declared: EnvironmentProfile{
+			OS:           runtime.GOOS,
+			Architecture: runtime.GOARCH,
+		},
+	}
+}
 func (LocalEnvironment) Discover(ctx context.Context) (EnvironmentProfile, error) {
-	a := environmentAdapter{kind: EnvironmentLocal, target: "local", exec: runner.LocalRunner{}}
+	a := localEnvironmentAdapter()
 	return a.Discover(ctx)
 }
 func (LocalEnvironment) ValidateCapabilities(ctx context.Context, c []EnvironmentCapability) error {
-	a := environmentAdapter{kind: EnvironmentLocal, target: "local", exec: runner.LocalRunner{}}
+	a := localEnvironmentAdapter()
 	return a.ValidateCapabilities(ctx, c)
 }
 func (LocalEnvironment) InspectWorkspace(ctx context.Context, w WorkspaceRef) (WorkspaceInspection, error) {
-	a := environmentAdapter{kind: EnvironmentLocal, target: w.Target, exec: runner.LocalRunner{}}
+	a := localEnvironmentAdapter()
+	a.target = w.Target
 	return a.InspectWorkspace(ctx, w)
 }
 func (LocalEnvironment) CleanupWorkspace(_ context.Context, w WorkspaceRef) error {
