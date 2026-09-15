@@ -13,7 +13,17 @@ import (
 	"tally/internal/controlplane"
 	"tally/internal/engineering"
 	"tally/internal/persistence"
+	"tally/internal/persistence/persistencetest"
 )
+
+func TestSharedConformance(t *testing.T) {
+	store, err := Open(context.Background(), filepath.Join(t.TempDir(), "conformance.db"))
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	defer store.Close()
+	persistencetest.Run(t, store)
+}
 
 func TestStoreRoundTripAndRestart(t *testing.T) {
 	ctx := context.Background()
