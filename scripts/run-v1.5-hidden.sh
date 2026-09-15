@@ -39,9 +39,21 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 REVISION="$(git rev-parse HEAD)"
 
-OUT_ROOT="${TALLY_V15_HIDDEN_OUT:-$ROOT/.local-validation/v1.5.0-hidden}"
+# Hidden result material must also remain outside the implementation checkout.
+# An external pack may emit protected diagnostics in its result directory, so a
+# repo-local default would break the information-separation boundary.
+OUT_ROOT="${TALLY_V15_HIDDEN_OUT:-${TMPDIR:-/tmp}/tally-v1.5-hidden-results}"
+mkdir -p "$OUT_ROOT"
+OUT_ROOT_REAL="$(cd "$OUT_ROOT" && pwd -P)"
+case "$OUT_ROOT_REAL" in
+  "$ROOT_REAL"|"$ROOT_REAL"/*)
+    echo "FAIL: hidden result directory must live outside the implementation repository" >&2
+    exit 2
+    ;;
+esac
+
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-OUT="$OUT_ROOT/$STAMP"
+OUT="$OUT_ROOT_REAL/$STAMP"
 mkdir -p "$OUT"
 SUMMARY="$OUT/summary.txt"
 
