@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"tally/internal/agentruntime"
+	"tally/internal/closedloop"
 	"tally/internal/controlplane"
 	"tally/internal/store"
 	"tally/internal/taskexecution"
@@ -97,6 +98,9 @@ func v15MaxRepairFromEnv() (int, error) {
 	n, err := strconv.Atoi(raw)
 	if err != nil {
 		return 0, fmt.Errorf("v1.5 control plane: TALLY_V15_MAX_REPAIR must be an integer: %w", err)
+	}
+	if _, err := closedloop.NewRepairPolicy(n); err != nil {
+		return 0, fmt.Errorf("v1.5 control plane: invalid TALLY_V15_MAX_REPAIR: %w", err)
 	}
 	return n, nil
 }
