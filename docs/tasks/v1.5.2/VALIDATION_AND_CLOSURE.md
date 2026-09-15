@@ -11,7 +11,7 @@ This ledger separates implementation completeness from empirical Release Qualifi
 - Implementation issue: #33
 - Build Host / release-gate issue: #50
 - Draft PR: #49
-- Implementation code freeze: `9a35c1ddf3b4ff1a313e92c3f0e8100da6d3653d`
+- Implementation code freeze: `79a31bef1655705aa09eaae30f36ddc3fae2863e`
 - Candidate state: **CODE-COMPLETE / NOT RELEASE QUALIFIED**
 
 The code-freeze revision contains the implementation and source-level test/validation carriers. Documentation-only commits may follow it. Empirical evidence must always name the exact checked-out revision; do not infer validation from this document or from an Agent claim.
@@ -25,14 +25,14 @@ The code-freeze revision contains the implementation and source-level test/valid
 | Local compatibility | CODE-COMPLETE as source | Local path remains compatibility edge; production Local composition remains available; Local OS/architecture baseline uses `runtime.GOOS/GOARCH` |
 | SSH environment | CODE-COMPLETE as source | cwd/env/argv/stdout/stderr, context cancellation, authentication boundary, fail-closed host-key policy, environment-native Git/workspace lifecycle |
 | Docker environment | CODE-COMPLETE as source | task image/profile, mount/workdir/env, `--rm`, forced cancellation cleanup; secret values stay out of Docker CLI argv |
-| Capability/failure semantics | CODE-COMPLETE as source | OS/normalized architecture/toolchain/Git/Docker/network/secret-availability/resource profile; typed mismatch before Agent start; transport/workspace/cleanup failures remain distinguishable |
+| Availability/capability/failure semantics | CODE-COMPLETE as source | non-Local Runner availability preflight distinguishes SSH/Docker placement failure before capability discovery; OS/normalized architecture/toolchain/Git/Docker/network/secret-availability/resource profile; typed mismatch before Agent start; transport/workspace/cleanup failures remain distinguishable |
 | Workspace restart/recovery | CODE-COMPLETE as source | retained workspace inspect; lost workspace recreate from accepted base revision; re-verification mandatory; destructive lifecycle rejects unsafe roots |
 | DSH remote/container Runtime | CODE-COMPLETE as source | one DSH Runtime implements generic `StartInEnvironment`; DSH session state is outside the candidate Git workspace; cancellation follows Runner context |
 | Scheduler/Harness integration | CODE-COMPLETE as source | `GitTaskRequestFactory` is environment-aware; host `os.Stat` only on Local; non-Local locators are absolute POSIX paths; implicit remote execution capabilities are fail-closed |
 | Production server composition | CODE-COMPLETE as source | `v15server` selects Local/SSH/Docker; DSH model/provider remain Runtime config rather than fabricated `model.select` capability |
 | Secret boundary | CODE-COMPLETE as source | EnvironmentProfile stores availability only; Docker CLI argv contains env names, not values; malformed SSH/Docker env validation errors do not echo values |
 | Cleanup semantics | CODE-COMPLETE as source | remote session cleanup failure is surfaced as typed `FailureCleanup`; Local close behavior remains backward-compatible |
-| Source test carriers | SOURCE-COMPLETE | focused/negative/production-composition/real-environment opt-in test sources committed |
+| Source test carriers | SOURCE-COMPLETE | focused/negative/production-composition/real-environment opt-in test sources committed, including non-Local availability-preflight failure coverage |
 | Visible validation carrier | CARRIER-COMPLETE | `scripts/validate-v1.5.2.sh` covers focused packages, production composition, architecture, full regression, real transport and explicit real-DSH gates |
 | Hidden validation carrier | CARRIER-COMPLETE | `scripts/run-v1.5.2-hidden.sh` requires an external held-out pack and a clean frozen candidate |
 
@@ -124,15 +124,15 @@ TALLY_V152_HIDDEN_ROOT=/outside/repo/tally-v1.5.2-hidden \
   bash scripts/run-v1.5.2-hidden.sh
 ```
 
-The external pack should cover at least Local portability, SSH auth/host-key/transport failure, hostile argv/env/cwd quoting, secret redaction, remote tool missing, remote Git mismatch, target mismatch, lost workspace/recreate failure, transport failure during recovery, cancellation during transport loss, cleanup failure/unsafe cleanup path, Docker unavailable/missing image/profile/network mismatch, runtime lacking environment binding, capability rejection before Agent start, session-resume fallback on the same environment, production Scheduler/server composition, and negative checks proving Core has no host-local filesystem assumption for SSH/Docker workspaces.
+The external pack should cover at least Local portability, SSH auth/host-key/transport failure, non-Local availability preflight, hostile argv/env/cwd quoting, secret redaction, remote tool missing, remote Git mismatch, target mismatch, lost workspace/recreate failure, transport failure during recovery, cancellation during transport loss, cleanup failure/unsafe cleanup path, Docker unavailable/missing image/profile/network mismatch, runtime lacking environment binding, capability rejection before Agent start, session-resume fallback on the same environment, production Scheduler/server composition, and negative checks proving Core has no host-local filesystem assumption for SSH/Docker workspaces.
 
 Hidden fixtures/oracles remain outside the implementation repository. Only sanitized status/result references may enter release records.
 
 ## Critical Journeys
 
 - **CJ-152-01 Local compatibility** — Codex+Local and DSH+Local retain pre-v1.5.2 behavior.
-- **CJ-152-02 SSH production binding** — production composition selects SSH; pinned Git workspace is inspected remotely; DSH runs through the generic SSH Runner with verified host identity.
-- **CJ-152-03 Docker production binding** — production composition selects Docker; task workspace is inside the shared mount; DSH runs through the generic Docker Runner with reproducible profile.
+- **CJ-152-02 SSH production binding** — production composition selects SSH; availability preflight proves the selected target is runnable; pinned Git workspace is inspected remotely; DSH runs through the generic SSH Runner with verified host identity.
+- **CJ-152-03 Docker production binding** — production composition selects Docker; availability preflight proves daemon/image placement; task workspace is inside the shared mount; DSH runs through the generic Docker Runner with reproducible profile.
 - **CJ-152-04 No silent Local fallback** — a non-Local request with a Local-only Runtime fails before Local `Start` is called.
 - **CJ-152-05 Capability fail-closed** — OS/arch/tool/Git/Docker/network/secret/resource mismatch blocks before Agent start.
 - **CJ-152-06 Workspace recovery** — retained workspace continues; missing/mismatched workspace recreates from accepted base revision; transport failure is not misclassified as workspace loss.
