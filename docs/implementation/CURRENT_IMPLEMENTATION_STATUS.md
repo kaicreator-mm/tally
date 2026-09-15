@@ -1,48 +1,159 @@
-# Current Implementation Status
+# Tally Current Implementation Status
 
-**Baseline:** `979a55ad3ba5e514bb80f0e012aa36e0e6577eba`  
-**Point in time:** before v1.4.1 implementation.
+**Current program:** v1.5.0 Engineering Control Plane Foundation  
+**Base:** v1.4.1 brownfield implementation  
+**Status:** implementation foundation complete through Issue #8; Issue #9 closure candidate in progress  
+**Release:** **NOT RELEASE QUALIFIED**
 
-| Area | Implemented | Production wired | v1.4.1 status |
-|---|---:|---:|---|
-| Closed Loop Execute/Verify/Repair/Accept | yes | yes | retain |
-| disposable worktrees | yes | yes | retain |
-| immutable ChangeSet / lineage | yes | yes | retain |
-| `agentruntime.Runtime` | yes | yes | retain |
-| Codex out-of-process Runtime Adapter | yes | yes | retain / regression-gate |
-| Contract compiler / bind | yes | yes — authoritative end-to-end (P1-03 assembler is the mandatory first execution gate, P1-04 worker wiring) | retain |
-| EngineeringPolicy matching | yes | yes — compiled authority + rule governance chain (P3-01..P3-09, gate PASS) | retain |
-| Risk + Assurance primitives | yes | yes — authoritative derivation → compiled authority → acceptance guard (P1-02..P1-06) | retain |
-| VerifiedBasis | yes | yes — acceptance guard + read projections (P1-06/P1-07) | retain |
-| Intent AI proposal seam | yes | yes — production executor wired in cmd/server (P0-05) | retain |
-| Dynamic clarification choices | yes | yes — bounded schema + rendered forms (P0-03/P0-04) | retain |
-| Confirm → immutable Freeze | yes | yes — freeze/reload plus downstream risk/compile consumption complete (P1 chain) | retain |
-| Rule governance / replay | yes | yes — proposal domain + append-only store + replay + GitWriter activation + Rules UI (P3-01..P3-09, gate PASS) | retain |
-| DeepSeek Harness Runtime Adapter | yes | yes — canary-gated, disabled by default (P4-04..P4-07, gate LIMITED_READY) | canary / limited |
-| Git L0–L2 | strong existing base | yes | retain |
-| Git L3 local integration | yes | yes — semantic service + permission ladder + audit projection (P5-01..P5-06, gate PASS) | retain |
-| Outcome domain/store | yes | yes — accepted writer in the Engine accept seam + capture APIs (P6-01/P6-02; non-accepted producers' wiring is a recorded gap for final validation) | retain |
-| migration verification root cause | resolved | yes — orchestrator infra-exit channel + trial fixture fix (P6-04/P6-05) | retain |
-| Human-centered Work/Reviews/Rules projection | yes | yes — navigation/work/runs/reviews/rules pages (P2-01..P2-05, gate PASS) | retain |
-| Safe external source export | yes | yes — `scripts/export` deterministic pinned-commit archive (P6-06) | retain |
+## Summary
 
-## Key semantic warning
+The repository has moved beyond the v1.4.1 development baseline. v1.5.0 now establishes the project-level Engineering Control Plane, Active TaskDAG authority and shared intelligence/execution seams while deliberately reusing the existing Agent Runtime, ChangeSet, verification and closed-loop authorities.
 
-A module being implemented is not the same as being the production authority.
+Completed implementation slices:
 
-v1.4.1 specifically closes that gap for:
-- Confirm→Freeze;
-- Compile/Risk/Assurance;
-- Acceptance;
-- Outcome.
+- #5 — v1.5 authority, L2 architecture and executable task program;
+- #6 — engineering lifecycle domain, TaskDAG, CompletionContract, authority/audit model;
+- #7 — common IntelligenceProvider plus AgentExecutor × ExecutionEnvironment contracts;
+- #8 — restartable Control Plane, Local production composition and brownfield closed-loop execution bridge.
 
-## v1.4.1 progress notes
+Issue #9 owns minimal UI/API completion, validation, Critical Journeys, Hidden Validation and Release Qualification. The closure branch contains those artifacts, but required release-level executable evidence remains unavailable in the current ChatGPT Web environment.
 
-- 2026-09-12 (P0-01): immutable FrozenIntent evidence domain landed — `internal/intentevidence` with the exact artifact adjudication `.tally/intents/<task_id>.yaml`, strict fail-closed parse, deterministic canonicalization and content-derived `sha256:` revision. "Confirm → immutable Freeze" row above is unchanged for now: Git loader (P0-02), draft→frozen mapping (P0-06) and the confirm→freeze transaction (P0-08) are still open. Task pack progress: 6/57.
-- 2026-09-12 (P0-02): FrozenIntent Git artifact loader landed — `artifacts.LoadIntent(repoPath, rev, taskID)` reads `.tally/intents/<task_id>.yaml` from the pinned commit tree only (never the working tree) and returns the `intentevidence.FrozenIntent` bound to the observed source commit, with typed rejections `ErrIntentNotFound` / `ErrIntentInvalid` (intentevidence sentinels wrapped through) / `ErrIntentIdentityMismatch`. "Confirm → immutable Freeze" row above is unchanged for now: draft→frozen mapping (P0-06) and the confirm→freeze transaction (P0-08, which consumes this loader for reload) are still open. Task pack progress: 7/57.
-- 2026-09-12 (P0-06): pure confirmed-draft→frozen domain mapper landed — `internal/intakefreeze.Map(ConfirmedDraft) → {intentevidence.FrozenIntent, taskcontract.TaskContract}`: deterministic (content-derived identity/revision only, no Git writes/storage), confirmed risk hints only (draft candidates never auto-promoted to evidence, DL-06), explicit profile as governance input (no invented defaults), acceptance independence left undeclared (conservative none default), fail-safe typed rejection of unsupported task types, unrepresentable draft semantics (`non_scope`/`constraints` non-empty → `ErrUnsupportedDraftSemantics`, never silently dropped) and products failing `taskcontract.Validate`/`ValidateStatic` (`ErrInvalidContract`). "Confirm → immutable Freeze" row above is unchanged for now: the confirm→freeze Git transaction (P0-08) that wires the mapper into the handler is still open, as is verification authoring/freeze admission (P0-07). Task pack progress: 11/57.
-- 2026-09-12 (P0-07): verification authoring and freeze admission landed — `internal/intakefreeze.Freeze(ConfirmedDraft, VerificationPlan) → FrozenArtifacts{Intent, Task, Verification}`: reuses `Map` (all P0-06 gates fire first), authors a `verification.Contract` 1:1 with the confirmed acceptance clauses from owner-declared per-clause planned evidence, and freezes it through the existing authority `verification.FreezeContract` at zero-value `FreezePolicy` (P1 standard path). Admission is fail-safe and typed: orphan declarations (pointing at non-existent clauses) → `ErrUnknownEvidenceTarget`; any acceptance without a planned evidence declaration → `ErrMissingEvidence` (missing evidence prevents execution-ready freeze); held-out visibility only from explicit `EvidenceDeclaration.HeldOut` (never auto-labeled) and only with complete declared runtime isolation requirements (`ErrHeldOutWithoutIsolation`, INV-VER-05); everything else delegated to `verification.Validate`/freeze rules wrapped as `ErrInvalidVerification`. Authoring provenance is structurally fixed to `pre_commit` (post_hoc is not expressible at the confirm boundary); binding ids are mechanically derived (`<clause>-EV<nn>`); declaration/clause ordering is canonicalized so frozen hashes are input-order invariant; equal duplicate declarations are rejected, not deduplicated. "Confirm → immutable Freeze" row above is still unchanged: the confirm→freeze Git transaction (P0-08) that wires `Freeze` behind `V14ConfirmDraft` remains open. Task pack progress: 12/57.
-- 2026-09-12 (P0-08): atomic confirm-to-freeze Git transaction landed — `artifacts.FreezeCommit(repoPath, FreezeCommitRequest{ExpectedBase, Artifacts, Message, Signature})` renders the frozen triple (FrozenIntent via `intentevidence.Render`; TaskContract and frozen VerificationContract via strict-parse-reversible `yaml.Marshal`) into `.tally/intents/<task_id>.yaml` + `.tally/tasks/<task_id>.yaml` + `.tally/verifications/<task_id>.yaml` and commits them through exactly one `gitwriter.Writer.Commit` at the caller's explicit expected base: a single CAS boundary (stale base → typed `gitwriter.ErrBaseRevision`, nothing written, never silently rebased), a fail-closed identity gate across the triple (`artifacts.ErrFreezeIdentityMismatch`), typed content-idempotency for duplicate confirmation (`gitwriter.ErrNoChanges`, no second commit), and full rollback inheritance from gitwriter on any mid-apply failure (test-proven: zero file residue, HEAD unchanged). Handler wiring in `v14_launch.go` (P0-04→P0-08 serial lane): `V14ConfirmDraft` → typed form inputs (task id, explicit governance profile, owner-checked risk hints, per-clause visible evidence kind/path/selector) → `intakefreeze.Freeze` (P0-07 admission unchanged) → `FreezeCommit` → PRG 303 flash outcome (frozen with commit sha / idempotent no-op / base conflict / honest failure); admission failures re-render 400 preserving all owner-entered content, and the stale "freeze not wired" receipt copy is removed from the confirm form. Reloadability from the pinned commit is proven at both transaction and handler level (`artifacts.Load` returns the same content hashes; `artifacts.LoadIntent` returns the same revision). No composition-root change was required: the confirm route is already production-mounted and the repo/commit identity come from the injected `Server.Content`; `cmd/server`, `server.go` and `internal/gitwriter` are zero-changed. The "Confirm → immutable Freeze" row above is updated: the freeze leg is now wired; downstream consumption (risk derivation from FrozenIntent, compile binding) remains for P1 lanes. Task pack progress: 13/57.
-- 2026-09-12 (P1-01): same-source execution bundle loader landed — `artifacts.LoadBundle(repoPath, rev, taskID)` (`internal/artifacts/v141_bundle_loader.go`) resolves `rev` to exactly one commit and loads the full execution authority for one task identity from that single commit tree: FrozenIntent (shared `loadIntentTree` with `LoadIntent` — identical adjudication, no drift), TaskContract (`taskcontract.Parse`+`ValidateStatic`), frozen VerificationContract (`verification.Parse`+`FreezeContract` at zero-value `FreezePolicy`), and EngineeringPolicies (existing `loadPolicyTree` — invalid policies carried per-file in `Rejected`, DL-09/BI-01 discipline inherited). DL-04 by construction: no second revision resolution and no auto-upgrade to HEAD, so mixed-commit bundles cannot exist; missing artifacts reject typed per class (`ErrTaskNotFound`/`ErrTaskInvalid`/`ErrTaskIdentityMismatch`, verification trio, existing intent trio) with a fixed load order; the deterministic `Identity()` hashes canonical text over the observed source commit plus all loaded revisions, proven change-sensitive to both policy version changes and content-identical different-commit bundles. `LoadIntent` was refactored onto the shared `openCommitTree`/`loadIntentTree` helpers with unchanged public semantics; `contract.Snapshot`/`Compile`/`Bind` are untouched — the "Contract compiler / bind" row above is unchanged: assembling the compiled authority from this bundle is P1-03's owned seam, worker wiring is P1-04. Task pack progress: 15/57.
-- 2026-09-12 (P1-02): authoritative risk input derivation landed — `intentevidence.FrozenIntent.DeriveRisk()` (`internal/intentevidence/riskderive.go`) derives the authoritative `risk.Result` from confirmed immutable facts plus deterministic task facts, preserving basis references: confirmed risk hints project through the existing `RiskSignalCandidates` (basis `intent:<task-id>`, P0-01 adjudication) and the frozen task-type fact projects through new `TaskTypeRiskCandidates` (`db_migration` ⇒ `schema_migration` by definition of the PRD §24.2 closed loop, basis `tasktype:<task-id>`; `bug_fix` ⇒ no deterministic signal), and the composed candidates go verbatim into `risk.Derive` — known/unknown classification stays entirely in the risk package (DL-05), candidate LLM risk output has no bypass path into the derivation (only frozen evidence is read), unknown/unmatched signals stay visible verbatim (INV-V14-09), zero-value intents reject as `ErrInvalidEvidence` (never derived as “no risk”), and missing/malformed basis fails the whole derivation as `risk.ErrMalformedSignal` (no partial results). Pure function, nothing persisted (DL-05: no RiskProfile); recompute-identical from the pinned commit. The “Risk + Assurance primitives” row above is unchanged: consuming the derived facts in production (`contract.Bind` assembly, worker wiring) remains P1-03/P1-04. Task pack progress: 16/57.
-- 2026-09-12 (P1-03): production contract compilation assembler landed — `(*artifacts.ExecutionBundle).CompileAuthority() → *artifacts.CompiledAuthority` (`internal/artifacts/v141_contract_assembler.go`) is the single production seam from the same-source bundle (P1-01 `LoadBundle`) to the authoritative compiled contract (PRD §16: worker must not bypass the compiler). It composes the existing authorities with zero new parallel subsystem (DL-18): source-commit consistency re-check at the assembly entry (`ErrSourceMismatch` — DL-04 defense against hand-built mixed-source bundles), policy-loader rejections fail-safe (`ErrPolicyRejections` blocks execution; the P1-01 deferred adjudication — a policy artifact present in the pinned snapshot but failing validation means the runtime-visible rule set is incomplete, so running would be a silent policy false-negative), `DeriveRisk` typed errors pass through verbatim (invalid risk basis stops execution; never "no risk" derived from non-evidence), then `contract.Compile` (content-derived pins as the second identity defense) and `contract.Bind` unchanged (DL-04: pure projection, never rewrites authority). Unmatched/unknown risk deliberately does NOT block — the existing INV-V14-09 compiler semantics are preserved (signals visible via `Coverage`, every clause fail-safe uplifted to L3), and zero-policy bundles compile legitimately as `ConfidenceNone` (L1 default floor when no signals; blocking policy-less repos is required by no authority document). `CompiledAuthority` exposes task id, observed source commit, bundle identity and the authoritative `risk.Result` next to `Compiled.Hash/Pins/Coverage/Clauses/GateKeys` (task AC: compiled identity/hash exposed to the caller). Determinism is test-pinned (task AC: inputs reproducible from source commit): same-bundle re-assembly, same-commit reload and policy-content-change sensitivity of the compiled hash. The focused suite drives real freeze→commit→load→assemble paths across the task Verification matrix — policy match (via the `db_migration` task-type deterministic fact, basis assertions on the derived signal), no-match (unmatched known signal → L3 failsafe; zero-policy/zero-signal → L1 floor), invalid policy (blocked), unknown risk (visible + L3 failsafe) — plus invalid-risk-basis, source-mismatch and mixed-identity negatives. The worker does not call the seam yet — call-site timing (compile before workspace/runtime start, no session on compilation failure) is P1-04's owned wiring. Task pack progress: 17/57.- 2026-09-13 (overnight batch P0-late → P6): 42 additional tasks landed across all lanes and were gated — P2 human-centered UX (P2-01..P2-05, gate PASS: structured-first navigation, runs/reviews/rules projections with honest absence and per-item reason/basis/action), P3 rule governance (P3-01..P3-09, gate PASS: proposal domain + append-only store + canonicalization + conflict analysis + evidence-bounded replay + GitWriter activation + Rules UI; no split-brain — runtime authority stays the Git snapshot), P4 DSH (P4-03 spike GO-WITH-CONDITIONS, P4-04..P4-07 adapter/canary/lifecycle/LIMITED_READY gate), P5 Git integration (P5-01..P5-06, gate PASS: semantic Integrate/branch/merge + L0-L3 permission ladder + audit projection; zero-remote, CAS semantics), P6 (P6-01 accepted Outcome writer in the Engine accept seam, P6-02 capture APIs for the four remaining kinds, P6-04 migration false-negative reproduction, P6-05 root-cause fix [infra-exit-code channel + trial fixture mapping, exit-1 trusted-FAIL preserved], P6-06 deterministic source export). Platform model-request outage persisted through the night: several tasks were implemented or closed out by the orchestrator main session (P4-04 closeout, P2-04, P2-05, P3-01..P3-09 where subagent dispatch failed); each such report declares it. Remaining: P6-08 final hidden validation — external process (hidden pack withheld per DL-17). Task pack progress: 56/57.
+## Implemented — engineering lifecycle
+
+`internal/engineering` contains:
+
+- RequirementsBaseline with required statement + acceptance criteria;
+- ProjectPlan / PlanningRevision;
+- ArchitectureRevision / ArchitectureConstraint;
+- TaskDAG proposal validation and ActiveTaskDAG;
+- deterministic dependency/readiness and legal transitions;
+- ArtifactRef / EvidenceRef;
+- append-only ActionRecord / AuditLog;
+- human participation/authority values;
+- CompletionContract / CompletionFacts / structured missing requirements.
+
+`Active TaskDAG = Project Flow`. v1.5.0 does not persist a second project-flow authority.
+
+## Implemented — intelligence/execution contracts
+
+`internal/intelligence`:
+
+- shared Provider contract;
+- Direct and AI Runtime adapters via a common invoker shape;
+- Result = Proposal + Assessment + Recommendation + provider provenance;
+- malformed/missing structured result is rejected;
+- provider failure does not fabricate a result or own project state.
+
+`internal/taskexecution`:
+
+- AgentExecutor;
+- RuntimeRef / EnvironmentRef;
+- ExecutionEnvironment and LocalEnvironment;
+- environment-aware WorkspaceRef;
+- runtime/environment capability requirements;
+- TaskExecutionRequest / TaskExecutionResult;
+- explicit cancellation/interruption;
+- bounded resume/fallback behavior.
+
+Only Local environment execution is implemented in v1.5.0.
+
+## Implemented — Control Plane
+
+`internal/controlplane` owns project lifecycle and task dispatch over the persisted Active TaskDAG.
+
+Implemented behavior:
+
+- ordered acceptance Requirements → Plan → Architecture;
+- validated TaskDAG activation only after lifecycle prerequisites;
+- restartable compatibility snapshot repository;
+- readiness refresh and task transitions;
+- append-only project audit;
+- authority decisions scoped to a task;
+- task restart independent of Agent-session resume;
+- Dispatch through a production TaskHarness;
+- CompletionContract still gates advancement after the Harness reports accepted.
+
+JSON API operations exist under `/api/v15/...`.
+
+The closure candidate adds `/v15/control-plane`, a thin browser console for lifecycle/DAG/audit observation plus Authority/Restart/Dispatch actions. The page owns no state and is mounted behind the existing authentication + CSRF middleware.
+
+## Implemented — brownfield production bridge
+
+`BrownfieldHarness` is the v1.5.0 production task-level composition. It does not create a second workflow/runtime stack.
+
+For each Local task run it:
+
+1. loads one exact/pinned Git execution bundle;
+2. checks project/task authority and compiles existing contract authority;
+3. checks held-out prerequisites before runtime execution;
+4. creates the existing workspace manager / closed-loop run table;
+5. uses existing `closedloop.NewLoop`;
+6. delegates coding attempts to the new AgentExecutor but forces the workspace to the disposable worktree created by the existing WorkspaceExecutor;
+7. freezes actual modified/untracked content into an immutable ChangeSet candidate;
+8. records a durable CodegenRun and rebinds exact candidate content to that database run identity;
+9. persists the authoritative ChangeSet before independent candidate verification;
+10. reuses existing candidateverify and closedloop verification/repair/acceptance;
+11. projects only an actual closed-loop Accepted Basis to CompletionFacts;
+12. lets CompletionContract and project authority decide whether Active TaskDAG advances.
+
+Operational/runtime/provider failure remains distinct from candidate verification failure.
+
+## Implemented safety properties
+
+- Agent `completed` is not Evidence and is insufficient to advance by itself.
+- executable candidate work happens in Tally-owned linked worktrees;
+- owner primary checkout is rejected by FreezeWorktree;
+- no-change completion produces no candidate;
+- unsupported deletion representation fails closed;
+- repair attempt correctness does not depend on session resume;
+- safe RepairFeedback remains bounded/allowlisted;
+- held-out execution requires external held-out material plus evidence-gated session isolation;
+- supersession/exposure/outcome facts reuse append-only brownfield stores;
+- Codex/DSH remain behind the one existing Agent Runtime protocol.
+
+## Validation evidence
+
+Actually executed focused evidence is recorded in `docs/tasks/v1.5.0/VALIDATION_MATRIX.md`:
+
+- engineering domain / TaskDAG / Completion focused test, vet and race PASS from PR #11;
+- IntelligenceProvider / taskexecution focused test, vet and race PASS from PR #12;
+- immutable real-Git worktree freeze test, vet and race PASS from PR #16 isolated harness;
+- PR #16 manual contract/interface review PASS.
+
+The closure branch also codifies a visible lifecycle Critical Journey and UI/API security tests. They have **not** been executed against the closure candidate in the current environment because the private repository is not available as an authenticated local checkout.
+
+Current required release-level gates:
+
+```text
+closure-candidate focused/full tests    ENV-BLOCKED
+full visible regression                 ENV-BLOCKED
+integration/E2E                         ENV-BLOCKED
+real Local Brownfield Critical Journey  ENV-BLOCKED
+external Hidden Validation              ENV-BLOCKED
+Release Qualification                   NOT COMPLETE
+```
+
+These are not inherited PASS.
+
+## Explicit local validation carriers
+
+```bash
+bash scripts/validate-v1.5.0.sh
+
+TALLY_V15_HIDDEN_ROOT=/secure/held-out/tally-v1.5.0 \
+  bash scripts/run-v1.5-hidden.sh
+```
+
+No GitHub Actions or CI system is authorized for this version.
+
+## Deferred / not implemented in v1.5.0
+
+- SQLite-default/PostgreSQL-optional persistence redesign and DB Job Queue removal — v1.5.1;
+- SSH/Docker ExecutionEnvironment implementations — v1.5.2;
+- full GitHub Issue/PR/Merge/Tag/Release authority automation — v1.5.3;
+- full multi-Agent role workflow — v1.5.4;
+- automatic re-plan / governed engineering learning — v1.5.5.
+
+## Current conclusion
+
+The source is converging on a coherent **v1.5.0 development baseline**. It must remain **NOT RELEASE QUALIFIED** until one frozen candidate passes the required visible regression, Critical Journeys and external Hidden Validation described in `docs/tasks/v1.5.0/RELEASE_QUALIFICATION.md`.

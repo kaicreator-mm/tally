@@ -58,3 +58,36 @@ func TestHTTPHandlerRejectsUnknownJSONFields(t *testing.T) {
 		t.Fatalf("status=%d body=%s", res.Code, res.Body.String())
 	}
 }
+
+func TestHTTPHandlerConsoleIsThinBrowserSurface(t *testing.T) {
+	s, _ := newHarness(t, &fakeExecutor{}, &fakeWorkflow{})
+	h, err := NewHTTPHandler(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/v15/control-plane", nil)
+	res := httptest.NewRecorder()
+	h.ServeHTTP(res, req)
+	if res.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", res.Code, res.Body.String())
+	}
+	if ct := res.Header().Get("Content-Type"); !strings.Contains(ct, "text/html") {
+		t.Fatalf("content-type=%q", ct)
+	}
+	body := res.Body.String()
+	for _, required := range []string{
+		"Engineering Control Plane",
+		"Active TaskDAG",
+		"/api/v15/projects/",
+		"X-CSRF-Token",
+		"Authority decision",
+		"Dispatch",
+	} {
+		if !strings.Contains(body, required) {
+			t.Fatalf("console missing %q", required)
+		}
+	}
+	if strings.Contains(body, "GitHub Actions") || strings.Contains(body, "CI") {
+		t.Fatal("console must not imply CI as a v1.5 execution authority")
+	}
+}
