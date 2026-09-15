@@ -1,6 +1,7 @@
 package controlplane
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +14,7 @@ import (
 func TestHTTPHandlerReplanUsesGovernedServicePath(t *testing.T) {
 	s, _ := newHarness(t, &fakeExecutor{}, &fakeWorkflow{})
 	bootstrap(t, s)
-	before, err := s.Snapshot(t.Context(), "project-1")
+	before, err := s.Snapshot(context.Background(), "project-1")
 	if err != nil {
 		t.Fatal(err)
 	}
