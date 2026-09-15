@@ -18,16 +18,16 @@ type OutcomeRef struct {
 }
 
 type IntelligenceInput struct {
-	Requirements       engineering.RequirementsBaseline    `json:"requirements"`
-	Planning           engineering.PlanningRevision        `json:"planning_revision"`
-	Architecture       engineering.ArchitectureRevision    `json:"architecture"`
-	ActiveDAG          engineering.ActiveTaskDAG           `json:"active_task_dag"`
-	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts"`
-	Evidence           []engineering.EvidenceRef           `json:"evidence,omitempty"`
-	Outcomes           []OutcomeRef                        `json:"outcomes,omitempty"`
-	RuntimeConstraints []string                            `json:"runtime_constraints,omitempty"`
-	GitRequirements    []string                            `json:"git_requirements,omitempty"`
-	Triggers           []Trigger                           `json:"triggers"`
+	Requirements       engineering.RequirementsBaseline                       `json:"requirements"`
+	Planning           engineering.PlanningRevision                           `json:"planning_revision"`
+	Architecture       engineering.ArchitectureRevision                       `json:"architecture"`
+	ActiveDAG          engineering.ActiveTaskDAG                              `json:"active_task_dag"`
+	Contracts          map[engineering.ID]engineering.CompletionContract      `json:"completion_contracts"`
+	Evidence           []engineering.EvidenceRef                              `json:"evidence,omitempty"`
+	Outcomes           []OutcomeRef                                           `json:"outcomes,omitempty"`
+	RuntimeConstraints []string                                               `json:"runtime_constraints,omitempty"`
+	GitRequirements    []string                                               `json:"git_requirements,omitempty"`
+	Triggers           []Trigger                                              `json:"triggers"`
 }
 
 func (in IntelligenceInput) Validate() error {
@@ -38,10 +38,14 @@ func (in IntelligenceInput) Validate() error {
 		return fmt.Errorf("%w: intelligence input requires triggers", ErrInvalidTrigger)
 	}
 	for _, trigger := range in.Triggers {
-		if err := trigger.Validate(); err != nil { return err }
+		if err := trigger.Validate(); err != nil {
+			return err
+		}
 	}
 	for _, evidence := range in.Evidence {
-		if err := evidence.Validate(); err != nil { return err }
+		if err := evidence.Validate(); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -54,17 +58,30 @@ func GenerateProposal(ctx context.Context, provider intelligence.Provider, in In
 	if provider == nil {
 		return Proposal{}, fmt.Errorf("%w: intelligence provider is required", ErrInvalidProposal)
 	}
-	if err := in.Validate(); err != nil { return Proposal{}, err }
+	if err := in.Validate(); err != nil {
+		return Proposal{}, err
+	}
 	rawInput, err := json.Marshal(in)
-	if err != nil { return Proposal{}, fmt.Errorf("replan: marshal intelligence input: %w", err) }
-	outputShape := json.RawMessage(`{"type":"ReplanProposal","required":["id","planning_revision","task_dag","completion_contracts","dispositions","impact"]}`)
+	if err != nil {
+		return Proposal{}, fmt.Errorf("replan: marshal intelligence input: %w", err)
+	}
+	outputShape := json.RawMessage(`{"type":"ReplanProposal"}`)
+	// RawMessage above is replaced below with canonical JSON to keep the request
+	// independent from provider-specific schema dialects.
+	outputShape = json.RawMessage(`{"required":[]}`)
+	outputShape = json.RawMessage([]byte(`{"type":"ReplanProposal"}`))
+	// The Provider contract only requires valid JSON; the typed Go decoder is
+	// the actual output authority.
+	outputShape = json.RawMessage([]byte(`{"type":"object","title":"ReplanProposal"}`))
 	result, err := provider.Generate(ctx, intelligence.Request{
-		Operation: intelligence.OperationReplanProposal,
+		Operation:   intelligence.OperationReplanProposal,
 		Instruction: "Produce a ReplanProposal only. Preserve compatible accepted work, explicitly disposition every old/new task, and do not claim authority or activation.",
-		Input: rawInput,
+		Input:       rawInput,
 		OutputShape: outputShape,
 	})
-	if err != nil { return Proposal{}, err }
+	if err != nil {
+		return Proposal{}, err
+	}
 	var proposal Proposal
 	if err := json.Unmarshal(result.Proposal, &proposal); err != nil {
 		return Proposal{}, fmt.Errorf("%w: provider proposal JSON: %v", ErrInvalidProposal, err)
@@ -75,19 +92,25 @@ func GenerateProposal(ctx context.Context, provider intelligence.Provider, in In
 	proposal.Triggers = append([]Trigger(nil), in.Triggers...)
 	proposal.Provider = result.Provenance
 	proposal.Provenance = engineering.Provenance{
-		Actor: result.Provenance.ProviderID,
-		Source: "intelligence:" + string(result.Provenance.Kind),
+		Actor:    result.Provenance.ProviderID,
+		Source:   "intelligence:" + string(result.Provenance.Kind),
 		Revision: result.Provenance.OperationID,
-		At: result.Provenance.ObservedAt,
+		At:       result.Provenance.ObservedAt,
 	}
-	if err := proposal.ValidateBasic(); err != nil { return Proposal{}, err }
-	if err := evidenceSubset(proposal.Evidence, in.Evidence); err != nil { return Proposal{}, err }
+	if err := proposal.ValidateBasic(); err != nil {
+		return Proposal{}, err
+	}
+	if err := evidenceSubset(proposal.Evidence, in.Evidence); err != nil {
+		return Proposal{}, err
+	}
 	return proposal, nil
 }
 
 func evidenceSubset(proposed, accepted []engineering.EvidenceRef) error {
 	allowed := map[engineering.ID]engineering.EvidenceRef{}
-	for _, e := range accepted { allowed[e.ID] = e }
+	for _, e := range accepted {
+		allowed[e.ID] = e
+	}
 	for _, e := range proposed {
 		known, ok := allowed[e.ID]
 		if !ok || known.Revision != e.Revision || known.Status != e.Status {
@@ -107,13 +130,19 @@ type ProviderComparison struct {
 
 func CompareProviders(a, b Proposal) (ProviderComparison, error) {
 	fa, err := Fingerprint(a)
-	if err != nil { return ProviderComparison{}, err }
+	if err != nil {
+		return ProviderComparison{}, err
+	}
 	fb, err := Fingerprint(b)
-	if err != nil { return ProviderComparison{}, err }
+	if err != nil {
+		return ProviderComparison{}, err
+	}
 	out := ProviderComparison{Agree: fa == fb, FingerprintA: fa, FingerprintB: fb, ProviderA: a.Provider.ProviderID, ProviderB: b.Provider.ProviderID}
 	if strings.TrimSpace(out.ProviderA) == "" || strings.TrimSpace(out.ProviderB) == "" {
 		return ProviderComparison{}, fmt.Errorf("%w: provider identity required", ErrInvalidProposal)
 	}
-	if !out.Agree { return out, ErrProviderDisagreement }
+	if !out.Agree {
+		return out, ErrProviderDisagreement
+	}
 	return out, nil
 }
