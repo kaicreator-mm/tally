@@ -76,9 +76,13 @@ func TestCriticalJourneyLifecycleThroughTaskDAGAdvance(t *testing.T) {
 		t.Fatalf("B state=%s", b.State)
 	}
 
-	// Restart/reload proof: Project Flow is reconstructed from the persisted
-	// Active TaskDAG rather than an in-memory second authority.
-	persisted, err := repo.Load(ctx, "project-1")
+	// Process restart proof: rebuild the Service from the same repository and
+	// recover Project Flow from persisted Active TaskDAG, not in-memory state.
+	restarted, err := NewServiceWithHarness(repo, h)
+	if err != nil {
+		t.Fatal(err)
+	}
+	persisted, err := restarted.Snapshot(ctx, "project-1")
 	if err != nil {
 		t.Fatal(err)
 	}
