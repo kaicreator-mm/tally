@@ -19,7 +19,7 @@ This ledger records development closure without converting unexecuted checks int
 | T155-05 | atomic Control Plane activation / immutable history | CODE-COMPLETE | separate `ActivateReplan`; stale parent, authority and history tests |
 | T155-06 | EngineeringRuleProposal domain | CODE-COMPLETE | `internal/engineeringlearning` |
 | T155-07 | Outcome/evidence/conflict validation | CODE-COMPLETE | structured Outcome facts + evidence/conflict validation |
-| T155-08 | authority-governed promotion | CODE-COMPLETE | shared/high-impact/AI authority gate; provider self-promotion rejected; existing policy governance reused |
+| T155-08 | authority-governed promotion | CODE-COMPLETE | shared/high-impact/AI authority gate; provider self-promotion rejected; handoff remains PROPOSED + append-only submit event until existing Git-backed `policygovernance.Store.Activate` succeeds |
 | T155-09 | bounded integration/API surface | CODE-COMPLETE | additive `/api/v15/projects/{project}/replan` delegates to `Service.ActivateReplan`; SQLite ReplanHistory restart compatibility test |
 | T155-10 | focused + full visible validation carrier | CARRIER-COMPLETE / ENV-BLOCKED | `scripts/validate-v1.5.5.sh`; not executed in current ChatGPT Web environment |
 | T155-11 | held-out Hidden Validation carrier | CARRIER-COMPLETE / ENV-BLOCKED | `scripts/run-v1.5.5-hidden.sh`; external held-out pack unavailable here |
@@ -33,7 +33,7 @@ Current main's v1.5.1 SQLite adapter persists the complete `controlplane.Project
 
 The v1.5.5 HTTP endpoint is additive and does not modify the frozen v1.5.0 `ControlPlane` interface: it uses a separate `ReplanControlPlane` capability assertion and then invokes the existing `Service.ActivateReplan`. Existing initial `AcceptPlan` / `ActivateDAG` immutability remains unchanged. `ActiveTaskDAG` remains the sole Project Flow.
 
-Engineering Learning continues to reuse the existing Outcome facts, `intelligence.Provider`, `policygovernance` candidate/lifecycle, and Git-backed runtime policy authority. It does not introduce a second knowledge store, provider contract, rule engine, or Project Flow.
+Engineering Learning continues to reuse the existing Outcome facts, `intelligence.Provider`, `policygovernance` candidate/lifecycle, and Git-backed runtime policy authority. Closure review corrected the handoff so Authority approval produces only a `PROPOSED` governance value plus an append-only `submit` event; Learning no longer fabricates an in-memory `ACTIVE` state. Only the existing `policygovernance.Store.Activate` may cross the runtime activation boundary through Git CAS, exact pinned-snapshot reload and the final activate event. No second knowledge store, provider contract, rule engine, or Project Flow is introduced.
 
 ## Current validation ledger
 
@@ -41,7 +41,7 @@ Engineering Learning continues to reuse the existing Outcome facts, `intelligenc
 |---|---|---|
 | v1.5.0 PRD/shared-contract compatibility review | PASS | additive Re-plan path; frozen initial lifecycle/provider/shared engineering contracts remain unchanged |
 | Current-main cross-slice static review | PASS | v1.5.1 persistence stores full ProjectSnapshot JSON; bounded v1.5.5 compatibility test added; no hard dependency introduced |
-| PR/static source review | PASS | implementation diffs reviewed; review findings were fixed before/through closure work |
+| PR/static source review | PASS | implementation diffs reviewed; invalid output-shape escaping, incomplete Outcome facts, premature Learning ACTIVE handoff and missing T155-09 route were corrected before closure |
 | Focused Go tests | ENV-BLOCKED | current ChatGPT Web environment has no executable private-repository checkout / Go build host |
 | Re-plan HTTP integration test | ENV-BLOCKED | test carrier exists; requires Local/Build Host execution |
 | SQLite ReplanHistory restart compatibility | ENV-BLOCKED | test carrier exists; requires Local/Build Host execution |
@@ -87,7 +87,7 @@ CJ-155-04 — **Accepted-work invalidation requires independent authority**: mar
 
 CJ-155-05 — **Restart/history continuity under current SQLite-first main**: activate a re-plan, close the SQLite store/process, reopen it, and verify the active Plan/DAG plus previous and activated revision ancestry survive unchanged.
 
-CJ-155-06 — **Engineering Learning is governed, not self-promoting**: provide validated Outcome facts/evidence; generate an EngineeringRuleProposal; reject missing evidence/invalid confidence/unresolved conflicts; require independent Authority for AI/shared/high-impact proposals; verify candidate/evidence/scope are preserved into existing policy governance and runtime authority remains the pinned Git policy path.
+CJ-155-06 — **Engineering Learning is governed, not self-promoting**: provide validated Outcome facts/evidence; generate an EngineeringRuleProposal; reject missing evidence/invalid confidence/unresolved conflicts; require independent Authority for AI/shared/high-impact proposals; verify promotion yields a `PROPOSED` governance handoff and append-only submit event, never an `ACTIVE` shortcut; after persistence, verify only existing `policygovernance.Store.Activate` can make the candidate runtime-observable through the pinned Git policy path.
 
 CJ-155-07 — **Cycle budget fail-safe**: repeatedly propose semantically equivalent re-plans with new proposal/provider identities; verify semantic fingerprint repeat budget and total re-plan budget stop the loop.
 
@@ -105,7 +105,7 @@ The held-out pack must live outside the implementation repository and should cov
 - Direct LLM / AI Runtime substitution and disagreement;
 - ProjectSnapshot restart/history preservation including SQLite current-main compatibility;
 - Outcome/evidence/provenance/conflict/low-confidence Engineering Learning cases;
-- AI self-promotion attempts and shared/high-impact rule authority;
+- AI self-promotion attempts, shared/high-impact rule authority, and attempts to bypass `policygovernance.Store.Activate` with a premature ACTIVE value;
 - negative checks proving no second Project Flow/provider/rule engine/runtime authority was introduced.
 
 Only sanitized status/evidence may be copied into release records. Hidden fixtures/oracles remain outside the repository.
