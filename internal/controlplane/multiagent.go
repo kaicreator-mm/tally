@@ -40,8 +40,15 @@ func (s *Service) ConfigureMultiAgentTask(ctx context.Context, projectID, taskID
 	if snap.ActiveDAG == nil {
 		return ProjectSnapshot{}, ErrDAGNotActive
 	}
-	if _, ok := findNode(*snap.ActiveDAG, taskID); !ok {
+	node, ok := findNode(*snap.ActiveDAG, taskID)
+	if !ok {
 		return ProjectSnapshot{}, fmt.Errorf("controlplane: unknown task %s", taskID)
+	}
+	// A persisted running task may be owned by an in-flight collaboration from
+	// another process. Do not mutate its role policy until it has been
+	// interrupted/restarted or otherwise leaves running state.
+	if node.State == engineering.TaskRunning {
+		return ProjectSnapshot{}, multiagent.ErrAlreadyActive
 	}
 	ensureMultiAgentMaps(&snap)
 	snap.MultiAgentPolicies[taskID] = policy
@@ -209,28 +216,35 @@ func (s *Service) claimMultiAgentLocked(ctx context.Context, projectID engineeri
 		policy = multiagent.DefaultTaskPolicy()
 		snap.MultiAgentPolicies[req.TaskID] = policy
 	}
-	state := snap.MultiAgentWorkflows[req.TaskID]
-	if state.TaskID == "" {
-		state, err = multiagent.NewWorkflowState(req.TaskID, s.now())
-		if err != nil {
-			return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, err
-		}
-	}
+	state, hadState := snap.MultiAgentWorkflows[req.TaskID]
 
 	source := "multiagent:dispatch"
 	switch node.State {
 	case engineering.TaskReady:
+		if !hadState {
+			state, err = multiagent.NewWorkflowState(req.TaskID, s.now())
+			if err != nil {
+				return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, err
+			}
+		}
 		dag, trErr := snap.ActiveDAG.Transition(req.TaskID, engineering.TaskRunning, "")
 		if trErr != nil {
 			return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, trErr
 		}
 		snap.ActiveDAG = &dag
 	case engineering.TaskRunning:
-		// A new Service process has an empty multiActive set. Persisted running
-		// plus role state is therefore recoverable without resuming Agent thought.
+		// A new Service process has an empty multiActive set. Persisted running is
+		// recoverable only when this task already owns durable multi-agent role
+		// state. Never hijack a running task from the legacy Harness/Executor path.
+		if !hadState {
+			return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, fmt.Errorf("%w: running task %s has no persisted multi-agent workflow", ErrTaskNotReady, req.TaskID)
+		}
 		source = "multiagent:restart-recovery"
 	default:
 		return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, fmt.Errorf("%w: task %s state=%s", ErrTaskNotReady, req.TaskID, node.State)
+	}
+	if state.TaskID == "" {
+		return ProjectSnapshot{}, multiagent.TaskPolicy{}, multiagent.WorkflowState{}, errors.New("controlplane: persisted multi-agent workflow is empty")
 	}
 	snap.MultiAgentWorkflows[req.TaskID] = state
 	if err := s.record(&snap, "multiagent.task.started", req.TaskID, source); err != nil {
@@ -288,6 +302,15 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 	}
 	ensureMultiAgentMaps(&snap)
 	if result.State.TaskID != "" {
+		// Cancellation can happen while the Engine is still queued on its global
+		// concurrency semaphore, before any role checkpoint exists. Persist an
+		// interrupted collaboration state so TaskDAG and role state agree.
+		if errors.Is(runErr, context.Canceled) && result.State.Status == multiagent.WorkflowActive {
+			result.State.Status = multiagent.WorkflowInterrupted
+			result.State.Reason = "collaboration cancelled before the next role could run"
+			result.State.Revision++
+			result.State.UpdatedAt = s.now()
+		}
 		snap.MultiAgentWorkflows[taskID] = result.State
 	}
 	contract, ok := snap.Contracts[taskID]
@@ -307,6 +330,7 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 		if err := s.save(ctx, &snap); err != nil {
 			return DispatchResult{}, err
 		}
+		base.Collaboration = &result.State
 		base.Snapshot = snap
 		return base, runErr
 	}
