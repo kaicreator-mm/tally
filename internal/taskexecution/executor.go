@@ -40,7 +40,9 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	if e.Environment.Kind() != req.Environment.Kind {
 		return TaskExecutionResult{}, ErrUnsupportedEnvironment
 	}
-	if err := checkEnvironmentCapabilities(e.Environment, req.RequiredCapabilities.Environment); err != nil {
+	// Environment capabilities, including discovered OS/architecture/toolchain,
+	// are validated before workspace resolution and before Agent start.
+	if err := checkEnvironmentCapabilities(ctx, e.Environment, req.RequiredCapabilities.Environment); err != nil {
 		return TaskExecutionResult{}, err
 	}
 	if _, err := agentruntime.Negotiate(e.Runtime.Descriptor().Capabilities, req.RequiredCapabilities.Runtime); err != nil {
