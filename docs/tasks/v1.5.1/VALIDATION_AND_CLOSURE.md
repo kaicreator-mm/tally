@@ -12,8 +12,8 @@ This file records the development closure state without converting unexecuted ch
 | T151-02 | SQLite default adapter | CODE-COMPLETE | SQLite adapter, migrations, conformance/contention tests |
 | T151-03 | PostgreSQL optional adapter | CODE-COMPLETE | optional adapter plus shared persistence conformance fixture |
 | T151-04 | Dispatch concurrency seam | CODE-COMPLETE | claim → unlocked execute → reload/latest commit; duplicate-claim guard |
-| T151-05 | Local Active TaskDAG scheduler | CODE-COMPLETE | bounded local scheduler; startup RUNNING → INTERRUPTED; pinned-Git TaskExecutionRequest factory; no second durable queue |
-| T151-06 | Production composition / migration | CODE-COMPLETE | SQLite-first `cmd/v15server`; optional runtime → RuntimeExecutor → LocalScheduler; profile selector; explicit v1.5.0 import |
+| T151-05 | Local Active TaskDAG scheduler | CODE-COMPLETE | bounded local scheduler; startup RUNNING → INTERRUPTED; pinned-Git TaskExecutionRequest factory; capability propagation; no second durable queue |
+| T151-06 | Production composition / migration | CODE-COMPLETE | SQLite-first `cmd/v15server`; optional runtime → fail-closed TaskHarness → RuntimeExecutor → LocalScheduler; profile selector; explicit v1.5.0 import |
 | T151-07 | Full Regression / Hidden Validation / Critical Journeys | ENV-BLOCKED | current ChatGPT Web environment cannot materialize/run the private repository/build host or external held-out pack |
 | T151-08 | Version Closure / Release Qualification | NOT_RUN | required empirical gates above are not yet PASS |
 
@@ -23,13 +23,13 @@ This file records the development closure state without converting unexecuted ch
 
 | Gate | Status | Basis / blocker |
 |---|---|---|
-| Static source / contract review | PASS | source/diffs reviewed against frozen PRD/L2/L3; SQLite-first production composition now contains runtime-selectable `RuntimeExecutor + LocalScheduler`; requests are built from the existing pinned Git ExecutionBundle; PostgreSQL-specific behavior remains adapter-local; legacy DB queue/BrownfieldHarness is not constructed by Core |
-| Focused Go tests | ENV-BLOCKED | no executable checkout / Go build host available in the current ChatGPT Web tool environment; new request-factory and architecture guards are authored but not claimed PASS |
+| Static source / contract review | PASS | source/diffs reviewed against frozen PRD/L2/L3; SQLite-first production topology is `LocalScheduler → Service.Dispatch → TaskHarness → AgentExecutor`; requests use existing pinned Git ExecutionBundle authority and propagate runtime/environment capabilities; PostgreSQL-specific behavior remains adapter-local; legacy DB queue/BrownfieldHarness is not constructed by Core |
+| Focused Go tests | ENV-BLOCKED | no executable checkout / Go build host available in the current ChatGPT Web tool environment; new request-factory, fail-closed harness and architecture guards are authored but not claimed PASS |
 | SQLite adapter integration | ENV-BLOCKED | same executable-environment blocker |
 | PostgreSQL adapter conformance | ENV-BLOCKED | requires executable checkout and explicit `TALLY_TEST_POSTGRES_URL` |
 | Dispatch/scheduler race tests | ENV-BLOCKED | requires Local/Build Host and `go test -race` |
-| Core server build/startup | ENV-BLOCKED | requires Local/Build Host; must test both default SQLite lifecycle-only startup and runtime-configured scheduler/AgentExecutor startup |
-| Runtime-configured TaskDAG execution | ENV-BLOCKED | requires prepared content repo/workspaces and Local runtime; must prove READY task reaches AgentExecutor through scheduler with bounded concurrency |
+| Core server build/startup | ENV-BLOCKED | requires Local/Build Host; must test both default SQLite lifecycle-only startup and runtime-configured scheduler/Harness/AgentExecutor startup |
+| Runtime-configured TaskDAG execution | ENV-BLOCKED | requires prepared content repo/workspaces and Local runtime; must prove READY task reaches AgentExecutor through scheduler/Harness with bounded concurrency |
 | Full visible regression | ENV-BLOCKED | requires Local/Build Host |
 | Legacy Integration/E2E compatibility | ENV-BLOCKED | requires Local/Build Host and legacy integration prerequisites such as `DATABASE_URL` where applicable |
 | Independent Review | NOT_RUN | no independent reviewer execution/evidence has been attached to this candidate |
@@ -51,17 +51,17 @@ For PostgreSQL parity, provide a disposable test database:
 TALLY_TEST_POSTGRES_URL='postgres://...' bash scripts/validate-v1.5.1.sh
 ```
 
-For runtime-configured scheduler reachability, prepare one workspace per Task ID under a common root and start the Core with an explicit frozen revision, for example:
+For runtime-configured scheduler reachability, prepare one workspace per Task ID under a common root and start the Core with an explicit revision, for example:
 
 ```bash
 TALLY_V15_RUNTIME=fake \
 TALLY_V15_CONTENT_REPO=/path/to/content-repo \
-TALLY_V15_BASE_REVISION=<frozen-revision> \
+TALLY_V15_BASE_REVISION=<revision> \
 TALLY_V15_WORKSPACE_ROOT=/path/to/prepared-workspaces \
 go run ./cmd/v15server
 ```
 
-Then invoke `POST /api/v15/projects/{project}/scheduler/run-once` (or `/scheduler/run`) against a project whose Active TaskDAG has READY work. In the SQLite-first Core profile, a completed Agent claim without the optional independent verification workflow must become explicit `BLOCKED` / `ErrWorkflowUnavailable`; it must never be promoted to accepted/done.
+Then invoke `POST /api/v15/projects/{project}/scheduler/run-once` (or `/scheduler/run`) against a project whose Active TaskDAG has READY work. The first successful ExecutionBundle resolution pins the scheduler instance to the exact observed commit. In the SQLite-first Core profile, a completed Agent claim without an independent verifier must become explicit `BLOCKED` with reason `independent verification/review workflow unavailable`; it must never be promoted to accepted/done.
 
 For the external held-out pack:
 
@@ -80,7 +80,7 @@ CJ-151-02 — **Persist/restart Active TaskDAG**: create a lifecycle snapshot an
 
 CJ-151-03 — **v1.5.0 state migration**: import a valid FileRepository state root into an empty SQLite target; verify project identity/state continuity; rerun and verify existing target state is skipped rather than overwritten; inject a corrupt source and verify import fails before writes.
 
-CJ-151-04 — **Production LocalScheduler → AgentExecutor reachability**: configure `TALLY_V15_RUNTIME`, content repo, frozen base revision and prepared task workspaces; health must report `execution=local_scheduler+agent_executor`; a READY task must be claimed RUNNING and actually reach the v1.5.0 AgentExecutor path. Without independent verification composition, successful Agent completion must be persisted as BLOCKED with explicit workflow-unavailable evidence rather than accepted/done.
+CJ-151-04 — **Production LocalScheduler → TaskHarness → AgentExecutor reachability**: configure `TALLY_V15_RUNTIME`, content repo, base revision and prepared task workspaces; health must report `execution=local_scheduler+harness+agent_executor`; a READY task must be claimed RUNNING and actually reach the v1.5.0 AgentExecutor path through the TaskHarness port. Without independent verification composition, successful Agent completion must be persisted as BLOCKED with explicit verification-unavailable reason rather than accepted/done.
 
 CJ-151-05 — **Independent parallel siblings**: two `ParallelEligible` READY siblings must both reach Agent execution concurrently under configured capacity; completion/failure of one must not overwrite the other's latest persisted state.
 
@@ -90,11 +90,11 @@ CJ-151-07 — **Optional PostgreSQL parity**: explicitly select PostgreSQL, run 
 
 CJ-151-08 — **No default DB queue dependency**: start the v1.5 Core path without `DATABASE_URL`; verify no `jobs.Queue`, lease/heartbeat, `SKIP LOCKED`, stale-worker takeover mechanism, or PostgreSQL-backed BrownfieldHarness is required for TaskDAG scheduling/AgentExecutor reachability.
 
-CJ-151-09 — **Pinned request authority**: move the named Git ref after server startup/request preparation and verify each execution request remains pinned to the exact commit observed by `ExecutionBundle`; inject a project/task identity mismatch and verify dispatch is rejected before Agent execution.
+CJ-151-09 — **Pinned request authority and capability enforcement**: configure a movable Git ref, execute the first request, move the ref, then verify later requests from the same scheduler still load the first observed commit. Inject project/task identity mismatch, unsafe workspace Task ID, unsupported runtime capability and unsupported environment capability; each must fail closed before or at the existing v1.5.0 capability negotiation boundary rather than silently weaken requirements.
 
 ## Hidden Validation contract
 
-The held-out pack must live outside the implementation repository and should cover at least: normal persistence lifecycle, invalid/corrupt persistence data, immutable append-only records, transaction rollback, SQLite contention/restart, concurrent sibling completion, stale/duplicate dispatch, pinned request authority/project drift, cancellation, startup recovery, optional PostgreSQL parity, migration idempotence/corruption handling, and negative checks proving queue-specific database semantics are not Core invariants.
+The held-out pack must live outside the implementation repository and should cover at least: normal persistence lifecycle, invalid/corrupt persistence data, immutable append-only records, transaction rollback, SQLite contention/restart, concurrent sibling completion, stale/duplicate dispatch, pinned request authority/project drift, capability mismatch, unsafe workspace identity, cancellation, startup recovery, optional PostgreSQL parity, migration idempotence/corruption handling, and negative checks proving queue-specific database semantics are not Core invariants.
 
 Only sanitized status/evidence may be copied into release records. Hidden fixtures/oracles remain outside the repository.
 
