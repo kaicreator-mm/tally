@@ -46,6 +46,9 @@ func (h *ExecutionOnlyHarness) Run(ctx context.Context, _ engineering.ID, req ta
 		result.Reason = "agent runtime reported failure; no verification fact produced"
 		return result, nil
 	case taskexecution.ExecutionCompleted:
+		// Fail closed: an Agent completion claim is never acceptance. Accepted
+		// stays explicitly false until an independent verifier is composed.
+		result.Accepted = false
 		result.Reason = verificationUnavailableReason
 		return result, nil
 	default:
