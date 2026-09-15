@@ -73,7 +73,7 @@ func (s *Service) dispatchHarness(ctx context.Context, projectID engineering.ID,
 	base := DispatchResult{Execution: h.Execution, Workflow: &wf, Snapshot: claimed}
 
 	if runErr != nil {
-		if h.Interrupted || errors.Is(runErr, context.Canceled) {
+		if h.Interrupted || isInterruptionError(runErr) {
 			return s.persistInterrupted(ctx, projectID, req.TaskID, h.Execution, &wf, runErr)
 		}
 		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "engineering harness error: "+classifyError(runErr), "task.harness.error", "engineering_harness")
@@ -105,6 +105,9 @@ func (s *Service) dispatchLegacy(ctx context.Context, projectID engineering.ID, 
 	execution, execErr := s.Executor.Execute(ctx, req)
 	base := DispatchResult{Execution: execution, Snapshot: claimed}
 	if execErr != nil {
+		if isInterruptionError(execErr) || execution.Status == taskexecution.ExecutionInterrupted {
+			return s.persistInterrupted(ctx, projectID, req.TaskID, execution, nil, execErr)
+		}
 		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "execution error: "+classifyError(execErr), "task.execution.error", "agent_executor")
 		if commitErr != nil {
 			return base, errors.Join(execErr, commitErr)
@@ -150,6 +153,9 @@ func (s *Service) dispatchLegacy(ctx context.Context, projectID engineering.ID, 
 	wf, wfErr := s.Workflow.VerifyAndAccept(ctx, req.TaskID, execution)
 	base.Workflow = &wf
 	if wfErr != nil {
+		if isInterruptionError(wfErr) {
+			return s.persistInterrupted(ctx, projectID, req.TaskID, execution, &wf, wfErr)
+		}
 		snap, commitErr := s.persistBlocked(ctx, projectID, req.TaskID, "verification workflow error: "+classifyError(wfErr), "task.verification.error", "verification")
 		if commitErr != nil {
 			return base, errors.Join(wfErr, commitErr)
@@ -298,4 +304,8 @@ func (s *Service) loadRunningForCommit(ctx context.Context, projectID, taskID en
 		return ProjectSnapshot{}, fmt.Errorf("%w: task %s state=%s, expected running", ErrDispatchConflict, taskID, node.State)
 	}
 	return snap, nil
+}
+
+func isInterruptionError(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
