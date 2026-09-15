@@ -76,19 +76,43 @@ func TestFreezeWorktreeRejectsDeletion(t *testing.T) {
 	}
 }
 
-func initFreezeRepo(t *testing.T) (string, string) {
-	t.Helper()
-	repo := t.TempDir()
-	runGitFreeze(t, repo, "init", "-q")
-	runGitFreeze(t, repo, "config", "user.email", "tally@example.invalid")
-	runGitFreeze(t, repo, "config", "user.name", "Tally Test")
-	if err := os.WriteFile(filepath.Join(repo, "existing.txt"), []byte("base\n"), 0o644); err != nil {
+func TestFreezeWorktreeRejectsOwnerPrimaryCheckout(t *testing.T) {
+	owner, base := initFreezeOwner(t)
+	if err := os.WriteFile(filepath.Join(owner, "existing.txt"), []byte("changed\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	runGitFreeze(t, repo, "add", "existing.txt")
-	runGitFreeze(t, repo, "commit", "-q", "-m", "base")
-	base := runGitFreeze(t, repo, "rev-parse", "HEAD")
-	return repo, base
+	_, _, err := FreezeWorktree(context.Background(), WorktreeFreezeSpec{
+		Project:       core.ProjectID("project-1"),
+		BaseRevision:  base,
+		ProducerRun:   "run-1",
+		WorkspacePath: owner,
+	})
+	if !errors.Is(err, ErrPrimaryWorktree) {
+		t.Fatalf("expected ErrPrimaryWorktree, got %v", err)
+	}
+}
+
+func initFreezeRepo(t *testing.T) (string, string) {
+	t.Helper()
+	owner, base := initFreezeOwner(t)
+	worktree := filepath.Join(t.TempDir(), "candidate-worktree")
+	runGitFreeze(t, owner, "worktree", "add", "--detach", "-q", worktree, base)
+	return worktree, base
+}
+
+func initFreezeOwner(t *testing.T) (string, string) {
+	t.Helper()
+	owner := t.TempDir()
+	runGitFreeze(t, owner, "init", "-q")
+	runGitFreeze(t, owner, "config", "user.email", "tally@example.invalid")
+	runGitFreeze(t, owner, "config", "user.name", "Tally Test")
+	if err := os.WriteFile(filepath.Join(owner, "existing.txt"), []byte("base\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runGitFreeze(t, owner, "add", "existing.txt")
+	runGitFreeze(t, owner, "commit", "-q", "-m", "base")
+	base := runGitFreeze(t, owner, "rev-parse", "HEAD")
+	return owner, base
 }
 
 func runGitFreeze(t *testing.T, repo string, args ...string) string {
