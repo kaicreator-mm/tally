@@ -70,6 +70,15 @@ type ExecutionEnvironment interface {
 	Resolve(context.Context, WorkspaceRef) (ResolvedWorkspace, error)
 }
 
+// EnvironmentCapabilityValidator is an additive v1.5.2 extension. It lets an
+// environment validate discovered profile requirements (for example os:linux,
+// arch:amd64, tool:go, git, docker, network, secret:NAME, resource:NAME)
+// before any Agent session is started, without changing the frozen v1.5.0
+// ExecutionEnvironment contract.
+type EnvironmentCapabilityValidator interface {
+	ValidateCapabilities(context.Context, []EnvironmentCapability) error
+}
+
 var ErrUnsupportedEnvironment = errors.New("taskexecution: unsupported execution environment")
 
 type LocalEnvironment struct{}
@@ -96,7 +105,9 @@ type CapabilityRequirement struct {
 	Environment []EnvironmentCapability            `json:"environment,omitempty"`
 }
 
-type RuntimeRef struct{ ID string `json:"id"` }
+type RuntimeRef struct {
+	ID string `json:"id"`
+}
 type EnvironmentRef struct {
 	Kind   EnvironmentKind `json:"kind"`
 	Target string          `json:"target"`
@@ -170,7 +181,10 @@ func (e *EnvironmentCapabilityError) Error() string {
 	return fmt.Sprintf("taskexecution: missing environment capabilities: %v", e.Missing)
 }
 
-func checkEnvironmentCapabilities(env ExecutionEnvironment, required []EnvironmentCapability) error {
+func checkEnvironmentCapabilities(ctx context.Context, env ExecutionEnvironment, required []EnvironmentCapability) error {
+	if validator, ok := env.(EnvironmentCapabilityValidator); ok {
+		return validator.ValidateCapabilities(ctx, required)
+	}
 	have := map[EnvironmentCapability]bool{}
 	for _, c := range env.Capabilities() {
 		have[c] = true
