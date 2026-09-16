@@ -105,7 +105,9 @@ func TestV152ExecutorBindsRemoteRuntimeToEnvironmentRunner(t *testing.T) {
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152Runtime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
-	if _, err := ex.Execute(context.Background(), v152RemoteReq()); err != nil {
+	bindReq := v152RemoteReq()
+	bindReq.Runtime.ID = "v152-fake"
+	if _, err := ex.Execute(context.Background(), bindReq); err != nil {
 		t.Fatal(err)
 	}
 	if len(runtime.starts) != 1 || runtime.starts[0].Workspace != "/remote/w" {
@@ -124,7 +126,9 @@ func TestV152NonLocalRuntimeCannotSilentlyFallBackToLocal(t *testing.T) {
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152LocalOnlyRuntime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
-	_, err := ex.Execute(context.Background(), v152RemoteReq())
+	localReq := v152RemoteReq()
+	localReq.Runtime.ID = "local-only"
+	_, err := ex.Execute(context.Background(), localReq)
 	var typed *EnvironmentError
 	if !errors.As(err, &typed) || typed.Kind != FailureProcess {
 		t.Fatalf("err=%T %v", err, err)
@@ -139,7 +143,9 @@ func TestV152NonLocalPreflightClassifiesTransportFailure(t *testing.T) {
 	env := NewSSHEnvironment("build", f, EnvironmentProfile{}, nil)
 	runtime := &v152Runtime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
-	_, err := ex.Execute(context.Background(), v152RemoteReq())
+	preflightReq := v152RemoteReq()
+	preflightReq.Runtime.ID = "v152-fake"
+	_, err := ex.Execute(context.Background(), preflightReq)
 	var typed *EnvironmentError
 	if !errors.As(err, &typed) || typed.Kind != FailureEnvironmentUnavailable || typed.Operation != "environment.preflight" {
 		t.Fatalf("err=%T %v", err, err)
@@ -208,6 +214,7 @@ func TestV152ProfileMismatchBlocksBeforeRuntimeStart(t *testing.T) {
 	runtime := &v152Runtime{}
 	ex, _ := NewRuntimeExecutor(runtime, env)
 	req := v152RemoteReq()
+	req.Runtime.ID = "v152-fake"
 	req.RequiredCapabilities.Environment = []EnvironmentCapability{"arch:arm64"}
 	_, err := ex.Execute(context.Background(), req)
 	var typed *EnvironmentCapabilityError
