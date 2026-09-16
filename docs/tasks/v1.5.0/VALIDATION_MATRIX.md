@@ -28,22 +28,26 @@ A PR-level or focused `PASS` is not a Release PASS.
 
 ## v1.5.0 closure candidate — required visible execution
 
-The closure branch adds `scripts/validate-v1.5.0.sh` as the explicit carrier. The following must be executed on a repository checkout of the frozen candidate. At the time this document was authored, ChatGPT Web does not have an authenticated local checkout of the private repository, so these remain blocked rather than inherited from earlier revisions.
+The closure branch adds `scripts/validate-v1.5.0.sh` as the explicit carrier. The following was executed on a repository checkout of the frozen candidate on the Build Host.
 
-| Gate | Command | Current status |
+**Execution record:** revision `0a5f7307ec5263240d726cd49b00232c39ebf684` · host `Nilar` (Windows 10.0.26200 x64) · Go 1.27.1 windows/amd64 · carrier `bash scripts/validate-v1.5.0.sh` with `DATABASE_URL=postgres://postgres:postgres@localhost:15432/tally_v150_validation?sslmode=disable` (disposable DB) · UTC `2026-09-15T23:31:24Z` → `2026-09-15T23:41Z` · evidence outside repo: `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/{validation.log,summary.tsv}` · **no GitHub Actions / no CI**.
+
+| Gate | Command | Status |
 |---|---|---|
-| Engineering domain | `go test ./internal/engineering/...` | ENV-BLOCKED(private repo checkout unavailable in current execution environment) |
-| Intelligence + execution | `go test ./internal/intelligence/... ./internal/taskexecution/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Control Plane + UI/API + Critical Journey | `go test ./internal/controlplane/... ./internal/web/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Brownfield safety | `go test ./internal/changeset/... ./internal/workspace/... ./internal/closedloop/... ./internal/workflow/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Runtime adapters | `go test ./runtimes/...` | ENV-BLOCKED(private repo checkout / runtime dependencies unavailable) |
-| Runtime conformance | `go test ./test/runtimeconformance/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Architecture tests | `go test ./test/arch/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Build | `go build ./...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Vet | `go vet ./...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Focused race | `go test -race ./internal/engineering/... ./internal/intelligence/... ./internal/taskexecution/... ./internal/controlplane/...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Full visible regression | `go test ./...` | ENV-BLOCKED(private repo checkout unavailable) |
-| Integration/E2E | `go test -tags=integration ./test/e2e/...` | ENV-BLOCKED(Build Host + reachable PostgreSQL not available here) |
+| Engineering domain | `go test ./internal/engineering/...` | PASS |
+| Intelligence + execution | `go test ./internal/intelligence/... ./internal/taskexecution/...` | PASS |
+| Control Plane + UI/API + Critical Journey | `go test ./internal/controlplane/...` + `go test ./internal/web/...` | PASS |
+| Brownfield safety | `go test ./internal/changeset/... ./internal/workspace/... ./internal/closedloop/... ./internal/workflow/...` | PASS |
+| Runtime adapters | `go test ./runtimes/...` | PASS |
+| Runtime conformance | `go test ./test/runtimeconformance/...` | PASS |
+| Architecture tests | `go test ./test/arch/...` | PASS |
+| Build | `go build ./...` | PASS |
+| Vet | `go vet ./...` | PASS |
+| Focused race | `go test -race ./internal/engineering/... ./internal/intelligence/... ./internal/taskexecution/... ./internal/controlplane/...` | PASS |
+| Full visible regression | `go test ./...` | PASS |
+| Integration/E2E | `go test -tags=integration ./test/e2e/...` | PASS (disposable PostgreSQL `tally_v150_validation`) |
+| Hidden Validation | `TALLY_V15_HIDDEN_ROOT=C:/Dev/vCode/hidden_validation/tally/v1.5.0 bash scripts/run-v1.5-hidden.sh` | PASS — 41/41 held-out scenarios (HV-REQ/HV-DAG/HV-COMP/HV-INT/HV-EXEC/HV-BROWNFIELD), same revision, UTC `2026-09-15T23:43:47Z`, sanitized evidence `C:/Dev/xCode/tally-validation/v1.5.0-hidden/20260915T234347Z/` |
+| Real Codex/DSH CLI runtime journey variant (CJ-04 variant) | `exec.LookPath("codex"|"dsh")` availability probe | ENV-BLOCKED — no `codex` or `dsh` CLI on this Build Host; evidence `C:/Dev/xCode/tally-validation/v1.5.0/real-runtime-availability.txt` (`executable file not found in %PATH%`, UTC 2026-09-15T23:44:53Z). Deterministic fake-runtime carriers (real Git worktrees + real DB) executed instead. |
 
 ## Required Build Host run
 

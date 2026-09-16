@@ -170,8 +170,8 @@ func TestSSHRunnerJoinsCommand(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if gotCmd != "echo hi there" {
-		t.Errorf("应拼成一条命令: %q", gotCmd)
+	if gotCmd != "exec echo hi there" {
+		t.Errorf("应拼成一条带 exec 前缀的远程命令: %q", gotCmd)
 	}
 	if gotCfg.Host != "h" {
 		t.Errorf("配置应透传: %+v", gotCfg)

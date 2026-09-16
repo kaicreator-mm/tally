@@ -7,48 +7,96 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
-// SSHConfig 描述一台目标机。
+// SSHConfig describes a remote target. Host may include an explicit port.
+// Password and private key material are transport-only secrets and must never
+// be copied into provenance/log output.
 type SSHConfig struct {
-	Host     string // host 或 host:port;缺省端口 22
-	User     string
-	Password string // 口令认证(与 KeyFile 二选一)
-	KeyFile  string // 私钥文件路径
+	Host                string
+	User                string
+	Password            string
+	KeyFile             string
+	KnownHostsFile      string
+	InsecureSkipHostKey bool
 }
 
-// SSHRunner 通过 SSH 在远端执行命令(x/crypto/ssh)。
-//
-// 建连与执行委托给 RunRemote,单测注入替身即可离线验证,不必连真机。
+// SSHRunner executes Command in a remote POSIX shell. Dir, Env and Argv are
+// preserved at the transport boundary; cancellation closes the remote session.
 type SSHRunner struct {
-	Config    SSHConfig
-	RunRemote func(ctx context.Context, cfg SSHConfig, command string) (Result, error)
-	// HostKeyCallback 主机密钥校验;空则 InsecureIgnoreHostKey。
-	// 单用户自部署的内网场景可接受不校验;要严格校验由调用方注入。
+	Config          SSHConfig
+	RunRemote       func(context.Context, SSHConfig, string) (Result, error)
 	HostKeyCallback ssh.HostKeyCallback
 }
 
-// NewSSHRunner 返回连往 cfg 的 SSH 执行器。
-func NewSSHRunner(cfg SSHConfig) *SSHRunner {
-	return &SSHRunner{Config: cfg, RunRemote: sshRunRemote}
-}
+func NewSSHRunner(cfg SSHConfig) *SSHRunner { return &SSHRunner{Config: cfg} }
 
-// Run 实现 Runner:把 cmd.Argv 拼成一条远端 shell 命令执行。
+var (
+	envNameRE   = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+	shellSafeRE = regexp.MustCompile(`^[A-Za-z0-9_./:@%+=,-]+$`)
+)
+
 func (r *SSHRunner) Run(ctx context.Context, cmd Command) (Result, error) {
-	run := r.RunRemote
-	if run == nil {
-		run = sshRunRemote
+	remote, err := remoteShellCommand(cmd)
+	if err != nil {
+		return Result{}, err
 	}
-	return run(ctx, r.Config, strings.Join(cmd.Argv, " "))
+	if r.RunRemote != nil {
+		return r.RunRemote(ctx, r.Config, remote)
+	}
+	return sshRunRemoteWithHostKey(ctx, r.Config, remote, r.HostKeyCallback)
 }
 
-// sshRunRemote 用 x/crypto/ssh 建连执行一条命令,分离 stdout/stderr 并取退出码。
+func remoteShellCommand(cmd Command) (string, error) {
+	if len(cmd.Argv) == 0 {
+		return "", errors.New("runner: 空命令")
+	}
+	argv := make([]string, len(cmd.Argv))
+	for i, arg := range cmd.Argv {
+		argv[i] = shellQuote(arg)
+	}
+	parts := make([]string, 0, 4)
+	if cmd.Dir != "" {
+		parts = append(parts, "cd -- "+shellQuote(cmd.Dir)+" &&")
+	}
+	parts = append(parts, "exec")
+	if len(cmd.Env) > 0 {
+		parts = append(parts, "env")
+		for _, entry := range cmd.Env {
+			key, _, ok := strings.Cut(entry, "=")
+			if !ok {
+				return "", errors.New("runner: environment entry must use KEY=VALUE form")
+			}
+			if !envNameRE.MatchString(key) {
+				return "", fmt.Errorf("runner: invalid environment variable name %q", key)
+			}
+			parts = append(parts, shellQuote(entry))
+		}
+	}
+	parts = append(parts, argv...)
+	return strings.Join(parts, " "), nil
+}
+
+func shellQuote(s string) string {
+	if s != "" && shellSafeRE.MatchString(s) {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'"
+}
+
 func sshRunRemote(ctx context.Context, cfg SSHConfig, command string) (Result, error) {
-	client, err := dialSSH(ctx, cfg)
+	return sshRunRemoteWithHostKey(ctx, cfg, command, nil)
+}
+
+func sshRunRemoteWithHostKey(ctx context.Context, cfg SSHConfig, command string, callback ssh.HostKeyCallback) (Result, error) {
+	client, err := dialSSHWithHostKey(ctx, cfg, callback)
 	if err != nil {
 		return Result{}, err
 	}
@@ -63,24 +111,51 @@ func sshRunRemote(ctx context.Context, cfg SSHConfig, command string) (Result, e
 	var stdout, stderr bytes.Buffer
 	sess.Stdout = &stdout
 	sess.Stderr = &stderr
-
 	start := time.Now()
-	runErr := sess.Run(command)
+	if err := sess.Start(command); err != nil {
+		return Result{}, fmt.Errorf("SSH 启动: %w", err)
+	}
+	waitCh := make(chan error, 1)
+	go func() { waitCh <- sess.Wait() }()
+
+	var runErr error
+	select {
+	case runErr = <-waitCh:
+	case <-ctx.Done():
+		_ = sess.Signal(ssh.SIGTERM)
+		_ = sess.Close()
+		select {
+		case <-waitCh:
+		case <-time.After(time.Second):
+		}
+		return Result{Stdout: stdout.String(), Stderr: stderr.String(), Duration: time.Since(start)}, fmt.Errorf("SSH 执行: %w", ctx.Err())
+	}
+
 	res := Result{Stdout: stdout.String(), Stderr: stderr.String(), Duration: time.Since(start)}
 	if runErr != nil {
 		var ee *ssh.ExitError
 		if errors.As(runErr, &ee) {
-			res.ExitCode = ee.ExitStatus() // 跑完了,退出码非零不是 error
+			res.ExitCode = ee.ExitStatus()
 			return res, nil
 		}
-		return res, fmt.Errorf("SSH 执行: %w", runErr) // 会话/网络层错误
+		return res, fmt.Errorf("SSH 执行: %w", runErr)
 	}
 	return res, nil
 }
 
-// dialSSH 建立 SSH 客户端连接。ctx 只用于拨号阶段(ssh 握手本身不吃 ctx)。
 func dialSSH(ctx context.Context, cfg SSHConfig) (*ssh.Client, error) {
+	return dialSSHWithHostKey(ctx, cfg, nil)
+}
+
+func dialSSHWithHostKey(ctx context.Context, cfg SSHConfig, callback ssh.HostKeyCallback) (*ssh.Client, error) {
+	if strings.TrimSpace(cfg.Host) == "" || strings.TrimSpace(cfg.User) == "" {
+		return nil, errors.New("SSH 配置缺少 Host 或 User")
+	}
 	auth, err := authMethods(cfg)
+	if err != nil {
+		return nil, err
+	}
+	callback, err = resolveHostKeyCallback(cfg, callback)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +163,7 @@ func dialSSH(ctx context.Context, cfg SSHConfig) (*ssh.Client, error) {
 	if !strings.Contains(host, ":") {
 		host += ":22"
 	}
-	clientCfg := &ssh.ClientConfig{
-		User:            cfg.User,
-		Auth:            auth,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec // 单用户自部署内网,见 SSHRunner.HostKeyCallback
-		Timeout:         15 * time.Second,
-	}
+	clientCfg := &ssh.ClientConfig{User: cfg.User, Auth: auth, HostKeyCallback: callback, Timeout: 15 * time.Second}
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, "tcp", host)
 	if err != nil {
@@ -107,7 +177,32 @@ func dialSSH(ctx context.Context, cfg SSHConfig) (*ssh.Client, error) {
 	return ssh.NewClient(c, chans, reqs), nil
 }
 
-// authMethods 按配置产出认证方式:私钥优先,其次口令。
+func resolveHostKeyCallback(cfg SSHConfig, explicit ssh.HostKeyCallback) (ssh.HostKeyCallback, error) {
+	if explicit != nil {
+		return explicit, nil
+	}
+	knownHostsFile := strings.TrimSpace(cfg.KnownHostsFile)
+	if knownHostsFile == "" {
+		if home, err := os.UserHomeDir(); err == nil {
+			candidate := filepath.Join(home, ".ssh", "known_hosts")
+			if info, statErr := os.Stat(candidate); statErr == nil && !info.IsDir() {
+				knownHostsFile = candidate
+			}
+		}
+	}
+	if knownHostsFile != "" {
+		callback, err := knownhosts.New(knownHostsFile)
+		if err != nil {
+			return nil, fmt.Errorf("读取 SSH known_hosts %s: %w", knownHostsFile, err)
+		}
+		return callback, nil
+	}
+	if cfg.InsecureSkipHostKey {
+		return ssh.InsecureIgnoreHostKey(), nil // explicit opt-in only
+	}
+	return nil, errors.New("SSH host-key policy 未配置: 提供 KnownHostsFile/HostKeyCallback，或显式设置 InsecureSkipHostKey")
+}
+
 func authMethods(cfg SSHConfig) ([]ssh.AuthMethod, error) {
 	var methods []ssh.AuthMethod
 	if cfg.KeyFile != "" {
