@@ -195,6 +195,7 @@ func validateReplanHistory(s ProjectSnapshot) error {
 			if record.PreviousPlanning.ID != previous.ActivatedPlanning.ID || record.PreviousDAG.RevisionID != previous.ActivatedDAG.RevisionID {
 				return fmt.Errorf("controlplane: replan history[%d] does not continue previous activation", i)
 			}
+		}
 	}
 	if len(s.ReplanHistory) == 0 {
 		return nil
