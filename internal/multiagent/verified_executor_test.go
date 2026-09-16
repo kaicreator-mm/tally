@@ -56,6 +56,15 @@ type vreFixture struct {
 // choose visible, executable or held-out contracts.
 func vreBuild(t *testing.T, plan intakefreeze.VerificationPlan) *vreFixture {
 	t.Helper()
+	return vreBuildCustom(t, plan, nil)
+}
+
+// vreBuildCustom is vreBuild plus the integration seam: swap replaces the
+// intake-authored verification contract with an executable one before the
+// freeze commit (the trio is bound on task identity; acceptance ids stay
+// aligned with the intake draft).
+func vreBuildCustom(t *testing.T, plan intakefreeze.VerificationPlan, swap *verification.Frozen) *vreFixture {
+	t.Helper()
 	repo := t.TempDir()
 	vreGit(t, repo, "init", "--quiet")
 	vreGit(t, repo, "config", "user.name", "vre-test")
@@ -101,6 +110,9 @@ func vreBuild(t *testing.T, plan intakefreeze.VerificationPlan) *vreFixture {
 	}, plan)
 	if err != nil {
 		t.Fatalf("intakefreeze.Freeze: %v", err)
+	}
+	if swap != nil {
+		fa.Verification = *swap
 	}
 	if _, err := artifacts.FreezeCommit(context.Background(), repo, artifacts.FreezeCommitRequest{
 		ExpectedBase: base,
