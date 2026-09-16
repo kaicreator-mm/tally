@@ -16,14 +16,10 @@ import (
 	"syscall"
 	"time"
 
-	"tally/internal/agentruntime"
 	"tally/internal/controlplane"
 	"tally/internal/persistence/migratev150"
 	"tally/internal/persistence/profile"
 	"tally/internal/taskexecution"
-	"tally/runtimes/codex"
-	"tally/runtimes/dsh"
-	"tally/runtimes/fake"
 )
 
 func main() {
@@ -52,16 +48,25 @@ func main() {
 	}
 
 	runtimeName := strings.TrimSpace(os.Getenv("TALLY_V15_RUNTIME"))
+	contentRepo := strings.TrimSpace(os.Getenv("TALLY_V15_CONTENT_REPO"))
+	baseRevision := strings.TrimSpace(os.Getenv("TALLY_V15_BASE_REVISION"))
 	var executor taskexecution.AgentExecutor
 	var scheduler *controlplane.LocalScheduler
+	environmentKind := taskexecution.EnvironmentLocal
+	environmentTarget := "local"
+	workspaceRoot := strings.TrimSpace(os.Getenv("TALLY_V15_WORKSPACE_ROOT"))
 	executionState := "disabled"
 	verificationState := "not_configured"
 	if runtimeName != "" {
-		executor, err = localExecutorFromEnv(runtimeName)
-		if err != nil {
-			slog.Error("v1.5 Local AgentExecutor startup failed", "err", err)
+		composition, composeErr := executionFromEnv(runtimeName, contentRepo)
+		if composeErr != nil {
+			slog.Error("v1.5 AgentExecutor/environment startup failed", "err", composeErr)
 			os.Exit(1)
 		}
+		executor = composition.Executor
+		environmentKind = composition.Kind
+		environmentTarget = composition.Target
+		workspaceRoot = composition.WorkspaceRoot
 	}
 
 	var service *controlplane.Service
@@ -69,9 +74,8 @@ func main() {
 		service, err = controlplane.NewService(adapter, nil, nil)
 	} else {
 		// The production path stays behind the frozen TaskHarness authority.
-		// v1.5.1 can execute through AgentExecutor without PostgreSQL, but it
-		// cannot manufacture independent verification facts. This harness is
-		// therefore deliberately fail-closed until a verifier is composed.
+		// ExecutionEnvironment only changes where workspace/process execution
+		// occurs; it does not become a second scheduler or verification loop.
 		harness, harnessErr := controlplane.NewExecutionOnlyHarness(executor)
 		if harnessErr != nil {
 			slog.Error("v1.5 execution harness startup failed", "err", harnessErr)
@@ -94,12 +98,13 @@ func main() {
 
 	if executor != nil {
 		requests, reqErr := controlplane.NewGitTaskRequestFactory(controlplane.GitTaskRequestFactoryConfig{
-			Repo:              os.Getenv("TALLY_V15_CONTENT_REPO"),
-			BaseRevision:      os.Getenv("TALLY_V15_BASE_REVISION"),
+			Repo:              contentRepo,
+			BaseRevision:      baseRevision,
 			RuntimeID:         runtimeName,
-			WorkspaceRoot:     os.Getenv("TALLY_V15_WORKSPACE_ROOT"),
-			EnvironmentTarget: envOr("TALLY_V15_ENV_TARGET", "local"),
-			ModelProfile:      os.Getenv("TALLY_V15_MODEL"),
+			WorkspaceRoot:     workspaceRoot,
+			EnvironmentKind:   environmentKind,
+			EnvironmentTarget: environmentTarget,
+			ModelProfile:      requestModelProfile(runtimeName),
 		})
 		if reqErr != nil {
 			slog.Error("v1.5 scheduler request composition failed", "err", reqErr)
@@ -123,19 +128,21 @@ func main() {
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/recover", schedulerHTTP)
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/run-once", schedulerHTTP)
 		mux.Handle("POST /api/v15/projects/{project}/scheduler/run", schedulerHTTP)
-		executionState = "local_scheduler+harness+agent_executor"
+		executionState = "local_scheduler+harness+agent_executor:" + string(environmentKind)
 		verificationState = "fail_closed_unavailable"
 	}
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{
-			"status":       "ok",
-			"component":    "tally-v1.5-core",
-			"persistence":  string(selected),
-			"execution":    executionState,
-			"runtime":      runtimeName,
-			"verification": verificationState,
+			"status":             "ok",
+			"component":          "tally-v1.5-core",
+			"persistence":        string(selected),
+			"execution":          executionState,
+			"runtime":            runtimeName,
+			"environment":        string(environmentKind),
+			"environment_target": environmentTarget,
+			"verification":       verificationState,
 		})
 	})
 
@@ -148,40 +155,11 @@ func main() {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected, "execution", executionState, "runtime", runtimeName, "verification", verificationState)
+	slog.Info("v1.5 Core server listening", "addr", addr, "persistence", selected, "execution", executionState, "runtime", runtimeName, "environment", environmentKind, "environment_target", environmentTarget, "verification", verificationState)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("v1.5 Core server failed", "err", err)
 		os.Exit(1)
 	}
-}
-
-func localExecutorFromEnv(runtimeName string) (taskexecution.AgentExecutor, error) {
-	isolationVerified := os.Getenv("TALLY_V15_SESSION_ISOLATION_VERIFIED") == "1"
-	var runtime agentruntime.Runtime
-	switch runtimeName {
-	case "fake":
-		runtime = fake.New(fake.Config{})
-	case "codex":
-		runtime = codex.New(codex.Config{
-			BinPath:                  os.Getenv("TALLY_V15_CODEX_BIN"),
-			Model:                    os.Getenv("TALLY_V15_MODEL"),
-			SessionIsolationVerified: isolationVerified,
-		})
-	case "dsh":
-		runtime = dsh.New(dsh.Config{
-			BinPath:                  os.Getenv("TALLY_V15_DSH_BIN"),
-			Model:                    os.Getenv("TALLY_V15_MODEL"),
-			Provider:                 os.Getenv("TALLY_V15_DSH_PROVIDER"),
-			SessionIsolationVerified: isolationVerified,
-		})
-	default:
-		return nil, fmt.Errorf("v1.5 core: unsupported TALLY_V15_RUNTIME %q (want fake|codex|dsh)", runtimeName)
-	}
-	executor, err := taskexecution.NewRuntimeExecutor(runtime, taskexecution.LocalEnvironment{})
-	if err != nil {
-		return nil, fmt.Errorf("v1.5 core: build Local AgentExecutor: %w", err)
-	}
-	return executor, nil
 }
 
 func schedulerConcurrencyFromEnv() (int, error) {
