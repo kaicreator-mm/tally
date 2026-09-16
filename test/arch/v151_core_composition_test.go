@@ -2,16 +2,39 @@ package arch
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestV151CoreServerDoesNotDependOnLegacyQueueOrPostgresStore(t *testing.T) {
-	data, err := os.ReadFile("../../cmd/v15server/main.go")
+// v151CoreServerSource returns the concatenated production source of the
+// cmd/v15server package. Composition may legitimately be split across several
+// files in the package (e.g. v1.5.2 environment composition); the guards apply
+// to the package as a whole.
+func v151CoreServerSource(t *testing.T) string {
+	t.Helper()
+	entries, err := os.ReadDir("../../cmd/v15server")
 	if err != nil {
-		t.Fatalf("read v1.5 Core server: %v", err)
+		t.Fatalf("read v1.5 Core server package: %v", err)
 	}
-	source := string(data)
+	var b strings.Builder
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join("../../cmd/v15server", name))
+		if err != nil {
+			t.Fatalf("read v1.5 Core server file %s: %v", name, err)
+		}
+		b.Write(data)
+		b.WriteByte('\n')
+	}
+	return b.String()
+}
+
+func TestV151CoreServerDoesNotDependOnLegacyQueueOrPostgresStore(t *testing.T) {
+	source := v151CoreServerSource(t)
 	for _, forbidden := range []string{
 		`"tally/internal/jobs"`,
 		`"tally/internal/store"`,
@@ -30,11 +53,7 @@ func TestV151CoreServerDoesNotDependOnLegacyQueueOrPostgresStore(t *testing.T) {
 }
 
 func TestV151CoreServerMakesHarnessedLocalSchedulerAgentExecutorReachable(t *testing.T) {
-	data, err := os.ReadFile("../../cmd/v15server/main.go")
-	if err != nil {
-		t.Fatalf("read v1.5 Core server: %v", err)
-	}
-	source := string(data)
+	source := v151CoreServerSource(t)
 	for _, required := range []string{
 		"taskexecution.NewRuntimeExecutor",
 		"controlplane.NewExecutionOnlyHarness",
