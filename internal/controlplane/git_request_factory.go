@@ -248,7 +248,7 @@ func taskWorkspaceLocation(root string, taskID engineering.ID, kind taskexecutio
 	// must not use host filepath semantics for an environment-native locator.
 	cleanRoot := path.Clean(strings.TrimSpace(root))
 	if !path.IsAbs(cleanRoot) || cleanRoot == "/" {
-		return "", fmt.Errorf("controlplane: non-local workspace root %q must be an absolute non-root POSIX path", root)
+		return "", fmt.Errorf("controlplane: unsafe non-local workspace root %q: must be an absolute non-root POSIX path", root)
 	}
 	return path.Join(cleanRoot, id), nil
 }
