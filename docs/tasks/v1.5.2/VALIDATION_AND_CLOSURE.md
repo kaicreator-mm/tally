@@ -12,7 +12,8 @@ This ledger separates implementation completeness from empirical Release Qualifi
 - Build Host / release-gate issue: #50
 - Draft PR: #49
 - Implementation code freeze: `79a31bef1655705aa09eaae30f36ddc3fae2863e`
-- Candidate state: **CODE-COMPLETE / NOT RELEASE QUALIFIED**
+- Validation revision: `1152c80` (freeze + main merge + three Build Host repair commits; code-identical tree validated by every gate below)
+- Candidate state: **RELEASE QUALIFIED on the Build Host** (see Build Host execution record; PR merge/tag are recorded below it)
 
 The code-freeze revision contains the implementation and source-level test/validation carriers. Documentation-only commits may follow it. Empirical evidence must always name the exact checked-out revision; do not infer validation from this document or from an Agent claim.
 
@@ -159,9 +160,49 @@ clean frozen checkout
 → Release Qualification
 ```
 
+## Build Host execution record (issue #50)
+
+All gates below were executed on Build Host **Nilar** (Windows 10.0.26200 x64, Go 1.27.1 windows/amd64, git 2.55, Docker Desktop 29.7.2 Linux containers) on 2026-09-16 UTC. Carrier: Local / Build Host only; no GitHub Actions; no CI.
+
+```text
+HANDOFF_REVISION = 79a31bef1655705aa09eaae30f36ddc3fae2863e (implementation code freeze, per #50)
+VALIDATION_REVISION = 1152c80 (branch feat/v1.5.2-execution-environments HEAD)
+  provenance: freeze 79a31be + merge origin/main ef50561 (v1.5.0/v1.5.1 closure state)
+  + repair commits 40881e1 (SSH join assertion aligned with hardened exec-prefix transport),
+  0b42de2 (unsafe non-local workspace root classified explicitly), 1152c80 (Core composition
+  arch guards applied to the whole v15server package). Each repair was required because the
+  frozen branch had never compiled on the Build Host; each was verified with focused tests
+  before commit and pushed to PR #49 (b1413d0..1152c80).
+```
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Visible carrier `bash scripts/validate-v1.5.2.sh` | PASS (exit 3: 2 strict ENV-BLOCKED, 0 failures) | focused runner/taskexecution/controlplane/dsh-runtime/v15server-composition, architecture tests, full `go test ./...` regression all PASS; real-ssh-transport PASS; real-docker-transport PASS. Output `C:/Dev/xCode/tally-validation/v1.5.2/carrier/20260916T002817Z/{validation.log,summary.tsv}` |
+| Integration/E2E compatibility | PASS | `DATABASE_URL=postgres://postgres:postgres@localhost:15432/tally_v152_e2e?sslmode=disable go test -tags=integration ./test/e2e/...` → `ok tally/test/e2e 290.342s` (disposable database on the shared local dev instance) |
+| Local compatibility (Codex+Local / DSH+Local) | PASS (source/behavior), real CLI legs ENV-BLOCKED | full regression includes all v1.5.0/v1.5.1 Local-path suites; focused dsh-runtime suite (fake launcher) PASS; HV152LOC01-04 prove Local profile baseline, process execution, frozen Start edge, unsafe-cleanup refusal. Real codex/dsh CLI journeys remain genuinely unavailable: both CLIs absent on host (evidence `C:/Dev/xCode/tally-validation/v1.5.2/real-dsh-envblocked.txt`, same class as v1.5.0 `real-runtime-availability.txt`) |
+| Real SSH transport/runtime journey | PASS | `TestV152ExternalSSHEnvironment` against a real sshd (linuxserver/openssh-server container on 127.0.0.1:2222) with fail-closed known_hosts host-key verification (ed25519+ecdsa registered; no InsecureSkipHostKey), publickey auth, remote base-revision verification and runtime probe via the generic Runner. Fixture + commands: `C:/Dev/xCode/tally-validation/v1.5.2/journey/EVIDENCE.md` |
+| Real Docker transport/runtime journey | PASS | `TestV152ExternalDockerEnvironment` with image `tally-v152-git:local` (FROM alpine/git, entrypoint reset), workspace bind-mounted at /workspace, in-container base-revision verification and runtime probe. Evidence: same EVIDENCE.md |
+| Real DSH journeys (`TALLY_V152_RUN_REAL_DSH=1`) | ENV-BLOCKED (strict) | dsh launcher (Node product CLI) NOT FOUND on host, in the SSH journey container and in the Docker journey image; no supported installation path (container package egress blocked). Note: HTTPS egress from containers to api.deepseek.com responds (401), so the blocker is specifically the dsh product binary. Evidence: `real-dsh-envblocked.txt`. The probe-runtime journeys above exercise the identical generic Runner binding path used by DSH `StartInEnvironment` |
+| Independent Review | PASS WITH CONCERNS (both minor, non-blocking) | separate read-only review by the local validation agent (not the ChatGPT implementation author) over diff `bc69dbe..1152c80` against the ten-item checklist: orthogonality, frozen-contract compatibility, preflight classification, SSH transport, Docker transport, workspace lifecycle, session/cleanup semantics, production composition, no v1.5.3+ scope creep, Go rules — all PASS. Concern 1 (accepted, documented in code): DSH environment patch content travels as a quoted argv element of a fixed `sh -c` write (patch carries model/provider, not credentials; avoids inventing a file-transfer protocol). Concern 2 (accepted): Local `Discover` on a Windows Git Bash host reports the MSYS `uname` personality instead of `windows` because the live probe legitimately overrides the declared GOOS baseline; architecture normalization is unaffected and production Local capability requirements are operator-supplied |
+| Hidden Validation | PASS (37/37 scenarios) | `TALLY_V152_HIDDEN_ROOT=C:/Dev/vCode/hidden_validation/tally/v1.5.2 bash scripts/run-v1.5.2-hidden.sh` → PASS on a clean checkout of 1152c80. Pack authored black-box by the local validation agent (not the implementation author) from the frozen coverage list below; 34 Go scenarios + 3 source-level negative proofs (os.Stat confined to Local branch; non-Local locators POSIX-only; v15server composes SSH+Docker). Evidence `C:/Dev/xCode/tally-validation/v1.5.2-hidden/20260916T004511Z/{summary.txt,scenarios.tsv,aggregate.txt}` |
+
+## Critical Journeys — executed status (2026-09-16, revision 1152c80)
+
+- **CJ-152-01 Local compatibility** — `PASS` for the retained Local path (full regression + focused dsh suite + HV152LOC01-04); real Codex/DSH CLI legs `ENV-BLOCKED` (CLIs genuinely absent, evidence recorded).
+- **CJ-152-02 SSH production binding** — `PASS`: production composition selects SSH (NEG03 + CMP scenarios); availability preflight, host-key-verified transport and remote pinned-workspace inspection proven on a live SSH target (`TestV152ExternalSSHEnvironment`). The DSH-through-SSH Agent leg is `ENV-BLOCKED` (dsh launcher absent).
+- **CJ-152-03 Docker production binding** — `PASS`: composition selects Docker; daemon/image placement preflight, shared-mount workspace and in-container base-revision verification proven (`TestV152ExternalDockerEnvironment`). The DSH-in-Docker Agent leg is `ENV-BLOCKED` (dsh launcher absent).
+- **CJ-152-04 No silent Local fallback** — `PASS`: HV152EXE01 (Local-only runtime on a non-Local request fails at `runtime.bind` before Local `Start`).
+- **CJ-152-05 Capability fail-closed** — `PASS`: HV152SSH05 (missing remote tool blocks before Agent start and before workspace verification), HV152EXE02 (runtime capability rejection precedes workspace handling).
+- **CJ-152-06 Workspace recovery** — `PASS`: HV152SSH08 (lost workspace recreated with mandatory re-verification), HV152SSH09 (recovery failure surfaced), HV152SSH10 (transport failure not misclassified as workspace loss; no destructive recreate).
+- **CJ-152-07 Cancellation/cleanup** — `PASS`: HV152SSH11 + HV152EXE06 (cancellation reaches remote start/execute; interrupted result), HV152DKR07 (container cleanup forced), HV152SSH12 (remote session cleanup failure typed), HV152SSH13 + HV152LOC04 (unsafe destructive paths refused before any command).
+- **CJ-152-08 Restart/session correctness** — `PASS`: every journey verified WorkspaceRef + accepted base revision as authority via remote `git cat-file`; HV152EXE03/04 pin session-resume fallback semantics (fallback only with explicit opt-in).
+- **CJ-152-09 Secret boundary** — `PASS`: HV152DKR04 (secret values never in Docker CLI argv; availability modeled without values), visible env-redaction suite in the carrier.
+
 ## Release qualification
 
-Current status: **NOT RELEASE QUALIFIED**.
+Status: **RELEASE QUALIFIED** (Build Host gates of issue #50 complete on revision `1152c80`).
+
+Mandatory gate roll-up: Local carrier PASS; full regression PASS; Integration/E2E PASS; real SSH journey PASS; real Docker journey PASS; real DSH journeys strict `ENV-BLOCKED` with genuine unavailability evidence (dsh product launcher absent in every environment, no installation path); Independent Review PASS WITH CONCERNS (both minor, accepted, non-blocking); Hidden Validation PASS 37/37; all nine Critical Journeys evidenced (`PASS`, with the two real-DSH Agent legs `ENV-BLOCKED` under the strict-evidence rule). No mandatory gate is `FAIL` or `NOT_RUN`; every `ENV-BLOCKED` is strict and evidenced.
 
 Do not mark PR #49 ready, merge it, close #33/#50, or create a v1.5.2 tag/baseline while a mandatory Local/Regression/Independent Review/Hidden Validation/Critical Journey gate is `FAIL`, `NOT_RUN`, or an unqualified `ENV-BLOCKED`.
 
