@@ -65,11 +65,13 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
+		worktreeRoot := envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees"))
+		envName := envOr("TALLY_V15_ENV", "server-local")
 		harness, harnessErr := controlplane.NewBrownfieldHarness(controlplane.BrownfieldHarnessConfig{
 			Repo:         contentRepo,
-			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
+			WorktreeRoot: worktreeRoot,
 			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
-			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			EnvName:      envName,
 			Runtime:      runtime.Descriptor(),
 			Executor:     executor,
 			Queries:      queries,
@@ -84,14 +86,29 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		}
 
 		// v1.5.4 composes above the same frozen AgentExecutor used by the
-		// Engineering Harness. This deliberately does not introduce a second
-		// runtime stack or worker queue: Local/Codex/DSH execution remains owned
-		// by taskexecution.RuntimeExecutor.
+		// Engineering Harness, behind the evidence-producing role executor:
+		// Implementer/Repairer runs freeze an immutable ChangeSet and
+		// Reviewer/Verifier evidence comes from the existing candidateverify
+		// authority, never from AgentRunResult.Summary. This deliberately does
+		// not introduce a second runtime stack or worker queue:
+		// Local/Codex/DSH execution remains owned by taskexecution.RuntimeExecutor.
 		maxConcurrency, parseErr := v15MultiAgentMaxConcurrencyFromEnv()
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
-		multiAgentEngine, engineErr := multiagent.NewEngine(executor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		roleExecutor, roleErr := multiagent.NewVerifiedRoleExecutor(multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: worktreeRoot,
+			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
+			EnvName:      envName,
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if roleErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build evidence-producing role executor: %w", roleErr)
+		}
+		multiAgentEngine, engineErr := multiagent.NewEngine(roleExecutor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
 		if engineErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
 		}
