@@ -15,6 +15,14 @@
 # make build 编译出的三个二进制(server / worker / tally;Windows 下含 .exe)。
 # 锚定仓库根,避免误伤各包内合法的 bin/ 目录。
 /bin/
+# go build ./cmd/v15server 直接在仓库根产出的本地二进制(Windows 含 .exe)。
+/v15server
+/v15server.exe
+
+# ---- 本地验证载体输出 -----------------------------------------------------------
+# scripts/validate-v*.sh 的本地验证记录(命令/结果/时间戳),属本地工具状态,
+# 与 .codegraph/.worktrees 同类,不随源码入库或导出。
+/.local-validation/
 
 # ---- Go 测试与性能分析产物 ------------------------------------------------------
 # go test -c 编译出的测试二进制、覆盖率文件(cover profile)、pprof 输出

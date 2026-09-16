@@ -20,9 +20,15 @@ type navPageData struct {
 		Kind string
 		Msg  string
 	}
+	ControlPlane bool
 }
 
 func renderBase(t *testing.T, active string) string {
+	t.Helper()
+	return renderBaseWithControlPlane(t, active, true)
+}
+
+func renderBaseWithControlPlane(t *testing.T, active string, controlPlane bool) string {
 	t.Helper()
 	base, err := template.New("base").ParseFS(assets.TemplateFS, "templates/base.tmpl")
 	if err != nil {
@@ -32,6 +38,7 @@ func renderBase(t *testing.T, active string) string {
 	data.Title = "t"
 	data.Active = active
 	data.CSRF = "tok"
+	data.ControlPlane = controlPlane
 	var buf bytes.Buffer
 	if err := base.ExecuteTemplate(&buf, "base", data); err != nil {
 		t.Fatalf("渲染 base: %v", err)
@@ -79,6 +86,26 @@ func TestNavProjectsHumanEntriesOntoExistingRoutes(t *testing.T) {
 		}
 		if strings.Contains(line, `href=""`) {
 			t.Errorf("导航条目不允许空 href:%s", line)
+		}
+	}
+}
+
+// 控制台未挂载(ControlPlane=false)时导航不得出现工程控制台条目:
+// 没有真实路由背书的条目宁可不出现,绝不放占位入口;其余研发条目照常。
+func TestNavHidesControlPlaneEntryWhenDisabled(t *testing.T) {
+	nav := navSection(t, renderBaseWithControlPlane(t, "", false))
+	if strings.Contains(nav, `href="/v15/control-plane"`) {
+		t.Errorf("控制台未挂载时导航仍出现 /v15/control-plane 占位条目")
+	}
+	for href, label := range map[string]string{
+		"/v14/launch":    "发起",
+		"/v13/tasks":     "工作",
+		"/v13/runs":      "运行",
+		"/v14/attention": "需人工",
+	} {
+		line := navLine(t, nav, href)
+		if !strings.Contains(line, ">"+label+"<") {
+			t.Errorf("禁用控制台后 %s 条目应保留且标签为 %q,得到:%s", href, label, line)
 		}
 	}
 }

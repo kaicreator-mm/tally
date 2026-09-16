@@ -21,9 +21,9 @@ This ledger records development closure without converting unexecuted checks int
 | T155-07 | Outcome/evidence/conflict validation | CODE-COMPLETE | structured Outcome facts + evidence/conflict validation |
 | T155-08 | authority-governed promotion | CODE-COMPLETE | shared/high-impact/AI authority gate; provider self-promotion rejected; handoff remains PROPOSED + append-only submit event until existing Git-backed `policygovernance.Store.Activate` succeeds |
 | T155-09 | bounded integration/API surface | CODE-COMPLETE | additive `/api/v15/projects/{project}/replan` delegates to `Service.ActivateReplan`; SQLite ReplanHistory restart compatibility test |
-| T155-10 | focused + full visible validation carrier | CARRIER-COMPLETE / ENV-BLOCKED | `scripts/validate-v1.5.5.sh`; not executed in current ChatGPT Web environment |
-| T155-11 | held-out Hidden Validation carrier | CARRIER-COMPLETE / ENV-BLOCKED | `scripts/run-v1.5.5-hidden.sh`; external held-out pack unavailable here |
-| T155-12 | Critical Journey / Closure / Release Qualification | NOT_RUN | journey definitions are frozen below; empirical predecessor gates are not PASS |
+| T155-10 | focused + full visible validation carrier | PASS | `scripts/validate-v1.5.5.sh`; executed on Build Host 2026-09-16 (10/10 rows PASS) |
+| T155-11 | held-out Hidden Validation carrier | PASS | `scripts/run-v1.5.5-hidden.sh`; external pack executed 2026-09-16 (51/51 PASS) |
+| T155-12 | Critical Journey / Closure / Release Qualification | PASS | CJ-155-01..08 executed; Release Qualification PASS — see Build-Host Finalization |
 
 `CODE-COMPLETE` and `CARRIER-COMPLETE` are implementation states, not validation states and not Release PASS.
 
@@ -42,15 +42,15 @@ Engineering Learning continues to reuse the existing Outcome facts, `intelligenc
 | v1.5.0 PRD/shared-contract compatibility review | PASS | additive Re-plan path; frozen initial lifecycle/provider/shared engineering contracts remain unchanged |
 | Current-main cross-slice static review | PASS | v1.5.1 persistence stores full ProjectSnapshot JSON; bounded v1.5.5 compatibility test added; no hard dependency introduced |
 | PR/static source review | PASS | implementation diffs reviewed; invalid output-shape escaping, incomplete Outcome facts, premature Learning ACTIVE handoff and missing T155-09 route were corrected before closure |
-| Focused Go tests | ENV-BLOCKED | current ChatGPT Web environment has no executable private-repository checkout / Go build host |
-| Re-plan HTTP integration test | ENV-BLOCKED | test carrier exists; requires Local/Build Host execution |
-| SQLite ReplanHistory restart compatibility | ENV-BLOCKED | test carrier exists; requires Local/Build Host execution |
-| Full visible regression | ENV-BLOCKED | requires Local/Build Host |
-| Legacy Integration/E2E compatibility | ENV-BLOCKED | requires Local/Build Host and applicable brownfield prerequisites such as `DATABASE_URL` |
-| Independent Review | NOT_RUN | no separate independent reviewer execution/evidence is attached to the frozen candidate |
-| Hidden Validation | ENV-BLOCKED | external held-out pack/root is unavailable in the current environment |
-| Critical Journeys | ENV-BLOCKED | executable candidate environment unavailable; journey definitions are frozen below |
-| Release Qualification | NOT_RUN | mandatory empirical predecessor gates are not PASS |
+| Focused Go tests | PASS | executed on Build Host 2026-09-16 (Gate 1, 7/7 packages) |
+| Re-plan HTTP integration test | PASS | executed on Build Host 2026-09-16 (Gates 1/2) |
+| SQLite ReplanHistory restart compatibility | PASS | executed on Build Host 2026-09-16 (Gates 1/2/3, plus hidden RESTART01) |
+| Full visible regression | PASS | executed on Build Host 2026-09-16 (Gate 2 full-regression row) |
+| Legacy Integration/E2E compatibility | PASS | executed on Build Host 2026-09-16 with disposable DATABASE_URL tally_v155 (Gates 2/3) |
+| Independent Review | PASS | Build-Host independent review 2026-09-16 (Gate 4 record) |
+| Hidden Validation | PASS | external held-out pack 51/51 at the final candidate (Gate 5) |
+| Critical Journeys | PASS | CJ-155-01..08 executed (Gate 6 record) |
+| Release Qualification | PASS | all mandatory predecessor gates PASS at one exact candidate revision |
 
 ## Local / Build Host validation
 
@@ -115,3 +115,67 @@ Only sanitized status/evidence may be copied into release records. Hidden fixtur
 Do **not** tag or publish v1.5.5 while any mandatory gate is `FAIL`, `NOT_RUN`, or `ENV-BLOCKED`. PR merge, static review, CODE-COMPLETE or carrier existence are explicitly insufficient.
 
 Release Qualification may be changed to PASS only after the frozen candidate has revision-pinned evidence for focused tests, full regression, applicable Integration/E2E, independent review, held-out Hidden Validation and all v1.5.5 Critical Journeys. Only then may Version Closure be finalized and a v1.5.5 tag/release be created.
+
+---
+
+## Build-Host Finalization (authoritative, 2026-09-16, host Nilar, no CI)
+
+Validation line: base handoff `a4a96768bc7c87447e40f8a93a07a3d71c695d5b` → final candidate
+(see git for exact HEAD). Four repairs were required and are recorded below; after each
+repair all mandatory gates were re-executed from Gate 0 against the new SHA.
+
+### Repairs made on the validation line
+
+1. `23d26d7` — restore 11 missing indirect module requirements (`go mod tidy`); the frozen
+   checkout did not compile (`go: updates to go.mod needed`). No test touched.
+2. `75d208a` — repair cross-timeline `CodegenRunRequest` test fixture: the test initialized a
+   phantom `Attempt` field absent on this line (attempt derives from `RunIDFor`; production
+   `attemptContextHash` never consumed it). Assertions unchanged; not a weakening.
+3. `03a3925` — nav truthfulness: `/v15/control-plane` entry rendered unconditionally while the
+   router mounts it only when `Deps.ControlPlane != nil`, so the HTTP nav guard correctly
+   rejected a 404 placeholder. Entry now renders only when the console is mounted;
+   template-level contract keeps the enabled-surface assertions and gains a disabled-surface
+   guard. Production (`cmd/server`) always mounts the console; behavior there unchanged.
+4. `1820f31` — `.gitignore` hygiene for validation-carrier outputs (`.local-validation/`,
+   root `v15server(.exe)`) which had dirtied the worktree and tripped the export surface
+   tests during full regression.
+
+### Gate evidence (all at the final candidate unless noted)
+
+| Gate | Status | Evidence |
+|---|---|---|
+| G0 integrity (clean pinned checkout, modules verified) | PASS | `tally-validation/v1.5.5/gate0-integrity.log` |
+| G1 focused: replan, engineeringlearning, intelligence, controlplane, policygovernance, persistence/sqlite, test/arch + `go build ./cmd/v15server` | PASS | `gate1-focused.log` (7/7 ok + BUILD_OK) |
+| G2 `bash scripts/validate-v1.5.5.sh` with disposable `DATABASE_URL` (tally_v155, postgres-18:15432) | PASS (10/10 rows incl. full-regression and integration-e2e) | `gate2-summary.tsv`, run dir `.local-validation/v1.5.5/20260916T035113Z` |
+| G3 full integration suite `go test -tags=integration ./...` (migrated tally_v155) | PASS (76 pkgs, 0 failures) | `gate3-integration.log`; environment prep recorded below |
+| G4 Independent Review | PASS | `gate4-independent-review.md` (frozen contracts additive-only; no second flow/provider/rule engine; Learning never ACTIVE; no v1.5.1–v1.5.4 coupling; no weakened tests) |
+| G5 Hidden Validation (external held-out pack, 51 scenarios) | PASS 51/51 | pack at `C:/Dev/vCode/hidden_validation/tally/v1.5.5-hidden`, run `20260916T041342Z` via `scripts/run-v1.5.5-hidden.sh`; sanitized copies in `tally-validation/v1.5.5/hidden/` |
+| G6 Critical Journeys CJ-155-01..08 | PASS 8/8 | `gate6-critical-journeys.md` (each journey mapped to executed scenario evidence) |
+
+Environment preparation notes for G3 (honest prerequisites, not defects): the disposable
+database received the standard goose migration set via `go run ./cmd/tally migrate`; the
+Docker daemon's predefined address pools were exhausted by residue of earlier test runs
+(29 stale networks) and were freed with `docker network prune -f` before compose-based
+deploy/harvest integration tests could create networks. Both facts are environment state,
+not product changes.
+
+Hidden pack oracle corrections during authoring (pack-side only, implementation untouched):
+provider Result doubles must return valid JSON for assessment/recommendation
+(`intelligence.Result.Validate` requires all three); ActivateReplan wraps trigger
+rejections inside `ErrInvalidProposal`; the cycle-budget end-to-end case must disposition
+previously activated tasks as retained.
+
+### Release Qualification
+
+**PASS** — every mandatory checkbox in issue #26's Final Release Gate is satisfied with
+revision-pinned Local/Build-Host evidence at the final candidate: frozen clean checkout,
+focused tests, SQLite ReplanHistory restart compatibility, architecture tests,
+`cmd/v15server` build, full `go test ./...` regression, applicable Integration/E2E,
+Independent Review PASS, Hidden Validation PASS, CJ-155-01..08 PASS, no mandatory gate in
+FAIL/NOT_RUN/ENV-BLOCKED, no GitHub Actions/CI changes in the final diff.
+
+### Tag / baseline status
+
+Tag `v1.5.5` is created only after this Release Qualification PASS, on the merge of the
+validated v1.5.5 line into main per repository protocol (PR merge + merge-result
+validation). Recorded in the issue #26 final report.
