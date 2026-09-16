@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"tally/internal/engineering"
+	"tally/internal/multiagent"
 	"tally/internal/replan"
 	"tally/internal/taskexecution"
 )
@@ -29,19 +30,21 @@ type AuthorityRecord struct {
 }
 
 type ProjectSnapshot struct {
-	SchemaVersion      int                                               `json:"schema_version"`
-	ProjectID          engineering.ID                                    `json:"project_id"`
-	Requirements       *engineering.RequirementsBaseline                 `json:"requirements,omitempty"`
-	Plan               *engineering.ProjectPlan                          `json:"plan,omitempty"`
-	Architecture       *engineering.ArchitectureRevision                 `json:"architecture,omitempty"`
-	ActiveDAG          *engineering.ActiveTaskDAG                        `json:"active_task_dag,omitempty"`
-	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts,omitempty"`
-	AuthorityDecisions []AuthorityRecord                                 `json:"authority_decisions,omitempty"`
-	ReplanHistory      []replan.ActivationRecord                         `json:"replan_history,omitempty"`
-	GitActions         engineering.GitActionLog                          `json:"git_actions"`
-	CompletionFacts    map[engineering.ID]engineering.CompletionFacts    `json:"completion_facts,omitempty"`
-	Audit              engineering.AuditLog                              `json:"audit"`
-	UpdatedAt          time.Time                                         `json:"updated_at"`
+	SchemaVersion       int                                               `json:"schema_version"`
+	ProjectID           engineering.ID                                    `json:"project_id"`
+	Requirements        *engineering.RequirementsBaseline                 `json:"requirements,omitempty"`
+	Plan                *engineering.ProjectPlan                          `json:"plan,omitempty"`
+	Architecture        *engineering.ArchitectureRevision                 `json:"architecture,omitempty"`
+	ActiveDAG           *engineering.ActiveTaskDAG                        `json:"active_task_dag,omitempty"`
+	Contracts           map[engineering.ID]engineering.CompletionContract `json:"completion_contracts,omitempty"`
+	AuthorityDecisions  []AuthorityRecord                                 `json:"authority_decisions,omitempty"`
+	ReplanHistory       []replan.ActivationRecord                         `json:"replan_history,omitempty"`
+	GitActions          engineering.GitActionLog                          `json:"git_actions"`
+	CompletionFacts     map[engineering.ID]engineering.CompletionFacts    `json:"completion_facts,omitempty"`
+	MultiAgentPolicies  map[engineering.ID]multiagent.TaskPolicy          `json:"multi_agent_policies,omitempty"`
+	MultiAgentWorkflows map[engineering.ID]multiagent.WorkflowState       `json:"multi_agent_workflows,omitempty"`
+	Audit               engineering.AuditLog                              `json:"audit"`
+	UpdatedAt           time.Time                                         `json:"updated_at"`
 }
 
 type Repository interface {
@@ -81,10 +84,11 @@ type TaskHarness interface {
 }
 
 type DispatchResult struct {
-	Execution  taskexecution.TaskExecutionResult `json:"execution"`
-	Workflow   *TaskWorkflowResult               `json:"workflow,omitempty"`
-	Completion *engineering.CompletionResult     `json:"completion,omitempty"`
-	Snapshot   ProjectSnapshot                   `json:"snapshot"`
+	Execution     taskexecution.TaskExecutionResult `json:"execution"`
+	Workflow      *TaskWorkflowResult               `json:"workflow,omitempty"`
+	Completion    *engineering.CompletionResult     `json:"completion,omitempty"`
+	Collaboration *multiagent.WorkflowState         `json:"collaboration,omitempty"`
+	Snapshot      ProjectSnapshot                   `json:"snapshot"`
 }
 
 func validateSnapshot(s ProjectSnapshot) error {
@@ -172,6 +176,25 @@ func validateSnapshot(s ProjectSnapshot) error {
 	for taskID := range s.CompletionFacts {
 		if !snapshotHasTask(s, taskID) {
 			return fmt.Errorf("controlplane: completion facts reference unknown task %s", taskID)
+		}
+	}
+	for id, policy := range s.MultiAgentPolicies {
+		if !snapshotHasTask(s, id) {
+			return fmt.Errorf("controlplane: multi-agent policy references unknown task %s", id)
+		}
+		if err := policy.Validate(); err != nil {
+			return fmt.Errorf("controlplane: invalid multi-agent policy for task %s: %w", id, err)
+		}
+	}
+	for id, workflow := range s.MultiAgentWorkflows {
+		if workflow.TaskID != id {
+			return fmt.Errorf("controlplane: multi-agent workflow key %s does not match task %s", id, workflow.TaskID)
+		}
+		if !snapshotHasTask(s, id) {
+			return fmt.Errorf("controlplane: multi-agent workflow references unknown task %s", id)
+		}
+		if err := workflow.Validate(); err != nil {
+			return fmt.Errorf("controlplane: invalid multi-agent workflow for task %s: %w", id, err)
 		}
 	}
 	for _, r := range s.Audit.Records {

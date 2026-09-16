@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,7 +13,10 @@ import (
 	"tally/internal/runner"
 )
 
-var ErrExecutionNotRunning = errors.New("taskexecution: task is not running")
+var (
+	ErrExecutionNotRunning = errors.New("taskexecution: task is not running")
+	ErrRuntimeRefMismatch  = errors.New("taskexecution: requested runtime does not match executor runtime")
+)
 
 // EnvironmentRuntime is an additive v1.5.2 extension. A runtime that can be
 // launched outside Local accepts a generic Runner rather than SSH/Docker types.
@@ -38,6 +42,15 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	if err := req.Validate(); err != nil {
 		return TaskExecutionResult{}, err
 	}
+	descriptor := e.Runtime.Descriptor()
+	if err := descriptor.Validate(); err != nil {
+		return TaskExecutionResult{}, err
+	}
+	requestedRuntime := strings.TrimSpace(req.Runtime.ID)
+	actualRuntime := strings.TrimSpace(descriptor.Name)
+	if requestedRuntime == "" || requestedRuntime != actualRuntime {
+		return TaskExecutionResult{}, fmt.Errorf("%w: requested=%q actual=%q", ErrRuntimeRefMismatch, requestedRuntime, actualRuntime)
+	}
 	if e.Environment.Kind() != req.Environment.Kind {
 		return TaskExecutionResult{}, ErrUnsupportedEnvironment
 	}
@@ -49,7 +62,7 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	if err := checkEnvironmentCapabilities(ctx, e.Environment, req.RequiredCapabilities.Environment); err != nil {
 		return TaskExecutionResult{}, err
 	}
-	if _, err := agentruntime.Negotiate(e.Runtime.Descriptor().Capabilities, req.RequiredCapabilities.Runtime); err != nil {
+	if _, err := agentruntime.Negotiate(descriptor.Capabilities, req.RequiredCapabilities.Runtime); err != nil {
 		return TaskExecutionResult{}, err
 	}
 	resolved, err := e.Environment.Resolve(ctx, req.Workspace)
@@ -73,7 +86,7 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	defer func() { cancel(); e.mu.Lock(); delete(e.active, req.TaskID); e.mu.Unlock() }()
 
 	start := agentruntime.StartRequest{Workspace: workspace, ModelProfile: req.Policy.ModelProfile, ResumeOf: req.Policy.ResumeSession}
-	if start.ResumeOf != "" && !e.Runtime.Descriptor().Capabilities.Has(agentruntime.CapSessionResume) {
+	if start.ResumeOf != "" && !descriptor.Capabilities.Has(agentruntime.CapSessionResume) {
 		if !req.Policy.FallbackToFresh {
 			return TaskExecutionResult{}, &agentruntime.CapabilityError{Missing: []agentruntime.Capability{agentruntime.CapSessionResume}}
 		}

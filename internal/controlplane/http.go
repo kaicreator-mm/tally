@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"tally/internal/engineering"
+	"tally/internal/multiagent"
 	"tally/internal/taskexecution"
 )
 
@@ -24,13 +25,24 @@ type ControlPlane interface {
 	Dispatch(context.Context, engineering.ID, taskexecution.TaskExecutionRequest) (DispatchResult, error)
 }
 
+type multiAgentControlPlane interface {
+	ConfigureMultiAgentTask(context.Context, engineering.ID, engineering.ID, multiagent.TaskPolicy) (ProjectSnapshot, error)
+	DispatchMultiAgent(context.Context, engineering.ID, taskexecution.TaskExecutionRequest) (DispatchResult, error)
+	DispatchReadyMultiAgent(context.Context, engineering.ID, map[engineering.ID]taskexecution.TaskExecutionRequest) (MultiAgentBatchResult, error)
+}
+
 type dagActivationRequest struct {
 	Proposal  engineering.TaskDAGProposal                        `json:"proposal"`
 	Contracts map[engineering.ID]engineering.CompletionContract `json:"completion_contracts"`
 }
 
+type multiAgentBatchRequest struct {
+	Requests map[engineering.ID]taskexecution.TaskExecutionRequest `json:"requests"`
+}
+
 type HTTPHandler struct {
 	service ControlPlane
+	multi   multiAgentControlPlane
 	mux     *http.ServeMux
 }
 
@@ -39,6 +51,9 @@ func NewHTTPHandler(service ControlPlane) (http.Handler, error) {
 		return nil, errors.New("controlplane: HTTP service is required")
 	}
 	h := &HTTPHandler{service: service, mux: http.NewServeMux()}
+	if multi, ok := service.(multiAgentControlPlane); ok {
+		h.multi = multi
+	}
 	// Thin browser console. The outer web router mounts this under the same
 	// authenticated + CSRF-protected group as the JSON API.
 	h.mux.HandleFunc("GET /v15/control-plane", h.console)
@@ -55,6 +70,11 @@ func NewHTTPHandler(service ControlPlane) (http.Handler, error) {
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/authority", h.authority)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/restart", h.restart)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/dispatch", h.dispatch)
+	if h.multi != nil {
+		h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/multi-agent/policy", h.multiAgentPolicy)
+		h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/multi-agent/dispatch", h.multiAgentDispatch)
+		h.mux.HandleFunc("POST /api/v15/projects/{project}/multi-agent/dispatch-ready", h.multiAgentDispatchReady)
+	}
 	return h, nil
 }
 
@@ -133,15 +153,49 @@ func (h *HTTPHandler) dispatch(w http.ResponseWriter, r *http.Request) {
 	h.respond(w, result, err)
 }
 
+func (h *HTTPHandler) multiAgentPolicy(w http.ResponseWriter, r *http.Request) {
+	var input multiagent.TaskPolicy
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	result, err := h.multi.ConfigureMultiAgentTask(r.Context(), engineering.ID(r.PathValue("project")), engineering.ID(r.PathValue("task")), input)
+	h.respond(w, result, err)
+}
+
+func (h *HTTPHandler) multiAgentDispatch(w http.ResponseWriter, r *http.Request) {
+	var input taskexecution.TaskExecutionRequest
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	taskID := engineering.ID(r.PathValue("task"))
+	if input.TaskID == "" {
+		input.TaskID = taskID
+	} else if input.TaskID != taskID {
+		writeAPIError(w, http.StatusBadRequest, "task id in body does not match path")
+		return
+	}
+	result, err := h.multi.DispatchMultiAgent(r.Context(), engineering.ID(r.PathValue("project")), input)
+	h.respond(w, result, err)
+}
+
+func (h *HTTPHandler) multiAgentDispatchReady(w http.ResponseWriter, r *http.Request) {
+	var input multiAgentBatchRequest
+	if !decodeJSON(w, r, &input) {
+		return
+	}
+	result, err := h.multi.DispatchReadyMultiAgent(r.Context(), engineering.ID(r.PathValue("project")), input.Requests)
+	h.respond(w, result, err)
+}
+
 func (h *HTTPHandler) respond(w http.ResponseWriter, result any, err error) {
 	if err != nil {
 		status := http.StatusUnprocessableEntity
 		switch {
 		case errors.Is(err, ErrProjectNotFound):
 			status = http.StatusNotFound
-		case errors.Is(err, ErrStageOrder), errors.Is(err, ErrImmutableStage), errors.Is(err, ErrDAGNotActive), errors.Is(err, ErrTaskNotReady):
+		case errors.Is(err, ErrStageOrder), errors.Is(err, ErrImmutableStage), errors.Is(err, ErrDAGNotActive), errors.Is(err, ErrTaskNotReady), errors.Is(err, multiagent.ErrAlreadyActive):
 			status = http.StatusConflict
-		case errors.Is(err, ErrWorkflowUnavailable):
+		case errors.Is(err, ErrWorkflowUnavailable), errors.Is(err, ErrMultiAgentUnavailable), errors.Is(err, multiagent.ErrRoleExecutionUnavailable):
 			status = http.StatusServiceUnavailable
 		case errors.Is(err, context.Canceled):
 			status = http.StatusRequestTimeout

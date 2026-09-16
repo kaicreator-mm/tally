@@ -11,6 +11,7 @@ import (
 	"tally/internal/agentruntime"
 	"tally/internal/closedloop"
 	"tally/internal/controlplane"
+	"tally/internal/multiagent"
 	"tally/internal/store"
 	"tally/internal/taskexecution"
 	"tally/runtimes/codex"
@@ -64,11 +65,13 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
+		worktreeRoot := envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees"))
+		envName := envOr("TALLY_V15_ENV", "server-local")
 		harness, harnessErr := controlplane.NewBrownfieldHarness(controlplane.BrownfieldHarnessConfig{
 			Repo:         contentRepo,
-			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
+			WorktreeRoot: worktreeRoot,
 			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
-			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			EnvName:      envName,
 			Runtime:      runtime.Descriptor(),
 			Executor:     executor,
 			Queries:      queries,
@@ -81,6 +84,35 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if err != nil {
 			return nil, "", err
 		}
+
+		// v1.5.4 composes above the same frozen AgentExecutor used by the
+		// Engineering Harness, behind the evidence-producing role executor:
+		// Implementer/Repairer runs freeze an immutable ChangeSet and
+		// Reviewer/Verifier evidence comes from the existing candidateverify
+		// authority, never from AgentRunResult.Summary. This deliberately does
+		// not introduce a second runtime stack or worker queue:
+		// Local/Codex/DSH execution remains owned by taskexecution.RuntimeExecutor.
+		maxConcurrency, parseErr := v15MultiAgentMaxConcurrencyFromEnv()
+		if parseErr != nil {
+			return nil, "", parseErr
+		}
+		roleExecutor, roleErr := multiagent.NewVerifiedRoleExecutor(multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: worktreeRoot,
+			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
+			EnvName:      envName,
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if roleErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build evidence-producing role executor: %w", roleErr)
+		}
+		multiAgentEngine, engineErr := multiagent.NewEngine(roleExecutor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		if engineErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
+		}
+		service.MultiAgent = multiAgentEngine
 	}
 
 	handler, err := controlplane.NewHTTPHandler(service)
@@ -101,6 +133,21 @@ func v15MaxRepairFromEnv() (int, error) {
 	}
 	if _, err := closedloop.NewRepairPolicy(n); err != nil {
 		return 0, fmt.Errorf("v1.5 control plane: invalid TALLY_V15_MAX_REPAIR: %w", err)
+	}
+	return n, nil
+}
+
+func v15MultiAgentMaxConcurrencyFromEnv() (int, error) {
+	raw := strings.TrimSpace(os.Getenv("TALLY_V15_MULTI_AGENT_MAX_CONCURRENCY"))
+	if raw == "" {
+		return 2, nil
+	}
+	n, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("v1.5 control plane: TALLY_V15_MULTI_AGENT_MAX_CONCURRENCY must be an integer: %w", err)
+	}
+	if n < 1 {
+		return 0, fmt.Errorf("v1.5 control plane: TALLY_V15_MULTI_AGENT_MAX_CONCURRENCY must be >= 1")
 	}
 	return n, nil
 }

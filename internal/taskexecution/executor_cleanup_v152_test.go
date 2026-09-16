@@ -42,7 +42,9 @@ func TestV152NonLocalSessionCleanupFailureIsTyped(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = ex.Execute(context.Background(), v152RemoteReq())
+	remoteReq := v152RemoteReq()
+	remoteReq.Runtime.ID = "close-fail"
+	_, err = ex.Execute(context.Background(), remoteReq)
 	var typed *EnvironmentError
 	if !errors.As(err, &typed) || typed.Kind != FailureCleanup {
 		t.Fatalf("err=%T %v", err, err)
@@ -54,6 +56,7 @@ func TestV152NonLocalSessionCleanupFailureIsTyped(t *testing.T) {
 
 func TestV152LocalSessionCloseCompatibilityStillIgnoresCloseError(t *testing.T) {
 	req := req()
+	req.Runtime.ID = "close-fail"
 	ex, err := NewRuntimeExecutor(&v152CloseFailRuntime{}, LocalEnvironment{})
 	if err != nil {
 		t.Fatal(err)
