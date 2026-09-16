@@ -373,7 +373,7 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 	if err := s.save(ctx, &snap); err != nil {
 		return DispatchResult{}, err
 	}
-	accepted, finishErr := s.finishAccepted(ctx, projectID, taskID, result.CandidateExecution, &wf, "multiagent")
+	accepted, finishErr := s.finishAcceptedLocked(ctx, projectID, taskID, result.CandidateExecution, &wf, "multiagent")
 	accepted.Collaboration = &result.State
 	if finishErr != nil {
 		return accepted, finishErr

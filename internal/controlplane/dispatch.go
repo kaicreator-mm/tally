@@ -230,6 +230,12 @@ func (s *Service) persistBlocked(ctx context.Context, projectID, taskID engineer
 func (s *Service) finishAccepted(ctx context.Context, projectID, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, source string) (DispatchResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.finishAcceptedLocked(ctx, projectID, taskID, execution, wf, source)
+}
+
+// finishAcceptedLocked is the lock-held variant for callers that already
+// serialize on s.mu (the v1.5.4 multi-agent finalize path).
+func (s *Service) finishAcceptedLocked(ctx context.Context, projectID, taskID engineering.ID, execution taskexecution.TaskExecutionResult, wf *TaskWorkflowResult, source string) (DispatchResult, error) {
 
 	persistCtx := context.WithoutCancel(ctx)
 	snap, err := s.loadRunningForCommit(persistCtx, projectID, taskID)
