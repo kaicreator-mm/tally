@@ -57,6 +57,11 @@ type Server struct {
 	// 运行时策略装载永远走 pinned Git 快照(artifacts.LoadPolicies),本存储
 	// 不是运行时权威(DL-09/BI-01)。
 	Governance *policygovernance.Store
+
+	// ControlPlane 标记外层路由器是否真实挂载了 v1.5 工程控制台处理器
+	// (web.Deps.ControlPlane != nil)。导航条目只在已挂载时渲染,
+	// 未挂载时不出现占位入口。
+	ControlPlane bool
 }
 
 // New 构建 Server。
@@ -175,15 +180,20 @@ type Page struct {
 	Active string // 导航高亮键:index/projects/requirements/tasks/docs/wiki
 	CSRF   string
 	Flash  Flash
+	// ControlPlane 为 true 时导航渲染 v1.5 工程控制台条目;仅当外层路由器
+	// 真实挂载了 ControlPlane 处理器(/v15/control-plane 可达)时才为 true,
+	// 导航绝不指向未启用的占位路由。
+	ControlPlane bool
 }
 
 // page 组装公共页面数据(含从 context 取 CSRF、从 query 取 flash)。
 func (s *Server) page(r *http.Request, title, active string) Page {
 	return Page{
-		Title:  title,
-		Active: active,
-		CSRF:   CSRFToken(r.Context()),
-		Flash:  flashFromQuery(r),
+		Title:        title,
+		Active:       active,
+		CSRF:         CSRFToken(r.Context()),
+		Flash:        flashFromQuery(r),
+		ControlPlane: s.ControlPlane,
 	}
 }
 

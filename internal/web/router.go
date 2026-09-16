@@ -90,6 +90,7 @@ func NewRouter(deps Deps) chi.Router {
 	srv.Exec = deps.Exec   // 执行数据只读来源;nil 时各页落空状态
 	srv.Knowledge = deps.Knowledge
 	srv.Trace = deps.Trace
+	srv.ControlPlane = deps.ControlPlane != nil // 导航条目只在控制台真实挂载时渲染
 	r.Group(func(r chi.Router) {
 		r.Use(deps.requireAuth)
 		r.Use(csrfMiddleware)
