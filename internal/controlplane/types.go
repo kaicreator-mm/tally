@@ -38,6 +38,8 @@ type ProjectSnapshot struct {
 	Contracts          map[engineering.ID]engineering.CompletionContract `json:"completion_contracts,omitempty"`
 	AuthorityDecisions []AuthorityRecord                                 `json:"authority_decisions,omitempty"`
 	ReplanHistory      []replan.ActivationRecord                         `json:"replan_history,omitempty"`
+	GitActions         engineering.GitActionLog                          `json:"git_actions"`
+	CompletionFacts    map[engineering.ID]engineering.CompletionFacts    `json:"completion_facts,omitempty"`
 	Audit              engineering.AuditLog                              `json:"audit"`
 	UpdatedAt          time.Time                                         `json:"updated_at"`
 }
@@ -154,6 +156,22 @@ func validateSnapshot(s ProjectSnapshot) error {
 		// history is valid if the task exists in either current or retained DAG history.
 		if !snapshotHasTask(s, d.NodeID) {
 			return fmt.Errorf("controlplane: authority decision references unknown task %s", d.NodeID)
+		}
+	}
+	for i, r := range s.GitActions.Records {
+		if err := r.Validate(); err != nil {
+			return fmt.Errorf("controlplane: invalid git action record[%d]: %w", i, err)
+		}
+		if r.Trace.ProjectID != s.ProjectID {
+			return fmt.Errorf("controlplane: git action record[%d] references project %s, expected %s", i, r.Trace.ProjectID, s.ProjectID)
+		}
+		if !snapshotHasTask(s, r.Trace.TaskNodeID) {
+			return fmt.Errorf("controlplane: git action record[%d] references unknown task %s", i, r.Trace.TaskNodeID)
+		}
+	}
+	for taskID := range s.CompletionFacts {
+		if !snapshotHasTask(s, taskID) {
+			return fmt.Errorf("controlplane: completion facts reference unknown task %s", taskID)
 		}
 	}
 	for _, r := range s.Audit.Records {
