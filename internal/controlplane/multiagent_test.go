@@ -21,6 +21,37 @@ type v154RoleExecutor struct {
 	maxActive        int
 	delay            time.Duration
 	reviewerEvidence bool
+	rendezvous       *v154Rendezvous
+}
+
+// v154Rendezvous releases every waiting party once exactly n parties have
+// arrived. It makes the parallel-overlap assertion deterministic: both
+// implementer role executions must be in flight at the same time, with no
+// sleep window that a loaded host can miss.
+type v154Rendezvous struct {
+	arrive chan struct{}
+	open   chan struct{}
+}
+
+func newV154Rendezvous(n int) *v154Rendezvous {
+	r := &v154Rendezvous{arrive: make(chan struct{}, n), open: make(chan struct{})}
+	go func() {
+		for i := 0; i < n; i++ {
+			<-r.arrive
+		}
+		close(r.open)
+	}()
+	return r
+}
+
+func (r *v154Rendezvous) wait(ctx context.Context) bool {
+	r.arrive <- struct{}{}
+	select {
+	case <-r.open:
+		return true
+	case <-ctx.Done():
+		return false
+	}
 }
 
 func (x *v154RoleExecutor) Execute(ctx context.Context, req taskexecution.TaskExecutionRequest) (taskexecution.TaskExecutionResult, error) {
@@ -37,6 +68,11 @@ func (x *v154RoleExecutor) Execute(ctx context.Context, req taskexecution.TaskEx
 		x.active--
 		x.mu.Unlock()
 	}()
+	if x.rendezvous != nil && strings.Contains(req.Instruction, "role: IMPLEMENTER") {
+		if !x.rendezvous.wait(ctx) {
+			return taskexecution.TaskExecutionResult{Runtime: req.Runtime, Environment: req.Environment, Workspace: req.Workspace, Status: taskexecution.ExecutionInterrupted}, nil
+		}
+	}
 	if x.delay > 0 {
 		select {
 		case <-time.After(x.delay):
@@ -170,7 +206,7 @@ func TestMultiAgentReviewerClaimWithoutEvidenceCannotAdvance(t *testing.T) {
 }
 
 func TestMultiAgentBatchRunsTwoReadyNonConflictingTasksInParallel(t *testing.T) {
-	exec := &v154RoleExecutor{reviewerEvidence: true, delay: 15 * time.Millisecond}
+	exec := &v154RoleExecutor{reviewerEvidence: true, rendezvous: newV154Rendezvous(2)}
 	s, _ := newV154Service(t, exec, 2)
 	bootstrapV154Parallel(t, s)
 
@@ -178,7 +214,9 @@ func TestMultiAgentBatchRunsTwoReadyNonConflictingTasksInParallel(t *testing.T) 
 	a.Workspace.Identity, a.Workspace.Path = "ws-A", "/tmp/ws-A"
 	b := request("B")
 	b.Workspace.Identity, b.Workspace.Path = "ws-B", "/tmp/ws-B"
-	res, err := s.DispatchReadyMultiAgent(context.Background(), "project-1", map[engineering.ID]taskexecution.TaskExecutionRequest{"A": a, "B": b})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	res, err := s.DispatchReadyMultiAgent(ctx, "project-1", map[engineering.ID]taskexecution.TaskExecutionRequest{"A": a, "B": b})
 	if err != nil {
 		t.Fatal(err)
 	}
