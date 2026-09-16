@@ -55,24 +55,59 @@ func TestAIProposalCannotSelfPromote(t *testing.T) {
 	}
 }
 
-func TestAuthorizedPromotionReusesPolicyGovernance(t *testing.T) {
+func TestAuthorizedPromotionPreparesProposedPolicyGovernanceHandoff(t *testing.T) {
 	now := time.Date(2026, 9, 15, 10, 0, 0, 0, time.UTC)
 	provider := &intelligence.ProviderProvenance{Kind: intelligence.ProviderAIRuntime, ProviderID: "ai-runtime", OperationID: "op-2", ObservedAt: now}
 	p := mustProposal(t, provider, []Conflict{{RuleID: "POL-OLD", Reason: "reviewed", Resolved: true}})
 	requirement := p.AuthorityRequirement()
 	human := engineering.AuthorityDecision{RequirementID: requirement.ID, Status: engineering.AuthorityAuthorized, Actor: "human-owner", At: now}
-	active, err := Promote(p, []engineering.AuthorityDecision{human}, "human-owner")
+	proposed, err := Promote(p, []engineering.AuthorityDecision{human}, "human-owner")
 	if err != nil {
 		t.Fatalf("Promote: %v", err)
 	}
-	if active.Status != policygovernance.StatusActive || active.ApprovedBy != "human-owner" {
-		t.Fatalf("unexpected governance state: status=%s approved=%s", active.Status, active.ApprovedBy)
+	// Learning must never fabricate ACTIVE. Only policygovernance.Store.Activate
+	// may cross the Git-backed runtime activation boundary.
+	if proposed.Status != policygovernance.StatusProposed || proposed.ApprovedBy != "" {
+		t.Fatalf("promotion must hand off PROPOSED, got status=%s approved=%q", proposed.Status, proposed.ApprovedBy)
 	}
-	if active.Candidate.Revision() != p.Candidate.Revision() {
+	if proposed.Candidate.Revision() != p.Candidate.Revision() {
 		t.Fatal("promotion changed canonical candidate")
 	}
-	if len(active.Evidence) != len(p.Evidence) {
+	if len(proposed.Evidence) != len(p.Evidence) {
 		t.Fatal("promotion lost evidence")
+	}
+	if proposed.Scope != p.ApplicableScope {
+		t.Fatalf("promotion lost scope: got %q want %q", proposed.Scope, p.ApplicableScope)
+	}
+
+	event, err := PromotionEvent(proposed, now)
+	if err != nil {
+		t.Fatalf("PromotionEvent: %v", err)
+	}
+	if event.Kind != policygovernance.EventSubmit || event.ApprovedBy != "" {
+		t.Fatalf("learning handoff must persist submit, not activate: kind=%s approved=%q", event.Kind, event.ApprovedBy)
+	}
+	if event.ProposalID != proposed.ID || event.CandidateRevision != proposed.Candidate.Revision() || event.Scope != proposed.Scope || len(event.Evidence) != len(proposed.Evidence) {
+		t.Fatalf("promotion event lost governance facts: %+v", event)
+	}
+}
+
+func TestPromotionEventRejectsPrematureActiveValue(t *testing.T) {
+	now := time.Date(2026, 9, 15, 10, 0, 0, 0, time.UTC)
+	provider := &intelligence.ProviderProvenance{Kind: intelligence.ProviderAIRuntime, ProviderID: "ai-runtime", OperationID: "op-2", ObservedAt: now}
+	p := mustProposal(t, provider, nil)
+	requirement := p.AuthorityRequirement()
+	human := engineering.AuthorityDecision{RequirementID: requirement.ID, Status: engineering.AuthorityAuthorized, Actor: "human-owner", At: now}
+	proposed, err := Promote(p, []engineering.AuthorityDecision{human}, "human-owner")
+	if err != nil {
+		t.Fatal(err)
+	}
+	active, err := proposed.Activate("human-owner")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := PromotionEvent(active, now); !errors.Is(err, ErrInvalidProposal) {
+		t.Fatalf("premature ACTIVE must not be accepted as persistence handoff, got %v", err)
 	}
 }
 

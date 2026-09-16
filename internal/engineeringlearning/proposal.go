@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"tally/internal/engineering"
 	"tally/internal/intelligence"
@@ -155,10 +156,12 @@ func (p Proposal) ValidateForPromotion() error {
 	return nil
 }
 
-// Promote crosses the Engineering Learning governance boundary into the
-// existing policygovernance lifecycle. It does not modify runtime policy
-// authority; the returned ACTIVE governance proposal still requires the
-// existing Git-backed activation path to become a pinned runtime policy.
+// Promote crosses the Engineering Learning boundary only as far as a validated
+// policy-governance PROPOSED value. It intentionally does NOT call
+// policygovernance.Proposal.Activate: runtime activation is exclusively owned by
+// policygovernance.Store.Activate, which reconstructs the persisted PROPOSED
+// history, performs the Git CAS commit, reloads the exact pinned policy snapshot
+// and only then records the activate event.
 func Promote(p Proposal, decisions []engineering.AuthorityDecision, actor string) (policygovernance.Proposal, error) {
 	if err := p.ValidateForPromotion(); err != nil {
 		return policygovernance.Proposal{}, err
@@ -200,9 +203,32 @@ func Promote(p Proposal, decisions []engineering.AuthorityDecision, actor string
 	// defined by the canonical candidate itself, exactly as policygovernance
 	// specifies.
 	governance.Scope = p.ApplicableScope
-	active, err := governance.Activate(actor)
-	if err != nil {
-		return policygovernance.Proposal{}, err
+	return governance, nil
+}
+
+// PromotionEvent converts an authority-approved Learning handoff into the
+// existing append-only policy-governance event shape. The event is PROPOSED
+// (submit), never activate; after it is appended, policygovernance.Store.Activate
+// remains the only path that can make the rule runtime-observable through Git.
+func PromotionEvent(proposal policygovernance.Proposal, occurredAt time.Time) (policygovernance.Event, error) {
+	if proposal.Status != policygovernance.StatusProposed {
+		return policygovernance.Event{}, fmt.Errorf("%w: governance proposal must be PROPOSED before persistence", ErrInvalidProposal)
 	}
-	return active, nil
+	if occurredAt.IsZero() {
+		return policygovernance.Event{}, fmt.Errorf("%w: promotion event time is required", ErrInvalidProposal)
+	}
+	if proposal.Candidate.Revision() == "" || len(proposal.Evidence) == 0 || strings.TrimSpace(proposal.ProposedBy) == "" {
+		return policygovernance.Event{}, fmt.Errorf("%w: incomplete governance proposal", ErrInvalidProposal)
+	}
+	return policygovernance.Event{
+		ProposalID:        proposal.ID,
+		Kind:              policygovernance.EventSubmit,
+		CandidateRevision: proposal.Candidate.Revision(),
+		CandidateYAML:     string(proposal.Candidate.Raw()),
+		Evidence:          append([]policygovernance.EvidenceRef(nil), proposal.Evidence...),
+		ProposedBy:        proposal.ProposedBy,
+		Supersedes:        proposal.Supersedes,
+		Scope:             proposal.Scope,
+		OccurredAt:        occurredAt.UTC(),
+	}, nil
 }

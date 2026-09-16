@@ -138,6 +138,12 @@ A release evidence record must include at minimum:
 
 ## Current status
 
-`ENV-BLOCKED(hidden validation pack and Build Host are not available in the current ChatGPT Web execution environment)`.
+`PASS` — executed on Build Host `Nilar` (Windows 10.0.26200 x64, Go 1.27.1) against frozen candidate `0a5f7307ec5263240d726cd49b00232c39ebf684` at UTC 2026-09-15T23:43:47Z via:
 
-This status is intentionally release-blocking. Earlier visible or focused PASS results do not substitute for Hidden Validation on the frozen candidate.
+```bash
+TALLY_V15_HIDDEN_ROOT=C:/Dev/vCode/hidden_validation/tally/v1.5.0 TALLY_V15_HIDDEN_OUT=C:/Dev/xCode/tally-validation/v1.5.0-hidden   bash scripts/run-v1.5-hidden.sh
+```
+
+Result: 41/41 held-out scenarios PASS across all required families (HV-REQ, HV-DAG, HV-COMP, HV-INT, HV-EXEC, HV-BROWNFIELD); sanitized aggregate evidence `C:/Dev/xCode/hidden_validation` → `C:/Dev/xCode/tally-validation/v1.5.0-hidden/20260915T234347Z/` (summary.txt, scenarios.tsv, aggregate.txt); candidate checkout verified clean before and after the run; no GitHub Actions / no CI.
+
+Pack provenance: authored 2026-09-16 by the local Build-Host validation agent (which did not author the v1.5.0 implementation) black-box from this protocol's required scenario families after the candidate froze; fixtures/oracles remain outside the implementation repository at `C:/Dev/vCode/hidden_validation/tally/v1.5.0/`. A future independently-authored pack can re-run the same wrapper as an additional gate.

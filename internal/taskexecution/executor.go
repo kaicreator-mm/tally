@@ -10,12 +10,19 @@ import (
 
 	"tally/internal/agentruntime"
 	"tally/internal/engineering"
+	"tally/internal/runner"
 )
 
 var (
-	ErrExecutionNotRunning    = errors.New("taskexecution: task is not running")
-	ErrRuntimeRefMismatch     = errors.New("taskexecution: requested runtime does not match executor runtime")
+	ErrExecutionNotRunning = errors.New("taskexecution: task is not running")
+	ErrRuntimeRefMismatch  = errors.New("taskexecution: requested runtime does not match executor runtime")
 )
+
+// EnvironmentRuntime is an additive v1.5.2 extension. A runtime that can be
+// launched outside Local accepts a generic Runner rather than SSH/Docker types.
+type EnvironmentRuntime interface {
+	StartInEnvironment(context.Context, agentruntime.StartRequest, runner.Runner) (agentruntime.Session, error)
+}
 
 type RuntimeExecutor struct {
 	Runtime     agentruntime.Runtime
@@ -47,13 +54,22 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	if e.Environment.Kind() != req.Environment.Kind {
 		return TaskExecutionResult{}, ErrUnsupportedEnvironment
 	}
-	if err := checkEnvironmentCapabilities(e.Environment, req.RequiredCapabilities.Environment); err != nil {
+	if err := e.preflightEnvironment(ctx, req.Environment.Target); err != nil {
+		return TaskExecutionResult{}, err
+	}
+	// Environment capabilities, including discovered OS/architecture/toolchain,
+	// are validated before workspace resolution and before Agent start.
+	if err := checkEnvironmentCapabilities(ctx, e.Environment, req.RequiredCapabilities.Environment); err != nil {
 		return TaskExecutionResult{}, err
 	}
 	if _, err := agentruntime.Negotiate(descriptor.Capabilities, req.RequiredCapabilities.Runtime); err != nil {
 		return TaskExecutionResult{}, err
 	}
 	resolved, err := e.Environment.Resolve(ctx, req.Workspace)
+	if err != nil {
+		return TaskExecutionResult{}, err
+	}
+	workspace, err := resolved.RuntimeLocation(req.Environment.Kind)
 	if err != nil {
 		return TaskExecutionResult{}, err
 	}
@@ -69,17 +85,17 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 	e.mu.Unlock()
 	defer func() { cancel(); e.mu.Lock(); delete(e.active, req.TaskID); e.mu.Unlock() }()
 
-	start := agentruntime.StartRequest{Workspace: resolved.LocalPath, ModelProfile: req.Policy.ModelProfile, ResumeOf: req.Policy.ResumeSession}
+	start := agentruntime.StartRequest{Workspace: workspace, ModelProfile: req.Policy.ModelProfile, ResumeOf: req.Policy.ResumeSession}
 	if start.ResumeOf != "" && !descriptor.Capabilities.Has(agentruntime.CapSessionResume) {
 		if !req.Policy.FallbackToFresh {
 			return TaskExecutionResult{}, &agentruntime.CapabilityError{Missing: []agentruntime.Capability{agentruntime.CapSessionResume}}
 		}
 		start.ResumeOf = ""
 	}
-	session, err := e.Runtime.Start(runCtx, start)
+	session, err := e.startSession(runCtx, start)
 	if err != nil && req.Policy.ResumeSession != "" && req.Policy.FallbackToFresh {
 		start.ResumeOf = ""
-		session, err = e.Runtime.Start(runCtx, start)
+		session, err = e.startSession(runCtx, start)
 	}
 	if err != nil {
 		if runCtx.Err() != nil {
@@ -87,15 +103,26 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		}
 		return TaskExecutionResult{}, err
 	}
-	defer closeSession(session)
 
-	claim, err := session.Execute(runCtx, agentruntime.ExecuteRequest{Instruction: req.Instruction})
-	if err != nil {
+	claim, execErr := session.Execute(runCtx, agentruntime.ExecuteRequest{Instruction: req.Instruction})
+	closeErr := closeSession(session)
+	if execErr != nil {
+		if closeErr != nil && e.Environment.Kind() != EnvironmentLocal {
+			cleanupErr := e.sessionCleanupError(req, closeErr)
+			if runCtx.Err() != nil {
+				return interruptedResult(req), cleanupErr
+			}
+			return TaskExecutionResult{}, errors.Join(execErr, cleanupErr)
+		}
 		if runCtx.Err() != nil {
 			return interruptedResult(req), nil
 		}
-		return TaskExecutionResult{}, err
+		return TaskExecutionResult{}, execErr
 	}
+	if closeErr != nil && e.Environment.Kind() != EnvironmentLocal {
+		return TaskExecutionResult{}, e.sessionCleanupError(req, closeErr)
+	}
+
 	status := ExecutionCompleted
 	if claim.Status == agentruntime.RunFailed {
 		status = ExecutionFailed
@@ -104,6 +131,53 @@ func (e *RuntimeExecutor) Execute(ctx context.Context, req TaskExecutionRequest)
 		status = ExecutionInterrupted
 	}
 	return TaskExecutionResult{AgentClaim: claim, Workspace: req.Workspace, Runtime: req.Runtime, Environment: req.Environment, Status: status}, nil
+}
+
+// preflightEnvironment distinguishes transport/placement unavailability from
+// capability mismatch. A selected SSH/Docker environment must be able to run a
+// trivial POSIX command before discovery, workspace recovery or Agent start.
+// Local skips this additive v1.5.2 probe to preserve the frozen Local path.
+func (e *RuntimeExecutor) preflightEnvironment(ctx context.Context, target string) error {
+	if e.Environment.Kind() == EnvironmentLocal {
+		return nil
+	}
+	processEnv, ok := e.Environment.(ProcessExecutionEnvironment)
+	if !ok || processEnv.ProcessRunner() == nil {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: errors.New("environment does not expose a process runner")}
+	}
+	res, err := processEnv.ProcessRunner().Run(ctx, runner.Command{Argv: []string{"true"}})
+	if err != nil {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: err}
+	}
+	if res.ExitCode != 0 {
+		return &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Target: target, Operation: "environment.preflight", Err: fmt.Errorf("availability probe exited %d: %s", res.ExitCode, res.Stderr)}
+	}
+	return nil
+}
+
+func (e *RuntimeExecutor) sessionCleanupError(req TaskExecutionRequest, err error) error {
+	return &EnvironmentError{
+		Kind:        FailureCleanup,
+		Environment: e.Environment.Kind(),
+		Target:      req.Environment.Target,
+		Operation:   "runtime.session.close",
+		Err:         err,
+	}
+}
+
+func (e *RuntimeExecutor) startSession(ctx context.Context, start agentruntime.StartRequest) (agentruntime.Session, error) {
+	if e.Environment.Kind() == EnvironmentLocal {
+		return e.Runtime.Start(ctx, start)
+	}
+	processEnv, ok := e.Environment.(ProcessExecutionEnvironment)
+	if !ok || processEnv.ProcessRunner() == nil {
+		return nil, &EnvironmentError{Kind: FailureEnvironmentUnavailable, Environment: e.Environment.Kind(), Operation: "runtime.bind", Err: errors.New("environment does not expose a process runner")}
+	}
+	bound, ok := e.Runtime.(EnvironmentRuntime)
+	if !ok {
+		return nil, &EnvironmentError{Kind: FailureProcess, Environment: e.Environment.Kind(), Operation: "runtime.bind", Err: errors.New("runtime does not support non-local environment binding")}
+	}
+	return bound.StartInEnvironment(ctx, start, processEnv.ProcessRunner())
 }
 
 func (e *RuntimeExecutor) Cancel(id engineering.ID) error {
@@ -119,10 +193,10 @@ func (e *RuntimeExecutor) Cancel(id engineering.ID) error {
 
 const sessionCloseTimeout = 5 * time.Second
 
-func closeSession(session agentruntime.Session) {
+func closeSession(session agentruntime.Session) error {
 	ctx, cancel := context.WithTimeout(context.Background(), sessionCloseTimeout)
 	defer cancel()
-	_ = session.Close(ctx)
+	return session.Close(ctx)
 }
 
 func interruptedResult(req TaskExecutionRequest) TaskExecutionResult {

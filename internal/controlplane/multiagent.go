@@ -313,8 +313,7 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 		}
 		snap.MultiAgentWorkflows[taskID] = result.State
 	}
-	contract, ok := snap.Contracts[taskID]
-	if !ok {
+	if _, ok := snap.Contracts[taskID]; !ok {
 		return DispatchResult{}, fmt.Errorf("controlplane: task %s has no CompletionContract", taskID)
 	}
 	wf := TaskWorkflowResult{Accepted: result.Verified, Reason: result.Reason, Facts: result.Facts}
@@ -369,7 +368,12 @@ func (s *Service) finalizeMultiAgent(ctx context.Context, projectID, taskID engi
 		return base, runErr
 	}
 
-	accepted, finishErr := s.finishAccepted(ctx, taskID, result.CandidateExecution, &wf, contract, snap, "multiagent")
+	// finishAccepted reloads the authoritative snapshot, so the terminal
+	// collaboration state must be durable before the shared completion path runs.
+	if err := s.save(ctx, &snap); err != nil {
+		return DispatchResult{}, err
+	}
+	accepted, finishErr := s.finishAccepted(ctx, projectID, taskID, result.CandidateExecution, &wf, "multiagent")
 	accepted.Collaboration = &result.State
 	if finishErr != nil {
 		return accepted, finishErr

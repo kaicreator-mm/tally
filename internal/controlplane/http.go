@@ -63,6 +63,10 @@ func NewHTTPHandler(service ControlPlane) (http.Handler, error) {
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/plan", h.plan)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/architecture", h.architecture)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/task-dag", h.taskDAG)
+	// v1.5.5 bounded integration: the HTTP surface delegates to the exact same
+	// governed service method used by non-HTTP callers. It does not expose a
+	// generic workflow/BPM mutation endpoint.
+	h.mux.HandleFunc("POST /api/v15/projects/{project}/replan", h.activateReplan)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/authority", h.authority)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/restart", h.restart)
 	h.mux.HandleFunc("POST /api/v15/projects/{project}/tasks/{task}/dispatch", h.dispatch)

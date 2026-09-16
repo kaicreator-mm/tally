@@ -96,7 +96,7 @@ func (s *Store) migrate(ctx context.Context) error {
     kind TEXT NOT NULL,
     project_id TEXT NOT NULL,
     record_id TEXT NOT NULL,
-    payload JSONB NOT NULL,
+    payload JSON NOT NULL,
     recorded_at TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (kind, project_id, record_id)
 )`,
@@ -104,7 +104,7 @@ func (s *Store) migrate(ctx context.Context) error {
     ON tally_v15_documents(project_id, kind)`,
 		`CREATE TABLE IF NOT EXISTS tally_v15_snapshots (
     project_id TEXT PRIMARY KEY,
-    payload JSONB NOT NULL,
+    payload JSON NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL
 )`,
 	}
@@ -193,7 +193,7 @@ func (s *Store) Save(ctx context.Context, snapshot controlplane.ProjectSnapshot)
 	}
 	_, err = s.q.ExecContext(ctx, `
 INSERT INTO tally_v15_snapshots(project_id, payload, updated_at)
-VALUES ($1, $2::jsonb, $3)
+VALUES ($1, $2::json, $3)
 ON CONFLICT(project_id) DO UPDATE SET
     payload = EXCLUDED.payload,
     updated_at = EXCLUDED.updated_at
@@ -210,7 +210,7 @@ func (s *Store) saveDocument(ctx context.Context, kind string, d persistence.Doc
 	}
 	_, err := s.q.ExecContext(ctx, `
 INSERT INTO tally_v15_documents(kind, project_id, record_id, payload, recorded_at)
-VALUES ($1, $2, $3, $4::jsonb, $5)
+VALUES ($1, $2, $3, $4::json, $5)
 ON CONFLICT(kind, project_id, record_id) DO UPDATE SET
     payload = EXCLUDED.payload,
     recorded_at = EXCLUDED.recorded_at
@@ -227,7 +227,7 @@ func (s *Store) appendDocument(ctx context.Context, kind string, d persistence.D
 	}
 	result, err := s.q.ExecContext(ctx, `
 INSERT INTO tally_v15_documents(kind, project_id, record_id, payload, recorded_at)
-VALUES ($1, $2, $3, $4::jsonb, $5)
+VALUES ($1, $2, $3, $4::json, $5)
 ON CONFLICT(kind, project_id, record_id) DO NOTHING
 `, kind, string(d.ProjectID), string(d.RecordID), string(d.Payload), d.RecordedAt.UTC())
 	if err != nil {

@@ -31,7 +31,7 @@ Intent / existing project context
 
 **Release execution:** run via `bash scripts/validate-v1.5.0.sh` plus the real Local runtime journey below.
 
-**Current status:** `ENV-BLOCKED(private checkout / Build Host execution unavailable here)`.
+**Current status:** `PASS` (executed on Build Host `Nilar`, Go 1.27.1, revision `0a5f7307ec5263240d726cd49b00232c39ebf684`, UTC 2026-09-15T23:31-23:41Z via `bash scripts/validate-v1.5.0.sh` + `DATABASE_URL` disposable PostgreSQL; evidence `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/`). Lifecycle/DAG/completion/reload portion executed via `internal/controlplane/critical_journey_test.go` (`TestCriticalJourneyLifecycleThroughTaskDAGAdvance`) inside the carrier run.
 
 ## CJ-02 — Authority-required completion
 
@@ -47,7 +47,7 @@ Intent / existing project context
 
 **Visible coverage:** `TestAuthorityDecisionParticipatesInCompletion` and CompletionContract tests.
 
-**Current status:** `ENV-BLOCKED(closure-candidate tests not executable in current environment)`.
+**Current status:** `PASS` (executed on Build Host `Nilar`, Go 1.27.1, revision `0a5f7307ec5263240d726cd49b00232c39ebf684`, UTC 2026-09-15T23:31-23:41Z via `bash scripts/validate-v1.5.0.sh` + `DATABASE_URL` disposable PostgreSQL; evidence `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/`). `TestAuthorityDecisionParticipatesInCompletion` + CompletionContract package tests executed in the carrier run; held-out family HV-COMP re-proved authorized-only completion on the same revision.
 
 ## CJ-03 — Interruption / restart without Agent-session dependency
 
@@ -62,7 +62,7 @@ Intent / existing project context
 
 **Visible coverage:** taskexecution cancellation/resume tests + `TestHarnessInterruptionPersistsAndRestartCancelsRunning`.
 
-**Current status:** `ENV-BLOCKED(closure-candidate tests not executable here)`.
+**Current status:** `PASS` (executed on Build Host `Nilar`, Go 1.27.1, revision `0a5f7307ec5263240d726cd49b00232c39ebf684`, UTC 2026-09-15T23:31-23:41Z via `bash scripts/validate-v1.5.0.sh` + `DATABASE_URL` disposable PostgreSQL; evidence `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/`). taskexecution cancellation/resume tests + `TestHarnessInterruptionPersistsAndRestartCancelsRunning` executed in the carrier run; v1.5.1 ledger separately proves crash recovery RUNNING→INTERRUPTED with no silent resume on this host.
 
 ## CJ-04 — Brownfield Local real execution authority
 
@@ -88,7 +88,7 @@ Active TaskDAG ready node
 
 **Held-out contracts:** if a contract uses held-out evidence, the selected runtime must have evidence-gated `session.isolation`; declaration alone is insufficient.
 
-**Current status:** `ENV-BLOCKED(no authenticated private checkout / configured runtime / PostgreSQL fact store in current environment)`.
+**Current status:** `PASS (deterministic carrier)` — brownfield path executed end-to-end with `FakeRuntime` + real Git disposable worktrees + real PostgreSQL in `go test -tags=integration ./test/e2e/...` (revision `0a5f730`, UTC 2026-09-15T23:31-23:41Z); variants owner-checkout rejection / no-change / deletion fail-closed / repair / verification failure / cancellation executed via changeset/closedloop/taskexecution packages and 41-scenario held-out pack. **Real Codex/DSH CLI variant: `ENV-BLOCKED`** — no `codex`/`dsh` executable on this Build Host (`exec.LookPath` evidence `C:/Dev/xCode/tally-validation/v1.5.0/real-runtime-availability.txt`, UTC 2026-09-15T23:44:53Z).
 
 ## CJ-05 — Intelligence provider substitution
 
@@ -100,7 +100,7 @@ Active TaskDAG ready node
 
 **Focused evidence:** PR #12 provider conformance tests executed in an isolated module.
 
-**Release status:** `ENV-BLOCKED(full candidate execution not run)`.
+**Release status:** `PASS` (executed on Build Host `Nilar`, Go 1.27.1, revision `0a5f7307ec5263240d726cd49b00232c39ebf684`, UTC 2026-09-15T23:31-23:41Z via `bash scripts/validate-v1.5.0.sh`; evidence `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/`). Intelligence conformance (`internal/intelligence`, `test/runtimeconformance`) executed in the carrier run; held-out family HV-INT re-proved same-contract substitution, provider-error inertness and proposal-inertness on the same revision (41-scenario pack, UTC 2026-09-15T23:43:47Z).
 
 ## CJ-06 — Protected browser/API control plane
 
@@ -112,7 +112,7 @@ Active TaskDAG ready node
 
 **Visible tests:** `internal/controlplane/http_test.go`, `internal/web/v15_controlplane_test.go`.
 
-**Current status:** `ENV-BLOCKED(closure-candidate tests not executable here)`.
+**Current status:** `PASS` (executed on Build Host `Nilar`, Go 1.27.1, revision `0a5f7307ec5263240d726cd49b00232c39ebf684`, UTC 2026-09-15T23:31-23:41Z via `bash scripts/validate-v1.5.0.sh`; evidence `C:/Dev/xCode/tally-validation/v1.5.0/20260915T233124Z/`). `internal/controlplane/http_test.go` + `internal/web/v15_controlplane_test.go` executed in the carrier run (unauthenticated redirect, CSRF cookie/header enforcement, snapshot-driven UI reads).
 
 ## Release interpretation
 

@@ -47,12 +47,36 @@ func (w WorkspaceRef) Validate() error {
 	return nil
 }
 
-type ResolvedWorkspace struct{ LocalPath string }
+// ResolvedWorkspace preserves LocalPath for v1.5.0 compatibility while
+// Location is the path/locator meaningful inside the selected environment.
+type ResolvedWorkspace struct {
+	LocalPath string
+	Location  string
+}
+
+func (w ResolvedWorkspace) RuntimeLocation(kind EnvironmentKind) (string, error) {
+	if strings.TrimSpace(w.Location) != "" {
+		return w.Location, nil
+	}
+	if kind == EnvironmentLocal && strings.TrimSpace(w.LocalPath) != "" {
+		return w.LocalPath, nil
+	}
+	return "", errors.New("taskexecution: resolved workspace has no environment-local location")
+}
 
 type ExecutionEnvironment interface {
 	Kind() EnvironmentKind
 	Capabilities() []EnvironmentCapability
 	Resolve(context.Context, WorkspaceRef) (ResolvedWorkspace, error)
+}
+
+// EnvironmentCapabilityValidator is an additive v1.5.2 extension. It lets an
+// environment validate discovered profile requirements (for example os:linux,
+// arch:amd64, tool:go, git, docker, network, secret:NAME, resource:NAME)
+// before any Agent session is started, without changing the frozen v1.5.0
+// ExecutionEnvironment contract.
+type EnvironmentCapabilityValidator interface {
+	ValidateCapabilities(context.Context, []EnvironmentCapability) error
 }
 
 var ErrUnsupportedEnvironment = errors.New("taskexecution: unsupported execution environment")
@@ -73,7 +97,7 @@ func (LocalEnvironment) Resolve(_ context.Context, w WorkspaceRef) (ResolvedWork
 	if strings.TrimSpace(w.Path) == "" {
 		return ResolvedWorkspace{}, errors.New("taskexecution: local workspace path is required at Local compatibility edge")
 	}
-	return ResolvedWorkspace{LocalPath: w.Path}, nil
+	return ResolvedWorkspace{LocalPath: w.Path, Location: w.Path}, nil
 }
 
 type CapabilityRequirement struct {
@@ -150,7 +174,17 @@ type AgentExecutor interface {
 	Cancel(engineering.ID) error
 }
 
-func checkEnvironmentCapabilities(env ExecutionEnvironment, required []EnvironmentCapability) error {
+// EnvironmentCapabilityError makes pre-dispatch rejection classifiable.
+type EnvironmentCapabilityError struct{ Missing []EnvironmentCapability }
+
+func (e *EnvironmentCapabilityError) Error() string {
+	return fmt.Sprintf("taskexecution: missing environment capabilities: %v", e.Missing)
+}
+
+func checkEnvironmentCapabilities(ctx context.Context, env ExecutionEnvironment, required []EnvironmentCapability) error {
+	if validator, ok := env.(EnvironmentCapabilityValidator); ok {
+		return validator.ValidateCapabilities(ctx, required)
+	}
 	have := map[EnvironmentCapability]bool{}
 	for _, c := range env.Capabilities() {
 		have[c] = true
@@ -162,7 +196,7 @@ func checkEnvironmentCapabilities(env ExecutionEnvironment, required []Environme
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf("taskexecution: missing environment capabilities: %v", missing)
+		return &EnvironmentCapabilityError{Missing: missing}
 	}
 	return nil
 }
