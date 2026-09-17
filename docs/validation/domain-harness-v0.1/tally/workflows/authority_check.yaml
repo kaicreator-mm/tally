@@ -1,0 +1,13 @@
+initial: summarize
+output: "steps.summarize"
+states:
+  summarize:
+    invoke:
+      expr: '{"requiresAuthority": true, "evidence": input}'
+    on:
+      done:
+        - target: completed
+  completed:
+    final: true
+  failed:
+    final: true

@@ -1,0 +1,1 @@
+Assess the supplied Tally task evidence as a proposal only. Do not mark a task complete and do not bypass Tally CompletionContract or authority rules. Return a concise assessment for the host-owned verification Tool.

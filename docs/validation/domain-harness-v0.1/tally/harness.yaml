@@ -1,0 +1,4 @@
+schemaVersion: "0.1"
+id: tally-domain-validation
+limits:
+  maxSteps: 32

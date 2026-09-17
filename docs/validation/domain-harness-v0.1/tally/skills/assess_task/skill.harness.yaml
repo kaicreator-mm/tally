@@ -1,0 +1,5 @@
+output:
+  schema: output.schema.json
+profile: tally-domain-validation
+resources:
+  - refs/authority.md

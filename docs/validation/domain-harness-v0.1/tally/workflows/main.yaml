@@ -1,0 +1,42 @@
+initial: assess_task
+output: '{"authority": steps.await_authority, "child": steps.authority_check}'
+states:
+  assess_task:
+    invoke:
+      skill: assess_task
+      input: "input"
+    on:
+      done:
+        - target: verify_contract
+  verify_contract:
+    invoke:
+      tool: tally_verify_completion_contract
+      input: "steps.assess_task"
+    on:
+      done:
+        - target: normalize
+  normalize:
+    invoke:
+      expr: '{"assessment": steps.assess_task, "verification": steps.verify_contract}'
+    on:
+      done:
+        - target: authority_check
+  authority_check:
+    invoke:
+      workflow: authority_check
+      input: "steps.normalize"
+    on:
+      done:
+        - target: await_authority
+  await_authority:
+    on:
+      approve:
+        schema: schemas/authority.schema.json
+        target: completed
+      reject:
+        schema: schemas/authority.schema.json
+        target: failed
+  completed:
+    final: true
+  failed:
+    final: true
