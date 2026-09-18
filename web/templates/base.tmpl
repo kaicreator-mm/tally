@@ -28,7 +28,7 @@
        纪律:只列真实存在且有真实读模型数据支撑的路由;没有背书的条目宁可不出现,
        绝不放占位入口。 */}}
   <div class="rail-label">研发</div>
-  <a href="/v15/control-plane" {{if eq .Active "v15-control-plane"}}aria-current="page"{{end}}>工程控制台</a>
+  {{if controlPlaneEnabled}}<a href="/v15/control-plane" {{if eq .Active "v15-control-plane"}}aria-current="page"{{end}}>工程控制台</a>{{end}}
   <a href="/v14/launch" {{if eq .Active "v14-launch"}}aria-current="page"{{end}}>发起</a>
   <a href="/v13/tasks" {{if eq .Active "v13"}}aria-current="page"{{end}}>工作</a>
   <a href="/v13/runs" {{if eq .Active "v13-runs"}}aria-current="page"{{end}}>运行</a>
