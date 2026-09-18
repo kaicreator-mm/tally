@@ -20,6 +20,18 @@ import (
 )
 
 func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Handler, string, error) {
+	service, runtimeName, err := v15ControlPlaneServiceFromEnv(contentRepo, queries)
+	if err != nil {
+		return nil, "", err
+	}
+	handler, err := controlplane.NewHTTPHandler(service)
+	if err != nil {
+		return nil, "", err
+	}
+	return handler, runtimeName, nil
+}
+
+func v15ControlPlaneServiceFromEnv(contentRepo string, queries *store.Queries) (*controlplane.Service, string, error) {
 	repo, err := controlplane.NewFileRepository(envOr("TALLY_V15_STATE_ROOT", "./tally-state/v1.5"))
 	if err != nil {
 		return nil, "", err
@@ -91,18 +103,31 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
-		multiAgentEngine, engineErr := multiagent.NewEngine(executor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		// Role execution must reuse the repository's existing verification
+		// enforcement (candidate freeze + read-only drift guard + candidateverify
+		// authority) instead of raw role execution. The verified executor wraps
+		// the same shared executor; ordinary implementation/repair execution is
+		// delegated unchanged.
+		verifiedExecutor, verifiedErr := multiagent.NewVerifiedRoleExecutor(multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
+			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
+			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if verifiedErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build verified role executor: %w", verifiedErr)
+		}
+		multiAgentEngine, engineErr := multiagent.NewEngine(verifiedExecutor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
 		if engineErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
 		}
 		service.MultiAgent = multiAgentEngine
 	}
 
-	handler, err := controlplane.NewHTTPHandler(service)
-	if err != nil {
-		return nil, "", err
-	}
-	return handler, runtimeName, nil
+	return service, runtimeName, nil
 }
 
 func v15MaxRepairFromEnv() (int, error) {
