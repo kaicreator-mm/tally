@@ -24,7 +24,14 @@ type navPageData struct {
 
 func renderBase(t *testing.T, active string) string {
 	t.Helper()
-	base, err := template.New("base").ParseFS(assets.TemplateFS, "templates/base.tmpl")
+	return renderBaseWithControlPlane(t, active, true)
+}
+
+func renderBaseWithControlPlane(t *testing.T, active string, controlPlaneEnabled bool) string {
+	t.Helper()
+	base, err := template.New("base").Funcs(template.FuncMap{
+		"controlPlaneEnabled": func() bool { return controlPlaneEnabled },
+	}).ParseFS(assets.TemplateFS, "templates/base.tmpl")
 	if err != nil {
 		t.Fatalf("解析 base.tmpl: %v", err)
 	}
@@ -61,7 +68,7 @@ func navLine(t *testing.T, nav, href string) string {
 }
 
 // 研发导航条目:人类心智模型到真实路由的映射。v1.5 Engineering Control
-// Plane is now a real protected route backed by the Active TaskDAG read model.
+// Plane is a protected route only when the outer router mounts its handler.
 var humanNavEntries = map[string]string{
 	"/v15/control-plane": "工程控制台",
 	"/v14/launch":        "发起",
@@ -79,6 +86,22 @@ func TestNavProjectsHumanEntriesOntoExistingRoutes(t *testing.T) {
 		}
 		if strings.Contains(line, `href=""`) {
 			t.Errorf("导航条目不允许空 href:%s", line)
+		}
+	}
+}
+
+func TestNavOmitsControlPlaneWhenOuterRouteIsDisabled(t *testing.T) {
+	nav := navSection(t, renderBaseWithControlPlane(t, "v15-control-plane", false))
+	if strings.Contains(nav, `href="/v15/control-plane"`) {
+		t.Fatal("ControlPlane 未挂载时导航不得出现 /v15/control-plane")
+	}
+	for href, label := range humanNavEntries {
+		if href == "/v15/control-plane" {
+			continue
+		}
+		line := navLine(t, nav, href)
+		if !strings.Contains(line, ">"+label+"<") {
+			t.Errorf("关闭 ControlPlane 不得改变 sibling 研发导航 %s 的语义,得到行:%s", href, line)
 		}
 	}
 }
@@ -152,7 +175,9 @@ func TestNavHrefsAreKnownRoutes(t *testing.T) {
 }
 
 func TestNavTemplateParseFSIsComplete(t *testing.T) {
-	base, err := template.New("base").ParseFS(assets.TemplateFS, "templates/base.tmpl")
+	base, err := template.New("base").Funcs(template.FuncMap{
+		"controlPlaneEnabled": func() bool { return true },
+	}).ParseFS(assets.TemplateFS, "templates/base.tmpl")
 	if err != nil {
 		t.Fatalf("解析 base.tmpl: %v", err)
 	}
