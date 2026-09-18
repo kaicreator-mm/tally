@@ -96,12 +96,23 @@ func funcMap() template.FuncMap {
 	}
 }
 
-// NewRenderer 从内嵌 FS 解析 base + 各页模板。
-//
-// 组合方式:base.tmpl 用 {{define "base"}}…{{template "content" .}}…{{end}} 定义外壳,
-// 并给 content 一个空默认定义;每个页面 .tmpl 重新 {{define "content"}},克隆 base 后覆盖之。
+// rendererFuncMap adds router-owned surface availability to the otherwise
+// reusable template helpers. The outer router is the authority for whether
+// the v1.5 Control Plane exists; templates only project that fact.
+func rendererFuncMap(controlPlaneEnabled bool) template.FuncMap {
+	funcs := funcMap()
+	funcs["controlPlaneEnabled"] = func() bool { return controlPlaneEnabled }
+	return funcs
+}
+
+// NewRenderer 从内嵌 FS 解析 base + 各页模板。没有 outer-router 装配上下文时，
+// 可选 surface 默认关闭，避免渲染指向未挂载 route 的入口。
 func NewRenderer() (*Renderer, error) {
-	base, err := template.New("base").Funcs(funcMap()).ParseFS(assets.TemplateFS, "templates/base.tmpl")
+	return newRenderer(false)
+}
+
+func newRenderer(controlPlaneEnabled bool) (*Renderer, error) {
+	base, err := template.New("base").Funcs(rendererFuncMap(controlPlaneEnabled)).ParseFS(assets.TemplateFS, "templates/base.tmpl")
 	if err != nil {
 		return nil, fmt.Errorf("解析 base 模板: %w", err)
 	}
