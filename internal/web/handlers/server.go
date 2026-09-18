@@ -28,8 +28,9 @@ type Identity struct {
 
 // Config 是内容仓库配置。RepoPath 为空时所有写操作返回明确错误(不 panic)。
 type Config struct {
-	RepoPath string
-	Identity Identity
+	RepoPath            string
+	Identity            Identity
+	ControlPlaneMounted bool // outer router 是否真实挂载 v1.5 Control Plane
 }
 
 // Server 持有 handlers 的依赖。字段都由 web 在构建路由时注入。
@@ -37,6 +38,9 @@ type Server struct {
 	Render  PageRenderer
 	Content *ContentStore
 	Tasks   TaskSource // 任务状态来源;nil → 任务列表为空(T05c 由 ExecTaskSource 接)
+
+	// ControlPlaneMounted 是 outer router 的真实挂载事实，只用于页面导航投影。
+	ControlPlaneMounted bool
 
 	// Queue 是动作入队出口(T05b):拉起/推倒/重建/回滚/重诊断一律只入队,不碰事实面(INV-5)。
 	// nil → 动作 POST 返回明确失败,不 panic。
@@ -62,9 +66,10 @@ type Server struct {
 // New 构建 Server。
 func New(cfg Config, render PageRenderer, tasks TaskSource) *Server {
 	return &Server{
-		Render:  render,
-		Content: &ContentStore{RepoPath: cfg.RepoPath, Identity: cfg.Identity},
-		Tasks:   tasks,
+		Render:              render,
+		Content:             &ContentStore{RepoPath: cfg.RepoPath, Identity: cfg.Identity},
+		Tasks:               tasks,
+		ControlPlaneMounted: cfg.ControlPlaneMounted,
 	}
 }
 
@@ -171,19 +176,21 @@ type Flash struct {
 
 // Page 是每个页面数据的公共部分(嵌入各页结构体,字段提升后模板直接 .Title 等)。
 type Page struct {
-	Title  string
-	Active string // 导航高亮键:index/projects/requirements/tasks/docs/wiki
-	CSRF   string
-	Flash  Flash
+	Title               string
+	Active              string // 导航高亮键:index/projects/requirements/tasks/docs/wiki
+	CSRF                string
+	Flash               Flash
+	ControlPlaneMounted bool // /v15/control-plane 是否由 outer router 真实挂载
 }
 
 // page 组装公共页面数据(含从 context 取 CSRF、从 query 取 flash)。
 func (s *Server) page(r *http.Request, title, active string) Page {
 	return Page{
-		Title:  title,
-		Active: active,
-		CSRF:   CSRFToken(r.Context()),
-		Flash:  flashFromQuery(r),
+		Title:               title,
+		Active:              active,
+		CSRF:                CSRFToken(r.Context()),
+		Flash:               flashFromQuery(r),
+		ControlPlaneMounted: s.ControlPlaneMounted,
 	}
 }
 

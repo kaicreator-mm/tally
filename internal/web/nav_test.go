@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"io/fs"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -13,16 +14,17 @@ import (
 /* ---------- P2-01 人类导航投影:base.tmpl 模板级合同 ---------- */
 
 type navPageData struct {
-	Title  string
-	Active string
-	CSRF   string
-	Flash  struct {
+	Title               string
+	Active              string
+	CSRF                string
+	ControlPlaneMounted bool
+	Flash               struct {
 		Kind string
 		Msg  string
 	}
 }
 
-func renderBase(t *testing.T, active string) string {
+func renderBase(t *testing.T, active string, controlPlaneMounted bool) string {
 	t.Helper()
 	base, err := template.New("base").ParseFS(assets.TemplateFS, "templates/base.tmpl")
 	if err != nil {
@@ -32,6 +34,7 @@ func renderBase(t *testing.T, active string) string {
 	data.Title = "t"
 	data.Active = active
 	data.CSRF = "tok"
+	data.ControlPlaneMounted = controlPlaneMounted
 	var buf bytes.Buffer
 	if err := base.ExecuteTemplate(&buf, "base", data); err != nil {
 		t.Fatalf("渲染 base: %v", err)
@@ -60,8 +63,24 @@ func navLine(t *testing.T, nav, href string) string {
 	return ""
 }
 
+func navHrefs(nav string) []string {
+	var hrefs []string
+	for _, line := range strings.Split(nav, "\n") {
+		i := strings.Index(line, `href="`)
+		if i < 0 {
+			continue
+		}
+		rest := line[i+len(`href="`):]
+		j := strings.Index(rest, `"`)
+		if j >= 0 {
+			hrefs = append(hrefs, rest[:j])
+		}
+	}
+	return hrefs
+}
+
 // 研发导航条目:人类心智模型到真实路由的映射。v1.5 Engineering Control
-// Plane is now a real protected route backed by the Active TaskDAG read model.
+// Plane is a conditional entry whose visibility follows the outer router mount fact.
 var humanNavEntries = map[string]string{
 	"/v15/control-plane": "工程控制台",
 	"/v14/launch":        "发起",
@@ -70,8 +89,21 @@ var humanNavEntries = map[string]string{
 	"/v14/attention":     "需人工",
 }
 
+func TestNavControlPlaneVisibilityFollowsMountState(t *testing.T) {
+	disabled := navSection(t, renderBase(t, "", false))
+	if strings.Contains(disabled, `href="/v15/control-plane"`) {
+		t.Fatal("Control Plane 未挂载时导航仍显示 /v15/control-plane")
+	}
+
+	enabled := navSection(t, renderBase(t, "", true))
+	line := navLine(t, enabled, "/v15/control-plane")
+	if !strings.Contains(line, ">工程控制台<") {
+		t.Fatalf("Control Plane 挂载时既有标签应保持为 %q,得到行:%s", "工程控制台", line)
+	}
+}
+
 func TestNavProjectsHumanEntriesOntoExistingRoutes(t *testing.T) {
-	nav := navSection(t, renderBase(t, ""))
+	nav := navSection(t, renderBase(t, "", true))
 	for href, label := range humanNavEntries {
 		line := navLine(t, nav, href)
 		if !strings.Contains(line, ">"+label+"<") {
@@ -92,7 +124,7 @@ func TestNavHighlightFollowsActiveKey(t *testing.T) {
 		{"v14-attention", "/v14/attention"},
 	}
 	for _, tc := range cases {
-		nav := navSection(t, renderBase(t, tc.active))
+		nav := navSection(t, renderBase(t, tc.active, true))
 		for href := range humanNavEntries {
 			line := navLine(t, nav, href)
 			want := href == tc.href
@@ -104,8 +136,22 @@ func TestNavHighlightFollowsActiveKey(t *testing.T) {
 	}
 }
 
+func TestNavSiblingEntriesUnchangedWhenControlPlaneDisabled(t *testing.T) {
+	enabled := navHrefs(navSection(t, renderBase(t, "", true)))
+	disabled := navHrefs(navSection(t, renderBase(t, "", false)))
+	var filtered []string
+	for _, href := range enabled {
+		if href != "/v15/control-plane" {
+			filtered = append(filtered, href)
+		}
+	}
+	if !reflect.DeepEqual(disabled, filtered) {
+		t.Fatalf("Control Plane visibility must not change sibling navigation: enabled-minus-control-plane=%v disabled=%v", filtered, disabled)
+	}
+}
+
 func TestNavHasNoPlaceholderEntries(t *testing.T) {
-	nav := navSection(t, renderBase(t, ""))
+	nav := navSection(t, renderBase(t, "", true))
 	for _, phantom := range []string{
 		`href="/v14/runs"`, `href="/runs"`, `href="/rules"`, `href="/policies"`, `href="/reviews"`,
 	} {
@@ -130,7 +176,7 @@ func TestNavHrefsAreKnownRoutes(t *testing.T) {
 		"/v14/launch": true, "/v13/tasks": true, "/v13/runs": true, "/v14/attention": true,
 		"/v14/rules": true, "/v14/integration": true,
 	}
-	nav := navSection(t, renderBase(t, ""))
+	nav := navSection(t, renderBase(t, "", true))
 	for _, line := range strings.Split(nav, "\n") {
 		i := strings.Index(line, `href="`)
 		if i < 0 {

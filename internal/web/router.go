@@ -82,7 +82,11 @@ func NewRouter(deps Deps) chi.Router {
 	// 其余一切:先登录,再 CSRF。handler 路由(T05a)在此注册;T05b/c 的动作路由经
 	// handlers.Server.RegisterRoutes 追加,自动落在同一保护组内。
 	srv := handlers.New(
-		handlers.Config{RepoPath: deps.ContentRepo, Identity: deps.Identity},
+		handlers.Config{
+			RepoPath:            deps.ContentRepo,
+			Identity:            deps.Identity,
+			ControlPlaneMounted: deps.ControlPlane != nil,
+		},
 		renderer,
 		deps.Tasks,
 	)

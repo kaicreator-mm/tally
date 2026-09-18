@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -68,5 +69,46 @@ func TestV15ControlPlaneRoutesStayBehindAuthAndCSRF(t *testing.T) {
 	r.ServeHTTP(res, req)
 	if res.Code != http.StatusOK || res.Body.String() != "v15-control-plane" {
 		t.Fatalf("POST with CSRF status=%d body=%q", res.Code, res.Body.String())
+	}
+}
+
+func TestV15ControlPlaneNavigationMatchesMountState(t *testing.T) {
+	cp := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("v15-control-plane"))
+	})
+
+	for _, tc := range []struct {
+		name              string
+		controlPlane      http.Handler
+		wantNav           bool
+		wantRouteHTTPCode int
+	}{
+		{name: "disabled", controlPlane: nil, wantNav: false, wantRouteHTTPCode: http.StatusNotFound},
+		{name: "enabled", controlPlane: cp, wantNav: true, wantRouteHTTPCode: http.StatusOK},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := NewRouter(Deps{Sessions: v15TestSessions{}, ControlPlane: tc.controlPlane})
+
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.AddCookie(&http.Cookie{Name: sessionCookie, Value: "valid"})
+			res := httptest.NewRecorder()
+			r.ServeHTTP(res, req)
+			if res.Code != http.StatusOK {
+				t.Fatalf("root status=%d body=%s", res.Code, res.Body.String())
+			}
+			hasNav := strings.Contains(res.Body.String(), `href="/v15/control-plane"`)
+			if hasNav != tc.wantNav {
+				t.Fatalf("Control Plane mounted=%v nav visible=%v, want %v", tc.controlPlane != nil, hasNav, tc.wantNav)
+			}
+
+			req = httptest.NewRequest(http.MethodGet, "/v15/control-plane", nil)
+			req.AddCookie(&http.Cookie{Name: sessionCookie, Value: "valid"})
+			res = httptest.NewRecorder()
+			r.ServeHTTP(res, req)
+			if res.Code != tc.wantRouteHTTPCode {
+				t.Fatalf("Control Plane mounted=%v route status=%d, want %d", tc.controlPlane != nil, res.Code, tc.wantRouteHTTPCode)
+			}
+		})
 	}
 }
