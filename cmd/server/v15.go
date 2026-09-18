@@ -61,15 +61,18 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if execErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Local AgentExecutor: %w", execErr)
 		}
+		worktreeRoot := envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees"))
+		holdoutRoot := os.Getenv("TALLY_V15_HOLDOUT_ROOT")
+		envName := envOr("TALLY_V15_ENV", "server-local")
 		maxRepair, parseErr := v15MaxRepairFromEnv()
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
 		harness, harnessErr := controlplane.NewBrownfieldHarness(controlplane.BrownfieldHarnessConfig{
 			Repo:         contentRepo,
-			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
-			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
-			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			WorktreeRoot: worktreeRoot,
+			HoldoutRoot:  holdoutRoot,
+			EnvName:      envName,
 			Runtime:      runtime.Descriptor(),
 			Executor:     executor,
 			Queries:      queries,
@@ -84,14 +87,30 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		}
 
 		// v1.5.4 composes above the same frozen AgentExecutor used by the
-		// Engineering Harness. This deliberately does not introduce a second
-		// runtime stack or worker queue: Local/Codex/DSH execution remains owned
-		// by taskexecution.RuntimeExecutor.
+		// Engineering Harness. Reviewer/verifier roles are routed through the
+		// existing VerifiedRoleExecutor; implementation/repair remain on the raw
+		// production executor. No second verification/worktree authority exists.
+		verifiedExecutor, verifiedErr := multiagent.NewVerifiedRoleExecutor(multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: worktreeRoot,
+			HoldoutRoot:  holdoutRoot,
+			EnvName:      envName,
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if verifiedErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build verified role executor: %w", verifiedErr)
+		}
+		roleExecutor, routeErr := multiagent.NewRoleExecutorRouter(executor, verifiedExecutor)
+		if routeErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build role executor router: %w", routeErr)
+		}
 		maxConcurrency, parseErr := v15MultiAgentMaxConcurrencyFromEnv()
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
-		multiAgentEngine, engineErr := multiagent.NewEngine(executor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		multiAgentEngine, engineErr := multiagent.NewEngine(roleExecutor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
 		if engineErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
 		}
