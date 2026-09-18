@@ -59,7 +59,8 @@ func NewRouter(deps Deps) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
 
-	renderer := mustNewRenderer()
+	controlPlaneEnabled := deps.ControlPlane != nil
+	renderer := mustNewRenderer(controlPlaneEnabled)
 
 	// 静态资源(公开,GET):内嵌的 tally.css + vendored htmx.min.js。
 	staticSub, err := fs.Sub(assets.StaticFS, "static")
@@ -95,7 +96,7 @@ func NewRouter(deps Deps) chi.Router {
 		r.Use(csrfMiddleware)
 
 		srv.RegisterRoutes(r)
-		if deps.ControlPlane != nil {
+		if controlPlaneEnabled {
 			// The stdlib mux inside controlplane rematches the full request path;
 			// chi only provides the authenticated/CSRF-protected outer boundary.
 			r.Handle("/api/v15/*", deps.ControlPlane)
@@ -108,8 +109,8 @@ func NewRouter(deps Deps) chi.Router {
 }
 
 // mustNewRenderer 构建渲染器;内嵌模板是编译期已知的,解析失败属不可恢复的编程错误,直接 panic 让其尽早暴露。
-func mustNewRenderer() *Renderer {
-	rd, err := NewRenderer()
+func mustNewRenderer(controlPlaneEnabled bool) *Renderer {
+	rd, err := newRenderer(controlPlaneEnabled)
 	if err != nil {
 		panic("web: 模板解析失败: " + err.Error())
 	}
