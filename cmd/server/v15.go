@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"tally/internal/agentruntime"
 	"tally/internal/closedloop"
 	"tally/internal/controlplane"
+	"tally/internal/engineering"
 	"tally/internal/multiagent"
 	"tally/internal/store"
 	"tally/internal/taskexecution"
@@ -65,11 +67,13 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
+		worktreeRoot := envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees"))
+		envName := envOr("TALLY_V15_ENV", "server-local")
 		harness, harnessErr := controlplane.NewBrownfieldHarness(controlplane.BrownfieldHarnessConfig{
 			Repo:         contentRepo,
-			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
+			WorktreeRoot: worktreeRoot,
 			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
-			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			EnvName:      envName,
 			Runtime:      runtime.Descriptor(),
 			Executor:     executor,
 			Queries:      queries,
@@ -86,12 +90,24 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		// v1.5.4 composes above the same frozen AgentExecutor used by the
 		// Engineering Harness. This deliberately does not introduce a second
 		// runtime stack or worker queue: Local/Codex/DSH execution remains owned
-		// by taskexecution.RuntimeExecutor.
+		// by taskexecution.RuntimeExecutor, and the verified-role guard reuses
+		// the existing verification-enforcement abstraction for review roles.
 		maxConcurrency, parseErr := v15MultiAgentMaxConcurrencyFromEnv()
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
-		multiAgentEngine, engineErr := multiagent.NewEngine(executor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		roleExecutor, roleErr := composeV15MultiAgentExecutor(executor, multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: worktreeRoot,
+			EnvName:      envName,
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if roleErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build verified role executor: %w", roleErr)
+		}
+		multiAgentEngine, engineErr := multiagent.NewEngine(roleExecutor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
 		if engineErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
 		}
@@ -103,6 +119,38 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		return nil, "", err
 	}
 	return handler, runtimeName, nil
+}
+
+// composeV15MultiAgentExecutor wires the v1.5.4 multi-agent role executor
+// above the frozen AgentExecutor: reviewer/verifier/specialist role runs go
+// through the existing VerifiedRoleExecutor verification enforcement
+// (candidate freeze, read-only drift rejection, candidateverify evidence),
+// while implementer/repairer runs keep the raw delegate behavior.
+func composeV15MultiAgentExecutor(raw taskexecution.AgentExecutor, cfg multiagent.VerifiedRoleExecutorConfig) (taskexecution.AgentExecutor, error) {
+	cfg.Delegate = raw
+	guarded, err := multiagent.NewVerifiedRoleExecutor(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return &v15GuardedRoleExecutor{raw: raw, guarded: guarded}, nil
+}
+
+type v15GuardedRoleExecutor struct {
+	raw     taskexecution.AgentExecutor
+	guarded *multiagent.VerifiedRoleExecutor
+}
+
+func (e *v15GuardedRoleExecutor) Execute(ctx context.Context, req taskexecution.TaskExecutionRequest) (taskexecution.TaskExecutionResult, error) {
+	if multiagent.IsGuardedRoleInstruction(req.Instruction) {
+		return e.guarded.Execute(ctx, req)
+	}
+	return e.raw.Execute(ctx, req)
+}
+
+func (e *v15GuardedRoleExecutor) Cancel(id engineering.ID) error {
+	// VerifiedRoleExecutor only decorates the same delegate for cancellation,
+	// so the raw executor stays the single cancellation authority.
+	return e.raw.Cancel(id)
 }
 
 func v15MaxRepairFromEnv() (int, error) {

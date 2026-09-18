@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	ErrNoFrozenCandidate          = errors.New("multiagent: role execution produced no immutable candidate")
+	ErrNoFrozenCandidate            = errors.New("multiagent: role execution produced no immutable candidate")
 	ErrReadOnlyRoleMutatedCandidate = errors.New("multiagent: review/verification role mutated the candidate workspace")
 )
 
@@ -131,13 +131,13 @@ func (e *VerifiedRoleExecutor) Execute(ctx context.Context, req taskexecution.Ta
 	}
 	verify := candidateverify.New(candidateverify.Config{
 		Repo: e.repo, WorktreeRoot: e.worktreeRoot, HoldoutRoot: e.holdoutRoot,
-		EnvName: e.envName,
+		EnvName:  e.envName,
 		Recorder: evidence.Recorder{Kind: evidence.RecorderVerificationRun, Actor: "tally-controlplane/v1.5.4"},
 	}, candidateverify.Deps{Queries: e.queries})
 	outcome, err := verify.Verify(ctx, candidateverify.Request{
-		Contract: bundle.Verification.Frozen,
+		Contract:  bundle.Verification.Frozen,
 		ChangeSet: before,
-		Runtime: e.runtime.Name,
+		Runtime:   e.runtime.Name,
 	})
 	if err != nil {
 		return result, fmt.Errorf("multiagent: role verification authority failed: %w", err)
@@ -180,16 +180,26 @@ func finalOutcomeEvidence(taskID engineering.ID, role Role, outcome *verificatio
 	}
 	id := engineering.ID(fmt.Sprintf("%s:%s:verification:%d", taskID, role, runID))
 	return engineering.EvidenceRef{
-		ID: id,
-		Kind: "verification.final",
-		URI: fmt.Sprintf("tally://verification/run/%d", runID),
+		ID:       id,
+		Kind:     "verification.final",
+		URI:      fmt.Sprintf("tally://verification/run/%d", runID),
 		Revision: changeSetID,
-		Status: status,
+		Status:   status,
 	}
 }
 
 func readOnlyRole(role Role) bool {
 	return role == RoleReviewer || role == RoleVerifier || role == RoleSpecialist
+}
+
+// IsGuardedRoleInstruction reports whether a v1.5.4 role directive names a
+// read-only review/verification role whose execution must go through the
+// VerifiedRoleExecutor guard. Production wiring routes role runs on this
+// predicate so reviewer/verifier/specialist execution is verification
+// enforced while implementer/repairer execution keeps its raw behavior.
+func IsGuardedRoleInstruction(instruction string) bool {
+	role, ok := roleFromInstruction(instruction)
+	return ok && readOnlyRole(role)
 }
 
 func roleFromInstruction(instruction string) (Role, bool) {
