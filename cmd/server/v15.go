@@ -86,12 +86,27 @@ func v15ControlPlaneFromEnv(contentRepo string, queries *store.Queries) (http.Ha
 		// v1.5.4 composes above the same frozen AgentExecutor used by the
 		// Engineering Harness. This deliberately does not introduce a second
 		// runtime stack or worker queue: Local/Codex/DSH execution remains owned
-		// by taskexecution.RuntimeExecutor.
+		// by taskexecution.RuntimeExecutor. Review-oriented read-only roles are
+		// routed through the existing multiagent.VerifiedRoleExecutor so they
+		// enforce immutable-candidate/verification behavior; producer roles keep
+		// the base executor unchanged.
+		verifiedExecutor, verifiedErr := multiagent.NewVerifiedRoleExecutor(multiagent.VerifiedRoleExecutorConfig{
+			Delegate:     executor,
+			Repo:         contentRepo,
+			WorktreeRoot: envOr("TALLY_V15_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v15-worktrees")),
+			HoldoutRoot:  os.Getenv("TALLY_V15_HOLDOUT_ROOT"),
+			EnvName:      envOr("TALLY_V15_ENV", "server-local"),
+			Runtime:      runtime.Descriptor(),
+			Queries:      queries,
+		})
+		if verifiedErr != nil {
+			return nil, "", fmt.Errorf("v1.5 control plane: build Verified Role Executor: %w", verifiedErr)
+		}
 		maxConcurrency, parseErr := v15MultiAgentMaxConcurrencyFromEnv()
 		if parseErr != nil {
 			return nil, "", parseErr
 		}
-		multiAgentEngine, engineErr := multiagent.NewEngine(executor, nil, multiagent.Config{MaxConcurrency: maxConcurrency})
+		multiAgentEngine, engineErr := multiagent.NewEngine(newVerificationRoutingExecutor(executor, verifiedExecutor), nil, multiagent.Config{MaxConcurrency: maxConcurrency})
 		if engineErr != nil {
 			return nil, "", fmt.Errorf("v1.5 control plane: build Multi-Agent Engine: %w", engineErr)
 		}

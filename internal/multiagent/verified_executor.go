@@ -210,3 +210,15 @@ func roleFromInstruction(instruction string) (Role, bool) {
 	}
 	return "", false
 }
+
+// RoleFromInstruction reports whether an instruction carries a v1.5.4 role
+// directive, without mutating execution behavior.
+func RoleFromInstruction(instruction string) (Role, bool) {
+	return roleFromInstruction(instruction)
+}
+
+// IsReadOnlyRole reports whether a role is review-oriented (read-only under
+// VerifiedRoleExecutor) rather than a producer role.
+func IsReadOnlyRole(role Role) bool {
+	return readOnlyRole(role)
+}
