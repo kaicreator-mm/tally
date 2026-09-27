@@ -14,6 +14,7 @@ steps:
     commands:
       - go version && git --version
       - git init . >/dev/null
+      - git config --global credential.helper '!f() { echo "username=$CI_NETRC_USERNAME"; echo "password=$CI_NETRC_PASSWORD"; }; f'
       - git fetch --no-tags --depth=1 "$CI_REPO_CLONE_URL" "$CI_COMMIT_SHA"
       - git checkout --detach FETCH_HEAD
       - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
