@@ -7,6 +7,11 @@ when:
 labels:
   backend: docker
 
+# Override the server-level default clone plugin (a host binary path for the
+# local agent) with the pre-pulled OCI plugin for docker agents.
+clone:
+  image: woodpeckerci/plugin-git:2.10.1
+
 steps:
   - name: verify
     image: kaicreator/builder:1.0
