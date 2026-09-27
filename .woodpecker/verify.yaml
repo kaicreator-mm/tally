@@ -1,0 +1,21 @@
+when:
+  - event: [push, manual]
+    branch: [main]
+
+# Route to ECF elastic agents (docker backend, baked kaicreator/builder image).
+labels:
+  backend: docker
+skip_clone: true
+
+steps:
+  - name: verify
+    image: kaicreator/builder:1.0
+    pull: false
+    commands:
+      - go version && git --version
+      - git init . >/dev/null
+      - git fetch --no-tags --depth=1 "$CI_REPO_CLONE_URL" "$CI_COMMIT_SHA"
+      - git checkout --detach FETCH_HEAD
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - go build ./...
+      - go test ./... 2>&1 | tail -20
