@@ -2,26 +2,16 @@ when:
   - event: [push, manual]
     branch: [main]
 
-# Route to ECF elastic agents (docker backend, baked kaicreator/builder image).
-# Standard clone: plugin-git:2.10.1 (pre-pulled on workers) + forge credentials.
+# ECF elastic workers run the agent with backend=local (VM-is-the-sandbox):
+# steps execute on the Alpine host (node24+go+python+git preinstalled).
 labels:
-  backend: docker
-
-# Override the server-level default clone plugin (a host binary path for the
-# local agent) with the pre-pulled OCI plugin for docker agents.
-clone:
-  - name: git
-    image: woodpeckerci/plugin-git:2.10.1
-    pull: false
-    settings:
-      depth: 1
+  backend: local
 
 steps:
   - name: verify
-    image: kaicreator/builder:1.0
-    pull: false
+    image: bash
     commands:
-      - go version && git --version
+      - uname -a && git --version && node -v && go version && python3 -V
       - test -d .git && git rev-parse HEAD
       - go build ./...
       - go test ./... 2>&1 | tail -20
