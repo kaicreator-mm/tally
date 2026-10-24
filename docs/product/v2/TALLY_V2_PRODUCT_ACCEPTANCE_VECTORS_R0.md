@@ -38,7 +38,6 @@
 | V28 | F45 | Secrets embedded in Agent output/error/log | Sanitized user projection and GitHub comment; no credential echo | Spec now; NOT_RUN |
 | V29 | F46/F47 | Build contains package imports to private DH src or compiler in runtime | Clean installed external producer/consumer refuses; runtime BUILD closure fail | Requires DH; NOT_RUN |
 | V30 | F13–19 | Package revision changes while previous occurrence runs | Old occurrence remains immutable selected pin; new BUILD separate | Requires DH; NOT_RUN |
-
 | V31 | F02 | A Product ambiguity remains unresolved after preliminary clarification | UI records question/answer and marks critical requirement OPEN; Product Freeze blocked until applicable review | Spec now; NOT_RUN |
 | V32 | F03 | Previously accepted intent source changes materially after freeze | Applicable frozen intent/review eligibility revoked or requalified, never stale green | Spec now; NOT_RUN |
 | V33 | F11 | Declared high assurance Task lacks required verifier/authority scope | Visible required checks and missing gate; no readiness/completion | Spec now; NOT_RUN |
