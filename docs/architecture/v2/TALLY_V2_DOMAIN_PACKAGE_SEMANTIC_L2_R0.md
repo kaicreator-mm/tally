@@ -25,13 +25,16 @@
 
 | 对象/动作 | 决策 Owner | 外部真相 / 存储 Owner | 执行边界 | 失败/未知处理 |
 |---|---|---|---|---|
-| Requirements/PRD 修订与审核建议 | Tally Product B | B/K 的版本化意图 + 对应 GitHub 合法工件 | UI→B；若 GitHub 写入则 K→C GitHub | 未合法发布不标 REVIEWED/FROZEN |
+| Requirements/PRD 修订与审核建议 | Tally Product B | B/K 版本化意图 + 对应 GitHub 合法工件 | App Shell→认证 Host→B/K；GitHub 写入 K→C | 缺 operator/project/version/source link ⇒ DRAFT，不标 FROZEN |
+| Operator / UI session / repo resource grant / CSRF / secrets (P0-15) | Host/App Shell 验证 operator、session expiry、Origin/CSRF；Engineering B 鉴权 repo/resource & protected paths；唯一 K Admission，C provider grant 独立验证；Host/C 屏蔽所有日志/回执中的 secret | Host session 与 GitHub 原生 provider scope/当前授权、K Effect、GitHub native readback | **四重许可均必须有效**：Host identity/session/origin、B resource ACL、K permit、C provider permission；Credential redaction before logs | Cross-origin、过期 session、跨仓库越权、protected edit 或日志泄露 token ⇒ DENY/no Effect，不能靠 JSON 或 K-only permit 绕过 |
+| Protected-path Repair, independently qualified verifier & reviewer (P0-07) | Assurance B 管理 Repair 预算、保护路径和 Reviewer 资格；K 许可合法 Effect；C Local/GitHub 读取真实 diff、测试与独立审查回执 | Git candidate SHA/diff/protected config, real validator command/exit and source-qualified independent reviewer | Builder 不能更改受保护 ADS/auth/hidden-test 资源而自批准，失败的 verifier 不得被状态转换覆盖 | Protected edit / fake success / self-review / verifier FAIL ⇒ BLOCK |
 | L2 设计修订、独立审核要求 | Tally Lifecycle B | B/K + GitHub Issue/PR/review | B 提议，K 准入，C GitHub 执行 | reviewer 缺失/过时 BLOCK |
 | Task DAG 提案、依赖/Ready 规则 | Tally Task B | B/K Proposal；native GitHub Issues/Dependencies 以 GitHub 为准 | B 的 DAG 判断→K/C 合法生效 | 环、stale parent、Native Graph 不完整不可 READY |
-| Agent Registry/Role/Provider 选择 | Tally Task B | K 受控配置/会话；外部 Agent 实际能力仅可观测 | B 选择、S 辅助、K/C 真实调用 | 不支持能力/权限 → BLOCK，不假分配 |
+| Agent Registry/Role/Provider 选择 | Tally Task B + self-declared logical role / current capability and scoped delegation | K 受控配置/会话；外部 Agent 真实性/Host session 可观测；GitHub transport 账号不代表逻辑身份 | B 选择并限制授权委托，S advisory、K/C 真实验证 scope | Stale Claim、委托越界或 Builder 换 reviewer 角色自签 PASS ⇒ BLOCK |
 | Task State / business occurrence 状态 | Tally Task B 解释规则 | **唯一 K Primary State/CAS/Journal** | K 原子准入/转移 | 冲突 typed；掉线 UNKNOWN |
 | 外部 Tool/Agent/Local/Host 调用 | B 请求意图，S 可给建议 | K Effect + 外部 Provider/Host 最终回执 | K Effect permit → C Local 等 | accepted ≠ terminal；丢 ACK reconcile |
 | GitHub Issue/PR/Review/CI/Tag | GitHub 真实权限决定 | **GitHub Native** | K permit → C GitHub；write/readback | 未读回不能称已发布/已合并 |
+| Cross-session durable report/decision/review/dispatch (P0-14) | Engineering Lifecycle B 生成绑定 source SHA 的工件与 handoff；K 治理发布，C GitHub 回读 | 实际 GitHub Issue/PR/comment/commit/revision/Source Evidence，**不是当前聊天或 SQLite 草稿** | 所有实质决策、报告、Review、Dispatch 必须持久发表并记录可恢复的 exact ref/version | 只存在会话文本、未成功写回/无法回读 ⇒ NOT_PERSISTED/UNKNOWN，禁止宣称完成 |
 | 验证契约、Repair、RQ 决策 | Verification B；S Rule/Evidence advisory | GitHub、Host、独立 Reviewer、实测命令证据 | K 受控 Effect；B 判门禁 | 没跑=NOT_RUN；PR PASS ≠ RQ PASS |
 | task-meta 观测与成本 | task-meta 独立采集 | 只有 ADS-合格的 **GitHub 发布摘要**供 Tally 读取 | C GitHub read-only；B 派生经验 | 未观测=UNKNOWN；不影响 Task |
 | SQLite Github Projection | B 查询规则/C GitHub Reader | GitHub 原始源仍主权；SQLite 是**派生视图** | Host/缓存层按源版本索引 | 过时/覆盖不全 → STALE / PARTIAL |
@@ -120,7 +123,8 @@
 
 ### C Local / Agent（最低必需）
 
-- Execution Environment=Local，Workspace 与 Agent Runtime/Provider 分离；支持一个真实 Agent/Task/Verify 回合以及取消与恢复。
+- Execution Environment=Local，Workspace 与 Agent Runtime/Provider 分离；支持一个真实 Agent/Task/Verify 回合以及取消与恢复。**P0 max executing Task Attempts = 1**，无论 DAG 中展示几个 parallel-ready node、worktree 是否分离，第二个并行 executing Admission 必须 NOT_ADMITTED；更多并发是 P1。
+- **Codex Provider/Auth partitioning:** Operator 在 Host/Provider adapter 配置中合法安装、登录真实 Codex CLI；Host 将**只可用于模型 Provider** 的最小授权会话/认证句柄限定传给低权限 Builder principal，**绝不继承**操作者可写 GitHub 的 gh/GCM/SSH-agent、home 配置、token cache 或提权能力。模型登录成功不证明 GitHub grant，也不成为写权限。若 Codex 授权文件/目录同 GitHub write credentials 无法实证隔离，返回 BUILDER_CONFINEMENT_UNAVAILABLE，Local Task 不可 PASS；禁止把真实秘密写入可发布的日志/证据。
 - 关键边界：OS 进程权限、环境变量脱敏、工作目录/命令参数隔离、Git 工作树安全、受控 Tool capability、进程退出/超时/错误码/标准输出留证。
 - SSH/Docker/runx **可选**；没有时不可妨碍 Local 工作和 ADS UI。
 - “每个 runx 实例的 SSH Server”属于可选远程 Host 提供者，不下沉为 Tally 核心 K 需求。
@@ -183,6 +187,19 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 | L2-N14 | PR 局部 CI PASS → Release 自动 Tag | BLOCK; no Release PASS |
 | L2-N15 | 私有 task-meta Trace/manifest ref 在 GitHub comment 中 | Tally 不 dereference 私有指针 |
 | L2-N16 | 不兼容 ADS Task Report 在 Reader 中混作当前版本 | UNSUPPORTED/INSUFFICIENT_EVIDENCE |
+| L2-N17 | Builder 经 gh/GCM/SSH/sudo 获得 GitHub write 权限 direct push | UNGOVERNED_EFFECT/BLOCK, 仅 K→C 发布 |
+| L2-N18 | Builder sudo/admin/backup 读取 Hidden fixture | HIDDEN_NOT_QUALIFIED |
+| L2-N19 | Builder credential confinement 或 verifier OS ACL 无法实证 | BUILDER_CONFINEMENT_UNAVAILABLE / HIDDEN_VERIFIER_UNAVAILABLE，禁止隐性 PASS |
+| L2-N20 | 已有 GitHub Issue/Ready，但 L3 Tests/Contract/Implementation/Failure/Reference 尚未准入 | L3_NOT_ADMITTED |
+| L2-N21 | 把 ADS v4.17 CONDITIONAL RQ 直接当 READY 激活项目 | STANDARD_PIN_PENDING，冻结拒绝 |
+| L2-N22 | task-meta hook hang/nonzero 中断 Agent/Verifier | fail-open，Telemetry UNKNOWN，Task 实际结果不变 |
+| L2-N23 | 跨源 Origin/CSRF、expired session、跨 repo grant 被 UI 当有权指令执行 | Host/B/K/C 至少一重 DENY，无外部 Effect |
+| L2-N24 | Repair 修改 protected ADS/hidden/auth 文件或 self-approve 失败验证 | Protected diff/independent verification BLOCK |
+| L2-N25 | 新会话仅依赖聊天记录声称 Product Frozen/Task PASS | NOT_PERSISTED/UNKNOWN，必须 GitHub source-qualified readback |
+| L2-N26 | Agent 以别的 logical role 逃避 Claim/独立 Reviewer 权限 | B delegated scope + K/C actual rights fail closed |
+| L2-N27 | 两个不同 worktree 的 Task Attempt 同时 EXECUTING | 第 2 个 K Admission NOT_ADMITTED，P0 max=1 |
+| L2-N28 | Codex 模型登录令牌目录同时暴露 operator 的 GitHub write token | BUILDER_CONFINEMENT_UNAVAILABLE，Provider/GitHub credential partition |
+| L2-N29 | GitHub readback/Agent stderr 回显秘密令牌或受保护凭证 | Host/C redaction，安全错误回执，不得发布明文 |
 
 所有案例现为 **SPEC_ONLY / NOT_RUN**；安装测试和真实消息/Effect 调用不得自行判通过。
 
@@ -212,7 +229,7 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 
 下一步是独立 L2 语义审查，对业务所有权和失败合同给 P0/P1/P2，再等待 DH 真实发布接口填补物理字段，最后才入正式 L2 Freeze。
 
-## 11. Current Product-v2 semantic security and source-adoption binding (candidate only)
+## 13. Current Product-v2 semantic security and source-adoption binding (candidate only)
 
 - **Builder credential isolation:** Real Codex CLI is launched under a least-privileged Builder OS principal with *no* GitHub write credential/credential helper/GCM/SSH-agent/delegated write capability. Only K-permitted C GitHub has scoped native write authority, expected source SHA and remote readback. Any write by Builder itself ⇒ `UNGOVERNED_EFFECT`, completion BLOCK/UNKNOWN, no false success on locally accepted intent; noninteractive sudo/admin/backup escalation paths must be proven denied. If not demonstrable, `BUILDER_CONFINEMENT_UNAVAILABLE` blocks Local Task closure.
 - **Local Hidden without runx/Docker:** A separate verifier OS principal with filesystem ACL denies the Builder access to fixture files, including through privilege escalation, inherited mounts/env/credential stores. Fixtures materialize after candidate freeze, and read-denial witness must be real. Missing verifier ⇒ `HIDDEN_VERIFIER_UNAVAILABLE`; readable fixture ⇒ `HIDDEN_NOT_QUALIFIED`. Runx/container/SSH are optional providers.
@@ -220,4 +237,4 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 - **Report/release evidence:** telemetry hook nonzero/hang fails open; git-native current source and independent verifier/Full/Hidden/CJ/RQ remain actual gates; source-corrected ADS Report invalidates derived advice only. Candidate→main merge tree drift requires revalidation before tag.
 - **Standards barrier:** Product draft may be independently semantically reviewed, but no effective v2 freeze/adoption until canonical project ADS 4.17 selection is *actually allowed by the pinned §2.1C RQ READY criterion* or an authorized prospective clarification, and its source-bound GitHub artifact is read back. Structural verifier PASS is necessary not sufficient.
 
-**Additional required negative cases:** L2-N17 Builder writes GitHub through inherited GCM/SSH/gh or privilege escalation; L2-N18 Hidden fixture readable under sudo/admin/backup privilege; L2-N19 missing Builder/Verifier confinement displays named BLOCK; L2-N20 bare GitHub Issue/Ready without admitted L3; L2-N21 actual ADS RQ CONDITIONAL incorrectly converted into effective manual READY; L2-N22 telemetry in-process hook hangs and blocks Agent/Verifier. All SOURCE_SPEC_ONLY / PHYSICAL_TESTS_NOT_RUN.
+**Required negative cases L2-N17…N29 are now normative source specifications in §10**, including Host/App Shell session+CSRF, protected-path Repair/role/delegation, durable GitHub facts, strict N=1 and Provider credential partition. All tests SOURCE_SPEC_ONLY / PHYSICAL_TESTS_NOT_RUN.
