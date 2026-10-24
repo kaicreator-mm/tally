@@ -61,6 +61,22 @@ Current authored evidence: **47 legacy parity domains, 67 Product acceptance vec
 
 **Execution evidence:** zero new Go/Node24/build/Host/GitHub Effect/Hidden tests. Product R1 narrow independent re-review must inspect exact latest SHA and these 5 amendments; only then can decide `SEMANTIC_FREEZE_READY`. The **separate** [#81 ADS v4.17.0 adoption PR](https://github.com/kaicreator-mm/tally/pull/81) was submitted in a *stacked version-staging branch* and is NOT merged into Product or main. A root `.dev-standard/VERSION` commit on this draft staging branch does not itself make Product Freeze, nor does it retroactively change historical Tally v1.5 baseline. Latest ADS v4.17 source qualification CONDITIONAL P2×3 remains disclosed.
 
+## Product R2 repeated-Claude review and remaining P2 author repair
+
+[Product R2 candidate review #6382926918](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6382926918) on prior exact `8115759cea3e56569b4f131f77964aca60c4a7bb` reports `P0=0/P1=0/P2=4`, `SEMANTIC_FREEZE_READY=CONDITIONAL_ON_ADS_PIN`, `PRODUCT_FROZEN=NO`, `MERGE_ELIGIBLE=NO`. Reviewer explicitly uses the **same Claude model/toolchain** as pre-review and R1, so it **does not qualify as distinct formal Product approval**. Preserve both earlier BLOCK and current conditional review history.
+
+Author submitted all four P2 refinements, NOT independent closure:
+
+| R2 P2 | Candidate fix | Evidence limit |
+|---|---|---|
+| P2-1 Markdown V66/V67 detached | Remove V65→V66 blank and add normal table→Coverage separation; total 67 unique rows | Static source review, not rendered UI test |
+| P2-2 Remediation ledger says 65 current | Correct current to 67 while retaining original 49/65 historically pinned counts | Static source review |
+| P2-3 Noninteractive elevation and token store gap | PRD Builder and verifier witness must probe sudo -n, admin/backup privilege, GH config/GCM/ssh-agent/delegated credential reachability, not merely scrub environment; strengthen V66/V67 | No actual ACL/privilege/credential denial test performed |
+| P2-4 Builder confinement unavailable not named | Add `BUILDER_CONFINEMENT_UNAVAILABLE`; disallow CJ03/Release PASS, preserve Product read-only/editing UI | Real Agent/Host test NOT_RUN |
+
+**Next:** only a distinct authorized independent Product reviewer may adjudicate the corrected source at newest exact PR #77 HEAD. Separate ADS v4.17 pin [PR #81](https://github.com/kaicreator-mm/tally/pull/81) has now been repaired to canonical format + A1 root override, yet downstream adoption remains explicitly blocked by `PROJECT_ADOPTION.md` §2.1C literal `RQ READY` vs actual independent `CONDITIONAL`; [ADS normative interpretation Issue #1318](https://github.com/kaicreator-mm/ai-development-standard/issues/1318) and [Tally #80](https://github.com/kaicreator-mm/tally/issues/80) own this gate. Neither PR may be merged into historical main as an incomplete Tally v2 Release.
+
+**State:** `AUTHOR_R2_P2_FIX_CANDIDATE`, `FORMAL_DISTINCT_PRODUCT_REVIEW=NOT_RUN`, `PHYSICAL_TESTS=NOT_RUN`, `ADS_417_ADOPTION_PENDING_NORMATIVE_READY_GATE`, `PRODUCT_FROZEN=NO`.
 ## Next independent checks
 
 1. Actual Claude pre-review DONE on earlier exact a97e6fa3 and returned REWORK; author fixes must be independently checked on newer source.
