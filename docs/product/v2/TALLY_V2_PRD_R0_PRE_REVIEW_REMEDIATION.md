@@ -24,7 +24,7 @@
 - **Local-only baseline:** runx/SSH/Docker remote provider optional, never a precondition for qualified Local single-Task+version completion.
 - **Protected File and independence:** Logical execution provenance is not GitHub account, protected source path exception not automatic owner check.
 - **Version closeout:** Finish version branch first, qualify exact candidate, then merge main only under source-currentness rules, reverify merged tree and target Tag.
-- **R0 preparation not implementation:** 47 mapped feature domains (legacy `v1.5.5@b5e7b6e38ea38837e3bbcfc46c36586180705de0`), 49 Product vectors now specified; no Go/Node/Host physical tests executed this turn, no formal reviewer PASS or Release Qualification.
+- **R0 preparation not implementation:** 47 mapped feature domains (legacy `v1.5.5@b5e7b6e38ea38837e3bbcfc46c36586180705de0`), **49 Product vectors at older pre-review HEAD a97e6fa3**; current revised vectors are **67**; no Go/Node/Host physical tests executed this turn, no formal reviewer PASS or Release Qualification.
 
 ## Actual Claude adversarial pre-review (newer than GPT-6) — author remediation
 
@@ -46,6 +46,20 @@
 Current authored evidence: **47 legacy parity domains, 65 Product acceptance vectors, P0-01..17** (all test vectors NOT_RUN). New source HEAD must be pinned after Output Ledger and PR metadata. No physical Node24 tests performed; no DomainHarness v0.10.2 ABI or npm Manifest freeze.
 
 **Gate:** Distinct independent reviewer must check the newest exact PR #77 SHA, deliver P0/P1/P2 and Product PASS/BLOCK/CONDITIONAL, and separately determine PRODUCT_FREEZE_READY vs actual PRODUCT_FROZEN. While the lawful exact v2 ADS adoption pin is unresolved, a document may be SEMANTIC_FREEZE_READY_CONDITIONAL but **not published as PRODUCT_FROZEN**. Do not replace GitHub ADS fact with K draft state.
+
+## Product R1 candidate review at earlier HEAD bda4fe71 — P1×2/P2×3 FIX_CANDIDATE
+
+[Claude Opus 5.5 source-only Product R1 candidate review #6382724644](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6382724644) explicitly declares **not independent of prior Claude pre-review model/toolchain** and returned `PRODUCT_R1=BLOCK, P0=0/P1=2/P2=3` on `bda4fe717a928ad00941c6c6d28dc44e42755043`. This verdict remains historic and must not be misreported as a fully independent formal Product PASS.
+
+| Finding | Repair decision / exact Product evidence | Status |
+|---|---|---|
+| **P1-R1** Builder shell bypasses K with inherited GitHub write credentials | **Choose model A:** Builder subprocess **must not carry GitHub write credentials**; only K-admitted C GitHub with immutable source/effect receipt may publish branch/PR/merge/tag. Unauthorized shell push/merge => `UNGOVERNED_EFFECT` and Task BLOCK. PRD P0-16 and Builder confinement; V66. Modify V61 to use the only lawful K→C remote publish path. | AUTHOR_FIX_CANDIDATE / no physical OS/network denial proof |
+| **P1-R2** Hidden Local-only provider missing | Default P0 Local verification uses **distinct verifier OS account/principal + filesystem ACL** with **actual Builder deny-read witness**. Separate workspace names alone are inadequate. No Docker/runx needed; `HIDDEN_VERIFIER_UNAVAILABLE` blocks Hidden PASS but not ordinary editing; V67. | AUTHOR_FIX_CANDIDATE / actual isolation NOT_RUN |
+| P2-R1 stale active counts | Gate references `P0-01..P0-17`, vectors current `V01..V67`; prior `49` is historically qualified to reviewed a97e6fa3. | AUTHOR_FIX_CANDIDATE |
+| P2-R2 F39 disposition mismatch | Main matrix `F39` is now `REPLACE; P0_HOOK_FAIL_OPEN`; Measurement implementation fully replaced by task-meta/GitHub-only advisory, but Hook nonblocking P0 persists. | AUTHOR_FIX_CANDIDATE |
+| P2-R3 stale weak Hidden V13 | V13 now directly defines Builder-readable fixture before candidate freeze => `HIDDEN_NOT_QUALIFIED`, harmonized with V57/V58; not a generic leak label. | AUTHOR_FIX_CANDIDATE |
+
+**Execution evidence:** zero new Go/Node24/build/Host/GitHub Effect/Hidden tests. Product R1 narrow independent re-review must inspect exact latest SHA and these 5 amendments; only then can decide `SEMANTIC_FREEZE_READY`. The **separate** [#81 ADS v4.17.0 adoption PR](https://github.com/kaicreator-mm/tally/pull/81) was submitted in a *stacked version-staging branch* and is NOT merged into Product or main. A root `.dev-standard/VERSION` commit on this draft staging branch does not itself make Product Freeze, nor does it retroactively change historical Tally v1.5 baseline. Latest ADS v4.17 source qualification CONDITIONAL P2×3 remains disclosed.
 
 ## Next independent checks
 
