@@ -15,7 +15,7 @@
 | P0-01 Package-first | Engineering B packaged as real selected DH Domain Package(s), selected S/one K/C/Host public installed BUILD | Qualified DH public Package Manifest/ABI/BUILD revision | Any standalone TS business state engine or private DH src import ⇒ BLOCK | PENDING_DH_0_10_2 |
 | P0-03/P0-04 Freeze truth | B proposes draft/review; K stores only app intent; C GitHub publishes and reads **actual applicable ADS review/freeze evidence** | GitHub commit/Issue/Review/accepted source & adoption | K State/SQLite showing FROZEN without current qualified GitHub artifact ⇒ UNKNOWN/BLOCK | PENDING_STANDARD_PIN_AND_PRODUCT_R1 |
 | P0-05 L3 execution admission | B enforces TaskContract Tests/Contract/Implementation plan/Failure Handling/Reference; K admits effect; C GitHub readback | Current GitHub Issue/L3 source SHA, selected ADS dialect | Ready DAG but stale/incomplete L3 ⇒ L3_NOT_ADMITTED | SOURCE_SPEC_ONLY |
-| P0-06/F17 real Agent | Real operator-authorized Codex CLI Local provider: Host presents only provider-model auth to least-privileged Builder, never operator GitHub write tokens or shared gh/GCM/SSH credential stores; B selects agent; K starts/cancels; C/Host records terminal | Real provider auth, exit/receipt/source/workspace and denied GitHub credential access | Fake-only, mixed Codex model and GitHub write credentials, or inherited operator privilege ⇒ BUILDER_CONFINEMENT_UNAVAILABLE / NOT_QUALIFIED | PENDING_PUBLIC_HOST_C |
+| P0-06/F17 real Agent | Real operator-authorized Codex CLI Local provider: Host presents only provider-model auth to least-privileged Builder, never operator GitHub write tokens or shared gh/GCM/SSH credential stores; B selects agent; K starts/cancels; C/Host records terminal | Real provider capability/auth, exit/receipt/source/workspace and denied GitHub credential access | **Absent/unauthed real provider or Fake-only ⇒ LOCAL_AGENT_UNAVAILABLE**; genuine provider but unproven Builder principal/credential separation ⇒ BUILDER_CONFINEMENT_UNAVAILABLE; no CJ03 PASS in either case, ordinary authorized read/edit UI remains usable | PENDING_PUBLIC_HOST_C |
 | P0-16/F21/F29 workspace safety | C Local creates per-Attempt clean exact-base disposable Git worktree; K **max N=1 concurrently executing Task Attempt in P0**, even across distinct worktrees; freeze candidate tree before verifier | Git worktree/attempt/source and K current executing count | Dirty base, wrong parent, second concurrently executing Attempt, shared writer or stale candidate ⇒ NOT_ADMITTED/BLOCK | SOURCE_SPEC_ONLY |
 | P0-15 Operator/session/repo grant/CSRF/secrets | Host/App Shell authenticates operator, binds short session + origin/CSRF; B enforces repository/resource authorization & protected paths; K permits; C GitHub independently verifies native grant; Host/C redact logs | Real Host session, operator, origin, repo grant, K Effect & C GitHub receipt | Expired session, cross-origin request, unrelated repo, protected path or leaked token in logs ⇒ DENY / no Effect | PENDING_REAL_HOST_AUTH | 
 | P0-16 Builder GitHub write confinement | **Selected PRD rule**: Builder subprocess lacks GitHub write credentials/GCM/SSH/gh; B→K permit→C GitHub alone publishes native writes with exact candidate SHA and readback | Actual K Journal/Effect & GitHub facts | Builder direct push/merge/force, sudo/credential-agent bypass ⇒ UNGOVERNED_EFFECT/BLOCK | PENDING_REAL_OS_DENY |
@@ -27,12 +27,17 @@
 
 ## Product vector groups driving L2 fixtures
 
-- **Lifecycle**: V01/V02/V31/V32/V46/V47/V50/V51/V65 — source/Freeze currentness, adopted exact standard or conditional status not FROZEN.
-- **DAG/L3/authority**: V03–V06/V33/V34/V44/V45/V48/V49 — selected ADS dialect and pre-admission evidence vs post-run Implementation receipts.
-- **Local/Agent/worktree/Effect**: V07–V12/V17/V26/V30/V52–V56/V61–V63/V66 — Codex real provider, selected K, actual Host receipts/unknown, no direct Builder GitHub writes, single active Task attempt.
-- **Hidden/security/Operator/Repair**: V13–V16/V28/V35–V41/V57/V58/V67 — held-out verifier ACL principal, privilege escalation and credential-store negative evidence, repo grants/origin/CSRF.
-- **Task telemetry and GitHub reader**: V18–V22/V27/V43/V59/V60 — collector/hook fail-open, current report correction/unsupported schema/derived advice invalidation.
-- **Release and App shell**: V23–V25/V29/V42/V64 — physical Domain Package import closure and independently qualified Version Tag; UI shell never second B/K state machine.
+- **Product lifecycle / source-qualified Freeze**: V01, V02, V31, V32, V46, V47, V50, V51, V65 — Product decisions and authority / Freeze currentness
+- **DAG and L3 admission**: V03, V04, V05, V06, V33, V34, V44, V45, V48, V49 — DAG/current TaskContract and pre-dispatch L3
+- **Local Agent / workspace / effects / Replan**: V07, V08, V09, V10, V11, V12, V17, V26, V30, V52, V53, V54, V55, V56, V61, V62, V63, V66 — real Codex provider, no inherited write authority, task evidence, N=1 executing and accepted-work preservation
+- **Hidden assurance / protected files / independent Review**: V13, V14, V35, V36, V57, V58, V67 — held-out isolation, verifier negative result, protected paths and anti-self-review
+- **Operator session / security / redaction**: V28, V37, V38, V39, V40 — session expiry, repo provider grants, CSRF, token redaction and revocation
+- **GitHub native readback / coverage / durability**: V15, V16, V21, V25, V41 — mismatched readback, 403/429/partial pages, derived cache, cross-chat recovery and remote UNKNOWN
+- **Telemetry / ADS Report and advisory**: V18, V19, V20, V27, V43, V59, V60 — task-meta fail-open, report dialect/correction and stale derived advice
+- **Ordinary structured UI / App Shell**: V22, V64 — Task form use without raw JSON and no second business engine
+- **Version RQ / packaging**: V23, V24, V29, V42 — Full/Hidden/Critical Journey, installed Package closure, qualified merged tree and Tag
+
+**Fixture assignment invariant:** every V01–V67 appears in exactly one authority-focused group; group headings are routing guidance, not independent evidence of test execution. GitHub native readback (V15/V16/V41), UI forms (V22), and cross-session durability (V25) are intentionally no longer classified as Hidden or Release checks.
 
 ## Strict dependency and source authority
 
