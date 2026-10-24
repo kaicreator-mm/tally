@@ -109,10 +109,10 @@ The PREVIOUS_AUDIT_ONLY and PROD_REACHABILITY_UNKNOWN values above **remain unch
 
 | ID | Retained P0 minimum user behavior | Acceptance vectors / excluded legacy subcapability |
 |---|---|---|
-| `F02` | One traceable clarification/answer/revision and visible unresolved requirement | V31; no full interview transcript/signature framework required |
-| `F03` | Accepted Intent exact revision and revalidation when material intent/risk changes | V32; no generic legacy risk classification |
-| `F11` | Bounded assurance severity affects required real checks and visibility | V33; no general assurance optimizer |
-| `F12` | Adopted ADS-compatible Task/L3 contract required before admission | V34/V44; no port of generic Go policy compiler |
+| `F02` | One traceable clarification/answer/revision and visible unresolved requirement | V31/V46; no full interview transcript/signature framework required |
+| `F03` | Accepted Intent exact revision and revalidation when material intent/risk changes | V32/V47; no generic legacy risk classification |
+| `F11` | Bounded assurance severity affects required real checks and visibility | V33/V48; no general assurance optimizer |
+| `F12` | Adopted ADS-compatible Task/L3 contract required before admission | V34/V44/V49; no port of generic Go policy compiler |
 | `F26` | Protected-governance-file changes require actual scope grant; independent review must bind logical execution provenance | V35/V36; advanced Reviewer UX/ranking is P1, not P0 |
 
 F45 Operator session/auth/CSRF remains P0 and is now explicitly probed by V37–V41. This **does not** equate logical execution identity with GitHub account and does not add a separate owner-signoff gate when ADS does not require one. The full reviewer dashboard, automated risk classification and generalized contract compiler remain P1/DEFER rather than silently pulled into P0.
