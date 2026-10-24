@@ -26,7 +26,7 @@
 
 ## B. 当前依赖路径：不是时间预测
 
-DH [A2 #1341](https://github.com/kaicreator-mm/domain-harness/issues/1341) R1 对 early T00 write-set 修订曾给 BLOCK（P1=1），R2 已提出但最新核对时没有独立 R2 PASS；其后是 Contracts T00、BUILD T05、Microkernel T04、Host T03、subscribe T06、cutover、发布与外部 producer T09，最终 R01。某个 issue 有源码或一个 PR CI PASS **不能**代表 Domain Package 可交付。
+DH [A2 #1341](https://github.com/kaicreator-mm/domain-harness/issues/1341) 的历史 R1 曾给 early T00 write-set `BLOCK P1=1`，但 [PR #1342 独立 R2](https://github.com/kaicreator-mm/domain-harness/pull/1342#issuecomment-6381135926) 已在精确 HEAD `77f2f3fcb3ec964a474fa6770617573deaaadd64` 给出 **PASS P0/P1/P2=0/0/0、A2_FREEZE_READY=YES**；PR #1342 已合并，merge commit `cfa3beddf79996a624b6b265e6f1034e8998e30f`。这证明 **A2 设计差异**，不是 Node24 物理安装、T00/T07a3 实测或 Public Package 发布资格。后续 Contracts T00、BUILD T05、Microkernel T04、Host T03、subscribe T06、cutover、外部 producer T09 与最终 R01 仍需各自真实证据。某个 Issue 关闭或 PR/局部 CI PASS **不能**代表 Domain Package 可交付。
 
 只在证据可验证时关闭该条；旧的 draft/PR HEAD 改变应重新审查。平台内部 ABI 如发生允许的 v0.10.2 修订，Tally 语义 L2 可保持稳定，但物理导入/manifest 必须重新 pin 后才能冻结。
 

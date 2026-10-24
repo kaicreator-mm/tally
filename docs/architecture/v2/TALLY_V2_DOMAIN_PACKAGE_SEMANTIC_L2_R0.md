@@ -197,7 +197,6 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 | L2-N17 | Builder 经 gh/GCM/SSH/sudo 获得 GitHub write 权限 direct push | UNGOVERNED_EFFECT/BLOCK, 仅 K→C 发布 |
 | L2-N18 | Builder sudo/admin/backup 读取 Hidden fixture | HIDDEN_NOT_QUALIFIED |
 | L2-N19 | 真实 Agent 已安装认证，但 Builder credential confinement 无法实证；或独立 verifier OS ACL 缺失 | BUILDER_CONFINEMENT_UNAVAILABLE / HIDDEN_VERIFIER_UNAVAILABLE，按不同提供方保留准确类型，不得隐性 PASS |
-| L2-N30 | 仅有 Fake/echo、真实 Codex CLI 未安装、未认证或能力不可用 | LOCAL_AGENT_UNAVAILABLE，禁止 CJ03/Task PASS；普通安全读写 UI 仍可用 |
 | L2-N20 | 已有 GitHub Issue/Ready，但 L3 Tests/Contract/Implementation/Failure/Reference 尚未准入 | L3_NOT_ADMITTED |
 | L2-N21 | 把 ADS v4.17 CONDITIONAL RQ 直接当 READY 激活项目 | STANDARD_PIN_PENDING，冻结拒绝 |
 | L2-N22 | task-meta hook hang/nonzero 中断 Agent/Verifier | fail-open，Telemetry UNKNOWN，Task 实际结果不变 |
@@ -208,6 +207,7 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 | L2-N27 | 两个不同 worktree 的 Task Attempt 同时 EXECUTING | 第 2 个 K Admission NOT_ADMITTED，P0 max=1 |
 | L2-N28 | Codex 模型登录令牌目录同时暴露 operator 的 GitHub write token | BUILDER_CONFINEMENT_UNAVAILABLE，Provider/GitHub credential partition |
 | L2-N29 | GitHub readback/Agent stderr 回显秘密令牌或受保护凭证 | Host/C redaction，安全错误回执，不得发布明文 |
+| L2-N30 | 仅有 Fake/echo、真实 Codex CLI 未安装、未认证或能力不可用 | LOCAL_AGENT_UNAVAILABLE，禁止 CJ03/Task PASS；普通安全读写 UI 仍可用 |
 
 所有案例现为 **SPEC_ONLY / NOT_RUN**；安装测试和真实消息/Effect 调用不得自行判通过。
 
