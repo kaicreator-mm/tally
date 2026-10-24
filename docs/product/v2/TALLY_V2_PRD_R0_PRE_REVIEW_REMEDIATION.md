@@ -39,11 +39,11 @@
 | P1-C5 task-meta in-process hook stalls/exit nonzero | P0-10 bounded fail-open hook and decoupled publisher; preserve Agent actual exit and verifier; disable invalid Hook if unable to prove. | V59/V60 | FIX_CANDIDATE |
 | P2-C1 Cancel and partial side effects | CANCEL_REQUESTED until process/child and remote receipts reconciled, no blind rollback/PASS. | V61/V62 | FIX_CANDIDATE |
 | P2-C2 Parallel scope contradiction | P0 compute parallel-ready set but only N=1 executing Task; concurrent multi-Agent is P1. | V63 | FIX_CANDIDATE |
-| P2-C3 Broken GitHub markdown table V31–V49 | One contiguous table with V01–V65, no blank-separated unheaded rows. | Static markdown verification | FIX_CANDIDATE |
-| P2-C4 Counts/old Go HTTP source citation | Current V01–V65; v1.5.5 http.go 62–65 main routes, dispatch line 72, historic comments not rewritten. | Static source readback | FIX_CANDIDATE |
+| P2-C3 Broken GitHub markdown table V31–V49 | One contiguous table with V01–V67, no blank-separated unheaded rows. | Static markdown verification | FIX_CANDIDATE |
+| P2-C4 Counts/old Go HTTP source citation | Current V01–V67; v1.5.5 http.go 62–65 main routes, dispatch line 72, historic comments not rewritten. | Static source readback | FIX_CANDIDATE |
 | P2-C5 App shell could hide second Business engine | Explicit domain-shell business state/rule leak prohibition, vector V64. | V64 | FIX_CANDIDATE |
 
-Current authored evidence: **47 legacy parity domains, 65 Product acceptance vectors, P0-01..17** (all test vectors NOT_RUN). New source HEAD must be pinned after Output Ledger and PR metadata. No physical Node24 tests performed; no DomainHarness v0.10.2 ABI or npm Manifest freeze.
+Current authored evidence: **47 legacy parity domains, 67 Product acceptance vectors, P0-01..17** (all test vectors NOT_RUN). New source HEAD must be pinned after Output Ledger and PR metadata. No physical Node24 tests performed; no DomainHarness v0.10.2 ABI or npm Manifest freeze.
 
 **Gate:** Distinct independent reviewer must check the newest exact PR #77 SHA, deliver P0/P1/P2 and Product PASS/BLOCK/CONDITIONAL, and separately determine PRODUCT_FREEZE_READY vs actual PRODUCT_FROZEN. While the lawful exact v2 ADS adoption pin is unresolved, a document may be SEMANTIC_FREEZE_READY_CONDITIONAL but **not published as PRODUCT_FROZEN**. Do not replace GitHub ADS fact with K draft state.
 
