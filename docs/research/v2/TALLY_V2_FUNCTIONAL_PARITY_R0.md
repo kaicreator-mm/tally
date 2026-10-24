@@ -123,12 +123,12 @@ F45 Operator session/auth/CSRF remains P0 and is now explicitly probed by V37–
 
 | Feature | Explicit P0 behavioral cut | New acceptance spec |
 |---|---|---|
-| F15 | Compute DAG parallel-ready set but **at most one concurrently executing Task Attempt** | V63 |
-| F17 | Real installed/authed **Codex CLI** mandatory as Local C provider with start/cancel/exit/receipt; Fake/echo is TEST_FIXTURE_ONLY; optional Claude Code | V52/V53 |
-| F21 | Per-attempt isolated clean-base disposable Git worktree and exact frozen candidate commit/tree | V54/V55 |
-| F24 | Held-out fixtures are inaccessible to Builder workspaces and processes before candidate freeze, with actual deny witness | V57/V58 |
-| F29 | Local writes cannot target dirty source/mismatched SHA or two writers on same checkout | V55/V56 |
-| F39 | Telemetry must fail open even if **in-process/wrapper hook hangs or returns non-zero**, no awaited publisher | V59/V60 |
+| `F15` | Compute DAG parallel-ready set but **at most one concurrently executing Task Attempt** | V63 |
+| `F17` | Real installed/authed **Codex CLI** mandatory as Local C provider with start/cancel/exit/receipt; Fake/echo is TEST_FIXTURE_ONLY; optional Claude Code | V52/V53 |
+| `F21` | Per-attempt isolated clean-base disposable Git worktree and exact frozen candidate commit/tree | V54/V55 |
+| `F24` | Held-out fixtures are inaccessible to Builder workspaces and processes before candidate freeze, with actual deny witness | V57/V58 |
+| `F29` | Local writes cannot target dirty source/mismatched SHA or two writers on same checkout | V55/V56 |
+| `F39` | Telemetry must fail open even if **in-process/wrapper hook hangs or returns non-zero**, no awaited publisher | V59/V60 |
 
 Cancel/timeout & partially committed GitHub remote effects are separate `CANCEL_REQUESTED`/reconciliation concerns V61/V62; shell-owned business state is prohibited by V64; lifecycle GitHub artifact truth by V50/V51/V65. The actual public DomainHarness Manifest/ABI and selected Host await independently validated v0.10.2 artifacts.
 
