@@ -51,7 +51,10 @@
 | B-TaskOrchestration | DAG 与依赖、TaskContract、Agent Profile、ready/blocked、Replan、重试预算、Local 优先 | F06–F07、F13–F20、F27、F30 | B 决策；K effect；C GitHub/Local/可选 runx |
 | B-AssuranceRelease | Candidate、ChangeSet、Verification Contract、held-out、Review、Repair、Version Closure/RQ | F08–F10、F21–F29、F47 | S Evidence/Workflow；K permits；C 真验证者/GitHub |
 | B-ExperienceDecision | Source-qualified Context、Failure Diagnosis、经验候选、Strategy/Cost 派生视图 | F31–F39、F41 | S Context/Decision 可选；C GitHub report；数据不足弃权 |
+| **F40 cross-layer persistence / derived projection (NOT an Engineering B Package)** | **K Primary + Host** own authoritative State/CAS/Journal/Effect durability through selected public Host persistence interface; **B query / C GitHub Reader + Host cache** own source-SHA-qualified GitHub-derived SQLite/Postgres read projection only | **F40** SQLite / Postgres 存储接口 | K/Host writes alone may persist K-owned state; GitHub Issue/PR/Review/Task Report stay native authority; derived cache staleness/partial pagination never upgrades eligibility; **no second Tally K/Journal or authority** |
 | App Shell/UI | 阶段向导、表单、Review/Verify/Release 视图 | F14、F42–F46 | UI 仅发送受控意图，不直接构造 Kernel state/effect |
+
+**F40 所有权追踪：**上表 F40 是跨层 Host/Storage+GitHub projection 责任，不是额外的 B npm 包；与 §2 的 `SQLite Github Projection` / `SQLite K 状态持久化` 以及 §7 两类存储一致。原 Go 存储后端能力不会成为 v2 绕 K 更新业务状态的理由。
 
 **L2 待决：**一个 Engineering B Package 还是多个 B Package、是否独立生产 C GitHub / C Local、UI 以何种 public Application Shell composition 加载，完全取决于 DomainHarness 最终可安装的 Producer/Manifest/ABI/BUILD 支持。不以“逻辑模块=物理包”作为默认假设。即便最终只有一个 B 包，仍须明确对外合同和权限最小化。
 
@@ -123,6 +126,10 @@
 
 ### C Local / Agent（最低必需）
 
+**Two independent Local rejection identities (Product P0-06, V52/V53/V66):** `LOCAL_AGENT_UNAVAILABLE` means no real installed/usable/authenticated Codex CLI (or only a Fake/echo test provider); the dispatch is not admitted regardless of Builder OS isolation. `BUILDER_CONFINEMENT_UNAVAILABLE` means a *real* Provider is present and authenticated but the least-privileged Builder principal, its credential-store separation, or no-write denial cannot be proved; the dispatch is still not admitted. Both cases keep ordinary authorized Product/Requirements browsing and draft editing usable. Neither status means Hidden-verifier absence: `HIDDEN_VERIFIER_UNAVAILABLE` independently blocks hidden qualification. Typed status must be retained in B projections, K Admission failure receipts, Host/C provider failure mapping and UI; never substitute `NOT_QUALIFIED` for the reason.
+
+
+
 - Execution Environment=Local，Workspace 与 Agent Runtime/Provider 分离；支持一个真实 Agent/Task/Verify 回合以及取消与恢复。**P0 max executing Task Attempts = 1**，无论 DAG 中展示几个 parallel-ready node、worktree 是否分离，第二个并行 executing Admission 必须 NOT_ADMITTED；更多并发是 P1。
 - **Codex Provider/Auth partitioning:** Operator 在 Host/Provider adapter 配置中合法安装、登录真实 Codex CLI；Host 将**只可用于模型 Provider** 的最小授权会话/认证句柄限定传给低权限 Builder principal，**绝不继承**操作者可写 GitHub 的 gh/GCM/SSH-agent、home 配置、token cache 或提权能力。模型登录成功不证明 GitHub grant，也不成为写权限。若 Codex 授权文件/目录同 GitHub write credentials 无法实证隔离，返回 BUILDER_CONFINEMENT_UNAVAILABLE，Local Task 不可 PASS；禁止把真实秘密写入可发布的日志/证据。
 - 关键边界：OS 进程权限、环境变量脱敏、工作目录/命令参数隔离、Git 工作树安全、受控 Tool capability、进程退出/超时/错误码/标准输出留证。
@@ -189,7 +196,8 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 | L2-N16 | 不兼容 ADS Task Report 在 Reader 中混作当前版本 | UNSUPPORTED/INSUFFICIENT_EVIDENCE |
 | L2-N17 | Builder 经 gh/GCM/SSH/sudo 获得 GitHub write 权限 direct push | UNGOVERNED_EFFECT/BLOCK, 仅 K→C 发布 |
 | L2-N18 | Builder sudo/admin/backup 读取 Hidden fixture | HIDDEN_NOT_QUALIFIED |
-| L2-N19 | Builder credential confinement 或 verifier OS ACL 无法实证 | BUILDER_CONFINEMENT_UNAVAILABLE / HIDDEN_VERIFIER_UNAVAILABLE，禁止隐性 PASS |
+| L2-N19 | 真实 Agent 已安装认证，但 Builder credential confinement 无法实证；或独立 verifier OS ACL 缺失 | BUILDER_CONFINEMENT_UNAVAILABLE / HIDDEN_VERIFIER_UNAVAILABLE，按不同提供方保留准确类型，不得隐性 PASS |
+| L2-N30 | 仅有 Fake/echo、真实 Codex CLI 未安装、未认证或能力不可用 | LOCAL_AGENT_UNAVAILABLE，禁止 CJ03/Task PASS；普通安全读写 UI 仍可用 |
 | L2-N20 | 已有 GitHub Issue/Ready，但 L3 Tests/Contract/Implementation/Failure/Reference 尚未准入 | L3_NOT_ADMITTED |
 | L2-N21 | 把 ADS v4.17 CONDITIONAL RQ 直接当 READY 激活项目 | STANDARD_PIN_PENDING，冻结拒绝 |
 | L2-N22 | task-meta hook hang/nonzero 中断 Agent/Verifier | fail-open，Telemetry UNKNOWN，Task 实际结果不变 |
@@ -237,4 +245,4 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 - **Report/release evidence:** telemetry hook nonzero/hang fails open; git-native current source and independent verifier/Full/Hidden/CJ/RQ remain actual gates; source-corrected ADS Report invalidates derived advice only. Candidate→main merge tree drift requires revalidation before tag.
 - **Standards barrier:** Product draft may be independently semantically reviewed, but no effective v2 freeze/adoption until canonical project ADS 4.17 selection is *actually allowed by the pinned §2.1C RQ READY criterion* or an authorized prospective clarification, and its source-bound GitHub artifact is read back. Structural verifier PASS is necessary not sufficient.
 
-**Required negative cases L2-N17…N29 are now normative source specifications in §10**, including Host/App Shell session+CSRF, protected-path Repair/role/delegation, durable GitHub facts, strict N=1 and Provider credential partition. All tests SOURCE_SPEC_ONLY / PHYSICAL_TESTS_NOT_RUN.
+**Required negative cases L2-N17…N30 are now normative source specifications in §10**, including Host/App Shell session+CSRF, protected-path Repair/role/delegation, durable GitHub facts, strict N=1 and Provider credential partition. All tests SOURCE_SPEC_ONLY / PHYSICAL_TESTS_NOT_RUN.
