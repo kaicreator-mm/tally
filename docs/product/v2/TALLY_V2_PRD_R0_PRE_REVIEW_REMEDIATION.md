@@ -1,6 +1,6 @@
-# Tally v2 Product R0 — GPT-6 adversarial pre-review remediation ledger
+# Tally v2 Product R0 — GPT-6 and Claude pre-review remediation ledger
 
-**Status:** AUTHOR_REPAIR_CANDIDATE / CLAUDE_MODEL_DIVERSITY_REVIEW_NOT_RUN / FORMAL_PRODUCT_R1_NOT_RUN / PRODUCT_FREEZE_READY=NO  
+**Status:** AUTHOR_REPAIR_CANDIDATE / CLAUDE_PRE_REVIEW_REWORK_P1_5_P2_5 / FORMAL_PRODUCT_R1_NOT_RUN / PRODUCT_FREEZE_READY=NO  
 **Source review:** [PR #77 GPT-6 pre-review comment #6381193617](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6381193617) on `3935e2d6d8a499fd010fbe82a5d9485bf7234c58`.  
 **Review identity:** reviewer actually identified as `GPT6_ADVERSARIAL_PRD_PRE_REVIEW` even though originally requested `CLAUDE_PRD_PRE_REVIEW`. Claude execution is **not** observed; do not translate one into the other.  
 **Findings:** P0=0 / P1=5 / P2=2, verdict `PRE_REVIEW_REWORK`. **Author's patch != independent closure.**
@@ -26,9 +26,30 @@
 - **Version closeout:** Finish version branch first, qualify exact candidate, then merge main only under source-currentness rules, reverify merged tree and target Tag.
 - **R0 preparation not implementation:** 47 mapped feature domains (legacy `v1.5.5@b5e7b6e38ea38837e3bbcfc46c36586180705de0`), 49 Product vectors now specified; no Go/Node/Host physical tests executed this turn, no formal reviewer PASS or Release Qualification.
 
+## Actual Claude adversarial pre-review (newer than GPT-6) — author remediation
+
+[Full Claude PR #77 review #6381544471](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6381544471) inspected exact former head a97e6fa3e1c36a400d6912c6649b780eb0678c97. Reviewer declared Claude Opus 5.5, independent of author; P0=0/P1=5/P2=5, PRE_REVIEW_REWORK. **This is an actual Claude pre-review, not formal Product R1, and the source verdict remains REWORK**. The author-proposed changes below require independent recheck, not an automatic PASS.
+
+| Finding | Product fix candidate | Negative/positive spec | Author status |
+|---|---|---|---|
+| P1-C1 Freeze authority and open P1 agenda | Drafts B/K; actual eligible Product/L2 review and Freeze are GitHub ADS source-qualified read-back artifacts. Project v2 exact ADS pin must be adopted before Freeze publication; unadopted pin is external HOLD, not silently resolved. §10 turns undefined P1 agenda into decisions/holds/deferred. | V50/V51/V65 | FIX_CANDIDATE |
+| P1-C2 Real Local Agent unspecified | Codex CLI mandatory real Local Agent C provider; actual start/cancel/timeout/exit/receipt/workspace, optional Claude Code; Fake test-only. | V52/V53 | FIX_CANDIDATE |
+| P1-C3 F21/F29 workspace/git isolation missing | P0-16 isolated clean-pinned per-attempt disposable worktree, candidate exact commit/tree freeze, disallow dirty/conflicting concurrent writers. | V54/V55/V56 | FIX_CANDIDATE |
+| P1-C4 Hidden Local host trust boundary missing | P0-17 verifier-only fixtures after candidate freeze and Builder denial witness; same-user unrestricted read invalidates Hidden PASS. | V57/V58 | FIX_CANDIDATE |
+| P1-C5 task-meta in-process hook stalls/exit nonzero | P0-10 bounded fail-open hook and decoupled publisher; preserve Agent actual exit and verifier; disable invalid Hook if unable to prove. | V59/V60 | FIX_CANDIDATE |
+| P2-C1 Cancel and partial side effects | CANCEL_REQUESTED until process/child and remote receipts reconciled, no blind rollback/PASS. | V61/V62 | FIX_CANDIDATE |
+| P2-C2 Parallel scope contradiction | P0 compute parallel-ready set but only N=1 executing Task; concurrent multi-Agent is P1. | V63 | FIX_CANDIDATE |
+| P2-C3 Broken GitHub markdown table V31–V49 | One contiguous table with V01–V65, no blank-separated unheaded rows. | Static markdown verification | FIX_CANDIDATE |
+| P2-C4 Counts/old Go HTTP source citation | Current V01–V65; v1.5.5 http.go 62–65 main routes, dispatch line 72, historic comments not rewritten. | Static source readback | FIX_CANDIDATE |
+| P2-C5 App shell could hide second Business engine | Explicit domain-shell business state/rule leak prohibition, vector V64. | V64 | FIX_CANDIDATE |
+
+Current authored evidence: **47 legacy parity domains, 65 Product acceptance vectors, P0-01..17** (all test vectors NOT_RUN). New source HEAD must be pinned after Output Ledger and PR metadata. No physical Node24 tests performed; no DomainHarness v0.10.2 ABI or npm Manifest freeze.
+
+**Gate:** Distinct independent reviewer must check the newest exact PR #77 SHA, deliver P0/P1/P2 and Product PASS/BLOCK/CONDITIONAL, and separately determine PRODUCT_FREEZE_READY vs actual PRODUCT_FROZEN. While the lawful exact v2 ADS adoption pin is unresolved, a document may be SEMANTIC_FREEZE_READY_CONDITIONAL but **not published as PRODUCT_FROZEN**. Do not replace GitHub ADS fact with K draft state.
+
 ## Next independent checks
 
-1. Actual Claude agent, if required for model diversity, reviews **latest refreshed exact PR #77 HEAD**, not the already reviewed `3935e2d6...` source. Record role as CLAUDE only if an actual Claude execution occurs; full findings and closeout posted to #77 and #76.
+1. Actual Claude pre-review DONE on earlier exact a97e6fa3 and returned REWORK; author fixes must be independently checked on newer source.
 2. A different independent Product R1 reviewer inspects newest exact SHA and this remediation ledger, verifies each P1/P2 with source references, then issues P0/P1/P2, PASS/BLOCK, PRODUCT_FREEZE_READY and MERGE_ELIGIBLE **separately**.
 3. Before L2 independent R1, reconcile approved Product changes into stacked #79 semantic L2 candidate; **physical** L2 Freeze still pending actual DomainHarness v0.10.2 public Package API and independently proven clean external producer/T09 + R01.
 4. If Claude pre-review or formal Reviewer finds new P0/P1, fix Product docs in PR #77 with a **new exact SHA** and repeat narrowed independent review. Keep all GitHub output durable.
