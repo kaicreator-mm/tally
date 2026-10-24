@@ -33,21 +33,21 @@
 | F12 | Contract 编译/策略匹配 | `internal/contract/`, `internal/engineeringpolicy/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_BOUNDED_ADS_CONTRACT_CHECK | B+S Rule KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F13 | Project Control Plane / 状态推进 | `internal/controlplane/service.go`, `types.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | B + K REIMPLEMENT | `internal/controlplane/service_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F14 | API 操作 Lifecycle/DAG/Dispatch | `internal/controlplane/http.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | App API KEEP | `internal/controlplane/http_v155_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
-| F15 | Ready 调度/并发/启动恢复 | `internal/controlplane/scheduler.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+K KEEP | `internal/controlplane/scheduler_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
+| F15 | Ready 调度/并发/启动恢复 | `internal/controlplane/scheduler.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_READY_SET_AND_N1_DISPATCH; PARALLEL_P1 | B Task + single K admission | `internal/controlplane/scheduler_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F16 | AgentExecutor 与 Runtime 中立协议 | `internal/taskexecution/`, `internal/agentruntime/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+C KEEP | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
-| F17 | Codex / DSH / Fake Agent | `runtimes/codex/`, `runtimes/dsh/`, `runtimes/fake/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | C Provider ADAPTER | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
+| F17 | Codex / DSH / Fake Agent | `runtimes/codex/`, `runtimes/dsh/`, `runtimes/fake/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_REAL_CODEX_CLI_ADAPTER; FAKE_TEST_ONLY | C Local Agent Provider; optional Claude Code | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
 | F18 | Direct LLM / AI Runtime | `internal/intelligence/`, `internal/airuntime/`, `internal/llm/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P1_CANDIDATE | S+C ADAPTER | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
 | F19 | Local/SSH/Docker/Workspace 能力 | `internal/runner/`, `internal/taskexecution/`, `internal/workspace/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | C Execution / Local mandatory | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
 | F20 | 环境 UP/Down/Health/Deploy/Rollback | `internal/environment/`, `internal/deploy/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | DEFER | C optional/业务视图视需要保留 | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
-| F21 | Disposable worktree 与候选冻结 | `internal/changeset/`, `internal/workspace/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+C KEEP | `internal/closedloop/integration_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
+| F21 | Disposable worktree 与候选冻结 | `internal/changeset/`, `internal/workspace/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_ATTEMPT_WORKTREE_AND_CANDIDATE_FREEZE | B+C Local Git safety | `internal/closedloop/integration_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F22 | Run / ChangeSet / Evidence 持久事实 | `internal/runstore/`, `internal/store/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | K State + B provenance | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F23 | Verification Contract / required gates | `internal/verification/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S+C KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
-| F24 | Hidden/Held-out 执行与隔离 | `internal/holdout/`, `internal/candidateverify/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+C validation KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
+| F24 | Hidden/Held-out 执行与隔离 | `internal/holdout/`, `internal/candidateverify/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_HIDDEN_BUILDER_INACCESSIBILITY_PROOF | B Assurance + C Verifier Isolation | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F25 | Closedloop Execute/Verify/Repair/Accept | `internal/closedloop/` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Workflow，K effects | `internal/closedloop/engine_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F26 | Reviewer 归账与保护文件处理 | `internal/review/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_PROTECTED_FILES_AND_REVIEW_INDEPENDENCE | B+S KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F27 | Multiagent role / 独立性 / Repair | `internal/multiagent/`, `internal/controlplane/multiagent.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | `internal/controlplane/multiagent_hardening_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F28 | Git Engineering Authority / GitHub Actions | `internal/gitengineering/`, `internal/engineering/git.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | REPLACE_ADAPTER | B+C GitHub KEEP | `internal/gitengineering/github_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
-| F29 | Local Git 写入/集成与防冲突 | `internal/gitwriter/`, `internal/gitintegration/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | C Git ADAPTER，保留安全约束 | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
+| F29 | Local Git 写入/集成与防冲突 | `internal/gitwriter/`, `internal/gitintegration/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_LOCAL_GIT_NO_DIRTY_OR_CONCURRENT_WRITERS | C Local Git safety | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F30 | Replan / stale parent / 循环预算 | `internal/replan/`, `internal/controlplane/replan.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | `internal/replan/validate_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F31 | Engineering Learning→RuleProposal | `internal/engineeringlearning/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P1_CANDIDATE | B+S KEEP | TEST_CASE_UNMAPPED | AC-EVIDENCE / AC-DEGRADE |
 | F32 | Rule 提议/激活/冲突处理 | `internal/policygovernance/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P1_CANDIDATE | B+S，生产选择经新 BUILD | TEST_CASE_UNMAPPED | AC-EVIDENCE / AC-DEGRADE |
@@ -82,7 +82,7 @@
 
 ### C2. Source-call-chain and test assertions newly inspected (supplement)
 
-**Static route chain, fixed v1.5.5 commit:** `cmd/v15server/main.go` blob `e57edef13129913d71b50c4e5d89a56a73d365a4` creates `controlplane.NewService(WithHarness)` and `controlplane.NewHTTPHandler`. `internal/controlplane/http.go` lines 62–66 register the routes, including POST task-dag. `internal/controlplane/service.go` blob `56dee1e91323e58385c35bf76347645b4a8af23c` `Service.ActivateDAG` requires prior Requirements+Plan+Architecture and delegates to `engineering.ActivateTaskDAG` (also enforces one CompletionContract per Task). Thus F06/F13/F14 have a **source-visible wiring chain from the v15 server entrypoint**, not an execution/test PASS. F07 readiness logic itself still needs caller-chain proof.
+**Static route chain, fixed v1.5.5 commit:** `cmd/v15server/main.go` blob `e57edef13129913d71b50c4e5d89a56a73d365a4` creates `controlplane.NewService(WithHarness)` and `controlplane.NewHTTPHandler`. `internal/controlplane/http.go` lines 62–65 register requirements/plan/architecture/task-dag routes, while dispatch is separately registered at line 72. `internal/controlplane/service.go` blob `56dee1e91323e58385c35bf76347645b4a8af23c` `Service.ActivateDAG` requires prior Requirements+Plan+Architecture and delegates to `engineering.ActivateTaskDAG` (also enforces one CompletionContract per Task). Thus F06/F13/F14 have a **source-visible wiring chain from the v15 server entrypoint**, not an execution/test PASS. F07 readiness logic itself still needs caller-chain proof.
 
 **Pinned test assertion witnesses (file+declaration inspected):**
 - F01/F04/F05/F08/F09: `internal/engineering/model_completion_test.go` blob `f2fb334af6435964ab980c1daa8fe64a0cf3f1a7`; `TestRequirementsBaselineRejectsMissingAcceptanceAndCopiesInput`, `TestPlanningArchitectureAndAudit`, `TestCompletionRequiresPassAndAuthority`.
@@ -116,6 +116,21 @@ The PREVIOUS_AUDIT_ONLY and PROD_REACHABILITY_UNKNOWN values above **remain unch
 | `F26` | Protected-governance-file changes require actual scope grant; independent review must bind logical execution provenance | V35/V36; advanced Reviewer UX/ranking is P1, not P0 |
 
 F45 Operator session/auth/CSRF remains P0 and is now explicitly probed by V37–V41. This **does not** equate logical execution identity with GitHub account and does not add a separate owner-signoff gate when ADS does not require one. The full reviewer dashboard, automated risk classification and generalized contract compiler remain P1/DEFER rather than silently pulled into P0.
+
+## D3. Claude Product pre-review bounded P0 cut and proof cases
+
+**Model diverse pre-review:** [Claude review on PR #77](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6381544471) identifies missing Product requirements, not new legacy source reachability. The old paths remain `PREVIOUS_AUDIT_ONLY/PROD_REACHABILITY_UNKNOWN`. Future v2 tests cannot inherit historic Go RQ PASS.
+
+| Feature | Explicit P0 behavioral cut | New acceptance spec |
+|---|---|---|
+| F15 | Compute DAG parallel-ready set but **at most one concurrently executing Task Attempt** | V63 |
+| F17 | Real installed/authed **Codex CLI** mandatory as Local C provider with start/cancel/exit/receipt; Fake/echo is TEST_FIXTURE_ONLY; optional Claude Code | V52/V53 |
+| F21 | Per-attempt isolated clean-base disposable Git worktree and exact frozen candidate commit/tree | V54/V55 |
+| F24 | Held-out fixtures are inaccessible to Builder workspaces and processes before candidate freeze, with actual deny witness | V57/V58 |
+| F29 | Local writes cannot target dirty source/mismatched SHA or two writers on same checkout | V55/V56 |
+| F39 | Telemetry must fail open even if **in-process/wrapper hook hangs or returns non-zero**, no awaited publisher | V59/V60 |
+
+Cancel/timeout & partially committed GitHub remote effects are separate `CANCEL_REQUESTED`/reconciliation concerns V61/V62; shell-owned business state is prohibited by V64; lifecycle GitHub artifact truth by V50/V51/V65. The actual public DomainHarness Manifest/ABI and selected Host await independently validated v0.10.2 artifacts.
 
 ## E. Next source proof requirement (before Product R1)
 
