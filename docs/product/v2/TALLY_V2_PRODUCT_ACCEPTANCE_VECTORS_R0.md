@@ -54,14 +54,30 @@
 | V43 | F33–40 | Previously qualified task-meta report is corrected/revoked after Agent ranking/Context advice issued | Invalidate dependent advice and label STALE/REQUALIFY; retain independent Task/CI truth, no cost double-count | Spec now; NOT_RUN |
 | V44 | F06/F08 | DAG Ready and Issue exists, but L3 Tests/Contract/Implementation/Failure Handling/Reference missing/stale | L3_NOT_ADMITTED; offer fix/publish/readback UI; no dispatch Effect | Requires DH; NOT_RUN |
 | V45 | F23/F25 | L3 spec was complete before dispatch but real implementation/verification receipts absent afterward | Implementation Evidence remains NOT_RUN/UNKNOWN; no Task PASS from pre-run plan | Requires DH; NOT_RUN |
-
 | V46 | F02 | A critical question is answered and acknowledged with current source revision | Revised Requirement/PRD retains attributed clarification and may proceed to valid independent Product review | Spec now; NOT_RUN |
 | V47 | F03 | Accepted frozen intent digest and applicable risk facts remain unchanged | Accepted current source remains valid without redundant intent re-freeze; no fabricated new decision | Spec now; NOT_RUN |
 | V48 | F11 | Declared risk class and qualified verifier/authority match adopted policy | Exactly the applicable bounded assurance checks become ready, not a universal extra gate | Spec now; NOT_RUN |
 | V49 | F12 | Correct adopted ADS Task/L3 contract contains actual required fields and current reference | Contract validation passes pre-admission semantics; production dispatch still requires real K and Claim | Spec now; NOT_RUN |
+| V50 | F01/F09 | Operator saves Product or L2 draft to K but no accepted GitHub review/Freeze artifact exists | UI shows DRAFT/REVIEW_PENDING, never FROZEN; another chat GitHub-only rehydrate does not conjure a Freeze | Spec now; NOT_RUN |
+| V51 | F01/F09 | Applicable ADS version not adopted for v2, but Product reviewer reports semantic READY | Record STANDARD_PIN_PENDING and conditional Product readiness only; do not publish Product Freeze until exact qualified project adoption+GitHub readback | Spec now; NOT_RUN |
+| V52 | F16/F17/F19 | Actual Codex CLI installed/authenticated and bound to one clean Local Task Attempt, runx absent | Real Agent start/cancel/terminal/exit/receipt/workspace exposed through K-admitted selected C; no Fake Agent substitution | Requires DH; NOT_RUN |
+| V53 | F17 | Provider registry offers only Fake/echo Agent but requests CJ03 or release | LOCAL_AGENT_UNAVAILABLE/NOT_QUALIFIED; basic UI still functions, no real Task PASS | Requires DH; NOT_RUN |
+| V54 | F21/F29 | One Task Attempt starts from exact pinned clean Git commit in its own disposable worktree | Workspace isolation and frozen candidate commit/tree proven before independent verification; no mutable primary checkout | Requires DH; NOT_RUN |
+| V55 | F21/F29 | Dirty worktree or wrong SHA reused for Task attempt | Deny dispatch or isolate from a clean correct source; no altered source conflated with accepted candidate | Requires DH; NOT_RUN |
+| V56 | F15/F21/F29 | Two ready Tasks attempt writes to same Local checkout | P0 single-executing-attempt and per-attempt isolation prevent competing writers; remain BLOCKED/QUEUED | Requires DH; NOT_RUN |
+| V57 | F24 | Builder runs while held-out fixtures are not readable by its process or worktree; frozen candidate later verified in separate protected identity | Qualified verifier can run hidden checks after freeze; physical deny/read witness captured before Hidden PASS | Requires DH; NOT_RUN |
+| V58 | F24 | Same-user Builder shell can read verifier-only hidden fixture file before candidate freeze | Hidden witness NOT_QUALIFIED; no silent PASS merely because dirs differ; RQ blocked unless permitted explicit policy | Requires DH; NOT_RUN |
+| V59 | F39 | task-meta hook embedded in Agent session exits nonzero while legitimate Agent command succeeds | Agent exit remains original success and real verifier still runs; telemetry UNAVAILABLE, not Task FAIL | Requires DH; NOT_RUN |
+| V60 | F39 | task-meta Agent hook hangs indefinitely or synchronously awaits a stalled publisher | Observer times out/disabled without delaying Agent or verifier bounded outcome; no awaited telemetry completion gate | Requires DH; NOT_RUN |
+| V61 | F16/F28 | Local Agent cancellation requested after pushing branch or opening PR | CANCEL_REQUESTED persists until child/process and remote effects reconciled; keep partial GitHub facts visible and no Task PASS | Requires DH; NOT_RUN |
+| V62 | F16/F19 | Agent times out leaving orphaned subprocess and UNKNOWN external action | Bounded stop/cleanup, external reconcile, no blind retry/false rollback or PASS | Requires DH; NOT_RUN |
+| V63 | F07/F15 | Three Tasks are ready and two are parallel-eligible under adopted DAG | UI shows parallel-ready set but P0 execution admission permits max 1 active Task Attempt; concurrency belongs P1 | Requires DH; NOT_RUN |
+| V64 | F13/F42/F44 | UI app shell implements engineering domain state transition or policy decision independently of Business B/K | Product/package closure check BLOCKS shell as second authority despite forms rendering correctly | Requires DH; NOT_RUN |
+| V65 | F09/F14 | GitHub ADS review/freeze artifact exists but source SHA is stale or reviewer provenance invalid | K/B projection must not show FROZEN; source-qualified actual authority check requires new valid artifact | Requires DH; NOT_RUN |
+
 ## Coverage and review protocol
 
-- **Product evidence:** F01–F47 domain inventory and 49 vectors. These are test *requirements*, not executed test results.
+- **Product evidence:** F01–F47 domain inventory and 65 vectors. These are test *requirements*, not executed test results.
 - **Physical Node24 tests after actual DH qualification:** real public Contracts/Manifest/ABI, producer with a Tally Engineering B/Capability package from outside DH repo, immutable artifact SHA, selected BUILD, Local Host persistence, C GitHub and Local Agent with K Effect admission.
 - **Source and authority:** actual latest GitHub Issue/PR/Review/CI and adopted ADS report versions, with transport pagination/error and cache staleness. A successful parser is neither evidence freshness nor Task PASS.
 - **Separation:** Functional tests vs release-level Full Regression, Hidden Validation, Critical Journeys, independent Product/L2/Implementation review and Release Qualification. Do not replace any stage with historical v1.5.5 result.
@@ -83,9 +99,9 @@ These shape sketches are illustrative Product-level vocabulary and **MUST NOT be
 ## Future gates
 
 1. P01 source parity Product reviewer checks rows/status and key call sites.
-2. P02 Product reviewer checks P0-01…P0-15 plus V01…V30, fix P0/P1, Product Freeze if independently eligible.
+2. P02 Product reviewer checks P0-01…P0-15 plus V01…V65, fix P0/P1, Product Freeze if independently eligible.
 3. Semantic L2 maps package boundaries; leave actual physical ABI open until qualified published DH artifacts exist.
 4. Physical L2/API, executable Task DAG, production Domain Packages and UI/E2E only after gate.
 5. Full Release Qualification / final tag on exact frozen version source.
 
-**Current result:** `DESIGN_VECTORS=49/49_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
+**Current result:** `DESIGN_VECTORS=65/65_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
