@@ -8,6 +8,7 @@ Effective process: [GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md](./GITHUB_OUTPUT_PERSI
 |---|---|---|---|---|---|
 | 2026-10-24 | Full v1.5.5 source functional audit and 47-feature B/S/K/C migration map; Product constraints, high-ROI additions, ADS UI gaps, task-meta degradation, SQLite cache and closed-loop gates | [Source audit](./TALLY_V155_SOURCE_FUNCTIONAL_AUDIT_2026-10-24.md) | Tally `v1.5.5@b5e7b6e38ea38837e3bbcfc46c36586180705de0` (RQ candidate `9c71fa6f35f08bcc5bda4101263929f70f81202a`) | STATIC_AUDIT; v2 NOT_RUN; Product NOT_FROZEN | Create function-by-function parity/verification matrix; Product review and L2 |
 | 2026-10-24 | User-required persistence: every substantive conversation output must be captured in GitHub, with durable handoff index and readback verification | [Persistence protocol](./GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md) | User Product decisions 2026-10-24; Tally #63 | USER_APPROVED intent; repository convention proposed for review | Apply to each next substantive Tally turn; keep ledger current |
+| 2026-10-24 | Cross-project ADS intake to require GitHub persistence for all substantive Web/Agent conversation outputs, expanding existing task-prompt rule #64 | [ADS #1316](https://github.com/kaicreator-mm/ai-development-standard/issues/1316) | ADS previous rule #64; Tally #73, [draft PR #74](https://github.com/kaicreator-mm/tally/pull/74) | PROPOSED STANDARD INTAKE; not adopted ADS norm | Independent ADS Product review; propagate to relevant repos after approval |
 
 ## Adding the next entry
 
