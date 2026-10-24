@@ -1,10 +1,12 @@
 # Tally v2 — Domain Package First 语义 L2 候选 R0
 
-**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_R0_REVIEW_PENDING / PHYSICAL_ABI_PENDING / L2_FREEZE_READY=NO / IMPLEMENTATION_NOT_STARTED  
+**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_R2_DISTINCT_REVIEW_PENDING / ADS_417_ADOPTION_BLOCKED / PHYSICAL_ABI_PENDING / L2_FREEZE_READY=NO / IMPLEMENTATION_NOT_STARTED  
 **归属**：[L2 #65](https://github.com/kaicreator-mm/tally/issues/65)、[语义 L2 交付 #78](https://github.com/kaicreator-mm/tally/issues/78)。Product R0 见 [#76](https://github.com/kaicreator-mm/tally/issues/76)、[PR #77](https://github.com/kaicreator-mm/tally/pull/77)。  
 **历史功能证据**：v1.5.5 固定 tag commit b5e7b6e38ea38837e3bbcfc46c36586180705de0；[47 项矩阵](../../research/v2/TALLY_V2_FUNCTIONAL_PARITY_R0.md)。  
 **平台设计参考**：DomainHarness v0.10.2 L2 Candidate 文档 blob 68e7dbc591f4c0c694818ec574b8585f95239c8b；引用的是**设计方案而非可安装 SDK/物理版本验收**。平台 [T09 外部消费者 #1330](https://github.com/kaicreator-mm/domain-harness/issues/1330) 和 [R01 #1331](https://github.com/kaicreator-mm/domain-harness/issues/1331) 未完成。  
 **底线**：不将普通 TS App 写好后包装成 Domain Package。先建立真实的第三方 Business/Capability Domain Package 产物及运行依赖，再编码 Tally 实现。本文件不发布任何新的 DomainHarness Manifest、npm 包名、公共 TypeScript ABI 或 Kernel 代码。
+
+**Product candidate source sync (not Freeze):** Parent Product PR #77 at exact `0d1f1a2e15581e300500bada6da54b2c9bcef75f`; 17 P0 requirements/47 Fxx domains/67 Vxx specs. The independent-source-qualification reviewer is still pending. ADS v4.17.0 root pin PR #81 structurally verified using pinned Python3.14 (PASS exit 0 at old exact #81 head) but **actual adoption remains BLOCKED** by literal RQ READY vs actual CONDITIONAL. [ADS #1318](https://github.com/kaicreator-mm/ai-development-standard/issues/1318). The scoped P0-15/16 credential confinement, P0-17 Local OS Verifier and L3/release boundaries are mapped in [R2 crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md), and incorporated as required semantic negative contracts below. This branch sync is NOT independent Review or physical ABI verification.
 
 ## 1. 物理架构硬约束
 
@@ -209,3 +211,13 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 - **v2 源码/测试进度**：NOT_STARTED / NOT_RUN；任何历史 Go v1.5.5 RQ 不转化为本版 Tally v2 PASS。
 
 下一步是独立 L2 语义审查，对业务所有权和失败合同给 P0/P1/P2，再等待 DH 真实发布接口填补物理字段，最后才入正式 L2 Freeze。
+
+## 11. Current Product-v2 semantic security and source-adoption binding (candidate only)
+
+- **Builder credential isolation:** Real Codex CLI is launched under a least-privileged Builder OS principal with *no* GitHub write credential/credential helper/GCM/SSH-agent/delegated write capability. Only K-permitted C GitHub has scoped native write authority, expected source SHA and remote readback. Any write by Builder itself ⇒ `UNGOVERNED_EFFECT`, completion BLOCK/UNKNOWN, no false success on locally accepted intent; noninteractive sudo/admin/backup escalation paths must be proven denied. If not demonstrable, `BUILDER_CONFINEMENT_UNAVAILABLE` blocks Local Task closure.
+- **Local Hidden without runx/Docker:** A separate verifier OS principal with filesystem ACL denies the Builder access to fixture files, including through privilege escalation, inherited mounts/env/credential stores. Fixtures materialize after candidate freeze, and read-denial witness must be real. Missing verifier ⇒ `HIDDEN_VERIFIER_UNAVAILABLE`; readable fixture ⇒ `HIDDEN_NOT_QUALIFIED`. Runx/container/SSH are optional providers.
+- **L3-before-Task:** Native GitHub Task Issue/DAG Ready is not executable without current ADS-version-selected L3 Tests/Contract/Implementation plan/Failure Handling/Reference source-qualified GitHub readback. Post-run Implementation Evidence is separate.
+- **Report/release evidence:** telemetry hook nonzero/hang fails open; git-native current source and independent verifier/Full/Hidden/CJ/RQ remain actual gates; source-corrected ADS Report invalidates derived advice only. Candidate→main merge tree drift requires revalidation before tag.
+- **Standards barrier:** Product draft may be independently semantically reviewed, but no effective v2 freeze/adoption until canonical project ADS 4.17 selection is *actually allowed by the pinned §2.1C RQ READY criterion* or an authorized prospective clarification, and its source-bound GitHub artifact is read back. Structural verifier PASS is necessary not sufficient.
+
+**Additional required negative cases:** L2-N17 Builder writes GitHub through inherited GCM/SSH/gh or privilege escalation; L2-N18 Hidden fixture readable under sudo/admin/backup privilege; L2-N19 missing Builder/Verifier confinement displays named BLOCK; L2-N20 bare GitHub Issue/Ready without admitted L3; L2-N21 actual ADS RQ CONDITIONAL incorrectly converted into effective manual READY; L2-N22 telemetry in-process hook hangs and blocks Agent/Verifier. All SOURCE_SPEC_ONLY / PHYSICAL_TESTS_NOT_RUN.

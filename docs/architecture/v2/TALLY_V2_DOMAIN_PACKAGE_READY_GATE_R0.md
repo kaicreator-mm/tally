@@ -45,3 +45,10 @@ DH [A2 #1341](https://github.com/kaicreator-mm/domain-harness/issues/1341) R1 �
 如果真实公共包安装证明 DP-01…DP-08 本身存在缺口：按具体 exact SHA/失败日志明确 `TRUE_DOMAIN_HARNESS_GAP`，在 DH 新增独立 Issue 并依据其版本门禁处理；如果只缺具体 Tally 工程规则、C GitHub/Local 行为、UI、源缓存，则属于 **Tally 自己的 B/C/App 实现**，不要推给 DH 微内核。未来 runx 是可选 Host/Capability，不是 DomainHarness 核心 SDK 责任。
 
 **结论：**本门禁可以提前作为产品/架构验收材料固化；未获取 DP-01…DP-09 证据前，Tally 正式 Domain Package 实施状态为 `NOT_ADMITTED`。
+
+## E. Version-current Product and ADS activation prerequisites (source-only)
+
+- Parent Product PR #77 exact synced source `0d1f1a2e15581e300500bada6da54b2c9bcef75f`, P0×17, Fxx×47, Vxx×67, including Builder GitHub credential deny and Local separate OS-principal Hidden verifier with escalation-negative fixtures.
+- Actual source-verified local pinned ADS 4.17 structural verifier PASS belongs to the specific PR #81 test SHA; the project v2 standard is still not legally adopted because the normative `RQ READY` condition and actual `CONDITIONAL` remain unresolved under ADS #1318.
+- A distinct independent Product Reviewer and eligible GitHub Product Freeze record must precede implementation Task DAG and any L2 semantic Freeze claim. Public DomainHarness v0.10.2 external BUILD consumer T09 and release R01 remain pending.
+- The L2 branch sync is **not** successful production Domain Package installation, a completed hidden test, or Release PASS.

@@ -20,7 +20,7 @@
 | V10 | F13–19 | Host crashes after accepted stateful operation and ACK lost | Journal read/reconcile; no blind duplicate effect | Requires DH; NOT_RUN |
 | V11 | F13–19 | Same idempotency key reused with different Task input | Typed CONFLICT; no successful reuse | Requires DH; NOT_RUN |
 | V12 | F21–27 | Candidate changes after test source SHA pinned | Old review/verification not current; retry before completion | Requires DH; NOT_RUN |
-| V13 | F24–27 | Hidden/held-out fixture before candidate freeze | Block leak/contamination; independent gate evidence | Requires DH; NOT_RUN |
+| V13 | F24–27 | Held-out fixture appears on any Builder-readable path before candidate source freeze | HIDDEN_NOT_QUALIFIED with denial/contamination evidence; narrowed explicit cases V57/V58 | Requires DH; NOT_RUN |
 | V14 | F24–27 | Failing verifier, Agent requests automatic acceptance | No Task PASS; repair/escalation paths only | Requires DH; NOT_RUN |
 | V15 | F28–30 | GitHub readback differs from accepted Issue/PR revision | Reconcile/UNKNOWN; no false mutation completion | Spec now; NOT_RUN |
 | V16 | F28–30 | GitHub 403/429 or partial pagination | Coverage PARTIAL; bounded retry, never assume all native facts fetched | Spec now; NOT_RUN |
@@ -38,10 +38,47 @@
 | V28 | F45 | Secrets embedded in Agent output/error/log | Sanitized user projection and GitHub comment; no credential echo | Spec now; NOT_RUN |
 | V29 | F46/F47 | Build contains package imports to private DH src or compiler in runtime | Clean installed external producer/consumer refuses; runtime BUILD closure fail | Requires DH; NOT_RUN |
 | V30 | F13–19 | Package revision changes while previous occurrence runs | Old occurrence remains immutable selected pin; new BUILD separate | Requires DH; NOT_RUN |
+| V31 | F02 | A Product ambiguity remains unresolved after preliminary clarification | UI records question/answer and marks critical requirement OPEN; Product Freeze blocked until applicable review | Spec now; NOT_RUN |
+| V32 | F03 | Previously accepted intent source changes materially after freeze | Applicable frozen intent/review eligibility revoked or requalified, never stale green | Spec now; NOT_RUN |
+| V33 | F11 | Declared high assurance Task lacks required verifier/authority scope | Visible required checks and missing gate; no readiness/completion | Spec now; NOT_RUN |
+| V34 | F12 | Task Contract has unsupported adopted ADS dialect or missing required field | Typed UNSUPPORTED / L3_NOT_ADMITTED; no silent fallback to historical schema | Spec now; NOT_RUN |
+| V35 | F26 | Builder modifies protected ADS or held-out/auth policy file without recorded grant | Guarded change is denied or escalated; no automatic acceptance | Requires DH; NOT_RUN |
+| V36 | F26/F27 | Same execution lineage changes displayed role from Builder to Reviewer | Independent-review check rejects role laundering despite same/different GitHub login | Spec now; NOT_RUN |
+| V37 | F45 | User UI session expired/revoked before GitHub/Local mutation | Reject prior to effect; no real provider operation | Requires DH; NOT_RUN |
+| V38 | F28/F45 | Authenticated operator lacks grant for the target repo or request names another project | Wrong repo/scope denied despite a syntactically valid K intent | Requires DH; NOT_RUN |
+| V39 | F45 | Cross-origin forged POST/CSRF attempts a protected UI action | Transport/action boundary blocks mutation and avoids publishing credentials | Requires DH; NOT_RUN |
+| V40 | F28/F45 | Provider credential revoked after initial UI read, before K/C mutation | Provider denial and reconciliation; never infer success from stale UI permission | Requires DH; NOT_RUN |
+| V41 | F28/F45 | Mutation request accepted locally but GitHub target cannot be read back | Maintain UNKNOWN; block related merge/tag/approval pending remote truth | Requires DH; NOT_RUN |
+| V42 | F47 | Full RQ PASS at exact version head but target main advances or merge produces unverified tree | Compare candidate and target exact revision, revalidate/re-RQ changed merged scope; no tag without qualified final commit | Requires DH; NOT_RUN |
+| V43 | F33–40 | Previously qualified task-meta report is corrected/revoked after Agent ranking/Context advice issued | Invalidate dependent advice and label STALE/REQUALIFY; retain independent Task/CI truth, no cost double-count | Spec now; NOT_RUN |
+| V44 | F06/F08 | DAG Ready and Issue exists, but L3 Tests/Contract/Implementation/Failure Handling/Reference missing/stale | L3_NOT_ADMITTED; offer fix/publish/readback UI; no dispatch Effect | Requires DH; NOT_RUN |
+| V45 | F23/F25 | L3 spec was complete before dispatch but real implementation/verification receipts absent afterward | Implementation Evidence remains NOT_RUN/UNKNOWN; no Task PASS from pre-run plan | Requires DH; NOT_RUN |
+| V46 | F02 | A critical question is answered and acknowledged with current source revision | Revised Requirement/PRD retains attributed clarification and may proceed to valid independent Product review | Spec now; NOT_RUN |
+| V47 | F03 | Accepted frozen intent digest and applicable risk facts remain unchanged | Accepted current source remains valid without redundant intent re-freeze; no fabricated new decision | Spec now; NOT_RUN |
+| V48 | F11 | Declared risk class and qualified verifier/authority match adopted policy | Exactly the applicable bounded assurance checks become ready, not a universal extra gate | Spec now; NOT_RUN |
+| V49 | F12 | Correct adopted ADS Task/L3 contract contains actual required fields and current reference | Contract validation passes pre-admission semantics; production dispatch still requires real K and Claim | Spec now; NOT_RUN |
+| V50 | F01/F09 | Operator saves Product or L2 draft to K but no accepted GitHub review/Freeze artifact exists | UI shows DRAFT/REVIEW_PENDING, never FROZEN; another chat GitHub-only rehydrate does not conjure a Freeze | Spec now; NOT_RUN |
+| V51 | F01/F09 | Applicable ADS version not adopted for v2, but Product reviewer reports semantic READY | Record STANDARD_PIN_PENDING and conditional Product readiness only; do not publish Product Freeze until exact qualified project adoption+GitHub readback | Spec now; NOT_RUN |
+| V52 | F16/F17/F19 | Actual Codex CLI installed/authenticated and bound to one clean Local Task Attempt, runx absent | Real Agent start/cancel/terminal/exit/receipt/workspace exposed through K-admitted selected C; no Fake Agent substitution | Requires DH; NOT_RUN |
+| V53 | F17 | Provider registry offers only Fake/echo Agent but requests CJ03 or release | LOCAL_AGENT_UNAVAILABLE/NOT_QUALIFIED; basic UI still functions, no real Task PASS | Requires DH; NOT_RUN |
+| V54 | F21/F29 | One Task Attempt starts from exact pinned clean Git commit in its own disposable worktree | Workspace isolation and frozen candidate commit/tree proven before independent verification; no mutable primary checkout | Requires DH; NOT_RUN |
+| V55 | F21/F29 | Dirty worktree or wrong SHA reused for Task attempt | Deny dispatch or isolate from a clean correct source; no altered source conflated with accepted candidate | Requires DH; NOT_RUN |
+| V56 | F15/F21/F29 | Two ready Tasks attempt writes to same Local checkout | P0 single-executing-attempt and per-attempt isolation prevent competing writers; remain BLOCKED/QUEUED | Requires DH; NOT_RUN |
+| V57 | F24 | Builder runs while held-out fixtures are not readable by its process or worktree; frozen candidate later verified in separate protected identity | Qualified verifier can run hidden checks after freeze; physical deny/read witness captured before Hidden PASS | Requires DH; NOT_RUN |
+| V58 | F24 | Same-user Builder shell can read verifier-only hidden fixture file before candidate freeze | Hidden witness NOT_QUALIFIED; no silent PASS merely because dirs differ; RQ blocked unless permitted explicit policy | Requires DH; NOT_RUN |
+| V59 | F39 | task-meta hook embedded in Agent session exits nonzero while legitimate Agent command succeeds | Agent exit remains original success and real verifier still runs; telemetry UNAVAILABLE, not Task FAIL | Requires DH; NOT_RUN |
+| V60 | F39 | task-meta Agent hook hangs indefinitely or synchronously awaits a stalled publisher | Observer times out/disabled without delaying Agent or verifier bounded outcome; no awaited telemetry completion gate | Requires DH; NOT_RUN |
+| V61 | F16/F28 | Local Agent cancellation requested after K-admitted C GitHub published a branch or PR | CANCEL_REQUESTED until child/process and real C GitHub receipts reconciled; only authorized partial remote effects visible; no Task PASS | Requires DH; NOT_RUN |
+| V62 | F16/F19 | Agent times out leaving orphaned subprocess and UNKNOWN external action | Bounded stop/cleanup, external reconcile, no blind retry/false rollback or PASS | Requires DH; NOT_RUN |
+| V63 | F07/F15 | Three Tasks are ready and two are parallel-eligible under adopted DAG | UI shows parallel-ready set but P0 execution admission permits max 1 active Task Attempt; concurrency belongs P1 | Requires DH; NOT_RUN |
+| V64 | F13/F42/F44 | UI app shell implements engineering domain state transition or policy decision independently of Business B/K | Product/package closure check BLOCKS shell as second authority despite forms rendering correctly | Requires DH; NOT_RUN |
+| V65 | F09/F14 | GitHub ADS review/freeze artifact exists but source SHA is stale or reviewer provenance invalid | K/B projection must not show FROZEN; source-qualified actual authority check requires new valid artifact | Requires DH; NOT_RUN |
+| V66 | F17/F28/F29 | Codex CLI Builder subprocess attempts `git push --force`, `gh pr merge` or scoped PR create using inherited/operator GitHub write credentials or `gh`/GCM/SSH-agent/sudo-admin credential-store escalation | Builder confinement verified against inherited credential sources and noninteractive privilege escalation; no usable write effect escape; attempted bypass denied or independently detected as UNGOVERNED_EFFECT, no Task PASS; authorized publisher only K→C GitHub with source-pinned readback | Requires DH; NOT_RUN |
+| V67 | F24/F47 | One Local machine has Codex Builder and a separately provisioned verifier OS account with ACL deny-read of fixtures; no Docker/runx | Real Builder read-denial witness **including noninteractive sudo/admin/backup token paths**; verifier materializes held-out only after frozen candidate, eligible Hidden on exact candidate under adopted ADS; missing verifier reports HIDDEN_VERIFIER_UNAVAILABLE | Requires DH; NOT_RUN |
 
 ## Coverage and review protocol
 
-- **Product evidence:** F01–F47 domain inventory and 30 vectors. These are test *requirements*, not executed test results.
+- **Product evidence:** F01–F47 domain inventory and 67 vectors. These are test *requirements*, not executed test results.
 - **Physical Node24 tests after actual DH qualification:** real public Contracts/Manifest/ABI, producer with a Tally Engineering B/Capability package from outside DH repo, immutable artifact SHA, selected BUILD, Local Host persistence, C GitHub and Local Agent with K Effect admission.
 - **Source and authority:** actual latest GitHub Issue/PR/Review/CI and adopted ADS report versions, with transport pagination/error and cache staleness. A successful parser is neither evidence freshness nor Task PASS.
 - **Separation:** Functional tests vs release-level Full Regression, Hidden Validation, Critical Journeys, independent Product/L2/Implementation review and Release Qualification. Do not replace any stage with historical v1.5.5 result.
@@ -63,9 +100,9 @@ These shape sketches are illustrative Product-level vocabulary and **MUST NOT be
 ## Future gates
 
 1. P01 source parity Product reviewer checks rows/status and key call sites.
-2. P02 Product reviewer checks P0-01…P0-15 plus V01…V30, fix P0/P1, Product Freeze if independently eligible.
+2. P02 Product reviewer checks P0-01…P0-17 plus V01…V67, fix P0/P1, Product Freeze if independently eligible.
 3. Semantic L2 maps package boundaries; leave actual physical ABI open until qualified published DH artifacts exist.
 4. Physical L2/API, executable Task DAG, production Domain Packages and UI/E2E only after gate.
 5. Full Release Qualification / final tag on exact frozen version source.
 
-**Current result:** `DESIGN_VECTORS=30/30_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
+**Current result:** `DESIGN_VECTORS=67/67_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
