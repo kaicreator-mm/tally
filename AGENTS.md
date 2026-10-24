@@ -99,3 +99,9 @@ Held-out cases are not read or used to tune implementation before visible implem
 
 ## 14. Completion report
 Report changed paths, production wiring, exact validation commands/results, acceptance criteria, risks and any `ENV-BLOCKED` evidence. `PR PASS != Release PASS`.
+
+
+## 15. Conversation output persistence — user direction (2026-10-24)
+
+For **Tally v2 planning, audit, design, review, and implementation work**, read and follow `docs/research/v2/GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md` and update `docs/research/v2/OUTPUT_LEDGER.md` before reporting a substantive deliverable complete. GitHub is the durable record; conversation-only outputs are not considered delivered. Use version branches/PRs for documents and code, Issue/PR comments for narrow evidence or handoffs, exact SHA for source reviews and explicit NOT_PERSISTED on failed writes. Record source-qualified decisions and preserve the latest user's stated product constraints. This section does not retroactively change v1.5.x frozen product or validation rules.
+
