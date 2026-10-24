@@ -20,7 +20,7 @@
 | V10 | F13–19 | Host crashes after accepted stateful operation and ACK lost | Journal read/reconcile; no blind duplicate effect | Requires DH; NOT_RUN |
 | V11 | F13–19 | Same idempotency key reused with different Task input | Typed CONFLICT; no successful reuse | Requires DH; NOT_RUN |
 | V12 | F21–27 | Candidate changes after test source SHA pinned | Old review/verification not current; retry before completion | Requires DH; NOT_RUN |
-| V13 | F24–27 | Hidden/held-out fixture before candidate freeze | Block leak/contamination; independent gate evidence | Requires DH; NOT_RUN |
+| V13 | F24–27 | Held-out fixture appears on any Builder-readable path before candidate source freeze | HIDDEN_NOT_QUALIFIED with denial/contamination evidence; narrowed explicit cases V57/V58 | Requires DH; NOT_RUN |
 | V14 | F24–27 | Failing verifier, Agent requests automatic acceptance | No Task PASS; repair/escalation paths only | Requires DH; NOT_RUN |
 | V15 | F28–30 | GitHub readback differs from accepted Issue/PR revision | Reconcile/UNKNOWN; no false mutation completion | Spec now; NOT_RUN |
 | V16 | F28–30 | GitHub 403/429 or partial pagination | Coverage PARTIAL; bounded retry, never assume all native facts fetched | Spec now; NOT_RUN |
@@ -68,15 +68,17 @@
 | V58 | F24 | Same-user Builder shell can read verifier-only hidden fixture file before candidate freeze | Hidden witness NOT_QUALIFIED; no silent PASS merely because dirs differ; RQ blocked unless permitted explicit policy | Requires DH; NOT_RUN |
 | V59 | F39 | task-meta hook embedded in Agent session exits nonzero while legitimate Agent command succeeds | Agent exit remains original success and real verifier still runs; telemetry UNAVAILABLE, not Task FAIL | Requires DH; NOT_RUN |
 | V60 | F39 | task-meta Agent hook hangs indefinitely or synchronously awaits a stalled publisher | Observer times out/disabled without delaying Agent or verifier bounded outcome; no awaited telemetry completion gate | Requires DH; NOT_RUN |
-| V61 | F16/F28 | Local Agent cancellation requested after pushing branch or opening PR | CANCEL_REQUESTED persists until child/process and remote effects reconciled; keep partial GitHub facts visible and no Task PASS | Requires DH; NOT_RUN |
+| V61 | F16/F28 | Local Agent cancellation requested after K-admitted C GitHub published a branch or PR | CANCEL_REQUESTED until child/process and real C GitHub receipts reconciled; only authorized partial remote effects visible; no Task PASS | Requires DH; NOT_RUN |
 | V62 | F16/F19 | Agent times out leaving orphaned subprocess and UNKNOWN external action | Bounded stop/cleanup, external reconcile, no blind retry/false rollback or PASS | Requires DH; NOT_RUN |
 | V63 | F07/F15 | Three Tasks are ready and two are parallel-eligible under adopted DAG | UI shows parallel-ready set but P0 execution admission permits max 1 active Task Attempt; concurrency belongs P1 | Requires DH; NOT_RUN |
 | V64 | F13/F42/F44 | UI app shell implements engineering domain state transition or policy decision independently of Business B/K | Product/package closure check BLOCKS shell as second authority despite forms rendering correctly | Requires DH; NOT_RUN |
 | V65 | F09/F14 | GitHub ADS review/freeze artifact exists but source SHA is stale or reviewer provenance invalid | K/B projection must not show FROZEN; source-qualified actual authority check requires new valid artifact | Requires DH; NOT_RUN |
 
+| V66 | F17/F28/F29 | Codex CLI Builder subprocess attempts `git push --force`, `gh pr merge` or scoped PR create using inherited/operator GitHub write credentials | No usable write credential/effect escape from Builder; attempted bypass denied or independently detected as UNGOVERNED_EFFECT, no Task PASS; authorized publisher only K→C GitHub with source-pinned readback | Requires DH; NOT_RUN |
+| V67 | F24/F47 | One Local machine has Codex Builder and a separately provisioned verifier OS account with ACL deny-read of fixtures; no Docker/runx | Real Builder read-denial witness, verifier materializes held-out only after frozen candidate, eligible Hidden on exact candidate under adopted ADS; missing verifier reports HIDDEN_VERIFIER_UNAVAILABLE | Requires DH; NOT_RUN |
 ## Coverage and review protocol
 
-- **Product evidence:** F01–F47 domain inventory and 65 vectors. These are test *requirements*, not executed test results.
+- **Product evidence:** F01–F47 domain inventory and 67 vectors. These are test *requirements*, not executed test results.
 - **Physical Node24 tests after actual DH qualification:** real public Contracts/Manifest/ABI, producer with a Tally Engineering B/Capability package from outside DH repo, immutable artifact SHA, selected BUILD, Local Host persistence, C GitHub and Local Agent with K Effect admission.
 - **Source and authority:** actual latest GitHub Issue/PR/Review/CI and adopted ADS report versions, with transport pagination/error and cache staleness. A successful parser is neither evidence freshness nor Task PASS.
 - **Separation:** Functional tests vs release-level Full Regression, Hidden Validation, Critical Journeys, independent Product/L2/Implementation review and Release Qualification. Do not replace any stage with historical v1.5.5 result.
@@ -98,9 +100,9 @@ These shape sketches are illustrative Product-level vocabulary and **MUST NOT be
 ## Future gates
 
 1. P01 source parity Product reviewer checks rows/status and key call sites.
-2. P02 Product reviewer checks P0-01…P0-15 plus V01…V65, fix P0/P1, Product Freeze if independently eligible.
+2. P02 Product reviewer checks P0-01…P0-17 plus V01…V67, fix P0/P1, Product Freeze if independently eligible.
 3. Semantic L2 maps package boundaries; leave actual physical ABI open until qualified published DH artifacts exist.
 4. Physical L2/API, executable Task DAG, production Domain Packages and UI/E2E only after gate.
 5. Full Release Qualification / final tag on exact frozen version source.
 
-**Current result:** `DESIGN_VECTORS=65/65_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
+**Current result:** `DESIGN_VECTORS=67/67_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
