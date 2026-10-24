@@ -1,4 +1,3 @@
-version: 4.17.0
-source: https://github.com/kaicreator-mm/ai-development-standard
-commit: a45644d734fdf94da3e6f9c3f90ffe4ce3c25fda
-adopted_for: tally-v2
+repository=kaicreator-mm/ai-development-standard
+version=4.17.0
+revision=a45644d734fdf94da3e6f9c3f90ffe4ce3c25fda
