@@ -39,9 +39,25 @@
 | V29 | F46/F47 | Build contains package imports to private DH src or compiler in runtime | Clean installed external producer/consumer refuses; runtime BUILD closure fail | Requires DH; NOT_RUN |
 | V30 | F13–19 | Package revision changes while previous occurrence runs | Old occurrence remains immutable selected pin; new BUILD separate | Requires DH; NOT_RUN |
 
+| V31 | F02 | A Product ambiguity remains unresolved after preliminary clarification | UI records question/answer and marks critical requirement OPEN; Product Freeze blocked until applicable review | Spec now; NOT_RUN |
+| V32 | F03 | Previously accepted intent source changes materially after freeze | Applicable frozen intent/review eligibility revoked or requalified, never stale green | Spec now; NOT_RUN |
+| V33 | F11 | Declared high assurance Task lacks required verifier/authority scope | Visible required checks and missing gate; no readiness/completion | Spec now; NOT_RUN |
+| V34 | F12 | Task Contract has unsupported adopted ADS dialect or missing required field | Typed UNSUPPORTED / L3_NOT_ADMITTED; no silent fallback to historical schema | Spec now; NOT_RUN |
+| V35 | F26 | Builder modifies protected ADS or held-out/auth policy file without recorded grant | Guarded change is denied or escalated; no automatic acceptance | Requires DH; NOT_RUN |
+| V36 | F26/F27 | Same execution lineage changes displayed role from Builder to Reviewer | Independent-review check rejects role laundering despite same/different GitHub login | Spec now; NOT_RUN |
+| V37 | F45 | User UI session expired/revoked before GitHub/Local mutation | Reject prior to effect; no real provider operation | Requires DH; NOT_RUN |
+| V38 | F28/F45 | Authenticated operator lacks grant for the target repo or request names another project | Wrong repo/scope denied despite a syntactically valid K intent | Requires DH; NOT_RUN |
+| V39 | F45 | Cross-origin forged POST/CSRF attempts a protected UI action | Transport/action boundary blocks mutation and avoids publishing credentials | Requires DH; NOT_RUN |
+| V40 | F28/F45 | Provider credential revoked after initial UI read, before K/C mutation | Provider denial and reconciliation; never infer success from stale UI permission | Requires DH; NOT_RUN |
+| V41 | F28/F45 | Mutation request accepted locally but GitHub target cannot be read back | Maintain UNKNOWN; block related merge/tag/approval pending remote truth | Requires DH; NOT_RUN |
+| V42 | F47 | Full RQ PASS at exact version head but target main advances or merge produces unverified tree | Compare candidate and target exact revision, revalidate/re-RQ changed merged scope; no tag without qualified final commit | Requires DH; NOT_RUN |
+| V43 | F33–40 | Previously qualified task-meta report is corrected/revoked after Agent ranking/Context advice issued | Invalidate dependent advice and label STALE/REQUALIFY; retain independent Task/CI truth, no cost double-count | Spec now; NOT_RUN |
+| V44 | F06/F08 | DAG Ready and Issue exists, but L3 Tests/Contract/Implementation/Failure Handling/Reference missing/stale | L3_NOT_ADMITTED; offer fix/publish/readback UI; no dispatch Effect | Requires DH; NOT_RUN |
+| V45 | F23/F25 | L3 spec was complete before dispatch but real implementation/verification receipts absent afterward | Implementation Evidence remains NOT_RUN/UNKNOWN; no Task PASS from pre-run plan | Requires DH; NOT_RUN |
+
 ## Coverage and review protocol
 
-- **Product evidence:** F01–F47 domain inventory and 30 vectors. These are test *requirements*, not executed test results.
+- **Product evidence:** F01–F47 domain inventory and 45 vectors. These are test *requirements*, not executed test results.
 - **Physical Node24 tests after actual DH qualification:** real public Contracts/Manifest/ABI, producer with a Tally Engineering B/Capability package from outside DH repo, immutable artifact SHA, selected BUILD, Local Host persistence, C GitHub and Local Agent with K Effect admission.
 - **Source and authority:** actual latest GitHub Issue/PR/Review/CI and adopted ADS report versions, with transport pagination/error and cache staleness. A successful parser is neither evidence freshness nor Task PASS.
 - **Separation:** Functional tests vs release-level Full Regression, Hidden Validation, Critical Journeys, independent Product/L2/Implementation review and Release Qualification. Do not replace any stage with historical v1.5.5 result.
@@ -68,4 +84,4 @@ These shape sketches are illustrative Product-level vocabulary and **MUST NOT be
 4. Physical L2/API, executable Task DAG, production Domain Packages and UI/E2E only after gate.
 5. Full Release Qualification / final tag on exact frozen version source.
 
-**Current result:** `DESIGN_VECTORS=30/30_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
+**Current result:** `DESIGN_VECTORS=45/45_DRAFTED`, `PHYSICAL_TESTS_EXECUTED=0`, `PRODUCT_REVIEW=NOT_RUN`, `RELEASE_PASS=NO`.
