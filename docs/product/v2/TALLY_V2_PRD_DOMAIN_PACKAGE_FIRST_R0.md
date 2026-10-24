@@ -17,7 +17,7 @@ PRD success requires an actual Node24 clean installed **external producer → Pa
 
 ## 2. Actors, authorization and project scope
 
-- **Operator** chooses project/version/AD S revision, confirms requirements, responds to actual required authority decisions, inspects progress/blocks and release gates.
+- **Operator** chooses project/version/ADS revision, confirms requirements, responds to actual required authority decisions, inspects progress/blocks and release gates.
 - **Logical Planner/Builder/Reviewer/Verifier/Repairer Agents** are distinct by declared task role/run/session and pinned provenance; same GitHub transport identity must not collapse them, but real provider grants still apply.
 - **GitHub provider** is authority of actual Issue/PR/Review/merge/commit/tag and version-qualified ADS-published facts.
 - **DomainHarness K Primary** owns Domain App State, Admission/CAS, Journal/Effect, replay, UNKNOWN; **selected S** applies reusable Rule/Context/Decision/Workflow as bounded services. Engineering B owns domain rules and user decisions, not duplicate platform effects.
