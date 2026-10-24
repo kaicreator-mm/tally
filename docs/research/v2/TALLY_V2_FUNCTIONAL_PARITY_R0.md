@@ -20,8 +20,8 @@
 | ID | Existing feature | Fixed legacy path | Source evidence level | Production reachable? | Proposed disposition | Candidate owner (original audit) | Legacy test pointer | v2 acceptance family |
 |---|---|---|---|---|---|---|---|---|
 | F01 | Requirements Baseline / 验收条件 | `internal/engineering/model.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
-| F02 | Requirement 澄清/访谈/签署/缺陷 | `internal/requirement/`, `internal/intake/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S ENHANCE，复用意图澄清 | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
-| F03 | Frozen Intent 与风险信号 | `internal/intentevidence/`, `internal/intakefreeze/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP SEMANTICS | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
+| F02 | Requirement 澄清/访谈/签署/缺陷 | `internal/requirement/`, `internal/intake/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_BOUNDED_CLARIFICATION | B+S ENHANCE，复用意图澄清 | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
+| F03 | Frozen Intent 与风险信号 | `internal/intentevidence/`, `internal/intakefreeze/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_BOUNDED_INTENT_CURRENTNESS | B+S KEEP SEMANTICS | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F04 | PlanningRevision / ProjectPlan | `internal/engineering/model.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F05 | ArchitectureRevision / Constraints | `internal/engineering/model.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F06 | TaskDAG Proposal→Active DAG | `internal/engineering/dag.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/dag_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
@@ -29,8 +29,8 @@
 | F08 | CompletionContract / 缺失门禁 | `internal/engineering/completion.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Rule KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F09 | Authority / AUTO/SUPERVISED/REQUIRED | `internal/engineering/completion.go`, `internal/approval/` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F10 | 证据来源与独立性 | `internal/evidence/`, `internal/verification/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Evidence KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
-| F11 | Risk/Assurance 选择 | `internal/risk/`, `internal/assurance/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
-| F12 | Contract 编译/策略匹配 | `internal/contract/`, `internal/engineeringpolicy/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Rule KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
+| F11 | Risk/Assurance 选择 | `internal/risk/`, `internal/assurance/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_BOUNDED_ASSURANCE_RULE | B+S KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
+| F12 | Contract 编译/策略匹配 | `internal/contract/`, `internal/engineeringpolicy/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_BOUNDED_ADS_CONTRACT_CHECK | B+S Rule KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F13 | Project Control Plane / 状态推进 | `internal/controlplane/service.go`, `types.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | B + K REIMPLEMENT | `internal/controlplane/service_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F14 | API 操作 Lifecycle/DAG/Dispatch | `internal/controlplane/http.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | App API KEEP | `internal/controlplane/http_v155_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F15 | Ready 调度/并发/启动恢复 | `internal/controlplane/scheduler.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+K KEEP | `internal/controlplane/scheduler_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
@@ -44,7 +44,7 @@
 | F23 | Verification Contract / required gates | `internal/verification/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S+C KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F24 | Hidden/Held-out 执行与隔离 | `internal/holdout/`, `internal/candidateverify/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+C validation KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F25 | Closedloop Execute/Verify/Repair/Accept | `internal/closedloop/` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Workflow，K effects | `internal/closedloop/engine_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
-| F26 | Reviewer 归账与保护文件处理 | `internal/review/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P1_CANDIDATE | B+S KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
+| F26 | Reviewer 归账与保护文件处理 | `internal/review/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_PROTECTED_FILES_AND_REVIEW_INDEPENDENCE | B+S KEEP | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
 | F27 | Multiagent role / 独立性 / Repair | `internal/multiagent/`, `internal/controlplane/multiagent.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | `internal/controlplane/multiagent_hardening_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F28 | Git Engineering Authority / GitHub Actions | `internal/gitengineering/`, `internal/engineering/git.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | REPLACE_ADAPTER | B+C GitHub KEEP | `internal/gitengineering/github_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-VERIFY / AC-RELEASE |
 | F29 | Local Git 写入/集成与防冲突 | `internal/gitwriter/`, `internal/gitintegration/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | C Git ADAPTER，保留安全约束 | TEST_CASE_UNMAPPED | AC-VERIFY / AC-RELEASE |
@@ -102,6 +102,20 @@
 - `F02/F03/F18/F33/F35/F36/F37/F38/F41/F42/F43` need targeted legacy reachability analysis **if** the v2 PRD actually retains their behavior. Avoid exhaustive low-value history reconstruction.
 - `F44` is demonstrably a product gap: raw JSON dispatch console is not an ADS wizard. `F39` is deliberately replaced by task-meta observational channel, not integrated as a blocking telemetry dependency.
 - Verify `F45` auth/CSRF and GitHub effect admission as separate security gates at L2/implementation. Do not infer security from legacy files.
+
+## D2. Bounded critical-legacy Product dispositions (GPT-6 pre-review remediation)
+
+The PREVIOUS_AUDIT_ONLY and PROD_REACHABILITY_UNKNOWN values above **remain unchanged**. This is a **business-priority correction**, not new Go runtime proof.
+
+| ID | Retained P0 minimum user behavior | Acceptance vectors / excluded legacy subcapability |
+|---|---|---|
+| F02 | One traceable clarification/answer/revision and visible unresolved requirement | V31; no full interview transcript/signature framework required |
+| F03 | Accepted Intent exact revision and revalidation when material intent/risk changes | V32; no generic legacy risk classification |
+| F11 | Bounded assurance severity affects required real checks and visibility | V33; no general assurance optimizer |
+| F12 | Adopted ADS-compatible Task/L3 contract required before admission | V34/V44; no port of generic Go policy compiler |
+| F26 | Protected-governance-file changes require actual scope grant; independent review must bind logical execution provenance | V35/V36; advanced Reviewer UX/ranking is P1, not P0 |
+
+F45 Operator session/auth/CSRF remains P0 and is now explicitly probed by V37–V41. This **does not** equate logical execution identity with GitHub account and does not add a separate owner-signoff gate when ADS does not require one. The full reviewer dashboard, automated risk classification and generalized contract compiler remain P1/DEFER rather than silently pulled into P0.
 
 ## E. Next source proof requirement (before Product R1)
 
