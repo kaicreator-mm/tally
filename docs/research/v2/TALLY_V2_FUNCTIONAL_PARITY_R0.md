@@ -10,7 +10,7 @@
 
 - `STATIC_SYMBOL_READ_THIS_TURN`: relevant definitions/surfaces in nine pinned Go source files separately re-fetched and inspected (model/dag/completion, CP HTTP/UI, GitHub adapter, telemetry recorder, replan validation, closedloop engine). **Does not prove live wiring, correct behavior or test PASS.**
 - `PREVIOUS_AUDIT_ONLY`: old audit file lists source paths, but this new turn has not re-read every file or proved reachability.
-- `PROD_REACHABILITY_UNKNOWN`: runtime route/call graph from real entrypoint not enumerated. **Every row remains UNKNOWN** on this specific dimension pending targeted evidence. No guesses based solely on file existence.
+- `PROD_REACHABILITY_UNKNOWN`: runtime route/call graph from real entrypoint not enumerated. **For F06/F13/F14, the main→HTTP→Service→DAG static entrypoint chain is observed; other 44 rows remain UNKNOWN.** This is not evidence that any v1.5.5 command was run in this turn. No guesses based solely on file existence.
 - `FILE_EXISTS`: test filename existence checked via pinned GitHub `contents` directory listings for engineering/controlplane/replan/closedloop/gitengineering, **not execution or assertion coverage**.
 - `TEST_CASE_UNMAPPED`: no exact legacy test evidence mapped in this pass. To be resolved by per-function trace or Local Go build/call-graph where ROI justifies it.
 - `P0_KEEP_BEHAVIOR` and `P1_CANDIDATE` are **Product decisions proposed for review**, not code migration authorization. `DEFER` / `REPLACE` are proposed, subject to Product Review and PRD freeze.
@@ -24,15 +24,15 @@
 | F03 | Frozen Intent 与风险信号 | `internal/intentevidence/`, `internal/intakefreeze/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP SEMANTICS | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F04 | PlanningRevision / ProjectPlan | `internal/engineering/model.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F05 | ArchitectureRevision / Constraints | `internal/engineering/model.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
-| F06 | TaskDAG Proposal→Active DAG | `internal/engineering/dag.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/dag_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
+| F06 | TaskDAG Proposal→Active DAG | `internal/engineering/dag.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/dag_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F07 | 环检测/依赖 Ready/并行候选 | `internal/engineering/dag.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B KEEP | `internal/engineering/dag_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F08 | CompletionContract / 缺失门禁 | `internal/engineering/completion.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Rule KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F09 | Authority / AUTO/SUPERVISED/REQUIRED | `internal/engineering/completion.go`, `internal/approval/` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | `internal/engineering/model_completion_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-PRODUCT / AC-UI-PRODUCT |
 | F10 | 证据来源与独立性 | `internal/evidence/`, `internal/verification/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Evidence KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F11 | Risk/Assurance 选择 | `internal/risk/`, `internal/assurance/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
 | F12 | Contract 编译/策略匹配 | `internal/contract/`, `internal/engineeringpolicy/` | LEGACY / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+S Rule KEEP | TEST_CASE_UNMAPPED | AC-PRODUCT / AC-UI-PRODUCT |
-| F13 | Project Control Plane / 状态推进 | `internal/controlplane/service.go`, `types.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B + K REIMPLEMENT | `internal/controlplane/service_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
-| F14 | API 操作 Lifecycle/DAG/Dispatch | `internal/controlplane/http.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | App API KEEP | `internal/controlplane/http_v155_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
+| F13 | Project Control Plane / 状态推进 | `internal/controlplane/service.go`, `types.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | B + K REIMPLEMENT | `internal/controlplane/service_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
+| F14 | API 操作 Lifecycle/DAG/Dispatch | `internal/controlplane/http.go` | CONFIRMED / STATIC_SYMBOL_READ_THIS_TURN | `STATIC_ENTRYPOINT_CHAIN_OBSERVED; REAL_RUNTIME_NOT_RUN` | P0_KEEP_BEHAVIOR | App API KEEP | `internal/controlplane/http_v155_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F15 | Ready 调度/并发/启动恢复 | `internal/controlplane/scheduler.go` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+K KEEP | `internal/controlplane/scheduler_test.go` (FILE_EXISTS; test execution NOT_RUN) | AC-TASK / AC-LOCAL |
 | F16 | AgentExecutor 与 Runtime 中立协议 | `internal/taskexecution/`, `internal/agentruntime/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | B+C KEEP | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
 | F17 | Codex / DSH / Fake Agent | `runtimes/codex/`, `runtimes/dsh/`, `runtimes/fake/` | CONFIRMED / PREVIOUS_AUDIT_ONLY | `PROD_REACHABILITY_UNKNOWN` | P0_KEEP_BEHAVIOR | C Provider ADAPTER | TEST_CASE_UNMAPPED | AC-TASK / AC-LOCAL |
@@ -79,6 +79,19 @@
 | Replan | `internal/replan/validate.go` blob `503fc92e869f99b3cf72ec1773a0aa8316ad1b9a` | `Validate`, `CheckAuthority`, `checkCycle`, `NewActivationRecord` | Actual source-aware replan in new Package |
 | Closedloop | `internal/closedloop/engine.go` blob `4962661493591d78490a57678a7f2941d1d9d09e` | `Engine.Run`, repair/escalate loop declarations | K-governed Domain Package capability |
 | Telemetry | `internal/measurement/recorder.go` blob `cc3f1bb544dafe40ef9e8d420d8b02e01cc8f868` | `Recorder`, `RecordLLMUsage`, RuntimeUsage declarations | Nonblocking collector; user explicitly rejects coupling |
+
+### C2. Source-call-chain and test assertions newly inspected (supplement)
+
+**Static route chain, fixed v1.5.5 commit:** `cmd/v15server/main.go` blob `e57edef13129913d71b50c4e5d89a56a73d365a4` creates `controlplane.NewService(WithHarness)` and `controlplane.NewHTTPHandler`. `internal/controlplane/http.go` lines 62–66 register the routes, including POST task-dag. `internal/controlplane/service.go` blob `56dee1e91323e58385c35bf76347645b4a8af23c` `Service.ActivateDAG` requires prior Requirements+Plan+Architecture and delegates to `engineering.ActivateTaskDAG` (also enforces one CompletionContract per Task). Thus F06/F13/F14 have a **source-visible wiring chain from the v15 server entrypoint**, not an execution/test PASS. F07 readiness logic itself still needs caller-chain proof.
+
+**Pinned test assertion witnesses (file+declaration inspected):**
+- F01/F04/F05/F08/F09: `internal/engineering/model_completion_test.go` blob `f2fb334af6435964ab980c1daa8fe64a0cf3f1a7`; `TestRequirementsBaselineRejectsMissingAcceptanceAndCopiesInput`, `TestPlanningArchitectureAndAudit`, `TestCompletionRequiresPassAndAuthority`.
+- F06/F07: `internal/engineering/dag_test.go` blob `bdb35886d01b0537e46e9ce3a8745dddc5028d5d`; `TestDAGRejectsMissingDependencyAndCycle`, `TestDAGBlockedReadyParallelAndTransitions`, `TestDAGRestartRoundTripPreservesReadiness`, `TestDAGOperationalBlockedAndInterruptedStayExplicit`.
+- F14/30: `internal/controlplane/http_v155_test.go` blob `1231adb15db724ebac4b77b29e42374b699a3f54` includes `TestHTTPHandlerReplanUsesGovernedServicePath`; does **not** prove full ADS UI.
+- F25: `internal/closedloop/engine_test.go` blob `ecf037b8b7e3ba0b33f095fae44ae998563f852a`; `TestEngineFirstPassAccepted`, `TestEngineRepairThenAccepted`, `TestEngineRepairBudgetExhausted`, `TestEngineInconclusiveNeverRepairs`.
+- F30: `internal/replan/validate_test.go` blob `bcd19cdde1b5acd436ed21ca35ed2cefbcb248b2`; `TestValidatePreservesAcceptedWorkAndRecalculatesReadiness`, `TestValidateRejectsSilentAcceptedWorkChange`, `TestMaterialReplanRequiresIndependentAuthority`, `TestCycleFingerprintCannotBeEvadedByNewIdentity`.
+
+**Limit:** Test functions/files were inspected as source; no `go test`, binary startup, timing, coverage or live GitHub/Host path executed. Do not label these `PASS` in a current validation ledger.
 
 ## D. Disposition policy & unresolved evidence
 
