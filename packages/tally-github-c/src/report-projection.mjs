@@ -66,6 +66,12 @@ export function projectReport(observation) {
   if (identity.kind === 'EXECUTION_SUMMARY' && envelope.data.capture_coverage !== 'COMPLETE') {
     return result(STATES.PARTIAL, 'REPORT_CAPTURE_NOT_COMPLETE', identity);
   }
+  // Reconciliation of correction targets is owned by later T03c.
+  // Never surface a REVOKE/REPLACE notice as CURRENT while its target may
+  // still be cached; even a perfectly schema-valid correction is advisory.
+  if (identity.kind === 'EXECUTION_CORRECTION') {
+    return result(STATES.UNKNOWN, 'CORRECTION_NOT_RECONCILED', identity);
+  }
   // Source qualification is merely an observed advisory projection.
   // Review/Claim/Effect/Release authority stays with native GitHub + the selected K.
   const advisory = Object.freeze({
