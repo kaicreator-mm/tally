@@ -85,7 +85,9 @@ export function getPolicy(){
     intentBindings:{
       inspectTaskReadiness:{
         trigger:{kind:'event',eventType:'TALLY_TASK_READINESS_INSPECTION_REQUESTED'},
-        ruleId:'rule:tally-readiness',roles:['planner','builder','reviewer'],
+        ruleId:'rule:tally-readiness',// Public Microkernel facade sends with K-derived callerRole='requester'.
+        // This intent is observation-only; it cannot grant admission/Task PASS.
+        roles:['requester','planner','builder','reviewer'],
       },
     },
     effectBindings:{
