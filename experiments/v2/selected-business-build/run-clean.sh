@@ -17,7 +17,7 @@ DH=$(cd "$DH" && pwd -P)
 TALLY=$(cd "$TALLY" && pwd -P)
 TALLY_B=$(cd "$TALLY_B" && pwd -P)
 [[ "$(git -C "$DH" rev-parse HEAD)" == "cee14399d9d0af4e20e34b9111861b16a465b690" ]] || { echo DH_SHA_MISMATCH; exit 2; }
-[[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "7b3725014ba3bfd450df83cc20021e48d7fda163" ]] || { echo T02A_SHA_MISMATCH; exit 2; }
+[[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "db763ec963df07b31d45bd7f65049e4a8c795bc4" ]] || { echo T02A_SHA_MISMATCH; exit 2; }
 [[ "$(node -p 'process.versions.node.split(".")[0]')" == '24' ]] || { echo NODE24_REQUIRED; exit 2; }
 BFILE="$TALLY_B/packages/tally-engineering-business/src/index.mjs"
 [[ -f "$BFILE" && -f "$TALLY/experiments/v2/selected-business-build/producer.mjs" ]]
