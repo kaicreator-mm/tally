@@ -1,4 +1,14 @@
-# Tally v2 T03b — real native GitHub read-only C
+# Tally v2 T03b — native GitHub ADS v5 read-only transport (R1 repair)
+
+ADS **formal wire**: first-line `<!-- ads:github -->`, exactly one fenced `yaml` mapping with `schema/kind/data`, optional human Markdown. Reader uses mature `yaml@2.8.1` strict parse and rejects duplicate keys, anchors, aliases, tags and invalid schema via the pinned Ajv schema. Bare JSON is NOT a published report. `data_digest` is **lowercase SHA256(RFC8785_JCS(validated data))**, with no prefix and no envelope fields. This exact digest is solely derived from provider-retrieved YAML.
+
+**Publisher provenance:** the trusted Host supplies `publisherBindings: { [namespace]: string[] // allowed GitHub transport logins }` at the native read boundary. Every candidate must originate from one of those provider-attested logins and match its own `publisher_namespace`. Unknown login comments do not become reports or poison an entire Issue; a missing allowlist yields UNKNOWN. This mapping authenticates the GitHub *transport account*, **not** the logical builder/reviewer or any approved Task Claim. Source `expectedSourceSha` must actually exist in the repository, but that alone doesn't prove branch-tip/Claim/Release currentness.
+
+All source observations retain `authorized=false/taskPass=false/releasePass=false`. Octokit `issues.get`, `repos.getCommit`, complete `listComments` pagination are read-only. Exact source SHA, native comment ID, link/Issue, edit times and schema are checked. Partial/403/404/corrections produce UNKNOWN or PARTIAL. Real provider token test still NOT_RUN; selected DH Capability and approval gates separately owned. No special HTTP/TLS stack or private task-meta integration.
+
+**R1 status:** prior HEAD `2d94116` **BLOCK P0=1/P1=2** because it accepted bare JSON, hashed entire envelope and trusted unknown GitHub commenters. This successor corrects those defects and requires independent R2 exact-head review; Node CI only confirms bounded mock provider tests, not real private GitHub credentials.
+
+---
 
 Owner [#111](https://github.com/kaicreator-mm/tally/issues/111), parent #106. This package connects merged T01 report-projection + T03a exact ADS v4.18 schema validator to **mature Octokit REST** native Issue comment pagination and independently recomputed **RFC8785 JCS SHA256** (`canonicalize@5.1.0`). No private task-meta access, GitHub mutation, K admission, Release authority or homemade HTTP/TLS/retry engine.
 
