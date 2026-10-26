@@ -30,10 +30,22 @@ const result=await build({
   }}]
 });
 if(result.outputFiles.length!==1)throw Error('EXPECTED_ONE_SEALED_MODULE');
-const code=result.outputFiles[0].text;
-const externals=[...new Set(Object.values(result.metafile.outputs)
+// esbuild preserves Node's two old bare builtins as "process" and "buffer".
+ // Rewrite ONLY their imported specifiers to explicit node: form so the
+ // DH closed-world declared node-import manifest exactly matches source.
+let code=result.outputFiles[0].text;
+const originals=[...new Set(Object.values(result.metafile.outputs)
   .flatMap(o=>o.imports).filter(i=>i.external).map(i=>i.path))].sort();
+for(const name of ['process','buffer']){
+  code=code.replaceAll('from "'+name+'"','from "node:'+name+'"');
+  code=code.replaceAll("from '"+name+"'","from 'node:"+name+"'");
+}
+const externals=originals.map(x=>['process','buffer'].includes(x)?'node:'+x:x);
 if(externals.some(x=>!x.startsWith('node:')))throw Error('UNSELECTED_BARE_DEPENDENCY:'+externals.join(','));
+for(const name of ['process','buffer']){
+  if(code.includes('from "'+name+'"')||code.includes("from '"+name+"'"))
+    throw Error('NODE_IMPORT_NOT_CANONICALIZED:'+name);
+}
 writeFileSync(out,code);
 writeFileSync(importsOut,JSON.stringify(externals));
 console.log(JSON.stringify({sealedCBytes:Buffer.byteLength(code),schemaBytes:schema.length,
