@@ -67,6 +67,12 @@ try {
   assert.equal(receipt.admitted.effects[0].output?.state,'OBSERVED_INPUT_ONLY');
   assert.equal(receipt.admitted.effects[0].output?.admitted,false);
   assert.equal(receipt.admitted.effects[0].output?.taskPass,false);
+  const selectedC=receipt.admitted.effects[0].output?.sourceObservation;
+  assert.equal(selectedC?.state,'OBSERVATION_NOT_NATIVE_VERIFIED');
+  assert.equal(selectedC?.sourceRef,msg.input.issueRef);
+  assert.equal(selectedC?.authorized,false);
+  assert.equal(selectedC?.taskPass,false);
+  assert.equal(selectedC?.releasePass,false);
   const answer=await facade.query({workflowId:'tally-readiness',instanceKey:'task-108',
     businessPackageId:'business-tally-task-readiness@v2.0.0'});
   assert.equal(answer.target.tenantId,deployment.tenantId);
@@ -95,6 +101,7 @@ try {
   assert.equal(JSON.stringify(after.snapshot),snapshotBefore,'denied send must not change current snapshot');
   console.log(JSON.stringify({realKLoad:true,realKSend:receipt.status,
     realEffectDisposition:receipt.admitted.effects[0].disposition,
+    realSelectedCOutput:receipt.admitted.effects[0].output?.sourceObservation?.state,
     key:'inspect:108:'+msg.input.sourceSha,realScopedQuery:true,
     immutableReplay:replay.idempotentReplay,changedInputRefused:conflict,
     unselectedIntentRefused:wrongIntent,authorizedTask:false,
