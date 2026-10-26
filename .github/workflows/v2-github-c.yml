@@ -1,0 +1,37 @@
+name: v2-github-c
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-github-c/**'
+      - '.github/workflows/v2-github-c.yml'
+  push:
+    branches:
+      - 'feat/v2-t01-github-report-readmodel'
+      - 'version/v2'
+    paths:
+      - 'packages/tally-github-c/**'
+      - '.github/workflows/v2-github-c.yml'
+permissions:
+  contents: read
+jobs:
+  report-projection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout real commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record subject
+        shell: bash
+        run: |
+          echo "GIT_HEAD=$(git rev-parse HEAD)"
+          node --version
+          npm --version
+      - name: Test GitHub C read-model (no API writes)
+        shell: bash
+        run: npm --prefix packages/tally-github-c test
