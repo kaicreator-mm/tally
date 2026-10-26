@@ -2,7 +2,7 @@
  * Tally v2 T03b — provider-read-only GitHub native C transport.
  *
  * No GitHub writes, no Task/Review/Release authority, no private task-meta.
- * Octokit handles HTTP, GitHub auth, pagination, errors and retry semantics.
+ * Octokit handles HTTP, GitHub auth and pagination. Retries/throttling\n * require optional provider policy; no implicit safe retry is claimed.
  * Every currentness fact below is only an advisory read of one pinned source.
  */
 import { createHash } from 'node:crypto';
@@ -33,13 +33,25 @@ function reportCandidate(comment) {
   // ADS v4.18 §16 wire: one first-line marker + one fenced YAML mapping.
   // Human prose after the close fence is ignored, never another authority.
   const marker='<!-- ads:github -->';
-  if(!raw.startsWith(marker+'\n')) return {kind:'unrelated'};
-  if(raw.length>maximumBody||raw.split(marker).length!==2) return {kind:'invalid'};
-  const match=/^<!-- ads:github -->\n```yaml\n([\s\S]*?)\n```(?=\n|$)/.exec(raw);
-  if(!match) return {kind:'invalid'};
+  // ADS reference uses splitlines(): CRLF and CR are legal line separators.
+  // A trusted publisher's misplaced marker is INVALID, not unrelated:
+  // otherwise a REVOKE following a valid summary is silently ignored.
+  if(raw.length>maximumBody) return {kind:'invalid'};
+  const lines=raw.split(/\r\n|\n|\r/);
+  const markerLines=lines.filter(line=>line.trim()===marker);
+  if(!markerLines.length) return {kind:'unrelated'};
+  if(markerLines.length!==1||lines[0]!==marker) return {kind:'invalid'};
+  let i=1;
+  while(i<lines.length&&lines[i].trim()==='') i++;
+  if(lines[i]!=='```yaml') return {kind:'invalid'};
+  i++;
+  const fenceEnd=lines.indexOf('```',i);
+  if(fenceEnd<0) return {kind:'invalid'};
+  const wire=lines.slice(i,fenceEnd).join('\n');
+  if(!wire.trim()) return {kind:'invalid'};
   let obj;
   try {
-    const doc=parseDocument(match[1],{uniqueKeys:true,merge:false,schema:'core',maxAliasCount:0,strict:true});
+    const doc=parseDocument(wire,{uniqueKeys:true,merge:false,schema:'core',maxAliasCount:0,strict:true});
     if(doc.errors.length||doc.warnings.length) return {kind:'invalid'};
     visit(doc,{Node(_key,node){
       if(isAlias(node)||node.anchor!==undefined||node.tag!==undefined){
