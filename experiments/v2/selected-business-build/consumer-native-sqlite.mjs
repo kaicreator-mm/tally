@@ -60,6 +60,10 @@ try {
   const recordsBefore=await sqlite.list('');
   assert.ok(recordsBefore.length>0);
   assert.ok(!JSON.stringify(before).includes(token),'token may not enter SQLite Kernel snapshot');
+  for(const key of recordsBefore){
+    const row=await sqlite.get(key);
+    assert.ok(!JSON.stringify(row).includes(token),'Host secret may not appear in ANY durable K document: '+key);
+  }
   facade.stop();facade=null;
   await sqlite.close();sqlite=null;
 
