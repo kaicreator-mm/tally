@@ -22,8 +22,9 @@ export function assessTaskEvidence(input) {
   if(!input||typeof input!=='object'||Array.isArray(input)) {
     return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',admitted:false,taskPass:false});
   }
-  const {issueRef,sourceSha,claimRef,dependenciesComplete}=input;
-  const sourceValid=ISSUE_REF.test(issueRef)&&SOURCE_SHA.test(sourceSha)&&isStr(claimRef);
+  const {issueRef,issueNumber,sourceSha,claimRef,dependenciesComplete}=input;
+  const sourceValid=ISSUE_REF.test(issueRef)&&Number.isSafeInteger(issueNumber)&&issueNumber>0&&
+    issueRef.endsWith(`/issues/${issueNumber}`)&&SOURCE_SHA.test(sourceSha)&&isStr(claimRef);
   if(!sourceValid){
     return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',admitted:false,taskPass:false});
   }
@@ -37,14 +38,17 @@ export function assessTaskEvidence(input) {
 }
 const inputFrom=Object.freeze({
   issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
   sourceSha:{source:'event',path:['payload','sourceSha']},
   claimRef:{source:'event',path:['payload','claimRef']},
   dependenciesComplete:{source:'event',path:['payload','dependenciesComplete']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
-    !!value.decision&&typeof value.decision.outcome==='string'&&
-    !!value.event&&typeof value.event.type==='string';
+    !!value.decision&&typeof value.decision==='object'&&!Array.isArray(value.decision)&&
+    typeof value.decision.outcome==='string'&&
+    !!value.event&&typeof value.event==='object'&&!Array.isArray(value.event)&&
+    typeof value.event.type==='string';
 }};
 export function getPolicy(){
   return {
@@ -58,7 +62,11 @@ export function getPolicy(){
           targetState:'open',
           effectIntents:[{
             effectType:'effect:tally-readiness-observation',inputFrom,
-            idempotencyKeyFrom:{template:'inspect:{issueRef}:{sourceSha}'}
+            // GitHub issue URL contains '/', invalid for DH 0.10.2 Kernel key.
+            // Native issueNumber must match the canonical issueRef before advice.
+            // Domain App keys are scoped to a selected project; multi-repo
+            // scope must add trusted repository identity in the T02b adapter.
+            idempotencyKeyFrom:{template:'inspect:{issueNumber}:{sourceSha}'}
           }]
         }]},
         {stateKey:'closed',kind:'final'},
@@ -70,7 +78,7 @@ export function getPolicy(){
       ruleId:'rule:tally-readiness',
       eventType:'TALLY_TASK_READINESS_INSPECTION_REQUESTED',
       payloadFromInput:{
-        issueRef:'issueRef',sourceSha:'sourceSha',claimRef:'claimRef',
+        issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',claimRef:'claimRef',
         dependenciesComplete:'dependenciesComplete',
       },
     }},
