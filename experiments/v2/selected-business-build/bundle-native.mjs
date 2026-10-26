@@ -23,6 +23,10 @@ if(replaced===original)throw Error('PINNED_ADS_SCHEMA_EMBED_TRANSFORM_MISSED');
 const result=await build({
   entryPoints:[entry],bundle:true,format:'esm',platform:'node',target:'node24',
   write:false,metafile:true,legalComments:'none',logLevel:'warning',
+  // Only the separately installed trusted npm provider may use ordinary Node
+  // createRequire for upstream CJS deps. The selected K C module is an ESM
+  // shim with a static declared npm import; no BUILD policy relaxation.
+  banner:{js:'import {createRequire as __nativeRequireFactory} from "node:module"; const require = __nativeRequireFactory(import.meta.url);'},
   plugins:[{name:'pinned-ads-schema-bytes',setup(b){
     b.onLoad({filter:/[/\\]tally-ads-v5-validator[/\\]src[/\\]validate\.mjs$/},()=>{
       return {contents:replaced,loader:'js',resolveDir:resolve(tally,'packages/tally-ads-v5-validator/src')};
