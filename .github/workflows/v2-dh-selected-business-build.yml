@@ -1,0 +1,51 @@
+name: v2-dh-selected-business-build
+on:
+  pull_request:
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - '.github/workflows/v2-dh-selected-business-build.yml'
+  push:
+    branches:
+      - feat/v2-t02b-public-build-selected-business
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - '.github/workflows/v2-dh-selected-business-build.yml'
+permissions:
+  contents: read
+jobs:
+  public-selected-business:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Tally implementation source checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: tally
+      - name: DomainHarness released public ABI
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          persist-credentials: false
+          path: domain-harness
+      - name: Pinned T02a source pending independent R2
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/tally
+          ref: 30a469398f4e50ca3185acea22c0961da854d274
+          persist-credentials: false
+          path: business
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Real public installed BUILD producer (K/S/Tally B)
+        shell: bash
+        env:
+          DH: ${{ github.workspace }}/domain-harness
+          TALLY: ${{ github.workspace }}/tally
+          TALLY_B: ${{ github.workspace }}/business
+        run: |
+          echo "TALLY_HEAD=$(git -C "$TALLY" rev-parse HEAD)"
+          bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"
