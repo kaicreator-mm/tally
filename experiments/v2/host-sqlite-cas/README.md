@@ -8,7 +8,7 @@
 
 Creates a **temporary file-backed SQLite database**, performs create/CAS/reject-unconditional/reject-duplicate/reject-stale, races two independent **connections** to the same file (one winner), closes/reopens and checks revision/value preservation. Also runs the public `probeTrueCasStore` on the actual physical store. The temporary directory is removed after the test. The output contains OS/Node and a test revision but no secrets, GitHub API writes, Task acceptance or Hidden fixtures.
 
-**Important exclusions:** two connections are not a cross-**process** locking witness; Host/CAS success alone is not K Journal/Effect/UNKNOWN, BUILD+selected K/S/B/C installation, real Codex, hidden verifier or Release PASS. Those are separate tests. No fabricated test result: `EXECUTION=NOT_RUN` until the operator uploads the actual test log/EXIT and package SHA256 digest.
+**Coverage boundary:** the default test's two connections are **not** a cross-process locking witness. The **optional** `WCX_WAL_STRESS=1` path uses four actual independent Node child **processes** per fresh SQLite database to exercise public Host WAL initialization/concurrent open; it does **not** prove cross-process same-key CAS, K Journal/Effect/UNKNOWN, selected Domain App/BUILD, real Codex, Hidden verifier or Release PASS. It is **not** the separate legacy `NodeSqliteRuntimeStore` regression suite for [DomainHarness #1385](https://github.com/kaicreator-mm/domain-harness/issues/1385). Both `EXECUTION=NOT_RUN` and `STRESS=NOT_RUN` remain until literal Node24 results, exit and tarball SHA256 receipts exist.
 
 ## Reproducible CLI (Ubuntu or Git Bash on Windows; Node24)
 
@@ -27,6 +27,19 @@ test ${PIPESTATUS[0]} -eq 0
 ```
 
 **Important:** `KEEP_WCX_WORK=1` retains temporary consumer+packed artifacts for independent digest/lockfile inspection; remove that experimental directory when evidence has been captured. A terminal log containing text `PUBLIC_HOST_CAS_SMOKE=PASS` without Node test process **EXIT 0** is insufficient. If the test fails, both `WCX_EXPERIMENT_EXIT` and the calling shell's `PIPESTATUS[0]` preserve failure; do not describe it as PASS. All package tarballs are pinned to actual source and SHA256, with no registry assumption for private `0.10.2-rc.0` package names.
+
+### Optional cross-process WAL initialization stress
+
+On the **same pinned R01 source checkout** and separate installed consumer, enable the separate test:
+
+```bash
+WCX_WAL_STRESS=1 WCX_WAL_ROUNDS=15 KEEP_WCX_WORK=1 bash "$TALLY/experiments/v2/host-sqlite-cas/run-clean.sh" 2>&1 | tee "$HOME/tally-wcx-wal-evidence.log"
+test ${PIPESTATUS[0]} -eq 0
+```
+
+The optional path creates **15 fresh SQLite databases**, spawning **4 independent Node child processes** per database. It captures each failing worker's exit and a bounded stderr excerpt without needing GitHub credentials. Any failed child causes the test and parent runner to exit nonzero; no retry masks a failure. Each child writes a distinct key: this covers concurrent *WAL initialization*, not cross-process same-key CAS. WCX_WAL_ROUNDS is bounded 1–30 (default 5 if enabled).
+
+This determines whether the public Tally-selected openSqliteCasStore interface shares startup exposure with upstream [DH #1385](https://github.com/kaicreator-mm/domain-harness/issues/1385), which specifically concerns the **different legacy NodeSqliteRuntimeStore** constructor. Even a clean stress result cannot close #1385, qualify DomainHarness R01, replace its private Hidden 7/7 evidence, or act as Tally Release PASS. Report observed discrepancies on #100 with exact source/OS/Node/logs. Run the normal CAS smoke first.
 
 **Evidence:** record (1) exact git SHAs/trees for both repos, (2) `node --version` and `npm --version`, (3) `npm ci` / `npm run build` / tarball install and test literal exit codes, (4) SHA256 tarball digests, (5) real node test summary and whether native better-sqlite3 actually loaded. Run on a separate clean consumer outside repository; do not publish an unqualified npm registry package or commit local `node_modules`.
 
