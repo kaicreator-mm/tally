@@ -12,17 +12,17 @@ finish() {
 trap finish EXIT
 : "${DH:?Set DH to exact released DomainHarness git checkout}"
 : "${TALLY:?Set TALLY to exact Tally PR checkout}"
-: "${TALLY_B:?Set TALLY_B to exact T02a reviewed-source git checkout}"
+: "${TALLY_B:?Set TALLY_B to Tally v2 merged B source git checkout}"
 DH=$(cd "$DH" && pwd -P)
 TALLY=$(cd "$TALLY" && pwd -P)
 TALLY_B=$(cd "$TALLY_B" && pwd -P)
 [[ "$(git -C "$DH" rev-parse HEAD)" == "cee14399d9d0af4e20e34b9111861b16a465b690" ]] || { echo DH_SHA_MISMATCH; exit 2; }
-[[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "30a469398f4e50ca3185acea22c0961da854d274" ]] || { echo T02A_SHA_MISMATCH; exit 2; }
+[[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "ccbe01ebd03bce1d028e5a2d2e8f3b51ce84f455" ]] || { echo T02A_SHA_MISMATCH; exit 2; }
 [[ "$(node -p 'process.versions.node.split(".")[0]')" == '24' ]] || { echo NODE24_REQUIRED; exit 2; }
 BFILE="$TALLY_B/packages/tally-engineering-business/src/index.mjs"
 [[ -f "$BFILE" && -f "$TALLY/experiments/v2/selected-business-build/producer.mjs" ]]
 tmp=$(mktemp -d)
-mkdir -p "$tmp/packed" "$tmp/producer"
+mkdir -p "$tmp/packed" "$tmp/producer" "$tmp/consumer"
 echo "DH_RELEASE_SHA=$(git -C "$DH" rev-parse HEAD)"
 echo "TALLY_SHA=$(git -C "$TALLY" rev-parse HEAD)"
 echo "T02A_SOURCE_SHA=$(git -C "$TALLY_B" rev-parse HEAD)"
@@ -32,7 +32,7 @@ npm ci
 npm run build
 # Contracts/BUILD are root npm workspaces, selected K/S Domain Packages
 # are independent package directories and are intentionally NOT workspaces.
-for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build; do
+for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build @kaicreator/domain-harness-microkernel; do
   npm pack --pack-destination "$tmp/packed" -w "$package" >/dev/null
 done
 for dir in "$DH/domain-packages/kernel/basic" "$DH/domain-packages/standard/basic"; do
@@ -44,6 +44,14 @@ cp "$TALLY/experiments/v2/selected-business-build/producer.mjs" "$tmp/producer/p
 cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
 printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
 cd "$tmp/producer"
-npm install --save-exact "$tmp"/packed/*.tgz
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-build-*.tgz "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-kernel-basic-*.tgz "$tmp"/packed/kaicreator-domain-standard-basic-*.tgz
 npm ls --depth=0
-TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+# A new Node process in an independent npm root consumes only public
+# Contracts + Microkernel, never BUILD/Compiler/unselected Domain Packages.
+cp "$TALLY/experiments/v2/selected-business-build/consumer.mjs" "$tmp/consumer/consumer.mjs"
+printf '{"name":"tally-selected-runtime-consumer","private":true,"type":"module"}\n' >"$tmp/consumer/package.json"
+cd "$tmp/consumer"
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz
+npm ls --depth=0
+node ./consumer.mjs
