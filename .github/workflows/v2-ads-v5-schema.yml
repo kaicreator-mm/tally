@@ -1,0 +1,34 @@
+name: v2-ads-v5-schema
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-ads-v5-schema.yml'
+  push:
+    branches:
+      - 'feat/v2-t03a-ads-v5-schema-validator'
+    paths:
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-ads-v5-schema.yml'
+permissions:
+  contents: read
+jobs:
+  strict-v5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record exact subject and execute strict validator tests
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          node --version
+          cd packages/tally-ads-v5-validator
+          npm install --ignore-scripts --no-audit --no-fund
+          npm ls --depth=0
+          npm test
