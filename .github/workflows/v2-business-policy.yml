@@ -1,0 +1,29 @@
+name: v2-business-policy
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-business-policy.yml'
+  push:
+    branches:
+      - 'feat/v2-t02a-engineering-business-readiness'
+    paths:
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-business-policy.yml'
+permissions:
+  contents: read
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: |
+          git rev-parse HEAD
+          node --version
+          npm --prefix packages/tally-engineering-business test
