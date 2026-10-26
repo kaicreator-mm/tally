@@ -41,6 +41,7 @@ done
 echo T02B_TARBALL_SHA256
 sha256sum "$tmp"/packed/*.tgz
 cp "$TALLY/experiments/v2/selected-business-build/producer.mjs" "$tmp/producer/producer.mjs"
+cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
 printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
 cd "$tmp/producer"
 npm install --save-exact "$tmp"/packed/*.tgz
