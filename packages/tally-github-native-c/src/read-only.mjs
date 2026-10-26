@@ -14,6 +14,8 @@ import { projectReportSet, STATES } from '../../tally-github-c/src/report-projec
 
 const SHA=/^[0-9a-f]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+$/;
+// GitHub App actors may legitimately have a [bot] suffix.
+const LOGIN=/^[A-Za-z0-9_.-]+(?:\\[bot\\])?$/;
 const maximumBody=256*1024;
 const maxRows=1000;
 const deny=(reason, status=STATES.UNKNOWN, observationCount=0)=>Object.freeze({
@@ -69,7 +71,7 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
   const bindings=publisherBindings;
   if(!bindings||typeof bindings!=='object'||Array.isArray(bindings)||
     !Object.values(bindings).every(logins=>Array.isArray(logins)&&logins.length>0&&
-      logins.every(login=>typeof login==='string'&&REPO.test(login)))) {
+      logins.every(login=>typeof login==='string'&&LOGIN.test(login)))) {
     return deny('PUBLISHER_BINDINGS_UNAVAILABLE');
   }
   const repository=`${owner}/${repo}`;
