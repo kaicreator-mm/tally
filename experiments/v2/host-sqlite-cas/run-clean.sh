@@ -3,25 +3,30 @@
 # This script runs real packages; success requires process EXIT=0, not a source review.
 set -Eeuo pipefail
 
+work=''
+cleanup() {
+  rc=$?
+  printf 'WCX_EXPERIMENT_EXIT=%s\n' "$rc"
+  if [ -n "$work" ]; then
+    if [ "${KEEP_WCX_WORK:-0}" = '1' ]; then
+      printf 'WCX_WORK_DIR=%s\n' "$work"
+    else
+      rm -rf -- "$work"
+    fi
+  fi
+}
+trap cleanup EXIT
+
 DH=${DH:?Set DH to clean DomainHarness v0.10.2 exact candidate checkout}
 TALLY=${TALLY:?Set TALLY to the Tally PR #101 exact checkout}
+DH=$(cd "$DH" && pwd -P)
+TALLY=$(cd "$TALLY" && pwd -P)
 expected_dh='11ab7954f547fde44c003e2b227d672dc8af0a79'
 test "$(git -C "$DH" rev-parse HEAD)" = "$expected_dh" || { echo 'DH_SHA_MISMATCH' >&2; exit 2; }
 git -C "$TALLY" rev-parse --verify HEAD
 test "$(node -p 'process.versions.node.split(".")[0]')" = '24' || { echo 'NODE24_REQUIRED' >&2; exit 2; }
 test -f "$TALLY/experiments/v2/host-sqlite-cas/host-cas.test.mjs"
-
 work=$(mktemp -d)
-cleanup() {
-  rc=$?
-  printf 'WCX_EXPERIMENT_EXIT=%s\n' "$rc"
-  if [ "${KEEP_WCX_WORK:-0}" = '1' ]; then
-    printf 'WCX_WORK_DIR=%s\n' "$work"
-  else
-    rm -rf -- "$work"
-  fi
-}
-trap cleanup EXIT
 pack="$work/tarballs"
 consumer="$work/consumer"
 mkdir -p "$pack" "$consumer"
