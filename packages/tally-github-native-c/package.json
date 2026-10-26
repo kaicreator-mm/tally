@@ -1,0 +1,20 @@
+{
+  "name": "@kaicreator/tally-github-native-c",
+  "version": "0.0.0-v2-development",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": "./src/read-only.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@octokit/rest": "22.0.1",
+    "canonicalize": "5.1.0",
+    "yaml": "2.8.1"
+  }
+}
