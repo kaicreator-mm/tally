@@ -93,9 +93,21 @@ export function getPolicy(){
     effectBindings:{
       'effect:tally-readiness-observation':{
         semantics:'idempotent',
-        handler:async ({input,effectId})=>({
-          ...assessTaskEvidence(input),effectId,
-        }),
+        // Actual selected-C dispatch via the K-owned sealed resources port,
+        // not an invented parallel Tally Tool runtime. No external effect.
+        resource:{key:'tally-source-observation',operation:'tally.observeReadiness'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function') {
+            throw new Error('SELECTED_READONLY_CAPABILITY_REQUIRED');
+          }
+          const sourceObservation=await resources.call(
+            'tally-source-observation','tally.observeReadiness',
+            {sourceRef:input?.issueRef,sourceSha:input?.sourceSha,issueNumber:input?.issueNumber,effectId}
+          );
+          return {
+            ...assessTaskEvidence(input),effectId,sourceObservation,
+          };
+        },
       },
     },
   };
