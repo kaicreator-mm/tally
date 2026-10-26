@@ -57,6 +57,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm --prefix "$TALLY/packages/tally-ads-v5-validator" install --ignore-scripts --no-audit --no-fund
   npm --prefix "$TALLY/packages/tally-github-native-c" install --ignore-scripts --no-audit --no-fund
   cp "$TALLY/experiments/v2/selected-business-build/bundle-native.mjs" "$tmp/producer/bundle-native.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/native-readonly-shim.mjs" "$tmp/producer/native-readonly-shim.mjs"
 fi
 cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
 printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
@@ -66,7 +67,14 @@ npm ls --depth=0
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm install --save-exact --ignore-scripts --no-audit --no-fund esbuild@0.25.12
   T04B_C_OUTPUT="$tmp/producer/native-bundled.mjs" T04B_IMPORTS_OUTPUT="$tmp/producer/native-imports.json" TALLY="$TALLY" node ./bundle-native.mjs
-  T04B_C_OUTPUT="$tmp/producer/native-bundled.mjs" T04B_IMPORTS_OUTPUT="$tmp/producer/native-imports.json" T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+  # Existing reviewed native provider (which may include CJS in upstream npm
+  # deps) is an installed, declared closed-world npm package, NOT in sealed
+  # moduleSource. The sealed C bytes only static re-export this npm package.
+  mkdir -p "$tmp/native-provider"
+  cp "$tmp/producer/native-bundled.mjs" "$tmp/native-provider/index.mjs"
+  printf '{"name":"@kaicreator/tally-native-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}\\n' > "$tmp/native-provider/package.json"
+  npm pack --pack-destination "$tmp/packed" "$tmp/native-provider" >/dev/null
+  T04B_NATIVE=1 T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 else
   T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 fi
@@ -76,6 +84,9 @@ cp "$TALLY/experiments/v2/selected-business-build/consumer.mjs" "$tmp/consumer/c
 printf '{"name":"tally-selected-runtime-consumer","private":true,"type":"module"}\n' >"$tmp/consumer/package.json"
 cd "$tmp/consumer"
 npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@^12'
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  npm install --save-exact "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+fi
 npm ls --depth=0
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
