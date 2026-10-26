@@ -1,0 +1,38 @@
+name: v2-github-native-readonly-c
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-github-native-c/**'
+      - 'packages/tally-github-c/**'
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-github-native-readonly-c.yml'
+  push:
+    branches:
+      - feat/v2-t03b-github-native-readonly-c
+      - version/v2
+    paths:
+      - 'packages/tally-github-native-c/**'
+      - '.github/workflows/v2-github-native-readonly-c.yml'
+permissions:
+  contents: read
+jobs:
+  native-reader:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Runtime and source subject
+        run: |
+          echo "EXACT_CI_SUBJECT=$(git rev-parse HEAD)"
+          node --version
+      - name: Install mature dependencies (no lifecycle scripts)
+        run: |
+          npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+          npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - name: Native read-only C contract and negative tests
+        run: npm --prefix packages/tally-github-native-c test
