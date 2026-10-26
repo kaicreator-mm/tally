@@ -72,7 +72,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   # moduleSource. The sealed C bytes only static re-export this npm package.
   mkdir -p "$tmp/native-provider"
   cp "$tmp/producer/native-bundled.mjs" "$tmp/native-provider/index.mjs"
-  printf '{"name":"@kaicreator/tally-native-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}\\n' > "$tmp/native-provider/package.json"
+  printf '%s' '{"name":"@kaicreator/tally-native-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/native-provider/package.json"
   npm pack --pack-destination "$tmp/packed" "$tmp/native-provider" >/dev/null
   T04B_NATIVE=1 T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 else
