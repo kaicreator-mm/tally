@@ -51,7 +51,13 @@
       "publisher_namespace": "task-meta:example-org/example-repo",
       "issue_ref": "https://github.com/example-org/example-repo/issues/42",
       "task_ref": "task:42",
-      "data_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      "data_digest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "repository": "example-org/example-repo",
+      "comment_id": 123,
+      "ads_profile": "ads/github/v5:report",
+      "attempt_ref": "attempt:42:1",
+      "target_source_status": "PINNED",
+      "target_source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "reason": "Sanitized invalidation notice; replacement facts require separate source-profile revision.",
     "notice": "REVOKE",
