@@ -65,3 +65,14 @@ test('decision schema rejects arrays as decision or event',()=>{
   assert.equal(schema.isValid({decision:[],event:{type:'ok'}}),false);
   assert.equal(schema.isValid({decision:{outcome:'ok'},event:[]}),false);
 });
+
+test('public Microkernel requester may inspect advisory without approval authority',async()=>{
+  const p=getPolicy();
+  assert.ok(p.intentBindings.inspectTaskReadiness.roles.includes('requester'));
+  const r=await p.effectBindings['effect:tally-readiness-observation'].handler({
+    input:good,effectId:'public-readonly-requester'
+  });
+  assert.equal(r.admitted,false);
+  assert.equal(r.taskPass,false);
+  assert.equal(r.state,'OBSERVED_INPUT_ONLY');
+});
