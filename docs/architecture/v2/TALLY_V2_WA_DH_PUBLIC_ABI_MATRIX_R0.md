@@ -1,6 +1,6 @@
 # Tally v2 W-A — selected DomainHarness v0.10.2 public Package/BUILD/Host ABI matrix R0
 
-**Owner:** [#87](https://github.com/kaicreator-mm/tally/issues/87). **Source identity for this inspection:** DomainHarness **version-branch** `v0.10.2@7c24f2ad0f75929e2dffbe256afb4ce9d42c49a7`, **not** `main` or v0.10.2 Release/Tag. DH [R01 #1331](https://github.com/kaicreator-mm/domain-harness/issues/1331) is still OPEN: current R01 final Full/Hidden/Critical/Packaging/Release NOT_QUALIFIED. This matrix is GitHub exact-blob source inspection, **not physical Node24 tests**.
+**Owner:** [#87](https://github.com/kaicreator-mm/tally/issues/87). **Source identity for this inspection:** DomainHarness **version-branch** `v0.10.2@11ab7954f547fde44c003e2b227d672dc8af0a79`, **not** `main` or qualified v0.10.2 Release/Tag. DH [R01 #1331](https://github.com/kaicreator-mm/domain-harness/issues/1331) remains OPEN: current Hidden owner-held suite actually executed **7/7 PASS, EXIT=0** on this exact candidate, but R01-A Full had **real EXIT=1**; independent clean reproduction **4 failures/15 runs** in legacy multi-process `NodeSqliteRuntimeStore` WAL setup is now tracked as **P1 [DH #1385](https://github.com/kaicreator-mm/domain-harness/issues/1385)** with source repair Draft [#1386](https://github.com/kaicreator-mm/domain-harness/pull/1386), **not yet accepted**. Thus Full Release/RQ remains NOT_QUALIFIED and main HOLD. This matrix is GitHub exact-blob source inspection, **not physical Node24 tests**.
 
 ## Actual external public package closure
 
@@ -10,6 +10,8 @@
 | `@kaicreator/domain-harness-build` `0.10.2-rc.0` | `ef9d71dd789206da076db7598f0abd3e60aa86cc` at `tooling/build/package.json` | root `.` → `dist/index.js`, `.d.ts` | **Only external Producer process** builds sealed selected K/S/B/C plain-data App |
 | `@kaicreator/domain-harness-microkernel` `0.10.2-rc.0` | `b36bf56f1ea87ba7b116a17acb8861317fd8a81e` | root `.` and `./host-seam` | Runtime `load(app, options)` yields selected `{send,query,subscribe,stop}` facade; `./host-seam` for trusted Host only |
 | `@kaicreator/domain-harness-host-node` `0.10.2-rc.0` | `72242fbe446dafc2ff08fff6da581d875766b0c2` | root `.` only | Rich trusted Host, `openSqliteCasStore`, governed activation, scoped memory/durable controls; optional `better-sqlite3` peer |
+
+**Source delta check:** all four manifest Git blobs and three public `.d.ts` root blobs in this matrix were re-read at the newer exact `11ab7954...` candidate and remained **byte-identical** to the former `7c24f2ad...` versions. This preserves this matrix's *public-surface source relevance*, not its current physical release eligibility. 
 
 **Physical package reality caveat:** package `version=0.10.2-rc.0`, Node engine `>=24.0.0` on these four manifests; registry publication is not inferred by manifest. Actual external Consumer must install **exact tarballs with captured SHA256 and matching lockfile**, not float npm latest or import source `src/**` / unexported `dist/**`/private Compiler. Runtime closure excludes BUILD/Compiler and unselected packages; producer closure contains BUILD+Contracts+selected payloads, no runtime selection changes.
 
@@ -35,11 +37,12 @@
 | DH-A09 | Build/runtime import closure | no runtime link to BUILD/Compiler, even type-only; no deep unexported path or private registry tarball |
 | DH-A10 | Scoped observed evidence | stop/revoke/subscribe and no K key/receipt secrets in public events |
 | DH-A11 | Node24 toolchain | actual `node --version` 24.x; exact lockfile, tarball hashes, CLI command + exit |
-| DH-A12 | Release vs scoped T09 | T09 evidence may be reused byte-for-byte if unchanged, but R01 whole-version gates remain independent NOT_RUN until actual receipt |
+| DH-A12 | Release vs scoped T09 | Scoped T09 evidence may be reused only if package bytes unchanged; owner-held R01 Hidden **7/7 PASS** at exact `11ab7954...` is distinct from independent qualified **R01 Full+RQ HOLD** due to real WAL P1 #1385 | 
+| DH-A13 | Public Host fresh WAL stress | Opt-in Tally [#101](https://github.com/kaicreator-mm/tally/pull/101) uses **4 independent OS child processes × fresh SQLite files**, separate from baseline CAS smoke; no conflation with legacy NodeSqliteRuntimeStore #1385 or its P1 repair |
 
 ## Workfront gate graph and target local task
 
-**Source verification now (Web-first)**: exact package manifests and declared public exports were inspected in GitHub at the pinned version HEAD. The v0.10.2 final-Release source may advance after this pin, requiring a new Source Delta review; do not silently upgrade.
+**Source verification now (Web-first)**: exact package manifests and declared public exports were inspected and byte-compared on both the former candidate and current exact `11ab7954...`; their stated blobs are unchanged. A later DH PR #1386 merge would create a **new** candidate SHA, requiring re-pin/impact review; no source inspection qualifies its physical Node24 Release.
 
 **Minimal optional experimental Local task** (NOT production admission, no GitHub writes): on a clean Node24 directory pack the 4 public packages from exact DH candidate source, save tarball SHA256, install selected dependencies into three isolated producer/Tiny/Rich roots (separate lockfiles), execute Tiny and Rich positive+negative tests, verify `node_modules` graph/import closure, record literal command/EXIT and evidence SHA. Prefer reusing independently qualified DH T09 Node24 receipts and perform only missing Tally-relevant proof. If `R01` has not qualified, label `EXPERIMENTAL_PUBLIC_ABI_SPIKE`; never Release PASS.
 
