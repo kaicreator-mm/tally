@@ -102,9 +102,9 @@ test('bad/unmarked YAML wire and duplicate keys, anchors, tags fail closed',asyn
   const valid=approved();
   for(const bad of [
     JSON.stringify(valid,null,2),
-    `<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v5\nschema: ads/github/v5\nkind: report\ndata: {}\n\`\`\``,
-    `<!-- ads:github -->\n\`\`\`yaml\nschema: &danger ads/github/v5\nkind: report\ndata: {}\n\`\`\``,
-    `<!-- ads:github -->\n\`\`\`yaml\nschema: !!js/function hacked\nkind: report\ndata: {}\n\`\`\`,
+    "<!-- ads:github -->\n```yaml\nschema: ads/github/v5\nschema: ads/github/v5\nkind: report\ndata: {}\n```",
+    "<!-- ads:github -->\n```yaml\nschema: &danger ads/github/v5\nkind: report\ndata: {}\n```",
+    "<!-- ads:github -->\n```yaml\nschema: !!js/function hacked\nkind: report\ndata: {}\n```",
   ]){
     const result=await read([[observation(valid,{body:bad})]]);
     assert.equal(result.status,'UNKNOWN');
