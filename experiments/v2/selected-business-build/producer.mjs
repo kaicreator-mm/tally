@@ -80,9 +80,9 @@ assert.equal(built.targetProfile,V10_TARGET_PROFILE);
 const negatives=[];
 for(const [caseName,mutate,code] of [
  ['duplicate-k',opts=>({...opts,modules:[...modules,{...modules[0],packageId:'kernel-second@v2'}]}),'V10_ROLE_CARDINALITY'],
- ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)})],'V10_ABI_UNSUPPORTED'],
- ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)})],'V10_DIGEST_MISMATCH'],
- ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]})],'V10_ROUTE_INVALID'],
+ ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)}), 'V10_ABI_UNSUPPORTED'],
+ ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)}), 'V10_DIGEST_MISMATCH'],
+ ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]}), 'V10_ROUTE_INVALID'],
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
   negatives.push(caseName);
