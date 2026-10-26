@@ -5,7 +5,7 @@
  * simulated Kernel acceptance. Consumer runtime proof is separate T02b work.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { V10_TARGET_PROFILE, sha256Hex } from '@kaicreator/domain-harness-contracts';
 import { buildV10App } from '@kaicreator/domain-harness-build';
@@ -70,6 +70,10 @@ assert.equal(built.modules.filter(x=>x.role==='capability').length,1);
 assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
+if(process.env.T02B_SEALED_APP_OUTPUT) {
+  // Sealed BUILD plain data, transferred as bytes to a separate consumer.
+  writeFileSync(process.env.T02B_SEALED_APP_OUTPUT, JSON.stringify(built));
+}
 assert.equal(built.targetProfile,V10_TARGET_PROFILE);
 // BUILD must not admit a duplicate K or forged Business role/ABI.
 const negatives=[];
