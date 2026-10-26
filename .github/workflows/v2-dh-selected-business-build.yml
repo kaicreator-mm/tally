@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: kaicreator-mm/tally
-          ref: ccbe01ebd03bce1d028e5a2d2e8f3b51ce84f455
+          ref: 7b3725014ba3bfd450df83cc20021e48d7fda163
           persist-credentials: false
           path: business
       - name: Node 24
