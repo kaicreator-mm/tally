@@ -3,12 +3,14 @@ on:
   pull_request:
     paths:
       - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-engineering-business/**'
       - '.github/workflows/v2-dh-selected-business-build.yml'
   push:
     branches:
       - feat/v2-t02b-public-build-selected-business
     paths:
       - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-engineering-business/**'
       - '.github/workflows/v2-dh-selected-business-build.yml'
 permissions:
   contents: read
