@@ -30,12 +30,13 @@ node --version
 cd "$DH"
 npm ci
 npm run build
-for package in \
-  @kaicreator/domain-harness-contracts \
-  @kaicreator/domain-harness-build \
-  @kaicreator/domain-kernel-basic \
-  @kaicreator/domain-standard-basic; do
+# Contracts/BUILD are root npm workspaces, selected K/S Domain Packages
+# are independent package directories and are intentionally NOT workspaces.
+for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build; do
   npm pack --pack-destination "$tmp/packed" -w "$package" >/dev/null
+done
+for dir in "$DH/domain-packages/kernel/basic" "$DH/domain-packages/standard/basic"; do
+  npm pack --pack-destination "$tmp/packed" "$dir" >/dev/null
 done
 echo T02B_TARBALL_SHA256
 sha256sum "$tmp"/packed/*.tgz
