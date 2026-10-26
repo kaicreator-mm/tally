@@ -15,6 +15,7 @@ on:
       - '.github/workflows/v2-github-native-readonly-c.yml'
 permissions:
   contents: read
+  issues: read
 jobs:
   native-reader:
     runs-on: ubuntu-latest
@@ -36,3 +37,8 @@ jobs:
           npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
       - name: Native read-only C contract and negative tests
         run: npm --prefix packages/tally-github-native-c test
+
+      - name: Real GitHub native Issue read (no publication expected)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node packages/tally-github-native-c/test/real-github-smoke.mjs
