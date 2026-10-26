@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "test": "node --test host-cas.test.mjs"
+    "test": "node --test host-cas.test.mjs",
+    "test:wal": "node --test wal-concurrent-open.test.mjs"
   }
 }
