@@ -16,6 +16,7 @@ assert.equal(sealed.modules.filter(m=>m.role==='kernel-primary').length,1);
 
 class InMemoryCas {
   #docs=new Map();
+  storeErrors=0;
   async get(key){
     const d=this.#docs.get(key);
     return d===undefined?null:{value:d.value,revision:d.revision};
@@ -28,6 +29,7 @@ class InMemoryCas {
     if(condition.kind==='cas'&&d!==undefined&&d.revision===condition.revision){
       this.#docs.set(key,{value,revision:d.revision+1});return {revision:d.revision+1};
     }
+    this.storeErrors++;
     throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
   }
   async remove(key,condition){
@@ -36,6 +38,7 @@ class InMemoryCas {
        (condition.kind==='create'&&d===undefined)){
       this.#docs.delete(key);return;
     }
+    this.storeErrors++;
     throw Object.assign(new Error('CAS removal refused'),{code:'HOST_CAS_CONFLICT'});
   }
   keys(){return [...this.#docs.keys()];}
@@ -61,11 +64,14 @@ try {
   assert.equal(receipt.admitted.effects[0].disposition,'executed');
   // A source-observation Business intent can be admitted while Task/Review PASS
   // remains false. The Claim ref is input metadata, not a K approval.
-  assert.notEqual(receipt.taskPass,true);
+  assert.equal(receipt.admitted.effects[0].output?.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(receipt.admitted.effects[0].output?.admitted,false);
+  assert.equal(receipt.admitted.effects[0].output?.taskPass,false);
   const answer=await facade.query({workflowId:'tally-readiness',instanceKey:'task-108',
     businessPackageId:'business-tally-task-readiness@v2.0.0'});
   assert.equal(answer.target.tenantId,deployment.tenantId);
   assert.ok(answer.snapshot);
+  const snapshotBefore=JSON.stringify(answer.snapshot);
   const replay=await facade.send({...msg,input:{...msg.input}});
   assert.equal(replay.status,'admitted');
   assert.equal(replay.idempotentReplay,true);
@@ -74,11 +80,15 @@ try {
     conflict=changed.status!=='admitted';
   } catch(e){conflict=typeof e.code==='string';}
   assert.ok(conflict,'changed-input same-message replay must refuse');
+  assert.equal(store.storeErrors,0,'negative must be Kernel denial, not store failure');
   let wrongIntent=false;
   try {const invalid=await facade.send({...msg,messageId:'message-t02b-02',
       intentType:'unknownTaskApproval'});
     wrongIntent=invalid.status!=='admitted';}catch(e){wrongIntent=typeof e.code==='string';}
   assert.ok(wrongIntent,'unselected intent cannot be admitted');
+  assert.equal(store.storeErrors,0,'negative must not depend on throwing store');
+  const after=await facade.query({workflowId:'tally-readiness',instanceKey:'task-108',businessPackageId:'business-tally-task-readiness@v2.0.0'});
+  assert.equal(JSON.stringify(after.snapshot),snapshotBefore,'denied send must not change current snapshot');
   console.log(JSON.stringify({realKLoad:true,realKSend:receipt.status,
     realEffectDisposition:receipt.admitted.effects[0].disposition,
     key:'inspect:108:'+msg.input.sourceSha,realScopedQuery:true,
