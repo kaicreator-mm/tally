@@ -1,3 +1,18 @@
+# Tally AGENTS — Version-aware authority routing
+
+**Prospective v2 version-branch routing only.** Determine the applicable standards from the accepted GitHub Issue/Claim, exact version branch and effective immutable ADS pin. Existing v1.5.x Tasks/Claims and old main remain under their original ADS 1.2.1 and v1.5.0 rules below; do not retroactively change their source, no-CI carrier, Review, or evidence.
+
+**For v2 source work**, consult the current, independently accepted exact SHA of Product PRD (docs/product/v2/TALLY_V2_PRD_DOMAIN_PACKAGE_FIRST_R0.md), semantic L2 (docs/architecture/v2/TALLY_V2_DOMAIN_PACKAGE_SEMANTIC_L2_R0.md), parallel Task DAG (docs/implementation/v2/TALLY_V2_ADS_V418_PARALLEL_TASK_DAG_R0.md), and the specific Issue #87–#92/L3. These artifacts may live in separate pending PR branches and **must not be assumed to exist in the current checkout** until merged on the qualified version branch. Use docs/research/v2/GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md and docs/research/v2/OUTPUT_LEDGER.md for source-qualified GitHub delivery. ADS v4.18.0 is the chosen upstream READY source; root .dev-standard/VERSION and one A1_MANUAL_PROTOCOL declaration are still **proposed project adoption until independently qualified #85 and version-only integration**.
+
+**For v2 implementation**, use selected DomainHarness Business/Standard/one Kernel/Capability/Host packages with public ABI. Do not build an independent Tally K, direct private DomainHarness imports or a standalone TS service retrofitted as a Domain Package. GitHub remains Issue/PR/Review/ADS Task Report source authority, SQLite P0 only persists K/Host State/CAS/Journal/Effect through its public Host and a separate GitHub-derived cache; PostgreSQL optional. Real Local Codex CLI, separately isolated Builder GitHub write secrets, verifier OS denied fixture access, and P0 max one executing Task Attempt need actual Node24/OS physical evidence. The DomainHarness v0.10.2 R01 independent Release RQ remains separate.
+
+**For v2 CI**, the prospective source declares ADS v4.18 custom profile: exact pin/current HEAD, trailer, independent source Review and full-root ADS verifier apply to docs/adoption scope; Node24, sealed Host/SQLite/public ABI and OS privilege negatives become required when those implementation paths ship; final Full/Hidden/Critical/Packaging/RQ remain required at release. Independent Tally #83 owner concluded the inherited v1.5 Go source-quality/Postgres failures are actual FAIL but informational for the examined v2 docs-only changes. Do not treat them as PASS/waived or extend this scoped decision to v2 runtime changes.
+
+**Before executing any v2 Task**, require native GitHub Issue Dependencies/current Claim and version-bound L3, real Product/ADS/L2/DH selected Host admission and K source-currentness. Planning Issue or Draft pin alone is NOT_ADMITTED. Keep v2 changes on a version branch until its Release Qualification authorizes main integration. Status must distinguish PASS, FAIL, NOT_RUN, ENV_BLOCKED, UNKNOWN with exact evidence.
+
+---
+
+## Historical Tally v1.5.0 instructions (unchanged applicability)
 # AGENTS.md — Tally v1.5.0 Engineering Instructions
 
 Read this file before changing code.
