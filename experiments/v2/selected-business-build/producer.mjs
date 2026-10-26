@@ -19,8 +19,11 @@ assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
 assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
-const capabilityFile = new URL('./readiness-capability.mjs', import.meta.url);
+const capabilityFile = process.env.T04B_C_OUTPUT ||
+  fileURLToPath(new URL('./readiness-capability.mjs',import.meta.url));
 const cBytes = readFileSync(capabilityFile, 'utf8');
+const cExternalNodes = process.env.T04B_IMPORTS_OUTPUT ?
+  JSON.parse(readFileSync(process.env.T04B_IMPORTS_OUTPUT,'utf8')) : [];
 
 const payload = (specifier) => readFileSync(fileURLToPath(import.meta.resolve(specifier)), 'utf8');
 const kBytes = payload('@kaicreator/domain-kernel-basic');
@@ -56,7 +59,8 @@ const modules = [
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
     capabilityId:'tally-source-observation',
     handlers:[{operationId:'tally.observeReadiness',handler:'observeReadiness'}],
-    externalEffect:false},
+    externalEffect:false,
+    ...(process.env.T04B_C_OUTPUT?{externalImports:{node:cExternalNodes,npm:[],native:[]}}:{})},
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
