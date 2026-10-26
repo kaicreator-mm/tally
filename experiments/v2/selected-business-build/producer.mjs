@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { V10_TARGET_PROFILE, sha256Hex } from '@kaicreator/domain-harness-contracts';
 import { buildV10App } from '@kaicreator/domain-harness-build';
+import { V10BuildError } from '@kaicreator/domain-harness-contracts';
 
 const businessFile = process.env.TALLY_BUSINESS_SOURCE;
 if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
@@ -77,13 +78,13 @@ if(process.env.T02B_SEALED_APP_OUTPUT) {
 assert.equal(built.targetProfile,V10_TARGET_PROFILE);
 // BUILD must not admit a duplicate K or forged Business role/ABI.
 const negatives=[];
-for(const [caseName,mutate] of [
- ['duplicate-k',opts=>({...opts,modules:[...modules,modules[0]]})],
- ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)})],
- ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)})],
- ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]})],
+for(const [caseName,mutate,code] of [
+ ['duplicate-k',opts=>({...opts,modules:[...modules,{...modules[0],packageId:'kernel-second@v2'}]}),'V10_ROLE_CARDINALITY'],
+ ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)})],'V10_ABI_UNSUPPORTED'],
+ ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)})],'V10_DIGEST_MISMATCH'],
+ ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]})],'V10_ROUTE_INVALID'],
 ]){
-  assert.throws(()=>buildV10App(mutate(options)),undefined,caseName);
+  assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
   negatives.push(caseName);
 }
 console.log(JSON.stringify({
