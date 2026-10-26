@@ -100,15 +100,18 @@ test('reject cross-Issue/cross-repo source and wrong native sha',async()=>{
 });
 test('bad/unmarked YAML wire and duplicate keys, anchors, tags fail closed',async()=>{
   const valid=approved();
-  for(const bad of [
+  const samples=[
     JSON.stringify(valid,null,2),
     "<!-- ads:github -->\n```yaml\nschema: ads/github/v5\nschema: ads/github/v5\nkind: report\ndata: {}\n```",
     "<!-- ads:github -->\n```yaml\nschema: &danger ads/github/v5\nkind: report\ndata: {}\n```",
     "<!-- ads:github -->\n```yaml\nschema: !!js/function hacked\nkind: report\ndata: {}\n```",
-  ]){
+  ];
+  for(const [i,bad] of samples.entries()){
     const result=await read([[observation(valid,{body:bad})]]);
     assert.equal(result.status,'UNKNOWN');
-    assert.equal(result.reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
+    // ADS ignores unmarked human discussion/JSON rather than treating it as
+    // an invalid normative operation. Marked malformed YAML is invalid.
+    assert.equal(result.reason,i===0?'NO_ADS_V5_REPORTS':'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
   }
 });
 test('failure halfway through native GitHub pagination never partial-success',async()=>{
