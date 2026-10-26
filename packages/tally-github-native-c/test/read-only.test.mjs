@@ -175,3 +175,43 @@ test('canonical report publication has optional Markdown without losing the data
   assert.equal((await read([[one]])).records[0].source.dataDigest,
     (await read([[two]])).records[0].source.dataDigest);
 });
+
+
+test('R2 P1: CRLF correction after LF summary must invalidate CURRENT',async()=>{
+  const base=observation(approved());
+  const corrected=observation(approved('correction'));
+  corrected.body=corrected.body.replace(/\n/g,'\r\n');
+  const result=await read([[base,corrected]]);
+  assert.equal(result.status,'UNKNOWN');
+  assert.equal(result.records[1].reason,'CORRECTION_NOT_RECONCILED');
+});
+test('R2 P1: displaced ADS marker in trusted comment must fail closed',async()=>{
+  const displaced=observation(approved('correction'));
+  displaced.body='\n'+displaced.body;
+  const result=await read([[observation(approved()),displaced]]);
+  assert.equal(result.status,'UNKNOWN');
+  assert.equal(result.reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
+});
+test('R2: CRLF single summary and blank lines after marker are valid ADS wire',async()=>{
+  const only=observation(approved());
+  only.body=only.body.replace(/\n/g,'\r\n');
+  assert.equal((await read([[only]])).status,'CURRENT_OBSERVED');
+  const padded=observation(approved());
+  padded.body=padded.body.replace('<!-- ads:github -->\n','<!-- ads:github -->\n\n');
+  assert.equal((await read([[padded]])).status,'CURRENT_OBSERVED');
+  const mixed=observation(approved('correction'));
+  mixed.body=mixed.body.replace('<!-- ads:github -->\n','<!-- ads:github -->\r\n\r\n');
+  assert.equal((await read([[observation(approved()),mixed]])).status,'UNKNOWN');
+});
+test('R2: misplaced duplicate marker and body with no YAML fence are invalid',async()=>{
+  const d=observation(approved('correction'));
+  const invalids=[
+    '\n'+d.body, d.body+'\n<!-- ads:github -->',
+    '<!-- ads:github -->\n\nNot a fence',
+  ];
+  for(const body of invalids){
+    const r=await read([[observation(approved()),observation(approved('correction'),{body})]]);
+    assert.equal(r.status,'UNKNOWN');
+    assert.equal(r.reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
+  }
+});
