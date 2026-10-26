@@ -2,17 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import canonicalize from 'canonicalize';
+import { stringify } from 'yaml';
+import { createHash } from 'node:crypto';
 import { readIssueReportsFromClient, readGitHubIssueReports } from '../src/read-only.mjs';
 const SHA='a'.repeat(40);
 const [owner,repo,issueNumber]=['example-org','example-repo',42];
-const scope={owner,repo,issueNumber,expectedSourceSha:SHA};
+const publisherBindings={'task-meta:example-org/example-repo':['trusted-bot'],'tally:example-org/example-repo':['trusted-bot']};
+const scope={owner,repo,issueNumber,expectedSourceSha:SHA,publisherBindings};
 const fixture=(name)=>JSON.parse(readFileSync(new URL(
   '../../tally-ads-v5-validator/test/fixtures/'+name+'.json',import.meta.url),'utf8'));
 let commentId=120;
 function observation(envelope,opts={}) {
   const id=opts.id??++commentId;
   return {
-    id,body:opts.body??canonicalize(envelope),
+    id,body:opts.body??`<!-- ads:github -->\n\`\`\`yaml\n${stringify(envelope).trimEnd()}\n\`\`\`\n\nHuman explanation (not machine authority).`,
+    user:{login:opts.login??'trusted-bot'},author_association:'NONE',
     created_at:'2026-10-21T00:00:00Z',
     updated_at:opts.edited?'2026-10-22T00:00:00Z':'2026-10-21T00:00:00Z',
     html_url:`https://github.com/${owner}/${repo}/issues/${issueNumber}#issuecomment-${id}`
@@ -53,7 +57,9 @@ test('real pinned ADS summary through GitHub-style native page yields advisory o
   const result=await read([[observation(approved())]]);
   assert.equal(result.status,'CURRENT_OBSERVED');
   assert.equal(result.records[0].source.sourceSha,SHA);
-  assert.match(result.records[0].source.dataDigest,/^jcs-sha256:[0-9a-f]{64}$/);
+  const expected=createHash('sha256').update(canonicalize(approved().data)).digest('hex');
+  assert.equal(result.records[0].source.dataDigest,expected);
+  assert.match(result.records[0].source.dataDigest,/^[0-9a-f]{64}$/);
   assert.equal(result.authorized,false);
   assert.equal(result.taskPass,false);
   assert.equal(result.releasePass,false);
@@ -92,12 +98,13 @@ test('reject cross-Issue/cross-repo source and wrong native sha',async()=>{
     assert.equal((await read([[observation(report)]])).reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
   }
 });
-test('bad wire and noncanonical JSON fail closed, duplicate keys refused',async()=>{
+test('bad/unmarked YAML wire and duplicate keys, anchors, tags fail closed',async()=>{
   const valid=approved();
   for(const bad of [
     JSON.stringify(valid,null,2),
-    canonicalize(valid).replace('"schema":','"schema":"ads/github/v5","schema":'),
-    '{ "schema": "ads/github/v5", ',
+    `<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v5\nschema: ads/github/v5\nkind: report\ndata: {}\n\`\`\``,
+    `<!-- ads:github -->\n\`\`\`yaml\nschema: &danger ads/github/v5\nkind: report\ndata: {}\n\`\`\``,
+    `<!-- ads:github -->\n\`\`\`yaml\nschema: !!js/function hacked\nkind: report\ndata: {}\n\`\`\`,
   ]){
     const result=await read([[observation(valid,{body:bad})]]);
     assert.equal(result.status,'UNKNOWN');
@@ -131,4 +138,37 @@ test('caller cannot inject validation, permission or precomputed JCS digest thro
   assert.equal(r.status,'CURRENT_OBSERVED');
   assert.notEqual(r.records[0].source.dataDigest,'forged');
   assert.equal(r.authorized,false);
+});
+
+test('untrusted GitHub account cannot forge a publication or poison the report set',async()=>{
+  const result=await read([[
+    observation(approved(),{login:'stranger'}),
+    observation(approved(),{login:'trusted-bot'})
+  ]]);
+  assert.equal(result.status,'CURRENT_OBSERVED');
+  assert.equal(result.reportCount,1);
+  const fakeCorrection=observation(approved('correction'),{login:'stranger'});
+  const protectedSet=await read([[observation(approved()),fakeCorrection]]);
+  assert.equal(protectedSet.status,'CURRENT_OBSERVED');
+});
+
+test('trusted login cannot impersonate a different publisher namespace',async()=>{
+  const x=approved('feedback');
+  const result=await read([[observation(x)]],{},{
+    publisherBindings:{'task-meta:example-org/example-repo':['trusted-bot']}
+  });
+  assert.equal(result.status,'UNKNOWN');
+  assert.equal(result.reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
+});
+test('missing trusted namespace binding never grants transport provenance',async()=>{
+  const missing=await readIssueReportsFromClient({octokit:client([[observation(approved())]]),
+    owner,repo,issueNumber,expectedSourceSha:SHA});
+  assert.equal(missing.reason,'PUBLISHER_BINDINGS_UNAVAILABLE');
+});
+test('canonical report publication has optional Markdown without losing the data digest',async()=>{
+  const f=approved();
+  const one=observation(f);
+  const two=observation(f,{id:one.id,body:one.body+'\nAdditional text.'});
+  assert.equal((await read([[one]])).records[0].source.dataDigest,
+    (await read([[two]])).records[0].source.dataDigest);
 });
