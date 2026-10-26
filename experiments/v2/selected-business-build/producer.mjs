@@ -18,6 +18,8 @@ assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
 assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
+const capabilityFile = new URL('./readiness-capability.mjs', import.meta.url);
+const cBytes = readFileSync(capabilityFile, 'utf8');
 
 const payload = (specifier) => readFileSync(fileURLToPath(import.meta.resolve(specifier)), 'utf8');
 const kBytes = payload('@kaicreator/domain-kernel-basic');
@@ -48,14 +50,24 @@ const modules = [
   selected({packageId:business.MODULE_ID,role:'business',
     abiVersion:business.ABI_VERSION,endpoint:'business-policy',
     bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness']}),
+  {...selected({packageId:'capability-tally-source-observation@v2.0.0',
+    role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
+    bytes:cBytes,provides:['capability:tally-readiness/1']}),
+    capabilityId:'tally-source-observation',
+    handlers:[{operationId:'tally.observeReadiness',handler:'observeReadiness'}],
+    externalEffect:false},
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
-  modules,routes:[],hardBudget:{maxStepsPerTurn:8,maxWorkUnitsPerTurn:64}};
+  modules,routes:[{intentId:'inspectTaskReadiness', operationId:'tally.observeReadiness',
+    capabilityId:'tally-source-observation',handlerId:'observeReadiness'}],
+  hardBudget:{maxStepsPerTurn:8,maxWorkUnitsPerTurn:64}};
 const built=buildV10App(options);
-assert.equal(built.modules.length,3);
+assert.equal(built.modules.length,4);
 assert.equal(built.modules.filter(x=>x.role==='kernel-primary').length,1);
 assert.equal(built.modules.filter(x=>x.role==='business').length,1);
+assert.equal(built.modules.filter(x=>x.role==='capability').length,1);
+assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
 assert.equal(built.targetProfile,V10_TARGET_PROFILE);
@@ -65,6 +77,7 @@ for(const [caseName,mutate] of [
  ['duplicate-k',opts=>({...opts,modules:[...modules,modules[0]]})],
  ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)})],
  ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)})],
+ ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]})],
 ]){
   assert.throws(()=>buildV10App(mutate(options)),undefined,caseName);
   negatives.push(caseName);
