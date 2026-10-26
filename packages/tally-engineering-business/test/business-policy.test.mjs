@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,ABI_VERSION,PACKAGE_KIND,INTENT_TYPES} from '../src/index.mjs';
-const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
+const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
   assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness']);
@@ -21,7 +21,7 @@ test('unproven DAG dependency refuses',()=>{
   assert.equal(assessTaskEvidence({...good,dependenciesComplete:'yes'}).state,'UNQUALIFIED_INPUT');
 });
 test('invalid/missing GitHub source identity refuses',()=>{
-  for(const i of [null,{},'x',{...good,sourceSha:'bad'},{...good,claimRef:''},{...good,issueRef:'https://evil.test/1'}]){
+  for(const i of [null,{},'x',{...good,sourceSha:'bad'},{...good,issueNumber:109},{...good,issueNumber:0},{...good,claimRef:''},{...good,issueRef:'https://evil.test/1'}]){
     assert.equal(assessTaskEvidence(i).admitted,false);
     assert.equal(assessTaskEvidence(i).taskPass,false);
   }
@@ -47,4 +47,21 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   assert.equal(p.domainId,'tally-engineering');
   assert.equal(Object.keys(p.effectBindings).length,1);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
+});
+
+test('Kernel v0.10.2 idempotency-key grammar accepts rendered valid source key',()=>{
+  // Exactly the public-tag Kernel source: ADMISSION_EFFECT_IDEMPOTENCY_KEY_PATTERN.
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const intent=getPolicy().workflowDefinition.states[0].transitions[0].effectIntents[0];
+  const rendered=intent.idempotencyKeyFrom.template.replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(good[name]));
+  assert.equal(rendered, 'inspect:108:'+good.sourceSha);
+  assert.ok(pattern.test(rendered));
+  assert.ok(!rendered.includes('/'));
+  assert.equal(assessTaskEvidence({...good,issueNumber:109}).admitted,false);
+});
+
+test('decision schema rejects arrays as decision or event',()=>{
+  const schema=getPolicy().decisionSchema;
+  assert.equal(schema.isValid({decision:[],event:{type:'ok'}}),false);
+  assert.equal(schema.isValid({decision:{outcome:'ok'},event:[]}),false);
 });
