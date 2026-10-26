@@ -2,7 +2,7 @@
 
 **GitHub owner:** [#100](https://github.com/kaicreator-mm/tally/issues/100), related W-C [#89](https://github.com/kaicreator-mm/tally/issues/89) and W-A [#87](https://github.com/kaicreator-mm/tally/issues/87). No Tally Kernel, Journal or business runtime is implemented here. This tests **only** the publicly exported Host-node physical `CasDocumentStore` SQLite adapter using actual installed code.
 
-**Source pin:** DomainHarness v0.10.2 R01 candidate at `11ab7954f547fde44c003e2b227d672dc8af0a79` (not final RQ). Exact public type source: `packages/host-node/dist/sqlite-cas.d.ts` blob `daefc613c3644fe46ff1b1c162fec7ce5df62ebd` and `sqlite-adapter.d.ts` blob `95c08bb3052f6d914af6e30905bc6794281419b6`, confirmed GitHub readback. Exports: `openSqliteCasStore({path,busyTimeoutMs})`, `probeTrueCasStore`, typed `HOST_PUT_CONDITION_REQUIRED`, `HOST_KEY_EXISTS`, `HOST_CAS_CONFLICT`. Runtime package manifest `0.10.2-rc.0`; optional better-sqlite3 `^12` peer. Real GitHub source pin must be checked again if upstream version advances.
+**Source pin:** DomainHarness v0.10.2 **qualified conditional release** at `cee14399d9d0af4e20e34b9111861b16a465b690` (final RQ is CONDITIONAL under independently approved exception; literal Full EXIT1/test:root NOT_RUN preserved). Exact public type source: `packages/host-node/dist/sqlite-cas.d.ts` blob `daefc613c3644fe46ff1b1c162fec7ce5df62ebd` and `sqlite-adapter.d.ts` blob `95c08bb3052f6d914af6e30905bc6794281419b6`, confirmed GitHub readback. Exports: `openSqliteCasStore({path,busyTimeoutMs})`, `probeTrueCasStore`, typed `HOST_PUT_CONDITION_REQUIRED`, `HOST_KEY_EXISTS`, `HOST_CAS_CONFLICT`. Runtime package manifest `0.10.2-rc.0`; optional better-sqlite3 `^12` peer. Real GitHub source pin must be checked again if upstream version advances.
 
 ## Scope of real test
 
@@ -14,7 +14,7 @@ Creates a **temporary file-backed SQLite database**, performs create/CAS/reject-
 
 Use the **versioned `run-clean.sh` in this PR** rather than copying/adapting a shell glob by hand. It refuses the wrong DH candidate SHA and non-Node24, normalizes both checkout paths, packs the three public dependency tarballs, checks SHA256, installs them with the optional native `better-sqlite3` peer into an independent temporary consumer, runs the actual test, and **always prints `WCX_EXPERIMENT_EXIT=<actual process exit>`**, including on failure. The native Node test suite also enforces the Node24 major version and source-typed CAS denials.
 
-Two *genuine* clean worktrees are required: DomainHarness `11ab7954f547fde44c003e2b227d672dc8af0a79` (still a release candidate), and the latest reviewed Tally PR #101 HEAD. On Ubuntu or Git Bash:
+Two *genuine* clean worktrees are required: DomainHarness `cee14399d9d0af4e20e34b9111861b16a465b690` (official Git Tag `v0.10.2` with conditional-release evidence), and the latest reviewed Tally PR #101 HEAD. On Ubuntu or Git Bash:
 
 ```bash
 export DH=/absolute/path/to/clean/domain-harness
@@ -46,3 +46,7 @@ This determines whether the public Tally-selected openSqliteCasStore interface s
 **Failure dispositions:** `HOST_STORE_DRIVER_UNAVAILABLE` indicates optional peer missing/ABI install issue; CAS conflict code mismatches or second-writer success are physical FAIL, not a waiver. Node22 or unavailable install must be `ENV_BLOCKED`, never PASS; no switch to InMemoryCasStore to fake SQLite. Old DomainHarness T09 packed-consumer proof can be reused for identical package bytes but cannot be substituted for a Tally-specific exact-HEAD test claim.
 
 **Workflow:** source-only experimental PR independent Review → optional real Node24 CLI → exact evidence writeback to #100 → re-pin to DH final RELEASE_READY when it exists → independent source+runtime suitability before production adapter admission. Version/main integration remains HOLD.
+
+## Exact final release pin
+
+The upstream `v0.10.2` lightweight Git Tag resolves **directly** to `cee14399d9d0af4e20e34b9111861b16a465b690`, with immutable tree `9618e88b32f16a63164f65b8fbdf4457c96f5e76`. It is merged in DH main with the identical tree. R01 issue #1331 is CLOSED, **RQ=CONDITIONAL** after an independent, owner-approved environment exception. The final Full remains literal EXIT1 with `test:root NOT_RUN`; Hidden 7/7 PASS. This experiment verifies only the actual public Host SQLite behavior consumed by Tally, not DH's internal conditional qualification. The public Host `.d.ts`/package manifest blobs are unchanged across the previous candidate and this exact tag. If the tag ever moves unexpectedly, abort and investigate rather than silently upgrading.
