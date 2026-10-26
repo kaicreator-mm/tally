@@ -50,7 +50,15 @@ printf 'TARBALL_SHA256\n'
 sha256sum "${tarballs[@]}"
 cp "$TALLY/experiments/v2/host-sqlite-cas/host-cas.test.mjs" "$consumer/"
 cp "$TALLY/experiments/v2/host-sqlite-cas/package.json" "$consumer/"
+cp "$TALLY/experiments/v2/host-sqlite-cas/wal-open-child.mjs" "$consumer/"
+cp "$TALLY/experiments/v2/host-sqlite-cas/wal-concurrent-open.test.mjs" "$consumer/"
 cd "$consumer"
 npm install --save-exact "${tarballs[@]}" 'better-sqlite3@^12'
 npm ls --depth=0
 node --test host-cas.test.mjs
+if [ "${WCX_WAL_STRESS:-0}" = "1" ]; then
+  printf "WCX_WAL_STRESS=ENABLED; rounds=%s; child_processes_per_round=4\n" "${WCX_WAL_ROUNDS:-5}"
+  node --test wal-concurrent-open.test.mjs
+else
+  printf "WCX_WAL_STRESS=NOT_RUN (set WCX_WAL_STRESS=1 to opt in)\n"
+fi
