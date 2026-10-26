@@ -7,6 +7,7 @@
  */
 import { createHash } from 'node:crypto';
 import canonicalize from 'canonicalize';
+import { parseDocument, visit, isAlias } from 'yaml';
 import { Octokit } from '@octokit/rest';
 import { validateAdsV5Report, ADS_REPORT_DIALECT } from '../../tally-ads-v5-validator/src/validate.mjs';
 import { projectReportSet, STATES } from '../../tally-github-c/src/report-projection.mjs';
@@ -27,24 +28,28 @@ const providerError=(e)=>e?.status===403?'GITHUB_ACCESS_DENIED':
 function reportCandidate(comment) {
   const raw=comment.body;
   if(typeof raw!=='string') return { kind:'unrelated' };
-  const s=raw.trim();
-  if(!s.startsWith('{')) return { kind:'unrelated' };
-  if(s.length>maximumBody) return { kind:'invalid' };
+  // ADS v4.18 §16 wire: one first-line marker + one fenced YAML mapping.
+  // Human prose after the close fence is ignored, never another authority.
+  const marker='<!-- ads:github -->';
+  if(!raw.startsWith(marker+'\n')) return {kind:'unrelated'};
+  if(raw.length>maximumBody||raw.split(marker).length!==2) return {kind:'invalid'};
+  const match=/^<!-- ads:github -->\n```yaml\n([\s\S]*?)\n```(?=\n|$)/.exec(raw);
+  if(!match) return {kind:'invalid'};
   let obj;
-  try { obj=JSON.parse(s); }
-  catch { return { kind:'invalid' }; }
-  if(obj?.schema!==ADS_REPORT_DIALECT || obj?.kind!=='report') {
-    return {kind:'unrelated'};
-  }
-  // Contract for this v2 native transport lane: GitHub comment body must be
-  // exact canonical RFC8785 JSON. This deliberately excludes prettified/fenced
-  // JSON rather than accepting duplicate-key ambiguities via JSON.parse.
-  // A lexical duplicate, noncanonical numeric/string spelling or extra bytes
-  // makes canonicalize(JSON.parse(body)) !== original bytes => NOT qualified.
   try {
-    if(canonicalize(obj)!==s) return { kind:'invalid' };
-  } catch { return {kind:'invalid'}; }
-  return { kind:'report', envelope:obj, canonical:s };
+    const doc=parseDocument(match[1],{uniqueKeys:true,merge:false,schema:'core',maxAliasCount:0,strict:true});
+    if(doc.errors.length||doc.warnings.length) return {kind:'invalid'};
+    visit(doc,{Node(_key,node){
+      if(isAlias(node)||node.anchor!==undefined||node.tag!==undefined){
+        throw new Error('YAML_ALIAS_ANCHOR_OR_TAG_DENIED');
+      }
+    }});
+    obj=doc.toJS({maxAliasCount:0});
+    if(!obj||typeof obj!=='object'||Array.isArray(obj)||
+       Object.keys(obj).sort().join(',')!=='data,kind,schema') return {kind:'invalid'};
+  }catch{return {kind:'invalid'};}
+  if(obj.schema!==ADS_REPORT_DIALECT||obj.kind!=='report') return {kind:'unrelated'};
+  return {kind:'report',envelope:obj};
 }
 
 /**
@@ -53,10 +58,19 @@ function reportCandidate(comment) {
  * Real callers use readGitHubIssueReports() which constructs authenticated
  * Octokit internally from one external token.
  */
-export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,limit=maxRows}) {
+export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit=maxRows}) {
   if(!REPO.test(owner??'')||!REPO.test(repo??'')||!Number.isSafeInteger(issueNumber)||
      issueNumber<1||!SHA.test(expectedSourceSha??'')||!Number.isSafeInteger(limit)||limit<1||limit>maxRows) {
     return deny('INVALID_NATIVE_QUERY', STATES.INVALID);
+  }
+  // This trust map is supplied by a Host-owned configuration, never by a
+  // GitHub comment's self-declared publisher_namespace or logical actor.
+  // It binds each namespace to the permitted transport login(s).
+  const bindings=publisherBindings;
+  if(!bindings||typeof bindings!=='object'||Array.isArray(bindings)||
+    !Object.values(bindings).every(logins=>Array.isArray(logins)&&logins.length>0&&
+      logins.every(login=>typeof login==='string'&&REPO.test(login)))) {
+    return deny('PUBLISHER_BINDINGS_UNAVAILABLE');
   }
   const repository=`${owner}/${repo}`;
   const issueRef=`https://github.com/${repository}/issues/${issueNumber}`;
@@ -79,6 +93,10 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
       for(const comment of page.data) {
         readCount++;
         if(readCount>limit) return deny('GITHUB_READ_LIMIT_REACHED',STATES.PARTIAL,readCount);
+        // Untrusted GitHub commenters cannot poison the entire Issue set by
+        // posting malformed marker text or fake correction notices.
+        const login=comment?.user?.login;
+        if(typeof login!=='string'||!Object.values(bindings).some(logins=>logins.includes(login))) continue;
         const candidate=reportCandidate(comment);
         if(candidate.kind==='unrelated') continue;
         if(candidate.kind==='invalid'){invalid++;continue;}
@@ -86,6 +104,9 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
         const checked=validateAdsV5Report(envelope);
         if(!checked.valid){invalid++;continue;}
         const data=envelope.data;
+        if(!bindings[data.publisher_namespace]?.includes(login)) {
+          invalid++;continue;
+        }
         const subject=data.subject;
         const publication=data.publication;
         // No caller can invent a repository/Issue binding, source hash, native
@@ -104,7 +125,9 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
           Array.isArray(subject.currentness?.limits)&&subject.currentness.limits.length===0&&
           Array.isArray(data.limits)&&data.limits.length===0&&
           data.supersedes===null;
-        const digest='jcs-sha256:'+createHash('sha256').update(candidate.canonical).digest('hex');
+        // ADS §16.5: lowercase SHA256(RFC8785_JCS(validated DATA)), not the
+        // surrounding schema/kind envelope. No ad-hoc prefix in native digest.
+        const digest=createHash('sha256').update(canonicalize(envelope.data)).digest('hex');
         records.push({
           envelope,
           validation:{schema:ADS_REPORT_DIALECT,passed:checked.valid,schemaBlob:checked.schemaBlob},
@@ -130,8 +153,8 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
 }
 
 /** Public entrypoint. Missing token never silently becomes anonymous access. */
-export async function readGitHubIssueReports({token,owner,repo,issueNumber,expectedSourceSha,limit}={}) {
+export async function readGitHubIssueReports({token,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit}={}) {
   if(typeof token!=='string'||token.length<8) return deny('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
   const octokit=new Octokit({auth:token,request:{timeout:15000}});
-  return readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,limit});
+  return readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit});
 }
