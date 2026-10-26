@@ -75,18 +75,22 @@ try {
   const replay=await facade.send({...msg,input:{...msg.input}});
   assert.equal(replay.status,'admitted');
   assert.equal(replay.idempotentReplay,true);
+  // Legitimate K CAS retries may have touched the test store during admission.
+  // Record a baseline immediately before negatives, rather than assuming zero
+  // historical conflicts for the whole positive journey.
+  const storeErrorsBeforeNegative=store.storeErrors;
   let conflict=false;
   try {const changed=await facade.send({...msg,input:{...msg.input,claimRef:'changed'}});
     conflict=changed.status!=='admitted';
   } catch(e){conflict=typeof e.code==='string';}
   assert.ok(conflict,'changed-input same-message replay must refuse');
-  assert.equal(store.storeErrors,0,'negative must be Kernel denial, not store failure');
+  assert.equal(store.storeErrors,storeErrorsBeforeNegative,'negative must be Kernel denial, not store failure');
   let wrongIntent=false;
   try {const invalid=await facade.send({...msg,messageId:'message-t02b-02',
       intentType:'unknownTaskApproval'});
     wrongIntent=invalid.status!=='admitted';}catch(e){wrongIntent=typeof e.code==='string';}
   assert.ok(wrongIntent,'unselected intent cannot be admitted');
-  assert.equal(store.storeErrors,0,'negative must not depend on throwing store');
+  assert.equal(store.storeErrors,storeErrorsBeforeNegative,'negative must not depend on throwing store');
   const after=await facade.query({workflowId:'tally-readiness',instanceKey:'task-108',businessPackageId:'business-tally-task-readiness@v2.0.0'});
   assert.equal(JSON.stringify(after.snapshot),snapshotBefore,'denied send must not change current snapshot');
   console.log(JSON.stringify({realKLoad:true,realKSend:receipt.status,
