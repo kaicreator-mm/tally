@@ -22,6 +22,8 @@ const kDocs=sqlite=>({get:key=>sqlite.get(key),
   put:(key,v,c)=>sqlite.put(key,v,condition(c)),
   remove:(key,c)=>sqlite.remove(key,condition(c))});
 const options=sqlite=>({store:kDocs(sqlite),deploymentIdentity:deployment,
+  // Resolve exactly the installed, BUILD-declared native C provider.
+  deploymentRoot:process.cwd(),
   tenantId:deployment.tenantId,queryAuthority:authority,now:()=>Date.UTC(2026,9,27)});
 const selector={workflowId:'tally-readiness',instanceKey:'task-111',
   businessPackageId:'business-tally-task-readiness@v2.0.0'};
