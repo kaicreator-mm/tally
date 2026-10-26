@@ -29,11 +29,11 @@ jobs:
           ref: cee14399d9d0af4e20e34b9111861b16a465b690
           persist-credentials: false
           path: domain-harness
-      - name: Pinned T02a source pending independent R2
+      - name: Pinned reviewed T02a + requester source merged into version/v2
         uses: actions/checkout@v4
         with:
           repository: kaicreator-mm/tally
-          ref: 7b3725014ba3bfd450df83cc20021e48d7fda163
+          ref: db763ec963df07b31d45bd7f65049e4a8c795bc4
           persist-credentials: false
           path: business
       - name: Node 24
