@@ -34,7 +34,7 @@ npm ci
 npm run build
 # Contracts/BUILD are root npm workspaces, selected K/S Domain Packages
 # are independent package directories and are intentionally NOT workspaces.
-for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build @kaicreator/domain-harness-microkernel; do
+for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build @kaicreator/domain-harness-microkernel @kaicreator/domain-harness-host-node; do
   npm pack --pack-destination "$tmp/packed" -w "$package" >/dev/null
 done
 for dir in "$DH/domain-packages/kernel/basic" "$DH/domain-packages/standard/basic"; do
@@ -54,6 +54,8 @@ T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$B
 cp "$TALLY/experiments/v2/selected-business-build/consumer.mjs" "$tmp/consumer/consumer.mjs"
 printf '{"name":"tally-selected-runtime-consumer","private":true,"type":"module"}\n' >"$tmp/consumer/package.json"
 cd "$tmp/consumer"
-npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@^12'
 npm ls --depth=0
 node ./consumer.mjs
+cp "$TALLY/experiments/v2/selected-business-build/consumer-sqlite.mjs" "$tmp/consumer/consumer-sqlite.mjs"
+node ./consumer-sqlite.mjs
