@@ -111,3 +111,31 @@ test('empty report set is not CURRENT', () => {
 test('feedback epistemic string is never treated as an arbitrary object', () => {
   assert.equal(projectReport(sample({ envelope: { data: { report_kind: 'EXPERIENCE_USE_FEEDBACK', epistemic: { state: 'OBSERVED' } } } })).advisory.epistemic, null);
 });
+
+test('canonical ADS v5 REVOKE correction cannot leave report set CURRENT', async () => {
+  const { readFileSync } = await import('node:fs');
+  const summary = JSON.parse(readFileSync(new URL('./fixtures/ads-v5-summary.json', import.meta.url), 'utf8'));
+  const correction = JSON.parse(readFileSync(new URL('./fixtures/ads-v5-correction.json', import.meta.url), 'utf8'));
+  assert.equal(correction.data.notice, 'REVOKE');
+  assert.equal(correction.data.target.report_id, summary.data.report_id);
+  assert.equal(correction.data.target.revision, summary.data.revision);
+  const summaryRecord = sample({ envelope: {
+    ...summary, data: { ...summary.data, capture_coverage: 'COMPLETE' }
+  }, native: { repository: 'example-org/example-repo', issueNumber: 42, commentId: 123 } });
+  const correctionRecord = sample({ envelope: correction,
+    native: { repository: 'example-org/example-repo', issueNumber: 42, commentId: 124,
+      dataDigest: 'correction-native-digest' } });
+  assert.equal(projectReport(correctionRecord).status, STATES.UNKNOWN);
+  assert.equal(projectReport(correctionRecord).reason, 'CORRECTION_NOT_RECONCILED');
+  const set = projectReportSet([summaryRecord, correctionRecord]);
+  assert.notEqual(set.status, STATES.CURRENT);
+  assert.equal(set.taskPass, false);
+  assert.equal(set.releasePass, false);
+});
+
+test('unreconciled replacement correction is never CURRENT', () => {
+  const row = projectReport(sample({ envelope: {
+    data: { report_kind: 'EXECUTION_CORRECTION', notice: 'REPLACE' }
+  } }));
+  assert.equal(row.status, STATES.UNKNOWN);
+});
