@@ -6,6 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
+import {createHash} from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { V10_TARGET_PROFILE, sha256Hex } from '@kaicreator/domain-harness-contracts';
 import { buildV10App } from '@kaicreator/domain-harness-build';
@@ -19,8 +20,21 @@ assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
 assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
-const capabilityFile = new URL('./readiness-capability.mjs', import.meta.url);
-const cBytes = readFileSync(capabilityFile, 'utf8');
+const capabilityFile = process.env.T04B_NATIVE === '1'
+  ? fileURLToPath(new URL('./native-readonly-shim.mjs',import.meta.url))
+  : fileURLToPath(new URL('./readiness-capability.mjs',import.meta.url));
+let cBytes = readFileSync(capabilityFile, 'utf8');
+if(process.env.T04B_NATIVE==='1'){
+  const providerFile=process.env.T04B_PROVIDER_FILE;
+  if(!providerFile)throw Error('T04B_PROVIDER_FILE_REQUIRED');
+  const providerSha=createHash('sha256').update(readFileSync(providerFile)).digest('hex');
+  if(!cBytes.includes('__PROVIDER_SHA256__'))throw Error('SEALED_PROVIDER_DIGEST_MARKER_MISSING');
+  cBytes=cBytes.replace('__PROVIDER_SHA256__',providerSha);
+  assert.match(cBytes,/NATIVE_PROVIDER_SHA256='[a-f0-9]{64}'/);
+  // Published with the exact B/K/C BUILD digest; never merely an unpinned
+  // npm package name. The Host checks installed bytes before any K load.
+  console.log('T04B_PROVIDER_SHA256='+providerSha);
+}
 
 const payload = (specifier) => readFileSync(fileURLToPath(import.meta.resolve(specifier)), 'utf8');
 const kBytes = payload('@kaicreator/domain-kernel-basic');
@@ -56,7 +70,9 @@ const modules = [
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
     capabilityId:'tally-source-observation',
     handlers:[{operationId:'tally.observeReadiness',handler:'observeReadiness'}],
-    externalEffect:false},
+    externalEffect:false,
+    ...(process.env.T04B_NATIVE==='1'?{externalImports:{
+      node:[],npm:['@kaicreator/tally-native-reader-bundle'],native:[]}}:{})},
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
