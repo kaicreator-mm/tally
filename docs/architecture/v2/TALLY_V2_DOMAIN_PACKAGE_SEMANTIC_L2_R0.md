@@ -1,12 +1,12 @@
 # Tally v2 — Domain Package First 语义 L2 候选 R0
 
-**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_R2_DISTINCT_REVIEW_PENDING / ADS_417_ADOPTION_BLOCKED / PHYSICAL_ABI_PENDING / L2_FREEZE_READY=NO / IMPLEMENTATION_NOT_STARTED  
+**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_R2_DISTINCT_REVIEW_PENDING / ADS_418_LOCAL_ADOPTION_PENDING / DH_0102_RELEASE_CONDITIONAL / L2_FREEZE_READY=NO / VERSION_STAGE_EXPERIMENTS_ONLY  
 **归属**：[L2 #65](https://github.com/kaicreator-mm/tally/issues/65)、[语义 L2 交付 #78](https://github.com/kaicreator-mm/tally/issues/78)。Product R0 见 [#76](https://github.com/kaicreator-mm/tally/issues/76)、[PR #77](https://github.com/kaicreator-mm/tally/pull/77)。  
 **历史功能证据**：v1.5.5 固定 tag commit b5e7b6e38ea38837e3bbcfc46c36586180705de0；[47 项矩阵](../../research/v2/TALLY_V2_FUNCTIONAL_PARITY_R0.md)。  
-**平台设计参考**：DomainHarness v0.10.2 L2 Candidate 文档 blob 68e7dbc591f4c0c694818ec574b8585f95239c8b；引用的是**设计方案而非可安装 SDK/物理版本验收**。平台 [T09 外部消费者 #1330](https://github.com/kaicreator-mm/domain-harness/issues/1330) 和 [R01 #1331](https://github.com/kaicreator-mm/domain-harness/issues/1331) 未完成。  
+**平台设计参考**：DomainHarness v0.10.2 L2 Candidate 文档 blob 68e7dbc591f4c0c694818ec574b8585f95239c8b；引用的是**设计方案而非可安装 SDK/物理版本验收**。历史平台 T09 #1330 已完成，v0.10.2 [R01 最终回执](https://github.com/kaicreator-mm/domain-harness/issues/1331#issuecomment-6416079327)已 CLOSED，tag `cee14399d9d0af4e20e34b9111861b16a465b690` 与 main 同树；**RQ=CONDITIONAL**（Hidden 7/7 PASS；Full EXIT1、root NOT_RUN、单次特准），不等于 Tally 当前 Host 的 Release 验收。  
 **底线**：不将普通 TS App 写好后包装成 Domain Package。先建立真实的第三方 Business/Capability Domain Package 产物及运行依赖，再编码 Tally 实现。本文件不发布任何新的 DomainHarness Manifest、npm 包名、公共 TypeScript ABI 或 Kernel 代码。
 
-**Product candidate source sync (not Freeze):** Parent Product PR #77 at exact `0d1f1a2e15581e300500bada6da54b2c9bcef75f`; 17 P0 requirements/47 Fxx domains/67 Vxx specs. The independent-source-qualification reviewer is still pending. ADS v4.17.0 root pin PR #81 structurally verified using pinned Python3.14 (PASS exit 0 at old exact #81 head) but **actual adoption remains BLOCKED** by literal RQ READY vs actual CONDITIONAL. [ADS #1318](https://github.com/kaicreator-mm/ai-development-standard/issues/1318). The scoped P0-15/16 credential confinement, P0-17 Local OS Verifier and L3/release boundaries are mapped in [R2 crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md), and incorporated as required semantic negative contracts below. This branch sync is NOT independent Review or physical ABI verification.
+**Product candidate source sync (not Freeze):** Parent Product PR #77 at exact `0d1f1a2e15581e300500bada6da54b2c9bcef75f`; 17 P0 requirements/47 Fxx domains/67 Vxx specs. The independent-source-qualification reviewer is still pending. **当前目标为 ADS v4.18.0**，上游 source `2c395c55569fe2edf3f4135f12d3d069e526d0b7` 已 RQ READY；Tally 项目采纳 Draft PR #85 在本 L2 候选时仍缺最新 exact-head verifier 与合格独立 review。旧 #81 v4.17 CONDITIONAL 问题是历史记录，不再是本版本选择障碍。 The scoped P0-15/16 credential confinement, P0-17 Local OS Verifier and L3/release boundaries are mapped in [R2 crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md), and incorporated as required semantic negative contracts below. This branch sync is NOT independent Review or physical ABI verification.
 
 ## 1. 物理架构硬约束
 
@@ -225,7 +225,7 @@ L2 物理问题留待 DH：Host SQLite 暴露的范围、K receipt/outbox 是否
 | 正式 ADS GitHub Task Report dialect | Tally project ADS adoption + ADS release | one immutable qualified adopted revision + actual report/readback |
 | Release RQ & Tag | DH R01 + Tally RQ | exact SHA Full/Hidden/CJ/Pack/Independent review |
 
-**不做**：从当前 DH 私有 compiler 源反推未来公共 API 并将其写入 Tally 的“正式接口”；不利用早期 v0.10.1 的旧 shims 冒充 v0.10.2 新 Package 已实现。
+**不做**：从 DH 私有 compiler 源反推不存在的公共 API。当前已发布 v0.10.2 public SDK 应通过版本锁定的真实 packed/Node24 调用使用；其发布 RQ CONDITIONAL 与 Tally v2 实测/RQ 仍独立。
 
 ## 12. 交付与 Gate 状态
 
