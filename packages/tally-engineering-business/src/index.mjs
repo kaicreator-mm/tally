@@ -112,3 +112,6 @@ export function getPolicy(){
     },
   };
 }
+
+// Read-only source evidence diagnosis; only selected K can actually admit.
+export {diagnoseNativeTaskReadiness} from './native-source-diagnostic.mjs';
