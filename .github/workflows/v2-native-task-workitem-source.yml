@@ -1,0 +1,34 @@
+name: v2-native-task-workitem-source
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-github-native-c/**'
+      - '.github/workflows/v2-native-task-workitem-source.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  actual-native-workitem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout actual PR source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install mature native Octokit and schema validator dependencies
+        run: |
+          npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+          npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - name: Exercise independent Native API negatives, previous Reader regression and actual GitHub deny
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TALLY_NATIVE_EXPECTED_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node --test packages/tally-github-native-c/test/*.test.mjs
+          node packages/tally-github-native-c/test/task-workitem-live.mjs
+          echo T06A_NATIVE_GITHUB_DEPENDENCIES=PASS
