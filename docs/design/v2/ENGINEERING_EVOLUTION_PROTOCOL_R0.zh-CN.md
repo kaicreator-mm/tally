@@ -4,6 +4,8 @@
 >
 > 现有 Owner：task-meta [#12](https://github.com/kaicreator-mm/task-meta/issues/12)、[#17](https://github.com/kaicreator-mm/task-meta/issues/17)、[#27](https://github.com/kaicreator-mm/task-meta/issues/27)、[#28](https://github.com/kaicreator-mm/task-meta/issues/28)、[#29](https://github.com/kaicreator-mm/task-meta/issues/29)；ADS [#1345](https://github.com/kaicreator-mm/ai-development-standard/issues/1345)、[#1347](https://github.com/kaicreator-mm/ai-development-standard/issues/1347)、[#1346](https://github.com/kaicreator-mm/ai-development-standard/issues/1346)；Tally [#57](https://github.com/kaicreator-mm/tally/issues/57)、[#58](https://github.com/kaicreator-mm/tally/issues/58)、[#60](https://github.com/kaicreator-mm/tally/issues/60)、[#139](https://github.com/kaicreator-mm/tally/issues/139)、[#140](https://github.com/kaicreator-mm/tally/issues/140)、[#141](https://github.com/kaicreator-mm/tally/issues/141)、[#143](https://github.com/kaicreator-mm/tally/issues/143)、[#145](https://github.com/kaicreator-mm/tally/issues/145)、[#146](https://github.com/kaicreator-mm/tally/issues/146)。DomainHarness 跨任务元进化依据 [#1398](https://github.com/kaicreator-mm/domain-harness/issues/1398)。
 
+> **2026-10-28 解释优先规则：本协议分析的真实软件工程活动默认由多种 LLM Agent 执行，而非人逐步控制。** 软件工程标准用于对 Agent 开发施加源、Claim、质量、角色独立性、范围和成本约束；人工仅处理真正必须由人决定/授权/操作的例外。独立审核可由合格且隔离的 Agent 执行，不等于人工审核。三项目的进化需要额外区分 `agent-autonomous continuous work / necessary human intervention / unnecessary handoff / role independence / delegated authority and budget`，但仅有实际来源和观测覆盖时才量化。详见 [Agent-native 设计](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.zh-CN.md)。
+
 ## 1. 进化目标与循环
 
 目标不是“训练模型后自动编写新规范”，而是从**可观察的真实软件结果**中不断改进三类不同资产：
