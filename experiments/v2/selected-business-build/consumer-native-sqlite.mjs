@@ -14,6 +14,13 @@ const sealed=JSON.parse(readFileSync(new URL('./sealed-app.json',import.meta.url
 const selectedC=sealed.modules.find(x=>x.role==='capability'&&
   x.packageId==='capability-tally-source-observation@v2.0.0');
 assert.ok(selectedC?.moduleSource,'sealed selected C required');
+// Do not trust a digest literal from a locally rewritten sealed App.
+// The selected C module bytes themselves must still match the BUILD seal;
+// deployment integrity of the entire App also requires a separately trusted
+// root digest (tracked as a generic DomainHarness v0.10.3 Host contract).
+const moduleSha=bytes=>createHash('sha256').update(bytes).digest('hex');
+assert.equal(moduleSha(selectedC.moduleSource),selectedC.moduleSha256,
+  'SEALED_CAPABILITY_SOURCE_INTEGRITY_MISMATCH');
 const digestMatch=/NATIVE_PROVIDER_SHA256='([0-9a-f]{64})'/.exec(selectedC.moduleSource);
 assert.ok(digestMatch,'provider byte digest must be present in BUILD-sealed C');
 const providerPath=fileURLToPath(import.meta.resolve('@kaicreator/tally-native-reader-bundle'));
