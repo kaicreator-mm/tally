@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {diagnoseNativeTaskReadiness as diagnose} from '../src/native-source-diagnostic.mjs';
+import {diagnoseNativeTaskReadiness as diagnose} from '../src/index.mjs';
 const sha='a'.repeat(40),ref='https://github.com/kaicreator-mm/tally/issues/125';
 const item={issueRef:ref,sourceSha:sha,dependencyState:'CLEAR',
   workflowState:'state:ready',reason:'CLAIM_NOT_VERIFIED',
