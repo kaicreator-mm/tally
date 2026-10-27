@@ -1,0 +1,97 @@
+name: v2-dh-v0103-candidate-compatibility
+on:
+  pull_request:
+    paths:
+      - 'experiments/v2/dh-v0103-candidate/**'
+      - '.github/workflows/v2-dh-v0103-candidate-compatibility.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  candidate-v0102-runtime-compat:
+    name: DH v0.10.3 branch candidate (not released) / ${{ matrix.scope }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [selected-native-github-k-sqlite, host-physical-cas-wal]
+    steps:
+      - name: Check out exact authored Tally source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: tally
+          persist-credentials: false
+      - name: Immutable verified released DH v0.10.2 baseline
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          path: dh-stable
+          persist-credentials: false
+      - name: Pinned IN-PROGRESS v0.10.3 branch candidate, not a release
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: e86f2c9450b962812fc03e1494aaad402490258e
+          path: domain-harness
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Exact source identity and honest ABI-equality impact gate
+        shell: bash
+        env:
+          TALLY: ${{ github.workspace }}/tally
+          DH: ${{ github.workspace }}/domain-harness
+          DH_STABLE: ${{ github.workspace }}/dh-stable
+        run: |
+          set -Eeuo pipefail
+          test "$(git -C "$TALLY" rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C "$DH" rev-parse HEAD)" = e86f2c9450b962812fc03e1494aaad402490258e
+          test "$(git -C "$DH_STABLE" rev-parse HEAD)" = cee14399d9d0af4e20e34b9111861b16a465b690
+          for path in packages/contracts packages/microkernel packages/host-node tooling/build domain-packages/kernel/basic domain-packages/standard/basic; do
+            if ! git diff --no-index --quiet "$DH_STABLE/$path" "$DH/$path"; then
+              echo "CANDIDATE_PUBLIC_RUNTIME_DIFF_REQUIRES_NEW_RQ_AND_IMPACT_ASSESSMENT:$path"
+              exit 14
+            fi
+          done
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            const root=process.env.DH;
+            for(const folder of ["packages/contracts","packages/microkernel","packages/host-node","tooling/build"]){
+              const p=JSON.parse(readFileSync(root+"/"+folder+"/package.json","utf8"));
+              if(p.version!=="0.10.2-rc.0")throw Error("IN_PROGRESS_CANDIDATE_PACKAGE_VERSION_CHANGED:"+folder+":"+p.version);
+              console.log(folder+"="+p.version);
+            }
+          '
+          echo DH_V0103_BRANCH_CANDIDATE_RUNTIME_IDENTICAL_TO_RELEASED_V0102=PASS
+          echo DH_V0103_RELEASE_QUALIFIED=NO
+      - name: Exercise Tally's EXISTING real DomainHarness public BUILD/K/Host consumer
+        shell: bash
+        env:
+          TALLY: ${{ github.workspace }}/tally
+          TALLY_B: ${{ github.workspace }}/tally
+          DH: ${{ github.workspace }}/domain-harness
+          T04B_NATIVE: '1'
+          TALLY_NATIVE_EXPECTED_SHA: 6356c96a45fcc2b7ee91642b1d87080f940b15af
+          TALLY_GITHUB_READ_TOKEN: ${{ github.token }}
+          WCX_WAL_STRESS: '1'
+          WCX_WAL_ROUNDS: '5'
+          TEST_SCOPE: ${{ matrix.scope }}
+        run: |
+          set -Eeuo pipefail
+          case "$TEST_SCOPE" in
+            selected-native-github-k-sqlite)
+              bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"
+              echo TALLY_V2_DH_V0103_CANDIDATE_GITHUB_K_SQLITE=PASS
+              ;;
+            host-physical-cas-wal)
+              bash "$TALLY/experiments/v2/host-sqlite-cas/run-clean.sh"
+              echo TALLY_V2_DH_V0103_CANDIDATE_HOST_CAS_WAL=PASS
+              ;;
+            *) exit 12;;
+          esac
+          echo TALLY_V2_DH_V0103_CANDIDATE_ONLY_NOT_RELEASE_AUTHORITY=PASS
