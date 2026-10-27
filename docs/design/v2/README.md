@@ -10,8 +10,11 @@
 
 ## 2. Read in this order / 推荐阅读顺序
 
+**ALM ownership clarification (2026-10-28):** Tally is primarily the agent-facing ZenTao/Jira-style software-lifecycle **task management, engineering evidence, and learning application**. Qualified external Agents perform actual Product/design/coding/test/review/release-preparation and communicate by the adopted ADS/native GitHub protocol, with or without Tally online. Tally re-reads, manages, coordinates and recommends; it does not implement those Agents or an alternate message broker/runner. See the new **Agent-native ALM Product R0** pair below. This is a proposed Product correction, not a substitute for formal PR #77/PR #82 Review or Freeze.
+
 | Purpose | 中文 | English / Agent |
 |---|---|---|
+| **Agent-native ALM: requirements → development → QA → release → maintenance + Task learning** | [面向 Agent 的全生命周期软件工程管理](./AGENT_NATIVE_ALM_PRODUCT_R0.zh-CN.md) | [Agent-native ALM Product R0](./AGENT_NATIVE_ALM_PRODUCT_R0.en.md) |
 | **Current v2 branch/PR reality and implementable delta — START HERE** | [重构整合与交付路线](./TALLY_V2_REFACTOR_INTEGRATION_R0.zh-CN.md) | [Source crosswalk / implementation handoff](./TALLY_V2_REFACTOR_INTEGRATION_R0.en.md) |
 | **LLM Agents default; Human on exceptions** | [Agent 原生软件工程模型](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.zh-CN.md) | [Agent-native operating model](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.en.md) |
 | **Engineering Business B/S/K/C design from real software engineering** | [Domain Package 蓝图](./TALLY_ENGINEERING_DOMAIN_PACKAGE_BLUEPRINT_R0.zh-CN.md) | [Domain Package blueprint](./TALLY_ENGINEERING_DOMAIN_PACKAGE_BLUEPRINT_R0.en.md) |
