@@ -21,4 +21,6 @@ The new `.github/workflows/v2-dh-v0103-candidate-compatibility.yml` is purposely
 
 References: [Tally v2 controller #86](https://github.com/kaicreator-mm/tally/issues/86), [v0.10.3 intake #1392](https://github.com/kaicreator-mm/domain-harness/issues/1392), [Provider integrity #1393](https://github.com/kaicreator-mm/domain-harness/issues/1393).
 
-**Gate flags:** `UPSTREAM_V0103_RELEASED=NO` · `V0103_REAL_RUNTIME_ABI=NOT_AVAILABLE` · `CANDIDATE_V0102_COMPAT_TEST=CI_RERUN_PENDING` · `TALLY_VERSION_UPGRADE=HOLD` · `MAIN_INTEGRATION_AUTHORIZED=NO`.
+**Test evidence (prior authored HEAD):** The first run [#40555830485](https://github.com/kaicreator-mm/tally/actions/runs/40555830485) correctly failed at the stable SHA guards. After transient-copy correction, **both real Node24 jobs SUCCESS** [#40556505875](https://github.com/kaicreator-mm/tally/actions/runs/40556505875): candidate public ABI/manifest identity PASS, real selected GitHub C→BUILD/K→SQLite `T02B_BUILD_EXIT=0` and `T04B_REAL_GITHUB_C_KERNEL_SQLITE=PASS`, and physical Host SQLite CAS/WAL `WCX_EXPERIMENT_EXIT=0`. The latter verifies **v0.10.2-equivalent public bits at an in-progress v0.10.3 planning SHA**, not newly implemented v0.10.3 Provider integrity. This documentation-only update needs its own authored HEAD CI receipt or an independently recorded no-impact decision.
+
+**Gate flags:** `UPSTREAM_V0103_RELEASED=NO` · `V0103_REAL_RUNTIME_ABI=NOT_AVAILABLE` · `CANDIDATE_V0102_COMPAT_TEST=PASS_PREVIOUS_SHA_PENDING_CURRENT_RERUN` · `TALLY_VERSION_UPGRADE=HOLD` · `MAIN_INTEGRATION_AUTHORIZED=NO`.
