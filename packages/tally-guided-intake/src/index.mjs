@@ -110,6 +110,8 @@ export function nextProjectIntakeStep(request,{sourceEvidenceRefs=[],advisory=nu
         return blocked(request,'OUTCOME_SOURCE_UNVERIFIED');
       const t=outcomeStep(prev);
       if(!t||!t.material.allowedEvents.includes(prev.event)||
+        (prev.receiptRef!==undefined&&
+          !['OBSERVATION_RECEIPT','EFFECT_RECEIPT'].includes(prev.event))||
         !validSelection(prev,t))
         return blocked(request,'OUTCOME_EVENT_OR_SELECTION_INVALID');
       if(prev.event==='PAUSE')
