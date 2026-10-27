@@ -83,15 +83,31 @@ jobs:
           TEST_SCOPE: ${{ matrix.scope }}
         run: |
           set -Eeuo pipefail
+          # Stable fixtures rightly hard-pin released v0.10.2; do NOT edit
+          # those scripts. Only after exact source/ABI equality above, make a
+          # transient per-job COPY with one SHA guard replaced by the pinned
+          # (unreleased) candidate SHA. Execute unchanged fixture behaviors
+          # against the candidate's actual packed source, never fake a tag.
           case "$TEST_SCOPE" in
             selected-native-github-k-sqlite)
-              bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"
-              echo TALLY_V2_DH_V0103_CANDIDATE_GITHUB_K_SQLITE=PASS
+              original="$TALLY/experiments/v2/selected-business-build/run-clean.sh"
               ;;
             host-physical-cas-wal)
-              bash "$TALLY/experiments/v2/host-sqlite-cas/run-clean.sh"
-              echo TALLY_V2_DH_V0103_CANDIDATE_HOST_CAS_WAL=PASS
+              original="$TALLY/experiments/v2/host-sqlite-cas/run-clean.sh"
               ;;
             *) exit 12;;
+          esac
+          stable='cee14399d9d0af4e20e34b9111861b16a465b690'
+          candidate='e86f2c9450b962812fc03e1494aaad402490258e'
+          test "$(grep -o "$stable" "$original" | wc -l)" -eq 1
+          scoped="$RUNNER_TEMP/tally-dh-candidate-$TEST_SCOPE.sh"
+          sed "s/$stable/$candidate/g" "$original" > "$scoped"
+          test "$(grep -o "$candidate" "$scoped" | wc -l)" -eq 1
+          test "$(grep -c "$stable" "$scoped" || true)" -eq 0
+          chmod +x "$scoped"
+          bash "$scoped"
+          case "$TEST_SCOPE" in
+            selected-native-github-k-sqlite) echo TALLY_V2_DH_V0103_CANDIDATE_GITHUB_K_SQLITE=PASS;;
+            host-physical-cas-wal) echo TALLY_V2_DH_V0103_CANDIDATE_HOST_CAS_WAL=PASS;;
           esac
           echo TALLY_V2_DH_V0103_CANDIDATE_ONLY_NOT_RELEASE_AUTHORITY=PASS
