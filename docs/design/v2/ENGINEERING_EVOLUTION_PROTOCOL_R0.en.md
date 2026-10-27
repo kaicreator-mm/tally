@@ -2,6 +2,8 @@
 
 **Date:** 2026-10-28. **Status:** cross-project Product/L2 research proposal; no normative freeze, review PASS, code authorization, Task Claim, approved BUILD, release or automatic adoption. Read Chinese original `ENGINEERING_EVOLUTION_PROTOCOL_R0.zh-CN.md` and the paired Domain Package blueprints.
 
+> **2026-10-28 interpretive precedence:** Actual development and engineering work is **LLM Agent-first**, constrained by software engineering and real ADS/GitHub/K authority, not a human-driven approval chain. Independent review is normally a genuinely independent Agent role/context where allowed; it is not automatically a manual Reviewer. Escalate to humans only on material product ambiguity, nondelegable approval/permissions/physical Host, exceeded authorized risk/budget, or legally/policy-required release responsibility. Improvement measurement should distinguish qualified Agent autonomy, necessary vs unnecessary human intervention, role isolation and actual authorization, with honest coverage. See [Agent-native operating model](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.en.md).
+
 ## 1. Purpose and invariants
 
 Build a **closed feedback loop from real software delivery** to three separately owned improvement products:
