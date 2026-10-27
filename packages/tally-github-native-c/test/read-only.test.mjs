@@ -215,3 +215,26 @@ test('R2: misplaced duplicate marker and body with no YAML fence are invalid',as
     assert.equal(r.reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
   }
 });
+
+test('T03c native transport invokes exact ADS v5 REVOKE reconciliation',async()=>{
+  const sum=approved();
+  const nativeSummary=observation(sum,{id:123});
+  const notice=approved('correction');
+  notice.data.limits=[];
+  notice.data.target.data_digest=createHash('sha256').update(canonicalize(sum.data)).digest('hex');
+  const nativeNotice=observation(notice,{id:124});
+  const result=await read([[nativeSummary,nativeNotice]]);
+  assert.equal(result.status,'UNKNOWN');
+  assert.equal(result.reconciliation,'NOTICES_APPLIED_ADVISORY');
+  assert.equal(result.corrections.length,1);
+  assert.equal(result.corrections[0].status,'MATCHED');
+  assert.equal(result.effectiveRecords[0].status,'REVOKED');
+  assert.equal(result.taskPass,false);
+  assert.equal(result.releasePass,false);
+  const mismatched=approved('correction');
+  mismatched.data.target.data_digest='f'.repeat(64);
+  const refused=await read([[nativeSummary,observation(mismatched,{id:124})]]);
+  assert.equal(refused.status,'UNKNOWN');
+  assert.equal(refused.reconciliation,'UNRESOLVED');
+  assert.equal(refused.corrections[0].status,'UNRESOLVED');
+});
