@@ -19,12 +19,11 @@ const output=(reason,more={})=>Object.freeze({
  * Only present a bounded explainable reason, not raw GitHub events/comments.
  * Even a caller-spoofed "accepted" flag is never proof of serialized CAS.
  */
-export function diagnoseNativeTaskReadiness({
-  workItem,claimEvents,expectedIssueRef,expectedSourceSha,
-  localAgentStatus='UNKNOWN',builderConfinementStatus='UNKNOWN',
-  hiddenVerifierStatus='UNKNOWN'
-}={}){
+export function diagnoseNativeTaskReadiness(options={}){
   try{
+    const {workItem,claimEvents,expectedIssueRef,expectedSourceSha,
+      localAgentStatus='UNKNOWN',builderConfinementStatus='UNKNOWN',
+      hiddenVerifierStatus='UNKNOWN'}=options??{};
     if(!ISSUE.test(expectedIssueRef??'')||
       !SOURCE_SHA.test(expectedSourceSha??''))
       return output('SOURCE_IDENTITY_UNAVAILABLE');
