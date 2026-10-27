@@ -99,3 +99,33 @@ test('missing referenced source denies, and non-array input never throws',()=>{
   assert.equal(reconcileCorrectionNotices(null).status,STATES.INVALID);
   assert.equal(reconcileCorrectionNotices(Array(1001).fill(null)).status,STATES.INVALID);
 });
+
+test('ADS v4.18 rejects correction whose OWN subject Task or Attempt differs from target',()=>{
+  for(const field of ['task_ref','attempt_ref']){
+    const records=pair();
+    records[1].envelope.data.subject[field]='fixture:cross-boundary';
+    const r=reconcileCorrectionNotices(records);
+    assert.equal(r.status,STATES.UNKNOWN);
+    assert.equal(r.reconciliation,'UNRESOLVED');
+    assert.equal(r.corrections[0].reason,'NOTICE_CROSS_SCOPE_OR_PUBLISHER');
+    assert.equal(r.effectiveRecords[0].status,'NOT_CURRENT');
+    assert.equal(r.taskPass,false);
+  }
+});
+test('ADS v4.18 rejects a correction whose own publisher source sha mismatches',()=>{
+  const records=pair();
+  records[1].envelope.data.notice_publisher_source_sha='b'.repeat(40);
+  const r=reconcileCorrectionNotices(records);
+  assert.equal(r.status,STATES.UNKNOWN);
+  assert.equal(r.reconciliation,'UNRESOLVED');
+  assert.equal(r.corrections[0].reason,'NOTICE_CROSS_SCOPE_OR_PUBLISHER');
+  assert.equal(r.taskPass,false);
+});
+test('an edited target is not a validated correction target',()=>{
+  const records=pair();records[0].native.currentness='STALE';
+  const r=reconcileCorrectionNotices(records);
+  assert.equal(r.status,STATES.UNKNOWN);
+  assert.equal(r.reconciliation,'UNRESOLVED');
+  assert.equal(r.corrections[0].reason,'NOTICE_TARGET_NOT_CURRENT');
+  assert.equal(r.effectiveRecords[0].status,'NOT_CURRENT');
+});
