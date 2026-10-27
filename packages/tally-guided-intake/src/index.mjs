@@ -12,7 +12,7 @@ const bytes=readFileSync(new URL('../vendor/guided-journey-v1.schema.json',impor
 const gitHash=createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
 if(gitHash!==SCHEMA_GIT_BLOB)throw Error('FROZEN_GUIDED_JOURNEY_CONTRACT_DRIFT');
 const schema=JSON.parse(bytes.toString('utf8'));
-const ajv=new Ajv2020({strict:true,allErrors:false,validateFormats:false,
+const ajv=new Ajv2020({strict:true,strictRequired:false,allErrors:false,validateFormats:false,
   removeAdditional:false,useDefaults:false,coerceTypes:false});
 const wire=ajv.compile(schema);
 const VERSION='dh.guided-journey/1';
