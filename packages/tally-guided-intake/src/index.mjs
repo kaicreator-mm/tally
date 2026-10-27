@@ -105,8 +105,7 @@ export function nextProjectIntakeStep(request,{sourceEvidenceRefs=[],advisory=nu
     const prev=request.previousOutcome;
     let next=goal;
     if(prev){
-      if(!matchingCase(request.caseRef,request.caseRef)|| // defensive no-op, schema already assures case identity
-        prev.journeyId!==request.journeyId||
+      if(prev.journeyId!==request.journeyId||
         !wire(prev)||prev.messageType!=='step.outcome')
         return blocked(request,'OUTCOME_SOURCE_UNVERIFIED');
       const t=outcomeStep(prev);
