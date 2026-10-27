@@ -1,0 +1,171 @@
+{
+  "$comment": "Only retrospective design-time seeds. NOT formal #143 fixture or a historically blind replay, ADS event or authoritative fact cache.",
+  "schema_id": "tally.v2.engineering-practice-seed.r0",
+  "status": "RESEARCH_NOT_FROZEN",
+  "as_of_mode": "RETROSPECTIVE_DIAGNOSIS",
+  "historical_prediction_claim": "NOT_RECONSTRUCTABLE",
+  "source_policy": {
+    "origin": "original GitHub Issue",
+    "coverage": "CURATED_PARTIAL",
+    "private_task_meta_access": false
+  },
+  "patterns": [
+    {
+      "id": "P01",
+      "symptom": "RELEASE_GATE_NOT_INFERRED",
+      "version": "v0.1",
+      "issue_numbers": [
+        "39"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/39",
+      "engineering_principle": "Definition of Done / release management",
+      "candidate_owner": "TALLY_ASSURANCE",
+      "expected_tally_decision": "Explain remaining Hidden and RQ after visible test PASS",
+      "forbidden_decision": "Visible test PASS implies shipped release"
+    },
+    {
+      "id": "P02",
+      "symptom": "PHYSICAL_HOST_HANDOFF",
+      "version": "v0.2",
+      "issue_numbers": [
+        "99"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/99",
+      "engineering_principle": "Validation environment and execution fitness",
+      "candidate_owner": "TALLY_JOURNEY",
+      "expected_tally_decision": "Guide Android/Hermes restart and wait for real Host receipt",
+      "forbidden_decision": "Node proxy equals physical device PASS"
+    },
+    {
+      "id": "P03",
+      "symptom": "CONSUMER_CONTRACT_GAP",
+      "version": "v0.3",
+      "issue_numbers": [
+        "177",
+        "180"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/177",
+      "engineering_principle": "Requirements validation / consumer contract",
+      "candidate_owner": "TALLY_ACCEPTANCE",
+      "expected_tally_decision": "Trace real App scenarios to SDK capability and correct Owner",
+      "forbidden_decision": "Internal test means all App scenarios work"
+    },
+    {
+      "id": "P04",
+      "symptom": "VALUE_BASED_SCOPE",
+      "version": "v0.6",
+      "issue_numbers": [
+        "472"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/472",
+      "engineering_principle": "Lean value engineering and reuse-before-build",
+      "candidate_owner": "TALLY_PLANNING",
+      "expected_tally_decision": "Compare REUSE/BUILD/DEFER and real value/risk",
+      "forbidden_decision": "Default to a new generic engine"
+    },
+    {
+      "id": "P05",
+      "symptom": "FALSE_SERIALIZATION",
+      "version": "v0.7",
+      "issue_numbers": [
+        "530"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/530",
+      "engineering_principle": "Task DAG, genuine dependency and integration join",
+      "candidate_owner": "TALLY_PLANNING_ADS",
+      "expected_tally_decision": "Offer independent lanes and a late compatibility join",
+      "forbidden_decision": "Silently remove native blocked_by"
+    },
+    {
+      "id": "P06",
+      "symptom": "CAMPAIGN_CHECKPOINT_IDENTITY",
+      "version": "v0.7",
+      "issue_numbers": [
+        "586"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/586",
+      "engineering_principle": "Work-unit granularity / proportionate V&V",
+      "candidate_owner": "TALLY_WORKUNIT",
+      "expected_tally_decision": "One campaign with separately scoped checkpoint terminals",
+      "forbidden_decision": "Treat each comment/checkpoint as new feature Task"
+    },
+    {
+      "id": "P07",
+      "symptom": "OVERLAPPING_WRITER_AND_SEAM",
+      "version": "v0.8",
+      "issue_numbers": [
+        "1013"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1013",
+      "engineering_principle": "Write-set ownership and consumer integration",
+      "candidate_owner": "TALLY_EXECUTION_ASSURANCE",
+      "expected_tally_decision": "Detect overlapping claim/PR scope and public Host to K seam",
+      "forbidden_decision": "All component PRs merged implies integrated application"
+    },
+    {
+      "id": "P08",
+      "symptom": "MUST_RETAIN_INVARIANT",
+      "version": "v0.8.1",
+      "issue_numbers": [
+        "1100"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1100",
+      "engineering_principle": "Risk-based change impact / CAS safety invariant",
+      "candidate_owner": "TALLY_ACCEPTANCE_ADS",
+      "expected_tally_decision": "Carry CAS/effect safety invariants into new version",
+      "forbidden_decision": "Downgrade proven P0 for throughput"
+    },
+    {
+      "id": "P09",
+      "symptom": "LOADED_NOT_INVOKED",
+      "version": "v0.10",
+      "issue_numbers": [
+        "1264"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1264",
+      "engineering_principle": "Requirements traceability / executable oracle",
+      "candidate_owner": "TALLY_ACCEPTANCE",
+      "expected_tally_decision": "Require selected installed Kernel invocation proof",
+      "forbidden_decision": "Import/init counts as functional acceptance"
+    },
+    {
+      "id": "P10",
+      "symptom": "REPRODUCIBLE_FLAKINESS",
+      "version": "v0.10.2",
+      "issue_numbers": [
+        "1385"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1385",
+      "engineering_principle": "Defect triage / replicate observations",
+      "candidate_owner": "TALLY_DIAGNOSIS",
+      "expected_tally_decision": "Retain 4/15 failed runs, environment and source qualification",
+      "forbidden_decision": "Single isolation PASS disproves defect"
+    },
+    {
+      "id": "P11",
+      "symptom": "SUPPLIER_INTEGRITY_FEEDBACK",
+      "version": "v0.10.3",
+      "issue_numbers": [
+        "1393"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1393",
+      "engineering_principle": "Supplier integrity / downstream retest",
+      "candidate_owner": "DOMAIN_HARNESS_SDK",
+      "expected_tally_decision": "Route common Provider gap upstream then retest Tally consumer",
+      "forbidden_decision": "Closed upstream issue means real consumer PASS"
+    },
+    {
+      "id": "P12",
+      "symptom": "NATIVE_DAG_ADMISSION",
+      "version": "v0.10.3",
+      "issue_numbers": [
+        "1411"
+      ],
+      "source_url": "https://github.com/kaicreator-mm/domain-harness/issues/1411",
+      "engineering_principle": "Authority / source qualified workflow",
+      "candidate_owner": "TALLY_JOURNEY_ADS",
+      "expected_tally_decision": "Wait for native dependency mutation/readback",
+      "forbidden_decision": "Treat prose DAG as admitted native DAG"
+    }
+  ]
+}
