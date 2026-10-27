@@ -10,7 +10,8 @@ import canonicalize from 'canonicalize';
 import { parseDocument, visit, isAlias } from 'yaml';
 import { Octokit } from '@octokit/rest';
 import { validateAdsV5Report, ADS_REPORT_DIALECT } from '../../tally-ads-v5-validator/src/validate.mjs';
-import { projectReportSet, STATES } from '../../tally-github-c/src/report-projection.mjs';
+import { STATES } from '../../tally-github-c/src/report-projection.mjs';
+import { reconcileCorrectionNotices } from '../../tally-github-c/src/correction-reconciliation.mjs';
 
 const SHA=/^[0-9a-f]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+$/;
@@ -157,7 +158,7 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
   }
   if(invalid) return deny('INVALID_OR_UNVERIFIED_REPORT_COMMENT',STATES.UNKNOWN,readCount);
   if(records.length===0) return deny('NO_ADS_V5_REPORTS',STATES.UNKNOWN,readCount);
-  const projection=projectReportSet(records);
+  const projection=reconcileCorrectionNotices(records);
   return Object.freeze({
     ...projection,reason:projection.status===STATES.CURRENT?'GITHUB_NATIVE_REPORTS_OBSERVED':
       'ADVISORY_REPORTS_NOT_CURRENT',
