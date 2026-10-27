@@ -1,12 +1,35 @@
 /** T04b public selected native C + real GitHub REST + durable public K/Host SQLite. */
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {load} from '@kaicreator/domain-harness-microkernel';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 const sealed=JSON.parse(readFileSync(new URL('./sealed-app.json',import.meta.url),'utf8'));
+// Independent trusted Host bootstrap check: BUILD-sealed C digest binds the
+// exact Provider file. Verify before Microkernel.load imports/evaluates it.
+const selectedC=sealed.modules.find(x=>x.role==='capability'&&
+  x.packageId==='capability-tally-source-observation@v2.0.0');
+assert.ok(selectedC?.moduleSource,'sealed selected C required');
+const digestMatch=/NATIVE_PROVIDER_SHA256='([0-9a-f]{64})'/.exec(selectedC.moduleSource);
+assert.ok(digestMatch,'provider byte digest must be present in BUILD-sealed C');
+const providerPath=fileURLToPath(import.meta.resolve('@kaicreator/tally-native-reader-bundle'));
+const originalProvider=readFileSync(providerPath);
+const sha=x=>createHash('sha256').update(x).digest('hex');
+const assertProvider=(bytes)=>assert.equal(sha(bytes),digestMatch[1],
+  'PROVIDER_INTEGRITY_MISMATCH: unreviewed npm implementation must refuse before K.load');
+assertProvider(originalProvider);
+// Real substitution falsifier on the actual installed Node package bytes.
+// Restore original bytes after positive assertion and before any K.load.
+try {
+  writeFileSync(providerPath,Buffer.concat([originalProvider,Buffer.from('\\n// UNREVIEWED_PROVIDER_SUBSTITUTION')]));
+  assert.throws(()=>assertProvider(readFileSync(providerPath)),/PROVIDER_INTEGRITY_MISMATCH/);
+}finally{writeFileSync(providerPath,originalProvider);}
+assertProvider(readFileSync(providerPath));
+console.log('T04B_PROVIDER_INTEGRITY_BEFORE_K_LOAD=PASS');
 const sourceSha=process.env.TALLY_NATIVE_EXPECTED_SHA;
 const token=process.env.TALLY_GITHUB_READ_TOKEN;
 assert.match(sourceSha??'',/^[0-9a-f]{40}$/);
