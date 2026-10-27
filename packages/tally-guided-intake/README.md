@@ -1,0 +1,17 @@
+# Tally v2 Product Intake — DomainHarness v0.10.3 contract-first consumer
+
+**Scope**: Tally's app-owned Product/Project intake Business projection, while deployed DomainHarness K/BUILD/Host remain pinned to published **v0.10.2**. This is NOT a v0.10.3 SDK runtime import, authenticated source adapter, web UI, Agent, or Task Claim writer. Parent [#148](https://github.com/kaicreator-mm/tally/issues/148); Product/PRD and current runtime release gates are separate.
+
+## Contract authority
+
+Frozen v0.10.3 Contract Freeze / L2 Freeze in `kaicreator-mm/domain-harness@e86f2c9450b962812fc03e1494aaad402490258e`; canonical [schema](https://github.com/kaicreator-mm/domain-harness/blob/e86f2c9450b962812fc03e1494aaad402490258e/docs/product/v0.10.3/contracts/guided-journey-v1.schema.json) pinned byte-for-byte Git blob `43710e2a1d5bc2b1827014c99867749b70c764f7`. No bespoke second DTO, no invented 0.10.3 public npm package. Ajv 2020-12 validates all actual `NextStepRequest`, `StepSpec`, `NextStepDecision`, `StepOutcome` and optional `LLMAdvisory` values with the **exact** schema. Current schema description still says 'planning candidate' historically, but independent reviewed Contract/L2 Freeze establishes current downstream consumption authority; maintain exact bytes.
+
+Approved Tally static templates are `goal` → `scope` → `review` (one next StepSpec at once); deterministic offline by default. `scope` requires trusted Host-provided evidence refs matching the submitted source claims; otherwise NEED_EVIDENCE. The review step submission yields WAIT/INDEPENDENT_PRODUCT_REVIEW_REQUIRED, never DONE/automatic Product Freeze. A model-proposed template must match selected approved static Step and case snapshot, cannot choose an arbitrary form, route, permission or tool call. The optional `LLMAdvisory` only reports `advisoryMatched`, never authorizes.
+
+**Trust boundaries:** `request.previousOutcome` is only candidate UI interaction and `sourceEvidenceRefs` parameter must originate from a separate *trusted* GitHub/evidence source adapter before actual deployment. This pure module has NO effect API, no K Permit, no GH mutation and no persistent state; it cannot prove review acceptance or fresh case identity in isolation. Nontrivial Product actions remain guarded in Product #77/ADS #85 and actual K admission. Do not expose this helper directly as an authorization endpoint. B BUILD-sealed source cannot import arbitrary relative loose modules; integration must inline or use proper BUILD-selected module source as a separate reviewed concern (cf T06c's `V10_IMPORT_POLICY_DENIED`).
+
+## Future v0.10.3 release realignment
+
+After upstream [T-R #1418](https://github.com/kaicreator-mm/domain-harness/issues/1418) and [T-Q #1419](https://github.com/kaicreator-mm/domain-harness/issues/1419) produce a real qualified exact public package/tag, compare exported neutral Guided Journey schema/validator APIs against this frozen source blob, test true external packed SDK/BUILD-selected B + Host/Kernel effects with the Tally Business, and remove the thin adapter only if supported native public API covers it. Any incompatible schema change requires upstream Contract/L2 amendment rather than a silent local fork. Optional `llm.generate` binds explicitly to one selected provider and cannot grant extra execution authority.
+
+**Gates:** DATA_CONTRACT_CONSUMER_TEST=PENDING; DH_V0103_RELEASE=NO; TALLY_BUSINESS_HOST_WIRING=NOT_RUN; GITHUB_TASK_CLAIM=NOT_VERIFIED; PRODUCT_L2_ADS_RELEASE=HOLD.
