@@ -28,13 +28,13 @@ if(live.reportCount!==1) {
   const comments=await client.rest.issues.listComments({owner:args.owner,repo:args.repo,issue_number:121,per_page:100});
   const comment=comments.data.find(x=>x.id===commentId);
   assert.ok(comment,'real fixture comment missing');
-  const match=/^<!-- ads:github -->\\n```yaml\\n([\\s\\S]*?)\\n```(?:\\n|$)/.exec(comment.body);
+  const match=/^<!-- ads:github -->\n```yaml\n([\s\S]*?)\n```(?:\n|$)/.exec(comment.body);
   const doc=match?parseDocument(match[1],{uniqueKeys:true,merge:false,schema:'core',maxAliasCount:0,strict:true}):null;
   const parsed=doc?.toJS({maxAliasCount:0});
   const {validateAdsV5Report}=await import('../../../packages/tally-ads-v5-validator/src/validate.mjs');
   const checked=parsed?validateAdsV5Report(parsed):{valid:false,code:'WIRE_PARSE_FAILED'};
   console.error(JSON.stringify({fixtureDiagnostics:true,nativeReason:live.reason,
-    marker:comment.body.startsWith('<!-- ads:github -->\\n'),
+    marker:comment.body.startsWith('<!-- ads:github -->\n'),
     yamlErrors:doc?.errors?.map(x=>x.message).slice(0,8),
     yamlWarnings:doc?.warnings?.map(x=>x.message).slice(0,8),
     resultKeys:parsed?Object.keys(parsed):[],
