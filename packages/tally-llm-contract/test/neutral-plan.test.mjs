@@ -174,3 +174,68 @@ test('planned request messages are an immutable snapshot of validated input',()=
   assert.throws(()=>{p.request.messages.push({role:'user',content:'injected'});},TypeError);
   assertDeny(p);
 });
+
+
+test('remote outcome UNKNOWN cannot be misclassified as a terminal known failure',()=>{
+  const p=planning();
+  const common={contractVersion:'dh.llm.generate/1',
+    requestId:p.request.requestId,providerKind:p.providerKind,
+    modelId:p.request.modelId,usage:{evidenceMode:'unavailable'},
+    reasonCode:'REMOTE_TIMEOUT'};
+  for(const bad of [
+    {status:'failed',errorCategory:'OUTCOME_UNKNOWN'},
+    {status:'unknown',errorCategory:'DEADLINE'}
+  ]){
+    const out=projectNeutralGenerationResult(p,{...common,...bad});
+    assert.equal(out.reason,'MALFORMED_NEUTRAL_FAILURE');
+    assertDeny(out);
+  }
+  const unknown=projectNeutralGenerationResult(p,{
+    ...common,status:'unknown',errorCategory:'OUTCOME_UNKNOWN'});
+  assert.equal(unknown.status,'UNKNOWN');
+  assertDeny(unknown);
+  const deadline=projectNeutralGenerationResult(p,{
+    ...common,status:'refused',errorCategory:'DEADLINE'});
+  assert.equal(deadline.status,'REFUSED');
+  assertDeny(deadline);
+});
+test('ToolProposal arguments must be JSON object and tool_proposal finish must contain a proposal',()=>{
+  const p=planning();
+  const common={contractVersion:'dh.llm.generate/1',
+    requestId:p.request.requestId,providerKind:p.providerKind,
+    modelId:p.request.modelId,status:'completed',text:'propose',
+    finishReason:'tool_proposal',usage:{evidenceMode:'unavailable'}};
+  for(const bad of [
+    {},{toolProposals:[]},
+    {toolProposals:[{name:'check',argumentsJson:'not-json'}]},
+    {toolProposals:[{name:'check',argumentsJson:'[]'}]},
+    {toolProposals:[{name:'check',argumentsJson:'null'}]},
+    {toolProposals:[{name:'check',argumentsJson:'123'}]}
+  ]){
+    const out=projectNeutralGenerationResult(p,{...common,...bad});
+    assert.equal(out.reason,'MALFORMED_NEUTRAL_COMPLETION');
+    assertDeny(out);
+  }
+  const ok=projectNeutralGenerationResult(p,{...common,
+    toolProposals:[{name:'check',argumentsJson:'{"path":"a"}'}]});
+  assert.equal(ok.status,'OBSERVED');
+  assert.equal(ok.toolProposalCount,1);
+  assert.equal(ok.toolExecutionAuthorized,false);
+  assertDeny(ok);
+});
+test('error reasonCode matches frozen transport guard grammar',()=>{
+  const p=planning();
+  const common={contractVersion:'dh.llm.generate/1',
+    requestId:p.request.requestId,providerKind:p.providerKind,
+    modelId:p.request.modelId,status:'failed',errorCategory:'UNAVAILABLE',
+    usage:{evidenceMode:'unavailable'}};
+  for(const code of ['1BAD','A:B','A-B','a_lower']){
+    const out=projectNeutralGenerationResult(p,{...common,reasonCode:code});
+    assert.equal(out.reason,'MALFORMED_NEUTRAL_FAILURE');
+    assertDeny(out);
+  }
+  const ok=projectNeutralGenerationResult(p,{
+    ...common,reasonCode:'REMOTE_UNAVAILABLE'});
+  assert.equal(ok.status,'FAILED');
+  assertDeny(ok);
+});
