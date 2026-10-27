@@ -138,3 +138,39 @@ test('hostile provider getters are normalized to typed denial without raw error'
   assert.equal(JSON.stringify(x).includes(secret),false);
   assertDeny(x);
 });
+
+test('provider usage with unapproved fields is denied without forwarding secrets',()=>{
+  const p=planning();
+  const common={contractVersion:'dh.llm.generate/1',
+    requestId:p.request.requestId,providerKind:p.providerKind,
+    modelId:p.request.modelId,status:'completed',text:'ok',
+    finishReason:'stop'};
+  const secret='PROVIDER_PRIVATE_TOKEN_NEVER_FORWARD';
+  for(const usage of [
+    {evidenceMode:'unavailable',internalToken:secret},
+    {evidenceMode:'provider-reported',inputTokens:2,outputTokens:3,debug:secret},
+    {evidenceMode:'measured',inputTokens:2,outputTokens:3,credentials:secret}
+  ]){
+    const out=projectNeutralGenerationResult(p,{...common,usage});
+    assert.equal(out.status,'BLOCKED');
+    assert.equal(out.reason,'PROVIDER_PROVENANCE_OR_USAGE_UNVERIFIED');
+    assert.equal(JSON.stringify(out).includes(secret),false);
+    assertDeny(out);
+  }
+});
+test('planned request messages are an immutable snapshot of validated input',()=>{
+  const original=request();
+  const p=planNeutralGeneration(original,config);
+  assert.equal(p.status,'PLANNED');
+  assert.equal(Object.isFrozen(p.request),true);
+  assert.equal(Object.isFrozen(p.request.messages),true);
+  assert.equal(Object.isFrozen(p.request.messages[0]),true);
+  const observed=p.request.messages[0].content;
+  original.messages[0].content='tamper after planning';
+  original.messages.push({role:'user',content:'new unreviewed message'});
+  assert.equal(p.request.messages[0].content,observed);
+  assert.equal(p.request.messages.length,2);
+  assert.throws(()=>{p.request.messages[0].content='post-plan rewrite';},TypeError);
+  assert.throws(()=>{p.request.messages.push({role:'user',content:'injected'});},TypeError);
+  assertDeny(p);
+});

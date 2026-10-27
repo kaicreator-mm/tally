@@ -69,11 +69,14 @@ export function planNeutralGeneration(req,{
     if(!Array.isArray(models)||!models.includes(req.modelId)||
       models.some(x=>!allowedText(x,128)))
       return safeOutput('HOST_MODEL_ALLOWLIST_REFUSED');
+    // A plan may be handed to K asynchronously. Preserve the exact
+    // validated message snapshot, not caller-mutable object/array aliases.
+    const messages=Object.freeze(req.messages.map(m=>
+      Object.freeze({role:m.role,content:m.content})));
     const copy={
       contractVersion:CONTRACT,requestId:req.requestId,modelId:req.modelId,
-      deadlineUnixMs:req.deadlineUnixMs,messages:req.messages.map(m=>({
-        role:m.role,content:m.content})),maxOutputTokens:req.maxOutputTokens,
-      outputFormat:req.outputFormat
+      deadlineUnixMs:req.deadlineUnixMs,messages,
+      maxOutputTokens:req.maxOutputTokens,outputFormat:req.outputFormat
     };
     if(req.temperature!==undefined)copy.temperature=req.temperature;
     return safeOutput('EXPLICIT_SELECTED_MODEL_INTENT',{
@@ -85,7 +88,10 @@ export function planNeutralGeneration(req,{
     });
   }catch{return safeOutput('UNTRUSTED_MODEL_PLAN_INPUT');}
 }
-const validUsage=u=>u&&typeof u==='object'&&
+const validUsage=u=>u&&typeof u==='object'&&!Array.isArray(u)&&
+  // Provider output is untrusted: unknown fields must never reach a
+  // report, Journal or UI through a spread of its raw usage object.
+  Object.keys(u).every(k=>['evidenceMode','inputTokens','outputTokens'].includes(k))&&
   (u.evidenceMode==='unavailable'?
     !Object.hasOwn(u,'inputTokens')&&!Object.hasOwn(u,'outputTokens'):
     ['provider-reported','measured'].includes(u.evidenceMode)&&
@@ -108,7 +114,10 @@ export function projectNeutralGenerationResult(plan,result){
       result.providerKind!==plan.providerKind||
       !validUsage(result.usage))
       return safeOutput('PROVIDER_PROVENANCE_OR_USAGE_UNVERIFIED');
-    const usage=Object.freeze({...result.usage});
+    const usage=result.usage.evidenceMode==='unavailable'?
+      Object.freeze({evidenceMode:'unavailable'}):
+      Object.freeze({evidenceMode:result.usage.evidenceMode,
+        inputTokens:result.usage.inputTokens,outputTokens:result.usage.outputTokens});
     if(result.status==='completed'){
       if(typeof result.text!=='string'||result.text.length>65536||
         !FINISH.has(result.finishReason)||
