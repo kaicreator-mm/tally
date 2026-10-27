@@ -7,7 +7,9 @@
     "node": ">=24"
   },
   "exports": {
-    ".": "./src/read-only.mjs"
+    ".": "./src/read-only.mjs",
+    "./task-workitem-source": "./src/task-workitem-source.mjs",
+    "./task-claim-events": "./src/task-claim-events.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"
@@ -15,6 +17,7 @@
   "dependencies": {
     "@octokit/rest": "22.0.1",
     "canonicalize": "5.1.0",
-    "yaml": "2.8.1"
+    "yaml": "2.8.1",
+    "ajv": "8.17.1"
   }
 }
