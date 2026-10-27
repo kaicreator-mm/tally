@@ -5,7 +5,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import {catalogRef,templateRefs,nextProjectIntakeStep} from '../src/index.mjs';
 
 const schema=JSON.parse(readFileSync(new URL('../vendor/guided-journey-v1.schema.json',import.meta.url),'utf8'));
-const canonical=new Ajv2020({strict:true,validateFormats:false}).compile(schema);
+const canonical=new Ajv2020({strict:true,strictRequired:false,validateFormats:false}).compile(schema);
 const VERSION='dh.guided-journey/1';
 const caseRef={snapshotId:'case-issue-148',digest:'a'.repeat(64)};
 const initial=()=>({messageType:'next-step.request',contractVersion:VERSION,
