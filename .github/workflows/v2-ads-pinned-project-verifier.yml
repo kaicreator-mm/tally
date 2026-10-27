@@ -1,0 +1,46 @@
+name: v2-ads-pinned-project-verifier
+
+on:
+  pull_request:
+    paths:
+      - 'AGENTS.md'
+      - '.dev-standard/**'
+      - 'docs/standards/TALLY_V2_ADS_V418_ADOPTION_EVIDENCE.md'
+      - '.github/workflows/v2-ads-pinned-project-verifier.yml'
+permissions:
+  contents: read
+jobs:
+  v2-ads-exact-head:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout EXACT Tally authored PR HEAD, not synthetic PR merge
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout public immutable ADS v4.18 source
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/ai-development-standard
+          ref: 2c395c55569fe2edf3f4135f12d3d069e526d0b7
+          path: pinned-ads
+          persist-credentials: false
+      - name: Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Independently resolve actual Git objects and strict project-root adoption
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C pinned-ads rev-parse HEAD)" = "2c395c55569fe2edf3f4135f12d3d069e526d0b7"
+          mv pinned-ads "$RUNNER_TEMP/tally-ads-v418-pinned"
+          test ! -e pinned-ads
+          echo "TALLY_PR_AUTHORED_HEAD=$(git rev-parse HEAD)"
+          echo "ADS_IMMUTABLE_PIN=$(git -C "$RUNNER_TEMP/tally-ads-v418-pinned" rev-parse HEAD)"
+          python --version
+          PYTHONDONTWRITEBYTECODE=1 python "$RUNNER_TEMP/tally-ads-v418-pinned/scripts/verify_project_standard.py" "$GITHUB_WORKSPACE" --standard-repo "$RUNNER_TEMP/tally-ads-v418-pinned" --require-resolution
+          echo "TALLY_V2_ADS_EXACT_HEAD_PINNED_ROOT_VERIFIER=PASS"
