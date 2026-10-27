@@ -1,15 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {createHash} from 'node:crypto';
-import canonicalize from 'canonicalize';
 import {reconcileCorrectionNotices} from '../src/correction-reconciliation.mjs';
 import {STATES} from '../src/report-projection.mjs';
 
 const summary=JSON.parse(readFileSync(new URL('../../tally-ads-v5-validator/test/fixtures/summary.json',import.meta.url)));
 const correction=JSON.parse(readFileSync(new URL('../../tally-ads-v5-validator/test/fixtures/correction.json',import.meta.url)));
 const repo='example-org/example-repo',issueNumber=42,sha='a'.repeat(40);
-const dig=e=>createHash('sha256').update(canonicalize(e.data)).digest('hex');
+// JCS hash is verified by native transport; the pure reconciler compares it exactly.
+const dig=()=>'e'.repeat(64);
 function pair() {
   const sum=structuredClone(summary);
   sum.data.limits=[];sum.data.capture_coverage='COMPLETE';
