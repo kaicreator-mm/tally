@@ -116,10 +116,21 @@ export function reconcileCorrectionNotices(observations) {
       t.publisher_namespace!==d.publisher_namespace ||
       d.subject?.repository!==n.repository ||
       d.subject?.issue_ref!==t.issue_ref ||
-      d.subject?.source_sha!==n.sourceSha)why='NOTICE_CROSS_SCOPE_OR_PUBLISHER';
+      d.subject?.source_sha!==n.sourceSha ||
+      // ADS v4.18 semantic validation: a correction cannot cross Task or
+      // Attempt, and its publisher source must match the actual notice.
+      d.subject?.task_ref!==t.task_ref ||
+      d.subject?.attempt_ref!==t.attempt_ref ||
+      d.notice_publisher_source_sha!==d.subject?.publisher_source_sha)
+      why='NOTICE_CROSS_SCOPE_OR_PUBLISHER';
     else {
       const candidates=originals.get(key)||[];
       if(candidates.length!==1||!sameTarget(t,candidates[0]))why='NOTICE_TARGET_UNVERIFIED';
+      else if(candidates[0].native?.currentness!=='CURRENT' ||
+              candidates[0].native?.permission!=='GRANTED' ||
+              candidates[0].native?.readback!=='VERIFIED' ||
+              candidates[0].native?.pagination!=='COMPLETE')
+        why='NOTICE_TARGET_NOT_CURRENT';
       else target=candidates[0];
     }
     const targetIdentity=target?.native?targetKey(target.native):null;
