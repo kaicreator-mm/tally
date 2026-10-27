@@ -78,7 +78,8 @@ export function reconcileCorrectionNotices(observations) {
   const base=projectReportSet(observations);
   if(!Array.isArray(observations)||observations.length>1000||
       base.status===STATES.INVALID)return Object.freeze({
-    ...base,reconciliation:'INVALID_INPUT',corrections:empty,
+    ...base,status:STATES.INVALID,reason:'UNBOUNDED_OR_INVALID_CORRECTION_INPUT',
+    reconciliation:'INVALID_INPUT',corrections:empty,
     effectiveRecords:empty,...DENIED
   });
   const notices=observations.filter(o=>o?.envelope?.data?.report_kind===CORRECTION);
