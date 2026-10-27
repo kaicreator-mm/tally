@@ -30,7 +30,10 @@ const refused=(reason)=>Object.freeze({state:'NATIVE_NOT_CURRENT',status:'UNKNOW
   reason,sourceRef:null,sourceSha:null,observationCount:0,
   authorized:false,admitted:false,taskPass:false,releasePass:false});
 export async function observeReadiness(input) {
-  const result=await nativeObserveReadiness(input);
+  // Provider exceptions (including getters and arbitrary Error.message text)
+  // are untrusted. Never allow raw errors to enter Kernel effect journals.
+  try {
+    const result=await nativeObserveReadiness(input);
   if(!result||typeof result!=='object'||Array.isArray(result)||
      !statuses.has(result.status)||!reasons.has(result.reason)||
      result.sourceRef!=='https://github.com/kaicreator-mm/tally/issues/111'||
@@ -49,4 +52,7 @@ export async function observeReadiness(input) {
     observationCount:result.observationCount,
     authorized:false,admitted:false,taskPass:false,releasePass:false
   });
+  } catch {
+    return refused('NATIVE_PROVIDER_THREW');
+  }
 }
