@@ -16,6 +16,31 @@ const args={token:process.env.GITHUB_TOKEN,
 assert.ok(typeof args.token==='string'&&args.token.length>=8,'READ_ONLY_GITHUB_TOKEN_REQUIRED');
 
 const live=await readGitHubIssueReports(args);
+if(live.reportCount!==1) {
+  // Diagnostic is ONLY in this standalone read-only fixture lane; keep
+  // production GitHub native reader untouched and never print credentials.
+  const {createRequire}=await import('node:module');
+  const {pathToFileURL}=await import('node:url');
+  const rq=createRequire(new URL('../../../packages/tally-github-native-c/package.json',import.meta.url));
+  const {Octokit}=await import(pathToFileURL(rq.resolve('@octokit/rest')).href);
+  const {parseDocument}=rq('yaml');
+  const client=new Octokit({auth:args.token});
+  const comments=await client.rest.issues.listComments({owner:args.owner,repo:args.repo,issue_number:121,per_page:100});
+  const comment=comments.data.find(x=>x.id===commentId);
+  assert.ok(comment,'real fixture comment missing');
+  const match=/^<!-- ads:github -->\\n```yaml\\n([\\s\\S]*?)\\n```(?:\\n|$)/.exec(comment.body);
+  const doc=match?parseDocument(match[1],{uniqueKeys:true,merge:false,schema:'core',maxAliasCount:0,strict:true}):null;
+  const parsed=doc?.toJS({maxAliasCount:0});
+  const {validateAdsV5Report}=await import('../../../packages/tally-ads-v5-validator/src/validate.mjs');
+  const checked=parsed?validateAdsV5Report(parsed):{valid:false,code:'WIRE_PARSE_FAILED'};
+  console.error(JSON.stringify({fixtureDiagnostics:true,nativeReason:live.reason,
+    marker:comment.body.startsWith('<!-- ads:github -->\\n'),
+    yamlErrors:doc?.errors?.map(x=>x.message).slice(0,8),
+    yamlWarnings:doc?.warnings?.map(x=>x.message).slice(0,8),
+    resultKeys:parsed?Object.keys(parsed):[],
+    valid:checked.valid,code:checked.code,violations:checked.violations?.slice(0,12),
+    commentEdited:comment.created_at!==comment.updated_at}));
+}
 assert.equal(live.reportCount,1,JSON.stringify({status:live.status,reason:live.reason}));
 assert.equal(live.status,'UNKNOWN','synthetic report must NEVER be CURRENT');
 assert.equal(live.reason,'ADVISORY_REPORTS_NOT_CURRENT');
