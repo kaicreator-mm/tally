@@ -74,7 +74,9 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   cp "$tmp/producer/native-bundled.mjs" "$tmp/native-provider/index.mjs"
   printf '%s' '{"name":"@kaicreator/tally-native-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/native-provider/package.json"
   npm pack --pack-destination "$tmp/packed" "$tmp/native-provider" >/dev/null
-  T04B_NATIVE=1 T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+  echo T04B_TRUSTED_PROVIDER_SHA256
+  sha256sum "$tmp/native-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+  T04B_NATIVE=1 T04B_PROVIDER_FILE="$tmp/native-provider/index.mjs" T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 else
   T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 fi
