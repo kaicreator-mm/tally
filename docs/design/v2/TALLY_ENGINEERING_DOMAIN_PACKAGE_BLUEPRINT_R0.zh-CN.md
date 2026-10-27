@@ -5,6 +5,8 @@
 > 关联：[Product #63](https://github.com/kaicreator-mm/tally/issues/63)、[B Contracts #91](https://github.com/kaicreator-mm/tally/issues/91)、[完整用户旅程 #92](https://github.com/kaicreator-mm/tally/issues/92)、[Version Driver #145](https://github.com/kaicreator-mm/tally/issues/145)、[验收账本 #146](https://github.com/kaicreator-mm/tally/issues/146)、[Casebook #143](https://github.com/kaicreator-mm/tally/issues/143)。
 > 英文 Agent 设计副本见 `TALLY_ENGINEERING_DOMAIN_PACKAGE_BLUEPRINT_R0.en.md`；三系统进化与变更归属见 `ENGINEERING_EVOLUTION_PROTOCOL_R0.zh-CN.md`。
 
+> **2026-10-28 P0 产品定位更新（优先于本文任何可能被解释为人驱动步骤的表述）：Tally 是由 LLM Agent 默认执行软件开发、以软件工程规范约束 Vibe Coding、仅必要时人类介入的 Domain App。** 人不是每阶段批准者；Planner/Architect/Builder/独立 Reviewer/Verifier/Integrator/Release Coordinator 原则上都由有能力的 Agent 承担，人工仅在目标/范围重大分歧、有效授权/物理 Host/凭据缺口、越界风险预算或确实要求人的发布责任时介入。工程 Gate 不等于 Human Gate；Agent 自动执行仍需要 ADS/GitHub 原生 Claim 和单 DomainHarness K 的真实准入。详见 [Agent 原生执行模型](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.zh-CN.md) 与 [English Agent Edition](./AGENT_NATIVE_SOFTWARE_ENGINEERING_R0.en.md)。
+
 ## 1. 根本产品问题
 
 普通用户在 Tally 输入产品目标/导入仓库，经渐进式交互确认需求，Tally 按 ADS 组织 Product→L2→Task DAG→真实 Claim/Agent/Host 执行→独立审核→诊断/修复→真实用户功能/集成验证→合法 RQ/发布→下一版。**成功定义为真实软件产品交付及下一版继续，而非 Issue 数、PR 数、Agent 自述 PASS 或 UI 流程展示完毕。**
