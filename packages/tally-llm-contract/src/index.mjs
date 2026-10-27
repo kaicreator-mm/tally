@@ -98,9 +98,16 @@ const validUsage=u=>u&&typeof u==='object'&&!Array.isArray(u)&&
     safeCount(u.inputTokens,Number.MAX_SAFE_INTEGER)&&
     safeCount(u.outputTokens,Number.MAX_SAFE_INTEGER));
 const validError=r=>ERRORS.has(r.errorCategory)&&
-  allowedText(r.reasonCode,128)&&/^[A-Z0-9_:-]+$/.test(r.reasonCode);
-const validProposal=p=>p&&allowedText(p.name,128)&&
-  typeof p.argumentsJson==='string'&&p.argumentsJson.length<=16384;
+  allowedText(r.reasonCode,128)&&/^[A-Z][A-Z0-9_]*$/.test(r.reasonCode);
+const validProposal=p=>{
+  if(!p||!allowedText(p.name,128)||
+    typeof p.argumentsJson!=='string'||p.argumentsJson.length>16384)
+    return false;
+  try{
+    const args=JSON.parse(p.argumentsJson);
+    return args!==null&&typeof args==='object'&&!Array.isArray(args);
+  }catch{return false;}
+};
 /** Normalize only externally observed, independently chosen route output. */
 export function projectNeutralGenerationResult(plan,result){
   try{
@@ -121,6 +128,8 @@ export function projectNeutralGenerationResult(plan,result){
     if(result.status==='completed'){
       if(typeof result.text!=='string'||result.text.length>65536||
         !FINISH.has(result.finishReason)||
+        (result.finishReason==='tool_proposal'&&
+          (!Array.isArray(result.toolProposals)||result.toolProposals.length===0))||
         (result.toolProposals!==undefined&&
           (!Array.isArray(result.toolProposals)||result.toolProposals.length>8||
             result.toolProposals.some(p=>!validProposal(p)))))
@@ -134,7 +143,8 @@ export function projectNeutralGenerationResult(plan,result){
         toolExecutionAuthorized:false
       });
     }
-    if(!['refused','failed','unknown'].includes(result.status)||!validError(result))
+    if(!['refused','failed','unknown'].includes(result.status)||!validError(result)||
+      (result.status==='unknown')!==(result.errorCategory==='OUTCOME_UNKNOWN'))
       return safeOutput('MALFORMED_NEUTRAL_FAILURE');
     return safeOutput(result.status==='unknown'?'REMOTE_OUTCOME_UNKNOWN':
       'OBSERVED_MODEL_NONCOMPLETION',{
