@@ -11,7 +11,8 @@
     "./task-workitem-source": "./src/task-workitem-source.mjs",
     "./task-claim-events": "./src/task-claim-events.mjs",
     "./task-source-pair": "./src/task-source-pair.mjs",
-    "./task-claim-publication-witness": "./src/task-claim-publication-witness.mjs"
+    "./task-claim-publication-witness": "./src/task-claim-publication-witness.mjs",
+    "./task-claim-host-readback-port": "./src/task-claim-host-readback-port.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"
