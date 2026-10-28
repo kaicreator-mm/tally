@@ -58,8 +58,10 @@ export function classifyCommitDiff(base,head){
   if(!SHA.test(base??'')||!SHA.test(head??''))return fail('INVALID_SHA_PAIR');
   try{
     // Both SHAs are validated above; no interpolated shell and no network.
+    // Do NOT let Git rename detection hide a removed Go source behind a
+    // docs-only destination (or the reverse): include both paths.
     const raw=execFileSync('git',
-      ['diff','--name-only','-z','--diff-filter=ACDMRT',base,head],
+      ['diff','--no-renames','--name-only','-z','--diff-filter=ACDMRT',base,head],
       {maxBuffer:2*1024*1024,encoding:'utf8',timeout:10000});
     return classifyChangedFiles(raw.endsWith('\0')?
       raw.slice(0,-1).split('\0'):[raw]);
