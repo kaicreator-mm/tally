@@ -64,18 +64,17 @@ test('Host model binding, deadlines and optional unsupported Tool or schema feat
     assertDeny(out);
   }
 });
-test('provider-reported tokens and tool proposals remain data, never tool execution',()=>{
+test('provider-reported usage accompanies an ordinary observed text completion only',()=>{
   const plan=planning();
   const x=projectNeutralGenerationResult(plan,{
     contractVersion:'dh.llm.generate/1',requestId:plan.request.requestId,
     providerKind:plan.providerKind,modelId:plan.request.modelId,
-    status:'completed',text:'Need source evidence.',finishReason:'tool_proposal',
-    usage:{evidenceMode:'provider-reported',inputTokens:10,outputTokens:8},
-    toolProposals:[{name:'git.write',argumentsJson:'{"effect":"forbidden"}'}]
+    status:'completed',text:'Need source evidence.',finishReason:'stop',
+    usage:{evidenceMode:'provider-reported',inputTokens:10,outputTokens:8}
   });
   assert.equal(x.status,'OBSERVED');
   assert.equal(x.text,'Need source evidence.');
-  assert.equal(x.toolProposalCount,1);
+  assert.equal(x.toolProposalCount,0);
   assert.equal(x.toolExecutionAuthorized,false);
   assert.deepEqual(x.usage,{evidenceMode:'provider-reported',inputTokens:10,outputTokens:8});
   assertDeny(x);
@@ -199,29 +198,44 @@ test('remote outcome UNKNOWN cannot be misclassified as a terminal known failure
   assert.equal(deadline.status,'REFUSED');
   assertDeny(deadline);
 });
-test('ToolProposal arguments must be JSON object and tool_proposal finish must contain a proposal',()=>{
+test('tool_proposal completion is denied without an approved Tool Catalog',()=>{
   const p=planning();
   const common={contractVersion:'dh.llm.generate/1',
     requestId:p.request.requestId,providerKind:p.providerKind,
-    modelId:p.request.modelId,status:'completed',text:'propose',
+    modelId:p.request.modelId,status:'completed',text:'secret result',
     finishReason:'tool_proposal',usage:{evidenceMode:'unavailable'}};
-  for(const bad of [
-    {},{toolProposals:[]},
-    {toolProposals:[{name:'check',argumentsJson:'not-json'}]},
-    {toolProposals:[{name:'check',argumentsJson:'[]'}]},
-    {toolProposals:[{name:'check',argumentsJson:'null'}]},
-    {toolProposals:[{name:'check',argumentsJson:'123'}]}
+  for(const proposal of [
+    undefined,[],
+    [{name:'check',argumentsJson:'{"path":"a"}'}],
+    [{name:'effect',argumentsJson:'{"secret":"CANARY_DO_NOT_JOURNAL"}'}]
   ]){
-    const out=projectNeutralGenerationResult(p,{...common,...bad});
-    assert.equal(out.reason,'MALFORMED_NEUTRAL_COMPLETION');
+    const out=projectNeutralGenerationResult(p,{...common,toolProposals:proposal});
+    assert.equal(out.reason,'UNREQUESTED_TOOL_PROPOSAL');
+    assert.equal(out.status,'BLOCKED');
+    assert.equal(JSON.stringify(out).includes('CANARY_DO_NOT_JOURNAL'),false);
     assertDeny(out);
   }
-  const ok=projectNeutralGenerationResult(p,{...common,
-    toolProposals:[{name:'check',argumentsJson:'{"path":"a"}'}]});
-  assert.equal(ok.status,'OBSERVED');
-  assert.equal(ok.toolProposalCount,1);
-  assert.equal(ok.toolExecutionAuthorized,false);
-  assertDeny(ok);
+});
+test('nonempty unsolicited toolProposals are denied even with finishReason stop',()=>{
+  const p=planning();
+  const common={contractVersion:'dh.llm.generate/1',
+    requestId:p.request.requestId,providerKind:p.providerKind,
+    modelId:p.request.modelId,status:'completed',text:'ok',
+    finishReason:'stop',usage:{evidenceMode:'unavailable'}};
+  for(const proposal of [
+    [{name:'check',argumentsJson:'{"path":"a"}'}],
+    [{name:'check',argumentsJson:'[]'}],
+    [{name:'check',argumentsJson:'not-json'}]
+  ]){
+    const out=projectNeutralGenerationResult(p,{...common,toolProposals:proposal});
+    assert.equal(out.reason,'UNREQUESTED_TOOL_PROPOSAL');
+    assert.equal(out.toolExecutionAuthorized,undefined);
+    assertDeny(out);
+  }
+  const empty=projectNeutralGenerationResult(p,{...common,toolProposals:[]});
+  assert.equal(empty.status,'OBSERVED');
+  assert.equal(empty.toolProposalCount,0);
+  assertDeny(empty);
 });
 test('error reasonCode matches frozen transport guard grammar',()=>{
   const p=planning();
