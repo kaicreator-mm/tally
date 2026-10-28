@@ -85,3 +85,23 @@ Author submitted all four P2 refinements, NOT independent closure:
 4. If Claude pre-review or formal Reviewer finds new P0/P1, fix Product docs in PR #77 with a **new exact SHA** and repeat narrowed independent review. Keep all GitHub output durable.
 
 **Never infer a reviewer verdict from this author change ledger; `P1_CLOSED_BY_INDEPENDENT_REVIEW=UNKNOWN`.**
+
+
+## 2026-10-28 R4 independent P1/P2 repair intake (not reviewed)
+
+Independent [Product PR #152 R4](https://github.com/kaicreator-mm/tally/pull/152) at old head `3db56f09def9a869ba460b64f6c8230b2a3cc6dd` returned `BLOCK P0=0/P1=1/P2=3`. The 47-row historic-retained parity obligation P1 was **carried from R3**, not a newly introduced source regression. Author has proposed [explicit per-feature RETAIN/ADAPT/RETIRE Product Owner ledger](./TALLY_V2_LEGACY_FEATURE_DISPOSITIONS_R4.md), with safe minimal replacements, source risk, existing Task/UX owners and verification stages; actual old Go/v2 runtime truth remains UNKNOWN/NOT_RUN. This is **P1 closure candidate only** pending a distinct exact-HEAD Product reviewer, not a reviewer-approved rescope or a waiver of HIGH-security invariants.
+
+Three P2 author fixes: (1) removed the Markdown blank before V68 so V01–V82 render as one 82-row table; (2) removed the blank before the latest Output Ledger Product R4 row so its provenance is visible in the original ledger table; (3) removed residual `N=1` final-v2 statements in PRD/F15 and amended V56 so a first single Task slice and an actually concurrent **two disjoint authorized Agents** final acceptance are unambiguous. No current Product Freeze/L2/DAG/Claim authority is asserted.
+
+## 2026-10-28 Product Owner ALM full-v2 amendment (current HEAD candidate, NOT reviewed)
+
+**Do not rewrite the original R0/R1/R2 history above.** Those rows, including historic P2-C2 `max1 active Task P0`, applied to their exact earlier HEADs. The current Product Owner direction explicitly **supersedes that old scope decision for full v2**: first authentic single Task is a delivery *slice*, while complete v2 P0 requires at least two actually authorized independent active Builder Task Attempts. The adopted ADS Claim/Host/K and nonoverlapping write-set requirements remain; this does **not** authorize concurrency before native DAG admission. Previous reviews/Freeze claims do not transfer to the new HEAD.
+
+Updated authoritative **author candidate** source in this Product PR:
+- [PRD](./TALLY_V2_PRD_DOMAIN_PACKAGE_FIRST_R0.md): P0-01..P0-24, extending core to agent-native ZenTao/Jira-style requirements, design, development, independent review/defect, QA/acceptance, source-qualified RQ/release, maintenance, evidence-grounded Task Learning and next-task adoption. Explicit Tally management role vs external ADS-speaking Agents; real selected DomainHarness B/S/K/C/Host, no second Agent runtime/Kernel/SoR.
+- [Product vectors](./TALLY_V2_PRODUCT_ACCEPTANCE_VECTORS_R0.md): **82 unique contiguous V01–V82** (67 historic + 15 new ALM); V63 now validates real safe parallelism rather than old max1 P0. New vectors are `NOT_RUN`, not physical or QA successes.
+- Source-linked bilingual ALM design intake remains [Draft PR #147](https://github.com/kaicreator-mm/tally/pull/147); formal Product #76 and L2 #82 must each independently decide/adopt final accepted scope.
+
+**Legacy 47-feature parity R3 P1 still open.** This change does not dismiss original source-parity evidence. Formal reviewer must either verify a required historical behavior or obtain an explicit Product Owner `RETAIN/ADAPT/RETIRE/UNKNOWN` disposition for each genuinely contested capability, without shrinking unmodified P0 security/release evidence by assumption.
+
+**Next required gate:** independent exact-HEAD Product reviewer at latest PR #77 head, including P0-18..24, V63 and V68..82, ADS adoption currentness, source parity R3 P1, and feasibility/independence of B/S/K/C/Host. Only after Review+Freeze/owner decisions can L2 #82 and #86 authorized DAG adapt. Until then `PRODUCT_FREEZE_READY=NO / NEW_ALM_SOURCE_CLAIM=NO / MAIN_MERGE=HOLD`.

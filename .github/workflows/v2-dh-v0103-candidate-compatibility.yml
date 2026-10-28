@@ -1,4 +1,4 @@
-name: v2-dh-v0103-candidate-compatibility
+name: v2-dh-v0103-released-tag-qualification
 on:
   pull_request:
     paths:
@@ -9,7 +9,7 @@ permissions:
   issues: read
 jobs:
   candidate-v0102-runtime-compat:
-    name: DH v0.10.3 branch candidate (not released) / ${{ matrix.scope }}
+    name: DH v0.10.3 exact source tag / ${{ matrix.scope }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
     strategy:
@@ -30,18 +30,18 @@ jobs:
           ref: cee14399d9d0af4e20e34b9111861b16a465b690
           path: dh-stable
           persist-credentials: false
-      - name: Pinned IN-PROGRESS v0.10.3 branch candidate, not a release
+      - name: Pinned published v0.10.3 source tag SHA
         uses: actions/checkout@v4
         with:
           repository: kaicreator-mm/domain-harness
-          ref: e86f2c9450b962812fc03e1494aaad402490258e
+          ref: 061376f4a023070f215f9feffad5c24d96d503cb
           path: domain-harness
           persist-credentials: false
       - name: Node 24
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Exact source identity and honest ABI-equality impact gate
+      - name: Released exact SHA, stable K/SQLite ABI and new provider contract gate
         shell: bash
         env:
           TALLY: ${{ github.workspace }}/tally
@@ -50,14 +50,21 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$(git -C "$TALLY" rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
-          test "$(git -C "$DH" rev-parse HEAD)" = e86f2c9450b962812fc03e1494aaad402490258e
+          test "$(git -C "$DH" rev-parse HEAD)" = 061376f4a023070f215f9feffad5c24d96d503cb
           test "$(git -C "$DH_STABLE" rev-parse HEAD)" = cee14399d9d0af4e20e34b9111861b16a465b690
-          for path in packages/contracts packages/microkernel packages/host-node tooling/build domain-packages/kernel/basic domain-packages/standard/basic; do
+          # The released tag changes Contracts LLM and Host Provider surfaces.
+          # Compare only the unchanged, load-bearing Tally-selected K/SQLite/BUILD
+          # seams; new public Provider behavior is exercised separately below.
+          for path in packages/microkernel tooling/build domain-packages/kernel/basic domain-packages/standard/basic packages/host-node/src/sqlite-cas.ts packages/host-node/src/sqlite-adapter.ts; do
             if ! git diff --no-index --quiet "$DH_STABLE/$path" "$DH/$path"; then
-              echo "CANDIDATE_PUBLIC_RUNTIME_DIFF_REQUIRES_NEW_RQ_AND_IMPACT_ASSESSMENT:$path"
+              echo "DH_V0103_SELECTED_RUNTIME_ABI_CHANGED_IMPACT_REVIEW_REQUIRED:$path"
               exit 14
             fi
           done
+          test -f "$DH/packages/contracts/src/llm-generate-v1.ts"
+          test -f "$DH/packages/host-node/src/verified-provider-bundle.ts"
+          test -f "$DH/tests/hosts/node/v0103-verified-provider-bundle.test.ts"
+          test -f "$DH/tests/contracts/v0103-llm-generate-v1.test.ts"
           node --input-type=module -e '
             import {readFileSync} from "node:fs";
             const root=process.env.DH;
@@ -67,9 +74,10 @@ jobs:
               console.log(folder+"="+p.version);
             }
           '
-          echo DH_V0103_BRANCH_CANDIDATE_RUNTIME_IDENTICAL_TO_RELEASED_V0102=PASS
-          echo DH_V0103_RELEASE_QUALIFIED=NO
-      - name: Exercise Tally's EXISTING real DomainHarness public BUILD/K/Host consumer
+          echo DH_V0103_RELEASE_SOURCE_PUBLIC_RUNTIME_SEAMS_COMPARED=PASS
+          echo DH_V0103_GIT_TAG_SOURCE_VERIFIED=YES
+          echo DH_V0103_PUBLIC_NPM_0103_MANIFEST=NOT_CLAIMED
+      - name: Exercise actual Tally consumer and released DomainHarness provider contracts
         shell: bash
         env:
           TALLY: ${{ github.workspace }}/tally
@@ -83,11 +91,9 @@ jobs:
           TEST_SCOPE: ${{ matrix.scope }}
         run: |
           set -Eeuo pipefail
-          # Stable fixtures rightly hard-pin released v0.10.2; do NOT edit
-          # those scripts. Only after exact source/ABI equality above, make a
-          # transient per-job COPY with one SHA guard replaced by the pinned
-          # (unreleased) candidate SHA. Execute unchanged fixture behaviors
-          # against the candidate's actual packed source, never fake a tag.
+          # Prior v0.10.2 receipts stay immutable. A transient copy replaces
+          # only the old source SHA guard with this exact Git-tagged SHA.
+          # This is NOT an npm package version rewrite or Task authorization.
           case "$TEST_SCOPE" in
             selected-native-github-k-sqlite)
               original="$TALLY/experiments/v2/selected-business-build/run-clean.sh"
@@ -98,7 +104,7 @@ jobs:
             *) exit 12;;
           esac
           stable='cee14399d9d0af4e20e34b9111861b16a465b690'
-          candidate='e86f2c9450b962812fc03e1494aaad402490258e'
+          candidate='061376f4a023070f215f9feffad5c24d96d503cb'
           test "$(grep -o "$stable" "$original" | wc -l)" -eq 1
           scoped="$RUNNER_TEMP/tally-dh-candidate-$TEST_SCOPE.sh"
           sed "s/$stable/$candidate/g" "$original" > "$scoped"
@@ -106,8 +112,15 @@ jobs:
           test "$(grep -c "$stable" "$scoped" || true)" -eq 0
           chmod +x "$scoped"
           bash "$scoped"
+          if [[ "$TEST_SCOPE" == "selected-native-github-k-sqlite" ]]; then
+            # New v0.10.3-specific contract/integrity negative tests run
+            # from the actual installed and freshly built SDK source.
+            cd "$DH"
+            node --import tsx --test tests/contracts/v0103-llm-generate-v1.test.ts tests/hosts/node/v0103-verified-provider-bundle.test.ts
+            echo DH_V0103_PROVIDER_INTEGRITY_CONTRACT_NEGATIVES=PASS
+          fi
           case "$TEST_SCOPE" in
-            selected-native-github-k-sqlite) echo TALLY_V2_DH_V0103_CANDIDATE_GITHUB_K_SQLITE=PASS;;
-            host-physical-cas-wal) echo TALLY_V2_DH_V0103_CANDIDATE_HOST_CAS_WAL=PASS;;
+            selected-native-github-k-sqlite) echo TALLY_V2_DH_V0103_TAG_GITHUB_K_SQLITE=PASS;;
+            host-physical-cas-wal) echo TALLY_V2_DH_V0103_TAG_HOST_CAS_WAL=PASS;;
           esac
-          echo TALLY_V2_DH_V0103_CANDIDATE_ONLY_NOT_RELEASE_AUTHORITY=PASS
+          echo TALLY_V2_DH_V0103_TAG_CONSUMER_ONLY_NOT_TASK_CLAIM=PASS

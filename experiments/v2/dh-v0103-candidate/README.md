@@ -1,26 +1,31 @@
-# Tally v2 × DomainHarness v0.10.3 — candidate compatibility (NOT production upgrade)
+# Tally v2 × DomainHarness v0.10.3 — exact tagged-source qualification
 
-**Status as checked 2026-10-28**: The DomainHarness **version branch** `version/v0.10.3` exists at exact `e86f2c9450b962812fc03e1494aaad402490258e`, but a GitHub `v0.10.3` tag / published Release does **not** yet exist. This revision is a planning / governance + documentation candidate. At this SHA, the public `packages/contracts`, `packages/microkernel`, `packages/host-node`, `tooling/build`, and selected basic Domain Package *implementation/manifest trees* are the same bytes as released `v0.10.2@cee14399d9d0af4e20e34b9111861b16a465b690`. Public Host/Contracts/Microkernel `package.json` still report `0.10.2-rc.0`. **This is not an installed v0.10.3 ABI** and proves nothing about unfinished 0.10.3 features.
+## Source and package identity (2026-10-29)
 
-## Pins and separate release gates
+- Upstream Git tag [`v0.10.3`](https://github.com/kaicreator-mm/domain-harness/tree/v0.10.3) **exists** and points to exact **`061376f4a023070f215f9feffad5c24d96d503cb`**, which also equals upstream `main` at source verification. This closes the previous missing-tag gate; current upstream RQ [#1419](https://github.com/kaicreator-mm/domain-harness/issues/1419) is closed. Tag identity is about **source**, not a GitHub Release object or npm package version.
+- Public Contracts/Microkernel/Host Node `package.json` still declare **`0.10.2-rc.0`**, despite the new v0.10.3 source tag. Use **one immutable Git checkout** and `npm pack` from its real source/exports; do not install an invented `@kaicreator/*@0.10.3` package, mix versions or silently rewrite manifests. Node engine `>=24.0.0`; this fixed Node24 verification job is only one tested tuple.
+- `version/v2` baseline is `0cbe2a55cf2ebf8472c82fbae0de31e7b6e165f6` at this task intake. Historical v0.10.2 smoke evidence remains valid *for its original tested SHA only*.
 
-| Purpose | Source of truth | Qualified status |
-| --- | --- | --- |
-| Tally current version-stage runtime | `kaicreator-mm/domain-harness@cee14399d9d0af4e20e34b9111861b16a465b690` | Released v0.10.2, R01 CONDITIONAL; already used by current Tally BUILD/Host CI |
-| Candidate compatibility probe only | `kaicreator-mm/domain-harness@e86f2c9450b962812fc03e1494aaad402490258e` | `version/v0.10.3` branch snapshot, **not published** |
-| Actual future upgrade | TBD real immutable `v0.10.3` release tag, package manifest revision and qualified Release RQ | BLOCKED on upstream implementation/qualification |
+## Actual ABI impact and scoped tests
 
-The new `.github/workflows/v2-dh-v0103-candidate-compatibility.yml` is purposely **non-authoritative for Release**. Its checkout and source-tree equality guard prevent claiming the in-progress candidate is a new runtime. Node24 then runs the existing **real Tally public BUILD → selected K/B/Native GitHub C → SQLite** and **physical Host SQLite CAS / WAL** suites from the Tally checkout against the candidate exact SHA. The stable experiment scripts intentionally hard-pin `cee14399...` and therefore reject the alternate SHA with `DH_SHA_MISMATCH`. The candidate-only workflow must first confirm exact upstream refs and **byte-identical public ABI sources**, then use one temporary per-CI-job **copy** of each experiment script with exactly one checked SHA literal changed from the stable to the pinned candidate. The stable scripts and all old test receipts remain **unchanged**; no script ever accepts a floating ref or skips SHA validation. Historical first CI run [#40555830485](https://github.com/kaicreator-mm/tally/actions/runs/40555830485) failed only on these exact-script guards, not on Host CAS or selected Kernel execution. Existing stable v0.10.2 jobs are unchanged and remain the rollback baseline. No new K, no proprietary Host API or fake public npm 0.10.3 version.
+- Compared released v0.10.2 `cee14399d9d0af4e20e34b9111861b16a465b690` vs tagged v0.10.3: 22 changed public SDK source/dist/manifest paths, principally new Contracts neutral LLM generate types and Host Provider integrity/client/deployment; **Microkernel, selected Kernel/Standard Domain Packages, public BUILD, SQLite CAS core** remain unchanged. This is **not** the old candidate runtime-equality claim.
+- The existing GitHub Actions workflow consumes the exact tagged SDK source with two independent Node24 profiles: selected native GitHub C → B/BUILD → K → SQLite, and real public Host SQLite CAS/WAL. It source-checks the unchanged K/BUILD/SQLite seams; verifies the new LLM/provider files exist and runs the upstream v0.10.3 contract and verified-provider-bundle negative tests. One temporary script copy replaces only the already-existing old SHA guard. Existing v0.10.2 script/source/receipts are not changed.
+- Local Windows evidence from [Tally #125](https://github.com/kaicreator-mm/tally/issues/125#issuecomment-6477907842) independently exercised earlier v0.10.3 candidate (`21aba1aa…`), real Host CAS PASS, WAL 15×4 PASS×2, read-only canonical sandbox Task PASS; **not a run on the tagged SHA**, not proof of native accepted Claim or K/Agent effect.
+- Ubuntu/WSL optional simultaneous first-WAL-open still has a real SQLITE_BUSY negative in [DomainHarness #1452](https://github.com/kaicreator-mm/domain-harness/issues/1452); does not undo the one-single-writer CAS PASS, and cannot be relabeled fixed by different Windows run.
 
-### Release adoption trigger / actual migration after upstream RQ
+## Gates
 
-1. Confirm exact immutable `v0.10.3` tag and independent DomainHarness [version RQ #1419](https://github.com/kaicreator-mm/domain-harness/issues/1419) / [shared integration #1418](https://github.com/kaicreator-mm/domain-harness/issues/1418) / [Provider integrity #1413](https://github.com/kaicreator-mm/domain-harness/issues/1413) facts. Do not infer release from a version branch or an Issue CLOSED alone.
-2. Replace candidate SHA in this isolated verification with the **actually published** tag target; verify package export versions, exact supported B/C/Host/BUILD APIs and lockfile/integrity. The present **ABI-equality assertion must be rewritten as an impact assessment** when actual v0.10.3 runtime bytes change (otherwise it correctly fails).
-3. Rerun packed clean-consumer Node24 BUILD/selected Domain App, native GitHub C → K → SQLite restart/replay, **real selected Host CAS**, all existing Tally report/Claim negative suites and legitimate execution authority gates. Repeat the Tally tampering negatives (Provider swap; Provider + matching mutable embedded digest; stale trusted App/subjectDigest); exercise new opt-in verified-executable profile only if actually exported in the released SDK. Preserve Tally C output allowlist and deny untrusted Provider exceptions. Real positive Task CAS writer/accepted event/Kernel admission is separately governed in [Tally #125](https://github.com/kaicreator-mm/tally/issues/125), **not solved by a DomainHarness version bump**.
-4. Independent exact-SHA source/compatibility review under ADS v4.18, then guarded `version/v2` integration; main remains HOLD pending Tally Product #77, L2 #82, ADS #85, RQ. Do not mass-replace immutable historical `0.10.2` references or v0.10.2 CI evidence with claims of newly tested 0.10.3.
+1. Real current SHA GitHub Actions check for this PR must finish SUCCESS, or an equivalent independently qualified installed-package CI/Host run must be recorded with exact input SHA and literal EXIT. Do not fabricate log counts from provider statuses.
+2. Independent ADS v4.18 #1241 exact-head R1 review: exact source tag, scope of changed SDK APIs, selected K/SQLite ABI stability, correct source-only provenance, legitimate Provider-integrity denial coverage, no unauthorized GitHub/Agent writes. Merge **version/v2 only** after PASS and applicable CI. A successful SDK tag or this suite does not authorize a real GitHub Task Claim or Tally main release.
+3. Real Owner-controlled Host source admission + actual ADS native Claim + selected Kernel Agent Task permission remain separate Tally [#125](https://github.com/kaicreator-mm/tally/issues/125) / [#62](https://github.com/kaicreator-mm/tally/issues/62) P0 work, not granted by a package pin.
 
-References: [Tally v2 controller #86](https://github.com/kaicreator-mm/tally/issues/86), [v0.10.3 intake #1392](https://github.com/kaicreator-mm/domain-harness/issues/1392), [Provider integrity #1393](https://github.com/kaicreator-mm/domain-harness/issues/1393).
-
-**Test evidence (prior authored HEAD):** The first run [#40555830485](https://github.com/kaicreator-mm/tally/actions/runs/40555830485) correctly failed at the stable SHA guards. After transient-copy correction, **both real Node24 jobs SUCCESS** [#40556505875](https://github.com/kaicreator-mm/tally/actions/runs/40556505875): candidate public ABI/manifest identity PASS, real selected GitHub C→BUILD/K→SQLite `T02B_BUILD_EXIT=0` and `T04B_REAL_GITHUB_C_KERNEL_SQLITE=PASS`, and physical Host SQLite CAS/WAL `WCX_EXPERIMENT_EXIT=0`. The latter verifies **v0.10.2-equivalent public bits at an in-progress v0.10.3 planning SHA**, not newly implemented v0.10.3 Provider integrity. This documentation-only update needs its own authored HEAD CI receipt or an independently recorded no-impact decision.
-
-**Gate flags:** `UPSTREAM_V0103_RELEASED=NO` · `V0103_REAL_RUNTIME_ABI=NOT_AVAILABLE` · `CANDIDATE_V0102_COMPAT_TEST=PASS_PREVIOUS_SHA_PENDING_CURRENT_RERUN` · `TALLY_VERSION_UPGRADE=HOLD` · `MAIN_INTEGRATION_AUTHORIZED=NO`.
+```ini
+DOMAINHARNESS_V0103_TAG=061376f4a023070f215f9feffad5c24d96d503cb
+V0103_GIT_SOURCE_TAG=YES
+PUBLIC_NPM_PACKAGE_SEMVER_0103=NOT_DECLARED
+RELEASED_SDK_SOURCE_ABI_IMPACT=CHANGED_CONTRACTS_AND_HOST_PROVIDER
+SELECTED_K_SQLITE_BUILD_SEAMS=SOURCE_UNCHANGED
+TALLY_VERSION_UPGRADE=PR_CI_AND_INDEPENDENT_REVIEW_REQUIRED
+REAL_ACCEPTED_TASK_CLAIM=NOT_RUN
+MAIN=HOLD
+```

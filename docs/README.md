@@ -14,7 +14,7 @@ Current qualification: **NOT RELEASE QUALIFIED**
 7. `architecture/CURRENT_CODEBASE.md`
 8. `implementation/CURRENT_IMPLEMENTATION_STATUS.md`
 
-Project-wide development rules are pinned through `.dev-standard/VERSION` and `.dev-standard/PROJECT_OVERRIDES.md`. For v1.5.0, validation is explicit Local / Build Host execution; GitHub Actions and all CI systems are prohibited.
+**Historical v1.5.0** source rules used ADS 1.2.1 and explicit Local/Build Host verification, with CI prohibited for that historical line only. **Prospective v2** adopts native TypeScript DomainHarness Packages and uses an exact ADS source pin via a separate version-stage PR; the candidate is **ADS 4.18.0@2c395c55569fe2edf3f4135f12d3d069e526d0b7**, independently RQ READY as a *source standard*, but **not effective in Tally** until project-local compatibility, currentness, verification and approved merge. Source/Host physical tests remain separately required; do not inherit v1.5 no-CI policy for v2.
 
 ## Current
 
