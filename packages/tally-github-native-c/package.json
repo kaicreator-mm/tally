@@ -13,7 +13,8 @@
     "./task-source-pair": "./src/task-source-pair.mjs",
     "./task-claim-publication-witness": "./src/task-claim-publication-witness.mjs",
     "./task-claim-host-preflight": "./src/task-claim-host-preflight.mjs",
-    "./task-claim-github-publisher": "./src/task-claim-github-publisher.mjs"
+    "./task-claim-github-publisher": "./src/task-claim-github-publisher.mjs",
+    "./task-claim-host-readback-port": "./src/task-claim-host-readback-port.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

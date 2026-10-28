@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 import {Octokit} from '@octokit/rest';
 import {readClaimEventCandidatesFromClient} from './task-claim-events.mjs';
 const NAME=/^[A-Za-z0-9_.-]+$/;
+const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
 const SHA=/^[a-f0-9]{40}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const ROLES=new Set(['builder','reviewer','validator']);
@@ -27,7 +28,7 @@ export async function readClaimPublicationWitnessFromClient({
   dispatchId,actorRole,operatorKind,operatorId,protectedClaimKey,
   claimGeneration,writerLogin,limit=1000
 }={}){
-  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!NAME.test(writerLogin??'')||
+  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!LOGIN.test(writerLogin??'')||
      !Number.isSafeInteger(issueNumber)||issueNumber<1||
      !Number.isSafeInteger(commentId)||commentId<1||
      !SHA.test(expectedSourceSha??'')||!ID.test(dispatchId??'')||
