@@ -9,7 +9,8 @@
   "exports": {
     ".": "./src/read-only.mjs",
     "./task-workitem-source": "./src/task-workitem-source.mjs",
-    "./task-claim-events": "./src/task-claim-events.mjs"
+    "./task-claim-events": "./src/task-claim-events.mjs",
+    "./task-source-pair": "./src/task-source-pair.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"
