@@ -136,7 +136,7 @@ try {
   }catch(e){blocked=typeof e.code==='string';}
   assert.equal(blocked,true);
   assert.deepEqual((await facade.query(selector)).snapshot,before);
-  console.log(JSON.stringify({provider:'github-native-readonly',via:'real-sealed-k-b-c',
+  console.log(JSON.stringify({provider:pairMode?'github-native-task-source-pair':'github-native-readonly',via:'real-sealed-k-b-c',
     persistedHost:'sqlite',reopened:true,sourceSha,observedComments:effect.sourceObservation.observationCount,
     reportReason:effect.sourceObservation.reason,
     replayWithoutToken:replay.idempotentReplay,docCount:recordsBefore.length,
