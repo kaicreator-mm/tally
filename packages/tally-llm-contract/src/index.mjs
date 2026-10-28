@@ -99,15 +99,6 @@ const validUsage=u=>u&&typeof u==='object'&&!Array.isArray(u)&&
     safeCount(u.outputTokens,Number.MAX_SAFE_INTEGER));
 const validError=r=>ERRORS.has(r.errorCategory)&&
   allowedText(r.reasonCode,128)&&/^[A-Z][A-Z0-9_]*$/.test(r.reasonCode);
-const validProposal=p=>{
-  if(!p||!allowedText(p.name,128)||
-    typeof p.argumentsJson!=='string'||p.argumentsJson.length>16384)
-    return false;
-  try{
-    const args=JSON.parse(p.argumentsJson);
-    return args!==null&&typeof args==='object'&&!Array.isArray(args);
-  }catch{return false;}
-};
 /** Normalize only externally observed, independently chosen route output. */
 export function projectNeutralGenerationResult(plan,result){
   try{
@@ -126,20 +117,21 @@ export function projectNeutralGenerationResult(plan,result){
       Object.freeze({evidenceMode:result.usage.evidenceMode,
         inputTokens:result.usage.inputTokens,outputTokens:result.usage.outputTokens});
     if(result.status==='completed'){
+      // This B adapter never admits a toolCatalogRef. A provider proposal is
+      // therefore unrequested, even if its JSON arguments happen to be valid.
+      // Do not turn it into a successful LLM completion or an executable Tool.
+      if(result.finishReason==='tool_proposal'||
+        (Array.isArray(result.toolProposals)&&result.toolProposals.length>0))
+        return safeOutput('UNREQUESTED_TOOL_PROPOSAL');
       if(typeof result.text!=='string'||result.text.length>65536||
         !FINISH.has(result.finishReason)||
-        (result.finishReason==='tool_proposal'&&
-          (!Array.isArray(result.toolProposals)||result.toolProposals.length===0))||
-        (result.toolProposals!==undefined&&
-          (!Array.isArray(result.toolProposals)||result.toolProposals.length>8||
-            result.toolProposals.some(p=>!validProposal(p)))))
+        (result.toolProposals!==undefined&&!Array.isArray(result.toolProposals)))
         return safeOutput('MALFORMED_NEUTRAL_COMPLETION');
-      // Proposals are not Tools. The caller must obtain a distinct K Permit.
       return safeOutput('OBSERVED_MODEL_COMPLETION',{
         status:'OBSERVED',providerKind:plan.providerKind,
         modelId:plan.request.modelId,text:result.text,
         finishReason:result.finishReason,usage,
-        toolProposalCount:result.toolProposals?.length??0,
+        toolProposalCount:0,
         toolExecutionAuthorized:false
       });
     }
