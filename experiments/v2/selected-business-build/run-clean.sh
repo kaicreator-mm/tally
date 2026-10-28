@@ -24,6 +24,9 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   # Prove sealed C drops raw Provider errors/credentials even if the trusted
   # Host pre-load integrity gate were bypassed; tests use synthetic secrets.
   node "$TALLY/experiments/v2/selected-business-build/test-shim-output-boundary.mjs"
+  if [[ "${T06F_NATIVE_PAIR:-0}" == "1" ]]; then
+    node "$TALLY/experiments/v2/selected-business-build/test-native-pair-output-boundary.mjs"
+  fi
   [[ -n "$native_token" ]] || { echo T04B_NATIVE_HOST_TOKEN_REQUIRED; exit 3; }
   [[ "${TALLY_NATIVE_EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T04B_SOURCE_PIN_REQUIRED; exit 3; }
 fi
