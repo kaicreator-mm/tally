@@ -13,9 +13,13 @@ import { Octokit } from '@octokit/rest';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const SHA=/^[a-f0-9]{40}$/;
-const STATES=new Set(['state:proposed','state:ready','state:claimed',
-  'state:implementing','state:review','state:changes-requested',
-  'state:validated','state:done','state:blocked','state:cancelled']);
+// ADS v4.18 GITHUB_WORK_ITEM_CONTRACT_STANDARD §5 exact canonical vocabulary.
+// Recognition is descriptive only; neither READY nor CLAIMED establishes CAS.
+const STATES=new Set(['state:planned','state:ready','state:claimed',
+  'state:implementing','state:review-ready','state:reviewing',
+  'state:validation-needed','state:validating',
+  'state:changes-requested','state:merge-ready',
+  'state:blocked','state:done','state:superseded','state:cancelled']);
 const TYPES=new Set(['type:task','type:planning']);
 const CAP=1000;
 const fail=(reason,options={})=>Object.freeze({

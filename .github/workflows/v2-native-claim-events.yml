@@ -1,0 +1,35 @@
+name: v2-native-claim-events
+on:
+  pull_request:
+    paths:
+      - 'packages/tally-github-native-c/**'
+      - '.github/workflows/v2-native-claim-events.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  native-ads-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact authored PR source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Set Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install existing native provider + pinned Ajv
+        run: |
+          npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+          npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - name: Source-conformant event validation, native reader and live no-CAS denial
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TALLY_NATIVE_EXPECTED_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node --test packages/tally-github-native-c/test/*.test.mjs
+          node packages/tally-github-native-c/test/task-claim-events-live.mjs
+          echo T06B_ADS_V418_NATIVE_CLAIM_EVENT_OBSERVATION=PASS

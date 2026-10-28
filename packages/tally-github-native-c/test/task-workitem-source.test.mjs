@@ -99,3 +99,22 @@ test('403, 404, incomplete iterator, invalid query never false ready and never l
     assert.equal(x.reason,'INVALID_NATIVE_QUERY');
   }
 });
+
+test('ADS v4.18 canonical state vocabulary is recognized but never authorizes Claim',async()=>{
+  const legal=['planned','ready','claimed','implementing','review-ready','reviewing',
+    'validation-needed','validating','changes-requested','merge-ready',
+    'blocked','done','superseded','cancelled'];
+  for(const state of legal){
+    const {octokit}=client({labels:['type:task','state:'+state]});
+    const observation=await readWorkItemSourceFromClient({...base,octokit});
+    assert.equal(observation.workflowState,'state:'+state);
+    assert.equal(observation.claimStatus,'NOT_VERIFIED');
+    assert.equal(observation.admitted,false);
+    assert.equal(observation.taskPass,false);
+  }
+  for(const invalid of ['proposed','review','validated']){
+    const {octokit}=client({labels:['type:task','state:'+invalid]});
+    const observation=await readWorkItemSourceFromClient({...base,octokit});
+    assert.equal(observation.reason,'CANONICAL_WORK_ITEM_STATE_UNVERIFIED');
+  }
+});
