@@ -6,6 +6,9 @@ on:
       - 'AGENTS.md'
       - '.dev-standard/**'
       - 'docs/standards/TALLY_V2_ADS_V418_ADOPTION_EVIDENCE.md'
+      - 'docs/product/v2/**'
+      - 'docs/architecture/v2/**'
+      - 'docs/implementation/v2/**'
       - '.github/workflows/v2-ads-pinned-project-verifier.yml'
 permissions:
   contents: read
