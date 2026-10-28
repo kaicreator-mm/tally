@@ -78,6 +78,8 @@ PRD success requires an actual Node24 clean installed **external producer → Pa
 
 See the reviewed-source-intake bilingual [ALM architecture/product design in PR #147](https://github.com/kaicreator-mm/tally/pull/147). This addendum is **not** a new DomainHarness SDK contract. Tag v0.10.2 public runtime remains current; v0.10.3 frozen Contract-first adapters must re-qualify against final packed release. Product/L2/ADS acceptance remains explicit.
 
+**47-feature Product Owner migration decisions** are now proposed individually, with severity/owner/P0 observable vector/verification stage, at [R4 legacy dispositions](./TALLY_V2_LEGACY_FEATURE_DISPOSITIONS_R4.md). This is the bounded scope closure candidate for independent R4 carried P1, not a claim that historic production reachability or present v2 physical tests have passed. Retire only the superseded legacy engines, not required User ALM/ADS/Host/security behavior.
+
 ### Domain-specific behavior to retain
 
 - RequirementsBaseline, ProjectPlan/PlanningRevision, ArchitectureRevision and explicit provenance (audit F01–F05).
