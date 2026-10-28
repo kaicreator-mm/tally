@@ -15,8 +15,20 @@ const outcome=(stepId,event,selectedOptionIds=[],evidenceRefs=[])=>({
   messageType:'step.outcome',contractVersion:VERSION,journeyId:initial().journeyId,
   stepId,event,selectedOptionIds,evidenceRefs
 });
+// This is a source-only *test fixture* for an issued-step checkpoint.
+ // The real selected Host must persist and verify the issuance independently.
+const issuedGoal=nextProjectIntakeStep(initial()).decision.step;
+const issuedScope=nextProjectIntakeStep({
+  ...initial(),previousOutcome:outcome('goal','USER_SUBMIT',['new-feature'])
+},{issuedStep:issuedGoal}).decision.step;
+const issuedReview=nextProjectIntakeStep({
+  ...initial(),previousOutcome:outcome('scope','USER_SUBMIT',['bounded'],['github:issue:148'])
+},{issuedStep:issuedScope,sourceEvidenceRefs:['github:issue:148']}).decision.step;
+const issuedFor=id=>id==='goal'?issuedGoal:
+  id==='scope'?issuedScope:id==='review'?issuedReview:null;
 const progress=(previousOutcome,opts={})=>
-  nextProjectIntakeStep({...initial(),previousOutcome},opts);
+  nextProjectIntakeStep({...initial(),previousOutcome},
+    {issuedStep:issuedFor(previousOutcome?.stepId),...opts});
 const assertNoAuthority=result=>{
   assert.equal(result.authorized,false);
   assert.equal(result.admitted,false);
@@ -56,12 +68,12 @@ test('LLM advisory can match an approved template but cannot alter allowed steps
     suggestedTemplateRef:templateRefs[1],
     reasonCode:'SCOPED_SUGGESTION',evidenceRefs:[]};
   const request={...initial(),previousOutcome:outcome('goal','USER_SUBMIT',['bug-fix'])};
-  const correct=nextProjectIntakeStep(request,{advisory:adv});
+  const correct=nextProjectIntakeStep(request,{advisory:adv,issuedStep:issuedGoal});
   assert.equal(correct.decision.step.stepId,'scope');
   assert.equal(correct.advisoryMatched,true);
   assert.equal(correct.advisoryUsedForAuthority,false);
   assertNoAuthority(correct);
-  const wrong=nextProjectIntakeStep(request,{advisory:{
+  const wrong=nextProjectIntakeStep(request,{issuedStep:issuedGoal,advisory:{
     ...adv,suggestedTemplateRef:templateRefs[2]}});
   assert.equal(wrong.decision.step.stepId,'scope');
   assert.equal(wrong.advisoryMatched,false);
@@ -129,4 +141,39 @@ test('malformed request and hostile getters fail closed without secret text',()=
   const nullResult=nextProjectIntakeStep(null);
   assert.equal(nullResult.status,'BLOCKED');
   assertNoAuthority(nullResult);
+});
+
+test('direct review submit cannot bypass an unissued Step checkpoint',()=>{
+  const direct={...initial(),previousOutcome:outcome('review','USER_SUBMIT')};
+  const missing=nextProjectIntakeStep(direct);
+  assert.equal(missing.status,'BLOCKED');
+  assert.equal(missing.reason,'ISSUED_STEP_CHECKPOINT_UNVERIFIED');
+  assertNoAuthority(missing);
+  const unrelated=nextProjectIntakeStep(direct,{issuedStep:issuedScope});
+  assert.equal(unrelated.reason,'ISSUED_STEP_CHECKPOINT_UNVERIFIED');
+  assertNoAuthority(unrelated);
+  const valid=nextProjectIntakeStep(direct,{issuedStep:issuedReview});
+  assert.equal(valid.reason,'INDEPENDENT_PRODUCT_REVIEW_REQUIRED');
+  assert.equal(valid.status,'WAIT');
+  assertNoAuthority(valid);
+});
+test('stale case/template and modified issued Step evidence cannot advance',()=>{
+  const prev=outcome('scope','USER_SUBMIT',['bounded'],['github:issue:148']);
+  const sourceEvidenceRefs=['github:issue:148'];
+  for(const issuedStep of [
+    {...issuedScope,caseRef:{snapshotId:caseRef.snapshotId,digest:'b'.repeat(64)}},
+    {...issuedScope,templateRef:{...issuedScope.templateRef,digest:'f'.repeat(64)}},
+    {...issuedScope,journeyId:'another-project'},
+    {...issuedScope,fields:[...issuedScope.fields,{id:'evil',type:'TEXT',labelKey:'x',required:false}]},
+    {...issuedScope,allowedEvents:['USER_SUBMIT','PAUSE']},
+    issuedReview,
+  ]){
+    const x=progress(prev,{issuedStep,sourceEvidenceRefs});
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'ISSUED_STEP_CHECKPOINT_UNVERIFIED');
+    assertNoAuthority(x);
+  }
+  const missing=progress(prev,{issuedStep:null,sourceEvidenceRefs});
+  assert.equal(missing.reason,'ISSUED_STEP_CHECKPOINT_UNVERIFIED');
+  assertNoAuthority(missing);
 });
