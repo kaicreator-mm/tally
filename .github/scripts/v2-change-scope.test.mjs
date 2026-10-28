@@ -1,5 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {mkdtempSync,mkdirSync,writeFileSync,renameSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,dirname} from 'node:path';
 import {classifyChangedFiles,classifyCommitDiff} from './v2-change-scope.mjs';
 const safe=x=>{
   assert.equal(x.existingProviderFailureWaived,false);
@@ -67,3 +71,49 @@ test('ambiguous files, empty diff, duplicates and path traversal fail closed',()
     assert.equal(x.classification,'UNKNOWN_SCOPE');safe(x);
   }
 });
+
+/**
+ * Real Git regression: with ordinary rename detection the removed Go path
+ * disappears from --name-only (100% similarity). The classifier must inspect
+ * both endpoints by disabling renames rather than trusting the new extension.
+ */
+for(const [oldPath,newPath] of [
+  ['internal/example.go','docs/example.md'],
+  ['docs/example.md','internal/example.go']
+]){
+  test('real Git rename '+oldPath+' -> '+newPath+' must not hide Go impact',()=>{
+    const root=mkdtempSync(join(tmpdir(),'tally-v2-scope-rename-'));
+    const prev=process.cwd();
+    const git=(...args)=>execFileSync('git',['-C',root,...args],
+      {encoding:'utf8',timeout:10000}).trim();
+    try{
+      git('init','-q');
+      git('config','user.name','Tally CI fixture');
+      git('config','user.email','tally-fixture@example.invalid');
+      mkdirSync(join(root,dirname(oldPath)),{recursive:true});
+      writeFileSync(join(root,oldPath),
+        'package fixture\n// deliberately byte-identical content across rename\n');
+      git('add','.');
+      git('commit','-q','-m','baseline');
+      const base=git('rev-parse','HEAD');
+      mkdirSync(join(root,dirname(newPath)),{recursive:true});
+      renameSync(join(root,oldPath),join(root,newPath));
+      git('add','-A');
+      git('commit','-q','-m','move tracked path');
+      const head=git('rev-parse','HEAD');
+      const defaultPaths=git('diff','--name-only',base,head).split('\n');
+      assert.deepEqual(defaultPaths,[newPath],
+        'fixture must reproduce Git rename endpoint elision');
+      process.chdir(root);
+      const result=classifyCommitDiff(base,head);
+      assert.equal(result.sourceQualified,true);
+      assert.equal(result.goSourceAffected,true);
+      assert.equal(result.docsOnly,false);
+      assert.equal(result.classification,'GO_OR_MIXED_CHANGE');
+      safe(result);
+    }finally{
+      process.chdir(prev);
+      rmSync(root,{recursive:true,force:true});
+    }
+  });
+}
