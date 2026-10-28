@@ -90,10 +90,13 @@ const uniqueBoundedRefs=x=>Array.isArray(x)&&x.length<=24&&
   new Set(x).size===x.length;
 /**
  * Produce one next UI message after authentic Host-side case/evidence checks.
- * sourceEvidenceRefs MUST be provided by a trusted source adapter, NEVER
- * extracted from a user outcome or model prose; still grants no authority.
+ * sourceEvidenceRefs and issuedStep MUST be obtained from a trusted Host
+ * adapter, never from the submitted outcome or LLM prose. The pure function
+ * checks consistency, not provenance or durability; no authority is granted.
  */
-export function nextProjectIntakeStep(request,{sourceEvidenceRefs=[],advisory=null}={}){
+export function nextProjectIntakeStep(request,{
+  sourceEvidenceRefs=[],issuedStep=null,advisory=null
+}={}){
   try{
     if(!wire(request)||request.messageType!=='next-step.request'||
       !equals(request.catalogRef,catalogRef)||
@@ -109,7 +112,24 @@ export function nextProjectIntakeStep(request,{sourceEvidenceRefs=[],advisory=nu
         !wire(prev)||prev.messageType!=='step.outcome')
         return blocked(request,'OUTCOME_SOURCE_UNVERIFIED');
       const t=outcomeStep(prev);
-      if(!t||!t.material.allowedEvents.includes(prev.event)||
+      // A canonical user-supplied StepOutcome is never proof that this step
+      // was actually issued. A selected Host must supply an independently
+      // sourced active issued StepSpec after durable checkpoint/currentness.
+      // This data-only helper can check identity, NOT authenticate the Host.
+      if(!t||!issuedStep||!wire(issuedStep)||
+        issuedStep.messageType!=='step.spec'||
+        issuedStep.journeyId!==request.journeyId||
+        !matchingCase(issuedStep.caseRef,request.caseRef)||
+        issuedStep.stepId!==prev.stepId||
+        !equals(issuedStep.templateRef,t.ref)||
+        !permitted(t)||
+        JSON.stringify(issuedStep.fields)!==JSON.stringify(t.material.fields)||
+        JSON.stringify(issuedStep.allowedEvents)!==
+          JSON.stringify(t.material.allowedEvents)||
+        issuedStep.kind!==t.material.kind||
+        issuedStep.titleKey!==t.material.titleKey)
+        return blocked(request,'ISSUED_STEP_CHECKPOINT_UNVERIFIED');
+      if(!t.material.allowedEvents.includes(prev.event)||
         (prev.receiptRef!==undefined&&
           !['OBSERVATION_RECEIPT','EFFECT_RECEIPT'].includes(prev.event))||
         !validSelection(prev,t))
