@@ -20,9 +20,11 @@ assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
 assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
-const capabilityFile = process.env.T04B_NATIVE === '1'
-  ? fileURLToPath(new URL('./native-readonly-shim.mjs',import.meta.url))
-  : fileURLToPath(new URL('./readiness-capability.mjs',import.meta.url));
+const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
+  ? fileURLToPath(new URL('./native-pair-shim.mjs',import.meta.url))
+  : process.env.T04B_NATIVE === '1'
+    ? fileURLToPath(new URL('./native-readonly-shim.mjs',import.meta.url))
+    : fileURLToPath(new URL('./readiness-capability.mjs',import.meta.url));
 let cBytes = readFileSync(capabilityFile, 'utf8');
 if(process.env.T04B_NATIVE==='1'){
   const providerFile=process.env.T04B_PROVIDER_FILE;

@@ -1,0 +1,46 @@
+name: v2-selected-native-task-pair
+on:
+  pull_request:
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-github-native-c/**'
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-selected-native-task-pair.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  selected-native-task-source-pair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Exact Tally candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: tally
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Public DomainHarness v0.10.2 exact source
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          persist-credentials: false
+          path: domain-harness
+      - name: Real Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Existing public BUILD and selected real K/B/C/Host SQLite
+        env:
+          DH: ${{ github.workspace }}/domain-harness
+          TALLY: ${{ github.workspace }}/tally
+          TALLY_B: ${{ github.workspace }}/tally
+          T04B_NATIVE: '1'
+          T06F_NATIVE_PAIR: '1'
+          TALLY_NATIVE_EXPECTED_SHA: ${{ github.event.pull_request.base.sha }}
+          TALLY_GITHUB_READ_TOKEN: ${{ github.token }}
+        run: |
+          echo "T06F_SOURCE_HEAD=$(git -C "$TALLY" rev-parse HEAD)"
+          bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"
+          echo T06F_SELECTED_K_NATIVE_PAIR_REAL_GITHUB_SQLITE=PASS
