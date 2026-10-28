@@ -119,11 +119,11 @@ F45 Operator session/auth/CSRF remains P0 and is now explicitly probed by V37–
 
 ## D3. Claude Product pre-review bounded P0 cut and proof cases
 
-**Model diverse pre-review:** [Claude review on PR #77](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6381544471) identifies missing Product requirements, not new legacy source reachability. The old paths remain `PREVIOUS_AUDIT_ONLY/PROD_REACHABILITY_UNKNOWN`. Future v2 tests cannot inherit historic Go RQ PASS.
+**Historical source scope, subsequently amended by Product R4/R5** (do not read D3's former N=1 first slice as final concurrency authorization or limitation). **Model diverse pre-review:** [Claude review on PR #77](https://github.com/kaicreator-mm/tally/pull/77#issuecomment-6381544471) identifies missing Product requirements, not new legacy source reachability. The old paths remain `PREVIOUS_AUDIT_ONLY/PROD_REACHABILITY_UNKNOWN`. Future v2 tests cannot inherit historic Go RQ PASS.
 
 | Feature | Explicit P0 behavioral cut | New acceptance spec |
 |---|---|---|
-| `F15` | Compute DAG parallel-ready set but **at most one concurrently executing Task Attempt** | V63 |
+| `F15` | **Historical Claude first-slice scope only:** initially one executing real Task to prove the path; **final v2 P0** additionally requires at least two genuinely independent, lawful concurrent Builder Task Attempts, with overlapping writes denied (current P0-20/V56/V63/V72–V73) | V56/V63/V72/V73 |
 | `F17` | Real installed/authed **Codex CLI** mandatory as Local C provider with start/cancel/exit/receipt; Fake/echo is TEST_FIXTURE_ONLY; optional Claude Code | V52/V53 |
 | `F21` | Per-attempt isolated clean-base disposable Git worktree and exact frozen candidate commit/tree | V54/V55 |
 | `F24` | Held-out fixtures are inaccessible to Builder workspaces and processes before candidate freeze, with actual deny witness | V57/V58 |
