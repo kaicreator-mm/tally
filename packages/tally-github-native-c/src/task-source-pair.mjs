@@ -86,7 +86,12 @@ export async function readNativeTaskSourcePairFromClient({
       taskPass:false,releasePass:false
     });
     const candidates=Object.freeze(claim.candidates.map(c=>Object.freeze({
-      sourceSha:c.sourceSha,dispatchId:c.dispatchId,
+      // The original dispatch_id is untrusted free text and can carry secrets.
+      // Use the GitHub-validated numeric comment identity ONLY as a bounded
+      // advisory candidate label for Business's pre-existing presence check.
+      // This is NOT the ADS canonical dispatch_id or an accepted Claim.
+      sourceSha:c.sourceSha,
+      dispatchId:`observed-comment-${c.commentId}`,
       sourceClass:c.sourceClass,claimAccepted:false
     })));
     const events=Object.freeze({
