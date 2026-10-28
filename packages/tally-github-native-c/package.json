@@ -10,7 +10,8 @@
     ".": "./src/read-only.mjs",
     "./task-workitem-source": "./src/task-workitem-source.mjs",
     "./task-claim-events": "./src/task-claim-events.mjs",
-    "./task-source-pair": "./src/task-source-pair.mjs"
+    "./task-source-pair": "./src/task-source-pair.mjs",
+    "./task-claim-publication-witness": "./src/task-claim-publication-witness.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

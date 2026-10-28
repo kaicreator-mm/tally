@@ -119,6 +119,9 @@ export async function readClaimEventCandidatesFromClient({
           operatorId:e.operator_id,sessionRef:e.session_ref??null,
           transportActor:c.user.login,sourceSha:e.sha,
           canonicalAdmissionRef:e.canonical_admission_ref??null,
+          protectedClaimKey:e.protected_claim_key??null,
+          claimGeneration:e.admission_generation??null,
+          commentBodySha256:createHash('sha256').update(c.body,'utf8').digest('hex'),
           // Self-declared fields remain self-declared even from GH comment.
           sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',
           claimAccepted:false
