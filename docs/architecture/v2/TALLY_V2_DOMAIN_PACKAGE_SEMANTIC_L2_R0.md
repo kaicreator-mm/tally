@@ -1,12 +1,12 @@
 # Tally v2 — Domain Package First 语义 L2 候选 R0
 
-**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_R2_DISTINCT_REVIEW_PENDING / ADS_418_LOCAL_ADOPTION_PENDING / DH_0102_RELEASE_CONDITIONAL / L2_FREEZE_READY=NO / VERSION_STAGE_EXPERIMENTS_ONLY  
+**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_152_USER_SCOPE_CONFIRMED_R7_PENDING / ADS_418_LOCAL_ADOPTION_PENDING / DH_0102_RELEASE_CONDITIONAL / L2_FREEZE_READY=NO / VERSION_STAGE_EXPERIMENTS_ONLY  
 **归属**：[L2 #65](https://github.com/kaicreator-mm/tally/issues/65)、[语义 L2 交付 #78](https://github.com/kaicreator-mm/tally/issues/78)。Product R0 见 [#76](https://github.com/kaicreator-mm/tally/issues/76)、[PR #77](https://github.com/kaicreator-mm/tally/pull/77)。  
 **历史功能证据**：v1.5.5 固定 tag commit b5e7b6e38ea38837e3bbcfc46c36586180705de0；[47 项矩阵](../../research/v2/TALLY_V2_FUNCTIONAL_PARITY_R0.md)。  
 **平台设计参考**：DomainHarness v0.10.2 L2 Candidate 文档 blob 68e7dbc591f4c0c694818ec574b8585f95239c8b；引用的是**设计方案而非可安装 SDK/物理版本验收**。历史平台 T09 #1330 已完成，v0.10.2 [R01 最终回执](https://github.com/kaicreator-mm/domain-harness/issues/1331#issuecomment-6416079327)已 CLOSED，tag `cee14399d9d0af4e20e34b9111861b16a465b690` 与 main 同树；**RQ=CONDITIONAL**（Hidden 7/7 PASS；Full EXIT1、root NOT_RUN、单次特准），不等于 Tally 当前 Host 的 Release 验收。  
 **底线**：不将普通 TS App 写好后包装成 Domain Package。先建立真实的第三方 Business/Capability Domain Package 产物及运行依赖，再编码 Tally 实现。本文件不发布任何新的 DomainHarness Manifest、npm 包名、公共 TypeScript ABI 或 Kernel 代码。
 
-**Product candidate source sync (not Freeze):** Parent Product PR #77 at exact `0d1f1a2e15581e300500bada6da54b2c9bcef75f`; 17 P0 requirements/47 Fxx domains/67 Vxx specs. The independent-source-qualification reviewer is still pending. **当前目标为 ADS v4.18.0**，上游 source `2c395c55569fe2edf3f4135f12d3d069e526d0b7` 已 RQ READY；Tally 项目采纳 Draft PR #85 在本 L2 候选时仍缺最新 exact-head verifier 与合格独立 review。旧 #81 v4.17 CONDITIONAL 问题是历史记录，不再是本版本选择障碍。 The scoped P0-15/16 credential confinement, P0-17 Local OS Verifier and L3/release boundaries are mapped in [R2 crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md), and incorporated as required semantic negative contracts below. This branch sync is NOT independent Review or physical ABI verification.
+**Product candidate source sync (not Freeze):** Historical parent Product PR #77 at `0d1f1a2e15581e300500bada6da54b2c9bcef75f` has been superseded for v2 design intent by [Product PR #152](https://github.com/kaicreator-mm/tally/pull/152) at `bdf632fa3572074eef0654af99cb52df24eb62e9`: **24 P0 requirements, F01–F47, V01–V82**, including P0-18..24 and V68..82 full Agent-native ALM. User confirmed the 47-feature **19 RETAIN / 23 ADAPT / 5 RETIRE** migration decision on 2026-10-28, but exact-HEAD independent Product **R7 is pending** and no Product Freeze was published. See the updated [R2→R7 provisional source crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md). **当前目标为 ADS v4.18.0**，上游 source `2c395c55569fe2edf3f4135f12d3d069e526d0b7` 已 RQ READY；Tally 项目采纳 Draft PR #85 在本 L2 候选时仍缺最新 exact-head verifier 与合格独立 review。旧 #81 v4.17 CONDITIONAL 问题是历史记录，不再是本版本选择障碍。 The scoped P0-15/16 credential confinement, P0-17 Local OS Verifier and L3/release boundaries are mapped in [R2 crosswalk](./TALLY_V2_PRODUCT_R2_TO_L2_GAP_CROSSWALK.md), and incorporated as required semantic negative contracts below. This branch sync is NOT independent Review or physical ABI verification.
 
 ## 1. 物理架构硬约束
 
@@ -130,7 +130,7 @@
 
 
 
-- Execution Environment=Local，Workspace 与 Agent Runtime/Provider 分离；支持一个真实 Agent/Task/Verify 回合以及取消与恢复。**P0 max executing Task Attempts = 1**，无论 DAG 中展示几个 parallel-ready node、worktree 是否分离，第二个并行 executing Admission 必须 NOT_ADMITTED；更多并发是 P1。
+- Execution Environment=Local，Workspace 与 Agent Runtime/Provider 分离；**第一阶段**先完成一个真实 Agent/Task/Verify 的物理纵向闭环（可串行）；**完整 v2 Product P0-20/V63/V72** 至少要有 **两个**独立授权、互不冲突写集、各有 native CAS Claim 和 K/Host Permit 的 Builder Task Attempts **真实同时执行**，再由独立 Reviewer Join。第二个执行请求若与已有写集/授权主体冲突必须拒绝或串行（V56/V73）；不能只展示 parallel-ready 集合作为并行 PASS。先前 max N=1 是已被 Product #152 取代的历史第一阶段约束，绝非最终 v2 P0。所有实现及并行 Task DAG 仍须 Product R7、L2 独立冻结和真实 Host 证据。
 - **Codex Provider/Auth partitioning:** Operator 在 Host/Provider adapter 配置中合法安装、登录真实 Codex CLI；Host 将**只可用于模型 Provider** 的最小授权会话/认证句柄限定传给低权限 Builder principal，**绝不继承**操作者可写 GitHub 的 gh/GCM/SSH-agent、home 配置、token cache 或提权能力。模型登录成功不证明 GitHub grant，也不成为写权限。若 Codex 授权文件/目录同 GitHub write credentials 无法实证隔离，返回 BUILDER_CONFINEMENT_UNAVAILABLE，Local Task 不可 PASS；禁止把真实秘密写入可发布的日志/证据。
 - 关键边界：OS 进程权限、环境变量脱敏、工作目录/命令参数隔离、Git 工作树安全、受控 Tool capability、进程退出/超时/错误码/标准输出留证。
 - SSH/Docker/runx **可选**；没有时不可妨碍 Local 工作和 ADS UI。
