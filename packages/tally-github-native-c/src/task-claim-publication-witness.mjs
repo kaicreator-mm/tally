@@ -50,7 +50,7 @@ export async function readClaimPublicationWitnessFromClient({
      c.operatorId!==operatorId||c.transportActor!==writerLogin||
      c.claimGeneration!==claimGeneration||c.sourceSha!==expectedSourceSha||
      c.sourceClass!=='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'||
-     c.claimAccepted!==false||!SHA.test(c.commentBodySha256??''))
+     c.claimAccepted!==false||!/^[a-f0-9]{64}$/.test(c.commentBodySha256??''))
     return deny('NATIVE_CLAIM_EVENT_RESERVATION_MISMATCH');
   try{
     const current=(await octokit.rest.issues.getComment({
