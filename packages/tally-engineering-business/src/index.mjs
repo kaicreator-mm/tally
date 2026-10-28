@@ -211,3 +211,6 @@ export function diagnoseNativeTaskReadiness(options={}){
     });
   }catch{return output('UNTRUSTED_SOURCE_INPUT');}
 }
+
+// W-F/#137 selected read-only Task as-of projection; never a grant.
+export {projectNativeTaskEffectiveSnapshot} from './task-effective-snapshot.mjs';
