@@ -1,6 +1,6 @@
 # Tally v2 — Domain Package First 语义 L2 候选 R0
 
-**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_152_SOURCE_R7_PASS_FREEZE_PENDING / ADS_418_LOCAL_ADOPTION_PENDING / DH_0102_RELEASE_CONDITIONAL / L2_FREEZE_READY=NO / VERSION_STAGE_EXPERIMENTS_ONLY  
+**状态**：L2_SEMANTIC_DRAFT_R0 / PRODUCT_152_SOURCE_R7_PASS_FREEZE_PENDING / ADS_418_VERSION_V2_ADOPTED_OWNER_FREEZE_PENDING / DH_0102_RELEASE_CONDITIONAL / L2_FREEZE_READY=NO / VERSION_STAGE_EXPERIMENTS_ONLY  
 **归属**：[L2 #65](https://github.com/kaicreator-mm/tally/issues/65)、[语义 L2 交付 #78](https://github.com/kaicreator-mm/tally/issues/78)。Product R0 见 [#76](https://github.com/kaicreator-mm/tally/issues/76)、[PR #77](https://github.com/kaicreator-mm/tally/pull/77)。  
 **历史功能证据**：v1.5.5 固定 tag commit b5e7b6e38ea38837e3bbcfc46c36586180705de0；[47 项矩阵](../../research/v2/TALLY_V2_FUNCTIONAL_PARITY_R0.md)。  
 **平台设计参考**：DomainHarness v0.10.2 L2 Candidate 文档 blob 68e7dbc591f4c0c694818ec574b8585f95239c8b；引用的是**设计方案而非可安装 SDK/物理版本验收**。历史平台 T09 #1330 已完成，v0.10.2 [R01 最终回执](https://github.com/kaicreator-mm/domain-harness/issues/1331#issuecomment-6416079327)已 CLOSED，tag `cee14399d9d0af4e20e34b9111861b16a465b690` 与 main 同树；**RQ=CONDITIONAL**（Hidden 7/7 PASS；Full EXIT1、root NOT_RUN、单次特准），不等于 Tally 当前 Host 的 Release 验收。  
