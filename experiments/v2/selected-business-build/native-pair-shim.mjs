@@ -34,7 +34,8 @@ const denies=x=>x?.authorized===false&&x?.admitted===false&&
   x?.taskPass===false&&x?.releasePass===false;
 const validWork=(w,sha)=>w&&typeof w==='object'&&!Array.isArray(w)&&
   w.issueRef===ISSUE&&w.sourceSha===sha&&
-  workReasons.has(w.reason)&&['CLEAR','BLOCKED'].includes(w.dependencyState)&&
+  workReasons.has(w.reason)&&['open','closed'].includes(w.issueState)&&
+  ['CLEAR','BLOCKED'].includes(w.dependencyState)&&
   workflow.has(w.workflowState)&&['type:task','type:planning',null].includes(w.workItemType)&&
   w.claimStatus==='NOT_VERIFIED'&&w.authorized===false&&w.admitted===false&&
   w.taskPass===false&&w.releasePass===false&&
