@@ -104,8 +104,22 @@ export function getPolicy(){
             'tally-source-observation','tally.observeReadiness',
             {sourceRef:input?.issueRef,sourceSha:input?.sourceSha,issueNumber:input?.issueNumber,effectId}
           );
+          // This Business projection is still advisory: a K-admitted
+          // *read-only inspection* is not a K-admitted Task execution. B
+          // consumes only the selected C allowlisted native pair, not any
+          // caller-provided status/Claim booleans.
+          const pairDiagnosis=sourceObservation?.status==='SOURCE_PAIR_OBSERVED'&&
+            sourceObservation?.claimStatus==='NOT_VERIFIED'
+            ? diagnoseNativeTaskReadiness({
+                workItem:sourceObservation.workItem,
+                claimEvents:sourceObservation.claimEvents,
+                expectedIssueRef:input?.issueRef,
+                expectedSourceSha:input?.sourceSha,
+              })
+            : null;
           return {
             ...assessTaskEvidence(input),effectId,sourceObservation,
+            ...(pairDiagnosis?{pairDiagnosis}:{}),
           };
         },
       },
