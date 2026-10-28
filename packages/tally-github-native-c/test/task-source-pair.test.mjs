@@ -16,7 +16,7 @@ const event={
     session_ref:'session:1',task:'#125',dispatch_id:'dispatch-1',
     dispatch_state:'CLAIMED',sha}
 };
-const comment=()=>({id:108,body:`<!-- ads:github -->\n\x60\x60\x60yaml\n${stringify(event).trimEnd()}\n\x60\x60\x60`,
+const comment=(dispatchId='dispatch-1')=>({id:108,body:`<!-- ads:github -->\n\x60\x60\x60yaml\n${stringify({...event,data:{...event.data,dispatch_id:dispatchId}}).trimEnd()}\n\x60\x60\x60`,
   html_url:issueRef+'#issuecomment-108',created_at:'2026-10-28T00:00:00Z',
   updated_at:'2026-10-28T00:00:00Z',user:{login:'github-actions[bot]'}});
 function fixture({blockerState=null,state='state:ready',comments=[],drift=false,
@@ -76,7 +76,7 @@ test('canonical observed DISPATCH_CLAIMED remains unaccepted and raw actors not 
     ...base,octokit:fixture({comments:[comment()]})});
   assert.equal(x.status,'SOURCE_PAIR_OBSERVED');
   assert.equal(x.claimEvents.candidateCount,1);
-  assert.equal(x.claimEvents.candidates[0].dispatchId,'dispatch-1');
+  assert.equal(x.claimEvents.candidates[0].dispatchId,'observed-comment-108');
   assert.equal(x.claimEvents.candidates[0].claimAccepted,false);
   assert.equal(JSON.stringify(x).includes('github-actions[bot]'),false);
   notGranted(x);
@@ -128,4 +128,28 @@ test('client errors, missing secret and spoofed caller flags cannot authorize',a
   const noToken=await readGitHubNativeTaskSourcePair({...base,token:null});
   assert.equal(noToken.reason,'GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
   notGranted(noToken);
+});
+
+test('free-text dispatch ID secrets and long IDs never escape bounded source projection',async()=>{
+  const secret='SECRET_CANARY_UNTRUSTED_COMMENT_987654';
+  for(const rawId of [secret,'Z'.repeat(25000)]){
+    const x=await readNativeTaskSourcePairFromClient({
+      ...base,octokit:fixture({comments:[comment(rawId)]})
+    });
+    assert.equal(x.status,'SOURCE_PAIR_OBSERVED');
+    assert.equal(x.claimEvents.candidateCount,1);
+    assert.equal(x.claimEvents.candidates[0].dispatchId,'observed-comment-108');
+    assert.ok(x.claimEvents.candidates[0].dispatchId.length<=40);
+    assert.equal(JSON.stringify(x).includes(secret),false);
+    assert.equal(JSON.stringify(x).includes(rawId),false);
+    notGranted(x);
+    const diagnosis=diagnoseNativeTaskReadiness({
+      workItem:x.workItem,claimEvents:x.claimEvents,
+      expectedIssueRef:issueRef,expectedSourceSha:sha,
+      localAgentStatus:'AVAILABLE',builderConfinementStatus:'VERIFIED',
+      hiddenVerifierStatus:'VERIFIED'
+    });
+    assert.equal(diagnosis.reason,'ACCEPTED_CAS_CLAIM_NOT_VERIFIED');
+    assert.equal(JSON.stringify(diagnosis).includes(secret),false);
+  }
 });
