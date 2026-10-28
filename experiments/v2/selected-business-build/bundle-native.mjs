@@ -43,7 +43,7 @@ const result=await build({
     b.onLoad({filter:/[/\\]tally-github-native-c[/\\]src[/\\]task-claim-events\.mjs$/},()=>({
       contents:claimReplaced,loader:'js',
       resolveDir:resolve(tally,'packages/tally-github-native-c/src')
-    })),
+    }));
     b.onLoad({filter:/[/\\]tally-ads-v5-validator[/\\]src[/\\]validate\.mjs$/},()=>{
       return {contents:replaced,loader:'js',resolveDir:resolve(tally,'packages/tally-ads-v5-validator/src')};
     });
