@@ -1,7 +1,7 @@
 # Tally v2 Product PRD — native Domain Package Engineering System Center (R0 candidate)
 
 **Date:** 2026-10-24  
-**Review state:** PRODUCT_DRAFT_R0 / ALM_P0_AUTHOR_AMENDMENT_CANDIDATE_2026-10-28 / INDEPENDENT_EXACT_SHA_REVIEW_PENDING / FREEZE_READY=NO  
+**Review state:** PRODUCT_SOURCE_R8_PASS_AT_abe3820b (historical review candidate) / SOURCE_STATUS_CORRECTION_REVIEW_PENDING / PRODUCT_NATIVE_OWNER_FREEZE_NOT_PUBLISHED / FREEZE_READY=NO  
 **Owning Issue:** [#76](https://github.com/kaicreator-mm/tally/issues/76), parent [#63](https://github.com/kaicreator-mm/tally/issues/63), [L2 #65](https://github.com/kaicreator-mm/tally/issues/65), [Domain Package-first correction #75](https://github.com/kaicreator-mm/tally/issues/75#issuecomment-6380546957)  
 **Legacy Product evidence:** [F01–F47 matrix](../../research/v2/TALLY_V2_FUNCTIONAL_PARITY_R0.md), pinned v1.5.5 source b5e7b6e38ea38837e3bbcfc46c36586180705de0.  
 **Current standards decision (updated 2026-10-27):** Tally v2 selects ADS **v4.18.0** at immutable source `2c395c55569fe2edf3f4135f12d3d069e526d0b7` (upstream independent [RQ READY](https://github.com/kaicreator-mm/ai-development-standard/issues/1327#issuecomment-6401840670)), with **Tally-local ADS source adoption now effective** via independently reviewed [PR #85](https://github.com/kaicreator-mm/tally/pull/85), version/v2 merge `a2877bbd7d1ce87e755a01a25eb2341fc9467a78`; Product Owner native GitHub Freeze publication/readback is still **NOT_DONE**. Historical v1.5.x source and accepted Claims remain on effective ADS 1.2.1; unmerged v4.17 PR #81 is history, not today's current candidate. Source-only ADS report fixtures do not grant actual Claim/Review/Task PASS.  
