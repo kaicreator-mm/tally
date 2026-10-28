@@ -1,0 +1,22 @@
+# Tally v2 native C source-only verification on the disposable ECF VM.
+# Local backend executes directly on VM: no server tokens or root credentials.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+
+labels:
+  backend: local
+
+steps:
+  - name: native-github-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WOODPECKER_V2_SOURCE_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "WOODPECKER_V2_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - node --test packages/tally-github-native-c/test/*.test.mjs
+      - echo TALLY_V2_WOODPECKER_NATIVE_NODE24_SOURCE_PASS
