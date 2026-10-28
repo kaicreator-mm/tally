@@ -155,6 +155,10 @@ Reviewed immutable legacy v1.5.5 commit `b5e7b6e38ea38837e3bbcfc46c36586180705de
 
 **No Product gate shortcut**: `PRODUCT_PARITY_P1=OPEN`, `TEST_EXECUTION=NOT_RUN`, `RUNTIME_REACHABILITY=UNKNOWN`, `SEMANTIC_FREEZE_READY=NO`; this is one finite source mapping batch, not 47 bespoke reenactments. Prefer actual v2 end-to-end replacement tests over exhaustive reconstruction of low-value v1 internals, subject to independent Product owner/Reviewer approval.
 
+## D6. Product R4 bounded Owner decisions versus historical source
+
+[**47-row explicit Product Owner migration scope matrix**](../../product/v2/TALLY_V2_LEGACY_FEATURE_DISPOSITIONS_R4.md) now proposes `RETAIN/ADAPT/RETIRE` for every F01–F47, with responsible owner, risk, minimum corresponding v2 Vxx, and real verification phase. It supersedes outdated global `P1_CANDIDATE`/single-run scope descriptions *as a proposed Product migration choice*, without changing the original factual v1.5.5 source paths, code/test declaration evidence or UNKNOWN execution truths. Independent Product R4/R5 exact-SHA reviewer must decide if the carried parity P1 can be closed. No actual old Go tests, current v2 Agent/Host execution, or release qualifications are implied.
+
 ## E. Next source proof requirement (before Product R1)
 
 For every P0 retained domain, collect: `legacy feature → exact function and call site → test assertion → expected user behavior → v2 Product acceptance → proposed Domain Package owner`. For unchanged high-confidence models, a targeted Go test/source search is preferable to executing legacy full regression again. Any not traced by independent Product review stays `UNKNOWN` and should be risk-classified, not converted to PASS.
