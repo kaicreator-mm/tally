@@ -55,12 +55,14 @@ const options=sqlite=>({store:kDocs(sqlite),deploymentIdentity:deployment,
   // Resolve exactly the installed, BUILD-declared native C provider.
   deploymentRoot:process.cwd(),
   tenantId:deployment.tenantId,queryAuthority:authority,now:()=>Date.UTC(2026,9,27)});
-const selector={workflowId:'tally-readiness',instanceKey:'task-111',
+const pairMode=process.env.T06F_NATIVE_PAIR==='1';
+const issueNumber=pairMode?125:111;
+const selector={workflowId:'tally-readiness',instanceKey:'task-'+issueNumber,
   businessPackageId:'business-tally-task-readiness@v2.0.0'};
-const message={intentType:'inspectTaskReadiness',instanceKey:'task-111',
-  messageId:'message-t04b-native-01',
-  input:{issueRef:'https://github.com/kaicreator-mm/tally/issues/111',
-    issueNumber:111,sourceSha,claimRef:'unverified:source:111',
+const message={intentType:'inspectTaskReadiness',instanceKey:'task-'+issueNumber,
+  messageId:pairMode?'message-t06f-native-pair-01':'message-t04b-native-01',
+  input:{issueRef:`https://github.com/kaicreator-mm/tally/issues/${issueNumber}`,
+    issueNumber,sourceSha,claimRef:'unverified:source:'+issueNumber,
     dependenciesComplete:true}};
 assert.ok(!JSON.stringify(message).includes(token),'token must NOT enter journaled Business input');
 const tmp=await mkdtemp(join(tmpdir(),'tally-t04b-native-'));
@@ -77,9 +79,29 @@ try {
   assert.equal(effect.state,'OBSERVED_INPUT_ONLY');
   assert.equal(effect.admitted,false);
   assert.equal(effect.taskPass,false);
-  assert.equal(effect.sourceObservation?.state,'NATIVE_NOT_CURRENT');
-  assert.equal(effect.sourceObservation?.status,'UNKNOWN');
-  assert.equal(effect.sourceObservation?.reason,'NO_ADS_V5_REPORTS');
+  if(pairMode){
+    const o=effect.sourceObservation;
+    assert.equal(o?.state,'NATIVE_TASK_SOURCE_ADVISORY');
+    assert.equal(o?.status,'SOURCE_PAIR_OBSERVED');
+    assert.equal(o?.reason,'ACCEPTED_CAS_CLAIM_NOT_VERIFIED');
+    assert.equal(o?.claimStatus,'NOT_VERIFIED');
+    assert.equal(o?.workItem?.issueRef,message.input.issueRef);
+    assert.equal(o?.workItem?.sourceSha,sourceSha);
+    assert.equal(o?.claimEvents?.claimStatus,'NOT_VERIFIED');
+    assert.equal(o?.claimEvents?.candidateCount,o?.observationCount);
+    assert.equal(o?.claimEvents?.authorized,false);
+    assert.ok(effect.pairDiagnosis);
+    assert.equal(effect.pairDiagnosis.state,'NOT_ADMITTED');
+    assert.equal(effect.pairDiagnosis.admitted,false);
+    assert.equal(effect.pairDiagnosis.taskPass,false);
+    assert.equal(effect.pairDiagnosis.releasePass,false);
+    // Native Github Task read is an observation, not an accepted execution.
+    assert.equal(effect.admitted,false);
+  }else{
+    assert.equal(effect.sourceObservation?.state,'NATIVE_NOT_CURRENT');
+    assert.equal(effect.sourceObservation?.status,'UNKNOWN');
+    assert.equal(effect.sourceObservation?.reason,'NO_ADS_V5_REPORTS');
+  }
   assert.equal(effect.sourceObservation?.sourceSha,sourceSha);
   assert.equal(effect.sourceObservation?.authorized,false);
   assert.equal(effect.sourceObservation?.taskPass,false);
@@ -119,7 +141,8 @@ try {
     reportReason:effect.sourceObservation.reason,
     replayWithoutToken:replay.idempotentReplay,docCount:recordsBefore.length,
     changedInputDenied:blocked,taskPass:false,releasePass:false}));
-  console.log('T04B_REAL_GITHUB_C_KERNEL_SQLITE=PASS');
+  console.log(pairMode?'T06F_REAL_GITHUB_PAIR_K_B_C_SQLITE_READONLY=PASS':
+    'T04B_REAL_GITHUB_C_KERNEL_SQLITE=PASS');
 } finally {
   if(facade)facade.stop();
   if(sqlite)await sqlite.close();
