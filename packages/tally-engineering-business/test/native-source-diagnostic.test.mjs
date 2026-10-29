@@ -155,4 +155,3 @@ test('untrusted property getters cannot leak raw exception/credential',()=>{
   const y=projectPair(snapshotPair,{expectedSourceSha:'invalid'});
   assert.equal(y.reason,'EXPECTED_SOURCE_IDENTITY_UNAVAILABLE');noTaskPermit(y);
 });
-

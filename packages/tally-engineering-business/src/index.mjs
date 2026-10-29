@@ -301,4 +301,3 @@ export function projectNativeTaskEffectiveSnapshot({
       'REQUEST_SELECTED_HOST_ADMISSION','HOST_AND_ADS_REQUIRED');
   }catch{return readModelOutput('SOURCE_OBSERVATION_UNREADABLE');}
 }
-
