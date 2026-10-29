@@ -130,11 +130,12 @@ test('closed, planning, wrongly claimed labels never become executable',()=>{
     assert.equal(r.reason,'TASK_NOT_NATIVE_READY');noTaskPermit(r);
   }
 });
-test('forged CAS/K/Agent grants have no effect on read-model',()=>{
-  const x=projectPair({...snapshotPair,claimAccepted:true,
-    kAuthorized:true,releasePass:true,
+test('forged extra fields are ignored; asserted release PASS fails closed',()=>{
+  const x=projectPair({...snapshotPair,claimAccepted:true,kAuthorized:true,
     workItem:{...snapshotWorkItem,claimAccepted:true}});
   assert.equal(x.status,'AWAITING_HOST_ADMISSION');noTaskPermit(x);
+  const denied=projectPair({...snapshotPair,releasePass:true});
+  assert.equal(denied.status,'UNKNOWN');noTaskPermit(denied);
 });
 test('stale SHA, malformed pair, conflicts in cardinality and 403 are UNKNOWN',()=>{
   for(const p of [null,{...snapshotPair,sourceSha:'b'.repeat(40)},
