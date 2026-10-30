@@ -181,6 +181,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
       TALLY_TASK_CLAIM_179_REGISTRY_PATH="${TALLY_TASK_CLAIM_179_REGISTRY_PATH:-}" \
         node "$tmp/consumer/consumer-concurrent-codex.mjs"
     else
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
     fi
   else
