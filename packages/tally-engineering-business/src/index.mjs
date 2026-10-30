@@ -405,6 +405,7 @@ const readModelOutput=(reason,more={})=>Object.freeze({
   kernelTaskState:'NOT_VERIFIED',agentAttemptState:'NOT_VERIFIED',
   reviewState:'NOT_VERIFIED',ciState:'NOT_VERIFIED',
   hostState:'NOT_VERIFIED',releaseState:'NOT_VERIFIED',
+  captureCoverage:'NOT_COMPARABLE',metricComparability:'NOT_COMPARABLE',
   authorized:false,admitted:false,taskPass:false,releasePass:false,
   nextActions:Object.freeze([Object.freeze({
     kind:'READ_CURRENT_GITHUB_SOURCE',authority:'READ_ONLY',reason
@@ -415,14 +416,20 @@ const readModelAdvice=(base,status,reason,kind,authority)=>Object.freeze({
     kind,authority,reason
   })])
 });
+const isoTime=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+const ATTEMPT_STATES=new Set(['LOCAL_CANDIDATE_READY','LOCAL_ATTEMPT_UNKNOWN',
+  'LOCAL_ATTEMPT_FAILED','LOCAL_ATTEMPT_CANCELLED']);
 /** Source pair must come from selected native GitHub C, never UI/LLM. */
 export function projectNativeTaskEffectiveSnapshot({
-  sourcePair,expectedIssueRef,expectedSourceSha
+  sourcePair,expectedIssueRef,expectedSourceSha,observedAt,hostObservation
 }={}){
   try{
     if(!DIAG_ISSUE.test(expectedIssueRef??'')||
       !DIAG_SOURCE_SHA.test(expectedSourceSha??''))
       return readModelOutput('EXPECTED_SOURCE_IDENTITY_UNAVAILABLE');
+    if(observedAt!==undefined&&!isoTime(observedAt))
+      return readModelOutput('OBSERVATION_TIME_UNAVAILABLE');
     const s=sourcePair;
     if(!s||typeof s!=='object'||Array.isArray(s)||
       s.status!=='SOURCE_PAIR_OBSERVED'||s.sourceQualified!==true||
@@ -444,7 +451,8 @@ export function projectNativeTaskEffectiveSnapshot({
       return readModelOutput('NATIVE_SOURCE_FACTS_NOT_VERIFIED');
     const base={
       sourceQualified:true,sourceRef:expectedIssueRef,sourceSha:expectedSourceSha,
-      observedAsOf:null,currentness:'AGE_NOT_VERIFIED',
+      observedAsOf:observedAt??null,
+      currentness:observedAt===undefined?'AGE_NOT_VERIFIED':'OBSERVED_AT_QUERY_COMPLETION',
       dependencyState:w.dependencyState,
       openBlockerCount:Number.isSafeInteger(w.openBlockerCount)?
         w.openBlockerCount:null,
@@ -452,30 +460,67 @@ export function projectNativeTaskEffectiveSnapshot({
       claimState:'NOT_VERIFIED',kernelTaskState:'NOT_VERIFIED',
       agentAttemptState:'NOT_VERIFIED',reviewState:'NOT_VERIFIED',
       ciState:'NOT_VERIFIED',hostState:'NOT_VERIFIED',
-      releaseState:'NOT_VERIFIED',authorized:false,admitted:false,
+      releaseState:'NOT_VERIFIED',captureCoverage:'NOT_COMPARABLE',
+      metricComparability:'NOT_COMPARABLE',authorized:false,admitted:false,
       taskPass:false,releasePass:false
     };
+    let observed=base;
+    if(hostObservation!==undefined){
+      const attempt=hostObservation?.attempt,join=hostObservation?.join;
+      const validAttempt=attempt&&typeof attempt==='object'&&!Array.isArray(attempt)&&
+        attempt.issueRef===expectedIssueRef&&attempt.sourceSha===expectedSourceSha&&
+        LOCAL_ATTEMPT_ID.test(attempt.attemptId??'')&&ATTEMPT_STATES.has(attempt.state)&&
+        attempt.authorized===false&&attempt.taskPass===false&&attempt.releasePass===false&&
+        attempt.process?.status==='EXITED'&&attempt.process.exitCode===0&&
+        isoTime(attempt.process.startedAt)&&isoTime(attempt.process.terminatedAt)&&
+        Date.parse(attempt.process.startedAt)<=Date.parse(attempt.process.terminatedAt)&&
+        (attempt.state!=='LOCAL_CANDIDATE_READY'||
+          DIAG_SOURCE_SHA.test(attempt.candidateTree??'')&&
+          DIAG_SOURCE_SHA.test(attempt.candidateCommit??''));
+      if(!validAttempt)return readModelOutput('HOST_OBSERVATION_NOT_VERIFIED');
+      const validJoin=join===undefined||join&&typeof join==='object'&&!Array.isArray(join)&&
+        join.state==='REVIEW_JOINED'&&join.issueRef===expectedIssueRef&&
+        join.sourceSha===expectedSourceSha&&LOCAL_ATTEMPT_ID.test(join.joinId??'')&&
+        join.authorized===false&&join.taskPass===false&&join.releasePass===false&&
+        Array.isArray(join.candidates)&&join.candidates.length>=2&&
+        join.candidates.every(c=>c&&LOCAL_ATTEMPT_ID.test(c.attemptId??'')&&
+          DIAG_SOURCE_SHA.test(c.candidateTree??'')&&DIAG_SOURCE_SHA.test(c.candidateCommit??''))&&
+        join.candidates.some(c=>c.attemptId===attempt.attemptId);
+      if(!validJoin)return readModelOutput('HOST_OBSERVATION_NOT_VERIFIED');
+      observed={...base,agentAttemptState:attempt.state,kernelTaskState:attempt.state,
+        hostState:join?join.state:attempt.state,reviewState:join?join.state:'NOT_VERIFIED'};
+    }
     if(w.dependencyState==='BLOCKED')
-      return readModelAdvice(base,'WAIT_EXTERNAL','NATIVE_DEPENDENCIES_BLOCKED',
+      return readModelAdvice(observed,'WAIT_EXTERNAL','NATIVE_DEPENDENCIES_BLOCKED',
         'WAIT_NATIVE_DEPENDENCIES','READ_ONLY');
     if(w.dependencyState!=='CLEAR')
       return readModelOutput('NATIVE_DEPENDENCIES_UNKNOWN');
     if(w.issueState!=='open'||w.workflowState!=='state:ready'||
       w.workItemType!=='type:task'||w.reason!=='CLAIM_NOT_VERIFIED')
-      return readModelAdvice(base,'WAIT_EXTERNAL','TASK_NOT_NATIVE_READY',
+      return readModelAdvice(observed,'WAIT_EXTERNAL','TASK_NOT_NATIVE_READY',
         'WAIT_NATIVE_TASK_READY','READ_ONLY');
     if(c.reason==='CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED'){
       if(c.candidateCount>1)
-        return readModelAdvice(base,'CONFLICT','AMBIGUOUS_CLAIM_EVENT_CANDIDATES',
+        return readModelAdvice(observed,'CONFLICT','AMBIGUOUS_CLAIM_EVENT_CANDIDATES',
           'RECONCILE_MULTIPLE_NATIVE_CLAIMS','HOST_REQUIRED');
       if(c.candidateCount===1)
-        return readModelAdvice(base,'WAIT_EXTERNAL',
+        return readModelAdvice(observed,'WAIT_EXTERNAL',
           'SELF_REPORTED_CLAIM_NEEDS_HOST_RECONCILIATION',
           'RECONCILE_NATIVE_CLAIM','HOST_REQUIRED');
     }
     if(c.reason!=='NO_DISPATCH_CLAIM_EVENTS'||c.candidateCount!==0)
       return readModelOutput('NATIVE_CLAIM_ABSENCE_UNVERIFIED');
-    return readModelAdvice(base,'AWAITING_HOST_ADMISSION',
+    if(hostObservation!==undefined){
+      if(hostObservation.join)
+        return readModelAdvice(observed,'REVIEW_CANDIDATE_EVIDENCE','REVIEW_JOINED',
+          'REVIEW_CANDIDATE_EVIDENCE','READ_ONLY');
+      if(hostObservation.attempt.state==='LOCAL_CANDIDATE_READY')
+        return readModelAdvice(observed,'AWAITING_REVIEW','LOCAL_CANDIDATE_READY',
+          'REQUEST_REVIEWER_JOIN','HOST_AND_ADS_REQUIRED');
+      return readModelAdvice(observed,'CONFLICT','AGENT_ATTEMPT_NOT_COMPLETE',
+        'RECONCILE_AGENT_ATTEMPT','HOST_REQUIRED');
+    }
+    return readModelAdvice(observed,'AWAITING_HOST_ADMISSION',
       'NATIVE_READY_NO_ACCEPTED_CLAIM',
       'REQUEST_SELECTED_HOST_ADMISSION','HOST_AND_ADS_REQUIRED');
   }catch{return readModelOutput('SOURCE_OBSERVATION_UNREADABLE');}
