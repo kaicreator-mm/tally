@@ -7,7 +7,7 @@ const validState=(value,expected)=>value===expected;
 const realReview=review=>review?.sourceReview==='PASS'&&Number.isSafeInteger(review.pipeline)&&review.pipeline>0;
 const baseItem=(vector,behavior,evidence,status,coverage,refs)=>({vector,behavior,
   status,coverage,mustRetain:'PRESERVE',released:false,taskPass:false,hiddenPass:false,
-  observedAsOf:evidence.observedAsOf,evidenceRefs:refs});
+  observedAsOf:evidence?.observedAsOf,evidenceRefs:refs});
 function sourceReady(status,mergedSha,reviewSha,pipeline){
   return status==='PASS'&&validSha(mergedSha)&&validSha(reviewSha)&&realReview({sourceReview:'PASS',pipeline});
 }
