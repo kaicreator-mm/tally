@@ -29,6 +29,10 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   fi
   [[ -n "$native_token" ]] || { echo T04B_NATIVE_HOST_TOKEN_REQUIRED; exit 3; }
   [[ "${TALLY_NATIVE_EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T04B_SOURCE_PIN_REQUIRED; exit 3; }
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    # T06l accepted-Claim admission reuses the same native producer lane.
+    [[ "${TALLY_CLAIM_SOURCE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T06L_SOURCE_PIN_REQUIRED; exit 3; }
+  fi
 fi
 [[ "$(git -C "$DH" rev-parse HEAD)" == "cee14399d9d0af4e20e34b9111861b16a465b690" ]] || { echo DH_SHA_MISMATCH; exit 2; }
 # This integration PR exercises the exact proposed Business bytes, not the
@@ -67,11 +71,15 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06F_NATIVE_PAIR:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/native-pair-shim.mjs" "$tmp/producer/native-pair-shim.mjs"
   fi
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/bundle-claim-reader.mjs" "$tmp/producer/bundle-claim-reader.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/claim-admission-shim.mjs" "$tmp/producer/claim-admission-shim.mjs"
+  fi
 fi
 cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
 printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
 cd "$tmp/producer"
-npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-build-*.tgz "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-kernel-basic-*.tgz "$tmp"/packed/kaicreator-domain-standard-basic-*.tgz
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-build-*.tgz "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz "$tmp"/packed/kaicreator-domain-kernel-basic-*.tgz "$tmp"/packed/kaicreator-domain-standard-basic-*.tgz
 npm ls --depth=0
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm install --save-exact --ignore-scripts --no-audit --no-fund esbuild@0.25.12
@@ -85,6 +93,19 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm pack --pack-destination "$tmp/packed" "$tmp/native-provider" >/dev/null
   echo T04B_TRUSTED_PROVIDER_SHA256
   sha256sum "$tmp/native-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    # T06l: sealed claim-admission provider bundles the existing T06g native
+    # publication witness plus the T06d Host CAS registry grammar.
+    T06L_C_OUTPUT="$tmp/producer/claim-bundled.mjs" T06L_IMPORTS_OUTPUT="$tmp/producer/claim-imports.json" TALLY="$TALLY" node ./bundle-claim-reader.mjs
+    mkdir -p "$tmp/native-claim-provider"
+    cp "$tmp/producer/claim-bundled.mjs" "$tmp/native-claim-provider/index.mjs"
+    printf '%s' '{"name":"@kaicreator/tally-native-claim-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/native-claim-provider/package.json"
+    npm pack --pack-destination "$tmp/packed" "$tmp/native-claim-provider" >/dev/null
+    echo T06L_TRUSTED_PROVIDER_SHA256
+    sha256sum "$tmp/native-claim-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
+  fi
+  T06L_CLAIM="${T06L_CLAIM:-0}" \
+  T06L_PROVIDER_FILE="$tmp/native-claim-provider/index.mjs" \
   T04B_NATIVE=1 T04B_PROVIDER_FILE="$tmp/native-provider/index.mjs" T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
 else
   T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
@@ -97,11 +118,30 @@ cd "$tmp/consumer"
 npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@^12'
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm install --save-exact "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    npm install --save-exact "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
+  fi
 fi
 npm ls --depth=0
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
   TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    # Real accepted Claim #169 identity, Host-supplied configuration only.
+    # A real previously accepted registry can replace the fixture bootstrap
+    # via TALLY_CLAIM_REGISTRY_PATH (then seeding is skipped).
+    cp "$TALLY/experiments/v2/selected-business-build/consumer-claim-admission.mjs" "$tmp/consumer/consumer-claim-admission.mjs"
+    TALLY_GITHUB_READ_TOKEN="$native_token" \
+    TALLY_CLAIM_SOURCE_SHA="${TALLY_CLAIM_SOURCE_SHA:-3293aace8a07c2a4f79a75c6539245980f77e2b4}" \
+    TALLY_CLAIM_DISPATCH_ID="${TALLY_CLAIM_DISPATCH_ID:-dispatch:169:t06l:kernel:20261030:1}" \
+    TALLY_CLAIM_OPERATOR_ID="${TALLY_CLAIM_OPERATOR_ID:-zcode:t125:kernel:1}" \
+    TALLY_CLAIM_OPERATOR_KIND="${TALLY_CLAIM_OPERATOR_KIND:-other}" \
+    TALLY_CLAIM_WRITER_ID="${TALLY_CLAIM_WRITER_ID:-writer:t06l:host:1}" \
+    TALLY_CLAIM_WRITER_LOGIN="${TALLY_CLAIM_WRITER_LOGIN:-kaicreator-mm}" \
+    TALLY_CLAIM_COMMENT_ID="${TALLY_CLAIM_COMMENT_ID:-6511046226}" \
+    TALLY_CLAIM_REGISTRY_PATH="${TALLY_CLAIM_REGISTRY_PATH:-}" \
+      node ./consumer-claim-admission.mjs
+  fi
 else
   node ./consumer.mjs
   cp "$TALLY/experiments/v2/selected-business-build/consumer-sqlite.mjs" "$tmp/consumer/consumer-sqlite.mjs"

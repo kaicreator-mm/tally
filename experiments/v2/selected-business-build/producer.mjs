@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -36,6 +36,21 @@ if(process.env.T04B_NATIVE==='1'){
   // Published with the exact B/K/C BUILD digest; never merely an unpinned
   // npm package name. The Host checks installed bytes before any K load.
   console.log('T04B_PROVIDER_SHA256='+providerSha);
+}
+// T06l: second sealed capability for accepted-Claim execution admission.
+// It composes with the existing readiness capability selection above; both
+// capabilities are sealed into the same App when T06L_CLAIM=1.
+let claimBytes=null;
+if(process.env.T06L_CLAIM==='1'){
+  const claimFile=fileURLToPath(new URL('./claim-admission-shim.mjs',import.meta.url));
+  claimBytes=readFileSync(claimFile,'utf8');
+  const claimProviderFile=process.env.T06L_PROVIDER_FILE;
+  if(!claimProviderFile)throw Error('T06L_PROVIDER_FILE_REQUIRED');
+  const claimProviderSha=createHash('sha256').update(readFileSync(claimProviderFile)).digest('hex');
+  if(!claimBytes.includes('__PROVIDER_SHA256__'))throw Error('T06L_SEALED_PROVIDER_DIGEST_MARKER_MISSING');
+  claimBytes=claimBytes.replace('__PROVIDER_SHA256__',claimProviderSha);
+  assert.match(claimBytes,/NATIVE_PROVIDER_SHA256='[a-f0-9]{64}'/);
+  console.log('T06L_PROVIDER_SHA256='+claimProviderSha);
 }
 
 const payload = (specifier) => readFileSync(fileURLToPath(import.meta.resolve(specifier)), 'utf8');
@@ -66,7 +81,8 @@ const modules = [
     bytes:sBytes,provides:['standard:interpret/1','standard:route/1']}),
   selected({packageId:business.MODULE_ID,role:'business',
     abiVersion:business.ABI_VERSION,endpoint:'business-policy',
-    bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness']}),
+    bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness',
+      'intent:admitClaimedTask']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -75,18 +91,37 @@ const modules = [
     externalEffect:false,
     ...(process.env.T04B_NATIVE==='1'?{externalImports:{
       node:[],npm:['@kaicreator/tally-native-reader-bundle'],native:[]}}:{})},
+  ...(claimBytes?[{...selected({packageId:'capability-tally-claim-admission@v1.0.0',
+    role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
+    bytes:claimBytes,provides:['capability:tally-claim-admission/1',
+      'intent:admitClaimedTask']}),
+    capabilityId:'tally-claim-admission',
+    handlers:[{operationId:'tally.admitClaimedTask',handler:'admitClaimedTask'}],
+    externalEffect:false,
+    externalImports:{node:[],npm:['@kaicreator/tally-native-claim-reader-bundle'],
+      native:['better-sqlite3']}}]:[]),
+];
+const routes=[
+  {intentId:'inspectTaskReadiness', operationId:'tally.observeReadiness',
+    capabilityId:'tally-source-observation',handlerId:'observeReadiness'},
+  ...(claimBytes?[{intentId:'admitClaimedTask', operationId:'tally.admitClaimedTask',
+    capabilityId:'tally-claim-admission',handlerId:'admitClaimedTask'}]:[]),
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
-  modules,routes:[{intentId:'inspectTaskReadiness', operationId:'tally.observeReadiness',
-    capabilityId:'tally-source-observation',handlerId:'observeReadiness'}],
+  modules,routes,
   hardBudget:{maxStepsPerTurn:8,maxWorkUnitsPerTurn:64}};
 const built=buildV10App(options);
-assert.equal(built.modules.length,4);
+assert.equal(built.modules.length,claimBytes?5:4);
 assert.equal(built.modules.filter(x=>x.role==='kernel-primary').length,1);
 assert.equal(built.modules.filter(x=>x.role==='business').length,1);
-assert.equal(built.modules.filter(x=>x.role==='capability').length,1);
+assert.equal(built.modules.filter(x=>x.role==='capability').length,claimBytes?2:1);
 assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
+assert.equal(built.routes.length,claimBytes?2:1);
+if(claimBytes){
+  assert.equal(built.routes[1].intentId,'admitClaimedTask');
+  assert.equal(built.routes[1].capabilityId,'tally-claim-admission');
+}
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
 if(process.env.T02B_SEALED_APP_OUTPUT) {
@@ -101,16 +136,22 @@ for(const [caseName,mutate,code] of [
  ['invalid-b-abi',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,abiVersion:'invalid'}:m)}), 'V10_ABI_UNSUPPORTED'],
  ['forged-b-digest',opts=>({...opts,modules:modules.map(m=>m.role==='business'?{...m,moduleSha256:'0'.repeat(64)}:m)}), 'V10_DIGEST_MISMATCH'],
  ['wrong-route-handler',opts=>({...opts,routes:[{...opts.routes[0],handlerId:'unselectedPrivateHandler'}]}), 'V10_ROUTE_INVALID'],
+ ...(claimBytes?[
+   ['claim-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='admitClaimedTask'?{...r,handlerId:'unselectedClaimHandler'}:r)}), 'V10_ROUTE_INVALID'],
+   ['forged-claim-c-digest',opts=>({...opts,modules:modules.map(m=>m.capabilityId==='tally-claim-admission'?{...m,moduleSha256:'0'.repeat(64)}:m)}), 'V10_DIGEST_MISMATCH'],
+   ['duplicate-claim-capability',opts=>({...opts,modules:[...modules,modules.find(m=>m.capabilityId==='tally-claim-admission')]}), 'BUILD_GRAPH_INVALID'],
+ ]:[]),
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
   negatives.push(caseName);
 }
 console.log(JSON.stringify({
-  selectedBusiness:business.MODULE_ID,policyIntent:business.INTENT_TYPES[0],
+  selectedBusiness:business.MODULE_ID,policyIntents:[...business.INTENT_TYPES],
   profile:built.targetProfile,subjectDigest:built.subjectDigest,
   loadOrder:built.loadOrder,selectedModules:built.modules.map(m=>({
     packageId:m.packageId,role:m.role,moduleSha256:m.moduleSha256})),
   negativeRefusals:negatives,producerOnly:true,realKernelSend:'NOT_RUN',
+  claimAdmissionCapability:claimBytes?'SELECTED':'NOT_SELECTED',
   githubEffect:'NOT_RUN',taskPass:false,releasePass:false
 },null,2));
 console.log('T02B_PUBLIC_BUILD_SELECTED_B=PASS');
