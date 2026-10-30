@@ -1,0 +1,46 @@
+# Tally v2 T06l accepted-Claim -> public K admission, exact authored SHA.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2, task/tally-t125-kernel-zcode]
+
+labels:
+  backend: local
+
+steps:
+  - name: t06l-kernel-admission-replay
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "T06L_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "T06L_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - export TALLY_GITHUB_READ_TOKEN=fixture-not-a-secret T06L_WITNESS_REPLAY=1
+      - export NODE_OPTIONS=--import="file://$PWD/claim-replay-runner.mjs"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+      - git log -1 --format=%B HEAD | grep -i '^Refs:' >/dev/null
+      - export work="$PWD/.t06l-ci"
+      - rm -rf -- "$work"
+      - mkdir -p "$work/dh"
+      - git clone --quiet --depth 1 --branch v0.10.2 https://github.com/kaicreator-mm/domain-harness.git "$work/dh"
+      - test "$(git -C "$work/dh" rev-parse HEAD)" = cee14399d9d0af4e20e34b9111861b16a465b690
+      - export npm_config_registry=https://registry.npmmirror.com
+      - export NODE_USE_ENV_PROXY=0 NO_PROXY=localhost,127.0.0.1,172.18.0.1
+      - export DH="$work/dh" TALLY="$PWD" TALLY_B="$PWD"
+      - export T04B_NATIVE=1 T06L_CLAIM=1
+      - export TALLY_NATIVE_EXPECTED_SHA=3293aace8a07c2a4f79a75c6539245980f77e2b4
+      - export TALLY_CLAIM_SOURCE_SHA=3293aace8a07c2a4f79a75c6539245980f77e2b4
+      - export TALLY_CLAIM_DISPATCH_ID=dispatch:169:t06l:kernel:20261030:1
+      - export TALLY_CLAIM_OPERATOR_ID=zcode:t125:kernel:1
+      - export TALLY_CLAIM_OPERATOR_KIND=other
+      - export TALLY_CLAIM_WRITER_ID=tally-host:win32:t125:kernel:1
+      - export TALLY_CLAIM_WRITER_LOGIN=kaicreator-mm
+      - export TALLY_CLAIM_COMMENT_ID=6511046226
+      - export TALLY_CLAIM_REGISTRY_PATH=
+      - sed 's|^npm ls --depth=0$|npm ls --depth=0 \|\| exit 77|' experiments/v2/selected-business-build/run-clean.sh > "$work/replay-clean.sh"
+      - sed -i 's|TALLY_GITHUB_READ_TOKEN="\$native_token" node ./consumer-native-sqlite.mjs|true|' "$work/replay-clean.sh"
+      - bash "$work/replay-clean.sh" > "$work/consumer.log" 2>&1 || { rc=$?; node ci-post-error.mjs "$work/consumer.log"; exit "$rc"; }
+      - echo TALLY_V2_T06L_WOODPECKER_REPLAY_K_ADMISSION_PASS

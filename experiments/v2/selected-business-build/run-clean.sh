@@ -115,7 +115,7 @@ fi
 cp "$TALLY/experiments/v2/selected-business-build/consumer.mjs" "$tmp/consumer/consumer.mjs"
 printf '{"name":"tally-selected-runtime-consumer","private":true,"type":"module"}\n' >"$tmp/consumer/package.json"
 cd "$tmp/consumer"
-npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@^12'
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@12.4.1'
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   npm install --save-exact "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
   if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
