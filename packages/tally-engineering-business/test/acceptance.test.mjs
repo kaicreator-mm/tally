@@ -91,7 +91,9 @@ test('missing Host evidence is UNKNOWN rather than source or physical PASS',()=>
     assert.equal(item.released,false);}
 });
 test('missing observation time yields UNKNOWN, never zero or PASS',()=>{
-  const items=buildAcceptanceItems({...evidence,observedAsOf:undefined});
-  assert.equal(items.length,1);assert.equal(items[0].status,'UNKNOWN');
-  assert.equal(items[0].coverage,'UNKNOWN');assert.equal(items[0].released,false);
+  for(const input of [{...evidence,observedAsOf:undefined},null,undefined]){
+    const items=buildAcceptanceItems(input);
+    assert.equal(items.length,1);assert.equal(items[0].status,'UNKNOWN');
+    assert.equal(items[0].coverage,'UNKNOWN');assert.equal(items[0].released,false);
+  }
 });
