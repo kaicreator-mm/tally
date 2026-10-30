@@ -417,7 +417,9 @@ const readModelAdvice=(base,status,reason,kind,authority)=>Object.freeze({
   })])
 });
 const isoTime=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
-  new Date(value).toISOString()===value;
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+const ATTEMPT_STATES=new Set(['LOCAL_CANDIDATE_READY','LOCAL_ATTEMPT_UNKNOWN',
+  'LOCAL_ATTEMPT_FAILED','LOCAL_ATTEMPT_CANCELLED']);
 /** Source pair must come from selected native GitHub C, never UI/LLM. */
 export function projectNativeTaskEffectiveSnapshot({
   sourcePair,expectedIssueRef,expectedSourceSha,observedAt,hostObservation
@@ -467,7 +469,7 @@ export function projectNativeTaskEffectiveSnapshot({
       const attempt=hostObservation?.attempt,join=hostObservation?.join;
       const validAttempt=attempt&&typeof attempt==='object'&&!Array.isArray(attempt)&&
         attempt.issueRef===expectedIssueRef&&attempt.sourceSha===expectedSourceSha&&
-        LOCAL_ATTEMPT_ID.test(attempt.attemptId??'')&&typeof attempt.state==='string'&&
+        LOCAL_ATTEMPT_ID.test(attempt.attemptId??'')&&ATTEMPT_STATES.has(attempt.state)&&
         attempt.authorized===false&&attempt.taskPass===false&&attempt.releasePass===false&&
         attempt.process?.status==='EXITED'&&attempt.process.exitCode===0&&
         isoTime(attempt.process.startedAt)&&isoTime(attempt.process.terminatedAt)&&

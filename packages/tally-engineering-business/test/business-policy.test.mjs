@@ -516,6 +516,7 @@ test('#137 candidate without Reviewer Join requests review rather than completio
 });
 test('#137 wrong host source/attempt/timestamps are UNKNOWN rather than normalized PASS',()=>{
   for(const hostObservation of [
+    {attempt:{...snapshotAttempt,state:'REVIEW_JOINED'}},
     {attempt:{...snapshotAttempt,issueRef:'https://github.com/kaicreator-mm/tally/issues/999'}},
     {attempt:{...snapshotAttempt,process:{...snapshotAttempt.process,startedAt:'bad'}}},
     {attempt:{...snapshotAttempt,process:{...snapshotAttempt.process,terminatedAt:'2026-10-30T10:00:00.000Z'}}},
@@ -531,6 +532,9 @@ test('#137 observation time stays honest and conflicting claims stay CONFLICT',(
     observedAt:undefined,sourcePair:snapshotPair()});
   assert.equal(missing.status,'AWAITING_HOST_ADMISSION');assert.equal(missing.currentness,'AGE_NOT_VERIFIED');
   assert.equal(missing.observedAsOf,null);
+  const noMillis=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,
+    expectedSourceSha:snapshotBase.sourceSha,observedAt:'2026-10-30T12:00:00Z',sourcePair:snapshotPair()});
+  assert.equal(noMillis.currentness,'OBSERVED_AT_QUERY_COMPLETION');
   const conflict=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
     observedAt:snapshotBase.observedAt,sourcePair:snapshotPair({}, {
     reason:'CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED',candidateCount:2,
