@@ -24,8 +24,8 @@ test('Project Journey exposes independent legal Agent assignments without human 
     ['START_ELIGIBLE_CLAIM','START_ELIGIBLE_INDEPENDENT_REVIEW','START_ELIGIBLE_VALIDATOR']);
   assert.deepEqual(actions.map(x=>x.actorRole),['builder','reviewer','validator']);
   assert.equal(humanActionInbox.length,0);
-  for(const action of actions){assert.equal(action.authorization,'ADVISORY_ONLY');
-    assert.equal(action.evidence.sourceSha,sourceSha);assert.equal(action.approvalNeeded,false);}
+  for(const action of actions){assert.equal(action.authorization,'HOST_AND_ADS_REQUIRED');
+    assert.equal(action.evidence.sourceSha,sourceSha);assert.equal(action.approvalNeeded,true);}
 });
 test('native blockers and no currentness never unlock an Agent',()=>{
   const blocked=projectJourneySnapshot({project:'tally',version:'v2',sourceSha,
@@ -56,7 +56,8 @@ test('candidate failure permits bounded Repair without rewriting old evidence',(
   const s=projectJourneySnapshot({project:'tally',version:'v2',sourceSha,tasks:[failed],observedAt});
   const action=nextActions(s).actions[0];
   assert.equal(action.authorizationType,'REPAIR_ELIGIBLE');assert.equal(action.actorRole,'builder');
-  assert.equal(action.approvalNeeded,false);assert.equal(action.costRisk,'MEDIUM');
+  assert.equal(action.approvalNeeded,true);assert.equal(action.authorization,'HOST_REQUIRED');
+  assert.equal(action.costRisk,'MEDIUM');
 });
 test('source changes recompute only affected lanes, not the whole project',()=>{
   const other=task('https://github.com/kaicreator-mm/tally/issues/999',{sourceSha:'f'.repeat(40)});
@@ -75,6 +76,11 @@ test('invalid snapshots, timestamps and conflict states cannot authorize action'
   const conflict=projectJourneySnapshot({project:'tally',version:'v2',sourceSha,
     tasks:[task(one.sourceRef,{status:'CONFLICT',reason:'AMBIGUOUS_CLAIM_EVENT_CANDIDATES'})],observedAt});
   assert.deepEqual(nextActions(conflict).actions.map(x=>x.authorizationType),['NO_VALID_ACTION']);
-  assert.equal(nextActions(null).length,1);
-  assert.equal(nextActions(null)[0].authorizationType,'NO_VALID_ACTION');
+  const unknown=projectJourneySnapshot({project:'tally',version:'v2',sourceSha,
+    tasks:[task(one.sourceRef,{status:'UNKNOWN',reason:'NATIVE_SOURCE_PAIR_NOT_VERIFIED'})],observedAt});
+  assert.equal(nextActions(unknown).actions[0].reason,'NATIVE_SOURCE_PAIR_NOT_VERIFIED');
+  const invalidResult=nextActions(null);
+  assert.equal(invalidResult.actions.length,1);
+  assert.equal(invalidResult.actions[0].authorizationType,'NO_VALID_ACTION');
+  assert.deepEqual(invalidResult.humanActionInbox,[]);
 });
