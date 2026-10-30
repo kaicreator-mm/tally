@@ -121,7 +121,8 @@ export async function runLocalCodexAttempt(input){
 `;
 const result=await build({
   stdin:{contents:provider,resolveDir:process.cwd(),sourcefile:'local-codex-provider.mjs',loader:'js'},
-  bundle:true,format:'esm',platform:'node',target:'node24',external:['better-sqlite3'],
+  bundle:true,format:'esm',platform:'node',target:'node24',
+  external:['better-sqlite3','@kaicreator/domain-harness-host-node'],
   write:false,metafile:true,legalComments:'none',logLevel:'warning',
   banner:{js:'import {createRequire as __nativeRequireFactory} from "node:module"; const require = __nativeRequireFactory(import.meta.url);'},
   plugins:[{name:'pinned-ads-event-schema-bytes',setup(b){
@@ -138,7 +139,8 @@ for(const name of ['process','buffer']){
   code=code.replaceAll("from '"+name+"'","from 'node:"+name+"'");
 }
 const externals=originals.map(x=>['process','buffer'].includes(x)?'node:'+x:x);
-if(externals.some(x=>!x.startsWith('node:')&&x!=='better-sqlite3'))
+const allowedExternals=new Set(['better-sqlite3','@kaicreator/domain-harness-host-node']);
+if(externals.some(x=>!x.startsWith('node:')&&!allowedExternals.has(x)))
   throw Error('UNSELECTED_BARE_DEPENDENCY:'+externals.join(','));
 writeFileSync(out,code);
 writeFileSync(importsOut,JSON.stringify(externals));
