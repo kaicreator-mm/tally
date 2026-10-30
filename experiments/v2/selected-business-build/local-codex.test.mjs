@@ -145,3 +145,221 @@ test('Builder environment is an explicit allowlist with no operator credential i
   assert.equal(env.GIT_CONFIG_NOSYSTEM,'1');assert.equal(env.GIT_TERMINAL_PROMPT,'0');
   assert.equal(env.CODEX_HOME,'C:\\Builder\\home');
 });
+
+
+const CONCURRENT_A='experiments/v2/selected-business-build/CONCURRENT_A.md';
+const CONCURRENT_B='experiments/v2/selected-business-build/CONCURRENT_B.md';
+const joinKey=id=>LOCAL_CODEX_CONSTANTS.joinKeyPrefix+id;
+function joinOperations(overrides={}){
+  return {
+    verifyCandidateReadback:async(config,record)=>({verified:true,
+      candidateTree:record.candidateTree,parent:config.sourceSha,
+      paths:[record.candidateRelativePath??LOCAL_CODEX_CONSTANTS.candidateRelativePath]}),
+    ...overrides
+  };
+}
+function readyRecord(attemptId,overrides={}){
+  return {phase:'CANDIDATE_READY',attemptId,sourceSha,issueRef,
+    claimGeneration:1,worktreePath:'C:\\worktrees\\'+attemptId,
+    candidateRelativePath:CONCURRENT_A,startedAt:'2026-10-30T00:00:00Z',
+    candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),
+    candidateRef:'refs/tally-candidates/'+attemptId.replace(/[^A-Za-z0-9._-]/g,'-'),
+    process:{status:'EXITED',exitCode:0,pid:4242,startedAt:'2026-10-30T00:00:00Z',
+      terminatedAt:'2026-10-30T00:01:00Z'},...overrides};
+}
+function joinHostOver(readback){
+  return {ops:{
+    probeProvider:async()=>({available:true}),
+    prepareWorktree:async config=>({worktreePath:config.worktreePath,baseSha:config.sourceSha}),
+    proveConfinement:async config=>({verified:true,builderPrincipal:config.builderPrincipal,
+      builderSid:config.builderSid,hiddenVerifierStatus:'HIDDEN_NOT_QUALIFIED'}),
+    finalizeCandidate:async()=>candidate,
+    verifyCandidateReadback:readback??joinOperations().verifyCandidateReadback,
+  }};
+}
+const joinConfigFor=(dir,joinId,candidates)=>({issueRef,sourceSha,joinId,
+  hostStorePath:join(dir,'host.sqlite'),repositoryPath:dir,candidates});
+const joinCandidates=()=>[
+  {attemptId:'attempt:t06n:a:1',candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40)},
+  {attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}];
+
+test('candidateRelativePath config drives record, prompt and write-set default',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-path-'));
+  try{
+    const calls=[];let seenConfig=null;
+    const spawnFn=(command,args,options)=>{
+      calls.push({command,args,options});return fakeChild((close)=>close(0,null));
+    };
+    const host=createLocalCodexHost({spawnFn,
+      operations:operations({finalizeCandidate:async c=>{seenConfig=c;return candidate;}}),
+      now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+    const config=configFor(dir);
+    const x=await host.runAttempt({...config,candidateRelativePath:CONCURRENT_A});
+    assert.equal(x.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(seenConfig.candidateRelativePath,CONCURRENT_A);
+    const prompt=calls[0].args.at(-1);
+    assert.ok(prompt.includes(CONCURRENT_A));
+    assert.ok(!prompt.includes(LOCAL_CODEX_CONSTANTS.candidateRelativePath));
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.candidateRelativePath,CONCURRENT_A);
+    await store.close();
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('concurrent Builders get distinct records and real overlapping lifetimes',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-overlap-'));
+  try{
+    const mkHost=delayMs=>{
+      const calls=[];
+      const spawnFn=(command,args,options)=>{
+        calls.push({command,args,options});
+        return fakeChild((close)=>setTimeout(()=>close(0,null),delayMs));
+      };
+      return {host:createLocalCodexHost({spawnFn,operations:operations(),
+        now:()=>Date.now(),killTree:async()=>true}),calls};
+    };
+    const a=mkHost(120),b=mkHost(120);
+    const configA={...configFor(dir,'attempt:t06n:overlap:a'),
+      worktreePath:join(dir,'wt-a'),candidateRelativePath:CONCURRENT_A};
+    const configB={...configFor(dir,'attempt:t06n:overlap:b'),
+      worktreePath:join(dir,'wt-b'),candidateRelativePath:CONCURRENT_B};
+    const [ra,rb]=await Promise.all([a.host.runAttempt(configA),b.host.runAttempt(configB)]);
+    assert.equal(ra.state,'LOCAL_CANDIDATE_READY');assert.equal(rb.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(a.calls.length,1);assert.equal(b.calls.length,1);
+    const a0=Date.parse(ra.process.startedAt),a1=Date.parse(ra.process.terminatedAt);
+    const b0=Date.parse(rb.process.startedAt),b1=Date.parse(rb.process.terminatedAt);
+    assert.ok(a0<b1&&b0<a1,'two real process lifetimes must overlap for overlap evidence');
+    const store=await openSqliteCasStore({path:configA.hostStorePath,busyTimeoutMs:1000});
+    const keys=await store.list(LOCAL_CODEX_CONSTANTS.attemptKeyPrefix);
+    assert.equal(keys.length,2,'independent CAS records per concurrent attempt');
+    await store.close();
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('shared worktree or overlapping write grant denies the second Builder',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-deny-'));
+  try{
+    const store=await openSqliteCasStore({path:join(dir,'host.sqlite'),busyTimeoutMs:1000});
+    await store.put(attemptKey('attempt:t06n:active:1'),
+      readyRecord('attempt:t06n:active:1',{phase:'RUNNING'}),{mustBeAbsent:true});
+    await store.close();
+    const host=createLocalCodexHost({
+      spawnFn:()=>{throw Error('overlap denial must not spawn');},
+      operations:operations(),now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+    const x=await host.runAttempt({...configFor(dir,'attempt:t06n:deny:wt'),
+      worktreePath:'C:\\worktrees\\attempt:t06n:active:1',candidateRelativePath:CONCURRENT_B});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.reason,'CANDIDATE_WORKTREE_OVERLAP');
+    assert.equal(x.agentLaunch,false);assert.equal(x.admitted,false);
+    const y=await host.runAttempt({...configFor(dir,'attempt:t06n:deny:grant'),
+      worktreePath:join(dir,'other-wt'),candidateRelativePath:CONCURRENT_A});
+    assert.equal(y.state,'NOT_ADMITTED');assert.equal(y.reason,'CANDIDATE_WRITE_GRANT_OVERLAP');
+    assert.equal(y.agentLaunch,false);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('reviewer Join verifies exact candidates and replays without re-readback',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-join-'));
+  try{
+    const store=await openSqliteCasStore({path:join(dir,'host.sqlite'),busyTimeoutMs:1000});
+    await store.put(attemptKey('attempt:t06n:a:1'),readyRecord('attempt:t06n:a:1'),
+      {mustBeAbsent:true});
+    await store.put(attemptKey('attempt:t06n:b:1'),readyRecord('attempt:t06n:b:1',
+      {candidateRelativePath:CONCURRENT_B,candidateTree:'c'.repeat(40),
+        candidateCommit:'d'.repeat(40),worktreePath:'C:\\worktrees\\b'}),{mustBeAbsent:true});
+    await store.close();
+    const host=createLocalCodexHost({
+      spawnFn:()=>{throw Error('join must not spawn processes');},
+      operations:joinOperations(),now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+    const joined=await host.joinReviewedCandidates(
+      joinConfigFor(dir,'join:t06n:test:1',joinCandidates()));
+    assert.equal(joined.state,'REVIEW_JOINED');
+    assert.equal(joined.candidates.length,2);
+    assert.equal(joined.taskPass,false);assert.equal(joined.authorized,false);
+    assert.equal(joined.candidates[0].candidateRelativePath,CONCURRENT_A);
+    assert.equal(joined.candidates[1].candidateRelativePath,CONCURRENT_B);
+    assert.ok(joined.candidates[0].terminatedAt,'overlap timestamps preserved in join');
+    const store2=await openSqliteCasStore({path:join(dir,'host.sqlite'),busyTimeoutMs:1000});
+    const row=await store2.get(joinKey('join:t06n:test:1'));
+    assert.equal(row.value.phase,'JOINED');
+    await store2.close();
+    const again=await host.joinReviewedCandidates(
+      joinConfigFor(dir,'join:t06n:test:1',joinCandidates()));
+    assert.equal(again.state,'REVIEW_JOINED');
+    assert.equal(again.joinedAt,joined.joinedAt,'idempotent join never re-reads');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('reviewer Join rejects missing, not-ready, stale, overlapping and unreadbackable candidates',async()=>{
+  const cases=[
+    ['CANDIDATE_NOT_FOUND',{},{},
+      {attemptId:'attempt:t06n:missing:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}],
+    ['CANDIDATE_NOT_READY',{},{phase:'FAILED'},
+      {attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}],
+    ['CANDIDATE_STALE',{sourceSha:'f'.repeat(40)},{},
+      {attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}],
+    ['CANDIDATE_STALE',{},{},
+      {attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'e'.repeat(40)}],
+    ['CANDIDATE_WRITESET_OVERLAP',{},{candidateRelativePath:CONCURRENT_A},
+      {attemptId:'attempt:t06n:b:1',candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40)}],
+    ['CANDIDATE_READBACK_MISMATCH',{},{},
+      {attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}],
+  ];
+  for(const [reason,aOverride,bRecordOverride,bCandidate] of cases){
+    const dir=await mkdtemp(join(tmpdir(),'tally-t06n-join-deny-'));
+    try{
+      const store=await openSqliteCasStore({path:join(dir,'host.sqlite'),busyTimeoutMs:1000});
+      await store.put(attemptKey('attempt:t06n:a:1'),readyRecord('attempt:t06n:a:1',aOverride),
+        {mustBeAbsent:true});
+      await store.put(attemptKey('attempt:t06n:b:1'),
+        readyRecord('attempt:t06n:b:1',{candidateRelativePath:CONCURRENT_B,
+          worktreePath:'C:\\worktrees\\b',...bRecordOverride}),{mustBeAbsent:true});
+      await store.close();
+      const readback=reason==='CANDIDATE_READBACK_MISMATCH'?
+        async()=>({verified:false}):joinOperations().verifyCandidateReadback;
+      const host=createLocalCodexHost({
+        spawnFn:()=>{throw Error('join must not spawn processes');},
+        operations:joinOperations({verifyCandidateReadback:readback}),
+        now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+      const x=await host.joinReviewedCandidates(joinConfigFor(dir,
+        'join:t06n:deny:'+reason.toLowerCase(),[joinCandidates()[0],bCandidate]));
+      assert.equal(x.state,'NOT_ADMITTED',reason);
+      assert.equal(x.reason,reason);
+      assert.equal(x.admitted,false);assert.equal(x.taskPass,false);
+      assert.equal(x.agentLaunch,false);
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
+});
+
+test('bounded repair uses a new attempt id and preserves prior failure evidence',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-repair-'));
+  try{
+    const calls=[];
+    const spawnFn=(command,args,options)=>{
+      calls.push({command,args,options});
+      return fakeChild((close)=>close(0,null));
+    };
+    const failingHost=createLocalCodexHost({spawnFn:()=>fakeChild((close)=>close(7,null)),
+      operations:operations(),now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+    const failed=await failingHost.runAttempt(
+      {...configFor(dir,'attempt:t06n:repair:failed'),candidateRelativePath:CONCURRENT_B});
+    assert.equal(failed.state,'LOCAL_ATTEMPT_FAILED');
+    const host=createLocalCodexHost({spawnFn,operations:operations({finalizeCandidate:async()=>
+      ({...candidate,candidateTree:'e'.repeat(40),candidateCommit:'f'.repeat(40),
+        candidateRef:'refs/tally-candidates/repair'})}),
+      now:()=>Date.UTC(2026,9,30),killTree:async()=>true});
+    const repair=await host.runAttempt({...configFor(dir,'attempt:t06n:repair:2'),
+      worktreePath:join(dir,'repair-wt'),candidateRelativePath:CONCURRENT_B});
+    assert.equal(repair.state,'LOCAL_CANDIDATE_READY');
+    assert.notEqual(repair.candidateCommit,failed.candidateCommit);
+    assert.equal(calls.length,1);
+    const store=await openSqliteCasStore({path:join(dir,'host.sqlite'),busyTimeoutMs:1000});
+    const prior=await store.get(attemptKey('attempt:t06n:repair:failed'));
+    assert.equal(prior.value.phase,'FAILED','prior failure evidence preserved verbatim');
+    await store.close();
+    const again=await host.runAttempt({...configFor(dir,'attempt:t06n:repair:2'),
+      worktreePath:join(dir,'repair-wt'),candidateRelativePath:CONCURRENT_B});
+    assert.equal(again.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(calls.length,1,'repaired attempt restart must not relaunch');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});

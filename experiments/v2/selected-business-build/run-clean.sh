@@ -35,7 +35,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   fi
 fi
 expected_dh_sha=cee14399d9d0af4e20e34b9111861b16a465b690
-if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+if [[ "${T06M_LOCAL:-0}" == "1" || "${T06N_CONCURRENT:-0}" == "1" ]]; then
   expected_dh_sha=061376f4a023070f215f9feffad5c24d96d503cb
 fi
 [[ "$(git -C "$DH" rev-parse HEAD)" == "$expected_dh_sha" ]] || { echo DH_SHA_MISMATCH; exit 2; }
@@ -122,6 +122,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     sha256sum "$tmp/local-codex-provider/index.mjs" "$tmp"/packed/kaicreator-tally-local-codex-host-bundle-*.tgz
   fi
   T06M_LOCAL="${T06M_LOCAL:-0}" \
+  T06N_CONCURRENT="${T06N_CONCURRENT:-0}" \
   T06M_PROVIDER_FILE="$tmp/local-codex-provider/index.mjs" \
   T06L_CLAIM="${T06L_CLAIM:-0}" \
   T06L_PROVIDER_FILE="$tmp/native-claim-provider/index.mjs" \
@@ -149,9 +150,39 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
-    cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
     node --test "$tmp/consumer/local-codex.test.mjs"
-    TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+    if [[ "${T06N_CONCURRENT:-0}" == "1" ]]; then
+      # T06n: ONE K facade runs Builder A (#177) and Builder B (#178) with two
+      # distinct instance keys/attempts so the real external effects overlap,
+      # then reviewer Join (#179), one bounded Repair and re-Join. Real run
+      # requires the Host-prepared accepted registry; safe replay seeds it.
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-concurrent-codex.mjs" "$tmp/consumer/consumer-concurrent-codex.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" \
+      TALLY_TASK_CLAIM_177_DISPATCH_ID="${TALLY_TASK_CLAIM_177_DISPATCH_ID:-dispatch:177:t06n:builder-a:20261030:1}" \
+      TALLY_TASK_CLAIM_177_OPERATOR_ID="${TALLY_TASK_CLAIM_177_OPERATOR_ID:-codex:t06n:builder-a:1}" \
+      TALLY_TASK_CLAIM_177_OPERATOR_KIND="${TALLY_TASK_CLAIM_177_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_177_WRITER_ID="${TALLY_TASK_CLAIM_177_WRITER_ID:-tally-host:win32:i177:1}" \
+      TALLY_TASK_CLAIM_177_WRITER_LOGIN="${TALLY_TASK_CLAIM_177_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_177_COMMENT_ID="${TALLY_TASK_CLAIM_177_COMMENT_ID:-6527324131}" \
+      TALLY_TASK_CLAIM_178_DISPATCH_ID="${TALLY_TASK_CLAIM_178_DISPATCH_ID:-dispatch:178:t06n:builder-b:20261030:1}" \
+      TALLY_TASK_CLAIM_178_OPERATOR_ID="${TALLY_TASK_CLAIM_178_OPERATOR_ID:-codex:t06n:builder-b:1}" \
+      TALLY_TASK_CLAIM_178_OPERATOR_KIND="${TALLY_TASK_CLAIM_178_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_178_WRITER_ID="${TALLY_TASK_CLAIM_178_WRITER_ID:-tally-host:win32:i178:1}" \
+      TALLY_TASK_CLAIM_178_WRITER_LOGIN="${TALLY_TASK_CLAIM_178_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_178_COMMENT_ID="${TALLY_TASK_CLAIM_178_COMMENT_ID:-6527327548}" \
+      TALLY_TASK_CLAIM_179_DISPATCH_ID="${TALLY_TASK_CLAIM_179_DISPATCH_ID:-dispatch:179:t06n:reviewer:20261030:1}" \
+      TALLY_TASK_CLAIM_179_OPERATOR_ID="${TALLY_TASK_CLAIM_179_OPERATOR_ID:-zcode:t06n:reviewer:1}" \
+      TALLY_TASK_CLAIM_179_OPERATOR_KIND="${TALLY_TASK_CLAIM_179_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_179_WRITER_ID="${TALLY_TASK_CLAIM_179_WRITER_ID:-tally-host:win32:i179:1}" \
+      TALLY_TASK_CLAIM_179_WRITER_LOGIN="${TALLY_TASK_CLAIM_179_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_179_COMMENT_ID="${TALLY_TASK_CLAIM_179_COMMENT_ID:-6527331202}" \
+      TALLY_TASK_CLAIM_177_REGISTRY_PATH="${TALLY_TASK_CLAIM_177_REGISTRY_PATH:-}" \
+      TALLY_TASK_CLAIM_178_REGISTRY_PATH="${TALLY_TASK_CLAIM_178_REGISTRY_PATH:-}" \
+      TALLY_TASK_CLAIM_179_REGISTRY_PATH="${TALLY_TASK_CLAIM_179_REGISTRY_PATH:-}" \
+        node "$tmp/consumer/consumer-concurrent-codex.mjs"
+    else
+      TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+    fi
   else
     cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
     TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs

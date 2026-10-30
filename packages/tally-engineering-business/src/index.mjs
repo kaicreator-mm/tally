@@ -8,9 +8,10 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
-  'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
+  'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
+  'effect:tally-reviewer-candidate-join']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -54,6 +55,13 @@ const localAgentInputFrom=Object.freeze({
   issueNumber:{source:'event',path:['payload','issueNumber']},
   sourceSha:{source:'event',path:['payload','sourceSha']},
   attemptId:{source:'event',path:['payload','attemptId']},
+});
+const joinInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  joinId:{source:'event',path:['payload','joinId']},
+  candidates:{source:'event',path:['payload','candidates']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -116,12 +124,28 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[localAgentTransition]},finalState],
   };
+  const joinTransition={
+    transitionKey:'join-reviewed-candidates',
+    trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-reviewer-candidate-join',inputFrom:joinInputFrom,
+      // One reviewer Join observation per (issue, sourceSha, joinId). A
+      // rejected observation still executes as a negative projection; replay
+      // of a prior JOINED observation never re-executes the native C read.
+      idempotencyKeyFrom:{template:'join:{issueNumber}:{sourceSha}:{joinId}'}
+    }]
+  };
+  const joinWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[joinTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition]},
         finalState,
       ],
     },
@@ -142,6 +166,11 @@ export function getPolicy(){
       ruleId:'rule:tally-local-codex-attempt',
       eventType:'TALLY_LOCAL_CODEX_ATTEMPT_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',attemptId:'attemptId'},
+    },'rule:tally-reviewer-candidate-join':{
+      ruleId:'rule:tally-reviewer-candidate-join',
+      eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        joinId:'joinId',candidates:'candidates'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -166,6 +195,16 @@ export function getPolicy(){
         ruleId:'rule:tally-local-codex-attempt',
         roles:['requester','planner','builder','reviewer'],
         definition:localAgentWorkflow,
+      },
+      joinReviewedCandidates:{
+        trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED'},
+        ruleId:'rule:tally-reviewer-candidate-join',
+        // Reviewer authority here is ONLY the sealed C reviewer-Claim
+        // observation (Host-owned #179 registry row plus current native
+        // readback and exact candidate git readback), never the caller.
+        // The caller role gates only who may REQUEST the Join check.
+        roles:['requester','planner','builder','reviewer'],
+        definition:joinWorkflow,
       },
     },
     effectBindings:{
@@ -240,6 +279,29 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectLocalCodexAttempt({input,observation,effectId});
+        },
+      },
+      'effect:tally-reviewer-candidate-join':{
+        // Idempotent: a JOINED observation replays from the K journal and
+        // never re-runs native candidate readback. The external C call has
+        // its own K permit but launches no Builder process.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.joinReviewedCandidates'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessReviewedCandidateJoin(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call(
+            'tally-local-codex','tally.joinReviewedCandidates',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,joinId:input.joinId,
+              candidates:input.candidates,effectId}
+          );
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectReviewedCandidateJoin({input,observation,effectId});
         },
       },
     },
@@ -536,7 +598,8 @@ const LOCAL_REASONS=new Set([
   'BUILDER_CONFINEMENT_UNAVAILABLE','HIDDEN_VERIFIER_UNAVAILABLE',
   'ATTEMPT_ALREADY_RECONCILED','ATTEMPT_STATUS_UNKNOWN','ATTEMPT_TIMEOUT_RECONCILED',
   'ATTEMPT_CANCELLED','ATTEMPT_PROCESS_FAILED','WRITE_SET_VIOLATION',
-  'CANDIDATE_TREE_UNAVAILABLE','LOCAL_AGENT_PROVIDER_THREW'
+  'CANDIDATE_TREE_UNAVAILABLE','LOCAL_AGENT_PROVIDER_THREW',
+  'CANDIDATE_WORKTREE_OVERLAP','CANDIDATE_WRITE_GRANT_OVERLAP'
 ]);
 const localDenied=(reason,effectId)=>Object.freeze({state:'NOT_ADMITTED',reason,effectId,
   admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
@@ -589,4 +652,94 @@ export function projectLocalCodexAttempt({input,observation,effectId}={}){
           startedAt:o.process.startedAt,terminatedAt:o.process.terminatedAt})});
     return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
   }catch{return localDenied('UNTRUSTED_LOCAL_CODEX_OBSERVATION',effectId);}
+}
+
+/**
+ * T06n/#176 — advisory input screening for the reviewer Join intent.
+ * The reviewer-accepted Claim fact and the exact candidate readback can only
+ * come from the selected sealed C; no input shape, caller assertion or
+ * candidate list supplied by an Agent is Join evidence.
+ */
+const JOIN_CANDIDATE_ISSUES=new Set([172,177,178]);
+export function assessReviewedCandidateJoin(input){
+  const unqualified=Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',
+    admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
+    taskPass:false,releasePass:false});
+  if(!input||typeof input!=='object'||Array.isArray(input))return unqualified;
+  const {issueRef,issueNumber,sourceSha,joinId,candidates}=input;
+  if(!(ISSUE_REF.test(issueRef)&&Number.isSafeInteger(issueNumber)&&issueNumber>0&&
+    issueRef.endsWith(`/issues/${issueNumber}`)&&SOURCE_SHA.test(sourceSha)&&
+    LOCAL_ATTEMPT_ID.test(joinId??'')&&Array.isArray(candidates)&&candidates.length>=2))
+    return Object.freeze({...unqualified,reason:'MISSING_SOURCE_IDENTITY'});
+  for(const c of candidates){
+    if(!c||typeof c!=='object'||Array.isArray(c)||
+      !JOIN_CANDIDATE_ISSUES.has(c.issueNumber)||
+      !LOCAL_ATTEMPT_ID.test(c.attemptId??'')||
+      !SOURCE_SHA.test(c.candidateCommit??'')||!SOURCE_SHA.test(c.candidateTree??''))
+      return Object.freeze({...unqualified,reason:'MISSING_SOURCE_IDENTITY'});
+  }
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_REVIEWER_JOIN_OBSERVATION',
+    issueRef,issueNumber,sourceSha,joinId,candidates,admitted:false,claimAccepted:false,
+    authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+}
+
+const JOIN_REASONS=new Set([
+  ...LOCAL_REASONS,'JOIN_INPUT_INVALID','CANDIDATE_NOT_FOUND','CANDIDATE_NOT_READY',
+  'CANDIDATE_STALE','CANDIDATE_READBACK_MISMATCH','CANDIDATE_WRITESET_OVERLAP',
+  'REVIEWER_SELF_ASSERTION'
+]);
+const joinDenied=(reason,effectId)=>Object.freeze({state:'NOT_ADMITTED',reason,effectId,
+  admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
+  joinedAt:null,candidates:[],taskPass:false,releasePass:false});
+/**
+ * T06n — Business projection of the sealed C reviewer-Join observation.
+ * Positive output verifies only that THIS K intent joined the exact reviewed
+ * candidates: it never authorizes the caller, upgrades Task/Release PASS or
+ * substitutes for the Host's independent candidate readback.
+ */
+export function projectReviewedCandidateJoin({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.joinId!==input?.joinId)
+      return joinDenied('UNVERIFIED_REVIEWER_JOIN_OBSERVATION',effectId);
+    if(o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)
+      return joinDenied('UNVERIFIED_REVIEWER_JOIN_OBSERVATION',effectId);
+    if(o.state==='NOT_ADMITTED'&&JOIN_REASONS.has(o.reason)&&o.admitted===false&&
+      o.claimAccepted===false&&o.agentLaunch===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,joinId:o.joinId,
+        claimGeneration:o.claimGeneration,claimAccepted:false,admitted:false,
+        authorized:false,agentLaunch:false,joinedAt:null,candidates:[],
+        taskPass:false,releasePass:false});
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+      o.replayFixture===true)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,joinId:o.joinId,
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        agentLaunch:false,replayFixture:true,joinedAt:null,candidates:[],
+        taskPass:false,releasePass:false});
+    if(o.state==='REVIEW_JOINED'&&o.reason==='REVIEWED_CANDIDATES_VERIFIED'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+      o.replayFixture===false&&typeof o.joinedAt==='string'&&
+      Array.isArray(o.candidates)&&o.candidates.length===input?.candidates?.length&&
+      o.candidates.every((c,i)=>c&&c.attemptId===input.candidates[i].attemptId&&
+        SOURCE_SHA.test(c.candidateTree??'')&&SOURCE_SHA.test(c.candidateCommit??'')&&
+        typeof c.candidateRelativePath==='string'))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,joinId:o.joinId,
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        agentLaunch:false,replayFixture:false,joinedAt:o.joinedAt,
+        candidates:Object.freeze(o.candidates.map((c,i)=>Object.freeze({
+          attemptId:c.attemptId,issueRef:c.issueRef,
+          issueNumber:input.candidates[i].issueNumber,
+          candidateRelativePath:c.candidateRelativePath,candidateTree:c.candidateTree,
+          candidateCommit:c.candidateCommit,candidateRef:c.candidateRef??null,
+          startedAt:c.startedAt??null,terminatedAt:c.terminatedAt??null}))),
+        taskPass:false,releasePass:false});
+    return joinDenied('UNVERIFIED_REVIEWER_JOIN_OBSERVATION',effectId);
+  }catch{return joinDenied('UNTRUSTED_REVIEWER_JOIN_OBSERVATION',effectId);}
 }
