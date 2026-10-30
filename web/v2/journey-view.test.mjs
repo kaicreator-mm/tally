@@ -49,6 +49,18 @@ test('unverified snapshot stays UNKNOWN with no available action',()=>{
   const html=renderJourneyWorkspace(null,{actions:[eligible],humanActionInbox:[]});
   assert.match(html,/UNKNOWN/);assert.match(html,/No action is available/);
 });
+test('Task rows match actions by sourceRef, not array position',()=>{
+  const two=task('https://github.com/kaicreator-mm/tally/issues/177',{status:'AWAITING_REVIEW',
+    reason:'LOCAL_CANDIDATE_READY'});
+  const review={...eligible,authorizationType:'START_ELIGIBLE_INDEPENDENT_REVIEW',
+    evidence:{sourceRef:two.sourceRef,sourceSha,observedAsOf:observedAt}};
+  const html=renderJourneyWorkspace({...snapshot,tasks:[one,two]},
+    {actions:[review,eligible],humanActionInbox:[]});
+  const first=html.indexOf('issues/172'),second=html.indexOf('issues/177');
+  assert.ok(first>0&&second>first);
+  assert.ok(html.indexOf('START_ELIGIBLE_INDEPENDENT_REVIEW')>html.indexOf('START_ELIGIBLE_CLAIM'));
+  assert.match(html,/START_ELIGIBLE_CLAIM/);assert.match(html,/START_ELIGIBLE_INDEPENDENT_REVIEW/);
+});
 test('static page contains the real module and no write controls',()=>{
   const html=readFileSync(new URL('./journey-view.html',import.meta.url),'utf8');
   assert.match(html,/import \{renderJourneyWorkspace\} from '\.\/journey-view.mjs'/);
