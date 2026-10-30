@@ -37,6 +37,14 @@ function builderEnvironment(config){
   return env;
 }
 
+function hostEnvironment(config){
+  const root=config.systemRoot??'C:\\Windows';
+  return {SystemRoot:root,SystemDrive:config.systemDrive??'C:',
+    ComSpec:root+'\\System32\\cmd.exe',PATH:root+'\\System32;C:\\Program Files\\Git\\cmd',
+    PATHEXT:'.COM;.EXE;.BAT;.CMD',TEMP:root+'\\Temp',TMP:root+'\\Temp',
+    GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:config.emptyGitConfig,GIT_TERMINAL_PROMPT:'0'};
+}
+
 function spawnCapture(spawnFn,command,args,{cwd,env,input,timeoutMs=15000}={}){
   const child=spawnFn(command,args,{cwd,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
   let stdout='',stderr='',settled=false;
@@ -118,6 +126,8 @@ function createDefaultOperations(spawnFn){
       return {verified:false,check:'ADMIN',reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};
     if(!SID.test(config.builderSid)||config.builderSid===config.verifierSid)
       return {verified:false,check:'VERIFIER_PRINCIPAL',reason:'HIDDEN_VERIFIER_UNAVAILABLE'};
+    if(typeof config.hiddenFixture!=='string'||!existsSync(config.hiddenFixture))
+      return {verified:false,check:'HIDDEN_MISSING',reason:'HIDDEN_VERIFIER_UNAVAILABLE'};
     const deniedPaths=[
       ['GH',config.operatorHome+'\\.config\\gh\\hosts.yml',false],
       ['GCM_FILE',config.operatorHome+'\\.git-credentials',false],
@@ -137,7 +147,8 @@ function createDefaultOperations(spawnFn){
       const agent=await sandbox(config,config.sshAddPath,['-l']);
       if(agent.code===0)return {verified:false,check:'SSH_AGENT',reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};
     }
-    const remote=await git(config,['-C',worktreePath,'push','--dry-run','origin'],{timeoutMs:30000});
+    const probeRef='HEAD:refs/_tally_probe/'+config.attemptId.replace(/[^A-Za-z0-9._-]/g,'-');
+    const remote=await git(config,['-C',worktreePath,'push','--dry-run','origin',probeRef],{timeoutMs:30000});
     if(remote.code===0)return {verified:false,check:'REMOTE_WRITE',reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};
     return {verified:true,builderPrincipal:principal,builderSid:config.builderSid,
       hiddenVerifierStatus:'HIDDEN_NOT_QUALIFIED'};
@@ -147,21 +158,23 @@ function createDefaultOperations(spawnFn){
     if(existsSync(config.worktreePath))throw safeError('CANDIDATE_WORKTREE_ALREADY_EXISTS');
     const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
     const added=await short(spawnFn,gitPath,['-C',config.repositoryPath,'worktree','add','--detach',
-      config.worktreePath,config.sourceSha],{timeoutMs:60000});
+      config.worktreePath,config.sourceSha],{env:hostEnvironment(config),timeoutMs:60000});
     if(added.code!==0)throw safeError('CANDIDATE_WORKTREE_UNAVAILABLE');
-    const head=await short(spawnFn,gitPath,['-C',config.worktreePath,'rev-parse','HEAD']);
+    const head=await short(spawnFn,gitPath,['-C',config.worktreePath,'rev-parse','HEAD'],
+      {env:hostEnvironment(config)});
     if(head.code!==0||head.stdout.trim()!==config.sourceSha)throw safeError('CANDIDATE_BASE_MISMATCH');
     for(const [path,permission] of [[dirname(config.worktreePath),'RX'],[config.worktreePath,'M'],
       ...(config.codexHome?[[config.codexHome,'F']]:[])]){
       const acl=await short(spawnFn,'C:\\Windows\\System32\\icacls.exe',[path,'/grant',
-        `*${config.builderSid}:(OI)(CI)(${permission})`],{timeoutMs:15000});
+        `*${config.builderSid}:(OI)(CI)(${permission})`],{env:hostEnvironment(config),timeoutMs:15000});
       if(acl.code!==0)throw safeError('BUILDER_ACL_UNAVAILABLE');
     }
     return {worktreePath:config.worktreePath,baseSha:head.stdout.trim()};
   }
   async function finalizeCandidate(config){
     const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
-    const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.worktreePath,...args],options);
+    const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.worktreePath,...args],
+      {env:hostEnvironment(config),...options});
     const [tracked,untracked]=await Promise.all([
       run(['diff','--name-only',config.sourceSha]),
       run(['ls-files','--others','--exclude-standard','--no-directory'])
@@ -177,7 +190,7 @@ function createDefaultOperations(spawnFn){
     const treeSha=tree.stdout.trim();
     const message=`Tally local candidate ${config.attemptId}`;
     const commit=await run(['commit-tree',treeSha,'-p',config.sourceSha,'-m',message],{
-      env:{...process.env,GIT_AUTHOR_NAME:'Tally Host',GIT_AUTHOR_EMAIL:'tally-host@localhost',
+      env:{...hostEnvironment(config),GIT_AUTHOR_NAME:'Tally Host',GIT_AUTHOR_EMAIL:'tally-host@localhost',
         GIT_COMMITTER_NAME:'Tally Host',GIT_COMMITTER_EMAIL:'tally-host@localhost'}});
     if(commit.code!==0||!SHA.test(commit.stdout.trim()))throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const commitSha=commit.stdout.trim();

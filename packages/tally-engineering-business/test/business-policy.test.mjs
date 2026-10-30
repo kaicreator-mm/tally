@@ -325,7 +325,7 @@ test('T06m replay, unavailable/confinement and UNKNOWN states remain distinct',(
     assert.equal(x.state,'AGENT_NOT_EXECUTED');assert.equal(x.agentLaunch,false);
   }
   const unknown=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
-    state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_STATUS_UNKNOWN',agentLaunch:true,
+    state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_STATUS_UNKNOWN',agentLaunch:true,replayFixture:false,
     process:{status:'UNKNOWN',pid:123,builderPrincipal:'nilar\\codexsandboxoffline',
       builderSid:'S-1-5-21-1-2-3-1003'}},effectId:'u'});
   assert.equal(unknown.state,'LOCAL_ATTEMPT_UNKNOWN');assert.equal(unknown.taskPass,false);

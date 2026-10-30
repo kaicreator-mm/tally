@@ -142,7 +142,8 @@ if(externals.some(x=>!x.startsWith('node:')&&x!=='better-sqlite3'))
   throw Error('UNSELECTED_BARE_DEPENDENCY:'+externals.join(','));
 writeFileSync(out,code);
 writeFileSync(importsOut,JSON.stringify(externals));
+const hasTokenBytes=code.includes(process.env.TALLY_GITHUB_READ_TOKEN||'__NO_SECRET_SET__');
+if(hasTokenBytes)throw Error('SEALED_PROVIDER_CONTAINS_HOST_TOKEN');
 console.log(JSON.stringify({sealedLocalCodexCBytes:Buffer.byteLength(code),
-  nativeLocalCodexExternalImports:externals,
-  hasTokenBytes:code.includes(process.env.TALLY_GITHUB_READ_TOKEN||'__NO_SECRET_SET__')}));
+  nativeLocalCodexExternalImports:externals,hasTokenBytes}));
 console.log('T06M_LOCAL_CODEX_PROVIDER_BUNDLED=PASS');

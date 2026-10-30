@@ -578,7 +578,7 @@ export function projectLocalCodexAttempt({input,observation,effectId}={}){
         candidateTree:null,candidateCommit:null,process:null});
     if(['LOCAL_ATTEMPT_UNKNOWN','LOCAL_ATTEMPT_FAILED','LOCAL_ATTEMPT_CANCELLED'].includes(o.state)&&
       LOCAL_REASONS.has(o.reason)&&o.admitted===true&&o.claimAccepted===true&&
-      o.agentLaunch===true&&typeof o.process?.status==='string')
+      o.agentLaunch===true&&o.replayFixture===false&&typeof o.process?.status==='string')
       return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:false,
         candidateTree:SOURCE_SHA.test(o.candidateTree??'')?o.candidateTree:null,
         candidateCommit:SOURCE_SHA.test(o.candidateCommit??'')?o.candidateCommit:null,
