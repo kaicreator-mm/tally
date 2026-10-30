@@ -258,6 +258,24 @@ test('shared worktree or overlapping write grant denies the second Builder',asyn
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('atomic grants allow exactly one competing Builder with no second spawn',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06n-grant-race-'));
+  try{
+    const calls=[];
+    const spawnFn=(command,args,options)=>{calls.push({command,args,options});
+      return fakeChild(close=>setTimeout(()=>close(0,null),20));};
+    const host=createLocalCodexHost({spawnFn,operations:operations(),now:()=>Date.now(),killTree:async()=>true});
+    const shared={worktreePath:join(dir,'shared-wt'),candidateRelativePath:CONCURRENT_A};
+    const [x,y]=await Promise.all([
+      host.runAttempt({...configFor(dir,'attempt:t06n:race:a'),...shared}),
+      host.runAttempt({...configFor(dir,'attempt:t06n:race:b'),...shared})
+    ]);
+    assert.equal([x,y].filter(v=>v.state==='LOCAL_CANDIDATE_READY').length,1);
+    assert.equal([x,y].filter(v=>v.state==='NOT_ADMITTED'&&v.reason==='CANDIDATE_WORKTREE_OVERLAP').length,1);
+    assert.equal(calls.length,1,'atomic grant must prevent the losing process from spawning');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('reviewer Join verifies exact candidates and replays without re-readback',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'tally-t06n-join-'));
   try{
@@ -287,6 +305,9 @@ test('reviewer Join verifies exact candidates and replays without re-readback',a
       joinConfigFor(dir,'join:t06n:test:1',joinCandidates()));
     assert.equal(again.state,'REVIEW_JOINED');
     assert.equal(again.joinedAt,joined.joinedAt,'idempotent join never re-reads');
+    const stale=await host.joinReviewedCandidates({...joinConfigFor(dir,'join:t06n:test:1',joinCandidates()),
+      sourceSha:'f'.repeat(40)});
+    assert.equal(stale.state,'NOT_ADMITTED');assert.equal(stale.reason,'CANDIDATE_STALE');
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 

@@ -10,6 +10,8 @@ const ATTEMPT=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
 const SID=/^S-1-5-21(?:-\d+){4}$/;
 const CANDIDATE='experiments/v2/selected-business-build/LOCAL_CODEX_L3.md';
 const keyFor=attemptId=>'tally:v2:local-agent-attempt:'+attemptId;
+const grantKeyFor=(kind,value)=>'tally:v2:local-agent-grant:'+kind+':'+
+  createHash('sha256').update(value).digest('hex');
 const safeError=code=>Object.assign(new Error(code),{code});
 const iso=now=>new Date(now()).toISOString();
 
@@ -264,6 +266,25 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
             builderPrincipal:config.builderPrincipal,builderSid:config.builderSid,
             startedAt:null,terminatedAt:null}};
       }
+      const grants=[];
+      const releaseGrants=async()=>{
+        for(const grant of grants.reverse())await store.remove(grant.key,{mustMatchRevision:grant.revision});
+        grants.length=0;
+      };
+      const acquireGrant=async(kind,value,reason)=>{
+        const key=grantKeyFor(kind,value);
+        try{
+          await store.put(key,{phase:'ACTIVE',kind,value,attemptId:config.attemptId},{mustBeAbsent:true});
+          grants.push({key,revision:0});return null;
+        }catch{await releaseGrants();return overlapDenied(base,reason);}
+      };
+      // Atomic resource grants close the cross-attempt read/scan/spawn race.
+      // UNKNOWN/crashed attempts retain them for reconciliation; known
+      // terminal outcomes release them so a bounded Repair may proceed.
+      const worktreeGrant=await acquireGrant('worktree',config.worktreePath,'CANDIDATE_WORKTREE_OVERLAP');
+      if(worktreeGrant)return worktreeGrant;
+      const writeGrant=await acquireGrant('candidate',candidatePath,'CANDIDATE_WRITE_GRANT_OVERLAP');
+      if(writeGrant)return writeGrant;
       // T06n: two Builders may execute concurrently, but never in one worktree
       // or under one write grant. An active record holding the same worktree
       // path or candidate path denies the new attempt before any reservation.
@@ -271,10 +292,12 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         if(otherKey===key)continue;
         const other=(await store.get(otherKey))?.value;
         if(!other||!ACTIVE_PHASES.has(other.phase))continue;
-        if(other.worktreePath&&other.worktreePath===config.worktreePath)
-          return overlapDenied(base,'CANDIDATE_WORKTREE_OVERLAP');
-        if((other.candidateRelativePath??CANDIDATE)===candidatePath)
-          return overlapDenied(base,'CANDIDATE_WRITE_GRANT_OVERLAP');
+        if(other.worktreePath&&other.worktreePath===config.worktreePath){
+          await releaseGrants();return overlapDenied(base,'CANDIDATE_WORKTREE_OVERLAP');
+        }
+        if((other.candidateRelativePath??CANDIDATE)===candidatePath){
+          await releaseGrants();return overlapDenied(base,'CANDIDATE_WRITE_GRANT_OVERLAP');
+        }
       }
       const startedAt=iso(now);
       await store.put(key,{phase:'STARTING',attemptId:config.attemptId,sourceSha:config.sourceSha,
@@ -286,6 +309,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       const notExecuted=async (reason,detail={})=>{
         const current=await store.get(key);revision=current.revision;
         await update({...current.value,phase:'NOT_EXECUTED',reason,...detail,terminatedAt:iso(now)});
+        await releaseGrants();
         return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,replayFixture:false,
           candidateTree:null,candidateCommit:null,process:null};
       };
@@ -352,6 +376,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       await update({...current.value,phase,reason,process,candidateTree:candidate.candidateTree??null,
         candidateCommit:candidate.candidateCommit??null,candidateRef:candidate.candidateRef??null,
         terminatedAt:process.terminatedAt});
+      await releaseGrants();
       return {...base,state,reason,agentLaunch:true,replayFixture:false,
         candidateTree:candidate.candidateTree??null,candidateCommit:candidate.candidateCommit??null,process};
     }finally{await store.close();}
@@ -375,6 +400,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:5000});
       const existing=await store.get(joinKey);
       if(existing?.value?.phase==='JOINED'){
+        if(existing.value.sourceSha!==config.sourceSha)return denied('CANDIDATE_STALE');
         const v=existing.value;
         return {...base,state:'REVIEW_JOINED',reason:'REVIEWED_CANDIDATES_VERIFIED',
           agentLaunch:false,replayFixture:false,joinedAt:v.joinedAt,candidates:v.candidates};

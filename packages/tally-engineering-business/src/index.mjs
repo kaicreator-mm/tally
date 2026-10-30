@@ -129,11 +129,9 @@ export function getPolicy(){
     trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED'},
     targetState:'open',
     effectIntents:[{
-      effectType:'effect:tally-reviewer-candidate-join',inputFrom:joinInputFrom,
-      // One reviewer Join observation per (issue, sourceSha, joinId). A
-      // rejected observation still executes as a negative projection; replay
-      // of a prior JOINED observation never re-executes the native C read.
-      idempotencyKeyFrom:{template:'join:{issueNumber}:{sourceSha}:{joinId}'}
+      effectType:'effect:tally-reviewer-candidate-join',inputFrom:joinInputFrom
+      // A new message may retry a transient denial with the same joinId;
+      // successful Host JOINED records remain idempotent without a K-level key.
     }]
   };
   const joinWorkflow={

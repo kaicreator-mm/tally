@@ -386,6 +386,7 @@ test('T06n reviewer Join intent is idempotent with its own rule and transition',
   assert.equal(definition.states[0].transitions.length,1);
   const transition=definition.states[0].transitions[0];
   assert.equal(transition.effectIntents[0].effectType,'effect:tally-reviewer-candidate-join');
+  assert.equal(transition.effectIntents[0].idempotencyKeyFrom,undefined);
   assert.deepEqual(p.effectBindings['effect:tally-reviewer-candidate-join'].external,
     {permitTtlMs:3600000,await:'terminal'});
   assert.deepEqual(Object.keys(transition.effectIntents[0].inputFrom),
