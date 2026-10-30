@@ -22,88 +22,158 @@ import {readGitHubNativeTaskSourcePair} from ${JSON.stringify(sourcePair)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createLocalCodexHost} from ${JSON.stringify(host)};
 import {createHash} from 'node:crypto';
-const OWNER='kaicreator-mm',REPO='tally',ISSUE_NUMBER=172,ACTOR_ROLE='builder';
-const ISSUE_REF='https://github.com/'+OWNER+'/'+REPO+'/issues/'+ISSUE_NUMBER;
-const CLAIM_KEY=OWNER+'/'+REPO+'#'+ISSUE_NUMBER+':'+ACTOR_ROLE+':__default__';
-const REGISTRY_KEY='tally:v2:claim-admission:'+createHash('sha256').update(CLAIM_KEY).digest('hex');
-const WRITESET_KEY='tally:v2:task-writeset:'+ISSUE_NUMBER;
+const OWNER='kaicreator-mm',REPO='tally';
+// T06n Host-owned task binding map: caller input may select ONLY one of these
+// issue keys; every claim/config value comes from issue-keyed Host env, never
+// from caller authority. #172 behavior is preserved exactly.
+const TASK_BINDINGS={
+  172:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
+  177:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
+  178:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
+  179:{actorRole:'reviewer'}
+};
+const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
+const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
+const registryKeyFor=claimKey=>'tally:v2:claim-admission:'+createHash('sha256').update(claimKey).digest('hex');
+const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
+// Host claim configuration: #172 keeps the legacy TALLY_CLAIM_* names; the
+// concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
+// each with its own registry path — never one synthetic shared authority.
+function claimEnv(env,issueNumber){
+  const p=issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
+  return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
+    dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
+    operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
+    writerLogin:env[p+'WRITER_LOGIN'],commentId:Number(env[p+'COMMENT_ID']),
+    registryPath:env[p+'REGISTRY_PATH'],
+    writeSetSha256:issueNumber===172?env.TALLY_LOCAL_WRITESET_SHA256:env[p+'WRITESET_SHA256']};
+}
 const SHA=/^[0-9a-f]{40}$/,ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\\[bot\\])?$/;
 const ATTEMPT=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
 const KINDS=new Set(['chatgpt-web','codex','claude-code','human','github-actions','woodpecker','other']);
-const base=input=>({issueRef:ISSUE_REF,sourceSha:input.sourceSha,attemptId:input.attemptId,
-  claimGeneration:1,authorized:false,taskPass:false,releasePass:false,replayFixture:false});
+const base=input=>({issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
+  attemptId:input.attemptId,claimGeneration:1,authorized:false,taskPass:false,
+  releasePass:false,replayFixture:false});
+const joinBase=input=>({issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
+  joinId:input.joinId,claimGeneration:1,authorized:false,taskPass:false,
+  releasePass:false,replayFixture:false});
 const denied=(input,reason)=>({...base(input),state:'NOT_ADMITTED',reason,claimAccepted:false,
   admitted:false,agentLaunch:false,candidateTree:null,candidateCommit:null,process:null});
+const joinDenied=(input,reason)=>({...joinBase(input),state:'NOT_ADMITTED',reason,
+  claimAccepted:false,admitted:false,agentLaunch:false,joinedAt:null,candidates:[]});
 const admitted=(input,state,reason,agentLaunch,more={})=>({...base(input),state,reason,
   claimAccepted:true,admitted:true,agentLaunch,candidateTree:null,candidateCommit:null,process:null,...more});
-function validClaimRow(row,env){
+function validClaimRow(row,claim,issueNumber,actorRole,env){
   const v=row?.value;
   return Number.isSafeInteger(row?.revision)&&row.revision>=1&&v?.phase==='PUBLISHED_VERIFIED'&&
-    v.generation===1&&v.protectedClaimKey===CLAIM_KEY&&v.repository===OWNER+'/'+REPO&&
-    v.issueRef===ISSUE_REF&&v.sourceSha===env.TALLY_CLAIM_SOURCE_SHA&&v.actorRole===ACTOR_ROLE&&
-    v.dispatchId===env.TALLY_CLAIM_DISPATCH_ID&&v.operatorId===env.TALLY_CLAIM_OPERATOR_ID&&
-    v.operatorKind===env.TALLY_CLAIM_OPERATOR_KIND&&v.writerId===env.TALLY_CLAIM_WRITER_ID&&
-    Number.isSafeInteger(v.commentId)&&v.commentId>0&&
-    v.commentRef===ISSUE_REF+'#issuecomment-'+v.commentId;
+    v.generation===1&&v.protectedClaimKey===claimKeyFor(issueNumber,actorRole)&&
+    v.repository===OWNER+'/'+REPO&&v.issueRef===issueRefFor(issueNumber)&&
+    v.sourceSha===claim.sourceSha&&v.actorRole===actorRole&&
+    v.dispatchId===claim.dispatchId&&v.operatorId===claim.operatorId&&
+    v.operatorKind===claim.operatorKind&&v.writerId===claim.writerId&&
+    Number.isSafeInteger(v.commentId)&&v.commentId>0&&v.commentId===claim.commentId&&
+    v.commentRef===v.issueRef+'#issuecomment-'+v.commentId;
+}
+// Independently verify one accepted Claim: durable CAS row plus the current
+// native publication witness. Shared by Builder attempts and Reviewer Join.
+async function verifyAcceptedClaim(env,issueNumber,actorRole){
+  const binding=TASK_BINDINGS[issueNumber];
+  const claim=claimEnv(env,issueNumber);
+  if(binding?.actorRole!==actorRole||!SHA.test(claim.sourceSha??'')||
+    !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
+    !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
+    !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
+    claim.commentId<=0||typeof claim.registryPath!=='string'||!claim.registryPath)
+    return {ok:false,reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH'};
+  let registry,row;
+  try{
+    registry=await openSqliteCasStore({path:claim.registryPath,busyTimeoutMs:1000});
+    row=await registry.get(registryKeyFor(claimKeyFor(issueNumber,actorRole)));
+  }catch{return {ok:false,reason:'CLAIM_REGISTRY_UNAVAILABLE'};}
+  finally{if(registry)await registry.close();}
+  if(!row)return {ok:false,reason:'CLAIM_REGISTRY_RECORD_NOT_FOUND'};
+  if(row.value?.phase!=='PUBLISHED_VERIFIED')return {ok:false,reason:'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED'};
+  if(!validClaimRow(row,claim,issueNumber,actorRole,env))return {ok:false,reason:'CLAIM_REGISTRY_RESERVATION_MISMATCH'};
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
+  try{
+    const witness=await readGitHubClaimPublicationWitness({token,owner:OWNER,repo:REPO,
+      issueNumber,expectedSourceSha:claim.sourceSha,commentId:row.value.commentId,
+      dispatchId:row.value.dispatchId,actorRole,operatorKind:row.value.operatorKind,
+      operatorId:row.value.operatorId,protectedClaimKey:claimKeyFor(issueNumber,actorRole),
+      claimGeneration:1,writerLogin:claim.writerLogin});
+    if(witness?.status!=='PUBLICATION_WITNESSED'||witness.claimAccepted!==false||
+      witness.authorized!==false||witness.admitted!==false||witness.taskPass!==false||
+      witness.releasePass!==false||witness.sourceQualified!==true||
+      witness.issueRef!==issueRefFor(issueNumber)||witness.sourceSha!==claim.sourceSha||
+      witness.commentId!==row.value.commentId||witness.commentRef!==row.value.commentRef||
+      witness.dispatchId!==row.value.dispatchId||witness.actorRole!==actorRole||
+      witness.operatorId!==row.value.operatorId||
+      witness.protectedClaimKey!==claimKeyFor(issueNumber,actorRole)||
+      witness.generation!==1||witness.transportActor!==claim.writerLogin)
+      return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};
+  }catch{return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};}
+  return {ok:true,claim};
+}
+async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
+  let pair;
+  try{pair=await readGitHubNativeTaskSourcePair({token,owner:OWNER,repo:REPO,
+    issueNumber,expectedSourceSha:sourceSha,limit:1000});
+  }catch{return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};}
+  if(pair?.workItem?.dependencyState==='BLOCKED')return {ok:false,reason:'NATIVE_DEPENDENCIES_BLOCKED'};
+  if(pair?.status!=='SOURCE_PAIR_OBSERVED'||pair.sourceQualified!==true||
+    pair.issueRef!==issueRefFor(issueNumber)||pair.sourceSha!==sourceSha||
+    pair.workItem?.issueState!=='open'||pair.workItem?.workflowState!=='state:ready'||
+    pair.workItem?.workItemType!=='type:task'||pair.workItem?.dependencyState!=='CLEAR')
+    return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};
+  return {ok:true,pair};
+}
+async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
+  const claim=claimEnv(env,issueNumber);
+  const candidateRelativePath=TASK_BINDINGS[issueNumber].candidateRelativePath;
+  if(!claim.writeSetSha256||typeof claim.registryPath!=='string'||!claim.registryPath)
+    return {ok:false,reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH'};
+  let registry,writeSet;
+  try{
+    registry=await openSqliteCasStore({path:claim.registryPath,busyTimeoutMs:1000});
+    writeSet=await registry.get(writeSetKeyFor(issueNumber));
+  }catch{return {ok:false,reason:'CLAIM_REGISTRY_UNAVAILABLE'};}
+  finally{if(registry)await registry.close();}
+  if(writeSet?.value?.phase!=='FROZEN_DAG_WRITESET'||writeSet.value.sourceSha!==sourceSha||
+    writeSet.value.writeSetSha256!==claim.writeSetSha256||
+    !writeSet.value.document?.includes(candidateRelativePath))
+    return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+  return {ok:true};
+}
+function attemptWorktreePath(env,attemptId){
+  const safe=attemptId.replace(/[^A-Za-z0-9._-]/g,'-');
+  const root=env.TALLY_LOCAL_WORKTREE_ROOT??env.TALLY_LOCAL_REPOSITORY_PATH;
+  return root+'/.tally-t06n-worktrees/'+safe;
 }
 export async function runLocalCodexAttempt(input){
   const env=process.env;
-  if(input?.sourceRef!==ISSUE_REF||input.issueNumber!==ISSUE_NUMBER||
-    !SHA.test(input.sourceSha??'')||!ATTEMPT.test(input.attemptId??'')||
-    input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||!ID.test(env.TALLY_CLAIM_DISPATCH_ID??'')||
-    !ID.test(env.TALLY_CLAIM_OPERATOR_ID??'')||!KINDS.has(env.TALLY_CLAIM_OPERATOR_KIND)||
-    !ID.test(env.TALLY_CLAIM_WRITER_ID??'')||!LOGIN.test(env.TALLY_CLAIM_WRITER_LOGIN??'')||
-    !env.TALLY_CLAIM_REGISTRY_PATH||!env.TALLY_LOCAL_WRITESET_SHA256)
+  const binding=TASK_BINDINGS[input?.issueNumber];
+  if(input?.sourceRef!==issueRefFor(input?.issueNumber)||!binding||
+    binding.actorRole!=='builder'||!SHA.test(input.sourceSha??'')||
+    !ATTEMPT.test(input.attemptId??'')||input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA)
     return denied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
-  let registry,row,writeSet;
-  try{
-    registry=await openSqliteCasStore({path:env.TALLY_CLAIM_REGISTRY_PATH,busyTimeoutMs:1000});
-    row=await registry.get(REGISTRY_KEY);writeSet=await registry.get(WRITESET_KEY);
-  }catch{return denied(input,'CLAIM_REGISTRY_UNAVAILABLE');
-  }finally{if(registry)await registry.close();}
-  if(!row)return denied(input,'CLAIM_REGISTRY_RECORD_NOT_FOUND');
-  if(row.value?.phase!=='PUBLISHED_VERIFIED')return denied(input,'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED');
-  if(!validClaimRow(row,env))return denied(input,'CLAIM_REGISTRY_RESERVATION_MISMATCH');
-  if(writeSet?.value?.phase!=='FROZEN_DAG_WRITESET'||
-    writeSet.value.sourceSha!==input.sourceSha||
-    writeSet.value.writeSetSha256!==env.TALLY_LOCAL_WRITESET_SHA256||
-    !writeSet.value.document?.includes('experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'))
-    return denied(input,'DAG_WRITESET_NOT_VERIFIED');
-  const token=env.TALLY_GITHUB_READ_TOKEN;
-  if(typeof token!=='string'||token.length<8)return denied(input,'LOCAL_AGENT_UNAVAILABLE');
-  let pair;
-  try{pair=await readGitHubNativeTaskSourcePair({token,owner:OWNER,repo:REPO,
-    issueNumber:ISSUE_NUMBER,expectedSourceSha:input.sourceSha,limit:1000});
-  }catch{return denied(input,'NATIVE_SOURCE_NOT_CURRENT');}
-  if(pair?.workItem?.dependencyState==='BLOCKED')return denied(input,'NATIVE_DEPENDENCIES_BLOCKED');
-  if(pair?.status!=='SOURCE_PAIR_OBSERVED'||pair.sourceQualified!==true||
-    pair.issueRef!==ISSUE_REF||pair.sourceSha!==input.sourceSha||
-    pair.workItem?.issueState!=='open'||pair.workItem?.workflowState!=='state:ready'||
-    pair.workItem?.workItemType!=='type:task'||pair.workItem?.dependencyState!=='CLEAR')
-    return denied(input,'NATIVE_SOURCE_NOT_CURRENT');
-  let witness;
-  try{witness=await readGitHubClaimPublicationWitness({token,owner:OWNER,repo:REPO,
-    issueNumber:ISSUE_NUMBER,expectedSourceSha:input.sourceSha,commentId:row.value.commentId,
-    dispatchId:row.value.dispatchId,actorRole:ACTOR_ROLE,operatorKind:row.value.operatorKind,
-    operatorId:row.value.operatorId,protectedClaimKey:CLAIM_KEY,claimGeneration:1,
-    writerLogin:env.TALLY_CLAIM_WRITER_LOGIN});
-  }catch{return denied(input,'NATIVE_CLAIM_WITNESS_NOT_VERIFIED');}
-  if(witness?.status!=='PUBLICATION_WITNESSED'||witness.claimAccepted!==false||
-    witness.authorized!==false||witness.admitted!==false||witness.taskPass!==false||
-    witness.releasePass!==false||witness.sourceQualified!==true||witness.issueRef!==ISSUE_REF||
-    witness.sourceSha!==input.sourceSha||witness.commentId!==row.value.commentId||
-    witness.commentRef!==row.value.commentRef||witness.dispatchId!==row.value.dispatchId||
-    witness.actorRole!==ACTOR_ROLE||witness.operatorKind!==row.value.operatorKind||
-    witness.operatorId!==row.value.operatorId||witness.protectedClaimKey!==CLAIM_KEY||
-    witness.generation!==1||witness.transportActor!==env.TALLY_CLAIM_WRITER_LOGIN)
-    return denied(input,'NATIVE_CLAIM_WITNESS_NOT_VERIFIED');
+  const issueNumber=input.issueNumber;
+  const claimCheck=await verifyAcceptedClaim(env,issueNumber,'builder');
+  if(!claimCheck.ok)return denied(input,claimCheck.reason);
+  const writeSetCheck=await verifyFrozenWriteSet(env,issueNumber,input.sourceSha);
+  if(!writeSetCheck.ok)return denied(input,writeSetCheck.reason);
+  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,issueNumber,input.sourceSha);
+  if(!pairCheck.ok)return denied(input,pairCheck.reason);
   if(env.TALLY_LOCAL_REPLAY==='1')
     return {...admitted(input,'REPLAY_COMPLETE','REPLAY_FIXTURE_ONLY',false),replayFixture:true};
   try{
-    return await createLocalCodexHost().runAttempt({issueRef:ISSUE_REF,sourceSha:input.sourceSha,
-      attemptId:input.attemptId,hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
-      repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,worktreePath:env.TALLY_LOCAL_WORKTREE_PATH,
+    return await createLocalCodexHost().runAttempt({issueRef:issueRefFor(issueNumber),
+      sourceSha:input.sourceSha,attemptId:input.attemptId,
+      candidateRelativePath:binding.candidateRelativePath,
+      worktreePath:env.TALLY_LOCAL_WORKTREE_PATH??attemptWorktreePath(env,input.attemptId),
+      hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
+      repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
       cliPath:env.TALLY_CODEX_CLI_PATH,sandboxCliPath:env.TALLY_CODEX_SANDBOX_PATH,
       codexHome:env.TALLY_CODEX_HOME,builderProfile:env.TALLY_BUILDER_PROFILE,
       builderTemp:env.TALLY_BUILDER_TEMP,emptyGitConfig:env.TALLY_EMPTY_GIT_CONFIG,
@@ -111,12 +181,60 @@ export async function runLocalCodexAttempt(input){
       builderPrincipal:env.TALLY_BUILDER_PRINCIPAL,builderSid:env.TALLY_BUILDER_SID,
       verifierSid:env.TALLY_VERIFIER_SID,sshAddPath:env.TALLY_SSH_ADD_PATH,
       gitPath:env.TALLY_GIT_PATH,powershellPath:env.TALLY_POWERSHELL_PATH,
-      modelProxy:env.TALLY_MODEL_PROXY,caBundle:env.TALLY_CA_BUNDLE,timeoutMs:Number(env.TALLY_CODEX_TIMEOUT_MS??300000)});
+      modelProxy:env.TALLY_MODEL_PROXY,caBundle:env.TALLY_CA_BUNDLE,
+      timeoutMs:Number(env.TALLY_CODEX_TIMEOUT_MS??300000)});
   }catch{
     return admitted(input,'LOCAL_ATTEMPT_UNKNOWN','ATTEMPT_STATUS_UNKNOWN',true,
       {process:{status:'UNKNOWN',exitCode:null,pid:null,builderPrincipal:env.TALLY_BUILDER_PRINCIPAL,
         builderSid:env.TALLY_BUILDER_SID,startedAt:null,terminatedAt:null}});
   }
+}
+export async function joinReviewedCandidates(input){
+  const env=process.env;
+  const issueNumber=input?.issueNumber;
+  if(input?.sourceRef!==issueRefFor(issueNumber)||issueNumber!==179||
+    TASK_BINDINGS[issueNumber]?.actorRole!=='reviewer'||
+    !SHA.test(input.sourceSha??'')||!ATTEMPT.test(input.joinId??'')||
+    input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||
+    !Array.isArray(input.candidates)||input.candidates.length<2)
+    return joinDenied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+  const candidates=input.candidates.map(c=>({issueNumber:c?.issueNumber,
+    attemptId:c?.attemptId,candidateCommit:c?.candidateCommit,candidateTree:c?.candidateTree}));
+  for(const c of candidates){
+    const binding=TASK_BINDINGS[c.issueNumber];
+    if(!binding||binding.actorRole!=='builder'||!ATTEMPT.test(c.attemptId??'')||
+      !SHA.test(c.candidateCommit??'')||!SHA.test(c.candidateTree??''))
+      return joinDenied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+    c.candidateRelativePath=binding.candidateRelativePath;
+  }
+  if(env.TALLY_LOCAL_REPLAY==='1')
+    return {...joinBase(input),state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
+      joinedAt:null,candidates:[]};
+  // The Reviewer Claim is verified independently of every Builder Claim.
+  const reviewerCheck=await verifyAcceptedClaim(env,179,'reviewer');
+  if(!reviewerCheck.ok)return joinDenied(input,reviewerCheck.reason);
+  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,179,input.sourceSha);
+  if(!pairCheck.ok)return joinDenied(input,pairCheck.reason);
+  // Self-assertion: the Reviewer identity must differ from every Builder
+  // identity it reviews; a Builder cannot review its own candidate.
+  for(const c of candidates){
+    const builderClaim=claimEnv(env,c.issueNumber);
+    if(builderClaim.operatorId===reviewerCheck.claim.operatorId||
+      builderClaim.writerId===reviewerCheck.claim.writerId)
+      return joinDenied(input,'REVIEWER_SELF_ASSERTION');
+  }
+  try{
+    const joined=await createLocalCodexHost().joinReviewedCandidates({
+      issueRef:issueRefFor(179),sourceSha:input.sourceSha,joinId:input.joinId,
+      hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
+      repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
+      gitPath:env.TALLY_GIT_PATH,candidates});
+    if(joined.state==='NOT_ADMITTED')return joinDenied(input,joined.reason);
+    return {...joinBase(input),state:joined.state,reason:joined.reason,
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+      joinedAt:joined.joinedAt,candidates:joined.candidates};
+  }catch{return joinDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
 }
 `;
 const result=await build({

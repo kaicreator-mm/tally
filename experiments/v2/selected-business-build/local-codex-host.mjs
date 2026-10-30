@@ -10,6 +10,8 @@ const ATTEMPT=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
 const SID=/^S-1-5-21(?:-\d+){4}$/;
 const CANDIDATE='experiments/v2/selected-business-build/LOCAL_CODEX_L3.md';
 const keyFor=attemptId=>'tally:v2:local-agent-attempt:'+attemptId;
+const grantKeyFor=(kind,value)=>'tally:v2:local-agent-grant:'+kind+':'+
+  createHash('sha256').update(value).digest('hex');
 const safeError=code=>Object.assign(new Error(code),{code});
 const iso=now=>new Date(now()).toISOString();
 
@@ -172,6 +174,7 @@ function createDefaultOperations(spawnFn){
     return {worktreePath:config.worktreePath,baseSha:head.stdout.trim()};
   }
   async function finalizeCandidate(config){
+    const candidatePath=config.candidateRelativePath??CANDIDATE;
     const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
     const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.worktreePath,...args],
       {env:hostEnvironment(config),...options});
@@ -182,8 +185,8 @@ function createDefaultOperations(spawnFn){
     if(tracked.code!==0||untracked.code!==0)throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const paths=[...new Set([...tracked.stdout.split(/\r?\n/),...untracked.stdout.split(/\r?\n/)]
       .map(x=>x.trim()).filter(Boolean))];
-    if(paths.length!==1||paths[0]!==CANDIDATE)return {writeSetValid:false,paths};
-    const added=await run(['add','--',CANDIDATE]);
+    if(paths.length!==1||paths[0]!==candidatePath)return {writeSetValid:false,paths};
+    const added=await run(['add','--',candidatePath]);
     if(added.code!==0)throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const tree=await run(['write-tree']);
     if(tree.code!==0||!SHA.test(tree.stdout.trim()))throw safeError('CANDIDATE_TREE_UNAVAILABLE');
@@ -201,8 +204,31 @@ function createDefaultOperations(spawnFn){
     if(readback.code!==0||readback.stdout.trim()!==treeSha)throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     return {writeSetValid:true,paths,candidateTree:treeSha,candidateCommit:commitSha,candidateRef:ref};
   }
-  return {probeProvider,proveConfinement,prepareWorktree,finalizeCandidate,sandbox};
+  async function verifyCandidateReadback(config,candidate){
+    // Independent git readback of one exact candidate: commit parent, tree and
+    // the single changed path are re-derived from the repository, never from
+    // Agent-asserted values. Used by the Reviewer Join only.
+    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.repositoryPath,...args],
+      {env:hostEnvironment(config),...options});
+    const commit=candidate.candidateCommit;
+    if(!SHA.test(commit??''))return {verified:false};
+    const [tree,parent,diff]=await Promise.all([
+      run(['rev-parse',commit+'^{tree}']),
+      run(['rev-parse',commit+'^']),
+      run(['diff','--name-only',config.sourceSha,commit])
+    ]);
+    if(tree.code!==0||parent.code!==0||diff.code!==0)return {verified:false};
+    return {verified:true,candidateTree:tree.stdout.trim(),parent:parent.stdout.trim(),
+      paths:diff.stdout.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)};
+  }
+  return {probeProvider,proveConfinement,prepareWorktree,finalizeCandidate,verifyCandidateReadback,sandbox};
 }
+
+const ACTIVE_PHASES=new Set(['STARTING','PERMITTED','RUNNING']);
+const overlapDenied=(base,reason)=>({...base,state:'NOT_ADMITTED',reason,
+  claimAccepted:false,admitted:false,agentLaunch:false,replayFixture:false,
+  candidateTree:null,candidateCommit:null,process:null});
 
 export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(),
   killTree}={}){
@@ -216,6 +242,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
     const flags={claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
       taskPass:false,releasePass:false};
     const base={issueRef:config.issueRef,sourceSha:config.sourceSha,attemptId:config.attemptId,...flags};
+    const candidatePath=config.candidateRelativePath??CANDIDATE;
     if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.attemptId??'')||
       !SID.test(config.builderSid??''))return {...base,state:'AGENT_NOT_EXECUTED',
       reason:'BUILDER_CONFINEMENT_UNAVAILABLE',agentLaunch:false,replayFixture:false,
@@ -239,16 +266,50 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
             builderPrincipal:config.builderPrincipal,builderSid:config.builderSid,
             startedAt:null,terminatedAt:null}};
       }
+      const grants=[];
+      const releaseGrants=async()=>{
+        for(const grant of grants.reverse())await store.remove(grant.key,{mustMatchRevision:grant.revision});
+        grants.length=0;
+      };
+      const acquireGrant=async(kind,value,reason)=>{
+        const key=grantKeyFor(kind,value);
+        try{
+          await store.put(key,{phase:'ACTIVE',kind,value,attemptId:config.attemptId},{mustBeAbsent:true});
+          grants.push({key,revision:0});return null;
+        }catch{await releaseGrants();return overlapDenied(base,reason);}
+      };
+      // Atomic resource grants close the cross-attempt read/scan/spawn race.
+      // They are released once a terminal attempt record exists; a crash with
+      // no terminal record retains them for operator reconciliation.
+      const worktreeGrant=await acquireGrant('worktree',config.worktreePath,'CANDIDATE_WORKTREE_OVERLAP');
+      if(worktreeGrant)return worktreeGrant;
+      const writeGrant=await acquireGrant('candidate',candidatePath,'CANDIDATE_WRITE_GRANT_OVERLAP');
+      if(writeGrant)return writeGrant;
+      // T06n: two Builders may execute concurrently, but never in one worktree
+      // or under one write grant. An active record holding the same worktree
+      // path or candidate path denies the new attempt before any reservation.
+      for(const otherKey of await store.list(LOCAL_CODEX_CONSTANTS.attemptKeyPrefix)){
+        if(otherKey===key)continue;
+        const other=(await store.get(otherKey))?.value;
+        if(!other||!ACTIVE_PHASES.has(other.phase))continue;
+        if(other.worktreePath&&other.worktreePath===config.worktreePath){
+          await releaseGrants();return overlapDenied(base,'CANDIDATE_WORKTREE_OVERLAP');
+        }
+        if((other.candidateRelativePath??CANDIDATE)===candidatePath){
+          await releaseGrants();return overlapDenied(base,'CANDIDATE_WRITE_GRANT_OVERLAP');
+        }
+      }
       const startedAt=iso(now);
       await store.put(key,{phase:'STARTING',attemptId:config.attemptId,sourceSha:config.sourceSha,
         issueRef:config.issueRef,claimGeneration:1,worktreePath:config.worktreePath,
-        candidateRelativePath:CANDIDATE,startedAt},{mustBeAbsent:true});
+        candidateRelativePath:candidatePath,startedAt},{mustBeAbsent:true});
       let revision=0;
       const update=async value=>{const result=await store.put(key,value,{mustMatchRevision:revision});
         revision=result.revision;};
       const notExecuted=async (reason,detail={})=>{
         const current=await store.get(key);revision=current.revision;
         await update({...current.value,phase:'NOT_EXECUTED',reason,...detail,terminatedAt:iso(now)});
+        await releaseGrants();
         return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,replayFixture:false,
           candidateTree:null,candidateCommit:null,process:null};
       };
@@ -260,7 +321,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       const confinement=await ops.proveConfinement(config,worktree.worktreePath);
       if(!confinement.verified)return await notExecuted(confinement.reason,{confinement});
       const env=builderEnvironment(config);
-      const prompt=`Work only in the current disposable Git worktree. Create exactly ${CANDIDATE} with a short Markdown candidate note containing attempt ${config.attemptId}. Do not modify any other path, do not commit, do not use GitHub or network except the model provider, and stop after writing the file.`;
+      const prompt=`Work only in the current disposable Git worktree. Create exactly ${candidatePath} with a short Markdown candidate note containing attempt ${config.attemptId}. Do not modify any other path, do not commit, do not use GitHub or network except the model provider, and stop after writing the file.`;
       const argv=[config.sandboxCliPath,...sandboxPrefix,config.cliPath,'exec',
         '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config','--ignore-rules',
         '--ephemeral','--json','-C',worktree.worktreePath,prompt];
@@ -294,11 +355,15 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       if((timedOut||cancelled)&&terminal.terminatedAt){
         await terminate(running.child.pid);
       }
+      // Overlap evidence must use the ACTUAL process lifetime: startedAt is
+      // the spawn-ack time captured by spawnCapture, not the earlier attempt
+      // reservation/probe time, which would overstate the overlap window.
+      const processStartedAt=new Date(terminal.startedAt).toISOString();
       const candidate=await ops.finalizeCandidate(config).catch(error=>({error:error.code}));
       const process={status:terminal.spawnError||terminal.probeTimeout?'UNKNOWN':'EXITED',
         exitCode:Number.isSafeInteger(terminal.code)?terminal.code:null,pid:running.child.pid,
         builderPrincipal:confinement.builderPrincipal,builderSid:confinement.builderSid,
-        startedAt,terminatedAt:iso(now)};
+        startedAt:processStartedAt,terminatedAt:iso(now)};
       let state,reason,phase;
       if(timedOut||terminal.spawnError||terminal.probeTimeout){
         state='LOCAL_ATTEMPT_UNKNOWN';reason=timedOut?'ATTEMPT_TIMEOUT_RECONCILED':'ATTEMPT_STATUS_UNKNOWN';phase='UNKNOWN';
@@ -311,13 +376,78 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       await update({...current.value,phase,reason,process,candidateTree:candidate.candidateTree??null,
         candidateCommit:candidate.candidateCommit??null,candidateRef:candidate.candidateRef??null,
         terminatedAt:process.terminatedAt});
+      await releaseGrants();
       return {...base,state,reason,agentLaunch:true,replayFixture:false,
         candidateTree:candidate.candidateTree??null,candidateCommit:candidate.candidateCommit??null,process};
     }finally{await store.close();}
   }
-  return Object.freeze({runAttempt,probeProvider:config=>ops.probeProvider(config),
+  // T06n Reviewer Join: consume durable Builder attempt records plus an
+  // independent git readback. The Reviewer never launches a process, never
+  // writes source and never upgrades candidates into Task/Release PASS.
+  async function joinReviewedCandidates(config){
+    const flags={claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+      taskPass:false,releasePass:false};
+    const base={issueRef:config.issueRef,sourceSha:config.sourceSha,joinId:config.joinId,...flags};
+    const joinKey=LOCAL_CODEX_CONSTANTS.joinKeyPrefix+config.joinId;
+    const denied=(reason)=>({...base,state:'NOT_ADMITTED',reason,claimAccepted:false,
+      admitted:false,agentLaunch:false,replayFixture:false,joinedAt:null,candidates:[]});
+    if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.joinId??'')||
+      !Array.isArray(config.candidates)||config.candidates.length<2)
+      return denied('JOIN_INPUT_INVALID');
+    const seen={attemptId:new Set(),path:new Set(),worktree:new Set(),ref:new Set()};
+    let store=null;
+    try{
+      store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:5000});
+      const existing=await store.get(joinKey);
+      if(existing?.value?.phase==='JOINED'){
+        if(existing.value.sourceSha!==config.sourceSha)return denied('CANDIDATE_STALE');
+        const v=existing.value;
+        return {...base,state:'REVIEW_JOINED',reason:'REVIEWED_CANDIDATES_VERIFIED',
+          agentLaunch:false,replayFixture:false,joinedAt:v.joinedAt,candidates:v.candidates};
+      }
+      const joined=[];
+      for(const candidate of config.candidates){
+        if(!ATTEMPT.test(candidate?.attemptId??'')||!SHA.test(candidate?.candidateCommit??'')||
+          !SHA.test(candidate?.candidateTree??''))return denied('JOIN_INPUT_INVALID');
+        const record=(await store.get(keyFor(candidate.attemptId)))?.value;
+        if(!record)return denied('CANDIDATE_NOT_FOUND');
+        if(record.phase!=='CANDIDATE_READY')return denied('CANDIDATE_NOT_READY');
+        if(record.sourceSha!==config.sourceSha)return denied('CANDIDATE_STALE');
+        if(record.candidateCommit!==candidate.candidateCommit||
+          record.candidateTree!==candidate.candidateTree)return denied('CANDIDATE_STALE');
+        // Disjointness is computed from the durable record, never from
+        // caller-asserted values: attempt, path, worktree and ref must all
+        // be distinct across the reviewed candidate set.
+        const recordFields={attemptId:record.attemptId,
+          path:record.candidateRelativePath??CANDIDATE,worktree:record.worktreePath,
+          ref:record.candidateRef};
+        for(const [field,value] of Object.entries(recordFields)){
+          if(value===undefined||value===null)continue;
+          if(seen[field].has(value))return denied('CANDIDATE_WRITESET_OVERLAP');
+          seen[field].add(value);
+        }
+        const readback=await ops.verifyCandidateReadback(config,record);
+        const candidatePath=record.candidateRelativePath??CANDIDATE;
+        if(!readback.verified||readback.candidateTree!==record.candidateTree||
+          readback.parent!==config.sourceSha||readback.paths.length!==1||
+          readback.paths[0]!==candidatePath)return denied('CANDIDATE_READBACK_MISMATCH');
+        joined.push(Object.freeze({attemptId:record.attemptId,issueRef:record.issueRef,
+          candidateRelativePath:candidatePath,candidateTree:record.candidateTree,
+          candidateCommit:record.candidateCommit,candidateRef:record.candidateRef??null,
+          startedAt:record.startedAt??null,terminatedAt:record.process?.terminatedAt??null}));
+      }
+      const joinedAt=iso(now);
+      await store.put(joinKey,{phase:'JOINED',joinId:config.joinId,sourceSha:config.sourceSha,
+        issueRef:config.issueRef,candidates:joined,joinedAt},{mustBeAbsent:true});
+      return {...base,state:'REVIEW_JOINED',reason:'REVIEWED_CANDIDATES_VERIFIED',
+        agentLaunch:false,replayFixture:false,joinedAt,candidates:joined};
+    }finally{if(store)await store.close();}
+  }
+  return Object.freeze({runAttempt,joinReviewedCandidates,
+    probeProvider:config=>ops.probeProvider(config),
     proveConfinement:(config,worktreePath)=>ops.proveConfinement(config,worktreePath)});
 }
 
 export const LOCAL_CODEX_CONSTANTS=Object.freeze({candidateRelativePath:CANDIDATE,
-  attemptKeyPrefix:'tally:v2:local-agent-attempt:',builderEnvironment});
+  attemptKeyPrefix:'tally:v2:local-agent-attempt:',joinKeyPrefix:'tally:v2:reviewer-join:',
+  builderEnvironment});

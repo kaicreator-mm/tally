@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
+  assessReviewedCandidateJoin,projectReviewedCandidateJoin,
   ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
@@ -20,14 +21,16 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
-    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
+    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
+    'effect:tally-reviewer-candidate-join']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
-    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
+    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
+    'effect:tally-reviewer-candidate-join']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -39,6 +42,11 @@ test('Policy declares one K-sealed read-only C operation, never external GitHub 
     {permitTtlMs:3600000,await:'terminal'});
   assert.deepEqual(p.effectBindings['effect:tally-local-codex-attempt'].resource,
     {key:'tally-local-codex',operation:'tally.runLocalCodexAttempt'});
+  assert.equal(p.effectBindings['effect:tally-reviewer-candidate-join'].semantics,'idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-reviewer-candidate-join'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  assert.deepEqual(p.effectBindings['effect:tally-reviewer-candidate-join'].resource,
+    {key:'tally-local-codex',operation:'tally.joinReviewedCandidates'});
 });
 test('canonical observed input still cannot grant K admission or Task PASS',()=>{
   const x=assessTaskEvidence(good);
@@ -80,7 +88,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,3);
+  assert.equal(Object.keys(p.effectBindings).length,4);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
 });
@@ -351,4 +359,102 @@ test('T06m effect calls only selected C and never upgrades denial',async()=>{
         claimAccepted:false,admitted:false,agentLaunch:false}}};
     }}});
   assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+});
+
+const joinInput={issueRef:'https://github.com/kaicreator-mm/tally/issues/179',issueNumber:179,
+  sourceSha:'ca09511d49488785c9ae8ff436c5db98f31b6714',joinId:'join:t06n:179:1',
+  candidates:[
+    {issueNumber:177,attemptId:'attempt:t06n:a:1',candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40)},
+    {issueNumber:178,attemptId:'attempt:t06n:b:1',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}]};
+const joinBase={issueRef:joinInput.issueRef,sourceSha:joinInput.sourceSha,joinId:joinInput.joinId,
+  claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,agentLaunch:false,
+  taskPass:false,releasePass:false};
+const joinedObservation={...joinBase,state:'REVIEW_JOINED',reason:'REVIEWED_CANDIDATES_VERIFIED',
+  replayFixture:false,joinedAt:'2026-10-30T02:00:00Z',
+  candidates:[
+    {attemptId:'attempt:t06n:a:1',issueRef:'https://github.com/kaicreator-mm/tally/issues/177',
+      candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md',
+      candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),candidateRef:'refs/tally-candidates/attempt-t06n-a-1'},
+    {attemptId:'attempt:t06n:b:1',issueRef:'https://github.com/kaicreator-mm/tally/issues/178',
+      candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md',
+      candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40),candidateRef:'refs/tally-candidates/attempt-t06n-b-1'}]};
+test('T06n reviewer Join intent is idempotent with its own rule and transition',()=>{
+  const p=getPolicy(),e='TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED';
+  assert.equal(p.intentBindings.joinReviewedCandidates.trigger.eventType,e);
+  assert.equal(p.rules['rule:tally-reviewer-candidate-join'].eventType,e);
+  const definition=p.intentBindings.joinReviewedCandidates.definition;
+  assert.equal(definition.states[0].transitions.length,1);
+  const transition=definition.states[0].transitions[0];
+  assert.equal(transition.effectIntents[0].effectType,'effect:tally-reviewer-candidate-join');
+  assert.equal(transition.effectIntents[0].idempotencyKeyFrom,undefined);
+  assert.deepEqual(p.effectBindings['effect:tally-reviewer-candidate-join'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  assert.deepEqual(Object.keys(transition.effectIntents[0].inputFrom),
+    ['issueRef','issueNumber','sourceSha','joinId','candidates']);
+  for(const name of Object.keys(transition.effectIntents[0].inputFrom))
+    assert.ok(Object.hasOwn(p.rules['rule:tally-reviewer-candidate-join'].payloadFromInput,name));
+});
+test('T06n join input alone never grants Reviewer authority and malformed joins skip C',async()=>{
+  assert.equal(assessReviewedCandidateJoin(joinInput).state,'OBSERVED_INPUT_ONLY');
+  for(const value of [null,{},'x',{...joinInput,sourceSha:'bad'},{...joinInput,joinId:'bad/id'},
+    {...joinInput,issueNumber:178},{...joinInput,candidates:[]},
+    {...joinInput,candidates:[joinInput.candidates[0]]},
+    {...joinInput,candidates:[{...joinInput.candidates[0],issueNumber:999}]},
+    {...joinInput,candidates:[{...joinInput.candidates[0],candidateCommit:'bad'}]}])
+    assert.equal(assessReviewedCandidateJoin(value).state,'UNQUALIFIED_INPUT');
+  let calls=0;
+  const x=await getPolicy().effectBindings['effect:tally-reviewer-candidate-join'].handler({
+    input:{...joinInput,joinId:'bad/id'},effectId:'bad-join',resources:{call:async()=>{calls++;}}});
+  assert.equal(calls,0);assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+});
+test('T06n REVIEW_JOINED projection preserves exact candidates without Task PASS',()=>{
+  const x=projectReviewedCandidateJoin({input:joinInput,observation:joinedObservation,effectId:'j1'});
+  assert.equal(x.state,'REVIEW_JOINED');assert.equal(x.joinId,joinInput.joinId);
+  assert.equal(x.candidates.length,2);
+  assert.equal(x.candidates[0].candidateRelativePath,
+    'experiments/v2/selected-business-build/CONCURRENT_A.md');
+  assert.equal(x.candidates[1].issueNumber,178);
+  assert.equal(x.authorized,false);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+});
+test('T06n replay and every reviewer denial stay distinct and never PASS',()=>{
+  const replay=projectReviewedCandidateJoin({input:joinInput,observation:{...joinBase,
+    state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',agentLaunch:false,replayFixture:true},effectId:'jr'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.agentLaunch,false);
+  assert.equal(replay.replayFixture,true);assert.equal(replay.taskPass,false);
+  for(const reason of ['CANDIDATE_NOT_FOUND','CANDIDATE_NOT_READY','CANDIDATE_STALE',
+    'CANDIDATE_READBACK_MISMATCH','CANDIDATE_WRITESET_OVERLAP','REVIEWER_SELF_ASSERTION',
+    'NATIVE_CLAIM_WITNESS_NOT_VERIFIED','CLAIM_REGISTRY_RESERVATION_MISMATCH']){
+    const x=projectReviewedCandidateJoin({input:joinInput,observation:{...joinBase,
+      state:'NOT_ADMITTED',reason,claimAccepted:false,admitted:false,agentLaunch:false},effectId:reason});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.reason,reason);
+    assert.equal(x.admitted,false);assert.equal(x.taskPass,false);
+  }
+});
+test('T06n forged join authority and malformed positive observations fail closed',()=>{
+  for(const value of [null,{},[],{...joinedObservation,authorized:true},
+    {...joinedObservation,taskPass:true},{...joinedObservation,agentLaunch:true},
+    {...joinedObservation,joinedAt:123},
+    {...joinedObservation,candidates:[joinedObservation.candidates[0]]},
+    {...joinedObservation,candidates:[{...joinedObservation.candidates[0],
+      candidateTree:'bad'}]},
+    {...joinedObservation,candidates:[{...joinedObservation.candidates[0],
+      attemptId:'attempt:t06n:other:9'}]}]){
+    const x=projectReviewedCandidateJoin({input:joinInput,observation:value,effectId:'forged-join'});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+  }
+});
+test('T06n join effect calls only selected C and never upgrades denial',async()=>{
+  const effect=getPolicy().effectBindings['effect:tally-reviewer-candidate-join'];
+  await assert.rejects(effect.handler({input:joinInput,effectId:'missing-c'}),
+    /SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+  const x=await effect.handler({input:joinInput,effectId:'join-c-denied',resources:{
+    call:async(key,operation,arg)=>{
+      assert.equal(key,'tally-local-codex');assert.equal(operation,'tally.joinReviewedCandidates');
+      assert.equal(arg.joinId,joinInput.joinId);
+      return {phase:'terminal',externalRef:'test',outcome:{ok:true,output:{...joinBase,
+        state:'NOT_ADMITTED',reason:'CANDIDATE_WRITESET_OVERLAP',
+        claimAccepted:false,admitted:false,agentLaunch:false}}};
+    }}});
+  assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.reason,'CANDIDATE_WRITESET_OVERLAP');
+  assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
 });
