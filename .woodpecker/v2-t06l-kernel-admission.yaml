@@ -29,7 +29,11 @@ steps:
       - |
         if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
           git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
-          base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
           echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
           ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
         else
