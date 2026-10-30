@@ -69,7 +69,7 @@ steps:
     commands:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
-      - command -v python3 >/dev/null || { echo "FAIL: python3 unavailable"; exit 1; }
+      - 'command -v python3 >/dev/null || { echo "FAIL: python3 unavailable"; exit 1; }'
       - python3 --version
       - python3 -c 'import sys; assert sys.version_info[:2] == (3, 14), "Python 3.14 required, got %s" % sys.version.split()[0]; print("PYTHON_314_OK")'
       - echo ADS_VERIFIER_PYTHON314_PASS
