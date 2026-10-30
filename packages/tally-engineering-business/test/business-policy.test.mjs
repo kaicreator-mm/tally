@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
-  assessReviewedCandidateJoin,projectReviewedCandidateJoin,
+  assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
   ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
@@ -457,4 +457,87 @@ test('T06n join effect calls only selected C and never upgrades denial',async()=
     }}});
   assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.reason,'CANDIDATE_WRITESET_OVERLAP');
   assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+});
+
+const snapshotBase={issueRef:'https://github.com/kaicreator-mm/tally/issues/137',issueNumber:137,
+  sourceSha:'ca09511d49488785c9ae8ff436c5db98f31b6714',observedAt:'2026-10-30T12:00:00.000Z'};
+const snapshotPair=(workItem={},claimEvents={})=>({status:'SOURCE_PAIR_OBSERVED',sourceQualified:true,
+  issueRef:snapshotBase.issueRef,sourceSha:snapshotBase.sourceSha,claimStatus:'NOT_VERIFIED',
+  authorized:false,admitted:false,taskPass:false,releasePass:false,
+  workItem:{issueRef:snapshotBase.issueRef,sourceSha:snapshotBase.sourceSha,
+    reason:'CLAIM_NOT_VERIFIED',issueState:'open',workflowState:'state:ready',workItemType:'type:task',
+    dependencyState:'CLEAR',openBlockerCount:0,claimStatus:'NOT_VERIFIED',
+    authorized:false,admitted:false,taskPass:false,...workItem},
+  claimEvents:{reason:'NO_DISPATCH_CLAIM_EVENTS',candidateCount:0,candidates:[],claimStatus:'NOT_VERIFIED',
+    authorized:false,admitted:false,taskPass:false,releasePass:false,...claimEvents}});
+const snapshotAttempt={issueRef:snapshotBase.issueRef,sourceSha:snapshotBase.sourceSha,
+  attemptId:'attempt:t06m:snapshot:1',state:'LOCAL_CANDIDATE_READY',authorized:false,taskPass:false,releasePass:false,
+  candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),
+  process:{status:'EXITED',exitCode:0,startedAt:'2026-10-30T11:00:00.000Z',terminatedAt:'2026-10-30T11:01:00.000Z'}};
+const snapshotJoin={issueRef:snapshotBase.issueRef,sourceSha:snapshotBase.sourceSha,
+  joinId:'join:t06n:snapshot:1',state:'REVIEW_JOINED',authorized:false,taskPass:false,releasePass:false,
+  candidates:[{attemptId:snapshotAttempt.attemptId,candidateTree:snapshotAttempt.candidateTree,
+    candidateCommit:snapshotAttempt.candidateCommit},
+    {attemptId:'attempt:t06n:snapshot:other',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}]};
+test('#137 open native blockers remain visible with actual query completion time',()=>{
+  const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,
+    expectedSourceSha:snapshotBase.sourceSha,observedAt:snapshotBase.observedAt,
+    sourcePair:snapshotPair({dependencyState:'BLOCKED',openBlockerCount:1})});
+  assert.equal(x.status,'WAIT_EXTERNAL');assert.equal(x.reason,'NATIVE_DEPENDENCIES_BLOCKED');
+  assert.equal(x.observedAsOf,snapshotBase.observedAt);
+  assert.equal(x.currentness,'OBSERVED_AT_QUERY_COMPLETION');
+  assert.equal(x.openBlockerCount,1);assert.equal(x.ciState,'NOT_VERIFIED');
+  assert.equal(x.releaseState,'NOT_VERIFIED');assert.equal(x.taskPass,false);
+});
+test('#137 no accepted CAS receipt stays awaiting Host and never launches Agent',()=>{
+  const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:snapshotBase.observedAt,sourcePair:snapshotPair()});
+  assert.equal(x.status,'AWAITING_HOST_ADMISSION');assert.equal(x.reason,'NATIVE_READY_NO_ACCEPTED_CLAIM');
+  assert.equal(x.claimState,'NOT_VERIFIED');assert.equal(x.kernelTaskState,'NOT_VERIFIED');
+  assert.equal(x.agentAttemptState,'NOT_VERIFIED');assert.equal(x.metricComparability,'NOT_COMPARABLE');
+  assert.equal(x.nextActions[0].kind,'REQUEST_SELECTED_HOST_ADMISSION');
+});
+test('#137 actual attempt and Reviewer Join observations stay layered without Task PASS',()=>{
+  const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:snapshotBase.observedAt,sourcePair:snapshotPair(),
+    hostObservation:{attempt:snapshotAttempt,join:snapshotJoin}});
+  assert.equal(x.status,'REVIEW_CANDIDATE_EVIDENCE');assert.equal(x.reason,'REVIEW_JOINED');
+  assert.equal(x.agentAttemptState,'LOCAL_CANDIDATE_READY');assert.equal(x.kernelTaskState,'LOCAL_CANDIDATE_READY');
+  assert.equal(x.hostState,'REVIEW_JOINED');assert.equal(x.reviewState,'REVIEW_JOINED');
+  assert.equal(x.ciState,'NOT_VERIFIED');assert.equal(x.releaseState,'NOT_VERIFIED');
+  assert.equal(x.taskPass,false);assert.equal(x.authorized,false);
+});
+test('#137 candidate without Reviewer Join requests review rather than completion',()=>{
+  const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:snapshotBase.observedAt,sourcePair:snapshotPair(),
+    hostObservation:{attempt:snapshotAttempt}});
+  assert.equal(x.status,'AWAITING_REVIEW');assert.equal(x.nextActions[0].kind,'REQUEST_REVIEWER_JOIN');
+  assert.equal(x.reviewState,'NOT_VERIFIED');assert.equal(x.taskPass,false);
+});
+test('#137 wrong host source/attempt/timestamps are UNKNOWN rather than normalized PASS',()=>{
+  for(const hostObservation of [
+    {attempt:{...snapshotAttempt,issueRef:'https://github.com/kaicreator-mm/tally/issues/999'}},
+    {attempt:{...snapshotAttempt,process:{...snapshotAttempt.process,startedAt:'bad'}}},
+    {attempt:{...snapshotAttempt,process:{...snapshotAttempt.process,terminatedAt:'2026-10-30T10:00:00.000Z'}}},
+    {attempt:snapshotAttempt,join:{...snapshotJoin,sourceSha:'0'.repeat(40)}},
+    {attempt:snapshotAttempt,join:{...snapshotJoin,candidates:snapshotJoin.candidates.slice(1)}}
+  ]){const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:snapshotBase.observedAt,sourcePair:snapshotPair(),hostObservation});
+    assert.equal(x.status,'UNKNOWN');assert.equal(x.reason,'HOST_OBSERVATION_NOT_VERIFIED');
+    assert.equal(x.taskPass,false);}
+});
+test('#137 observation time stays honest and conflicting claims stay CONFLICT',()=>{
+  const missing=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:undefined,sourcePair:snapshotPair()});
+  assert.equal(missing.status,'AWAITING_HOST_ADMISSION');assert.equal(missing.currentness,'AGE_NOT_VERIFIED');
+  assert.equal(missing.observedAsOf,null);
+  const conflict=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,expectedSourceSha:snapshotBase.sourceSha,
+    observedAt:snapshotBase.observedAt,sourcePair:snapshotPair({}, {
+    reason:'CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED',candidateCount:2,
+    candidates:[{sourceSha:snapshotBase.sourceSha,sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',
+      claimAccepted:false,dispatchId:'observed-comment-1'},
+      {sourceSha:snapshotBase.sourceSha,sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',
+        claimAccepted:false,dispatchId:'observed-comment-2'}]})});
+  assert.equal(conflict.status,'CONFLICT');assert.equal(conflict.reason,'AMBIGUOUS_CLAIM_EVENT_CANDIDATES');
+  assert.equal(conflict.claimState,'NOT_VERIFIED');assert.equal(conflict.taskPass,false);
 });
