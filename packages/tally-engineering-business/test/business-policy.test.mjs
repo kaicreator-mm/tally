@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
-  projectClaimedTaskAdmission,ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
+  projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
+  ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
 const claimed={issueRef:'https://github.com/kaicreator-mm/tally/issues/169',issueNumber:169,sourceSha:'a'.repeat(40)};
@@ -19,20 +20,25 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
-    'effect:tally-claim-execution-admission']);
+    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
-    'effect:tally-claim-execution-admission']);
+    'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
   assert.ok(!('external' in p.effectBindings['effect:tally-claim-execution-admission']));
   assert.deepEqual(p.effectBindings['effect:tally-claim-execution-admission'].resource,
     {key:'tally-claim-admission',operation:'tally.admitClaimedTask'});
+  assert.equal(p.effectBindings['effect:tally-local-codex-attempt'].semantics,'non-idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-local-codex-attempt'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  assert.deepEqual(p.effectBindings['effect:tally-local-codex-attempt'].resource,
+    {key:'tally-local-codex',operation:'tally.runLocalCodexAttempt'});
 });
 test('canonical observed input still cannot grant K admission or Task PASS',()=>{
   const x=assessTaskEvidence(good);
@@ -74,7 +80,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,2);
+  assert.equal(Object.keys(p.effectBindings).length,3);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
 });
@@ -270,4 +276,79 @@ test('T06l admission effect returns K intent admission, never Task/Agent authori
   assert.equal(x.admitted,true);
   assert.equal(x.authorized,false);assert.equal(x.taskPass,false);
   assert.equal(x.agentLaunch,false);assert.equal(x.releasePass,false);
+});
+
+const localInput={issueRef:'https://github.com/kaicreator-mm/tally/issues/172',issueNumber:172,
+  sourceSha:'2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9',attemptId:'attempt:t06m:test:1'};
+const localBase={issueRef:localInput.issueRef,sourceSha:localInput.sourceSha,attemptId:localInput.attemptId,
+  claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,taskPass:false,releasePass:false};
+const localReady={...localBase,state:'LOCAL_CANDIDATE_READY',reason:'REAL_CODEX_CANDIDATE_RECORDED',
+  agentLaunch:true,replayFixture:false,candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),
+  process:{status:'EXITED',exitCode:0,pid:123,builderPrincipal:'nilar\\codexsandboxoffline',
+    builderSid:'S-1-5-21-1-2-3-1003',startedAt:'2026-10-30T00:00:00Z',terminatedAt:'2026-10-30T00:01:00Z'}};
+test('T06m Local Codex intent uses a non-idempotent effect and matching rule payload',()=>{
+  const p=getPolicy(),e='TALLY_LOCAL_CODEX_ATTEMPT_REQUESTED';
+  assert.equal(p.intentBindings.runLocalCodexAttempt.trigger.eventType,e);
+  assert.equal(p.rules['rule:tally-local-codex-attempt'].eventType,e);
+  const definition=p.intentBindings.runLocalCodexAttempt.definition;
+  assert.equal(definition.states[0].transitions.length,1);
+  const transition=definition.states[0].transitions[0];
+  assert.equal(transition.effectIntents[0].effectType,'effect:tally-local-codex-attempt');
+  assert.deepEqual(Object.keys(transition.effectIntents[0].inputFrom),
+    ['issueRef','issueNumber','sourceSha','attemptId']);
+  for(const name of Object.keys(transition.effectIntents[0].inputFrom))
+    assert.ok(Object.hasOwn(p.rules['rule:tally-local-codex-attempt'].payloadFromInput,name));
+});
+test('T06m input alone never grants Agent execution and malformed attempts skip C',async()=>{
+  assert.equal(assessLocalCodexAttempt(localInput).state,'OBSERVED_INPUT_ONLY');
+  for(const value of [null,{},'x',{...localInput,sourceSha:'bad'},{...localInput,attemptId:'../escape'},
+    {...localInput,issueNumber:169}])assert.equal(assessLocalCodexAttempt(value).state,'UNQUALIFIED_INPUT');
+  let calls=0;
+  const x=await getPolicy().effectBindings['effect:tally-local-codex-attempt'].handler({
+    input:{...localInput,attemptId:'bad/id'},effectId:'bad-local',resources:{call:async()=>{calls++;}}});
+  assert.equal(calls,0);assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+});
+test('T06m real candidate projection preserves exact tree and process without Task PASS',()=>{
+  const x=projectLocalCodexAttempt({input:localInput,observation:localReady,effectId:'local-ready'});
+  assert.equal(x.state,'LOCAL_CANDIDATE_READY');assert.equal(x.agentLaunch,true);
+  assert.equal(x.candidateTree,'a'.repeat(40));assert.equal(x.process.pid,123);
+  assert.equal(x.authorized,false);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+});
+test('T06m replay, unavailable/confinement and UNKNOWN states remain distinct',()=>{
+  const replay=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
+    state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',agentLaunch:false,replayFixture:true},effectId:'r'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.agentLaunch,false);
+  for(const [state,reason] of [['AGENT_NOT_EXECUTED','LOCAL_AGENT_UNAVAILABLE'],
+    ['AGENT_NOT_EXECUTED','BUILDER_CONFINEMENT_UNAVAILABLE']]){
+    const x=projectLocalCodexAttempt({input:localInput,observation:{...localBase,state,reason,
+      agentLaunch:false,replayFixture:false},effectId:reason});
+    assert.equal(x.state,'AGENT_NOT_EXECUTED');assert.equal(x.agentLaunch,false);
+  }
+  const unknown=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
+    state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_STATUS_UNKNOWN',agentLaunch:true,
+    process:{status:'UNKNOWN',pid:123,builderPrincipal:'nilar\\codexsandboxoffline',
+      builderSid:'S-1-5-21-1-2-3-1003'}},effectId:'u'});
+  assert.equal(unknown.state,'LOCAL_ATTEMPT_UNKNOWN');assert.equal(unknown.taskPass,false);
+});
+test('T06m forged authority, malformed candidate and provider output fail closed',()=>{
+  for(const value of [null,{},[],{...localReady,authorized:true},{...localReady,taskPass:true},
+    {...localReady,agentLaunch:false},{...localReady,candidateTree:'bad'},
+    {...localReady,process:{...localReady.process,exitCode:1}}]){
+    const x=projectLocalCodexAttempt({input:localInput,observation:value,effectId:'forged'});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
+  }
+});
+test('T06m effect calls only selected C and never upgrades denial',async()=>{
+  const effect=getPolicy().effectBindings['effect:tally-local-codex-attempt'];
+  await assert.rejects(effect.handler({input:localInput,effectId:'missing-c'}),
+    /SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+  const x=await effect.handler({input:localInput,effectId:'local-c-denied',resources:{
+    call:async(key,operation,arg)=>{
+      assert.equal(key,'tally-local-codex');assert.equal(operation,'tally.runLocalCodexAttempt');
+      assert.equal(arg.attemptId,localInput.attemptId);
+      return {phase:'terminal',externalRef:'test',outcome:{ok:true,output:{...localBase,
+        state:'NOT_ADMITTED',reason:'CLAIM_REGISTRY_RECORD_NOT_FOUND',
+        claimAccepted:false,admitted:false,agentLaunch:false}}};
+    }}});
+  assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
 });

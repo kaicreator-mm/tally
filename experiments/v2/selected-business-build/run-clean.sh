@@ -34,7 +34,11 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     [[ "${TALLY_CLAIM_SOURCE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T06L_SOURCE_PIN_REQUIRED; exit 3; }
   fi
 fi
-[[ "$(git -C "$DH" rev-parse HEAD)" == "cee14399d9d0af4e20e34b9111861b16a465b690" ]] || { echo DH_SHA_MISMATCH; exit 2; }
+expected_dh_sha=cee14399d9d0af4e20e34b9111861b16a465b690
+if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+  expected_dh_sha=061376f4a023070f215f9feffad5c24d96d503cb
+fi
+[[ "$(git -C "$DH" rev-parse HEAD)" == "$expected_dh_sha" ]] || { echo DH_SHA_MISMATCH; exit 2; }
 # This integration PR exercises the exact proposed Business bytes, not the
 # old merged B. CI uses GitHub's synthetic PR merge checkout for both paths.
 [[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "$(git -C "$TALLY" rev-parse HEAD)" ]] || { echo T04A_SOURCE_CHECKOUT_MISMATCH; exit 2; }
@@ -75,6 +79,10 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/bundle-claim-reader.mjs" "$tmp/producer/bundle-claim-reader.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/claim-admission-shim.mjs" "$tmp/producer/claim-admission-shim.mjs"
   fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/bundle-local-codex.mjs" "$tmp/producer/bundle-local-codex.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-shim.mjs" "$tmp/producer/local-codex-shim.mjs"
+  fi
 fi
 cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
 printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
@@ -104,6 +112,17 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     echo T06L_TRUSTED_PROVIDER_SHA256
     sha256sum "$tmp/native-claim-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
   fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    T06M_C_OUTPUT="$tmp/producer/local-codex-bundled.mjs" T06M_IMPORTS_OUTPUT="$tmp/producer/local-codex-imports.json" TALLY="$TALLY" node ./bundle-local-codex.mjs
+    mkdir -p "$tmp/local-codex-provider"
+    cp "$tmp/producer/local-codex-bundled.mjs" "$tmp/local-codex-provider/index.mjs"
+    printf '%s' '{"name":"@kaicreator/tally-local-codex-host-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/local-codex-provider/package.json"
+    npm pack --pack-destination "$tmp/packed" "$tmp/local-codex-provider" >/dev/null
+    echo T06M_TRUSTED_PROVIDER_SHA256
+    sha256sum "$tmp/local-codex-provider/index.mjs" "$tmp"/packed/kaicreator-tally-local-codex-host-bundle-*.tgz
+  fi
+  T06M_LOCAL="${T06M_LOCAL:-0}" \
+  T06M_PROVIDER_FILE="$tmp/local-codex-provider/index.mjs" \
   T06L_CLAIM="${T06L_CLAIM:-0}" \
   T06L_PROVIDER_FILE="$tmp/native-claim-provider/index.mjs" \
   T04B_NATIVE=1 T04B_PROVIDER_FILE="$tmp/native-provider/index.mjs" T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
@@ -121,26 +140,37 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
     npm install --save-exact "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
   fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    npm install --save-exact "$tmp"/packed/kaicreator-tally-local-codex-host-bundle-*.tgz
+  fi
 fi
 npm ls --depth=0
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
-  cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
-  TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs
-  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
-    # Real accepted Claim #169 identity, Host-supplied configuration only.
-    # A real previously accepted registry can replace the fixture bootstrap
-    # via TALLY_CLAIM_REGISTRY_PATH (then seeding is skipped).
-    cp "$TALLY/experiments/v2/selected-business-build/consumer-claim-admission.mjs" "$tmp/consumer/consumer-claim-admission.mjs"
-    TALLY_GITHUB_READ_TOKEN="$native_token" \
-    TALLY_CLAIM_SOURCE_SHA="${TALLY_CLAIM_SOURCE_SHA:-3293aace8a07c2a4f79a75c6539245980f77e2b4}" \
-    TALLY_CLAIM_DISPATCH_ID="${TALLY_CLAIM_DISPATCH_ID:-dispatch:169:t06l:kernel:20261030:1}" \
-    TALLY_CLAIM_OPERATOR_ID="${TALLY_CLAIM_OPERATOR_ID:-zcode:t125:kernel:1}" \
-    TALLY_CLAIM_OPERATOR_KIND="${TALLY_CLAIM_OPERATOR_KIND:-other}" \
-    TALLY_CLAIM_WRITER_ID="${TALLY_CLAIM_WRITER_ID:-writer:t06l:host:1}" \
-    TALLY_CLAIM_WRITER_LOGIN="${TALLY_CLAIM_WRITER_LOGIN:-kaicreator-mm}" \
-    TALLY_CLAIM_COMMENT_ID="${TALLY_CLAIM_COMMENT_ID:-6511046226}" \
-    TALLY_CLAIM_REGISTRY_PATH="${TALLY_CLAIM_REGISTRY_PATH:-}" \
-      node ./consumer-claim-admission.mjs
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
+    node --test "$tmp/consumer/local-codex.test.mjs"
+    TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+  else
+    cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
+    TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs
+    if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+      # Real accepted Claim #169 identity, Host-supplied configuration only.
+      # A real previously accepted registry can replace the fixture bootstrap
+      # via TALLY_CLAIM_REGISTRY_PATH (then seeding is skipped).
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-claim-admission.mjs" "$tmp/consumer/consumer-claim-admission.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" \
+      TALLY_CLAIM_SOURCE_SHA="${TALLY_CLAIM_SOURCE_SHA:-3293aace8a07c2a4f79a75c6539245980f77e2b4}" \
+      TALLY_CLAIM_DISPATCH_ID="${TALLY_CLAIM_DISPATCH_ID:-dispatch:169:t06l:kernel:20261030:1}" \
+      TALLY_CLAIM_OPERATOR_ID="${TALLY_CLAIM_OPERATOR_ID:-zcode:t125:kernel:1}" \
+      TALLY_CLAIM_OPERATOR_KIND="${TALLY_CLAIM_OPERATOR_KIND:-other}" \
+      TALLY_CLAIM_WRITER_ID="${TALLY_CLAIM_WRITER_ID:-writer:t06l:host:1}" \
+      TALLY_CLAIM_WRITER_LOGIN="${TALLY_CLAIM_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_CLAIM_COMMENT_ID="${TALLY_CLAIM_COMMENT_ID:-6511046226}" \
+      TALLY_CLAIM_REGISTRY_PATH="${TALLY_CLAIM_REGISTRY_PATH:-}" \
+        node ./consumer-claim-admission.mjs
+    fi
   fi
 else
   node ./consumer.mjs

@@ -8,9 +8,9 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
-  'effect:tally-claim-execution-admission']);
+  'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -48,6 +48,12 @@ const claimInputFrom=Object.freeze({
   issueRef:{source:'event',path:['payload','issueRef']},
   issueNumber:{source:'event',path:['payload','issueNumber']},
   sourceSha:{source:'event',path:['payload','sourceSha']},
+});
+const localAgentInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  attemptId:{source:'event',path:['payload','attemptId']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -88,6 +94,15 @@ export function getPolicy(){
       idempotencyKeyFrom:{template:'admit:{issueNumber}:{sourceSha}'}
     }]
   };
+  const localAgentTransition={
+    transitionKey:'run-local-codex-attempt',
+    trigger:{kind:'event',eventType:'TALLY_LOCAL_CODEX_ATTEMPT_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-local-codex-attempt',inputFrom:localAgentInputFrom,
+      idempotencyKeyFrom:{template:'agent:{issueNumber}:{sourceSha}:{attemptId}'}
+    }]
+  };
   const finalState={stateKey:'closed',kind:'final'};
   const readinessWorkflow={
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
@@ -97,12 +112,16 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[admitTransition]},finalState],
   };
+  const localAgentWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[localAgentTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition]},
         finalState,
       ],
     },
@@ -119,6 +138,10 @@ export function getPolicy(){
       ruleId:'rule:tally-claim-admission',
       eventType:'TALLY_CLAIMED_TASK_ADMISSION_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha'},
+    },'rule:tally-local-codex-attempt':{
+      ruleId:'rule:tally-local-codex-attempt',
+      eventType:'TALLY_LOCAL_CODEX_ATTEMPT_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',attemptId:'attemptId'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -137,6 +160,12 @@ export function getPolicy(){
         // The caller role gates only who may REQUEST the admission check.
         roles:['requester','planner','builder','reviewer'],
         definition:claimWorkflow,
+      },
+      runLocalCodexAttempt:{
+        trigger:{kind:'event',eventType:'TALLY_LOCAL_CODEX_ATTEMPT_REQUESTED'},
+        ruleId:'rule:tally-local-codex-attempt',
+        roles:['requester','planner','builder','reviewer'],
+        definition:localAgentWorkflow,
       },
     },
     effectBindings:{
@@ -192,6 +221,25 @@ export function getPolicy(){
               sourceSha:input.sourceSha,effectId}
           );
           return projectClaimedTaskAdmission({input,claimObservation,effectId});
+        },
+      },
+      'effect:tally-local-codex-attempt':{
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.runLocalCodexAttempt'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessLocalCodexAttempt(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call(
+            'tally-local-codex','tally.runLocalCodexAttempt',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,attemptId:input.attemptId,effectId}
+          );
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectLocalCodexAttempt({input,observation,effectId});
         },
       },
     },
@@ -461,4 +509,84 @@ export function projectClaimedTaskAdmission({input,claimObservation,effectId}={}
     }
     return notAdmitted('UNVERIFIED_CLAIM_ADMISSION_OBSERVATION',effectId,o);
   }catch{return notAdmitted('UNTRUSTED_CLAIM_ADMISSION_OBSERVATION',effectId,null);}
+}
+
+const LOCAL_ATTEMPT_ID=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
+export function assessLocalCodexAttempt(input){
+  if(!input||typeof input!=='object'||Array.isArray(input))
+    return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',admitted:false,
+      authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+  const {issueRef,issueNumber,sourceSha,attemptId}=input;
+  if(!(ISSUE_REF.test(issueRef)&&Number.isSafeInteger(issueNumber)&&issueNumber>0&&
+    issueRef.endsWith(`/issues/${issueNumber}`)&&SOURCE_SHA.test(sourceSha)&&
+    LOCAL_ATTEMPT_ID.test(attemptId??'')))
+    return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',admitted:false,
+      authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',reason:'REQUIRES_SEALED_LOCAL_CODEX_ATTEMPT',
+    issueRef,issueNumber,sourceSha,attemptId,admitted:false,authorized:false,
+    agentLaunch:false,taskPass:false,releasePass:false});
+}
+
+const LOCAL_REASONS=new Set([
+  'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH','CLAIM_REGISTRY_UNAVAILABLE',
+  'CLAIM_REGISTRY_RECORD_NOT_FOUND','CLAIM_REGISTRY_RECORD_INVALID',
+  'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED','CLAIM_REGISTRY_RESERVATION_MISMATCH',
+  'DAG_WRITESET_NOT_VERIFIED','NATIVE_DEPENDENCIES_BLOCKED','NATIVE_SOURCE_NOT_CURRENT',
+  'NATIVE_CLAIM_WITNESS_NOT_VERIFIED','LOCAL_AGENT_UNAVAILABLE',
+  'BUILDER_CONFINEMENT_UNAVAILABLE','HIDDEN_VERIFIER_UNAVAILABLE',
+  'ATTEMPT_ALREADY_RECONCILED','ATTEMPT_STATUS_UNKNOWN','ATTEMPT_TIMEOUT_RECONCILED',
+  'ATTEMPT_CANCELLED','ATTEMPT_PROCESS_FAILED','WRITE_SET_VIOLATION',
+  'CANDIDATE_TREE_UNAVAILABLE','LOCAL_AGENT_PROVIDER_THREW'
+]);
+const localDenied=(reason,effectId)=>Object.freeze({state:'NOT_ADMITTED',reason,effectId,
+  admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
+  taskPass:false,releasePass:false});
+export function projectLocalCodexAttempt({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.attemptId!==input?.attemptId||
+      !LOCAL_REASONS.has(o.reason)&&o.state!=='LOCAL_CANDIDATE_READY'&&o.state!=='REPLAY_COMPLETE')
+      return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
+    const common={issueRef:o.issueRef,sourceSha:o.sourceSha,attemptId:o.attemptId,
+      claimGeneration:o.claimGeneration,claimAccepted:o.claimAccepted,
+      admitted:o.admitted,authorized:o.authorized,agentLaunch:o.agentLaunch,
+      taskPass:o.taskPass,releasePass:o.releasePass};
+    if(o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
+    if(o.state==='NOT_ADMITTED'&&LOCAL_REASONS.has(o.reason)&&o.admitted===false&&
+      o.claimAccepted===false&&o.agentLaunch===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common});
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&o.replayFixture===true)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:true,
+        candidateTree:null,candidateCommit:null,process:null});
+    if(o.state==='LOCAL_CANDIDATE_READY'&&o.reason==='REAL_CODEX_CANDIDATE_RECORDED'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===true&&
+      o.replayFixture===false&&SOURCE_SHA.test(o.candidateTree??'')&&
+      SOURCE_SHA.test(o.candidateCommit??'')&&o.process?.status==='EXITED'&&
+      o.process.exitCode===0&&typeof o.process.builderPrincipal==='string'&&
+      typeof o.process.builderSid==='string'&&Number.isSafeInteger(o.process.pid))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:false,
+        candidateTree:o.candidateTree,candidateCommit:o.candidateCommit,
+        process:Object.freeze({status:'EXITED',exitCode:0,pid:o.process.pid,
+          builderPrincipal:o.process.builderPrincipal,builderSid:o.process.builderSid,
+          startedAt:o.process.startedAt,terminatedAt:o.process.terminatedAt})});
+    if(o.state==='AGENT_NOT_EXECUTED'&&LOCAL_REASONS.has(o.reason)&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:false,
+        candidateTree:null,candidateCommit:null,process:null});
+    if(['LOCAL_ATTEMPT_UNKNOWN','LOCAL_ATTEMPT_FAILED','LOCAL_ATTEMPT_CANCELLED'].includes(o.state)&&
+      LOCAL_REASONS.has(o.reason)&&o.admitted===true&&o.claimAccepted===true&&
+      o.agentLaunch===true&&typeof o.process?.status==='string')
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:false,
+        candidateTree:SOURCE_SHA.test(o.candidateTree??'')?o.candidateTree:null,
+        candidateCommit:SOURCE_SHA.test(o.candidateCommit??'')?o.candidateCommit:null,
+        process:Object.freeze({status:o.process.status,
+          exitCode:Number.isSafeInteger(o.process.exitCode)?o.process.exitCode:null,
+          pid:Number.isSafeInteger(o.process.pid)?o.process.pid:null,
+          builderPrincipal:o.process.builderPrincipal,builderSid:o.process.builderSid,
+          startedAt:o.process.startedAt,terminatedAt:o.process.terminatedAt})});
+    return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
+  }catch{return localDenied('UNTRUSTED_LOCAL_CODEX_OBSERVATION',effectId);}
 }
