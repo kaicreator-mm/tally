@@ -8,8 +8,9 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness']);
-export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask']);
+export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
+  'effect:tally-claim-execution-admission']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -43,6 +44,11 @@ const inputFrom=Object.freeze({
   claimRef:{source:'event',path:['payload','claimRef']},
   dependenciesComplete:{source:'event',path:['payload','dependenciesComplete']},
 });
+const claimInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+});
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
     !!value.decision&&typeof value.decision==='object'&&!Array.isArray(value.decision)&&
@@ -51,25 +57,53 @@ const decisionSchema={isValid(value){
     typeof value.event.type==='string';
 }};
 export function getPolicy(){
+  // The DH 0.10.2 kernel wires EVERY transition of a workflow definition
+  // against EACH intent-bound rule and the S SDK projects the rule payload
+  // from the arriving event. Two intents therefore cannot share one dynamic
+  // effect surface: each intent binding carries its own single-transition
+  // definition over the same workflowKey, while the top-level definition
+  // remains the full union for queries and policy description.
+  const inspectTransition={
+    transitionKey:'inspect-task-source',
+    trigger:{kind:'event',eventType:'TALLY_TASK_READINESS_INSPECTION_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-readiness-observation',inputFrom,
+      // GitHub issue URL contains '/', invalid for DH 0.10.2 Kernel key.
+      // Native issueNumber must match the canonical issueRef before advice.
+      // Domain App keys are scoped to a selected project; multi-repo
+      // scope must add trusted repository identity in the T02b adapter.
+      idempotencyKeyFrom:{template:'inspect:{issueNumber}:{sourceSha}'}
+    }]
+  };
+  const admitTransition={
+    transitionKey:'admit-claimed-task',
+    trigger:{kind:'event',eventType:'TALLY_CLAIMED_TASK_ADMISSION_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-claim-execution-admission',inputFrom:claimInputFrom,
+      // One admitted-Claim observation per (issue, sourceSha). A rejected
+      // observation still executes as a negative projection; replay of a
+      // prior admitted observation never re-executes the native C read.
+      idempotencyKeyFrom:{template:'admit:{issueNumber}:{sourceSha}'}
+    }]
+  };
+  const finalState={stateKey:'closed',kind:'final'};
+  const readinessWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[inspectTransition]},finalState],
+  };
+  const claimWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[admitTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[{
-          transitionKey:'inspect-task-source',
-          trigger:{kind:'event',eventType:'TALLY_TASK_READINESS_INSPECTION_REQUESTED'},
-          targetState:'open',
-          effectIntents:[{
-            effectType:'effect:tally-readiness-observation',inputFrom,
-            // GitHub issue URL contains '/', invalid for DH 0.10.2 Kernel key.
-            // Native issueNumber must match the canonical issueRef before advice.
-            // Domain App keys are scoped to a selected project; multi-repo
-            // scope must add trusted repository identity in the T02b adapter.
-            idempotencyKeyFrom:{template:'inspect:{issueNumber}:{sourceSha}'}
-          }]
-        }]},
-        {stateKey:'closed',kind:'final'},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition]},
+        finalState,
       ],
     },
     decisionSchema,governanceSemantics:{hardInvariants:[]},
@@ -81,6 +115,10 @@ export function getPolicy(){
         issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',claimRef:'claimRef',
         dependenciesComplete:'dependenciesComplete',
       },
+    },'rule:tally-claim-admission':{
+      ruleId:'rule:tally-claim-admission',
+      eventType:'TALLY_CLAIMED_TASK_ADMISSION_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -88,6 +126,17 @@ export function getPolicy(){
         ruleId:'rule:tally-readiness',// Public Microkernel facade sends with K-derived callerRole='requester'.
         // This intent is observation-only; it cannot grant admission/Task PASS.
         roles:['requester','planner','builder','reviewer'],
+        definition:readinessWorkflow,
+      },
+      admitClaimedTask:{
+        trigger:{kind:'event',eventType:'TALLY_CLAIMED_TASK_ADMISSION_REQUESTED'},
+        ruleId:'rule:tally-claim-admission',
+        // Admission authority here is ONLY the sealed C accepted-Claim
+        // observation (DH CAS registry row + current native readback), never
+        // the caller, a comment flag or a self-declared accepted boolean.
+        // The caller role gates only who may REQUEST the admission check.
+        roles:['requester','planner','builder','reviewer'],
+        definition:claimWorkflow,
       },
     },
     effectBindings:{
@@ -121,6 +170,28 @@ export function getPolicy(){
             ...assessTaskEvidence(input),effectId,sourceObservation,
             ...(pairDiagnosis?{pairDiagnosis}:{}),
           };
+        },
+      },
+      'effect:tally-claim-execution-admission':{
+        semantics:'idempotent',
+        // Selected C dispatch via the K-owned sealed resources port. C reads
+        // the real DH CAS registry row and re-verifies the current native
+        // GitHub readback; B never sees or trusts a caller/comment boolean.
+        resource:{key:'tally-claim-admission',operation:'tally.admitClaimedTask'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function') {
+            throw new Error('SELECTED_READONLY_CAPABILITY_REQUIRED');
+          }
+          const advisory=assessClaimedTaskAdmission(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY'){
+            return {...advisory,effectId};
+          }
+          const claimObservation=await resources.call(
+            'tally-claim-admission','tally.admitClaimedTask',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,effectId}
+          );
+          return projectClaimedTaskAdmission({input,claimObservation,effectId});
         },
       },
     },
@@ -300,4 +371,94 @@ export function projectNativeTaskEffectiveSnapshot({
       'NATIVE_READY_NO_ACCEPTED_CLAIM',
       'REQUEST_SELECTED_HOST_ADMISSION','HOST_AND_ADS_REQUIRED');
   }catch{return readModelOutput('SOURCE_OBSERVATION_UNREADABLE');}
+}
+
+/**
+ * T06l/#169 — advisory input screening for the claimed-Task admission intent.
+ * The accepted-Claim fact can only come from the selected sealed C reading
+ * the real DH CAS registry plus a current native GitHub publication witness;
+ * no input shape, caller assertion or comment flag is admission evidence.
+ */
+export function assessClaimedTaskAdmission(input){
+  if(!input||typeof input!=='object'||Array.isArray(input)) {
+    return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',
+      admitted:false,authorized:false,taskPass:false,agentLaunch:false,releasePass:false});
+  }
+  const {issueRef,issueNumber,sourceSha}=input;
+  if(!(ISSUE_REF.test(issueRef)&&Number.isSafeInteger(issueNumber)&&issueNumber>0&&
+      issueRef.endsWith(`/issues/${issueNumber}`)&&SOURCE_SHA.test(sourceSha))) {
+    return Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+      admitted:false,authorized:false,taskPass:false,agentLaunch:false,releasePass:false});
+  }
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_CLAIM_ADMISSION_OBSERVATION',
+    issueRef,issueNumber,sourceSha,admitted:false,authorized:false,
+    taskPass:false,agentLaunch:false,releasePass:false});
+}
+
+/**
+ * T06l — Business projection of the sealed C accepted-Claim observation.
+ * Positive output is admission of THIS K intent only: it never authorizes
+ * the caller, launches an Agent, passes the Task or releases. Any deviation
+ * from the exact sealed positive shape fails closed to NOT_ADMITTED.
+ */
+const ADMIT_REASON='CLAIM_REGISTRY_PUBLICATION_AND_NATIVE_READBACK_VERIFIED';
+const CLAIM_PUBLICATION='REGISTRY_PUBLISHED_VERIFIED_NATIVE_READBACK';
+const deniedFlags=Object.freeze({authorized:false,admitted:false,taskPass:false,
+  agentLaunch:false,releasePass:false});
+const notAdmitted=(reason,effectId,claimObservation)=>Object.freeze({
+  state:'NOT_ADMITTED',reason,effectId,
+  claimObservation:claimObservation??null,...deniedFlags,
+});
+export function projectClaimedTaskAdmission({input,claimObservation,effectId}={}){
+  try{
+    const o=claimObservation;
+    if(!o||typeof o!=='object'||Array.isArray(o)){
+      return notAdmitted('UNVERIFIED_CLAIM_ADMISSION_OBSERVATION',effectId,o??null);
+    }
+    if(o.state==='ADMITTED_PENDING_AGENT_EFFECT'){
+      const positive=
+        o.reason===ADMIT_REASON&&
+        o.issueRef===input?.issueRef&&o.sourceSha===input?.sourceSha&&
+        DIAG_ISSUE.test(o.issueRef??'')&&DIAG_SOURCE_SHA.test(o.sourceSha??'')&&
+        typeof o.protectedClaimKey==='string'&&
+        /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9][0-9]*:(builder|reviewer|validator):__default__$/
+          .test(o.protectedClaimKey)&&
+        o.generation===1&&
+        typeof o.dispatchId==='string'&&o.dispatchId.length>0&&
+        o.actorRole==='builder'&&
+        typeof o.operatorKind==='string'&&o.operatorKind.length>0&&
+        typeof o.operatorId==='string'&&o.operatorId.length>0&&
+        Number.isSafeInteger(o.commentId)&&o.commentId>0&&
+        o.commentRef===`${o.issueRef}#issuecomment-${o.commentId}`&&
+        o.claimPublication===CLAIM_PUBLICATION&&
+        o.claimAccepted===true&&
+        o.admitted===true&&o.authorized===false&&o.taskPass===false&&
+        o.agentLaunch===false&&o.releasePass===false;
+      if(!positive)return notAdmitted('UNVERIFIED_CLAIM_ADMISSION_OBSERVATION',effectId,o);
+      const observation=Object.freeze({
+        state:'ADMITTED_PENDING_AGENT_EFFECT',reason:o.reason,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,
+        protectedClaimKey:o.protectedClaimKey,generation:1,
+        dispatchId:o.dispatchId,actorRole:o.actorRole,
+        operatorKind:o.operatorKind,operatorId:o.operatorId,
+        commentId:o.commentId,commentRef:o.commentRef,
+        claimPublication:o.claimPublication,claimAccepted:true,
+        admitted:true,authorized:false,taskPass:false,
+        agentLaunch:false,releasePass:false,
+      });
+      return Object.freeze({
+        state:'ADMITTED_PENDING_AGENT_EFFECT',reason:o.reason,effectId,
+        claimObservation:observation,
+        admitted:true,authorized:false,taskPass:false,
+        agentLaunch:false,releasePass:false,
+      });
+    }
+    if(o.state==='NOT_ADMITTED'&&typeof o.reason==='string'&&o.reason.length>0&&
+       o.reason.length<=64&&o.admitted===false&&o.authorized===false&&
+       o.taskPass===false&&o.agentLaunch===false&&o.releasePass===false){
+      return notAdmitted(o.reason,effectId,o);
+    }
+    return notAdmitted('UNVERIFIED_CLAIM_ADMISSION_OBSERVATION',effectId,o);
+  }catch{return notAdmitted('UNTRUSTED_CLAIM_ADMISSION_OBSERVATION',effectId,null);}
 }
