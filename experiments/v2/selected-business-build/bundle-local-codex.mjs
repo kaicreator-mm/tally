@@ -120,7 +120,7 @@ export async function runLocalCodexAttempt(input){
 }
 `;
 const result=await build({
-  stdin:{contents:provider,resolveDir:resolve(tally,'experiments/v2/selected-business-build'),sourcefile:'local-codex-provider.mjs',loader:'js'},
+  stdin:{contents:provider,resolveDir:process.cwd(),sourcefile:'local-codex-provider.mjs',loader:'js'},
   bundle:true,format:'esm',platform:'node',target:'node24',external:['better-sqlite3'],
   write:false,metafile:true,legalComments:'none',logLevel:'warning',
   banner:{js:'import {createRequire as __nativeRequireFactory} from "node:module"; const require = __nativeRequireFactory(import.meta.url);'},
