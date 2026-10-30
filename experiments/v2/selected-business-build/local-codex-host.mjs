@@ -279,8 +279,8 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         }catch{await releaseGrants();return overlapDenied(base,reason);}
       };
       // Atomic resource grants close the cross-attempt read/scan/spawn race.
-      // UNKNOWN/crashed attempts retain them for reconciliation; known
-      // terminal outcomes release them so a bounded Repair may proceed.
+      // They are released once a terminal attempt record exists; a crash with
+      // no terminal record retains them for operator reconciliation.
       const worktreeGrant=await acquireGrant('worktree',config.worktreePath,'CANDIDATE_WORKTREE_OVERLAP');
       if(worktreeGrant)return worktreeGrant;
       const writeGrant=await acquireGrant('candidate',candidatePath,'CANDIDATE_WRITE_GRANT_OVERLAP');
