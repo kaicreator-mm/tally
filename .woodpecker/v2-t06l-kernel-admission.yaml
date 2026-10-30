@@ -1,16 +1,55 @@
 # Tally v2 T06l accepted-Claim -> public K admission, exact authored SHA.
+# Historical proof: this profile intentionally keeps DomainHarness v0.10.2
+# (cee14399d9d0af4e20e34b9111861b16a465b690) replay; new/common SDK
+# qualification uses DH v0.10.3 (061376f4a023070f215f9feffad5c24d96d503cb)
+# via v2-t06j-host-admission.yaml (#173).
+# #173: path-scoped on version/v2; the historical task branch replays unchanged.
 when:
   - event: [pull_request, push, manual]
-    branch: [version/v2, task/tally-t125-kernel-zcode]
+    branch: [version/v2]
+    path:
+      include:
+        - 'experiments/v2/selected-business-build/**'
+        - 'experiments/v2/t06d-host-claim-publication/**'
+        - 'claim-replay-runner.mjs'
+        - 'ci-post-error.mjs'
+        - '.woodpecker/v2-t06l-kernel-admission.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-t125-kernel-zcode]
 
 labels:
   backend: local
 
 steps:
+  - name: t06l-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_T06L_RANGE_TRAILERS_PASS
+
   - name: t06l-kernel-admission-replay
     image: bash
     commands:
       - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
       - 'echo "T06L_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
       - 'echo "T06L_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
       - test -n "${CI_COMMIT_SHA:-}"
