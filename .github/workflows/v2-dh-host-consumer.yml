@@ -1,6 +1,14 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
 name: v2-dh-host-consumer
 on:
   pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
     paths:
       - 'experiments/v2/host-sqlite-cas/**'
       - '.github/workflows/v2-dh-host-consumer.yml'

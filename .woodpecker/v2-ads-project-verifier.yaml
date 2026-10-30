@@ -1,0 +1,86 @@
+# Tally v2 pinned ADS v4.18 full-root project verifier.
+# Sole v2 carrier for ADS-version / Product / L2 / DAG / CI-policy scope changes
+# (#173); replaces the suspended GitHub Actions v2-ads-pinned-project-verifier.
+# Python 3.14 is required and the profile fails closed without it.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'AGENTS.md'
+        - '.dev-standard/**'
+        - 'docs/product/v2/**'
+        - 'docs/architecture/v2/**'
+        - 'docs/implementation/v2/**'
+        - 'docs/standards/TALLY_V2_ADS_V418_ADOPTION_EVIDENCE.md'
+        - '.woodpecker/v2-ads-project-verifier.yaml'
+        - '.github/workflows/v2-ads-pinned-project-verifier.yml'
+
+labels:
+  backend: local
+
+steps:
+  - name: ads-project-verifier-exact-head
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
+      - 'echo "ADS_VERIFIER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "ADS_VERIFIER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+
+  - name: ads-project-verifier-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo ADS_VERIFIER_TRAILERS_PASS
+
+  - name: ads-project-verifier-pinned-clone
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - work="$PWD/.ads-verify-ci"
+      - rm -rf -- "$work"
+      - mkdir -p "$work"
+      - git clone --quiet https://github.com/kaicreator-mm/ai-development-standard.git "$work/ads"
+      - git -C "$work/ads" checkout --detach 2c395c55569fe2edf3f4135f12d3d069e526d0b7
+      - test "$(git -C "$work/ads" rev-parse HEAD)" = 2c395c55569fe2edf3f4135f12d3d069e526d0b7
+      - echo ADS_VERIFIER_PINNED_CLONE_PASS
+
+  - name: ads-project-verifier-python314
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - command -v python3 >/dev/null || { echo "FAIL: python3 unavailable"; exit 1; }
+      - python3 --version
+      - python3 -c 'import sys; assert sys.version_info[:2] == (3, 14), "Python 3.14 required, got %s" % sys.version.split()[0]; print("PYTHON_314_OK")'
+      - echo ADS_VERIFIER_PYTHON314_PASS
+
+  - name: ads-project-verifier-run
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - work="$PWD/.ads-verify-ci"
+      - test -x "$work/ads/scripts/verify_project_standard.py" || test -f "$work/ads/scripts/verify_project_standard.py"
+      - export PYTHONDONTWRITEBYTECODE=1
+      - python3 "$work/ads/scripts/verify_project_standard.py" "$PWD" --standard-repo "$work/ads" --require-resolution
+      - echo TALLY_V2_ADS_PROJECT_VERIFIER_PASS
