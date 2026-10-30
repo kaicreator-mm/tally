@@ -56,6 +56,8 @@ steps:
     commands:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
-      - node --test web/v2/*.test.mjs
+      - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
+      - test -n "$files"
+      - node --test $files
       - echo TALLY_V2_ALM_WORKSPACE_SOURCE_TESTS_PASS
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER
