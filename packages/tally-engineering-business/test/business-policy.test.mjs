@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
-  assessCandidatePublication,projectCandidatePublication,ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
+  assessCandidatePublication,projectCandidatePublication,assessProductIntakeFreeze,
+  projectProductIntakeFreeze,assessProjectIntakeAdmission,projectProjectIntakeAdmission,
+  ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
 const claimed={issueRef:'https://github.com/kaicreator-mm/tally/issues/169',issueNumber:169,sourceSha:'a'.repeat(40)};
@@ -21,16 +23,18 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
+    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
+    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -88,10 +92,38 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,5);
+  assert.equal(Object.keys(p.effectBindings).length,7);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
-});
+  // T210 intake intents: freeze is an idempotent Host CAS write, admission is
+  // the only GitHub-write path, both sealed behind explicit K permits.
+  assert.equal(p.effectBindings['effect:tally-product-intake-freeze'].semantics,'idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-product-intake-freeze'].resource,
+    {key:'tally-local-codex',operation:'tally.freezeProductIntake'});
+  assert.deepEqual(p.effectBindings['effect:tally-product-intake-freeze'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  assert.equal(p.effectBindings['effect:tally-project-intake-admission'].semantics,'non-idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-project-intake-admission'].resource,
+    {key:'tally-local-codex',operation:'tally.hostProjectIntake'});
+  assert.deepEqual(p.effectBindings['effect:tally-project-intake-admission'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  for(const key of ['freezeProductIntake','admitProjectIntake'])
+    assert.ok(p.intentBindings[key].roles.includes('requester'));
+  const ruleByTransition={'inspect-task-source':'rule:tally-readiness',
+    'admit-claimed-task':'rule:tally-claim-admission',
+    'run-local-codex-attempt':'rule:tally-local-codex-attempt',
+    'join-reviewed-candidates':'rule:tally-reviewer-candidate-join',
+    'publish-reviewed-candidate':'rule:tally-reviewed-candidate-publication',
+    'freeze-product-intake':'rule:tally-product-intake-freeze',
+    'admit-project-intake':'rule:tally-project-intake-admission'};
+  assert.deepEqual(Object.keys(ruleByTransition).sort(),
+    p.workflowDefinition.states[0].transitions.map(t=>t.transitionKey).sort());
+  for(const transition of p.workflowDefinition.states[0].transitions){
+    const rule=p.rules[ruleByTransition[transition.transitionKey]];
+    for(const name of Object.keys(transition.effectIntents[0].inputFrom))
+      assert.ok(Object.hasOwn(rule.payloadFromInput,name),
+        `${transition.transitionKey}:${name}`);
+  }});
 
 test('Kernel v0.10.2 idempotency-key grammar accepts rendered valid source key',()=>{
   // Exactly the public-tag Kernel source: ADMISSION_EFFECT_IDEMPOTENCY_KEY_PATTERN.
@@ -581,4 +613,127 @@ test('#137 observation time stays honest and conflicting claims stay CONFLICT',(
         claimAccepted:false,dispatchId:'observed-comment-2'}]})});
   assert.equal(conflict.status,'CONFLICT');assert.equal(conflict.reason,'AMBIGUOUS_CLAIM_EVENT_CANDIDATES');
   assert.equal(conflict.claimState,'NOT_VERIFIED');assert.equal(conflict.taskPass,false);
+});
+
+// --- T210 J01b/J02: governed Product intake freeze + project admission ---
+
+const intakeInput=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/210',
+  issueNumber:210,sourceSha:'b'.repeat(40),productDigest:'c'.repeat(64),
+  projectTitle:'Tally v2 Intake'});
+const frozenObservation=()=>({state:'FROZEN_COMPLETE',
+  reason:'INDEPENDENT_REVIEW_FROZEN_IN_HOST_CAS',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/210',sourceSha:'b'.repeat(40),
+  productDigest:'c'.repeat(64),receiptRef:`receipt:sha256:${'c'.repeat(64)}`,frozen:true,
+  claimGeneration:1,review:{author:'author:1',reviewer:'reviewer:1'},
+  authorized:false,admitted:false,taskPass:false,releasePass:false});
+
+test('#210 freeze screening refuses self-review, cross-repo and malformed digests',()=>{
+  assert.equal(assessProductIntakeFreeze({...intakeInput(),author:'user:1',reviewer:'user:1'}).reason,
+    'MISSING_SOURCE_IDENTITY');
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/197'},
+    {issueNumber:197},{sourceSha:'short'},{productDigest:'nothex'},
+    {author:''},{reviewer:''},
+  ]){
+    const x=assessProductIntakeFreeze({...intakeInput(),author:'author:1',
+      reviewer:'reviewer:1',...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(x.frozen,false);
+  }
+  const ok=assessProductIntakeFreeze({...intakeInput(),author:'author:1',reviewer:'reviewer:1'});
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');assert.equal(ok.frozen,false);
+  assert.equal(ok.reason,'REQUIRES_SEALED_PRODUCT_INTAKE_FREEZE');
+});
+
+test('#210 freeze projection accepts only the sealed FROZEN_COMPLETE shape',()=>{
+  const x=projectProductIntakeFreeze({input:{...intakeInput(),author:'author:1',reviewer:'reviewer:1'},
+    observation:frozenObservation(),effectId:'fx'});
+  assert.equal(x.state,'FROZEN_COMPLETE');assert.equal(x.frozen,true);
+  assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  for(const change of [
+    {frozen:false},{receiptRef:'receipt:sha256:deadbeef'},
+    {review:{author:'reviewer:1',reviewer:'reviewer:1'}},
+    {state:'NOT_FROZEN',reason:'PRODUCT_REVIEW_NOT_INDEPENDENT',frozen:false},
+    {claimGeneration:2},
+  ]){
+    const y=projectProductIntakeFreeze({input:{...intakeInput(),author:'author:1',
+      reviewer:'reviewer:1'},observation:{...frozenObservation(),...change},effectId:'fx'});
+    assert.equal(y.frozen,false);assert.equal(y.taskPass,false);
+  }
+});
+
+test('#210 intake screening enforces exact repo/issue allowlist and bounded title',()=>{
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/197'},{issueNumber:197},
+    {issueRef:'https://github.com/other/tally/issues/210'},
+    {sourceSha:'bad'},{productDigest:'zz'},{projectTitle:''},{projectTitle:'x'.repeat(121)},
+  ]){
+    const x=assessProjectIntakeAdmission({...intakeInput(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(x.admitted,false);
+  }
+  const ok=assessProjectIntakeAdmission(intakeInput());
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(ok.reason,'REQUIRES_SEALED_PROJECT_INTAKE_OBSERVATION');
+});
+
+test('#210 intake projection admits only verified publish+readback and honest NOT_RUN/UNKNOWN',()=>{
+  const positive=()=>({state:'PROJECT_INTAKE_ADMITTED',
+    reason:'PROJECT_INTAKE_PUBLISHED_AND_READBACK_VERIFIED',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/210',sourceSha:'b'.repeat(40),
+    productDigest:'c'.repeat(64),claimGeneration:1,claimAccepted:true,admitted:true,
+    authorized:false,replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
+    repository:'kaicreator-mm/tally',
+    project:{number:7,title:'Tally v2 Intake',
+      url:'https://github.com/kaicreator-mm/tally/projects/7',itemCount:1},
+    taskPass:false,releasePass:false});
+  const x=projectProjectIntakeAdmission({input:intakeInput(),observation:positive(),effectId:'fx'});
+  assert.equal(x.state,'PROJECT_INTAKE_ADMITTED');assert.equal(x.admitted,true);
+  assert.equal(x.githubEffect,'PERFORMED_VERIFIED');assert.equal(x.project.number,7);
+  assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  const replay=projectProjectIntakeAdmission({input:intakeInput(),observation:{
+    ...positive(),state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',admitted:true,
+    replayFixture:true,githubEffect:'NOT_RUN',project:null},effectId:'fx'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.githubEffect,'NOT_RUN');
+  for(const change of [
+    {githubEffect:'NOT_RUN',state:'NOT_ADMITTED',reason:'PRODUCT_FREEZE_NOT_VERIFIED',admitted:false},
+    {githubEffect:'UNKNOWN',state:'PROJECT_INTAKE_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN'},
+    {repository:'other/tally'},{project:{...positive().project,number:0}},
+    {project:{...positive().project,url:'https://github.com/kaicreator-mm/tally/x'}},
+    {admitted:false},
+  ]){
+    const y=projectProjectIntakeAdmission({input:intakeInput(),
+      observation:{...positive(),...change},effectId:'fx'});
+    assert.equal(y.admitted,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+});
+
+test('#210 intake effect dispatches sealed resource only for qualified input',async()=>{
+  const p=getPolicy();let calls=0;
+  const handler=p.effectBindings['effect:tally-project-intake-admission'].handler;
+  const x=await handler({input:{...intakeInput(),issueNumber:197},effectId:'fx',
+    resources:{call:async()=>{calls++;return {phase:'terminal',outcome:{ok:true,output:{}}};}}});
+  assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(calls,0);
+  const y=await handler({input:intakeInput(),effectId:'fx',
+    resources:{call:async(key,op,arg)=>{
+      calls++;
+      assert.equal(key,'tally-local-codex');assert.equal(op,'tally.hostProjectIntake');
+      assert.equal(arg.issueNumber,210);assert.equal(arg.effectId,'fx');
+      return {phase:'terminal',outcome:{ok:true,output:{
+        state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+        issueRef:'https://github.com/kaicreator-mm/tally/issues/210',
+        sourceSha:'b'.repeat(40),productDigest:'c'.repeat(64),claimGeneration:1,
+        admitted:false,authorized:false,githubEffect:'NOT_RUN',
+        taskPass:false,releasePass:false}}};}}});
+  assert.equal(y.state,'NOT_ADMITTED');assert.equal(y.reason,'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE');
+  assert.equal(calls,1);
+});
+
+test('#210 freeze idempotency key renders within Kernel grammar',()=>{
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const transition=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='freeze-product-intake');
+  const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(intakeInput()[name]??''));
+  assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
 });

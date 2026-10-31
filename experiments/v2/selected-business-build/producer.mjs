@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -95,7 +95,8 @@ const modules = [
     abiVersion:business.ABI_VERSION,endpoint:'business-policy',
     bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness',
       'intent:admitClaimedTask','intent:runLocalCodexAttempt','intent:joinReviewedCandidates',
-      'intent:publishReviewedCandidate']}),
+      'intent:publishReviewedCandidate','intent:freezeProductIntake',
+      'intent:admitProjectIntake']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -118,13 +119,18 @@ const modules = [
     bytes:localCodexBytes,provides:['capability:tally-local-codex/1',
       'intent:runLocalCodexAttempt',
       ...(process.env.T06N_CONCURRENT==='1'?['intent:joinReviewedCandidates']:[]),
-      ...(process.env.T06P_PUBLISH==='1'?['intent:publishReviewedCandidate']:[])]}),
+      ...(process.env.T06P_PUBLISH==='1'?['intent:publishReviewedCandidate']:[]),
+      ...(process.env.T210_PROJECT_INTAKE==='1'?['intent:freezeProductIntake',
+        'intent:admitProjectIntake']:[])]}),
     capabilityId:'tally-local-codex',
     handlers:[{operationId:'tally.runLocalCodexAttempt',handler:'runLocalCodexAttempt'},
       ...(process.env.T06N_CONCURRENT==='1'?
         [{operationId:'tally.joinReviewedCandidates',handler:'joinReviewedCandidates'}]:[]),
       ...(process.env.T06P_PUBLISH==='1'?
-        [{operationId:'tally.publishReviewedCandidate',handler:'publishReviewedCandidate'}]:[])],
+        [{operationId:'tally.publishReviewedCandidate',handler:'publishReviewedCandidate'}]:[]),
+      ...(process.env.T210_PROJECT_INTAKE==='1'?
+        [{operationId:'tally.freezeProductIntake',handler:'freezeProductIntake'},
+          {operationId:'tally.hostProjectIntake',handler:'hostProjectIntake'}]:[])],
     externalEffect:true,
     externalImports:{node:[],npm:['@kaicreator/tally-local-codex-host-bundle'],
       native:['better-sqlite3']}}]:[]),
@@ -141,7 +147,12 @@ const routes=[
         capabilityId:'tally-local-codex',handlerId:'joinReviewedCandidates'}]:[]),
     ...(process.env.T06P_PUBLISH==='1'?
       [{intentId:'publishReviewedCandidate',operationId:'tally.publishReviewedCandidate',
-        capabilityId:'tally-local-codex',handlerId:'publishReviewedCandidate'}]:[])]:[]),
+        capabilityId:'tally-local-codex',handlerId:'publishReviewedCandidate'}]:[]),
+    ...(process.env.T210_PROJECT_INTAKE==='1'?
+      [{intentId:'freezeProductIntake',operationId:'tally.freezeProductIntake',
+        capabilityId:'tally-local-codex',handlerId:'freezeProductIntake'},
+        {intentId:'admitProjectIntake',operationId:'tally.hostProjectIntake',
+          capabilityId:'tally-local-codex',handlerId:'hostProjectIntake'}]:[])]:[]),
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
@@ -156,7 +167,8 @@ assert.equal(built.modules.filter(x=>x.role==='capability').length,selectedCapab
 assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
 const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06N_CONCURRENT==='1'?1:0)+
-  (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0);
+  (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
+  (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0);
 assert.equal(built.routes.length,selectedRouteCount);
 if(claimBytes){
   assert.equal(built.routes[1].intentId,'admitClaimedTask');
@@ -179,6 +191,17 @@ if(process.env.T06P_PUBLISH==='1'){
   const route=built.routes.find(x=>x.intentId==='publishReviewedCandidate');
   assert.equal(route.capabilityId,'tally-local-codex');
   assert.equal(route.handlerId,'publishReviewedCandidate');
+}
+if(localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'){
+  for(const [intent,handler] of [['freezeProductIntake','freezeProductIntake'],
+    ['admitProjectIntake','hostProjectIntake']]){
+    const route=built.routes.find(x=>x.intentId===intent);
+    assert.equal(route.capabilityId,'tally-local-codex',intent);
+    assert.equal(route.handlerId,handler,intent);
+  }
+}else{
+  assert.equal(built.routes.some(x=>x.intentId==='admitProjectIntake'),false,
+    'T210 intake routes are selected only when T210_PROJECT_INTAKE=1');
 }
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
@@ -206,6 +229,10 @@ for(const [caseName,mutate,code] of [
    ...(process.env.T06N_CONCURRENT==='1'?[
     ['join-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='joinReviewedCandidates'?{...r,handlerId:'unselectedJoinHandler'}:r)}), 'V10_ROUTE_INVALID'],
    ]:[]),
+   ...(process.env.T210_PROJECT_INTAKE==='1'?[
+    ['intake-freeze-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='freezeProductIntake'?{...r,handlerId:'unselectedFreezeHandler'}:r)}), 'V10_ROUTE_INVALID'],
+    ['intake-admit-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='admitProjectIntake'?{...r,handlerId:'unselectedIntakeHandler'}:r)}), 'V10_ROUTE_INVALID'],
+   ]:[]),
   ]:[]),
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
@@ -221,6 +248,7 @@ console.log(JSON.stringify({
   localCodexCapability:localCodexBytes?'SELECTED_EXTERNAL_EFFECT':'NOT_SELECTED',
   concurrentJoinRoute:process.env.T06N_CONCURRENT==='1'?'SELECTED':'NOT_SELECTED',
   candidatePublicationRoute:process.env.T06P_PUBLISH==='1'?'SELECTED':'NOT_SELECTED',
+  projectIntakeRoutes:process.env.T210_PROJECT_INTAKE==='1'?'SELECTED':'NOT_SELECTED',
   githubEffect:'NOT_RUN',taskPass:false,releasePass:false
 },null,2));
 console.log('T02B_PUBLIC_BUILD_SELECTED_B=PASS');

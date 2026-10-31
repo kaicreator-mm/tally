@@ -8,10 +8,11 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-  'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
+  'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+  'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -62,6 +63,21 @@ const joinInputFrom=Object.freeze({
   sourceSha:{source:'event',path:['payload','sourceSha']},
   joinId:{source:'event',path:['payload','joinId']},
   candidates:{source:'event',path:['payload','candidates']},
+});
+const freezeInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  productDigest:{source:'event',path:['payload','productDigest']},
+  author:{source:'event',path:['payload','author']},
+  reviewer:{source:'event',path:['payload','reviewer']},
+});
+const intakeInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  productDigest:{source:'event',path:['payload','productDigest']},
+  projectTitle:{source:'event',path:['payload','projectTitle']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -149,12 +165,43 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[publicationTransition]},finalState],
   };
+  // T210 J02: independent Product Review/Freeze is a Host CAS write gated on
+  // reviewer independence; the caller can only REQUEST the sealed freeze.
+  const freezeTransition={
+    transitionKey:'freeze-product-intake',
+    trigger:{kind:'event',eventType:'TALLY_PRODUCT_INTAKE_FREEZE_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-product-intake-freeze',inputFrom:freezeInputFrom,
+      idempotencyKeyFrom:{template:'freeze:{issueNumber}:{sourceSha}:{productDigest}'}
+    }]
+  };
+  const freezeWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[freezeTransition]},finalState],
+  };
+  // T210 J01b: governed create/import of the target project. Authority is
+  // ONLY the sealed C observation (accepted Claim + frozen write-set + frozen
+  // independent review + canonical GitHub readback), never the caller.
+  const intakeTransition={
+    transitionKey:'admit-project-intake',
+    trigger:{kind:'event',eventType:'TALLY_PROJECT_INTAKE_ADMISSION_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-project-intake-admission',inputFrom:intakeInputFrom,
+      idempotencyKeyFrom:{template:'intake:{issueNumber}:{sourceSha}:{productDigest}'}
+    }]
+  };
+  const intakeWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[intakeTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition]},
         finalState,
       ],
     },
@@ -184,6 +231,16 @@ export function getPolicy(){
       ruleId:'rule:tally-reviewed-candidate-publication',
       eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',attemptId:'attemptId'},
+    },'rule:tally-product-intake-freeze':{
+      ruleId:'rule:tally-product-intake-freeze',
+      eventType:'TALLY_PRODUCT_INTAKE_FREEZE_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        productDigest:'productDigest',author:'author',reviewer:'reviewer'},
+    },'rule:tally-project-intake-admission':{
+      ruleId:'rule:tally-project-intake-admission',
+      eventType:'TALLY_PROJECT_INTAKE_ADMISSION_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        productDigest:'productDigest',projectTitle:'projectTitle'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -223,6 +280,22 @@ export function getPolicy(){
         trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED'},
         ruleId:'rule:tally-reviewed-candidate-publication',
         roles:['requester','planner','reviewer'],definition:publicationWorkflow,
+      },
+      freezeProductIntake:{
+        trigger:{kind:'event',eventType:'TALLY_PRODUCT_INTAKE_FREEZE_REQUESTED'},
+        ruleId:'rule:tally-product-intake-freeze',
+        // Freeze authority is ONLY the Host CAS record written after the
+        // sealed reviewer-independence check; the caller role gates only who
+        // may REQUEST the freeze.
+        roles:['requester','planner','builder','reviewer'],definition:freezeWorkflow,
+      },
+      admitProjectIntake:{
+        trigger:{kind:'event',eventType:'TALLY_PROJECT_INTAKE_ADMISSION_REQUESTED'},
+        ruleId:'rule:tally-project-intake-admission',
+        // Admission authority is ONLY the sealed C observation: accepted
+        // Claim, frozen DAG write-set, frozen independent Product review and
+        // canonical GitHub readback. No caller/UI/Agent credential.
+        roles:['requester','planner','builder','reviewer'],definition:intakeWorkflow,
       },
     },
     effectBindings:{
@@ -337,6 +410,47 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectCandidatePublication({input,observation,effectId});
+        },
+      },
+      'effect:tally-product-intake-freeze':{
+        // Idempotent: the Host CAS create replays an identical frozen record
+        // and refuses a divergent digest. GitHub is never touched here.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.freezeProductIntake'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessProductIntakeFreeze(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex','tally.freezeProductIntake',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,productDigest:input.productDigest,
+              author:input.author,reviewer:input.reviewer,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectProductIntakeFreeze({input,observation,effectId});
+        },
+      },
+      'effect:tally-project-intake-admission':{
+        // The only Tally GitHub write path in this slice: selected B -> one K
+        // -> Host/GitHub C with accepted Claim, frozen write-set, frozen
+        // independent review, repo allowlist and canonical readback.
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.hostProjectIntake'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessProjectIntakeAdmission(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex','tally.hostProjectIntake',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,productDigest:input.productDigest,
+              projectTitle:input.projectTitle,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectProjectIntakeAdmission({input,observation,effectId});
         },
       },
     },
@@ -874,4 +988,133 @@ export function projectCandidatePublication({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return publicationDenied('UNVERIFIED_CANDIDATE_PUBLICATION',effectId);
   }catch{return publicationDenied('UNTRUSTED_CANDIDATE_PUBLICATION',effectId);}
+}
+
+/**
+ * T210 J02 — advisory input screening for the Product intake freeze intent.
+ * The frozen fact can only come from the selected sealed C writing the Host
+ * CAS record after verifying reviewer independence; no input flag or caller
+ * assertion is freeze evidence.
+ */
+const INTAKE_ISSUE=210;
+const PRODUCT_DIGEST=/^[0-9a-f]{64}$/;
+const IDENTITY=/^[A-Za-z0-9][A-Za-z0-9 .:_'@-]{0,127}$/;
+export function assessProductIntakeFreeze(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,frozen:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,productDigest,author,reviewer}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${INTAKE_ISSUE}`||
+    issueNumber!==INTAKE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !PRODUCT_DIGEST.test(productDigest??'')||!IDENTITY.test(author??'')||
+    !IDENTITY.test(reviewer??'')||author===reviewer)return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_PRODUCT_INTAKE_FREEZE',
+    issueRef,issueNumber,sourceSha,productDigest,admitted:false,authorized:false,
+    frozen:false,taskPass:false,releasePass:false});
+}
+
+const FREEZE_REASONS=new Set(['PRODUCT_FREEZE_INPUT_INVALID','PRODUCT_REVIEW_NOT_INDEPENDENT',
+  'PRODUCT_FREEZE_STORE_UNAVAILABLE','PRODUCT_FREEZE_ALREADY_RECORDED',
+  'PRODUCT_FREEZE_DIGEST_MISMATCH','LOCAL_AGENT_PROVIDER_THREW']);
+const freezeDenied=(reason,effectId)=>Object.freeze({state:'NOT_FROZEN',reason,effectId,
+  admitted:false,authorized:false,frozen:false,taskPass:false,releasePass:false});
+/** Positive output records only THIS K intent's freeze; never Task/Release PASS. */
+export function projectProductIntakeFreeze({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.productDigest!==input?.productDigest||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)
+      return freezeDenied('UNVERIFIED_PRODUCT_INTAKE_FREEZE',effectId);
+    if(o.state==='NOT_FROZEN'&&FREEZE_REASONS.has(o.reason)&&o.frozen===false)
+      return freezeDenied(o.reason,effectId);
+    if(o.state==='FROZEN_COMPLETE'&&o.frozen===true&&
+      PRODUCT_DIGEST.test(o.productDigest??'')&&
+      o.receiptRef===`receipt:sha256:${o.productDigest}`&&
+      typeof o.review?.reviewer==='string'&&o.review.reviewer!==o.review?.author)
+      return Object.freeze({state:o.state,reason:o.reason??'INDEPENDENT_REVIEW_FROZEN_IN_HOST_CAS',
+        effectId,issueRef:o.issueRef,sourceSha:o.sourceSha,productDigest:o.productDigest,
+        receiptRef:o.receiptRef,frozen:true,claimGeneration:1,
+        review:Object.freeze({author:String(o.review.author),reviewer:String(o.review.reviewer)}),
+        admitted:false,authorized:false,taskPass:false,releasePass:false});
+    return freezeDenied('UNVERIFIED_PRODUCT_INTAKE_FREEZE',effectId);
+  }catch{return freezeDenied('UNTRUSTED_PRODUCT_INTAKE_FREEZE',effectId);}
+}
+
+/**
+ * T210 J01b — advisory input screening for the project intake admission
+ * intent. Repo allowlist is exact (kaicreator-mm/tally#210); cross-repo,
+ * stale-source and malformed input refuses before any sealed dispatch.
+ */
+const INTAKE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'PROJECT_INTAKE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
+  'PRODUCT_FREEZE_NOT_VERIFIED','PRODUCT_FREEZE_DIGEST_MISMATCH',
+  'PRODUCT_REVIEW_NOT_INDEPENDENT','PRODUCT_FREEZE_STORE_UNAVAILABLE',
+  'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE','GITHUB_PUBLISH_UNKNOWN',
+  'PROJECT_INTAKE_READBACK_MISMATCH','PROJECT_INTAKE_INPUT_INVALID']);
+const PROJECT_TITLE=/^.{1,120}$/s;
+export function assessProjectIntakeAdmission(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,productDigest,projectTitle}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${INTAKE_ISSUE}`||
+    issueNumber!==INTAKE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !PRODUCT_DIGEST.test(productDigest??'')||!PROJECT_TITLE.test(projectTitle??''))
+    return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_PROJECT_INTAKE_OBSERVATION',
+    issueRef,issueNumber,sourceSha,productDigest,projectTitle,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+
+const intakeDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,reason,
+  effectId,admitted:false,authorized:false,taskPass:false,releasePass:false});
+/**
+ * T210 — Business projection of the sealed C project-intake observation.
+ * Positive output admits THIS K intent only: it never authorizes the caller,
+ * passes the Task or releases. githubEffect stays NOT_RUN unless the Host
+ * proved a real publish plus canonical readback.
+ */
+export function projectProjectIntakeAdmission({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.productDigest!==input?.productDigest||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)
+      return intakeDenied('UNVERIFIED_PROJECT_INTAKE_OBSERVATION',effectId);
+    if(o.state==='NOT_ADMITTED'&&INTAKE_REASONS.has(o.reason)&&o.admitted===false&&
+      o.githubEffect==='NOT_RUN')
+      return intakeDenied(o.reason,effectId);
+    if(o.state==='PROJECT_INTAKE_UNKNOWN'&&INTAKE_REASONS.has(o.reason)&&
+      o.githubEffect==='UNKNOWN')
+      return intakeDenied(o.reason,effectId,o.state);
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.githubEffect==='NOT_RUN'&&o.replayFixture===true)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,productDigest:o.productDigest,
+        claimGeneration:1,admitted:true,authorized:false,replayFixture:true,
+        githubEffect:'NOT_RUN',project:null,taskPass:false,releasePass:false});
+    if(o.state==='PROJECT_INTAKE_ADMITTED'&&
+      ['PROJECT_INTAKE_PUBLISHED_AND_READBACK_VERIFIED',
+        'PROJECT_INTAKE_READBACK_ALREADY_PRESENT'].includes(o.reason)&&
+      o.admitted===true&&o.githubEffect==='PERFORMED_VERIFIED'&&
+      o.replayFixture===false&&o.repository==='kaicreator-mm/tally'&&
+      o.project&&typeof o.project==='object'&&!Array.isArray(o.project)&&
+      Number.isSafeInteger(o.project.number)&&o.project.number>0&&
+      PROJECT_TITLE.test(o.project.title??'')&&
+      /^https:\/\/github\.com\/kaicreator-mm\/tally\/projects\/[1-9][0-9]*$/.test(o.project.url??''))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,productDigest:o.productDigest,
+        claimGeneration:1,admitted:true,authorized:false,replayFixture:false,
+        githubEffect:'PERFORMED_VERIFIED',repository:o.repository,
+        project:Object.freeze({number:o.project.number,title:o.project.title,
+          url:o.project.url,itemCount:Number.isSafeInteger(o.project.itemCount)?
+            o.project.itemCount:null}),
+        taskPass:false,releasePass:false});
+    return intakeDenied('UNVERIFIED_PROJECT_INTAKE_OBSERVATION',effectId);
+  }catch{return intakeDenied('UNTRUSTED_PROJECT_INTAKE_OBSERVATION',effectId);}
 }
