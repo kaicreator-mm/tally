@@ -11,6 +11,8 @@ const sourcePair=resolve(tally,'packages/tally-github-native-c/src/task-source-p
 const host=resolve(tally,'experiments/v2/selected-business-build/local-codex-host.mjs');
 const candidateHost=resolve(tally,'experiments/v2/candidate-publication/host-publisher.mjs');
 const candidateC=resolve(tally,'packages/tally-github-c/src/candidate-publication.mjs');
+const intakeHostModule=resolve(tally,'experiments/v2/project-intake/host-project.mjs');
+const intakeReadModel=resolve(tally,'packages/tally-github-c/src/project-intake.mjs');
 const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
@@ -27,11 +29,14 @@ import {createLocalCodexHost} from ${JSON.stringify(host)};
 import {Octokit} from ${JSON.stringify(octokit)};
 import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
+import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} from ${JSON.stringify(intakeHostModule)};
+import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
 // issue keys; every claim/config value comes from issue-keyed Host env, never
-// from caller authority. #172 behavior is preserved exactly.
+// from caller authority. #172 behavior is preserved exactly. #210 is the
+// T210 governed project-intake Builder (no candidate file; Host CAS freeze).
 const TASK_BINDINGS={
   172:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
   177:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
@@ -42,7 +47,8 @@ const TASK_BINDINGS={
   198:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
   199:{actorRole:'reviewer'},
   200:{actorRole:'reviewer'},
-  203:{actorRole:'builder'}
+  203:{actorRole:'builder'},
+  210:{actorRole:'builder'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -264,6 +270,48 @@ export async function publishReviewedCandidate(input){
     repositoryPath:process.env.TALLY_LOCAL_REPOSITORY_PATH,
     gitPath:process.env.TALLY_GIT_PATH,emptyGitConfig:process.env.TALLY_EMPTY_GIT_CONFIG,
     githubToken:token});
+}
+// T210 — the narrow GitHub project effect lives behind the Host module; this
+// provider only binds transports. The write-scoped token, when the operator
+// supplies one, never enters sealed bytes and is only read from Host env.
+async function publishProjectIntake(publishInput){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_WRITE_TOKEN??env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const data=await octokit.graphql('query($owner:String!,$name:String!){repository(owner:$owner,name:$name){id projectsV2(first:20){nodes{number title url}}}}',
+    {owner:OWNER,name:REPO});
+  const repositoryId=data?.repository?.id;
+  if(typeof repositoryId!=='string'||!repositoryId)throw Error('PROJECT_REPOSITORY_ID_UNAVAILABLE');
+  const existing=(data.repository.projectsV2?.nodes??[]).find(p=>p.title===publishInput.projectTitle);
+  if(existing)return {state:'PROJECT_EXISTS',project:{number:existing.number,
+    title:existing.title,url:existing.url}};
+  const created=await octokit.graphql(
+    'mutation($repoId:ID!,$title:String!){createProjectV2(input:{repositoryId:$repoId,title:$title}){projectV2{number title url}}}',
+    {repoId:repositoryId,title:publishInput.projectTitle});
+  const project=created?.createProjectV2?.projectV2;
+  if(!project?.number)throw Error('PROJECT_CREATE_READBACK_MISSING');
+  return {state:'PROJECT_CREATED',project:{number:project.number,
+    title:project.title,url:project.url}};
+}
+export async function hostProjectIntake(input){
+  const env=process.env;
+  const intake=createProjectIntakeHost({env,openStore:openSqliteCasStore,
+    verifyAcceptedClaim:(issueNumber,actorRole)=>verifyAcceptedClaim(env,issueNumber,actorRole),
+    verifyFrozenWriteSet:(issueNumber,sourceSha)=>verifyFrozenWriteSet(env,issueNumber,sourceSha),
+    readProjectIntake:args=>readProjectIntakeFromClient({...args,
+      octokit:new Octokit({auth:env.TALLY_GITHUB_READ_TOKEN,request:{timeout:15000}})}),
+    publish:publishProjectIntake});
+  return intake.hostProjectIntake(input);
+}
+export async function freezeProductIntake(input){
+  return hostFreezeProductIntake({
+    openStore:openSqliteCasStore,
+    registryPath:process.env.TALLY_TASK_CLAIM_210_REGISTRY_PATH,
+    sourceSha:input?.sourceSha,productDigest:input?.productDigest,
+    author:input?.author,reviewer:input?.reviewer,frozenAt:input?.frozenAt,
+    caseRefDigest:input?.caseRefDigest});
 }
 `;
 const result=await build({

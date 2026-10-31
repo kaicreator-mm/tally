@@ -1,7 +1,8 @@
-/** T06m/T06n sealed Local Codex C boundary. Provider output is never Task evidence. */
+/** T06m/T06n/T210 sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
-  publishReviewedCandidate as nativePublishReviewedCandidate}
+  publishReviewedCandidate as nativePublishReviewedCandidate,
+  hostProjectIntake as nativeHostProjectIntake}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -9,7 +10,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -181,5 +182,65 @@ export async function publishReviewedCandidate(input){
     else output=publicationDenied(input,'LOCAL_AGENT_PROVIDER_THREW');
   }
   return Object.freeze({phase:'terminal',externalRef:`tally:${input?.issueNumber??'invalid'}:${input?.attemptId??'invalid'}:publication`,
+    outcome:{ok:true,output}});
+}
+
+// T210 — J01b/J02 governed project intake boundary. The sealed C passes only
+// the exact bounded observation shapes; provider garbage or a second writer
+// shape fails closed. No Task/Release PASS can cross this boundary.
+const INTAKE_ISSUE=210;
+const DIGEST=/^[0-9a-f]{64}$/,TITLE=/^.{1,120}$/s;
+const PROJECT_URL=/^https:\/\/github\.com\/kaicreator-mm\/tally\/projects\/[1-9][0-9]*$/;
+const INTAKE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'PROJECT_INTAKE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
+  'PRODUCT_FREEZE_NOT_VERIFIED','PRODUCT_FREEZE_DIGEST_MISMATCH',
+  'PRODUCT_REVIEW_NOT_INDEPENDENT','PRODUCT_FREEZE_STORE_UNAVAILABLE',
+  'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE','GITHUB_PUBLISH_UNKNOWN',
+  'PROJECT_INTAKE_READBACK_MISMATCH','PROJECT_INTAKE_INPUT_INVALID']);
+const intakeBase=(input,reason,state)=>({state,reason,
+  issueRef:issueRefFor(INTAKE_ISSUE),sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  productDigest:DIGEST.test(input?.productDigest??'')?input.productDigest:null,
+  claimGeneration:1,claimAccepted:false,admitted:false,authorized:false,
+  agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',project:null,
+  taskPass:false,releasePass:false});
+const validIntakeProject=p=>p&&typeof p==='object'&&!Array.isArray(p)&&
+  Number.isSafeInteger(p.number)&&p.number>0&&TITLE.test(p.title??'')&&
+  PROJECT_URL.test(p.url??'');
+const validIntakeOutput=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(INTAKE_ISSUE)||
+    o.sourceSha!==input.sourceSha||o.productDigest!==input.productDigest||
+    o.claimGeneration!==1||o.authorized!==false||o.agentLaunch!==false||
+    o.taskPass!==false||o.releasePass!==false)return false;
+  if(o.state==='NOT_ADMITTED')return INTAKE_REASONS.has(o.reason)&&o.admitted===false&&
+    o.claimAccepted===false&&o.githubEffect==='NOT_RUN'&&o.replayFixture===false&&
+    o.project===null;
+  if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&
+    o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===true&&o.project===null;
+  if(o.state==='PROJECT_INTAKE_UNKNOWN')return INTAKE_REASONS.has(o.reason)&&
+    o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='UNKNOWN'&&
+    o.replayFixture===false&&o.project===null;
+  if(o.state==='PROJECT_INTAKE_ADMITTED')
+    return ['PROJECT_INTAKE_PUBLISHED_AND_READBACK_VERIFIED',
+      'PROJECT_INTAKE_READBACK_ALREADY_PRESENT'].includes(o.reason)&&
+    o.admitted===true&&o.claimAccepted===true&&
+    o.githubEffect==='PERFORMED_VERIFIED'&&o.replayFixture===false&&
+    o.repository==='kaicreator-mm/tally'&&validIntakeProject(o.project);
+  return false;
+};
+export async function hostProjectIntake(input){
+  let output;
+  if(!input||typeof input==='object'&&Array.isArray(input)||input.issueNumber!==INTAKE_ISSUE||
+    input.sourceRef!==issueRefFor(INTAKE_ISSUE)||!SHA.test(input.sourceSha??'')||
+    !DIGEST.test(input.productDigest??'')||!TITLE.test(input.projectTitle??''))
+    output=intakeBase(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH','NOT_ADMITTED');
+  else{
+    let observed;
+    try{observed=await nativeHostProjectIntake(input);}catch{observed=null;}
+    if(validIntakeOutput(input,observed))output=observed;
+    else output=intakeBase(input,'LOCAL_AGENT_PROVIDER_THREW','NOT_ADMITTED');
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${INTAKE_ISSUE}:${input?.productDigest??'invalid'}:intake`,
     outcome:{ok:true,output}});
 }

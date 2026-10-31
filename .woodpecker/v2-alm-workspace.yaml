@@ -6,6 +6,9 @@ when:
       include:
         - 'web/v2/**'
         - 'packages/tally-engineering-business/**'
+        - 'packages/tally-github-c/src/project-intake.mjs'
+        - 'packages/tally-github-c/test/project-intake.test.mjs'
+        - 'experiments/v2/project-intake/**'
         - 'experiments/v2/selected-business-build/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
@@ -58,9 +61,10 @@ steps:
     commands:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
-      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
@@ -69,4 +73,5 @@ steps:
       - echo TALLY_V2_ALM_WORKSPACE_SOURCE_TESTS_PASS
       - echo TALLY_V2_J06_BROWSER_JOURNEY_SOURCE_TESTS_PASS_V74_V75_V76_V82
       - echo TALLY_V2_J06_REAL_BROWSER_GUI_NOT_PROVEN_IN_DOCKER
+      - echo TALLY_V2_ALM_WORKSPACE_REAL_GITHUB_PROJECT_EFFECT_NOT_RUN
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER
