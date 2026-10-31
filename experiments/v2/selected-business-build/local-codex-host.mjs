@@ -195,7 +195,8 @@ function createDefaultOperations(spawnFn){
     const tree=await run(['write-tree']);
     if(tree.code!==0||!SHA.test(tree.stdout.trim()))throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const treeSha=tree.stdout.trim();
-    const message=`Tally local candidate ${config.attemptId}`;
+    const issueNumber=/\/issues\/([1-9][0-9]*)$/.exec(config.issueRef??'')?.[1];
+    const message=`Tally local candidate ${config.attemptId}\n\nRefs: #${issueNumber??'172'}`;
     const commit=await run(['commit-tree',treeSha,'-p',config.sourceSha,'-m',message],{
       env:{...hostEnvironment(config),GIT_AUTHOR_NAME:'Tally Host',GIT_AUTHOR_EMAIL:'tally-host@localhost',
         GIT_COMMITTER_NAME:'Tally Host',GIT_COMMITTER_EMAIL:'tally-host@localhost'}});

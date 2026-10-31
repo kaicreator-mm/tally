@@ -9,6 +9,9 @@ if(!tally||!out||!importsOut)throw Error('T06M_BUNDLE_PATH_REQUIRED');
 const witness=resolve(tally,'packages/tally-github-native-c/src/task-claim-publication-witness.mjs');
 const sourcePair=resolve(tally,'packages/tally-github-native-c/src/task-source-pair.mjs');
 const host=resolve(tally,'experiments/v2/selected-business-build/local-codex-host.mjs');
+const candidateHost=resolve(tally,'experiments/v2/candidate-publication/host-publisher.mjs');
+const candidateC=resolve(tally,'packages/tally-github-c/src/candidate-publication.mjs');
+const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
 const claimSchema=readFileSync(resolve(tally,'packages/tally-github-native-c/vendor/agent-event-v2.schema.json'));
@@ -21,6 +24,9 @@ import {readGitHubClaimPublicationWitness} from ${JSON.stringify(witness)};
 import {readGitHubNativeTaskSourcePair} from ${JSON.stringify(sourcePair)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createLocalCodexHost} from ${JSON.stringify(host)};
+import {Octokit} from ${JSON.stringify(octokit)};
+import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
+import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
@@ -35,7 +41,8 @@ const TASK_BINDINGS={
   197:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
   198:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
   199:{actorRole:'reviewer'},
-  200:{actorRole:'reviewer'}
+  200:{actorRole:'reviewer'},
+  203:{actorRole:'builder'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -240,6 +247,23 @@ export async function joinReviewedCandidates(input){
       claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
       joinedAt:joined.joinedAt,candidates:joined.candidates};
   }catch{return joinDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
+}
+export async function publishReviewedCandidate(input){
+  const env=process.env,token=env.TALLY_GITHUB_READ_TOKEN;
+  const claim=await verifyAcceptedClaim(env,203,'builder');
+  if(!claim.ok)return {state:'NOT_ADMITTED',reason:claim.reason,authorized:false,taskPass:false,releasePass:false};
+  const pair=await verifyCurrentSourcePair(token,203,env.TALLY_CLAIM_SOURCE_SHA);
+  if(!pair.ok)return {state:'NOT_ADMITTED',reason:pair.reason,authorized:false,taskPass:false,releasePass:false};
+  const octokit=typeof token==='string'&&token.length>=8?
+    new Octokit({auth:token,request:{timeout:15000}}):null;
+  const publisher=createCandidatePublisher({openStore:openSqliteCasStore,
+    publish:input=>publishCandidatePullRequestFromClient({octokit,...input})});
+  return publisher.publishReviewedCandidate({issueRef:input?.sourceRef,
+    sourceSha:input?.sourceSha,attemptId:input?.attemptId,
+    hostStorePath:process.env.TALLY_LOCAL_HOST_STORE_PATH,
+    repositoryPath:process.env.TALLY_LOCAL_REPOSITORY_PATH,
+    gitPath:process.env.TALLY_GIT_PATH,emptyGitConfig:process.env.TALLY_EMPTY_GIT_CONFIG,
+    githubToken:token});
 }
 `;
 const result=await build({

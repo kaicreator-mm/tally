@@ -1,6 +1,7 @@
 /** T06m/T06n sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
-  joinReviewedCandidates as nativeJoinReviewedCandidates}
+  joinReviewedCandidates as nativeJoinReviewedCandidates,
+  publishReviewedCandidate as nativePublishReviewedCandidate}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -8,7 +9,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -142,5 +143,43 @@ export async function runLocalCodexAttempt(input){
 export async function joinReviewedCandidates(input){
   const output=await computeJoinReviewedCandidates(input);
   return Object.freeze({phase:'terminal',externalRef:`tally:${input?.issueNumber??'invalid'}:${input?.joinId??'invalid'}`,
+    outcome:{ok:true,output}});
+}
+
+const PUBLICATION_REASONS=new Set(['PUBLICATION_TASK_NOT_ALLOWED','PUBLICATION_INPUT_INVALID',
+  'GITHUB_PROVIDER_TOKEN_UNAVAILABLE','REVIEW_STORE_UNAVAILABLE','CANDIDATE_REVIEW_NOT_FOUND',
+  'CANDIDATE_SUPERSEDED_BY_REPAIR','CANDIDATE_READBACK_MISMATCH','CANDIDATE_REF_MISMATCH',
+  'PUBLICATION_IDENTITY_CONFLICT','PUBLICATION_CLOSED_OR_MERGED','GITHUB_ACCESS_DENIED',
+  'GITHUB_RATE_LIMITED','GITHUB_PUBLICATION_CONFLICT','GITHUB_PUBLICATION_UNKNOWN',
+  'GITHUB_REF_PUBLICATION_UNKNOWN','PUBLICATION_READBACK_MISMATCH','LOCAL_AGENT_PROVIDER_THREW',
+  'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH','CLAIM_REGISTRY_UNAVAILABLE','CLAIM_REGISTRY_RECORD_NOT_FOUND',
+  'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED','CLAIM_REGISTRY_RESERVATION_MISMATCH',
+  'NATIVE_CLAIM_WITNESS_NOT_VERIFIED','NATIVE_SOURCE_NOT_CURRENT','NATIVE_DEPENDENCIES_BLOCKED']);
+const publicationDenied=(input,reason,state='NOT_ADMITTED')=>Object.freeze({
+  ...common(input,null,state,reason,flags(false,false,false)),replayFixture:false});
+export async function publishReviewedCandidate(input){
+  let output;
+  if(!input||input.sourceRef!==issueRefFor(input.issueNumber)||![197,198].includes(input.issueNumber)||
+    !SHA.test(input.sourceSha??'')||!ATTEMPT.test(input.attemptId??''))
+    output=publicationDenied({issueNumber:197,sourceSha:null,attemptId:null},'PUBLICATION_INPUT_INVALID');
+  else{
+    let observed;
+    try{observed=await nativePublishReviewedCandidate(input);}catch{observed=null;}
+    if(observed?.state==='PUBLISHED_VERIFIED'&&
+      observed.reason==='GITHUB_BRANCH_AND_PR_READBACK_VERIFIED'&&validCommon(input,observed)&&
+      observed.admitted===true&&observed.claimAccepted===true&&observed.agentLaunch===false&&
+      observed.repository===OWNER+'/'+REPO&&observed.baseRef==='version/v2'&&
+      SHA.test(observed.candidateCommit??'')&&SHA.test(observed.candidateTree??'')&&
+      Number.isSafeInteger(observed.pullNumber)&&observed.pullNumber>0&&
+      /^https:\/\/github\.com\/kaicreator-mm\/tally\/pull\/[1-9][0-9]*$/.test(observed.pullRef??'')&&
+      observed.externalRef===observed.pullRef)
+      output=Object.freeze({...observed,claimGeneration:1,claimAccepted:true,admitted:true,
+        authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+    else if(observed&&['NOT_ADMITTED','PUBLICATION_UNKNOWN'].includes(observed.state)&&
+      PUBLICATION_REASONS.has(observed.reason))
+      output=publicationDenied(input,observed.reason,observed.state);
+    else output=publicationDenied(input,'LOCAL_AGENT_PROVIDER_THREW');
+  }
+  return Object.freeze({phase:'terminal',externalRef:`tally:${input?.issueNumber??'invalid'}:${input?.attemptId??'invalid'}:publication`,
     outcome:{ok:true,output}});
 }
