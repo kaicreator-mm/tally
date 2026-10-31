@@ -104,28 +104,76 @@ async function resultOf(kind,config,run){
   let result=null;
   try{const path=join(evidenceDir,'e2e-result.json'),info=await stat(path);
     if(info.mtimeMs>=exit.startedAt)result=JSON.parse(await readFile(path,'utf8'));}catch{}
-  return {status:exit.code===0&&result?.status==='PASS'?'PASS':'FAIL',exitCode:exit.code,
-    signal:exit.signal??null,timeout:exit.timeout===true,result,evidenceDir};
+  const observedAt=new Date().toISOString();
+  const status=exit.code===0&&result?.status==='PASS'?'PASS':exit.code===0&&!result?'UNKNOWN':'FAIL';
+  return {status,reason:status==='UNKNOWN'?'ACK_LOST':undefined,exitCode:exit.code,
+    signal:exit.signal??null,timeout:exit.timeout===true,observedAt,result,evidenceDir};
 }
+/** Canonical claim repository; a claim receipt for any other repository is cross-repo and rejected. */
+const REPOSITORY='kaicreator-mm/tally';
+/** A fresh run is only a PASS when the process exited 0 AND its durable result says PASS AND the
+ * canonical receipts it carried are intact. Missing durable result on exit 0 is a lost ACK (UNKNOWN),
+ * a failing native readback (403/429/5xx) downgrades PASS to FAIL. */
+function normalize(result){
+  if(result?.status!=='PASS')return result;
+  const summary=result.result??null,native=summary?.nativeReadback;
+  if(!summary||summary.ackReceipt?.state==='LOST')return {...result,status:'UNKNOWN',reason:'ACK_LOST'};
+  if(native&&!(native.httpStatus>=200&&native.httpStatus<300)){
+    const kind=native.httpStatus===403?'FORBIDDEN':native.httpStatus===429?'RATE_LIMITED':'SERVER_ERROR';
+    return {...result,status:'FAIL',reason:`NATIVE_READBACK_${kind}`};
+  }
+  return result;
+}
+const claimReceiptsOf=result=>[...(result?.claimReceipts??[]),...(result?.claimReceipt?[result.claimReceipt]:[])]
+  .filter(receipt=>receipt&&Number.isInteger(Number(receipt.issue)));
+function claimStateOf(issue,fresh,summary){
+  const receipt=claimReceiptsOf(summary).find(receipt=>Number(receipt.issue)===issue);
+  if(fresh?.status==='PASS'&&receipt?.state==='ACCEPTED'&&receipt.repository===REPOSITORY)return 'ACCEPTED';
+  if(receipt?.state==='ACCEPTED'&&receipt.repository!==REPOSITORY)return 'REPO_MISMATCH';
+  if(receipt?.state==='REJECTED')return 'REJECTED';
+  return 'UNKNOWN';
+}
+const nativeReadbackStateOf=summary=>{
+  const native=summary?.nativeReadback;
+  if(!native)return 'NOT_RUN';
+  if(native.httpStatus===403)return 'FORBIDDEN';
+  if(native.httpStatus===429)return 'RATE_LIMITED';
+  if(native.httpStatus>=500)return 'SERVER_ERROR';
+  return native.httpStatus>=200&&native.httpStatus<300?'VERIFIED':'UNKNOWN';
+};
+const hiddenStateOf=summary=>summary?.hiddenVerifier==='HIDDEN_NOT_QUALIFIED'?'NOT_QUALIFIED':
+  summary?.hiddenPass===true||summary?.hiddenVerifier==='HELD_OUT_VERIFIED'?'HELD_OUT_VERIFIED':summary?'NOT_RUN':'UNKNOWN';
+const installedAcceptanceStateOf=summary=>['ACCEPTED','FAILED','NOT_RUN'].includes(summary?.installedAcceptance?.state)?
+  summary.installedAcceptance.state:summary?'NOT_RUN':'UNKNOWN';
 export function createJourneyController(config,{run}={}){
   if(!SHA.test(config.currentSourceSha??''))throw new TypeError('CURRENT_SOURCE_SHA_REQUIRED');
   const history=[];let pending=Promise.resolve();
   async function act(kind,sourceSha){
     if(sourceSha!==config.currentSourceSha)return {status:'STALE_SOURCE',taskPass:false,releasePass:false};
-    const execution=pending.then(()=>resultOf(kind,config,run));pending=execution.catch(()=>{});
+    const execution=pending.then(async()=>normalize(await resultOf(kind,config,run)));pending=execution.catch(()=>{});
     const result=await execution;history.push({kind,...result});
     return result;
   }
   function snapshot(){
     const latest=history.at(-1),single=history.filter(x=>x.kind==='start').at(-1),
       review=history.filter(x=>x.kind==='review-repair').at(-1);
-    const task=(number,sourceRef,sourceSha,result)=>({sourceRef,sourceSha,observedAsOf:new Date().toISOString(),
-      currentness:'REAL_ACTION_READBACK',status:result?.status??'NOT_RUN',reason:result?.status??'NOT_RUN',
-      dependencyState:'CLEAR',claimState:'ACCEPTED',agentAttemptState:result?.result?.realAgentEffect===true&&result.status==='PASS'?'LOCAL_CANDIDATE_READY':result?.status==='FAIL'?'FAILED':'NOT_RUN',
-      reviewState:result?.result?.result?.rejoin?.state??'NOT_RUN',ciState:'NOT_VERIFIED',hostState:result?.status??'NOT_RUN',
-      releaseState:'NOT_VERIFIED',authorized:false,admitted:false,taskPass:false,releasePass:false});
+    const task=(number,sourceRef,sourceSha,fresh)=>{const summary=fresh?.result??null;
+      const nativeReadbackState=nativeReadbackStateOf(summary);
+      const attemptReady=fresh?.status==='PASS'&&summary?.realAgentEffect===true&&
+        ['FORBIDDEN','RATE_LIMITED','SERVER_ERROR'].includes(nativeReadbackState)===false;
+      return {issue:number,sourceRef,sourceSha,observedAsOf:new Date().toISOString(),
+      currentness:'REAL_ACTION_READBACK',status:fresh?.status??'NOT_RUN',reason:fresh?.reason??fresh?.status??'NOT_RUN',
+      dependencyState:'CLEAR',claimState:claimStateOf(number,fresh,summary),
+      claimVerifiedAt:claimStateOf(number,fresh,summary)==='ACCEPTED'?(claimReceiptsOf(summary).find(r=>Number(r.issue)===number)?.observedAt??fresh.observedAt??null):null,
+      agentAttemptState:attemptReady?'LOCAL_CANDIDATE_READY':fresh?.status==='FAIL'?'FAILED':fresh?.status==='UNKNOWN'?'UNKNOWN':'NOT_RUN',
+      reviewState:fresh?.result?.result?.rejoin?.state??fresh?.result?.review?.state??'NOT_RUN',
+      ciState:'NOT_VERIFIED',hostState:fresh?.status??'NOT_RUN',nativeReadbackState,
+      hiddenState:hiddenStateOf(summary),installedAcceptanceState:installedAcceptanceStateOf(summary),
+      staleAcceptedCheckState:fresh?((fresh.result?.priorAcceptedCheck??fresh.result?.result?.priorAcceptedCheck)?.preserved===true?'PRESERVED':
+        (fresh.result?.priorAcceptedCheck??fresh.result?.result?.priorAcceptedCheck)?'NOT_PRESERVED':'UNKNOWN'):'UNKNOWN',
+      releaseState:'NOT_VERIFIED',authorized:false,admitted:false,taskPass:false,releasePass:false};};
     return {status:'OBSERVED',project:'tally',version:'v2',sourceSha:config.currentSourceSha,
-      observedAsOf:new Date().toISOString(),currentness:'REAL_ACTION_READBACK',tasks:[
+      observedAsOf:new Date().toISOString(),currentness:'REAL_ACTION_READBACK',claimRepository:REPOSITORY,tasks:[
         task(196,'https://github.com/kaicreator-mm/tally/issues/196',CLAIM_SINGLE.sourceSha,single),
         task(197,'https://github.com/kaicreator-mm/tally/issues/197',CONCURRENT.sourceSha,review),
         task(198,'https://github.com/kaicreator-mm/tally/issues/198',CONCURRENT.sourceSha,review),

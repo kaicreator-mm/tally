@@ -107,3 +107,79 @@ test('invalid current source is rejected before any process or UI action',()=>{
     createJourneyController(defaultAlmConfig({dhPath:'/dh',tallyPath:'/tally',tallyBPath:'/tally',githubToken:'x',currentSourceSha:'bad',workRoot:'/tmp'})),
     /CURRENT_SOURCE_SHA_REQUIRED/);
 });
+
+const observedAt='2026-11-01T00:00:00.000Z';
+const summaryWith=extra=>({status:'PASS',realAgentEffect:true,hiddenVerifier:'HIDDEN_NOT_QUALIFIED',
+  installedAcceptance:{state:'NOT_RUN'},result:{state:'LOCAL_CANDIDATE_READY'},...extra});
+
+test('initial and unverified claim state is UNKNOWN, never ACCEPTED without a fresh receipt',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'alm-claim-'));
+  try{
+    const controller=createJourneyController(config(root),{run:runner});
+    const snapshot=controller.snapshot();
+    for(const task of snapshot.tasks)assert.equal(task.claimState,'UNKNOWN',`task ${task.issue}`);
+    await controller.start(sourceSha);
+    const after=controller.snapshot().tasks.find(task=>task.issue===196);
+    assert.equal(after.claimState,'UNKNOWN');
+    assert.equal(after.claimVerifiedAt,null);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('fresh canonical receipt is the only path to ACCEPTED and cross-repo receipts are rejected',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'alm-receipt-'));
+  const receipts=[
+    {repository:'kaicreator-mm/tally',issue:196,state:'ACCEPTED',commentId:'6542838856',observedAt},
+    {repository:'kaicreator-mm/other-repo',issue:197,state:'ACCEPTED',commentId:'1',observedAt}];
+  try{
+    const controller=createJourneyController(config(root),{run:async kind=>({status:'PASS',exitCode:0,
+      result:summaryWith({claimReceipts:kind==='start'?[receipts[0]]:[receipts[1]]}),evidenceDir:`C:/e/${kind}`})});
+    await controller.start(sourceSha);
+    const started=controller.snapshot().tasks.find(task=>task.issue===196);
+    assert.equal(started.claimState,'ACCEPTED');assert.equal(started.claimVerifiedAt,observedAt);
+    await controller.reviewRepair(sourceSha);
+    const crossRepo=controller.snapshot().tasks.find(task=>task.issue===197);
+    assert.equal(crossRepo.claimState,'REPO_MISMATCH');assert.equal(crossRepo.claimVerifiedAt,null);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('native readback failure, lost ACK and stale check preservation keep layers independent',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'alm-native-'));
+  try{
+    const nativeController=createJourneyController(config(root),{run:async kind=>({status:'PASS',exitCode:0,
+      result:summaryWith({nativeReadback:{httpStatus:429,reason:'HOST_READBACK'}}),evidenceDir:`C:/e/${kind}`})});
+    const nativeResult=await nativeController.start(sourceSha);
+    assert.equal(nativeResult.status,'FAIL');assert.equal(nativeResult.reason,'NATIVE_READBACK_RATE_LIMITED');
+    const nativeTask=nativeController.snapshot().tasks.find(task=>task.issue===196);
+    assert.equal(nativeTask.nativeReadbackState,'RATE_LIMITED');assert.equal(nativeTask.agentAttemptState,'FAILED');
+    assert.equal(nativeTask.claimState,'UNKNOWN');assert.equal(nativeTask.releasePass,false);
+
+    const ackController=createJourneyController(config(root),{run:async kind=>({status:'PASS',exitCode:0,
+      result:null,evidenceDir:`C:/e/${kind}`})});
+    const ackResult=await ackController.start(sourceSha);
+    assert.equal(ackResult.status,'UNKNOWN');assert.equal(ackResult.reason,'ACK_LOST');
+    assert.equal(ackController.snapshot().progressSignals.realCandidates,0);
+
+    const reviewController=createJourneyController(config(root),{run:async kind=>({status:'FAIL',exitCode:1,
+      result:{status:'FAIL',realAgentEffect:false,result:{rejoin:{state:'FINDING'},
+        priorAcceptedCheck:{preserved:true,commentId:'6538568600'}}},evidenceDir:`C:/e/${kind}`})});
+    await reviewController.reviewRepair(sourceSha);
+    const reviewTask=reviewController.snapshot().tasks.find(task=>task.issue===200);
+    assert.equal(reviewTask.reviewState,'FINDING');assert.equal(reviewTask.staleAcceptedCheckState,'PRESERVED');
+    assert.equal(reviewTask.ciState,'NOT_VERIFIED');assert.equal(reviewTask.releaseState,'NOT_VERIFIED');
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('installed user acceptance stays a separate NOT_RUN witness even when unit run passes (V76)',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'alm-installed-'));
+  try{
+    const controller=createJourneyController(config(root),
+      {run:async kind=>({status:'PASS',exitCode:0,result:summaryWith({}),evidenceDir:`C:/e/${kind}`})});
+    await controller.start(sourceSha);
+    const task=controller.snapshot().tasks.find(entry=>entry.issue===196);
+    assert.equal(task.agentAttemptState,'LOCAL_CANDIDATE_READY');
+    assert.equal(task.installedAcceptanceState,'NOT_RUN');
+    assert.equal(task.hiddenState,'NOT_QUALIFIED');
+    assert.equal(task.releaseState,'NOT_VERIFIED');
+    assert.equal(controller.snapshot().releasePass,false);assert.equal(controller.snapshot().taskPass,false);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
