@@ -8,11 +8,16 @@ when:
         - 'packages/tally-engineering-business/**'
         - 'packages/tally-github-c/src/project-intake.mjs'
         - 'packages/tally-github-c/test/project-intake.test.mjs'
+        - 'packages/tally-github-c/src/maintenance-effects.mjs'
+        - 'packages/tally-github-c/test/maintenance-effects.test.mjs'
         - 'experiments/v2/project-intake/**'
+        - 'experiments/v2/maintenance/**'
         - 'experiments/v2/selected-business-build/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
     branch: [task/tally-i92-k3]
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i219-k3]
 
 labels:
   backend: local
@@ -64,7 +69,7 @@ steps:
       - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
-      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'

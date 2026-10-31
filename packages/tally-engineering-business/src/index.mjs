@@ -8,11 +8,12 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
   'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
-  'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
+  'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+  'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -78,6 +79,25 @@ const intakeInputFrom=Object.freeze({
   sourceSha:{source:'event',path:['payload','sourceSha']},
   productDigest:{source:'event',path:['payload','productDigest']},
   projectTitle:{source:'event',path:['payload','projectTitle']},
+});
+const maintenanceInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  candidateDigest:{source:'event',path:['payload','candidateDigest']},
+});
+const learningInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  learningId:{source:'event',path:['payload','learningId']},
+  decision:{source:'event',path:['payload','decision']},
+  // The later independent outcome rides as always-present scalars (null in
+  // the decision phase): the S SDK refuses to project absent keys, so a
+  // nested optional object can never cross the K event boundary.
+  outcomeAttested:{source:'event',path:['payload','outcomeAttested']},
+  outcomeObservedAt:{source:'event',path:['payload','outcomeObservedAt']},
+  outcomeNote:{source:'event',path:['payload','outcomeNote']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -196,12 +216,46 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[intakeTransition]},finalState],
   };
+  // J219 J08b: the only authorized native Issue publication for a reviewed
+  // maintenance candidate. Authority is ONLY the sealed C observation
+  // (accepted Claim + frozen write-set + frozen independent candidate review
+  // + canonical GitHub readback); a lost acknowledgment stays UNKNOWN.
+  const maintenanceTransition={
+    transitionKey:'publish-maintenance-issue',
+    trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_ISSUE_PUBLICATION_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-maintenance-issue-publication',inputFrom:maintenanceInputFrom,
+      idempotencyKeyFrom:{template:'maint-issue:{issueNumber}:{sourceSha}:{candidateDigest}'}
+    }]
+  };
+  const maintenanceWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[maintenanceTransition]},finalState],
+  };
+  // J219 J08c: measured Task Learning over existing public ADS reports. The
+  // Host CAS ledger is the only record; provenance stays reported-only with an
+  // explicit use/reject decision and a later independent outcome — never a
+  // quality-gain inference and never an Agent ranking.
+  const learningTransition={
+    transitionKey:'record-task-learning-outcome',
+    trigger:{kind:'event',eventType:'TALLY_TASK_LEARNING_OUTCOME_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-task-learning-outcome',inputFrom:learningInputFrom,
+      idempotencyKeyFrom:{template:'learning:{issueNumber}:{sourceSha}:{learningId}'}
+    }]
+  };
+  const learningWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[learningTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition]},
         finalState,
       ],
     },
@@ -241,6 +295,17 @@ export function getPolicy(){
       eventType:'TALLY_PROJECT_INTAKE_ADMISSION_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         productDigest:'productDigest',projectTitle:'projectTitle'},
+    },'rule:tally-maintenance-issue-publication':{
+      ruleId:'rule:tally-maintenance-issue-publication',
+      eventType:'TALLY_MAINTENANCE_ISSUE_PUBLICATION_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        candidateDigest:'candidateDigest'},
+    },'rule:tally-task-learning-outcome':{
+      ruleId:'rule:tally-task-learning-outcome',
+      eventType:'TALLY_TASK_LEARNING_OUTCOME_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        learningId:'learningId',decision:'decision',outcomeAttested:'outcomeAttested',
+        outcomeObservedAt:'outcomeObservedAt',outcomeNote:'outcomeNote'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -296,6 +361,24 @@ export function getPolicy(){
         // Claim, frozen DAG write-set, frozen independent Product review and
         // canonical GitHub readback. No caller/UI/Agent credential.
         roles:['requester','planner','builder','reviewer'],definition:intakeWorkflow,
+      },
+      publishMaintenanceIssue:{
+        trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_ISSUE_PUBLICATION_REQUESTED'},
+        ruleId:'rule:tally-maintenance-issue-publication',
+        // Publication authority is ONLY the sealed C observation: accepted
+        // Claim on #219, frozen DAG write-set, frozen independent candidate
+        // review and canonical GitHub Issue readback. The prior release stays
+        // immutable; a lost acknowledgment stays UNKNOWN without duplicates.
+        roles:['requester','planner','builder','reviewer'],definition:maintenanceWorkflow,
+      },
+      recordTaskLearningOutcome:{
+        trigger:{kind:'event',eventType:'TALLY_TASK_LEARNING_OUTCOME_REQUESTED'},
+        ruleId:'rule:tally-task-learning-outcome',
+        // Learning authority is ONLY the Host CAS ledger derived from
+        // existing public ADS reports with exact provenance. Explicit
+        // use/reject and a later independent outcome are recorded; no
+        // quality-gain inference and no Agent ranking can cross this intent.
+        roles:['requester','planner','builder','reviewer'],definition:learningWorkflow,
       },
     },
     effectBindings:{
@@ -451,6 +534,61 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectProjectIntakeAdmission({input,observation,effectId});
+        },
+      },
+      'effect:tally-maintenance-issue-publication':{
+        // J219 J08b: the authorized native Issue publication. Host CAS keeps
+        // physical idempotency (pending marker + reconcile); the K effect is
+        // non-idempotent so a genuinely new publication can always run.
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.publishMaintenanceIssue'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessMaintenanceIssuePublication(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.publishMaintenanceIssue',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectMaintenanceIssuePublication({input,observation,effectId});
+        },
+      },
+      'effect:tally-task-learning-outcome':{
+        // J219 J08c: explicit use/reject plus later independent outcome,
+        // recorded only in the Host CAS learning ledger. GitHub is never
+        // written here and no quality gain or Agent ranking is inferable.
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.recordTaskLearningOutcome'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          // Reassemble the bounded outcome object from the always-present
+          // scalar wire fields (null in the decision phase) before the
+          // advisory screening and the sealed C call.
+          const outcome=input.outcomeAttested===null||input.outcomeAttested===undefined?
+            undefined:{
+              attested:input.outcomeAttested===true,
+              observedAt:input.outcomeObservedAt,
+              note:input.outcomeNote,
+            };
+          const advisory=assessTaskLearningOutcome({...input,outcome});
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.recordTaskLearningOutcome',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,learningId:input.learningId,
+              decision:input.decision,
+              outcomeAttested:outcome!==undefined?outcome.attested:null,
+              outcomeObservedAt:input.outcomeObservedAt??null,
+              outcomeNote:input.outcomeNote??null,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectTaskLearningOutcome({input:{...input,outcome},observation,effectId});
         },
       },
     },
@@ -1117,4 +1255,179 @@ export function projectProjectIntakeAdmission({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return intakeDenied('UNVERIFIED_PROJECT_INTAKE_OBSERVATION',effectId);
   }catch{return intakeDenied('UNTRUSTED_PROJECT_INTAKE_OBSERVATION',effectId);}
+}
+
+/**
+ * T219 J08b — advisory input screening for the authorized native Issue
+ * publication of one reviewed maintenance candidate. Repo/issue allowlist is
+ * exact (kaicreator-mm/tally#219); cross-issue, stale-source and malformed
+ * digests refuse before any sealed dispatch.
+ */
+const MAINTENANCE_ISSUE=219;
+const CANDIDATE_DIGEST=/^[0-9a-f]{64}$/;
+export function assessMaintenanceIssuePublication(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,candidateDigest}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${MAINTENANCE_ISSUE}`||
+    issueNumber!==MAINTENANCE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !CANDIDATE_DIGEST.test(candidateDigest??''))return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_MAINTENANCE_ISSUE_PUBLICATION',
+    issueRef,issueNumber,sourceSha,candidateDigest,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+
+const MAINTENANCE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'MAINTENANCE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
+  'CANDIDATE_REVIEW_NOT_VERIFIED','MAINTENANCE_REVIEW_DIGEST_MISMATCH',
+  'CANDIDATE_REVIEW_NOT_INDEPENDENT','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+  'MAINTENANCE_ISSUE_DIGEST_MISMATCH','GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+  'GITHUB_PUBLISH_UNKNOWN','MAINTENANCE_ISSUE_READBACK_MISMATCH',
+  'MAINTENANCE_ISSUE_IDENTITY_CONFLICT','MAINTENANCE_ISSUE_INPUT_INVALID',
+  'GITHUB_ACCESS_DENIED','GITHUB_RATE_LIMITED','GITHUB_UNAUTHENTICATED',
+  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_PUBLICATION_CONFLICT']);
+const ISSUE_URL_EXACT=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
+const maintenanceDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,
+  reason,effectId,admitted:false,authorized:false,taskPass:false,releasePass:false});
+/**
+ * T219 — Business projection of the sealed C maintenance publication
+ * observation. Positive output admits THIS K intent only: it never authorizes
+ * the caller, passes the Task or releases. githubEffect stays NOT_RUN unless
+ * the Host proved a real publish plus canonical readback; a lost
+ * acknowledgment stays PUBLICATION_UNKNOWN with a null Issue and can later
+ * reconcile WITHOUT any duplicate.
+ */
+export function projectMaintenanceIssuePublication({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.candidateDigest!==input?.candidateDigest||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)
+      return maintenanceDenied('UNVERIFIED_MAINTENANCE_ISSUE_PUBLICATION',effectId);
+    if(o.state==='NOT_ADMITTED'&&MAINTENANCE_REASONS.has(o.reason)&&
+      o.admitted===false&&o.githubEffect==='NOT_RUN'&&o.issue===null)
+      return maintenanceDenied(o.reason,effectId);
+    if(o.state==='PUBLICATION_UNKNOWN'&&MAINTENANCE_REASONS.has(o.reason)&&
+      o.githubEffect==='UNKNOWN'&&o.issue===null)
+      return Object.freeze({...maintenanceDenied(o.reason,effectId,o.state),
+        githubEffect:'UNKNOWN'});
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      o.replayFixture===true&&o.issue===null)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,candidateDigest:o.candidateDigest,
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        replayFixture:true,githubEffect:'NOT_RUN',issue:null,
+        historicalReleaseMutation:false,taskPass:false,releasePass:false});
+    if(o.state==='MAINTENANCE_ISSUE_PUBLISHED'&&
+      ['MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
+        'MAINTENANCE_ISSUE_READBACK_ALREADY_PRESENT',
+        'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK'].includes(o.reason)&&
+      o.admitted===true&&o.claimAccepted===true&&
+      o.githubEffect==='PERFORMED_VERIFIED'&&o.replayFixture===false&&
+      o.repository==='kaicreator-mm/tally'&&o.duplicate===false&&
+      o.historicalReleaseMutation===false&&
+      o.issue&&typeof o.issue==='object'&&!Array.isArray(o.issue)&&
+      Number.isSafeInteger(o.issue.number)&&o.issue.number>0&&
+      typeof o.issue.title==='string'&&o.issue.title.length>0&&
+      ISSUE_URL_EXACT.test(o.issue.url??''))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,candidateDigest:o.candidateDigest,
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
+        repository:o.repository,duplicate:false,alreadyPresent:o.alreadyPresent===true,
+        issue:Object.freeze({number:o.issue.number,title:o.issue.title,
+          url:o.issue.url}),
+        historicalReleaseMutation:false,taskPass:false,releasePass:false});
+    return maintenanceDenied('UNVERIFIED_MAINTENANCE_ISSUE_PUBLICATION',effectId);
+  }catch{return maintenanceDenied('UNTRUSTED_MAINTENANCE_ISSUE_PUBLICATION',effectId);}
+}
+
+/**
+ * T219 J08c — advisory input screening for one Task Learning use/reject
+ * decision plus its optional later independent outcome. The learning identity
+ * must be the exact ledger entry id; the outcome is an observed fact only.
+ */
+const LEARNING_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'MAINTENANCE_HOST_CONFIG_INVALID','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+  'LEARNING_PROVENANCE_NOT_VERIFIED','LEARNING_DECISION_REQUIRED',
+  'LEARNING_DECISION_MISMATCH','LEARNING_OUTCOME_MISMATCH',
+  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW']);
+const ISO_TIME=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
+export function assessTaskLearningOutcome(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,learningId,decision,outcome}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${MAINTENANCE_ISSUE}`||
+    issueNumber!==MAINTENANCE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !CANDIDATE_DIGEST.test(learningId??'')||!['ADOPTED','REJECTED'].includes(decision))
+    return Object.freeze(unqualified);
+  if(outcome!==undefined){
+    if(!outcome||typeof outcome!=='object'||Array.isArray(outcome)||
+      typeof outcome.attested!=='boolean'||!ISO_TIME(outcome.observedAt??'')||
+      typeof outcome.note!=='string'||outcome.note.length===0||
+      outcome.note.length>512)return Object.freeze(unqualified);
+  }
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_TASK_LEARNING_RECORD',
+    issueRef,issueNumber,sourceSha,learningId,decision,
+    ...(outcome!==undefined?{outcome}:{}),
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+
+/**
+ * T219 — Business projection of the sealed C Task Learning record. Positive
+ * output admits THIS K intent only. measuredEffect is NOT_MEASURED unless the
+ * outcome was independently attested (ATTESTED_OUTCOME_ONLY); a quality gain
+ * is never inferred, Agents are never ranked and GitHub is never written.
+ */
+export function projectTaskLearningOutcome({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.learningId!==input?.learningId||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1)
+      return maintenanceDenied('UNVERIFIED_TASK_LEARNING_RECORD',effectId);
+    if(o.state==='NOT_ADMITTED'&&LEARNING_REASONS.has(o.reason)&&
+      o.admitted===false&&o.githubEffect==='NOT_RUN')
+      return maintenanceDenied(o.reason,effectId);
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED')
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,learningId:o.learningId,
+        decision:o.decision,claimGeneration:1,claimAccepted:true,admitted:true,
+        authorized:false,replayFixture:true,githubEffect:'NOT_RUN',
+        measuredEffect:'NOT_MEASURED',noAgentRanking:true,
+        qualityGainClaimed:false,taskPass:false,releasePass:false});
+    if(o.state==='LEARNING_RECORDED'&&
+      ['LEARNING_DECISION_RECORDED_IN_HOST_CAS','LEARNING_DECISION_ALREADY_RECORDED',
+        'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS','LEARNING_OUTCOME_ALREADY_RECORDED']
+        .includes(o.reason)&&o.admitted===true&&o.claimAccepted===true&&
+      o.githubEffect==='NOT_RUN'&&o.replayFixture===false&&
+      ['ADOPTED','REJECTED'].includes(o.decision)&&
+      o.noAgentRanking===true&&o.qualityGainClaimed===false&&
+      (o.measuredEffect==='NOT_MEASURED'||
+        o.measuredEffect==='ATTESTED_OUTCOME_ONLY'&&
+        o.outcome&&typeof o.outcome==='object'&&!Array.isArray(o.outcome)&&
+        typeof o.outcome.attested==='boolean'))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,sourceSha:o.sourceSha,learningId:o.learningId,
+        decision:o.decision,claimGeneration:1,claimAccepted:true,admitted:true,
+        authorized:false,replayFixture:false,githubEffect:'NOT_RUN',
+        measuredEffect:o.measuredEffect,
+        outcome:o.outcome!==undefined?
+          Object.freeze({attested:o.outcome.attested===true,
+            measuredEffect:o.outcome.measuredEffect??o.measuredEffect}):
+          undefined,
+        noAgentRanking:true,qualityGainClaimed:false,
+        taskPass:false,releasePass:false});
+    return maintenanceDenied('UNVERIFIED_TASK_LEARNING_RECORD',effectId);
+  }catch{return maintenanceDenied('UNTRUSTED_TASK_LEARNING_RECORD',effectId);}
 }
