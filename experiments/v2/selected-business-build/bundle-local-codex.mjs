@@ -54,7 +54,7 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
-  219:{actorRole:'builder'}
+  219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';

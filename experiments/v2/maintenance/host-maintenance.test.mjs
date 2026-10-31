@@ -745,3 +745,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
       physicalGithubEffect:'NOT_RUN',dh:REPLAY_DH_SHA}));
   }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+test('Task 219 frozen write-set binding names the admitted Host path',()=>{
+  const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
