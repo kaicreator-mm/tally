@@ -407,6 +407,14 @@ test('T06n join input alone never grants Reviewer authority and malformed joins 
     input:{...joinInput,joinId:'bad/id'},effectId:'bad-join',resources:{call:async()=>{calls++;}}});
   assert.equal(calls,0);assert.equal(x.agentLaunch,false);assert.equal(x.taskPass,false);
 });
+test('T06n ALM binding accepts only the additional exact Builder identities',()=>{
+  const input={...joinInput,issueRef:'https://github.com/kaicreator-mm/tally/issues/200',issueNumber:200,
+    candidates:[{...joinInput.candidates[0],issueNumber:197},{...joinInput.candidates[1],issueNumber:198}]};
+  const assessed=assessReviewedCandidateJoin(input);
+  assert.equal(assessed.state,'OBSERVED_INPUT_ONLY');assert.equal(assessed.admitted,false);
+  assert.equal(assessReviewedCandidateJoin({...input,candidates:[input.candidates[0],
+    {...input.candidates[1],issueNumber:199}]}).state,'UNQUALIFIED_INPUT');
+});
 test('T06n REVIEW_JOINED projection preserves exact candidates without Task PASS',()=>{
   const x=projectReviewedCandidateJoin({input:joinInput,observation:joinedObservation,effectId:'j1'});
   assert.equal(x.state,'REVIEW_JOINED');assert.equal(x.joinId,joinInput.joinId);

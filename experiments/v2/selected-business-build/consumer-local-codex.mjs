@@ -44,10 +44,11 @@ assert.ok(typeof token==='string'&&token.length>=8);
 assert.match(sourceSha??'',/^[0-9a-f]{40}$/);
 assert.ok(dispatchId&&operatorId&&operatorKind&&writerId&&writerLogin);
 assert.ok(Number.isSafeInteger(commentId)&&commentId>0);
-const issueRef='https://github.com/kaicreator-mm/tally/issues/172';
-const claimKey='kaicreator-mm/tally#172:builder:__default__';
+const issueNumber=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER??172);
+const issueRef=`https://github.com/kaicreator-mm/tally/issues/${issueNumber}`;
+const claimKey=`kaicreator-mm/tally#${issueNumber}:builder:__default__`;
 const registryKey='tally:v2:claim-admission:'+sha(claimKey);
-const writeSetKey='tally:v2:task-writeset:172';
+const writeSetKey=`tally:v2:task-writeset:${issueNumber}`;
 const rowValue=()=>({phase:'PUBLISHED_VERIFIED',generation:1,protectedClaimKey:claimKey,
   repository:'kaicreator-mm/tally',issueRef,sourceSha,dispatchId,actorRole:'builder',
   operatorKind,operatorId,writerId,commentId,commentRef:`${issueRef}#issuecomment-${commentId}`});
@@ -67,20 +68,20 @@ if(replay){
   await registry.put(registryKey,reservation,{mustBeAbsent:true});
   await registry.put(registryKey,rowValue(),{mustMatchRevision:0});
   await registry.put(writeSetKey,{phase:'FROZEN_DAG_WRITESET',repository:'kaicreator-mm/tally',
-    issueNumber:172,sourceSha,writeSetSha256,document:writeSetDocument},{mustBeAbsent:true});
+    issueNumber,sourceSha,writeSetSha256,document:writeSetDocument},{mustBeAbsent:true});
   const date='2026-10-30T00:00:00Z';
-  const body=`<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v3\nkind: event\ndata:\n  schema: ai-dev/event-v2\n  event: DISPATCH_CLAIMED\n  actor_role: builder\n  operator_kind: ${operatorKind}\n  operator_id: ${operatorId}\n  task: '#172'\n  issue: '#172'\n  sha: ${sourceSha}\n  dispatch_id: ${dispatchId}\n  dispatch_state: CLAIMED\n  protected_claim_key: ${claimKey}\n  admission_generation: 1\n\`\`\`\n`;
+  const body=`<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v3\nkind: event\ndata:\n  schema: ai-dev/event-v2\n  event: DISPATCH_CLAIMED\n  actor_role: builder\n  operator_kind: ${operatorKind}\n  operator_id: ${operatorId}\n  task: '#${issueNumber}'\n  issue: '#${issueNumber}'\n  sha: ${sourceSha}\n  dispatch_id: ${dispatchId}\n  dispatch_state: CLAIMED\n  protected_claim_key: ${claimKey}\n  admission_generation: 1\n\`\`\`\n`;
   const comment={id:commentId,body,html_url:`${issueRef}#issuecomment-${commentId}`,
-    issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/172',
+    issue_url:`https://api.github.com/repos/kaicreator-mm/tally/issues/${issueNumber}`,
     created_at:date,updated_at:date,user:{login:writerLogin}};
-  const issue={id:1720,number:172,html_url:issueRef,state:'open',updated_at:date,
+  const issue={id:issueNumber*10,number:issueNumber,html_url:issueRef,state:'open',updated_at:date,
     labels:[{name:'type:task'},{name:'state:ready'}]};
   globalThis.fetch=async input=>{
     const url=new URL(input);let value,status=200;
-    if(url.pathname==='/repos/kaicreator-mm/tally/issues/172')value=issue;
+    if(url.pathname===`/repos/kaicreator-mm/tally/issues/${issueNumber}`)value=issue;
     else if(url.pathname===`/repos/kaicreator-mm/tally/commits/${sourceSha}`)value={sha:sourceSha};
-    else if(url.pathname==='/repos/kaicreator-mm/tally/issues/172/dependencies/blocked_by')value=[];
-    else if(url.pathname==='/repos/kaicreator-mm/tally/issues/172/comments')value=[comment];
+    else if(url.pathname===`/repos/kaicreator-mm/tally/issues/${issueNumber}/dependencies/blocked_by`)value=[];
+    else if(url.pathname===`/repos/kaicreator-mm/tally/issues/${issueNumber}/comments`)value=[comment];
     else if(url.pathname===`/repos/kaicreator-mm/tally/issues/comments/${commentId}`)value=comment;
     else if(url.pathname==='/user')value={login:writerLogin};
     else{status=404;value={message:'fixture-not-found'};}
@@ -106,8 +107,8 @@ const options=sqlite=>({store:{get:key=>sqlite.get(key),put:(key,v,c)=>sqlite.pu
   remove:(key,c)=>sqlite.remove(key,condition(c))},deploymentIdentity:deployment,
   deploymentRoot:process.cwd(),tenantId:deployment.tenantId,queryAuthority:authority,
   now:()=>Date.UTC(2026,9,30)});
-const input={issueRef,issueNumber:172,sourceSha,attemptId};
-const instanceKey='task-local-codex-172';
+const input={issueRef,issueNumber,sourceSha,attemptId};
+const instanceKey=`task-local-codex-${issueNumber}`;
 const selector={workflowId:'tally-readiness',instanceKey,
   businessPackageId:'business-tally-task-readiness@v2.0.0'};
 const message={intentType:'runLocalCodexAttempt',instanceKey,messageId:'message-t06m-172-1',input};

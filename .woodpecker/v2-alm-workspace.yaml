@@ -1,10 +1,12 @@
-# Tally v2 read-only ALM workspace source gate. Not Windows OS-isolation evidence.
+# Tally v2 ALM workspace source gate. Windows Codex evidence is Host-local, not Docker OS-isolation evidence.
 when:
   - event: [pull_request, push, manual]
     branch: [version/v2]
     path:
       include:
         - 'web/v2/**'
+        - 'packages/tally-engineering-business/**'
+        - 'experiments/v2/selected-business-build/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
     branch: [task/tally-i92-k3]
@@ -58,6 +60,6 @@ steps:
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
-      - node --test $files
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs
       - echo TALLY_V2_ALM_WORKSPACE_SOURCE_TESTS_PASS
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER

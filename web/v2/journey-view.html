@@ -19,30 +19,6 @@ a{color:#8ec5ff;text-decoration-thickness:1px;text-underline-offset:3px}a:hover{
 </style>
 </head>
 <body><main id="app"></main>
-<script type="module">
-import {renderJourneyWorkspace} from './journey-view.mjs';
-const sourceSha='ec9820c3a67e387d5ca51f736be0d6f316f36c12';
-const observedAt='2026-10-30T19:00:00.000Z';
-const task=(sourceRef,changes={})=>({sourceRef,sourceSha,observedAsOf:observedAt,
-  currentness:'OBSERVED_AT_QUERY_COMPLETION',status:'AWAITING_HOST_ADMISSION',
-  reason:'NATIVE_READY_NO_ACCEPTED_CLAIM',dependencyState:'CLEAR',claimState:'NOT_VERIFIED',
-  kernelTaskState:'NOT_VERIFIED',agentAttemptState:'NOT_VERIFIED',reviewState:'NOT_VERIFIED',
-  ciState:'NOT_VERIFIED',hostState:'NOT_VERIFIED',releaseState:'NOT_VERIFIED',
-  authorized:false,admitted:false,taskPass:false,releasePass:false,...changes});
-const snapshot={status:'OBSERVED',project:'tally',version:'v2',sourceSha,observedAsOf:observedAt,
-  currentness:'OBSERVED_AT_QUERY_COMPLETION',tasks:[
-    task('https://github.com/kaicreator-mm/tally/issues/172'),
-    task('https://github.com/kaicreator-mm/tally/issues/177',{status:'AWAITING_REVIEW',reason:'LOCAL_CANDIDATE_READY',agentAttemptState:'LOCAL_CANDIDATE_READY'}),
-    task('https://github.com/kaicreator-mm/tally/issues/179',{status:'REVIEW_CANDIDATE_EVIDENCE',reason:'REVIEW_JOINED',reviewState:'REVIEW_JOINED',hostState:'REVIEW_JOINED'}),
-    task('https://github.com/kaicreator-mm/tally/issues/999',{requiredHostEvidence:{kind:'WINDOWS_CODEX_HOST',available:false,reason:'CODEX_HOST_UNREACHABLE'}})
-  ],progressSignals:{candidates:1,reviewed:1,released:0,comparison:'COUNTS_NOT_PERCENTAGES'},authorized:false,admitted:false,taskPass:false,releasePass:false};
-const actions=[{authorizationType:'START_ELIGIBLE_CLAIM',reason:'NATIVE_READY_NO_ACCEPTED_CLAIM',actorRole:'builder',requiredCapability:'HOST_CLAIM_WRITER',approvalNeeded:true,costRisk:'LOW',authorization:'HOST_AND_ADS_REQUIRED',currentness:snapshot.currentness,evidence:{sourceRef:snapshot.tasks[0].sourceRef,sourceSha,observedAsOf:observedAt}},
-{authorizationType:'START_ELIGIBLE_INDEPENDENT_REVIEW',reason:'LOCAL_CANDIDATE_READY',actorRole:'reviewer',requiredCapability:'INDEPENDENT_REVIEWER',approvalNeeded:true,costRisk:'LOW',authorization:'HOST_AND_ADS_REQUIRED',currentness:snapshot.currentness,evidence:{sourceRef:snapshot.tasks[1].sourceRef,sourceSha,observedAsOf:observedAt}},
-{authorizationType:'START_ELIGIBLE_VALIDATOR',reason:'REVIEW_JOINED',actorRole:'validator',requiredCapability:'VALIDATOR',approvalNeeded:true,costRisk:'LOW',authorization:'HOST_AND_ADS_REQUIRED',currentness:snapshot.currentness,evidence:{sourceRef:snapshot.tasks[2].sourceRef,sourceSha,observedAsOf:observedAt}},
-{authorizationType:'NEEDS_HUMAN_HOST',reason:'CODEX_HOST_UNREACHABLE',actorRole:'human',requiredCapability:'WINDOWS_CODEX_HOST',approvalNeeded:true,costRisk:'HIGH',authorization:'ADVISORY_ONLY',currentness:snapshot.currentness,evidence:{sourceRef:snapshot.tasks[3].sourceRef,sourceSha,observedAsOf:observedAt}}];
-const humanActionInbox=[{kind:'NEEDS_HUMAN_HOST',reason:'CODEX_HOST_UNREACHABLE',expectedEvidence:'WINDOWS_CODEX_HOST',readback:snapshot.tasks[3].sourceRef,sourceSha}];
-for(const action of actions)Object.freeze(action);
-document.querySelector('#app').innerHTML=renderJourneyWorkspace(snapshot,{actions,humanActionInbox});
-</script>
+<script defer src="./journey-bootstrap.mjs"></script>
 </body>
 </html>

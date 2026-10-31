@@ -61,9 +61,17 @@ test('Task rows match actions by sourceRef, not array position',()=>{
   assert.ok(html.indexOf('START_ELIGIBLE_INDEPENDENT_REVIEW')>html.indexOf('START_ELIGIBLE_CLAIM'));
   assert.match(html,/START_ELIGIBLE_CLAIM/);assert.match(html,/START_ELIGIBLE_INDEPENDENT_REVIEW/);
 });
+test('write mode exposes only real action buttons and native readback',()=>{
+  const html=renderJourneyWorkspace({...snapshot,result:{status:'PASS',exitCode:0,evidenceDir:'C:/evidence',
+    result:{status:'PASS',realAgentEffect:true}}},{
+    actions:[{...eligible,kind:'start'}],humanActionInbox:[],mode:'write'});
+  assert.match(html,/data-action="start"/);assert.match(html,/Real action readback/);
+  assert.match(html,/realAgentEffect/);assert.doesNotMatch(html,/onclick|onerror/i);
+});
 test('static page contains the real module and no write controls',()=>{
   const html=readFileSync(new URL('./journey-view.html',import.meta.url),'utf8');
-  assert.match(html,/import \{renderJourneyWorkspace\} from '\.\/journey-view.mjs'/);
-  assert.match(html,/type="module"/);assert.doesNotMatch(html,/<button/i);
+  assert.match(html,/<script defer src="\.\/journey-bootstrap\.mjs"><\/script>/);
+  assert.doesNotMatch(html,/<script(?:\s+type="module")?\s*>/);
+  assert.match(html,/defer/);assert.doesNotMatch(html,/<button/i);
   assert.doesNotMatch(html,/onerror|onclick/i);
 });

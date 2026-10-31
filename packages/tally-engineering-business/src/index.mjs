@@ -703,7 +703,7 @@ export function projectLocalCodexAttempt({input,observation,effectId}={}){
  * come from the selected sealed C; no input shape, caller assertion or
  * candidate list supplied by an Agent is Join evidence.
  */
-const JOIN_CANDIDATE_ISSUES=new Set([172,177,178]);
+const JOIN_CANDIDATE_ISSUES=new Set([172,177,178,196,197,198]);
 export function assessReviewedCandidateJoin(input){
   const unqualified=Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',
     admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
