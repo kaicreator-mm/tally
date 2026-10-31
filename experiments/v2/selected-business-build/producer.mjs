@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -96,7 +96,8 @@ const modules = [
     bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness',
       'intent:admitClaimedTask','intent:runLocalCodexAttempt','intent:joinReviewedCandidates',
       'intent:publishReviewedCandidate','intent:freezeProductIntake',
-      'intent:admitProjectIntake']}),
+      'intent:admitProjectIntake','intent:publishMaintenanceIssue',
+      'intent:recordTaskLearningOutcome']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -121,7 +122,9 @@ const modules = [
       ...(process.env.T06N_CONCURRENT==='1'?['intent:joinReviewedCandidates']:[]),
       ...(process.env.T06P_PUBLISH==='1'?['intent:publishReviewedCandidate']:[]),
       ...(process.env.T210_PROJECT_INTAKE==='1'?['intent:freezeProductIntake',
-        'intent:admitProjectIntake']:[])]}),
+        'intent:admitProjectIntake']:[]),
+      ...(process.env.T219_MAINTENANCE==='1'?['intent:publishMaintenanceIssue',
+        'intent:recordTaskLearningOutcome']:[])]}),
     capabilityId:'tally-local-codex',
     handlers:[{operationId:'tally.runLocalCodexAttempt',handler:'runLocalCodexAttempt'},
       ...(process.env.T06N_CONCURRENT==='1'?
@@ -130,7 +133,10 @@ const modules = [
         [{operationId:'tally.publishReviewedCandidate',handler:'publishReviewedCandidate'}]:[]),
       ...(process.env.T210_PROJECT_INTAKE==='1'?
         [{operationId:'tally.freezeProductIntake',handler:'freezeProductIntake'},
-          {operationId:'tally.hostProjectIntake',handler:'hostProjectIntake'}]:[])],
+          {operationId:'tally.hostProjectIntake',handler:'hostProjectIntake'}]:[]),
+      ...(process.env.T219_MAINTENANCE==='1'?
+        [{operationId:'tally.publishMaintenanceIssue',handler:'publishMaintenanceIssue'},
+          {operationId:'tally.recordTaskLearningOutcome',handler:'recordTaskLearningOutcome'}]:[])],
     externalEffect:true,
     externalImports:{node:[],npm:['@kaicreator/tally-local-codex-host-bundle'],
       native:['better-sqlite3']}}]:[]),
@@ -152,7 +158,12 @@ const routes=[
       [{intentId:'freezeProductIntake',operationId:'tally.freezeProductIntake',
         capabilityId:'tally-local-codex',handlerId:'freezeProductIntake'},
         {intentId:'admitProjectIntake',operationId:'tally.hostProjectIntake',
-          capabilityId:'tally-local-codex',handlerId:'hostProjectIntake'}]:[])]:[]),
+          capabilityId:'tally-local-codex',handlerId:'hostProjectIntake'}]:[]),
+    ...(process.env.T219_MAINTENANCE==='1'?
+      [{intentId:'publishMaintenanceIssue',operationId:'tally.publishMaintenanceIssue',
+        capabilityId:'tally-local-codex',handlerId:'publishMaintenanceIssue'},
+        {intentId:'recordTaskLearningOutcome',operationId:'tally.recordTaskLearningOutcome',
+          capabilityId:'tally-local-codex',handlerId:'recordTaskLearningOutcome'}]:[])]:[]),
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
@@ -168,7 +179,8 @@ assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
 const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06N_CONCURRENT==='1'?1:0)+
   (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
-  (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0);
+  (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0)+
+  (localCodexBytes&&process.env.T219_MAINTENANCE==='1'?2:0);
 assert.equal(built.routes.length,selectedRouteCount);
 if(claimBytes){
   assert.equal(built.routes[1].intentId,'admitClaimedTask');
@@ -203,6 +215,18 @@ if(localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'){
   assert.equal(built.routes.some(x=>x.intentId==='admitProjectIntake'),false,
     'T210 intake routes are selected only when T210_PROJECT_INTAKE=1');
 }
+if(localCodexBytes&&process.env.T219_MAINTENANCE==='1'){
+  for(const [intent,handler] of [['publishMaintenanceIssue','publishMaintenanceIssue'],
+    ['recordTaskLearningOutcome','recordTaskLearningOutcome']]){
+    const route=built.routes.find(x=>x.intentId===intent);
+    assert.equal(route.capabilityId,'tally-local-codex',intent);
+    assert.equal(route.handlerId,handler,intent);
+  }
+}else{
+  assert.equal(built.routes.some(x=>x.intentId==='publishMaintenanceIssue')||
+    built.routes.some(x=>x.intentId==='recordTaskLearningOutcome'),false,
+    'T219 maintenance routes are selected only when T219_MAINTENANCE=1');
+}
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
 if(process.env.T02B_SEALED_APP_OUTPUT) {
@@ -233,6 +257,10 @@ for(const [caseName,mutate,code] of [
     ['intake-freeze-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='freezeProductIntake'?{...r,handlerId:'unselectedFreezeHandler'}:r)}), 'V10_ROUTE_INVALID'],
     ['intake-admit-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='admitProjectIntake'?{...r,handlerId:'unselectedIntakeHandler'}:r)}), 'V10_ROUTE_INVALID'],
    ]:[]),
+   ...(process.env.T219_MAINTENANCE==='1'?[
+    ['maintenance-publish-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='publishMaintenanceIssue'?{...r,handlerId:'unselectedMaintenanceHandler'}:r)}), 'V10_ROUTE_INVALID'],
+    ['maintenance-learning-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='recordTaskLearningOutcome'?{...r,handlerId:'unselectedLearningHandler'}:r)}), 'V10_ROUTE_INVALID'],
+   ]:[]),
   ]:[]),
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
@@ -249,6 +277,7 @@ console.log(JSON.stringify({
   concurrentJoinRoute:process.env.T06N_CONCURRENT==='1'?'SELECTED':'NOT_SELECTED',
   candidatePublicationRoute:process.env.T06P_PUBLISH==='1'?'SELECTED':'NOT_SELECTED',
   projectIntakeRoutes:process.env.T210_PROJECT_INTAKE==='1'?'SELECTED':'NOT_SELECTED',
+  maintenanceRoutes:process.env.T219_MAINTENANCE==='1'?'SELECTED':'NOT_SELECTED',
   githubEffect:'NOT_RUN',taskPass:false,releasePass:false
 },null,2));
 console.log('T02B_PUBLIC_BUILD_SELECTED_B=PASS');

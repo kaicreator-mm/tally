@@ -5,6 +5,8 @@ import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
   assessCandidatePublication,projectCandidatePublication,assessProductIntakeFreeze,
   projectProductIntakeFreeze,assessProjectIntakeAdmission,projectProjectIntakeAdmission,
+  assessMaintenanceIssuePublication,projectMaintenanceIssuePublication,
+  assessTaskLearningOutcome,projectTaskLearningOutcome,
   ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
@@ -23,18 +25,20 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
-    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
+    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
-    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission']);
+    'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -92,7 +96,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,7);
+  assert.equal(Object.keys(p.effectBindings).length,9);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
   // T210 intake intents: freeze is an idempotent Host CAS write, admission is
@@ -115,7 +119,9 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
     'join-reviewed-candidates':'rule:tally-reviewer-candidate-join',
     'publish-reviewed-candidate':'rule:tally-reviewed-candidate-publication',
     'freeze-product-intake':'rule:tally-product-intake-freeze',
-    'admit-project-intake':'rule:tally-project-intake-admission'};
+    'admit-project-intake':'rule:tally-project-intake-admission',
+    'publish-maintenance-issue':'rule:tally-maintenance-issue-publication',
+    'record-task-learning-outcome':'rule:tally-task-learning-outcome'};
   assert.deepEqual(Object.keys(ruleByTransition).sort(),
     p.workflowDefinition.states[0].transitions.map(t=>t.transitionKey).sort());
   for(const transition of p.workflowDefinition.states[0].transitions){
@@ -735,5 +741,237 @@ test('#210 freeze idempotency key renders within Kernel grammar',()=>{
     t=>t.transitionKey==='freeze-product-intake');
   const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
     .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(intakeInput()[name]??''));
+  assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+
+// --- T219 J08b/J08c: authorized maintenance Issue + measured Task Learning ---
+
+const maintInput=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64)});
+const maintPublished=()=>({state:'MAINTENANCE_ISSUE_PUBLISHED',
+  reason:'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+  claimAccepted:true,admitted:true,authorized:false,replayFixture:false,
+  githubEffect:'PERFORMED_VERIFIED',repository:'kaicreator-mm/tally',
+  duplicate:false,alreadyPresent:false,historicalReleaseMutation:false,
+  issue:{number:302,title:'[maintenance] Post-release regression',
+    url:'https://github.com/kaicreator-mm/tally/issues/302'},
+  taskPass:false,releasePass:false});
+const learningInput=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),
+  decision:'ADOPTED'});
+const learningRecorded=()=>({state:'LEARNING_RECORDED',
+  reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+  claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+  replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+  noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false});
+
+test('#219 publication screening enforces the exact #219 allowlist and digest',()=>{
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/210'},{issueNumber:210},
+    {issueRef:'https://github.com/other/tally/issues/219'},
+    {sourceSha:'bad'},{candidateDigest:'zz'},
+  ]){
+    const x=assessMaintenanceIssuePublication({...maintInput(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(x.admitted,false);
+  }
+  for(const empty of [null,undefined,{},[]]){
+    const x=assessMaintenanceIssuePublication(empty);
+    assert.equal(x.state,'UNQUALIFIED_INPUT');
+  }
+  const ok=assessMaintenanceIssuePublication(maintInput());
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(ok.reason,'REQUIRES_SEALED_MAINTENANCE_ISSUE_PUBLICATION');
+});
+
+test('#219 publication projection admits only verified publish+readback shapes',()=>{
+  const x=projectMaintenanceIssuePublication({input:maintInput(),
+    observation:maintPublished(),effectId:'fx'});
+  assert.equal(x.state,'MAINTENANCE_ISSUE_PUBLISHED');
+  assert.equal(x.admitted,true);assert.equal(x.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(x.issue.number,302);assert.equal(x.duplicate,false);
+  assert.equal(x.historicalReleaseMutation,false);
+  assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  const replay=projectMaintenanceIssuePublication({input:maintInput(),
+    observation:{...maintPublished(),state:'REPLAY_COMPLETE',
+      reason:'REPLAY_FIXTURE_ONLY',admitted:true,replayFixture:true,
+      githubEffect:'NOT_RUN',issue:null,repository:null,duplicate:false,
+      alreadyPresent:false},effectId:'fx'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.githubEffect,'NOT_RUN');
+  const reconciled=projectMaintenanceIssuePublication({input:maintInput(),
+    observation:{...maintPublished(),
+      reason:'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK'},effectId:'fx'});
+  assert.equal(reconciled.reason,'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK');
+  for(const change of [
+    {state:'NOT_ADMITTED',reason:'CANDIDATE_REVIEW_NOT_VERIFIED',admitted:false,
+      claimAccepted:false,githubEffect:'NOT_RUN',issue:null,repository:null,
+      duplicate:false,alreadyPresent:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',
+      githubEffect:'UNKNOWN',issue:null,repository:null,duplicate:false,
+      alreadyPresent:false},
+    {repository:'other/tally'},
+    {issue:{...maintPublished().issue,number:0}},
+    {issue:{...maintPublished().issue,url:'https://github.com/kaicreator-mm/tally/x'}},
+    {duplicate:true},{historicalReleaseMutation:true},{admitted:false},
+    {reason:'MADE_UP_REASON'},
+  ]){
+    const y=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:{...maintPublished(),...change},effectId:'fx'});
+    assert.equal(y.admitted,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+});
+
+test('#219 publication effect dispatches sealed resource only for qualified input',async()=>{
+  const p=getPolicy();let calls=0;
+  const handler=p.effectBindings['effect:tally-maintenance-issue-publication'].handler;
+  const x=await handler({input:{...maintInput(),issueNumber:210},effectId:'fx',
+    resources:{call:async()=>{calls++;return {phase:'terminal',outcome:{ok:true,output:{}}};}}});
+  assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(calls,0);
+  const y=await handler({input:maintInput(),effectId:'fx',
+    resources:{call:async(key,op,arg)=>{
+      calls++;
+      assert.equal(key,'tally-local-codex');assert.equal(op,'tally.publishMaintenanceIssue');
+      assert.equal(arg.issueNumber,219);assert.equal(arg.candidateDigest,'e'.repeat(64));
+      return {phase:'terminal',outcome:{ok:true,output:{
+        state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',
+        issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+        sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+        claimAccepted:true,admitted:true,authorized:false,replayFixture:false,
+        githubEffect:'UNKNOWN',issue:null,historicalReleaseMutation:false,
+        duplicate:false,taskPass:false,releasePass:false}}};}}});
+  assert.equal(y.state,'PUBLICATION_UNKNOWN');assert.equal(y.reason,'GITHUB_PUBLISH_UNKNOWN');
+  assert.equal(calls,1);
+});
+
+test('#219 publication idempotency key renders within Kernel grammar',()=>{
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const transition=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='publish-maintenance-issue');
+  const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(maintInput()[name]??''));
+  assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+
+test('#219 learning screening requires decision enum and bounded outcome',()=>{
+  for(const change of [
+    {issueNumber:197},{sourceSha:'short'},{learningId:'zz'},
+    {decision:'RANK_AGENTS'},{decision:undefined},
+  ]){
+    const x=assessTaskLearningOutcome({...learningInput(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+  }
+  for(const empty of [null,undefined,{},[]]){
+    const x=assessTaskLearningOutcome(empty);
+    assert.equal(x.state,'UNQUALIFIED_INPUT');
+  }
+  for(const outcome of [
+    {attested:'yes',observedAt:'2026-11-02T10:00:00.000Z',note:'x'},
+    {attested:false,observedAt:'not-a-time',note:'x'},
+    {attested:false,observedAt:'2026-11-02T10:00:00.000Z',note:''},
+    {attested:false,observedAt:'2026-11-02T10:00:00.000Z',note:'x'.repeat(513)},
+    'garbage',
+  ]){
+    const x=assessTaskLearningOutcome({...learningInput(),outcome});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(outcome));
+  }
+  const decisionOnly=assessTaskLearningOutcome(learningInput());
+  assert.equal(decisionOnly.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(decisionOnly.reason,'REQUIRES_SEALED_TASK_LEARNING_RECORD');
+  const withOutcome=assessTaskLearningOutcome({...learningInput(),outcome:{
+    attested:false,observedAt:'2026-11-02T10:00:00.000Z',note:'no measurable change'}});
+  assert.equal(withOutcome.state,'OBSERVED_INPUT_ONLY');
+});
+
+test('#219 learning projection records use/reject and honest outcomes only',()=>{
+  const x=projectTaskLearningOutcome({input:learningInput(),
+    observation:learningRecorded(),effectId:'fx'});
+  assert.equal(x.state,'LEARNING_RECORDED');assert.equal(x.admitted,true);
+  assert.equal(x.measuredEffect,'NOT_MEASURED');assert.equal(x.noAgentRanking,true);
+  assert.equal(x.qualityGainClaimed,false);assert.equal(x.githubEffect,'NOT_RUN');
+  assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  const attested=projectTaskLearningOutcome({input:learningInput(),
+    observation:{...learningRecorded(),
+      reason:'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
+      measuredEffect:'ATTESTED_OUTCOME_ONLY',
+      outcome:{attested:true,measuredEffect:'ATTESTED_OUTCOME_ONLY'}},effectId:'fx'});
+  assert.equal(attested.measuredEffect,'ATTESTED_OUTCOME_ONLY');
+  assert.equal(attested.outcome.attested,true);
+  const replay=projectTaskLearningOutcome({input:learningInput(),
+    observation:{...learningRecorded(),state:'REPLAY_COMPLETE',
+      reason:'REPLAY_FIXTURE_ONLY',replayFixture:true,decision:'ADOPTED',
+      measuredEffect:'NOT_MEASURED'},effectId:'fx'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.githubEffect,'NOT_RUN');
+  for(const change of [
+    {state:'NOT_ADMITTED',reason:'LEARNING_PROVENANCE_NOT_VERIFIED',admitted:false,
+      claimAccepted:false},
+    {decision:'RANK_AGENTS'},{noAgentRanking:false},{qualityGainClaimed:true},
+    {githubEffect:'PERFORMED_VERIFIED'},{measuredEffect:'QUALITY_GAIN_PLUS_40'},
+    {reason:'MADE_UP_REASON'},{admitted:false},
+  ]){
+    const y=projectTaskLearningOutcome({input:learningInput(),
+      observation:{...learningRecorded(),...change},effectId:'fx'});
+    assert.equal(y.admitted,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+});
+
+test('#219 learning effect dispatches sealed resource only for qualified input',async()=>{
+  const p=getPolicy();let calls=0;
+  const handler=p.effectBindings['effect:tally-task-learning-outcome'].handler;
+  const x=await handler({input:{...learningInput(),decision:'RANK_AGENTS'},
+    effectId:'fx',resources:{call:async()=>{calls++;return {phase:'terminal'};}}});
+  assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(calls,0);
+  const y=await handler({input:{...learningInput(),outcomeAttested:false,
+      outcomeObservedAt:'2026-11-02T10:00:00.000Z',outcomeNote:'independent follow-up'},
+    effectId:'fx',
+    resources:{call:async(key,op,arg)=>{
+      calls++;
+      assert.equal(key,'tally-local-codex');assert.equal(op,'tally.recordTaskLearningOutcome');
+      assert.equal(arg.learningId,'f'.repeat(64));
+      assert.equal(arg.outcomeAttested,false);
+      assert.equal(arg.outcomeObservedAt,'2026-11-02T10:00:00.000Z');
+      assert.equal(arg.outcomeNote,'independent follow-up');
+      return {phase:'terminal',outcome:{ok:true,output:{
+        state:'LEARNING_RECORDED',reason:'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
+        issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+        sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+        outcome:{attested:false,measuredEffect:'NOT_MEASURED'},
+        noAgentRanking:true,qualityGainClaimed:false,
+        taskPass:false,releasePass:false}}};}}});
+  assert.equal(y.state,'LEARNING_RECORDED');
+  assert.equal(y.outcome.measuredEffect,'NOT_MEASURED');
+  assert.equal(calls,1);
+  // The decision phase (null outcome scalars) stays a qualified dispatch.
+  const z=await handler({input:{...learningInput(),outcomeAttested:null,
+      outcomeObservedAt:null,outcomeNote:null},
+    effectId:'fx',
+    resources:{call:async()=>{calls++;
+      return {phase:'terminal',outcome:{ok:true,output:{
+        state:'LEARNING_RECORDED',reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+        issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+        sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+        noAgentRanking:true,qualityGainClaimed:false,
+        taskPass:false,releasePass:false}}};}}});
+  assert.equal(z.state,'LEARNING_RECORDED');
+  assert.equal(z.measuredEffect,'NOT_MEASURED');
+  assert.equal(calls,2);
+});
+
+test('#219 learning idempotency key renders within Kernel grammar',()=>{
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const transition=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='record-task-learning-outcome');
+  const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(learningInput()[name]??''));
   assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
 });

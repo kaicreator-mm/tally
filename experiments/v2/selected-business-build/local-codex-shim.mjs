@@ -1,9 +1,11 @@
-/** T06m/T06n/T210 sealed Local Codex C boundary. Provider output is never Task evidence. */
+/** T06m/T06n/T210/T219 sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
   publishReviewedCandidate as nativePublishReviewedCandidate,
   hostProjectIntake as nativeHostProjectIntake,
-  freezeProductIntake as nativeFreezeProductIntake}
+  freezeProductIntake as nativeFreezeProductIntake,
+  publishMaintenanceIssue as nativePublishMaintenanceIssue,
+  recordTaskLearningOutcome as nativeRecordTaskLearningOutcome}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -11,7 +13,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -290,5 +292,151 @@ export async function freezeProductIntake(input){
   }
   return Object.freeze({phase:'terminal',
     externalRef:`tally:${INTAKE_ISSUE}:${input?.productDigest??'invalid'}:freeze`,
+    outcome:{ok:true,output}});
+}
+
+// T219 — J08b authorized native Issue publication boundary. Only the exact
+// bounded observation shapes cross; a lost acknowledgment stays UNKNOWN with
+// a null Issue, a verified publication carries the canonical Issue identity,
+// and no shape can ever smuggle a Task/Release PASS or a historical change.
+const MAINTENANCE_ISSUE=219;
+const CANDIDATE_DIGEST=/^[0-9a-f]{64}$/;
+const ISSUE_URL_BOUNDARY=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
+const MAINTENANCE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'MAINTENANCE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
+  'CANDIDATE_REVIEW_NOT_VERIFIED','MAINTENANCE_REVIEW_DIGEST_MISMATCH',
+  'CANDIDATE_REVIEW_NOT_INDEPENDENT','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+  'MAINTENANCE_ISSUE_DIGEST_MISMATCH','GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+  'GITHUB_PUBLISH_UNKNOWN','MAINTENANCE_ISSUE_READBACK_MISMATCH',
+  'MAINTENANCE_ISSUE_IDENTITY_CONFLICT','MAINTENANCE_ISSUE_INPUT_INVALID',
+  'GITHUB_ACCESS_DENIED','GITHUB_RATE_LIMITED','GITHUB_UNAUTHENTICATED',
+  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_PUBLICATION_CONFLICT','LOCAL_AGENT_PROVIDER_THREW']);
+const validMaintenanceIssue=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(MAINTENANCE_ISSUE)||
+    o.sourceSha!==input.sourceSha||o.candidateDigest!==input.candidateDigest||
+    o.claimGeneration!==1||o.authorized!==false||o.agentLaunch!==false||
+    o.historicalReleaseMutation!==false||o.taskPass!==false||
+    o.releasePass!==false)return false;
+  if(o.state==='NOT_ADMITTED')return MAINTENANCE_REASONS.has(o.reason)&&
+    o.claimAccepted===false&&o.admitted===false&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===false&&o.issue===null;
+  if(o.state==='PUBLICATION_UNKNOWN')return MAINTENANCE_REASONS.has(o.reason)&&
+    o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='UNKNOWN'&&
+    o.replayFixture===false&&o.issue===null;
+  if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&
+    o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===true&&o.issue===null;
+  if(o.state==='MAINTENANCE_ISSUE_PUBLISHED')
+    return ['MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
+      'MAINTENANCE_ISSUE_READBACK_ALREADY_PRESENT',
+      'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK'].includes(o.reason)&&
+    o.claimAccepted===true&&o.admitted===true&&
+    o.githubEffect==='PERFORMED_VERIFIED'&&o.replayFixture===false&&
+    o.repository==='kaicreator-mm/tally'&&o.duplicate===false&&
+    o.issue&&typeof o.issue==='object'&&!Array.isArray(o.issue)&&
+    Number.isSafeInteger(o.issue.number)&&o.issue.number>0&&
+    typeof o.issue.title==='string'&&o.issue.title.length>0&&
+    ISSUE_URL_BOUNDARY.test(o.issue.url??'');
+  return false;
+};
+export async function publishMaintenanceIssue(input){
+  let output;
+  if(!input||typeof input==='object'&&Array.isArray(input)||
+    input.issueNumber!==MAINTENANCE_ISSUE||
+    input.sourceRef!==issueRefFor(MAINTENANCE_ISSUE)||
+    !SHA.test(input.sourceSha??'')||!CANDIDATE_DIGEST.test(input.candidateDigest??''))
+    output={state:'NOT_ADMITTED',reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+      issueRef:issueRefFor(MAINTENANCE_ISSUE),
+      sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+      candidateDigest:CANDIDATE_DIGEST.test(input?.candidateDigest??'')?
+        input.candidateDigest:null,claimGeneration:1,claimAccepted:false,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',issue:null,historicalReleaseMutation:false,
+      taskPass:false,releasePass:false};
+  else{
+    let observed;
+    try{observed=await nativePublishMaintenanceIssue(input);}catch{observed=null;}
+    if(validMaintenanceIssue(input,observed))output=observed;
+    else output={state:'NOT_ADMITTED',reason:'LOCAL_AGENT_PROVIDER_THREW',
+      issueRef:issueRefFor(MAINTENANCE_ISSUE),sourceSha:input.sourceSha,
+      candidateDigest:input.candidateDigest,claimGeneration:1,claimAccepted:false,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',issue:null,historicalReleaseMutation:false,
+      taskPass:false,releasePass:false};
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${MAINTENANCE_ISSUE}:${input?.candidateDigest??'invalid'}:maintenance`,
+    outcome:{ok:true,output}});
+}
+
+// T219 — J08c Task Learning boundary. Only the exact LEARNING_RECORDED /
+// NOT_ADMITTED / REPLAY_COMPLETE shapes cross; noAgentRanking and
+// qualityGainClaimed=false are re-verified here so a ranking or a quality-gain
+// claim can never cross the sealed boundary.
+const LEARNING_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'MAINTENANCE_HOST_CONFIG_INVALID','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+  'LEARNING_PROVENANCE_NOT_VERIFIED','LEARNING_DECISION_REQUIRED',
+  'LEARNING_DECISION_MISMATCH','LEARNING_OUTCOME_MISMATCH',
+  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW']);
+const validLearningOutcome=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(MAINTENANCE_ISSUE)||
+    o.sourceSha!==input.sourceSha||o.learningId!==input.learningId||
+    o.claimGeneration!==1||o.authorized!==false||o.agentLaunch!==false||
+    o.taskPass!==false||o.releasePass!==false)return false;
+  if(o.state==='NOT_ADMITTED')return LEARNING_REASONS.has(o.reason)&&
+    o.claimAccepted===false&&o.admitted===false&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===false;
+  if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&
+    o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED';
+  if(o.state==='LEARNING_RECORDED')
+    return ['LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+      'LEARNING_DECISION_ALREADY_RECORDED','LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
+      'LEARNING_OUTCOME_ALREADY_RECORDED'].includes(o.reason)&&
+    o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='NOT_RUN'&&
+    o.replayFixture===false&&['ADOPTED','REJECTED'].includes(o.decision)&&
+    o.noAgentRanking===true&&o.qualityGainClaimed===false&&
+    (o.measuredEffect==='NOT_MEASURED'||o.measuredEffect==='ATTESTED_OUTCOME_ONLY');
+  return false;
+};
+export async function recordTaskLearningOutcome(input){
+  let output;
+  const malformed=(!input||typeof input==='object'&&Array.isArray(input)||
+    input.issueNumber!==MAINTENANCE_ISSUE||
+    input.sourceRef!==issueRefFor(MAINTENANCE_ISSUE)||
+    !SHA.test(input.sourceSha??'')||!CANDIDATE_DIGEST.test(input.learningId??'')||
+    !['ADOPTED','REJECTED'].includes(input.decision));
+  const hasOutcome=input?.outcomeAttested!==null&&input?.outcomeAttested!==undefined;
+  const outcomeShape=hasOutcome?
+    (typeof input.outcomeObservedAt!=='string'||!input.outcomeObservedAt||
+      Number.isNaN(Date.parse(input.outcomeObservedAt))||
+      typeof input.outcomeNote!=='string'||input.outcomeNote.length===0||
+      input.outcomeNote.length>512):
+    (input?.outcomeObservedAt!==null&&input?.outcomeObservedAt!==undefined||
+      input?.outcomeNote!==null&&input?.outcomeNote!==undefined);
+  if(malformed||outcomeShape)
+    output={state:'NOT_ADMITTED',reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+      issueRef:issueRefFor(MAINTENANCE_ISSUE),
+      sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+      learningId:CANDIDATE_DIGEST.test(input?.learningId??'')?input.learningId:null,
+      claimGeneration:1,claimAccepted:false,admitted:false,authorized:false,
+      agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',
+      taskPass:false,releasePass:false};
+  else{
+    const nativeInput={sourceRef:input.sourceRef,issueNumber:input.issueNumber,
+      sourceSha:input.sourceSha,learningId:input.learningId,decision:input.decision,
+      ...(hasOutcome?{outcome:{attested:input.outcomeAttested===true,
+        observedAt:input.outcomeObservedAt,note:input.outcomeNote}}:{})};
+    let observed;
+    try{observed=await nativeRecordTaskLearningOutcome(nativeInput);}catch{observed=null;}
+    if(validLearningOutcome(nativeInput,observed))output=observed;
+    else output={state:'NOT_ADMITTED',reason:'LOCAL_AGENT_PROVIDER_THREW',
+      issueRef:issueRefFor(MAINTENANCE_ISSUE),sourceSha:input.sourceSha,
+      learningId:input.learningId,claimGeneration:1,claimAccepted:false,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',taskPass:false,releasePass:false};
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${MAINTENANCE_ISSUE}:${input?.learningId??'invalid'}:learning`,
     outcome:{ok:true,output}});
 }

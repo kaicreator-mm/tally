@@ -13,6 +13,8 @@ const candidateHost=resolve(tally,'experiments/v2/candidate-publication/host-pub
 const candidateC=resolve(tally,'packages/tally-github-c/src/candidate-publication.mjs');
 const intakeHostModule=resolve(tally,'experiments/v2/project-intake/host-project.mjs');
 const intakeReadModel=resolve(tally,'packages/tally-github-c/src/project-intake.mjs');
+const maintenanceHostModule=resolve(tally,'experiments/v2/maintenance/host-maintenance.mjs');
+const maintenanceEffects=resolve(tally,'packages/tally-github-c/src/maintenance-effects.mjs');
 const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
@@ -31,6 +33,9 @@ import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
 import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} from ${JSON.stringify(intakeHostModule)};
 import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
+import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
+import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
+  readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
@@ -48,7 +53,8 @@ const TASK_BINDINGS={
   199:{actorRole:'reviewer'},
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
-  210:{actorRole:'builder'}
+  210:{actorRole:'builder'},
+  219:{actorRole:'builder'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -312,6 +318,34 @@ export async function freezeProductIntake(input){
     sourceSha:input?.sourceSha,productDigest:input?.productDigest,
     author:input?.author,reviewer:input?.reviewer,frozenAt:input?.frozenAt,
     caseRefDigest:input?.caseRefDigest});
+}
+// T219 — the authorized native Issue effect lives behind the Host module;
+// these bindings are transports only. The write-scoped token never enters
+// sealed bytes and is read from Host env at call time. The frozen candidate
+// review and the Task Learning ledger live in the #219 Host CAS registry and
+// are seeded by Host-owned setup (never from caller input).
+function maintenanceHostFor(){
+  const env=process.env;
+  const readOctokit=()=>new Octokit({auth:env.TALLY_GITHUB_READ_TOKEN,
+    request:{timeout:15000}});
+  return createMaintenanceHost({env,openStore:openSqliteCasStore,
+    verifyAcceptedClaim:(issueNumber,actorRole)=>verifyAcceptedClaim(env,issueNumber,actorRole),
+    verifyFrozenWriteSet:(issueNumber,sourceSha)=>verifyFrozenWriteSet(env,issueNumber,sourceSha),
+    publishIssue:publishInput=>{
+      const token=env.TALLY_GITHUB_WRITE_TOKEN??env.TALLY_GITHUB_READ_TOKEN;
+      if(typeof token!=='string'||token.length<8)
+        return Promise.reject(Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE'));
+      return publishMaintenanceIssueFromClient({octokit:new Octokit({auth:token,
+        request:{timeout:15000}}),...publishInput});
+    },
+    findIssue:args=>findMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
+    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args})});
+}
+export async function publishMaintenanceIssue(input){
+  return maintenanceHostFor().hostPublishMaintenanceIssue(input);
+}
+export async function recordTaskLearningOutcome(input){
+  return maintenanceHostFor().hostRecordTaskLearningOutcome(input);
 }
 `;
 const result=await build({

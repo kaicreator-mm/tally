@@ -4,6 +4,8 @@ import {randomBytes} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {createJourneyController} from './journey-controller.mjs';
 import {createIntakeController} from './intake-controller.mjs';
+import {createMaintenanceController,renderMaintenanceWorkspace}
+  from './maintenance-controller.mjs';
 import {renderJourneyWorkspace} from './journey-view.mjs';
 import {renderIntakeWorkspace} from './intake-view.mjs';
 
@@ -93,10 +95,100 @@ const INTAKE_BOOTSTRAP=String.raw`import('./intake-view.mjs')
     const panel=document.querySelector('#intake-app .error-panel p');
     if(panel)panel.textContent=error?.message??String(error);
   });`;
+// The maintenance workspace renders server-side (one shared HTML renderer in
+// maintenance-controller.mjs); the client only fetches HTML, collects guided
+// form fields and posts sealed same-origin actions. Privileged effects never
+// leave the sealedDispatch seam.
+const MAINTENANCE_CLIENT=String.raw`export async function startMaintenanceClient(){
+  const app=document.querySelector('#maintenance-app'),key=new URLSearchParams(location.search).get('actionKey')??'';
+  const value=name=>{const field=app.querySelector('[name="'+name+'"]');
+    return field?field.value.trim():undefined;};
+  const collectArgs=kind=>{
+    if(kind==='report-defect'){const args={};
+      for(const name of ['summary','requirementIssue','defectIssue','releaseVersion','releaseCommitSha']){
+        const v=value(name);if(v)args[name]=v;}
+      return args;}
+    if(kind==='review-candidate'){const reviewer=value('reviewer');return reviewer?{reviewer}:{};}
+    if(kind==='record-learning'){const args={learningId:value('learningId')??'',
+      decision:value('decision')??'ADOPTED'};
+      if(!args.learningId)delete args.learningId;
+      return args;}
+    return {};
+  };
+  const report=async()=>{const response=await fetch('/api/maintenance/snapshot',{cache:'no-store'});
+    const data=await response.json();app.innerHTML=data.html;
+    app.dataset.sourceSha=data.snapshot.sourceSha;};
+  app.addEventListener('click',async event=>{
+    const button=event.target.closest('button[data-action]');if(!button)return;
+    const kind=button.dataset.action;
+    button.disabled=true;button.textContent='RUNNING';
+    try{const response=await fetch('/api/maintenance/actions',{method:'POST',
+      headers:{'content-type':'application/json','x-tally-action-key':key},
+      body:JSON.stringify({kind,sourceSha:app.dataset.sourceSha,args:collectArgs(kind)})});
+      const result=await response.json();await report();
+      const status=app.querySelector('[data-maintenance-result]');
+      if(status)status.textContent='last action: '+kind+' '+(result.status??String(response.status))+
+        (result.reason?' '+result.reason:'');
+      if(!response.ok)throw new Error(result.reason??result.status??'ACTION_FAILED');
+    }catch(error){await report();
+      const fresh=app.querySelector('button[data-action="'+kind+'"]');
+      if(fresh){fresh.disabled=false;fresh.textContent=error.message;}}
+  });
+  await report();
+}`;
+const MAINTENANCE_BOOTSTRAP=String.raw`import('./maintenance-client.mjs')
+  .then(({startMaintenanceClient})=>startMaintenanceClient())
+  .catch(error=>{
+    const app=document.querySelector('#maintenance-app');
+    if(app)app.innerHTML='<section class="error-panel" role="alert"><h2>MAINTENANCE_START_FAILED</h2><p></p></section>';
+    const panel=document.querySelector('#maintenance-app .error-panel p');
+    if(panel)panel.textContent=error?.message??String(error);
+  });`;
 const json=(value)=>JSON.stringify(value);
 const INTAKE_ACTIONS=['submit-goal','select-evidence','confirm-inspect','draft-product',
   'review-draft','freeze-draft','admit-project-intake','refresh-source-facts'];
+const MAINTENANCE_ACTIONS=['report-defect','review-candidate','load-learning',
+  'record-learning','publish-maintenance-issue'];
 const boundedString=value=>typeof value==='string'&&value.length>0&&value.length<=256;
+function sanitizeMaintenanceArgs(args){
+  if(args===undefined)return {};
+  if(!args||typeof args!=='object'||Array.isArray(args))return null;
+  const out={},known=Object.keys(args);
+  if(known.some(key=>!['summary','requirementIssue','defectIssue','releaseVersion',
+    'releaseCommitSha','reviewer','learningId','decision','outcome'].includes(key)))
+    return null;
+  for(const key of ['summary','reviewer'])
+    if(args[key]!==undefined){
+      if(!boundedString(args[key])||args[key].length>512)return null;out[key]=args[key];}
+  for(const key of ['requirementIssue','defectIssue'])
+    if(args[key]!==undefined){
+      if(typeof args[key]!=='string'||!/^[1-9][0-9]{0,5}$/.test(args[key]))return null;
+      out[key]=args[key];}
+  if(args.releaseVersion!==undefined){
+    if(typeof args.releaseVersion!=='string'||args.releaseVersion.length>32)return null;
+    out.releaseVersion=args.releaseVersion;}
+  if(args.releaseCommitSha!==undefined){
+    if(typeof args.releaseCommitSha!=='string'||!/^[0-9a-f]{40}$/.test(args.releaseCommitSha))
+      return null;
+    out.releaseCommitSha=args.releaseCommitSha;}
+  if(args.learningId!==undefined){
+    if(typeof args.learningId!=='string'||!/^[0-9a-f]{64}$/.test(args.learningId))return null;
+    out.learningId=args.learningId;}
+  if(args.decision!==undefined){
+    if(!['ADOPTED','REJECTED'].includes(args.decision))return null;
+    out.decision=args.decision;}
+  if(args.outcome!==undefined){
+    if(!args.outcome||typeof args.outcome!=='object'||Array.isArray(args.outcome)||
+      typeof args.outcome.attested!=='boolean'||typeof args.outcome.observedAt!=='string'||
+      Number.isNaN(Date.parse(args.outcome.observedAt))||
+      typeof args.outcome.note!=='string'||args.outcome.note.length===0||
+      args.outcome.note.length>512||Object.keys(args.outcome).some(key=>
+        !['attested','observedAt','note'].includes(key)))
+      return null;
+    out.outcome={attested:args.outcome.attested,observedAt:args.outcome.observedAt,
+      note:args.outcome.note};}
+  return out;
+}
 function sanitizeIntakeArgs(args){
   if(args===undefined)return {};
   if(!args||typeof args!=='object'||Array.isArray(args))return null;
@@ -132,15 +224,21 @@ async function body(req,limit=4096){
   return text;
 }
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
-  intakeJourneySnapshot}={}){
+  intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
       {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
         // Privileged admit effects flow only through this K-consumer seam;
         // absent a seam the intake admit stays NOT_RUN in the UI.
         sealedDispatch:intakeSealedDispatch??null}),
+    maintenance=createMaintenanceController({currentSourceSha:config.currentSourceSha},
+      {host:maintenanceHost??null,
+        // The only privileged maintenance path (authorized native Issue
+        // publication and Task Learning records) is this sealed K seam; the
+        // UI has no second scheduler, writer or credential.
+        sealedDispatch:maintenanceSealedDispatch??null}),
     actionKey=randomBytes(24).toString('hex');
-  let lastIntakeResult=null;
+  let lastIntakeResult=null,lastMaintenanceResult=null;
   const server=http.createServer(async(req,res)=>{
     const origin=`http://127.0.0.1:${server.address().port}`;
     const send=(status,type,value)=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store',
@@ -162,12 +260,37 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         return send(200,'text/javascript; charset=utf-8',INTAKE_BOOTSTRAP);
       if(req.method==='GET'&&url.pathname==='/intake-client.mjs')
         return send(200,'text/javascript; charset=utf-8',INTAKE_CLIENT);
+      if(req.method==='GET'&&url.pathname==='/maintenance-client.mjs')
+        return send(200,'text/javascript; charset=utf-8',MAINTENANCE_CLIENT);
+      if(req.method==='GET'&&url.pathname==='/maintenance-bootstrap.mjs')
+        return send(200,'text/javascript; charset=utf-8',MAINTENANCE_BOOTSTRAP);
       if(req.method==='GET'&&url.pathname==='/api/snapshot'){
         const snapshot=controller.snapshot();
         return send(200,'application/json',json({snapshot,actions:actionDefinitions(config.currentSourceSha),humanActionInbox:[]}));
       }
       if(req.method==='GET'&&url.pathname==='/api/intake/snapshot'){
         return send(200,'application/json',json({snapshot:intake.snapshot(),lastResult:lastIntakeResult}));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/maintenance/snapshot'){
+        return send(200,'application/json',json({
+          html:renderMaintenanceWorkspace(maintenance.snapshot(),
+            {mode:'write',result:lastMaintenanceResult}),
+          snapshot:maintenance.snapshot(),lastResult:lastMaintenanceResult}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/maintenance/actions'){
+        if(req.headers['x-tally-action-key']!==actionKey||req.headers.origin!==origin)
+          return send(403,'application/json',json({status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        const payload=JSON.parse(await body(req));
+        if(payload.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({status:'STALE_SOURCE',reason:'SOURCE_SHA_MISMATCH'}));
+        if(!MAINTENANCE_ACTIONS.includes(payload.kind))
+          return send(400,'application/json',json({status:'DENIED',reason:'UNKNOWN_ACTION'}));
+        const args=sanitizeMaintenanceArgs(payload.args);
+        if(args===null)
+          return send(400,'application/json',json({status:'DENIED',reason:'ARGS_INVALID'}));
+        const result=await maintenance.dispatch(payload.sourceSha,payload.kind,args);
+        lastMaintenanceResult={kind:payload.kind,...result};
+        return send(200,'application/json',json(result));
       }
       if(req.method==='POST'&&url.pathname==='/api/intake/actions'){
         if(req.headers['x-tally-action-key']!==actionKey||req.headers.origin!==origin)
