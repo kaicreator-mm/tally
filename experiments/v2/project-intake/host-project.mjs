@@ -71,7 +71,7 @@ export async function freezeProductIntake({openStore,registryPath,sourceSha,
     authorized:false,admitted:false,taskPass:false,releasePass:false});
   try{
     store=await openStore({path:registryPath,busyTimeoutMs:1000});
-    await store.put(PRODUCT_INTAKE_KEY,value,{kind:'create'});
+    await store.put(PRODUCT_INTAKE_KEY,value,{mustBeAbsent:true});
   }catch{
     return unqualified('PRODUCT_FREEZE_STORE_UNAVAILABLE');
   }finally{if(store)await store.close();}

@@ -32,8 +32,8 @@ const frozenValue=Object.freeze({phase:'FROZEN_PRODUCT_INTAKE',
 function memoryStore(existing){const docs=new Map(existing??[]);
   return {async get(key){const d=docs.get(key);
       return d===undefined?null:{value:d.value,revision:d.revision};},
-    async put(key,value,condition){if(condition?.kind==='create'&&docs.has(key))
-        throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
+    async put(key,value,condition){const create=condition?.kind==='create'||condition?.mustBeAbsent===true;
+      if(create&&docs.has(key))throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
       docs.set(key,{value,revision:(docs.get(key)?.revision??0)+1});},
     async close(){}};}
 const openStoreOk=async options=>memoryStore([[PRODUCT_INTAKE_KEY,
@@ -185,12 +185,13 @@ let creates=0;
 const openStore=async()=>({
   async get(key){const d=docs.get(key);return d===undefined?null:{value:d.value,revision:d.revision};},
   async put(key,value,condition){
-    if(condition&&condition.kind==='create'&&docs.has(key))
+    const create=condition&&(condition.kind==='create'||condition.mustBeAbsent===true);
+    if(create&&docs.has(key))
       throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
     const previous=docs.get(key);
     const revision=(previous?previous.revision:0)+1;
     docs.set(key,{value,revision});
-    if(condition&&condition.kind==='create')creates++;
+    if(create)creates++;
     return {revision};},
   async close(){}});
 globalThis.__T210_REPLAY_STORE={
