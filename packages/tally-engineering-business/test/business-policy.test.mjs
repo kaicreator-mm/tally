@@ -7,6 +7,7 @@ import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   projectProductIntakeFreeze,assessProjectIntakeAdmission,projectProjectIntakeAdmission,
   assessMaintenanceIssuePublication,projectMaintenanceIssuePublication,
   assessTaskLearningOutcome,projectTaskLearningOutcome,
+  assessQualifiedReleaseDelivery,projectQualifiedReleaseDelivery,
   ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
@@ -25,20 +26,22 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
-    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
+    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
+    'effect:tally-qualified-release-delivery']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
-    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
+    'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
+    'effect:tally-qualified-release-delivery']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -96,7 +99,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,9);
+  assert.equal(Object.keys(p.effectBindings).length,10);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
   // T210 intake intents: freeze is an idempotent Host CAS write, admission is
@@ -121,7 +124,8 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
     'freeze-product-intake':'rule:tally-product-intake-freeze',
     'admit-project-intake':'rule:tally-project-intake-admission',
     'publish-maintenance-issue':'rule:tally-maintenance-issue-publication',
-    'record-task-learning-outcome':'rule:tally-task-learning-outcome'};
+    'record-task-learning-outcome':'rule:tally-task-learning-outcome',
+    'deliver-qualified-release':'rule:tally-qualified-release-delivery'};
   assert.deepEqual(Object.keys(ruleByTransition).sort(),
     p.workflowDefinition.states[0].transitions.map(t=>t.transitionKey).sort());
   for(const transition of p.workflowDefinition.states[0].transitions){
@@ -974,4 +978,154 @@ test('#219 learning idempotency key renders within Kernel grammar',()=>{
   const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
     .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(learningInput()[name]??''));
   assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+
+// --- J222 J07b: selected K/Host/GitHub C qualified Release delivery ---
+
+const releaseInput=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/222',
+  issueNumber:222,sourceSha:'9'.repeat(40),operation:'MERGE',
+  pullNumber:225,headSha:'a'.repeat(40),headTree:'c'.repeat(40),
+  targetSha:'b'.repeat(40),targetTree:'d'.repeat(40),
+  tagName:null,commitSha:null,commitTree:null});
+const releaseDeniedShape=(more={})=>({
+  state:'NOT_ADMITTED',reason:'INDEPENDENT_RQ_NOT_QUALIFIED',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/222',
+  sourceSha:'9'.repeat(40),operation:'MERGE',claimGeneration:1,
+  claimAccepted:true,admitted:false,authorized:false,agentLaunch:false,
+  replayFixture:false,githubEffect:'NOT_RUN',releasePublished:false,
+  taskPass:false,releasePass:false,...more});
+const releaseMerged=()=>({
+  state:'MERGED_REQUALIFY_REQUIRED',
+  reason:'FINAL_MERGE_TREE_REQUIRES_NEW_INDEPENDENT_RQ',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/222',
+  sourceSha:'9'.repeat(40),operation:'MERGE',claimGeneration:1,
+  claimAccepted:true,admitted:true,authorized:false,agentLaunch:false,
+  replayFixture:false,githubEffect:'PERFORMED_READBACK_VERIFIED',
+  releasePublished:false,operationKey:'tally:v2:release:merge:0f00',
+  mergedSha:'e'.repeat(40),mergedTree:'f'.repeat(40),
+  canTag:false,canRelease:false,next:'REQUALIFY_NEW_MAIN_SHA_AND_TREE_BEFORE_TAG',
+  taskPass:false,releasePass:false});
+test('#222 release screening pins the exact issue and separates claim SHA from subject SHAs',()=>{
+  for(const change of [
+    {issueNumber:219},{issueRef:'https://github.com/kaicreator-mm/tally/issues/219'},
+    {sourceSha:'bad'},{operation:'RELEASAE'},{operation:undefined},
+    {pullNumber:0},{headSha:'short'},{headTree:'not-a-tree'},
+    {targetSha:'a'.repeat(40)},{tagName:'v2.0.0',commitSha:'e'.repeat(40),
+      commitTree:'f'.repeat(40)},
+  ]){
+    const x=assessQualifiedReleaseDelivery({...releaseInput(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+  }
+  for(const bad of [{...releaseInput(),operation:'TAG',pullNumber:1},
+    {...releaseInput(),operation:'TAG',tagName:'v2/evil'},
+    {...releaseInput(),operation:'TAG',tagName:'v2.0.0',commitSha:'nope',commitTree:'f'.repeat(40)},
+    {...releaseInput(),operation:'TAG',tagName:'v2.0.0',commitSha:'e'.repeat(40),commitTree:'e'.repeat(40)}]){
+    const x=assessQualifiedReleaseDelivery(bad);
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(bad.operation+':'+bad.tagName));
+  }
+  for(const empty of [null,undefined,{},[]]){
+    assert.equal(assessQualifiedReleaseDelivery(empty).state,'UNQUALIFIED_INPUT');
+  }
+  const ok=assessQualifiedReleaseDelivery(releaseInput());
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(ok.reason,'REQUIRES_SEALED_QUALIFIED_RELEASE_DELIVERY');
+  assert.equal(ok.sourceSha,'9'.repeat(40));
+  assert.equal(ok.headSha,'a'.repeat(40));
+  const tag=assessQualifiedReleaseDelivery({...releaseInput(),operation:'TAG',
+    pullNumber:null,headSha:null,headTree:null,targetSha:null,targetTree:null,
+    tagName:'v2.0.0',commitSha:'e'.repeat(40),commitTree:'f'.repeat(40)});
+  assert.equal(tag.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(tag.tagName,'v2.0.0');
+});
+test('#222 release projection keeps merge readback below Release PASS and UNKNOWN honest',()=>{
+  const merged=projectQualifiedReleaseDelivery({input:releaseInput(),
+    observation:releaseMerged(),effectId:'fx'});
+  assert.equal(merged.state,'MERGED_REQUALIFY_REQUIRED');
+  assert.equal(merged.githubEffect,'PERFORMED_READBACK_VERIFIED');
+  assert.equal(merged.canTag,false);assert.equal(merged.canRelease,false);
+  assert.equal(merged.releasePass,false);assert.equal(merged.releasePublished,false);
+  const unknown=projectQualifiedReleaseDelivery({input:releaseInput(),
+    observation:{...releaseMerged(),state:'GITHUB_EFFECT_UNKNOWN',
+      reason:'GITHUB_TRANSPORT_UNKNOWN',githubEffect:'UNKNOWN',
+      operationKey:'tally:v2:release:merge:0f00',mergedSha:null,mergedTree:null,
+      canTag:undefined,canRelease:undefined,next:undefined},effectId:'fx'});
+  assert.equal(unknown.state,'GITHUB_EFFECT_UNKNOWN');
+  assert.equal(unknown.githubEffect,'UNKNOWN');assert.equal(unknown.mergedSha,null);
+  const reconcile=projectQualifiedReleaseDelivery({input:releaseInput(),
+    observation:{...releaseMerged(),state:'RECONCILIATION_REQUIRED',
+      reason:'PREVIOUS_RELEASE_OPERATION_PENDING',githubEffect:'NOT_RUN',
+      mergedSha:null,mergedTree:null,canTag:undefined,canRelease:undefined,
+      next:undefined},effectId:'fx'});
+  assert.equal(reconcile.state,'RECONCILIATION_REQUIRED');
+  assert.equal(reconcile.githubEffect,'NOT_RUN');
+  const preflight=projectQualifiedReleaseDelivery({input:releaseInput(),
+    observation:{...releaseMerged(),state:'EXACT_PREFLIGHT_OBSERVED',
+      reason:'REQUIRES_INDEPENDENT_HOST_RQ_AND_OWNER_GRANT',githubEffect:'NOT_RUN',
+      repository:'kaicreator-mm/tally',pullNumber:225,headSha:'a'.repeat(40),
+      headTree:'c'.repeat(40),targetSha:'b'.repeat(40),targetTree:'d'.repeat(40),
+      hostGateRequired:true,mergedSha:null,mergedTree:null,canTag:undefined,
+      canRelease:undefined,next:undefined},effectId:'fx'});
+  assert.equal(preflight.state,'EXACT_PREFLIGHT_OBSERVED');
+  assert.equal(preflight.hostGateRequired,true);
+  for(const change of [
+    {operation:'PREFLIGHT'},{sourceSha:'1'.repeat(40)},{claimGeneration:2},
+    {authorized:true},{releasePublished:true},{taskPass:true},{releasePass:true},
+    {state:'MADE_UP_STATE'},{reason:'MADE_UP_REASON'},
+    {...releaseMerged(),state:'NOT_ADMITTED',reason:'OWNER_EXACT_RELEASE_SCOPE_MISSING',
+      githubEffect:'NOT_RUN',admitted:false,mergedSha:null,mergedTree:null},
+    {mergedSha:'short'},{canTag:true},{canRelease:true},{next:'SHIP_IT'},
+    {operationKey:123},
+  ]){
+    const y=projectQualifiedReleaseDelivery({input:releaseInput(),
+      observation:{...releaseMerged(),...change},effectId:'fx'});
+    assert.equal(y.admitted,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+    assert.equal(y.releasePass,false);
+  }
+});
+test('#222 release effect dispatches sealed resource only for qualified input',async()=>{
+  const p=getPolicy();let calls=0;
+  const handler=p.effectBindings['effect:tally-qualified-release-delivery'].handler;
+  const x=await handler({input:{...releaseInput(),issueNumber:210},effectId:'fx',
+    resources:{call:async()=>{calls++;return {phase:'terminal',outcome:{ok:true,output:{}}};}}});
+  assert.equal(x.state,'UNQUALIFIED_INPUT');assert.equal(calls,0);
+  const y=await handler({input:releaseInput(),effectId:'fx',
+    resources:{call:async(key,op,arg)=>{
+      calls++;
+      assert.equal(key,'tally-local-codex');assert.equal(op,'tally.deliverQualifiedRelease');
+      assert.equal(arg.issueNumber,222);assert.equal(arg.operation,'MERGE');
+      assert.equal(arg.pullNumber,225);assert.equal(arg.tagName,null);
+      return {phase:'terminal',outcome:{ok:true,output:releaseDeniedShape()}};}}});
+  assert.equal(y.state,'NOT_ADMITTED');
+  assert.equal(y.reason,'INDEPENDENT_RQ_NOT_QUALIFIED');
+  assert.equal(y.githubEffect,'NOT_RUN');
+  assert.equal(calls,1);
+});
+test('#222 release idempotency key renders within Kernel grammar',()=>{
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const transition=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='deliver-qualified-release');
+  assert.equal(transition.effectIntents[0].effectType,
+    'effect:tally-qualified-release-delivery');
+  const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(releaseInput()[name]??''));
+  assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+test('#222 release intent binding carries its own single-transition definition',()=>{
+  const p=getPolicy();
+  const binding=p.intentBindings.deliverQualifiedRelease;
+  assert.equal(binding.trigger.eventType,'TALLY_QUALIFIED_RELEASE_DELIVERY_REQUESTED');
+  assert.equal(binding.ruleId,'rule:tally-qualified-release-delivery');
+  assert.deepEqual(binding.roles,['requester','planner','builder','reviewer']);
+  assert.equal(binding.definition.workflowKey,'tally-readiness');
+  const transitions=binding.definition.states[0].transitions;
+  assert.equal(transitions.length,1);
+  assert.equal(transitions[0].transitionKey,'deliver-qualified-release');
+  assert.equal(p.rules['rule:tally-qualified-release-delivery'].eventType,
+    'TALLY_QUALIFIED_RELEASE_DELIVERY_REQUESTED');
+  assert.equal(p.effectBindings['effect:tally-qualified-release-delivery'].semantics,
+    'non-idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-qualified-release-delivery'].resource,
+    {key:'tally-local-codex',operation:'tally.deliverQualifiedRelease'});
 });

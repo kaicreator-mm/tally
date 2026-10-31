@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -97,7 +97,7 @@ const modules = [
       'intent:admitClaimedTask','intent:runLocalCodexAttempt','intent:joinReviewedCandidates',
       'intent:publishReviewedCandidate','intent:freezeProductIntake',
       'intent:admitProjectIntake','intent:publishMaintenanceIssue',
-      'intent:recordTaskLearningOutcome']}),
+      'intent:recordTaskLearningOutcome','intent:deliverQualifiedRelease']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -124,7 +124,8 @@ const modules = [
       ...(process.env.T210_PROJECT_INTAKE==='1'?['intent:freezeProductIntake',
         'intent:admitProjectIntake']:[]),
       ...(process.env.T219_MAINTENANCE==='1'?['intent:publishMaintenanceIssue',
-        'intent:recordTaskLearningOutcome']:[])]}),
+        'intent:recordTaskLearningOutcome']:[]),
+      ...(process.env.T222_RELEASE_DELIVERY==='1'?['intent:deliverQualifiedRelease']:[])]}),
     capabilityId:'tally-local-codex',
     handlers:[{operationId:'tally.runLocalCodexAttempt',handler:'runLocalCodexAttempt'},
       ...(process.env.T06N_CONCURRENT==='1'?
@@ -136,7 +137,9 @@ const modules = [
           {operationId:'tally.hostProjectIntake',handler:'hostProjectIntake'}]:[]),
       ...(process.env.T219_MAINTENANCE==='1'?
         [{operationId:'tally.publishMaintenanceIssue',handler:'publishMaintenanceIssue'},
-          {operationId:'tally.recordTaskLearningOutcome',handler:'recordTaskLearningOutcome'}]:[])],
+          {operationId:'tally.recordTaskLearningOutcome',handler:'recordTaskLearningOutcome'}]:[]),
+      ...(process.env.T222_RELEASE_DELIVERY==='1'?
+        [{operationId:'tally.deliverQualifiedRelease',handler:'hostReleaseDelivery'}]:[])],
     externalEffect:true,
     externalImports:{node:[],npm:['@kaicreator/tally-local-codex-host-bundle'],
       native:['better-sqlite3']}}]:[]),
@@ -163,7 +166,10 @@ const routes=[
       [{intentId:'publishMaintenanceIssue',operationId:'tally.publishMaintenanceIssue',
         capabilityId:'tally-local-codex',handlerId:'publishMaintenanceIssue'},
         {intentId:'recordTaskLearningOutcome',operationId:'tally.recordTaskLearningOutcome',
-          capabilityId:'tally-local-codex',handlerId:'recordTaskLearningOutcome'}]:[])]:[]),
+        capabilityId:'tally-local-codex',handlerId:'recordTaskLearningOutcome'}]:[]),
+    ...(process.env.T222_RELEASE_DELIVERY==='1'?
+      [{intentId:'deliverQualifiedRelease',operationId:'tally.deliverQualifiedRelease',
+        capabilityId:'tally-local-codex',handlerId:'hostReleaseDelivery'}]:[])]:[]),
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
@@ -180,7 +186,8 @@ const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06N_CONCURRENT==='1'?1:0)+
   (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
   (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0)+
-  (localCodexBytes&&process.env.T219_MAINTENANCE==='1'?2:0);
+  (localCodexBytes&&process.env.T219_MAINTENANCE==='1'?2:0)+
+  (localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'?1:0);
 assert.equal(built.routes.length,selectedRouteCount);
 if(claimBytes){
   assert.equal(built.routes[1].intentId,'admitClaimedTask');
@@ -227,6 +234,14 @@ if(localCodexBytes&&process.env.T219_MAINTENANCE==='1'){
     built.routes.some(x=>x.intentId==='recordTaskLearningOutcome'),false,
     'T219 maintenance routes are selected only when T219_MAINTENANCE=1');
 }
+if(localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'){
+  const route=built.routes.find(x=>x.intentId==='deliverQualifiedRelease');
+  assert.equal(route.capabilityId,'tally-local-codex');
+  assert.equal(route.handlerId,'hostReleaseDelivery');
+}else{
+  assert.equal(built.routes.some(x=>x.intentId==='deliverQualifiedRelease'),false,
+    'T222 release delivery route is selected only when T222_RELEASE_DELIVERY=1');
+}
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
 if(process.env.T02B_SEALED_APP_OUTPUT) {
@@ -261,6 +276,9 @@ for(const [caseName,mutate,code] of [
     ['maintenance-publish-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='publishMaintenanceIssue'?{...r,handlerId:'unselectedMaintenanceHandler'}:r)}), 'V10_ROUTE_INVALID'],
     ['maintenance-learning-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='recordTaskLearningOutcome'?{...r,handlerId:'unselectedLearningHandler'}:r)}), 'V10_ROUTE_INVALID'],
    ]:[]),
+   ...(process.env.T222_RELEASE_DELIVERY==='1'?[
+    ['release-delivery-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='deliverQualifiedRelease'?{...r,handlerId:'unselectedReleaseHandler'}:r)}), 'V10_ROUTE_INVALID'],
+   ]:[]),
   ]:[]),
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
@@ -278,6 +296,7 @@ console.log(JSON.stringify({
   candidatePublicationRoute:process.env.T06P_PUBLISH==='1'?'SELECTED':'NOT_SELECTED',
   projectIntakeRoutes:process.env.T210_PROJECT_INTAKE==='1'?'SELECTED':'NOT_SELECTED',
   maintenanceRoutes:process.env.T219_MAINTENANCE==='1'?'SELECTED':'NOT_SELECTED',
+  releaseDeliveryRoute:process.env.T222_RELEASE_DELIVERY==='1'?'SELECTED':'NOT_SELECTED',
   githubEffect:'NOT_RUN',taskPass:false,releasePass:false
 },null,2));
 console.log('T02B_PUBLIC_BUILD_SELECTED_B=PASS');

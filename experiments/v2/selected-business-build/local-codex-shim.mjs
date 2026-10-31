@@ -1,11 +1,12 @@
-/** T06m/T06n/T210/T219 sealed Local Codex C boundary. Provider output is never Task evidence. */
+/** T06m/T06n/T210/T219/J222 sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
   publishReviewedCandidate as nativePublishReviewedCandidate,
   hostProjectIntake as nativeHostProjectIntake,
   freezeProductIntake as nativeFreezeProductIntake,
   publishMaintenanceIssue as nativePublishMaintenanceIssue,
-  recordTaskLearningOutcome as nativeRecordTaskLearningOutcome}
+  recordTaskLearningOutcome as nativeRecordTaskLearningOutcome,
+  hostReleaseDelivery as nativeHostReleaseDelivery}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -13,7 +14,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -438,5 +439,111 @@ export async function recordTaskLearningOutcome(input){
   }
   return Object.freeze({phase:'terminal',
     externalRef:`tally:${MAINTENANCE_ISSUE}:${input?.learningId??'invalid'}:learning`,
+    outcome:{ok:true,output}});
+}
+
+// J222 J07b — sealed qualified Release delivery boundary. Only the exact
+// bounded observation shapes cross; identity (issueRef/sourceSha/operation)
+// is re-attached and re-verified here so provider garbage, a caller-supplied
+// PASS flag or a second writer shape can never become release authority. A
+// merged readback stays below Release PASS; a lost acknowledgment stays
+// GITHUB_EFFECT_UNKNOWN; a pending Host CAS op stays RECONCILIATION_REQUIRED.
+const RELEASE_ISSUE=222;
+const RELEASE_OPERATIONS=new Set(['PREFLIGHT','MERGE','TAG']);
+const RELEASE_TAG_NAME=/^v[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[a-z0-9.-]+)?$/;
+const RELEASE_STATES=new Set(['NOT_ADMITTED','GITHUB_EFFECT_UNKNOWN',
+  'RECONCILIATION_REQUIRED','HOST_GATES_OBSERVED','EXACT_PREFLIGHT_OBSERVED',
+  'MERGED_REQUALIFY_REQUIRED']);
+const RELEASE_DENY_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+  'CLAIM_REGISTRY_UNAVAILABLE','CLAIM_REGISTRY_RECORD_NOT_FOUND',
+  'CLAIM_REGISTRY_RECORD_INVALID','CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED',
+  'CLAIM_REGISTRY_RESERVATION_MISMATCH','DAG_WRITESET_NOT_VERIFIED',
+  'LOCAL_AGENT_UNAVAILABLE','NATIVE_CLAIM_WITNESS_NOT_VERIFIED',
+  'HOST_QUALIFICATION_READ_UNKNOWN','RELEASE_HOST_PORTS_NOT_CONNECTED',
+  'RELEASE_SOURCE_NOT_PINNED','NATIVE_CLAIM_NOT_VERIFIED','TASK_WRITESET_NOT_VERIFIED',
+  'INDEPENDENT_RQ_NOT_QUALIFIED','OWNER_EXACT_RELEASE_SCOPE_MISSING',
+  'RELEASE_PHYSICAL_EFFECT_DISABLED','RELEASE_HOST_CAS_UNAVAILABLE',
+  'RELEASE_HOST_CAS_UNAVAILABLE_OR_CONFLICT','TAG_SOURCE_NOT_PINNED',
+  'POST_MERGE_RQ_READ_UNKNOWN','POST_MERGE_RQ_OR_GRANT_NOT_VERIFIED',
+  'TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING',
+  'RELEASE_CANDIDATE_INPUT_INVALID','EXACT_HEAD_TREE_OR_TARGET_MOVED',
+  'MERGEABILITY_NOT_PROVEN','GITHUB_MERGE_TRANSPORT_UNAVAILABLE',
+  'TAG_READBACK_INPUT_INVALID','RELEASE_TAG_INPUT_INVALID',
+  'TAG_CONFLICT_OR_ANNOTATED_TAG_REQUIRES_REVIEW',
+  'POST_MERGE_TARGET_REQUALIFICATION_REQUIRED']);
+const RELEASE_UNKNOWN_REASONS=new Set(['GITHUB_UNAUTHENTICATED','GITHUB_ACCESS_DENIED',
+  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_CONFLICT','GITHUB_RATE_LIMITED',
+  'GITHUB_TRANSPORT_UNKNOWN','GITHUB_MERGE_RECEIPT_INCOMPLETE',
+  'MERGE_READBACK_OR_PARENT_MISMATCH','TAG_CREATE_READBACK_UNKNOWN']);
+const releaseBase=(input,reason,state)=>({state,reason,
+  issueRef:issueRefFor(RELEASE_ISSUE),
+  sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  operation:RELEASE_OPERATIONS.has(input?.operation)?input.operation:null,
+  claimGeneration:1,claimAccepted:false,admitted:false,authorized:false,
+  agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',
+  releasePublished:false,taskPass:false,releasePass:false});
+const releasePin=(input,claimAccepted)=>{
+  const mergeShape=Number.isSafeInteger(input?.pullNumber)&&input.pullNumber>0&&
+    SHA.test(input?.headSha??'')&&SHA.test(input?.headTree??'')&&
+    SHA.test(input?.targetSha??'')&&SHA.test(input?.targetTree??'')&&
+    input.tagName==null&&input.commitSha==null&&input.commitTree==null;
+  const tagShape=RELEASE_TAG_NAME.test(input?.tagName??'')&&
+    SHA.test(input?.commitSha??'')&&SHA.test(input?.commitTree??'')&&
+    input.pullNumber==null&&input.headSha==null&&input.targetSha==null;
+  return input?.sourceRef===issueRefFor(RELEASE_ISSUE)&&
+    input.issueNumber===RELEASE_ISSUE&&SHA.test(input?.sourceSha??'')&&
+    RELEASE_OPERATIONS.has(input.operation)&&
+    (input.operation==='TAG'?tagShape:mergeShape)&&claimAccepted;
+};
+const validReleaseOutput=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||
+    o.issueRef!==issueRefFor(RELEASE_ISSUE)||o.sourceSha!==input.sourceSha||
+    o.operation!==input.operation||o.claimGeneration!==1||
+    o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+    o.releasePublished!==false||!RELEASE_STATES.has(o.state))return false;
+  if(o.repository!==undefined&&o.repository!=='kaicreator-mm/tally')return false;
+  if(o.state==='NOT_ADMITTED')
+    return RELEASE_DENY_REASONS.has(o.reason)&&o.admitted===false&&
+      (o.githubEffect??'NOT_RUN')==='NOT_RUN'&&o.mergedSha===undefined;
+  if(o.state==='GITHUB_EFFECT_UNKNOWN')
+    return RELEASE_UNKNOWN_REASONS.has(o.reason)&&o.admitted===true&&
+      o.claimAccepted===true&&o.githubEffect==='UNKNOWN'&&
+      (o.mergedSha===undefined||o.mergedSha===null);
+  if(o.state==='RECONCILIATION_REQUIRED')
+    return o.reason==='PREVIOUS_RELEASE_OPERATION_PENDING'&&o.admitted===true&&
+      o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      typeof o.operationKey==='string'&&o.operationKey.length>0;
+  if(o.state==='HOST_GATES_OBSERVED')
+    return o.reason==='REQUIRES_CURRENT_TARGET_PREFLIGHT'&&o.admitted===true&&
+      o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      SHA.test(o.headSha??'')&&SHA.test(o.targetSha??'');
+  if(o.state==='EXACT_PREFLIGHT_OBSERVED')
+    return o.reason==='REQUIRES_INDEPENDENT_HOST_RQ_AND_OWNER_GRANT'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      o.hostGateRequired===true&&o.repository==='kaicreator-mm/tally'&&
+      Number.isSafeInteger(o.pullNumber)&&o.pullNumber===input.pullNumber&&
+      o.headSha===input.headSha&&o.headTree===input.headTree&&
+      o.targetSha===input.targetSha&&o.targetTree===input.targetTree;
+  // MERGED_REQUALIFY_REQUIRED: one verified merge readback, never Release PASS.
+  return o.reason==='FINAL_MERGE_TREE_REQUIRES_NEW_INDEPENDENT_RQ'&&
+    o.admitted===true&&o.claimAccepted===true&&
+    o.githubEffect==='PERFORMED_READBACK_VERIFIED'&&
+    SHA.test(o.mergedSha??'')&&SHA.test(o.mergedTree??'')&&
+    o.canTag===false&&o.canRelease===false&&
+    typeof o.operationKey==='string'&&
+    o.next==='REQUALIFY_NEW_MAIN_SHA_AND_TREE_BEFORE_TAG';
+};
+export async function hostReleaseDelivery(input){
+  let output;
+  if(!releasePin(input,true)){
+    output=releaseBase(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH','NOT_ADMITTED');
+  }else{
+    let observed;
+    try{observed=await nativeHostReleaseDelivery(input);}catch{observed=null;}
+    if(validReleaseOutput(input,observed))output=observed;
+    else output=releaseBase(input,'LOCAL_AGENT_PROVIDER_THREW','NOT_ADMITTED');
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${RELEASE_ISSUE}:${input?.operation??'invalid'}:${input?.headSha??input?.commitSha??'invalid'}:release`,
     outcome:{ok:true,output}});
 }

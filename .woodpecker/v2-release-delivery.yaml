@@ -1,0 +1,81 @@
+# J07b qualified Release delivery source gate (#222). Real merge/tag/release
+# effects are Host-local only and stay fail-closed (TALLY_RELEASE_PHYSICAL_
+# EFFECTS unset); CI proves source tests at the exact authored SHA on Node24.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-github-c/src/release-delivery.mjs'
+        - 'packages/tally-github-c/test/release-delivery.test.mjs'
+        - 'experiments/v2/release/host-release.mjs'
+        - 'experiments/v2/release/host-release.test.mjs'
+        - 'packages/tally-engineering-business/src/index.mjs'
+        - 'packages/tally-engineering-business/test/business-policy.test.mjs'
+        - 'experiments/v2/selected-business-build/producer.mjs'
+        - 'experiments/v2/selected-business-build/bundle-local-codex.mjs'
+        - 'experiments/v2/selected-business-build/local-codex-shim.mjs'
+        - '.woodpecker/v2-release-delivery.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/i222-zcode]
+labels:
+  backend: local
+steps:
+  - name: release-delivery-exact-head-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "T07B_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "T07B_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+  - name: release-delivery-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_RELEASE_DELIVERY_TRAILERS_PASS
+  - name: release-delivery-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "T07B_TESTS_HEAD=$(git rev-parse HEAD)"'
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      - node --test packages/tally-github-c/test/release-delivery.test.mjs experiments/v2/release/host-release.test.mjs packages/tally-engineering-business/test/business-policy.test.mjs
+      - node --check experiments/v2/selected-business-build/producer.mjs
+      - node --check experiments/v2/selected-business-build/bundle-local-codex.mjs
+      - node --check experiments/v2/selected-business-build/local-codex-shim.mjs
+      - 'test "$(grep -c "intent:deliverQualifiedRelease" experiments/v2/selected-business-build/producer.mjs)" -ge 1'
+      - echo TALLY_V2_RELEASE_DELIVERY_SOURCE_TESTS_PASS
+      - echo TALLY_V2_RELEASE_PHYSICAL_EFFECTS_DEFAULT_DENY_CI
+  - name: release-delivery-negative-qualification
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "T07B_NEGATIVE_HEAD=$(git rev-parse HEAD)"'
+      # The release route must stay BUILD-gated: without T222_RELEASE_DELIVERY
+      # the selected BUILD must not admit the release intent at all.
+      - grep -qF "T222_RELEASE_DELIVERY==='1'?['intent:deliverQualifiedRelease']" experiments/v2/selected-business-build/producer.mjs
+      - grep -qF "releaseDeliveryRoute:process.env.T222_RELEASE_DELIVERY==='1'?'SELECTED':'NOT_SELECTED'" experiments/v2/selected-business-build/producer.mjs
+      # Physical effects stay denied in CI and by default in the Host env.
+      - grep -q "TALLY_RELEASE_PHYSICAL_EFFECTS!=='1'" experiments/v2/release/host-release.mjs
+      - grep -q "TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING" experiments/v2/release/host-release.mjs
+      # No release PASS can cross the Business projection.
+      - grep -q "releasePublished:false" experiments/v2/selected-business-build/local-codex-shim.mjs
+      - echo TALLY_V2_RELEASE_DELIVERY_NEGATIVE_QUALIFICATION_PASS

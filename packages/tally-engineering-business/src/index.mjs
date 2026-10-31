@@ -8,12 +8,13 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
   'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
   'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
-  'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome']);
+  'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
+  'effect:tally-qualified-release-delivery']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -98,6 +99,24 @@ const learningInputFrom=Object.freeze({
   outcomeAttested:{source:'event',path:['payload','outcomeAttested']},
   outcomeObservedAt:{source:'event',path:['payload','outcomeObservedAt']},
   outcomeNote:{source:'event',path:['payload','outcomeNote']},
+});
+const releaseInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  // The frozen Task Claim source SHA stays separate from the release subject
+  // SHAs below; a moved candidate never reuses the Task admission.
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  operation:{source:'event',path:['payload','operation']},
+  // MERGE/PREFLIGHT scalars (null in the TAG phase).
+  pullNumber:{source:'event',path:['payload','pullNumber']},
+  headSha:{source:'event',path:['payload','headSha']},
+  headTree:{source:'event',path:['payload','headTree']},
+  targetSha:{source:'event',path:['payload','targetSha']},
+  targetTree:{source:'event',path:['payload','targetTree']},
+  // TAG scalars (null in the PREFLIGHT/MERGE phase).
+  tagName:{source:'event',path:['payload','tagName']},
+  commitSha:{source:'event',path:['payload','commitSha']},
+  commitTree:{source:'event',path:['payload','commitTree']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -250,12 +269,30 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[learningTransition]},finalState],
   };
+  // J222 J07b: qualified Release delivery request. Authority is ONLY the
+  // sealed Host observation chain (accepted #222 Claim, frozen write-set,
+  // independent exact-SHA/tree RQ, fresh Owner grant, durable Host CAS
+  // reservation and canonical GitHub readback). The caller may only REQUEST
+  // the check; a merged readback still never yields Release PASS here.
+  const releaseTransition={
+    transitionKey:'deliver-qualified-release',
+    trigger:{kind:'event',eventType:'TALLY_QUALIFIED_RELEASE_DELIVERY_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-qualified-release-delivery',inputFrom:releaseInputFrom,
+      idempotencyKeyFrom:{template:'release:{issueNumber}:{sourceSha}:{operation}:{headSha}'}
+    }]
+  };
+  const releaseWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[releaseTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition]},
         finalState,
       ],
     },
@@ -306,6 +343,13 @@ export function getPolicy(){
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         learningId:'learningId',decision:'decision',outcomeAttested:'outcomeAttested',
         outcomeObservedAt:'outcomeObservedAt',outcomeNote:'outcomeNote'},
+    },'rule:tally-qualified-release-delivery':{
+      ruleId:'rule:tally-qualified-release-delivery',
+      eventType:'TALLY_QUALIFIED_RELEASE_DELIVERY_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        operation:'operation',pullNumber:'pullNumber',headSha:'headSha',headTree:'headTree',
+        targetSha:'targetSha',targetTree:'targetTree',tagName:'tagName',
+        commitSha:'commitSha',commitTree:'commitTree'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -379,6 +423,16 @@ export function getPolicy(){
         // use/reject and a later independent outcome are recorded; no
         // quality-gain inference and no Agent ranking can cross this intent.
         roles:['requester','planner','builder','reviewer'],definition:learningWorkflow,
+      },
+      deliverQualifiedRelease:{
+        trigger:{kind:'event',eventType:'TALLY_QUALIFIED_RELEASE_DELIVERY_REQUESTED'},
+        ruleId:'rule:tally-qualified-release-delivery',
+        // Delivery authority is ONLY the sealed Host observation chain:
+        // accepted #222 Claim, frozen DAG write-set, independent exact
+        // SHA/tree RQ, fresh exact-scoped Owner grant, durable Host CAS
+        // reservation and canonical GitHub readback. A merged or tagged
+        // readback still never becomes Release PASS through this intent.
+        roles:['requester','planner','builder','reviewer'],definition:releaseWorkflow,
       },
     },
     effectBindings:{
@@ -589,6 +643,32 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectTaskLearningOutcome({input:{...input,outcome},observation,effectId});
+        },
+      },
+      'effect:tally-qualified-release-delivery':{
+        // J222 J07b: the sealed Host release delivery observation. Physical
+        // idempotency lives in the Host CAS pending operation; the K effect is
+        // non-idempotent so a genuinely new delivery request can always run.
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.deliverQualifiedRelease'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessQualifiedReleaseDelivery(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.deliverQualifiedRelease',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,operation:input.operation,
+              pullNumber:input.pullNumber??null,headSha:input.headSha??null,
+              headTree:input.headTree??null,targetSha:input.targetSha??null,
+              targetTree:input.targetTree??null,tagName:input.tagName??null,
+              commitSha:input.commitSha??null,commitTree:input.commitTree??null,
+              effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectQualifiedReleaseDelivery({input,observation,effectId});
         },
       },
     },
@@ -1430,4 +1510,136 @@ export function projectTaskLearningOutcome({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return maintenanceDenied('UNVERIFIED_TASK_LEARNING_RECORD',effectId);
   }catch{return maintenanceDenied('UNTRUSTED_TASK_LEARNING_RECORD',effectId);}
+}
+
+/**
+ * J222 J07b — advisory input screening for one qualified Release delivery
+ * request. The frozen #222 Task Claim source SHA is screened separately from
+ * the release subject SHAs: PREFLIGHT/MERGE bind an exact open PR head/base
+ * SHA+tree pair; TAG binds an exact post-merge commit SHA+tree and tag name.
+ */
+const RELEASE_ISSUE=222;
+const RELEASE_TAG_NAME=/^v[0-9]+\.[0-9]+(?:\.[0-9]+)?(?:-[a-z0-9.-]+)?$/;
+const RELEASE_OPERATIONS=new Set(['PREFLIGHT','MERGE','TAG']);
+export function assessQualifiedReleaseDelivery(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,operation,pullNumber,headSha,headTree,
+    targetSha,targetTree,tagName,commitSha,commitTree}=input;
+  const tagPhase=operation==='TAG';
+  const mergeFields=[headSha,headTree,targetSha,targetTree];
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${RELEASE_ISSUE}`||
+    issueNumber!==RELEASE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !RELEASE_OPERATIONS.has(operation))return Object.freeze(unqualified);
+  if(tagPhase){
+    if(!RELEASE_TAG_NAME.test(tagName??'')||!SOURCE_SHA.test(commitSha??'')||
+      !SOURCE_SHA.test(commitTree??'')||commitSha===commitTree||
+      Number.isSafeInteger(pullNumber))return Object.freeze(unqualified);
+  }else{
+    if(!Number.isSafeInteger(pullNumber)||pullNumber<1||
+      !mergeFields.every(x=>SOURCE_SHA.test(x??''))||headSha===targetSha||
+      headTree===targetTree||tagName!=null||commitSha!=null||commitTree!=null)
+      return Object.freeze(unqualified);
+  }
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_QUALIFIED_RELEASE_DELIVERY',
+    issueRef,issueNumber,sourceSha,operation,
+    pullNumber:tagPhase?null:pullNumber,
+    headSha:tagPhase?null:headSha,headTree:tagPhase?null:headTree,
+    targetSha:tagPhase?null:targetSha,targetTree:tagPhase?null:targetTree,
+    tagName:tagPhase?tagName:null,commitSha:tagPhase?commitSha:null,
+    commitTree:tagPhase?commitTree:null,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+
+/**
+ * J222 — Business projection of the sealed Host release delivery observation.
+ * Positive output admits THIS K intent only: a verified merge readback still
+ * requires requalification and canTag/canRelease stay false; a lost
+ * acknowledgment stays GITHUB_EFFECT_UNKNOWN with no blind retry; a pending
+ * Host CAS operation stays RECONCILIATION_REQUIRED. No shape can ever carry
+ * Release PASS or caller authority across this boundary.
+ */
+const RELEASE_DENY_REASONS=new Set(['RELEASE_HOST_PORTS_NOT_CONNECTED',
+  'RELEASE_SOURCE_NOT_PINNED','NATIVE_CLAIM_NOT_VERIFIED','TASK_WRITESET_NOT_VERIFIED',
+  'INDEPENDENT_RQ_NOT_QUALIFIED','OWNER_EXACT_RELEASE_SCOPE_MISSING',
+  'HOST_QUALIFICATION_READ_UNKNOWN','RELEASE_PHYSICAL_EFFECT_DISABLED',
+  'RELEASE_HOST_CAS_UNAVAILABLE','RELEASE_HOST_CAS_UNAVAILABLE_OR_CONFLICT',
+  'TAG_SOURCE_NOT_PINNED','POST_MERGE_RQ_READ_UNKNOWN',
+  'POST_MERGE_RQ_OR_GRANT_NOT_VERIFIED',
+  'TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING',
+  'RELEASE_CANDIDATE_INPUT_INVALID','EXACT_HEAD_TREE_OR_TARGET_MOVED',
+  'MERGEABILITY_NOT_PROVEN','GITHUB_MERGE_TRANSPORT_UNAVAILABLE',
+  'TAG_READBACK_INPUT_INVALID','RELEASE_TAG_INPUT_INVALID',
+  'TAG_CONFLICT_OR_ANNOTATED_TAG_REQUIRES_REVIEW',
+  'POST_MERGE_TARGET_REQUALIFICATION_REQUIRED',
+  'GITHUB_UNAUTHENTICATED','GITHUB_ACCESS_DENIED','GITHUB_RESOURCE_NOT_FOUND',
+  'GITHUB_CONFLICT','GITHUB_RATE_LIMITED','GITHUB_TRANSPORT_UNKNOWN']);
+const RELEASE_UNKNOWN_REASONS=new Set(['GITHUB_UNAUTHENTICATED','GITHUB_ACCESS_DENIED',
+  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_CONFLICT','GITHUB_RATE_LIMITED',
+  'GITHUB_TRANSPORT_UNKNOWN','GITHUB_MERGE_RECEIPT_INCOMPLETE',
+  'MERGE_READBACK_OR_PARENT_MISMATCH','TAG_CREATE_READBACK_UNKNOWN']);
+const releaseDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,
+  reason,effectId,admitted:false,authorized:false,taskPass:false,releasePass:false});
+const releaseBase=(o,effectId)=>({effectId,issueRef:o.issueRef,sourceSha:o.sourceSha,
+  operation:o.operation,claimGeneration:1,authorized:false,agentLaunch:false,
+  replayFixture:false,taskPass:false,releasePass:false,releasePublished:false});
+export function projectQualifiedReleaseDelivery({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    const identity=!o||typeof o!=='object'||Array.isArray(o)||
+      o.issueRef!==input?.issueRef||o.sourceSha!==input?.sourceSha||
+      o.operation!==input?.operation||o.claimGeneration!==1||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.releasePublished!==false;
+    if(identity)return releaseDenied('UNVERIFIED_QUALIFIED_RELEASE_DELIVERY',effectId);
+    if(o.state==='NOT_ADMITTED'&&RELEASE_DENY_REASONS.has(o.reason)&&
+      o.admitted===false&&(o.githubEffect??'NOT_RUN')==='NOT_RUN')
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:o.claimAccepted===true,admitted:false,
+        githubEffect:'NOT_RUN',mergedSha:null,mergedTree:null});
+    if(o.state==='GITHUB_EFFECT_UNKNOWN'&&RELEASE_UNKNOWN_REASONS.has(o.reason)&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='UNKNOWN')
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:true,admitted:true,githubEffect:'UNKNOWN',
+        operationKey:typeof o.operationKey==='string'?o.operationKey:null,
+        mergedSha:null,mergedTree:null});
+    if(o.state==='RECONCILIATION_REQUIRED'&&o.reason==='PREVIOUS_RELEASE_OPERATION_PENDING'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      typeof o.operationKey==='string'&&o.operationKey.length>0)
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:true,admitted:true,githubEffect:'NOT_RUN',
+        operationKey:o.operationKey,mergedSha:null,mergedTree:null});
+    if(o.state==='HOST_GATES_OBSERVED'&&o.reason==='REQUIRES_CURRENT_TARGET_PREFLIGHT'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      SOURCE_SHA.test(o.headSha??'')&&SOURCE_SHA.test(o.targetSha??''))
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:true,admitted:true,githubEffect:'NOT_RUN',
+        headSha:o.headSha,targetSha:o.targetSha,mergedSha:null,mergedTree:null});
+    if(o.state==='EXACT_PREFLIGHT_OBSERVED'&&
+      o.reason==='REQUIRES_INDEPENDENT_HOST_RQ_AND_OWNER_GRANT'&&
+      o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
+      o.hostGateRequired===true&&o.repository==='kaicreator-mm/tally'&&
+      Number.isSafeInteger(o.pullNumber)&&o.pullNumber===input.pullNumber&&
+      o.headSha===input.headSha&&o.headTree===input.headTree&&
+      o.targetSha===input.targetSha&&o.targetTree===input.targetTree)
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:true,admitted:true,githubEffect:'NOT_RUN',
+        pullNumber:o.pullNumber,headSha:o.headSha,headTree:o.headTree,
+        targetSha:o.targetSha,targetTree:o.targetTree,hostGateRequired:true,
+        mergedSha:null,mergedTree:null});
+    if(o.state==='MERGED_REQUALIFY_REQUIRED'&&
+      o.reason==='FINAL_MERGE_TREE_REQUIRES_NEW_INDEPENDENT_RQ'&&
+      o.admitted===true&&o.claimAccepted===true&&
+      o.githubEffect==='PERFORMED_READBACK_VERIFIED'&&
+      SOURCE_SHA.test(o.mergedSha??'')&&SOURCE_SHA.test(o.mergedTree??'')&&
+      o.canTag===false&&o.canRelease===false&&
+      typeof o.operationKey==='string'&&o.next==='REQUALIFY_NEW_MAIN_SHA_AND_TREE_BEFORE_TAG')
+      return Object.freeze({...releaseBase(o,effectId),state:o.state,reason:o.reason,
+        claimAccepted:true,admitted:true,githubEffect:'PERFORMED_READBACK_VERIFIED',
+        operationKey:o.operationKey,mergedSha:o.mergedSha,mergedTree:o.mergedTree,
+        canTag:false,canRelease:false,next:o.next});
+    return releaseDenied('UNVERIFIED_QUALIFIED_RELEASE_DELIVERY',effectId);
+  }catch{return releaseDenied('UNTRUSTED_QUALIFIED_RELEASE_DELIVERY',effectId);}
 }

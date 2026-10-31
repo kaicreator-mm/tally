@@ -15,6 +15,7 @@ const intakeHostModule=resolve(tally,'experiments/v2/project-intake/host-project
 const intakeReadModel=resolve(tally,'packages/tally-github-c/src/project-intake.mjs');
 const maintenanceHostModule=resolve(tally,'experiments/v2/maintenance/host-maintenance.mjs');
 const maintenanceEffects=resolve(tally,'packages/tally-github-c/src/maintenance-effects.mjs');
+const releaseHostModule=resolve(tally,'experiments/v2/release/host-release.mjs');
 const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
@@ -36,6 +37,7 @@ import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
   readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
+import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
@@ -54,7 +56,8 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
-  219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'}
+  219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
+  222:{actorRole:'builder'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -346,6 +349,162 @@ export async function publishMaintenanceIssue(input){
 }
 export async function recordTaskLearningOutcome(input){
   return maintenanceHostFor().hostRecordTaskLearningOutcome(input);
+}
+// J222 J07b — qualified Release delivery provider binding. All release
+// authority stays Host-owned: the accepted #222 Claim, the frozen DAG
+// write-set, the independent exact-SHA/tree RQ and the fresh exact-scoped
+// Owner grant are read from Host env and the #222 Host CAS registry, never
+// from caller input. Physical effects additionally require explicit Host env
+// pins (TALLY_RELEASE_PHYSICAL_EFFECTS/TALLY_RELEASE_SOURCE_SHA) that stay
+// unset in CI; every mutation is read back and never yields Release PASS.
+const RELEASE_ISSUE=222;
+const RELEASE_OPERATIONS=new Set(['PREFLIGHT','MERGE','TAG']);
+const RELEASE_TAG_NAME=/^v[0-9]+\\.[0-9]+(?:\\.[0-9]+)?(?:-[a-z0-9.-]+)?$/;
+const RELEASE_URL=/^https:\\/\\/github\\.com\\/kaicreator-mm\\/tally\\/(?:issues|pull)\\/[1-9][0-9]*$/;
+const releaseClaimEnv=env=>claimEnv(env,RELEASE_ISSUE);
+const releaseRqKey=q=>'tally:v2:release-rq:'+createHash('sha256')
+  .update(JSON.stringify([q.sourceSha,q.sourceTree,q.targetSha,q.targetTree,q.operation])).digest('hex');
+const releaseGrantKey=q=>'tally:v2:release-grant:'+createHash('sha256')
+  .update(JSON.stringify([q.sourceSha,q.targetSha,q.operation])).digest('hex');
+async function verifyReleaseFrozenWriteSet(env,sourceSha){
+  const claim=releaseClaimEnv(env);
+  if(!claim.writeSetSha256||typeof claim.registryPath!=='string'||!claim.registryPath)
+    return {ok:false,reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH'};
+  let registry,writeSet;
+  try{
+    registry=await openSqliteCasStore({path:claim.registryPath,busyTimeoutMs:1000});
+    writeSet=await registry.get(writeSetKeyFor(RELEASE_ISSUE));
+  }catch{return {ok:false,reason:'CLAIM_REGISTRY_UNAVAILABLE'};}
+  finally{if(registry)await registry.close();}
+  if(writeSet?.value?.phase!=='FROZEN_DAG_WRITESET'||
+    writeSet.value.sourceSha!==sourceSha||
+    writeSet.value.writeSetSha256!==claim.writeSetSha256||
+    !writeSet.value.document?.includes('packages/tally-github-c/src/release-delivery.mjs')||
+    !writeSet.value.document?.includes('experiments/v2/release/host-release.mjs'))
+    return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+  return {ok:true};
+}
+async function readReleaseRq(env,q){
+  const claim=releaseClaimEnv(env);
+  if(typeof claim.registryPath!=='string'||!claim.registryPath)
+    return {state:'NOT_QUALIFIED'};
+  let registry,row;
+  try{
+    registry=await openSqliteCasStore({path:claim.registryPath,busyTimeoutMs:1000});
+    row=await registry.get(releaseRqKey(q));
+  }catch{return {state:'READ_UNKNOWN'};}
+  finally{if(registry)await registry.close();}
+  const v=row?.value;
+  if(row?.revision>=1&&v?.phase==='RELEASE_RQ_QUALIFIED'&&v.generation===1&&
+    v.verifierIndependentlyBound===true&&v.sourceSha===q.sourceSha&&
+    v.sourceTree===q.sourceTree&&v.targetSha===q.targetSha&&
+    v.targetTree===q.targetTree&&v.operation===q.operation&&
+    RELEASE_URL.test(v.nativeEvidenceRef??''))
+    return {state:'QUALIFIED',verifierIndependentlyBound:true,sourceSha:v.sourceSha,
+      sourceTree:v.sourceTree,targetSha:v.targetSha,targetTree:v.targetTree,
+      operation:v.operation,nativeEvidenceRef:v.nativeEvidenceRef};
+  return {state:'NOT_QUALIFIED'};
+}
+async function readReleaseGrant(env,q){
+  const claim=releaseClaimEnv(env);
+  if(typeof claim.registryPath!=='string'||!claim.registryPath)
+    return {state:'NOT_GRANTED'};
+  let registry,row;
+  try{
+    registry=await openSqliteCasStore({path:claim.registryPath,busyTimeoutMs:1000});
+    row=await registry.get(releaseGrantKey(q));
+  }catch{return {state:'READ_UNKNOWN'};}
+  finally{if(registry)await registry.close();}
+  const v=row?.value;
+  if(row?.revision>=1&&v?.phase==='RELEASE_GRANT_GRANTED'&&v.generation===1&&
+    v.exactScope==='kaicreator-mm/tally:version/v2->main'&&
+    v.sourceSha===q.sourceSha&&v.targetSha===q.targetSha&&
+    v.operation===q.operation&&typeof v.ownerIdentity==='string'&&v.ownerIdentity&&
+    RELEASE_URL.test(v.grantRef??''))
+    return {state:'GRANTED',exactScope:v.exactScope,sourceSha:v.sourceSha,
+      targetSha:v.targetSha,operation:v.operation,ownerIdentity:v.ownerIdentity,
+      grantRef:v.grantRef};
+  return {state:'NOT_GRANTED'};
+}
+export async function hostReleaseDelivery(input){
+  const env=process.env;
+  if(!input||typeof input==='object'&&Array.isArray(input)||
+    input.issueNumber!==RELEASE_ISSUE||
+    input.sourceRef!==issueRefFor(RELEASE_ISSUE)||
+    !SHA.test(input.sourceSha??'')||!RELEASE_OPERATIONS.has(input.operation)||
+    input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA)
+    return {state:'NOT_ADMITTED',reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+      issueRef:issueRefFor(RELEASE_ISSUE),
+      sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+      operation:RELEASE_OPERATIONS.has(input?.operation)?input.operation:null,
+      claimGeneration:1,claimAccepted:false,admitted:false,authorized:false,
+      agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',
+      releasePublished:false,taskPass:false,releasePass:false};
+  const claimCheck=await verifyAcceptedClaim(env,RELEASE_ISSUE,'builder');
+  if(!claimCheck.ok)
+    return {state:'NOT_ADMITTED',reason:claimCheck.reason,
+      issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
+      operation:input.operation,claimGeneration:1,claimAccepted:false,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+  const writeSetCheck=await verifyReleaseFrozenWriteSet(env,input.sourceSha);
+  if(!writeSetCheck.ok)
+    return {state:'NOT_ADMITTED',reason:writeSetCheck.reason,
+      issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
+      operation:input.operation,claimGeneration:1,claimAccepted:true,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+  const token=env.TALLY_GITHUB_WRITE_TOKEN??env.TALLY_GITHUB_READ_TOKEN;
+  const octokit=typeof token==='string'&&token.length>=8?
+    new Octokit({auth:token,request:{timeout:15000}}):null;
+  const host=createReleaseHost({
+    verifyNativeClaim:async()=>({state:'ACCEPTED',sourceSha:input.sourceSha}),
+    verifyWriteSet:async()=>({state:'FROZEN_VERIFIED'}),
+    readIndependentRq:q=>readReleaseRq(env,q),
+    readOwnerGrant:q=>readReleaseGrant(env,q),
+    openCasStore:({path})=>openSqliteCasStore({path,busyTimeoutMs:1000}),
+    octokit,env});
+  try{
+    // The Host prototype returns transport-shaped results without Task
+    // identity; the provider re-attaches the exact #222 identity and the
+    // fail-closed authority flags so the sealed boundary can verify them.
+    const attach=o=>({...o,issueRef:issueRefFor(RELEASE_ISSUE),
+      sourceSha:input.sourceSha,operation:input.operation,claimGeneration:1,
+      claimAccepted:true,admitted:o?.state!=='NOT_ADMITTED',authorized:false,
+      agentLaunch:false,replayFixture:false,taskPass:false,releasePass:false,
+      releasePublished:false,
+      githubEffect:o?.githubEffect??
+        (o?.state==='GITHUB_EFFECT_UNKNOWN'?'UNKNOWN':'NOT_RUN')});
+    if(input.operation==='TAG'){
+      if(!RELEASE_TAG_NAME.test(input.tagName??'')||
+        !SHA.test(input.commitSha??'')||!SHA.test(input.commitTree??''))
+        return {state:'NOT_ADMITTED',reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+          issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
+          operation:'TAG',claimGeneration:1,claimAccepted:true,admitted:false,
+          authorized:false,agentLaunch:false,replayFixture:false,
+          githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+      return attach(await host.tag({tag:input.tagName,commitSha:input.commitSha,
+        commitTree:input.commitTree}));
+    }
+    if(!Number.isSafeInteger(input.pullNumber)||input.pullNumber<1||
+      !SHA.test(input.headSha??'')||!SHA.test(input.headTree??'')||
+      !SHA.test(input.targetSha??'')||!SHA.test(input.targetTree??''))
+      return {state:'NOT_ADMITTED',reason:'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
+        issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
+        operation:input.operation,claimGeneration:1,claimAccepted:true,
+        admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+        githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+    const subject={pullNumber:input.pullNumber,headSha:input.headSha,
+      headTree:input.headTree,targetSha:input.targetSha,targetTree:input.targetTree};
+    return attach(input.operation==='MERGE'?await host.merge(subject):
+      await host.preflight(subject));
+  }catch{
+    return {state:'NOT_ADMITTED',reason:'HOST_QUALIFICATION_READ_UNKNOWN',
+      issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
+      operation:input.operation,claimGeneration:1,claimAccepted:true,
+      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
+      githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+  }
 }
 `;
 const result=await build({
