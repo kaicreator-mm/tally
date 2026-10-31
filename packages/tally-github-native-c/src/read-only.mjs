@@ -73,9 +73,12 @@ function reportCandidate(comment) {
  * Real callers use readGitHubIssueReports() which constructs authenticated
  * Octokit internally from one external token.
  */
-export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit=maxRows}) {
+export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,publisherRepository,acceptedCommentIds,limit=maxRows}) {
   if(!REPO.test(owner??'')||!REPO.test(repo??'')||!Number.isSafeInteger(issueNumber)||
-     issueNumber<1||!SHA.test(expectedSourceSha??'')||!Number.isSafeInteger(limit)||limit<1||limit>maxRows) {
+     issueNumber<1||!SHA.test(expectedSourceSha??'')||!Number.isSafeInteger(limit)||limit<1||limit>maxRows||
+     (publisherRepository!==undefined&&(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(publisherRepository)||publisherRepository.includes('..')))||
+     (acceptedCommentIds!==undefined&&(!Array.isArray(acceptedCommentIds)||acceptedCommentIds.length===0||
+       acceptedCommentIds.some(id=>!Number.isSafeInteger(id)||id<1)))) {
     return deny('INVALID_NATIVE_QUERY', STATES.INVALID);
   }
   // This trust map is supplied by a Host-owned configuration, never by a
@@ -88,14 +91,16 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
     return deny('PUBLISHER_BINDINGS_UNAVAILABLE');
   }
   const repository=`${owner}/${repo}`;
+  const [publisherOwner,publisherRepo]=publisherRepository?publisherRepository.split('/'):[owner,repo];
   const issueRef=`https://github.com/${repository}/issues/${issueNumber}`;
   const params={owner,repo,issue_number:issueNumber};
   const records=[];
+  const accepted=acceptedCommentIds?new Set(acceptedCommentIds):null;
   let invalid=0, readCount=0;
   try {
     const [issue,commit]=await Promise.all([
       octokit.rest.issues.get(params),
-      octokit.rest.repos.getCommit({owner,repo,ref:expectedSourceSha}),
+      octokit.rest.repos.getCommit({owner:publisherOwner,repo:publisherRepo,ref:expectedSourceSha}),
     ]);
     if(issue?.data?.number!==issueNumber || commit?.data?.sha!==expectedSourceSha) {
       return deny('NATIVE_ISSUE_OR_COMMIT_MISMATCH');
@@ -107,6 +112,7 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
       if(!Array.isArray(page?.data)) return deny('INVALID_GITHUB_PAGE');
       for(const comment of page.data) {
         readCount++;
+        if(accepted&&!accepted.has(comment?.id))continue;
         if(readCount>limit) return deny('GITHUB_READ_LIMIT_REACHED',STATES.PARTIAL,readCount);
         // Untrusted GitHub commenters cannot poison the entire Issue set by
         // posting malformed marker text or fake correction notices.
@@ -124,10 +130,17 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
         }
         const subject=data.subject;
         const publication=data.publication;
+        const collectorOnly=subject?.attempt_binding==='COLLECTOR_ONLY'&&subject.source_sha===null&&
+          subject.publisher_source_sha===expectedSourceSha&&subject.source_status==='UNPINNED'&&
+          subject.source_currentness==='UNKNOWN'&&subject.currentness?.state==='UNKNOWN'&&
+          Array.isArray(subject.currentness?.limits)&&subject.currentness.limits.length>0&&
+          typeof subject.source_reason==='string'&&subject.source_reason.length>0&&
+          Array.isArray(data.limits)&&data.limits.length>0;
+        const sourceQualified=subject?.source_sha===expectedSourceSha||collectorOnly;
         // No caller can invent a repository/Issue binding, source hash, native
         // page completeness or identity; prove these against this REST result.
         if(subject?.repository!==repository||subject?.issue_ref!==issueRef||
-           subject?.source_sha!==expectedSourceSha||
+           !sourceQualified||
            publication?.classification!=='PUBLISHABLE'||
            !Number.isSafeInteger(comment?.id)||comment.id<1||
            typeof comment?.created_at!=='string'||typeof comment?.updated_at!=='string'||
@@ -168,8 +181,8 @@ export async function readIssueReportsFromClient({octokit,owner,repo,issueNumber
 }
 
 /** Public entrypoint. Missing token never silently becomes anonymous access. */
-export async function readGitHubIssueReports({token,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit}={}) {
+export async function readGitHubIssueReports({token,owner,repo,issueNumber,expectedSourceSha,publisherBindings,publisherRepository,acceptedCommentIds,limit}={}) {
   if(typeof token!=='string'||token.length<8) return deny('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
   const octokit=new Octokit({auth:token,request:{timeout:15000}});
-  return readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,limit});
+  return readIssueReportsFromClient({octokit,owner,repo,issueNumber,expectedSourceSha,publisherBindings,publisherRepository,acceptedCommentIds,limit});
 }

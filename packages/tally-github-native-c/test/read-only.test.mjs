@@ -28,6 +28,15 @@ function approved(name='summary'){
   if(name==='summary') obj.data.capture_coverage='COMPLETE';
   return obj;
 }
+function collectorApproved(){
+  const obj=approved();
+  Object.assign(obj.data.subject,{attempt_binding:'COLLECTOR_ONLY',source_sha:null,publisher_source_sha:SHA,
+    source_status:'UNPINNED',source_currentness:'UNKNOWN',source_reason:'collector saw no immutable execution bytes',
+    collector_observation_refs:['collector:session:1']});
+  obj.data.subject.currentness.state='UNKNOWN';obj.data.subject.currentness.limits=['HEAD not witnessed'];
+  obj.data.limits=['source execution bytes not witnessed'];
+  return obj;
+}
 function client(pages=[],opts={}) {
   const api={
     rest:{
@@ -37,9 +46,9 @@ function client(pages=[],opts={}) {
         },
         listComments:async()=>{throw Error('iterator only')}
       },
-      repos:{getCommit:async()=>opts.errorAt==='commit'?Promise.reject({status:opts.error??404}):{
+      repos:{getCommit:async args=>{opts.commitArgs=args;return opts.errorAt==='commit'?Promise.reject({status:opts.error??404}):{
         data:{sha:opts.wrongCommit?'b'.repeat(40):SHA}
-      }}
+      }}}
     },
     paginate:{iterator:async function* (){
       for(let i=0;i<pages.length;i++){
@@ -237,4 +246,43 @@ test('T03c native transport invokes exact ADS v5 REVOKE reconciliation',async()=
   assert.equal(refused.status,'UNKNOWN');
   assert.equal(refused.reconciliation,'UNRESOLVED');
   assert.equal(refused.corrections[0].status,'UNRESOLVED');
+});
+
+test('collector-only source-null report validates publisher SHA in bound repository but remains STALE',async()=>{
+  const opts={};
+  const result=await readIssueReportsFromClient({octokit:client([[observation(collectorApproved())]],opts),
+    ...scope,publisherRepository:'example-org/publisher-repo'});
+  assert.equal(result.reportCount,1,JSON.stringify(result));assert.equal(result.records[0].status,'STALE');
+  assert.equal(result.records[0].reason,'NATIVE_SOURCE_STALE');
+  assert.equal(result.records[0].source.sourceSha,SHA);
+  assert.deepEqual(opts.commitArgs,{owner:'example-org',repo:'publisher-repo',ref:SHA});
+  assert.equal(result.taskPass,false);assert.equal(result.releasePass,false);
+});
+test('collector-only source-null mode rejects missing limits reason publisher mismatch and bad repository',async()=>{
+  for(const change of [
+    x=>{x.data.limits=[];},
+    x=>{x.data.subject.currentness.limits=[];},
+    x=>{x.data.subject.source_reason='';},
+    x=>{x.data.subject.publisher_source_sha='b'.repeat(40);},
+    x=>{x.data.subject.source_status='PINNED';},
+    x=>{x.data.subject.attempt_binding='CANONICAL_DISPATCH';}
+  ]){
+    const report=collectorApproved();change(report);
+    assert.equal((await read([[observation(report)]])).reason,'INVALID_OR_UNVERIFIED_REPORT_COMMENT');
+  }
+  const invalid=await readIssueReportsFromClient({octokit:client([]),...scope,publisherRepository:'bad'});
+  assert.equal(invalid.reason,'INVALID_NATIVE_QUERY');
+  const dotted=await readIssueReportsFromClient({octokit:client([]),...scope,publisherRepository:'example-org/../x'});
+  assert.equal(dotted.reason,'INVALID_NATIVE_QUERY');
+});
+test('Host comment allowlist separates mixed source identities without weakening source checks',async()=>{
+  const pinned=observation(approved()),collector=observation(collectorApproved());
+  const selected=await read([[pinned,collector]],{},{acceptedCommentIds:[pinned.id]});
+  assert.equal(selected.reportCount,1);assert.equal(selected.records[0].source.commentId,pinned.id);
+  const none=await read([[pinned,collector]],{},{acceptedCommentIds:[999999]});
+  assert.equal(none.reason,'NO_ADS_V5_REPORTS');
+  for(const acceptedCommentIds of [[],['bad'],[0]]){
+    const invalid=await readIssueReportsFromClient({octokit:client([]),...scope,acceptedCommentIds});
+    assert.equal(invalid.reason,'INVALID_NATIVE_QUERY');
+  }
 });

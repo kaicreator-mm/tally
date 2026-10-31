@@ -28,6 +28,23 @@ test('observed valid summary is never native authorization or task PASS', () => 
   assert.equal(x.releasePass, false);
   assert.equal(x.advisory.metricCount, 1);
 });
+test('advisory exposes only bounded public observation fields', () => {
+  const x = projectReport(sample({ envelope: { data: {
+    actor: { operator_id: 'zcode' },
+    subject: { source_status: 'UNPINNED', source_currentness: 'UNKNOWN', source_sha: null, publisher_source_sha: SHA },
+    verifier: { status: 'NOT_RUN' }, cost: { basis: 'UNKNOWN' }, capture_coverage: 'PARTIAL',
+    metrics: [{ name: 'input_tokens', value: 1, unit: 'tokens', epistemic: 'OBSERVED', coverage: 'COMPLETE' }]
+  } } }));
+  assert.equal(x.status, STATES.PARTIAL);
+  assert.equal(x.advisory.actorOperatorId, 'zcode');
+  assert.equal(x.advisory.sourceStatus, 'UNPINNED');
+  assert.equal(x.advisory.sourceSha, null);
+  assert.equal(x.advisory.publisherSourceSha, SHA);
+  assert.equal(x.advisory.verifierStatus, 'NOT_RUN');
+  assert.equal(x.advisory.costBasis, 'UNKNOWN');
+  assert.deepEqual(x.advisory.metricSummaries[0], { name: 'input_tokens', value: 1, unit: 'tokens',
+    epistemic: 'OBSERVED', coverage: 'COMPLETE' });
+});
 test('wrong effective ADS dialect rejected', () => {
   assert.equal(projectReport(sample({ envelope: { schema: 'ads/github/v4' } })).status, STATES.UNSUPPORTED);
 });
