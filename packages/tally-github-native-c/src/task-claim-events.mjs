@@ -9,6 +9,7 @@ import Ajv2020 from 'ajv/dist/2020.js';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {Octokit} from '@octokit/rest';
+import {createNativeReadRetryFetch} from './read-retry.mjs';
 import {parseDocument,visit,isAlias} from 'yaml';
 
 const EVENT_SCHEMA_BLOB='cad9434e11febfd29657b564dbe710700c674888';
@@ -142,7 +143,7 @@ export async function readGitHubClaimEventCandidates({
   token,owner,repo,issueNumber,expectedSourceSha,limit
 }={}){
   if(typeof token!=='string'||token.length<8)return no('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
-  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const octokit=new Octokit({auth:token,request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
   return readClaimEventCandidatesFromClient({
     octokit,owner,repo,issueNumber,expectedSourceSha,limit
   });
