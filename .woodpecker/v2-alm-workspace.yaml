@@ -12,6 +12,7 @@ when:
         - 'packages/tally-github-c/test/maintenance-effects.test.mjs'
         - 'experiments/v2/project-intake/**'
         - 'experiments/v2/maintenance/**'
+        - 'experiments/v2/release/**'
         - 'experiments/v2/selected-business-build/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
@@ -69,7 +70,7 @@ steps:
       - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
-      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
@@ -80,3 +81,22 @@ steps:
       - echo TALLY_V2_J06_REAL_BROWSER_GUI_NOT_PROVEN_IN_DOCKER
       - echo TALLY_V2_ALM_WORKSPACE_REAL_GITHUB_PROJECT_EFFECT_NOT_RUN
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER
+  - name: alm-workspace-release-panel-negative
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "T07C_RELEASE_NEGATIVE_HEAD=$(git rev-parse HEAD)"'
+      # J07c: the Release panel stays read-only until a fresh selected K/Host
+      # permit exists; no enabled control and no advisory-PASS promotion.
+      - grep -q 'data-release-action="merge" disabled aria-disabled="true"' web/v2/release-view.mjs
+      - grep -q 'data-release-action="tag" disabled aria-disabled="true"' web/v2/release-view.mjs
+      - grep -q 'data-release-action="publish" disabled aria-disabled="true"' web/v2/release-view.mjs
+      - grep -q 'INDEPENDENT_HOST_ADMISSION_NOT_CONNECTED' web/v2/release-controller.mjs
+      - grep -q 'CSRF_OR_ORIGIN' web/v2/journey-server.mjs
+      - grep -q 'verifyReleaseSeamResult' web/v2/journey-server.mjs
+      - grep -q 'id="release-app"' web/v2/journey-view.html
+      - grep -q 'release-bootstrap.mjs' web/v2/journey-view.html
+      # Installed journey receipts never become independent RQ.
+      - grep -q 'CAPTURE_REQUIRES_INDEPENDENT_VERIFICATION' experiments/v2/release/installed-journey.mjs
+      - grep -q 'qualification:.NOT_QUALIFIED.' experiments/v2/release/installed-journey.mjs
+      - echo TALLY_V2_ALM_WORKSPACE_RELEASE_PANEL_NEGATIVE_PASS
