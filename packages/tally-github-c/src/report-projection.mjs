@@ -58,22 +58,7 @@ export function projectReport(observation) {
     sourceSha: native.sourceSha,
     dataDigest: native.dataDigest,
   });
-  // An absent, revoked, unrecognized or unknown grant is NOT a readable source.
-  if (native.permission !== 'GRANTED') return result(STATES.UNKNOWN, 'GITHUB_PERMISSION_NOT_GRANTED', identity);
-  if (native.readback !== 'VERIFIED') return result(STATES.UNKNOWN, 'NO_NATIVE_READBACK', identity);
-  if (native.pagination !== 'COMPLETE') return result(STATES.PARTIAL, 'NATIVE_PAGINATION_INCOMPLETE', identity);
-  if (native.currentness !== 'CURRENT') return result(STATES.STALE, 'NATIVE_SOURCE_STALE', identity);
-  if (identity.kind === 'EXECUTION_SUMMARY' && envelope.data.capture_coverage !== 'COMPLETE') {
-    return result(STATES.PARTIAL, 'REPORT_CAPTURE_NOT_COMPLETE', identity);
-  }
-  // Reconciliation of correction targets is owned by later T03c.
-  // Never surface a REVOKE/REPLACE notice as CURRENT while its target may
-  // still be cached; even a perfectly schema-valid correction is advisory.
-  if (identity.kind === 'EXECUTION_CORRECTION') {
-    return result(STATES.UNKNOWN, 'CORRECTION_NOT_RECONCILED', identity);
-  }
-  // Source qualification is merely an observed advisory projection.
-  // Review/Claim/Effect/Release authority stays with native GitHub + the selected K.
+  // Source qualification is merely an observed advisory projection, including STALE/PARTIAL evidence.
   const advisory = Object.freeze({
     reportKind: identity.kind,
     publicationRef: native.commentId,
@@ -81,7 +66,33 @@ export function projectReport(observation) {
       ['OBSERVED', 'SELF_REPORTED', 'INFERRED', 'UNKNOWN'].includes(envelope.data.epistemic)
       ? envelope.data.epistemic : null,
     metricCount: Array.isArray(envelope.data.metrics) ? envelope.data.metrics.length : null,
+    actorOperatorId: envelope.data.actor?.operator_id ?? null,
+    captureCoverage: envelope.data.capture_coverage ?? null,
+    sourceStatus: envelope.data.subject?.source_status ?? null,
+    sourceCurrentness: envelope.data.subject?.source_currentness ?? null,
+    sourceSha: envelope.data.subject?.source_sha ?? null,
+    publisherSourceSha: envelope.data.subject?.publisher_source_sha ?? null,
+    verifierStatus: envelope.data.verifier?.status ?? null,
+    costBasis: envelope.data.cost?.basis ?? null,
+    metricSummaries: Array.isArray(envelope.data.metrics) ? envelope.data.metrics.map(metric=>({
+      name: metric.name, value: metric.value, unit: metric.unit,
+      epistemic: metric.epistemic, coverage: metric.coverage
+    })) : null,
   });
+  // An absent, revoked, unrecognized or unknown grant is NOT a readable source.
+  if (native.permission !== 'GRANTED') return result(STATES.UNKNOWN, 'GITHUB_PERMISSION_NOT_GRANTED', identity, advisory);
+  if (native.readback !== 'VERIFIED') return result(STATES.UNKNOWN, 'NO_NATIVE_READBACK', identity, advisory);
+  if (native.pagination !== 'COMPLETE') return result(STATES.PARTIAL, 'NATIVE_PAGINATION_INCOMPLETE', identity, advisory);
+  if (native.currentness !== 'CURRENT') return result(STATES.STALE, 'NATIVE_SOURCE_STALE', identity, advisory);
+  if (identity.kind === 'EXECUTION_SUMMARY' && envelope.data.capture_coverage !== 'COMPLETE') {
+    return result(STATES.PARTIAL, 'REPORT_CAPTURE_NOT_COMPLETE', identity, advisory);
+  }
+  // Reconciliation of correction targets is owned by later T03c.
+  // Never surface a REVOKE/REPLACE notice as CURRENT while its target may
+  // still be cached; even a perfectly schema-valid correction is advisory.
+  if (identity.kind === 'EXECUTION_CORRECTION') {
+    return result(STATES.UNKNOWN, 'CORRECTION_NOT_RECONCILED', identity, advisory);
+  }
   return result(STATES.CURRENT, 'NATIVE_REPORT_OBSERVED', identity, advisory);
 }
 

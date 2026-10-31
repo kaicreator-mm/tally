@@ -1,0 +1,77 @@
+# Tally v2 real GitHub-only ADS report observation (not Task/Release PASS).
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-github-native-c/src/read-only.mjs'
+        - 'packages/tally-github-native-c/test/read-only.test.mjs'
+        - 'packages/tally-github-c/src/report-projection.mjs'
+        - 'packages/tally-github-c/test/report-projection.test.mjs'
+        - 'experiments/v2/github-only-observation/**'
+        - '.woodpecker/v2-github-only-observation.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i62-k3]
+
+labels:
+  backend: local
+
+steps:
+  - name: observation-exact-head-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+      - git show --format= --name-only HEAD
+
+  - name: observation-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target"
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target"
+            base="$(git merge-base refs/ci-base/target HEAD)"
+          fi
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_OBSERVATION_TRAILERS_PASS
+
+  - name: observation-native-c-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - node --test packages/tally-github-native-c/test/read-only.test.mjs
+
+  - name: observation-projection-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - node --test packages/tally-github-c/test/report-projection.test.mjs
+      - node --test packages/tally-github-c/test/correction-reconciliation.test.mjs
+
+  - name: observation-live-readback
+    image: bash
+    commands:
+      - set -euo pipefail
+      - export NODE_USE_ENV_PROXY=1 HTTPS_PROXY=http://host.docker.internal:10808 HTTP_PROXY=http://host.docker.internal:10808 NO_PROXY=localhost,127.0.0.1,172.18.0.1
+      - node experiments/v2/github-only-observation/consumer.mjs
+      - echo TALLY_V2_REAL_GITHUB_ONLY_OBSERVATION_PASS
+
+  - name: observation-offline-negatives
+    image: bash
+    commands:
+      - set -euo pipefail
+      - node --test experiments/v2/github-only-observation/observation.test.mjs
+      - echo TALLY_V2_OBSERVATION_NOT_TASK_OR_RELEASE_PASS
