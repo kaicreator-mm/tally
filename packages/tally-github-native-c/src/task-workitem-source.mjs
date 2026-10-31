@@ -10,6 +10,7 @@
  * No GitHub writes, no DB, no process effect, no task-meta or independent K.
  */
 import { Octokit } from '@octokit/rest';
+import {createNativeReadRetryFetch} from './read-retry.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const SHA=/^[a-f0-9]{40}$/;
@@ -132,7 +133,7 @@ export async function readGitHubWorkItemSource({
 }={}) {
   if(typeof token!=='string'||token.length<8)
     return fail('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
-  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const octokit=new Octokit({auth:token,request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
   return readWorkItemSourceFromClient({
     octokit,owner,repo,issueNumber,expectedSourceSha,limit
   });
