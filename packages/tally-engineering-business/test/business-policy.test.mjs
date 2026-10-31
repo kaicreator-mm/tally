@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
-  ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
+  assessCandidatePublication,projectCandidatePublication,ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
 const claimed={issueRef:'https://github.com/kaicreator-mm/tally/issues/169',issueNumber:169,sourceSha:'a'.repeat(40)};
@@ -21,16 +21,16 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join']);
+    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join']);
+    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -88,7 +88,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,4);
+  assert.equal(Object.keys(p.effectBindings).length,5);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
 });
@@ -487,6 +487,35 @@ const snapshotJoin={issueRef:snapshotBase.issueRef,sourceSha:snapshotBase.source
   candidates:[{attemptId:snapshotAttempt.attemptId,candidateTree:snapshotAttempt.candidateTree,
     candidateCommit:snapshotAttempt.candidateCommit},
     {attemptId:'attempt:t06n:snapshot:other',candidateTree:'c'.repeat(40),candidateCommit:'d'.repeat(40)}]};
+const publicationInput={issueRef:'https://github.com/kaicreator-mm/tally/issues/197',issueNumber:197,
+  sourceSha:'d'.repeat(40),attemptId:'attempt:alm:j05:a:1'};
+const publicationObservation={state:'PUBLISHED_VERIFIED',reason:'GITHUB_BRANCH_AND_PR_READBACK_VERIFIED',
+  issueRef:publicationInput.issueRef,sourceSha:publicationInput.sourceSha,attemptId:publicationInput.attemptId,
+  claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,agentLaunch:false,
+  repository:'kaicreator-mm/tally',branch:'tally/reviewed/attempt-alm-j05-a-1',baseRef:'version/v2',
+  candidateCommit:'a'.repeat(40),candidateTree:'b'.repeat(40),pullNumber:203,
+  pullRef:'https://github.com/kaicreator-mm/tally/pull/203',externalRef:'https://github.com/kaicreator-mm/tally/pull/203',
+  taskPass:false,releasePass:false};
+test('T06p publication is non-idempotent and input alone never grants a PR effect',async()=>{
+  const effect=getPolicy().effectBindings['effect:tally-reviewed-candidate-publication'];
+  assert.equal(effect.semantics,'non-idempotent');assert.deepEqual(effect.external,{permitTtlMs:3600000,await:'terminal'});
+  assert.equal(assessCandidatePublication(publicationInput).state,'OBSERVED_INPUT_ONLY');
+  for(const input of [{...publicationInput,issueNumber:196},{...publicationInput,sourceSha:'bad'},null])
+    assert.equal(assessCandidatePublication(input).state,'UNQUALIFIED_INPUT');
+  let calls=0;const denied=await effect.handler({input:{...publicationInput,attemptId:'bad/id'},effectId:'bad',
+    resources:{call:async()=>{calls++;}}});
+  assert.equal(calls,0);assert.equal(denied.state,'UNQUALIFIED_INPUT');
+});
+test('T06p exact PR receipt and UNKNOWN preserve authority boundaries',()=>{
+  const x=projectCandidatePublication({input:publicationInput,observation:publicationObservation,effectId:'pub1'});
+  assert.equal(x.state,'PUBLISHED_VERIFIED');assert.equal(x.pullNumber,203);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  const unknown=projectCandidatePublication({input:publicationInput,observation:{...publicationObservation,
+    state:'PUBLICATION_UNKNOWN',reason:'GITHUB_REF_PUBLICATION_UNKNOWN',admitted:false,claimAccepted:false},effectId:'pub2'});
+  assert.equal(unknown.state,'PUBLICATION_UNKNOWN');assert.equal(unknown.admitted,false);
+  for(const observation of [{...publicationObservation,pullNumber:0},{...publicationObservation,authorized:true},
+    {...publicationObservation,baseRef:'main'}])
+    assert.equal(projectCandidatePublication({input:publicationInput,observation,effectId:'bad'}).state,'NOT_ADMITTED');
+});
 test('#137 open native blockers remain visible with actual query completion time',()=>{
   const x=projectNativeTaskEffectiveSnapshot({expectedIssueRef:snapshotBase.issueRef,
     expectedSourceSha:snapshotBase.sourceSha,observedAt:snapshotBase.observedAt,

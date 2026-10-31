@@ -8,10 +8,10 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-  'effect:tally-reviewer-candidate-join']);
+  'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -138,12 +138,23 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[joinTransition]},finalState],
   };
+  const publicationTransition={
+    transitionKey:'publish-reviewed-candidate',
+    trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED'},
+    targetState:'open',effectIntents:[{
+      effectType:'effect:tally-reviewed-candidate-publication',inputFrom:localAgentInputFrom
+    }]
+  };
+  const publicationWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[publicationTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition]},
         finalState,
       ],
     },
@@ -169,6 +180,10 @@ export function getPolicy(){
       eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         joinId:'joinId',candidates:'candidates'},
+    },'rule:tally-reviewed-candidate-publication':{
+      ruleId:'rule:tally-reviewed-candidate-publication',
+      eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',attemptId:'attemptId'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -203,6 +218,11 @@ export function getPolicy(){
         // The caller role gates only who may REQUEST the Join check.
         roles:['requester','planner','builder','reviewer'],
         definition:joinWorkflow,
+      },
+      publishReviewedCandidate:{
+        trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED'},
+        ruleId:'rule:tally-reviewed-candidate-publication',
+        roles:['requester','planner','reviewer'],definition:publicationWorkflow,
       },
     },
     effectBindings:{
@@ -300,6 +320,23 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectReviewedCandidateJoin({input,observation,effectId});
+        },
+      },
+      'effect:tally-reviewed-candidate-publication':{
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.publishReviewedCandidate'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessCandidatePublication(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex','tally.publishReviewedCandidate',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,sourceSha:input.sourceSha,
+              attemptId:input.attemptId,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectCandidatePublication({input,observation,effectId});
         },
       },
     },
@@ -785,4 +822,56 @@ export function projectReviewedCandidateJoin({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return joinDenied('UNVERIFIED_REVIEWER_JOIN_OBSERVATION',effectId);
   }catch{return joinDenied('UNTRUSTED_REVIEWER_JOIN_OBSERVATION',effectId);}
+}
+
+const PUBLICATION_ISSUES=new Set([197,198]);
+const PUBLICATION_REASONS=new Set(['PUBLICATION_TASK_NOT_ALLOWED','PUBLICATION_INPUT_INVALID',
+  'GITHUB_PROVIDER_TOKEN_UNAVAILABLE','REVIEW_STORE_UNAVAILABLE','CANDIDATE_REVIEW_NOT_FOUND',
+  'CANDIDATE_SUPERSEDED_BY_REPAIR','CANDIDATE_READBACK_MISMATCH','CANDIDATE_REF_MISMATCH',
+  'PUBLICATION_IDENTITY_CONFLICT','PUBLICATION_CLOSED_OR_MERGED','GITHUB_ACCESS_DENIED',
+  'GITHUB_RATE_LIMITED','GITHUB_PUBLICATION_CONFLICT','GITHUB_PUBLICATION_UNKNOWN',
+  'GITHUB_REF_PUBLICATION_UNKNOWN','PUBLICATION_READBACK_MISMATCH','LOCAL_AGENT_PROVIDER_THREW',
+  'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH','CLAIM_REGISTRY_UNAVAILABLE','CLAIM_REGISTRY_RECORD_NOT_FOUND',
+  'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED','CLAIM_REGISTRY_RESERVATION_MISMATCH',
+  'NATIVE_CLAIM_WITNESS_NOT_VERIFIED','NATIVE_SOURCE_NOT_CURRENT','NATIVE_DEPENDENCIES_BLOCKED']);
+const publicationDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,reason,effectId,
+  admitted:false,authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+export function assessCandidatePublication(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',admitted:false,
+    authorized:false,agentLaunch:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,attemptId}=input;
+  if(!ISSUE_REF.test(issueRef)||!PUBLICATION_ISSUES.has(issueNumber)||
+    issueRef!==`https://github.com/kaicreator-mm/tally/issues/${issueNumber}`||
+    !SOURCE_SHA.test(sourceSha)||!LOCAL_ATTEMPT_ID.test(attemptId??''))return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',reason:'REQUIRES_SEALED_REVIEWED_PUBLICATION',
+    issueRef,issueNumber,sourceSha,attemptId,admitted:false,authorized:false,agentLaunch:false,
+    taskPass:false,releasePass:false});
+}
+export function projectCandidatePublication({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.attemptId!==input?.attemptId||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false)
+      return publicationDenied('UNVERIFIED_CANDIDATE_PUBLICATION',effectId);
+    if(o.state==='NOT_ADMITTED'&&PUBLICATION_REASONS.has(o.reason)&&o.admitted===false)
+      return publicationDenied(o.reason,effectId);
+    if(o.state==='PUBLICATION_UNKNOWN'&&PUBLICATION_REASONS.has(o.reason))
+      return publicationDenied(o.reason,effectId,o.state);
+    if(o.state==='PUBLISHED_VERIFIED'&&o.reason==='GITHUB_BRANCH_AND_PR_READBACK_VERIFIED'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&o.claimGeneration===1&&
+      o.repository==='kaicreator-mm/tally'&&o.baseRef==='version/v2'&&
+      SOURCE_SHA.test(o.candidateCommit??'')&&SOURCE_SHA.test(o.candidateTree??'')&&
+      Number.isSafeInteger(o.pullNumber)&&o.pullNumber>0&&
+      /^https:\/\/github\.com\/kaicreator-mm\/tally\/pull\/[1-9][0-9]*$/.test(o.pullRef??'')&&
+      o.externalRef===o.pullRef&&o.branch===`tally/reviewed/${input.attemptId.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()}`)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,issueRef:o.issueRef,
+        sourceSha:o.sourceSha,attemptId:o.attemptId,claimGeneration:1,claimAccepted:true,
+        admitted:true,authorized:false,agentLaunch:false,repository:o.repository,branch:o.branch,
+        baseRef:o.baseRef,candidateCommit:o.candidateCommit,candidateTree:o.candidateTree,
+        pullNumber:o.pullNumber,pullRef:o.pullRef,externalRef:o.externalRef,
+        taskPass:false,releasePass:false});
+    return publicationDenied('UNVERIFIED_CANDIDATE_PUBLICATION',effectId);
+  }catch{return publicationDenied('UNTRUSTED_CANDIDATE_PUBLICATION',effectId);}
 }
