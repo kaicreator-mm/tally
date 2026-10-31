@@ -108,7 +108,10 @@ function dagLanes(tasks){
     cycleCount:cycles.length,candidateCount:plan.coverage?.candidateCount??lanes.length,
     advisoryOnly:plan.advisoryOnly===true};
 }
-export function createIntakeController(config,{host,journeySnapshot,now}={}){
+export function createIntakeController(config,{host,journeySnapshot,sealedDispatch,now}={}){
+  // `host` is READ-ONLY source-fact reading only. Privileged admit effects
+  // flow exclusively through the `sealedDispatch` seam (selected K consumer
+  // envelope); the controller never touches a provider or credential.
   if(!SHA.test(config?.currentSourceSha??''))throw new TypeError('CURRENT_SOURCE_SHA_REQUIRED');
   if(config.author!==undefined&&(typeof config.author!=='string'||!IDENTITY.test(config.author)))
     throw new TypeError('AUTHOR_IDENTITY_INVALID');
@@ -238,18 +241,29 @@ export function createIntakeController(config,{host,journeySnapshot,now}={}){
       const advisory=assessProjectIntakeAdmission(input);
       if(advisory.state!=='OBSERVED_INPUT_ONLY')
         return record('admit-project-intake',blocked(advisory.reason));
-      if(typeof host?.hostProjectIntake!=='function'){
-        state.intake={state:'NOT_RUN',reason:'HOST_PROJECT_INTAKE_UNAVAILABLE',
+      // The workbench UI never dispatches a privileged effect by itself: the
+      // only permitted path is the injected sealedDispatch seam (the selected
+      // K consumer envelope). Without that seam the admit stays NOT_RUN.
+      if(typeof sealedDispatch!=='function'){
+        state.intake={state:'NOT_RUN',reason:'SEALED_K_DISPATCH_UNAVAILABLE',
           githubEffect:'NOT_RUN',project:null,sealedDispatch:'NOT_RUN'};
         return record('admit-project-intake',{status:'OK',...state.intake});
       }
-      const observation=await host.hostProjectIntake({issueNumber:ISSUE,
-        sourceSha:currentSha(),productDigest:state.frozen.digest,projectTitle});
+      let observation=null;
+      try{
+        const envelope=await sealedDispatch({intentType:'admitProjectIntake',input});
+        observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+          envelope.outcome.output:envelope;
+      }catch(error){
+        state.intake={state:'NOT_RUN',reason:'SEALED_K_DISPATCH_FAILED',
+          githubEffect:'NOT_RUN',project:null,sealedDispatch:'SEAM_ERROR'};
+        return record('admit-project-intake',{status:'OK',...state.intake});
+      }
       const projection=projectProjectIntakeAdmission({input,observation,
-        effectId:'intake-workbench'});
+        effectId:'intake-workbench-seam'});
       state.intake={state:projection.state,reason:projection.reason,
         githubEffect:projection.githubEffect??'NOT_RUN',
-        project:projection.project??null,sealedDispatch:'NOT_RUN'};
+        project:projection.project??null,sealedDispatch:'VIA_SEAM'};
       return record('admit-project-intake',{status:'OK',...state.intake});
     },
     async 'refresh-source-facts'(sourceSha){
@@ -285,7 +299,7 @@ export function createIntakeController(config,{host,journeySnapshot,now}={}){
         ...(state.reviewBlock?{reviewBlock:state.reviewBlock}:{}),
       frozen:state.frozen?{...state.frozen}:null,
       intake:state.intake?{...state.intake}:{state:'NOT_RUN',
-        reason:'HOST_PROJECT_INTAKE_REQUIRED',githubEffect:'NOT_RUN',project:null,
+        reason:'SEALED_K_DISPATCH_REQUIRED',githubEffect:'NOT_RUN',project:null,
         sealedDispatch:'NOT_RUN'},
       constraints:{writeSet:[...WRITE_SET],writeSetDigest:digestOf(WRITE_SET),
         pinnedClaim:'kaicreator-mm/tally#210:builder:__default__',

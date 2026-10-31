@@ -2,7 +2,8 @@
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
   publishReviewedCandidate as nativePublishReviewedCandidate,
-  hostProjectIntake as nativeHostProjectIntake}
+  hostProjectIntake as nativeHostProjectIntake,
+  freezeProductIntake as nativeFreezeProductIntake}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -242,5 +243,52 @@ export async function hostProjectIntake(input){
   }
   return Object.freeze({phase:'terminal',
     externalRef:`tally:${INTAKE_ISSUE}:${input?.productDigest??'invalid'}:intake`,
+    outcome:{ok:true,output}});
+}
+
+// T210/J02 — sealed freeze boundary wrapping the Host CAS freeze operation.
+// Only the exact FROZEN_COMPLETE / NOT_FROZEN observation shapes cross; the
+// reviewer independence and receipt digest are re-verified here so provider
+// garbage can never become a frozen fact or a Task/Release PASS.
+const FREEZE_REASONS=new Set(['PRODUCT_FREEZE_INPUT_INVALID','PRODUCT_REVIEW_NOT_INDEPENDENT',
+  'PRODUCT_FREEZE_STORE_UNAVAILABLE','PRODUCT_FREEZE_ALREADY_RECORDED',
+  'PRODUCT_FREEZE_DIGEST_MISMATCH','LOCAL_AGENT_PROVIDER_THREW']);
+const freezeBase=(input,reason)=>({state:'NOT_FROZEN',reason,
+  issueRef:issueRefFor(INTAKE_ISSUE),sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  productDigest:DIGEST.test(input?.productDigest??'')?input.productDigest:null,
+  claimGeneration:1,frozen:false,replayFixture:false,
+  authorized:false,admitted:false,taskPass:false,releasePass:false});
+const validFreezeOutput=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(INTAKE_ISSUE)||
+    o.sourceSha!==input.sourceSha||o.productDigest!==input.productDigest||
+    o.claimGeneration!==1||o.authorized!==false||o.admitted!==false||
+    o.taskPass!==false||o.releasePass!==false)return false;
+  if(o.state==='NOT_FROZEN')return o.frozen===false&&o.replayFixture===false&&
+    FREEZE_REASONS.has(o.reason);
+  if(o.state==='FROZEN_COMPLETE')return o.frozen===true&&o.replayFixture===false&&
+    o.receiptRef===`receipt:sha256:${o.productDigest}`&&
+    o.review&&typeof o.review==='object'&&!Array.isArray(o.review)&&
+    typeof o.review.reviewer==='string'&&o.review.reviewer.length>0&&
+    o.review.reviewer!==o.review.author;
+  return false;
+};
+export async function freezeProductIntake(input){
+  let output;
+  if(!input||typeof input==='object'&&Array.isArray(input)||input.issueNumber!==INTAKE_ISSUE||
+    input.sourceRef!==issueRefFor(INTAKE_ISSUE)||!SHA.test(input.sourceSha??'')||
+    !DIGEST.test(input.productDigest??'')||typeof input.author!=='string'||
+    input.author.length===0||input.author.length>128||
+    typeof input.reviewer!=='string'||input.reviewer.length===0||
+    input.reviewer.length>128||input.author===input.reviewer)
+    output=freezeBase(input,'PRODUCT_REVIEW_NOT_INDEPENDENT');
+  else{
+    let observed;
+    try{observed=await nativeFreezeProductIntake({...input,
+      frozenAt:new Date().toISOString()});}catch{observed=null;}
+    if(validFreezeOutput(input,observed))output=observed;
+    else output=freezeBase(input,'LOCAL_AGENT_PROVIDER_THREW');
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${INTAKE_ISSUE}:${input?.productDigest??'invalid'}:freeze`,
     outcome:{ok:true,output}});
 }

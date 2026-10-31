@@ -131,10 +131,14 @@ async function body(req,limit=4096){
   let text='';for await(const chunk of req){text+=chunk;if(text.length>limit)throw new Error('REQUEST_TOO_LARGE');}
   return text;
 }
-export function createAlmServer(config,{run,intakeHost,intakeJourneySnapshot}={}){
+export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
+  intakeJourneySnapshot}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
-      {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot())}),
+      {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
+        // Privileged admit effects flow only through this K-consumer seam;
+        // absent a seam the intake admit stays NOT_RUN in the UI.
+        sealedDispatch:intakeSealedDispatch??null}),
     actionKey=randomBytes(24).toString('hex');
   let lastIntakeResult=null;
   const server=http.createServer(async(req,res)=>{

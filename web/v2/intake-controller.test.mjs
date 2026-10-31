@@ -26,8 +26,8 @@ const tasks=[
 const journeySnapshot=()=>({status:'OBSERVED',project:'tally',version:'v2',sourceSha,
   observedAsOf:'2026-10-31T08:00:00.000Z',currentness:'OBSERVED_AT_QUERY_COMPLETION',
   tasks,authorized:false,admitted:false,taskPass:false,releasePass:false});
-const make=({host}={})=>createIntakeController({currentSourceSha:sourceSha},
-  {host,journeySnapshot});
+const make=({host,sealedDispatch}={})=>createIntakeController({currentSourceSha:sourceSha},
+  {host,sealedDispatch,journeySnapshot});
 const goalSha=(controller,args,kind='submit-goal')=>controller.dispatch(sourceSha,kind,args);
 
 test('initial snapshot: real sources pinned, live facts NOT_RUN, DAG lanes with native claim facts',()=>{
@@ -111,36 +111,47 @@ test('freeze requires the guided summary step and current source',async()=>{
   assert.equal(stale.status,'STALE_SOURCE');
 });
 
-test('admit-project-intake stays NOT_RUN without a Host and follows the sealed observation with one',async()=>{
-  const withoutHost=make();
-  await seedFrozen(withoutHost);
-  const notRun=await withoutHost.dispatch(sourceSha,'admit-project-intake',
+test('admit goes only through the sealedDispatch seam; default stays NOT_RUN',async()=>{
+  const withoutSeam=make();
+  await seedFrozen(withoutSeam);
+  const notRun=await withoutSeam.dispatch(sourceSha,'admit-project-intake',
     {projectTitle:'Tally v2 Intake'});
-  assert.equal(notRun.state,'NOT_RUN');assert.equal(notRun.reason,'HOST_PROJECT_INTAKE_UNAVAILABLE');
+  assert.equal(notRun.state,'NOT_RUN');assert.equal(notRun.reason,'SEALED_K_DISPATCH_UNAVAILABLE');
   assert.equal(notRun.githubEffect,'NOT_RUN');assert.equal(notRun.sealedDispatch,'NOT_RUN');
   const calls=[];
-  const host={hostProjectIntake:async arg=>{calls.push(arg);
-    return {state:'PROJECT_INTAKE_ADMITTED',reason:'PROJECT_INTAKE_PUBLISHED_AND_READBACK_VERIFIED',
-      issueRef:ISSUE_REF,sourceSha,productDigest:arg.productDigest,claimGeneration:1,
-      claimAccepted:true,admitted:true,authorized:false,replayFixture:false,
-      githubEffect:'PERFORMED_VERIFIED',repository:'kaicreator-mm/tally',
-      project:{number:7,title:'Tally v2 Intake',
-        url:'https://github.com/kaicreator-mm/tally/projects/7',itemCount:1},
-      taskPass:false,releasePass:false};}};
-  const withHost=make({host});
-  await seedFrozen(withHost);
-  const admitted=await withHost.dispatch(sourceSha,'admit-project-intake',
+  // The seam receives exactly the K consumer envelope contract
+  // ({phase:'terminal',outcome:{ok,output}}); the controller has no other
+  // privileged path — the host fixture below deliberately has no
+  // hostProjectIntake member at all.
+  const seam=async request=>{calls.push(request);
+    const {intentType,input}=request;
+    assert.equal(intentType,'admitProjectIntake');
+    return {phase:'terminal',outcome:{ok:true,output:{
+      state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+      issueRef:ISSUE_REF,sourceSha:input.sourceSha,productDigest:input.productDigest,
+      claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+      replayFixture:true,githubEffect:'NOT_RUN',project:null,
+      taskPass:false,releasePass:false}}}};
+  const withSeam=make({sealedDispatch:seam});
+  await seedFrozen(withSeam);
+  const replayed=await withSeam.dispatch(sourceSha,'admit-project-intake',
     {projectTitle:'Tally v2 Intake'});
-  assert.equal(admitted.state,'PROJECT_INTAKE_ADMITTED');
-  assert.equal(admitted.githubEffect,'PERFORMED_VERIFIED');
-  assert.equal(admitted.project.number,7);
-  assert.equal(admitted.sealedDispatch,'NOT_RUN');
-  assert.deepEqual(calls.map(x=>x.issueNumber),[210]);
-  assert.equal(calls[0].sourceSha,sourceSha);
-  const snapshot=withHost.snapshot();
-  assert.equal(snapshot.intake.state,'PROJECT_INTAKE_ADMITTED');
+  assert.equal(replayed.state,'REPLAY_COMPLETE');
+  assert.equal(replayed.githubEffect,'NOT_RUN');
+  assert.equal(replayed.sealedDispatch,'VIA_SEAM');
+  assert.deepEqual(calls.map(x=>x.input.issueNumber),[210]);
+  assert.equal(calls[0].input.sourceSha,sourceSha);
+  const snapshot=withSeam.snapshot();
+  assert.equal(snapshot.intake.state,'REPLAY_COMPLETE');
   assert.equal(snapshot.taskPass,false);assert.equal(snapshot.releasePass,false);
   assert.equal(snapshot.authorized,false);
+  // A seam that throws must degrade to NOT_RUN instead of faking an effect.
+  const throwing=make({sealedDispatch:async()=>{throw new Error('k down');}});
+  await seedFrozen(throwing);
+  const failed=await throwing.dispatch(sourceSha,'admit-project-intake',
+    {projectTitle:'Tally v2 Intake'});
+  assert.equal(failed.state,'NOT_RUN');assert.equal(failed.reason,'SEALED_K_DISPATCH_FAILED');
+  assert.equal(failed.sealedDispatch,'SEAM_ERROR');
 });
 async function seedFrozen(controller){
   await goalSha(controller,{goal:'Goal'});

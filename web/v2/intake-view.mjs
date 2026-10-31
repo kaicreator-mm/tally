@@ -104,7 +104,7 @@ function intakePanel(snapshot,mode){
     <h2 id="intake-effect">Governed project effect (J01b)</h2>
     <span class="quiet">Selected B → one K → Host/GitHub C with the accepted Claim, exact source and repo allowlist. No UI or Agent credential.</span></div>
     <p>Effect state ${badge(intake.state??NOT_RUN)} · GitHub effect ${badge(intake.githubEffect??NOT_RUN)}</p>
-    <p class="quiet">${escape(intake.reason??'HOST_PROJECT_INTAKE_REQUIRED')} · sealed K dispatch: ${escape(intake.sealedDispatch??'NOT_RUN')}${intake.project?` · project <a href="${url(`https://github.com/kaicreator-mm/tally/projects/${intake.project.number}`)}" target="_blank" rel="noreferrer">#${escape(intake.project.number)}</a> ${escape(intake.project.title)}`:''}</p>
+    <p class="quiet">${escape(intake.reason??'SEALED_K_DISPATCH_REQUIRED')} · sealed K dispatch: ${escape(intake.sealedDispatch??'NOT_RUN')}${intake.project?` · project <a href="${url(`https://github.com/kaicreator-mm/tally/projects/${intake.project.number}`)}" target="_blank" rel="noreferrer">#${escape(intake.project.number)}</a> ${escape(intake.project.title)}`:''}</p>
     ${mode==='write'?`<form class="intake-form" aria-label="Admit project intake">
       <div class="field"><label for="intake-project-title">Target project title</label>
         <input id="intake-project-title" name="projectTitle" type="text" maxlength="120" required></div>

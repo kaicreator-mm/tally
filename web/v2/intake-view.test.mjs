@@ -22,7 +22,7 @@ const base=()=>({status:'OBSERVED',project:'kaicreator-mm',version:'v2',sourceSh
     caseRef:{snapshotId:'case',digest:'e'.repeat(64)},goals:[],evidence:[],
     decision:{status:'NEED_EVIDENCE',reasonCode:'GOAL_REQUIRED',step:null,evidenceRefs:[]}},
   sources,dag,draft:null,review:null,frozen:null,
-  intake:{state:'NOT_RUN',reason:'HOST_PROJECT_INTAKE_REQUIRED',
+  intake:{state:'NOT_RUN',reason:'SEALED_K_DISPATCH_REQUIRED',
     githubEffect:'NOT_RUN',project:null,sealedDispatch:'NOT_RUN'},
   constraints:{writeSet:Array.from({length:16},(_,i)=>`path/${i}.mjs`),
     writeSetDigest:'f'.repeat(64),pinnedClaim:'kaicreator-mm/tally#210:builder:__default__',
@@ -44,7 +44,7 @@ test('read mode renders facts and explicit NOT_RUN with zero buttons and zero JS
   const html=renderIntakeWorkspace(base(),{mode:'read'});
   assert.doesNotMatch(html,/<button/i);assert.doesNotMatch(html,/onclick|onerror|onsubmit/i);
   assert.match(html,/NOT_RUN/);assert.match(html,/HOST_GITHUB_READ_REQUIRED/);
-  assert.match(html,/HOST_PROJECT_INTAKE_REQUIRED/);
+  assert.match(html,/SEALED_K_DISPATCH_REQUIRED/);
   assert.match(html,/sealed K dispatch: NOT_RUN/);
   assert.doesNotMatch(html,/textarea/i);
   assert.match(html,/a draft is never an accepted Freeze/i);

@@ -60,6 +60,8 @@ export async function freezeProductIntake({openStore,registryPath,sourceSha,
       existing.value.sourceSha===sourceSha&&existing.value.review?.reviewer===reviewer)
       return Object.freeze({...unqualified('PRODUCT_FREEZE_ALREADY_RECORDED'),
         state:'FROZEN_COMPLETE',frozen:true,
+        review:Object.freeze({author:String(existing.value.review.author),
+          reviewer:String(existing.value.review.reviewer)}),
         receiptRef:`receipt:sha256:${productDigest}`});
     return unqualified('PRODUCT_FREEZE_DIGEST_MISMATCH');
   }
@@ -76,6 +78,7 @@ export async function freezeProductIntake({openStore,registryPath,sourceSha,
   return Object.freeze({state:'FROZEN_COMPLETE',reason:'INDEPENDENT_REVIEW_FROZEN_IN_HOST_CAS',
     issueRef:ISSUE_REF,sourceSha,productDigest,
     receiptRef:`receipt:sha256:${productDigest}`,frozen:true,claimGeneration:1,
+    review:Object.freeze({author,reviewer}),
     replayFixture:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
 }
 
