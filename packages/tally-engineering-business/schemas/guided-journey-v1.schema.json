@@ -1,0 +1,512 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DomainHarness v0.10.3 Guided Journey shared message contract R0",
+  "description": "Planning candidate only. Not frozen and not a public SDK export. Consumer must separately verify eligible template identity, fresh evidence, business authority and K effect permits.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/StepSpec"
+    },
+    {
+      "$ref": "#/$defs/StepOutcome"
+    },
+    {
+      "$ref": "#/$defs/NextStepRequest"
+    },
+    {
+      "$ref": "#/$defs/NextStepDecision"
+    },
+    {
+      "$ref": "#/$defs/LLMAdvisory"
+    }
+  ],
+  "$defs": {
+    "ContractVersion": {
+      "const": "dh.guided-journey/1"
+    },
+    "TemplateRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "artifactId",
+        "version",
+        "digest"
+      ]
+    },
+    "CaseRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snapshotId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$",
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "snapshotId",
+        "digest"
+      ]
+    },
+    "StepOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "labelKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "disabledReasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "id",
+        "labelKey",
+        "eligible"
+      ]
+    },
+    "StepField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "type": {
+          "enum": [
+            "CHOICE",
+            "MULTI",
+            "TEXT",
+            "CONFIRM"
+          ]
+        },
+        "labelKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepOption"
+          },
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "labelKey",
+        "required"
+      ]
+    },
+    "StepSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messageType": {
+          "const": "step.spec"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/ContractVersion"
+        },
+        "journeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "stepId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "templateRef": {
+          "$ref": "#/$defs/TemplateRef"
+        },
+        "caseRef": {
+          "$ref": "#/$defs/CaseRef"
+        },
+        "kind": {
+          "enum": [
+            "DEVICE_IDENTIFY",
+            "CHOOSE_GOAL",
+            "ASK",
+            "INSPECT",
+            "CHOOSE_ROUTE",
+            "REFINE_ACTION",
+            "REVIEW_EFFECT",
+            "VERIFY_OUTCOME",
+            "SUMMARY"
+          ]
+        },
+        "titleKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepField"
+          },
+          "maxItems": 12
+        },
+        "allowedEvents": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "USER_SUBMIT",
+              "SKIP",
+              "BACK",
+              "PAUSE",
+              "RESUME",
+              "OBSERVATION_RECEIPT",
+              "EFFECT_RECEIPT"
+            ]
+          },
+          "maxItems": 7,
+          "uniqueItems": true
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "actionPreviewRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "messageType",
+        "contractVersion",
+        "journeyId",
+        "stepId",
+        "templateRef",
+        "caseRef",
+        "kind",
+        "titleKey",
+        "fields",
+        "allowedEvents",
+        "evidenceRefs"
+      ]
+    },
+    "StepOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messageType": {
+          "const": "step.outcome"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/ContractVersion"
+        },
+        "journeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "stepId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "event": {
+          "enum": [
+            "USER_SUBMIT",
+            "SKIP",
+            "BACK",
+            "PAUSE",
+            "RESUME",
+            "OBSERVATION_RECEIPT",
+            "EFFECT_RECEIPT"
+          ]
+        },
+        "selectedOptionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "receiptRef": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "messageType",
+        "contractVersion",
+        "journeyId",
+        "stepId",
+        "event",
+        "evidenceRefs"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "event": {
+                "enum": [
+                  "OBSERVATION_RECEIPT",
+                  "EFFECT_RECEIPT"
+                ]
+              }
+            },
+            "required": [
+              "event"
+            ]
+          },
+          "then": {
+            "required": [
+              "receiptRef"
+            ]
+          }
+        }
+      ]
+    },
+    "NextStepRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messageType": {
+          "const": "next-step.request"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/ContractVersion"
+        },
+        "journeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "goals": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "maxItems": 8,
+          "uniqueItems": true
+        },
+        "caseRef": {
+          "$ref": "#/$defs/CaseRef"
+        },
+        "catalogRef": {
+          "$ref": "#/$defs/TemplateRef"
+        },
+        "eligibleTemplateRefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TemplateRef"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "previousOutcome": {
+          "$ref": "#/$defs/StepOutcome"
+        }
+      },
+      "required": [
+        "messageType",
+        "contractVersion",
+        "journeyId",
+        "goals",
+        "caseRef",
+        "catalogRef",
+        "eligibleTemplateRefs"
+      ]
+    },
+    "NextStepDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messageType": {
+          "const": "next-step.decision"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/ContractVersion"
+        },
+        "journeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "status": {
+          "enum": [
+            "STEP",
+            "NEED_EVIDENCE",
+            "WAIT",
+            "BLOCKED",
+            "DONE"
+          ]
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "step": {
+          "$ref": "#/$defs/StepSpec"
+        }
+      },
+      "required": [
+        "messageType",
+        "contractVersion",
+        "journeyId",
+        "status",
+        "reasonCode",
+        "evidenceRefs"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "STEP"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "step"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "step"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "LLMAdvisory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "messageType": {
+          "const": "llm.advisory"
+        },
+        "contractVersion": {
+          "$ref": "#/$defs/ContractVersion"
+        },
+        "journeyId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "caseRef": {
+          "$ref": "#/$defs/CaseRef"
+        },
+        "suggestedTemplateRef": {
+          "$ref": "#/$defs/TemplateRef"
+        },
+        "reasonCode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "maxItems": 24,
+          "uniqueItems": true
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "messageType",
+        "contractVersion",
+        "journeyId",
+        "caseRef",
+        "suggestedTemplateRef",
+        "reasonCode",
+        "evidenceRefs"
+      ]
+    }
+  }
+}

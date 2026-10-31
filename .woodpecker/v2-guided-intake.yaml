@@ -1,0 +1,65 @@
+# Tally v2 guided Project/Product intake: exact-SHA Node24 + frozen schema gate.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-engineering-business/src/guided-intake.mjs'
+        - 'packages/tally-engineering-business/test/guided-intake.test.mjs'
+        - 'packages/tally-engineering-business/schemas/guided-journey-v1.schema.json'
+        - '.woodpecker/v2-guided-intake.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i148-k3]
+
+labels:
+  backend: local
+
+steps:
+  - name: guided-exact-head-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+      - git show --format= --name-only HEAD
+
+  - name: guided-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target"
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target"
+            base="$(git merge-base refs/ci-base/target HEAD)"
+          fi
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_GUIDED_TRAILERS_PASS
+
+  - name: guided-upstream-frozen-schema
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.guided-ci"
+      - rm -rf -- "$work"
+      - git clone --quiet --depth 1 --branch v0.10.3 https://github.com/kaicreator-mm/domain-harness.git "$work/dh"
+      - test "$(git -C "$work/dh" rev-parse HEAD)" = 061376f4a023070f215f9feffad5c24d96d503cb
+      - cmp packages/tally-engineering-business/schemas/guided-journey-v1.schema.json "$work/dh/docs/product/v0.10.3/contracts/guided-journey-v1.schema.json"
+      - echo TALLY_V2_GUIDED_UPSTREAM_FROZEN_SCHEMA_PASS
+
+  - name: guided-schema-and-unit
+    image: bash
+    commands:
+      - set -euo pipefail
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      - node --test packages/tally-engineering-business/test/guided-intake.test.mjs
+      - echo TALLY_V2_GUIDED_INTAKE_PASS
+      - echo TALLY_V2_GUIDED_NO_CLAIM_OR_EFFECT_AUTHORITY

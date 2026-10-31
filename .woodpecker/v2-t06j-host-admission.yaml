@@ -75,6 +75,7 @@ steps:
       - set -euo pipefail
       - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
       - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
       - npm --prefix packages/tally-engineering-business test
       - node --test packages/tally-github-native-c/test/*.test.mjs
       - echo TALLY_V2_T06J_B_AND_NATIVE_C_PASS
