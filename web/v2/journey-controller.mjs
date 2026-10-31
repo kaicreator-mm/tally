@@ -109,10 +109,11 @@ async function resultOf(kind,config,run){
 }
 export function createJourneyController(config,{run}={}){
   if(!SHA.test(config.currentSourceSha??''))throw new TypeError('CURRENT_SOURCE_SHA_REQUIRED');
-  const history=[];
+  const history=[];let pending=Promise.resolve();
   async function act(kind,sourceSha){
     if(sourceSha!==config.currentSourceSha)return {status:'STALE_SOURCE',taskPass:false,releasePass:false};
-    const result=await resultOf(kind,config,run);history.push({kind,...result});
+    const execution=pending.then(()=>resultOf(kind,config,run));pending=execution.catch(()=>{});
+    const result=await execution;history.push({kind,...result});
     return result;
   }
   function snapshot(){
@@ -127,6 +128,7 @@ export function createJourneyController(config,{run}={}){
       observedAsOf:new Date().toISOString(),currentness:'REAL_ACTION_READBACK',tasks:[
         task(196,'https://github.com/kaicreator-mm/tally/issues/196',CLAIM_SINGLE.sourceSha,single),
         task(197,'https://github.com/kaicreator-mm/tally/issues/197',CONCURRENT.sourceSha,review),
+        task(198,'https://github.com/kaicreator-mm/tally/issues/198',CONCURRENT.sourceSha,review),
         task(200,'https://github.com/kaicreator-mm/tally/issues/200',CONCURRENT.sourceSha,review)],
       progressSignals:{realCandidates:history.filter(x=>x.status==='PASS').length,reviewed:review?.result?.result?.rejoin?.state==='REVIEW_JOINED'?1:0,released:0,comparison:'COUNTS_NOT_PERCENTAGES'},
       result:latest??null,authorized:false,admitted:false,taskPass:false,releasePass:false};

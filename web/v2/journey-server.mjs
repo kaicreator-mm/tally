@@ -14,7 +14,7 @@ const CLIENT=String.raw`export async function startJourneyClient(renderJourneyWo
     button.disabled=true;button.textContent='RUNNING';
     try{const response=await fetch('/api/actions',{method:'POST',headers:{'content-type':'application/json','x-tally-action-key':key},
       body:JSON.stringify({kind:button.dataset.action,sourceSha:button.dataset.sourceSha})});
-      const result=await response.json();if(!response.ok)throw new Error(result.reason??'ACTION_FAILED');await report();
+      const result=await response.json();await report();if(!response.ok)throw new Error(result.reason??'ACTION_FAILED');
     }catch(error){button.textContent=error.message;button.disabled=false;}
   });
   await report();
@@ -31,9 +31,11 @@ const json=(value)=>JSON.stringify(value);
 function actionDefinitions(sourceSha){return [
   {kind:'start',authorizationType:'START_ELIGIBLE_CLAIM',reason:'Run real Local Codex through the existing K/Host consumer',
     actorRole:'builder',requiredCapability:'WINDOWS_CODEX_HOST',approvalNeeded:true,costRisk:'LOW',
+    evidence:{sourceRef:'https://github.com/kaicreator-mm/tally/issues/196'},
     authorization:'HOST_AND_ADS_REQUIRED',currentness:'REAL_ACTION_READBACK',sourceSha},
   {kind:'review-repair',authorizationType:'START_ELIGIBLE_INDEPENDENT_REVIEW',reason:'Run independent Reviewer Join, bounded Repair and re-Join',
     actorRole:'reviewer',requiredCapability:'INDEPENDENT_REVIEWER',approvalNeeded:true,costRisk:'LOW',
+    evidence:{sourceRef:'https://github.com/kaicreator-mm/tally/issues/200'},
     authorization:'HOST_AND_ADS_REQUIRED',currentness:'REAL_ACTION_READBACK',sourceSha}
 ];}
 async function body(req,limit=4096){

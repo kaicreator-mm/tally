@@ -68,11 +68,11 @@ if(replay){
   await registry.put(registryKey,reservation,{mustBeAbsent:true});
   await registry.put(registryKey,rowValue(),{mustMatchRevision:0});
   await registry.put(writeSetKey,{phase:'FROZEN_DAG_WRITESET',repository:'kaicreator-mm/tally',
-    issueNumber:172,sourceSha,writeSetSha256,document:writeSetDocument},{mustBeAbsent:true});
+    issueNumber,sourceSha,writeSetSha256,document:writeSetDocument},{mustBeAbsent:true});
   const date='2026-10-30T00:00:00Z';
-  const body=`<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v3\nkind: event\ndata:\n  schema: ai-dev/event-v2\n  event: DISPATCH_CLAIMED\n  actor_role: builder\n  operator_kind: ${operatorKind}\n  operator_id: ${operatorId}\n  task: '#172'\n  issue: '#172'\n  sha: ${sourceSha}\n  dispatch_id: ${dispatchId}\n  dispatch_state: CLAIMED\n  protected_claim_key: ${claimKey}\n  admission_generation: 1\n\`\`\`\n`;
+  const body=`<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v3\nkind: event\ndata:\n  schema: ai-dev/event-v2\n  event: DISPATCH_CLAIMED\n  actor_role: builder\n  operator_kind: ${operatorKind}\n  operator_id: ${operatorId}\n  task: '#${issueNumber}'\n  issue: '#${issueNumber}'\n  sha: ${sourceSha}\n  dispatch_id: ${dispatchId}\n  dispatch_state: CLAIMED\n  protected_claim_key: ${claimKey}\n  admission_generation: 1\n\`\`\`\n`;
   const comment={id:commentId,body,html_url:`${issueRef}#issuecomment-${commentId}`,
-    issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/172',
+    issue_url:`https://api.github.com/repos/kaicreator-mm/tally/issues/${issueNumber}`,
     created_at:date,updated_at:date,user:{login:writerLogin}};
   const issue={id:issueNumber*10,number:issueNumber,html_url:issueRef,state:'open',updated_at:date,
     labels:[{name:'type:task'},{name:'state:ready'}]};

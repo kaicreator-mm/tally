@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {defaultAlmConfig,createJourneyController} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
+import {renderJourneyWorkspace} from './journey-view.mjs';
 
 const sourceSha='d'.repeat(40);
 const config=root=>defaultAlmConfig({dhPath:'/dh',tallyPath:'/tally',tallyBPath:'/tally',githubToken:'secret-token',
@@ -66,6 +67,10 @@ test('same-origin HTTP actions enforce CSRF exact SHA and real result readback',
     }
     const snapshot=await fetch(origin+'/api/snapshot').then(r=>r.json());
     assert.equal(snapshot.actions.length,2);
+    const initialHtml=renderJourneyWorkspace(snapshot.snapshot,{actions:snapshot.actions,humanActionInbox:[],mode:'write'});
+    const singleRow=initialHtml.match(/<tr class="task-row">[\s\S]*?issues\/196[\s\S]*?<\/tr>/)?.[0];
+    const reviewerRow=initialHtml.match(/<tr class="task-row">[\s\S]*?issues\/200[\s\S]*?<\/tr>/)?.[0];
+    assert.match(singleRow,/START_ELIGIBLE_CLAIM/);assert.match(reviewerRow,/START_ELIGIBLE_INDEPENDENT_REVIEW/);
     const denied=await fetch(origin+'/api/actions',{method:'POST',headers:{'content-type':'application/json','x-tally-action-key':'wrong',origin},
       body:JSON.stringify({kind:'start',sourceSha})});
     assert.equal(denied.status,403);
@@ -85,6 +90,16 @@ test('same-origin HTTP actions enforce CSRF exact SHA and real result readback',
     const latest=await fetch(origin+'/api/snapshot').then(r=>r.json());
     assert.equal(latest.snapshot.result['result']['result']['rejoin']['state'],'REVIEW_JOINED');
   }finally{await app.close();await rm(root,{recursive:true,force:true});}
+});
+
+test('real actions are serialized instead of racing shared worktrees and evidence',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'alm-serial-'));let active=0,maxActive=0;
+  const serialRunner=async kind=>{active++;maxActive=Math.max(maxActive,active);
+    await new Promise(resolve=>setTimeout(resolve,15));active--;return runner(kind);};
+  try{const controller=createJourneyController(config(root),{run:serialRunner});
+    const [started,reviewed]=await Promise.all([controller.start(sourceSha),controller.reviewRepair(sourceSha)]);
+    assert.equal(started.status,'PASS');assert.equal(reviewed.status,'PASS');assert.equal(maxActive,1);
+  }finally{await rm(root,{recursive:true,force:true});}
 });
 
 test('invalid current source is rejected before any process or UI action',()=>{
