@@ -61,11 +61,11 @@ steps:
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs
-      - node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"
-      - grep -q '"ok": true' "${TMPDIR:-/tmp}/journey-browser-witness.json"
-      - grep -q '"hostExecution": "INJECTED_RUN_SEAM"' "${TMPDIR:-/tmp}/journey-browser-witness.json"
-      - grep -q '"realWindowsCodex": "NOT_RUN"' "${TMPDIR:-/tmp}/journey-browser-witness.json"
-      - grep -q '"browser": "GUI_NOT_PROVEN"' "${TMPDIR:-/tmp}/journey-browser-witness.json"
+      - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
+      - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
+      - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
+      - 'grep -q ''"realWindowsCodex": "NOT_RUN"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
+      - 'grep -q ''"browser": "GUI_NOT_PROVEN"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - echo TALLY_V2_ALM_WORKSPACE_SOURCE_TESTS_PASS
       - echo TALLY_V2_J06_BROWSER_JOURNEY_SOURCE_TESTS_PASS_V74_V75_V76_V82
       - echo TALLY_V2_J06_REAL_BROWSER_GUI_NOT_PROVEN_IN_DOCKER
