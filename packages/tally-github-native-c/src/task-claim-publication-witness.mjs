@@ -4,6 +4,7 @@
  */
 import {createHash} from 'node:crypto';
 import {Octokit} from '@octokit/rest';
+import {createNativeReadRetryFetch} from './read-retry.mjs';
 import {readClaimEventCandidatesFromClient} from './task-claim-events.mjs';
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
@@ -81,6 +82,6 @@ export async function readClaimPublicationWitnessFromClient({
 export async function readGitHubClaimPublicationWitness({token,...input}={}){
   if(typeof token!=='string'||token.length<8)
     return deny('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
-  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const octokit=new Octokit({auth:token,request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
   return readClaimPublicationWitnessFromClient({octokit,...input});
 }

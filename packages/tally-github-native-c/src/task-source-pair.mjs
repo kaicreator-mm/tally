@@ -8,6 +8,7 @@
  * only K may authorize later physical effects after separate Host authority.
  */
 import {Octokit} from '@octokit/rest';
+import {createNativeReadRetryFetch} from './read-retry.mjs';
 import {readWorkItemSourceFromClient} from './task-workitem-source.mjs';
 import {readClaimEventCandidatesFromClient} from './task-claim-events.mjs';
 
@@ -114,7 +115,7 @@ export async function readGitHubNativeTaskSourcePair({
 }={}){
   if(typeof token!=='string'||token.length<8)
     return denied('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
-  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const octokit=new Octokit({auth:token,request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
   return readNativeTaskSourcePairFromClient({
     octokit,owner,repo,issueNumber,expectedSourceSha,limit
   });
