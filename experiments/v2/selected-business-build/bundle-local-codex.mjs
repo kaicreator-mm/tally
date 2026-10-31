@@ -30,7 +30,12 @@ const TASK_BINDINGS={
   172:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
   177:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
   178:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
-  179:{actorRole:'reviewer'}
+  179:{actorRole:'reviewer'},
+  196:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
+  197:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
+  198:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
+  199:{actorRole:'reviewer'},
+  200:{actorRole:'reviewer'}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -190,9 +195,9 @@ export async function runLocalCodexAttempt(input){
   }
 }
 export async function joinReviewedCandidates(input){
-  const env=process.env;
+  const env=process.env,reviewer=Number(env.TALLY_CONCURRENT_ISSUE_REVIEWER??179);
   const issueNumber=input?.issueNumber;
-  if(input?.sourceRef!==issueRefFor(issueNumber)||issueNumber!==179||
+  if(input?.sourceRef!==issueRefFor(issueNumber)||issueNumber!==reviewer||
     TASK_BINDINGS[issueNumber]?.actorRole!=='reviewer'||
     !SHA.test(input.sourceSha??'')||!ATTEMPT.test(input.joinId??'')||
     input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||
@@ -212,9 +217,9 @@ export async function joinReviewedCandidates(input){
       claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
       joinedAt:null,candidates:[]};
   // The Reviewer Claim is verified independently of every Builder Claim.
-  const reviewerCheck=await verifyAcceptedClaim(env,179,'reviewer');
+  const reviewerCheck=await verifyAcceptedClaim(env,reviewer,'reviewer');
   if(!reviewerCheck.ok)return joinDenied(input,reviewerCheck.reason);
-  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,179,input.sourceSha);
+  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,reviewer,input.sourceSha);
   if(!pairCheck.ok)return joinDenied(input,pairCheck.reason);
   // Self-assertion: the Reviewer identity must differ from every Builder
   // identity it reviews; a Builder cannot review its own candidate.
@@ -226,7 +231,7 @@ export async function joinReviewedCandidates(input){
   }
   try{
     const joined=await createLocalCodexHost().joinReviewedCandidates({
-      issueRef:issueRefFor(179),sourceSha:input.sourceSha,joinId:input.joinId,
+      issueRef:issueRefFor(reviewer),sourceSha:input.sourceSha,joinId:input.joinId,
       hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
       repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
       gitPath:env.TALLY_GIT_PATH,candidates});

@@ -32,10 +32,13 @@ const replay=process.env.TALLY_LOCAL_REPLAY==='1';
 const token=process.env.TALLY_GITHUB_READ_TOKEN;
 const sourceSha=process.env.TALLY_CLAIM_SOURCE_SHA;
 const issueRefFor=n=>'https://github.com/kaicreator-mm/tally/issues/'+n;
+const issueA=Number(process.env.TALLY_CONCURRENT_ISSUE_A??177);
+const issueB=Number(process.env.TALLY_CONCURRENT_ISSUE_B??178);
+const issueReviewer=Number(process.env.TALLY_CONCURRENT_ISSUE_REVIEWER??179);
 const CLAIMS=[
-  {issueNumber:177,actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
-  {issueNumber:178,actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
-  {issueNumber:179,actorRole:'reviewer'},
+  {issueNumber:issueA,actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_A.md'},
+  {issueNumber:issueB,actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/CONCURRENT_B.md'},
+  {issueNumber:issueReviewer,actorRole:'reviewer'},
 ];
 for(const claim of CLAIMS){
   const p='TALLY_TASK_CLAIM_'+claim.issueNumber+'_';
@@ -158,9 +161,9 @@ const attemptMessage=(claim,attemptId,instanceKey,messageId)=>({
   input:{issueRef:issueRefFor(claim.issueNumber),issueNumber:claim.issueNumber,
     sourceSha,attemptId}});
 const joinMessage=(joinId,candidates,messageId)=>({
-  intentType:'joinReviewedCandidates',instanceKey:'task-concurrent-codex-179',
+  intentType:'joinReviewedCandidates',instanceKey:`task-concurrent-codex-${issueReviewer}`,
   messageId,
-  input:{issueRef:issueRefFor(179),issueNumber:179,sourceSha,joinId,candidates}});
+  input:{issueRef:issueRefFor(issueReviewer),issueNumber:issueReviewer,sourceSha,joinId,candidates}});
 const candidatesFrom=effects=>effects.map((effect,ix)=>({
   issueNumber:CLAIMS[ix].issueNumber,attemptId:effect.attemptId,
   candidateTree:effect.candidateTree??'a'.repeat(40),
@@ -171,7 +174,7 @@ try{
   facade=await load(sealed,options(sqlite));
   // ONE K facade; TWO distinct instance keys/messages so the two real
   // external Builder effects genuinely overlap in process lifetimes.
-  const instanceKeyA='task-concurrent-codex-177',instanceKeyB='task-concurrent-codex-178';
+  const instanceKeyA=`task-concurrent-codex-${issueA}`,instanceKeyB=`task-concurrent-codex-${issueB}`;
   for(const [claim,instanceKey] of [[CLAIMS[0],instanceKeyA],[CLAIMS[1],instanceKeyB]]){
     const initialized=await facade.send({intentType:'inspectTaskReadiness',instanceKey,
       messageId:'message-t06n-init-'+claim.issueNumber,input:{issueRef:issueRefFor(claim.issueNumber),
@@ -269,7 +272,7 @@ try{
   const rejoinEffect=rejoined.admitted.effects[0].output;
   assert.equal(replay?rejoinEffect.state==='REPLAY_COMPLETE':rejoinEffect.state==='REVIEW_JOINED',
     true,JSON.stringify(rejoinEffect));
-  const before=(await facade.query(selectorFor('task-concurrent-codex-177'))).snapshot;
+  const before=(await facade.query(selectorFor(instanceKeyA))).snapshot;
   const recordsBefore=await sqlite.list('');
   for(const key of recordsBefore){
     const row=await sqlite.get(key);const text=JSON.stringify(row);
@@ -280,7 +283,7 @@ try{
   delete process.env.TALLY_GITHUB_READ_TOKEN;
   sqlite=await openSqliteCasStore({path:db,busyTimeoutMs:1000});
   facade=await load(sealed,options(sqlite));
-  assert.deepEqual((await facade.query(selectorFor('task-concurrent-codex-177'))).snapshot,before);
+  assert.deepEqual((await facade.query(selectorFor(instanceKeyA))).snapshot,before);
   const replayed=await facade.send(joinMessage('join:t06n:179:2',
     candidatesFrom([effectA,repairEffect]),'message-t06n-join-2'));
   assert.equal(replayed.status,'admitted');assert.equal(replayed.idempotentReplay,true);

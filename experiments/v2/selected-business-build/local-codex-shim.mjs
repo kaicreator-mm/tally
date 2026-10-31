@@ -11,8 +11,8 @@ export const CAPABILITY_ID='tally-local-codex';
 export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
-const ISSUES=new Set([172,177,178]);
-const REVIEWER_ISSUE=179;
+const ISSUES=new Set([172,177,178,196,197,198]);
+const REVIEWER_ISSUE=Number(process.env.TALLY_CONCURRENT_ISSUE_REVIEWER??179);
 const OWNER='kaicreator-mm',REPO='tally';
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const SHA=/^[0-9a-f]{40}$/;

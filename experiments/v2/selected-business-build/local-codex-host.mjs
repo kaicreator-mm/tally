@@ -80,7 +80,9 @@ function spawnCapture(spawnFn,command,args,{cwd,env,input,timeoutMs=15000}={}){
 
 async function short(spawnFn,command,args,options={}){
   const {done}=spawnCapture(spawnFn,command,args,options);
-  return done;
+  const result=await done;
+  if(result.code!==0)console.error('HOST_COMMAND_FAILED',command,args,JSON.stringify(result).slice(0,4000));
+  return result;
 }
 function encodedPowerShell(script){return Buffer.from(script,'utf16le').toString('base64');}
 function quotePs(value){return "'"+value.replaceAll("'","''")+"'";}
@@ -93,6 +95,7 @@ function createDefaultOperations(spawnFn){
   const git=(config,args,options={})=>short(spawnFn,config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe',
     args,{env:builderEnvironment(config),...options});
   async function probeProvider(config){
+    console.error('HOST_PROBE_PROVIDER_START');
     const version=await sandbox(config,config.cliPath,['--version']);
     if(version.code!==0||!/^codex-cli\s+\d+\./.test(version.stdout.trim()))
       return {available:false,reason:'LOCAL_AGENT_UNAVAILABLE',stage:'VERSION',
@@ -156,6 +159,7 @@ function createDefaultOperations(spawnFn){
       hiddenVerifierStatus:'HIDDEN_NOT_QUALIFIED'};
   }
   async function prepareWorktree(config){
+    console.error('HOST_PREPARE_WORKTREE_START',config.worktreePath);
     await mkdir(dirname(config.worktreePath),{recursive:true});
     if(existsSync(config.worktreePath))throw safeError('CANDIDATE_WORKTREE_ALREADY_EXISTS');
     const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
