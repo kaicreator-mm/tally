@@ -98,6 +98,8 @@ steps:
       # gate UI-E #232). Dependencies resolve from the npmmirror cache.
       - npm --prefix apps/tally-web install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
       - npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com
+      # Vite transpiles TS but DOES NOT typecheck. Guard installed product.
+      - npm --prefix apps/tally-web run typecheck
       - npm --prefix apps/tally-web run build
       - test -f apps/tally-web/dist/index.html
       - echo TALLY_V2_TALLY_WEB_BUILD_PASS
