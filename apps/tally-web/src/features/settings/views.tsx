@@ -17,30 +17,37 @@ const SECTION_LABEL:Record<SettingsSection,{zh:string;en:string}>={
   ci:{zh:'Woodpecker CI',en:'Woodpecker CI'},
   gitGithub:{zh:'Git / GitHub / ADS',en:'Git / GitHub / ADS'},
   deployment:{zh:'部署环境',en:'Deployment environments'},
+  host:{zh:'Host / 运行时',en:'Host / runtime'},
+  storage:{zh:'存储与缓存',en:'Storage & cache'},
+  security:{zh:'安全与权限',en:'Security & access'},
+  integrations:{zh:'集成与通知',en:'Integrations & notifications'},
   defaults:{zh:'工作区默认值',en:'Workspace defaults'},
 };
 export function SettingsCenter({snapshot,connected=true,locale='zh',
-  onTestConnection}:
+  onTestConnection,selectedSection}:
   {snapshot:SettingsSnapshot|null;connected?:boolean;locale?:'zh'|'en';
+   selectedSection?:SettingsSection;
    onTestConnection?:(section:SettingsSection)=>void}){
   const zh=locale==='zh';
-  const [section,setSection]=useState<SettingsSection>('agentProviders');
+  const [internalSection,setInternalSection]=useState<SettingsSection>('agentProviders');
+  const section=selectedSection??internalSection;
   if(!connected)return <EmptyState title={zh?'未连接真实数据源':'Not connected'}
     hint="UI-E #232"/>;
   if(!snapshot)return <EmptyState title={zh?'配置快照不可用':'Snapshot unavailable'}/>;
-  return <div style={{display:'grid',gridTemplateColumns:'200px 1fr',
+  return <div style={{display:'grid',
+    gridTemplateColumns:selectedSection?'minmax(0,1fr)':'200px minmax(0,1fr)',
     gap:'var(--s5)',alignItems:'start'}}>
-    <nav aria-label={zh?'配置导航':'settings nav'}
+    {!selectedSection?<nav aria-label={zh?'配置导航':'settings nav'}
       style={{display:'grid',gap:2}}>
       {SETTINGS_SECTIONS.map(key=><button key={key}
         aria-current={section===key?'true':undefined}
-        onClick={()=>setSection(key)}
+        onClick={()=>setInternalSection(key)}
         style={{textAlign:'left',padding:'9px 12px',border:0,borderRadius:'var(--r-sm)',
           background:section===key?'var(--info-dim)':'transparent',
           color:section===key?'var(--text-primary)':'var(--text-secondary)',
           cursor:'pointer',font:'inherit',fontWeight:section===key?600:400}}>
         {zh?SECTION_LABEL[key].zh:SECTION_LABEL[key].en}</button>)}
-    </nav>
+    </nav>:null}
     <div style={{display:'grid',gap:'var(--s5)'}}>
       {section==='agentProviders'
         ?<AgentProvidersSection providers={snapshot.agentProviders} zh={zh}/>
@@ -48,12 +55,16 @@ export function SettingsCenter({snapshot,connected=true,locale='zh',
           ?<TallyLlmSection snapshot={snapshot} zh={zh}/>
           :section==='ci'
             ?<CiSection snapshot={snapshot} zh={zh}
-                onTest={()=>onTestConnection?.('ci')}/>
+                onTest={()=>onTestConnection?.('ci')} available={Boolean(onTestConnection)}/>
             :section==='gitGithub'
               ?<GitSection snapshot={snapshot} zh={zh}/>
               :section==='deployment'
                 ?<DeploymentSection snapshot={snapshot} zh={zh}/>
-                :<DefaultsSection snapshot={snapshot} zh={zh}/>}
+                :section==='defaults'
+                  ?<DefaultsSection snapshot={snapshot} zh={zh}/>
+                  :<EmptyState title={zh?SECTION_LABEL[section].zh:SECTION_LABEL[section].en}
+                    hint={zh?'NOT_CONNECTED · 需要受信 Host 的配置读模型和权限校验'
+                      :'NOT_CONNECTED · trusted Host settings adapter required'}/>}
     </div>
   </div>;
 }
@@ -68,7 +79,7 @@ function AgentProvidersSection({providers,zh}:
   </Card>;
 }
 function ProviderRow({provider,zh}:{provider:AgentProviderConfig;zh:boolean}){
-  const [enabled,setEnabled]=useState(provider.enabled);
+  const enabled=provider.enabled;
   const toggle=canToggleProvider(provider,!enabled);
   return <div style={{display:'grid',gap:'var(--s2)',padding:'var(--s4) 0',
     borderBottom:'1px solid var(--border-subtle)'}}>
@@ -78,11 +89,12 @@ function ProviderRow({provider,zh}:{provider:AgentProviderConfig;zh:boolean}){
         {provider.buildSelected?'BUILD 已选中':'BUILD 未选中'}</Badge>
       <Badge tone={enabled?'ok':'neutral'}>{enabled?'启用':'停用'}</Badge>
       <label style={{display:'flex',gap:6,alignItems:'center',fontSize:13}}>
-        <input type="checkbox" checked={enabled} disabled={!toggle.ok}
-          onChange={event=>{
-            const check=canToggleProvider(provider,event.target.checked);
-            if(check.ok)setEnabled(event.target.checked);}}/>
+        <input type="checkbox" checked={enabled} disabled
+          title="HOST_CONFIGURATION_WRITE_NOT_CONNECTED"
+          onChange={()=>{}}/>
         {zh?'启用':'Enable'}</label>
+      <span style={{color:'var(--text-faint)',fontSize:12}}>
+        READ_ONLY · HOST_CONFIGURATION_WRITE_NOT_CONNECTED</span>
       {!toggle.ok&&provider.buildSelected===false?
         <span style={{color:'var(--warn)',fontSize:12}}>{toggle.reason}</span>:null}
     </div>
@@ -131,13 +143,13 @@ function TallyLlmSection({snapshot,zh}:{snapshot:SettingsSnapshot;zh:boolean}){
         <dd style={{margin:0}}><Badge tone={llm.privacyConsentPreviewShown?'ok':'warn'}>
           {llm.privacyConsentPreviewShown?'已展示':'未展示'}</Badge></dd>
       </dl>
-      <Input label={zh?'端点':'Endpoint'} value={endpoint}
+      <Input label={zh?'端点':'Endpoint'} value={endpoint} disabled
         onChange={event=>setEndpoint(event.target.value)}
         error={endpointCheck&&endpointCheck!=='ok'
           ?(endpointCheck==='embedded_credentials'
             ?'URL 中不得内嵌凭证':'URL 无效'):null}
         hint={endpointCheck==='ok'?'ok':undefined}/>
-      <Input label={zh?'Token 预算':'Token budget'} value={budget}
+      <Input label={zh?'Token 预算':'Token budget'} value={budget} disabled
         onChange={event=>setBudget(event.target.value)}
         error={budgetCheck&&budgetCheck!=='ok'?'超出范围':null}
         hint={zh?'留空 = 不限制(显示 UNKNOWN)':'empty = unlimited (UNKNOWN)'}/>
@@ -149,8 +161,8 @@ function TallyLlmSection({snapshot,zh}:{snapshot:SettingsSnapshot;zh:boolean}){
     </div>
   </Card>;
 }
-function CiSection({snapshot,zh,onTest}:
-  {snapshot:SettingsSnapshot;zh:boolean;onTest:()=>void}){
+function CiSection({snapshot,zh,onTest,available}:
+  {snapshot:SettingsSnapshot;zh:boolean;onTest:()=>void;available:boolean}){
   const ci=snapshot.ci;
   return <Card>
     <CardHeader title={zh?'自建 Woodpecker(禁用 GitHub Actions)'
@@ -166,7 +178,10 @@ function CiSection({snapshot,zh,onTest}:
       <dt>Webhook</dt><dd style={{margin:0}}><Badge tone={ci.webhookState==='OK'
         ?'ok':'warn'}>{ci.webhookState}</Badge></dd>
     </dl>
-    <Button onClick={onTest}>{zh?'通过 Host 适配器测试连接':'Test via Host adapter'}</Button>
+    <Button onClick={onTest} disabled={!available}>
+      {zh?'通过 Host 适配器测试连接':'Test via Host adapter'}</Button>
+    {!available?<p style={{color:'var(--text-muted)',fontSize:12}}>
+      HOST_TEST_CONNECTION_NOT_CONNECTED</p>:null}
   </Card>;
 }
 function GitSection({snapshot,zh}:{snapshot:SettingsSnapshot;zh:boolean}){

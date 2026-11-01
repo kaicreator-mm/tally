@@ -26,6 +26,7 @@ import {EMPTY_FILTERS} from '../features/tasks/model.ts';
 import type {TaskFilters,TaskRecord} from '../features/tasks/model.ts';
 import type {VersionDag} from '../features/dag/model.ts';
 import type {SettingsSnapshot} from '../features/settings/model.ts';
+import {sectionForSettingsRoute} from '../features/settings/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
 
 export function App({route,onNavigate,inboxCount=0}:{route:Route;
@@ -58,7 +59,7 @@ function routeBody(key:string,versionId:string|null):React.ReactNode{
     case 'agent-providers':case 'tally-llm':case 'ci':case 'git-github':
     case 'host':case 'storage':case 'security':case 'deployment-env':
     case 'integrations':
-      return <SettingsRoute/>;
+      return <SettingsRoute routeKey={key}/>;
     default:
       // Workbench inbox/approvals/blockers/overview and deployment read
       // models are not implemented server-side yet: honest NOT_CONNECTED.
@@ -133,13 +134,16 @@ function MetadataRoute({versionId}:{versionId:string|null}){
     version?<MetadataCenter version={version} allVersions={[]} expectedTaskIds={null}/>
       :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
-function SettingsRoute(){
+function SettingsRoute({routeKey}:{routeKey:string}){
   const settings=useHost<SettingsResponse>('settings',
     adapter=>adapter.settings(),[]);
   if(settings.state==='loading')return <Skeleton lines={6}/>;
   if(settings.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={settings.reason??undefined}/>;
+  const selectedSection=sectionForSettingsRoute(routeKey);
+  if(!selectedSection)return <EmptyState title="UNKNOWN_SETTINGS_ROUTE"/>;
   return <SettingsCenter
     snapshot={(settings.data?.snapshot??null) as SettingsSnapshot|null}
+    selectedSection={selectedSection}
     connected={settings.data?.connected===true}/>;
 }
