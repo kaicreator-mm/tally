@@ -67,14 +67,14 @@ function routeBody(key:string,projectId:string|null,versionId:string|null,
       return <WorkbenchView page={key as WorkbenchPage}
         snapshot={workbench} onNavigate={onNavigate}/>;
     case 'product':return <GuidedHostRoute projectId={projectId} versionId={versionId}/>;
-    case 'tasks':return <TasksRoute versionId={versionId}/>;
+    case 'tasks':return <TasksRoute projectId={projectId} versionId={versionId}/>;
     case 'agents':return <AgentsRoute projectId={projectId} versionId={versionId}/>;
-    case 'l2-dag':return <DagRoute versionId={versionId}/>;
+    case 'l2-dag':return <DagRoute projectId={projectId} versionId={versionId}/>;
     case 'requirements':return <RequirementsRoute projectId={projectId} versionId={versionId}/>
     case 'qa':return <QaRoute projectId={projectId} versionId={versionId}/>
-    case 'release':return <ReleaseRoute versionId={versionId}/>;
+    case 'release':return <ReleaseRoute projectId={projectId} versionId={versionId}/>;
     case 'maintenance':return <MaintenanceRoute projectId={projectId} versionId={versionId}/>;
-    case 'metadata':return <MetadataRoute versionId={versionId}/>;
+    case 'metadata':return <MetadataRoute projectId={projectId} versionId={versionId}/>;
     case 'workflow':return <GovernanceRoute kind="workflow" projectId={projectId}/>;
     case 'domain-packages':
       return <GovernanceRoute kind="domain-package" projectId={projectId}/>;
@@ -96,11 +96,11 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
-function TasksRoute({versionId}:{versionId:string|null}){
+function TasksRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const [filters,setFilters]=useState<TaskFilters>({...EMPTY_FILTERS});
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
-    adapter=>adapter.tasks(versionId??''),[versionId]);
+    adapter=>adapter.tasks(projectId??'',versionId??''),[projectId,versionId]);
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={tasks.reason??undefined}/>;
@@ -174,27 +174,27 @@ function GovernanceRoute({kind,projectId}:{kind:GovernanceKind;
     ?result.data as GovernanceSnapshot:null;
   return <GovernanceView kind={kind} snapshot={snapshot}/>;
 }
-function DagRoute({versionId}:{versionId:string|null}){
+function DagRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
-    adapter=>adapter.dag(versionId??''),[versionId]);
+    adapter=>adapter.dag(projectId??'',versionId??''),[projectId,versionId]);
   if(dag.state==='loading')return <Skeleton lines={6}/>;
   if(dag.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>;
   return guard(versionId,
     <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>);
 }
-function ReleaseRoute({versionId}:{versionId:string|null}){
+function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
-    adapter=>adapter.release(versionId??''),[versionId]);
+    adapter=>adapter.release(projectId??'',versionId??''),[projectId,versionId]);
   if(release.state==='loading')return <Skeleton lines={4}/>;
   const readiness=(release.data?.readiness??null) as ReleaseReadiness|null;
   return guard(versionId,
     <ReleaseView readiness={readiness}
       connected={release.data?.connected===true}/>);
 }
-function MetadataRoute({versionId}:{versionId:string|null}){
+function MetadataRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const metadata=useHost<MetadataResponse>('metadata',
-    adapter=>adapter.metadata(versionId??''),[versionId]);
+    adapter=>adapter.metadata(projectId??'',versionId??''),[projectId,versionId]);
   if(metadata.state==='loading')return <Skeleton lines={6}/>;
   const data=metadata.data;
   if(metadata.state==='not_connected'||data?.connected!==true)
