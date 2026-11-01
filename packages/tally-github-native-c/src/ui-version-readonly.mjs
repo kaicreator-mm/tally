@@ -6,9 +6,6 @@
  * A Host-approved version roster is REQUIRED; "all repo issues" is NOT a
  * safe substitute. Incomplete or drifting reads fail closed.
  */
-import {Octokit} from '@octokit/rest';
-import {readWorkItemSourceFromClient} from './task-workitem-source.mjs';
-import {createNativeReadRetryFetch} from './read-retry.mjs';
 
 const SHA=/^[0-9a-f]{40}$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
@@ -67,7 +64,7 @@ export async function readUiNativeCatalogFromClient({
 }
 export async function readUiNativeVersionFromClient({
   octokit,owner,repo,versionId,expectedSha,taskIssueNumbers,
-  workItemReader=readWorkItemSourceFromClient
+  workItemReader=null
 }={}){
   if(!validInput(octokit,owner,repo,versionId,expectedSha)||
      !octokit?.rest?.issues?.get||!octokit?.paginate?.iterator||
@@ -88,7 +85,9 @@ export async function readUiNativeVersionFromClient({
         return denied('NATIVE_ISSUE_IDENTITY_UNVERIFIED');
       // The existing C adapter rechecks Issue drift and all native
       // dependency pages. It intentionally NEVER accepts a Claim.
-      const observed=await workItemReader({
+      const selectedReader=typeof workItemReader==='function'?workItemReader:
+        (await import('./task-workitem-source.mjs')).readWorkItemSourceFromClient;
+      const observed=await selectedReader({
         octokit,owner,repo,issueNumber:number,expectedSourceSha:expectedSha
       });
       if(observed?.sourceSha!==expectedSha||
@@ -154,12 +153,20 @@ export function createUiNativeSource({token,owner,repo,versionId,
   expectedSha,taskIssueNumbers}={}){
   if(typeof token!=='string'||token.length<8)
     throw new TypeError('TRUSTED_GITHUB_C_CREDENTIAL_REQUIRED');
-  const octokit=new Octokit({auth:token,
-    request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
+  // Native production adapter imports Octokit only on actual Host use.
+  // Source tests need no provider/credential packages or external effects.
+  const getClient=async()=>{
+    const [{Octokit},{createNativeReadRetryFetch}]=await Promise.all([
+      import('@octokit/rest'),import('./read-retry.mjs')]);
+    return new Octokit({auth:token,
+      request:{timeout:15000,fetch:createNativeReadRetryFetch()}});
+  };
+  let clientPromise;
+  const client=()=>clientPromise??=getClient();
   return Object.freeze({
-    catalog:()=>readUiNativeCatalogFromClient({octokit,owner,repo,
-      versionId,expectedSha}),
-    version:()=>readUiNativeVersionFromClient({octokit,owner,repo,
-      versionId,expectedSha,taskIssueNumbers}),
+    catalog:async()=>readUiNativeCatalogFromClient({
+      octokit:await client(),owner,repo,versionId,expectedSha}),
+    version:async()=>readUiNativeVersionFromClient({
+      octokit:await client(),owner,repo,versionId,expectedSha,taskIssueNumbers}),
   });
 }
