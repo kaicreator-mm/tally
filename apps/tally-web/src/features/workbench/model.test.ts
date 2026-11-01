@@ -21,6 +21,10 @@ test('one source drives workbench inbox, approvals and blockers',()=>{
   assert.deepEqual(activeWorkActions(ready,'approvals')!.map(a=>a.id),['2']);
   assert.deepEqual(activeWorkActions(ready,'blockers')!.map(a=>a.id),['2','3']);
 });
+test('partial roster never turns a zero scoped blocker count into zero human inbox',()=>{
+  assert.equal(inboxCounts({...ready,queueCoverage:'PARTIAL_UNVERIFIED_ROSTER',
+    actions:[]}),null);
+});
 test('resolved decisions never reappear as pending',()=>{
   assert.equal(activeWorkActions(ready,'inbox')!.some(a=>a.id==='4'),false);
 });
