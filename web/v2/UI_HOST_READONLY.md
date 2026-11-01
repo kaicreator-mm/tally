@@ -32,3 +32,33 @@ invalid Task state or missing credentials fail closed.
 `connected:true` certifies only **source read qualification**, NOT a CAS
 Claim, trusted Kernel admission, Task PASS or Release RQ. Release permissions
 remain separately gated. See `docs/implementation/v2/UI_WEBFIRST_R1_ACCEPTANCE.md`.
+
+## Optional ADS v5 report-only source
+
+The Host may additionally configure **both** variables; neither may be supplied
+by browser query, dynamic form, or Agent output:
+
+- `TALLY_V2_ADS_PUBLISHER_BINDINGS_JSON={"ads/task-meta":["trusted-publisher-login"]}`
+  — Host-selected binding of publisher namespaces to the actual GitHub
+  comment transport author; no publisher is inferred from report text.
+- `TALLY_V2_ADS_ACCEPTED_COMMENTS_JSON={"210":[123456789]}`
+  — Host-selected, positive native GitHub Issue comment ID witness per Task
+  in the bounded roster. A missing mapping does **not** mean no reports exist.
+
+This composes `/api/v2/metadata` using the already implemented read-only
+GitHub Native C ADS v5 schema/source/publisher/JCS/correction checks. Only
+CURRENT_OBSERVED reports with exact comment/source match are returned, and
+all are **SELF_REPORTED** until an independent Reviewer explicitly witnesses
+them. No Task PASS, Claim, release permission, private task-meta or Agent
+execution grant is implied.
+
+Telemetry, Task Attempt, lineage and learning feeds are **not** sourced by
+this adapter: the UI marks their coverage UNKNOWN, even if report rows are
+visible. The frozen Task roster coverage remains UNVERIFIED. A verified
+Publisher ID and comment ID are not a guarantee of complete report coverage.
+Omit the two variables to keep metadata NOT_CONNECTED, not a fake empty set.
+
+To validate in a real Host environment, use Node >=24 and the existing
+`web/v2/ui-report-host.test.mjs` and
+`web/v2/ui-report-host-http.test.mjs` before supplying actual publisher
+bindings. The application must not log or persist credential values.
