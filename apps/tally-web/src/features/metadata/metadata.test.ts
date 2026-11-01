@@ -72,3 +72,8 @@ test('deep links both ways encode version scoping',()=>{
   assert.equal(taskDeepLink('a b','v 1'),
     '#/development/tasks?projectId&versionId=v%201&taskId=a%20b');
 });
+
+test('missing-report count stays UNKNOWN without qualified Task roster',()=>{
+  assert.equal(missingReports(version({}),null),null);
+  assert.deepEqual(missingReports(version({}),[]),[]);
+});
