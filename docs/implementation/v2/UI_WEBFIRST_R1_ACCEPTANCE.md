@@ -125,3 +125,14 @@ version branch is checked before and after read; partial status pagination,
 foreign URL, stale branch and untrusted context fail closed. Without
 the configured context the QA menu remains NOT_CONNECTED. This is
 a candidate source producer, not an installed acceptance certificate.
+
+## Selected native GitHub Settings fact gate
+
+`web/v2/ui-settings-host.mjs` provides **one** source-qualified part of
+the Settings center: the exact repository/version catalog. Its response
+sets `coverage=PARTIAL` and per-section `NOT_CONNECTED` for all other
+providers. The UI refuses to present placeholder empty Agent/LLM/CI
+inventory as observed runtime state. A native C catalog readback twice
+bound to the pinned version SHA is required. No Host/Agent provider,
+LLM, OAuth, CI, storage or deployment evidence is invented, and no
+configuration mutation or credentials are exposed.
