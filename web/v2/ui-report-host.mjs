@@ -14,7 +14,7 @@ const kindOf=kind=>({
 const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 export function createUiAdsReportHost({repository,versionId,expectedSha,
   nativeC,taskIssueNumbers,acceptedCommentIdsByIssue,publisherBindings,
-  readReports}={}){
+  readReports,token}={}){
   if(!REPO.test(repository??'')||typeof versionId!=='string'||
      !/^version\/[A-Za-z0-9_.-]+$/.test(versionId)||
      !SHA.test(expectedSha??'')||
@@ -52,9 +52,11 @@ export function createUiAdsReportHost({repository,versionId,expectedSha,
          branch.source?.repository!==repository)
         return deny('PINNED_VERSION_SOURCE_UNAVAILABLE');
       const reader=readReports??(async args=>{
+        if(typeof token!=='string'||token.length<8)
+          throw new Error('HOST_ONLY_NATIVE_ADS_TOKEN_MISSING');
         const {readGitHubIssueReports}=await import(
           '../../packages/tally-github-native-c/src/read-only.mjs');
-        return readGitHubIssueReports(args);
+        return readGitHubIssueReports({...args,token});
       });
       const records=[],ids=new Set();
       for(const issueNumber of taskIssueNumbers){
