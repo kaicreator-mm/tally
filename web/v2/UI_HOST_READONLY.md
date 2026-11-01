@@ -141,3 +141,24 @@ rendering empty placeholder arrays. No token, credential target, Host
 principal or dynamic execution authority is disclosed to browser; settings
 writes remain disabled. Tests: `web/v2/ui-settings-host.test.mjs` and
 `web/v2/ui-settings-host-http.test.mjs`.
+
+## Optional GitHub-native blocked-Task workbench (partial source)
+
+The Host-only `TALLY_V2_WORKBENCH_BLOCKERS=read-only` option composes
+`web/v2/ui-workbench-host.mjs` with the selected GitHub Native C
+`version()` reader. It requires an explicit `TALLY_V2_TASK_ISSUES_JSON`
+roster, exact version SHA and current catalog double readback.
+The Native C Task projection preserves **openBlockerCount** and
+**dependencyState** from independently verified GitHub blocked_by edges;
+only Tasks positively observed with open native blockers produce advisory
+`BLOCKER` rows. They are UNASSIGNED and do not authorize any operation.
+Unverified Task roster membership, cross-repo edges, stale SHA, unaccepted
+Claim states or inconsistent dependency counts fail closed.
+
+The Workbench emits `queueCoverage=PARTIAL_UNVERIFIED_ROSTER` and
+`approvalCoverage=NOT_CONNECTED`; a zero blocked-row count is only a
+bounded-source observation, never proof of a complete empty human inbox
+or zero approvals. The UI visibly warns about limited Task coverage.
+Without the Host-only opt-in, Workbench stays NOT_CONNECTED.
+Run `web/v2/ui-workbench-host.test.mjs` and
+`web/v2/ui-workbench-host-http.test.mjs` with Node >=24.
