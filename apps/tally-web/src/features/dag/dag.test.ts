@@ -78,7 +78,7 @@ test('exports carry as-of identity and edge authority',()=>{
   const mmd=toMermaid(dag);
   assert.match(mmd,/flowchart LR/);
   assert.match(mmd,/version=v2 asOf=aaaaaaaaaaaa/);
-  assert.match(mmd,/a -\.-> b/); // planned edge dashed
+  assert.match(mmd,/task_0 -\.-> task_1/); // generated safe node aliases, planned dashed
   const parsed=JSON.parse(toJson(dag));
   assert.equal(parsed.asOf.sourceSha,'a'.repeat(40));
   assert.equal(parsed.edges[0].authority,'planned_candidate');
@@ -97,4 +97,23 @@ test('fan summary counts in/out degrees',()=>{
   assert.equal(inDegree.get('c'),2);
   assert.equal(outDegree.get('a'),1);
   assert.equal(outDegree.get('c'),undefined);
+});
+
+test('Mermaid export rejects injected issue-title commands and unsafe IDs',()=>{
+  const graph=dagOf([
+    node({taskId:'a/b',title:'Normal"]\\nflowchart RL\\n%% evil'}),
+    node({taskId:'b:c',title:'<img src=x onerror=alert(1)>'}),
+  ],[edge({from:'a/b',to:'b:c',kind:'NATIVE'})]);
+  const text=toMermaid(graph);
+  assert.match(text,/task_0 --> task_1/);
+  assert.match(text,/task_0\\["a b Normal/);
+  assert.ok(!text.includes('flowchart RL'));
+  assert.ok(!text.includes('<img'));
+  assert.equal(text.split('flowchart LR').length,2);
+});
+test('UNKNOWN native Task workflow and priority survive source-qualified DAG',()=>{
+  const graph=dagOf([node({status:'unknown',severity:'UNKNOWN'})],[]);
+  assert.equal(filterDag(graph,{status:'unknown',severity:'UNKNOWN',agentId:null,
+    onlyBlocked:false,group:null}).nodes.length,1);
+  assert.match(toMermaid(graph),/task_0/);
 });
