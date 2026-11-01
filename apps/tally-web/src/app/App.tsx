@@ -243,7 +243,10 @@ function MetadataRoute({projectId,versionId,onNavigate}:{
       attempts:data.attempts as import('../features/metadata/model.ts').AttemptMeta[],
       reports:data.reports as import('../features/metadata/model.ts').ReportMeta[],
       lineage:data.lineage as import('../features/metadata/model.ts').LineageMeta[],
-      learnedOutcomes:data.learnedOutcomes as import('../features/metadata/model.ts').VersionMetadata['learnedOutcomes']}
+      learnedOutcomes:data.learnedOutcomes as import('../features/metadata/model.ts').VersionMetadata['learnedOutcomes'],
+      reportCoverage:data.reportCoverage,telemetryCoverage:data.telemetryCoverage,
+      lineageCoverage:data.lineageCoverage,learningCoverage:data.learningCoverage,
+      rosterCoverage:data.rosterCoverage}
     :null;
   return guard(versionId,
     version?<MetadataCenter version={version} allVersions={[]}
