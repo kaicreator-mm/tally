@@ -95,3 +95,27 @@ test('non-Task, duplicated issue roster or missing native C claim facts are deni
       authorized:true})});
   assert.equal(fake.connected,false);
 });
+
+test('closed GitHub Issue with state:ready does not render task DONE',async()=>{
+  const observedIssue=issue(166,{state:'closed'});
+  const result=await readUiNativeVersionFromClient({
+    ...args(native({},sha,{166:observedIssue})),taskIssueNumbers:[166],
+    workItemReader:({issueNumber,expectedSourceSha})=>({
+      ...sourceReader({issueNumber,expectedSourceSha}),issueState:'closed',
+    })});
+  assert.equal(result.connected,true);
+  assert.equal(result.tasks[0].status,'unknown');
+  assert.equal(result.tasks[0].claimState,'NOT_VERIFIED');
+});
+test('state:done label alone never certifies independent closure',async()=>{
+  const observedIssue=issue(201,{state:'closed',
+    labels:[{name:'type:task'},{name:'state:done'}]});
+  const result=await readUiNativeVersionFromClient({
+    ...args(native({},sha,{201:observedIssue})),taskIssueNumbers:[201],
+    workItemReader:({issueNumber,expectedSourceSha})=>({
+      ...sourceReader({issueNumber,expectedSourceSha}),
+      workflowState:'state:done',issueState:'closed',
+    })});
+  assert.equal(result.connected,true);
+  assert.equal(result.tasks[0].status,'unknown');
+});
