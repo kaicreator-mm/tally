@@ -56,7 +56,13 @@ export function createUiV2ReadModelHost({repository,versionId,nativeC}={}){
            observed.versionId!==versionId||
            observed.structureCoverage!=='HOST_DECLARED_UNVERIFIED'||
            observed.freezeCoverage!=='UNKNOWN'||
-           !Array.isArray(observed.nodes))
+           !Array.isArray(observed.nodes)||
+           observed.nodes.some(node=>!node||
+             !['requirement','epic','story'].includes(node.kind)||
+             node.freezeState!=='UNKNOWN'||node.productRevision!==null||
+             node.l2Decision!==null||
+             !Array.isArray(node.acceptanceRefs)||
+             node.acceptanceRefs.length!==0))
           return deny(observed?.reason??'NATIVE_REQUIREMENT_SOURCE_UNQUALIFIED');
         return observed;
       }catch{return deny('NATIVE_REQUIREMENT_READ_FAILED');}
