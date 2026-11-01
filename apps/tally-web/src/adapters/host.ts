@@ -115,15 +115,15 @@ export const hostAdapter=Object.freeze({
       '?projectId='+encodeURIComponent(projectId)),
   workbench:()=>getJson<WorkbenchResponse>('/api/v2/workbench'),
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
-  tasks:(versionId:string)=>getJson<TasksResponse>(
-    `/api/v2/tasks?versionId=${encodeURIComponent(versionId)}`),
-  dag:(versionId:string)=>getJson<DagResponse>(
-    `/api/v2/dag?versionId=${encodeURIComponent(versionId)}`),
+  tasks:(projectId:string,versionId:string)=>
+    getJson<TasksResponse>(scoped('tasks',projectId,versionId)),
+  dag:(projectId:string,versionId:string)=>
+    getJson<DagResponse>(scoped('dag',projectId,versionId)),
   settings:()=>getJson<SettingsResponse>('/api/v2/settings'),
-  release:(versionId:string)=>getJson<ReleaseResponse>(
-    `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
-  metadata:(versionId:string)=>getJson<MetadataResponse>(
-    `/api/v2/metadata?versionId=${encodeURIComponent(versionId)}`),
+  release:(projectId:string,versionId:string)=>
+    getJson<ReleaseResponse>(scoped('release',projectId,versionId)),
+  metadata:(projectId:string,versionId:string)=>
+    getJson<MetadataResponse>(scoped('metadata',projectId,versionId)),
 });
 /** Wrap any adapter call: transport failure degrades to NOT_CONNECTED with
  * the model name preserved — the UI never mistakes an outage for emptiness. */
