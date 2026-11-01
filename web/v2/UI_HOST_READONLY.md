@@ -62,3 +62,26 @@ To validate in a real Host environment, use Node >=24 and the existing
 `web/v2/ui-report-host.test.mjs` and
 `web/v2/ui-report-host-http.test.mjs` before supplying actual publisher
 bindings. The application must not log or persist credential values.
+
+## Optional ADS v3 Claim candidate Audit (read-only)
+
+`TALLY_V2_AUDIT_CLAIM_CANDIDATES=read-only` enables the selected GitHub C
+WorkItem + ADS Claim event **source pair** over the configured Task roster.
+Requires the same pinned version SHA and Host-only GitHub credential.
+This is a potentially larger paginated scan; omit the flag to leave the
+Audit source NOT_CONNECTED. Invalid flag value and missing Task roster fail
+at Host startup, never silently enable a scanner.
+
+The Governance/Audit menu displays one source observation per selected Task,
+with an optional count of `DISPATCH_CLAIMED` comments. A valid ADS v3 event
+is a **candidate**, not a durable accepted CAS Claim, Agent Attempt, Reviewer
+PASS, Kernel permit or Task closure. The UI does not see raw dispatch IDs,
+session refs, GitHub comment bodies, model credentials or operator details.
+If any selected Issue cannot be read or fails the source-pair witness, the
+whole audit source returns NOT_CONNECTED; no partial positive ledger.
+
+Native Claim candidate comments under `ads/github/v3` are distinct from
+ADS v5 `kind: report` comments. Neither type substitutes for the other.
+Run `web/v2/ui-audit-host.test.mjs` and
+`web/v2/ui-audit-host-http.test.mjs` with Node >=24 before enabling
+production audit reads.
