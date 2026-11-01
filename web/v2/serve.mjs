@@ -45,6 +45,20 @@ export function readUiHostEnvironment(env){
       new Set(roster).size!==roster.length)
       throw new TypeError('INVALID_HOST_TASK_ROSTER');
   }
+  // Requirement roster is an explicit Host taxonomy declaration, never
+  // a Product Freeze or canonical Epic/Story DAG witness.
+  let requirements=null;
+  if(env.TALLY_V2_REQUIREMENT_ISSUES_JSON!==undefined){
+    try{requirements=JSON.parse(env.TALLY_V2_REQUIREMENT_ISSUES_JSON);}
+    catch{throw new TypeError('INVALID_HOST_REQUIREMENT_ROSTER');}
+    if(!Array.isArray(requirements)||requirements.length<1||
+       requirements.length>16||
+       requirements.some(x=>!x||!Number.isSafeInteger(x.number)||x.number<1||
+         !['requirement','epic','story'].includes(x.kind)||
+         (x.parent!==null&&(!Number.isSafeInteger(x.parent)||x.parent<1)))||
+       new Set(requirements.map(x=>x.number)).size!==requirements.length)
+      throw new TypeError('INVALID_HOST_REQUIREMENT_ROSTER');
+  }
   const hasGrant=Boolean(env.TALLY_V2_ADS_ACCEPTED_COMMENTS_JSON);
   const hasBindings=Boolean(env.TALLY_V2_ADS_PUBLISHER_BINDINGS_JSON);
   if(hasGrant!==hasBindings)
@@ -65,7 +79,7 @@ export function readUiHostEnvironment(env){
   if(auditMode==='read-only'&&roster.length===0)
     throw new TypeError('HOST_AUDIT_TASK_ROSTER_REQUIRED');
   const [owner,repo]=repository.split('/');
-  return {repository,owner,repo,versionId,expectedSha,roster,ads,
+  return {repository,owner,repo,versionId,expectedSha,roster,requirements,ads,
     auditReadOnly:auditMode==='read-only',token:env.TALLY_GITHUB_READ_TOKEN};
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
@@ -73,7 +87,8 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   const nativeC=createUiNativeSource({token:settings.token,
     owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
-    taskIssueNumbers:settings.roster});
+    taskIssueNumbers:settings.roster,
+    requirementIssueSpecs:settings.requirements});
   const nativeReadHost=createUiV2ReadModelHost({
     repository:settings.repository,versionId:settings.versionId,nativeC});
   const adsReadHost=settings.ads?createUiAdsReportHost({
