@@ -12,8 +12,8 @@ export interface Catalog{
 export interface TasksResponse{
   connected:boolean;reason?:string;versionId?:string;
   tasks?:{id:string;versionId:string;title:string;
-    status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed';
-    severity:'P0'|'P1'|'P2';blockedBy:string[];agentId:string|null;
+    status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed'|'unknown';
+    severity:'P0'|'P1'|'P2'|'UNKNOWN';blockedBy:string[];agentId:string|null;
     claimState:string;attemptId:string|null;attemptState:string|null;
     prNumber:number|null;reviewState:string;ciState:string;writeSet:string[];
     requirementRef:string|null;updatedAt:string|null}[];
