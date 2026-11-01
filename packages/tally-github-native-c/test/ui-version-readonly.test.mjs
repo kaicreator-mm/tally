@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readUiNativeCatalogFromClient,readUiNativeVersionFromClient,
-  readUiNativeRequirementsFromClient}
+  readUiNativeRequirementsFromClient,readUiNativeQaFromClient}
   from '../src/ui-version-readonly.mjs';
 
 const sha='a'.repeat(40),owner='org',repo='tally',
@@ -193,4 +193,51 @@ test('moved pinned version branch blocks otherwise valid requirements',async()=>
     ...args(native({},'b'.repeat(40))),requirementIssueSpecs:requirements,
     intakeReader:async()=>intakeObservation});
   assert.equal(r.reason,'VERSION_BRANCH_NOT_PINNED');
+});
+
+const qaContext='ci/woodpecker/push/v2-alm-workspace';
+const qaClient=(list=[{context:qaContext,state:'success',
+  target_url:'https://ci.kaicreator.com/repos/12/pipeline/369/2',
+  updated_at:'2026-11-02T00:00:00Z'}],branchSha=sha)=>{
+  const base=native({},branchSha);
+  return {...base,rest:{...base.rest,repos:{...base.rest.repos,
+    getCombinedStatusForRef:async()=>({data:{
+      sha,total_count:list.length,statuses:list}})}}};
+};
+test('GitHub commit status yields REPORTED only, never independent QA',async()=>{
+  const r=await readUiNativeQaFromClient({...args(qaClient()),
+    qaStatusContext:qaContext});
+  assert.equal(r.connected,true);
+  assert.equal(r.independentCoverage,'UNKNOWN');
+  assert.equal(r.ciCoverage,'REPORTED_ONLY');
+  assert.equal(r.records[0].layer,'fullRegression');
+  assert.equal(r.records[0].provenance,'REPORTED');
+  assert.equal(r.records[0].outcome,'PASS');
+});
+test('no matching scoped CI context is observed absence, not QA PASS',async()=>{
+  const r=await readUiNativeQaFromClient({...args(qaClient([])),
+    qaStatusContext:qaContext});
+  assert.equal(r.connected,true);
+  assert.equal(r.ciCoverage,'NO_MATCHING_STATUS');
+  assert.deepEqual(r.records,[]);
+});
+test('forged CI target URL or incomplete status pages deny source',async()=>{
+  const bad=await readUiNativeQaFromClient({...args(qaClient([{
+    context:qaContext,state:'success',
+    target_url:'https://attacker.example/ci/pass',
+    updated_at:'2026-11-02T00:00:00Z'}])),qaStatusContext:qaContext});
+  assert.equal(bad.reason,'GITHUB_CI_STATUS_IDENTITY_UNQUALIFIED');
+  const incomplete=qaClient();
+  incomplete.rest.repos.getCombinedStatusForRef=async()=>({
+    data:{sha,total_count:120,statuses:[]}});
+  const r=await readUiNativeQaFromClient({...args(incomplete),qaStatusContext:qaContext});
+  assert.equal(r.reason,'GITHUB_CI_STATUS_PAGE_UNQUALIFIED');
+});
+test('moved branch or invalid CI context cannot yield a connected QA state',async()=>{
+  assert.equal((await readUiNativeQaFromClient({
+    ...args(qaClient([], 'b'.repeat(40))),qaStatusContext:qaContext}))
+    .reason,'VERSION_BRANCH_NOT_PINNED');
+  assert.equal((await readUiNativeQaFromClient({
+    ...args(qaClient()),qaStatusContext:'hiddenValidation/PASS'}))
+    .reason,'QA_STATUS_SOURCE_NOT_CONFIGURED');
 });
