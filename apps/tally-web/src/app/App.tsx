@@ -28,13 +28,14 @@ import type {VersionDag} from '../features/dag/model.ts';
 import type {SettingsSnapshot} from '../features/settings/model.ts';
 import {sectionForSettingsRoute} from '../features/settings/model.ts';
 import {WorkbenchView} from '../features/workbench/views.tsx';
+import {GuidedHostRoute} from '../features/forms/host-route.tsx';
 import {inboxCounts} from '../features/workbench/model.ts';
 import type {WorkbenchSnapshot,WorkbenchPage} from '../features/workbench/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
 
 export function App({route,onNavigate,inboxCount=0}:{route:Route;
   onNavigate:(hash:string)=>void;inboxCount?:number}){
-  const {t,td,versionId}=useShell();
+  const {t,td,versionId,projectId}=useShell();
   const queue=useHost<WorkbenchResponse>('workbench',
     adapter=>adapter.workbench(),[]);
   const workbench=(queue.data?.connected===true?
@@ -42,7 +43,7 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
   const count=inboxCounts(workbench)?.pending??inboxCount;
   const item=findItemByRoute(route);
   const body=item
-    ?routeBody(item.key,versionId,onNavigate,workbench)
+    ?routeBody(item.key,projectId,versionId,onNavigate,workbench)
     :<EmptyState title={t('state.empty')} hint={`${route.group}/${route.view}`}/>;
   return <AppShell route={route} onNavigate={onNavigate} inboxCount={count}>
     <div className="page">
@@ -54,12 +55,13 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
     </div>
   </AppShell>;
 }
-function routeBody(key:string,versionId:string|null,
+function routeBody(key:string,projectId:string|null,versionId:string|null,
   onNavigate:(hash:string)=>void,workbench:WorkbenchSnapshot|null):React.ReactNode{
   switch(key){
     case 'inbox':case 'approvals':case 'blockers':case 'overview':
       return <WorkbenchView page={key as WorkbenchPage}
         snapshot={workbench} onNavigate={onNavigate}/>;
+    case 'product':return <GuidedHostRoute projectId={projectId} versionId={versionId}/>;
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
