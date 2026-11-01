@@ -39,6 +39,11 @@ export interface ReleaseResponse{connected:boolean;
       grantedAt:string|null}[]|null;
     rqState:string;ownerGrantState:string};}
 export interface MetadataResponse{connected:boolean;versionId:string|null;
+  reportCoverage?:'PARTIAL'|'UNKNOWN';
+  telemetryCoverage?:'UNKNOWN'|'VERIFIED';
+  lineageCoverage?:'UNKNOWN'|'VERIFIED';
+  learningCoverage?:'UNKNOWN'|'VERIFIED';
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   attempts:unknown[];reports:unknown[];lineage:unknown[];
   learnedOutcomes:unknown[];note?:string;}
 
