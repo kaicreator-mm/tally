@@ -21,6 +21,7 @@ import {createUiV2ReadModelHost} from './ui-native-host.mjs';
 import {createUiNativeSource}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
 import {createUiAdsReportHost} from './ui-report-host.mjs';
+import {createUiNativeAuditHost} from './ui-audit-host.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF=/^version\/[A-Za-z0-9_.-]+$/;
@@ -58,9 +59,14 @@ export function readUiHostEnvironment(env){
       Array.isArray(ads.bindings))
       throw new TypeError('INVALID_ADS_HOST_CONFIGURATION');
   }
+  const auditMode=env.TALLY_V2_AUDIT_CLAIM_CANDIDATES;
+  if(auditMode!==undefined&&auditMode!=='read-only')
+    throw new TypeError('INVALID_HOST_AUDIT_READ_MODE');
+  if(auditMode==='read-only'&&roster.length===0)
+    throw new TypeError('HOST_AUDIT_TASK_ROSTER_REQUIRED');
   const [owner,repo]=repository.split('/');
   return {repository,owner,repo,versionId,expectedSha,roster,ads,
-    token:env.TALLY_GITHUB_READ_TOKEN};
+    auditReadOnly:auditMode==='read-only',token:env.TALLY_GITHUB_READ_TOKEN};
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
   const settings=readUiHostEnvironment(env);
@@ -77,7 +83,12 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     acceptedCommentIdsByIssue:settings.ads.grants,
     publisherBindings:settings.ads.bindings,
     token:settings.token}):{};
-  const v2ReadModelHost=Object.freeze({...nativeReadHost,...adsReadHost});
+  const auditReadHost=settings.auditReadOnly?createUiNativeAuditHost({
+    repository:settings.repository,versionId:settings.versionId,
+    expectedSha:settings.expectedSha,taskIssueNumbers:settings.roster,
+    nativeC,token:settings.token}):{};
+  const v2ReadModelHost=Object.freeze({
+    ...nativeReadHost,...adsReadHost,...auditReadHost});
   // The legacy J01–J08 console remains fail-closed in this entrypoint.
   // No process executor or selected K dispatch is granted by launching UI.
   const config=defaultAlmConfig({
