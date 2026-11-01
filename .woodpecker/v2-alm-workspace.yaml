@@ -5,6 +5,7 @@ when:
     path:
       include:
         - 'web/v2/**'
+        - 'apps/tally-web/**'
         - 'packages/tally-engineering-business/**'
         - 'packages/tally-github-c/src/project-intake.mjs'
         - 'packages/tally-github-c/test/project-intake.test.mjs'
@@ -81,6 +82,25 @@ steps:
       - echo TALLY_V2_J06_REAL_BROWSER_GUI_NOT_PROVEN_IN_DOCKER
       - echo TALLY_V2_ALM_WORKSPACE_REAL_GITHUB_PROJECT_EFFECT_NOT_RUN
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER
+  - name: alm-workspace-tally-web-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "TALLY_WEB_HEAD=$(git rev-parse HEAD)"'
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      # UI lanes (#228-#231, #233-#235): pure-TS model tests run without any
+      # npm install by design (Node >=24 native type stripping).
+      - 'files="$(find apps/tally-web/src -type f -name "*.test.ts" -print)"'
+      - test -n "$files"
+      - node --test $files
+      - node --check web/v2/journey-client.mjs
+      # Build the production bundle the ALM server serves at /app (feature
+      # gate UI-E #232). Dependencies resolve from the npmmirror cache.
+      - npm --prefix apps/tally-web install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com
+      - npm --prefix apps/tally-web run build
+      - test -f apps/tally-web/dist/index.html
+      - echo TALLY_V2_TALLY_WEB_BUILD_PASS
   - name: alm-workspace-release-panel-negative
     image: bash
     commands:

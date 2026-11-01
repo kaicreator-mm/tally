@@ -272,6 +272,141 @@ async function body(req,limit=4096){
   let text='';for await(const chunk of req){text+=chunk;if(text.length>limit)throw new Error('REQUEST_TOO_LARGE');}
   return text;
 }
+// ---- UI-E #232: dependency-free v2 read models (plain fetch, Host token) ----
+const V2_REPO='kaicreator-mm/tally';
+const V2_TOKEN=()=>process.env.TALLY_GITHUB_READ_TOKEN??null;
+const V2_TIMEOUT=15000;
+async function ghJson(path){
+  const token=V2_TOKEN();
+  if(!token||token.length<8)return {ok:false,reason:'HOST_TOKEN_UNAVAILABLE'};
+  try{
+    const response=await fetch(`https://api.github.com${path}`,{
+      headers:{authorization:`Bearer ${token}`,accept:'application/vnd.github+json',
+        'user-agent':'tally-v2-alm-readmodel'},
+      signal:AbortSignal.timeout(V2_TIMEOUT)});
+    if(!response.ok)return {ok:false,reason:`GITHUB_${response.status}`};
+    return {ok:true,data:await response.json()};
+  }catch(error){
+    return {ok:false,reason:'GITHUB_TRANSPORT_UNKNOWN'};
+  }
+}
+const notConnected=(model)=>Object.freeze({connected:false,
+  reason:'NOT_CONNECTED',model,unknown:true});
+async function v2Catalog(){
+  const branches=await ghJson(`/repos/${V2_REPO}/branches?per_page=100`);
+  if(!branches.ok)
+    return notConnected('catalog');
+  const versions=branches.data
+    .map(branch=>branch.name)
+    .filter(name=>name==='main'||name.startsWith('version/'))
+    .map(name=>({id:name,projectId:V2_REPO,label:name,ref:name}));
+  return Object.freeze({connected:true,
+    projects:[{id:V2_REPO,title:'tally',repository:V2_REPO}],
+    versionsByProject:{[V2_REPO]:versions},defaultVersionId:'version/v2'});
+}
+const V2_TITLE=/^\[v2\](?:\[(UI-[A-H]|J0\d\w*)\])?(?:\[P([012])\])?\s*(.+)$/;
+function v2TaskFromIssue(issue){
+  const match=V2_TITLE.exec(issue.title??'');
+  return {
+    id:String(issue.number),
+    versionId:'version/v2',
+    title:match?match[3]:issue.title,
+    status:issue.state==='closed'?'done':'open',
+    severity:match&&match[2]?`P${match[2]}`:'P2',
+    blockedBy:[],
+    agentId:null,
+    // Honest: per-task claim/CI/attempt state is not derivable from the issue
+    // list read model — the shell shows UNKNOWN until deeper adapters land.
+    claimState:'UNKNOWN',attemptId:null,attemptState:'UNKNOWN',
+    prNumber:null,reviewState:'UNKNOWN',ciState:'UNKNOWN',
+    writeSet:[],requirementRef:null,updatedAt:issue.updated_at??null,
+  };
+}
+async function v2Tasks(versionId){
+  if(versionId&&versionId!=='version/v2')
+    return notConnected('tasks');
+  const issues=await ghJson(`/repos/${V2_REPO}/issues?state=open&per_page=100`);
+  if(!issues.ok)return notConnected('tasks');
+  const tasks=issues.data
+    .filter(issue=>!('pull_request' in issue))
+    .map(v2TaskFromIssue);
+  return Object.freeze({connected:true,versionId:versionId??'version/v2',tasks});
+}
+// Planned-edge table for the current UI workstream: PLANNED candidates from
+// the task DAG planning (#227 workfront) — explicitly NOT native blocked_by;
+// native edges arrive only from a future source-qualified adapter.
+const V2_PLANNED_EDGES=[
+  {from:'228',to:'232'},{from:'229',to:'232'},{from:'230',to:'232'},
+  {from:'231',to:'232'},{from:'233',to:'232'},{from:'234',to:'232'},
+  {from:'235',to:'232'},
+];
+async function v2Dag(versionId){
+  const tasks=await v2Tasks(versionId);
+  if(!tasks.connected)return notConnected('dag');
+  const nodes=tasks.tasks.map(task=>({
+    taskId:task.id,versionId:'version/v2',title:task.title,
+    status:task.status,severity:task.severity,
+    requirementGroup:null,phase:null,lane:null,agentId:null,
+    executable:false}));
+  const known=new Set(nodes.map(node=>node.taskId));
+  const edges=V2_PLANNED_EDGES
+    .filter(edge=>known.has(edge.from)&&known.has(edge.to))
+    .map(edge=>({...edge,kind:'PLANNED',evidenceRef:null,amendedAt:null}));
+  return Object.freeze({connected:true,versionId:'version/v2',
+    asOf:{sourceSha:'',frozenAt:null},
+    nodes,edges});
+}
+function v2Release(versionId){
+  // Advisory projection only; authoritative qualification stays in the
+  // Host/C chain (#222) — the shell never derives Release PASS here.
+  return Object.freeze({connected:true,versionId:versionId??null,
+    readiness:{versionId:versionId??'version/v2',
+      gates:[{name:'woodpeckerCI',status:'UNKNOWN',owner:'CI'},
+        {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}],
+      permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}});
+}
+function v2Settings(){
+  return Object.freeze({connected:true,
+    snapshot:{agentProviders:[
+      {id:'zcode',enabled:true,cliPath:null,hostPrincipal:null,concurrency:1,
+        sandbox:null,buildSelected:true,credential:null},
+      {id:'codex',enabled:false,cliPath:null,hostPrincipal:null,concurrency:1,
+        sandbox:null,buildSelected:false,credential:null},
+      {id:'claude-code',enabled:false,cliPath:null,hostPrincipal:null,
+        concurrency:1,sandbox:null,buildSelected:false,credential:null}],
+    tallyLlm:{enabled:false,provider:null,model:null,endpoint:null,
+      promptTemplateVersion:null,privacyConsentPreviewShown:false,
+      tokenBudget:null,credential:null},
+    ci:{woodpeckerUrl:process.env.TALLY_WOODPECKER_URL??null,repoId:null,
+      profiles:['v2-alm-workspace'],webhookState:'UNKNOWN',lastReadbackAt:null},
+    git:{repositories:[V2_REPO],defaultBase:'version/v2',adsPin:null,
+      oauthScopes:[],requiredScopeGaps:V2_TOKEN()?[]:['read:project']},
+    deploymentEnvs:[],defaults:{locale:'zh-CN',defaultView:'list',
+      cascade:{workspace:'kaicreator-mm',project:null,version:null,task:null}}}});
+}
+function v2Metadata(versionId){
+  return Object.freeze({connected:true,versionId:versionId??null,
+    attempts:[],reports:[],lineage:[],learnedOutcomes:[],
+    note:'METADATA_ADAPTER_PENDING: task-meta/ADS 深层读模型尚未接入,所有条目保持空/UNKNOWN'});
+}
+const APP_DIST=new URL('../../apps/tally-web/dist/',import.meta.url);
+const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
+  '.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png',
+  '.map':'application/json','.json':'application/json'};
+/** Returns a response descriptor; the route handler owns the socket send. */
+async function staticAppResponse(relative){
+  const target=new URL(relative,APP_DIST);
+  if(!target.href.startsWith(APP_DIST.href))
+    return {status:403,type:'text/plain',body:'FORBIDDEN'};
+  try{
+    const bytes=await readFile(target);
+    const ext=relative.slice(relative.lastIndexOf('.'));
+    return {status:200,type:MIME[ext]??'application/octet-stream',body:bytes};
+  }catch{
+    return {status:404,type:'text/plain',
+      body:'APP_BUNDLE_NOT_BUILT (run: npm --prefix apps/tally-web run build)'};
+  }
+}
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
   releaseHost,releaseSealedDispatch}={}){
@@ -419,6 +554,51 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         const result=payload.kind==='start'?await controller.start(payload.sourceSha):
           await controller.reviewRepair(payload.sourceSha);
         return send(result.status==='PASS'?200:502,'application/json',json(result));
+      }
+      // ---- UI-E #232: v2 shell read models + feature gate -----------------
+      // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or
+      // UNKNOWN, never fabricated data. No effect path starts here.
+      if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
+        const catalog=await v2Catalog();
+        return send(200,'application/json',json(catalog));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
+        const versionId=url.searchParams.get('versionId');
+        const tasks=await v2Tasks(versionId);
+        return send(200,'application/json',json(tasks));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/dag'){
+        const versionId=url.searchParams.get('versionId');
+        const dag=await v2Dag(versionId);
+        return send(200,'application/json',json(dag));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/release'){
+        return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
+        return send(200,'application/json',json(v2Settings()));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/metadata'){
+        return send(200,'application/json',json(v2Metadata(url.searchParams.get('versionId'))));
+      }
+      // Feature gate: /app serves the new shell bundle (built by
+      // apps/tally-web); /diagnostics keeps the legacy test console; / picks
+      // by TALLY_V2_UI_GATE (default open ⇒ new shell).
+      if(req.method==='GET'&&(url.pathname==='/app'||url.pathname==='/app/')){
+        const served=await staticAppResponse('index.html');
+        return send(served.status,served.type,served.body);
+      }
+      if(req.method==='GET'&&url.pathname.startsWith('/app/assets/')){
+        const served=await staticAppResponse(url.pathname.slice('/app/'.length));
+        return send(served.status,served.type,served.body);
+      }
+      if(req.method==='GET'&&url.pathname==='/'&&process.env.TALLY_V2_UI_GATE!=='legacy'){
+        res.writeHead(302,{location:'/app'});
+        return res.end();
+      }
+      if(req.method==='GET'&&url.pathname==='/diagnostics'){
+        return send(200,'text/html; charset=utf-8',
+          await readFile(new URL('./journey-view.html',import.meta.url),'utf8'));
       }
       return send(404,'text/plain','NOT_FOUND');
     }catch(error){return send(400,'application/json',json({status:'ERROR',reason:error.message}));}

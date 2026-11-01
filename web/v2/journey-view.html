@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Tally v2 · Agent-native ALM workspace</title>
+<title>Tally v2 · Diagnostics(旧版测试控制台)</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1020;color:#edf2ff;font-size:15px;line-height:1.5}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 8% 0%,#1c2a4a 0,#0b1020 48%,#080c17 100%);min-height:100vh}
@@ -19,7 +19,14 @@ a{color:#8ec5ff;text-decoration-thickness:1px;text-underline-offset:3px}a:hover{
 @media(max-width:800px){.workspace{padding:24px 16px}.workspace-header{display:block}.source-meta{justify-items:start;text-align:left;margin-top:18px}h1{font-size:29px}.section-head{display:block}.section-head .quiet{display:block;text-align:left;margin-top:5px}table{min-width:0;display:block}thead{display:none}tbody,tr,td{display:block;width:100%}tr.task-row{border-bottom:1px solid #2a3a5d;padding:12px 14px}td{border:0;padding:4px 0;font-size:12px}td:before{content:attr(data-label);display:block;color:#7f96bd;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:2px}td:first-child{padding-top:8px}td:last-child{padding-bottom:8px}.action-grid,.inbox-grid{grid-template-columns:1fr}}
 </style>
 </head>
-<body><main id="app"></main>
+<body>
+<div role="banner" style="max-width:1440px;margin:0 auto;padding:0 30px 16px">
+  <p style="margin:0;padding:10px 16px;border:1px solid #a2763c;border-radius:12px;background:#35291a;color:#f3d49e;font-size:12.5px">
+    ⚙️ 这是<b>诊断控制台</b>(旧版测试面板,按需访问 /diagnostics)。正式用户界面在新
+    <a href="/app">/app 工作台</a>(apps/tally-web,UI-E #232 特性门切换)。
+  </p>
+</div>
+<main id="app"></main>
 <section id="intake-app" aria-label="Guided intake workbench (J01–J03)"></section>
 <section id="maintenance-app" aria-label="Governed maintenance workbench (J08b–J08c)"></section>
 <section id="release-app" aria-label="Release qualification (J07)"></section>
