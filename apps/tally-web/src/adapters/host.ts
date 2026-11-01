@@ -31,6 +31,10 @@ export interface DagResponse{
     evidenceRef:string|null;amendedAt:string|null}[];
 }
 export interface SettingsResponse{connected:boolean;
+  coverage?:'PARTIAL';
+  sectionCoverage?:Partial<Record<
+    import('../features/settings/model.ts').SettingsSection,
+    'NOT_CONNECTED'|'CURRENT_OBSERVED'>>;
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
   readiness?:{versionId:string;
