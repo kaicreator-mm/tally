@@ -73,6 +73,26 @@ export function validateV2ReadModel(model,value,scope={}){
     if(!plain(value.readiness)||value.readiness.versionId!==scope.versionId||
       !Array.isArray(value.readiness.gates))return false;
   }
+  if(model==='agents'&&!Array.isArray(value.attempts))return false;
+  if(model==='requirements'&&!Array.isArray(value.nodes))return false;
+  if(model==='qa'&&!Array.isArray(value.records))return false;
+  if(model==='maintenance'&&(!Array.isArray(value.defects)||
+    !Array.isArray(value.learnings)))return false;
+  if(model==='deployment'&&!Array.isArray(value.deployments))return false;
+  if(['workflow','domainPackages','experience','audit'].includes(model)){
+    if(!Array.isArray(value.records))return false;
+    for(const record of value.records){
+      if(!plain(record)||!ID.test(record.id)||
+        record.projectId!==source.repository||
+        (record.versionId!==null&&!ID.test(record.versionId))||
+        typeof record.title!=='string'||!record.title.trim()||
+        !['workflow','domain-package','experience','audit'].includes(record.kind)||
+        !['OBSERVED','PROPOSAL','REVIEWED','BUILD_SELECTED'].includes(record.authority)||
+        typeof record.sourceRef!=='string'||
+        !record.sourceRef.startsWith('https://github.com/'+source.repository+'/'))
+        return false;
+    }
+  }
   if(model==='workbench'){
     if(!Array.isArray(value.actions))return false;
     const ids=new Set();
