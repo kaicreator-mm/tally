@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateEndpoint,validateConcurrency,canToggleProvider,
-  validateTokenBudget,assertNoSecrets,persistSelections,resolveScoped}
+  validateTokenBudget,assertNoSecrets,persistSelections,resolveScoped,
+  SETTINGS_ROUTE_MAP,sectionForSettingsRoute}
   from './model.ts';
 import type {AgentProviderConfig,WorkspaceDefaults} from './model.ts';
 
@@ -73,4 +74,17 @@ test('scope cascade resolves task > version > project > workspace',()=>{
     version:{value:'v',source:'version',authorizer:'freeze'},
     task:{value:'t',source:'task',authorizer:'claim'}}),
     {value:'t',source:'task',authorizer:'claim'});
+});
+
+test('all nine primary Settings routes map to one exact section',()=>{
+  assert.equal(Object.keys(SETTINGS_ROUTE_MAP).length,9);
+  const cases={
+    'agent-providers':'agentProviders','tally-llm':'tallyLlm',
+    'git-github':'gitGithub','ci':'ci','host':'host','storage':'storage',
+    'security':'security','deployment-env':'deployment','integrations':'integrations',
+  };
+  for(const [route,section] of Object.entries(cases))
+    assert.equal(sectionForSettingsRoute(route),section,route);
+  assert.equal(sectionForSettingsRoute('does-not-exist'),null);
+  assert.equal(sectionForSettingsRoute('__proto__'),null);
 });
