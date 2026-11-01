@@ -6,6 +6,7 @@
  */
 import {useState} from 'react';
 import {useShell} from './shell/AppContext.tsx';
+import {taskRoute} from './shell/scope.ts';
 import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
@@ -101,10 +102,6 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
-const taskDetailUrl=(projectId:string,versionId:string,taskId:string|null)=>
-  '#/development/tasks?projectId='+encodeURIComponent(projectId)
-    +'&versionId='+encodeURIComponent(versionId)
-    +(taskId?'&taskId='+encodeURIComponent(taskId):'');
 function TasksRoute({projectId,versionId,taskId,onNavigate}:{
   projectId:string|null;versionId:string|null;taskId:string|null;
   onNavigate:(hash:string)=>void}){
@@ -119,13 +116,13 @@ function TasksRoute({projectId,versionId,taskId,onNavigate}:{
   return guard(versionId,<>
     <TasksView tasks={rows} filters={filters} setFilters={setFilters}
       onSelectTask={id=>projectId&&versionId&&
-        onNavigate(taskDetailUrl(projectId,versionId,id))}
+        onNavigate(taskRoute(projectId,versionId,id))}
       selectedTaskId={taskId}
       versionId={versionId} connected={connected}/>
     <TaskDrawer task={taskId&&connected?
         rows.find(row=>row.id===taskId&&row.versionId===versionId)??null:null}
       onClose={()=>projectId&&versionId&&
-        onNavigate(taskDetailUrl(projectId,versionId,null))}/>
+        onNavigate(taskRoute(projectId,versionId,null))}/>
   </>);
 }
 function AgentsRoute({projectId,versionId}:{projectId:string|null;
@@ -199,7 +196,7 @@ function DagRoute({projectId,versionId,onNavigate}:{
   return guard(versionId,
     <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}
       onOpenTask={id=>projectId&&versionId&&
-        onNavigate(taskDetailUrl(projectId,versionId,id))}/>);
+        onNavigate(taskRoute(projectId,versionId,id))}/>);
 }
 function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
@@ -234,7 +231,7 @@ function MetadataRoute({projectId,versionId,onNavigate}:{
   return guard(versionId,
     version?<MetadataCenter version={version} allVersions={[]}
         expectedTaskIds={null} onOpenTask={id=>projectId&&versionId&&
-          onNavigate(taskDetailUrl(projectId,versionId,id))}/>
+          onNavigate(taskRoute(projectId,versionId,id))}/>
       :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
 function SettingsRoute({routeKey}:{routeKey:string}){
