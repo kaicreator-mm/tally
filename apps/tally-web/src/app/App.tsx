@@ -151,6 +151,7 @@ function RequirementsRoute({projectId,versionId}:{projectId:string|null;
   if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
   if(result.state==='loading')return <Skeleton lines={4}/>;
   return <RequirementsView nodes={result.data?.nodes??[]}
+    structureCoverage={result.data?.structureCoverage}
     connected={result.state==='ready'&&result.data?.connected===true&&
       result.data.versionId===versionId&&Array.isArray(result.data.nodes)}/>;
 }
