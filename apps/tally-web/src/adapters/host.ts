@@ -52,7 +52,10 @@ export interface MetadataResponse{connected:boolean;versionId:string|null;
   learnedOutcomes:unknown[];note?:string;}
 
 export interface WorkbenchResponse{
-  connected:boolean;source?:{repository:string;sourceSha:string;currentness:string;
+  connected:boolean;
+  queueCoverage?:'PARTIAL_UNVERIFIED_ROSTER';
+  approvalCoverage?:'NOT_CONNECTED';
+  source?:{repository:string;sourceSha:string;currentness:string;
     readback:string};
   actions?:import('../features/workbench/model.ts').WorkAction[];
 }
