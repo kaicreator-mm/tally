@@ -12,7 +12,9 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import type {Route} from './router.ts';
 import type {TasksResponse,DagResponse,ReleaseResponse,
-  SettingsResponse,MetadataResponse,WorkbenchResponse} from '../adapters/host.ts';
+  SettingsResponse,MetadataResponse,WorkbenchResponse,
+  VersionAgentsRead,VersionRequirementsRead,VersionQaRead,VersionMaintenanceRead,
+  GovernanceRead} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
@@ -29,6 +31,9 @@ import type {SettingsSnapshot} from '../features/settings/model.ts';
 import {sectionForSettingsRoute} from '../features/settings/model.ts';
 import {WorkbenchView} from '../features/workbench/views.tsx';
 import {GuidedHostRoute} from '../features/forms/host-route.tsx';
+import {GovernanceView} from '../features/governance/views.tsx';
+import type {GovernanceSnapshot,GovernanceKind}
+  from '../features/governance/model.ts';
 import {inboxCounts} from '../features/workbench/model.ts';
 import type {WorkbenchSnapshot,WorkbenchPage} from '../features/workbench/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
@@ -62,14 +67,20 @@ function routeBody(key:string,projectId:string|null,versionId:string|null,
       return <WorkbenchView page={key as WorkbenchPage}
         snapshot={workbench} onNavigate={onNavigate}/>;
     case 'product':return <GuidedHostRoute projectId={projectId} versionId={versionId}/>;
-    case 'tasks':return <TasksRoute versionId={versionId}/>;
-    case 'agents':return <AgentsRoute versionId={versionId}/>;
-    case 'l2-dag':return <DagRoute versionId={versionId}/>;
-    case 'requirements':return <RequirementsView nodes={[]} connected={false}/>
-    case 'qa':return <QaView records={[]} connected={false}/>
-    case 'release':return <ReleaseRoute versionId={versionId}/>;
-    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]} connected={false}/>;
-    case 'metadata':return <MetadataRoute versionId={versionId}/>;
+    case 'tasks':return <TasksRoute projectId={projectId} versionId={versionId}/>;
+    case 'agents':return <AgentsRoute projectId={projectId} versionId={versionId}/>;
+    case 'l2-dag':return <DagRoute projectId={projectId} versionId={versionId}/>;
+    case 'requirements':return <RequirementsRoute projectId={projectId} versionId={versionId}/>
+    case 'qa':return <QaRoute projectId={projectId} versionId={versionId}/>
+    case 'release':return <ReleaseRoute projectId={projectId} versionId={versionId}/>;
+    case 'maintenance':return <MaintenanceRoute projectId={projectId} versionId={versionId}/>;
+    case 'metadata':return <MetadataRoute projectId={projectId} versionId={versionId}/>;
+    case 'workflow':return <GovernanceRoute kind="workflow" projectId={projectId}/>;
+    case 'domain-packages':
+      return <GovernanceRoute kind="domain-package" projectId={projectId}/>;
+    case 'experience':
+      return <GovernanceRoute kind="experience" projectId={projectId}/>;
+    case 'audit':return <GovernanceRoute kind="audit" projectId={projectId}/>;
     case 'agent-providers':case 'tally-llm':case 'ci':case 'git-github':
     case 'host':case 'storage':case 'security':case 'deployment-env':
     case 'integrations':
@@ -85,11 +96,11 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
-function TasksRoute({versionId}:{versionId:string|null}){
+function TasksRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const [filters,setFilters]=useState<TaskFilters>({...EMPTY_FILTERS});
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
-    adapter=>adapter.tasks(versionId??''),[versionId]);
+    adapter=>adapter.tasks(projectId??'',versionId??''),[projectId,versionId]);
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={tasks.reason??undefined}/>;
@@ -103,31 +114,87 @@ function TasksRoute({versionId}:{versionId:string|null}){
       onClose={()=>setSelectedId(null)}/>
   </>);
 }
-function AgentsRoute({versionId}:{versionId:string|null}){
-  return guard(versionId,
-    <AgentsPanel attempts={[]} connected={false}/>);
+function AgentsRoute({projectId,versionId}:{projectId:string|null;
+  versionId:string|null}){
+  const result=useHost<VersionAgentsRead>('agents',
+    adapter=>adapter.agents(projectId??'',versionId??''),
+    [projectId,versionId]);
+  if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
+  if(result.state==='loading')return <Skeleton lines={4}/>;
+  const records=result.data?.attempts;
+  return <AgentsPanel attempts={records??[]}
+    connected={result.state==='ready'&&result.data?.connected===true&&
+      result.data.versionId===versionId&&Array.isArray(records)}/>;
 }
-function DagRoute({versionId}:{versionId:string|null}){
+function RequirementsRoute({projectId,versionId}:{projectId:string|null;
+  versionId:string|null}){
+  const result=useHost<VersionRequirementsRead>('requirements',
+    adapter=>adapter.requirements(projectId??'',versionId??''),
+    [projectId,versionId]);
+  if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
+  if(result.state==='loading')return <Skeleton lines={4}/>;
+  return <RequirementsView nodes={result.data?.nodes??[]}
+    connected={result.state==='ready'&&result.data?.connected===true&&
+      result.data.versionId===versionId&&Array.isArray(result.data.nodes)}/>;
+}
+function QaRoute({projectId,versionId}:{projectId:string|null;
+  versionId:string|null}){
+  const result=useHost<VersionQaRead>('qa',
+    adapter=>adapter.qa(projectId??'',versionId??''),
+    [projectId,versionId]);
+  if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
+  return result.state==='loading'?<Skeleton lines={4}/>:
+    <QaView records={result.data?.records??[]}
+      connected={result.state==='ready'&&result.data?.connected===true&&
+        result.data.versionId===versionId&&Array.isArray(result.data.records)}/>;
+}
+function MaintenanceRoute({projectId,versionId}:{projectId:string|null;
+  versionId:string|null}){
+  const result=useHost<VersionMaintenanceRead>('maintenance',
+    adapter=>adapter.maintenance(projectId??'',versionId??''),
+    [projectId,versionId]);
+  if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
+  if(result.state==='loading')return <Skeleton lines={4}/>;
+  return <MaintenanceView defects={result.data?.defects??[]}
+    learnings={result.data?.learnings??[]}
+    connected={result.state==='ready'&&result.data?.connected===true&&
+      result.data.versionId===versionId&&Array.isArray(result.data.defects)&&
+      Array.isArray(result.data.learnings)}/>;
+}
+function GovernanceRoute({kind,projectId}:{kind:GovernanceKind;
+  projectId:string|null}){
+  const modelKey=kind==='domain-package'?'domainPackages':kind;
+  const result=useHost<GovernanceRead>(modelKey,
+    adapter=>adapter.governance(modelKey as
+      'workflow'|'domainPackages'|'experience'|'audit',projectId??''),
+    [kind,projectId]);
+  if(result.state==='loading')return <Skeleton lines={4}/>;
+  const snapshot=result.data?.connected===true&&
+    Array.isArray(result.data.records)&&result.data.source
+    ?result.data as GovernanceSnapshot:null;
+  return <GovernanceView kind={kind} snapshot={snapshot}/>;
+}
+function DagRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
-    adapter=>adapter.dag(versionId??''),[versionId]);
+    adapter=>adapter.dag(projectId??'',versionId??''),[projectId,versionId]);
   if(dag.state==='loading')return <Skeleton lines={6}/>;
   if(dag.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>;
   return guard(versionId,
     <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>);
 }
-function ReleaseRoute({versionId}:{versionId:string|null}){
+function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
-    adapter=>adapter.release(versionId??''),[versionId]);
+    adapter=>adapter.release(projectId??'',versionId??''),[projectId,versionId]);
   if(release.state==='loading')return <Skeleton lines={4}/>;
   const readiness=(release.data?.readiness??null) as ReleaseReadiness|null;
   return guard(versionId,
     <ReleaseView readiness={readiness}
       connected={release.data?.connected===true}/>);
 }
-function MetadataRoute({versionId}:{versionId:string|null}){
+function MetadataRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const metadata=useHost<MetadataResponse>('metadata',
-    adapter=>adapter.metadata(versionId??''),[versionId]);
+    adapter=>adapter.metadata(projectId??'',versionId??''),[projectId,versionId]);
   if(metadata.state==='loading')return <Skeleton lines={6}/>;
   const data=metadata.data;
   if(metadata.state==='not_connected'||data?.connected!==true)

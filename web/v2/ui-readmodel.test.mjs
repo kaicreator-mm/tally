@@ -76,3 +76,23 @@ test('workbench queue rejects cross-repo actions and self-asserted states',()=>{
   assert.equal(validateV2ReadModel('workbench',{...base,actions:[
     {...base.actions[0],sourceRef:'https://attacker.example/issues/1'}]},{}),false);
 });
+
+test('versioned lifecycle read models refuse missing source arrays',async()=>{
+  const base={connected:true,versionId:'version/v2',source};
+  for(const [kind,valid] of [
+    ['agents',{attempts:[]}],['requirements',{nodes:[]}],['qa',{records:[]}],
+    ['maintenance',{defects:[],learnings:[]}],['deployment',{deployments:[]}]
+  ]){
+    assert.equal(validateV2ReadModel(kind,base,scope),false,kind);
+    assert.equal(validateV2ReadModel(kind,{...base,...valid},scope),true,kind);
+  }
+});
+test('governance read model rejects source-crossing records',()=>{
+  const good={connected:true,source,records:[{
+    id:'1',projectId:'org/tally',versionId:'version/v2',
+    title:'Package',kind:'domain-package',authority:'BUILD_SELECTED',
+    sourceRef:'https://github.com/org/tally/issues/1',state:'SELECTED'}]};
+  assert.equal(validateV2ReadModel('domainPackages',good,{}),true);
+  assert.equal(validateV2ReadModel('domainPackages',{...good,
+    records:[{...good.records[0],projectId:'other/repo'}]},{}),false);
+});

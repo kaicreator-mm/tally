@@ -482,6 +482,24 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
             answers:payload.answers});
         return send(result.ok===true?200:409,'application/json',json(result));
       }
+      // UI #254: all lifecycle/governance pages use the same selected Host.
+      // No second GitHub source reader or Task state author is created here.
+      const v2SourceModels=Object.freeze({
+        '/api/v2/agents':'agents','/api/v2/requirements':'requirements',
+        '/api/v2/qa':'qa','/api/v2/maintenance':'maintenance',
+        '/api/v2/deployment':'deployment',
+        '/api/v2/workflow':'workflow','/api/v2/domain-packages':'domainPackages',
+        '/api/v2/experience':'experience','/api/v2/audit':'audit',
+      });
+      if(req.method==='GET'&&
+        Object.prototype.hasOwnProperty.call(v2SourceModels,url.pathname)){
+        const kind=v2SourceModels[url.pathname];
+        const result=await readV2HostModel(v2ReadModelHost,kind,{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined,
+        });
+        return send(200,'application/json',json(result));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/workbench'){
         const model=await readV2HostModel(v2ReadModelHost,'workbench',{});
         return send(200,'application/json',json(model));
