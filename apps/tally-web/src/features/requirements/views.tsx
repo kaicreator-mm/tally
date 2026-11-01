@@ -9,8 +9,9 @@ import {EmptyState} from '../../components/ui/States.tsx';
 const HINT_ZH:Record<string,string>={draft_product:'起草产品 PRD',
   add_acceptance:'补充验收标准',request_freeze:'发起独立评审冻结',
   renew_freeze:'重新冻结(内容已变更)',none:'已就绪'};
-export function RequirementsView({nodes,connected=true,locale='zh'}:
-  {nodes:readonly RequirementNode[];connected?:boolean;locale?:'zh'|'en'}){
+export function RequirementsView({nodes,connected=true,locale='zh',structureCoverage}:
+  {nodes:readonly RequirementNode[];connected?:boolean;locale?:'zh'|'en';
+   structureCoverage?:'HOST_DECLARED_UNVERIFIED'}){
   const zh=locale==='zh';
   if(!connected)return <EmptyState title={zh?'未连接真实数据源':'Not connected'}
     hint="UI-E #232"/>;
@@ -38,6 +39,10 @@ export function RequirementsView({nodes,connected=true,locale='zh'}:
   const diff=freezeDiff(nodes,frozen.length?Math.min(
     ...frozen.map(node=>node.productRevision??0)):0);
   return <div style={{display:'grid',gap:'var(--s5)'}}>
+    {structureCoverage==='HOST_DECLARED_UNVERIFIED'?<div role="status"
+      style={{color:'var(--warn)'}}>
+      REQUIREMENT_STRUCTURE=HOST_DECLARED_UNVERIFIED · GitHub 标题已核实，但层级、验收标准与 Product 冻结均未独立确认
+    </div>:null}
     <Card>
       <CardHeader title={zh?'需求层级':'Requirement hierarchy'}
         sub={zh?'Requirement → Epic/Story → PRD/验收 → L2 → 冻结':'hierarchy'}/>
