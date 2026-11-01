@@ -163,9 +163,85 @@ export async function readUiNativeVersionFromClient({
         asOf:{sourceSha:expectedSha,frozenAt:null},nodes,edges}});
   }catch{return denied('NATIVE_TASK_READ_FAILED');}
 }
+/** Read selected, immutable-at-query GitHub Requirement titles using the
+ * existing GitHub C project-intake transport. Kind and hierarchy are
+ * explicitly Host-declared, NOT an independently frozen Product structure.
+ */
+export async function readUiNativeRequirementsFromClient({
+  octokit,owner,repo,versionId,expectedSha,requirementIssueSpecs,
+  intakeReader=null
+}={}){
+  if(!validInput(octokit,owner,repo,versionId,expectedSha)||
+     !Array.isArray(requirementIssueSpecs)||
+     requirementIssueSpecs.length<1||requirementIssueSpecs.length>16||
+     !octokit?.rest?.issues?.get)return denied('REQUIREMENT_ROSTER_NOT_CONFIGURED');
+  const ids=new Set();
+  for(const item of requirementIssueSpecs){
+    if(!item||!Number.isSafeInteger(item.number)||item.number<1||
+       ids.has(item.number)||
+       !['requirement','epic','story'].includes(item.kind)||
+       (item.parent!==null&&(!Number.isSafeInteger(item.parent)||item.parent<1)))
+      return denied('INVALID_HOST_REQUIREMENT_ROSTER');
+    ids.add(item.number);
+  }
+  for(const item of requirementIssueSpecs){
+    if(item.parent!==null&&(!ids.has(item.parent)||item.parent===item.number))
+      return denied('REQUIREMENT_PARENT_OUTSIDE_ROSTER');
+    const ancestors=new Set([item.number]);
+    let parent=item.parent;
+    while(parent!==null){
+      if(ancestors.has(parent))return denied('REQUIREMENT_CYCLE');
+      ancestors.add(parent);
+      parent=requirementIssueSpecs.find(x=>x.number===parent)?.parent??null;
+    }
+  }
+  try{
+    if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
+      return denied('VERSION_BRANCH_NOT_PINNED');
+    const read=intakeReader??(await import(
+      '../../tally-github-c/src/project-intake.mjs')).readProjectIntakeFromClient;
+    const observed=await read({octokit,owner,repo,expectedSourceSha:expectedSha,
+      sources:requirementIssueSpecs.map(x=>({number:x.number}))});
+    if(observed?.status!=='PROJECT_INTAKE_OBSERVED'||
+       observed.sourceQualified!==true||
+       observed.authorized!==false||observed.taskPass!==false||
+       observed.releasePass!==false||
+       observed.repository?.fullName!==owner+'/'+repo||
+       typeof observed.observedAt!=='string'||
+       !Array.isArray(observed.sources)||
+       observed.sources.length!==requirementIssueSpecs.length)
+      return denied('NATIVE_REQUIREMENT_SOURCE_UNQUALIFIED');
+    const nodes=[];
+    for(let i=0;i<requirementIssueSpecs.length;i++){
+      const spec=requirementIssueSpecs[i],actual=observed.sources[i];
+      if(actual?.number!==spec.number||actual.isPullRequest!==false||
+         actual.url!==`https://github.com/${owner}/${repo}/issues/${spec.number}`||
+         !['open','closed'].includes(actual.state)||
+         typeof actual.title!=='string'||!actual.title.trim())
+        return denied('REQUIREMENT_ISSUE_IDENTITY_UNVERIFIED');
+      // Double read all selected Issue facts to reject mutation during
+      // source observation. This does not make a Product freeze attestation.
+      const last=(await octokit.rest.issues.get({owner,repo,
+        issue_number:spec.number}))?.data;
+      if(last?.number!==spec.number||last?.html_url!==actual.url||
+         last?.pull_request!==undefined||last?.state!==actual.state||
+         last?.title!==actual.title)
+        return denied('REQUIREMENT_ISSUE_CHANGED_DURING_READ');
+      nodes.push({id:String(spec.number),kind:spec.kind,title:actual.title,
+        parent:spec.parent===null?null:String(spec.parent),
+        productRevision:null,acceptanceRefs:[],l2Decision:null,
+        freezeState:'UNKNOWN',updatedAt:observed.observedAt});
+    }
+    if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
+      return denied('VERSION_BRANCH_DRIFT');
+    return Object.freeze({connected:true,source:source(owner,repo,expectedSha),
+      versionId,structureCoverage:'HOST_DECLARED_UNVERIFIED',
+      freezeCoverage:'UNKNOWN',nodes});
+  }catch{return denied('NATIVE_REQUIREMENT_READ_FAILED');}
+}
 /** Production creates the Octokit transport INSIDE C, not the browser. */
 export function createUiNativeSource({token,owner,repo,versionId,
-  expectedSha,taskIssueNumbers}={}){
+  expectedSha,taskIssueNumbers,requirementIssueSpecs}={}){
   if(typeof token!=='string'||token.length<8)
     throw new TypeError('TRUSTED_GITHUB_C_CREDENTIAL_REQUIRED');
   // Native production adapter imports Octokit only on actual Host use.
@@ -183,5 +259,7 @@ export function createUiNativeSource({token,owner,repo,versionId,
       octokit:await client(),owner,repo,versionId,expectedSha}),
     version:async()=>readUiNativeVersionFromClient({
       octokit:await client(),owner,repo,versionId,expectedSha,taskIssueNumbers}),
+    requirements:async()=>readUiNativeRequirementsFromClient({
+      octokit:await client(),owner,repo,versionId,expectedSha,requirementIssueSpecs}),
   });
 }
