@@ -67,3 +67,20 @@ test('unconfigured or forged native requirement freeze cannot become Host fact',
       freezeCoverage:'FROZEN',nodes:[]})}});
   assert.equal((await forged.requirements({projectId:repo,versionId})).connected,false);
 });
+
+test('reported CI evidence cannot assert independent Hidden or installed acceptance',async()=>{
+  const qa={connected:true,source,versionId,
+    ciCoverage:'REPORTED_ONLY',independentCoverage:'UNKNOWN',records:[{
+      layer:'fullRegression',provenance:'REPORTED',outcome:'PASS',
+      witness:'github-native-c-status-reported',
+      evidenceRef:'https://ci.kaicreator.com/repos/12/pipeline/369/2',
+      subjectSha:source.sourceSha,observedAt:'2026-11-02T00:00:00Z'}]};
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,qa:async()=>qa}});
+  assert.deepEqual(await host.qa({projectId:repo,versionId}),qa);
+  assert.equal((await host.qa({projectId:repo,versionId:'version/v3'})).connected,false);
+  const forged=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,qa:async()=>({...qa,records:[{
+      ...qa.records[0],layer:'hiddenValidation',provenance:'INDEPENDENT'}]})}});
+  assert.equal((await forged.qa({projectId:repo,versionId})).connected,false);
+});
