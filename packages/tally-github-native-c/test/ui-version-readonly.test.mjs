@@ -27,7 +27,7 @@ const native=(deps={},branchSha=sha,issueMap={})=>({
 const sourceReader=({issueNumber,expectedSourceSha})=>({
   sourceSha:expectedSourceSha,workItemType:'type:task',
   claimStatus:'NOT_VERIFIED',authorized:false,taskPass:false,
-  dependencyState:'CLEAR',blockerCount:0,
+  dependencyState:'CLEAR',blockerCount:0,openBlockerCount:0,
   workflowState:'state:ready',issueState:'open',
 });
 const args=octokit=>({octokit,owner,repo,versionId,expectedSha:sha});
@@ -64,7 +64,7 @@ test('native dependencies are C readback edges, not assistant planned edges',asy
   const reader=({issueNumber,expectedSourceSha})=>({
     ...sourceReader({issueNumber,expectedSourceSha}),
     dependencyState:issueNumber===2?'BLOCKED':'CLEAR',
-    blockerCount:issueNumber===2?1:0,
+    blockerCount:issueNumber===2?1:0,openBlockerCount:0,
   });
   const r=await readUiNativeVersionFromClient({
     ...args(native({2:[dep]})),taskIssueNumbers:[1,2],workItemReader:reader});
@@ -118,4 +118,19 @@ test('state:done label alone never certifies independent closure',async()=>{
     })});
   assert.equal(result.connected,true);
   assert.equal(result.tasks[0].status,'unknown');
+});
+
+test('dependency open/closed state drift with unchanged count is rejected',async()=>{
+  const dependency={number:1,id:10001,
+    html_url:'https://github.com/org/tally/issues/1',state:'open'};
+  const fake=({issueNumber,expectedSourceSha})=>({
+    ...sourceReader({issueNumber,expectedSourceSha}),
+    dependencyState:issueNumber===2?'CLEAR':'CLEAR',
+    blockerCount:issueNumber===2?1:0,openBlockerCount:0,
+  });
+  const r=await readUiNativeVersionFromClient({
+    ...args(native({2:[dependency]})),taskIssueNumbers:[1,2],
+    workItemReader:fake});
+  assert.equal(r.connected,false);
+  assert.equal(r.reason,'NATIVE_DEPENDENCY_COUNT_DRIFT');
 });
