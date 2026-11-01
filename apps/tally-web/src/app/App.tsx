@@ -116,13 +116,13 @@ function TasksRoute({projectId,versionId,taskId,onNavigate}:{
   return guard(versionId,<>
     <TasksView tasks={rows} filters={filters} setFilters={setFilters}
       onSelectTask={id=>projectId&&versionId&&
-        onNavigate(taskRoute(projectId,versionId,id))}
+        onNavigate(taskRoute(projectId,versionId,id)!)}
       selectedTaskId={taskId}
       versionId={versionId} connected={connected}/>
     <TaskDrawer task={taskId&&connected?
         rows.find(row=>row.id===taskId&&row.versionId===versionId)??null:null}
       onClose={()=>projectId&&versionId&&
-        onNavigate(taskRoute(projectId,versionId,null))}/>
+        onNavigate(taskRoute(projectId,versionId,null)!)}/>
   </>);
 }
 function AgentsRoute({projectId,versionId}:{projectId:string|null;
@@ -196,7 +196,7 @@ function DagRoute({projectId,versionId,onNavigate}:{
   return guard(versionId,
     <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}
       onOpenTask={id=>projectId&&versionId&&
-        onNavigate(taskRoute(projectId,versionId,id))}/>);
+        onNavigate(taskRoute(projectId,versionId,id)!)}/>);
 }
 function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
@@ -231,7 +231,7 @@ function MetadataRoute({projectId,versionId,onNavigate}:{
   return guard(versionId,
     version?<MetadataCenter version={version} allVersions={[]}
         expectedTaskIds={null} onOpenTask={id=>projectId&&versionId&&
-          onNavigate(taskRoute(projectId,versionId,id))}/>
+          onNavigate(taskRoute(projectId,versionId,id)!)}/>
       :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
 function SettingsRoute({routeKey}:{routeKey:string}){
