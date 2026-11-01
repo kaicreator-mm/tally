@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {resolveScope,chooseProject,chooseVersion} from './scope.ts';
+import {resolveScope,chooseProject,chooseVersion,taskRoute} from './scope.ts';
 const catalog={
   projects:[{id:'owner/a',title:'a'},{id:'owner/b',title:'b'}],
   versionsByProject:{
@@ -31,4 +31,12 @@ test('project picker clears old version and validates new version',()=>{
     {projectId:'owner/b',versionId:null});
   assert.deepEqual(chooseVersion(catalog,start,'version/v3'),
     {projectId:'owner/b',versionId:'version/v3'});
+});
+
+test('Task route carries exact validated project/version/task and escapes IDs',()=>{
+  assert.equal(taskRoute('org/tally','version/v2','227'),
+    '#/development/tasks?projectId=org%2Ftally&versionId=version%2Fv2&taskId=227');
+  assert.equal(taskRoute('org/tally','version/v2',null),
+    '#/development/tasks?projectId=org%2Ftally&versionId=version%2Fv2');
+  assert.equal(taskRoute('','version/v2','227'),null);
 });
