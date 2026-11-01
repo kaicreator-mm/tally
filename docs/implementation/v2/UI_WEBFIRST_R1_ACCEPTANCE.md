@@ -86,3 +86,16 @@ workflow, QA, Release or installed UI positive end-to-end requirements.
 Run `web/v2/ui-report-host.test.mjs` and
 `web/v2/ui-report-host-http.test.mjs` in Node24 and verify authorized
 published report identities separately before marking metadata connected.
+
+## Optional GitHub Native C ADS Claim audit observation
+
+`web/v2/ui-audit-host.mjs` adds a selected, explicit `read-only` audit
+source for the Governance/Audit menu. It reuses the native `task-source-pair`
+C adapter (one Task WorkItem and paginated ADS v3 Claim candidate events
+under an outer source witness). A zero candidate count in a positively
+qualified Task only means no **candidate comments** observed in that
+selected read scope; it is **not** evidence that no accepted Claim or Agent
+Attempt exists. There is no writer or K dispatch. The emitted
+`CLAIM_NOT_VERIFIED` state and `rosterCoverage=UNVERIFIED` are mandatory.
+Absent opt-in, the menu remains NOT_CONNECTED. Full frozen DAG roster,
+accepted Host CAS and independent Reviewer remain separate requirements.
