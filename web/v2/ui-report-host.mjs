@@ -84,7 +84,8 @@ export function createUiAdsReportHost({repository,versionId,expectedSha,
           const key=String(issueNumber)+':'+String(item.commentId);
           if(ids.has(key))return deny('DUPLICATE_ADS_PUBLICATION');
           ids.add(key);
-          records.push({reportId:item.reportId+'@'+item.revision,
+          records.push({reportId:String(issueNumber)+'/'+item.reportId+
+            '@'+item.revision+'#'+item.commentId,
             taskId:String(issueNumber),attemptId:null,kind:kindOf(item.kind),
             subjectSha:item.sourceSha,observedAt:null,
             evidenceRef:'https://github.com/'+repository+'/issues/'+issueNumber+
