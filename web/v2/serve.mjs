@@ -20,6 +20,7 @@ import {createAlmServer} from './journey-server.mjs';
 import {createUiV2ReadModelHost} from './ui-native-host.mjs';
 import {createUiNativeSource}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
+import {createUiAdsReportHost} from './ui-report-host.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF=/^version\/[A-Za-z0-9_.-]+$/;
@@ -43,8 +44,22 @@ export function readUiHostEnvironment(env){
       new Set(roster).size!==roster.length)
       throw new TypeError('INVALID_HOST_TASK_ROSTER');
   }
+  const hasGrant=Boolean(env.TALLY_V2_ADS_ACCEPTED_COMMENTS_JSON);
+  const hasBindings=Boolean(env.TALLY_V2_ADS_PUBLISHER_BINDINGS_JSON);
+  if(hasGrant!==hasBindings)
+    throw new TypeError('ADS_HOST_REPORT_CONFIGURATION_INCOMPLETE');
+  let ads=null;
+  if(hasGrant){
+    try{
+      ads={grants:JSON.parse(env.TALLY_V2_ADS_ACCEPTED_COMMENTS_JSON),
+        bindings:JSON.parse(env.TALLY_V2_ADS_PUBLISHER_BINDINGS_JSON)};
+    }catch{throw new TypeError('INVALID_ADS_HOST_CONFIGURATION');}
+    if(!ads.grants||!ads.bindings||Array.isArray(ads.grants)||
+      Array.isArray(ads.bindings))
+      throw new TypeError('INVALID_ADS_HOST_CONFIGURATION');
+  }
   const [owner,repo]=repository.split('/');
-  return {repository,owner,repo,versionId,expectedSha,roster,
+  return {repository,owner,repo,versionId,expectedSha,roster,ads,
     token:env.TALLY_GITHUB_READ_TOKEN};
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
@@ -53,8 +68,16 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
     taskIssueNumbers:settings.roster});
-  const v2ReadModelHost=createUiV2ReadModelHost({
+  const nativeReadHost=createUiV2ReadModelHost({
     repository:settings.repository,versionId:settings.versionId,nativeC});
+  const adsReadHost=settings.ads?createUiAdsReportHost({
+    repository:settings.repository,versionId:settings.versionId,
+    expectedSha:settings.expectedSha,nativeC,
+    taskIssueNumbers:settings.roster,
+    acceptedCommentIdsByIssue:settings.ads.grants,
+    publisherBindings:settings.ads.bindings,
+    token:settings.token}):{};
+  const v2ReadModelHost=Object.freeze({...nativeReadHost,...adsReadHost});
   // The legacy J01–J08 console remains fail-closed in this entrypoint.
   // No process executor or selected K dispatch is granted by launching UI.
   const config=defaultAlmConfig({
