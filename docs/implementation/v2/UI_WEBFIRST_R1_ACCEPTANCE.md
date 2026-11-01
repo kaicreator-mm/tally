@@ -136,3 +136,15 @@ inventory as observed runtime state. A native C catalog readback twice
 bound to the pinned version SHA is required. No Host/Agent provider,
 LLM, OAuth, CI, storage or deployment evidence is invented, and no
 configuration mutation or credentials are exposed.
+
+## Native GitHub blocked-Task workbench (advisory-only)
+
+With an explicit Host opt-in, the Workbench can display only source-verified
+blocked Tasks from the existing selected Native C version Task reader;
+this is *not* an owner-action queue nor an approval decision source.
+It uses native `dependencyState=BLOCKED` with positive
+`openBlockerCount` after existing GitHub dependency readback.
+The roster's completeness is still UNVERIFIED, so `0` items only
+means none observed in selected scope; approvals, assignments and other
+action classes are NOT_CONNECTED. No Task execution, CAS accepted Claim,
+review PASS, Owner grant or release eligibility is inferred.
