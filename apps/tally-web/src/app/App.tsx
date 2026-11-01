@@ -266,5 +266,6 @@ function SettingsRoute({routeKey}:{routeKey:string}){
   return <SettingsCenter
     snapshot={(settings.data?.snapshot??null) as SettingsSnapshot|null}
     selectedSection={selectedSection}
+    sectionCoverage={settings.data?.sectionCoverage}
     connected={settings.data?.connected===true}/>;
 }
