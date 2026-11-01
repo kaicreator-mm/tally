@@ -1,7 +1,7 @@
-/** UI-E #232 — data hook for shell routes over the Host adapter with honest
- * NOT_CONNECTED degradation and per-version reload semantics. */
-import {useCallback,useEffect,useState} from 'react';
+/** Reviewer #244: project/version async result must never leak across scopes. */
+import {useCallback,useEffect,useRef,useState} from 'react';
 import {hostAdapter,orNotConnected} from './host.ts';
+import {createLatestRequestGate} from './latest.ts';
 
 export interface HostState<T>{
   state:'loading'|'ready'|'not_connected';
@@ -10,21 +10,28 @@ export interface HostState<T>{
 }
 export function useHost<T>(model:string,
   load:(adapter:typeof hostAdapter)=>Promise<T>,
-  deps:readonly unknown[]):HostState<T>{
+  deps:readonly unknown[]):HostState<T>&{refresh:()=>Promise<void>}{
   const [snapshot,setSnapshot]=useState<HostState<T>>(
     {state:'loading',data:null,reason:null});
+  const gate=useRef(createLatestRequestGate());
   const refresh=useCallback(async()=>{
-    setSnapshot(previous=>({...previous,state:'loading'}));
+    const lease=gate.current.begin();
+    setSnapshot({state:'loading',data:null,reason:null});
     const result=await orNotConnected(model,()=>load(hostAdapter));
+    if(!lease.isCurrent())return;
     if(result&&(result as {connected?:boolean}).connected===false){
       const degraded=result as {reason?:string;transportError?:string};
       setSnapshot({state:'not_connected',data:null,
         reason:degraded.transportError??degraded.reason??'NOT_CONNECTED'});
-      return;}
+      return;
+    }
     setSnapshot({state:'ready',data:result as T,reason:null});
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },deps);
-  useEffect(()=>{void refresh();},[refresh]);
-  return {...snapshot,refresh} as HostState<T>&{refresh:()=>Promise<void>};
+  },[model,...deps]);
+  useEffect(()=>{
+    void refresh();
+    return ()=>gate.current.invalidate();
+  },[refresh]);
+  return {...snapshot,refresh};
 }
 export {hostAdapter};
