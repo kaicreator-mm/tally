@@ -59,6 +59,10 @@ export function readUiHostEnvironment(env){
        new Set(requirements.map(x=>x.number)).size!==requirements.length)
       throw new TypeError('INVALID_HOST_REQUIREMENT_ROSTER');
   }
+  const qaStatusContext=env.TALLY_V2_QA_STATUS_CONTEXT??null;
+  if(qaStatusContext!==null&&
+     !/^ci\/woodpecker\/(?:pr|push)\/[A-Za-z0-9_.-]{1,80}$/.test(qaStatusContext))
+    throw new TypeError('INVALID_HOST_QA_STATUS_CONTEXT');
   const hasGrant=Boolean(env.TALLY_V2_ADS_ACCEPTED_COMMENTS_JSON);
   const hasBindings=Boolean(env.TALLY_V2_ADS_PUBLISHER_BINDINGS_JSON);
   if(hasGrant!==hasBindings)
@@ -79,7 +83,7 @@ export function readUiHostEnvironment(env){
   if(auditMode==='read-only'&&roster.length===0)
     throw new TypeError('HOST_AUDIT_TASK_ROSTER_REQUIRED');
   const [owner,repo]=repository.split('/');
-  return {repository,owner,repo,versionId,expectedSha,roster,requirements,ads,
+  return {repository,owner,repo,versionId,expectedSha,roster,requirements,qaStatusContext,ads,
     auditReadOnly:auditMode==='read-only',token:env.TALLY_GITHUB_READ_TOKEN};
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
@@ -88,7 +92,8 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
     taskIssueNumbers:settings.roster,
-    requirementIssueSpecs:settings.requirements});
+    requirementIssueSpecs:settings.requirements,
+    qaStatusContext:settings.qaStatusContext});
   const nativeReadHost=createUiV2ReadModelHost({
     repository:settings.repository,versionId:settings.versionId,nativeC});
   const adsReadHost=settings.ads?createUiAdsReportHost({
