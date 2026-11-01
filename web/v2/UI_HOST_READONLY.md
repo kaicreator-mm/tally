@@ -126,3 +126,18 @@ absence in this scope, not a passed test.
 Run `web/v2/ui-qa-host-http.test.mjs` and the Native C status tests on
 Node>=24. Only a real selected Host may set this context; it is not
 computed from or accepted from browser input.
+
+## Source-qualified GitHub-only Settings inventory
+
+The read-only Host supplies `/api/v2/settings` from two consecutive,
+exact-version Native C catalog readbacks. Only the selected repository,
+`version/v2` reference and current pinned SHA are qualified GitHub facts.
+The response marks `SETTINGS_COVERAGE=PARTIAL`. Separate coverage for
+Agent providers, Tally LLM, Woodpecker webhook, OAuth scopes, storage,
+security and deployment is `NOT_CONNECTED`, **not** "no providers", "LLM
+disabled", or "nothing deployed". UI sections lacking a trusted selected
+configuration source render an explicit unconnected message instead of
+rendering empty placeholder arrays. No token, credential target, Host
+principal or dynamic execution authority is disclosed to browser; settings
+writes remain disabled. Tests: `web/v2/ui-settings-host.test.mjs` and
+`web/v2/ui-settings-host-http.test.mjs`.
