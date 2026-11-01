@@ -7,7 +7,7 @@ import {InboxPanel} from './InboxPanel.tsx';
 /** Owner directive: project & version pickers live TOP-RIGHT only (no sidebar
  * duplicates); the bell opens the same human-action queue as the workbench. */
 export function TopBar({inboxCount,onNavigate}:
-  {inboxCount:number;onNavigate:(hash:string)=>void}){
+  {inboxCount:number|null;onNavigate:(hash:string)=>void}){
   const shell=useShell();
   const [inboxOpen,setInboxOpen]=useState(false);
   const {t,catalog,projectId,versionId}=shell;
@@ -20,7 +20,8 @@ export function TopBar({inboxCount,onNavigate}:
       onKeyDown={event=>{if(event.key==='Enter')
         onNavigate(`#/workbench/inbox?focus=${encodeURIComponent(event.currentTarget.value)}`);}}/>
     <div className="spacer"/>
-    {inboxCount>0?<Badge tone="warn" title={t('top.notifications')}>{inboxCount}</Badge>:null}
+    {inboxCount===null?<Badge tone="neutral" title="PARTIAL_INBOX_COVERAGE">?</Badge>:
+      inboxCount>0?<Badge tone="warn" title={t('top.notifications')}>{inboxCount}</Badge>:null}
     <Select aria-label={t('top.project')} label={t('top.project')}
       value={projectId} placeholder={t('top.select-project')}
       options={projects.map(project=>({value:project.id,label:project.title}))}

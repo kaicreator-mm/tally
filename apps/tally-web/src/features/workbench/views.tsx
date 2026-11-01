@@ -15,6 +15,10 @@ export function WorkbenchView({snapshot,page,onNavigate}:
     hint="工作台需要当前用户有权读取的受信 Host 人工待办队列；不可将未知当作零待办。"/>;
   const count=inboxCounts(snapshot);
   return <div style={{display:'grid',gap:'var(--s4)'}}>
+    {snapshot?.queueCoverage==='PARTIAL_UNVERIFIED_ROSTER'?<div role="status"
+      style={{color:'var(--warn)',fontSize:12}}>
+      WORKBENCH_COVERAGE=PARTIAL_UNVERIFIED_ROSTER · 仅显示已选 Task 的 GitHub 原生阻塞；未知审批、其他待办不可视为零
+    </div>:null}
     <Card>
       <CardHeader title={pageNames[page]}
         sub="同一受信待办源 · 仅显示待办，不自动授予审批、执行或发布权限"/>
@@ -26,8 +30,8 @@ export function WorkbenchView({snapshot,page,onNavigate}:
     </Card>
     <Card>
       <CardHeader title="需要人工介入的事项" sub="由 Host 读模型标记负责人及可操作事项"/>
-      {rows.length===0?<EmptyState title="当前没有待处理事项"
-        hint="仅适用于此来源覆盖范围内的已连接队列"/>:
+      {rows.length===0?<EmptyState title="当前来源内未发现原生阻塞"
+        hint="任务清单未获完整冻结证明；审批与其他待办仍 NOT_CONNECTED"/>:
       <div style={{display:'grid',gap:'var(--s3)'}}>
         {rows.map(action=><div key={action.id} style={{
           borderBottom:'1px solid var(--border-subtle)',padding:'8px 0',

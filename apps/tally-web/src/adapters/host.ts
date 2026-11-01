@@ -11,15 +11,17 @@ export interface Catalog{
 }
 export interface TasksResponse{
   connected:boolean;reason?:string;versionId?:string;
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   tasks?:{id:string;versionId:string;title:string;
-    status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed';
-    severity:'P0'|'P1'|'P2';blockedBy:string[];agentId:string|null;
+    status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed'|'unknown';
+    severity:'P0'|'P1'|'P2'|'UNKNOWN';blockedBy:string[];agentId:string|null;
     claimState:string;attemptId:string|null;attemptState:string|null;
     prNumber:number|null;reviewState:string;ciState:string;writeSet:string[];
     requirementRef:string|null;updatedAt:string|null}[];
 }
 export interface DagResponse{
   connected:boolean;reason?:string;versionId:string;
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:{taskId:string;versionId:string;title:string;
     status:string;severity:string;requirementGroup:string|null;
@@ -29,6 +31,10 @@ export interface DagResponse{
     evidenceRef:string|null;amendedAt:string|null}[];
 }
 export interface SettingsResponse{connected:boolean;
+  coverage?:'PARTIAL';
+  sectionCoverage?:Partial<Record<
+    import('../features/settings/model.ts').SettingsSection,
+    'NOT_CONNECTED'|'CURRENT_OBSERVED'>>;
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
   readiness?:{versionId:string;
@@ -37,11 +43,19 @@ export interface ReleaseResponse{connected:boolean;
       grantedAt:string|null}[]|null;
     rqState:string;ownerGrantState:string};}
 export interface MetadataResponse{connected:boolean;versionId:string|null;
+  reportCoverage?:'PARTIAL'|'UNKNOWN';
+  telemetryCoverage?:'UNKNOWN'|'VERIFIED';
+  lineageCoverage?:'UNKNOWN'|'VERIFIED';
+  learningCoverage?:'UNKNOWN'|'VERIFIED';
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   attempts:unknown[];reports:unknown[];lineage:unknown[];
   learnedOutcomes:unknown[];note?:string;}
 
 export interface WorkbenchResponse{
-  connected:boolean;source?:{repository:string;sourceSha:string;currentness:string;
+  connected:boolean;
+  queueCoverage?:'PARTIAL_UNVERIFIED_ROSTER';
+  approvalCoverage?:'NOT_CONNECTED';
+  source?:{repository:string;sourceSha:string;currentness:string;
     readback:string};
   actions?:import('../features/workbench/model.ts').WorkAction[];
 }
@@ -72,12 +86,16 @@ export interface LifecycleRead<T>{
 export interface VersionAgentsRead{connected:boolean;versionId:string;
   attempts?:import('../features/agents/model.ts').AttemptRecord[];}
 export interface VersionRequirementsRead{connected:boolean;versionId:string;
+  structureCoverage?:'HOST_DECLARED_UNVERIFIED';
+  freezeCoverage?:'UNKNOWN';
   nodes?:import('../features/requirements/model.ts').RequirementNode[];}
 export interface VersionQaRead{connected:boolean;versionId:string;
   records?:import('../features/qa/model.ts').QaRecord[];}
 export interface VersionMaintenanceRead{connected:boolean;versionId:string;
   defects?:import('../features/maintenance/model.ts').DefectRecord[];
   learnings?:import('../features/maintenance/model.ts').LearningRecord[];}
+export interface VersionDeploymentRead{connected:boolean;versionId:string;
+  deployments?:import('../features/deployment/model.ts').DeploymentRecord[];}
 export interface GovernanceRead{
   connected:boolean;records?:import('../features/governance/model.ts').GovernanceItem[];
   source?:import('../features/governance/model.ts').GovernanceSnapshot['source'];
@@ -107,6 +125,8 @@ export const hostAdapter=Object.freeze({
     getJson<VersionQaRead>(scoped('qa',projectId,versionId)),
   maintenance:(projectId:string,versionId:string)=>
     getJson<VersionMaintenanceRead>(scoped('maintenance',projectId,versionId)),
+  deployment:(projectId:string,versionId:string)=>
+    getJson<VersionDeploymentRead>(scoped('deployment',projectId,versionId)),
   governance:(kind:'workflow'|'domainPackages'|'experience'|'audit',
     projectId:string)=>
     getJson<GovernanceRead>('/api/v2/'+({

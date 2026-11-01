@@ -78,7 +78,19 @@ export function validateV2ReadModel(model,value,scope={}){
   if(model==='qa'&&!Array.isArray(value.records))return false;
   if(model==='maintenance'&&(!Array.isArray(value.defects)||
     !Array.isArray(value.learnings)))return false;
-  if(model==='deployment'&&!Array.isArray(value.deployments))return false;
+  if(model==='deployment'){
+    if(!Array.isArray(value.deployments))return false;
+    for(const record of value.deployments){
+      if(!plain(record)||!ID.test(record.id)||record.versionId!==scope.versionId||
+        typeof record.environment!=='string'||!record.environment.trim()||
+        !['PENDING','RUNNING','SUCCEEDED','FAILED','UNKNOWN'].includes(record.state)||
+        !['HEALTHY','DEGRADED','UNKNOWN'].includes(record.health)||
+        (record.releaseSha!==null&&!SHA.test(record.releaseSha))||
+        (record.receiptRef!==null&&typeof record.receiptRef!=='string')||
+        (record.rollbackReceiptRef!==null&&typeof record.rollbackReceiptRef!=='string'))
+        return false;
+    }
+  }
   if(['workflow','domainPackages','experience','audit'].includes(model)){
     if(!Array.isArray(value.records))return false;
     for(const record of value.records){

@@ -65,12 +65,12 @@ test('cross-version casebook links without merging aggregates',()=>{
   assert.deepEqual(casebookLinks(versions,'999'),[]);
 });
 test('deep links both ways encode version scoping',()=>{
-  assert.equal(taskDeepLink('101','v1'),
-    '#/development/tasks?projectId&versionId=v1&taskId=101');
-  assert.equal(metadataDeepLink('101','v1'),
-    '#/governance/metadata?versionId=v1&taskId=101');
-  assert.equal(taskDeepLink('a b','v 1'),
-    '#/development/tasks?projectId&versionId=v%201&taskId=a%20b');
+  assert.equal(taskDeepLink('101','org/tally','v1'),
+    '#/development/tasks?projectId=org%2Ftally&versionId=v1&taskId=101');
+  assert.equal(metadataDeepLink('101','org/tally','v1'),
+    '#/governance/metadata?projectId=org%2Ftally&versionId=v1&taskId=101');
+  assert.equal(taskDeepLink('a b','org/my repo','v 1'),
+    '#/development/tasks?projectId=org%2Fmy%20repo&versionId=v%201&taskId=a%20b');
 });
 
 test('missing-report count stays UNKNOWN without qualified Task roster',()=>{

@@ -9,7 +9,10 @@ export interface WorkAction{
   ownerRole:string;sourceRef:string;reason:string|null;updatedAt:string|null;
 }
 export interface WorkbenchSnapshot{
-  connected:boolean;source:{repository:string;sourceSha:string;currentness:string;
+  connected:boolean;
+  queueCoverage?:'PARTIAL_UNVERIFIED_ROSTER';
+  approvalCoverage?:'NOT_CONNECTED';
+  source:{repository:string;sourceSha:string;currentness:string;
     readback:string};actions:readonly WorkAction[];
 }
 export type WorkbenchPage='inbox'|'approvals'|'blockers'|'overview';
@@ -25,7 +28,7 @@ export function activeWorkActions(snapshot:WorkbenchSnapshot|null,
 }
 export function inboxCounts(snapshot:WorkbenchSnapshot|null){
   const actions=activeWorkActions(snapshot,'inbox');
-  if(!actions)return null;
+  if(!actions||snapshot?.queueCoverage==='PARTIAL_UNVERIFIED_ROSTER')return null;
   return {pending:actions.length,
     approvals:activeWorkActions(snapshot,'approvals')!.length,
     blockers:activeWorkActions(snapshot,'blockers')!.length};

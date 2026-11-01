@@ -96,3 +96,15 @@ test('governance read model rejects source-crossing records',()=>{
   assert.equal(validateV2ReadModel('domainPackages',{...good,
     records:[{...good.records[0],projectId:'other/repo'}]},{}),false);
 });
+
+test('deployment source rejects foreign version and impossible status',()=>{
+  const good={connected:true,versionId:'version/v2',source,deployments:[{
+    id:'deploy1',versionId:'version/v2',environment:'staging',
+    state:'SUCCEEDED',health:'UNKNOWN',releaseSha:null,
+    receiptRef:null,rollbackReceiptRef:null}]};
+  assert.equal(validateV2ReadModel('deployment',good,scope),true);
+  assert.equal(validateV2ReadModel('deployment',{...good,
+    deployments:[{...good.deployments[0],versionId:'version/v3'}]},scope),false);
+  assert.equal(validateV2ReadModel('deployment',{...good,
+    deployments:[{...good.deployments[0],state:'RELEASE_PASS'}]},scope),false);
+});

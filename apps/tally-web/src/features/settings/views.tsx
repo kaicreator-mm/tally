@@ -24,9 +24,10 @@ const SECTION_LABEL:Record<SettingsSection,{zh:string;en:string}>={
   defaults:{zh:'工作区默认值',en:'Workspace defaults'},
 };
 export function SettingsCenter({snapshot,connected=true,locale='zh',
-  onTestConnection,selectedSection}:
+  onTestConnection,selectedSection,sectionCoverage}:
   {snapshot:SettingsSnapshot|null;connected?:boolean;locale?:'zh'|'en';
    selectedSection?:SettingsSection;
+   sectionCoverage?:Partial<Record<SettingsSection,'CURRENT_OBSERVED'|'NOT_CONNECTED'>>;
    onTestConnection?:(section:SettingsSection)=>void}){
   const zh=locale==='zh';
   const [internalSection,setInternalSection]=useState<SettingsSection>('agentProviders');
@@ -49,7 +50,15 @@ export function SettingsCenter({snapshot,connected=true,locale='zh',
         {zh?SECTION_LABEL[key].zh:SECTION_LABEL[key].en}</button>)}
     </nav>:null}
     <div style={{display:'grid',gap:'var(--s5)'}}>
-      {section==='agentProviders'
+      {sectionCoverage?<div role="status" style={{color:'var(--warn)',fontSize:12}}>
+        SETTINGS_COVERAGE=PARTIAL · Only qualified selected GitHub scope is observed.
+        Other sections remain NOT_CONNECTED.
+      </div>:null}
+      {sectionCoverage&&sectionCoverage[section]!=='CURRENT_OBSERVED'
+        ?<EmptyState title="NOT_CONNECTED"
+           hint={zh?'该配置分类尚无受信 Host 读回，不代表没有配置':
+             'No trusted Host source for this section; not evidence of no configuration'}/>
+        :section==='agentProviders'
         ?<AgentProvidersSection providers={snapshot.agentProviders} zh={zh}/>
         :section==='tallyLlm'
           ?<TallyLlmSection snapshot={snapshot} zh={zh}/>
