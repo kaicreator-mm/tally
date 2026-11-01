@@ -99,10 +99,12 @@ export async function readUiNativeVersionFromClient({
          observed.workflowState===null||
          observed.issueState!==issue.state)
         return denied('WORKITEM_NATIVE_SOURCE_UNQUALIFIED');
-      const stateLabels=labelNames(issue.labels).filter(l=>l.startsWith('state:'));
-      if(stateLabels.length!==1||stateLabels[0]!==observed.workflowState)
-        return denied('NATIVE_ISSUE_STATE_DRIFT');
       const labels=labelNames(issue.labels);
+      const stateLabels=labels.filter(l=>l.startsWith('state:'));
+      const typeLabels=labels.filter(l=>l.startsWith('type:'));
+      if(typeLabels.length!==1||typeLabels[0]!=='type:task'||
+         stateLabels.length!==1||stateLabels[0]!==observed.workflowState)
+        return denied('NATIVE_ISSUE_STATE_DRIFT');
       const priority=labels.filter(l=>/^(?:priority:)?P[012]$/.test(l))
         .map(l=>l.slice(-2));
       const severity=priority.length===1?priority[0]:'UNKNOWN';
