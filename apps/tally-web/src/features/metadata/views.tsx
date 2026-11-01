@@ -12,7 +12,7 @@ const pct=(value:number|null)=>value===null?'UNKNOWN'
 export function MetadataCenter({version,allVersions,expectedTaskIds,
   connected=true,locale='zh',onOpenTask}:
   {version:VersionMetadata|null;allVersions:readonly VersionMetadata[];
-   expectedTaskIds:readonly string[];connected?:boolean;locale?:'zh'|'en';
+   expectedTaskIds:readonly string[]|null;connected?:boolean;locale?:'zh'|'en';
    onOpenTask?:(taskId:string)=>void}){
   const zh=locale==='zh';
   if(!connected)return <EmptyState title={zh?'未连接真实数据源':'Not connected'}
@@ -50,8 +50,9 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
         </Card>
         <Card>
           <CardHeader title={zh?'ADS / task-meta 报告':'ADS / task-meta reports'}
-            sub={zh?`缺失 ADS v5 报告:${missing.length||'无'}`
-              :`${missing.length} missing`}/>
+            sub={missing===null?(zh?'任务清单来源未知，无法计算缺失报告':'Task roster unavailable')
+              :zh?`缺失 ADS v5 报告:${missing.length===0?'无':missing.length}`
+                :`${missing.length} missing`}/>
           {reports.length===0?<EmptyState title={zh?'暂无报告':'No reports'}/>:
             <DataTable rows={reports} rowKey={row=>row.reportId}
               columns={[
