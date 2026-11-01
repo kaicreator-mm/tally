@@ -107,11 +107,13 @@ export function casebookLinks(versions:readonly VersionMetadata[],
   return links;
 }
 /** Deep-link helpers both ways: task ↔ metadata. */
-export function taskDeepLink(taskId:string,versionId:string){
-  return `#/development/tasks?projectId&versionId=${encodeURIComponent(versionId)}`
+export function taskDeepLink(taskId:string,projectId:string,versionId:string){
+  return `#/development/tasks?projectId=${encodeURIComponent(projectId)}`
+    +`&versionId=${encodeURIComponent(versionId)}`
     +`&taskId=${encodeURIComponent(taskId)}`;
 }
-export function metadataDeepLink(taskId:string,versionId:string){
-  return `#/governance/metadata?versionId=${encodeURIComponent(versionId)}`
+export function metadataDeepLink(taskId:string,projectId:string,versionId:string){
+  return `#/governance/metadata?projectId=${encodeURIComponent(projectId)}`
+    +`&versionId=${encodeURIComponent(versionId)}`
     +`&taskId=${encodeURIComponent(taskId)}`;
 }
