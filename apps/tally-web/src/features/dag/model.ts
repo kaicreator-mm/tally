@@ -26,7 +26,7 @@ export interface DagEdge{
 export interface VersionDag{
   versionId:string;
   /** Configured Task IDs do not prove exhaustive frozen version membership. */
-  rosterCoverage?:'UNVERIFIED';
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   /** Frozen as-of identity of this snapshot. */
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:readonly DagNode[];
