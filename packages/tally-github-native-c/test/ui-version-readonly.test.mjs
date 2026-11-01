@@ -63,7 +63,8 @@ test('native dependencies are C readback edges, not assistant planned edges',asy
     state:'closed'};
   const reader=({issueNumber,expectedSourceSha})=>({
     ...sourceReader({issueNumber,expectedSourceSha}),
-    dependencyState:issueNumber===2?'BLOCKED':'CLEAR',
+    // A closed blocker is still a native edge, but source state is CLEAR.
+    dependencyState:'CLEAR',
     blockerCount:issueNumber===2?1:0,openBlockerCount:0,
   });
   const r=await readUiNativeVersionFromClient({
