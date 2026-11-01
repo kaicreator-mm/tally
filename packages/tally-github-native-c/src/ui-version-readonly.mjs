@@ -154,8 +154,12 @@ export async function readUiNativeVersionFromClient({
     if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
       return denied('VERSION_BRANCH_DRIFT');
     const prov=source(owner,repo,expectedSha);
+    // A Host-selected list is a scope declaration, not an independently
+    // verified COMPLETE frozen DAG. This must be visible in the UI.
+    const rosterCoverage='UNVERIFIED';
     return Object.freeze({connected:true,source:prov,versionId,
-      tasks,dag:{connected:true,source:prov,versionId,
+      rosterCoverage,tasks,dag:{connected:true,source:prov,versionId,
+        rosterCoverage,
         asOf:{sourceSha:expectedSha,frozenAt:null},nodes,edges}});
   }catch{return denied('NATIVE_TASK_READ_FAILED');}
 }
