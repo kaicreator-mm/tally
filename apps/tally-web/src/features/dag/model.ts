@@ -137,8 +137,8 @@ export function versionIsolated(dag:VersionDag):boolean{
  * dotted+red for UNRESOLVED, %% comments carry as-of identity). */
 export function toMermaid(dag:VersionDag):string{
   // GitHub-controlled titles and IDs are never Mermaid source.
-  const safe=(value:string)=>String(value).replace(/[^\\p{L}\\p{N} ._#-]/gu,' ')
-    .replace(/\\s+/g,' ').trim().slice(0,96);
+  const safe=(value:string)=>String(value).replace(/[^\p{L}\p{N} ._#-]/gu,' ')
+    .replace(/\s+/g,' ').trim().slice(0,96);
   const aliases=new Map(dag.nodes.map((node,i)=>[node.taskId,'task_'+i]));
   const lines=['flowchart LR',
     `%% version=${safe(dag.versionId)} asOf=${safe(dag.asOf.sourceSha.slice(0,12))}`,
