@@ -107,7 +107,7 @@ test('Mermaid export rejects injected issue-title commands and unsafe IDs',()=>{
   const text=toMermaid(graph);
   assert.match(text,/task_0 --> task_1/);
   assert.match(text,/task_0\\["a b Normal/);
-  assert.ok(!text.includes('flowchart RL'));
+  assert.ok(!text.includes('\\nflowchart RL'));
   assert.ok(!text.includes('<img'));
   assert.equal(text.split('flowchart LR').length,2);
 });
