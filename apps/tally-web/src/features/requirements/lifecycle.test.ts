@@ -76,15 +76,24 @@ test('release blockers bounded to 3 and actions need fresh permits',()=>{
     ['RQ_MISSING','GRANT_MISSING','GATES_INCOMPLETE']);
   assert.equal(actionDisplay(blocked,'merge').enabled,false);
   assert.match(actionDisplay(blocked,'merge').reason!,/RQ_MISSING/);
-  // GRANTED permit alone does not bypass missing RQ display logic (permit
-  // wins only when Host issued it fresh for this exact subject).
-  const permitted=readiness({permits:[
+  // A GRANTED-looking permit CANNOT bypass independent RQ, Owner, gates,
+  // exact current source, or Host verified currentness.
+  const forged=readiness({permits:[
     {operation:'merge',state:'GRANTED',sourceSha:'a'.repeat(40),
       grantedAt:'2026-11-01T00:00:00Z'}]});
+  assert.equal(actionDisplay(forged,'merge').enabled,false);
+  assert.match(actionDisplay(forged,'merge').reason!,/RQ_MISSING/);
+  const permitted=readiness({currentSourceSha:'a'.repeat(40),
+    rqState:'QUALIFIED',ownerGrantState:'GRANTED',
+    gates:[{name:'woodpeckerCI',status:'PASS',owner:'CI'},
+      {name:'hiddenValidation',status:'PASS',owner:'独立验证者'}],
+    permits:[{operation:'merge',state:'GRANTED',sourceSha:'a'.repeat(40),
+      grantedAt:'2026-11-01T00:00:00Z',currentness:'CURRENT'}]});
   assert.equal(actionDisplay(permitted,'merge').enabled,true);
   assert.equal(actionDisplay(permitted,'tag').enabled,false);
-  assert.match(actionDisplay(permitted,'tag').reason!,/RQ_MISSING/);
+  assert.match(actionDisplay(permitted,'tag').reason!,/HOST_PERMIT_MISSING/);
   const denied=readiness({rqState:'QUALIFIED',ownerGrantState:'GRANTED',
+    gates:[{name:'woodpeckerCI',status:'PASS',owner:'CI'}],
     permits:[{operation:'merge',state:'DENIED',sourceSha:null,grantedAt:null}]});
   assert.equal(actionDisplay(denied,'merge').enabled,false);
   assert.match(actionDisplay(denied,'merge').reason!,/HOST_PERMIT_DENIED/);
