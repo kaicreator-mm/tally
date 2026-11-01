@@ -18,7 +18,7 @@ export function InboxPanel({open,onToggle,onNavigate}:
       <button role="menuitem" onClick={()=>onNavigate('#/workbench/inbox')}
         style={{width:'100%',textAlign:'left',padding:'8px 10px',border:0,borderRadius:'var(--r-sm)',
           background:'transparent',color:'var(--brand-strong)',cursor:'pointer',font:'inherit'}}>
-        {t('inbox.empty')} → {t('nav.inbox')}
+        {t('nav.inbox')} · 查看受信待办队列
       </button>
     </div>:null}
   </>;
