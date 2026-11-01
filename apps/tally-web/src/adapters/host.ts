@@ -79,6 +79,8 @@ export interface LifecycleRead<T>{
 export interface VersionAgentsRead{connected:boolean;versionId:string;
   attempts?:import('../features/agents/model.ts').AttemptRecord[];}
 export interface VersionRequirementsRead{connected:boolean;versionId:string;
+  structureCoverage?:'HOST_DECLARED_UNVERIFIED';
+  freezeCoverage?:'UNKNOWN';
   nodes?:import('../features/requirements/model.ts').RequirementNode[];}
 export interface VersionQaRead{connected:boolean;versionId:string;
   records?:import('../features/qa/model.ts').QaRecord[];}
