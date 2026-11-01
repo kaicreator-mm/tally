@@ -239,9 +239,55 @@ export async function readUiNativeRequirementsFromClient({
       freezeCoverage:'UNKNOWN',nodes});
   }catch{return denied('NATIVE_REQUIREMENT_READ_FAILED');}
 }
+/** Selected GitHub commit-status observation for one Host-qualified
+ * Full regression CI context. Status writers are NOT independent QA witnesses.
+ */
+export async function readUiNativeQaFromClient({
+  octokit,owner,repo,versionId,expectedSha,qaStatusContext
+}={}){
+  if(!validInput(octokit,owner,repo,versionId,expectedSha)||
+     typeof qaStatusContext!=='string'||
+     !/^ci\/woodpecker\/(?:pr|push)\/[A-Za-z0-9_.-]{1,80}$/.test(qaStatusContext)||
+     typeof octokit?.rest?.repos?.getCombinedStatusForRef!=='function')
+    return denied('QA_STATUS_SOURCE_NOT_CONFIGURED');
+  try{
+    if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
+      return denied('VERSION_BRANCH_NOT_PINNED');
+    const result=(await octokit.rest.repos.getCombinedStatusForRef({
+      owner,repo,ref:expectedSha,per_page:100}))?.data;
+    if(result?.sha!==expectedSha||!Number.isSafeInteger(result.total_count)||
+       result.total_count<0||result.total_count>100||
+       !Array.isArray(result.statuses)||
+       result.statuses.length!==result.total_count)
+      return denied('GITHUB_CI_STATUS_PAGE_UNQUALIFIED');
+    const matches=result.statuses.filter(item=>item?.context===qaStatusContext);
+    const records=[];
+    if(matches.length){
+      const selected=matches[0];
+      if(!['success','failure','error','pending'].includes(selected.state)||
+         typeof selected.target_url!=='string'||
+         !/^https:\/\/ci\.kaicreator\.com\/repos\/[0-9]+\/pipeline\/[0-9]+\/[0-9]+$/
+           .test(selected.target_url)||
+         typeof selected.updated_at!=='string'||
+         !Number.isFinite(Date.parse(selected.updated_at)))
+        return denied('GITHUB_CI_STATUS_IDENTITY_UNQUALIFIED');
+      records.push({layer:'fullRegression',provenance:'REPORTED',
+        outcome:selected.state==='success'?'PASS':
+          selected.state==='failure'||selected.state==='error'?'FAIL':'UNKNOWN',
+        witness:'github-native-c-status-reported',
+        evidenceRef:selected.target_url,subjectSha:expectedSha,
+        observedAt:selected.updated_at});
+    }
+    if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
+      return denied('VERSION_BRANCH_DRIFT');
+    return Object.freeze({connected:true,source:source(owner,repo,expectedSha),
+      versionId,ciCoverage:matches.length?'REPORTED_ONLY':'NO_MATCHING_STATUS',
+      independentCoverage:'UNKNOWN',records});
+  }catch{return denied('GITHUB_CI_STATUS_READ_FAILED');}
+}
 /** Production creates the Octokit transport INSIDE C, not the browser. */
 export function createUiNativeSource({token,owner,repo,versionId,
-  expectedSha,taskIssueNumbers,requirementIssueSpecs}={}){
+  expectedSha,taskIssueNumbers,requirementIssueSpecs,qaStatusContext}={}){
   if(typeof token!=='string'||token.length<8)
     throw new TypeError('TRUSTED_GITHUB_C_CREDENTIAL_REQUIRED');
   // Native production adapter imports Octokit only on actual Host use.
@@ -261,5 +307,7 @@ export function createUiNativeSource({token,owner,repo,versionId,
       octokit:await client(),owner,repo,versionId,expectedSha,taskIssueNumbers}),
     requirements:async()=>readUiNativeRequirementsFromClient({
       octokit:await client(),owner,repo,versionId,expectedSha,requirementIssueSpecs}),
+    qa:async()=>readUiNativeQaFromClient({
+      octokit:await client(),owner,repo,versionId,expectedSha,qaStatusContext}),
   });
 }
