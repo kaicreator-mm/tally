@@ -11,6 +11,7 @@ export interface Catalog{
 }
 export interface TasksResponse{
   connected:boolean;reason?:string;versionId?:string;
+  rosterCoverage?:'UNVERIFIED';
   tasks?:{id:string;versionId:string;title:string;
     status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed'|'unknown';
     severity:'P0'|'P1'|'P2'|'UNKNOWN';blockedBy:string[];agentId:string|null;
@@ -20,6 +21,7 @@ export interface TasksResponse{
 }
 export interface DagResponse{
   connected:boolean;reason?:string;versionId:string;
+  rosterCoverage?:'UNVERIFIED';
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:{taskId:string;versionId:string;title:string;
     status:string;severity:string;requirementGroup:string|null;
