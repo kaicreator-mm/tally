@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react';
 // relative and routing is hash-based so no server-side rewrite is required.
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: '/app/',
   build: {outDir: 'dist', sourcemap: true, target: 'es2022'},
   server: {port: 5173, strictPort: false},
 });
