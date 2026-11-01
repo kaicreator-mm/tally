@@ -11,14 +11,19 @@ const SHA=/^[0-9a-f]{40}$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
 const denied=(reason)=>Object.freeze({connected:false,reason});
-const taskStatus=state=>({
-  'state:planned':'open','state:ready':'open','state:claimed':'open',
-  'state:implementing':'in_progress','state:review-ready':'review',
-  'state:reviewing':'review','state:validation-needed':'review',
-  'state:validating':'review','state:changes-requested':'blocked',
-  'state:merge-ready':'review','state:blocked':'blocked',
-  'state:done':'done','state:superseded':'done','state:cancelled':'done',
-})[state]??'unknown';
+// ADS workflow labels are descriptive, not Closure evidence. A closed Issue
+// with state:ready (or a state:done label alone) must not render Task DONE.
+const taskStatus=(state,issueState)=>{
+  if(issueState!=='open'||['state:done','state:superseded','state:cancelled']
+    .includes(state))return 'unknown';
+  return ({
+    'state:planned':'open','state:ready':'open','state:claimed':'open',
+    'state:implementing':'in_progress','state:review-ready':'review',
+    'state:reviewing':'review','state:validation-needed':'review',
+    'state:validating':'review','state:changes-requested':'blocked',
+    'state:merge-ready':'review','state:blocked':'blocked',
+  })[state]??'unknown';
+};
 const labelNames=raw=>Array.isArray(raw)?
   raw.map(label=>typeof label==='string'?label:label?.name):null;
 const allowedRef=(ref,owner,repo,n)=>
@@ -130,7 +135,7 @@ export async function readUiNativeVersionFromClient({
       }
       if(dependencies.length!==observed.blockerCount)
         return denied('NATIVE_DEPENDENCY_COUNT_DRIFT');
-      const status=taskStatus(observed.workflowState);
+      const status=taskStatus(observed.workflowState,observed.issueState);
       const entry={id:String(number),versionId,title:issue.title,
         status,severity,blockedBy:dependencies,
         agentId:null,claimState:'NOT_VERIFIED',attemptId:null,
