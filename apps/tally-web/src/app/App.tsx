@@ -47,7 +47,8 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
     adapter=>adapter.workbench(),[]);
   const workbench=(queue.data?.connected===true?
     queue.data as WorkbenchSnapshot:null);
-  const count=inboxCounts(workbench)?.pending??inboxCount;
+  const count=workbench?.queueCoverage==='PARTIAL_UNVERIFIED_ROSTER'
+    ?null:(inboxCounts(workbench)?.pending??inboxCount);
   const item=findItemByRoute(route);
   const body=item
     ?routeBody(item.key,projectId,versionId,onNavigate,workbench,
