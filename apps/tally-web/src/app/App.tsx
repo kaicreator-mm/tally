@@ -50,10 +50,10 @@ function routeBody(key:string,versionId:string|null):React.ReactNode{
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
-    case 'requirements':return <RequirementsView nodes={[]}/>
-    case 'qa':return <QaView records={[]}/>
+    case 'requirements':return <RequirementsView nodes={[]} connected={false}/>
+    case 'qa':return <QaView records={[]} connected={false}/>
     case 'release':return <ReleaseRoute versionId={versionId}/>;
-    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]}/>;
+    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]} connected={false}/>;
     case 'metadata':return <MetadataRoute versionId={versionId}/>;
     case 'agent-providers':case 'tally-llm':case 'ci':case 'git-github':
     case 'host':case 'storage':case 'security':case 'deployment-env':
@@ -90,7 +90,7 @@ function TasksRoute({versionId}:{versionId:string|null}){
 }
 function AgentsRoute({versionId}:{versionId:string|null}){
   return guard(versionId,
-    <AgentsPanel attempts={[]} connected/>);
+    <AgentsPanel attempts={[]} connected={false}/>);
 }
 function DagRoute({versionId}:{versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
@@ -108,20 +108,30 @@ function ReleaseRoute({versionId}:{versionId:string|null}){
   const readiness=(release.data?.readiness??null) as ReleaseReadiness|null;
   return guard(versionId,
     <ReleaseView readiness={readiness}
-      connected={release.data?.connected===true}
-      onAction={()=>{/* effects stay Host-owned; UI renders permit state */}}/>);
+      connected={release.data?.connected===true}/>);
 }
 function MetadataRoute({versionId}:{versionId:string|null}){
   const metadata=useHost<MetadataResponse>('metadata',
     adapter=>adapter.metadata(versionId??''),[versionId]);
   if(metadata.state==='loading')return <Skeleton lines={6}/>;
   const data=metadata.data;
-  const version=data?.connected===true&&data.versionId
-    ?{versionId:data.versionId,attempts:[],reports:[],lineage:[],
-      learnedOutcomes:[]}
+  if(metadata.state==='not_connected'||data?.connected!==true)
+    return guard(versionId,<EmptyState title="NOT_CONNECTED"
+      hint="任务元数据需由选中的 Host 通过 ADS v5 来源验证后读取"/>);
+  // Source-qualified data is preserved, not replaced with empty arrays.
+  // The Host boundary validates the exact version and record schema.
+  const version=data.versionId===versionId&&
+    Array.isArray(data.attempts)&&Array.isArray(data.reports)&&
+    Array.isArray(data.lineage)&&Array.isArray(data.learnedOutcomes)
+    ?{versionId:data.versionId,
+      attempts:data.attempts as import('../features/metadata/model.ts').AttemptMeta[],
+      reports:data.reports as import('../features/metadata/model.ts').ReportMeta[],
+      lineage:data.lineage as import('../features/metadata/model.ts').LineageMeta[],
+      learnedOutcomes:data.learnedOutcomes as import('../features/metadata/model.ts').VersionMetadata['learnedOutcomes']}
     :null;
   return guard(versionId,
-    <MetadataCenter version={version} allVersions={[]} expectedTaskIds={[]}/>);
+    version?<MetadataCenter version={version} allVersions={[]} expectedTaskIds={[]}/>
+      :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
 function SettingsRoute(){
   const settings=useHost<SettingsResponse>('settings',
