@@ -45,7 +45,11 @@ export function createUiNativeAuditHost({repository,versionId,expectedSha,
            !Number.isSafeInteger(pair.claimEvents?.candidateCount)||
            pair.claimEvents.candidateCount<0||
            !Array.isArray(pair.claimEvents.candidates)||
-           pair.claimEvents.candidates.length!==pair.claimEvents.candidateCount)
+           pair.claimEvents.candidates.length!==pair.claimEvents.candidateCount||
+           pair.claimEvents.candidates.some(c=>c?.sourceSha!==expectedSha||
+             c?.claimAccepted!==false||
+             c?.sourceClass!=='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'||
+             !/^observed-comment-[1-9][0-9]*$/.test(c?.dispatchId??'')))
           return deny('NATIVE_ADS_CLAIM_SOURCE_UNQUALIFIED');
         records.push({
           id:'native-claim-'+issueNumber,
