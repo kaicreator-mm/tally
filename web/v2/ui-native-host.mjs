@@ -38,7 +38,8 @@ export function createUiV2ReadModelHost({repository,versionId,nativeC}={}){
     async tasks(scope){
       const observed=await readVersion(scope);
       return observed.connected?{connected:true,source:observed.source,
-        versionId,tasks:observed.tasks}:observed;
+        versionId,rosterCoverage:observed.rosterCoverage??'UNVERIFIED',
+        tasks:observed.tasks}:observed;
     },
     async dag(scope){
       const observed=await readVersion(scope);
