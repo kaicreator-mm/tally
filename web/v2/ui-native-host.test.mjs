@@ -20,6 +20,7 @@ test('real C task facts and native DAG evidence carry the exact source',async()=
   const host=createUiV2ReadModelHost({repository:repo,versionId,nativeC});
   const scope={projectId:repo,versionId};
   assert.deepEqual((await host.tasks(scope)).tasks,version.tasks);
+  assert.equal((await host.tasks(scope)).rosterCoverage,'UNVERIFIED');
   assert.deepEqual(await host.dag(scope),version.dag);
 });
 test('foreign project/version request fails closed before any native read',async()=>{
