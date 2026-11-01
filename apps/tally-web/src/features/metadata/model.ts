@@ -83,7 +83,7 @@ export interface ReportRow{
   reportId:string;taskId:string;kind:ReportMeta['kind'];
   reviewed:'REVIEWED'|'SELF_REPORTED';
   staleAgainst:(subjectSha:string)=>boolean;
-  observedAt:string;evidenceRef:string;
+  observedAt:string|null;evidenceRef:string;
 }
 export function reportRows(version:VersionMetadata):ReportRow[]{
   return version.reports.map(report=>({
