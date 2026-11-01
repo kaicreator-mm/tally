@@ -65,6 +65,27 @@ async function postGuided(path:string,csrfKey:string,payload:unknown):
     connected:false,ok:false,reason:result.reason??'GUIDED_HOST_DENIED'};
   return result;
 }
+export interface LifecycleRead<T>{
+  connected:boolean;versionId:string;records?:T[];
+  source?:{repository:string;sourceSha:string;currentness:string;readback:string};
+}
+export interface VersionAgentsRead{connected:boolean;versionId:string;
+  attempts?:import('../features/agents/model.ts').AttemptRecord[];}
+export interface VersionRequirementsRead{connected:boolean;versionId:string;
+  nodes?:import('../features/requirements/model.ts').RequirementNode[];}
+export interface VersionQaRead{connected:boolean;versionId:string;
+  records?:import('../features/qa/model.ts').QaRecord[];}
+export interface VersionMaintenanceRead{connected:boolean;versionId:string;
+  defects?:import('../features/maintenance/model.ts').DefectRecord[];
+  learnings?:import('../features/maintenance/model.ts').LearningRecord[];}
+export interface GovernanceRead{
+  connected:boolean;records?:import('../features/governance/model.ts').GovernanceItem[];
+  source?:import('../features/governance/model.ts').GovernanceSnapshot['source'];
+}
+const scoped=(path:string,projectId:string,versionId:string)=>{
+  return '/api/v2/'+path+'?projectId='+encodeURIComponent(projectId)+
+    '&versionId='+encodeURIComponent(versionId);
+};
 async function getJson<T>(path:string):Promise<T>{
   const response=await fetch(path,{cache:'no-store'});
   if(!response.ok)throw new Error(`HOST_${response.status}`);
@@ -78,6 +99,20 @@ export const hostAdapter=Object.freeze({
   guidedSubmit:(scope:{projectId:string;versionId:string;sourceSha:string},
     csrfKey:string,payload:GuidedAnswers)=>
     postGuided('/api/v2/guided/submit',csrfKey,{...scope,...payload}),
+  agents:(projectId:string,versionId:string)=>
+    getJson<VersionAgentsRead>(scoped('agents',projectId,versionId)),
+  requirements:(projectId:string,versionId:string)=>
+    getJson<VersionRequirementsRead>(scoped('requirements',projectId,versionId)),
+  qa:(projectId:string,versionId:string)=>
+    getJson<VersionQaRead>(scoped('qa',projectId,versionId)),
+  maintenance:(projectId:string,versionId:string)=>
+    getJson<VersionMaintenanceRead>(scoped('maintenance',projectId,versionId)),
+  governance:(kind:'workflow'|'domainPackages'|'experience'|'audit',
+    projectId:string)=>
+    getJson<GovernanceRead>('/api/v2/'+({
+      workflow:'workflow',domainPackages:'domain-packages',
+      experience:'experience',audit:'audit'} as const)[kind]+
+      '?projectId='+encodeURIComponent(projectId)),
   workbench:()=>getJson<WorkbenchResponse>('/api/v2/workbench'),
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
   tasks:(versionId:string)=>getJson<TasksResponse>(
