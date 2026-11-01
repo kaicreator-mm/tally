@@ -21,7 +21,7 @@ Source order: GitHub native Task/Issue/Dependencies + immutable ADS v5 report pu
 | 项目研发 / Release | `/api/v2/release` | Independent RQ + Owner + all gates + current exact permit + real selected K Host dispatch | Read + fail-closed button, **no React dispatch bound** | No-op is disabled; installed qualified effect required |
 | 项目研发 / Deployment | `/api/v2/deployment` | Environment-specific Host deployment, separate from Release | Host read port and per-environment version-scoped UI are implemented; installed provider may still be NOT_CONNECTED | Per-env receipts/health/rollback, never infer Release success |
 | 项目研发 / Maintenance | `/api/v2/maintenance` | Native defect and immutable Casebook evidence | Scoped read port; no invented zero history | Defect→Repair/next-version linkage |
-| 研发治理 / 元数据 | `/api/v2/metadata` | task-meta→ADS v5 published, no raw private data | Read port, missing Task denominator => UNKNOWN | Actual Task/Attempt/report/usage/as-of with source provenance |
+| 研发治理 / 元数据 | `/api/v2/metadata` | task-meta→ADS v5 published, no raw private data | Optional GitHub Native C ADS v5 report-only Host producer now available; source-bound publisher + comment identity required; all unsourced telemetry/lineage/learnings UNKNOWN | Actual Task/Attempt/report/usage/as-of with source provenance |
 | 研发治理 / Workflow | `/api/v2/workflow` | selected Business/Host workflow definitions + instances (not a second scheduler) | read-only governance ledger; producer needed | Definition revision, current instance, audit evidence |
 | 研发治理 / Domain Packages | `/api/v2/domain-packages` | Exact BUILD selected K/S/B/C manifests, activation read-only | read-only ledger; manifest producer needed | ABI/hash/source and authorized future BUILD only |
 | 研发治理 / 经验 | `/api/v2/experience` | Proposed/reviewed/attested learning only, no autonomous Meta adoption | read-only ledger; ADS/Meta producer needed | Evidence→proposal→review→future BUILD |
@@ -59,3 +59,30 @@ The consolidated candidate now includes `packages/tally-github-native-c/src/ui-v
 The Host-selected frozen Task issue list is **not** itself proof that the list exhausts `version/v2`. Current Native C version observations therefore publish `rosterCoverage: UNVERIFIED`, and the Task list and DAG display `ROSTER_COVERAGE=UNVERIFIED` even when all *selected* Issues and native dependencies pass readback. A two-Issue environment smoke is acceptable only as `SMOKE_PARTIAL_ROSTER`; it is **not** `COMPLETE_DAG`, closure, or version qualification. Full coverage needs separately read-backed frozen DAG/Task Pack provenance and native Issue linkage.
 
 The native reader now compares open-blocker counts and dependency states across its two reads; a closed Issue or `state:done` label does not imply independent Task Closure. The DAG frontend accepts `status=unknown` and `severity=UNKNOWN` and sanitizes GitHub-controlled titles/IDs before Mermaid export, preventing injected source-level graph directives.
+
+## Conditional ADS v5 report-only producer (Web-first R1 successor)
+
+`web/v2/ui-report-host.mjs` is an optional **read-only native C consumer**:
+it reads a bounded, Host-selected set of GitHub ADS v5 report comments
+using pinned source SHA, trusted publisher bindings, validated ADS schema,
+GitHub comment readback and correction reconciliation from the existing
+`tally-github-native-c`. The Host config supplies accepted comment IDs per
+Task; zero configured witnesses means metadata remains NOT_CONNECTED.
+`web/v2/serve.mjs` composes the port only when both trusted binding and
+accepted-comment maps are configured. Real @current ADS v5 comments were
+not independently observed on inspected #210/#211/#212: their published
+`<!-- ads:github -->` comments are **v3 DISPATCH_CLAIMED events**, not
+`ads/github/v5` report witnesses. No synthetic v5 row is created.
+
+When a valid report is present, UI rows are advisory SELF_REPORTED;
+`telemetryCoverage=UNKNOWN`, `lineageCoverage=UNKNOWN`,
+`learningCoverage=UNKNOWN`, `rosterCoverage=UNVERIFIED` and
+`reportCoverage=PARTIAL`. Absence of those feeds is never displayed as
+zero Attempt, zero lineage or a verified empty learning history.
+
+Only selected Native C source qualification is implemented here. It **does not**
+fulfill the complete task-meta, J01-J08, independent Reviewer, native Claim,
+workflow, QA, Release or installed UI positive end-to-end requirements.
+Run `web/v2/ui-report-host.test.mjs` and
+`web/v2/ui-report-host-http.test.mjs` in Node24 and verify authorized
+published report identities separately before marking metadata connected.
