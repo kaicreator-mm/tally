@@ -20,6 +20,7 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
   if(!version)return <EmptyState
     title={zh?'请先在右上角选择项目与版本':'Select project & version first'}/>;
   const usage=aggregateUsage(version);
+  const measured=version.telemetryCoverage==='VERIFIED';
   const reports=reportRows(version);
   const missing=missingReports(version,expectedTaskIds);
   const tabs:readonly {key:MetadataTab;label:string;content:React.ReactNode}[]=[
@@ -31,26 +32,26 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
           <dl style={{display:'grid',gridTemplateColumns:'auto auto auto 1fr',
             gap:'8px 14px',margin:0,fontSize:13}}>
             <dt style={{color:'var(--text-muted)'}}>{zh?'尝试':'Attempts'}</dt>
-            <dd style={{margin:0}}>{usage.attempts}</dd><span/>
+            <dd style={{margin:0}}>{measured?usage.attempts:'UNKNOWN'}</dd><span/>
             <span style={{color:'var(--text-muted)'}}>
-              {Object.entries(usage.byRole).map(([role,entry])=>
+              {(measured?Object.entries(usage.byRole):[]).map(([role,entry])=>
                 `${role}: ${entry.measured}/${entry.count}`).join(' · ')}</span>
             <dt style={{color:'var(--text-muted)'}}>{zh?'时长(可测)':'Duration (measured)'}</dt>
-            <dd style={{margin:0}}>{Math.round(usage.measuredDuration/1000)}s</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.durationCoverage)}</dd><span/>
+            <dd style={{margin:0}}>{measured?Math.round(usage.measuredDuration/1000)+'s':'UNKNOWN'}</dd>
+            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(measured?usage.durationCoverage:null)}</dd><span/>
             <dt style={{color:'var(--text-muted)'}}>tokens 入</dt>
-            <dd style={{margin:0}}>{usage.tokensIn}</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.tokenInCoverage)}</dd><span/>
+            <dd style={{margin:0}}>{measured?usage.tokensIn:'UNKNOWN'}</dd>
+            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(measured?usage.tokenInCoverage:null)}</dd><span/>
             <dt style={{color:'var(--text-muted)'}}>tokens 出</dt>
-            <dd style={{margin:0}}>{usage.tokensOut}</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.tokenOutCoverage)}</dd><span/>
+            <dd style={{margin:0}}>{measured?usage.tokensOut:'UNKNOWN'}</dd>
+            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(measured?usage.tokenOutCoverage:null)}</dd><span/>
             <dt style={{color:'var(--text-muted)'}}>{zh?'费用':'Cost'}</dt>
             <dd style={{margin:0}}><Badge tone="warn">UNKNOWN</Badge></dd><span/><span/>
           </dl>
         </Card>
         <Card>
           <CardHeader title={zh?'ADS / task-meta 报告':'ADS / task-meta reports'}
-            sub={missing===null?(zh?'任务清单来源未知，无法计算缺失报告':'Task roster unavailable')
+            sub={missing===null?(zh?'ROSTER_COVERAGE=UNVERIFIED · 报告覆盖率未知':'ROSTER_COVERAGE=UNVERIFIED · report coverage UNKNOWN')
               :zh?`缺失 ADS v5 报告:${missing.length===0?'无':missing.length}`
                 :`${missing.length} missing`}/>
           {reports.length===0?<EmptyState title={zh?'暂无报告':'No reports'}/>:
@@ -72,7 +73,7 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
       content:<Card>
         <CardHeader title={zh?'Claim / 冻结 / PR / CI / 发布部署链路'
           :'Claim / freeze / PR / CI / release lineage'}/>
-        {version.lineage.length===0?<EmptyState title={zh?'暂无溯源':'No lineage'}/>:
+        {version.lineage.length===0?<EmptyState title={version.lineageCoverage==='VERIFIED'?(zh?'暂无溯源':'No lineage'):'LINEAGE_COVERAGE=UNKNOWN'}/>: 
           <DataTable rows={version.lineage} rowKey={row=>row.taskId}
             columns={[
               {key:'task',header:zh?'任务':'Task',cell:row=><code>{row.taskId}</code>},
@@ -99,7 +100,7 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
         <CardHeader title={zh?'跨版本经验与实测结果':'Cross-version learning'}
           sub={zh?'实测效果为独立见证;未测即未测,无 Agent 排名':'attested only; no ranking'}/>
         {version.learnedOutcomes.length===0?
-          <EmptyState title={zh?'暂无经验记录':'No learnings'}/>:
+          <EmptyState title={version.learningCoverage==='VERIFIED'?(zh?'暂无经验记录':'No learnings'):'LEARNING_COVERAGE=UNKNOWN'}/>:
           <DataTable rows={version.learnedOutcomes} rowKey={row=>row.learningId}
             columns={[
               {key:'id',header:'ID',cell:row=><code>{row.learningId}</code>},
