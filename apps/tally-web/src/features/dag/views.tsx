@@ -51,13 +51,13 @@ export function DagView({dag,locale='zh',onOpenTask}:
         <select aria-label="status" value={filters.status??''}
           onChange={event=>setFilters({...filters,status:event.target.value||null})}>
           <option value="">{zh?'全部状态':'all statuses'}</option>
-          {['open','in_progress','review','blocked','done','failed']
+          {['open','in_progress','review','blocked','done','failed','unknown']
             .map(status=><option key={status} value={status}>{status}</option>)}
         </select>
         <select aria-label="severity" value={filters.severity??''}
           onChange={event=>setFilters({...filters,severity:event.target.value||null})}>
           <option value="">{zh?'全部级别':'all'}</option>
-          {['P0','P1','P2'].map(severity=>
+          {['P0','P1','P2','UNKNOWN'].map(severity=>
             <option key={severity} value={severity}>{severity}</option>)}
         </select>
         <select aria-label="agent" value={filters.agentId??''}
