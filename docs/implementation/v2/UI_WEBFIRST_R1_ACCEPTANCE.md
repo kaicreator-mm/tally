@@ -113,3 +113,15 @@ acceptance criteria, L2 decision and Freeze cannot be claimed
 (`freezeCoverage=UNKNOWN`). Unconfigured rosters, source drift, parent
 cycles and foreign issues fail closed. New Node24 native, Host and HTTP tests
 must pass before treating it as a production-connected Requirements page.
+
+## Conditional GitHub CI status QA read source
+
+New `readUiNativeQaFromClient` uses pinned native GitHub C commit status
+readback and optional Host-configured Woodpecker context. It projects
+`fullRegression` as `REPORTED` only. No CI context is independently
+qualified as Hidden, critical-journey or installed acceptance, and status
+`success` alone cannot satisfy Owner RQ or release. The selected exact
+version branch is checked before and after read; partial status pagination,
+foreign URL, stale branch and untrusted context fail closed. Without
+the configured context the QA menu remains NOT_CONNECTED. This is
+a candidate source producer, not an installed acceptance certificate.
