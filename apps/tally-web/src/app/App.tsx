@@ -130,7 +130,7 @@ function MetadataRoute({versionId}:{versionId:string|null}){
       learnedOutcomes:data.learnedOutcomes as import('../features/metadata/model.ts').VersionMetadata['learnedOutcomes']}
     :null;
   return guard(versionId,
-    version?<MetadataCenter version={version} allVersions={[]} expectedTaskIds={[]}/>
+    version?<MetadataCenter version={version} allVersions={[]} expectedTaskIds={null}/>
       :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
 function SettingsRoute(){
