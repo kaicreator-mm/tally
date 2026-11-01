@@ -22,6 +22,7 @@ import {createUiNativeSource}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
 import {createUiAdsReportHost} from './ui-report-host.mjs';
 import {createUiNativeAuditHost} from './ui-audit-host.mjs';
+import {createUiSettingsHost} from './ui-settings-host.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF=/^version\/[A-Za-z0-9_.-]+$/;
@@ -107,8 +108,11 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     repository:settings.repository,versionId:settings.versionId,
     expectedSha:settings.expectedSha,taskIssueNumbers:settings.roster,
     nativeC,token:settings.token}):{};
+  const settingsReadHost=createUiSettingsHost({
+    repository:settings.repository,versionId:settings.versionId,
+    expectedSha:settings.expectedSha,nativeC});
   const v2ReadModelHost=Object.freeze({
-    ...nativeReadHost,...adsReadHost,...auditReadHost});
+    ...nativeReadHost,...adsReadHost,...auditReadHost,...settingsReadHost});
   // The legacy J01–J08 console remains fail-closed in this entrypoint.
   // No process executor or selected K dispatch is granted by launching UI.
   const config=defaultAlmConfig({
