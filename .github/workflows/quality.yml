@@ -1,7 +1,11 @@
 name: quality
 
+# Legacy Go v1.5 maintenance only. Tally v2 on version/v2 is validated by
+# the separate Node24/DomainHarness source and selected-host workflows.
+# Do not run Go/PostgreSQL checks on v2 PRs; preserve main maintenance.
 on:
   pull_request:
+    branches: [main, master]
   push:
     branches: [main, master]
   workflow_dispatch: {}

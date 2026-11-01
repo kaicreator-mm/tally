@@ -1,0 +1,51 @@
+# Reviewed-candidate publication source gate. Real GitHub/Windows effects are Host-local only.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-github-c/**'
+        - 'packages/tally-engineering-business/**'
+        - 'experiments/v2/candidate-publication/**'
+        - 'experiments/v2/selected-business-build/**'
+        - '.woodpecker/v2-candidate-publication.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i203-k3]
+labels:
+  backend: local
+steps:
+  - name: candidate-publication-exact-head-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+  - name: candidate-publication-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base"; exit 1; }
+          fi
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_CANDIDATE_PUBLICATION_TRAILERS_PASS
+  - name: candidate-publication-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - node --test packages/tally-github-c/test/candidate-publication.test.mjs experiments/v2/candidate-publication/host-publisher.test.mjs packages/tally-engineering-business/test/business-policy.test.mjs
+      - node --check experiments/v2/candidate-publication/publish-real.mjs
+      - echo TALLY_V2_CANDIDATE_PUBLICATION_SOURCE_TESTS_PASS
+      - echo TALLY_V2_CANDIDATE_PUBLICATION_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER

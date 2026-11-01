@@ -1,0 +1,54 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-dh-native-github-sqlite
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-github-native-c/**'
+      - 'packages/tally-ads-v5-validator/**'
+      - 'packages/tally-github-c/**'
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-dh-native-github-sqlite.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  sealed-native-readonly-c:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Tally selected source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: tally
+      - name: DomainHarness exact v0.10.2 public release
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          persist-credentials: false
+          path: domain-harness
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Real K B native GitHub C plus SQLite Host
+        shell: bash
+        env:
+          DH: ${{ github.workspace }}/domain-harness
+          TALLY: ${{ github.workspace }}/tally
+          TALLY_B: ${{ github.workspace }}/tally
+          T04B_NATIVE: '1'
+          TALLY_NATIVE_EXPECTED_SHA: 6356c96a45fcc2b7ee91642b1d87080f940b15af
+          TALLY_GITHUB_READ_TOKEN: ${{ github.token }}
+        run: |
+          echo "TALLY_CANDIDATE_HEAD=$(git -C "$TALLY" rev-parse HEAD)"
+          bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"

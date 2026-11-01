@@ -1,0 +1,43 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-native-published-fixture
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'experiments/v2/github-live-publisher-fixture/**'
+      - 'packages/tally-github-native-c/**'
+      - 'packages/tally-ads-v5-validator/**'
+      - 'packages/tally-github-c/**'
+      - '.github/workflows/v2-native-published-fixture.yml'
+permissions:
+  contents: read
+  issues: read
+jobs:
+  real-readonly-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Exact Tally PR implementation
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install existing official reader and ADS validator dependencies
+        shell: bash
+        run: |
+          npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+          npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - name: Real read-only GitHub published fixture, not a Task Claim
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node experiments/v2/github-live-publisher-fixture/readback.mjs

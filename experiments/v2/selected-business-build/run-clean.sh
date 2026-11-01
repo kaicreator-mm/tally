@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+tmp=''
+finish() {
+  rc=$?
+  echo "T02B_BUILD_EXIT=$rc"
+  if [[ -n "$tmp" ]]; then
+    if [[ "${KEEP_T02B_WORK:-0}" == "1" ]]; then echo "T02B_WORK=$tmp"
+    else rm -rf "$tmp"; fi
+  fi
+}
+trap finish EXIT
+: "${DH:?Set DH to exact released DomainHarness git checkout}"
+: "${TALLY:?Set TALLY to exact Tally PR checkout}"
+: "${TALLY_B:?Set TALLY_B to Tally v2 merged B source git checkout}"
+DH=$(cd "$DH" && pwd -P)
+TALLY=$(cd "$TALLY" && pwd -P)
+TALLY_B=$(cd "$TALLY_B" && pwd -P)
+# Immediately remove host credential from the producer/npm/build environment.
+# Re-export only for the final isolated read-only native consumer process.
+native_token="${TALLY_GITHUB_READ_TOKEN:-}"
+unset TALLY_GITHUB_READ_TOKEN
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  # Prove sealed C drops raw Provider errors/credentials even if the trusted
+  # Host pre-load integrity gate were bypassed; tests use synthetic secrets.
+  node "$TALLY/experiments/v2/selected-business-build/test-shim-output-boundary.mjs"
+  if [[ "${T06F_NATIVE_PAIR:-0}" == "1" ]]; then
+    node "$TALLY/experiments/v2/selected-business-build/test-native-pair-output-boundary.mjs"
+  fi
+  [[ -n "$native_token" ]] || { echo T04B_NATIVE_HOST_TOKEN_REQUIRED; exit 3; }
+  [[ "${TALLY_NATIVE_EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T04B_SOURCE_PIN_REQUIRED; exit 3; }
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    # T06l accepted-Claim admission reuses the same native producer lane.
+    [[ "${TALLY_CLAIM_SOURCE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || { echo T06L_SOURCE_PIN_REQUIRED; exit 3; }
+  fi
+fi
+expected_dh_sha=cee14399d9d0af4e20e34b9111861b16a465b690
+if [[ "${T06M_LOCAL:-0}" == "1" || "${T06N_CONCURRENT:-0}" == "1" ]]; then
+  expected_dh_sha=061376f4a023070f215f9feffad5c24d96d503cb
+fi
+[[ "$(git -C "$DH" rev-parse HEAD)" == "$expected_dh_sha" ]] || { echo DH_SHA_MISMATCH; exit 2; }
+# This integration PR exercises the exact proposed Business bytes, not the
+# old merged B. CI uses GitHub's synthetic PR merge checkout for both paths.
+[[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "$(git -C "$TALLY" rev-parse HEAD)" ]] || { echo T04A_SOURCE_CHECKOUT_MISMATCH; exit 2; }
+[[ "$(node -p 'process.versions.node.split(".")[0]')" == '24' ]] || { echo NODE24_REQUIRED; exit 2; }
+BFILE="$TALLY_B/packages/tally-engineering-business/src/index.mjs"
+[[ -f "$BFILE" && -f "$TALLY/experiments/v2/selected-business-build/producer.mjs" ]]
+tmp=$(mktemp -d)
+mkdir -p "$tmp/packed" "$tmp/producer" "$tmp/consumer"
+echo "DH_RELEASE_SHA=$(git -C "$DH" rev-parse HEAD)"
+echo "TALLY_SHA=$(git -C "$TALLY" rev-parse HEAD)"
+echo "T02A_SOURCE_SHA=$(git -C "$TALLY_B" rev-parse HEAD)"
+node --version
+cd "$DH"
+npm ci
+npm run build
+# Contracts/BUILD are root npm workspaces, selected K/S Domain Packages
+# are independent package directories and are intentionally NOT workspaces.
+for package in @kaicreator/domain-harness-contracts @kaicreator/domain-harness-build @kaicreator/domain-harness-microkernel @kaicreator/domain-harness-host-node; do
+  npm pack --pack-destination "$tmp/packed" -w "$package" >/dev/null
+done
+for dir in "$DH/domain-packages/kernel/basic" "$DH/domain-packages/standard/basic"; do
+  npm pack --pack-destination "$tmp/packed" "$dir" >/dev/null
+done
+echo T02B_TARBALL_SHA256
+sha256sum "$tmp"/packed/*.tgz
+cp "$TALLY/experiments/v2/selected-business-build/producer.mjs" "$tmp/producer/producer.mjs"
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  # Install ONLY reviewed existing parser/provider dependencies; bundle source,
+  # do not rebuild Octokit, GitHub REST, YAML or JCS.
+  npm --prefix "$TALLY/packages/tally-ads-v5-validator" install --ignore-scripts --no-audit --no-fund
+  npm --prefix "$TALLY/packages/tally-github-native-c" install --ignore-scripts --no-audit --no-fund
+  cp "$TALLY/experiments/v2/selected-business-build/bundle-native.mjs" "$tmp/producer/bundle-native.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/native-readonly-shim.mjs" "$tmp/producer/native-readonly-shim.mjs"
+  if [[ "${T06F_NATIVE_PAIR:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/native-pair-shim.mjs" "$tmp/producer/native-pair-shim.mjs"
+  fi
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/bundle-claim-reader.mjs" "$tmp/producer/bundle-claim-reader.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/claim-admission-shim.mjs" "$tmp/producer/claim-admission-shim.mjs"
+  fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/bundle-local-codex.mjs" "$tmp/producer/bundle-local-codex.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-shim.mjs" "$tmp/producer/local-codex-shim.mjs"
+  fi
+fi
+cp "$TALLY/experiments/v2/selected-business-build/readiness-capability.mjs" "$tmp/producer/readiness-capability.mjs"
+printf '{"name":"tally-selected-build-producer","private":true,"type":"module"}\n' >"$tmp/producer/package.json"
+cd "$tmp/producer"
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-build-*.tgz "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz "$tmp"/packed/kaicreator-domain-kernel-basic-*.tgz "$tmp"/packed/kaicreator-domain-standard-basic-*.tgz
+npm ls --depth=0
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  npm install --save-exact --ignore-scripts --no-audit --no-fund esbuild@0.25.12
+  T04B_C_OUTPUT="$tmp/producer/native-bundled.mjs" T04B_IMPORTS_OUTPUT="$tmp/producer/native-imports.json" TALLY="$TALLY" node ./bundle-native.mjs
+  # Existing reviewed native provider (which may include CJS in upstream npm
+  # deps) is an installed, declared closed-world npm package, NOT in sealed
+  # moduleSource. The sealed C bytes only static re-export this npm package.
+  mkdir -p "$tmp/native-provider"
+  cp "$tmp/producer/native-bundled.mjs" "$tmp/native-provider/index.mjs"
+  printf '%s' '{"name":"@kaicreator/tally-native-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/native-provider/package.json"
+  npm pack --pack-destination "$tmp/packed" "$tmp/native-provider" >/dev/null
+  echo T04B_TRUSTED_PROVIDER_SHA256
+  sha256sum "$tmp/native-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    # T06l: sealed claim-admission provider bundles the existing T06g native
+    # publication witness plus the T06d Host CAS registry grammar.
+    T06L_C_OUTPUT="$tmp/producer/claim-bundled.mjs" T06L_IMPORTS_OUTPUT="$tmp/producer/claim-imports.json" TALLY="$TALLY" node ./bundle-claim-reader.mjs
+    mkdir -p "$tmp/native-claim-provider"
+    cp "$tmp/producer/claim-bundled.mjs" "$tmp/native-claim-provider/index.mjs"
+    printf '%s' '{"name":"@kaicreator/tally-native-claim-reader-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/native-claim-provider/package.json"
+    npm pack --pack-destination "$tmp/packed" "$tmp/native-claim-provider" >/dev/null
+    echo T06L_TRUSTED_PROVIDER_SHA256
+    sha256sum "$tmp/native-claim-provider/index.mjs" "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
+  fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    T06M_C_OUTPUT="$tmp/producer/local-codex-bundled.mjs" T06M_IMPORTS_OUTPUT="$tmp/producer/local-codex-imports.json" TALLY="$TALLY" node ./bundle-local-codex.mjs
+    mkdir -p "$tmp/local-codex-provider"
+    cp "$tmp/producer/local-codex-bundled.mjs" "$tmp/local-codex-provider/index.mjs"
+    printf '%s' '{"name":"@kaicreator/tally-local-codex-host-bundle","version":"0.0.0","private":true,"type":"module","exports":"./index.mjs"}' > "$tmp/local-codex-provider/package.json"
+    npm pack --pack-destination "$tmp/packed" "$tmp/local-codex-provider" >/dev/null
+    echo T06M_TRUSTED_PROVIDER_SHA256
+    sha256sum "$tmp/local-codex-provider/index.mjs" "$tmp"/packed/kaicreator-tally-local-codex-host-bundle-*.tgz
+  fi
+  T06M_LOCAL="${T06M_LOCAL:-0}" \
+  T06N_CONCURRENT="${T06N_CONCURRENT:-0}" \
+  T06M_PROVIDER_FILE="$tmp/local-codex-provider/index.mjs" \
+  T06L_CLAIM="${T06L_CLAIM:-0}" \
+  T06L_PROVIDER_FILE="$tmp/native-claim-provider/index.mjs" \
+  T04B_NATIVE=1 T04B_PROVIDER_FILE="$tmp/native-provider/index.mjs" T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+else
+  T02B_SEALED_APP_OUTPUT="$tmp/consumer/sealed-app.json" TALLY_BUSINESS_SOURCE="$BFILE" node ./producer.mjs
+fi
+# A new Node process in an independent npm root consumes only public
+# Contracts + Microkernel, never BUILD/Compiler/unselected Domain Packages.
+cp "$TALLY/experiments/v2/selected-business-build/consumer.mjs" "$tmp/consumer/consumer.mjs"
+printf '{"name":"tally-selected-runtime-consumer","private":true,"type":"module"}\n' >"$tmp/consumer/package.json"
+cd "$tmp/consumer"
+npm install --save-exact "$tmp"/packed/kaicreator-domain-harness-contracts-*.tgz "$tmp"/packed/kaicreator-domain-harness-microkernel-*.tgz "$tmp"/packed/kaicreator-domain-harness-host-node-*.tgz 'better-sqlite3@12.4.1'
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  npm install --save-exact "$tmp"/packed/kaicreator-tally-native-reader-bundle-*.tgz
+  if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+    npm install --save-exact "$tmp"/packed/kaicreator-tally-native-claim-reader-bundle-*.tgz
+  fi
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    npm install --save-exact "$tmp"/packed/kaicreator-tally-local-codex-host-bundle-*.tgz
+  fi
+fi
+npm ls --depth=0
+if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
+  if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
+    node --test "$tmp/consumer/local-codex.test.mjs"
+    if [[ "${T06N_CONCURRENT:-0}" == "1" ]]; then
+      # T06n: ONE K facade runs Builder A (#177) and Builder B (#178) with two
+      # distinct instance keys/attempts so the real external effects overlap,
+      # then reviewer Join (#179), one bounded Repair and re-Join. Real run
+      # requires the Host-prepared accepted registry; safe replay seeds it.
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-concurrent-codex.mjs" "$tmp/consumer/consumer-concurrent-codex.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" \
+      TALLY_TASK_CLAIM_177_DISPATCH_ID="${TALLY_TASK_CLAIM_177_DISPATCH_ID:-dispatch:177:t06n:builder-a:20261030:1}" \
+      TALLY_TASK_CLAIM_177_OPERATOR_ID="${TALLY_TASK_CLAIM_177_OPERATOR_ID:-codex:t06n:builder-a:1}" \
+      TALLY_TASK_CLAIM_177_OPERATOR_KIND="${TALLY_TASK_CLAIM_177_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_177_WRITER_ID="${TALLY_TASK_CLAIM_177_WRITER_ID:-tally-host:win32:i177:1}" \
+      TALLY_TASK_CLAIM_177_WRITER_LOGIN="${TALLY_TASK_CLAIM_177_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_177_COMMENT_ID="${TALLY_TASK_CLAIM_177_COMMENT_ID:-6527324131}" \
+      TALLY_TASK_CLAIM_178_DISPATCH_ID="${TALLY_TASK_CLAIM_178_DISPATCH_ID:-dispatch:178:t06n:builder-b:20261030:1}" \
+      TALLY_TASK_CLAIM_178_OPERATOR_ID="${TALLY_TASK_CLAIM_178_OPERATOR_ID:-codex:t06n:builder-b:1}" \
+      TALLY_TASK_CLAIM_178_OPERATOR_KIND="${TALLY_TASK_CLAIM_178_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_178_WRITER_ID="${TALLY_TASK_CLAIM_178_WRITER_ID:-tally-host:win32:i178:1}" \
+      TALLY_TASK_CLAIM_178_WRITER_LOGIN="${TALLY_TASK_CLAIM_178_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_178_COMMENT_ID="${TALLY_TASK_CLAIM_178_COMMENT_ID:-6527327548}" \
+      TALLY_TASK_CLAIM_179_DISPATCH_ID="${TALLY_TASK_CLAIM_179_DISPATCH_ID:-dispatch:179:t06n:reviewer:20261030:1}" \
+      TALLY_TASK_CLAIM_179_OPERATOR_ID="${TALLY_TASK_CLAIM_179_OPERATOR_ID:-zcode:t06n:reviewer:1}" \
+      TALLY_TASK_CLAIM_179_OPERATOR_KIND="${TALLY_TASK_CLAIM_179_OPERATOR_KIND:-other}" \
+      TALLY_TASK_CLAIM_179_WRITER_ID="${TALLY_TASK_CLAIM_179_WRITER_ID:-tally-host:win32:i179:1}" \
+      TALLY_TASK_CLAIM_179_WRITER_LOGIN="${TALLY_TASK_CLAIM_179_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_TASK_CLAIM_179_COMMENT_ID="${TALLY_TASK_CLAIM_179_COMMENT_ID:-6527331202}" \
+      TALLY_TASK_CLAIM_177_REGISTRY_PATH="${TALLY_TASK_CLAIM_177_REGISTRY_PATH:-}" \
+      TALLY_TASK_CLAIM_178_REGISTRY_PATH="${TALLY_TASK_CLAIM_178_REGISTRY_PATH:-}" \
+      TALLY_TASK_CLAIM_179_REGISTRY_PATH="${TALLY_TASK_CLAIM_179_REGISTRY_PATH:-}" \
+        node "$tmp/consumer/consumer-concurrent-codex.mjs"
+    else
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+    fi
+  else
+    cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
+    TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs
+    if [[ "${T06L_CLAIM:-0}" == "1" ]]; then
+      # Real accepted Claim #169 identity, Host-supplied configuration only.
+      # A real previously accepted registry can replace the fixture bootstrap
+      # via TALLY_CLAIM_REGISTRY_PATH (then seeding is skipped).
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-claim-admission.mjs" "$tmp/consumer/consumer-claim-admission.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" \
+      TALLY_CLAIM_SOURCE_SHA="${TALLY_CLAIM_SOURCE_SHA:-3293aace8a07c2a4f79a75c6539245980f77e2b4}" \
+      TALLY_CLAIM_DISPATCH_ID="${TALLY_CLAIM_DISPATCH_ID:-dispatch:169:t06l:kernel:20261030:1}" \
+      TALLY_CLAIM_OPERATOR_ID="${TALLY_CLAIM_OPERATOR_ID:-zcode:t125:kernel:1}" \
+      TALLY_CLAIM_OPERATOR_KIND="${TALLY_CLAIM_OPERATOR_KIND:-other}" \
+      TALLY_CLAIM_WRITER_ID="${TALLY_CLAIM_WRITER_ID:-writer:t06l:host:1}" \
+      TALLY_CLAIM_WRITER_LOGIN="${TALLY_CLAIM_WRITER_LOGIN:-kaicreator-mm}" \
+      TALLY_CLAIM_COMMENT_ID="${TALLY_CLAIM_COMMENT_ID:-6511046226}" \
+      TALLY_CLAIM_REGISTRY_PATH="${TALLY_CLAIM_REGISTRY_PATH:-}" \
+        node ./consumer-claim-admission.mjs
+    fi
+  fi
+else
+  node ./consumer.mjs
+  cp "$TALLY/experiments/v2/selected-business-build/consumer-sqlite.mjs" "$tmp/consumer/consumer-sqlite.mjs"
+  node ./consumer-sqlite.mjs
+fi

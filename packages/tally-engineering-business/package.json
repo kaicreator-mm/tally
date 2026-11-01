@@ -1,0 +1,15 @@
+{
+  "name": "@kaicreator/tally-engineering-business",
+  "version": "0.0.0-v2-development",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

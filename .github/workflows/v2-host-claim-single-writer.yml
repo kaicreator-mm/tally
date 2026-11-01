@@ -1,0 +1,57 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-host-claim-single-writer
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'experiments/v2/t06d-host-claim-publication/**'
+      - '.github/workflows/v2-host-claim-single-writer.yml'
+permissions:
+  contents: read
+jobs:
+  physical-sqlite-single-writer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact authored Tally source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Public released DomainHarness immutable source
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          path: pinned-dh
+          persist-credentials: false
+      - name: Set Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Pack actual published DH v0.10.2 public Host / Contracts / Microkernel and run true SQLite CAS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C pinned-dh rev-parse HEAD)" = "cee14399d9d0af4e20e34b9111861b16a465b690"
+          root="$PWD"
+          mkdir -p "$RUNNER_TEMP/packed" "$RUNNER_TEMP/t06d-consumer"
+          cp "$root"/experiments/v2/t06d-host-claim-publication/*.mjs "$RUNNER_TEMP/t06d-consumer/"
+          printf '%s\n' '{"name":"tally-t06d-real-host-cas","private":true,"type":"module"}' > "$RUNNER_TEMP/t06d-consumer/package.json"
+          cd "$root/pinned-dh"
+          npm ci
+          npm run build
+          for name in '@kaicreator/domain-harness-contracts' '@kaicreator/domain-harness-microkernel' '@kaicreator/domain-harness-host-node'; do
+            npm pack --pack-destination "$RUNNER_TEMP/packed" -w "$name" >/dev/null
+          done
+          cd "$RUNNER_TEMP/t06d-consumer"
+          npm install --no-audit --no-fund --save-exact "$RUNNER_TEMP"/packed/kaicreator-domain-harness-contracts-*.tgz "$RUNNER_TEMP"/packed/kaicreator-domain-harness-microkernel-*.tgz "$RUNNER_TEMP"/packed/kaicreator-domain-harness-host-node-*.tgz better-sqlite3@12.4.1
+          node --test ./single-writer.test.mjs
+          echo T06D_PUBLIC_DH_V0102_TRUE_SQLITE_CAS_CLAIM_WRITER=PASS

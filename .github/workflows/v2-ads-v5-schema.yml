@@ -1,0 +1,42 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-ads-v5-schema
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-ads-v5-schema.yml'
+  push:
+    branches:
+      - 'feat/v2-t03a-ads-v5-schema-validator'
+    paths:
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-ads-v5-schema.yml'
+permissions:
+  contents: read
+jobs:
+  strict-v5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record exact subject and execute strict validator tests
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          node --version
+          cd packages/tally-ads-v5-validator
+          npm install --ignore-scripts --no-audit --no-fund
+          npm ls --depth=0
+          npm test

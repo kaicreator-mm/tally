@@ -1,0 +1,93 @@
+# Tally v2 T06n concurrent Local Codex source/build and safe replay gate.
+# Windows two-Codex real process overlap, OS-principal/credential/Hidden
+# evidence is Host-local only: this Docker profile runs SAFE REPLAY ONLY and
+# is never Windows OS-isolation evidence.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-engineering-business/**'
+        - 'packages/tally-github-native-c/**'
+        - 'packages/tally-ads-v5-validator/**'
+        - 'experiments/v2/selected-business-build/**'
+        - '.woodpecker/v2-t06n-concurrent-agent.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i176-k3]
+
+labels:
+  backend: local
+
+steps:
+  - name: t06n-exact-head-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
+      - 'echo "T06N_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "T06N_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+      - git show --format= --name-only HEAD
+
+  - name: t06n-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_T06N_TRAILERS_PASS
+
+  - name: t06n-engineering-b-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      - npm --prefix packages/tally-engineering-business test
+      - echo TALLY_V2_T06N_ENGINEERING_B_PASS
+
+  - name: t06n-dh-v0103-public-k-host-safe-replay
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - export npm_config_registry=https://registry.npmmirror.com
+      - export NODE_USE_ENV_PROXY=0 NO_PROXY=localhost,127.0.0.1,172.18.0.1
+      - export work="$PWD/.t06n-ci"
+      - rm -rf -- "$work"
+      - mkdir -p "$work"
+      - git clone --quiet --depth 1 --branch v0.10.3 https://github.com/kaicreator-mm/domain-harness.git "$work/dh"
+      - test "$(git -C "$work/dh" rev-parse HEAD)" = 061376f4a023070f215f9feffad5c24d96d503cb
+      - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - export DH="$work/dh" TALLY="$PWD" TALLY_B="$PWD" T04B_NATIVE=1 T06M_LOCAL=1 T06N_CONCURRENT=1
+      - export TALLY_NATIVE_EXPECTED_SHA="$(git rev-parse HEAD)"
+      - export TALLY_CLAIM_SOURCE_SHA="$(git rev-parse HEAD)"
+      - export TALLY_GITHUB_READ_TOKEN=fixture-not-a-secret TALLY_LOCAL_REPLAY=1
+      - echo "T06N_SAFE_REPLAY_PIPELINE_AGENT=${CI_AGENT_ID:-unknown} PIPELINE=${CI_PIPELINE_NUMBER:-manual}"
+      - bash experiments/v2/selected-business-build/run-clean.sh > "$work/consumer.log" 2>&1 || { rc=$?; node ci-post-error.mjs "$work/consumer.log"; exit "$rc"; }
+      - grep -q "T06N_SAFE_REPLAY_ONLY_NO_REAL_OVERLAP_NO_AGENT_EFFECT=PASS" "$work/consumer.log"
+      - echo TALLY_V2_T06N_DH_V0103_PUBLIC_K_HOST_SAFE_REPLAY_PASS
+      - echo TALLY_V2_T06N_WINDOWS_REAL_OVERLAP_NOT_RUN_IN_DOCKER
+      - echo TALLY_V2_T06N_DOCKER_IS_NOT_WINDOWS_OS_ISOLATION_EVIDENCE

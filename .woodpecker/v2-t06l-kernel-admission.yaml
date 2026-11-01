@@ -1,0 +1,85 @@
+# Tally v2 T06l accepted-Claim -> public K admission, exact authored SHA.
+# Historical proof: this profile intentionally keeps DomainHarness v0.10.2
+# (cee14399d9d0af4e20e34b9111861b16a465b690) replay; new/common SDK
+# qualification uses DH v0.10.3 (061376f4a023070f215f9feffad5c24d96d503cb)
+# via v2-t06j-host-admission.yaml (#173).
+# #173: path-scoped on version/v2; the historical task branch replays unchanged.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'experiments/v2/selected-business-build/**'
+        - 'experiments/v2/t06d-host-claim-publication/**'
+        - 'claim-replay-runner.mjs'
+        - 'ci-post-error.mjs'
+        - '.woodpecker/v2-t06l-kernel-admission.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-t125-kernel-zcode]
+
+labels:
+  backend: local
+
+steps:
+  - name: t06l-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_T06L_RANGE_TRAILERS_PASS
+
+  - name: t06l-kernel-admission-replay
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
+      - 'echo "T06L_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "T06L_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - export TALLY_GITHUB_READ_TOKEN=fixture-not-a-secret T06L_WITNESS_REPLAY=1
+      - export NODE_OPTIONS=--import="file://$PWD/claim-replay-runner.mjs"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+      - git log -1 --format=%B HEAD | grep -i '^Refs:' >/dev/null
+      - export work="$PWD/.t06l-ci"
+      - rm -rf -- "$work"
+      - mkdir -p "$work/dh"
+      - git clone --quiet --depth 1 --branch v0.10.2 https://github.com/kaicreator-mm/domain-harness.git "$work/dh"
+      - test "$(git -C "$work/dh" rev-parse HEAD)" = cee14399d9d0af4e20e34b9111861b16a465b690
+      - export npm_config_registry=https://registry.npmmirror.com
+      - export NODE_USE_ENV_PROXY=0 NO_PROXY=localhost,127.0.0.1,172.18.0.1
+      - export DH="$work/dh" TALLY="$PWD" TALLY_B="$PWD"
+      - export T04B_NATIVE=1 T06L_CLAIM=1
+      - export TALLY_NATIVE_EXPECTED_SHA=3293aace8a07c2a4f79a75c6539245980f77e2b4
+      - export TALLY_CLAIM_SOURCE_SHA=3293aace8a07c2a4f79a75c6539245980f77e2b4
+      - export TALLY_CLAIM_DISPATCH_ID=dispatch:169:t06l:kernel:20261030:1
+      - export TALLY_CLAIM_OPERATOR_ID=zcode:t125:kernel:1
+      - export TALLY_CLAIM_OPERATOR_KIND=other
+      - export TALLY_CLAIM_WRITER_ID=tally-host:win32:t125:kernel:1
+      - export TALLY_CLAIM_WRITER_LOGIN=kaicreator-mm
+      - export TALLY_CLAIM_COMMENT_ID=6511046226
+      - export TALLY_CLAIM_REGISTRY_PATH=
+      - sed 's|^npm ls --depth=0$|npm ls --depth=0 \|\| exit 77|' experiments/v2/selected-business-build/run-clean.sh > "$work/replay-clean.sh"
+      - sed -i 's|TALLY_GITHUB_READ_TOKEN="\$native_token" node ./consumer-native-sqlite.mjs|true|' "$work/replay-clean.sh"
+      - bash "$work/replay-clean.sh" > "$work/consumer.log" 2>&1 || { rc=$?; node ci-post-error.mjs "$work/consumer.log"; exit "$rc"; }
+      - echo TALLY_V2_T06L_WOODPECKER_REPLAY_K_ADMISSION_PASS

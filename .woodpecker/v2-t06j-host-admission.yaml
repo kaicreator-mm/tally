@@ -1,0 +1,132 @@
+# Tally v2 T06j applicable Node24 + public DH v0.10.3 Host admission gate.
+# #173: path-scoped on version/v2; the historical task branch replays unchanged.
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-engineering-business/**'
+        - 'packages/tally-github-native-c/**'
+        - 'packages/tally-ads-v5-validator/**'
+        - 'experiments/v2/t06d-host-claim-publication/**'
+        - '.woodpecker/v2-t06j-host-admission.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i166-zcode]
+
+labels:
+  backend: local
+
+steps:
+  - name: t06j-node24-diff
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
+      - 'echo "T06J_WOODPECKER_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "T06J_WOODPECKER_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - git diff --check
+
+  - name: t06j-head-trailer
+    image: bash
+    commands:
+      - set -euo pipefail
+      - git log -1 --format=%B HEAD | grep -i '^Refs:' >/dev/null
+      - echo TALLY_V2_T06J_HEAD_TRAILER_PASS
+
+  - name: t06j-range-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_T06J_RANGE_TRAILERS_PASS
+
+  - name: t06j-head-scope
+    image: bash
+    commands:
+      - set -euo pipefail
+      - git show --format= --name-only HEAD
+      - echo TALLY_V2_T06J_DIFF_SCOPE_OBSERVED
+
+  - name: engineering-b-and-native-c-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      - npm --prefix packages/tally-engineering-business test
+      - node --test packages/tally-github-native-c/test/*.test.mjs
+      - echo TALLY_V2_T06J_B_AND_NATIVE_C_PASS
+
+  - name: t06j-dh-v0103-clone
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.t06j-ci"
+      - rm -rf -- "$work"
+      - mkdir -p "$work/packed"
+      - git clone --quiet --depth 1 --branch v0.10.3 https://github.com/kaicreator-mm/domain-harness.git "$work/dh"
+      - test "$(git -C "$work/dh" rev-parse HEAD)" = 061376f4a023070f215f9feffad5c24d96d503cb
+      - echo TALLY_V2_T06J_DH_V0103_CLONE_PASS
+
+  - name: t06j-dh-v0103-npm-ci
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.t06j-ci"
+      - npm --prefix "$work/dh" ci --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - echo TALLY_V2_T06J_DH_V0103_NPM_CI_PASS
+
+  - name: t06j-dh-v0103-build
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.t06j-ci"
+      - npm --prefix "$work/dh" run build
+      - echo TALLY_V2_T06J_DH_V0103_BUILD_PASS
+
+  - name: t06j-dh-v0103-pack
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.t06j-ci"
+      - 'for name in "@kaicreator/domain-harness-contracts" "@kaicreator/domain-harness-microkernel" "@kaicreator/domain-harness-host-node"; do npm --prefix "$work/dh" pack --ignore-scripts --pack-destination "$work/packed" -w "$name" >/dev/null; done'
+      - echo TALLY_V2_T06J_DH_V0103_PACK_PASS
+
+  - name: t06j-test-deps
+    image: bash
+    commands:
+      - set -euo pipefail
+      - work="$PWD/.t06j-ci"
+      - npm install --prefix experiments/v2/t06d-host-claim-publication --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com @octokit/rest@22.0.1 yaml@2.8.1 ajv@8.17.1 canonicalize@5.1.0 better-sqlite3@12.11.1 "$work"/packed/kaicreator-domain-harness-contracts-*.tgz "$work"/packed/kaicreator-domain-harness-microkernel-*.tgz "$work"/packed/kaicreator-domain-harness-host-node-*.tgz
+      - echo TALLY_V2_T06J_TEST_DEPS_PASS
+
+  - name: t06j-host-admission-integration
+    image: bash
+    commands:
+      - set -euo pipefail
+      - node --test experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs
+      - node --test experiments/v2/t06d-host-claim-publication/single-writer.test.mjs
+      - echo TALLY_V2_T06J_PUBLIC_DH_V0103_HOST_ADMISSION_INTEGRATION_PASS

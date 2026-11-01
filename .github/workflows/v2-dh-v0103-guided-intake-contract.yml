@@ -1,0 +1,54 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-dh-v0103-guided-intake-contract
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'packages/tally-guided-intake/**'
+      - '.github/workflows/v2-dh-v0103-guided-intake-contract.yml'
+permissions:
+  contents: read
+jobs:
+  frozen-data-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Exact authored Tally source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Released DomainHarness v0.10.3 frozen SOURCE contract (not runtime package)
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: e86f2c9450b962812fc03e1494aaad402490258e
+          path: pinned-dh-contract
+          persist-credentials: false
+      - name: Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify exact frozen Schema bytes/identity, not moving SDK
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test "$(git -C pinned-dh-contract rev-parse HEAD)" = e86f2c9450b962812fc03e1494aaad402490258e
+          source=pinned-dh-contract/docs/product/v0.10.3/contracts/guided-journey-v1.schema.json
+          vendor=packages/tally-guided-intake/vendor/guided-journey-v1.schema.json
+          test "$(git -C pinned-dh-contract hash-object docs/product/v0.10.3/contracts/guided-journey-v1.schema.json)" = 43710e2a1d5bc2b1827014c99867749b70c764f7
+          cmp -s "$source" "$vendor"
+          echo TALLY_GUIDED_DH_V0103_FROZEN_CONTRACT_EXACT=PASS
+      - name: Install only Tally app-owned Ajv2020 contract validator
+        run: npm --prefix packages/tally-guided-intake install --ignore-scripts --no-audit --no-fund
+      - name: Run real offline Tally project intake and security-negative tests
+        run: |
+          npm --prefix packages/tally-guided-intake test
+          echo TALLY_V2_GUIDED_INTAKE_CONTRACT_FIRST=PASS

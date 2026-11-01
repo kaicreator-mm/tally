@@ -1,0 +1,16 @@
+{
+  "name": "@kaicreator/tally-github-c",
+  "version": "0.0.0-v2-development",
+  "private": true,
+  "type": "module",
+  "description": "Tally v2 GitHub C read-model core; native facts only",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "exports": {
+    ".": "./src/report-projection.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

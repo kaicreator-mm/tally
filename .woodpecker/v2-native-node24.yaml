@@ -1,0 +1,64 @@
+# Tally v2 native C source-only verification on the disposable ECF VM.
+# Local backend executes directly on VM: no server tokens or root credentials.
+# #173: self-hosted Woodpecker is the sole v2 validation carrier; this profile
+# asserts the exact authored SHA and enforces Refs trailers with
+# scripts/check-trailers.sh semantics (base from CI_COMMIT_TARGET_BRANCH, head CI_COMMIT_SHA).
+when:
+  - event: [pull_request, push, manual]
+    branch: [version/v2]
+    path:
+      include:
+        - 'packages/tally-github-native-c/**'
+        - 'packages/tally-ads-v5-validator/**'
+        - '.woodpecker/v2-native-node24.yaml'
+
+labels:
+  backend: local
+
+steps:
+  - name: native-github-node24-exact-head
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_PIPELINE_EVENT=${CI_PIPELINE_EVENT:-unknown}"'
+      - 'echo "WP_AGENT_ID=${CI_AGENT_ID:-unknown}"'
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - 'echo "WP_PIPELINE_URL=${CI_PIPELINE_URL:-unknown}"'
+      - 'echo "WOODPECKER_V2_SOURCE_HEAD=$(git rev-parse HEAD)"'
+      - 'echo "WOODPECKER_V2_PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test -n "${CI_COMMIT_SHA:-}"
+      - git checkout --detach "$CI_COMMIT_SHA"
+      - test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"
+      - node --version
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+
+  - name: native-github-node24-trailers
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_PIPELINE_NUMBER=${CI_PIPELINE_NUMBER:-unknown} WP_STEP=${CI_STEP_NAME:-unknown}"'
+      - |
+        if [ "${CI_PIPELINE_EVENT:-}" = "pull_request" ] && [ -n "${CI_COMMIT_TARGET_BRANCH:-}" ]; then
+          git fetch --quiet origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot fetch target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          if ! base="$(git merge-base refs/ci-base/target HEAD)"; then
+            echo "CI_TRAILER_DEEPEN_REQUIRED=${CI_COMMIT_TARGET_BRANCH}"
+            git fetch --quiet --unshallow origin "+refs/heads/${CI_COMMIT_TARGET_BRANCH}:refs/ci-base/target" || { echo "FAIL: cannot unshallow target branch ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+            base="$(git merge-base refs/ci-base/target HEAD)" || { echo "FAIL: no merge-base with ${CI_COMMIT_TARGET_BRANCH}"; exit 1; }
+          fi
+          echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
+          ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        else
+          echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
+          git log -1 --format=%B HEAD | grep -qi '^Refs:'
+        fi
+      - echo TALLY_V2_WOODPECKER_NATIVE_NODE24_TRAILERS_PASS
+
+  - name: native-github-node24-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
+      - npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - node --test packages/tally-github-native-c/test/*.test.mjs
+      - echo TALLY_V2_WOODPECKER_NATIVE_NODE24_SOURCE_PASS

@@ -1,0 +1,41 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-native-correction-reconciliation
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'packages/tally-github-c/**'
+      - 'packages/tally-github-native-c/**'
+      - 'packages/tally-ads-v5-validator/**'
+      - '.github/workflows/v2-native-correction-reconciliation.yml'
+permissions:
+  contents: read
+jobs:
+  ads-v5-correction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout actual source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install existing validator and native provider dependencies
+        shell: bash
+        run: |
+          npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund
+          npm --prefix packages/tally-github-native-c install --ignore-scripts --no-audit --no-fund
+      - name: Pure corrected-source projection + actual native-adapter test
+        shell: bash
+        run: |
+          node --test packages/tally-github-c/test/*.test.mjs packages/tally-github-native-c/test/*.test.mjs
+          echo T03C_ADS_V5_CORRECTION_RECONCILIATION=PASS

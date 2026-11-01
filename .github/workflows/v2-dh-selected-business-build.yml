@@ -1,0 +1,54 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-dh-selected-business-build
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-dh-selected-business-build.yml'
+  push:
+    branches:
+      - feat/v2-t02b-public-build-selected-business
+    paths:
+      - 'experiments/v2/selected-business-build/**'
+      - 'packages/tally-engineering-business/**'
+      - '.github/workflows/v2-dh-selected-business-build.yml'
+permissions:
+  contents: read
+jobs:
+  public-selected-business:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Tally implementation source checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: tally
+      - name: DomainHarness released public ABI
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          persist-credentials: false
+          path: domain-harness
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Real public installed BUILD producer (K/S/Tally B)
+        shell: bash
+        env:
+          DH: ${{ github.workspace }}/domain-harness
+          TALLY: ${{ github.workspace }}/tally
+          TALLY_B: ${{ github.workspace }}/tally
+        run: |
+          echo "TALLY_HEAD=$(git -C "$TALLY" rev-parse HEAD)"
+          bash "$TALLY/experiments/v2/selected-business-build/run-clean.sh"

@@ -1,0 +1,44 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-github-c
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'packages/tally-github-c/**'
+      - '.github/workflows/v2-github-c.yml'
+  push:
+    branches:
+      - 'feat/v2-t01-github-report-readmodel'
+    paths:
+      - 'packages/tally-github-c/**'
+      - '.github/workflows/v2-github-c.yml'
+permissions:
+  contents: read
+jobs:
+  report-projection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout real commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Record subject
+        shell: bash
+        run: |
+          echo "GIT_HEAD=$(git rev-parse HEAD)"
+          node --version
+          npm --version
+      - name: Test GitHub C read-model (no API writes)
+        shell: bash
+        run: npm --prefix packages/tally-github-c test

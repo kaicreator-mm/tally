@@ -6,11 +6,20 @@
 # 不是服务端 hook:服务端 hook 对 PR 流程不可见,也难审计。
 #
 # 无对应条款的提交写 `Refs: N/A` 即可通过(挂钩存在即声明了「我想过这事」)。
+#
+# 2026-10-30(#173):Owner 指定 version/v2 的唯一 v2 校验载体是自托管 Woodpecker。
+# 本 Action 继续为 main/master 及其余分支的 PR 提供 Refs 检查(历史行为不变),
+# 但排除以 version/v2 为 base 的 PR —— v2 的 Refs  Enforcement 由
+# .woodpecker 各 profile 在 CI_COMMIT_SHA 上以 scripts/check-trailers.sh
+# 语义执行。本文件保留作历史 provenance,不作为 v2 验收依据。
 name: trailer-check
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - '**'
+      - '!version/v2'
 
 jobs:
   trailer-check:

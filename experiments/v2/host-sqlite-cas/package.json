@@ -1,0 +1,13 @@
+{
+  "name": "tally-v2-wcx-host-cas-consumer",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0-experimental",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "test": "node --test host-cas.test.mjs",
+    "test:wal": "node --test wal-concurrent-open.test.mjs"
+  }
+}

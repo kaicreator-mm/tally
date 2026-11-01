@@ -1,3 +1,18 @@
+# Tally AGENTS — Version-aware authority routing
+
+**Prospective v2 version-branch routing only.** Determine the applicable standards from the accepted GitHub Issue/Claim, exact version branch and effective immutable ADS pin. Existing v1.5.x Tasks/Claims and old main remain under their original ADS 1.2.1 and v1.5.0 rules below; do not retroactively change their source, no-CI carrier, Review, or evidence.
+
+**For v2 source work**, consult the current, independently accepted exact SHA of Product PRD (docs/product/v2/TALLY_V2_PRD_DOMAIN_PACKAGE_FIRST_R0.md), semantic L2 (docs/architecture/v2/TALLY_V2_DOMAIN_PACKAGE_SEMANTIC_L2_R0.md), parallel Task DAG (docs/implementation/v2/TALLY_V2_ADS_V418_PARALLEL_TASK_DAG_R0.md), and the specific Issue #87–#92/L3. These artifacts may live in separate pending PR branches and **must not be assumed to exist in the current checkout** until merged on the qualified version branch. Use docs/research/v2/GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md and docs/research/v2/OUTPUT_LEDGER.md for source-qualified GitHub delivery. ADS v4.18.0 is the chosen upstream READY source; root .dev-standard/VERSION and one A1_MANUAL_PROTOCOL declaration are still **proposed project adoption until independently qualified #85 and version-only integration**.
+
+**For v2 implementation**, use selected DomainHarness Business/Standard/one Kernel/Capability/Host packages with public ABI. Do not build an independent Tally K, direct private DomainHarness imports or a standalone TS service retrofitted as a Domain Package. GitHub remains Issue/PR/Review/ADS Task Report source authority, SQLite P0 only persists K/Host State/CAS/Journal/Effect through its public Host and a separate GitHub-derived cache; PostgreSQL optional. Real Local Codex CLI, separately isolated Builder GitHub write secrets and verifier OS denied fixture access need actual Node24/OS physical evidence. The first real Task is a single-Task integration slice; the user-confirmed Product #152 P0-20/V63/V72 requires **at least two legal disjoint concurrent Builder Tasks** for final v2, while overlapping write grants must be denied (V56/V73). Product R7/L2 Freeze and genuine K/Host/native Claim evidence remain pending, so this does not authorize dispatch. DomainHarness v0.10.2 **has been conditionally released** at exact tag `cee14399d9d0af4e20e34b9111861b16a465b690`: [R01 #1331 final closure](https://github.com/kaicreator-mm/domain-harness/issues/1331#issuecomment-6416079327) is CLOSED, tagged source tree matches main, Hidden 7/7 PASS; **Full literal EXIT1 and root tests NOT_RUN** were admitted only under a version-scoped reviewed exception. This is not Tally Node24 physical qualification or Tally RQ PASS. Tally pins the already published exact SDK; future generic defects go to DomainHarness v0.10.3 #1392.
+
+**For v2 CI**, the prospective source declares ADS v4.18 custom profile: exact pin/current HEAD, trailer, independent source Review and full-root ADS verifier apply to docs/adoption scope; Node24, sealed Host/SQLite/public ABI and OS privilege negatives become required when those implementation paths ship; final Full/Hidden/Critical/Packaging/RQ remain required at release. Independent Tally #83 owner concluded the inherited v1.5 Go source-quality/Postgres failures are actual FAIL but informational for the examined v2 docs-only changes. Do not treat them as PASS/waived or extend this scoped decision to v2 runtime changes.
+
+**Before executing any v2 Task**, require native GitHub Issue Dependencies/current Claim and version-bound L3, real Product/ADS/L2/DH selected Host admission and K source-currentness. Planning Issue or Draft pin alone is NOT_ADMITTED. Keep v2 changes on a version branch until its Release Qualification authorizes main integration. Status must distinguish PASS, FAIL, NOT_RUN, ENV_BLOCKED, UNKNOWN with exact evidence.
+
+---
+
+## Historical Tally v1.5.0 instructions (unchanged applicability)
 # AGENTS.md — Tally v1.5.0 Engineering Instructions
 
 Read this file before changing code.
@@ -99,3 +114,9 @@ Held-out cases are not read or used to tune implementation before visible implem
 
 ## 14. Completion report
 Report changed paths, production wiring, exact validation commands/results, acceptance criteria, risks and any `ENV-BLOCKED` evidence. `PR PASS != Release PASS`.
+
+
+## 15. Conversation output persistence — user direction (2026-10-24)
+
+For **Tally v2 planning, audit, design, review, and implementation work**, read and follow `docs/research/v2/GITHUB_OUTPUT_PERSISTENCE_PROTOCOL.md` and update `docs/research/v2/OUTPUT_LEDGER.md` before reporting a substantive deliverable complete. GitHub is the durable record; conversation-only outputs are not considered delivered. Use version branches/PRs for documents and code, Issue/PR comments for narrow evidence or handoffs, exact SHA for source reviews and explicit NOT_PERSISTED on failed writes. Record source-qualified decisions and preserve the latest user's stated product constraints. This section does not retroactively change v1.5.x frozen product or validation rules.
+

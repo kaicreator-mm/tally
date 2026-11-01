@@ -1,0 +1,55 @@
+# SUSPENDED for version/v2 (#173, 2026-10-30): self-hosted Woodpecker is the sole
+# v2 validation carrier. `version/v2` is excluded from every trigger below; this
+# file is retained as historical provenance of pre-#173 v2 runs and its historical
+# results are not rewritten. main/master legacy maintenance is unaffected.
+name: v2-dh-host-consumer
+on:
+  pull_request:
+    # #173: never execute for version/v2 PRs (Woodpecker-only v2 carrier).
+    branches:
+      - '**'
+      - '!version/v2'
+    paths:
+      - 'experiments/v2/host-sqlite-cas/**'
+      - '.github/workflows/v2-dh-host-consumer.yml'
+  push:
+    branches:
+      - 'experiment/tally-v2-wcx-public-host-sqlite-cas'
+    paths:
+      - 'experiments/v2/host-sqlite-cas/**'
+      - '.github/workflows/v2-dh-host-consumer.yml'
+permissions:
+  contents: read
+jobs:
+  public-host-cas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Tally actual PR checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: tally
+      - name: DomainHarness exact conditional release Git tag
+        uses: actions/checkout@v4
+        with:
+          repository: kaicreator-mm/domain-harness
+          ref: cee14399d9d0af4e20e34b9111861b16a465b690
+          persist-credentials: false
+          path: domain-harness
+      - name: Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Exact public Host CAS + WAL process test
+        shell: bash
+        env:
+          DH: ${{ github.workspace }}/domain-harness
+          TALLY: ${{ github.workspace }}/tally
+          WCX_WAL_STRESS: '1'
+          WCX_WAL_ROUNDS: '5'
+        run: |
+          echo "TALLY_HEAD=$(git -C "$TALLY" rev-parse HEAD)"
+          echo "DH_RELEASE_HEAD=$(git -C "$DH" rev-parse HEAD)"
+          node --version
+          bash "$TALLY/experiments/v2/host-sqlite-cas/run-clean.sh"
