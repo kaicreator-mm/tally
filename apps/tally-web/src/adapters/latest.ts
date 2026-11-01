@@ -10,3 +10,8 @@ export function createLatestRequestGate():LatestRequestGate {
     invalidate(){++generation;},
   };
 }
+
+/** Stable identity of one Host read: used to mask old data before useEffect. */
+export function requestIdentity(model:string,deps:readonly unknown[]):string{
+  return JSON.stringify([model,...deps]);
+}
