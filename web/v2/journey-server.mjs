@@ -293,11 +293,16 @@ async function ghJson(path){
 const notConnected=(model)=>Object.freeze({connected:false,
   reason:'NOT_CONNECTED',model,unknown:true});
 async function v2Catalog(){
-  const branches=await ghJson(`/repos/${V2_REPO}/branches?per_page=100`);
-  if(!branches.ok)
-    return notConnected('catalog');
-  const versions=branches.data
-    .map(branch=>branch.name)
+  // Branch list paginates far beyond 100 in this repository; collect enough
+  // pages to cover version/* refs (sorted refs keep version/* near the end).
+  const names=[];
+  for(let page=1;page<=4;page++){
+    const branches=await ghJson(`/repos/${V2_REPO}/branches?per_page=100&page=${page}`);
+    if(!branches.ok)return notConnected('catalog');
+    names.push(...branches.data.map(branch=>branch.name));
+    if(branches.data.length<100)break;
+  }
+  const versions=names
     .filter(name=>name==='main'||name.startsWith('version/'))
     .map(name=>({id:name,projectId:V2_REPO,label:name,ref:name}));
   return Object.freeze({connected:true,
@@ -438,6 +443,13 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
     try{
       const url=new URL(req.url,origin);
       if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/journey-view.html')){
+        // UI-E feature gate: the production user UI is /app; the legacy test
+        // console stays reachable at /diagnostics (and at / directly when
+        // TALLY_V2_UI_GATE=legacy for rollback).
+        if(url.pathname==='/'&&process.env.TALLY_V2_UI_GATE!=='legacy'){
+          res.writeHead(302,{location:'/app'});
+          return res.end();
+        }
         return send(200,'text/html; charset=utf-8',await readFile(new URL('./journey-view.html',import.meta.url),'utf8'));
       }
       if(req.method==='GET'&&url.pathname==='/journey-view.mjs')
@@ -591,10 +603,6 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname.startsWith('/app/assets/')){
         const served=await staticAppResponse(url.pathname.slice('/app/'.length));
         return send(served.status,served.type,served.body);
-      }
-      if(req.method==='GET'&&url.pathname==='/'&&process.env.TALLY_V2_UI_GATE!=='legacy'){
-        res.writeHead(302,{location:'/app'});
-        return res.end();
       }
       if(req.method==='GET'&&url.pathname==='/diagnostics'){
         return send(200,'text/html; charset=utf-8',

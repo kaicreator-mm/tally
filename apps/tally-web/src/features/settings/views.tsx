@@ -117,7 +117,7 @@ function TallyLlmSection({snapshot,zh}:{snapshot:SettingsSnapshot;zh:boolean}){
     <CardHeader title={zh?'Tally 自身 LLM(用于澄清/规划)':'Tally-owned LLM'}
       sub={zh?'与 Agent 执行配置严格分离;停用不影响任务管理'
         :'strictly separate from agent providers'}/>
-    <div style={{display:'grid',gap:'var(--s4)',maxWidth:480}>
+    <div style={{display:'grid',gap:'var(--s4)',maxWidth:480}}>
       <label style={{display:'flex',gap:6,alignItems:'center'}}>
         <input type="checkbox" checked={llm.enabled} readOnly/>
         {zh?'启用(需 BUILD 选中 Provider)':'Enabled (BUILD-selected provider only)'}</label>

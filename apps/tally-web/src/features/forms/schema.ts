@@ -77,7 +77,8 @@ export function validateStepSpec(step:unknown):FormStep|null{
   if(typeof s.journeyId!=='string'||!ID.test(s.journeyId))return null;
   if(!localized(s.title))return null;
   if(s.intro!==undefined&&s.intro!==null&&!localized(s.intro))return null;
-  if(!Number.isSafeInteger(s.revision)||s.revision<1)return null;
+  if(typeof s.revision!=='number'||!Number.isSafeInteger(s.revision)||s.revision<1)
+    return null;
   if(!Array.isArray(s.fields)||s.fields.length===0||s.fields.length>24)return null;
   if(!Array.isArray(s.actions)||s.actions.length===0)return null;
   const allowed=new Set(['next','back','pause','resume','cancel']);
@@ -122,7 +123,8 @@ export function validateStepSpec(step:unknown):FormStep|null{
     };
     switch(f.kind){
       case 'text':case 'textArea':
-        if(!Number.isSafeInteger(f.maxLength)||f.maxLength<1||f.maxLength>4000)return null;
+        if(typeof f.maxLength!=='number'||!Number.isSafeInteger(f.maxLength)||
+          f.maxLength<1||f.maxLength>4000)return null;
         break;
       case 'choice':case 'multi':{
         if(!optionList(f.options))return null;
@@ -138,13 +140,14 @@ export function validateStepSpec(step:unknown):FormStep|null{
         break;
       case 'choiceWithOther':{
         if(!optionList(f.options))return null;
-        if(!Number.isSafeInteger(f.otherMaxLength)||f.otherMaxLength<1
-          ||f.otherMaxLength>500)return null;
+        if(typeof f.otherMaxLength!=='number'||!Number.isSafeInteger(f.otherMaxLength)||
+          f.otherMaxLength<1||f.otherMaxLength>500)return null;
         break;}
       case 'multiLimited':{
         if(!optionList(f.options))return null;
-        if(!Number.isSafeInteger(f.minSelected)||!Number.isSafeInteger(f.maxSelected)
-          ||f.minSelected<0||f.maxSelected<f.minSelected||f.maxSelected>32)return null;
+        if(typeof f.minSelected!=='number'||typeof f.maxSelected!=='number'||
+          !Number.isSafeInteger(f.minSelected)||!Number.isSafeInteger(f.maxSelected)||
+          f.minSelected<0||f.maxSelected<f.minSelected||f.maxSelected>32)return null;
         break;}
     }
     fields.push(f as unknown as Field);

@@ -94,9 +94,9 @@ function statusTone(status:TaskRecord['status']){
   return status==='done'?'ok':status==='blocked'||status==='failed'?'danger'
     :status==='review'?'info':'neutral';
 }
-export function TaskListView({tasks,onSelectTask,selectedTaskId,locale='zh'}:
+export function TaskListView({tasks,onSelectTask,locale='zh'}:
   {tasks:readonly TaskRecord[];onSelectTask:(id:string)=>void;
-   selectedTaskId:string|null;locale?:'zh'|'en'}){
+   selectedTaskId?:string|null;locale?:'zh'|'en'}){
   const zh=locale==='zh';
   if(tasks.length===0)
     return <EmptyState title={zh?'没有匹配的任务':'No matching tasks'}/>;

@@ -13,8 +13,8 @@ import {DataTable} from '../../components/ui/DataTable.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 
 const NODE_W=150,NODE_H=44,GAP_X=70,GAP_Y=26;
-export function DagView({dag,versionId,locale='zh',onOpenTask}:
-  {dag:VersionDag|null;versionId:string|null;locale?:'zh'|'en';
+export function DagView({dag,locale='zh',onOpenTask}:
+  {dag:VersionDag|null;versionId?:string|null;locale?:'zh'|'en';
    onOpenTask?:(taskId:string)=>void}){
   const zh=locale==='zh';
   const [filters,setFilters]=useState<DagFilters>({status:null,severity:null,
@@ -39,7 +39,6 @@ export function DagView({dag,versionId,locale='zh',onOpenTask}:
   const position=new Map<string,{x:number;y:number}>();
   layers.forEach((layer,row)=>layer.forEach((taskId,column)=>
     position.set(taskId,{x:column*(NODE_W+GAP_X),y:row*(NODE_H+GAP_Y)})));
-  const nodeById=new Map(filtered.nodes.map(node=>[node.taskId,node]));
   const agents=[...new Set(dag.nodes.map(node=>node.agentId)
     .filter((id):id is string=>id!==null))];
   return <div style={{display:'grid',gap:'var(--s5)'}}>

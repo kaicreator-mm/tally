@@ -5,7 +5,8 @@
  * Business-issued reason. Authorized effects belong to the trusted Host.
  */
 import {useEffect,useMemo,useState} from 'react';
-import type {Field,FieldValue,FormStep,FieldOption} from './schema.ts';
+import type {Field,FormStep,FieldOption} from './schema.ts';
+import type {FieldValue} from './engine.ts';
 import {validateStepSpec} from './schema.ts';
 import {visibleFields,validateStep,serializeDraft,restoreDraft,buildSubmitPayload,
   type FieldErrors} from './engine.ts';
