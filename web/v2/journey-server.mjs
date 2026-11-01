@@ -11,6 +11,7 @@ import {renderReleasePanel} from './release-view.mjs';
 import {renderJourneyWorkspace} from './journey-view.mjs';
 import {renderIntakeWorkspace} from './intake-view.mjs';
 import {readV2HostModel} from './ui-readmodel.mjs';
+import {readGuidedStep,submitGuidedStep} from './guided-form-port.mjs';
 
 const CLIENT=String.raw`export async function startJourneyClient(renderJourneyWorkspace){
   const app=document.querySelector('#app'),key=new URLSearchParams(location.search).get('actionKey')??'';
@@ -296,7 +297,7 @@ async function staticAppResponse(relative){
 }
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
-  releaseHost,releaseSealedDispatch,v2ReadModelHost}={}){
+  releaseHost,releaseSealedDispatch,v2ReadModelHost,v2GuidedFormHost}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
       {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
@@ -452,6 +453,35 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // ---- UI-E #232: v2 shell read models + feature gate -----------------
       // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or
       // UNKNOWN, never fabricated data. No effect path starts here.
+      // UI #252: form steps are issued by the selected Business/Host.
+      // Browser cannot bypass revision/current-source or same-origin checks.
+      if(req.method==='GET'&&url.pathname==='/api/v2/guided/step'){
+        const scope={projectId:url.searchParams.get('projectId'),
+          versionId:url.searchParams.get('versionId')};
+        const observed=await readGuidedStep(v2GuidedFormHost,scope,
+          config.currentSourceSha);
+        return send(200,'application/json',json(observed.connected
+          ?{...observed,csrfKey:actionKey}:observed));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/guided/submit'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+          req.headers.origin!==origin)
+          return send(403,'application/json',json({connected:false,
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        const payload=JSON.parse(await body(req,8192));
+        const scope={projectId:payload.projectId,versionId:payload.versionId};
+        if(payload.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({connected:false,
+            status:'STALE_SOURCE',reason:'SOURCE_SHA_MISMATCH'}));
+        // Route only canonical, bounded answers to the selected Host port;
+        // never reuse the old J01 controller as a second writer.
+        const result=await submitGuidedStep(v2GuidedFormHost,scope,
+          config.currentSourceSha,{
+            sourceSha:payload.sourceSha,journeyId:payload.journeyId,
+            stepId:payload.stepId,revision:payload.revision,
+            answers:payload.answers});
+        return send(result.ok===true?200:409,'application/json',json(result));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/workbench'){
         const model=await readV2HostModel(v2ReadModelHost,'workbench',{});
         return send(200,'application/json',json(model));
