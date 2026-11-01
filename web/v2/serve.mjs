@@ -1,0 +1,91 @@
+/**
+ * Tally v2 UI loopback read-only entrypoint.
+ *
+ * Requires an operator-selected GitHub Native C source, a pinned branch SHA
+ * and an explicit frozen Task roster. It NEVER starts Agent work or writes
+ * GitHub. Unconfigured read sources stay NOT_CONNECTED.
+ *
+ * Environment (Host-side ONLY; never exposed to browser):
+ *   TALLY_V2_REPOSITORY=owner/repo
+ *   TALLY_V2_VERSION_REF=version/v2
+ *   TALLY_V2_VERSION_SHA=<40 hex chars>
+ *   TALLY_V2_TASK_ISSUES_JSON=[101,102,...]
+ *   TALLY_GITHUB_READ_TOKEN=<credential scoped to reading repo>
+ */
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {resolve} from 'node:path';
+import {defaultAlmConfig} from './journey-controller.mjs';
+import {createAlmServer} from './journey-server.mjs';
+import {createUiV2ReadModelHost} from './ui-native-host.mjs';
+import {createUiNativeSource}
+  from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
+
+const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const REF=/^version\/[A-Za-z0-9_.-]+$/;
+const SHA=/^[a-f0-9]{40}$/;
+export function readUiHostEnvironment(env){
+  const repository=env.TALLY_V2_REPOSITORY;
+  const versionId=env.TALLY_V2_VERSION_REF;
+  const expectedSha=env.TALLY_V2_VERSION_SHA;
+  if(!REPO.test(repository??'')||!REF.test(versionId??'')||
+    !SHA.test(expectedSha??'')||
+    typeof env.TALLY_GITHUB_READ_TOKEN!=='string'||
+    env.TALLY_GITHUB_READ_TOKEN.length<8)
+    throw new TypeError('SELECTED_UI_SOURCE_CONFIGURATION_REQUIRED');
+  let roster=[];
+  if(env.TALLY_V2_TASK_ISSUES_JSON){
+    try{roster=JSON.parse(env.TALLY_V2_TASK_ISSUES_JSON);}catch{
+      throw new TypeError('INVALID_HOST_TASK_ROSTER');
+    }
+    if(!Array.isArray(roster)||roster.length>200||
+      roster.some(n=>!Number.isSafeInteger(n)||n<1)||
+      new Set(roster).size!==roster.length)
+      throw new TypeError('INVALID_HOST_TASK_ROSTER');
+  }
+  const [owner,repo]=repository.split('/');
+  return {repository,owner,repo,versionId,expectedSha,roster,
+    token:env.TALLY_GITHUB_READ_TOKEN};
+}
+export async function startUiReadOnlyServer({env=process.env}={}){
+  const settings=readUiHostEnvironment(env);
+  const nativeC=createUiNativeSource({token:settings.token,
+    owner:settings.owner,repo:settings.repo,
+    versionId:settings.versionId,expectedSha:settings.expectedSha,
+    taskIssueNumbers:settings.roster});
+  const v2ReadModelHost=createUiV2ReadModelHost({
+    repository:settings.repository,versionId:settings.versionId,nativeC});
+  // The legacy J01–J08 console remains fail-closed in this entrypoint.
+  // No process executor or selected K dispatch is granted by launching UI.
+  const config=defaultAlmConfig({
+    dhPath:env.TALLY_V2_DH_PATH??join(process.cwd(),'domain-harness'),
+    tallyPath:process.cwd(),tallyBPath:process.cwd(),
+    githubToken:settings.token,currentSourceSha:settings.expectedSha,
+    workRoot:env.TALLY_V2_WORK_ROOT??join(process.cwd(),'.tally-ui-readonly')
+  });
+  const server=createAlmServer(config,{
+    run:async()=>({status:'FAIL',reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',
+      exitCode:1,result:null}),
+    v2ReadModelHost
+  });
+  const address=await server.listen();
+  return {address,close:()=>server.close()};
+}
+const main=process.argv[1]&&resolve(process.argv[1])===
+  fileURLToPath(import.meta.url);
+if(main){
+  startUiReadOnlyServer().then(({address,close})=>{
+    process.stdout.write('TALLY_UI_READ_ONLY='+address.origin+'/app\n');
+    process.stdout.write('TALLY_UI_AGENT_DISPATCH=DENIED\n');
+    let closing=false;
+    const stop=()=>{
+      if(closing)return;closing=true;
+      void close().then(()=>process.exit(0),()=>process.exit(1));
+    };
+    process.on('SIGINT',stop);process.on('SIGTERM',stop);
+  },()=>{
+    // Errors can include provider credentials; never write raw details.
+    process.stderr.write('TALLY_UI_START_DENIED: invalid selected Host source\n');
+    process.exitCode=1;
+  });
+}
