@@ -116,6 +116,10 @@ function TasksRoute({projectId,versionId,taskId,onNavigate}:{
   const connected=tasks.data?.connected===true;
   const rows=(tasks.data?.tasks??[]) as TaskRecord[];
   return guard(versionId,<>
+    {connected&&tasks.data?.rosterCoverage!=='VERIFIED_COMPLETE'?
+      <div role="status" style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
+        ROSTER_COVERAGE=UNVERIFIED · Host 已声明任务集合，未证明完整版本清单
+      </div>:null}
     <TasksView tasks={rows} filters={filters} setFilters={setFilters}
       onSelectTask={id=>projectId&&versionId&&
         onNavigate(taskRoute(projectId,versionId,id)!)}
