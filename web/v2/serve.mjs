@@ -23,6 +23,7 @@ import {createUiNativeSource}
 import {createUiAdsReportHost} from './ui-report-host.mjs';
 import {createUiNativeAuditHost} from './ui-audit-host.mjs';
 import {createUiSettingsHost} from './ui-settings-host.mjs';
+import {createUiWorkbenchHost} from './ui-workbench-host.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF=/^version\/[A-Za-z0-9_.-]+$/;
@@ -83,9 +84,16 @@ export function readUiHostEnvironment(env){
     throw new TypeError('INVALID_HOST_AUDIT_READ_MODE');
   if(auditMode==='read-only'&&roster.length===0)
     throw new TypeError('HOST_AUDIT_TASK_ROSTER_REQUIRED');
+  const workbenchMode=env.TALLY_V2_WORKBENCH_BLOCKERS;
+  if(workbenchMode!==undefined&&workbenchMode!=='read-only')
+    throw new TypeError('INVALID_HOST_WORKBENCH_READ_MODE');
+  if(workbenchMode==='read-only'&&roster.length===0)
+    throw new TypeError('HOST_WORKBENCH_TASK_ROSTER_REQUIRED');
   const [owner,repo]=repository.split('/');
   return {repository,owner,repo,versionId,expectedSha,roster,requirements,qaStatusContext,ads,
-    auditReadOnly:auditMode==='read-only',token:env.TALLY_GITHUB_READ_TOKEN};
+    auditReadOnly:auditMode==='read-only',
+    workbenchReadOnly:workbenchMode==='read-only',
+    token:env.TALLY_GITHUB_READ_TOKEN};
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
   const settings=readUiHostEnvironment(env);
@@ -111,8 +119,12 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   const settingsReadHost=createUiSettingsHost({
     repository:settings.repository,versionId:settings.versionId,
     expectedSha:settings.expectedSha,nativeC});
+  const workbenchReadHost=settings.workbenchReadOnly?createUiWorkbenchHost({
+    repository:settings.repository,versionId:settings.versionId,
+    expectedSha:settings.expectedSha,nativeC}):{};
   const v2ReadModelHost=Object.freeze({
-    ...nativeReadHost,...adsReadHost,...auditReadHost,...settingsReadHost});
+    ...nativeReadHost,...adsReadHost,...auditReadHost,
+    ...settingsReadHost,...workbenchReadHost});
   // The legacy J01–J08 console remains fail-closed in this entrypoint.
   // No process executor or selected K dispatch is granted by launching UI.
   const config=defaultAlmConfig({
