@@ -232,8 +232,8 @@ function MetadataRoute({projectId,versionId,onNavigate}:{
       hint="任务元数据需由选中的 Host 通过 ADS v5 来源验证后读取"/>);
   // Source-qualified data is preserved, not replaced with empty arrays.
   // The Host boundary validates the exact version and record schema.
-  const version=data.versionId===versionId&&
-    Array.isArray(data.attempts)&&Array.isArray(data.reports)&&
+  const version=typeof data.versionId==='string'&&
+    data.versionId===versionId&&Array.isArray(data.attempts)&&Array.isArray(data.reports)&&
     Array.isArray(data.lineage)&&Array.isArray(data.learnedOutcomes)
     ?{versionId:data.versionId,
       attempts:data.attempts as import('../features/metadata/model.ts').AttemptMeta[],
