@@ -53,3 +53,9 @@ The consolidated candidate now includes `packages/tally-github-native-c/src/ui-v
 **Scope limit:** Task → version membership still requires a trusted, complete Host-configured roster; there is no automatic GitHub Project field sync yet. No runtime selected K authorization, ADS v5 / task-meta reports or private telemetry are inferred. The remaining non-catalog/non-task models stay NOT_CONNECTED until composed from separately qualified providers. This satisfies an important subset of blocker #1, **not** all J01–J08 acceptance.
 
 **CI coverage repair:** Tally web now exposes portable all-tests discovery and strict `typecheck`; Woodpecker explicitly invokes TypeScript before Vite. Do not claim SUCCESS until the latest exact candidate SHA finishes both quality gates.
+
+## Additional R1 negative checks — Native DAG full-roster distinction
+
+The Host-selected frozen Task issue list is **not** itself proof that the list exhausts `version/v2`. Current Native C version observations therefore publish `rosterCoverage: UNVERIFIED`, and the Task list and DAG display `ROSTER_COVERAGE=UNVERIFIED` even when all *selected* Issues and native dependencies pass readback. A two-Issue environment smoke is acceptable only as `SMOKE_PARTIAL_ROSTER`; it is **not** `COMPLETE_DAG`, closure, or version qualification. Full coverage needs separately read-backed frozen DAG/Task Pack provenance and native Issue linkage.
+
+The native reader now compares open-blocker counts and dependency states across its two reads; a closed Issue or `state:done` label does not imply independent Task Closure. The DAG frontend accepts `status=unknown` and `severity=UNKNOWN` and sanitizes GitHub-controlled titles/IDs before Mermaid export, preventing injected source-level graph directives.
