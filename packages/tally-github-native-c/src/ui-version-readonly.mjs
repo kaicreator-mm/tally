@@ -142,6 +142,8 @@ export async function readUiNativeVersionFromClient({
       const status=taskStatus(observed.workflowState,observed.issueState);
       const entry={id:String(number),versionId,title:issue.title,
         status,severity,blockedBy:dependencies,
+        dependencyState:observed.dependencyState,
+        openBlockerCount:observed.openBlockerCount,
         agentId:null,claimState:'NOT_VERIFIED',attemptId:null,
         attemptState:null,prNumber:null,reviewState:'UNKNOWN',
         ciState:'UNKNOWN',writeSet:[],requirementRef:null,
