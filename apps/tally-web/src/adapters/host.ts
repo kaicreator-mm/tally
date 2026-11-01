@@ -45,12 +45,39 @@ export interface WorkbenchResponse{
     readback:string};
   actions?:import('../features/workbench/model.ts').WorkAction[];
 }
+export interface GuidedStepResponse{
+  connected:boolean;reason?:string;sourceSha?:string;csrfKey?:string;
+  step?:import('../features/forms/schema.ts').FormStep;
+}
+export interface GuidedSubmitResponse{
+  connected:boolean;ok?:boolean;reason?:string;
+  nextStep?:import('../features/forms/schema.ts').FormStep|null;
+}
+export type GuidedAnswers=ReturnType<
+  typeof import('../features/forms/engine.ts').buildSubmitPayload>;
+async function postGuided(path:string,csrfKey:string,payload:unknown):
+  Promise<GuidedSubmitResponse>{
+  const response=await fetch(path,{method:'POST',cache:'no-store',
+    headers:{'content-type':'application/json','x-tally-action-key':csrfKey},
+    body:JSON.stringify(payload)});
+  const result=await response.json() as GuidedSubmitResponse;
+  if(!response.ok||result.ok!==true)return {
+    connected:false,ok:false,reason:result.reason??'GUIDED_HOST_DENIED'};
+  return result;
+}
 async function getJson<T>(path:string):Promise<T>{
   const response=await fetch(path,{cache:'no-store'});
   if(!response.ok)throw new Error(`HOST_${response.status}`);
   return await response.json() as T;
 }
 export const hostAdapter=Object.freeze({
+  guidedStep:(projectId:string,versionId:string)=>
+    getJson<GuidedStepResponse>(
+      '/api/v2/guided/step?projectId='+encodeURIComponent(projectId)+
+      '&versionId='+encodeURIComponent(versionId)),
+  guidedSubmit:(scope:{projectId:string;versionId:string;sourceSha:string},
+    csrfKey:string,payload:GuidedAnswers)=>
+    postGuided('/api/v2/guided/submit',csrfKey,{...scope,...payload}),
   workbench:()=>getJson<WorkbenchResponse>('/api/v2/workbench'),
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
   tasks:(versionId:string)=>getJson<TasksResponse>(
