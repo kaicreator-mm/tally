@@ -4,7 +4,7 @@ import {Sidebar} from './Sidebar.tsx';
 import type {Route} from '../router.ts';
 
 export function AppShell({route,onNavigate,inboxCount,children}:
-  {route:Route;onNavigate:(hash:string)=>void;inboxCount:number;children:React.ReactNode}){
+  {route:Route;onNavigate:(hash:string)=>void;inboxCount:number|null;children:React.ReactNode}){
   const [navOpen,setNavOpen]=useState(false);
   return <div className="shell">
     <TopBar inboxCount={inboxCount} onNavigate={onNavigate}/>

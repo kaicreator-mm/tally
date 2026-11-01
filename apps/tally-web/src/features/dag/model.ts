@@ -7,8 +7,8 @@
 export type EdgeKind='NATIVE'|'PLANNED'|'UNRESOLVED';
 export interface DagNode{
   taskId:string;versionId:string;title:string;
-  status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed';
-  severity:'P0'|'P1'|'P2';
+  status:'open'|'in_progress'|'review'|'blocked'|'done'|'failed'|'unknown';
+  severity:'P0'|'P1'|'P2'|'UNKNOWN';
   requirementGroup:string|null;
   phase:string|null;
   lane:string|null;
@@ -25,6 +25,8 @@ export interface DagEdge{
 }
 export interface VersionDag{
   versionId:string;
+  /** Configured Task IDs do not prove exhaustive frozen version membership. */
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   /** Frozen as-of identity of this snapshot. */
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:readonly DagNode[];
@@ -136,15 +138,23 @@ export function versionIsolated(dag:VersionDag):boolean{
 /** Mermaid export with source-qualified styling (dashed for PLANNED,
  * dotted+red for UNRESOLVED, %% comments carry as-of identity). */
 export function toMermaid(dag:VersionDag):string{
+  // GitHub-controlled titles and IDs are never Mermaid source.
+  const safe=(value:string)=>String(value).replace(/[^\p{L}\p{N} ._#-]/gu,' ')
+    .replace(/\s+/g,' ').trim().slice(0,96);
+  const aliases=new Map(dag.nodes.map((node,i)=>[node.taskId,'task_'+i]));
   const lines=['flowchart LR',
-    `%% version=${dag.versionId} asOf=${dag.asOf.sourceSha.slice(0,12)}`,
-    `%% frozen=${dag.asOf.frozenAt??'NOT_FROZEN'} connected=${dag.connected}`];
+    `%% version=${safe(dag.versionId)} asOf=${safe(dag.asOf.sourceSha.slice(0,12))}`,
+    `%% frozen=${safe(dag.asOf.frozenAt??'NOT_FROZEN')} connected=${dag.connected}`];
   for(const node of dag.nodes)
-    lines.push(`  ${node.taskId}["${node.taskId} ${node.title.replace(/"/g,"'")}"]`);
+    lines.push(`  ${aliases.get(node.taskId)}["${safe(node.taskId+" "+node.title)}"]`);
   for(const edge of dag.edges){
     const style=edge.kind==='NATIVE'?'-->'
-      :edge.kind==='PLANNED'?'-.->':'-. ??? .->';
-    lines.push(`  ${edge.from} ${style} ${edge.to}`);
+      :edge.kind==='PLANNED'?'-.->':'-.->';
+    const from=aliases.get(edge.from),to=aliases.get(edge.to);
+    if(!from||!to)continue;
+    lines.push(`  ${from} ${style} ${to}`);
+    if(edge.kind==='UNRESOLVED')
+      lines.push('  %% UNRESOLVED: not an executable dependency');
   }
   return lines.join('\n');
 }

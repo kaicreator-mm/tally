@@ -10,6 +10,8 @@ import {createReleaseController} from './release-controller.mjs';
 import {renderReleasePanel} from './release-view.mjs';
 import {renderJourneyWorkspace} from './journey-view.mjs';
 import {renderIntakeWorkspace} from './intake-view.mjs';
+import {readV2HostModel} from './ui-readmodel.mjs';
+import {readGuidedStep,submitGuidedStep} from './guided-form-port.mjs';
 
 const CLIENT=String.raw`export async function startJourneyClient(renderJourneyWorkspace){
   const app=document.querySelector('#app'),key=new URLSearchParams(location.search).get('actionKey')??'';
@@ -272,128 +274,9 @@ async function body(req,limit=4096){
   let text='';for await(const chunk of req){text+=chunk;if(text.length>limit)throw new Error('REQUEST_TOO_LARGE');}
   return text;
 }
-// ---- UI-E #232: dependency-free v2 read models (plain fetch, Host token) ----
-const V2_REPO='kaicreator-mm/tally';
-const V2_TOKEN=()=>process.env.TALLY_GITHUB_READ_TOKEN??null;
-const V2_TIMEOUT=15000;
-async function ghJson(path){
-  const token=V2_TOKEN();
-  if(!token||token.length<8)return {ok:false,reason:'HOST_TOKEN_UNAVAILABLE'};
-  try{
-    const response=await fetch(`https://api.github.com${path}`,{
-      headers:{authorization:`Bearer ${token}`,accept:'application/vnd.github+json',
-        'user-agent':'tally-v2-alm-readmodel'},
-      signal:AbortSignal.timeout(V2_TIMEOUT)});
-    if(!response.ok)return {ok:false,reason:`GITHUB_${response.status}`};
-    return {ok:true,data:await response.json()};
-  }catch(error){
-    return {ok:false,reason:'GITHUB_TRANSPORT_UNKNOWN'};
-  }
-}
-const notConnected=(model)=>Object.freeze({connected:false,
-  reason:'NOT_CONNECTED',model,unknown:true});
-async function v2Catalog(){
-  // Branch list paginates far beyond 100 in this repository; collect enough
-  // pages to cover version/* refs (sorted refs keep version/* near the end).
-  const names=[];
-  for(let page=1;page<=4;page++){
-    const branches=await ghJson(`/repos/${V2_REPO}/branches?per_page=100&page=${page}`);
-    if(!branches.ok)return notConnected('catalog');
-    names.push(...branches.data.map(branch=>branch.name));
-    if(branches.data.length<100)break;
-  }
-  const versions=names
-    .filter(name=>name==='main'||name.startsWith('version/'))
-    .map(name=>({id:name,projectId:V2_REPO,label:name,ref:name}));
-  return Object.freeze({connected:true,
-    projects:[{id:V2_REPO,title:'tally',repository:V2_REPO}],
-    versionsByProject:{[V2_REPO]:versions},defaultVersionId:'version/v2'});
-}
-const V2_TITLE=/^\[v2\](?:\[(UI-[A-H]|J0\d\w*)\])?(?:\[P([012])\])?\s*(.+)$/;
-function v2TaskFromIssue(issue){
-  const match=V2_TITLE.exec(issue.title??'');
-  return {
-    id:String(issue.number),
-    versionId:'version/v2',
-    title:match?match[3]:issue.title,
-    status:issue.state==='closed'?'done':'open',
-    severity:match&&match[2]?`P${match[2]}`:'P2',
-    blockedBy:[],
-    agentId:null,
-    // Honest: per-task claim/CI/attempt state is not derivable from the issue
-    // list read model — the shell shows UNKNOWN until deeper adapters land.
-    claimState:'UNKNOWN',attemptId:null,attemptState:'UNKNOWN',
-    prNumber:null,reviewState:'UNKNOWN',ciState:'UNKNOWN',
-    writeSet:[],requirementRef:null,updatedAt:issue.updated_at??null,
-  };
-}
-async function v2Tasks(versionId){
-  if(versionId&&versionId!=='version/v2')
-    return notConnected('tasks');
-  const issues=await ghJson(`/repos/${V2_REPO}/issues?state=open&per_page=100`);
-  if(!issues.ok)return notConnected('tasks');
-  const tasks=issues.data
-    .filter(issue=>!('pull_request' in issue))
-    .map(v2TaskFromIssue);
-  return Object.freeze({connected:true,versionId:versionId??'version/v2',tasks});
-}
-// Planned-edge table for the current UI workstream: PLANNED candidates from
-// the task DAG planning (#227 workfront) — explicitly NOT native blocked_by;
-// native edges arrive only from a future source-qualified adapter.
-const V2_PLANNED_EDGES=[
-  {from:'228',to:'232'},{from:'229',to:'232'},{from:'230',to:'232'},
-  {from:'231',to:'232'},{from:'233',to:'232'},{from:'234',to:'232'},
-  {from:'235',to:'232'},
-];
-async function v2Dag(versionId){
-  const tasks=await v2Tasks(versionId);
-  if(!tasks.connected)return notConnected('dag');
-  const nodes=tasks.tasks.map(task=>({
-    taskId:task.id,versionId:'version/v2',title:task.title,
-    status:task.status,severity:task.severity,
-    requirementGroup:null,phase:null,lane:null,agentId:null,
-    executable:false}));
-  const known=new Set(nodes.map(node=>node.taskId));
-  const edges=V2_PLANNED_EDGES
-    .filter(edge=>known.has(edge.from)&&known.has(edge.to))
-    .map(edge=>({...edge,kind:'PLANNED',evidenceRef:null,amendedAt:null}));
-  return Object.freeze({connected:true,versionId:'version/v2',
-    asOf:{sourceSha:'',frozenAt:null},
-    nodes,edges});
-}
-function v2Release(versionId){
-  // Advisory projection only; authoritative qualification stays in the
-  // Host/C chain (#222) — the shell never derives Release PASS here.
-  return Object.freeze({connected:true,versionId:versionId??null,
-    readiness:{versionId:versionId??'version/v2',
-      gates:[{name:'woodpeckerCI',status:'UNKNOWN',owner:'CI'},
-        {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}],
-      permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}});
-}
-function v2Settings(){
-  return Object.freeze({connected:true,
-    snapshot:{agentProviders:[
-      {id:'zcode',enabled:true,cliPath:null,hostPrincipal:null,concurrency:1,
-        sandbox:null,buildSelected:true,credential:null},
-      {id:'codex',enabled:false,cliPath:null,hostPrincipal:null,concurrency:1,
-        sandbox:null,buildSelected:false,credential:null},
-      {id:'claude-code',enabled:false,cliPath:null,hostPrincipal:null,
-        concurrency:1,sandbox:null,buildSelected:false,credential:null}],
-    tallyLlm:{enabled:false,provider:null,model:null,endpoint:null,
-      promptTemplateVersion:null,privacyConsentPreviewShown:false,
-      tokenBudget:null,credential:null},
-    ci:{woodpeckerUrl:process.env.TALLY_WOODPECKER_URL??null,repoId:null,
-      profiles:['v2-alm-workspace'],webhookState:'UNKNOWN',lastReadbackAt:null},
-    git:{repositories:[V2_REPO],defaultBase:'version/v2',adsPin:null,
-      oauthScopes:[],requiredScopeGaps:V2_TOKEN()?[]:['read:project']},
-    deploymentEnvs:[],defaults:{locale:'zh-CN',defaultView:'list',
-      cascade:{workspace:'kaicreator-mm',project:null,version:null,task:null}}}});
-}
-function v2Metadata(versionId){
-  return Object.freeze({connected:true,versionId:versionId??null,
-    attempts:[],reports:[],lineage:[],learnedOutcomes:[],
-    note:'METADATA_ADAPTER_PENDING: task-meta/ADS 深层读模型尚未接入,所有条目保持空/UNKNOWN'});
-}
+// ---- UI #246: consume ONLY source-qualified selected Host projections.
+// No second GitHub transport, no speculative default provider/CI status.
+// Missing selected Host adapter degrades to NOT_CONNECTED, not a fabricated 0.
 const APP_DIST=new URL('../../apps/tally-web/dist/',import.meta.url);
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png',
@@ -414,7 +297,7 @@ async function staticAppResponse(relative){
 }
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
-  releaseHost,releaseSealedDispatch}={}){
+  releaseHost,releaseSealedDispatch,v2ReadModelHost,v2GuidedFormHost}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
       {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
@@ -570,28 +453,88 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // ---- UI-E #232: v2 shell read models + feature gate -----------------
       // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or
       // UNKNOWN, never fabricated data. No effect path starts here.
+      // UI #252: form steps are issued by the selected Business/Host.
+      // Browser cannot bypass revision/current-source or same-origin checks.
+      if(req.method==='GET'&&url.pathname==='/api/v2/guided/step'){
+        const scope={projectId:url.searchParams.get('projectId'),
+          versionId:url.searchParams.get('versionId')};
+        const observed=await readGuidedStep(v2GuidedFormHost,scope,
+          config.currentSourceSha);
+        return send(200,'application/json',json(observed.connected
+          ?{...observed,csrfKey:actionKey}:observed));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/guided/submit'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+          req.headers.origin!==origin)
+          return send(403,'application/json',json({connected:false,
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        const payload=JSON.parse(await body(req,8192));
+        const scope={projectId:payload.projectId,versionId:payload.versionId};
+        if(payload.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({connected:false,
+            status:'STALE_SOURCE',reason:'SOURCE_SHA_MISMATCH'}));
+        // Route only canonical, bounded answers to the selected Host port;
+        // never reuse the old J01 controller as a second writer.
+        const result=await submitGuidedStep(v2GuidedFormHost,scope,
+          config.currentSourceSha,{
+            sourceSha:payload.sourceSha,journeyId:payload.journeyId,
+            stepId:payload.stepId,revision:payload.revision,
+            answers:payload.answers});
+        return send(result.ok===true?200:409,'application/json',json(result));
+      }
+      // UI #254: all lifecycle/governance pages use the same selected Host.
+      // No second GitHub source reader or Task state author is created here.
+      const v2SourceModels=Object.freeze({
+        '/api/v2/agents':'agents','/api/v2/requirements':'requirements',
+        '/api/v2/qa':'qa','/api/v2/maintenance':'maintenance',
+        '/api/v2/deployment':'deployment',
+        '/api/v2/workflow':'workflow','/api/v2/domain-packages':'domainPackages',
+        '/api/v2/experience':'experience','/api/v2/audit':'audit',
+      });
+      if(req.method==='GET'&&
+        Object.prototype.hasOwnProperty.call(v2SourceModels,url.pathname)){
+        const kind=v2SourceModels[url.pathname];
+        const result=await readV2HostModel(v2ReadModelHost,kind,{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined,
+        });
+        return send(200,'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/workbench'){
+        const model=await readV2HostModel(v2ReadModelHost,'workbench',{});
+        return send(200,'application/json',json(model));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
-        const catalog=await v2Catalog();
-        return send(200,'application/json',json(catalog));
+        const model=await readV2HostModel(v2ReadModelHost,'catalog',{});
+        return send(200,'application/json',json(model));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
-        const versionId=url.searchParams.get('versionId');
-        const tasks=await v2Tasks(versionId);
-        return send(200,'application/json',json(tasks));
+        const model=await readV2HostModel(v2ReadModelHost,'tasks',{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined});
+        return send(200,'application/json',json(model));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/dag'){
-        const versionId=url.searchParams.get('versionId');
-        const dag=await v2Dag(versionId);
-        return send(200,'application/json',json(dag));
+        const model=await readV2HostModel(v2ReadModelHost,'dag',{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined});
+        return send(200,'application/json',json(model));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/release'){
-        return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
+        const model=await readV2HostModel(v2ReadModelHost,'release',{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined});
+        return send(200,'application/json',json(model));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
-        return send(200,'application/json',json(v2Settings()));
+        const model=await readV2HostModel(v2ReadModelHost,'settings',{});
+        return send(200,'application/json',json(model));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/metadata'){
-        return send(200,'application/json',json(v2Metadata(url.searchParams.get('versionId'))));
+        const model=await readV2HostModel(v2ReadModelHost,'metadata',{
+          projectId:url.searchParams.get('projectId')??undefined,
+          versionId:url.searchParams.get('versionId')??undefined});
+        return send(200,'application/json',json(model));
       }
       // Feature gate: /app serves the new shell bundle (built by
       // apps/tally-web); /diagnostics keeps the legacy test console; / picks

@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --test \"src/app/*.test.ts\" \"src/i18n/*.test.ts\" \"src/features/**/*.test.ts\""
+    "test": "node scripts/run-tests.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "react": "18.3.1",

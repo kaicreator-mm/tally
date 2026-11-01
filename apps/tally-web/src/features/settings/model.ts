@@ -5,9 +5,21 @@
  * and test-connection runs only through the permitted Host adapter.
  */
 export type SettingsSection='agentProviders'|'tallyLlm'|'ci'|'gitGithub'
-  |'deployment'|'defaults';
+  |'host'|'storage'|'security'|'deployment'|'integrations'|'defaults';
 export const SETTINGS_SECTIONS:readonly SettingsSection[]=Object.freeze(
-  ['agentProviders','tallyLlm','ci','gitGithub','deployment','defaults']);
+  ['agentProviders','tallyLlm','gitGithub','ci','host','storage','security',
+    'deployment','integrations','defaults']);
+/** One-to-one route binding from the primary Settings sidebar, not a second
+ * mutable tab state. Unsupported routes never silently display Agent config. */
+export const SETTINGS_ROUTE_MAP=Object.freeze({
+  'agent-providers':'agentProviders','tally-llm':'tallyLlm',
+  'git-github':'gitGithub','ci':'ci','host':'host','storage':'storage',
+  'security':'security','deployment-env':'deployment','integrations':'integrations'
+} as const satisfies Record<string,SettingsSection>);
+export function sectionForSettingsRoute(route:string):SettingsSection|null{
+  return Object.prototype.hasOwnProperty.call(SETTINGS_ROUTE_MAP,route)
+    ?SETTINGS_ROUTE_MAP[route as keyof typeof SETTINGS_ROUTE_MAP]:null;
+}
 export interface SecretRef{
   /** Host-side credential target id (e.g. Windows Credential Manager key). */
   targetId:string;
