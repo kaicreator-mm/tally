@@ -40,7 +40,7 @@ export function ReleaseView({readiness,onAction,connected=true,locale='zh'}:
           return <div key={operation} style={{display:'grid',gap:4}}>
             <Button variant={wired?'primary':'secondary'}
               disabled={!wired}
-              onClick={wired?()=>onAction(operation):undefined}>
+              onClick={wired?()=>onAction?.(operation):undefined}>
               {zh?OP_LABEL[index].zh:OP_LABEL[index].en}
             </Button>
             {display.reason||!wired?<span style={{color:'var(--warn)',fontSize:12,
