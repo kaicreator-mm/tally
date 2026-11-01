@@ -15,7 +15,7 @@ import type {Route} from './router.ts';
 import type {TasksResponse,DagResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,WorkbenchResponse,
   VersionAgentsRead,VersionRequirementsRead,VersionQaRead,VersionMaintenanceRead,
-  GovernanceRead} from '../adapters/host.ts';
+  GovernanceRead,VersionDeploymentRead} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
@@ -33,6 +33,7 @@ import {sectionForSettingsRoute} from '../features/settings/model.ts';
 import {WorkbenchView} from '../features/workbench/views.tsx';
 import {GuidedHostRoute} from '../features/forms/host-route.tsx';
 import {GovernanceView} from '../features/governance/views.tsx';
+import {DeploymentView} from '../features/deployment/views.tsx';
 import type {GovernanceSnapshot,GovernanceKind}
   from '../features/governance/model.ts';
 import {inboxCounts} from '../features/workbench/model.ts';
@@ -78,6 +79,7 @@ function routeBody(key:string,projectId:string|null,versionId:string|null,
     case 'requirements':return <RequirementsRoute projectId={projectId} versionId={versionId}/>
     case 'qa':return <QaRoute projectId={projectId} versionId={versionId}/>
     case 'release':return <ReleaseRoute projectId={projectId} versionId={versionId}/>;
+    case 'deployment':return <DeploymentRoute projectId={projectId} versionId={versionId}/>;
     case 'maintenance':return <MaintenanceRoute projectId={projectId} versionId={versionId}/>;
     case 'metadata':return <MetadataRoute projectId={projectId} versionId={versionId}
       onNavigate={onNavigate}/>;
@@ -171,6 +173,17 @@ function MaintenanceRoute({projectId,versionId}:{projectId:string|null;
     connected={result.state==='ready'&&result.data?.connected===true&&
       result.data.versionId===versionId&&Array.isArray(result.data.defects)&&
       Array.isArray(result.data.learnings)}/>;
+}
+function DeploymentRoute({projectId,versionId}:{projectId:string|null;
+  versionId:string|null}){
+  const result=useHost<VersionDeploymentRead>('deployment',
+    adapter=>adapter.deployment(projectId??'',versionId??''),
+    [projectId,versionId]);
+  if(!projectId||!versionId)return <EmptyState title="请选择项目与版本"/>;
+  if(result.state==='loading')return <Skeleton lines={4}/>;
+  return <DeploymentView versionId={versionId} records={result.data?.deployments??[]}
+    connected={result.state==='ready'&&result.data?.connected===true&&
+      result.data.versionId===versionId&&Array.isArray(result.data.deployments)}/>;
 }
 function GovernanceRoute({kind,projectId}:{kind:GovernanceKind;
   projectId:string|null}){
