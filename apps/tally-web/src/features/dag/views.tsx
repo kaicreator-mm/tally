@@ -47,6 +47,10 @@ export function DagView({dag,locale='zh',onOpenTask}:
         sub={zh?`as-of ${dag.asOf.sourceSha.slice(0,12)} · ${
           dag.asOf.frozenAt?'已冻结':'未冻结'} · ${dag.nodes.length} 节点 / ${dag.edges.length} 边`
           :`as-of ${dag.asOf.sourceSha.slice(0,12)}`}/>
+      {dag.rosterCoverage!=='VERIFIED_COMPLETE'?<div role="status"
+        style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
+        ROSTER_COVERAGE=UNVERIFIED · 仅显示 Host 已声明的任务，不能视为完整版本 DAG
+      </div>:null}
       <div style={{display:'flex',gap:'var(--s2)',flexWrap:'wrap',marginBottom:'var(--s3)'}}>
         <select aria-label="status" value={filters.status??''}
           onChange={event=>setFilters({...filters,status:event.target.value||null})}>
