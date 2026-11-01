@@ -16,7 +16,7 @@ Host environment (only the Host process, never browser or ADS report):
 - `TALLY_V2_DH_PATH`, `TALLY_V2_WORK_ROOT` (local paths optional for read-only bootstrap).
 
 Node>=24: install the existing `packages/tally-github-native-c` dependency
-tree, and the `apps/tally-web` build dependencies. Run `node
+tree, the `packages/tally-engineering-business` runtime dependency (`ajv@8.17.1`), and the `apps/tally-web` build dependencies. The engineering Business package must be installed explicitly; installing the Native C package and web app alone does not provide its Ajv dependency. Run `node
 web/v2/serve.mjs` on a trusted loopback Host; the printed path ends in
 `/app`. No browser credentials are needed.
 
