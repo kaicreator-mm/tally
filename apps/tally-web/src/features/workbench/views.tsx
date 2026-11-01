@@ -15,6 +15,10 @@ export function WorkbenchView({snapshot,page,onNavigate}:
     hint="工作台需要当前用户有权读取的受信 Host 人工待办队列；不可将未知当作零待办。"/>;
   const count=inboxCounts(snapshot);
   return <div style={{display:'grid',gap:'var(--s4)'}}>
+    {snapshot?.queueCoverage==='PARTIAL_UNVERIFIED_ROSTER'?<div role="status"
+      style={{color:'var(--warn)',fontSize:12}}>
+      WORKBENCH_COVERAGE=PARTIAL_UNVERIFIED_ROSTER · 仅显示已选 Task 的 GitHub 原生阻塞；未知审批、其他待办不可视为零
+    </div>:null}
     <Card>
       <CardHeader title={pageNames[page]}
         sub="同一受信待办源 · 仅显示待办，不自动授予审批、执行或发布权限"/>
