@@ -61,3 +61,18 @@ test('catalog refuses cross-project version identity',()=>{
     versionsByProject:{'org/tally':[{id:'version/v2',projectId:'other/repo'}]}};
   assert.equal(validateV2ReadModel('catalog',catalog,{}),false);
 });
+
+test('workbench queue rejects cross-repo actions and self-asserted states',()=>{
+  const base={connected:true,
+    source:{repository:'org/tally',sourceSha:SHA,currentness:'CURRENT',readback:'VERIFIED'},
+    actions:[{id:'a1',taskId:'227',projectId:'org/tally',versionId:'version/v2',
+      title:'Review',kind:'APPROVAL',state:'PENDING',ownerRole:'owner',
+      sourceRef:'https://github.com/org/tally/issues/227',reason:null,updatedAt:null}]};
+  assert.equal(validateV2ReadModel('workbench',base,{}),true);
+  assert.equal(validateV2ReadModel('workbench',{...base,actions:[
+    {...base.actions[0],projectId:'other/repo'}]},{}),false);
+  assert.equal(validateV2ReadModel('workbench',{...base,actions:[
+    {...base.actions[0],state:'ACCEPTED'}]},{}),false);
+  assert.equal(validateV2ReadModel('workbench',{...base,actions:[
+    {...base.actions[0],sourceRef:'https://attacker.example/issues/1'}]},{}),false);
+});

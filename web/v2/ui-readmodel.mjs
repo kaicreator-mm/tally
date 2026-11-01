@@ -73,6 +73,24 @@ export function validateV2ReadModel(model,value,scope={}){
     if(!plain(value.readiness)||value.readiness.versionId!==scope.versionId||
       !Array.isArray(value.readiness.gates))return false;
   }
+  if(model==='workbench'){
+    if(!Array.isArray(value.actions))return false;
+    const ids=new Set();
+    for(const action of value.actions){
+      if(!plain(action)||!ID.test(action.id)||ids.has(action.id)||
+        action.projectId!==source.repository||
+        (action.versionId!==null&&!ID.test(action.versionId))||
+        (action.taskId!==null&&!ID.test(action.taskId))||
+        typeof action.title!=='string'||!action.title.trim()||
+        !['APPROVAL','DECISION','BLOCKER','REVIEW','RECOVERY'].includes(action.kind)||
+        !['PENDING','BLOCKED','RESOLVED'].includes(action.state)||
+        typeof action.ownerRole!=='string'||!action.ownerRole.trim()||
+        typeof action.sourceRef!=='string'||
+        !action.sourceRef.startsWith('https://github.com/'+source.repository+'/issues/'))
+        return false;
+      ids.add(action.id);
+    }
+  }
   if(model==='settings'&&!plain(value.snapshot))return false;
   return noSecrets(value);
 }

@@ -40,12 +40,18 @@ export interface MetadataResponse{connected:boolean;versionId:string|null;
   attempts:unknown[];reports:unknown[];lineage:unknown[];
   learnedOutcomes:unknown[];note?:string;}
 
+export interface WorkbenchResponse{
+  connected:boolean;source?:{repository:string;sourceSha:string;currentness:string;
+    readback:string};
+  actions?:import('../features/workbench/model.ts').WorkAction[];
+}
 async function getJson<T>(path:string):Promise<T>{
   const response=await fetch(path,{cache:'no-store'});
   if(!response.ok)throw new Error(`HOST_${response.status}`);
   return await response.json() as T;
 }
 export const hostAdapter=Object.freeze({
+  workbench:()=>getJson<WorkbenchResponse>('/api/v2/workbench'),
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
   tasks:(versionId:string)=>getJson<TasksResponse>(
     `/api/v2/tasks?versionId=${encodeURIComponent(versionId)}`),
