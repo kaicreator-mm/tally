@@ -45,3 +45,25 @@ test('untrusted GitHub C observation never becomes Host-connected',async()=>{
   assert.equal((await host.catalog()).connected,false);
   assert.equal((await host.tasks({projectId:repo,versionId})).connected,false);
 });
+
+test('Requirement Host read preserves declared-but-unverified hierarchy and no freeze',async()=>{
+  const qualified={connected:true,source,versionId,
+    structureCoverage:'HOST_DECLARED_UNVERIFIED',freezeCoverage:'UNKNOWN',
+    nodes:[{id:'77',kind:'requirement',title:'Real GitHub title',
+      parent:null,productRevision:null,acceptanceRefs:[],
+      l2Decision:null,freezeState:'UNKNOWN',updatedAt:'2026-11-02T00:00:00Z'}]};
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,requirements:async()=>qualified}});
+  assert.deepEqual(await host.requirements({projectId:repo,versionId}),qualified);
+  assert.equal((await host.requirements({projectId:repo,
+    versionId:'version/v3'})).connected,false);
+});
+test('unconfigured or forged native requirement freeze cannot become Host fact',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,nativeC});
+  assert.equal((await host.requirements({projectId:repo,versionId})).connected,false);
+  const forged=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,requirements:async()=>({
+      connected:true,source,versionId,structureCoverage:'VERIFIED_COMPLETE',
+      freezeCoverage:'FROZEN',nodes:[]})}});
+  assert.equal((await forged.requirements({projectId:repo,versionId})).connected,false);
+});
