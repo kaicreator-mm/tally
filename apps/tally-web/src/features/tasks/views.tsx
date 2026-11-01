@@ -48,7 +48,7 @@ export function TasksView({tasks,filters,setFilters,onSelectTask,selectedTaskId,
         onChange={event=>setFilters({...filters,
           severity:(event.target.value||null) as TaskFilters['severity']})}>
         <option value="">{zh?'全部级别':'All severities'}</option>
-        {['P0','P1','P2'].map(severity=>
+        {['P0','P1','P2','UNKNOWN'].map(severity=>
           <option key={severity} value={severity}>{severity}</option>)}
       </select>
       <label style={{display:'flex',gap:6,alignItems:'center',color:'var(--text-secondary)'}}>
