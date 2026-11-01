@@ -452,6 +452,10 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // ---- UI-E #232: v2 shell read models + feature gate -----------------
       // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or
       // UNKNOWN, never fabricated data. No effect path starts here.
+      if(req.method==='GET'&&url.pathname==='/api/v2/workbench'){
+        const model=await readV2HostModel(v2ReadModelHost,'workbench',{});
+        return send(200,'application/json',json(model));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         const model=await readV2HostModel(v2ReadModelHost,'catalog',{});
         return send(200,'application/json',json(model));
