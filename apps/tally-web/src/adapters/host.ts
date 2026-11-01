@@ -78,6 +78,8 @@ export interface VersionQaRead{connected:boolean;versionId:string;
 export interface VersionMaintenanceRead{connected:boolean;versionId:string;
   defects?:import('../features/maintenance/model.ts').DefectRecord[];
   learnings?:import('../features/maintenance/model.ts').LearningRecord[];}
+export interface VersionDeploymentRead{connected:boolean;versionId:string;
+  deployments?:import('../features/deployment/model.ts').DeploymentRecord[];}
 export interface GovernanceRead{
   connected:boolean;records?:import('../features/governance/model.ts').GovernanceItem[];
   source?:import('../features/governance/model.ts').GovernanceSnapshot['source'];
@@ -107,6 +109,8 @@ export const hostAdapter=Object.freeze({
     getJson<VersionQaRead>(scoped('qa',projectId,versionId)),
   maintenance:(projectId:string,versionId:string)=>
     getJson<VersionMaintenanceRead>(scoped('maintenance',projectId,versionId)),
+  deployment:(projectId:string,versionId:string)=>
+    getJson<VersionDeploymentRead>(scoped('deployment',projectId,versionId)),
   governance:(kind:'workflow'|'domainPackages'|'experience'|'audit',
     projectId:string)=>
     getJson<GovernanceRead>('/api/v2/'+({
