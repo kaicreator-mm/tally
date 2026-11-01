@@ -12,7 +12,7 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import type {Route} from './router.ts';
 import type {TasksResponse,DagResponse,ReleaseResponse,
-  SettingsResponse,MetadataResponse} from '../adapters/host.ts';
+  SettingsResponse,MetadataResponse,WorkbenchResponse} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
@@ -27,16 +27,24 @@ import type {TaskFilters,TaskRecord} from '../features/tasks/model.ts';
 import type {VersionDag} from '../features/dag/model.ts';
 import type {SettingsSnapshot} from '../features/settings/model.ts';
 import {sectionForSettingsRoute} from '../features/settings/model.ts';
+import {WorkbenchView} from '../features/workbench/views.tsx';
+import {inboxCounts} from '../features/workbench/model.ts';
+import type {WorkbenchSnapshot,WorkbenchPage} from '../features/workbench/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
 
 export function App({route,onNavigate,inboxCount=0}:{route:Route;
   onNavigate:(hash:string)=>void;inboxCount?:number}){
   const {t,td,versionId}=useShell();
+  const queue=useHost<WorkbenchResponse>('workbench',
+    adapter=>adapter.workbench(),[]);
+  const workbench=(queue.data?.connected===true?
+    queue.data as WorkbenchSnapshot:null);
+  const count=inboxCounts(workbench)?.pending??inboxCount;
   const item=findItemByRoute(route);
   const body=item
-    ?routeBody(item.key,versionId)
+    ?routeBody(item.key,versionId,onNavigate,workbench)
     :<EmptyState title={t('state.empty')} hint={`${route.group}/${route.view}`}/>;
-  return <AppShell route={route} onNavigate={onNavigate} inboxCount={inboxCount}>
+  return <AppShell route={route} onNavigate={onNavigate} inboxCount={count}>
     <div className="page">
       <div className="page-header">
         <h1>{item?td(`nav.${item.key}`):route.view}</h1>
@@ -46,8 +54,12 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
     </div>
   </AppShell>;
 }
-function routeBody(key:string,versionId:string|null):React.ReactNode{
+function routeBody(key:string,versionId:string|null,
+  onNavigate:(hash:string)=>void,workbench:WorkbenchSnapshot|null):React.ReactNode{
   switch(key){
+    case 'inbox':case 'approvals':case 'blockers':case 'overview':
+      return <WorkbenchView page={key as WorkbenchPage}
+        snapshot={workbench} onNavigate={onNavigate}/>;
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
