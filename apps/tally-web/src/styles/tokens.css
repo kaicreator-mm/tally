@@ -1,0 +1,27 @@
+/* UI-A #228 — design tokens (dark-first, WCAG-conscious contrast). */
+:root{
+  color-scheme:dark;
+  --font-ui:"Inter","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --font-mono:"Cascadia Code",Consolas,"SFMono-Regular",monospace;
+  /* surfaces */
+  --bg-app:#0b1020;--bg-panel:#111a2d;--bg-raised:#152139;--bg-hover:#1a2740;
+  --border-subtle:#263452;--border-strong:#3a527c;
+  /* text */
+  --text-primary:#edf2ff;--text-secondary:#c3d3ef;--text-muted:#8ba0c5;--text-faint:#64779c;
+  /* brand & semantics */
+  --brand:#6ea8ff;--brand-strong:#8ec5ff;--brand-ink:#0b1a33;
+  --ok:#3ecf9a;--ok-dim:#123a34;--warn:#f3c96b;--warn-dim:#3a2f16;
+  --danger:#ff9db0;--danger-dim:#3c1b27;--info:#9db8ff;--info-dim:#1b2a4a;
+  /* spacing scale (4px base) */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:20px;--s6:24px;--s8:32px;--s10:40px;
+  /* radii & elevation */
+  --r-sm:8px;--r-md:10px;--r-lg:14px;--r-pill:999px;
+  --shadow-1:0 4px 14px #03061166;--shadow-2:0 10px 32px #03061188;
+  --focus-ring:2px solid var(--brand);
+  /* layout metrics */
+  --topbar-h:56px;--sidebar-w:236px;--sidebar-w-collapsed:56px;
+  --z-drawer:60;--z-modal:70;--z-toast:80;
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
