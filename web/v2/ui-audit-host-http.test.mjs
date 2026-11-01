@@ -15,7 +15,8 @@ const audit=createUiNativeAuditHost({repository,versionId:'version/v2',
     claimStatus:'NOT_VERIFIED',authorized:false,admitted:false,
     taskPass:false,releasePass:false,workItem:{claimStatus:'NOT_VERIFIED'},
     claimEvents:{candidateCount:1,candidates:[{sourceSha:sha,
-      dispatchId:'not-for-browser',claimAccepted:false}]}
+      dispatchId:'observed-comment-123',
+      sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',claimAccepted:false}]}
   })
 });
 const config=defaultAlmConfig({dhPath:'/fake/dh',tallyPath:'/fake/tally',
@@ -32,7 +33,7 @@ test('real HTTP Governance audit is observed-only and redacts claim operator',as
     assert.equal(result.records[0].kind,'audit');
     assert.equal(result.records[0].authority,'OBSERVED');
     assert.equal(result.claimAcceptance,'NOT_VERIFIED');
-    assert.equal(JSON.stringify(result).includes('not-for-browser'),false);
+    assert.equal(JSON.stringify(result).includes('observed-comment-123'),false);
     assert.equal(JSON.stringify(result).includes('secretonlyinternal'),false);
     const foreign=await fetch(origin+'/api/v2/audit?projectId=evil%2Frepo')
       .then(r=>r.json());
