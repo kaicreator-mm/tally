@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readUiNativeCatalogFromClient,readUiNativeVersionFromClient}
+import {readUiNativeCatalogFromClient,readUiNativeVersionFromClient,
+  readUiNativeRequirementsFromClient}
   from '../src/ui-version-readonly.mjs';
 
 const sha='a'.repeat(40),owner='org',repo='tally',
@@ -136,4 +137,60 @@ test('dependency open/closed state drift with unchanged count is rejected',async
     workItemReader:fake});
   assert.equal(r.connected,false);
   assert.equal(r.reason,'NATIVE_DEPENDENCY_COUNT_DRIFT');
+});
+
+const requirements=[{number:77,kind:'requirement',parent:null},
+  {number:78,kind:'story',parent:77}];
+const intakeObservation={status:'PROJECT_INTAKE_OBSERVED',sourceQualified:true,
+  authorized:false,taskPass:false,releasePass:false,
+  repository:{fullName:'org/tally'},observedAt:'2026-11-02T00:00:00Z',
+  sources:[{number:77,title:'Product goal',state:'open',
+    isPullRequest:false,url:'https://github.com/org/tally/issues/77'},
+    {number:78,title:'Feature story',state:'open',
+      isPullRequest:false,url:'https://github.com/org/tally/issues/78'}]};
+test('native Product source validates real GitHub Issue titles; freeze stays UNKNOWN',async()=>{
+  const r=await readUiNativeRequirementsFromClient({...args(native({},sha,{
+    77:issue(77,{title:'Product goal'}),78:issue(78,{title:'Feature story'})})),
+    requirementIssueSpecs:requirements,
+    intakeReader:async()=>intakeObservation});
+  assert.equal(r.connected,true);
+  assert.equal(r.structureCoverage,'HOST_DECLARED_UNVERIFIED');
+  assert.equal(r.freezeCoverage,'UNKNOWN');
+  assert.deepEqual(r.nodes.map(x=>[x.id,x.parent,x.freezeState,x.productRevision]),
+    [['77',null,'UNKNOWN',null],['78','77','UNKNOWN',null]]);
+  assert.equal(r.nodes[0].title,'Product goal');
+  assert.deepEqual(r.nodes[0].acceptanceRefs,[]);
+});
+test('invalid requirement hierarchy, cycle and untrusted issue roster fail closed',async()=>{
+  const input={...args(native()),intakeReader:async()=>intakeObservation};
+  assert.equal((await readUiNativeRequirementsFromClient({
+    ...input,requirementIssueSpecs:[{number:77,kind:'story',parent:99}]}))
+    .reason,'REQUIREMENT_PARENT_OUTSIDE_ROSTER');
+  assert.equal((await readUiNativeRequirementsFromClient({
+    ...input,requirementIssueSpecs:[{number:77,kind:'story',parent:78},
+      {number:78,kind:'story',parent:77}]})).reason,'REQUIREMENT_CYCLE');
+  assert.equal((await readUiNativeRequirementsFromClient({
+    ...input,requirementIssueSpecs:[{number:77,kind:'product-owner',parent:null}]}))
+    .reason,'INVALID_HOST_REQUIREMENT_ROSTER');
+});
+test('native Requirement read rejects issue title drift and PR source',async()=>{
+  const o=await readUiNativeRequirementsFromClient({
+    ...args(native({},sha,{
+      77:issue(77,{title:'Product goal modified'}),
+      78:issue(78,{title:'Feature story'})})),
+    requirementIssueSpecs:requirements,intakeReader:async()=>intakeObservation});
+  assert.equal(o.reason,'REQUIREMENT_ISSUE_CHANGED_DURING_READ');
+  const c={...intakeObservation,sources:[{
+    ...intakeObservation.sources[0],isPullRequest:true},
+    intakeObservation.sources[1]]};
+  const f=await readUiNativeRequirementsFromClient({
+    ...args(native()),requirementIssueSpecs:requirements,
+    intakeReader:async()=>c});
+  assert.equal(f.reason,'REQUIREMENT_ISSUE_IDENTITY_UNVERIFIED');
+});
+test('moved pinned version branch blocks otherwise valid requirements',async()=>{
+  const r=await readUiNativeRequirementsFromClient({
+    ...args(native({},'b'.repeat(40))),requirementIssueSpecs:requirements,
+    intakeReader:async()=>intakeObservation});
+  assert.equal(r.reason,'VERSION_BRANCH_NOT_PINNED');
 });
