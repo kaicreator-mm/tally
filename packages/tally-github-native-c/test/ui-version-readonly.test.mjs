@@ -56,6 +56,8 @@ test('source-qualified native C WorkItem yields unknown Agent/Claim and real Tas
   assert.equal(r.tasks[0].claimState,'NOT_VERIFIED');
   assert.equal(r.tasks[0].reviewState,'UNKNOWN');
   assert.deepEqual(r.dag.edges,[]);
+  assert.equal(r.rosterCoverage,'UNVERIFIED');
+  assert.equal(r.dag.rosterCoverage,'UNVERIFIED');
   assert.equal(r.dag.nodes[0].executable,false);
 });
 test('native dependencies are C readback edges, not assistant planned edges',async()=>{
