@@ -114,6 +114,7 @@ export async function readUiNativeVersionFromClient({
         .map(l=>l.slice(-2));
       const severity=priority.length===1?priority[0]:'UNKNOWN';
       const dependencies=[],uniqueDeps=new Set();
+      let openDeps=0;
       const route='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by';
       for await(const page of octokit.paginate.iterator(route,{...args,per_page:100})){
         if(!Array.isArray(page?.data))return denied('NATIVE_DEPENDENCY_PAGE_INVALID');
@@ -125,6 +126,7 @@ export async function readUiNativeVersionFromClient({
             return denied('NATIVE_DEPENDENCY_OUTSIDE_PINNED_ROSTER');
           uniqueDeps.add(dependency.number);
           dependencies.push(String(dependency.number));
+          if(dependency.state==='open')openDeps++;
           const edgeId=`${dependency.number}->${number}`;
           if(!seenEdges.has(edgeId)){
             seenEdges.add(edgeId);
@@ -133,7 +135,9 @@ export async function readUiNativeVersionFromClient({
           }
         }
       }
-      if(dependencies.length!==observed.blockerCount)
+      if(dependencies.length!==observed.blockerCount||
+         openDeps!==observed.openBlockerCount||
+         (openDeps>0)!==(observed.dependencyState==='BLOCKED'))
         return denied('NATIVE_DEPENDENCY_COUNT_DRIFT');
       const status=taskStatus(observed.workflowState,observed.issueState);
       const entry={id:String(number),versionId,title:issue.title,
