@@ -28,7 +28,7 @@ export function activeWorkActions(snapshot:WorkbenchSnapshot|null,
 }
 export function inboxCounts(snapshot:WorkbenchSnapshot|null){
   const actions=activeWorkActions(snapshot,'inbox');
-  if(!actions)return null;
+  if(!actions||snapshot?.queueCoverage==='PARTIAL_UNVERIFIED_ROSTER')return null;
   return {pending:actions.length,
     approvals:activeWorkActions(snapshot,'approvals')!.length,
     blockers:activeWorkActions(snapshot,'blockers')!.length};
