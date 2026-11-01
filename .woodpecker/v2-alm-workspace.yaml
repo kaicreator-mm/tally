@@ -88,15 +88,18 @@ steps:
       - set -euo pipefail
       - 'echo "TALLY_WEB_HEAD=$(git rev-parse HEAD)"'
       - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
-      # UI lanes (#228-#231, #233-#235): pure-TS model tests run without any
-      # npm install by design (Node >=24 native type stripping).
+      # Parse all TS/TSX/JS/MJS first; avoid the previous malformed test
+      # regex reaching slow tests or bundling. Node --check alone cannot
+      # parse TS/TSX, so use the pinned TypeScript compiler API.
+      - npm --prefix apps/tally-web install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - node apps/tally-web/scripts/syntax-preflight.mjs
+      - echo TALLY_V2_SYNTAX_PREFLIGHT_PASS
       - 'files="$(find apps/tally-web/src -type f -name "*.test.ts" -print)"'
       - test -n "$files"
       - node --test $files
       - node --check web/v2/journey-client.mjs
       # Build the production bundle the ALM server serves at /app (feature
       # gate UI-E #232). Dependencies resolve from the npmmirror cache.
-      - npm --prefix apps/tally-web install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
       - npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com
       # Vite transpiles TS but DOES NOT typecheck. Guard installed product.
       - npm --prefix apps/tally-web run typecheck
