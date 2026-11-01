@@ -90,7 +90,8 @@ export function reportRows(version:VersionMetadata):ReportRow[]{
 }
 /** Distinguish a missing report from a present one; ADS v5 absent is a gap. */
 export function missingReports(version:VersionMetadata,
-  expectedTaskIds:readonly string[]):string[]{
+  expectedTaskIds:readonly string[]|null):string[]|null{
+  if(expectedTaskIds===null)return null;
   const withReports=new Set(version.reports.map(report=>report.taskId));
   return expectedTaskIds.filter(taskId=>!withReports.has(taskId));
 }

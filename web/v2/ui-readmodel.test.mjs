@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readV2HostModel,validateV2ReadModel} from './ui-readmodel.mjs';
+const SHA='a'.repeat(40),source={repository:'org/tally',sourceSha:SHA,
+  currentness:'CURRENT',readback:'VERIFIED'};
+const scope={projectId:'org/tally',versionId:'version/v2'};
+const tasks={connected:true,versionId:'version/v2',source,tasks:[{
+  id:'228',versionId:'version/v2',title:'Work item',blockedBy:[]}]};
+const host={tasks:async()=>tasks};
+test('missing trusted host cannot report empty success',async()=>{
+  assert.deepEqual(await readV2HostModel(null,'tasks',scope),{
+    connected:false,model:'tasks',reason:'HOST_READMODEL_UNAVAILABLE'});
+});
+test('qualified current tasks retain original projection',async()=>{
+  assert.deepEqual(await readV2HostModel(host,'tasks',scope),tasks);
+});
+test('cross-version record fails closed',async()=>{
+  const other={...tasks,tasks:[{...tasks.tasks[0],versionId:'version/v3'}]};
+  assert.equal(validateV2ReadModel('tasks',other,scope),false);
+  assert.equal((await readV2HostModel({tasks:async()=>other},'tasks',scope)).reason,'SOURCE_UNQUALIFIED');
+});
+test('foreign repository fails closed',()=>{
+  assert.equal(validateV2ReadModel('tasks',
+    {...tasks,source:{...source,repository:'other/tally'}},scope),false);
+});
+test('unverified transport/currentness and missing SHA refuse',()=>{
+  assert.equal(validateV2ReadModel('tasks',
+    {...tasks,source:{...source,currentness:'UNKNOWN'}},scope),false);
+  assert.equal(validateV2ReadModel('tasks',
+    {...tasks,source:{...source,sourceSha:''}},scope),false);
+});
+test('native DAG edges require explicit proof and same-version nodes',()=>{
+  const node={taskId:'1',versionId:'version/v2'},node2={taskId:'2',versionId:'version/v2'};
+  const dag={connected:true,versionId:'version/v2',source,
+    asOf:{sourceSha:SHA,frozenAt:null},nodes:[node,node2],
+    edges:[{from:'1',to:'2',kind:'NATIVE',evidenceRef:null}]};
+  assert.equal(validateV2ReadModel('dag',dag,scope),false);
+  assert.equal(validateV2ReadModel('dag',{...dag,
+    edges:[{...dag.edges[0],kind:'PLANNED'}]},scope),true);
+  assert.equal(validateV2ReadModel('dag',{...dag,
+    edges:[{...dag.edges[0],evidenceRef:'https://github.com/org/tally/issues/1'}]},scope),true);
+});
+test('private credentials never reach browser even from selected host',async()=>{
+  const snapshot={connected:true,source,snapshot:{
+    agentProviders:[],apiKey:'sk-secretsecretsecret1234567'}};
+  assert.equal((await readV2HostModel({settings:async()=>snapshot},'settings',{})).reason,
+    'SOURCE_UNQUALIFIED');
+});
+test('metadata missing arrays cannot be interpreted as zero observations',async()=>{
+  const incomplete={connected:true,versionId:'version/v2',source,
+    attempts:[],reports:[],lineage:[]};
+  assert.equal((await readV2HostModel({metadata:async()=>incomplete},'metadata',scope)).reason,
+    'SOURCE_UNQUALIFIED');
+});
+test('provider failure never leaks exception details',async()=>{
+  const bad=await readV2HostModel({tasks:async()=>{throw Error('sk-TOPSECRET');}},'tasks',scope);
+  assert.deepEqual(bad,{connected:false,model:'tasks',reason:'HOST_READ_FAILED'});
+});
+test('catalog refuses cross-project version identity',()=>{
+  const catalog={connected:true,source,projects:[{id:'org/tally',title:'Tally'}],
+    versionsByProject:{'org/tally':[{id:'version/v2',projectId:'other/repo'}]}};
+  assert.equal(validateV2ReadModel('catalog',catalog,{}),false);
+});
