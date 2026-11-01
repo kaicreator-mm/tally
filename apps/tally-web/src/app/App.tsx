@@ -48,7 +48,8 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
   const count=inboxCounts(workbench)?.pending??inboxCount;
   const item=findItemByRoute(route);
   const body=item
-    ?routeBody(item.key,projectId,versionId,onNavigate,workbench)
+    ?routeBody(item.key,projectId,versionId,onNavigate,workbench,
+      route.query.taskId??null)
     :<EmptyState title={t('state.empty')} hint={`${route.group}/${route.view}`}/>;
   return <AppShell route={route} onNavigate={onNavigate} inboxCount={count}>
     <div className="page">
@@ -61,20 +62,24 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
   </AppShell>;
 }
 function routeBody(key:string,projectId:string|null,versionId:string|null,
-  onNavigate:(hash:string)=>void,workbench:WorkbenchSnapshot|null):React.ReactNode{
+  onNavigate:(hash:string)=>void,workbench:WorkbenchSnapshot|null,
+  taskId:string|null):React.ReactNode{
   switch(key){
     case 'inbox':case 'approvals':case 'blockers':case 'overview':
       return <WorkbenchView page={key as WorkbenchPage}
         snapshot={workbench} onNavigate={onNavigate}/>;
     case 'product':return <GuidedHostRoute projectId={projectId} versionId={versionId}/>;
-    case 'tasks':return <TasksRoute projectId={projectId} versionId={versionId}/>;
+    case 'tasks':return <TasksRoute projectId={projectId} versionId={versionId}
+      taskId={taskId} onNavigate={onNavigate}/>;
     case 'agents':return <AgentsRoute projectId={projectId} versionId={versionId}/>;
-    case 'l2-dag':return <DagRoute projectId={projectId} versionId={versionId}/>;
+    case 'l2-dag':return <DagRoute projectId={projectId} versionId={versionId}
+      onNavigate={onNavigate}/>;
     case 'requirements':return <RequirementsRoute projectId={projectId} versionId={versionId}/>
     case 'qa':return <QaRoute projectId={projectId} versionId={versionId}/>
     case 'release':return <ReleaseRoute projectId={projectId} versionId={versionId}/>;
     case 'maintenance':return <MaintenanceRoute projectId={projectId} versionId={versionId}/>;
-    case 'metadata':return <MetadataRoute projectId={projectId} versionId={versionId}/>;
+    case 'metadata':return <MetadataRoute projectId={projectId} versionId={versionId}
+      onNavigate={onNavigate}/>;
     case 'workflow':return <GovernanceRoute kind="workflow" projectId={projectId}/>;
     case 'domain-packages':
       return <GovernanceRoute kind="domain-package" projectId={projectId}/>;
@@ -96,9 +101,14 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
-function TasksRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
+const taskDetailUrl=(projectId:string,versionId:string,taskId:string|null)=>
+  '#/development/tasks?projectId='+encodeURIComponent(projectId)
+    +'&versionId='+encodeURIComponent(versionId)
+    +(taskId?'&taskId='+encodeURIComponent(taskId):'');
+function TasksRoute({projectId,versionId,taskId,onNavigate}:{
+  projectId:string|null;versionId:string|null;taskId:string|null;
+  onNavigate:(hash:string)=>void}){
   const [filters,setFilters]=useState<TaskFilters>({...EMPTY_FILTERS});
-  const [selectedId,setSelectedId]=useState<string|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
     adapter=>adapter.tasks(projectId??'',versionId??''),[projectId,versionId]);
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
@@ -108,10 +118,14 @@ function TasksRoute({projectId,versionId}:{projectId:string|null;versionId:strin
   const rows=(tasks.data?.tasks??[]) as TaskRecord[];
   return guard(versionId,<>
     <TasksView tasks={rows} filters={filters} setFilters={setFilters}
-      onSelectTask={id=>setSelectedId(id)} selectedTaskId={selectedId}
+      onSelectTask={id=>projectId&&versionId&&
+        onNavigate(taskDetailUrl(projectId,versionId,id))}
+      selectedTaskId={taskId}
       versionId={versionId} connected={connected}/>
-    <TaskDrawer task={selectedId?rows.find(row=>row.id===selectedId)??null:null}
-      onClose={()=>setSelectedId(null)}/>
+    <TaskDrawer task={taskId&&connected?
+        rows.find(row=>row.id===taskId&&row.versionId===versionId)??null:null}
+      onClose={()=>projectId&&versionId&&
+        onNavigate(taskDetailUrl(projectId,versionId,null))}/>
   </>);
 }
 function AgentsRoute({projectId,versionId}:{projectId:string|null;
@@ -174,14 +188,18 @@ function GovernanceRoute({kind,projectId}:{kind:GovernanceKind;
     ?result.data as GovernanceSnapshot:null;
   return <GovernanceView kind={kind} snapshot={snapshot}/>;
 }
-function DagRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
+function DagRoute({projectId,versionId,onNavigate}:{
+  projectId:string|null;versionId:string|null;
+  onNavigate:(hash:string)=>void}){
   const dag=useHost<DagResponse>('dag',
     adapter=>adapter.dag(projectId??'',versionId??''),[projectId,versionId]);
   if(dag.state==='loading')return <Skeleton lines={6}/>;
   if(dag.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>;
   return guard(versionId,
-    <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>);
+    <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}
+      onOpenTask={id=>projectId&&versionId&&
+        onNavigate(taskDetailUrl(projectId,versionId,id))}/>);
 }
 function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
@@ -192,7 +210,9 @@ function ReleaseRoute({projectId,versionId}:{projectId:string|null;versionId:str
     <ReleaseView readiness={readiness}
       connected={release.data?.connected===true}/>);
 }
-function MetadataRoute({projectId,versionId}:{projectId:string|null;versionId:string|null}){
+function MetadataRoute({projectId,versionId,onNavigate}:{
+  projectId:string|null;versionId:string|null;
+  onNavigate:(hash:string)=>void}){
   const metadata=useHost<MetadataResponse>('metadata',
     adapter=>adapter.metadata(projectId??'',versionId??''),[projectId,versionId]);
   if(metadata.state==='loading')return <Skeleton lines={6}/>;
@@ -212,7 +232,9 @@ function MetadataRoute({projectId,versionId}:{projectId:string|null;versionId:st
       learnedOutcomes:data.learnedOutcomes as import('../features/metadata/model.ts').VersionMetadata['learnedOutcomes']}
     :null;
   return guard(versionId,
-    version?<MetadataCenter version={version} allVersions={[]} expectedTaskIds={null}/>
+    version?<MetadataCenter version={version} allVersions={[]}
+        expectedTaskIds={null} onOpenTask={id=>projectId&&versionId&&
+          onNavigate(taskDetailUrl(projectId,versionId,id))}/>
       :<EmptyState title="SOURCE_UNQUALIFIED" hint="元数据版本或字段校验失败"/>);
 }
 function SettingsRoute({routeKey}:{routeKey:string}){
