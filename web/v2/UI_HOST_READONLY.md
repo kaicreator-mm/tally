@@ -85,3 +85,27 @@ ADS v5 `kind: report` comments. Neither type substitutes for the other.
 Run `web/v2/ui-audit-host.test.mjs` and
 `web/v2/ui-audit-host-http.test.mjs` with Node >=24 before enabling
 production audit reads.
+
+## Optional selected GitHub C Requirement/Story roster
+
+The Host can opt into the read-only Requirements view using
+`TALLY_V2_REQUIREMENT_ISSUES_JSON`, a bounded JSON list (up to 16 entries)
+of `{"number":77,"kind":"requirement","parent":null}` and optional nested
+`kind: "epic" | "story"` records referring to other list members.
+No browser is allowed to configure this list. Cycles, foreign parents,
+duplicate IDs and invalid category names are refused.
+
+The already-selected native Octokit reads each Issue via the existing
+`packages/tally-github-c/src/project-intake.mjs` source port and compares
+the exact Issue title, number and canonical URL with a second GitHub read,
+with the selected `version/v2` branch verified both before and after.
+Only source-qualified Issue titles become connected. The category and parent
+pointers are **Host-declared metadata**, not canonical frozen Product or L2
+source; they render as `REQUIREMENT_STRUCTURE=HOST_DECLARED_UNVERIFIED`.
+Product Revision, acceptance references, L2 decisions and Freeze remain
+`null`/`UNKNOWN`, never inferred from the Issue title or closed state.
+No effect/Approval/PRD/Owner grant is created.
+
+If the roster environment is absent, Requirements stay NOT_CONNECTED.
+The existing `ui-requirements-host-http.test.mjs`, native C tests and
+source-level scope tests must pass on Node>=24.
