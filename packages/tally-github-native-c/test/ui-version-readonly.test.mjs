@@ -74,7 +74,25 @@ test('native dependencies are C readback edges, not assistant planned edges',asy
     ...args(native({2:[dep]})),taskIssueNumbers:[1,2],workItemReader:reader});
   assert.equal(r.connected,true);
   assert.deepEqual(r.tasks[1].blockedBy,['1']);
+  assert.equal(r.tasks[1].dependencyState,'CLEAR');
+  assert.equal(r.tasks[1].openBlockerCount,0);
   assert.deepEqual(r.dag.edges.map(e=>[e.from,e.to,e.kind]),[['1','2','NATIVE']]);
+});
+test('open GitHub dependency is source-visible as BLOCKED, not a CAS claim',async()=>{
+  const dep={number:1,html_url:'https://github.com/org/tally/issues/1',
+    state:'open'};
+  const reader=({issueNumber,expectedSourceSha})=>({
+    ...sourceReader({issueNumber,expectedSourceSha}),
+    dependencyState:issueNumber===2?'BLOCKED':'CLEAR',
+    blockerCount:issueNumber===2?1:0,
+    openBlockerCount:issueNumber===2?1:0
+  });
+  const r=await readUiNativeVersionFromClient({
+    ...args(native({2:[dep]})),taskIssueNumbers:[1,2],workItemReader:reader});
+  assert.equal(r.connected,true);
+  assert.equal(r.tasks[1].dependencyState,'BLOCKED');
+  assert.equal(r.tasks[1].openBlockerCount,1);
+  assert.equal(r.tasks[1].claimState,'NOT_VERIFIED');
 });
 test('out-of-roster dependency cannot be silently rendered as complete graph',async()=>{
   const r=await readUiNativeVersionFromClient({
