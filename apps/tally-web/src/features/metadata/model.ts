@@ -15,7 +15,7 @@ export interface AttemptMeta{
 export interface ReportMeta{
   reportId:string;taskId:string;attemptId:string|null;
   kind:'ads-v5-summary'|'ads-v5-correction'|'feedback';
-  subjectSha:string;observedAt:string;evidenceRef:string;
+  subjectSha:string;observedAt:string|null;evidenceRef:string;
   /** ADS reports are self-reported until independently reviewed. */
   independentlyReviewed:boolean;
 }
@@ -36,6 +36,11 @@ export interface LineageMeta{
 }
 export interface VersionMetadata{
   versionId:string;
+  reportCoverage?:'PARTIAL'|'UNKNOWN';
+  telemetryCoverage?:'UNKNOWN'|'VERIFIED';
+  lineageCoverage?:'UNKNOWN'|'VERIFIED';
+  learningCoverage?:'UNKNOWN'|'VERIFIED';
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   attempts:readonly AttemptMeta[];
   reports:readonly ReportMeta[];
   lineage:readonly LineageMeta[];
