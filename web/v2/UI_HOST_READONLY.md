@@ -109,3 +109,20 @@ No effect/Approval/PRD/Owner grant is created.
 If the roster environment is absent, Requirements stay NOT_CONNECTED.
 The existing `ui-requirements-host-http.test.mjs`, native C tests and
 source-level scope tests must pass on Node>=24.
+
+## Optional exact-SHA GitHub CI status for QA (reported only)
+
+`TALLY_V2_QA_STATUS_CONTEXT=ci/woodpecker/push/v2-alm-workspace`
+(or an explicitly selected `ci/woodpecker/pr/...` context) enables
+a read-only GitHub Native C commit-status observation on the pinned version SHA.
+All returned status pages must be complete and match the version branch;
+only a literal `https://ci.kaicreator.com/repos/<id>/pipeline/<id>/<id>`
+evidence URL is eligible. This projects exactly one
+`fullRegression` `REPORTED` record, **not** a full independent QA
+qualification. HiddenValidation, criticalJourneys, installedAcceptance,
+Owner/RQ remain UNKNOWN or NOT_RUN. A missing CI status is a verified
+absence in this scope, not a passed test.
+
+Run `web/v2/ui-qa-host-http.test.mjs` and the Native C status tests on
+Node>=24. Only a real selected Host may set this context; it is not
+computed from or accepted from browser input.
