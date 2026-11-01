@@ -24,3 +24,11 @@ export function chooseVersion(catalog:ScopeCatalog,current:SelectedScope,
   versionId:string|null):SelectedScope{
   return resolveScope(catalog,{projectId:current.projectId,versionId});
 }
+
+/** Canonical Task deep link. Caller must use selected Host-validated scope. */
+export function taskRoute(projectId:string,versionId:string,taskId:string|null){
+  if(!projectId||!versionId)return null;
+  return '#/development/tasks?projectId='+encodeURIComponent(projectId)
+    +'&versionId='+encodeURIComponent(versionId)
+    +(taskId?'&taskId='+encodeURIComponent(taskId):'');
+}
