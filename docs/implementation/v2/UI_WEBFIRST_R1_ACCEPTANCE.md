@@ -99,3 +99,17 @@ Attempt exists. There is no writer or K dispatch. The emitted
 `CLAIM_NOT_VERIFIED` state and `rosterCoverage=UNVERIFIED` are mandatory.
 Absent opt-in, the menu remains NOT_CONNECTED. Full frozen DAG roster,
 accepted Host CAS and independent Reviewer remain separate requirements.
+
+## Requirements — selected GitHub Native C facts, no frozen Product assertion
+
+This R1 source candidate has an additional optional real producer:
+`readUiNativeRequirementsFromClient` reuses the existing GitHub C
+`project-intake` read source and pins all Issue facts to the selected
+version branch as-of read, with final branch/Issue readback. Host receives
+a bounded explicit Requirement/Epic/Story roster and parent IDs; the category
+and tree remain `HOST_DECLARED_UNVERIFIED` until backed by independently
+frozen Product/L2 Task Pack evidence. On this source path, Product Revision,
+acceptance criteria, L2 decision and Freeze cannot be claimed
+(`freezeCoverage=UNKNOWN`). Unconfigured rosters, source drift, parent
+cycles and foreign issues fail closed. New Node24 native, Host and HTTP tests
+must pass before treating it as a production-connected Requirements page.
