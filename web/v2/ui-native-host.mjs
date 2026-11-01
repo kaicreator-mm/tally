@@ -45,6 +45,25 @@ export function createUiV2ReadModelHost({repository,versionId,nativeC}={}){
       const observed=await readVersion(scope);
       return observed.connected?observed.dag:observed;
     },
+    async qa(scope){
+      if(!scoped(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(typeof nativeC.qa!=='function')
+        return deny('QA_STATUS_SOURCE_NOT_CONFIGURED');
+      try{
+        const result=await nativeC.qa();
+        if(result?.connected!==true||
+           result.source?.repository!==repository||
+           result.versionId!==versionId||
+           !['REPORTED_ONLY','NO_MATCHING_STATUS'].includes(result.ciCoverage)||
+           result.independentCoverage!=='UNKNOWN'||
+           !Array.isArray(result.records)||
+           result.records.some(r=>r?.layer!=='fullRegression'||
+             r.provenance!=='REPORTED'||r.subjectSha!==result.source.sourceSha||
+             !['PASS','FAIL','UNKNOWN'].includes(r.outcome)))
+          return deny(result?.reason??'NATIVE_QA_STATUS_UNQUALIFIED');
+        return result;
+      }catch{return deny('NATIVE_QA_READ_FAILED');}
+    },
     async requirements(scope){
       if(!scoped(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
       if(typeof nativeC.requirements!=='function')
