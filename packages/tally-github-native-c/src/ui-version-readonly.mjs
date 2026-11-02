@@ -72,7 +72,7 @@ export async function readUiNativeVersionFromClient({
   workItemReader=null
 }={}){
   if(!validInput(octokit,owner,repo,versionId,expectedSha)||
-     !octokit?.rest?.issues?.get||!octokit?.paginate?.iterator||
+     !octokit?.rest?.issues?.get||!octokit?.rest?.issues?.listForRepo||!octokit?.paginate?.iterator||
      !Array.isArray(taskIssueNumbers)||taskIssueNumbers.length<1||
      taskIssueNumbers.length>200||taskIssueNumbers.some(n=>
        !Number.isSafeInteger(n)||n<1)||
@@ -82,6 +82,23 @@ export async function readUiNativeVersionFromClient({
     if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
       return denied('VERSION_BRANCH_NOT_PINNED');
     const roster=new Set(taskIssueNumbers);
+    const discovered=new Set();
+    for await(const page of octokit.paginate.iterator(octokit.rest.issues.listForRepo,{
+      owner,repo,state:'all',labels:'type:task',per_page:100})){
+      if(!Array.isArray(page?.data))return denied('NATIVE_TASK_ROSTER_PAGE_INVALID');
+      for(const candidate of page.data){
+        if(candidate?.pull_request)continue;
+        const labels=labelNames(candidate?.labels);
+        if(labels?.includes('type:task')){
+          if(!Number.isSafeInteger(candidate.number)||candidate.number<1||
+             discovered.has(candidate.number))
+            return denied('NATIVE_TASK_ROSTER_DUPLICATE_OR_INVALID');
+          discovered.add(candidate.number);
+        }
+      }
+    }
+    if(discovered.size!==roster.size||[...discovered].some(n=>!roster.has(n)))
+      return denied('FROZEN_TASK_ROSTER_INCOMPLETE_OR_EXTRA');
     const tasks=[],nodes=[],edges=[],seenEdges=new Set();
     for(const number of taskIssueNumbers){
       const args={owner,repo,issue_number:number};
@@ -131,7 +148,8 @@ export async function readUiNativeVersionFromClient({
           if(!seenEdges.has(edgeId)){
             seenEdges.add(edgeId);
             edges.push({from:String(dependency.number),to:String(number),
-              kind:'NATIVE',evidenceRef:dependency.html_url,amendedAt:null});
+              kind:'NATIVE',evidenceRef:issue.html_url,
+              dependencyRef:dependency.html_url,amendedAt:null});
           }
         }
       }
