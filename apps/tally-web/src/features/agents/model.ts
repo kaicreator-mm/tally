@@ -15,6 +15,8 @@ export interface AttemptRecord{
   costUsd:null;
   model:string|null;
   provider:string|null;
+  /** Tally-assigned work role; users do not select or message an Agent process. */
+  role?:'BUILDER'|'REVIEWER'|'REPAIR'|'VALIDATOR'|'ORCHESTRATOR'|'UNKNOWN'|null;
 }
 export const UNKNOWN_TEXT='UNKNOWN';
 export function durationLabel(attempt:AttemptRecord):string{
