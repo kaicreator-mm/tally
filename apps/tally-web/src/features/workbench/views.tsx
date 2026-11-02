@@ -58,27 +58,40 @@ export function WorkbenchView({snapshot,page,onNavigate,
             {actionTaskLink(action)?<button type="button"
               onClick={()=>onNavigate(actionTaskLink(action)!)}
               style={{font:'inherit',cursor:'pointer'}}>查看任务</button>:null}
-            {actionCatalog?(()=>{
-              const gate=workbenchActionGate(snapshot,actionCatalog,action);
-              const enabled=gate.enabled&&typeof onAction==='function'&&
-                actionCatalog.source!==undefined&&actionCatalog.versionId!==undefined;
-              return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
-                <Button disabled={!enabled}
-                  onClick={enabled?()=>onAction?.({
-                    repository:actionCatalog.source!.repository,
-                    versionId:actionCatalog.versionId!,
-                    sourceSha:actionCatalog.source!.sourceSha,
-                    actionId:gate.actionId!,revision:gate.revision!
-                  }):undefined}>
-                  {gate.label==='操作不可用'?'执行操作':gate.label}
-                </Button>
-                {!enabled?<span role="status" style={{fontSize:11,
-                  color:'var(--text-muted)'}}>{gate.reason}</span>:null}
-              </div>;
-            })():null}
+            {actionCatalog!==undefined?<WorkbenchActionButton
+              snapshot={snapshot} catalog={actionCatalog} action={action}
+              onAction={onAction}/>:null}
           </div>
         </div>)}
       </div>}
     </Card>
+  </div>;
+}
+
+
+function WorkbenchActionButton({snapshot,catalog,action,onAction}:{
+  snapshot:WorkbenchSnapshot|null;catalog:SelectedActionCatalog|null;
+  action:import('./model.ts').WorkAction;
+  onAction?: (request:WorkbenchActionRequest)=>void;
+}){
+  const gate=workbenchActionGate(snapshot,catalog,action);
+  const source=catalog?.source;
+  const versionId=catalog?.versionId;
+  const enabled=gate.enabled&&typeof onAction==='function'&&
+    source!==undefined&&versionId!==undefined&&
+    gate.actionId!==null&&gate.revision!==null;
+  const submit=()=>{
+    if(!enabled||!onAction||!source||!versionId||
+       !gate.actionId||gate.revision===null)return;
+    onAction({repository:source.repository,versionId,
+      sourceSha:source.sourceSha,actionId:gate.actionId,
+      revision:gate.revision});
+  };
+  return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
+    <Button disabled={!enabled} onClick={enabled?submit:undefined}>
+      {gate.enabled?gate.label:'执行操作'}
+    </Button>
+    {!enabled?<span role="status" style={{fontSize:11,
+      color:'var(--text-muted)'}}>{gate.reason}</span>:null}
   </div>;
 }
