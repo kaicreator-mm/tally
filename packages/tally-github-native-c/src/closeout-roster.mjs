@@ -50,11 +50,17 @@ function parseYaml(body){
 }
 async function exactComment({octokit,owner,repo,issueNumber,commentId,login}){
   try{
-    const c=(await octokit.rest.issues.getComment({owner,repo,comment_id:commentId}))?.data;
-    if(c?.id!==commentId||c.html_url!==commentUrl(owner+'/'+repo,issueNumber,commentId)||
-       c.issue_url!==apiIssueUrl(owner,repo,issueNumber)||c.user?.login!==login||
-       typeof c.body!=='string'||c.created_at!==c.updated_at)return null;
-    return c;
+    const params={owner,repo,comment_id:commentId};
+    const first=(await octokit.rest.issues.getComment(params))?.data;
+    const second=(await octokit.rest.issues.getComment(params))?.data;
+    const valid=c=>c?.id===commentId&&
+      c.html_url===commentUrl(owner+'/'+repo,issueNumber,commentId)&&
+      c.issue_url===apiIssueUrl(owner,repo,issueNumber)&&c.user?.login===login&&
+      typeof c.body==='string'&&c.body.length<=256*1024&&
+      typeof c.created_at==='string'&&c.created_at===c.updated_at;
+    if(!valid(first)||!valid(second)||first.updated_at!==second.updated_at||
+       first.body!==second.body||first.user.login!==second.user.login)return null;
+    return first;
   }catch{return null;}
 }
 
@@ -99,6 +105,7 @@ export function createHostResponsibilityHandoffReaderFromClient({
          h.from_operator_id!=='zcode:i259:closeout:1'||h.to_operator_id!==WEB_OPERATOR||
          h.to_operator_kind!=='chatgpt-web'||h.to_actor_role!=='builder'||
          h.execution_environment!=='WEB'||h.scheduler_origin!=='WEB'||
+         !ID.test(h.handoff_dispatch_id??'')||
          h.protected_claim_key!==claimSubject.protectedClaimKey||
          h.admission_generation!==claimSubject.generation||
          h.authority_ref!=='#259@'+authorityCommentId)
@@ -197,7 +204,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
         issueNumber:a.issueNumber,expectedSourceSha:a.claimSourceSha});
       if(!before){
         const after=await store.get(key);
-        if(after!==null)return notVerified(a,'CLAIM_CHANGED_DURING_READ');
+        if(after!==null&&after!==undefined)return notVerified(a,'CLAIM_CHANGED_DURING_READ');
         if(events?.reason==='NO_DISPATCH_CLAIM_EVENTS'&&events.candidateCount===0){
           if(s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED')return notClaimed(a);
           return notVerified(a,'EXPECTED_CLAIM_EVENT_MISSING');
@@ -457,17 +464,23 @@ export function createHostVersionTaskDagReader({
       if(!doc||doc.schema!=='tally/version-task-dag/v1'||
          doc.phase!=='FROZEN_VERSION_TASK_DAG'||doc.repository!==repository||
          doc.versionId!==versionId||doc.sourceSha!==expectedVersionSha||
+         doc.authorized!==false||doc.admitted!==false||
+         doc.taskPass!==false||doc.releasePass!==false||
          !SHA.test(doc.blobSha??'')||doc.frozen?.blobSha!==doc.blobSha||
          doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
          doc.witness?.blobSha!==doc.blobSha||doc.witness?.sourceSha!==expectedVersionSha||
          doc.witness?.reviewedHeadSha!==expectedVersionSha||
          !ID.test(doc.witness?.reviewer??'')||!ID.test(doc.witness?.author??'')||
          doc.witness.reviewer===doc.witness.author||
+         !Number.isFinite(Date.parse(doc.witness.verifiedAt??''))||
          typeof doc.witness.reviewRef!=='string'||
          !doc.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
+         doc.ownerApproval?.status!=='OWNER_APPROVED'||
          doc.ownerApproval?.sourceSha!==expectedVersionSha||
          doc.ownerApproval?.owner!==repository.split('/')[0]||
+         !Number.isFinite(Date.parse(doc.ownerApproval.approvedAt??''))||
          typeof doc.frozenAt!=='string'||!Number.isFinite(Date.parse(doc.frozenAt))||
+         doc.frozen?.versionId!==versionId||doc.frozen?.taskPackRef!==doc.taskPackRef||
          !immutableBlobRef(doc.taskPackRef,repository)||
          typeof doc.ownerApproval.approvalRef!=='string'||
          !doc.ownerApproval.approvalRef.startsWith('https://github.com/'+repository+'/'))
