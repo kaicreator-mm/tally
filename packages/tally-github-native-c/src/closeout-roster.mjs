@@ -281,9 +281,12 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
     if(x.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
        (!Number.isSafeInteger(x.commentId)||x.commentId<1||
         !ID.test(x.dispatchId??'')||!ID.test(x.operatorKind??'')||
-        !ID.test(x.operatorId??'')||
+        !ID.test(x.operatorId??'')||!Number.isSafeInteger(x.generation)||x.generation<1||
+        x.commentRef!==commentUrl(repository,x.issueNumber,x.commentId)||
         x.protectedClaimKey!==repository+'#'+x.issueNumber+':'+x.actorRole+':__default__'))
       return false;
+    if(x.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
+       (x.commentId!==null||x.commentRef!==null||x.dispatchId!==null))return false;
     if(!['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(x.candidateStatus))
       return false;
     subjects.add(x.issueNumber);
@@ -336,11 +339,16 @@ export function createHostVersionTaskDagFreezeWriter({
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==taskPackBlobSha||review.sourceSha!==expectedVersionSha||
          !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
-         review.reviewer===review.author||typeof review.reviewRef!=='string')
+         review.reviewer===review.author||!SHA.test(review.reviewedHeadSha??'')||
+         typeof review.reviewRef!=='string'||
+         !review.reviewRef.startsWith('https://github.com/'))
         return {status:'BLOCKED',reason:'INDEPENDENT_REVIEW_REQUIRED'};
       if(approval?.status!=='OWNER_APPROVED'||
          approval.taskPackBlobSha!==taskPackBlobSha||
-         approval.sourceSha!==expectedVersionSha||typeof approval.approvalRef!=='string')
+         approval.sourceSha!==expectedVersionSha||
+         approval.owner!==repository.split('/')[0]||
+         typeof approval.approvalRef!=='string'||
+         !approval.approvalRef.startsWith('https://github.com/'))
         return {status:'BLOCKED',reason:'OWNER_APPROVAL_REQUIRED'};
       const value={schema:'tally/version-task-dag/v1',phase:'FROZEN_VERSION_TASK_DAG',
         repository,versionId,sourceSha:expectedVersionSha,taskPackRef,
