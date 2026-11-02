@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createUiActionPort} from './ui-action-port.mjs';
+import {createUiActionPort,businessIntentForUiAction} from './ui-action-port.mjs';
 const repository='org/tally',versionId='version/v2',sha='a'.repeat(40);
 const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
 const eligible={id:'start-260',kind:'START_AGENT',revision:1,label:'启动已准入 Agent',
@@ -91,4 +91,18 @@ test('UI cannot invent Task creation or CAS Claim publication as Business intent
       .actions();
     assert.equal(result.connected,false);
   }
+});
+
+test('Host action kinds map only to existing selected Business intents',()=>{
+  assert.equal(businessIntentForUiAction('FREEZE_PRODUCT'),'freezeProductIntake');
+  assert.equal(businessIntentForUiAction('ADMIT_PROJECT'),'admitProjectIntake');
+  assert.equal(businessIntentForUiAction('ADMIT_CLAIMED_TASK'),'admitClaimedTask');
+  assert.equal(businessIntentForUiAction('START_AGENT'),'runLocalCodexAttempt');
+  assert.equal(businessIntentForUiAction('REVIEW_REPAIR'),'joinReviewedCandidates');
+  assert.equal(businessIntentForUiAction('PUBLISH_CANDIDATE'),'publishReviewedCandidate');
+  assert.equal(businessIntentForUiAction('PUBLISH_MAINTENANCE_ISSUE'),'publishMaintenanceIssue');
+  assert.equal(businessIntentForUiAction('RECORD_TASK_LEARNING'),'recordTaskLearningOutcome');
+  assert.equal(businessIntentForUiAction('DELIVER_QUALIFIED_RELEASE'),'deliverQualifiedRelease');
+  assert.equal(businessIntentForUiAction('CREATE_TASK'),null);
+  assert.equal(businessIntentForUiAction('CLAIM_TASK'),null);
 });
