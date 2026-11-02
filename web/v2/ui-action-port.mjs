@@ -147,8 +147,11 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
 /** Pure HTTP boundary for E's same-origin route. E owns socket/body parsing and
  * calls this adapter; it cannot be mounted by a browser or expose credentials.
  */
-export function createUiActionHttpAdapter({actionPort,origin,csrfKey}={}){
+export function createUiActionHttpAdapter({
+  actionPort,origin,csrfKey,repository,versionId
+}={}){
   if(typeof actionPort?.actions!=='function'||typeof actionPort?.submit!=='function'||
+     !REPO.test(repository??'')||!VERSION.test(versionId??'')||
      typeof origin!=='string'||!/^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin)||
      typeof csrfKey!=='string'||csrfKey.length<32)
     throw new TypeError('UI_ACTION_HTTP_HOST_CONFIGURATION_REQUIRED');
