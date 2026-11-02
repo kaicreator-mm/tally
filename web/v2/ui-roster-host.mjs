@@ -31,8 +31,8 @@ function frozenOk(doc,repository,versionId,expectedSha){
      !Array.isArray(doc.frozen.edges)||doc.frozen.edges.length>2000||
      !Array.isArray(doc.frozen.claimSubjects)||
      doc.frozen.claimSubjects.length!==doc.frozen.taskIssues.length||
-     doc.frozen.taskPackRef!==doc.frozen.taskPackRef||
-     !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\//.test(doc.frozen.taskPackRef??''))
+     doc.frozen.taskPackRef!==doc.taskPackRef||
+     !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\//.test(doc.taskPackRef??''))
     return false;
   const tasks=doc.frozen.taskIssues;
   if(tasks.some(n=>!Number.isSafeInteger(n)||n<1)||
@@ -75,17 +75,17 @@ const equalFreeze=(a,b)=>a.witness.blobSha===b.witness.blobSha&&
   a.versionId===b.versionId&&
   sameSet(new Set(a.frozen.taskIssues),new Set(b.frozen.taskIssues))&&
   same(a.frozen.edges,b.frozen.edges)&&same(a.frozen.claimSubjects,b.frozen.claimSubjects);
-function claimBaseOk(claim,repository,versionSha,issueNumber,subject,taskPackRef,blobSha){
+function claimBaseOk(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha){
   return claim?.connected===true&&claim.source?.repository===repository&&
     claim.source.sourceSha===subject.sourceSha&&claim.source.currentness==='PINNED'&&
-    claim.source.readback==='VERIFIED'&&claim.versionId!==undefined&&
+    claim.source.readback==='VERIFIED'&&claim.versionId===versionId&&
     claim.versionSourceSha===versionSha&&claim.claimSourceSha===subject.sourceSha&&
     claim.taskPackRef===taskPackRef&&claim.taskPackBlobSha===blobSha&&
     claim.issueNumber===issueNumber&&claim.authorized===false&&
     claim.admitted===false&&claim.taskPass===false&&claim.releasePass===false;
 }
-function validClaim(claim,repository,versionSha,issueNumber,subject,taskPackRef,blobSha){
-  if(!claimBaseOk(claim,repository,versionSha,issueNumber,subject,taskPackRef,blobSha))
+function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha){
+  if(!claimBaseOk(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha))
     return false;
   if(claim.claimStatus==='NOT_CLAIMED')
     return subject.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
@@ -160,8 +160,8 @@ export function createUiRosterHost({repository,versionId,expectedSha,
             taskPackRef,taskPackBlobSha,claimSubject:subject};
           const first=await claimHost.readAcceptedClaim(args);
           const second=await claimHost.readAcceptedClaim(args);
-          if(!validClaim(first,repository,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
-             !validClaim(second,repository,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
+          if(!validClaim(first,repository,versionId,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
+             !validClaim(second,repository,versionId,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
              JSON.stringify(first)!==JSON.stringify(second))
             return denial('ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
           claimResults.push(first);
@@ -174,7 +174,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       for(const edge of native.dag.edges){
         if(!edge||edge.kind!=='NATIVE'||
            !frozenIds.has(String(edge.from))||!frozenIds.has(String(edge.to))||
-           !String(edge.evidenceRef??'').startsWith('https://github.com/'+repository+'/issues/'))
+           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.to)
           return denial('UNQUALIFIED_NATIVE_DEPENDENCY');
         const key=edgeId(edge.from,edge.to);
         if(observed.has(key)||!planned.has(key))
