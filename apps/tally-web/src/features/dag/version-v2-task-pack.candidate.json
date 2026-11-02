@@ -521,6 +521,14 @@
       "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/263"
+    },
+    {
+      "from": 211,
+      "to": 212,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "Issue #212 declares #211 as a dependency; GitHub native blocked_by readback is currently absent, so this remains PLANNED and is not executable."
     }
   ],
   "claimSubjects": [
@@ -1052,6 +1060,7 @@
     "Task roster is a candidate snapshot; Host must re-read the complete type:task set.",
     "DISPATCH_CLAIMED comments are candidate evidence only; CAS acceptance is NOT_VERIFIED.",
     "Closed Issues remain closure-unverified until independent closeout evidence is read.",
-    "Only native blocked_by edges observed at snapshot are included."
+    "Only native blocked_by edges observed at snapshot are included.",
+    "Issue #212 describes a dependency on #211, but current GitHub native blocked_by readback is empty; preserve it as PLANNED, never project it as NATIVE."
   ]
 }
