@@ -34,8 +34,13 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
     return deny('NO_HOST_ACTION_FOR_ITEM');
   const matching=catalog.actions.filter(a=>
     a.taskIssue===Number(workItem.taskId)&&a.state==='ELIGIBLE'&&
-    ((workItem.kind==='REVIEW'&&a.kind==='REVIEW_REPAIR')||
-     (workItem.kind==='DECISION'&&a.kind==='FREEZE_PRODUCT')));
+    (workItem.hostActionId!==undefined&&workItem.hostActionId!==null
+      ?a.id===workItem.hostActionId&&
+        a.revision===workItem.hostActionRevision&&
+        a.kind===workItem.hostActionKind
+      :(workItem.kind==='REVIEW'&&a.kind==='REVIEW_REPAIR')||
+       (workItem.kind==='DECISION'&&a.kind==='FREEZE_PRODUCT')||
+       (workItem.kind==='RECOVERY'&&a.kind==='START_AGENT')));
   if(matching.length!==1)return deny('HOST_ACTION_NOT_ELIGIBLE_OR_AMBIGUOUS');
   const a=matching[0];
   if(!/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(a.id)||
