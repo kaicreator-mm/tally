@@ -70,6 +70,13 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
   if(typeof host?.dispatchStep!=='function')
     return deny('GUIDED_HOST_DISPATCH_UNAVAILABLE');
   try{
+    // Close the read→dispatch race: the selected Business/Host must still
+    // issue the same exact step immediately before the side effect. K/Host
+    // performs its own CAS/permit check inside dispatchStep.
+    const latest=await host.readCurrentStep({...scope,sourceSha:currentSha});
+    if(!verifyGuidedSnapshot(latest,scope,currentSha)||
+       JSON.stringify(latest.step)!==JSON.stringify(read.step))
+      return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
     const result=await host.dispatchStep({
       ...scope,sourceSha:currentSha,journeyId:payload.journeyId,
       stepId:payload.stepId,revision:payload.revision,answers:payload.answers});
