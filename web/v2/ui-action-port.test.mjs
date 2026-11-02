@@ -83,3 +83,12 @@ test('lost dispatch acknowledgement does not claim success or retry',async()=>{
   assert.equal(r.status,'UNKNOWN');
   assert.equal(JSON.stringify(r).includes('private key'),false);
 });
+
+test('UI cannot invent Task creation or CAS Claim publication as Business intents',async()=>{
+  for(const kind of ['CREATE_TASK','CLAIM_TASK']){
+    const action={...eligible,kind};
+    const result=await make({readCurrentActions:async()=>({...snapshot(),actions:[action]})})
+      .actions();
+    assert.equal(result.connected,false);
+  }
+});
