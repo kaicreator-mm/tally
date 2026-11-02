@@ -46,3 +46,13 @@ test('rejected stale form does not reach Host dispatcher',async()=>{
   assert.equal(denied.reason,'GUIDED_STEP_STALE_OR_INVALID');
   assert.equal(called,false);
 });
+
+test('selected Business step is re-read before any dispatch side effect',async()=>{
+  let reads=0,dispatches=0;
+  const host={readCurrentStep:async()=>reads++===0?snapshot:
+    {...snapshot,step:{...step,revision:2}},
+    dispatchStep:async()=>{dispatches++;return{ok:true,nextStep:null}}};
+  const result=await submitGuidedStep(host,scope,sha,form);
+  assert.equal(result.reason,'GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
+  assert.equal(dispatches,0);
+});
