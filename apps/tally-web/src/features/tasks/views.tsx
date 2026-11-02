@@ -11,6 +11,8 @@ import {Drawer} from '../../components/ui/Drawer.tsx';
 import {DataTable} from '../../components/ui/DataTable.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 import {Collapse} from '../../components/ui/Collapse.tsx';
+import type {TaskActionCatalog,TaskActionRequest} from '../task-actions/model.ts';
+import {TaskActionsView} from '../task-actions/views.tsx';
 
 export type ViewMode='list'|'board';
 export function TasksView({tasks,filters,setFilters,onSelectTask,selectedTaskId,
@@ -152,8 +154,11 @@ export function TaskBoardView({tasks,onSelectTask,locale='zh'}:
     </section>)}
   </div>;
 }
-export function TaskDrawer({task,onClose,locale='zh'}:
-  {task:TaskRecord|null;onClose:()=>void;locale?:'zh'|'en'}){
+export function TaskDrawer({task,onClose,locale='zh',projectId,
+  actionCatalog,onAction}:
+  {task:TaskRecord|null;onClose:()=>void;locale?:'zh'|'en';
+   projectId?:string|null;actionCatalog?:TaskActionCatalog|null;
+   onAction?:(request:TaskActionRequest)=>void}){
   const zh=locale==='en'?false:true;
   return <Drawer open={task!==null} onClose={onClose}
     title={task?`${task.id} · ${task.title}`:''}>
@@ -175,6 +180,14 @@ export function TaskDrawer({task,onClose,locale='zh'}:
               <code>{blocker.code}</code> — {blocker.detail}</li>)}
           </ul>}
       </section>
+      {projectId&&actionCatalog!==undefined?<section
+        aria-label={zh?'任务可执行操作':'Task actions'}>
+        <strong style={{display:'block',marginBottom:'var(--s2)'}}>
+          {zh?'当前可用操作':'Available actions'}</strong>
+        <TaskActionsView catalog={actionCatalog} projectId={projectId}
+          versionId={task.versionId} taskIssue={Number(task.id)}
+          onDispatch={request=>onAction?.(request)} locale={locale}/>
+      </section>:null}
       <section aria-label={zh?'执行与评审':'execution'}>
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
           {zh?'执行与评审':'Execution & review'}</strong>
