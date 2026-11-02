@@ -12,6 +12,13 @@ const receipt={status:'OBSERVED',sourceSha:sha,actionId:'start-260',
   receiptRef:'https://github.com/org/tally/issues/260#issuecomment-100'};
 const make=(overrides={})=>createUiActionPort({repository,versionId,expectedSha:sha,
   host:{readCurrentActions:async()=>snapshot(),dispatchAuthorizedAction:async()=>receipt,...overrides}});
+test('port publishes immutable selected scope for the HTTP boundary',()=>{
+  const port=make();
+  assert.deepEqual(port.scope,{repository,versionId,sourceSha:sha});
+  assert.equal(Object.isFrozen(port.scope),true);
+  assert.equal(Reflect.set(port.scope,'repository','evil/repo'),false);
+  assert.equal(port.scope.repository,repository);
+});
 test('missing Host and foreign scope fail closed',async()=>{
   assert.equal((await createUiActionPort({repository,versionId,expectedSha:sha}).actions()).connected,false);
   assert.equal((await make().actions({repository:'evil/repo'})).reason,'ACTION_SCOPE_MISMATCH');
