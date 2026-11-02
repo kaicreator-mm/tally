@@ -154,7 +154,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
     versionId,versionSourceSha:expectedVersionSha,issueNumber:a.issueNumber,
     claimSourceSha:a.claimSourceSha,taskPackRef:a.taskPackRef,
     taskPackBlobSha:a.taskPackBlobSha,claimStatus:'NOT_VERIFIED',
-    claimAccepted:false,claimPublication:'CANDIDATE_ONLY',reason,
+    claimAccepted:false,claimPublication:more.commentId?'CANDIDATE_ONLY':'NOT_VERIFIED',reason,
     authorized:false,admitted:false,taskPass:false,releasePass:false,...more});
   const notClaimed=a=>({connected:true,
     source:{repository,sourceSha:a.claimSourceSha,currentness:'PINNED',readback:'VERIFIED'},
@@ -191,9 +191,10 @@ export function createHostCloseoutClaimReadbackPortFromClient({
       if(!before){
         const after=await store.get(key);
         if(after!==null)return notVerified(a,'CLAIM_CHANGED_DURING_READ');
-        if(events?.reason==='NO_DISPATCH_CLAIM_EVENTS'&&events.candidateCount===0&&
-           s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED')
-          return notClaimed(a);
+        if(events?.reason==='NO_DISPATCH_CLAIM_EVENTS'&&events.candidateCount===0){
+          if(s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED')return notClaimed(a);
+          return notVerified(a,'EXPECTED_CLAIM_EVENT_MISSING');
+        }
         const c=events?.candidates?.find(x=>x.protectedClaimKey===s.protectedClaimKey);
         return notVerified(a,'NATIVE_EVENT_WITHOUT_CAS_ROW',c?{
           commentId:c.commentId,commentRef:c.commentRef,
