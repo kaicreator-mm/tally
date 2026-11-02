@@ -7,7 +7,7 @@ const actionPort={actions:async()=>({connected:true,source:{repository,
   sourceSha,currentness:'CURRENT',readback:'VERIFIED'},versionId,actions:[]}),
   submit:async request=>({connected:true,ok:true,status:'OBSERVED',
     actionId:request.actionId,sourceSha,receiptRef:'https://github.com/org/tally/issues/1#issuecomment-1'})};
-const adapter=()=>createUiActionHttpAdapter({actionPort,origin,csrfKey});
+const adapter=()=>createUiActionHttpAdapter({actionPort,origin,csrfKey,repository,versionId});
 test('same-origin GET reads a scoped Host action catalog',async()=>{
   const r=await adapter().handle({method:'GET',path:'/api/v2/actions',origin,
     query:{projectId:repository,versionId}});
@@ -38,4 +38,12 @@ test('unknown route and malformed origin fail closed',async()=>{
     origin,csrfKey,body:{}})).status,404);
   assert.equal((await adapter().handle({method:'GET',path:'/api/v2/actions',
     origin:'null',query:{projectId:repository,versionId}})).status,403);
+});
+
+test('HTTP adapter requires explicit selected repository and version scope',()=>{
+  assert.throws(()=>createUiActionHttpAdapter({actionPort,origin,csrfKey}),
+    /UI_ACTION_HTTP_HOST_CONFIGURATION_REQUIRED/);
+  assert.throws(()=>createUiActionHttpAdapter({actionPort,origin,csrfKey,
+    repository:'evil/repo',versionId}),
+    /UI_ACTION_HTTP_HOST_CONFIGURATION_REQUIRED/);
 });
