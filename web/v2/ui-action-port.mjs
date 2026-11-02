@@ -17,6 +17,22 @@ const KINDS=new Set(['FREEZE_PRODUCT','ADMIT_PROJECT','ADMIT_CLAIMED_TASK',
   'START_AGENT','REVIEW_REPAIR','PUBLISH_CANDIDATE',
   'PUBLISH_MAINTENANCE_ISSUE','RECORD_TASK_LEARNING',
   'DELIVER_QUALIFIED_RELEASE']);
+const BUSINESS_INTENT_BY_KIND=Object.freeze({
+  FREEZE_PRODUCT:'freezeProductIntake',
+  ADMIT_PROJECT:'admitProjectIntake',
+  ADMIT_CLAIMED_TASK:'admitClaimedTask',
+  START_AGENT:'runLocalCodexAttempt',
+  REVIEW_REPAIR:'joinReviewedCandidates',
+  PUBLISH_CANDIDATE:'publishReviewedCandidate',
+  PUBLISH_MAINTENANCE_ISSUE:'publishMaintenanceIssue',
+  RECORD_TASK_LEARNING:'recordTaskLearningOutcome',
+  DELIVER_QUALIFIED_RELEASE:'deliverQualifiedRelease',
+});
+/** Exact public Tally Engineering Business intent mapping for E's one-K adapter. */
+export function businessIntentForUiAction(kind){
+  return typeof kind==='string'?BUSINESS_INTENT_BY_KIND[kind]??null:null;
+}
+
 const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,})\b/;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const denied=(reason)=>({connected:false,ok:false,status:'DENIED',reason});
