@@ -75,7 +75,7 @@ export function createHostResponsibilityHandoffReaderFromClient({
       ]);
       if(!authority||!scope||!handoff||!ack||
          !authority.body.includes('Owner-authorized responsibility handoff')||
-         !authority.body.includes('Receiving Builder: '+WEB_OPERATOR)||
+         !authority.body.includes('Receiving Builder')||!authority.body.includes(WEB_OPERATOR)||
          !authority.body.includes(claimSubject.dispatchId)||
          !authority.body.includes(String(claimSubject.commentId))||
          !scope.body.includes('frozen write sets')||
@@ -84,6 +84,7 @@ export function createHostResponsibilityHandoffReaderFromClient({
       const h=parseYaml(handoff.body),a=parseYaml(ack.body);
       const parentRef='#'+issueNumber+'@'+claimSubject.commentId;
       if(!h||h.schema!=='tally/responsibility-handoff/v1'||
+         h.responsibility_mode!=='RESPONSIBILITY_HANDOFF'||
          h.repository!==repository||h.task!=='#'+issueNumber||h.issue!=='#'+issueNumber||
          h.source_sha!==claimSubject.sourceSha||h.parent_dispatch_ref!==parentRef||
          h.parent_dispatch_id!==claimSubject.dispatchId||
@@ -101,7 +102,10 @@ export function createHostResponsibilityHandoffReaderFromClient({
         canonicalScope='https://github.com/'+repository+'/issues/'+scopeIssueNumber+
           '#issuecomment-'+scopeCommentId;
         if(!c||c.schema!=='tally/responsibility-handoff-scope-ref-correction/v1'||
-           c.task!=='#'+issueNumber||c.recorded_scope_ref!==h.scope_ref||
+           c.task!=='#'+issueNumber||
+           c.original_handoff_ref!=='#'+issueNumber+'@'+cfg.handoffCommentId||
+           c.original_authority_ref!=='#259@'+authorityCommentId||
+           c.recorded_scope_ref!==h.scope_ref||
            c.canonical_scope_ref!==canonicalScope||
            c.canonical_scope_issue!==scopeIssueNumber||
            c.canonical_scope_comment_id!==scopeCommentId||
@@ -113,7 +117,7 @@ export function createHostResponsibilityHandoffReaderFromClient({
          a.repository!==repository||a.task!=='#'+issueNumber||
          a.source_sha!==claimSubject.sourceSha||a.parent_dispatch_ref!==parentRef||
          a.parent_dispatch_id!==claimSubject.dispatchId||
-         a.handoff_ref!==commentUrl(repository,issueNumber,cfg.handoffCommentId)||
+         a.handoff_ref!=='#'+issueNumber+'@'+cfg.handoffCommentId||
          a.handoff_dispatch_id!==h.handoff_dispatch_id||
          a.protected_claim_key!==claimSubject.protectedClaimKey||
          a.admission_generation!==claimSubject.generation||
