@@ -73,7 +73,8 @@ function frozenOk(doc,repository,versionId,expectedSha){
     if(!e||!known.has(String(e.from))||!known.has(String(e.to))||
        String(e.from)===String(e.to)||!['NATIVE','PLANNED'].includes(e.kind))
       return false;
-    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.to)return false;
+    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.to||
+       e.dependencyRef!=='https://github.com/'+repository+'/issues/'+e.from)return false;
     const k=edgeId(e.from,e.to);
     if(edges.has(k))return false;
     edges.add(k);
