@@ -81,8 +81,8 @@ const EXECUTION_STATES=new Set([
 const EXECUTION_ROLES=new Set(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
 const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
-const PROGRESS_SECRET=/\\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\\s+\\S+)\\b/i;
-const CANDIDATE_PR=/^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/pull\\/[1-9][0-9]*$/;
+const PROGRESS_SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
+const CANDIDATE_PR=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/[1-9][0-9]*$/;
 function validTaskExecution(execution,repository){
   if(!plain(execution)||Object.keys(execution).sort().join(',')!==
     'attemptId,candidateRef,costUsd,elapsedMs,heartbeatAt,progressSummary,progressSummaryKind,provider,role,state,tokensIn,tokensOut'||
@@ -94,7 +94,7 @@ function validTaskExecution(execution,repository){
     !(execution.progressSummaryKind==='NOT_AVAILABLE'&&execution.progressSummary===null||
       execution.progressSummaryKind==='SANITIZED'&&typeof execution.progressSummary==='string'&&
       execution.progressSummary.length>0&&execution.progressSummary.length<=240&&
-      !/[\\u0000-\\u001f\\u007f]/.test(execution.progressSummary)&&
+      !/[\u0000-\u001f\u007f]/.test(execution.progressSummary)&&
       !PROGRESS_SECRET.test(execution.progressSummary))||
     !(execution.heartbeatAt===null||typeof execution.heartbeatAt==='string'&&
       execution.heartbeatAt.length<=40&&Number.isFinite(Date.parse(execution.heartbeatAt)))||
