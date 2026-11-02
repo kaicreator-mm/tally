@@ -10,7 +10,7 @@ const snap=()=>({connected:true,source,versionId,candidates:[candidate]});
 const request={repository,versionId,sourceSha:sha,candidateId:'lesson-1',
   revision:1,decision:'ADOPT'};
 const receipt={status:'OBSERVED',candidateId:'lesson-1',sourceSha:sha,
-  decisionReceiptRef:'https://github.com/org/tally/issues/52#issuecomment-1'};
+  decision:'ADOPTED',decisionReceiptRef:'https://github.com/org/tally/issues/52#issuecomment-1'};
 const make=(overrides={})=>createUiExperienceHost({repository,versionId,
   expectedSha:sha,selectedHost:{readExperienceCandidates:async()=>snap(),
     dispatchExperienceDecision:async()=>receipt,...overrides}});
@@ -232,8 +232,61 @@ test('selected maintenance Host independently refuses ADOPT for UNKNOWN report',
     maintenanceController:controller,repository,versionId,expectedSha:sha,
     trustedPublisherRepositories:[publisherRepository]});
   const result=await adapter.dispatchExperienceDecision({repository,versionId,
-    sourceSha:sha,candidateId:staleSuggestion.learningId,revision:1,decision:'ADOPT'});
+    sourceSha:sha,candidateId:staleSuggestion.learningId,revision:1,decision:'ADOPT',
+    evidenceRef:staleSuggestion.provenance.publicationRef,
+    publisherRepository,reportQualification:'UNKNOWN'});
   assert.equal(result.status,'DENIED');
   assert.equal(result.reason,'UNQUALIFIED_REPORT_CANNOT_BE_ADOPTED');
   assert.equal(recordCalls,0);
+});
+
+
+test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const publicationRef='https://github.com/'+publisherRepository+
+    '/issues/10#issuecomment-6381704605';
+  const staleSuggestion={learningId:'c'.repeat(64),taskIssueRef:null,
+    targetIssueRef:'https://github.com/'+publisherRepository+'/issues/10',
+    subjectSha:null,qualification:'STALE',
+    provenance:{reportId:'task-meta:stale',revision:2,
+      kind:'EXECUTION_SUMMARY',commentId:6381704605,issueNumber:10,
+      namespace:'task-meta:'+publisherRepository,dataDigest:'c'.repeat(64),
+      publicationRef},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  let decision=null,recordCalls=0;
+  const controller={
+    async dispatch(_sha,kind,args){
+      if(kind==='load-learning')return {status:'OK',
+        reason:'PUBLIC_ADS_REPORTS_OBSERVED'};
+      if(kind==='record-learning'){
+        recordCalls++;decision=args.decision;
+        return {state:'LEARNING_RECORDED',decision,claimAccepted:true,
+          admitted:true,authorized:false,taskPass:false,releasePass:false,
+          githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+          noAgentRanking:true,qualityGainClaimed:false};
+      }
+      return {status:'DENIED'};
+    },
+    snapshot(){return {status:'OBSERVED',sourceSha:sha,learning:[{
+      ...staleSuggestion,decision,recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED',
+      qualityGainClaimed:false,noAgentRanking:true,measuredEffect:'NOT_MEASURED'}]};}
+  };
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository]});
+  const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],selectedHost:adapter});
+  const listed=await host.candidates();
+  assert.equal(listed.connected,true);
+  assert.equal(listed.candidates[0].reportQualification,'STALE');
+  const adopted=await host.decision({...request,candidateId:staleSuggestion.learningId,
+    revision:2,decision:'ADOPT'});
+  assert.equal(adopted.status,'DENIED');
+  assert.equal(recordCalls,0);
+  const rejected=await host.decision({...request,candidateId:staleSuggestion.learningId,
+    revision:2,decision:'REJECT'});
+  assert.equal(rejected.status,'OBSERVED');
+  assert.equal(rejected.ok,true);
+  assert.equal(decision,'REJECTED');
+  assert.equal(recordCalls,1);
 });
