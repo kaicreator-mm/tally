@@ -113,7 +113,9 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
   assert.equal(source.candidates[0].state,'PROPOSED');
   assert.equal(source.candidates[0].sourceRef,suggestion.provenance.publicationRef);
   const result=await adapter.dispatchExperienceDecision({repository,versionId,
-    sourceSha:sha,candidateId:suggestion.learningId,revision:2,decision:'ADOPT'});
+    sourceSha:sha,candidateId:suggestion.learningId,revision:2,decision:'ADOPT',
+    evidenceRef:suggestion.provenance.publicationRef,
+    publisherRepository:repository,reportQualification:'VERIFIED'});
   assert.equal(result.status,'OBSERVED');
   assert.equal(result.decisionReceiptAuthority,
     'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT');
