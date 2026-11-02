@@ -19,8 +19,10 @@ function frozenOk(doc,repository,versionId,expectedSha){
      doc.source.readback!=='VERIFIED'||doc.versionId!==versionId||
      doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
      doc.witness?.sourceSha!==expectedSha||
-     doc.witness?.reviewedHeadSha!==expectedSha||
-     doc.witness?.author===doc.witness?.reviewer||
+     !SHA.test(doc.witness?.reviewedHeadSha??'')||
+     typeof doc.witness?.author!=='string'||!doc.witness.author||
+     typeof doc.witness?.reviewer!=='string'||!doc.witness.reviewer||
+     doc.witness.author===doc.witness.reviewer||
      doc.ownerApproval?.sourceSha!==expectedSha||
      doc.ownerApproval?.owner!==repository.split('/')[0]||
      !SHA.test(doc.witness.blobSha??'')||
@@ -53,11 +55,16 @@ function frozenOk(doc,repository,versionId,expectedSha){
        s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__'||
        !['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(s.candidateStatus)||
        (s.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
-        (!Number.isSafeInteger(s.commentId)||s.commentId<1||s.generation!==1||
+        (!Number.isSafeInteger(s.commentId)||s.commentId<1||
+         !Number.isSafeInteger(s.generation)||s.generation<1||
+         s.commentRef!=='https://github.com/'+repository+'/issues/'+s.issueNumber+
+           '#issuecomment-'+s.commentId||
          typeof s.dispatchId!=='string'||!s.dispatchId||
          typeof s.operatorKind!=='string'||!s.operatorKind||
          typeof s.operatorId!=='string'||!s.operatorId)))
       return false;
+    if(s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
+       (s.commentId!==null||s.commentRef!==null||s.dispatchId!==null))return false;
     subjects.add(String(s.issueNumber));
   }
   if(subjects.size!==known.size)return false;
@@ -65,7 +72,7 @@ function frozenOk(doc,repository,versionId,expectedSha){
     if(!e||!known.has(String(e.from))||!known.has(String(e.to))||
        String(e.from)===String(e.to)||!['NATIVE','PLANNED'].includes(e.kind))
       return false;
-    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.from)return false;
+    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.to)return false;
     const k=edgeId(e.from,e.to);
     if(edges.has(k))return false;
     edges.add(k);
