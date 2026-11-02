@@ -61,3 +61,11 @@ test('Recovery may request only a Host-issued START_AGENT action',()=>{
   const c={...catalog,actions:[{...catalog.actions[0],kind:'START_AGENT'}]};
   assert.equal(workbenchActionGate(inbox,c,recovery).enabled,true);
 });
+
+test('malformed source SHA and absent action catalog fail closed',()=>{
+  assert.equal(workbenchActionGate({...inbox,source:{...source,sourceSha:'latest'}},
+    catalog,work).enabled,false);
+  assert.equal(workbenchActionGate(inbox,{...catalog,source:{...source,sourceSha:'latest'}},
+    work).enabled,false);
+  assert.equal(workbenchActionGate(inbox,{...catalog,actions:undefined},work).enabled,false);
+});
