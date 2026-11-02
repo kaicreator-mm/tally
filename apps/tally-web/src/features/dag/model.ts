@@ -29,8 +29,14 @@ export interface VersionDag{
   /** Configured Task IDs do not prove exhaustive frozen version membership. */
   rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   claimReadbackCoverage?:'NOT_VERIFIED'|'VERIFIED_COMPLETE';
-  claimCoverage?:'NOT_VERIFIED'|'PARTIAL'|'ACCEPTED_ALL';
+  claimCoverage?:'NOT_VERIFIED'|'NONE_ACCEPTED'|'PARTIAL'|'ACCEPTED_ALL';
   acceptedClaimCount?:number|null;
+  notVerifiedCount?:number|null;
+  notClaimedCount?:number|null;
+  activeWebResponsibilityCount?:number|null;
+  dependencyCoverage?:'NATIVE_COMPLETE'|'NATIVE_PARTIAL';
+  frozenBlobSha?:string|null;
+  taskPackRef?:string|null;
   /** Frozen as-of identity of this snapshot. */
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:readonly DagNode[];
