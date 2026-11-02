@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createUiRosterHost} from '../../../web/v2/ui-roster-host.mjs';
 import {
   createHostCloseoutClaimReadbackPortFromClient,
   createHostResponsibilityHandoffReaderFromClient,
@@ -376,4 +377,23 @@ test('freeze refuses a native roster omission or native dependency drift',async(
   }});
   assert.equal((await changed.writer.freezeVersionTaskDag({
     taskPackRef,taskPackBlobSha:packBlobSha})).reason,'NATIVE_TASK_ROSTER_READBACK_FAILED');
+});
+
+test('freeze writer -> reader -> UI roster preserves the immutable Task Pack reference',async()=>{
+  const h=freezeHarness();
+  const frozen=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(frozen.status,'FROZEN');
+  const frozenHost=createHostVersionTaskDagReader({
+    repository,versionId,expectedVersionSha:versionSha,store:h.store,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader
+  });
+  const ui=createUiRosterHost({repository,versionId,expectedSha:versionSha,
+    frozenHost,nativeC:{version:args=>h.nativeRosterReader(args)}});
+  const result=await ui.roster({projectId:repository,versionId});
+  assert.equal(result.connected,true);
+  assert.equal(result.taskPackRef,taskPackRef);
+  assert.equal(result.frozenBlobSha,packBlobSha);
+  assert.equal(result.taskCount,4);
+  assert.equal(result.claimReadbackCoverage,'NOT_VERIFIED');
 });
