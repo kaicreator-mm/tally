@@ -63,12 +63,27 @@ test('Host cannot smuggle unqualified benefit or foreign receipt',async()=>{
 });
 test('next Task Context usage requires independent selected Host witness',async()=>{
   assert.equal((await make().nextTaskUsage(20)).connected,false);
-  const h=make({readNextTaskContextUsage:async()=>({connected:true,source,
-    taskIssue:20,usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})});
+
+  // A positive usage witness may name only a previously adopted, verified,
+  // explicitly eligible candidate. Keep the shared REVIEWED fixture ineligible.
+  const eligibleCandidate={...candidate,state:'ADOPTED',eligibleForNextTask:true};
+  const h=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    selectedHost:{
+      readExperienceCandidates:async()=>({...snap(),candidates:[eligibleCandidate]}),
+      readNextTaskContextUsage:async()=>({connected:true,source,
+        taskIssue:20,usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})
+    }});
   const r=await h.nextTaskUsage(20);
   assert.equal(r.connected,true);
   assert.deepEqual(r.usedCandidates,['lesson-1']);
   assert.equal(r.measuredBenefit,'UNKNOWN');
+
+  // A REVIEWED candidate is not eligible for a real applied-usage receipt.
+  const ineligible=await make({readNextTaskContextUsage:async()=>({connected:true,source,
+    taskIssue:20,usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})})
+    .nextTaskUsage(20);
+  assert.equal(ineligible.connected,false);
+  assert.equal(ineligible.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
 });
 test('dispatch transport failure stays UNKNOWN without automatic repeat',async()=>{
   let calls=0;
