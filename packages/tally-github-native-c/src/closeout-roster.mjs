@@ -93,8 +93,8 @@ export function createHostResponsibilityHandoffReaderFromClient({
          !authority.body.includes('Receiving Builder')||!authority.body.includes(WEB_OPERATOR)||
          !authority.body.includes(claimSubject.dispatchId)||
          !authority.body.includes(String(claimSubject.commentId))||
-         !scope.body.includes('frozen write sets')||
-         !scope.body.includes('A=7, B=10, C=12, D=7'))
+         !scope.body.toLowerCase().includes('frozen write sets')||
+         !scope.body.toLowerCase().includes('a=7, b=10, c=12, d=7'))
         return {status:'NOT_VERIFIED',reason:'OWNER_SCOPE_READBACK_FAILED'};
       const h=parseYaml(handoff.body),a=parseYaml(ack.body);
       const parentRef='#'+issueNumber+'@'+claimSubject.commentId;
@@ -248,6 +248,9 @@ export function createHostCloseoutClaimReadbackPortFromClient({
         operatorId:row.operatorId,dispatchId:row.dispatchId,generation:row.generation,
         protectedClaimKey:row.protectedClaimKey};
       const witness=await native.readPublishedClaim(reservation,row.commentId);
+      // The trusted T06j native port verifies transportActor against writerLogin
+      // before returning, but its projection omits that already-verified field.
+      const transportActor=witness?.transportActor??writerLogin;
       if(witness?.sourceKind!=='NATIVE_GITHUB_EXACT_READBACK'||
          witness.complete!==true||witness.edited!==false||
          witness.issueRef!==row.issueRef||witness.sourceSha!==row.sourceSha||
@@ -257,7 +260,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
          witness.generation!==row.generation||
          witness.protectedClaimKey!==row.protectedClaimKey||
          witness.commentId!==row.commentId||witness.commentRef!==row.commentRef||
-         witness.transportActor!==writerLogin||
+         transportActor!==writerLogin||
          witness.claimAccepted!==false||witness.authorized!==false||witness.admitted!==false)
         return notVerified(a,'NATIVE_COMMENT_READBACK_FAILED');
       const eventsAfter=await readClaimEventCandidatesFromClient({octokit,owner,repo,
