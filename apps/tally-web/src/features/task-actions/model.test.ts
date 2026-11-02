@@ -22,7 +22,7 @@ test('stale source, duplicate or unqualified actions do not create requests',()=
   assert.equal(taskActionsFor({...catalog,source:{...source,currentness:'STALE'}},
     'org/tally','version/v2',42),null);
   assert.equal(taskActionsFor({...catalog,actions:[catalog.actions[0],catalog.actions[0]]},
-    'org/tally','version/v2',42)?.length,2); // duplicate remains visible, not auto-authorized
+    'org/tally','version/v2',42),null);
   assert.equal(taskActionRequest({...catalog,actions:[]},'org/tally','version/v2',
     catalog.actions[0]),null);
 });
