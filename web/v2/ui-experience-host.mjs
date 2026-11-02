@@ -81,16 +81,21 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
         repository,versionId,sourceSha:expectedSha,
         candidateId:candidate.id,revision:candidate.revision,
         decision:request.decision,evidenceRef:candidate.sourceRef});
+      const githubReceipt=typeof r?.decisionReceiptRef==='string'&&
+        r.decisionReceiptRef.startsWith('https://github.com/'+repository+'/');
+      const casReceipt=r?.decisionReceiptAuthority===
+        'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT'&&
+        r.decisionReceiptRef===null;
       if(!plain(r)||r.candidateId!==candidate.id||r.sourceSha!==expectedSha||
          !['OBSERVED','DENIED','UNKNOWN','RECONCILIATION_REQUIRED'].includes(r.status)||
          r.taskPass===true||r.releasePass===true||r.qualityImproved===true||
-         (r.status==='OBSERVED'&&
-           (typeof r.decisionReceiptRef!=='string'||
-            !r.decisionReceiptRef.startsWith('https://github.com/'+repository+'/'))))
+         (r.status==='OBSERVED'&&!githubReceipt&&!casReceipt))
         return denied('EXPERIENCE_DECISION_RECEIPT_UNQUALIFIED');
       return {connected:true,ok:r.status==='OBSERVED',status:r.status,
         candidateId:candidate.id,sourceSha:expectedSha,
-        receiptRef:r.status==='OBSERVED'?r.decisionReceiptRef:null,
+        receiptRef:r.status==='OBSERVED'&&githubReceipt?r.decisionReceiptRef:null,
+        receiptAuthority:r.status==='OBSERVED'&&casReceipt?
+          'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT':null,
         nextTaskUsage:'NOT_VERIFIED',measuredBenefit:'UNKNOWN'};
     }catch{return {connected:false,ok:false,status:'UNKNOWN',
       reason:'EXPERIENCE_DECISION_ACK_UNKNOWN_RECONCILE'};}
@@ -114,4 +119,105 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     }catch{return denied('NEXT_TASK_CONTEXT_READ_FAILED');}
   }
   return Object.freeze({candidates,decision,nextTaskUsage});
+}
+
+const issueRef=(value,repository)=>typeof value==='string'&&
+  value.startsWith('https://github.com/'+repository+'/issues/')&&
+  /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9][0-9]+$/.test(value);
+function verifiedSuggestion(row,repository){
+  const p=row?.provenance;
+  return plain(row)&&/^[a-f0-9]{64}$/.test(row.learningId??'')&&
+    row.qualification==='REPORTED_QUALIFIED'&&
+    issueRef(row.taskIssueRef,repository)&&issueRef(row.targetIssueRef,repository)&&
+    plain(p)&&typeof p.reportId==='string'&&p.reportId.length>0&&
+    Number.isSafeInteger(p.revision)&&p.revision>0&&
+    ['EXECUTION_SUMMARY','EXPERIENCE_USE_FEEDBACK'].includes(p.kind)&&
+    Number.isSafeInteger(p.commentId)&&p.commentId>0&&
+    Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
+    p.namespace==='tally'&&
+    p.publicationRef==='https://github.com/'+repository+'/issues/'+
+      p.issueNumber+'#issuecomment-'+p.commentId&&
+    row.measuredEffect==='NOT_MEASURED'&&row.noAgentRanking===true&&
+    row.qualityGainClaimed===false;
+}
+/** Reuses the existing J08 maintenance controller: ADS report loading and
+ * record-learning already traverse its selected Host reader and sealed B→K→C
+ * effect. This adapter adds no registry, scheduler, or GitHub writer.
+ */
+export function createMaintenanceControllerExperienceAdapter({
+  maintenanceController,repository,versionId,expectedSha
+}={}){
+  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+     !SHA.test(expectedSha??'')||
+     typeof maintenanceController?.dispatch!=='function'||
+     typeof maintenanceController?.snapshot!=='function')
+    throw new TypeError('SELECTED_MAINTENANCE_CONTROLLER_REQUIRED');
+  async function readExperienceCandidates(){
+    try{
+      const loaded=await maintenanceController.dispatch(expectedSha,'load-learning',{});
+      const snapshot=maintenanceController.snapshot();
+      if(loaded?.status!=='OK'||loaded?.reason!=='PUBLIC_ADS_REPORTS_OBSERVED'||
+         snapshot?.status!=='OBSERVED'||snapshot.sourceSha!==expectedSha||
+         !Array.isArray(snapshot.learning)||snapshot.learning.length>100)
+        return {connected:false,reason:'PUBLIC_ADS_REPORTS_NOT_CURRENT'};
+      const candidates=[];
+      for(const row of snapshot.learning){
+        if(!verifiedSuggestion(row,repository))
+          return {connected:false,reason:'ADS_LEARNING_PROVENANCE_UNQUALIFIED'};
+        const decision=row.decision??null;
+        if(decision!==null&&!['ADOPTED','REJECTED'].includes(decision))
+          return {connected:false,reason:'ADS_LEARNING_DECISION_UNQUALIFIED'};
+        const state=decision==='ADOPTED'?'ADOPTED':
+          decision==='REJECTED'?'REJECTED':'PROPOSED';
+        candidates.push({
+          id:row.learningId,revision:row.provenance.revision,
+          title:'Task '+row.taskIssueRef.split('/').pop()+
+            ' → Task '+row.targetIssueRef.split('/').pop()+
+            ' · '+row.provenance.reportId,
+          state,reportQualification:'VERIFIED',
+          sourceRef:row.provenance.publicationRef,
+          // Adoption is not proof that a later Task Context Pack used it.
+          eligibleForNextTask:false
+        });
+      }
+      return {connected:true,source:{repository,sourceSha:expectedSha,
+        currentness:'CURRENT',readback:'VERIFIED'},
+        versionId,candidates};
+    }catch{return {connected:false,reason:'ADS_LEARNING_READ_FAILED'};}
+  }
+  async function dispatchExperienceDecision(request){
+    if(request?.repository!==repository||request?.versionId!==versionId||
+       request?.sourceSha!==expectedSha||
+       !/^[a-f0-9]{64}$/.test(request?.candidateId??'')||
+       !Number.isSafeInteger(request?.revision)||request.revision<1||
+       !['ADOPT','REJECT'].includes(request?.decision))
+      return {status:'DENIED',candidateId:request?.candidateId??null,
+        sourceSha:expectedSha,reason:'EXPERIENCE_DECISION_SCOPE_INVALID',
+        taskPass:false,releasePass:false};
+    try{
+      const result=await maintenanceController.dispatch(expectedSha,'record-learning',{
+        learningId:request.candidateId,
+        decision:request.decision==='ADOPT'?'ADOPTED':'REJECTED'});
+      const snapshot=maintenanceController.snapshot();
+      const row=snapshot?.learning?.find(x=>x.learningId===request.candidateId);
+      const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
+      if(result?.state!=='LEARNING_RECORDED'||result?.decision!==expectedDecision||
+         result?.claimAccepted!==true||result?.admitted!==true||
+         result?.authorized!==false||result?.taskPass!==false||
+         result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
+         row?.decision!==expectedDecision||row?.recordState!=='LEARNING_RECORDED'||
+         row?.qualityGainClaimed!==false||row?.noAgentRanking!==true)
+        return {status:'UNKNOWN',candidateId:request.candidateId,
+          sourceSha:expectedSha,reason:'LEARNING_CAS_RESULT_NOT_RECONCILED',
+          taskPass:false,releasePass:false};
+      return {status:'OBSERVED',candidateId:request.candidateId,
+        sourceSha:expectedSha,decisionReceiptAuthority:
+          'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT',
+        decisionReceiptRef:null,taskPass:false,releasePass:false,
+        qualityImproved:false};
+    }catch{return {status:'UNKNOWN',candidateId:request.candidateId,
+      sourceSha:expectedSha,reason:'LEARNING_DECISION_ACK_UNKNOWN',
+      taskPass:false,releasePass:false};}
+  }
+  return Object.freeze({readExperienceCandidates,dispatchExperienceDecision});
 }
