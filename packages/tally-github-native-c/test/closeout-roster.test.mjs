@@ -397,3 +397,57 @@ test('freeze writer -> reader -> UI roster preserves the immutable Task Pack ref
   assert.equal(result.taskCount,4);
   assert.equal(result.claimReadbackCoverage,'NOT_VERIFIED');
 });
+
+test('canonical unedited Web Builder handoff replacement v2 is read back as VERIFIED',async()=>{
+  const dispatchId='dispatch:260:closeout-a:host:20261102:1';
+  const authorityId=6574693761,scopeId=6572687940;
+  const handoffId=6579759879,receiptId=6579767823;
+  const handoffFields=[
+    'schema: tally/responsibility-handoff/v1',
+    'responsibility_mode: RESPONSIBILITY_HANDOFF',
+    'repository: '+repository,'task: "#260"','issue: "#260"',
+    'source_sha: '+claimSha,'parent_dispatch_ref: "#260@6568304709"',
+    'parent_dispatch_id: '+dispatchId,'from_operator_id: zcode:i259:closeout:1',
+    'to_operator_id: chatgpt-web:tally-v2','to_operator_kind: chatgpt-web',
+    'to_actor_role: builder','execution_environment: WEB','scheduler_origin: WEB',
+    'handoff_dispatch_id: dispatch:260:closeout-a:web-handoff:20261102:2',
+    'protected_claim_key: '+protectedKey(260),'admission_generation: 1',
+    'authority_ref: "#259@6574693761"','scope_ref: "#260@6572687940"'
+  ].join('\n');
+  const ackFields=[
+    'schema: tally/responsibility-handoff-ack/v1',
+    'responsibility_mode: RESPONSIBILITY_HANDOFF_RECEIVED',
+    'repository: '+repository,'task: "#260"','issue: "#260"',
+    'source_sha: '+claimSha,'parent_dispatch_ref: "#260@6568304709"',
+    'parent_dispatch_id: '+dispatchId,
+    'handoff_ref: "#260@6579759879"',
+    'handoff_dispatch_id: dispatch:260:closeout-a:web-handoff:20261102:2',
+    'protected_claim_key: '+protectedKey(260),'admission_generation: 1',
+    'authority_ref: "#259@6574693761"','scope_ref: "#260@6572687940"',
+    'receiver:','  operator_id: chatgpt-web:tally-v2',
+    '  operator_kind: chatgpt-web','  actor_role: builder',
+    '  execution_environment: WEB','  scheduler_origin: WEB',
+    'transport_actor: '+owner,'received: true'
+  ].join('\n');
+  const comments=new Map([
+    [authorityId,githubComment(authorityId,259,
+      'Owner-authorized responsibility handoff. Receiving Builder chatgpt-web:tally-v2. '+
+      dispatchId+' 6568304709.')],
+    [scopeId,githubComment(scopeId,260,
+      'The frozen write sets are recorded: A=7, B=10, C=12, D=7.')],
+    [handoffId,yamlComment(handoffId,260,handoffFields)],
+    [receiptId,yamlComment(receiptId,260,ackFields)]
+  ]);
+  const octokit={rest:{issues:{getComment:async({comment_id})=>({data:comments.get(comment_id)})}}};
+  const reader=createHostResponsibilityHandoffReaderFromClient({
+    octokit,owner,repo,writerLogin:owner,
+    handoffByIssue:{'260':{handoffCommentId:handoffId,receiptCommentId:receiptId}}
+  });
+  const result=await reader.readResponsibilityHandoff({
+    issueNumber:260,claimSubject:observedSubject
+  });
+  assert.equal(result.status,'VERIFIED');
+  assert.equal(result.activeOperator.operatorId,'chatgpt-web:tally-v2');
+  assert.equal(result.handoffRef,commentUrl(260,handoffId));
+  assert.equal(result.receiptRef,commentUrl(260,receiptId));
+});
