@@ -105,7 +105,8 @@ test('version Task DAG freeze and readback bind complete roster, native/planned 
   assert.deepEqual(result.frozen.taskIssues,[211,212,260,264]);
   assert.equal(result.frozen.edges.find(x=>x.kind==='PLANNED').from,211);
   assert.equal(result.frozenAt,'2026-11-02T12:00:00.000Z');
-  assert.equal(result.authorized,undefined);
+  assert.equal(result.witness.reviewedHeadSha,versionSha);
+  assert.equal(result.ownerApproval.owner,owner);
 });
 
 test('freeze rejects a reviewer who did not review the exact version SHA',async()=>{
