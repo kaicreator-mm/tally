@@ -578,7 +578,8 @@ export function createHostVersionTaskDagReader({
         return denied('FROZEN_DAG_CHANGED_DURING_READ');
       return {connected:true,source:{repository,sourceSha:expectedVersionSha,
           currentness:'CURRENT',readback:'VERIFIED'},
-        versionId,witness:doc.witness,ownerApproval:doc.ownerApproval,
+        versionId,taskPackRef:doc.taskPackRef,
+        witness:doc.witness,ownerApproval:doc.ownerApproval,
         frozenAt:doc.frozenAt,
         frozen:{blobSha:doc.blobSha,taskPackRef:doc.taskPackRef,versionId,
           taskIssues:doc.frozen.taskIssues,edges:doc.frozen.edges,
