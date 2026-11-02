@@ -131,6 +131,20 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       if(!positive(current,repository,versionId,expectedSha))return current;
       const r=await selectedHost.readNextTaskContextUsage({repository,versionId,
         sourceSha:expectedSha,taskIssue});
+      const after=await read();
+      if(!positive(after,repository,versionId,expectedSha))return after;
+      const afterById=new Map(after.candidates.map(c=>[c.id,c]));
+      const stable=current.candidates.length===after.candidates.length&&
+        current.candidates.every(c=>{
+          const next=afterById.get(c.id);
+          return next&&next.revision===c.revision&&next.state===c.state&&
+            next.reportQualification===c.reportQualification&&
+            next.sourceRef===c.sourceRef&&
+            next.publisherRepository===c.publisherRepository&&
+            next.sourceKind===c.sourceKind&&
+            next.eligibleForNextTask===c.eligibleForNextTask;
+        });
+      if(!stable)return denied('EXPERIENCE_SOURCE_CHANGED_DURING_USAGE_READ');
       const eligibleIds=new Set(current.candidates.filter(c=>
         c.state==='ADOPTED'&&c.reportQualification==='VERIFIED'&&
         c.eligibleForNextTask===true).map(c=>c.id));
