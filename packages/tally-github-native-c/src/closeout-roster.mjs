@@ -95,7 +95,7 @@ export function createHostResponsibilityHandoffReaderFromClient({
          h.admission_generation!==claimSubject.generation||
          h.authority_ref!=='#259@'+authorityCommentId)
         return {status:'NOT_VERIFIED',reason:'OWNER_HANDOFF_MISMATCH'};
-      const expectedScope='#'+issueNumber+'@'+scopeCommentId;
+      const expectedScope='#'+scopeIssueNumber+'@'+scopeCommentId;
       let canonicalScope=expectedScope;
       if(h.scope_ref!==expectedScope){
         const c=correction?parseYaml(correction.body):null;
@@ -214,8 +214,15 @@ export function createHostCloseoutClaimReadbackPortFromClient({
         protectedClaimKey:row.protectedClaimKey};
       const witness=await native.readPublishedClaim(reservation,row.commentId);
       if(witness?.sourceKind!=='NATIVE_GITHUB_EXACT_READBACK'||
+         witness.complete!==true||witness.edited!==false||
+         witness.issueRef!==row.issueRef||witness.sourceSha!==row.sourceSha||
+         witness.event!=='DISPATCH_CLAIMED'||witness.dispatchState!=='CLAIMED'||
+         witness.dispatchId!==row.dispatchId||witness.actorRole!==row.actorRole||
+         witness.operatorKind!==row.operatorKind||witness.operatorId!==row.operatorId||
+         witness.generation!==row.generation||
+         witness.protectedClaimKey!==row.protectedClaimKey||
          witness.commentId!==row.commentId||witness.commentRef!==row.commentRef||
-         witness.sourceSha!==row.sourceSha||witness.transportActor!==writerLogin)
+         witness.claimAccepted!==false||witness.authorized!==false||witness.admitted!==false)
         return notVerified(a,'NATIVE_COMMENT_READBACK_FAILED');
       const eventsAfter=await readClaimEventCandidatesFromClient({octokit,owner,repo,
         issueNumber:a.issueNumber,expectedSourceSha:a.claimSourceSha});
@@ -253,7 +260,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
 function validTaskPack(pack,repository,versionId,versionSha,blobSha){
   if(!plain(pack)||pack.schema!=='tally/version-task-pack/v1'||
      pack.status!=='CANDIDATE_NOT_FROZEN'||pack.repository!==repository||
-     pack.versionId!==versionId||pack.versionSourceSha!==versionSha||
+     pack.versionId!==versionId||!SHA.test(pack.versionBaseSha??'')||
      !SHA.test(blobSha??'')||!Array.isArray(pack.taskIssues)||
      !pack.taskIssues.length||pack.taskIssues.length>200||
      !Array.isArray(pack.edges)||pack.edges.length>2000||
@@ -342,9 +349,11 @@ export function createHostVersionTaskDagFreezeWriter({
           taskIssues:pack.taskIssues.map(x=>x.issueNumber),edges:pack.edges,
           claimSubjects:pack.claimSubjects},
         witness:{status:'INDEPENDENTLY_VERIFIED',blobSha:taskPackBlobSha,
+          sourceSha:expectedVersionSha,reviewedHeadSha:review.reviewedHeadSha??null,
           reviewer:review.reviewer,reviewRef:review.reviewRef,
           verifiedAt:review.verifiedAt??clock()},
-        ownerApproval:{status:'OWNER_APPROVED',approvalRef:approval.approvalRef,
+        ownerApproval:{status:'OWNER_APPROVED',sourceSha:expectedVersionSha,
+          approvalRef:approval.approvalRef,owner:approval.owner??null,
           approvedAt:approval.approvedAt??clock()},
         authorized:false,admitted:false,taskPass:false,releasePass:false};
       const key='tally:v2:version-task-dag:'+hash(repository+'#'+versionId);
@@ -391,7 +400,8 @@ export function createHostVersionTaskDagReader({
          doc.versionId!==versionId||doc.sourceSha!==expectedVersionSha||
          !SHA.test(doc.blobSha??'')||doc.frozen?.blobSha!==doc.blobSha||
          doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
-         doc.witness?.blobSha!==doc.blobSha||typeof doc.frozenAt!=='string')
+         doc.witness?.blobSha!==doc.blobSha||doc.witness?.sourceSha!==expectedVersionSha||
+         doc.ownerApproval?.sourceSha!==expectedVersionSha||typeof doc.frozenAt!=='string')
         return denied('FROZEN_DAG_RECORD_UNQUALIFIED');
       const file=await taskPackReader({taskPackRef:doc.taskPackRef,expectedBlobSha:doc.blobSha});
       if(file?.status!=='VERIFIED'||file.blobSha!==doc.blobSha||
@@ -409,9 +419,10 @@ export function createHostVersionTaskDagReader({
       ]);
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==doc.blobSha||review.sourceSha!==expectedVersionSha||
+         (review.reviewedHeadSha??null)!==(doc.witness.reviewedHeadSha??null)||
          review.reviewer!==doc.witness.reviewer||review.reviewRef!==doc.witness.reviewRef||
          approval?.status!=='OWNER_APPROVED'||approval.taskPackBlobSha!==doc.blobSha||
-         approval.sourceSha!==expectedVersionSha||
+         approval.sourceSha!==expectedVersionSha||approval.owner!==doc.ownerApproval?.owner||
          approval.approvalRef!==doc.ownerApproval?.approvalRef)
         return denied('FROZEN_DAG_WITNESS_STALE');
       const after=await store.get(key);
@@ -427,4 +438,20 @@ export function createHostVersionTaskDagReader({
     }catch{return denied('FROZEN_DAG_READ_FAILED');}
   }
   return Object.freeze({readFrozenDag});
+}
+
+
+export function createHostCloseoutRosterPorts({
+  repository,versionId,expectedVersionSha,store,octokit,owner,repo,
+  writerLogin,writerId,taskPackReader,reviewWitnessReader,ownerApprovalReader,
+  handoffReader
+}={}){
+  return Object.freeze({
+    frozenHost:createHostVersionTaskDagReader({repository,versionId,expectedVersionSha,
+      store,taskPackReader,reviewWitnessReader,ownerApprovalReader}),
+    freezeWriter:createHostVersionTaskDagFreezeWriter({repository,versionId,expectedVersionSha,
+      store,taskPackReader,reviewWitnessReader,ownerApprovalReader}),
+    claimHost:createHostCloseoutClaimReadbackPortFromClient({octokit,owner,repo,
+      writerLogin,writerId,store,handoffReader,repository,versionId,expectedVersionSha})
+  });
 }
