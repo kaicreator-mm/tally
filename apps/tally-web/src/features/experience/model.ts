@@ -20,11 +20,16 @@ export interface ExperienceDecisionReceipt{
 export function eligibleExperienceDecision(snapshot:ExperienceSnapshot|null,
   candidate:ExperienceCandidate|null,repository:string,versionId:string){
   if(snapshot?.connected!==true||snapshot.source?.repository!==repository||
+     !/^[a-f0-9]{40}$/.test(snapshot.source.sourceSha??'')||
      snapshot.source.currentness!=='CURRENT'||snapshot.source.readback!=='VERIFIED'||
-     snapshot.versionId!==versionId||!Array.isArray(snapshot.candidates))
+     snapshot.versionId!==versionId||!Array.isArray(snapshot.candidates)||
+     new Set(snapshot.candidates.map(c=>c.id)).size!==snapshot.candidates.length)
     return {eligible:false,reason:'EXPERIENCE_SOURCE_NOT_CURRENT'};
-  if(!candidate||!snapshot.candidates.some(c=>c.id===candidate.id&&
-     c.revision===candidate.revision)||candidate.state!=='PROPOSED'&&
+  if(!candidate||!/^[a-f0-9]{64}$/.test(candidate.id??'')||
+     !Number.isSafeInteger(candidate.revision)||candidate.revision<1||
+     !candidate.sourceRef.startsWith('https://github.com/'+repository+'/issues/')||
+     !snapshot.candidates.some(c=>c.id===candidate.id&&
+       c.revision===candidate.revision)||candidate.state!=='PROPOSED'&&
      candidate.state!=='REVIEWED'||candidate.reportQualification!=='VERIFIED')
     return {eligible:false,reason:'EXPERIENCE_EVIDENCE_NOT_ELIGIBLE'};
   if(candidate.eligibleForNextTask)return {eligible:false,reason:'ALREADY_MARKED_FOR_NEXT_TASK'};
