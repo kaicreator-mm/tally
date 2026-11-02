@@ -19,10 +19,12 @@ const noSubject={issueNumber:2,sourceSha:'e'.repeat(40),actorRole:'builder',
   generation:1,protectedClaimKey:repository+'#2:builder:__default__',
   commentId:null,commentRef:null,candidateStatus:'NO_CLAIM_EVENT_EXPECTED'};
 const edge={from:1,to:2,kind:'NATIVE',
-  evidenceRef:'https://github.com/org/tally/issues/2'};
+  evidenceRef:'https://github.com/org/tally/issues/2',
+  dependencyRef:'https://github.com/org/tally/issues/1'};
 const task=id=>({id:String(id),versionId,claimState:'NOT_VERIFIED'});
 const native=(edges=[{from:'1',to:'2',kind:'NATIVE',
-  evidenceRef:'https://github.com/org/tally/issues/2'}])=>({
+  evidenceRef:'https://github.com/org/tally/issues/2',
+  dependencyRef:'https://github.com/org/tally/issues/1'}])=>({
   connected:true,source:versionSource,versionId,tasks:[task(1),task(2)],
   dag:{source:versionSource,versionId,asOf:{sourceSha:versionSha},
     nodes:[{taskId:'1'},{taskId:'2'}],edges}
@@ -141,9 +143,11 @@ test('candidate-only, self-loop and cyclic frozen DAG refuse qualification',asyn
   for(const x of [
     {...frozen(),witness:{...frozen().witness,status:'SELF_REPORTED'}},
     {...frozen(),frozen:{...frozen().frozen,edges:[{from:1,to:1,kind:'NATIVE',
-      evidenceRef:'https://github.com/org/tally/issues/1'}]}},
+      evidenceRef:'https://github.com/org/tally/issues/1',
+      dependencyRef:'https://github.com/org/tally/issues/1'}]}},
     {...frozen(),frozen:{...frozen().frozen,edges:[edge,
-      {from:2,to:1,kind:'NATIVE',evidenceRef:'https://github.com/org/tally/issues/1'}]}}
+      {from:2,to:1,kind:'NATIVE',evidenceRef:'https://github.com/org/tally/issues/1',
+        dependencyRef:'https://github.com/org/tally/issues/2'}]}}
   ]){
     const {host}=make(async()=>x);
     assert.equal((await host.roster()).connected,false);
@@ -152,7 +156,8 @@ test('candidate-only, self-loop and cyclic frozen DAG refuse qualification',asyn
 
 test('out-of-roster native edge, duplicate task and stale source deny',async()=>{
   const badEdge={from:'3',to:'2',kind:'NATIVE',
-    evidenceRef:'https://github.com/org/tally/issues/2'};
+    evidenceRef:'https://github.com/org/tally/issues/2',
+    dependencyRef:'https://github.com/org/tally/issues/3'};
   const {host:a}=make(async()=>frozen(),async()=>native([badEdge]));
   assert.equal((await a.roster()).connected,false);
   const duplicate={...frozen(),frozen:{...frozen().frozen,taskIssues:[1,1]}};
