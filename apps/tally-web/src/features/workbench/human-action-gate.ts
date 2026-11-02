@@ -20,11 +20,14 @@ const deny=(reason:string):HumanActionGate=>({enabled:false,reason,
 export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   catalog:SelectedActionCatalog|null,workItem:WorkAction):HumanActionGate{
   if(snapshot?.connected!==true||catalog?.connected!==true||
-     !catalog.source||snapshot.source?.currentness!=='CURRENT'||
+     !catalog.source||! /^[a-f0-9]{40}$/.test(snapshot.source?.sourceSha??'')||
+     !/^[a-f0-9]{40}$/.test(catalog.source.sourceSha??'')||
+     snapshot.source?.currentness!=='CURRENT'||
      snapshot.source.readback!=='VERIFIED'||
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.source.repository!==snapshot.source.repository||
-     catalog.source.sourceSha!==snapshot.source.sourceSha)
+     catalog.source.sourceSha!==snapshot.source.sourceSha||
+     !Array.isArray(catalog.actions))
     return deny('HOST_ACTION_SOURCE_NOT_CONNECTED');
   if(workItem.projectId!==snapshot.source.repository||
      workItem.versionId===null||catalog.versionId!==workItem.versionId||
