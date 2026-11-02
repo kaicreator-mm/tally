@@ -119,3 +119,39 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
   }
   return Object.freeze({actions,submit});
 }
+
+/** Pure HTTP boundary for E's same-origin route. E owns socket/body parsing and
+ * calls this adapter; it cannot be mounted by a browser or expose credentials.
+ */
+export function createUiActionHttpAdapter({actionPort,origin,csrfKey}={}){
+  if(typeof actionPort?.actions!=='function'||typeof actionPort?.submit!=='function'||
+     typeof origin!=='string'||!/^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin)||
+     typeof csrfKey!=='string'||csrfKey.length<32)
+    throw new TypeError('UI_ACTION_HTTP_HOST_CONFIGURATION_REQUIRED');
+  const response=(status,body)=>Object.freeze({status,body});
+  const sameOrigin=request=>request?.origin===origin;
+  return Object.freeze({async handle(request={}){
+    if(!sameOrigin(request))return response(403,denied('CSRF_OR_ORIGIN'));
+    if(request.method==='GET'&&request.path==='/api/v2/actions'){
+      const q=request.query;
+      if(!plain(q)||Object.keys(q).sort().join(',')!=='projectId,versionId'||
+         q.projectId!==undefined&&q.projectId!==repository||
+         q.versionId!==undefined&&q.versionId!==versionId)
+        return response(400,denied('ACTION_SCOPE_MISMATCH'));
+      const result=await actionPort.actions({repository,versionId});
+      return response(result.connected?200:503,result);
+    }
+    if(request.method!=='POST'||request.path!=='/api/v2/actions/dispatch')
+      return response(404,denied('ACTION_ROUTE_NOT_FOUND'));
+    if(request.csrfKey!==csrfKey)return response(403,denied('CSRF_ORIGIN_KEY'));
+    if(!plain(request.body)||Object.keys(request.body).sort().join(',')!==
+       'actionId,projectId,revision,sourceSha,versionId'||
+       request.body.projectId!==repository||
+       request.body.versionId!==versionId)
+      return response(400,denied('ACTION_REQUEST_SHAPE_INVALID'));
+    const result=await actionPort.submit({
+      repository,versionId,sourceSha:request.body.sourceSha,
+      actionId:request.body.actionId,revision:request.body.revision});
+    return response(result.ok===true?200:409,result);
+  }});
+}
