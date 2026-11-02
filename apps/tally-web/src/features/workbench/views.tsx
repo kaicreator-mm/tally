@@ -4,12 +4,21 @@ import {activeWorkActions,inboxCounts,actionTaskLink} from './model.ts';
 import {Card,CardHeader} from '../../components/ui/Card.tsx';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
+import {Button} from '../../components/ui/Button.tsx';
+import type {SelectedActionCatalog} from './human-action-gate.ts';
+import {workbenchActionGate} from './human-action-gate.ts';
 
+export interface WorkbenchActionRequest{
+  repository:string;versionId:string;sourceSha:string;
+  actionId:string;revision:number;
+}
 const pageNames:Record<WorkbenchPage,string>={
   inbox:'我的待办',approvals:'审批与决策',blockers:'阻塞与恢复',overview:'工作概览'};
-export function WorkbenchView({snapshot,page,onNavigate}:
+export function WorkbenchView({snapshot,page,onNavigate,
+  actionCatalog,onAction}:
   {snapshot:WorkbenchSnapshot|null;page:WorkbenchPage;
-   onNavigate:(hash:string)=>void}){
+   onNavigate:(hash:string)=>void;actionCatalog?:SelectedActionCatalog|null;
+   onAction?:(request:WorkbenchActionRequest)=>void}){
   const rows=activeWorkActions(snapshot,page);
   if(!rows)return <EmptyState title="NOT_CONNECTED"
     hint="工作台需要当前用户有权读取的受信 Host 人工待办队列；不可将未知当作零待办。"/>;
@@ -45,9 +54,29 @@ export function WorkbenchView({snapshot,page,onNavigate}:
             <a href={action.sourceRef} target="_blank" rel="noopener noreferrer"
               style={{fontSize:12}}>查看原始证据</a>
           </div>
-          {actionTaskLink(action)?<button type="button"
-            onClick={()=>onNavigate(actionTaskLink(action)!)}
-            style={{font:'inherit',cursor:'pointer'}}>查看任务</button>:null}
+          <div style={{display:'grid',gap:6,justifyItems:'end'}}>
+            {actionTaskLink(action)?<button type="button"
+              onClick={()=>onNavigate(actionTaskLink(action)!)}
+              style={{font:'inherit',cursor:'pointer'}}>查看任务</button>:null}
+            {actionCatalog?(()=>{
+              const gate=workbenchActionGate(snapshot,actionCatalog,action);
+              const enabled=gate.enabled&&typeof onAction==='function'&&
+                actionCatalog.source!==undefined&&actionCatalog.versionId!==undefined;
+              return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
+                <Button size="sm" disabled={!enabled}
+                  onClick={enabled?()=>onAction?.({
+                    repository:actionCatalog.source!.repository,
+                    versionId:actionCatalog.versionId!,
+                    sourceSha:actionCatalog.source!.sourceSha,
+                    actionId:gate.actionId!,revision:gate.revision!
+                  }):undefined}>
+                  {gate.label==='操作不可用'?'执行操作':gate.label}
+                </Button>
+                {!enabled?<span role="status" style={{fontSize:11,
+                  color:'var(--text-muted)'}}>{gate.reason}</span>:null}
+              </div>;
+            })():null}
+          </div>
         </div>)}
       </div>}
     </Card>
