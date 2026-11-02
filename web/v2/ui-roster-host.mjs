@@ -147,6 +147,9 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       });
       const acceptedClaimCount=claimResults===null?null:
         claimResults.filter(c=>c.claimStatus==='ACCEPTED').length;
+      const claimByTask=new Map(tasks.map(task=>[task.id,task.claimState??'NOT_VERIFIED']));
+      const dagNodes=native.dag.nodes.map(node=>({...node,
+        claimState:claimByTask.get(node.taskId)??'NOT_VERIFIED'}));
       return {connected:true,source:native.source,versionId,
         rosterCoverage:'VERIFIED_COMPLETE',
         dependencyCoverage:sameSet(planned,observed)?'NATIVE_COMPLETE':'NATIVE_PARTIAL',
@@ -157,6 +160,10 @@ export function createUiRosterHost({repository,versionId,expectedSha,
           acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':'PARTIAL',
         acceptedClaimCount,tasks,
         dag:{...native.dag,rosterCoverage:'VERIFIED_COMPLETE',
+          claimReadbackCoverage:claimReadback,
+          claimCoverage:claimResults===null?'NOT_VERIFIED':
+            acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':'PARTIAL',
+          acceptedClaimCount,nodes:dagNodes,
           asOf:{...native.dag.asOf,frozenAt:before.frozen.frozenAt??null}}};
     }catch{return denial('ROSTER_SOURCE_READ_FAILED');}
   }
