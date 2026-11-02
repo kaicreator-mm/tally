@@ -56,7 +56,7 @@ function frozenOk(doc,repository,versionId,expectedSha){
        !['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(s.candidateStatus)||
        (s.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
         (!Number.isSafeInteger(s.commentId)||s.commentId<1||
-         !Number.isSafeInteger(s.generation)||s.generation<1||
+         !Number.isSafeInteger(s.generation)||s.generation!==1||
          s.commentRef!=='https://github.com/'+repository+'/issues/'+s.issueNumber+
            '#issuecomment-'+s.commentId||
          typeof s.dispatchId!=='string'||!s.dispatchId||
@@ -64,7 +64,8 @@ function frozenOk(doc,repository,versionId,expectedSha){
          typeof s.operatorId!=='string'||!s.operatorId)))
       return false;
     if(s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
-       (s.commentId!==null||s.commentRef!==null||s.dispatchId!==null))return false;
+       (s.commentId!==null||s.commentRef!==null||s.dispatchId!==null||
+        s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__))return false;
     subjects.add(String(s.issueNumber));
   }
   if(subjects.size!==known.size)return false;
@@ -123,6 +124,8 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
       claim.generation===subject.generation&&claim.actorRole===subject.actorRole&&
       claim.operatorKind===subject.operatorKind&&claim.operatorId===subject.operatorId&&
       claim.protectedClaimKey===subject.protectedClaimKey&&
+      claim.sourceClass==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
+      claim.transportActor===repository.split('/')[0]&&
       claim.commentRef==='https://github.com/'+repository+'/issues/'+issueNumber+
         '#issuecomment-'+subject.commentId&&
       /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'');
@@ -138,6 +141,7 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
     claim.commentRef==='https://github.com/'+repository+'/issues/'+issueNumber+
       '#issuecomment-'+subject.commentId&&
     /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'')&&
+    claim.transportActor===repository.split('/')[0]&&
     typeof claim.writerId==='string'&&claim.writerId.length>0&&
     ['VERIFIED','NOT_VERIFIED'].includes(claim.responsibilityStatus)&&
     (claim.responsibilityStatus!=='VERIFIED'||
@@ -207,7 +211,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       for(const edge of native.dag.edges){
         if(!edge||edge.kind!=='NATIVE'||
            !frozenIds.has(String(edge.from))||!frozenIds.has(String(edge.to))||
-           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.from)
+           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.to)
           return denial('UNQUALIFIED_NATIVE_DEPENDENCY');
         const key=edgeId(edge.from,edge.to);
         if(observed.has(key)||!planned.has(key))
