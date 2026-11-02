@@ -30,7 +30,10 @@ const BUSINESS_INTENT_BY_KIND=Object.freeze({
 });
 /** Exact public Tally Engineering Business intent mapping for E's one-K adapter. */
 export function businessIntentForUiAction(kind){
-  return typeof kind==='string'?BUSINESS_INTENT_BY_KIND[kind]??null:null;
+  if(typeof kind!=='string'||
+     !Object.prototype.hasOwnProperty.call(BUSINESS_INTENT_BY_KIND,kind))
+    return null;
+  return BUSINESS_INTENT_BY_KIND[kind];
 }
 
 const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,})\b/;
