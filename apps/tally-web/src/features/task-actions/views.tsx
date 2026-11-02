@@ -6,7 +6,7 @@ import {EmptyState} from '../../components/ui/States.tsx';
 export function TaskActionsView({catalog,projectId,versionId,taskIssue,
   onDispatch,locale='zh'}:{catalog:TaskActionCatalog|null;
   projectId:string;versionId:string;taskIssue:number;
-  onDispatch:(request:TaskActionRequest)=>void;locale?:'zh'|'en'}){
+  onDispatch?:(request:TaskActionRequest)=>void;locale?:'zh'|'en'}){
   const zh=locale==='zh';
   const actions=taskActionsFor(catalog,projectId,versionId,taskIssue);
   if(actions===null)return <EmptyState title="NOT_CONNECTED"
