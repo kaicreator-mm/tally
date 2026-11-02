@@ -105,6 +105,50 @@ test('task execution summary exposes only source-provided sanitized progress and
     ...task.execution!,attemptId:'ghp_12345678901234567890'
   }}).attemptId,'UNKNOWN');
 });
+
+test('execution identifiers and candidate refs fail closed without unsafe fallback',()=>{
+  const secret='ghp_12345678901234567890';
+  const baseExecution:NonNullable<TaskRecord['execution']>={
+    state:'RUNNING',provider:'local-codex',role:'BUILDER',attemptId:'attempt-300',
+    progressSummary:null,progressSummaryKind:'NOT_AVAILABLE',heartbeatAt:null,
+    elapsedMs:null,tokensIn:null,tokensOut:null,costUsd:null,candidateRef:null
+  };
+  const cases:{
+    name:string;
+    field:'provider'|'attemptId'|'candidateRef';
+    patch:Partial<NonNullable<TaskRecord['execution']>>;
+    legacyAttemptId:string|null;
+    expected:string|null;
+  }[]=[
+    {name:'secret provider is UNKNOWN',field:'provider',
+      patch:{provider:secret},legacyAttemptId:'attempt-legacy',expected:'UNKNOWN'},
+    {name:'missing provider stays UNKNOWN',field:'provider',
+      patch:{provider:null},legacyAttemptId:'attempt-legacy',expected:'UNKNOWN'},
+    {name:'secret execution attempt does not fall back',field:'attemptId',
+      patch:{attemptId:secret},legacyAttemptId:'attempt-legacy',expected:'UNKNOWN'},
+    {name:'malformed execution attempt does not fall back',field:'attemptId',
+      patch:{attemptId:'bad attempt id'},legacyAttemptId:'attempt-legacy',expected:'UNKNOWN'},
+    {name:'absent execution attempt may use a valid legacy id',field:'attemptId',
+      patch:{attemptId:null},legacyAttemptId:'attempt-legacy',expected:'attempt-legacy'},
+    {name:'absent execution attempt rejects a secret legacy id',field:'attemptId',
+      patch:{attemptId:null},legacyAttemptId:secret,expected:'UNKNOWN'},
+    {name:'missing candidate ref remains absent',field:'candidateRef',
+      patch:{candidateRef:null},legacyAttemptId:'attempt-legacy',expected:null},
+    {name:'foreign candidate ref is rejected',field:'candidateRef',
+      patch:{candidateRef:'https://github.com/other/repo/pull/300'},
+      legacyAttemptId:'attempt-legacy',expected:null},
+    {name:'same-project candidate ref is retained',field:'candidateRef',
+      patch:{candidateRef:'https://github.com/kaicreator-mm/tally/pull/300'},
+      legacyAttemptId:'attempt-legacy',
+      expected:'https://github.com/kaicreator-mm/tally/pull/300'}
+  ];
+  for(const item of cases){
+    const summary=taskExecutionSummary(make({projectId:'kaicreator-mm/tally',
+      attemptId:item.legacyAttemptId,
+      execution:{...baseExecution,...item.patch}}));
+    assert.equal(summary[item.field],item.expected,item.name);
+  }
+});
 test('missing, raw, secret-bearing or malformed execution evidence remains UNKNOWN',()=>{
   const empty=taskExecutionSummary(make({}));
   assert.equal(empty.state,'UNKNOWN');

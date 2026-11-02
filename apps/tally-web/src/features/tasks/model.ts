@@ -162,10 +162,14 @@ export function taskExecutionSummary(task:Pick<TaskRecord,'attemptId'|'execution
   const provider=typeof e?.provider==='string'&&PROVIDER_ID.test(e.provider)&&
     !PROGRESS_SECRET.test(e.provider)?e.provider:'UNKNOWN';
   const role=EXECUTION_ROLES.has(e?.role as TaskExecutionRole)?e!.role!:'UNKNOWN';
-  const attemptId=typeof e?.attemptId==='string'&&EXECUTION_ID.test(e.attemptId)&&
-    !PROGRESS_SECRET.test(e.attemptId)?e.attemptId:
-    typeof task.attemptId==='string'&&EXECUTION_ID.test(task.attemptId)&&
-      !PROGRESS_SECRET.test(task.attemptId)?task.attemptId:'UNKNOWN';
+  const executionAttemptId=e?.attemptId;
+  // A supplied but unsafe execution id must not fall back to a legacy task id.
+  // The legacy value is used only when the execution snapshot omits the field.
+  const attemptId=executionAttemptId===null||executionAttemptId===undefined
+    ?typeof task.attemptId==='string'&&EXECUTION_ID.test(task.attemptId)&&
+      !PROGRESS_SECRET.test(task.attemptId)?task.attemptId:'UNKNOWN'
+    :typeof executionAttemptId==='string'&&EXECUTION_ID.test(executionAttemptId)&&
+      !PROGRESS_SECRET.test(executionAttemptId)?executionAttemptId:'UNKNOWN';
   const rawProgress=e?.progressSummary;
   const progressSummary=e?.progressSummaryKind==='SANITIZED'&&
     typeof rawProgress==='string'&&rawProgress.length>0&&rawProgress.length<=240&&
