@@ -51,9 +51,12 @@ function validPack(){
   return {
     schema:'tally/version-task-pack/v1',status:'CANDIDATE_NOT_FROZEN',
     repository,versionId,versionBaseSha:versionSha,
+    observedAt:'2026-11-02T03:00:00Z',
+    source:{kind:'GITHUB_NATIVE_ISSUES',query:'state=all&labels=type:task',
+      taskIssueCount:4,claimCommentPages:1},
     taskIssues:[211,212,260,264].map(n=>({
       issueNumber:n,title:'Task '+n,issueState:n===264?'open':'closed',
-      labels:['type:task']
+      labels:['type:task'],updatedAt:'2026-11-02T02:59:00Z'
     })),
     edges:[
       {from:260,to:264,kind:'NATIVE',evidenceRef:issueUrl(264)},
@@ -78,14 +81,27 @@ const approval=()=>({
 function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=approval(),store=memoryStore()}={}){
   const content=JSON.stringify(pack);
   const taskPackReader=async()=>({status:'VERIFIED',blobSha:packBlobSha,content});
+  const nativeRosterReader=async()=>({
+    connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
+    versionId,tasks:pack.taskIssues.map(t=>({id:String(t.issueNumber),versionId,
+      title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
+    dag:{connected:true,source:{repository,sourceSha:versionSha,
+      currentness:'CURRENT',readback:'VERIFIED'},versionId,
+      asOf:{sourceSha:versionSha},
+      nodes:pack.taskIssues.map(t=>({taskId:String(t.issueNumber),versionId})),
+      edges:pack.edges.filter(e=>e.kind==='NATIVE').map(e=>({...e,
+        from:String(e.from),to:String(e.to),
+        dependencyRef:issueUrl(e.from)}))}
+  });
   const reviewWitnessReader=async()=>reviewValue;
   const ownerApprovalReader=async()=>approvalValue;
   const writer=createHostVersionTaskDagFreezeWriter({
     repository,versionId,expectedVersionSha:versionSha,store,
-    taskPackReader,reviewWitnessReader,ownerApprovalReader,
+    taskPackReader,nativeRosterReader,reviewWitnessReader,ownerApprovalReader,
     now:()=> '2026-11-02T12:00:00.000Z'
   });
-  return {store,writer,taskPackReader,reviewWitnessReader,ownerApprovalReader};
+  return {store,writer,taskPackReader,nativeRosterReader,
+    reviewWitnessReader,ownerApprovalReader};
 }
 
 test('version Task DAG freeze and readback bind complete roster, native/planned edges and exact witnesses',async()=>{
@@ -327,4 +343,37 @@ test('Owner authority, frozen write-set scope, original Claim and Web handoff re
   });
   assert.equal(result.status,'VERIFIED');
   assert.equal(result.activeOperator.operatorId,'chatgpt-web:tally-v2');
+});
+
+
+test('freeze refuses a native roster omission or native dependency drift',async()=>{
+  const missing=freezeHarness({nativeRosterReader:async()=>{
+    const pack=validPack();
+    return {
+      connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
+      versionId,tasks:pack.taskIssues.slice(1).map(t=>({id:String(t.issueNumber),
+        versionId,title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
+      dag:{connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
+        versionId,asOf:{sourceSha:versionSha},
+        nodes:pack.taskIssues.slice(1).map(t=>({taskId:String(t.issueNumber),versionId})),
+        edges:pack.edges.filter(e=>e.kind==='NATIVE').map(e=>({...e,
+          from:String(e.from),to:String(e.to),dependencyRef:issueUrl(e.from)}))}
+    };
+  }});
+  assert.equal((await missing.writer.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha})).reason,'NATIVE_TASK_ROSTER_READBACK_FAILED');
+  const changed=freezeHarness({nativeRosterReader:async()=>{
+    const pack=validPack();
+    return {
+      connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
+      versionId,tasks:pack.taskIssues.map(t=>({id:String(t.issueNumber),versionId,
+        title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
+      dag:{connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
+        versionId,asOf:{sourceSha:versionSha},
+        nodes:pack.taskIssues.map(t=>({taskId:String(t.issueNumber),versionId})),
+        edges:[]}
+    };
+  }});
+  assert.equal((await changed.writer.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha})).reason,'NATIVE_TASK_ROSTER_READBACK_FAILED');
 });
