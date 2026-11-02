@@ -65,7 +65,7 @@ function frozenOk(doc,repository,versionId,expectedSha){
       return false;
     if(s.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
        (s.commentId!==null||s.commentRef!==null||s.dispatchId!==null||
-        s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__))return false;
+        s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__'))return false;
     subjects.add(String(s.issueNumber));
   }
   if(subjects.size!==known.size)return false;
