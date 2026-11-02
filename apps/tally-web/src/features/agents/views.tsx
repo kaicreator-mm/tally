@@ -1,5 +1,4 @@
-/** UI-C #230 — parallel Agent execution panel (same read model as tasks;
- * this is a view over attempts, not a substitute for the canonical Task list). */
+/** B/#261 — read-only task execution history; users dispatch and coordinate in Tally. */
 import type {AttemptRecord} from './model.ts';
 import {durationLabel,tokenLabel,telemetryCoverage,
   tokenTotals,stateTone} from './model.ts';
@@ -16,7 +15,7 @@ export function AgentsPanel({attempts,locale='zh',connected=true}:
       hint={zh?'等待 UI-E #232 接入 Host 读模型':'Host read model arrives with UI-E #232'}/>;
   }
   if(attempts.length===0)
-    return <EmptyState title={zh?'当前版本没有 Agent 执行记录':'No agent attempts in this version'}/>;
+    return <EmptyState title={zh?'当前版本没有任务执行记录':'No task execution records in this version'}/>;
   const coverage=telemetryCoverage(attempts);
   const totals=tokenTotals(attempts);
   return <div style={{display:'grid',gap:'var(--s5)'}}>
