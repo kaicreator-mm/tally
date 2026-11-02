@@ -51,6 +51,15 @@ export function DagView({dag,locale='zh',onOpenTask}:
         style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
         ROSTER_COVERAGE=UNVERIFIED · 仅显示 Host 已声明的任务，不能视为完整版本 DAG
       </div>:null}
+      {dag.claimReadbackCoverage!=='VERIFIED_COMPLETE'
+        ?<div role="status" style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
+          CAS_CLAIM_READBACK=NOT_VERIFIED · ADS v3 评论本身不是已接受 Claim
+        </div>
+        :<div role="status" style={{color:'var(--text-secondary)',marginBottom:'var(--s3)'}}>
+          CAS_CLAIM_READBACK=VERIFIED_COMPLETE · ACCEPTED=
+          {dag.acceptedClaimCount??'UNKNOWN'}/{dag.nodes.length} ·
+          {dag.claimCoverage??'UNKNOWN'}
+        </div>}
       <div style={{display:'flex',gap:'var(--s2)',flexWrap:'wrap',marginBottom:'var(--s3)'}}>
         <select aria-label="status" value={filters.status??''}
           onChange={event=>setFilters({...filters,status:event.target.value||null})}>
@@ -145,6 +154,9 @@ export function DagView({dag,locale='zh',onOpenTask}:
             {key:'title',header:zh?'标题':'Title',cell:node=>node.title},
             {key:'status',header:zh?'状态':'Status',cell:node=>
               <Badge tone={node.status==='done'?'ok':'neutral'}>{node.status}</Badge>},
+            {key:'claim',header:'CAS Claim',cell:node=>
+              <Badge tone={node.claimState==='ACCEPTED'?'ok':'warn'}>
+                {node.claimState??'NOT_VERIFIED'}</Badge>},
             {key:'exec',header:zh?'可执行':'Executable',
               cell:node=><Badge tone={node.executable?'ok':'warn'}>
                 {node.executable?'YES':'HOST_GATE'}</Badge>},
@@ -167,6 +179,9 @@ export function DagView({dag,locale='zh',onOpenTask}:
         <dt>{zh?'阶段/泳道':'Phase/Lane'}</dt>
         <dd style={{margin:0}}>{selected.phase??'—'} / {selected.lane??'—'}</dd>
         <dt>Agent</dt><dd style={{margin:0}}>{selected.agentId??'—'}</dd>
+        <dt>CAS Claim</dt>
+        <dd style={{margin:0}}><Badge tone={selected.claimState==='ACCEPTED'?'ok':'warn'}>
+          {selected.claimState??'NOT_VERIFIED'}</Badge></dd>
         <dt>{zh?'可执行性(Host 判定)':'Executable (Host-derived)'}</dt>
         <dd style={{margin:0}}><Badge tone={selected.executable?'ok':'warn'}>
           {selected.executable?'YES':'HOST_GATE'}</Badge></dd>
