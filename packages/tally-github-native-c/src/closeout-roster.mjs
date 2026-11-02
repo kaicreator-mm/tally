@@ -205,7 +205,9 @@ export function createHostCloseoutClaimReadbackPortFromClient({
          !Array.isArray(matches)||matches.length!==1||
          matches[0].commentId!==row.commentId||matches[0].dispatchId!==row.dispatchId||
          matches[0].actorRole!==row.actorRole||matches[0].operatorKind!==row.operatorKind||
-         matches[0].operatorId!==row.operatorId||matches[0].transportActor!==writerLogin||
+         matches[0].operatorId!==row.operatorId||
+         matches[0].claimGeneration!==row.generation||
+         matches[0].transportActor!==writerLogin||
          matches[0].sourceSha!==row.sourceSha)
         return notVerified(a,'NATIVE_EVENT_DOES_NOT_MATCH_CAS_ROW');
       const reservation={repository,issueNumber:a.issueNumber,issueRef:row.issueRef,
@@ -358,7 +360,7 @@ export function createHostVersionTaskDagFreezeWriter({
           claimSubjects:pack.claimSubjects},
         witness:{status:'INDEPENDENTLY_VERIFIED',blobSha:taskPackBlobSha,
           sourceSha:expectedVersionSha,reviewedHeadSha:review.reviewedHeadSha??null,
-          reviewer:review.reviewer,reviewRef:review.reviewRef,
+          reviewer:review.reviewer,author:review.author,reviewRef:review.reviewRef,
           verifiedAt:review.verifiedAt??clock()},
         ownerApproval:{status:'OWNER_APPROVED',sourceSha:expectedVersionSha,
           approvalRef:approval.approvalRef,owner:approval.owner??null,
@@ -428,7 +430,8 @@ export function createHostVersionTaskDagReader({
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==doc.blobSha||review.sourceSha!==expectedVersionSha||
          (review.reviewedHeadSha??null)!==(doc.witness.reviewedHeadSha??null)||
-         review.reviewer!==doc.witness.reviewer||review.reviewRef!==doc.witness.reviewRef||
+         review.reviewer!==doc.witness.reviewer||review.author!==doc.witness.author||
+         review.reviewer===review.author||review.reviewRef!==doc.witness.reviewRef||
          approval?.status!=='OWNER_APPROVED'||approval.taskPackBlobSha!==doc.blobSha||
          approval.sourceSha!==expectedVersionSha||approval.owner!==doc.ownerApproval?.owner||
          approval.approvalRef!==doc.ownerApproval?.approvalRef)
