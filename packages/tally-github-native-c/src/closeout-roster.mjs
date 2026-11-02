@@ -24,6 +24,13 @@ const claimKey=(repo,n,role)=>'tally:v2:claim-admission:'+hash(repo+'#'+n+':'+ro
 const issueUrl=(repo,n)=>'https://github.com/'+repo+'/issues/'+n;
 const commentUrl=(repo,n,id)=>issueUrl(repo,n)+'#issuecomment-'+id;
 const apiIssueUrl=(owner,repo,n)=>'https://api.github.com/repos/'+owner+'/'+repo+'/issues/'+n;
+const immutableBlobRef=(value,repository)=>{
+  if(typeof value!=='string')return false;
+  const prefix='https://github.com/'+repository+'/blob/';
+  if(!value.startsWith(prefix))return false;
+  const rest=value.slice(prefix.length),slash=rest.indexOf('/');
+  return slash===40&&SHA.test(rest.slice(0,slash))&&rest.length>slash+1;
+};
 const denied=reason=>({connected:false,reason,rosterCoverage:'UNVERIFIED',
   claimAccepted:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
 
@@ -168,7 +175,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
        a.versionSourceSha!==expectedVersionSha||
        !Number.isSafeInteger(a.issueNumber)||a.issueNumber<1||
        !SHA.test(a.claimSourceSha??'')||
-       !a.taskPackRef.startsWith('https://github.com/'+repository+'/blob/')||
+       !immutableBlobRef(a.taskPackRef,repository)||
        !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\//.test(a.taskPackRef??'')||
        !SHA.test(a.taskPackBlobSha??'')||!plain(a.claimSubject)||
        a.claimSubject.issueNumber!==a.issueNumber||
@@ -345,8 +352,7 @@ export function createHostVersionTaskDagFreezeWriter({
     throw new TypeError('TRUSTED_DAG_FREEZE_WRITER_REQUIRED');
   const clock=now??(()=>new Date().toISOString());
   async function freezeVersionTaskDag({taskPackRef,taskPackBlobSha}={}){
-    if(typeof taskPackRef!=='string'||
-       !taskPackRef.startsWith('https://github.com/'+repository+'/blob/')||
+    if(!immutableBlobRef(taskPackRef,repository)||
        !SHA.test(taskPackBlobSha??''))
       return {status:'BLOCKED',reason:'TASK_PACK_IDENTITY_INVALID'};
     try{
@@ -364,7 +370,7 @@ export function createHostVersionTaskDagFreezeWriter({
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==taskPackBlobSha||review.sourceSha!==expectedVersionSha||
          !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
-         review.reviewer===review.author||!SHA.test(review.reviewedHeadSha??'')||
+         review.reviewer===review.author||review.reviewedHeadSha!==expectedVersionSha||
          typeof review.reviewRef!=='string'||
          !review.reviewRef.startsWith('https://github.com/'+repository+'/'))
         return {status:'BLOCKED',reason:'INDEPENDENT_REVIEW_REQUIRED'};
@@ -375,9 +381,12 @@ export function createHostVersionTaskDagFreezeWriter({
          typeof approval.approvalRef!=='string'||
          !approval.approvalRef.startsWith('https://github.com/'+repository+'/'))
         return {status:'BLOCKED',reason:'OWNER_APPROVAL_REQUIRED'};
+      const frozenAt=clock();
+      if(typeof frozenAt!=='string'||!Number.isFinite(Date.parse(frozenAt)))
+        return {status:'BLOCKED',reason:'FREEZE_TIMESTAMP_INVALID'};
       const value={schema:'tally/version-task-dag/v1',phase:'FROZEN_VERSION_TASK_DAG',
         repository,versionId,sourceSha:expectedVersionSha,taskPackRef,
-        blobSha:taskPackBlobSha,frozenAt:clock(),
+        blobSha:taskPackBlobSha,frozenAt,
         frozen:{blobSha:taskPackBlobSha,taskPackRef,versionId,
           taskIssues:pack.taskIssues.map(x=>x.issueNumber),edges:pack.edges,
           claimSubjects:pack.claimSubjects},
@@ -392,10 +401,27 @@ export function createHostVersionTaskDagFreezeWriter({
       const key='tally:v2:version-task-dag:'+hash(repository+'#'+versionId);
       const existing=await store.get(key);
       if(existing){
-        if(existing.value?.blobSha===taskPackBlobSha&&
-           existing.value?.sourceSha===expectedVersionSha&&
-           existing.value?.phase==='FROZEN_VERSION_TASK_DAG')
-          return {status:'REPLAY',blobSha:taskPackBlobSha,frozenAt:existing.value.frozenAt};
+        const prior=existing.value;
+        const replay=prior?.schema==='tally/version-task-dag/v1'&&
+          prior.phase==='FROZEN_VERSION_TASK_DAG'&&prior.repository===repository&&
+          prior.versionId===versionId&&prior.sourceSha===expectedVersionSha&&
+          prior.taskPackRef===taskPackRef&&prior.blobSha===taskPackBlobSha&&
+          Number.isFinite(Date.parse(prior.frozenAt??''))&&
+          same(prior.frozen,{blobSha:taskPackBlobSha,taskPackRef,versionId,
+            taskIssues:pack.taskIssues.map(x=>x.issueNumber),edges:pack.edges,
+            claimSubjects:pack.claimSubjects})&&
+          prior.witness?.status==='INDEPENDENTLY_VERIFIED'&&
+          prior.witness.blobSha===taskPackBlobSha&&
+          prior.witness.sourceSha===expectedVersionSha&&
+          prior.witness.reviewedHeadSha===expectedVersionSha&&
+          prior.witness.reviewer===review.reviewer&&prior.witness.author===review.author&&
+          prior.witness.reviewer!==prior.witness.author&&
+          prior.witness.reviewRef===review.reviewRef&&
+          prior.ownerApproval?.status==='OWNER_APPROVED'&&
+          prior.ownerApproval.sourceSha===expectedVersionSha&&
+          prior.ownerApproval.owner===approval.owner&&
+          prior.ownerApproval.approvalRef===approval.approvalRef;
+        if(replay)return {status:'REPLAY',blobSha:taskPackBlobSha,frozenAt:prior.frozenAt};
         return {status:'BLOCKED',reason:'DIVERGENT_FREEZE_EXISTS'};
       }
       await store.put(key,value,{mustBeAbsent:true});
@@ -434,11 +460,17 @@ export function createHostVersionTaskDagReader({
          !SHA.test(doc.blobSha??'')||doc.frozen?.blobSha!==doc.blobSha||
          doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
          doc.witness?.blobSha!==doc.blobSha||doc.witness?.sourceSha!==expectedVersionSha||
+         doc.witness?.reviewedHeadSha!==expectedVersionSha||
+         !ID.test(doc.witness?.reviewer??'')||!ID.test(doc.witness?.author??'')||
+         doc.witness.reviewer===doc.witness.author||
+         typeof doc.witness.reviewRef!=='string'||
+         !doc.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
          doc.ownerApproval?.sourceSha!==expectedVersionSha||
          doc.ownerApproval?.owner!==repository.split('/')[0]||
          typeof doc.frozenAt!=='string'||!Number.isFinite(Date.parse(doc.frozenAt))||
-         typeof doc.taskPackRef!=='string'||
-         !doc.taskPackRef.startsWith('https://github.com/'+repository+'/blob/'))
+         !immutableBlobRef(doc.taskPackRef,repository)||
+         typeof doc.ownerApproval.approvalRef!=='string'||
+         !doc.ownerApproval.approvalRef.startsWith('https://github.com/'+repository+'/'))
         return denied('FROZEN_DAG_RECORD_UNQUALIFIED');
       const file=await taskPackReader({taskPackRef:doc.taskPackRef,expectedBlobSha:doc.blobSha});
       if(file?.status!=='VERIFIED'||file.blobSha!==doc.blobSha||
@@ -456,11 +488,13 @@ export function createHostVersionTaskDagReader({
       ]);
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==doc.blobSha||review.sourceSha!==expectedVersionSha||
-         (review.reviewedHeadSha??null)!==(doc.witness.reviewedHeadSha??null)||
+         review.reviewedHeadSha!==expectedVersionSha||
+         review.reviewedHeadSha!==doc.witness.reviewedHeadSha||
          review.reviewer!==doc.witness.reviewer||review.author!==doc.witness.author||
          review.reviewer===review.author||review.reviewRef!==doc.witness.reviewRef||
          approval?.status!=='OWNER_APPROVED'||approval.taskPackBlobSha!==doc.blobSha||
-         approval.sourceSha!==expectedVersionSha||approval.owner!==doc.ownerApproval?.owner||
+         approval.sourceSha!==expectedVersionSha||approval.owner!==repository.split('/')[0]||
+         approval.owner!==doc.ownerApproval?.owner||
          approval.approvalRef!==doc.ownerApproval?.approvalRef)
         return denied('FROZEN_DAG_WITNESS_STALE');
       const after=await store.get(key);
