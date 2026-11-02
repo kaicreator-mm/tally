@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import type {ExperienceSnapshot,ExperienceDecisionReceipt} from './model.ts';
 import {eligibleExperienceDecision,experienceOutcomeLabel} from './model.ts';
 import {Badge} from '../../components/ui/Badge.tsx';
@@ -10,6 +11,20 @@ export function ExperienceView({snapshot,projectId,versionId,onDecision,
     decision:'ADOPT'|'REJECT')=>Promise<ExperienceDecisionReceipt>|void;
   locale?:'zh'|'en'}){
   const zh=locale==='zh';
+  const [pendingId,setPendingId]=useState<string|null>(null);
+  const [notice,setNotice]=useState<string|null>(null);
+  const decide=async(id:string,revision:number,decision:'ADOPT'|'REJECT')=>{
+    setPendingId(id);setNotice(null);
+    try{
+      const result=await onDecision(id,revision,decision);
+      if(!result){setNotice('HOST_ACTION_NOT_CONNECTED');return;}
+      if(result.status==='OBSERVED')
+        setNotice(zh?'决定已写入受信 Host；下一 Task 使用情况仍待独立验证':
+          'Decision recorded by selected Host; next-task use remains unverified');
+      else setNotice(result.reason??result.status);
+    }catch{setNotice('UNKNOWN · RECONCILE_BEFORE_RETRY');}
+    finally{setPendingId(null);}
+  };
   if(!snapshot?.connected||snapshot.source?.repository!==projectId||
      snapshot.versionId!==versionId||snapshot.source.currentness!=='CURRENT'||
      snapshot.source.readback!=='VERIFIED'||!Array.isArray(snapshot.candidates))
@@ -19,6 +34,7 @@ export function ExperienceView({snapshot,projectId,versionId,onDecision,
     return <EmptyState title={zh?'暂无经验候选':'No experience candidates'}
       hint={zh?'没有候选不代表已证明质量提升':'No candidate is not evidence of quality improvement'}/>;
   return <div style={{display:'grid',gap:'var(--s4)'}}>
+    {notice?<div role="status" style={{color:'var(--text-secondary)'}}>{notice}</div>:null}
     <Card>
       <CardHeader title={zh?'工程经验与规则':'Engineering experience'}
         sub={zh?'每条经验都必须经过来源验证和人工决定；下一 Task 是否使用另行取证'
@@ -46,12 +62,14 @@ export function ExperienceView({snapshot,projectId,versionId,onDecision,
           {zh?'查看 ADS 原始报告':'Open ADS source report'}
         </a>
         {!terminal?<div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
-          <Button disabled={!gate.eligible}
-            onClick={()=>{void onDecision(candidate.id,candidate.revision,'ADOPT');}}>
+          <Button disabled={!gate.eligible||pendingId!==null}
+            loading={pendingId===candidate.id}
+            onClick={()=>{void decide(candidate.id,candidate.revision,'ADOPT');}}>
             {zh?'采纳为后续经验':'Adopt for future Tasks'}
           </Button>
-          <Button variant="secondary" disabled={!gate.eligible}
-            onClick={()=>{void onDecision(candidate.id,candidate.revision,'REJECT');}}>
+          <Button variant="secondary" disabled={!gate.eligible||pendingId!==null}
+            loading={pendingId===candidate.id}
+            onClick={()=>{void decide(candidate.id,candidate.revision,'REJECT');}}>
             {zh?'拒绝':'Reject'}
           </Button>
           {!gate.eligible?<span role="status" style={{fontSize:12,color:'var(--text-muted)'}}>
