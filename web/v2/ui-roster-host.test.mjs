@@ -31,7 +31,8 @@ const frozen=()=>({connected:true,source:versionSource,versionId,
   taskPackRef,ownerApproval:{status:'OWNER_APPROVED',sourceSha:versionSha,
     owner:'org',approvalRef:'https://github.com/org/tally/issues/260#issuecomment-1'},
   witness:{status:'INDEPENDENTLY_VERIFIED',blobSha:taskPackBlobSha,
-    sourceSha:versionSha,reviewedHeadSha:'f'.repeat(40),reviewer:'independent-reviewer',
+    sourceSha:versionSha,reviewedHeadSha:'f'.repeat(40),author:'source-author',
+    reviewer:'independent-reviewer',
     reviewRef:'https://github.com/org/tally/pull/258#pullrequestreview-1'},
   frozenAt:'2026-11-02T00:00:00Z',
   frozen:{blobSha:taskPackBlobSha,taskPackRef,versionId,
@@ -45,7 +46,7 @@ const acceptedClaim=(n)=>({connected:true,source:sourceForClaim,
   dispatchId:'dispatch:'+n+':builder:1',commentId:1000+n,
   commentRef:'https://github.com/'+repository+'/issues/'+n+
     '#issuecomment-'+(1000+n),commentBodySha256:'9'.repeat(64),
-  writerId:'tally-host:win32:i259:closeout:1',responsibilityStatus:'NOT_VERIFIED',
+  transportActor:'org',writerId:'tally-host:win32:i259:closeout:1',responsibilityStatus:'NOT_VERIFIED',
   activeOperator:null,authorized:false,admitted:false,taskPass:false,releasePass:false});
 const candidateClaim=(n)=>({connected:true,source:sourceForClaim,
   versionId,versionSourceSha:versionSha,issueNumber:n,claimSourceSha,
@@ -53,6 +54,9 @@ const candidateClaim=(n)=>({connected:true,source:sourceForClaim,
   claimPublication:'CANDIDATE_ONLY',commentId:1000+n,
   commentRef:'https://github.com/'+repository+'/issues/'+n+
     '#issuecomment-'+(1000+n),commentBodySha256:'8'.repeat(64),
+  generation:1,actorRole:'builder',operatorKind:'other',operatorId:'zcode:task:'+n,
+  protectedClaimKey:repository+'#'+n+':builder:__default__',
+  sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',transportActor:'org',
   dispatchId:'dispatch:'+n+':builder:1',authorized:false,admitted:false,
   taskPass:false,releasePass:false});
 const notClaimed=(n)=>({connected:true,source:{...sourceForClaim,
@@ -101,7 +105,7 @@ test('candidate-only Claim is visible but never counted as accepted',async()=>{
     async args=>args.issueNumber===1?candidateClaim(1):notClaimed(2));
   const r=await host.roster();
   assert.equal(r.connected,true);
-  assert.equal(r.claimReadbackCoverage,'OBSERVATIONS_COMPLETE');
+  assert.equal(r.claimReadbackCoverage,'VERIFIED_COMPLETE');
   assert.equal(r.claimCoverage,'NONE_ACCEPTED');
   assert.equal(r.acceptedClaimCount,0);
   assert.equal(r.notVerifiedCount,1);
@@ -117,7 +121,7 @@ test('accepted CAS Claim does not imply Web responsibility or Kernel admission',
     async args=>args.issueNumber===1?acceptedClaim(1):notClaimed(2));
   const r=await host.roster();
   assert.equal(r.connected,true);
-  assert.equal(r.claimCoverage,'PARTIAL_ACCEPTED');
+  assert.equal(r.claimCoverage,'PARTIAL');
   assert.equal(r.acceptedClaimCount,1);
   assert.equal(r.activeWebResponsibilityCount,0);
   assert.equal(r.tasks[0].claimAccepted,true);
