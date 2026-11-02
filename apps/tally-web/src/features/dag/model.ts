@@ -21,6 +21,8 @@ export interface DagEdge{
   from:string;to:string;kind:EdgeKind;
   /** Native acceptance evidence (issue comment ref) or null for planned. */
   evidenceRef:string|null;
+  /** Exact blocker Issue URL (from) for provenance; not a second authority. */
+  dependencyRef?:string|null;
   /** Legal amendment record if the edge was amended after freeze. */
   amendedAt:string|null;
 }
