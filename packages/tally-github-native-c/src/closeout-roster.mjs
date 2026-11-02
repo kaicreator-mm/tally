@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {parseDocument,visit,isAlias} from 'yaml';
 import {readClaimEventCandidatesFromClient} from './task-claim-events.mjs';
 import {createHostNativeGitHubClaimReadbackPortFromClient} from './task-claim-host-readback-port.mjs';
+import {readUiNativeVersionFromClient} from './ui-version-readonly.mjs';
 
 const SHA=/^[a-f0-9]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
@@ -301,6 +302,10 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
      pack.versionId!==versionId||pack.versionBaseSha!==versionSha||
      !SHA.test(blobSha??'')||!Array.isArray(pack.taskIssues)||
      !pack.taskIssues.length||pack.taskIssues.length>200||
+     !plain(pack.source)||pack.source.kind!=='GITHUB_NATIVE_ISSUES'||
+     pack.source.query!=='state=all&labels=type:task'||
+     pack.source.taskIssueCount!==pack.taskIssues.length||
+     !Number.isFinite(Date.parse(pack.observedAt??''))||
      !Array.isArray(pack.edges)||pack.edges.length>2000||
      !Array.isArray(pack.claimSubjects)||pack.claimSubjects.length!==pack.taskIssues.length)
     return false;
@@ -308,7 +313,8 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
   for(const t of pack.taskIssues){
     if(!plain(t)||!Number.isSafeInteger(t.issueNumber)||t.issueNumber<1||
        ids.has(t.issueNumber)||typeof t.title!=='string'||
-       !['open','closed'].includes(t.issueState)||!Array.isArray(t.labels)||
+       !['open','closed'].includes(t.issueState)||
+       !Number.isFinite(Date.parse(t.updatedAt??''))||!Array.isArray(t.labels)||
        t.labels.some(x=>typeof x!=='string'))return false;
     ids.add(t.issueNumber);
   }
@@ -347,14 +353,64 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
   return [...ids].every(walk);
 }
 
+function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha){
+  const source=native?.source,dagSource=native?.dag?.source;
+  if(native?.connected!==true||native.versionId!==versionId||
+     source?.repository!==repository||source?.sourceSha!==versionSha||
+     source?.currentness!=='CURRENT'||source?.readback!=='VERIFIED'||
+     dagSource?.repository!==repository||dagSource?.sourceSha!==versionSha||
+     dagSource?.currentness!=='CURRENT'||dagSource?.readback!=='VERIFIED'||
+     native.dag?.connected!==true||native.dag.versionId!==versionId||
+     native.dag.asOf?.sourceSha!==versionSha||
+     !Array.isArray(native.tasks)||native.tasks.length!==pack.taskIssues.length||
+     !Array.isArray(native.dag.nodes)||native.dag.nodes.length!==pack.taskIssues.length||
+     !Array.isArray(native.dag.edges))return false;
+  const expected=new Map(pack.taskIssues.map(t=>[t.issueNumber,t]));
+  const observed=new Set();
+  for(const task of native.tasks){
+    const n=Number(task?.id),candidate=expected.get(n);
+    if(!Number.isSafeInteger(n)||!candidate||observed.has(n)||
+       task.versionId!==versionId||task.title!==candidate.title||
+       task.issueState!==candidate.issueState||task.updatedAt!==candidate.updatedAt)
+      return false;
+    observed.add(n);
+  }
+  if(observed.size!==expected.size)return false;
+  const nodes=new Set();
+  for(const node of native.dag.nodes){
+    const n=Number(node?.taskId);
+    if(!Number.isSafeInteger(n)||!expected.has(n)||nodes.has(n)||
+       node.versionId!==versionId)return false;
+    nodes.add(n);
+  }
+  if(nodes.size!==expected.size)return false;
+  const normalize=(edges,fromNative)=>edges.map(e=>{
+    const from=Number(e?.from),to=Number(e?.to);
+    if(!Number.isSafeInteger(from)||!Number.isSafeInteger(to)||
+       !expected.has(from)||!expected.has(to)||e.kind!=='NATIVE'||
+       e.evidenceRef!==issueUrl(repository,to)||
+       (fromNative&&e.dependencyRef!==issueUrl(repository,from)))return null;
+    return {from,to,evidenceRef:e.evidenceRef};
+  });
+  const expectedEdges=normalize(pack.edges.filter(e=>e.kind==='NATIVE'),false);
+  const observedEdges=normalize(native.dag.edges,true);
+  if(expectedEdges.some(e=>!e)||observedEdges.some(e=>!e)||
+     expectedEdges.length!==observedEdges.length)return false;
+  const key=e=>e.from+'>'+e.to;
+  expectedEdges.sort((a,b)=>key(a).localeCompare(key(b)));
+  observedEdges.sort((a,b)=>key(a).localeCompare(key(b)));
+  return same(expectedEdges,observedEdges);
+}
+
 /** Create-only version DAG freeze writer. It refuses absent independent review or Owner approval. */
 export function createHostVersionTaskDagFreezeWriter({
-  repository,versionId,expectedVersionSha,store,taskPackReader,
+  repository,versionId,expectedVersionSha,store,taskPackReader,nativeRosterReader,
   reviewWitnessReader,ownerApprovalReader,now
 }={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedVersionSha??'')||typeof store?.get!=='function'||
      typeof store?.put!=='function'||typeof taskPackReader!=='function'||
+     typeof nativeRosterReader!=='function'||
      typeof reviewWitnessReader!=='function'||typeof ownerApprovalReader!=='function')
     throw new TypeError('TRUSTED_DAG_FREEZE_WRITER_REQUIRED');
   const clock=now??(()=>new Date().toISOString());
@@ -370,6 +426,11 @@ export function createHostVersionTaskDagFreezeWriter({
       const pack=JSON.parse(file.content);
       if(!validTaskPack(pack,repository,versionId,expectedVersionSha,taskPackBlobSha))
         return {status:'BLOCKED',reason:'TASK_PACK_CONTENT_INVALID'};
+      const native=await nativeRosterReader({repository,versionId,
+        sourceSha:expectedVersionSha,
+        taskIssueNumbers:pack.taskIssues.map(x=>x.issueNumber)});
+      if(!nativeRosterMatchesPack(native,pack,repository,versionId,expectedVersionSha))
+        return {status:'BLOCKED',reason:'NATIVE_TASK_ROSTER_READBACK_FAILED'};
       const [review,approval]=await Promise.all([
         reviewWitnessReader({taskPackRef,taskPackBlobSha,versionId,sourceSha:expectedVersionSha}),
         ownerApprovalReader({taskPackRef,taskPackBlobSha,versionId,sourceSha:expectedVersionSha})
@@ -535,7 +596,10 @@ export function createHostCloseoutRosterPorts({
     frozenHost:createHostVersionTaskDagReader({repository,versionId,expectedVersionSha,
       store,taskPackReader,reviewWitnessReader,ownerApprovalReader}),
     freezeWriter:createHostVersionTaskDagFreezeWriter({repository,versionId,expectedVersionSha,
-      store,taskPackReader,reviewWitnessReader,ownerApprovalReader}),
+      store,taskPackReader,
+      nativeRosterReader:({taskIssueNumbers})=>readUiNativeVersionFromClient({
+        octokit,owner,repo,versionId,expectedSha:expectedVersionSha,taskIssueNumbers}),
+      reviewWitnessReader,ownerApprovalReader}),
     claimHost:createHostCloseoutClaimReadbackPortFromClient({octokit,owner,repo,
       writerLogin,writerId,store,handoffReader,repository,versionId,expectedVersionSha})
   });
