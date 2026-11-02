@@ -105,4 +105,6 @@ test('Host action kinds map only to existing selected Business intents',()=>{
   assert.equal(businessIntentForUiAction('DELIVER_QUALIFIED_RELEASE'),'deliverQualifiedRelease');
   assert.equal(businessIntentForUiAction('CREATE_TASK'),null);
   assert.equal(businessIntentForUiAction('CLAIM_TASK'),null);
+  assert.equal(businessIntentForUiAction('__proto__'),null);
+  assert.equal(businessIntentForUiAction('toString'),null);
 });
