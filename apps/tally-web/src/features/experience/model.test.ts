@@ -7,7 +7,7 @@ const snapshot={connected:true,versionId:'version/v2',
     currentness:'CURRENT',readback:'VERIFIED'},candidates:[]} as const satisfies ExperienceSnapshot;
 const candidate={id:'b'.repeat(64),revision:1,title:'Rule',state:'PROPOSED',
   reportQualification:'VERIFIED',sourceRef:'https://github.com/org/tally/issues/2#issuecomment-1',
-  eligibleForNextTask:false};
+  eligibleForNextTask:false} as const satisfies ExperienceCandidate;
 test('only current source-backed proposed/reviewed candidate is actionable',()=>{
   const s={...snapshot,candidates:[candidate]};
   assert.deepEqual(eligibleExperienceDecision(s,candidate,'org/tally','version/v2'),
