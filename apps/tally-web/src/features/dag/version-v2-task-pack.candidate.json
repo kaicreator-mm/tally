@@ -1,0 +1,1057 @@
+{
+  "schema": "tally/version-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+  "observedAt": "2026-11-02T12:08:32.278Z",
+  "source": {
+    "kind": "GITHUB_NATIVE_ISSUES",
+    "query": "state=all&labels=type:task",
+    "taskIssueCount": 40,
+    "claimCommentPages": 3
+  },
+  "taskIssues": [
+    {
+      "issueNumber": 62,
+      "title": "Tally v2 integration: one real ADS Task through DomainHarness B/S/K/C + task-meta observation",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-19T16:21:36Z",
+      "updatedAt": "2026-10-31T03:38:17Z",
+      "closedAt": "2026-10-31T03:38:17Z"
+    },
+    {
+      "issueNumber": 92,
+      "title": "[v2 W-F][P0 Product UX] Tally 端到端软件开发单一入口：J01–J08 可操作 UI、恢复与真实发布验收",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-25T21:02:14Z",
+      "updatedAt": "2026-10-31T03:43:17Z",
+      "closedAt": "2026-10-31T03:43:17Z"
+    },
+    {
+      "issueNumber": 137,
+      "title": "[v2][P1 Product Intake] 任务当前状态的可信只读投影：native DAG、Claim、执行、证据分层和阻塞原因",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:21:37Z",
+      "updatedAt": "2026-10-30T18:46:03Z",
+      "closedAt": "2026-10-30T18:46:03Z"
+    },
+    {
+      "issueNumber": 139,
+      "title": "[v2][P1 Product Intake] 多版本真实工程证据图谱：Product/L2 → Task/Issue/PR → Review/CI → Release/后继缺陷",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:41:34Z",
+      "updatedAt": "2026-10-30T21:48:38Z",
+      "closedAt": "2026-10-30T21:48:38Z"
+    },
+    {
+      "issueNumber": 140,
+      "title": "[v2][P1 Product Intake] 开发流程根因与瓶颈诊断：真实 DAG、Review/Repair、验证等待及 Agent 协作成本",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:42:29Z",
+      "updatedAt": "2026-10-30T22:16:18Z",
+      "closedAt": "2026-10-30T22:16:18Z"
+    },
+    {
+      "issueNumber": 141,
+      "title": "[v2][P1 Product Intake] 跨版本经验驱动的新版本规划：需求拆分、Task DAG 并行、Agent 分工与验证策略建议",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:43:20Z",
+      "updatedAt": "2026-10-30T22:51:29Z",
+      "closedAt": "2026-10-30T22:51:29Z"
+    },
+    {
+      "issueNumber": 142,
+      "title": "[v2][P1 Product Intake] Issue ≠ Task：Concern/Checkpoint 工作单元身份、并发 Claim 冲突与进度分母",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:52:23Z",
+      "updatedAt": "2026-10-30T23:23:52Z",
+      "closedAt": "2026-10-30T23:23:52Z"
+    },
+    {
+      "issueNumber": 143,
+      "title": "[v2][P1 Product Intake] 真实跨版本 Issue Casebook 与 as-of 回放：可量化验证 Tally 的诊断和下一版规划",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:52:25Z",
+      "updatedAt": "2026-10-31T00:03:26Z",
+      "closedAt": "2026-10-31T00:03:26Z"
+    },
+    {
+      "issueNumber": 144,
+      "title": "[v2][P2 Product Intake] 跨项目工程反馈工单闭环：下游缺口归属、去重、跨版本采纳和效果回读",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T18:52:27Z",
+      "updatedAt": "2026-10-31T00:36:14Z",
+      "closedAt": "2026-10-31T00:36:13Z"
+    },
+    {
+      "issueNumber": 145,
+      "title": "[v2][P0 Product Intake] Version Journey Driver：从用户目标到发布的持续下一步、并行推进与人机交接",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T19:18:41Z",
+      "updatedAt": "2026-10-30T19:14:40Z",
+      "closedAt": "2026-10-30T19:14:40Z"
+    },
+    {
+      "issueNumber": 146,
+      "title": "[v2][P1 Product Intake] 用户能力验收账本：冻结需求→真实选中执行→跨版本保留与可用性证明",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T19:18:43Z",
+      "updatedAt": "2026-10-30T20:53:28Z",
+      "closedAt": "2026-10-30T20:53:28Z"
+    },
+    {
+      "issueNumber": 148,
+      "title": "[v2 DH0103-contract] Guided Project intake: schema-pinned deterministic next step, advisory without authority",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-27T21:00:52Z",
+      "updatedAt": "2026-10-31T01:12:41Z",
+      "closedAt": "2026-10-31T01:12:41Z"
+    },
+    {
+      "issueNumber": 166,
+      "title": "T06j: privileged Host admission source adapter for T06d single-writer controller",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-29T12:29:10Z",
+      "updatedAt": "2026-10-29T22:49:56Z",
+      "closedAt": "2026-10-29T22:49:56Z"
+    },
+    {
+      "issueNumber": 169,
+      "title": "T06l: accepted Claim verifier and DomainHarness K execution admission",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-29T23:34:19Z",
+      "updatedAt": "2026-10-30T07:20:55Z",
+      "closedAt": "2026-10-30T07:20:55Z"
+    },
+    {
+      "issueNumber": 172,
+      "title": "T06m: real Local Codex execution through selected DomainHarness K/Host",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T08:06:27Z",
+      "updatedAt": "2026-10-30T15:58:27Z",
+      "closedAt": "2026-10-30T15:58:27Z"
+    },
+    {
+      "issueNumber": 173,
+      "title": "CI(v2): make self-hosted Woodpecker the sole validation carrier",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T08:09:16Z",
+      "updatedAt": "2026-10-30T15:28:11Z",
+      "closedAt": "2026-10-30T15:28:11Z"
+    },
+    {
+      "issueNumber": 176,
+      "title": "T06n: concurrent independent Builders with Reviewer Join and Repair",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T15:59:21Z",
+      "updatedAt": "2026-10-30T18:09:43Z",
+      "closedAt": "2026-10-30T18:07:28Z"
+    },
+    {
+      "issueNumber": 177,
+      "title": "T06n Builder A: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T16:02:04Z",
+      "updatedAt": "2026-10-30T18:09:50Z",
+      "closedAt": "2026-10-30T18:07:32Z"
+    },
+    {
+      "issueNumber": 178,
+      "title": "T06n Builder B: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T16:02:05Z",
+      "updatedAt": "2026-10-30T18:09:59Z",
+      "closedAt": "2026-10-30T18:07:36Z"
+    },
+    {
+      "issueNumber": 179,
+      "title": "T06n Reviewer: independent Join and Repair review",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T16:02:07Z",
+      "updatedAt": "2026-10-30T18:10:06Z",
+      "closedAt": "2026-10-30T18:07:40Z"
+    },
+    {
+      "issueNumber": 184,
+      "title": "CI(v2): validate read-only ALM workspace sources",
+      "issueState": "closed",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-30T19:29:27Z",
+      "updatedAt": "2026-10-30T19:48:41Z",
+      "closedAt": "2026-10-30T19:48:41Z"
+    },
+    {
+      "issueNumber": 196,
+      "title": "[v2][P0] J04–J06 write-capable ALM workspace：真实 Local Codex、Reviewer/Repair 与读回",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T03:43:19Z",
+      "updatedAt": "2026-10-31T05:15:24Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 197,
+      "title": "[v2][P0] J05 Builder A：真实 disjoint Local Codex candidate",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T04:35:59Z",
+      "updatedAt": "2026-10-31T04:37:34Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 198,
+      "title": "[v2][P0] J05 Builder B：真实 disjoint Local Codex candidate 与 Repair",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T04:36:01Z",
+      "updatedAt": "2026-10-31T04:37:45Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 199,
+      "title": "[v2][P0] J05 Reviewer：独立 Join、Repair 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T04:36:03Z",
+      "updatedAt": "2026-10-31T04:37:55Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 200,
+      "title": "[v2][P0] J05 Reviewer：独立 Reviewer Claim、Join 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T05:43:13Z",
+      "updatedAt": "2026-10-31T05:44:27Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 202,
+      "title": "[v2] J04–J06 ALM dynamic binding integration correction",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T06:53:36Z",
+      "updatedAt": "2026-10-31T07:06:55Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 203,
+      "title": "[v2] Publish reviewed candidates as exact-SHA pull requests",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T07:11:08Z",
+      "updatedAt": "2026-10-31T18:53:25Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 207,
+      "title": "[v2][P0][J06] Real-browser ALM journey acceptance and truthful CI/Host readback",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T10:36:16Z",
+      "updatedAt": "2026-10-31T12:54:16Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 208,
+      "title": "[v2][P0][J07] Exact-SHA Release Qualification, version closure and authorized delivery",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T10:36:18Z",
+      "updatedAt": "2026-10-31T17:32:52Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 209,
+      "title": "[v2][P0][J08] Defect intake, next-version planning and measured Task Learning replay",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T10:36:20Z",
+      "updatedAt": "2026-10-31T12:44:25Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 210,
+      "title": "[v2][P0][J01–J03] Wire guided project intake, Product/L2 freeze and native Task DAG into ALM workspace",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T10:38:10Z",
+      "updatedAt": "2026-11-01T04:27:32Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 211,
+      "title": "[v2] Bounded recovery for native GitHub read failures",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T11:41:50Z",
+      "updatedAt": "2026-10-31T12:54:22Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 212,
+      "title": "[v2] Complete native WorkItem and Claim-event read recovery",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T12:06:28Z",
+      "updatedAt": "2026-10-31T13:01:22Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 219,
+      "title": "[v2] Governed maintenance, next version and measured Task Learning",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-10-31T15:00:38Z",
+      "updatedAt": "2026-10-31T16:52:46Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 260,
+      "title": "[v2][Closeout A][P0] Canonical per-version Task DAG, native dependencies & accepted Claim readback",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-11-01T20:03:39Z",
+      "updatedAt": "2026-11-02T11:36:15Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 261,
+      "title": "[v2][Closeout B][P0] Reuse selected B/K/Host for real UI-guided development and Agent/Review actions",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-11-01T20:03:40Z",
+      "updatedAt": "2026-11-02T11:40:09Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 262,
+      "title": "[v2][Closeout C][P0] Real ADS/task-meta, audit and controlled experience feedback to next Task",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-11-01T20:03:43Z",
+      "updatedAt": "2026-11-02T11:40:12Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 263,
+      "title": "[v2][Closeout D][P0] Human-oriented actionable ALM UI incl. approvals, QA, Release, deployment, settings",
+      "issueState": "open",
+      "labels": [
+        "state:ready",
+        "type:task"
+      ],
+      "createdAt": "2026-11-01T20:03:45Z",
+      "updatedAt": "2026-11-02T11:40:15Z",
+      "closedAt": null
+    },
+    {
+      "issueNumber": 264,
+      "title": "[v2][Closeout E][P0] Single final PR #258 composition, differential verification and installed J01-J08",
+      "issueState": "open",
+      "labels": [
+        "state:planned",
+        "type:task"
+      ],
+      "createdAt": "2026-11-01T20:03:47Z",
+      "updatedAt": "2026-11-02T08:35:32Z",
+      "closedAt": null
+    }
+  ],
+  "edges": [
+    {
+      "from": 260,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260"
+    },
+    {
+      "from": 261,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261"
+    },
+    {
+      "from": 262,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262"
+    },
+    {
+      "from": 263,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/263"
+    }
+  ],
+  "claimSubjects": [
+    {
+      "issueNumber": 62,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#62:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 92,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#92:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 137,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#137:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 139,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#139:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 140,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#140:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 141,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#141:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 142,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#142:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 143,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#143:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 144,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#144:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 145,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#145:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 146,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#146:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 148,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#148:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 166,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#166:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 169,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#169:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 172,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#172:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 173,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#173:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 176,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#176:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 177,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#177:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 178,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#178:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 179,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#179:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 184,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#184:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 196,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#196:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 197,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#197:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 198,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#198:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 199,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#199:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 200,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#200:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 202,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#202:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 203,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 207,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#207:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 208,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#208:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 209,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#209:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 210,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#210:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 211,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#211:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 212,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#212:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 219,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#219:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 260,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#260:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 261,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#261:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 262,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#262:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 263,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#263:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 264,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#264:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    }
+  ],
+  "claimAcceptance": "NOT_VERIFIED",
+  "closureEvidence": "NOT_VERIFIED",
+  "plannedEdges": [],
+  "notes": [
+    "Task roster is a candidate snapshot; Host must re-read the complete type:task set.",
+    "DISPATCH_CLAIMED comments are candidate evidence only; CAS acceptance is NOT_VERIFIED.",
+    "Closed Issues remain closure-unverified until independent closeout evidence is read.",
+    "Only native blocked_by edges observed at snapshot are included."
+  ]
+}
