@@ -129,15 +129,20 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     try{
       const current=await read();
       if(!positive(current,repository,versionId,expectedSha))return current;
-      const rejectedIds=new Set(current.candidates.filter(c=>c.state==='REJECTED').map(c=>c.id));
       const r=await selectedHost.readNextTaskContextUsage({repository,versionId,
         sourceSha:expectedSha,taskIssue});
+      const eligibleIds=new Set(current.candidates.filter(c=>
+        c.state==='ADOPTED'&&c.reportQualification==='VERIFIED'&&
+        c.eligibleForNextTask===true).map(c=>c.id));
       if(r?.connected!==true||r.source?.repository!==repository||
          r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
          r.source?.readback!=='VERIFIED'||r.taskIssue!==taskIssue||
          !Array.isArray(r.usedCandidates)||r.usedCandidates.length>100||
-         r.usedCandidates.some(id=>!ID.test(id)||rejectedIds.has(id))||
-         !['EXPLICITLY_APPLIED','EXPLICITLY_NOT_APPLIED'].includes(r.usageState))
+         new Set(r.usedCandidates).size!==r.usedCandidates.length||
+         r.usedCandidates.some(id=>!ID.test(id)||!eligibleIds.has(id))||
+         !['EXPLICITLY_APPLIED','EXPLICITLY_NOT_APPLIED'].includes(r.usageState)||
+         (r.usageState==='EXPLICITLY_NOT_APPLIED'&&r.usedCandidates.length!==0)||
+         (r.usageState==='EXPLICITLY_APPLIED'&&r.usedCandidates.length===0))
         return denied('NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
       return {connected:true,taskIssue,usageState:r.usageState,
         usedCandidates:r.usedCandidates,measuredBenefit:'UNKNOWN'};
