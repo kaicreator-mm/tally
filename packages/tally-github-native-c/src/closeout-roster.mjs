@@ -340,7 +340,9 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
   const seen=new Set(),adj=new Map([...ids].map(n=>[n,[]]));
   for(const e of pack.edges){
     if(!plain(e)||!ids.has(e.from)||!ids.has(e.to)||e.from===e.to||
-       !['NATIVE','PLANNED'].includes(e.kind)||e.evidenceRef!==issueUrl(repository,e.to))
+       !['NATIVE','PLANNED'].includes(e.kind)||
+       e.evidenceRef!==issueUrl(repository,e.to)||
+       e.dependencyRef!==issueUrl(repository,e.from))
       return false;
     const key=e.from+'>'+e.to;
     if(seen.has(key))return false;
