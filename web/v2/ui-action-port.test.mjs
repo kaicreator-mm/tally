@@ -115,3 +115,55 @@ test('Host action kinds map only to existing selected Business intents',()=>{
   assert.equal(businessIntentForUiAction('__proto__'),null);
   assert.equal(businessIntentForUiAction('toString'),null);
 });
+
+const executionSnapshot=()=>({connected:true,source,versionId,taskIssue:260,
+  execution:{state:'RUNNING',provider:'local-codex',role:'BUILDER',
+    attemptId:'attempt-260',progressSummary:'正在检查依赖并执行任务',
+    progressSummaryKind:'SANITIZED',heartbeatAt:'2026-11-02T12:30:00.000Z',
+    elapsedMs:65000,tokensIn:1200,tokensOut:300,costUsd:null,
+    candidateRef:'https://github.com/org/tally/pull/300'}});
+test('task execution read is selected-source scoped and exposes only bounded lifecycle evidence',async()=>{
+  let received;
+  const port=make({readTaskExecution:async input=>{
+    received=input;return executionSnapshot();
+  }});
+  const result=await port.taskExecution(260);
+  assert.deepEqual(received,{repository,versionId,sourceSha:sha,taskIssue:260});
+  assert.equal(result.connected,true);
+  assert.equal(result.execution.state,'RUNNING');
+  assert.equal(result.execution.provider,'local-codex');
+  assert.equal(result.execution.role,'BUILDER');
+  assert.equal(result.execution.progressSummary,'正在检查依赖并执行任务');
+  assert.equal(result.execution.candidateRef,'https://github.com/org/tally/pull/300');
+  assert.equal(result.execution.rawLog,undefined);
+});
+test('task execution read keeps missing source UNKNOWN and refuses foreign or unsafe evidence',async()=>{
+  assert.equal((await make().taskExecution(260)).reason,
+    'SELECTED_HOST_TASK_EXECUTION_NOT_CONNECTED');
+  assert.equal((await make().taskExecution(0)).reason,'TASK_EXECUTION_ISSUE_INVALID');
+  const foreign=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    source:{...source,repository:'evil/repo'}})}).taskExecution(260);
+  assert.equal(foreign.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  const wrongTask=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    taskIssue:261})}).taskExecution(260);
+  assert.equal(wrongTask.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  const secret=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    execution:{...executionSnapshot().execution,
+      progressSummary:'Bearer ghp_abcdefghijklmnopqrstuvwxyz'}})}).taskExecution(260);
+  assert.equal(secret.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  const foreignPr=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    execution:{...executionSnapshot().execution,
+      candidateRef:'https://github.com/evil/repo/pull/300'}})}).taskExecution(260);
+  assert.equal(foreignPr.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+});
+test('task execution permits absent telemetry only as explicit nulls',async()=>{
+  const result=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    execution:{state:'UNKNOWN',provider:null,role:null,attemptId:null,
+      progressSummary:null,progressSummaryKind:'NOT_AVAILABLE',heartbeatAt:null,
+      elapsedMs:null,tokensIn:null,tokensOut:null,costUsd:null,candidateRef:null}})})
+    .taskExecution(260);
+  assert.equal(result.connected,true);
+  assert.equal(result.execution.state,'UNKNOWN');
+  assert.equal(result.execution.tokensIn,null);
+  assert.equal(result.execution.costUsd,null);
+});
