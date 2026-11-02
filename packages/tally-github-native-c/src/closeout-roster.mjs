@@ -325,7 +325,7 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
       return false;
     if(x.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
        (x.commentId!==null||x.commentRef!==null||x.dispatchId!==null||
-        x.protectedClaimKey!==repository+'#'+x.issueNumber+':'+x.actorRole+':__default__))return false;
+        x.protectedClaimKey!==repository+'#'+x.issueNumber+':'+x.actorRole+':__default__'))return false;
     if(!['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(x.candidateStatus))
       return false;
     subjects.add(x.issueNumber);
