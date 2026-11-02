@@ -10,21 +10,26 @@ const denial=reason=>({connected:false,reason,rosterCoverage:'UNVERIFIED'});
 const ids=items=>items.map(String);
 const edgeId=(from,to)=>String(from)+'->'+String(to);
 const sameSet=(a,b)=>a.size===b.size&&[...a].every(x=>b.has(x));
-const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const canonical=x=>Array.isArray(x)?x.map(canonical):
+  x!==null&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
+const same=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
 function frozenOk(doc,repository,versionId,expectedSha){
   if(doc?.connected!==true||doc?.source?.repository!==repository||
      doc.source.sourceSha!==expectedSha||doc.source.currentness!=='CURRENT'||
      doc.source.readback!=='VERIFIED'||doc.versionId!==versionId||
      doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
      doc.witness?.sourceSha!==expectedSha||
+     doc.witness?.reviewedHeadSha!==expectedSha||
+     doc.witness?.author===doc.witness?.reviewer||
      doc.ownerApproval?.sourceSha!==expectedSha||
+     doc.ownerApproval?.owner!==repository.split('/')[0]||
      !SHA.test(doc.witness.blobSha??'')||
      typeof doc.witness.reviewer!=='string'||!doc.witness.reviewer||
      typeof doc.witness.reviewRef!=='string'||
-     !doc.witness.reviewRef.startsWith('https://github.com/')||
+     !doc.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
      doc.ownerApproval?.status!=='OWNER_APPROVED'||
      typeof doc.ownerApproval.approvalRef!=='string'||
-     !doc.ownerApproval.approvalRef.startsWith('https://github.com/')||
+     !doc.ownerApproval.approvalRef.startsWith('https://github.com/'+repository+'/')||
      doc.frozen?.blobSha!==doc.witness.blobSha||
      doc.frozen?.versionId!==versionId||
      typeof doc.frozenAt!=='string'||!Number.isFinite(Date.parse(doc.frozenAt))||
@@ -34,6 +39,7 @@ function frozenOk(doc,repository,versionId,expectedSha){
      !Array.isArray(doc.frozen.claimSubjects)||
      doc.frozen.claimSubjects.length!==doc.frozen.taskIssues.length||
      doc.frozen.taskPackRef!==doc.taskPackRef||
+     !doc.taskPackRef.startsWith('https://github.com/'+repository+'/blob/')||
      !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\//.test(doc.taskPackRef??''))
     return false;
   const tasks=doc.frozen.taskIssues;
@@ -44,7 +50,13 @@ function frozenOk(doc,repository,versionId,expectedSha){
     if(!s||!known.has(String(s.issueNumber))||subjects.has(String(s.issueNumber))||
        !SHA.test(s.sourceSha??'')||
        !['builder','reviewer','validator'].includes(s.actorRole)||
-       !['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(s.candidateStatus))
+       s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__'||
+       !['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(s.candidateStatus)||
+       (s.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
+        (!Number.isSafeInteger(s.commentId)||s.commentId<1||s.generation!==1||
+         typeof s.dispatchId!=='string'||!s.dispatchId||
+         typeof s.operatorKind!=='string'||!s.operatorKind||
+         typeof s.operatorId!=='string'||!s.operatorId)))
       return false;
     subjects.add(String(s.issueNumber));
   }
@@ -53,8 +65,8 @@ function frozenOk(doc,repository,versionId,expectedSha){
     if(!e||!known.has(String(e.from))||!known.has(String(e.to))||
        String(e.from)===String(e.to)||!['NATIVE','PLANNED'].includes(e.kind))
       return false;
-    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.to)return false;
-    const k=edgeId(e.from,e.to)+':'+e.kind;
+    if(e.evidenceRef!=='https://github.com/'+repository+'/issues/'+e.from)return false;
+    const k=edgeId(e.from,e.to);
     if(edges.has(k))return false;
     edges.add(k);
   }
@@ -70,17 +82,17 @@ function frozenOk(doc,repository,versionId,expectedSha){
   };
   return [...known].every(walk);
 }
-const equalFreeze=(a,b)=>a.witness.blobSha===b.witness.blobSha&&
-  a.witness.sourceSha===b.witness.sourceSha&&
-  a.witness.reviewedHeadSha===b.witness.reviewedHeadSha&&
-  a.witness.reviewer===b.witness.reviewer&&a.witness.reviewRef===b.witness.reviewRef&&
-  a.ownerApproval?.sourceSha===b.ownerApproval?.sourceSha&&
-  a.ownerApproval?.owner===b.ownerApproval?.owner&&
-  a.ownerApproval?.approvalRef===b.ownerApproval?.approvalRef&&
-  a.frozenAt===b.frozenAt&&a.frozen.taskPackRef===b.frozen.taskPackRef&&
-  a.versionId===b.versionId&&
-  sameSet(new Set(a.frozen.taskIssues),new Set(b.frozen.taskIssues))&&
-  same(a.frozen.edges,b.frozen.edges)&&same(a.frozen.claimSubjects,b.frozen.claimSubjects);
+const equalFreeze=(a,b)=>same({
+  source:{repository:a.source?.repository,sourceSha:a.source?.sourceSha,
+    currentness:a.source?.currentness,readback:a.source?.readback},
+  versionId:a.versionId,frozenAt:a.frozenAt,taskPackRef:a.taskPackRef,
+  frozen:a.frozen,witness:a.witness,ownerApproval:a.ownerApproval
+},{
+  source:{repository:b.source?.repository,sourceSha:b.source?.sourceSha,
+    currentness:b.source?.currentness,readback:b.source?.readback},
+  versionId:b.versionId,frozenAt:b.frozenAt,taskPackRef:b.taskPackRef,
+  frozen:b.frozen,witness:b.witness,ownerApproval:b.ownerApproval
+});
 function claimBaseOk(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha){
   return claim?.connected===true&&claim.source?.repository===repository&&
     claim.source.sourceSha===subject.sourceSha&&claim.source.currentness==='PINNED'&&
@@ -101,6 +113,9 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
     return subject.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
       claim.claimAccepted===false&&claim.claimPublication==='CANDIDATE_ONLY'&&
       claim.commentId===subject.commentId&&claim.dispatchId===subject.dispatchId&&
+      claim.generation===subject.generation&&claim.actorRole===subject.actorRole&&
+      claim.operatorKind===subject.operatorKind&&claim.operatorId===subject.operatorId&&
+      claim.protectedClaimKey===subject.protectedClaimKey&&
       claim.commentRef==='https://github.com/'+repository+'/issues/'+issueNumber+
         '#issuecomment-'+subject.commentId&&
       /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'');
@@ -117,7 +132,12 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
       '#issuecomment-'+subject.commentId&&
     /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'')&&
     typeof claim.writerId==='string'&&claim.writerId.length>0&&
-    ['VERIFIED','NOT_VERIFIED'].includes(claim.responsibilityStatus);
+    ['VERIFIED','NOT_VERIFIED'].includes(claim.responsibilityStatus)&&
+    (claim.responsibilityStatus!=='VERIFIED'||
+      claim.activeOperator?.operatorId==='chatgpt-web:tally-v2'&&
+      claim.activeOperator?.operatorKind==='chatgpt-web'&&
+      claim.activeOperator?.actorRole==='builder'&&
+      claim.activeOperator?.executionEnvironment==='WEB');
 }
 export function createUiRosterHost({repository,versionId,expectedSha,
   frozenHost,nativeC,claimHost}={}){
@@ -172,7 +192,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
             return denial('ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
           claimResults.push(first);
         }
-        claimReadback='OBSERVATIONS_COMPLETE';
+        claimReadback='VERIFIED_COMPLETE';
       }
       const planned=new Set(before.frozen.edges.filter(e=>e.kind==='NATIVE')
         .map(e=>edgeId(e.from,e.to)));
@@ -180,7 +200,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       for(const edge of native.dag.edges){
         if(!edge||edge.kind!=='NATIVE'||
            !frozenIds.has(String(edge.from))||!frozenIds.has(String(edge.to))||
-           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.to)
+           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.from)
           return denial('UNQUALIFIED_NATIVE_DEPENDENCY');
         const key=edgeId(edge.from,edge.to);
         if(observed.has(key)||!planned.has(key))
@@ -218,7 +238,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
         rosterCoverage:'VERIFIED_COMPLETE',claimReadbackCoverage:claimReadback,
         claimCoverage:claimResults===null?'NOT_VERIFIED':
           acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':
-          acceptedClaimCount>0?'PARTIAL_ACCEPTED':'NONE_ACCEPTED',
+          acceptedClaimCount>0?'PARTIAL':'NONE_ACCEPTED',
         acceptedClaimCount,notVerifiedCount,notClaimedCount,
         activeWebResponsibilityCount,nodes:dagNodes,
         asOf:{...native.dag.asOf,frozenAt:before.frozenAt??null}};
@@ -227,10 +247,10 @@ export function createUiRosterHost({repository,versionId,expectedSha,
         dependencyCoverage:sameSet(planned,observed)?'NATIVE_COMPLETE':'NATIVE_PARTIAL',
         frozenBlobSha:before.frozen.blobSha,taskPackRef,
         taskCount:native.tasks.length,nativeEdgeCount:observed.size,
-        frozenEdgeCount:planned.size,claimReadbackCoverage:claimReadback,
+        frozenEdgeCount:before.frozen.edges.length,claimReadbackCoverage:claimReadback,
         claimCoverage:claimResults===null?'NOT_VERIFIED':
           acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':
-          acceptedClaimCount>0?'PARTIAL_ACCEPTED':'NONE_ACCEPTED',
+          acceptedClaimCount>0?'PARTIAL':'NONE_ACCEPTED',
         acceptedClaimCount,notVerifiedCount,notClaimedCount,
         activeWebResponsibilityCount,tasks,dag};
     }catch{return denial('ROSTER_SOURCE_READ_FAILED');}
