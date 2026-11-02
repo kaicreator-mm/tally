@@ -10,8 +10,13 @@ const SHA=/^[0-9a-f]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
 const ACTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
-const KINDS=new Set(['FREEZE_PRODUCT','ADMIT_PROJECT','CREATE_TASK',
-  'CLAIM_TASK','START_AGENT','REVIEW_REPAIR','PUBLISH_CANDIDATE']);
+// Only intents already present in the selected Tally Engineering Business
+// package are dispatchable. Task creation and CAS Claim publication are not
+// invented here: admitClaimedTask consumes an already accepted Host Claim.
+const KINDS=new Set(['FREEZE_PRODUCT','ADMIT_PROJECT','ADMIT_CLAIMED_TASK',
+  'START_AGENT','REVIEW_REPAIR','PUBLISH_CANDIDATE',
+  'PUBLISH_MAINTENANCE_ISSUE','RECORD_TASK_LEARNING',
+  'DELIVER_QUALIFIED_RELEASE']);
 const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,})\b/;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const denied=(reason)=>({connected:false,ok:false,status:'DENIED',reason});
