@@ -366,3 +366,71 @@ test('rejected learning cannot appear in a later Task Context Pack usage readbac
   assert.equal(result.connected,false);
   assert.equal(result.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
 });
+
+test('next-Task usage accepts only unique adopted verified eligible candidates',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
+  const id='e'.repeat(64);
+  const candidate=(overrides={})=>({
+    id,revision:1,title:'Verified adopted report',state:'ADOPTED',
+    reportQualification:'VERIFIED',
+    sourceRef:'https://github.com/'+publisherRepository+
+      '/issues/12#issuecomment-6381704607',
+    publisherRepository,eligibleForNextTask:true,sourceKind:'PUBLIC_ADS_REPORT',
+    ...overrides
+  });
+  const hostFor=(item,usage)=>createUiExperienceHost({
+    repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],
+    selectedHost:{
+      readExperienceCandidates:async()=>({connected:true,source,versionId,
+        candidates:[item]}),
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+        taskIssue,...usage})
+    }
+  });
+  const applied=await hostFor(candidate(),{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(21);
+  assert.equal(applied.connected,true);
+  assert.equal(applied.usageState,'EXPLICITLY_APPLIED');
+  assert.deepEqual(applied.usedCandidates,[id]);
+
+  const proposed=await hostFor(candidate({state:'PROPOSED',
+    eligibleForNextTask:false}),{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(21);
+  assert.equal(proposed.connected,false);
+  assert.equal(proposed.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  const stale=await hostFor(candidate({state:'PROPOSED',
+    reportQualification:'STALE',eligibleForNextTask:false}),{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(21);
+  assert.equal(stale.connected,false);
+  assert.equal(stale.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  const notApplied=await hostFor(candidate(),{
+    usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(21);
+  assert.equal(notApplied.connected,false);
+  assert.equal(notApplied.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  const duplicate=await hostFor(candidate(),{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id,id]
+  }).nextTaskUsage(21);
+  assert.equal(duplicate.connected,false);
+  assert.equal(duplicate.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  const unknown=await hostFor(candidate(),{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:['f'.repeat(64)]
+  }).nextTaskUsage(21);
+  assert.equal(unknown.connected,false);
+  assert.equal(unknown.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  const emptyNotApplied=await hostFor(candidate(),{
+    usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[]
+  }).nextTaskUsage(21);
+  assert.equal(emptyNotApplied.connected,true);
+  assert.equal(emptyNotApplied.usageState,'EXPLICITLY_NOT_APPLIED');
+});
