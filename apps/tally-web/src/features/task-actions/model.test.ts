@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {taskActionsFor,taskActionRequest} from './model.ts';
 import type {TaskActionCatalog} from './model.ts';
-import type {TaskActionCatalog} from './model.ts';
 const source={repository:'org/tally',sourceSha:'a'.repeat(40),
   currentness:'CURRENT',readback:'VERIFIED'};
 const catalog={connected:true,source,versionId:'version/v2',actions:[
