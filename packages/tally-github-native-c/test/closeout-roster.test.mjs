@@ -59,7 +59,7 @@ function validPack(){
       labels:['type:task'],updatedAt:'2026-11-02T02:59:00Z'
     })),
     edges:[
-      {from:260,to:264,kind:'NATIVE',evidenceRef:issueUrl(264)},
+      {from:260,to:264,kind:'NATIVE',evidenceRef:issueUrl(264),dependencyRef:issueUrl(260)},
       {from:211,to:212,kind:'PLANNED',evidenceRef:issueUrl(212),
         dependencyRef:issueUrl(211)}
     ],
