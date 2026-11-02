@@ -42,3 +42,22 @@ test('ambiguous Host action or invalid revision refuses action',()=>{
   assert.equal(workbenchActionGate(inbox,{...catalog,
     actions:[{...catalog.actions[0],revision:0}]},work).enabled,false);
 });
+
+test('exact Host-issued action identity wins over generic UI category mapping',()=>{
+  const exact={...work,hostActionId:'host-issued-1',
+    hostActionRevision:7,hostActionKind:'START_AGENT'};
+  const c={...catalog,actions:[{id:'host-issued-1',kind:'START_AGENT',
+    revision:7,taskIssue:260,state:'ELIGIBLE' as const,label:'Start Builder'}]};
+  const r=workbenchActionGate(inbox,c,exact);
+  assert.equal(r.enabled,true);
+  assert.equal(r.actionId,'host-issued-1');
+  assert.equal(r.revision,7);
+  assert.equal(workbenchActionGate(inbox,{...c,actions:[{
+    ...c.actions[0],revision:8}]},exact).enabled,false);
+});
+test('Recovery may request only a Host-issued START_AGENT action',()=>{
+  const recovery={...work,kind:'RECOVERY' as const};
+  assert.equal(workbenchActionGate(inbox,catalog,recovery).enabled,false);
+  const c={...catalog,actions:[{...catalog.actions[0],kind:'START_AGENT'}]};
+  assert.equal(workbenchActionGate(inbox,c,recovery).enabled,true);
+});
