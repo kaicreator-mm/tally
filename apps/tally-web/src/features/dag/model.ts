@@ -15,6 +15,7 @@ export interface DagNode{
   agentId:string|null;
   /** Host-derived execution availability (not graph-inferred). */
   executable:boolean;
+  claimState?:'ACCEPTED'|'NOT_CLAIMED'|'NOT_VERIFIED';
 }
 export interface DagEdge{
   from:string;to:string;kind:EdgeKind;
@@ -27,6 +28,9 @@ export interface VersionDag{
   versionId:string;
   /** Configured Task IDs do not prove exhaustive frozen version membership. */
   rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
+  claimReadbackCoverage?:'NOT_VERIFIED'|'VERIFIED_COMPLETE';
+  claimCoverage?:'NOT_VERIFIED'|'PARTIAL'|'ACCEPTED_ALL';
+  acceptedClaimCount?:number|null;
   /** Frozen as-of identity of this snapshot. */
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:readonly DagNode[];
