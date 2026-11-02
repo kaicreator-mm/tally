@@ -186,7 +186,7 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           {zh?'当前可用操作':'Available actions'}</strong>
         <TaskActionsView catalog={actionCatalog} projectId={projectId}
           versionId={task.versionId} taskIssue={Number(task.id)}
-          onDispatch={request=>onAction?.(request)} locale={locale}/>
+          onDispatch={onAction} locale={locale}/>
       </section>:null}
       <section aria-label={zh?'执行与评审':'execution'}>
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
