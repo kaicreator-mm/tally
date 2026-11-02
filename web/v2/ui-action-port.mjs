@@ -141,20 +141,28 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
     }catch{return {connected:false,ok:false,status:'UNKNOWN',
       reason:'HOST_DISPATCH_ACK_UNKNOWN_RECONCILE_BEFORE_RETRY'};}
   }
-  return Object.freeze({actions,submit});
+  return Object.freeze({
+    scope:Object.freeze({repository,versionId,sourceSha:expectedSha}),
+    actions,submit,
+  });
 }
 
 /** Pure HTTP boundary for E's same-origin route. E owns socket/body parsing and
  * calls this adapter; it cannot be mounted by a browser or expose credentials.
+ * Its selected project/version/SHA are derived only from the immutable scope
+ * issued by createUiActionPort; caller-supplied scope cannot override the port.
  */
-export function createUiActionHttpAdapter({
-  actionPort,origin,csrfKey,repository,versionId
-}={}){
+export function createUiActionHttpAdapter({actionPort,origin,csrfKey}={}){
+  const scope=actionPort?.scope;
   if(typeof actionPort?.actions!=='function'||typeof actionPort?.submit!=='function'||
-     !REPO.test(repository??'')||!VERSION.test(versionId??'')||
+     !plain(scope)||!Object.isFrozen(scope)||
+     Object.keys(scope).sort().join(',')!=='repository,sourceSha,versionId'||
+     !REPO.test(scope.repository??'')||!VERSION.test(scope.versionId??'')||
+     !SHA.test(scope.sourceSha??'')||
      typeof origin!=='string'||!/^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin)||
      typeof csrfKey!=='string'||csrfKey.length<32)
     throw new TypeError('UI_ACTION_HTTP_HOST_CONFIGURATION_REQUIRED');
+  const {repository,versionId,sourceSha}=scope;
   const response=(status,body)=>Object.freeze({status,body});
   const sameOrigin=request=>request?.origin===origin;
   return Object.freeze({async handle(request={}){
