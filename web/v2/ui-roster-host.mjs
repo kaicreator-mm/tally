@@ -50,8 +50,30 @@ const equalFreeze=(a,b)=>a.witness.blobSha===b.witness.blobSha&&
   sameSet(new Set(a.frozen.taskIssues),new Set(b.frozen.taskIssues))&&
   sameSet(new Set(a.frozen.edges.map(e=>edgeId(e.from,e.to))),
           new Set(b.frozen.edges.map(e=>edgeId(e.from,e.to))));
+const claimBaseOk=(claim,repository,expectedSha,issueNumber)=>
+  claim?.connected===true&&claim.source?.repository===repository&&
+  claim.source?.sourceSha===expectedSha&&claim.source?.currentness==='CURRENT'&&
+  claim.source?.readback==='VERIFIED'&&claim.issueNumber===issueNumber&&
+  claim.authorized===false&&claim.taskPass===false&&claim.releasePass===false&&
+  ['ACCEPTED','NOT_CLAIMED'].includes(claim.claimStatus)&&
+  claim.claimAccepted===(claim.claimStatus==='ACCEPTED');
+function validClaim(claim,repository,expectedSha,issueNumber){
+  if(!claimBaseOk(claim,repository,expectedSha,issueNumber))return false;
+  if(claim.claimStatus==='NOT_CLAIMED')
+    return claim.claimPublication==='NOT_VERIFIED'&&claim.commentRef===null&&
+      claim.commentId===null;
+  const keyPrefix=repository+'#'+issueNumber+':';
+  return claim.claimPublication==='REGISTRY_PUBLISHED_VERIFIED_NATIVE_READBACK'&&
+    claim.generation===1&&
+    ['builder','reviewer'].includes(claim.actorRole)&&
+    claim.protectedClaimKey===keyPrefix+claim.actorRole+':__default__'&&
+    typeof claim.dispatchId==='string'&&claim.dispatchId.length>0&&
+    Number.isSafeInteger(claim.commentId)&&claim.commentId>0&&
+    claim.commentRef==='https://github.com/'+repository+'/issues/'+issueNumber+
+      '#issuecomment-'+claim.commentId;
+}
 export function createUiRosterHost({repository,versionId,expectedSha,
-  frozenHost,nativeC}={}){
+  frozenHost,nativeC,claimHost}={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedSha??''))throw TypeError('PINNED_ROSTER_SCOPE_REQUIRED');
   async function roster(scope={}){
@@ -84,6 +106,22 @@ export function createUiRosterHost({repository,versionId,expectedSha,
          native.tasks.some(t=>t.versionId!==versionId||
            t.claimState!=='NOT_VERIFIED'))
         return denial('VERSION_ROSTER_NOT_EXHAUSTIVE');
+      let claimReadback='NOT_VERIFIED',claimResults=null;
+      if(typeof claimHost?.readAcceptedClaim==='function'){
+        claimResults=[];
+        for(const task of native.tasks){
+          const number=Number(task.id);
+          const args={repository,versionId,sourceSha:expectedSha,issueNumber:number};
+          const first=await claimHost.readAcceptedClaim(args);
+          const second=await claimHost.readAcceptedClaim(args);
+          if(!validClaim(first,repository,expectedSha,number)||
+             !validClaim(second,repository,expectedSha,number)||
+             JSON.stringify(first)!==JSON.stringify(second))
+            return denial('ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
+          claimResults.push(first);
+        }
+        claimReadback='VERIFIED_COMPLETE';
+      }
       const planned=new Set(before.frozen.edges.map(e=>edgeId(e.from,e.to)));
       const observed=new Set();
       for(const edge of native.dag.edges){
@@ -100,13 +138,24 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       if(!frozenOk(after,repository,versionId,expectedSha)||
          !equalFreeze(before,after))
         return denial('FROZEN_DAG_CHANGED_DURING_READ');
+      const tasks=claimResults===null?native.tasks:native.tasks.map((task,index)=>{
+        const claim=claimResults[index];
+        return {...task,claimState:claim.claimStatus,
+          claimAccepted:claim.claimAccepted,
+          claimRef:claim.claimStatus==='ACCEPTED'?claim.commentRef:null,
+          claimDispatchId:claim.claimStatus==='ACCEPTED'?claim.dispatchId:null};
+      });
+      const acceptedClaimCount=claimResults===null?null:
+        claimResults.filter(c=>c.claimStatus==='ACCEPTED').length;
       return {connected:true,source:native.source,versionId,
         rosterCoverage:'VERIFIED_COMPLETE',
         dependencyCoverage:sameSet(planned,observed)?'NATIVE_COMPLETE':'NATIVE_PARTIAL',
         frozenBlobSha:before.frozen.blobSha,taskCount:native.tasks.length,
         nativeEdgeCount:observed.size,frozenEdgeCount:planned.size,
-        // Task execution still requires a separate current accepted Host CAS Claim.
-        claimCoverage:'NOT_VERIFIED',tasks:native.tasks,
+        claimReadbackCoverage:claimReadback,
+        claimCoverage:claimResults===null?'NOT_VERIFIED':
+          acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':'PARTIAL',
+        acceptedClaimCount,tasks,
         dag:{...native.dag,rosterCoverage:'VERIFIED_COMPLETE',
           asOf:{...native.dag.asOf,frozenAt:before.frozen.frozenAt??null}}};
     }catch{return denial('ROSTER_SOURCE_READ_FAILED');}
