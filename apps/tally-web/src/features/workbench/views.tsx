@@ -63,7 +63,7 @@ export function WorkbenchView({snapshot,page,onNavigate,
               const enabled=gate.enabled&&typeof onAction==='function'&&
                 actionCatalog.source!==undefined&&actionCatalog.versionId!==undefined;
               return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
-                <Button size="sm" disabled={!enabled}
+                <Button disabled={!enabled}
                   onClick={enabled?()=>onAction?.({
                     repository:actionCatalog.source!.repository,
                     versionId:actionCatalog.versionId!,
