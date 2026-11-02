@@ -148,8 +148,9 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
          snapshot.versionId!==versionId||snapshot.taskIssue!==taskIssue||
          !validTaskExecution(snapshot.execution,repository))
         return denied('HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
-      return {connected:true,source:snapshot.source,versionId,taskIssue,
-        execution:Object.freeze({...snapshot.execution})};
+      return {connected:true,source:Object.freeze({
+        repository,sourceSha:expectedSha,currentness:'CURRENT',readback:'VERIFIED'
+      }),versionId,taskIssue,execution:Object.freeze({...snapshot.execution})};
     }catch{return denied('HOST_TASK_EXECUTION_READ_FAILED');}
   }
   async function submit(request){
