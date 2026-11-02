@@ -97,6 +97,13 @@ test('task execution summary exposes only source-provided sanitized progress and
     tokensIn:'1200',tokensOut:'300',cost:'$0.0123',
     candidateRef:'https://github.com/kaicreator-mm/tally/pull/300'
   });
+  assert.equal(taskExecutionSummary({...task,projectId:'other/repo'}).candidateRef,null);
+  assert.equal(taskExecutionSummary({...task,execution:{
+    ...task.execution,provider:'ghp_12345678901234567890'
+  }}).provider,'UNKNOWN');
+  assert.equal(taskExecutionSummary({...task,execution:{
+    ...task.execution,attemptId:'ghp_12345678901234567890'
+  }}).attemptId,'UNKNOWN');
 });
 test('missing, raw, secret-bearing or malformed execution evidence remains UNKNOWN',()=>{
   const empty=taskExecutionSummary(make({}));
