@@ -127,13 +127,16 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
        typeof selectedHost?.readNextTaskContextUsage!=='function')
       return denied('NEXT_TASK_CONTEXT_NOT_CONNECTED');
     try{
+      const current=await read();
+      if(!positive(current,repository,versionId,expectedSha))return current;
+      const rejectedIds=new Set(current.candidates.filter(c=>c.state==='REJECTED').map(c=>c.id));
       const r=await selectedHost.readNextTaskContextUsage({repository,versionId,
         sourceSha:expectedSha,taskIssue});
       if(r?.connected!==true||r.source?.repository!==repository||
          r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
          r.source?.readback!=='VERIFIED'||r.taskIssue!==taskIssue||
          !Array.isArray(r.usedCandidates)||r.usedCandidates.length>100||
-         r.usedCandidates.some(id=>!ID.test(id))||
+         r.usedCandidates.some(id=>!ID.test(id)||rejectedIds.has(id))||
          !['EXPLICITLY_APPLIED','EXPLICITLY_NOT_APPLIED'].includes(r.usageState))
         return denied('NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
       return {connected:true,taskIssue,usageState:r.usageState,
@@ -158,7 +161,7 @@ function verifiedSuggestion(row,repository,publishers){
   const publisherRepository=publisherRepositoryFor(p?.namespace,repository);
   const issueUrl=publisherRepository&&Number.isSafeInteger(p?.issueNumber)&&p.issueNumber>0
     ?`https://github.com/${publisherRepository}/issues/${p.issueNumber}`:null;
-  const qualification=['REPORTED_QUALIFIED','STALE','UNKNOWN'].includes(row?.qualification);
+  const qualification=['REPORTED_QUALIFIED','STALE','UNVERIFIED','UNKNOWN'].includes(row?.qualification);
   return plain(row)&&/^[a-f0-9]{64}$/.test(row.learningId??'')&&
     qualification&&publishers.has(publisherRepository)&&
     (row.taskIssueRef===null||row.taskIssueRef===undefined||
@@ -211,7 +214,8 @@ export function createMaintenanceControllerExperienceAdapter({
         const state=decision==='ADOPTED'?'ADOPTED':
           decision==='REJECTED'?'REJECTED':'PROPOSED';
         const reportQualification=row.qualification==='REPORTED_QUALIFIED'?'VERIFIED':
-          row.qualification==='STALE'?'STALE':'UNKNOWN';
+          row.qualification==='STALE'?'STALE':
+          row.qualification==='UNVERIFIED'?'UNVERIFIED':'UNKNOWN';
         const publisherRepository=publisherRepositoryFor(
           row.provenance.namespace,repository);
         candidates.push({
@@ -256,7 +260,8 @@ export function createMaintenanceControllerExperienceAdapter({
       const publisherRepository=publisherRepositoryFor(
         candidate?.provenance?.namespace,repository);
       const qualification=candidate?.qualification==='REPORTED_QUALIFIED'?'VERIFIED':
-        candidate?.qualification==='STALE'?'STALE':'UNKNOWN';
+        candidate?.qualification==='STALE'?'STALE':
+        candidate?.qualification==='UNVERIFIED'?'UNVERIFIED':'UNKNOWN';
       if(!candidate||!verifiedSuggestion(candidate,repository,publishers)||
          candidate.provenance.revision!==request.revision||
          request.evidenceRef!==candidate.provenance.publicationRef||
