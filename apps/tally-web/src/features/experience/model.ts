@@ -27,6 +27,7 @@ export function eligibleExperienceDecision(snapshot:ExperienceSnapshot|null,
     return {eligible:false,reason:'EXPERIENCE_SOURCE_NOT_CURRENT'};
   if(!candidate||!/^[a-f0-9]{64}$/.test(candidate.id??'')||
      !Number.isSafeInteger(candidate.revision)||candidate.revision<1||
+     typeof candidate.sourceRef!=='string'||
      !candidate.sourceRef.startsWith('https://github.com/'+repository+'/issues/')||
      !snapshot.candidates.some(c=>c.id===candidate.id&&
        c.revision===candidate.revision)||candidate.state!=='PROPOSED'&&
