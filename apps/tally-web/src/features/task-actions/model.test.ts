@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {taskActionsFor,taskActionRequest} from './model.ts';
 import type {TaskActionCatalog} from './model.ts';
+import type {TaskActionCatalog} from './model.ts';
 const source={repository:'org/tally',sourceSha:'a'.repeat(40),
   currentness:'CURRENT',readback:'VERIFIED'};
 const catalog={connected:true,source,versionId:'version/v2',actions:[
   {id:'start-1',kind:'START_AGENT',revision:1,label:'Start',taskIssue:42,state:'ELIGIBLE'},
-  {id:'review-1',kind:'REVIEW_REPAIR',revision:2,label:'Review',taskIssue:42,state:'BLOCKED'}]};
+  {id:'review-1',kind:'REVIEW_REPAIR',revision:2,label:'Review',taskIssue:42,state:'BLOCKED'}]} as const satisfies TaskActionCatalog;
 test('only selected current version actions for one Task are listed',()=>{
   assert.equal(taskActionsFor(catalog,'org/tally','version/v2',42)?.length,2);
   assert.equal(taskActionsFor(catalog,'evil/repo','version/v2',42),null);
