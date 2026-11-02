@@ -14,21 +14,25 @@ export interface TaskActionRequest{
 export function taskActionsFor(catalog:TaskActionCatalog|null,
   projectId:string,versionId:string,taskIssue:number):TaskActionOption[]|null{
   if(catalog?.connected!==true||catalog.source?.repository!==projectId||
+     !/^[a-f0-9]{40}$/.test(catalog.source.sourceSha??'')||
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.versionId!==versionId||!Array.isArray(catalog.actions))return null;
   const selected=catalog.actions.filter(a=>a.taskIssue===taskIssue);
   if(selected.some(a=>!a.id||!Number.isSafeInteger(a.revision)||a.revision<1||
-     !['ELIGIBLE','BLOCKED'].includes(a.state)))return null;
+     typeof a.kind!=='string'||!a.kind||typeof a.label!=='string'||!a.label.trim()||
+     !['ELIGIBLE','BLOCKED'].includes(a.state))||
+     new Set(selected.map(a=>a.id)).size!==selected.length)return null;
   return selected;
 }
 export function taskActionRequest(catalog:TaskActionCatalog,
   projectId:string,versionId:string,action:TaskActionOption):TaskActionRequest|null{
   if(catalog.connected!==true||!catalog.source||
      catalog.source.repository!==projectId||
+     !/^[a-f0-9]{40}$/.test(catalog.source.sourceSha??'')||
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.versionId!==versionId||action.state!=='ELIGIBLE'||
-     !catalog.actions?.some(a=>a.id===action.id&&a.revision===action.revision&&
-       a.state==='ELIGIBLE'))return null;
+     catalog.actions?.filter(a=>a.id===action.id&&a.revision===action.revision&&
+       a.state==='ELIGIBLE').length!==1)return null;
   return {projectId,versionId,sourceSha:catalog.source.sourceSha,
     actionId:action.id,revision:action.revision};
 }
