@@ -108,7 +108,7 @@ test('task execution summary exposes only source-provided sanitized progress and
 
 test('execution identifiers and candidate refs fail closed without unsafe fallback',()=>{
   const secret='ghp_12345678901234567890';
-  const baseExecution:NonNullable<TaskRecord['execution']>={
+  const baseExecution:NonNullable<TaskRecord['execution']> = {
     state:'RUNNING',provider:'local-codex',role:'BUILDER',attemptId:'attempt-300',
     progressSummary:null,progressSummaryKind:'NOT_AVAILABLE',heartbeatAt:null,
     elapsedMs:null,tokensIn:null,tokensOut:null,costUsd:null,candidateRef:null
