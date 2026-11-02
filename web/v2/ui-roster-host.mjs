@@ -212,7 +212,8 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       for(const edge of native.dag.edges){
         if(!edge||edge.kind!=='NATIVE'||
            !frozenIds.has(String(edge.from))||!frozenIds.has(String(edge.to))||
-           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.to)
+           edge.evidenceRef!=='https://github.com/'+repository+'/issues/'+edge.to||
+           edge.dependencyRef!=='https://github.com/'+repository+'/issues/'+edge.from)
           return denial('UNQUALIFIED_NATIVE_DEPENDENCY');
         const key=edgeId(edge.from,edge.to);
         if(observed.has(key)||!planned.has(key))
