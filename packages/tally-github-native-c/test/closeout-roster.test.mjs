@@ -79,10 +79,11 @@ const approval=()=>({
   owner,approvalRef:'https://github.com/'+repository+'/issues/259#issuecomment-6574693761',
   approvedAt:'2026-11-02T11:01:00.000Z'
 });
-function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=approval(),store=memoryStore()}={}){
+function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=approval(),
+  nativeRosterReader:nativeRosterReaderOverride,store=memoryStore()}={}){
   const content=JSON.stringify(pack);
   const taskPackReader=async()=>({status:'VERIFIED',blobSha:packBlobSha,content});
-  const nativeRosterReader=async()=>({
+  const nativeRosterReader=nativeRosterReaderOverride??(async()=>({
     connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
     versionId,tasks:pack.taskIssues.map(t=>({id:String(t.issueNumber),versionId,
       title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
@@ -93,7 +94,7 @@ function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=appr
       edges:pack.edges.filter(e=>e.kind==='NATIVE').map(e=>({...e,
         from:String(e.from),to:String(e.to),
         dependencyRef:issueUrl(e.from)}))}
-  });
+  }));
   const reviewWitnessReader=async()=>reviewValue;
   const ownerApprovalReader=async()=>approvalValue;
   const writer=createHostVersionTaskDagFreezeWriter({
@@ -265,7 +266,7 @@ test('comment-only DISPATCH_CLAIMED is a candidate, never an accepted Claim',asy
 });
 
 test('verified absence is distinct from a candidate and invalid input fails closed',async()=>{
-  const args={...claimArgs(),claimSubject:absentSubject(260)};
+  const args={...claimArgs(),claimSubject:{...absentSubject(260),sourceSha:claimSha}};
   const port=claimPort({comment:null,row:null});
   const absent=await port.readAcceptedClaim(args);
   assert.equal(absent.claimStatus,'NOT_CLAIMED');
@@ -330,7 +331,7 @@ test('Owner authority, frozen write-set scope, original Claim and Web handoff re
       'Owner-authorized responsibility handoff. Receiving Builder chatgpt-web:tally-v2. '+
       dispatchId+' 6568304709.')],
     [scopeId,githubComment(scopeId,260,
-      'The frozen write sets are recorded: A=7, B=10, C=12, D=7.')],
+      'The Frozen write sets are recorded: A=7, B=10, C=12, D=7.')],
     [handoffId,yamlComment(handoffId,260,handoffFields)],
     [receiptId,yamlComment(receiptId,260,ackFields)]
   ]);
@@ -434,7 +435,7 @@ test('canonical unedited Web Builder handoff replacement v2 is read back as VERI
       'Owner-authorized responsibility handoff. Receiving Builder chatgpt-web:tally-v2. '+
       dispatchId+' 6568304709.')],
     [scopeId,githubComment(scopeId,260,
-      'The frozen write sets are recorded: A=7, B=10, C=12, D=7.')],
+      'The Frozen write sets are recorded: A=7, B=10, C=12, D=7.')],
     [handoffId,yamlComment(handoffId,260,handoffFields)],
     [receiptId,yamlComment(receiptId,260,ackFields)]
   ]);
