@@ -141,8 +141,11 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
   return Object.freeze({candidates,decision,nextTaskUsage});
 }
 
-const issueRef=(value,repository)=>typeof value==='string'&&
-  value===`https://github.com/${repository}/issues/${value.split('/').pop()}`;
+const issueRef=(value,repository)=>{
+  if(typeof value!=='string')return false;
+  const prefix=`https://github.com/${repository}/issues/`;
+  return value.startsWith(prefix)&&/^[1-9][0-9]*$/.test(value.slice(prefix.length));
+};
 function publisherRepositoryFor(namespace,repository){
   if(namespace==='tally')return repository;
   const match=/^task-meta:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/.exec(namespace??'');
@@ -153,7 +156,7 @@ function verifiedSuggestion(row,repository,publishers){
   const publisherRepository=publisherRepositoryFor(p?.namespace,repository);
   const issueUrl=publisherRepository&&Number.isSafeInteger(p?.issueNumber)&&p.issueNumber>0
     ?`https://github.com/${publisherRepository}/issues/${p.issueNumber}`:null;
-  const qualification=['REPORTED_QUALIFIED','UNKNOWN'].includes(row?.qualification);
+  const qualification=['REPORTED_QUALIFIED','STALE','UNKNOWN'].includes(row?.qualification);
   return plain(row)&&/^[a-f0-9]{64}$/.test(row.learningId??'')&&
     qualification&&publishers.has(publisherRepository)&&
     (row.taskIssueRef===null||row.taskIssueRef===undefined||
@@ -205,8 +208,8 @@ export function createMaintenanceControllerExperienceAdapter({
           return {connected:false,reason:'ADS_LEARNING_DECISION_UNQUALIFIED'};
         const state=decision==='ADOPTED'?'ADOPTED':
           decision==='REJECTED'?'REJECTED':'PROPOSED';
-        const reportQualification=row.qualification==='REPORTED_QUALIFIED'?
-          'VERIFIED':'UNKNOWN';
+        const reportQualification=row.qualification==='REPORTED_QUALIFIED'?'VERIFIED':
+          row.qualification==='STALE'?'STALE':'UNKNOWN';
         const publisherRepository=publisherRepositoryFor(
           row.provenance.namespace,repository);
         candidates.push({
@@ -215,7 +218,7 @@ export function createMaintenanceControllerExperienceAdapter({
             ' → Task '+row.targetIssueRef.split('/').pop()+
             ' · '+row.provenance.reportId,
           state,reportQualification,publisherRepository,
-          sourceKind:publisherRepository.endsWith('task-meta-e2e')?
+          sourceKind:publisherRepository==='kaicreator-mm/task-meta-e2e'?
             'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
           sourceRef:row.provenance.publicationRef,
           // Adoption is not proof that a later Task Context Pack used it.
@@ -248,8 +251,15 @@ export function createMaintenanceControllerExperienceAdapter({
           sourceSha:expectedSha,reason:'LEARNING_SOURCE_NOT_CURRENT',
           taskPass:false,releasePass:false};
       const candidate=before.learning.find(x=>x.learningId===request.candidateId);
+      const publisherRepository=publisherRepositoryFor(
+        candidate?.provenance?.namespace,repository);
+      const qualification=candidate?.qualification==='REPORTED_QUALIFIED'?'VERIFIED':
+        candidate?.qualification==='STALE'?'STALE':'UNKNOWN';
       if(!candidate||!verifiedSuggestion(candidate,repository,publishers)||
          candidate.provenance.revision!==request.revision||
+         request.evidenceRef!==candidate.provenance.publicationRef||
+         request.publisherRepository!==publisherRepository||
+         request.reportQualification!==qualification||
          (candidate.decision!==null&&candidate.decision!==undefined))
         return {status:'DENIED',candidateId:request.candidateId,
           sourceSha:expectedSha,reason:'LEARNING_CANDIDATE_STALE_OR_ALREADY_DECIDED',
@@ -268,6 +278,14 @@ export function createMaintenanceControllerExperienceAdapter({
          result?.claimAccepted!==true||result?.admitted!==true||
          result?.authorized!==false||result?.taskPass!==false||
          result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
+         row?.learningId!==candidate.learningId||
+         row?.provenance?.reportId!==candidate.provenance.reportId||
+         row?.provenance?.revision!==candidate.provenance.revision||
+         row?.provenance?.publicationRef!==candidate.provenance.publicationRef||
+         row?.provenance?.dataDigest!==candidate.provenance.dataDigest||
+         row?.qualification!==candidate.qualification||
+         row?.targetIssueRef!==candidate.targetIssueRef||
+         row?.subjectSha!==candidate.subjectSha||
          row?.decision!==expectedDecision||row?.recordState!=='LEARNING_RECORDED'||
          row?.qualityGainClaimed!==false||row?.noAgentRanking!==true||
          row?.measuredEffect!=='NOT_MEASURED')
@@ -275,7 +293,8 @@ export function createMaintenanceControllerExperienceAdapter({
           sourceSha:expectedSha,reason:'LEARNING_CAS_RESULT_NOT_RECONCILED',
           taskPass:false,releasePass:false};
       return {status:'OBSERVED',candidateId:request.candidateId,
-        sourceSha:expectedSha,decisionReceiptAuthority:
+        sourceSha:expectedSha,decision:expectedDecision,
+        decisionReceiptAuthority:
           'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT',
         decisionReceiptRef:null,taskPass:false,releasePass:false,
         qualityImproved:false};
