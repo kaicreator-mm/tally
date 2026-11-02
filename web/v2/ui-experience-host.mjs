@@ -12,19 +12,33 @@ const positive=(v,repo,versionId,sha)=>v?.connected===true&&
   v.source?.repository===repo&&v.source?.sourceSha===sha&&
   v.source?.currentness==='CURRENT'&&v.source?.readback==='VERIFIED'&&
   v.versionId===versionId&&Array.isArray(v.candidates)&&v.candidates.length<=100;
-const validCandidate=(v,repo)=>plain(v)&&ID.test(v.id??'')&&
-  Number.isSafeInteger(v.revision)&&v.revision>=1&&
-  ['PROPOSED','REVIEWED','ADOPTED','REJECTED'].includes(v.state)&&
-  ['VERIFIED','STALE','UNVERIFIED','UNKNOWN'].includes(v.reportQualification)&&
-  typeof v.title==='string'&&v.title.length>0&&v.title.length<=160&&
-  typeof v.sourceRef==='string'&&
-  v.sourceRef.startsWith('https://github.com/'+repo+'/issues/')&&
-  (v.state!=='ADOPTED'||v.reportQualification==='VERIFIED')&&
-  typeof v.eligibleForNextTask==='boolean'&&
-  (v.eligibleForNextTask===false||v.state==='ADOPTED'&&v.reportQualification==='VERIFIED');
-export function createUiExperienceHost({repository,versionId,expectedSha,selectedHost}={}){
+const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
+const publisherSet=(repository,extra)=>{
+  if(extra!==undefined&&(!Array.isArray(extra)||extra.length>20||
+     extra.some(x=>!REPO.test(x))))throw new TypeError('TRUSTED_PUBLISHER_REPOSITORIES_INVALID');
+  return new Set([repository,...(extra??[])]);
+};
+const validCandidate=(v,repo,publishers)=> {
+  const ref=COMMENT_REF.exec(v?.sourceRef??'');
+  const publisher=v?.publisherRepository??ref?.[1]??null;
+  const sameIssue=ref&&publisher===ref[1]&&publishers.has(publisher)&&
+    (ref[3]!==undefined||publisher===repo);
+  return plain(v)&&ID.test(v.id??'')&&
+    Number.isSafeInteger(v.revision)&&v.revision>=1&&
+    ['PROPOSED','REVIEWED','ADOPTED','REJECTED'].includes(v.state)&&
+    ['VERIFIED','STALE','UNVERIFIED','UNKNOWN'].includes(v.reportQualification)&&
+    typeof v.title==='string'&&v.title.length>0&&v.title.length<=160&&
+    sameIssue&&
+    (v.state!=='ADOPTED'||v.reportQualification==='VERIFIED')&&
+    typeof v.eligibleForNextTask==='boolean'&&
+    (v.eligibleForNextTask===false||v.state==='ADOPTED'&&v.reportQualification==='VERIFIED')&&
+    (v.sourceKind===undefined||['PUBLIC_ADS_REPORT','ISOLATED_E2E_TEST_ONLY'].includes(v.sourceKind));
+};
+export function createUiExperienceHost({repository,versionId,expectedSha,selectedHost,
+  trustedPublisherRepositories}={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedSha??''))throw TypeError('EXPERIENCE_SELECTED_SOURCE_REQUIRED');
+  const publishers=publisherSet(repository,trustedPublisherRepositories);
   const read=async()=>{
     if(typeof selectedHost?.readExperienceCandidates!=='function')
       return denied('EXPERIENCE_HOST_NOT_CONNECTED');
@@ -32,7 +46,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       const value=await selectedHost.readExperienceCandidates({repository,versionId,
         sourceSha:expectedSha});
       if(!positive(value,repository,versionId,expectedSha)||
-         value.candidates.some(v=>!validCandidate(v,repository))||
+         value.candidates.some(v=>!validCandidate(v,repository,publishers))||
          new Set(value.candidates.map(v=>v.id)).size!==value.candidates.length)
         return denied('EXPERIENCE_PROVENANCE_UNQUALIFIED');
       return value;
@@ -48,7 +62,9 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       qualification:'SOURCE_OBSERVED_NOT_MEASURED_OUTCOME',
       candidates:v.candidates.map(c=>({id:c.id,revision:c.revision,
         title:c.title,state:c.state,reportQualification:c.reportQualification,
-        sourceRef:c.sourceRef,eligibleForNextTask:c.eligibleForNextTask}))};
+        sourceRef:c.sourceRef,publisherRepository:c.publisherRepository??null,
+        sourceKind:c.sourceKind??'PUBLIC_ADS_REPORT',
+        eligibleForNextTask:c.eligibleForNextTask}))};
   }
   async function decision(request){
     if(!plain(request)||Object.keys(request).sort().join(',')!==
@@ -63,7 +79,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     const candidate=v.candidates.find(c=>c.id===request.candidateId);
     if(!candidate||candidate.revision!==request.revision||
        !['PROPOSED','REVIEWED'].includes(candidate.state)||
-       candidate.reportQualification!=='VERIFIED')
+       (request.decision==='ADOPT'&&candidate.reportQualification!=='VERIFIED'))
       return denied('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
     if(typeof selectedHost?.dispatchExperienceDecision!=='function')
       return denied('EXPERIENCE_K_HOST_DISPATCH_NOT_CONNECTED');
@@ -72,7 +88,9 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     const fresh=recheck.candidates.find(c=>c.id===candidate.id);
     if(!fresh||fresh.revision!==candidate.revision||
        fresh.state!==candidate.state||fresh.sourceRef!==candidate.sourceRef||
-       fresh.reportQualification!=='VERIFIED')
+       fresh.reportQualification!==candidate.reportQualification||
+       fresh.publisherRepository!==candidate.publisherRepository||
+       fresh.eligibleForNextTask!==candidate.eligibleForNextTask)
       return denied('EXPERIENCE_DECISION_STALE');
     try{
       // Only an existing selected K/Host reviewer/Owner may accept this request.
@@ -80,7 +98,9 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       const r=await selectedHost.dispatchExperienceDecision({
         repository,versionId,sourceSha:expectedSha,
         candidateId:candidate.id,revision:candidate.revision,
-        decision:request.decision,evidenceRef:candidate.sourceRef});
+        decision:request.decision,evidenceRef:candidate.sourceRef,
+        reportQualification:candidate.reportQualification,
+        publisherRepository:candidate.publisherRepository??null});
       const githubReceipt=typeof r?.decisionReceiptRef==='string'&&
         r.decisionReceiptRef.startsWith('https://github.com/'+repository+'/');
       const casReceipt=r?.decisionReceiptAuthority===
@@ -122,36 +142,48 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
 }
 
 const issueRef=(value,repository)=>typeof value==='string'&&
-  value.startsWith('https://github.com/'+repository+'/issues/')&&
-  /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9][0-9]+$/.test(value);
-function verifiedSuggestion(row,repository){
+  value===`https://github.com/${repository}/issues/${value.split('/').pop()}`;
+function publisherRepositoryFor(namespace,repository){
+  if(namespace==='tally')return repository;
+  const match=/^task-meta:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/.exec(namespace??'');
+  return match?.[1]??null;
+}
+function verifiedSuggestion(row,repository,publishers){
   const p=row?.provenance;
+  const publisherRepository=publisherRepositoryFor(p?.namespace,repository);
+  const issueUrl=publisherRepository&&Number.isSafeInteger(p?.issueNumber)&&p.issueNumber>0
+    ?`https://github.com/${publisherRepository}/issues/${p.issueNumber}`:null;
+  const qualification=['REPORTED_QUALIFIED','UNKNOWN'].includes(row?.qualification);
   return plain(row)&&/^[a-f0-9]{64}$/.test(row.learningId??'')&&
-    row.qualification==='REPORTED_QUALIFIED'&&
-    issueRef(row.taskIssueRef,repository)&&issueRef(row.targetIssueRef,repository)&&
+    qualification&&publishers.has(publisherRepository)&&
+    (row.taskIssueRef===null||row.taskIssueRef===undefined||
+      issueRef(row.taskIssueRef,publisherRepository))&&
+    row.targetIssueRef===issueUrl&&
+    (row.subjectSha===null||row.subjectSha===undefined||/^[a-f0-9]{40}$/.test(row.subjectSha))&&
     plain(p)&&typeof p.reportId==='string'&&p.reportId.length>0&&
     Number.isSafeInteger(p.revision)&&p.revision>0&&
     ['EXECUTION_SUMMARY','EXPERIENCE_USE_FEEDBACK'].includes(p.kind)&&
     Number.isSafeInteger(p.commentId)&&p.commentId>0&&
     Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
-    p.namespace==='tally'&&
-    p.publicationRef==='https://github.com/'+repository+'/issues/'+
-      p.issueNumber+'#issuecomment-'+p.commentId&&
-    ['NOT_MEASURED','ATTESTED_OUTCOME_ONLY'].includes(row.measuredEffect)&&row.noAgentRanking===true&&
-    row.qualityGainClaimed===false;
+    typeof p.dataDigest==='string'&&/^[a-f0-9]{64}$/.test(p.dataDigest)&&
+    p.publicationRef===issueUrl+'#issuecomment-'+p.commentId&&
+    ['NOT_MEASURED','ATTESTED_OUTCOME_ONLY'].includes(row.measuredEffect)&&
+    row.noAgentRanking===true&&row.qualityGainClaimed===false;
 }
 /** Reuses the existing J08 maintenance controller: ADS report loading and
  * record-learning already traverse its selected Host reader and sealed B→K→C
  * effect. This adapter adds no registry, scheduler, or GitHub writer.
  */
 export function createMaintenanceControllerExperienceAdapter({
-  maintenanceController,repository,versionId,expectedSha
+  maintenanceController,repository,versionId,expectedSha,
+  trustedPublisherRepositories
 }={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedSha??'')||
      typeof maintenanceController?.dispatch!=='function'||
      typeof maintenanceController?.snapshot!=='function')
     throw new TypeError('SELECTED_MAINTENANCE_CONTROLLER_REQUIRED');
+  const publishers=publisherSet(repository,trustedPublisherRepositories);
   async function readExperienceCandidates(request={}){
     if(request.repository!==undefined&&request.repository!==repository||
        request.versionId!==undefined&&request.versionId!==versionId||
@@ -166,19 +198,25 @@ export function createMaintenanceControllerExperienceAdapter({
         return {connected:false,reason:'PUBLIC_ADS_REPORTS_NOT_CURRENT'};
       const candidates=[];
       for(const row of snapshot.learning){
-        if(!verifiedSuggestion(row,repository))
+        if(!verifiedSuggestion(row,repository,publishers))
           return {connected:false,reason:'ADS_LEARNING_PROVENANCE_UNQUALIFIED'};
         const decision=row.decision??null;
         if(decision!==null&&!['ADOPTED','REJECTED'].includes(decision))
           return {connected:false,reason:'ADS_LEARNING_DECISION_UNQUALIFIED'};
         const state=decision==='ADOPTED'?'ADOPTED':
           decision==='REJECTED'?'REJECTED':'PROPOSED';
+        const reportQualification=row.qualification==='REPORTED_QUALIFIED'?
+          'VERIFIED':'UNKNOWN';
+        const publisherRepository=publisherRepositoryFor(
+          row.provenance.namespace,repository);
         candidates.push({
           id:row.learningId,revision:row.provenance.revision,
-          title:'Task '+row.taskIssueRef.split('/').pop()+
+          title:'Task '+(row.taskIssueRef?.split('/').pop()??row.provenance.issueNumber)+
             ' → Task '+row.targetIssueRef.split('/').pop()+
             ' · '+row.provenance.reportId,
-          state,reportQualification:'VERIFIED',
+          state,reportQualification,publisherRepository,
+          sourceKind:publisherRepository.endsWith('task-meta-e2e')?
+            'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
           sourceRef:row.provenance.publicationRef,
           // Adoption is not proof that a later Task Context Pack used it.
           eligibleForNextTask:false
@@ -199,6 +237,27 @@ export function createMaintenanceControllerExperienceAdapter({
         sourceSha:expectedSha,reason:'EXPERIENCE_DECISION_SCOPE_INVALID',
         taskPass:false,releasePass:false};
     try{
+      // The selected Host re-loads the public report set immediately before
+      // dispatch. UI validation is convenience only; it is never authority.
+      const loaded=await maintenanceController.dispatch(expectedSha,'load-learning',{});
+      const before=maintenanceController.snapshot();
+      if(loaded?.status!=='OK'||loaded?.reason!=='PUBLIC_ADS_REPORTS_OBSERVED'||
+         before?.status!=='OBSERVED'||before.sourceSha!==expectedSha||
+         !Array.isArray(before.learning))
+        return {status:'DENIED',candidateId:request.candidateId,
+          sourceSha:expectedSha,reason:'LEARNING_SOURCE_NOT_CURRENT',
+          taskPass:false,releasePass:false};
+      const candidate=before.learning.find(x=>x.learningId===request.candidateId);
+      if(!candidate||!verifiedSuggestion(candidate,repository,publishers)||
+         candidate.provenance.revision!==request.revision||
+         (candidate.decision!==null&&candidate.decision!==undefined))
+        return {status:'DENIED',candidateId:request.candidateId,
+          sourceSha:expectedSha,reason:'LEARNING_CANDIDATE_STALE_OR_ALREADY_DECIDED',
+          taskPass:false,releasePass:false};
+      if(request.decision==='ADOPT'&&candidate.qualification!=='REPORTED_QUALIFIED')
+        return {status:'DENIED',candidateId:request.candidateId,
+          sourceSha:expectedSha,reason:'UNQUALIFIED_REPORT_CANNOT_BE_ADOPTED',
+          taskPass:false,releasePass:false};
       const result=await maintenanceController.dispatch(expectedSha,'record-learning',{
         learningId:request.candidateId,
         decision:request.decision==='ADOPT'?'ADOPTED':'REJECTED'});
@@ -210,7 +269,8 @@ export function createMaintenanceControllerExperienceAdapter({
          result?.authorized!==false||result?.taskPass!==false||
          result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
          row?.decision!==expectedDecision||row?.recordState!=='LEARNING_RECORDED'||
-         row?.qualityGainClaimed!==false||row?.noAgentRanking!==true)
+         row?.qualityGainClaimed!==false||row?.noAgentRanking!==true||
+         row?.measuredEffect!=='NOT_MEASURED')
         return {status:'UNKNOWN',candidateId:request.candidateId,
           sourceSha:expectedSha,reason:'LEARNING_CAS_RESULT_NOT_RECONCILED',
           taskPass:false,releasePass:false};
