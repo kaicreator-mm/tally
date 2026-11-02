@@ -77,3 +77,66 @@ test('dispatch transport failure stays UNKNOWN without automatic repeat',async()
   assert.equal(calls,1);assert.equal(r.status,'UNKNOWN');
   assert.equal(JSON.stringify(r).includes('token secret'),false);
 });
+
+import {createMaintenanceControllerExperienceAdapter} from './ui-experience-host.mjs';
+test('existing maintenance controller adapter preserves ADS provenance and sealed K decision',async()=>{
+  const suggestion={learningId:'f'.repeat(64),
+    taskIssueRef:'https://github.com/org/tally/issues/52',
+    targetIssueRef:'https://github.com/org/tally/issues/60',
+    qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
+      commentId:1001,issueNumber:60,namespace:'tally',
+      publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  let decision=null;
+  const controller={
+    async dispatch(_sha,kind,args){
+      if(kind==='load-learning')return {status:'OK',
+        reason:'PUBLIC_ADS_REPORTS_OBSERVED',suggestions:1};
+      if(kind==='record-learning'){
+        decision=args.decision;
+        return {state:'LEARNING_RECORDED',decision,claimAccepted:true,
+          admitted:true,authorized:false,taskPass:false,releasePass:false,
+          githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+          noAgentRanking:true,qualityGainClaimed:false};
+      }
+      return {status:'DENIED'};
+    },
+    snapshot(){return {status:'OBSERVED',sourceSha:sha,learning:[{
+      ...suggestion,decision,recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED',
+      qualityGainClaimed:false,noAgentRanking:true,measuredEffect:'NOT_MEASURED'}]};}
+  };
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha});
+  const source=await adapter.readExperienceCandidates({repository,versionId,sourceSha:sha});
+  assert.equal(source.connected,true);
+  assert.equal(source.candidates[0].state,'PROPOSED');
+  assert.equal(source.candidates[0].sourceRef,suggestion.provenance.publicationRef);
+  const result=await adapter.dispatchExperienceDecision({repository,versionId,
+    sourceSha:sha,candidateId:suggestion.learningId,revision:2,decision:'ADOPT'});
+  assert.equal(result.status,'OBSERVED');
+  assert.equal(result.decisionReceiptAuthority,
+    'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT');
+  assert.equal(result.decisionReceiptRef,null);
+  assert.equal(decision,'ADOPTED');
+});
+test('maintenance experience adapter rejects malformed report provenance and foreign scope',async()=>{
+  const suggestion={learningId:'f'.repeat(64),
+    taskIssueRef:'https://github.com/org/tally/issues/52',
+    targetIssueRef:'https://github.com/org/tally/issues/60',
+    qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
+      commentId:1001,issueNumber:60,namespace:'tally',
+      publicationRef:'https://evil.example/issues/60#issuecomment-1001'},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const controller={dispatch:async()=>({status:'OK',
+    reason:'PUBLIC_ADS_REPORTS_OBSERVED'}),
+    snapshot:()=>({status:'OBSERVED',sourceSha:sha,learning:[suggestion]})};
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha});
+  assert.equal((await adapter.readExperienceCandidates()).reason,
+    'ADS_LEARNING_PROVENANCE_UNQUALIFIED');
+  assert.equal((await adapter.dispatchExperienceDecision({repository:'evil/repo',
+    versionId,sourceSha:sha,candidateId:'f'.repeat(64),revision:2,
+    decision:'ADOPT'})).status,'DENIED');
+});
