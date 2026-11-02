@@ -22,7 +22,7 @@ test('foreign origin and scope cannot read action catalog',async()=>{
 test('dispatch requires exact CSRF and allowlisted request body',async()=>{
   let calls=0;
   const port={...actionPort,submit:async x=>{calls++;return actionPort.submit(x)}};
-  const h=createUiActionHttpAdapter({actionPort:port,origin,csrfKey});
+  const h=createUiActionHttpAdapter({actionPort:port,origin,csrfKey,repository,versionId});
   const body={projectId:repository,versionId,sourceSha,actionId:'start-1',revision:1};
   assert.equal((await h.handle({method:'POST',path:'/api/v2/actions/dispatch',
     origin,csrfKey:'wrong',body})).status,403);
