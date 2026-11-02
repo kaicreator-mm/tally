@@ -99,10 +99,10 @@ test('task execution summary exposes only source-provided sanitized progress and
   });
   assert.equal(taskExecutionSummary({...task,projectId:'other/repo'}).candidateRef,null);
   assert.equal(taskExecutionSummary({...task,execution:{
-    ...task.execution,provider:'ghp_12345678901234567890'
+    ...task.execution!,provider:'ghp_12345678901234567890'
   }}).provider,'UNKNOWN');
   assert.equal(taskExecutionSummary({...task,execution:{
-    ...task.execution,attemptId:'ghp_12345678901234567890'
+    ...task.execution!,attemptId:'ghp_12345678901234567890'
   }}).attemptId,'UNKNOWN');
 });
 test('missing, raw, secret-bearing or malformed execution evidence remains UNKNOWN',()=>{

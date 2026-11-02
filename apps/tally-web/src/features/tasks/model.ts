@@ -149,7 +149,7 @@ export interface TaskExecutionSummary{
 const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
 const PROGRESS_SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
-const CANDIDATE_PR=/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/pull\/[1-9][0-9]*$/;
+const CANDIDATE_PR=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/[1-9][0-9]*$/;
 const EXECUTION_ROLES=new Set<TaskExecutionRole>(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
 const formatElapsed=(ms:number)=>{
   const seconds=Math.floor(ms/1000);
