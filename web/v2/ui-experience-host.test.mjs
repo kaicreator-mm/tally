@@ -434,3 +434,31 @@ test('next-Task usage accepts only unique adopted verified eligible candidates',
   assert.equal(emptyNotApplied.connected,true);
   assert.equal(emptyNotApplied.usageState,'EXPLICITLY_NOT_APPLIED');
 });
+
+test('next-Task usage refuses a candidate set that changes during readback',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
+  const id='a'.repeat(64);
+  const candidate=(state,eligible)=>({
+    id,revision:state==='ADOPTED'?1:2,title:'Changing candidate',
+    state,reportQualification:'VERIFIED',
+    sourceRef:'https://github.com/'+publisherRepository+
+      '/issues/13#issuecomment-6381704608',
+    publisherRepository,eligibleForNextTask:eligible,sourceKind:'PUBLIC_ADS_REPORT'
+  });
+  let reads=0;
+  const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],selectedHost:{
+      readExperienceCandidates:async()=>{
+        reads++;
+        return {connected:true,source,versionId,
+          candidates:[reads===1?candidate('ADOPTED',true):candidate('REJECTED',false)]};
+      },
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+        taskIssue,usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]})
+    }});
+  const result=await host.nextTaskUsage(22);
+  assert.equal(reads,2);
+  assert.equal(result.connected,false);
+  assert.equal(result.reason,'EXPERIENCE_SOURCE_CHANGED_DURING_USAGE_READ');
+});
