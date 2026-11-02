@@ -101,6 +101,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
         decision:request.decision,evidenceRef:candidate.sourceRef,
         reportQualification:candidate.reportQualification,
         publisherRepository:candidate.publisherRepository??null});
+      const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
       const githubReceipt=typeof r?.decisionReceiptRef==='string'&&
         r.decisionReceiptRef.startsWith('https://github.com/'+repository+'/');
       const casReceipt=r?.decisionReceiptAuthority===
@@ -109,6 +110,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       if(!plain(r)||r.candidateId!==candidate.id||r.sourceSha!==expectedSha||
          !['OBSERVED','DENIED','UNKNOWN','RECONCILIATION_REQUIRED'].includes(r.status)||
          r.taskPass===true||r.releasePass===true||r.qualityImproved===true||
+         (r.status==='OBSERVED'&&r.decision!==expectedDecision)||
          (r.status==='OBSERVED'&&!githubReceipt&&!casReceipt))
         return denied('EXPERIENCE_DECISION_RECEIPT_UNQUALIFIED');
       return {connected:true,ok:r.status==='OBSERVED',status:r.status,
