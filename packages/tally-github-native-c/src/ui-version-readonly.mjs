@@ -141,7 +141,9 @@ export async function readUiNativeVersionFromClient({
         return denied('NATIVE_DEPENDENCY_COUNT_DRIFT');
       const status=taskStatus(observed.workflowState,observed.issueState);
       const entry={id:String(number),versionId,title:issue.title,
-        status,severity,blockedBy:dependencies,
+        status,severity,issueState:issue.state,
+        closureState:issue.state==='closed'?'CLOSED_UNVERIFIED':'OPEN',
+        blockedBy:dependencies,
         dependencyState:observed.dependencyState,
         openBlockerCount:observed.openBlockerCount,
         agentId:null,claimState:'NOT_VERIFIED',attemptId:null,
@@ -150,6 +152,7 @@ export async function readUiNativeVersionFromClient({
         updatedAt:issue.updated_at};
       tasks.push(entry);
       nodes.push({taskId:entry.id,versionId,title:entry.title,status,severity,
+        issueState:entry.issueState,closureState:entry.closureState,
         requirementGroup:null,phase:null,lane:null,agentId:null,
         executable:false});
     }
@@ -305,8 +308,9 @@ export function createUiNativeSource({token,owner,repo,versionId,
   return Object.freeze({
     catalog:async()=>readUiNativeCatalogFromClient({
       octokit:await client(),owner,repo,versionId,expectedSha}),
-    version:async()=>readUiNativeVersionFromClient({
-      octokit:await client(),owner,repo,versionId,expectedSha,taskIssueNumbers}),
+    version:async({taskIssueNumbers:frozenTaskIssueNumbers}={})=>
+      readUiNativeVersionFromClient({octokit:await client(),owner,repo,versionId,
+        expectedSha,taskIssueNumbers:frozenTaskIssueNumbers??taskIssueNumbers}),
     requirements:async()=>readUiNativeRequirementsFromClient({
       octokit:await client(),owner,repo,versionId,expectedSha,requirementIssueSpecs}),
     qa:async()=>readUiNativeQaFromClient({
