@@ -7,6 +7,9 @@ export interface WorkAction{
   id:string;taskId:string|null;projectId:string;versionId:string|null;
   title:string;kind:WorkActionKind;state:WorkActionState;
   ownerRole:string;sourceRef:string;reason:string|null;updatedAt:string|null;
+  /** Exact Host-issued action identity; absence means display-only. */
+  hostActionId?:string|null;hostActionRevision?:number|null;
+  hostActionKind?:string|null;
 }
 export interface WorkbenchSnapshot{
   connected:boolean;
