@@ -85,7 +85,7 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
     targetIssueRef:'https://github.com/org/tally/issues/60',
     qualification:'REPORTED_QUALIFIED',
     provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
-      commentId:1001,issueNumber:60,namespace:'tally',
+      commentId:1001,issueNumber:60,namespace:'tally',dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   let decision=null;
@@ -139,4 +139,101 @@ test('maintenance experience adapter rejects malformed report provenance and for
   assert.equal((await adapter.dispatchExperienceDecision({repository:'evil/repo',
     versionId,sourceSha:sha,candidateId:'f'.repeat(64),revision:2,
     decision:'ADOPT'})).status,'DENIED');
+});
+
+
+test('real isolated external ADS report stays UNKNOWN and permits REJECT only',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const publicationRef='https://github.com/'+publisherRepository+
+    '/issues/9#issuecomment-6381704604';
+  const staleSuggestion={learningId:'a'.repeat(64),
+    taskIssueRef:null,
+    targetIssueRef:'https://github.com/'+publisherRepository+'/issues/9',
+    subjectSha:'5b7072d78016052b1ea816b2b36322b946ef5c78',
+    qualification:'UNKNOWN',
+    provenance:{reportId:'task-meta:sess_aebeaf3e',revision:1,
+      kind:'EXECUTION_SUMMARY',commentId:6381704604,issueNumber:9,
+      namespace:'task-meta:'+publisherRepository,dataDigest:'e'.repeat(64),
+      publicationRef},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  let decision=null,recordCalls=0;
+  const controller={
+    async dispatch(_sha,kind,args){
+      if(kind==='load-learning')return {status:'OK',
+        reason:'PUBLIC_ADS_REPORTS_OBSERVED',suggestions:1};
+      if(kind==='record-learning'){
+        recordCalls++;decision=args.decision;
+        return {state:'LEARNING_RECORDED',decision,claimAccepted:true,
+          admitted:true,authorized:false,taskPass:false,releasePass:false,
+          githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+          noAgentRanking:true,qualityGainClaimed:false};
+      }
+      return {status:'DENIED'};
+    },
+    snapshot(){return {status:'OBSERVED',sourceSha:sha,learning:[{
+      ...staleSuggestion,decision,recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED',
+      qualityGainClaimed:false,noAgentRanking:true,measuredEffect:'NOT_MEASURED'}]};}
+  };
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository]});
+  const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],selectedHost:{
+      ...adapter,
+      readNextTaskContextUsage:async()=>({connected:true,source,taskIssue:20,
+        usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[]})
+    }});
+  const listed=await host.candidates();
+  assert.equal(listed.connected,true);
+  assert.equal(listed.candidates[0].reportQualification,'UNKNOWN');
+  assert.equal(listed.candidates[0].sourceKind,'ISOLATED_E2E_TEST_ONLY');
+  assert.equal(listed.candidates[0].eligibleForNextTask,false);
+  assert.equal(listed.candidates[0].sourceRef,publicationRef);
+
+  const adopted=await host.decision({...request,candidateId:staleSuggestion.learningId,
+    revision:1,decision:'ADOPT'});
+  assert.equal(adopted.status,'DENIED');
+  assert.equal(recordCalls,0);
+
+  const rejected=await host.decision({...request,candidateId:staleSuggestion.learningId,
+    revision:1,decision:'REJECT'});
+  assert.equal(rejected.status,'OBSERVED');
+  assert.equal(rejected.ok,true);
+  assert.equal(decision,'REJECTED');
+  assert.equal(recordCalls,1);
+
+  const usage=await host.nextTaskUsage(20);
+  assert.equal(usage.connected,true);
+  assert.equal(usage.usageState,'EXPLICITLY_NOT_APPLIED');
+  assert.deepEqual(usage.usedCandidates,[]);
+  assert.equal(usage.measuredBenefit,'UNKNOWN');
+});
+
+test('selected maintenance Host independently refuses ADOPT for UNKNOWN report',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const staleSuggestion={learningId:'b'.repeat(64),
+    taskIssueRef:null,
+    targetIssueRef:'https://github.com/'+publisherRepository+'/issues/9',
+    subjectSha:null,qualification:'UNKNOWN',
+    provenance:{reportId:'task-meta:unknown',revision:1,
+      kind:'EXECUTION_SUMMARY',commentId:6381704604,issueNumber:9,
+      namespace:'task-meta:'+publisherRepository,dataDigest:'f'.repeat(64),
+      publicationRef:'https://github.com/'+publisherRepository+
+        '/issues/9#issuecomment-6381704604'},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  let recordCalls=0;
+  const controller={
+    dispatch:async(_sha,kind)=>kind==='load-learning'?{status:'OK',
+      reason:'PUBLIC_ADS_REPORTS_OBSERVED'}:
+      (recordCalls++,{state:'LEARNING_RECORDED'}),
+    snapshot:()=>({status:'OBSERVED',sourceSha:sha,learning:[staleSuggestion]})
+  };
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository]});
+  const result=await adapter.dispatchExperienceDecision({repository,versionId,
+    sourceSha:sha,candidateId:staleSuggestion.learningId,revision:1,decision:'ADOPT'});
+  assert.equal(result.status,'DENIED');
+  assert.equal(result.reason,'UNQUALIFIED_REPORT_CANNOT_BE_ADOPTED');
+  assert.equal(recordCalls,0);
 });
