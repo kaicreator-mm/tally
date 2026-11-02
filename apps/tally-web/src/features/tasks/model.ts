@@ -25,6 +25,8 @@ export interface TaskRecord{
   /** Native work-unit id from the projection (e.g. issue number as string). */
   id:string;
   versionId:string;
+  /** Selected repository identity used to bind candidate links. */
+  projectId?:string;
   title:string;
   status:TaskStatus;
   severity:'P0'|'P1'|'P2'|'UNKNOWN';
@@ -154,13 +156,16 @@ const formatElapsed=(ms:number)=>{
   return seconds>=60?`${Math.floor(seconds/60)}m${seconds%60}s`:`${seconds}s`;
 };
 /** Project only bounded Host summaries; never expose raw logs or secret-bearing text. */
-export function taskExecutionSummary(task:Pick<TaskRecord,'attemptId'|'execution'>):TaskExecutionSummary{
+export function taskExecutionSummary(task:Pick<TaskRecord,'attemptId'|'execution'|'projectId'>):TaskExecutionSummary{
   const e=task.execution??null;
   const state=TASK_EXECUTION_STATES.includes(e?.state as TaskExecutionState)?e!.state:'UNKNOWN';
-  const provider=typeof e?.provider==='string'&&PROVIDER_ID.test(e.provider)?e.provider:'UNKNOWN';
+  const provider=typeof e?.provider==='string'&&PROVIDER_ID.test(e.provider)&&
+    !PROGRESS_SECRET.test(e.provider)?e.provider:'UNKNOWN';
   const role=EXECUTION_ROLES.has(e?.role as TaskExecutionRole)?e!.role!:'UNKNOWN';
-  const attemptId=typeof e?.attemptId==='string'&&EXECUTION_ID.test(e.attemptId)?e.attemptId:
-    typeof task.attemptId==='string'&&EXECUTION_ID.test(task.attemptId)?task.attemptId:'UNKNOWN';
+  const attemptId=typeof e?.attemptId==='string'&&EXECUTION_ID.test(e.attemptId)&&
+    !PROGRESS_SECRET.test(e.attemptId)?e.attemptId:
+    typeof task.attemptId==='string'&&EXECUTION_ID.test(task.attemptId)&&
+      !PROGRESS_SECRET.test(task.attemptId)?task.attemptId:'UNKNOWN';
   const rawProgress=e?.progressSummary;
   const progressSummary=e?.progressSummaryKind==='SANITIZED'&&
     typeof rawProgress==='string'&&rawProgress.length>0&&rawProgress.length<=240&&
@@ -174,8 +179,10 @@ export function taskExecutionSummary(task:Pick<TaskRecord,'attemptId'|'execution
   const tokensOut=Number.isSafeInteger(e?.tokensOut)&&e!.tokensOut!>=0?String(e!.tokensOut):'UNKNOWN';
   const cost=typeof e?.costUsd==='number'&&Number.isFinite(e.costUsd)&&e.costUsd>=0
     ?'$'+e.costUsd.toFixed(4):'UNKNOWN';
-  const candidateRef=typeof e?.candidateRef==='string'&&CANDIDATE_PR.test(e.candidateRef)
-    ?e.candidateRef:null;
+  const candidateMatch=typeof e?.candidateRef==='string'?
+    CANDIDATE_PR.exec(e.candidateRef):null;
+  const candidateRef=candidateMatch&&task.projectId===candidateMatch[1]+'/'+candidateMatch[2]
+    ?e!.candidateRef:null;
   return {state,provider,role,attemptId,progressSummary,heartbeatAt,elapsed,
     tokensIn,tokensOut,cost,candidateRef};
 }
