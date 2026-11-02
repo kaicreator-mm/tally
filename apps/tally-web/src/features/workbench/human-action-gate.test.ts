@@ -30,7 +30,7 @@ test('other project/version and blocked action cannot be clicked',()=>{
   assert.equal(workbenchActionGate(inbox,{...catalog,versionId:'version/v3'},work).enabled,false);
   assert.equal(workbenchActionGate(inbox,catalog,{...work,state:'BLOCKED'}).enabled,false);
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:[{
-    ...catalog.actions[0],state:'BLOCKED'}]},work).enabled,false);
+    ...catalog.actions[0],state:'BLOCKED' as const}]},work).enabled,false);
 });
 test('native blocker and unassigned approval never become fake permitted action',()=>{
   assert.equal(workbenchActionGate(inbox,catalog,{...work,kind:'BLOCKER'}).enabled,false);
