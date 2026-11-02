@@ -6,7 +6,7 @@ import {filterTasks,sortTasks,boardColumns,blockerSummary,
 import type {TaskRecord} from './model.ts';
 
 const make=(over:Partial<TaskRecord>):TaskRecord=>({
-  id:'100',versionId:'v1',title:'任务',status:'open',severity:'P2',
+  id:'100',versionId:'v1',projectId:'kaicreator-mm/tally',title:'任务',status:'open',severity:'P2',
   blockedBy:[],agentId:null,claimState:'NOT_VERIFIED',attemptId:null,
   attemptState:null,prNumber:null,reviewState:'NOT_RUN',ciState:'NOT_RUN',
   writeSet:[],requirementRef:null,updatedAt:'2026-11-01T00:00:00Z',...over});
