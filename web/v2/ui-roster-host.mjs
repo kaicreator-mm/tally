@@ -16,6 +16,8 @@ function frozenOk(doc,repository,versionId,expectedSha){
      doc.source.sourceSha!==expectedSha||doc.source.currentness!=='CURRENT'||
      doc.source.readback!=='VERIFIED'||doc.versionId!==versionId||
      doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
+     doc.witness?.sourceSha!==expectedSha||
+     doc.ownerApproval?.sourceSha!==expectedSha||
      !SHA.test(doc.witness.blobSha??'')||
      typeof doc.witness.reviewer!=='string'||!doc.witness.reviewer||
      typeof doc.witness.reviewRef!=='string'||
@@ -69,7 +71,11 @@ function frozenOk(doc,repository,versionId,expectedSha){
   return [...known].every(walk);
 }
 const equalFreeze=(a,b)=>a.witness.blobSha===b.witness.blobSha&&
+  a.witness.sourceSha===b.witness.sourceSha&&
+  a.witness.reviewedHeadSha===b.witness.reviewedHeadSha&&
   a.witness.reviewer===b.witness.reviewer&&a.witness.reviewRef===b.witness.reviewRef&&
+  a.ownerApproval?.sourceSha===b.ownerApproval?.sourceSha&&
+  a.ownerApproval?.owner===b.ownerApproval?.owner&&
   a.ownerApproval?.approvalRef===b.ownerApproval?.approvalRef&&
   a.frozenAt===b.frozenAt&&a.frozen.taskPackRef===b.frozen.taskPackRef&&
   a.versionId===b.versionId&&
@@ -129,7 +135,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       const before=await frozenHost.readFrozenDag(params);
       if(!frozenOk(before,repository,versionId,expectedSha))
         return denial('FROZEN_DAG_SOURCE_UNQUALIFIED');
-      const native=await nativeC.version();
+      const native=await nativeC.version({taskIssueNumbers:before.frozen.taskIssues});
       if(native?.connected!==true||native.source?.repository!==repository||
          native.source.sourceSha!==expectedSha||
          native.source.currentness!=='CURRENT'||
