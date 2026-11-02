@@ -7,7 +7,13 @@ const actionPort={scope:Object.freeze({repository,versionId,sourceSha}),
   actions:async()=>({connected:true,source:{repository,
   sourceSha,currentness:'CURRENT',readback:'VERIFIED'},versionId,actions:[]}),
   submit:async request=>({connected:true,ok:true,status:'OBSERVED',
-    actionId:request.actionId,sourceSha,receiptRef:'https://github.com/org/tally/issues/1#issuecomment-1'})};
+    actionId:request.actionId,sourceSha,receiptRef:'https://github.com/org/tally/issues/1#issuecomment-1'}),
+  taskExecution:async taskIssue=>({connected:true,
+    source:{repository,sourceSha,currentness:'CURRENT',readback:'VERIFIED'},
+    versionId,taskIssue,execution:{state:'RUNNING',provider:'local-codex',
+      role:'BUILDER',attemptId:'attempt-1',progressSummary:'任务执行中',
+      progressSummaryKind:'SANITIZED',heartbeatAt:'2026-11-02T12:30:00Z',
+      elapsedMs:1000,tokensIn:null,tokensOut:null,costUsd:null,candidateRef:null}})};
 const adapter=()=>createUiActionHttpAdapter({actionPort,origin,csrfKey});
 test('same-origin GET reads a scoped Host action catalog',async()=>{
   const r=await adapter().handle({method:'GET',path:'/api/v2/actions',origin,
@@ -56,4 +62,25 @@ test('HTTP adapter pins scope to immutable selected port and rejects caller over
   const foreign=await h.handle({method:'GET',path:'/api/v2/actions',origin,
     query:{projectId:'evil/repo',versionId:'version/v99'}});
   assert.equal(foreign.status,400);
+});
+
+test('same-origin task execution GET reads only the selected task lifecycle',async()=>{
+  const r=await adapter().handle({method:'GET',path:'/api/v2/task-execution',origin,
+    query:{projectId:repository,versionId,taskIssue:260}});
+  assert.equal(r.status,200);
+  assert.equal(r.body.connected,true);
+  assert.equal(r.body.taskIssue,260);
+  assert.equal(r.body.execution.state,'RUNNING');
+});
+test('task execution GET rejects foreign scope, malformed task and missing Host port',async()=>{
+  const h=adapter();
+  assert.equal((await h.handle({method:'GET',path:'/api/v2/task-execution',
+    origin,query:{projectId:'evil/repo',versionId,taskIssue:260}})).status,400);
+  assert.equal((await h.handle({method:'GET',path:'/api/v2/task-execution',
+    origin,query:{projectId:repository,versionId,taskIssue:'260'}})).status,400);
+  const missing=createUiActionHttpAdapter({actionPort:{
+    scope:actionPort.scope,actions:actionPort.actions,submit:actionPort.submit
+  },origin,csrfKey});
+  assert.equal((await missing.handle({method:'GET',path:'/api/v2/task-execution',
+    origin,query:{projectId:repository,versionId,taskIssue:260}})).status,503);
 });
