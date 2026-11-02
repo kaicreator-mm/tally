@@ -73,6 +73,41 @@ function sanitized(actions){
     state:action.state,reason:action.state==='ELIGIBLE'?null:
       'HOST_ADMISSION_REQUIRED'}));
 }
+const EXECUTION_STATES=new Set([
+  'QUEUED','ADMISSION_BLOCKED','ADMITTED','STARTING','RUNNING','CANDIDATE_READY',
+  'REVIEWING','REPAIRING','CI_RUNNING','COMPLETED','FAILED','BLOCKED','CANCELLED',
+  'UNKNOWN','RECONCILING'
+]);
+const EXECUTION_ROLES=new Set(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
+const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
+const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
+const PROGRESS_SECRET=/\\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\\s+\\S+)\\b/i;
+const CANDIDATE_PR=/^https:\\/\\/github\\.com\\/([A-Za-z0-9_.-]+)\\/([A-Za-z0-9_.-]+)\\/pull\\/[1-9][0-9]*$/;
+function validTaskExecution(execution,repository){
+  if(!plain(execution)||Object.keys(execution).sort().join(',')!==
+    'attemptId,candidateRef,costUsd,elapsedMs,heartbeatAt,progressSummary,progressSummaryKind,provider,role,state,tokensIn,tokensOut'||
+    !EXECUTION_STATES.has(execution.state)||
+    !(execution.provider===null||typeof execution.provider==='string'&&PROVIDER_ID.test(execution.provider))||
+    !(execution.role===null||EXECUTION_ROLES.has(execution.role))||
+    !(execution.attemptId===null||typeof execution.attemptId==='string'&&EXECUTION_ID.test(execution.attemptId))||
+    !['SANITIZED','NOT_AVAILABLE'].includes(execution.progressSummaryKind)||
+    !(execution.progressSummaryKind==='NOT_AVAILABLE'&&execution.progressSummary===null||
+      execution.progressSummaryKind==='SANITIZED'&&typeof execution.progressSummary==='string'&&
+      execution.progressSummary.length>0&&execution.progressSummary.length<=240&&
+      !/[\\u0000-\\u001f\\u007f]/.test(execution.progressSummary)&&
+      !PROGRESS_SECRET.test(execution.progressSummary))||
+    !(execution.heartbeatAt===null||typeof execution.heartbeatAt==='string'&&
+      execution.heartbeatAt.length<=40&&Number.isFinite(Date.parse(execution.heartbeatAt)))||
+    !(execution.elapsedMs===null||Number.isSafeInteger(execution.elapsedMs)&&execution.elapsedMs>=0)||
+    !(execution.tokensIn===null||Number.isSafeInteger(execution.tokensIn)&&execution.tokensIn>=0)||
+    !(execution.tokensOut===null||Number.isSafeInteger(execution.tokensOut)&&execution.tokensOut>=0)||
+    !(execution.costUsd===null||typeof execution.costUsd==='number'&&
+      Number.isFinite(execution.costUsd)&&execution.costUsd>=0))
+    return false;
+  if(execution.candidateRef===null)return true;
+  const match=typeof execution.candidateRef==='string'&&CANDIDATE_PR.exec(execution.candidateRef);
+  return Boolean(match&&match[1]+'/'+match[2]===repository);
+}
 export function createUiActionPort({repository,versionId,expectedSha,host}={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedSha??''))throw new TypeError('SELECTED_UI_ACTION_SCOPE_REQUIRED');
@@ -95,6 +130,27 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
     if(!qualified(result,repository,versionId,expectedSha))return result;
     return {connected:true,source:result.source,versionId,
       coverage:'SELECTED_HOST_ONLY',actions:sanitized(result.actions)};
+  }
+  async function taskExecution(taskIssue){
+    if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
+      return denied('TASK_EXECUTION_ISSUE_INVALID');
+    if(typeof host?.readTaskExecution!=='function')
+      return denied('SELECTED_HOST_TASK_EXECUTION_NOT_CONNECTED');
+    try{
+      const snapshot=await host.readTaskExecution({
+        repository,versionId,sourceSha:expectedSha,taskIssue
+      });
+      if(!plain(snapshot)||snapshot.connected!==true||
+         snapshot.source?.repository!==repository||
+         snapshot.source?.sourceSha!==expectedSha||
+         snapshot.source?.currentness!=='CURRENT'||
+         snapshot.source?.readback!=='VERIFIED'||
+         snapshot.versionId!==versionId||snapshot.taskIssue!==taskIssue||
+         !validTaskExecution(snapshot.execution,repository))
+        return denied('HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+      return {connected:true,source:snapshot.source,versionId,taskIssue,
+        execution:Object.freeze({...snapshot.execution})};
+    }catch{return denied('HOST_TASK_EXECUTION_READ_FAILED');}
   }
   async function submit(request){
     if(!plain(request)||Object.keys(request).sort().join(',')!==
@@ -143,7 +199,7 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
   }
   return Object.freeze({
     scope:Object.freeze({repository,versionId,sourceSha:expectedSha}),
-    actions,submit,
+    actions,taskExecution,submit,
   });
 }
 
@@ -174,6 +230,17 @@ export function createUiActionHttpAdapter({actionPort,origin,csrfKey}={}){
          q.versionId!==undefined&&q.versionId!==versionId)
         return response(400,denied('ACTION_SCOPE_MISMATCH'));
       const result=await actionPort.actions({repository,versionId});
+      return response(result.connected?200:503,result);
+    }
+    if(request.method==='GET'&&request.path==='/api/v2/task-execution'){
+      const q=request.query;
+      if(!plain(q)||Object.keys(q).sort().join(',')!=='projectId,taskIssue,versionId'||
+         q.projectId!==repository||q.versionId!==versionId||
+         !Number.isSafeInteger(q.taskIssue)||q.taskIssue<1)
+        return response(400,denied('TASK_EXECUTION_SCOPE_OR_QUERY_INVALID'));
+      if(typeof actionPort.taskExecution!=='function')
+        return response(503,denied('SELECTED_HOST_TASK_EXECUTION_NOT_CONNECTED'));
+      const result=await actionPort.taskExecution(q.taskIssue);
       return response(result.connected?200:503,result);
     }
     if(request.method!=='POST'||request.path!=='/api/v2/actions/dispatch')
