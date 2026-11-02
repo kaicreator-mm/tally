@@ -137,7 +137,7 @@ function verifiedSuggestion(row,repository){
     p.namespace==='tally'&&
     p.publicationRef==='https://github.com/'+repository+'/issues/'+
       p.issueNumber+'#issuecomment-'+p.commentId&&
-    row.measuredEffect==='NOT_MEASURED'&&row.noAgentRanking===true&&
+    ['NOT_MEASURED','ATTESTED_OUTCOME_ONLY'].includes(row.measuredEffect)&&row.noAgentRanking===true&&
     row.qualityGainClaimed===false;
 }
 /** Reuses the existing J08 maintenance controller: ADS report loading and
@@ -152,7 +152,11 @@ export function createMaintenanceControllerExperienceAdapter({
      typeof maintenanceController?.dispatch!=='function'||
      typeof maintenanceController?.snapshot!=='function')
     throw new TypeError('SELECTED_MAINTENANCE_CONTROLLER_REQUIRED');
-  async function readExperienceCandidates(){
+  async function readExperienceCandidates(request={}){
+    if(request.repository!==undefined&&request.repository!==repository||
+       request.versionId!==undefined&&request.versionId!==versionId||
+       request.sourceSha!==undefined&&request.sourceSha!==expectedSha)
+      return {connected:false,reason:'EXPERIENCE_SOURCE_SCOPE_MISMATCH'};
     try{
       const loaded=await maintenanceController.dispatch(expectedSha,'load-learning',{});
       const snapshot=maintenanceController.snapshot();
