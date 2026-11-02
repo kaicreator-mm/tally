@@ -19,7 +19,7 @@ function frozenOk(doc,repository,versionId,expectedSha){
      doc.source.readback!=='VERIFIED'||doc.versionId!==versionId||
      doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
      doc.witness?.sourceSha!==expectedSha||
-     !SHA.test(doc.witness?.reviewedHeadSha??'')||
+     doc.witness?.reviewedHeadSha!==expectedSha||
      typeof doc.witness?.author!=='string'||!doc.witness.author||
      typeof doc.witness?.reviewer!=='string'||!doc.witness.reviewer||
      doc.witness.author===doc.witness.reviewer||
@@ -199,7 +199,7 @@ export function createUiRosterHost({repository,versionId,expectedSha,
           const second=await claimHost.readAcceptedClaim(args);
           if(!validClaim(first,repository,versionId,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
              !validClaim(second,repository,versionId,expectedSha,number,subject,taskPackRef,taskPackBlobSha)||
-             JSON.stringify(first)!==JSON.stringify(second))
+             !same(first,second))
             return denial('ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
           claimResults.push(first);
         }
