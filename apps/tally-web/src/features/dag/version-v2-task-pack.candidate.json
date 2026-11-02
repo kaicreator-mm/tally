@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-02T12:08:32.278Z",
+  "observedAt": "2026-11-02T19:18:00Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -393,7 +393,7 @@
         "type:task"
       ],
       "createdAt": "2026-10-31T10:38:10Z",
-      "updatedAt": "2026-11-01T04:27:32Z",
+      "updatedAt": "2026-11-02T14:29:29Z",
       "closedAt": null
     },
     {
@@ -441,7 +441,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-02T11:36:15Z",
+      "updatedAt": "2026-11-02T19:22:22Z",
       "closedAt": null
     },
     {
@@ -453,7 +453,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
-      "updatedAt": "2026-11-02T11:40:09Z",
+      "updatedAt": "2026-11-02T18:57:36Z",
       "closedAt": null
     },
     {
@@ -465,7 +465,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:43Z",
-      "updatedAt": "2026-11-02T11:40:12Z",
+      "updatedAt": "2026-11-02T17:43:25Z",
       "closedAt": null
     },
     {
@@ -477,7 +477,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:45Z",
-      "updatedAt": "2026-11-02T11:40:15Z",
+      "updatedAt": "2026-11-02T18:57:47Z",
       "closedAt": null
     },
     {
@@ -489,7 +489,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-02T08:35:32Z",
+      "updatedAt": "2026-11-02T19:13:18Z",
       "closedAt": null
     }
   ],
