@@ -5,7 +5,7 @@ import type {ExperienceCandidate,ExperienceSnapshot} from './model.ts';
 const snapshot={connected:true,versionId:'version/v2',
   source:{repository:'org/tally',sourceSha:'a'.repeat(40),
     currentness:'CURRENT',readback:'VERIFIED'},candidates:[]} as const satisfies ExperienceSnapshot;
-const candidate:ExperienceCandidate={id:'b'.repeat(64),revision:1,title:'Rule',state:'PROPOSED',
+const candidate={id:'b'.repeat(64),revision:1,title:'Rule',state:'PROPOSED',
   reportQualification:'VERIFIED',sourceRef:'https://github.com/org/tally/issues/2#issuecomment-1',
   eligibleForNextTask:false};
 test('only current source-backed proposed/reviewed candidate is actionable',()=>{
