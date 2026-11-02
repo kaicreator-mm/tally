@@ -34,6 +34,11 @@ test('token totals only over measured attempts with coverage attached',()=>{
   assert.equal(totals.inCoverage,2/3);
   assert.equal(totals.outCoverage,1/3);
 });
+test('attempt role is optional and never inferred from provider identity',()=>{
+  assert.equal(attempts[0].role,undefined);
+  assert.equal(make({role:'REVIEWER'}).role,'REVIEWER');
+  assert.equal(make({role:null}).role,null);
+});
 test('grouping by agent keeps attempts explicit',()=>{
   const groups=byAgent(attempts);
   assert.deepEqual(groups.map(group=>group.agentId),['zcode','kimi']);
