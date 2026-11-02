@@ -275,7 +275,11 @@ test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
     maintenanceController:controller,repository,versionId,expectedSha:sha,
     trustedPublisherRepositories:[publisherRepository]});
   const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
-    trustedPublisherRepositories:[publisherRepository],selectedHost:adapter});
+    trustedPublisherRepositories:[publisherRepository],selectedHost:{
+      ...adapter,readNextTaskContextUsage:async({taskIssue})=>({
+        connected:true,source:{repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'},
+        taskIssue,usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[]})
+    }});
   const listed=await host.candidates();
   assert.equal(listed.connected,true);
   assert.equal(listed.candidates[0].reportQualification,'STALE');
@@ -289,4 +293,74 @@ test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
   assert.equal(rejected.ok,true);
   assert.equal(decision,'REJECTED');
   assert.equal(recordCalls,1);
+  const usage=await host.nextTaskUsage(20);
+  assert.equal(usage.connected,true);
+  assert.equal(usage.usageState,'EXPLICITLY_NOT_APPLIED');
+  assert.deepEqual(usage.usedCandidates,[]);
+  assert.equal(usage.measuredBenefit,'UNKNOWN');
+});
+
+
+test('UNVERIFIED ADS evidence is preserved and permits REJECT but never ADOPT',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const suggestion={learningId:'d'.repeat(64),taskIssueRef:null,
+    targetIssueRef:'https://github.com/'+publisherRepository+'/issues/11',
+    subjectSha:null,qualification:'UNVERIFIED',
+    provenance:{reportId:'task-meta:unverified',revision:1,
+      kind:'EXECUTION_SUMMARY',commentId:6381704606,issueNumber:11,
+      namespace:'task-meta:'+publisherRepository,dataDigest:'d'.repeat(64),
+      publicationRef:'https://github.com/'+publisherRepository+
+        '/issues/11#issuecomment-6381704606'},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  let decision=null,recordCalls=0;
+  const controller={
+    async dispatch(_sha,kind,args){
+      if(kind==='load-learning')return {status:'OK',reason:'PUBLIC_ADS_REPORTS_OBSERVED'};
+      if(kind==='record-learning'){
+        recordCalls++;decision=args.decision;
+        return {state:'LEARNING_RECORDED',decision,claimAccepted:true,admitted:true,
+          authorized:false,taskPass:false,releasePass:false,githubEffect:'NOT_RUN',
+          measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+      }
+      return {status:'DENIED'};
+    },
+    snapshot(){return {status:'OBSERVED',sourceSha:sha,learning:[{
+      ...suggestion,decision,recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED'}]};}
+  };
+  const adapter=createMaintenanceControllerExperienceAdapter({
+    maintenanceController:controller,repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository]});
+  const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],selectedHost:adapter});
+  const listed=await host.candidates();
+  assert.equal(listed.connected,true);
+  assert.equal(listed.candidates[0].reportQualification,'UNVERIFIED');
+  const adopted=await host.decision({...request,candidateId:suggestion.learningId,
+    revision:1,decision:'ADOPT'});
+  assert.equal(adopted.status,'DENIED');
+  assert.equal(recordCalls,0);
+  const rejected=await host.decision({...request,candidateId:suggestion.learningId,
+    revision:1,decision:'REJECT'});
+  assert.equal(rejected.status,'OBSERVED');
+  assert.equal(decision,'REJECTED');
+  assert.equal(recordCalls,1);
+});
+
+test('rejected learning cannot appear in a later Task Context Pack usage readback',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const id='e'.repeat(64);
+  const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
+  const candidate={id,revision:1,title:'Rejected stale report',state:'REJECTED',
+    reportQualification:'STALE',sourceRef:'https://github.com/'+publisherRepository+
+      '/issues/12#issuecomment-6381704607',publisherRepository,
+    eligibleForNextTask:false,sourceKind:'PUBLIC_ADS_REPORT'};
+  const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],selectedHost:{
+      readExperienceCandidates:async()=>({connected:true,source,versionId,candidates:[candidate]}),
+      readNextTaskContextUsage:async()=>({connected:true,source,taskIssue:21,
+        usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]})
+    }});
+  const result=await host.nextTaskUsage(21);
+  assert.equal(result.connected,false);
+  assert.equal(result.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
 });
