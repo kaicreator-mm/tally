@@ -393,7 +393,7 @@ The four new compiler/consumer files proposed for F1b are `experiments/v2/select
 - **F0 — Design and inventory:** completed as docs-only analysis in PR #277; not source admission.
 - **F1a — New-only Domain Data foundation:** after a fresh #276 Task Pack/Claim, add only source-linked glossary/authority assets plus the minimal task-readiness schema/Rule and exact tests under new F-owned directories; only the schema/Rule pair is selected into v2 BUILD.
 - **F1b — New-only compiler/consumer:** add the four exact compiler/consumer files listed in §8.1.1. The existing Producer edit remains serialized after #219 and separately reviewed.
-- **F2 — B source reconciliation:** after #219/#273/#275 and the relevant #262 Experience contract are complete; one writer edits the overlapping B modules/tests.
+- **F2 — B source reconciliation:** after #208/#209/#219/#273/#275 have completed their exact owned paths and the relevant #262 Experience contract is frozen; one writer edits the remaining overlapping B modules/tests.
 - **F3 — BUILD qualification:** only if the selected-runtime outcome above is chosen and the write set is separately amended; run exact clean-consumer positive/negative tests for every selected asset/route.
 - **F4 — Integration:** E/#264 alone composes shared Host/UI/Woodpecker paths after independent F review.
 
@@ -405,7 +405,7 @@ This ordering avoids overlapping writers and prevents a documentation-only Domai
 2. Establish the minimal glossary and authority map; do not create all directories/assets in bulk.
 3. Add only the schemas and deterministic rules required by a real Workflow consumer. Each schema/rule must have a positive, negative, boundary and recovery fixture.
 4. Define the eight Workflow assets and map each state/transition to an existing or explicitly missing Business Intent/C Operation/K effect/Host port.
-5. Resolve overlapping writers #219, #261, #262, #273, #274 and #275 before changing their owned source files. #276 stays PLANNED until exact Task Pack, native dependencies, accepted CAS Claim and JIT branch are verified.
+5. Resolve overlapping writers #208, #209, #219, #261, #262, #273, #274 and #275 before changing their owned source files. #276 stays PLANNED until exact Task Pack, native dependencies, accepted CAS Claim and JIT branch are verified.
 6. Reconcile the selected B source closure: no deep import into private package internals without an explicit contract; no assumption that sibling files are bundled; no generic SDK change without a reproducible clean-consumer gap.
 7. Add tests in the exact F write set; syntax preflight first; then scoped Node24 tests, typecheck/build and the approved Woodpecker profile.
 8. Independent exact-SHA review; only then may #260 refresh/freeze the final DAG and #264 perform the sole shared integration.
