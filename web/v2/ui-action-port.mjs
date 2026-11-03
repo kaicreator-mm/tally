@@ -36,7 +36,7 @@ export function businessIntentForUiAction(kind){
   return BUSINESS_INTENT_BY_KIND[kind];
 }
 
-const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,})\b/;
+const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const denied=(reason)=>({connected:false,ok:false,status:'DENIED',reason});
 const qualified=(snapshot,repository,versionId,sha)=>
@@ -81,7 +81,7 @@ const EXECUTION_STATES=new Set([
 const EXECUTION_ROLES=new Set(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
 const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
-const PROGRESS_SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
+const PROGRESS_SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
 const CANDIDATE_PR=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/[1-9][0-9]*$/;
 function validTaskExecution(execution,repository){
   if(!plain(execution)||Object.keys(execution).sort().join(',')!==

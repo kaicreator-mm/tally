@@ -73,7 +73,9 @@ test('cross-project, malformed Host results and attempted PASS elevation rejecte
   const bad=[{...snapshot(),source:{...source,repository:'evil/repo'}},
     {...snapshot(),source:{...source,currentness:'STALE'}},
     {...snapshot(),actions:[eligible,eligible]},
-    {...snapshot(),actions:[{...eligible,label:'ghp_abcdefghijklmnopqrstuvwxyz'}]}];
+    ...['ghp_abcdefghijklmnopqrstuvwxyz','github_pat_abcdefghijklmnopqrstuvwxyz',
+      'Bearer abcdefghijklmnopqrstuvwxyz'].map(label=>({...snapshot(),
+        actions:[{...eligible,label}]}))];
   for(const x of bad){
     assert.equal((await make({readCurrentActions:async()=>x}).actions()).connected,false);
   }
@@ -147,10 +149,12 @@ test('task execution read keeps missing source UNKNOWN and refuses foreign or un
   const wrongTask=await make({readTaskExecution:async()=>({...executionSnapshot(),
     taskIssue:261})}).taskExecution(260);
   assert.equal(wrongTask.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
-  const secret=await make({readTaskExecution:async()=>({...executionSnapshot(),
-    execution:{...executionSnapshot().execution,
-      progressSummary:'Bearer ghp_abcdefghijklmnopqrstuvwxyz'}})}).taskExecution(260);
-  assert.equal(secret.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  for(const progressSummary of ['Bearer ghp_abcdefghijklmnopqrstuvwxyz',
+    'github_pat_abcdefghijklmnopqrstuvwxyz']){
+    const secret=await make({readTaskExecution:async()=>({...executionSnapshot(),
+      execution:{...executionSnapshot().execution,progressSummary}})}).taskExecution(260);
+    assert.equal(secret.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  }
   const foreignPr=await make({readTaskExecution:async()=>({...executionSnapshot(),
     execution:{...executionSnapshot().execution,
       candidateRef:'https://github.com/evil/repo/pull/300'}})}).taskExecution(260);
