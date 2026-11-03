@@ -14,6 +14,7 @@ const positive=(v,repo,versionId,sha)=>v?.connected===true&&
   v.source?.currentness==='CURRENT'&&v.source?.readback==='VERIFIED'&&
   v.versionId===versionId&&Array.isArray(v.candidates)&&v.candidates.length<=100;
 const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
+const ISOLATED_TEST_PUBLISHER='kaicreator-mm/task-meta-e2e';
 const publisherSet=(repository,extra)=>{
   if(extra!==undefined&&(!Array.isArray(extra)||extra.length>20||
      extra.some(x=>!REPO.test(x))))throw new TypeError('TRUSTED_PUBLISHER_REPOSITORIES_INVALID');
@@ -24,6 +25,8 @@ const validCandidate=(v,repo,publishers)=> {
   const publisher=v?.publisherRepository??ref?.[1]??null;
   const sameIssue=ref&&publisher===ref[1]&&publishers.has(publisher)&&
     (ref[3]!==undefined||publisher===repo);
+  const expectedSourceKind=publisher===ISOLATED_TEST_PUBLISHER?
+    'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT';
   return plain(v)&&ID.test(v.id??'')&&
     Number.isSafeInteger(v.revision)&&v.revision>=1&&
     ['PROPOSED','REVIEWED','ADOPTED','REJECTED'].includes(v.state)&&
@@ -33,7 +36,9 @@ const validCandidate=(v,repo,publishers)=> {
     (v.state!=='ADOPTED'||v.reportQualification==='VERIFIED')&&
     typeof v.eligibleForNextTask==='boolean'&&
     (v.eligibleForNextTask===false||v.state==='ADOPTED'&&v.reportQualification==='VERIFIED')&&
-    (v.sourceKind===undefined||['PUBLIC_ADS_REPORT','ISOLATED_E2E_TEST_ONLY'].includes(v.sourceKind));
+    (v.sourceKind===undefined&&expectedSourceKind==='PUBLIC_ADS_REPORT'||
+      v.sourceKind===expectedSourceKind)&&
+    (expectedSourceKind!=='ISOLATED_E2E_TEST_ONLY'||v.eligibleForNextTask===false);
 };
 export function createUiExperienceHost({repository,versionId,expectedSha,selectedHost,
   trustedPublisherRepositories}={}){
@@ -64,7 +69,8 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       candidates:v.candidates.map(c=>({id:c.id,revision:c.revision,
         title:c.title,state:c.state,reportQualification:c.reportQualification,
         sourceRef:c.sourceRef,publisherRepository:c.publisherRepository??null,
-        sourceKind:c.sourceKind??'PUBLIC_ADS_REPORT',
+        sourceKind:c.publisherRepository===ISOLATED_TEST_PUBLISHER?
+          'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
         eligibleForNextTask:c.eligibleForNextTask}))};
   }
   async function decision(request){
@@ -148,7 +154,9 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       if(!stable)return denied('EXPERIENCE_SOURCE_CHANGED_DURING_USAGE_READ');
       const eligibleIds=new Set(current.candidates.filter(c=>
         c.state==='ADOPTED'&&c.reportQualification==='VERIFIED'&&
-        c.eligibleForNextTask===true).map(c=>c.id));
+        c.eligibleForNextTask===true&&
+        c.publisherRepository!==ISOLATED_TEST_PUBLISHER&&
+        c.sourceKind!=='ISOLATED_E2E_TEST_ONLY').map(c=>c.id));
       if(r?.connected!==true||r.source?.repository!==repository||
          r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
          r.source?.readback!=='VERIFIED'||r.taskIssue!==taskIssue||
@@ -301,9 +309,11 @@ export function createMaintenanceControllerExperienceAdapter({
         return {status:'DENIED',candidateId:request.candidateId,
           sourceSha:expectedSha,reason:'LEARNING_CANDIDATE_STALE_OR_ALREADY_DECIDED',
           taskPass:false,releasePass:false};
-      if(request.decision==='ADOPT'&&candidate.qualification!=='REPORTED_QUALIFIED')
+      if(request.decision==='ADOPT'&&
+         (candidate.qualification!=='REPORTED_QUALIFIED'||
+          publisherRepository===ISOLATED_TEST_PUBLISHER))
         return {status:'DENIED',candidateId:request.candidateId,
-          sourceSha:expectedSha,reason:'UNQUALIFIED_REPORT_CANNOT_BE_ADOPTED',
+          sourceSha:expectedSha,reason:'UNQUALIFIED_OR_TEST_ONLY_REPORT_CANNOT_BE_ADOPTED',
           taskPass:false,releasePass:false};
       const result=await maintenanceController.dispatch(expectedSha,'record-learning',{
         learningId:request.candidateId,

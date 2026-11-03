@@ -560,3 +560,52 @@ test('experience projection rejects forged learning IDs and mismatched report so
     assert.equal(result.reason,'ADS_LEARNING_PROVENANCE_UNQUALIFIED');
   }
 });
+
+test('isolated E2E publisher remains test-only and can never be adopted or reused',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const id='d'.repeat(64);
+  const isolated={
+    id,revision:1,title:'Isolated E2E report',state:'PROPOSED',
+    reportQualification:'VERIFIED',
+    sourceRef:'https://github.com/'+publisherRepository+
+      '/issues/30#issuecomment-6381704609',
+    publisherRepository,sourceKind:'ISOLATED_E2E_TEST_ONLY',
+    eligibleForNextTask:false
+  };
+  let dispatches=0;
+  const hostFor=(item,usage)=>createUiExperienceHost({
+    repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository],
+    selectedHost:{
+      readExperienceCandidates:async()=>({connected:true,source,versionId,
+        candidates:[item]}),
+      dispatchExperienceDecision:async()=>{dispatches++;return {
+        status:'OBSERVED',candidateId:id,sourceSha:sha,decision:'ADOPTED',
+        decisionReceiptRef:'https://github.com/'+repository+
+          '/issues/30#issuecomment-6381704610'
+      };},
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+        taskIssue,...usage})
+    }
+  });
+  const adoption=await hostFor(isolated,{}).decision({...request,
+    candidateId:id,revision:1,decision:'ADOPT'});
+  assert.equal(adoption.status,'DENIED');
+  assert.equal(dispatches,0);
+
+  const applied=await hostFor({...isolated,state:'ADOPTED'},{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(31);
+  assert.equal(applied.connected,false);
+  assert.equal(applied.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
+  for(const mislabeled of [
+    {...isolated,sourceKind:'PUBLIC_ADS_REPORT'},
+    {...isolated,sourceKind:undefined},
+    {...isolated,state:'ADOPTED',eligibleForNextTask:true}
+  ]){
+    const result=await hostFor(mislabeled,{}).candidates();
+    assert.equal(result.connected,false);
+    assert.equal(result.reason,'EXPERIENCE_PROVENANCE_UNQUALIFIED');
+  }
+});
