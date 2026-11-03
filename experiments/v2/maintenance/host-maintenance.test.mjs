@@ -958,3 +958,41 @@ test('concurrent identical learning outcomes reconcile the first CAS write',asyn
   assert.equal(record.phase,'LEARNING_OUTCOME');
   assert.equal(record.outcomeAt!==undefined,true);
 });
+
+test('concurrent learning decisions reconcile identical CAS writes and refuse opposite writes',async()=>{
+  const same=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:same.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const sameHost=host(same);
+  const input=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,...over});
+  const identical=await Promise.all([
+    sameHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'})),
+    sameHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'}))
+  ]);
+  assert.ok(identical.every(result=>result.state==='LEARNING_RECORDED'));
+  assert.deepEqual(identical.map(result=>result.reason).sort(),[
+    'LEARNING_DECISION_ALREADY_RECORDED',
+    'LEARNING_DECISION_RECORDED_IN_HOST_CAS']);
+  const stored=(await same.openStore().then(s=>s.get(
+    `tally:v2:maintenance-learning-decision:${LEARNING_ID}`))).value;
+  assert.equal(stored.phase,'LEARNING_DECISION');
+  assert.equal(stored.decision,'ADOPTED');
+
+  const opposite=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:opposite.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const oppositeHost=host(opposite);
+  const competing=await Promise.all([
+    oppositeHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'})),
+    oppositeHost.hostRecordTaskLearningOutcome(input({decision:'REJECTED'}))
+  ]);
+  assert.equal(competing.filter(result=>result.state==='LEARNING_RECORDED').length,1);
+  assert.equal(competing.filter(result=>result.reason==='LEARNING_DECISION_MISMATCH').length,1);
+  const winner=(await opposite.openStore().then(s=>s.get(
+    `tally:v2:maintenance-learning-decision:${LEARNING_ID}`))).value;
+  assert.equal(winner.phase,'LEARNING_DECISION');
+  assert.ok(['ADOPTED','REJECTED'].includes(winner.decision));
+});

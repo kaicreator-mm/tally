@@ -482,46 +482,67 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
       if(outcome===undefined){
-        if(existingDecision?.value?.phase==='LEARNING_DECISION'){
-          if(existingDecision.value.decision===input.decision)
-            return Object.freeze({...flags,state:'LEARNING_RECORDED',
-              reason:'LEARNING_DECISION_ALREADY_RECORDED',issueRef:ISSUE_REF,
-              sourceSha:input.sourceSha,learningId:input.learningId,
-              decision:input.decision,claimAccepted:true,admitted:true,
-              replayFixture:false,githubEffect:'NOT_RUN',
-              provenance:suggestion.provenance,
-              currentness:currentnessOf(suggestion),
-              currentnessReason:suggestion.currentnessReason??null,
-              qualification:suggestion.qualification,...NOT_REUSED,
-              measuredEffect:'NOT_MEASURED',noAgentRanking:true,
-              qualityGainClaimed:false});
-          return denied(input,'LEARNING_DECISION_MISMATCH');
-        }
-        try{
-          opened=await store(openStore,registryPath);
-          await opened.put(`tally:v2:maintenance-learning-decision:${input.learningId}`,
-            Object.freeze({phase:'LEARNING_DECISION',issueRef:ISSUE_REF,
-              sourceSha:input.sourceSha,learningId:input.learningId,
-              decision:input.decision,decidedAt:new Date().toISOString(),
-              provenance:suggestion.provenance,
-              currentness:currentnessOf(suggestion),
-              currentnessReason:suggestion.currentnessReason??null,
-              qualification:suggestion.qualification,...NOT_REUSED,
-              noAgentRanking:true,qualityGainClaimed:false,authorized:false,
-              taskPass:false,releasePass:false}),{mustBeAbsent:true});
-        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-        finally{if(opened)await opened.close();}
-        return Object.freeze({...flags,state:'LEARNING_RECORDED',
-          reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',issueRef:ISSUE_REF,
-          sourceSha:input.sourceSha,learningId:input.learningId,
-          decision:input.decision,claimAccepted:true,admitted:true,
-          replayFixture:false,githubEffect:'NOT_RUN',
+        const decisionFacts=Object.freeze({phase:'LEARNING_DECISION',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          learningId:input.learningId,decision:input.decision,
           provenance:suggestion.provenance,
           currentness:currentnessOf(suggestion),
           currentnessReason:suggestion.currentnessReason??null,
           qualification:suggestion.qualification,...NOT_REUSED,
-          measuredEffect:'NOT_MEASURED',noAgentRanking:true,
+          noAgentRanking:true,qualityGainClaimed:false,authorized:false,
+          taskPass:false,releasePass:false});
+        const sameDecision=record=>{
+          if(record?.phase!=='LEARNING_DECISION')return false;
+          const comparable=Object.fromEntries(Object.keys(decisionFacts).map(key=>{
+            if(key==='currentness'&&record[key]===undefined)
+              return [key,currentnessOf(suggestion)];
+            if(key==='currentnessReason'&&record[key]===undefined)
+              return [key,suggestion.currentnessReason??null];
+            return [key,record[key]];
+          }));
+          return sha256(comparable)===sha256(decisionFacts);
+        };
+        const decisionReceipt=(record,reason)=>Object.freeze({...flags,
+          state:'LEARNING_RECORDED',reason,issueRef:ISSUE_REF,
+          sourceSha:record.sourceSha,learningId:record.learningId,
+          decision:record.decision,claimAccepted:true,admitted:true,
+          replayFixture:false,githubEffect:'NOT_RUN',
+          provenance:record.provenance??suggestion.provenance,
+          currentness:record.currentness??currentnessOf(suggestion),
+          currentnessReason:record.currentnessReason??suggestion.currentnessReason??null,
+          qualification:record.qualification??suggestion.qualification,
+          ...NOT_REUSED,measuredEffect:'NOT_MEASURED',noAgentRanking:true,
           qualityGainClaimed:false});
+        const decisionKey=`tally:v2:maintenance-learning-decision:${input.learningId}`;
+        if(existingDecision?.value?.phase==='LEARNING_DECISION'){
+          if(sameDecision(existingDecision.value))
+            return decisionReceipt(existingDecision.value,'LEARNING_DECISION_ALREADY_RECORDED');
+          return denied(input,existingDecision.value.decision===input.decision?
+            'LEARNING_DECISION_RECORD_MISMATCH':'LEARNING_DECISION_MISMATCH');
+        }
+        const decisionRecord=Object.freeze({...decisionFacts,
+          decidedAt:new Date().toISOString()});
+        try{
+          opened=await store(openStore,registryPath);
+          await opened.put(decisionKey,decisionRecord,{mustBeAbsent:true});
+        }catch(error){
+          if(error?.code!=='HOST_CAS_CONFLICT')
+            return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+          let raced=null;
+          try{
+            opened=await store(openStore,registryPath);
+            raced=await opened.get(decisionKey);
+          }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+          finally{if(opened){await opened.close();opened=null;}}
+          if(raced?.value?.phase==='LEARNING_DECISION'){
+            if(sameDecision(raced.value))
+              return decisionReceipt(raced.value,'LEARNING_DECISION_ALREADY_RECORDED');
+            return denied(input,raced.value.decision===input.decision?
+              'LEARNING_DECISION_RECORD_MISMATCH':'LEARNING_DECISION_MISMATCH');
+          }
+          return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+        }finally{if(opened)await opened.close();}
+        return decisionReceipt(decisionRecord,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
       }
       if(existingDecision?.value?.phase!=='LEARNING_DECISION')
         return denied(input,'LEARNING_DECISION_REQUIRED');
