@@ -74,6 +74,27 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 
 ## 3. Package 结构、初始化与运行时版本
 
+### 3.1 不同版本坐标：ABI、SDK、应用与运行时
+
+以下版本号属于不同坐标轴，不能相互替换：
+
+| 坐标 | 当前值 | 含义 |
+|---|---|---|
+| Tally 应用 | `v2` | Engineering Domain App 的产品/版本线 |
+| DomainHarness 发布源码 | `v0.10.3` | 不可变 Git tag，`061376f4a023070f215f9feffad5c24d96d503cb` |
+| Business Package ABI | `v08-business-abi/1` | V8 Qualified Package 中 Business 角色的 ABI 标识，不是 Tally v0.8，也不是 DH SDK v0.8 |
+| BUILD / Runtime Profile | V10 | `V10_TARGET_PROFILE`、`buildV10App()`、`activateV10App()` 所属的构建/激活契约 |
+| 实际安装 Host | 必须单独 pin | 由选定 Host 的精确源码、打包产物、依赖闭包和运行回执证明 |
+
+源码证据：
+- DH `packages/domain-harness/src/public-v8/contracts.ts` 明确将 `v08-business-abi/1` 列入 `V8_QUALIFIED_ABI`；它表达的是 Business Package ABI 代际。
+- Tally `experiments/v2/selected-business-build/producer.mjs` 同时导入 `V10_TARGET_PROFILE` / `buildV10App`，并断言 Tally B 的 `ABI_VERSION === 'v08-business-abi/1'`。因此在该 BUILD 路径中，V10 构建配置与 V8 Business ABI 是并存的，不应机械改名为 `v010-business-abi/1`。
+- 这不代表 Tally 已完成 DH v0.10.3 的运行时升级。B README 和 `src/index.mjs` 的历史说明仍 pin v0.10.2；`run-clean.sh` 默认期望 DH SHA `cee14399d9d0af4e20e34b9111861b16a465b690`，仅 `T06M_LOCAL` / `T06N_CONCURRENT` 路径期望 v0.10.3 SHA `061376f4a023070f215f9feffad5c24d96d503cb`；Guided Intake README 仍声明部署 K/BUILD/Host pin v0.10.2。Tally #271 的 Host 预检也没有证明当前已安装 v0.10.3 Runtime。
+- DH v0.10.3 是 Git-only 源码 tag；包清单中的历史 `0.10.2-rc.0` 字符串不等于 Git tag，也不能据此推导存在 npm `0.10.3` 包。应使用精确 tag 源码和实际 pack/consumer 证据，不得混装或伪造 semver。
+
+**结论**：保留 `v08-business-abi/1`，除非未来经独立 Product/L2 决策定义了新的 Business ABI。当前真正的 P0 是把 Tally v2 的 DH v0.10.3 BUILD、Runtime、Host 和 clean-consumer 资格链补齐，而不是重命名 ABI 字符串。
+
+
 建议文件组织为 `domain/{glossary,authority,schemas,rules,knowledge,patterns,recipes,templates,skills,workflows,tool-policies,examples,validation}/` 与 `src/{domain-model,contexts,policy}/`、`test/{contracts,workflows,critical-journeys}/`。**这仅是源码组织约定，不是已验证的 DomainHarness 自动加载目录规范。**
 
 B Package 初始化、业务首次进入流程、Host 初始化是三种不同问题：
