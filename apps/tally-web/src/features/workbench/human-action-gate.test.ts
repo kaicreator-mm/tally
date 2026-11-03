@@ -92,7 +92,7 @@ test('malformed source SHA and absent action catalog fail closed',()=>{
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:undefined},work).enabled,false);
 });
 
- 
+
 test('unsafe numeric Task identifiers cannot alias a different Host issue number',()=>{
   const huge={...work,taskId:'9007199254740993',hostActionId:'aliased-action',
     hostActionRevision:1,hostActionKind:'REVIEW_REPAIR'};
