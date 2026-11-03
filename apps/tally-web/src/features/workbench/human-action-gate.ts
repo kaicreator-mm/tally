@@ -38,6 +38,9 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   if(!Array.isArray(catalog.actions)||
      workItem.taskId===null||!/^\d+$/.test(workItem.taskId))
     return deny('NO_HOST_ACTION_FOR_ITEM');
+  const taskIssue=Number(workItem.taskId);
+  if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
+    return deny('NO_HOST_ACTION_FOR_ITEM');
   const expectedKind=hostKindFor[workItem.kind];
   if(!expectedKind||!workItem.hostActionId||
      !Number.isSafeInteger(workItem.hostActionRevision)||
@@ -45,7 +48,7 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      workItem.hostActionKind!==expectedKind)
     return deny('HOST_ACTION_IDENTITY_NOT_BOUND');
   const matching=catalog.actions.filter(a=>
-    a.taskIssue===Number(workItem.taskId)&&a.state==='ELIGIBLE'&&
+    a.taskIssue===taskIssue&&a.state==='ELIGIBLE'&&
     a.id===workItem.hostActionId&&
     a.revision===workItem.hostActionRevision&&
     a.kind===expectedKind);

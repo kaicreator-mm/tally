@@ -91,3 +91,12 @@ test('malformed source SHA and absent action catalog fail closed',()=>{
     work).enabled,false);
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:undefined},work).enabled,false);
 });
+
+ 
+test('unsafe numeric Task identifiers cannot alias a different Host issue number',()=>{
+  const huge={...work,taskId:'9007199254740993',hostActionId:'aliased-action',
+    hostActionRevision:1,hostActionKind:'REVIEW_REPAIR'};
+  const c={...catalog,actions:[{id:'aliased-action',kind:'REVIEW_REPAIR',
+    revision:1,taskIssue:9007199254740992,state:'ELIGIBLE' as const,label:'Review'}]};
+  assert.equal(workbenchActionGate(inbox,c,huge).enabled,false);
+});
