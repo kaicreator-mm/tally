@@ -58,7 +58,7 @@ test('empty, missing or malformed project/version scope identifiers fail closed'
   const missingRepositorySnapshot={...inbox,
     source:{...source,repository:undefined}} as unknown as WorkbenchSnapshot;
   const missingRepositoryCatalog={...catalog,
-    source:{...source,repository:undefined}};
+    source:{...source,repository:undefined}} as unknown as typeof catalog;
   const missingProject={...work,projectId:undefined} as unknown as WorkAction;
   assert.equal(workbenchActionGate(missingRepositorySnapshot,
     missingRepositoryCatalog,missingProject).enabled,false);
@@ -71,8 +71,10 @@ test('empty, missing or malformed project/version scope identifiers fail closed'
     {...catalog,versionId:'version/v2/extra'},
     {...work,versionId:'version/v2/extra'}).enabled,false);
   const missingVersion={...work,versionId:undefined} as unknown as WorkAction;
+  const missingVersionCatalog={...catalog,versionId:undefined}
+    as unknown as typeof catalog;
   assert.equal(workbenchActionGate(inbox,
-    {...catalog,versionId:undefined},missingVersion).enabled,false);
+    missingVersionCatalog,missingVersion).enabled,false);
 });
 
 test('native blocker and unassigned approval never become fake permitted action',()=>{
