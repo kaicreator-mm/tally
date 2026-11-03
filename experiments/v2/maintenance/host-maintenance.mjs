@@ -9,7 +9,9 @@
  * trusts caller authority. The prior release is an immutable reported
  * identity only — it is never rewritten. Task Learning uses existing public
  * ADS reports with explicit provenance, an explicit use/reject decision and a
- * later independent outcome; quality gain is never inferred and Agents are
+ * later independent outcome; the observation set is projected as a whole, so
+ * a projector-defined same-identity report CONFLICT refuses every suggestion
+ * in it. Quality gain is never inferred and Agents are
  * never ranked. A REJECT is the explicit decline of observed evidence: it is
  * recordable while the suggestion is bound to a legitimately observed report
  * identity even when the source is STALE/UNKNOWN, it records the exact
@@ -21,7 +23,8 @@
  * duplicate Issue.
  */
 import {createHash} from 'node:crypto';
-import {projectReport,STATES} from '../../../packages/tally-github-c/src/report-projection.mjs';
+import {projectReport,projectReportSet,STATES}
+  from '../../../packages/tally-github-c/src/report-projection.mjs';
 
 const OWNER='kaicreator-mm',REPO='tally',ISSUE=219;
 const ISSUE_REF=`https://github.com/${OWNER}/${REPO}/issues/${ISSUE}`;
@@ -199,19 +202,28 @@ export async function recordMaintenanceCandidate({openStore,registryPath,sourceS
 /**
  * J08c provenance ledger: derive Task Learning suggestions ONLY from existing
  * public ADS report observations already collected by the native C reader.
- * Provenance keeps the exact report identity; qualification REPORTED_QUALIFIED
- * requires a CURRENT report with a QUALIFIED verifier — everything else stays
- * UNKNOWN, while currentness/currentnessReason keep the exact observed
- * source/currentness result (STALE/UNKNOWN/PARTIAL/CURRENT) for the explicit
- * use/reject decision. No quality gain and no Agent ranking can enter the
- * ledger.
+ * The whole observation set is projected together first: the shared projector
+ * defines the same logical report identity (repository, issue, namespace,
+ * reportId, revision, kind) with a divergent native digest/source SHA/comment
+ * ID as a CONFLICT, and such a set is refused in full — every conflicting row
+ * alone still looks legitimately provenance-bound, so only the set-level
+ * check can catch the pair. Provenance keeps the exact report identity;
+ * qualification REPORTED_QUALIFIED requires a CURRENT report with a QUALIFIED
+ * verifier — everything else stays UNKNOWN, while currentness/currentnessReason
+ * keep the exact observed source/currentness result (STALE/UNKNOWN/PARTIAL/
+ * CURRENT) for the explicit use/reject decision. No quality gain and no Agent
+ * ranking can enter the ledger.
  */
-export function learningSuggestionsFromReports(observations){
-  if(!Array.isArray(observations)||observations.length>100)return null;
+const projectLearningSet=observations=>{
+  if(!Array.isArray(observations)||observations.length>100)
+    return {status:'INVALID',suggestions:null};
+  if(projectReportSet(observations).status===STATES.CONFLICT)
+    return {status:'CONFLICT',suggestions:null};
   const suggestions=[];
   for(const observation of observations){
     const row=projectReport(observation);
-    if(row.status===STATES.INVALID||row.status===STATES.UNSUPPORTED)return null;
+    if(row.status===STATES.INVALID||row.status===STATES.UNSUPPORTED)
+      return {status:row.status,suggestions:null};
     const data=observation?.envelope?.data;
     const taskIssueRef=ISSUE_URL.test(data?.subject?.task_ref??'')?
       data.subject.task_ref:null;
@@ -234,7 +246,10 @@ export function learningSuggestionsFromReports(observations){
         publicationRef:`https://github.com/${row.source.repository}/issues/${row.source.issueNumber}#issuecomment-${row.source.commentId}`}):null,
       measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false}));
   }
-  return Object.freeze(suggestions);
+  return {status:'READY',suggestions:Object.freeze(suggestions)};
+};
+export function learningSuggestionsFromReports(observations){
+  return projectLearningSet(observations).suggestions;
 }
 
 /**
@@ -250,8 +265,12 @@ export async function observeLearningSuggestions({openStore,registryPath,sourceS
   if(typeof openStore!=='function'||typeof registryPath!=='string'||
     !SHA.test(sourceSha??'')||!ISO(observedAt??''))
     return unqualified('MAINTENANCE_INPUT_INVALID');
-  const suggestions=learningSuggestionsFromReports(observations);
-  if(suggestions===null)return unqualified('LEARNING_PROVENANCE_UNVERIFIED');
+  const projected=projectLearningSet(observations);
+  if(projected.status==='CONFLICT')
+    return unqualified('LEARNING_REPORT_SET_CONFLICT');
+  if(projected.suggestions===null)
+    return unqualified('LEARNING_PROVENANCE_UNVERIFIED');
+  const suggestions=projected.suggestions;
   let opened,existing;
   try{
     opened=await store(openStore,registryPath);
@@ -553,12 +572,14 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         }catch(error){
           if(error?.code!=='HOST_CAS_CONFLICT')
             return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
-          let raced=null;
+          // Re-read the raced record through its own handle; the writer stays
+          // owned by the outer finally so a race never leaks a connection.
+          let raced=null,reader=null;
           try{
-            opened=await store(openStore,registryPath);
-            raced=await opened.get(decisionKey);
+            reader=await store(openStore,registryPath);
+            raced=await reader.get(decisionKey);
           }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-          finally{if(opened){await opened.close();opened=null;}}
+          finally{if(reader)await reader.close();}
           if(raced?.value?.phase==='LEARNING_DECISION'){
             if(sameDecision(raced.value))
               return decisionReceipt(raced.value,'LEARNING_DECISION_ALREADY_RECORDED');
@@ -614,12 +635,14 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }catch(error){
         if(error?.code!=='HOST_CAS_CONFLICT')
           return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
-        let raced=null;
+        // Re-read the raced record through its own handle; the writer stays
+        // owned by the outer finally so a race never leaks a connection.
+        let raced=null,reader=null;
         try{
-          opened=await store(openStore,registryPath);
-          raced=await opened.get(outcomeKey);
+          reader=await store(openStore,registryPath);
+          raced=await reader.get(outcomeKey);
         }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-        finally{if(opened){await opened.close();opened=null;}}
+        finally{if(reader)await reader.close();}
         return sameOutcome(raced?.value)?
           outcomeReceipt(raced.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
           denied(input,'LEARNING_OUTCOME_MISMATCH');

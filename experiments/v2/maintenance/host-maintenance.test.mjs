@@ -190,6 +190,58 @@ test('learning provenance derives from existing public ADS reports only',()=>{
     assert.equal(learningSuggestionsFromReports(bad),null,'invalid observation set refuses');
 });
 
+test('conflicting report identities in one observation set fail closed before the ledger',async()=>{
+  // Same logical report identity (repository, issue, namespace, reportId,
+  // revision, kind) observed on two different comments with divergent native
+  // digests: each row alone projects and provenance-binds legitimately, so
+  // only the shared projector's set-level CONFLICT catches the pair.
+  const secondComment=summaryObservation({native:{
+    ...summaryObservation().native,commentId:6540000099,
+    dataDigest:'f'.repeat(64)}});
+  assert.equal(learningSuggestionsFromReports(
+    [summaryObservation(),secondComment]),null,
+    'same report identity on two comments must refuse the set');
+  const movedSource=summaryObservation({native:{
+    ...summaryObservation().native,sourceSha:'b'.repeat(40)}});
+  assert.equal(learningSuggestionsFromReports(
+    [summaryObservation(),movedSource]),null,
+    'a divergent source SHA must refuse the set');
+  // An exact duplicate observation is a replay, not a conflict.
+  assert.equal(learningSuggestionsFromReports(
+    [summaryObservation(),summaryObservation()]).length,2);
+  // A conflicting pair poisons the whole observation set even alongside an
+  // otherwise valid unrelated report.
+  assert.equal(learningSuggestionsFromReports(
+    [summaryObservation(),p0Observation('rep-unrelated',6540000299),
+      secondComment]),null);
+  // The Host refuses to observe the conflicting set, leaves no ledger, and no
+  // conflicting learningId can then reach any decision — above all no ADOPT.
+  const ctx=await reviewedFrozen();
+  const refused=await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation(),secondComment],
+    observedAt:'2026-11-04T09:00:00.000Z'});
+  assert.equal(refused.state,'NOT_RECORDED');
+  assert.equal(refused.reason,'LEARNING_REPORT_SET_CONFLICT');
+  const cas=await ctx.openStore();
+  assert.equal(await cas.get(MAINTENANCE_LEARNING_KEY),null,
+    'conflicting observation set must never enter the Host CAS ledger');
+  const h=host(ctx);
+  for(const observation of [summaryObservation(),secondComment]){
+    const learningId=sha256HexOf(['rep-1',1,
+      observation.native.commentId,'EXECUTION_SUMMARY']);
+    for(const decision of ['ADOPTED','REJECTED'])
+      assert.equal((await h.hostRecordTaskLearningOutcome({
+        issueNumber:219,sourceRef:__test.ISSUE_REF,sourceSha:sha,
+        learningId,decision})).reason,'LEARNING_PROVENANCE_NOT_VERIFIED',
+        decision+' of a conflicting report identity must be refused');
+    assert.equal(await cas.get(
+      `tally:v2:maintenance-learning-decision:${learningId}`),null,
+      'no decision record may exist for a conflicting report identity');
+  }
+  await cas.close();
+});
+
 test('learning decision and later independent outcome are ledger-gated and idempotent',async()=>{
   const ctx=await reviewedFrozen();
   const unproven=await observeLearningSuggestions({openStore:ctx.openStore,
@@ -1029,6 +1081,63 @@ test('concurrent learning decisions reconcile identical CAS writes and refuse op
     `tally:v2:maintenance-learning-decision:${LEARNING_ID}`))).value;
   assert.equal(winner.phase,'LEARNING_DECISION');
   assert.ok(['ADOPTED','REJECTED'].includes(winner.decision));
+});
+
+// Every openStore() call opens exactly one handle; the CAS-conflict re-read
+// must never orphan the writer connection it interrupted. memoryStore.close
+// is a no-op, so leak detection needs this counting wrapper.
+const countingMemoryStore=()=>{const m=memoryStore();let opened=0,closed=0;
+  const openStore=async()=>{opened++;
+    return {get:m.store.get,put:m.store.put,
+      close:async()=>{closed++;}};};
+  return {m,openStore,handleStats:()=>({opened,closed,active:opened-closed})};};
+
+test('decision and outcome CAS races reconcile without leaking store handles',async()=>{
+  const seed=async ctx=>{
+    const frozen=await recordMaintenanceCandidate(
+      {...reviewArgs({openStore:ctx.openStore})});
+    assert.equal(frozen.state,'RECORDED_COMPLETE');
+    const observed=await observeLearningSuggestions({openStore:ctx.openStore,
+      registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+      observations:[summaryObservation()],observedAt:'2026-11-04T09:00:00.000Z'});
+    assert.equal(observed.state,'RECORDED_COMPLETE');};
+  const input=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,...over});
+  // Decision race: the losing writer re-reads the raced record through a
+  // second handle; both handles must be closed before the call returns.
+  const decisionCtx=countingMemoryStore();
+  await seed(decisionCtx);
+  const decisionHost=host({openStore:decisionCtx.openStore});
+  const racedDecisions=await Promise.all([
+    decisionHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'})),
+    decisionHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'}))]);
+  assert.ok(racedDecisions.every(r=>r.state==='LEARNING_RECORDED'));
+  assert.deepEqual(racedDecisions.map(r=>r.reason).sort(),[
+    'LEARNING_DECISION_ALREADY_RECORDED','LEARNING_DECISION_RECORDED_IN_HOST_CAS'],
+    'the race must exercise the CAS-conflict reconciliation path');
+  assert.equal(decisionCtx.handleStats().active,0,
+    'decision CAS race leaked an open store handle');
+  assert.equal(decisionCtx.handleStats().closed,decisionCtx.handleStats().opened,
+    'every opened store handle must be closed');
+  // Outcome race: the same reconciliation on the outcome CAS.
+  const outcomeCtx=countingMemoryStore();
+  await seed(outcomeCtx);
+  const outcomeHost=host({openStore:outcomeCtx.openStore});
+  assert.equal((await outcomeHost.hostRecordTaskLearningOutcome(
+    input({decision:'ADOPTED'}))).reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+  const outcome={attested:false,observedAt:'2026-11-04T10:00:00.000Z',
+    note:'independent follow-up observed no measurable change'};
+  const racedOutcomes=await Promise.all([
+    outcomeHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome})),
+    outcomeHost.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome}))]);
+  assert.ok(racedOutcomes.every(r=>r.state==='LEARNING_RECORDED'));
+  assert.deepEqual(racedOutcomes.map(r=>r.reason).sort(),[
+    'LEARNING_OUTCOME_ALREADY_RECORDED','LEARNING_OUTCOME_RECORDED_IN_HOST_CAS'],
+    'the race must exercise the CAS-conflict reconciliation path');
+  assert.equal(outcomeCtx.handleStats().active,0,
+    'outcome CAS race leaked an open store handle');
+  assert.equal(outcomeCtx.handleStats().closed,outcomeCtx.handleStats().opened,
+    'every opened store handle must be closed');
 });
 
 test('learning decision requires one source-matched complete currentness-qualified ledger row',async()=>{
