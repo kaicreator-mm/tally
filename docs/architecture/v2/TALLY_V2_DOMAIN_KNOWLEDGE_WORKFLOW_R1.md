@@ -323,6 +323,45 @@ Every Workflow and promoted Rule must be tested through the exact layers it clai
 Before any Woodpecker CI:
 `node apps/tally-web/scripts/syntax-preflight.mjs` → `git diff --check` → scoped Node24 tests/typecheck/build → Woodpecker. The current docs-only audit does not run CI.
 
+## 8. Source write-set overlap and BUILD-closure decision
+
+The current Task bodies show that F is a **late serialized source join**, not a parallel writer for every existing B file.
+
+| Task | Exact overlap with #276 candidate write set | Required ordering / boundary |
+|---|---|---|
+| #219 Maintenance/Learning | `src/index.mjs`, `test/business-policy.test.mjs`; #219 also owns maintenance C/Host/controller/Producer paths outside F | #219 must finish its B policy edits first; F reconciles the final source rather than racing it |
+| #273 Governed Replan | `src/index.mjs`, `test/business-policy.test.mjs`, `src/planning.mjs` | #273 is after #219; F must consume its final Replan contract/source and not rewrite it concurrently |
+| #275 Attempt read model | `src/attempts.mjs`, `test/attempts.test.mjs` | #275 owns initial creation; F may reconcile only after #275 completes and the Attempt source contract is frozen |
+| #262 Experience | No current exact B path in its admitted write set; it reserves Experience/feedback integration semantics and allows existing learning/Casebook B files only by separate amendment | F must align with the delivered ExperienceRef/Qualification contract; no opportunistic Casebook/feedback edit |
+| #261 Action bridge | UI/Host action paths, not F's current B write set | Preserve B Intent and K/Host action contract; do not edit #261-owned paths |
+| #274 ADS feedback Publisher | C/native-C/Host Publisher paths, not F's current B write set | Align ExperienceUseFeedback vocabulary and read/effect split; do not edit C paths |
+| #264 Final integration | Shared Host/UI/entrypoint/Woodpecker hotspots | E remains the sole shared integration writer and waits for F |
+
+### 8.1 Required decision: how Domain Data enters the selected BUILD
+
+At the pinned source baseline:
+- V10 Producer reads the single `TALLY_BUSINESS_SOURCE` file and passes those bytes as the selected B `moduleSource`.
+- `src/index.mjs` has zero imports.
+- B `package.json` exposes only its root entrypoint and the package is private.
+- `domain/**` assets and sibling source modules are therefore **not proven to enter the sealed selected B** merely because they exist in the repository.
+
+Before freezing the final #276 write set, choose and evidence one of these explicit outcomes:
+
+1. **Authoring-time/reference-only Domain Data for v2:** assets are versioned and validated by tests/Producer-side tooling but are not claimed as selected Runtime inputs. Existing B root remains the selected source. State clearly which semantics remain compiled/duplicated in `index.mjs`.
+2. **Selected Runtime Domain Data for v2:** the BUILD must deliberately include/inline/compile the required assets into the selected B module and bind the result to a digest. This likely requires an explicit #276 write-set amendment for Producer/BUILD manifest/clean-consumer tests and possibly CI profile. No such path is currently admitted by #276; do not modify it under the existing write set.
+
+A Host controller reading `domain/**` directly is not an equivalent solution for B-owned business semantics: it reintroduces the existing Host deep-import/source-drift risk and does not prove selected B/K execution. Do not silently add `fs` reads or a dynamic file loader to the Business ABI.
+
+### 8.2 Recommended staged execution (inside the admitted F task)
+
+- **F0 — Design and inventory:** completed as docs-only analysis in PR #277; not source admission.
+- **F1 — Disjoint Domain Data assets:** after a fresh #276 Task Pack/Claim, add only the minimal glossary/authority/schema/rule/workflow assets and deterministic tests under F's new directories.
+- **F2 — B source reconciliation:** after #219/#273/#275 and the relevant #262 Experience contract are complete; one writer edits the overlapping B modules/tests.
+- **F3 — BUILD qualification:** only if the selected-runtime outcome above is chosen and the write set is separately amended; run exact clean-consumer positive/negative tests for every selected asset/route.
+- **F4 — Integration:** E/#264 alone composes shared Host/UI/Woodpecker paths after independent F review.
+
+This ordering avoids overlapping writers and prevents a documentation-only Domain Data tree from being mistaken for selected executable Business logic.
+
 ## 8. Implementation sequence for Lane F
 
 1. Complete the source-to-callsite/BUILD closure inventory and preserve the module disposition table above.
