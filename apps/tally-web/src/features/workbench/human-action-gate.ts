@@ -22,8 +22,8 @@ export interface HumanActionGate{
 const deny=(reason:string):HumanActionGate=>({enabled:false,reason,
   actionId:null,revision:null,label:'操作不可用'});
 // A matching Task/category is not a Host-issued action identity.
-const REPOSITORY_REF=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,38}\\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
-const VERSION_REF=/^version\\/[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
+const REPOSITORY_REF=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,38}[/][A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
+const VERSION_REF=/^version[/][A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 // Project/version identifiers are authority scope labels, not optional
 // display strings. Equality between two empty or malformed values is not
 // evidence that the work item belongs to a canonical current scope.
