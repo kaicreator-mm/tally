@@ -378,7 +378,18 @@ const LEARNING_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
   'MAINTENANCE_HOST_CONFIG_INVALID','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
   'LEARNING_PROVENANCE_NOT_VERIFIED','LEARNING_DECISION_REQUIRED',
   'LEARNING_DECISION_MISMATCH','LEARNING_OUTCOME_MISMATCH',
-  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW']);
+  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW',
+  'LEARNING_OWNER_APPROVAL_NOT_VERIFIED']);
+const validLearningOwnerApproval=(input,approval)=>
+  approval?.state==='OWNER_APPROVAL_VERIFIED'&&
+  approval.reason==='GITHUB_OWNER_APPROVAL_VERIFIED'&&
+  approval.repository==='kaicreator-mm/tally'&&
+  approval.issueNumber===MAINTENANCE_ISSUE&&
+  approval.sourceSha===input.sourceSha&&approval.learningId===input.learningId&&
+  approval.decision==='ADOPTED'&&Number.isSafeInteger(approval.commentId)&&
+  approval.commentId>0&&typeof approval.author==='string'&&
+  /^[A-Za-z0-9-]{1,39}$/.test(approval.author)&&approval.permission==='admin'&&
+  approval.commentUrl===issueRefFor(MAINTENANCE_ISSUE)+'#issuecomment-'+approval.commentId;
 const validLearningOutcome=(input,o)=>{
   if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(MAINTENANCE_ISSUE)||
     o.sourceSha!==input.sourceSha||o.learningId!==input.learningId||
@@ -389,13 +400,16 @@ const validLearningOutcome=(input,o)=>{
     o.replayFixture===false;
   if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&
     o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='NOT_RUN'&&
-    o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED';
+    o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED'&&
+    ['ADOPTED','REJECTED'].includes(o.decision)&&
+    (o.decision!=='ADOPTED'||validLearningOwnerApproval(input,o.ownerApproval));
   if(o.state==='LEARNING_RECORDED')
     return ['LEARNING_DECISION_RECORDED_IN_HOST_CAS',
       'LEARNING_DECISION_ALREADY_RECORDED','LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
       'LEARNING_OUTCOME_ALREADY_RECORDED'].includes(o.reason)&&
     o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='NOT_RUN'&&
     o.replayFixture===false&&['ADOPTED','REJECTED'].includes(o.decision)&&
+    (o.decision!=='ADOPTED'||validLearningOwnerApproval(input,o.ownerApproval))&&
     o.noAgentRanking===true&&o.qualityGainClaimed===false&&
     (o.measuredEffect==='NOT_MEASURED'||o.measuredEffect==='ATTESTED_OUTCOME_ONLY');
   return false;
