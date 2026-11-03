@@ -527,8 +527,13 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       // Only ADOPT requires a per-learning Owner comment. The Host reads it
       // from GitHub through the trusted C port; caller identity/approval data
       // is never accepted. REJECT deliberately does not call this port.
+      // Production outcomes reuse only the CAS-stored receipt below; the
+      // replay fixture keeps no CAS decision row, so a replayed ADOPT outcome
+      // re-observes the same deterministic approval to carry the exact
+      // receipt every ADOPTED output must present at the sealed boundary.
       let ownerApproval;
-      if(input.decision==='ADOPTED'&&outcome===undefined){
+      if(input.decision==='ADOPTED'&&
+        (outcome===undefined||env.TALLY_LOCAL_REPLAY==='1')){
         if(typeof readOwnerApproval!=='function')
           return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
         let observedApproval=null;
