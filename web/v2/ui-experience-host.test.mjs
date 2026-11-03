@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {createUiExperienceHost} from './ui-experience-host.mjs';
 const repository='org/tally',versionId='version/v2',sha='a'.repeat(40);
+const learningIdFor=(reportId,revision,commentId,kind='EXECUTION_SUMMARY')=>
+  createHash('sha256').update(JSON.stringify([reportId,revision,commentId,kind])).digest('hex');
 const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
 const candidate={id:'lesson-1',revision:1,title:'Validated rule',state:'REVIEWED',
   reportQualification:'VERIFIED',sourceRef:'https://github.com/org/tally/issues/52',
@@ -95,12 +98,12 @@ test('dispatch transport failure stays UNKNOWN without automatic repeat',async()
 
 import {createMaintenanceControllerExperienceAdapter} from './ui-experience-host.mjs';
 test('existing maintenance controller adapter preserves ADS provenance and sealed K decision',async()=>{
-  const suggestion={learningId:'f'.repeat(64),
+  const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
     taskIssueRef:'https://github.com/org/tally/issues/52',
-    targetIssueRef:'https://github.com/org/tally/issues/60',
+    targetIssueRef:'https://github.com/org/tally/issues/60',subjectSha:sha,
     qualification:'REPORTED_QUALIFIED',
     provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
-      commentId:1001,issueNumber:60,namespace:'tally',dataDigest:'d'.repeat(64),
+      commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   let decision=null;
@@ -138,12 +141,12 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
   assert.equal(decision,'ADOPTED');
 });
 test('maintenance experience decision refuses post-CAS readback from a moved source',async()=>{
-  const suggestion={learningId:'f'.repeat(64),
+  const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
     taskIssueRef:'https://github.com/org/tally/issues/52',
-    targetIssueRef:'https://github.com/org/tally/issues/60',
+    targetIssueRef:'https://github.com/org/tally/issues/60',subjectSha:sha,
     qualification:'REPORTED_QUALIFIED',
     provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
-      commentId:1001,issueNumber:60,namespace:'tally',dataDigest:'d'.repeat(64),
+      commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   let decision=null,snapshotReads=0,recordCalls=0;
@@ -181,12 +184,12 @@ test('maintenance experience decision refuses post-CAS readback from a moved sou
 });
 
 test('maintenance experience adapter rejects malformed report provenance and foreign scope',async()=>{
-  const suggestion={learningId:'f'.repeat(64),
+  const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
     taskIssueRef:'https://github.com/org/tally/issues/52',
-    targetIssueRef:'https://github.com/org/tally/issues/60',
+    targetIssueRef:'https://github.com/org/tally/issues/60',subjectSha:sha,
     qualification:'REPORTED_QUALIFIED',
     provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
-      commentId:1001,issueNumber:60,namespace:'tally',
+      commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://evil.example/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   const controller={dispatch:async()=>({status:'OK',
@@ -206,14 +209,15 @@ test('real isolated external ADS report stays UNKNOWN and permits REJECT only',a
   const publisherRepository='kaicreator-mm/task-meta-e2e';
   const publicationRef='https://github.com/'+publisherRepository+
     '/issues/9#issuecomment-6381704604';
-  const staleSuggestion={learningId:'a'.repeat(64),
+  const staleSuggestion={learningId:learningIdFor('task-meta:sess_aebeaf3e',1,6381704604),
     taskIssueRef:null,
     targetIssueRef:'https://github.com/'+publisherRepository+'/issues/9',
     subjectSha:'5b7072d78016052b1ea816b2b36322b946ef5c78',
     qualification:'UNKNOWN',
     provenance:{reportId:'task-meta:sess_aebeaf3e',revision:1,
       kind:'EXECUTION_SUMMARY',commentId:6381704604,issueNumber:9,
-      namespace:'task-meta:'+publisherRepository,dataDigest:'e'.repeat(64),
+      namespace:'task-meta:'+publisherRepository,repository:publisherRepository,
+      sourceSha:'5b7072d78016052b1ea816b2b36322b946ef5c78',dataDigest:'e'.repeat(64),
       publicationRef},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   let decision=null,recordCalls=0;
@@ -271,13 +275,14 @@ test('real isolated external ADS report stays UNKNOWN and permits REJECT only',a
 
 test('selected maintenance Host independently refuses ADOPT for UNKNOWN report',async()=>{
   const publisherRepository='kaicreator-mm/task-meta-e2e';
-  const staleSuggestion={learningId:'b'.repeat(64),
+  const staleSuggestion={learningId:learningIdFor('task-meta:unknown',1,6381704604),
     taskIssueRef:null,
     targetIssueRef:'https://github.com/'+publisherRepository+'/issues/9',
-    subjectSha:null,qualification:'UNKNOWN',
+    subjectSha:sha,qualification:'UNKNOWN',
     provenance:{reportId:'task-meta:unknown',revision:1,
       kind:'EXECUTION_SUMMARY',commentId:6381704604,issueNumber:9,
-      namespace:'task-meta:'+publisherRepository,dataDigest:'f'.repeat(64),
+      namespace:'task-meta:'+publisherRepository,repository:publisherRepository,
+      sourceSha:sha,dataDigest:'f'.repeat(64),
       publicationRef:'https://github.com/'+publisherRepository+
         '/issues/9#issuecomment-6381704604'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
@@ -305,12 +310,13 @@ test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
   const publisherRepository='kaicreator-mm/task-meta-e2e';
   const publicationRef='https://github.com/'+publisherRepository+
     '/issues/10#issuecomment-6381704605';
-  const staleSuggestion={learningId:'c'.repeat(64),taskIssueRef:null,
+  const staleSuggestion={learningId:learningIdFor('task-meta:stale',2,6381704605),taskIssueRef:null,
     targetIssueRef:'https://github.com/'+publisherRepository+'/issues/10',
-    subjectSha:null,qualification:'STALE',
+    subjectSha:sha,qualification:'STALE',
     provenance:{reportId:'task-meta:stale',revision:2,
       kind:'EXECUTION_SUMMARY',commentId:6381704605,issueNumber:10,
-      namespace:'task-meta:'+publisherRepository,dataDigest:'c'.repeat(64),
+      namespace:'task-meta:'+publisherRepository,repository:publisherRepository,
+      sourceSha:sha,dataDigest:'c'.repeat(64),
       publicationRef},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
   let decision=null,recordCalls=0;
@@ -363,12 +369,13 @@ test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
 
 test('UNVERIFIED ADS evidence is preserved and permits REJECT but never ADOPT',async()=>{
   const publisherRepository='kaicreator-mm/task-meta-e2e';
-  const suggestion={learningId:'d'.repeat(64),taskIssueRef:null,
+  const suggestion={learningId:learningIdFor('task-meta:unverified',1,6381704606),taskIssueRef:null,
     targetIssueRef:'https://github.com/'+publisherRepository+'/issues/11',
-    subjectSha:null,qualification:'UNVERIFIED',
+    subjectSha:sha,qualification:'UNVERIFIED',
     provenance:{reportId:'task-meta:unverified',revision:1,
       kind:'EXECUTION_SUMMARY',commentId:6381704606,issueNumber:11,
-      namespace:'task-meta:'+publisherRepository,dataDigest:'d'.repeat(64),
+      namespace:'task-meta:'+publisherRepository,repository:publisherRepository,
+      sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/'+publisherRepository+
         '/issues/11#issuecomment-6381704606'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
@@ -519,4 +526,37 @@ test('next-Task usage refuses a candidate set that changes during readback',asyn
   assert.equal(reads,2);
   assert.equal(result.connected,false);
   assert.equal(result.reason,'EXPERIENCE_SOURCE_CHANGED_DURING_USAGE_READ');
+});
+
+ 
+test('experience projection rejects forged learning IDs and mismatched report source bindings',async()=>{
+  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const reportId='task-meta:bound',revision=1,commentId=6381704608;
+  const suggestion={learningId:learningIdFor(reportId,revision,commentId),
+    taskIssueRef:null,targetIssueRef:'https://github.com/'+publisherRepository+'/issues/13',
+    subjectSha:sha,qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId,revision,kind:'EXECUTION_SUMMARY',commentId,issueNumber:13,
+      namespace:'task-meta:'+publisherRepository,repository:publisherRepository,
+      sourceSha:sha,dataDigest:'a'.repeat(64),
+      publicationRef:'https://github.com/'+publisherRepository+
+        '/issues/13#issuecomment-'+commentId},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const read=row=>createMaintenanceControllerExperienceAdapter({
+    maintenanceController:{dispatch:async()=>({status:'OK',
+      reason:'PUBLIC_ADS_REPORTS_OBSERVED'}),
+      snapshot:()=>({status:'OBSERVED',sourceSha:sha,learning:[row]})},
+    repository,versionId,expectedSha:sha,
+    trustedPublisherRepositories:[publisherRepository]
+  }).readExperienceCandidates();
+  assert.equal((await read(suggestion)).connected,true);
+  for(const bad of [
+    {...suggestion,learningId:'0'.repeat(64)},
+    {...suggestion,provenance:{...suggestion.provenance,sourceSha:'b'.repeat(40)}},
+    {...suggestion,provenance:{...suggestion.provenance,repository:'evil/repo'}},
+    {...suggestion,subjectSha:'c'.repeat(40)}
+  ]){
+    const result=await read(bad);
+    assert.equal(result.connected,false);
+    assert.equal(result.reason,'ADS_LEARNING_PROVENANCE_UNQUALIFIED');
+  }
 });

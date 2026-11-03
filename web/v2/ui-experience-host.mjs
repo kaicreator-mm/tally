@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 /** Closeout C/#262: governed Task Learning → next Task Context Pack Host seam.
  * Existing ADS v5 and #221 Business/Kernel own the actual provenance,
  * review, decision and Context Pack mutation; this adapter never grants it.
@@ -175,24 +176,34 @@ function publisherRepositoryFor(namespace,repository){
   const match=/^task-meta:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/.exec(namespace??'');
   return match?.[1]??null;
 }
+function learningIdentity(p){
+  return createHash('sha256').update(JSON.stringify([
+    p.reportId,p.revision,p.commentId,p.kind
+  ])).digest('hex');
+}
 function verifiedSuggestion(row,repository,publishers){
   const p=row?.provenance;
   const publisherRepository=publisherRepositoryFor(p?.namespace,repository);
   const issueUrl=publisherRepository&&Number.isSafeInteger(p?.issueNumber)&&p.issueNumber>0
-    ?`https://github.com/${publisherRepository}/issues/${p.issueNumber}`:null;
+    ?'https://github.com/'+publisherRepository+'/issues/'+p.issueNumber:null;
   const qualification=['REPORTED_QUALIFIED','STALE','UNVERIFIED','UNKNOWN'].includes(row?.qualification);
-  return plain(row)&&/^[a-f0-9]{64}$/.test(row.learningId??'')&&
-    qualification&&publishers.has(publisherRepository)&&
-    (row.taskIssueRef===null||row.taskIssueRef===undefined||
-      issueRef(row.taskIssueRef,publisherRepository))&&
-    row.targetIssueRef===issueUrl&&
-    (row.subjectSha===null||row.subjectSha===undefined||/^[a-f0-9]{40}$/.test(row.subjectSha))&&
-    plain(p)&&typeof p.reportId==='string'&&p.reportId.length>0&&
+  return plain(row)&&plain(p)&&
+    typeof p.reportId==='string'&&p.reportId.length>0&&p.reportId.length<=512&&
     Number.isSafeInteger(p.revision)&&p.revision>0&&
     ['EXECUTION_SUMMARY','EXPERIENCE_USE_FEEDBACK'].includes(p.kind)&&
     Number.isSafeInteger(p.commentId)&&p.commentId>0&&
     Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
-    typeof p.dataDigest==='string'&&/^[a-f0-9]{64}$/.test(p.dataDigest)&&
+    typeof p.namespace==='string'&&p.namespace.length>0&&p.namespace.length<=512&&
+    p.repository===publisherRepository&&
+    /^[a-f0-9]{40}$/.test(p.sourceSha??'')&&p.sourceSha===row.subjectSha&&
+    /^[a-f0-9]{40}$/.test(row.subjectSha??'')&&
+    row.learningId===learningIdentity(p)&&
+    /^[a-f0-9]{64}$/.test(p.dataDigest??'')&&
+    /^[a-f0-9]{64}$/.test(row.learningId??'')&&
+    qualification&&publishers.has(publisherRepository)&&
+    (row.taskIssueRef===null||row.taskIssueRef===undefined||
+      issueRef(row.taskIssueRef,publisherRepository))&&
+    row.targetIssueRef===issueUrl&&
     p.publicationRef===issueUrl+'#issuecomment-'+p.commentId&&
     ['NOT_MEASURED','ATTESTED_OUTCOME_ONLY'].includes(row.measuredEffect)&&
     row.noAgentRanking===true&&row.qualityGainClaimed===false;
