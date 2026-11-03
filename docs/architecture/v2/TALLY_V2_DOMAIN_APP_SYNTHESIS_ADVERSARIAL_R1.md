@@ -146,6 +146,10 @@ B Package 初始化、业务首次进入流程、Host 初始化是三种不同�
 - [DH #1467](https://github.com/kaicreator-mm/domain-harness/issues/1467) 是命名质量调查，不暗示必须重命名。
 - 经验以实际消费者、相同 Exact SHA、预期/实况、最小复现、失败出口和修复证据记录到 [DH #1392](https://github.com/kaicreator-mm/domain-harness/issues/1392)，可复用条目分流 #1465。不能以 Tally 一个项目的业务偏好增加 DH Kernel 硬编码。
 
+### 7.1 经验标识碰撞的实际反例
+
+静态交叉检查 [DH #1465](https://github.com/kaicreator-mm/domain-harness/issues/1465) 评论发现：Tally 经验使用 `DPB-011..DPB-018`，xDownload 另一批经验也曾使用 `DPB-011..DPB-014`。因此先前“稳定经验 ID”的约定没有实现全局唯一。后续 Tally 经验 ID 应采用 `DPB-TALLY-###` 命名空间，以原 GitHub comment URL + 旧 ID 保留历史别名；不可凭无命名空间序号自动关联或晋升 Domain Asset。这是已证实的经验治理问题，优先修复文档/索引，不据此修改 DomainHarness Kernel。
+
 ## 8. 本文件的验收与限制
 
 仅证明设计归纳和源码静态交叉核对；`SOURCE_REVIEW=SELF_ADVERSARIAL`、`INDEPENDENT_REVIEW=NOT_RUN`、`NODE24_TEST=NOT_RUN`、`WOODPECKER=NOT_RUN`、`HOST_E2E=NOT_RUN`、`PACKAGE_RUNTIME_MIGRATION=NOT_PROVEN`、`TASK_PACK_FREEZE=NO`、`MERGE_AUTHORIZED=NO`。
