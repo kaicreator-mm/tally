@@ -331,7 +331,7 @@ The current Task bodies show that F is a **late serialized source join**, not a 
 
 | Task | Exact overlap with #276 candidate write set | Required ordering / boundary |
 |---|---|---|
-| #219 Maintenance/Learning | `src/index.mjs`, `test/business-policy.test.mjs`; #219 also owns maintenance C/Host/controller/Producer paths outside F | #219 must finish its B policy edits first; F reconciles the final source rather than racing it |
+| #219 Maintenance/Learning | `src/index.mjs`, `test/business-policy.test.mjs`, and (under the proposed selected-BUILD amendment) `experiments/v2/selected-business-build/producer.mjs`; #219 also owns maintenance C/Host/controller paths | #219 must finish its B policy and Producer edits first; F reconciles the final source rather than racing it |
 | #273 Governed Replan | `src/index.mjs`, `test/business-policy.test.mjs`, `src/planning.mjs` | #273 is after #219; F must consume its final Replan contract/source and not rewrite it concurrently |
 | #275 Attempt read model | `src/attempts.mjs`, `test/attempts.test.mjs` | #275 owns initial creation; F may reconcile only after #275 completes and the Attempt source contract is frozen |
 | #262 Experience | No current exact B path in its admitted write set; it reserves Experience/feedback integration semantics and allows existing learning/Casebook B files only by separate amendment | F must align with the delivered ExperienceRef/Qualification contract; no opportunistic Casebook/feedback edit |
@@ -350,7 +350,9 @@ At the pinned source baseline:
 Before freezing the final #276 write set, choose and evidence one of these explicit outcomes:
 
 1. **Authoring-time/reference-only Domain Data for v2:** assets are versioned and validated by tests/Producer-side tooling but are not claimed as selected Runtime inputs. Existing B root remains the selected source. State clearly which semantics remain compiled/duplicated in `index.mjs`.
-2. **Selected Runtime Domain Data for v2:** the BUILD must deliberately include/inline/compile the required assets into the selected B module and bind the result to a digest. This likely requires an explicit #276 write-set amendment for Producer/BUILD manifest/clean-consumer tests and possibly CI profile. No such path is currently admitted by #276; do not modify it under the existing write set.
+2. **Selected Runtime Domain Data for v2:** the BUILD must deliberately include/inline/compile the required assets into the selected B module and bind the result to a digest. This is the recommended outcome for core executable schemas/rules/workflow definitions; non-executable Knowledge/Patterns/Recipes/Examples/Skills may remain authoring-only until a real consumer exists.
+
+Issue #276 now records a proposed but not admitted write-set amendment: edit `experiments/v2/selected-business-build/producer.mjs` serially after #219; add `domain-data-compiler.mjs`, `domain-data-compiler.test.mjs`, `consumer-domain-data.mjs` and `consumer-domain-data.test.mjs`. F supplies the deterministic consumer/test entrypoint; E/#264 owns the shared Woodpecker profile. These paths require independent review, exact Task Pack reconciliation and Owner approval before any source Claim.
 
 A Host controller reading `domain/**` directly is not an equivalent solution for B-owned business semantics: it reintroduces the existing Host deep-import/source-drift risk and does not prove selected B/K execution. Do not silently add `fs` reads or a dynamic file loader to the Business ABI.
 
