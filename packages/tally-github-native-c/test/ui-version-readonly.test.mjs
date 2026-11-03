@@ -174,6 +174,95 @@ test('dependency open/closed state drift with unchanged count is rejected',async
   assert.equal(r.reason,'NATIVE_DEPENDENCY_COUNT_DRIFT');
 });
 
+// Scripted client: pages[i] is the i-th full type:task roster enumeration
+// (clamped to the last entry), gets(number,call) is the call-th issues.get
+// for that Issue (call 0 = first read, call 1 = end-of-observation recheck).
+const scriptedNative=(pages,gets,deps={})=>{
+  let enumerations=0;
+  const listForRepo=async()=>({data:pages[Math.min(enumerations,pages.length-1)]});
+  const getCalls=new Map();
+  return {getCalls,
+    rest:{
+      repos:{
+        getBranch:async()=>({data:{commit:{sha}}}),
+        getCommit:async()=>({data:{sha}}),
+      },
+      issues:{
+        get:async({issue_number})=>{
+          const call=getCalls.get(issue_number)??0;
+          getCalls.set(issue_number,call+1);
+          return {data:gets(issue_number,call)};
+        },
+        listForRepo,
+      },
+    },
+    paginate:{iterator:async function*(route,params={}){
+      if(route===listForRepo){
+        yield {data:pages[Math.min(enumerations,pages.length-1)]};
+        enumerations++;
+        return;
+      }
+      if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+        yield {data:deps[params.issue_number]??[]};
+        return;
+      }
+      throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+    }},
+  };
+};
+
+test('Task Issue metadata mutated between the first GET and the nested WorkItem observation is denied',async()=>{
+  for(const changes of [
+    {title:'Task #1 renamed mid-observation'},
+    {updated_at:'2026-11-03T12:00:00Z'},
+    {labels:[{name:'type:task'},{name:'state:claimed'},{name:'priority:P1'}]},
+  ]){
+    let armed=false;
+    const mutatingReader=observed=>{
+      armed=true;
+      return sourceReader(observed);
+    };
+    const r=await readUiNativeVersionFromClient({
+      ...args(scriptedNative(
+        [[issue(1),issue(2)],[issue(1),issue(2)]],
+        (n,call)=>armed&&call>0?issue(n,changes):issue(n))),
+      taskIssueNumbers:[1,2],workItemReader:mutatingReader});
+    assert.deepEqual(r,{connected:false,
+      reason:'NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION'});
+  }
+});
+
+test('Task Issue added or removed between roster enumerations is denied',async()=>{
+  const deny=async pages=>{
+    const r=await readUiNativeVersionFromClient({
+      ...args(scriptedNative(pages,n=>issue(n))),
+      taskIssueNumbers:[1,2],workItemReader:sourceReader});
+    assert.deepEqual(r,{connected:false,
+      reason:'NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION'});
+  };
+  await deny([[issue(1),issue(2)],[issue(1),issue(2),issue(3)]]);
+  await deny([[issue(1),issue(2)],[issue(1)]]);
+  await deny([[issue(1),issue(2)],
+    [issue(1),issue(2,{labels:[{name:'state:ready'},{name:'priority:P1'}]})]]);
+});
+
+test('stable unchanged roster still returns connected with exact metadata',async()=>{
+  const {getCalls,...octo}=scriptedNative(
+    [[issue(1),issue(2)],[issue(1),issue(2)]],n=>issue(n));
+  const r=await readUiNativeVersionFromClient({
+    ...args(octo),taskIssueNumbers:[1,2],workItemReader:sourceReader});
+  assert.equal(r.connected,true);
+  assert.equal(r.source.sourceSha,sha);
+  assert.deepEqual(r.tasks.map(t=>[t.id,t.title,t.updatedAt,t.issueState,
+    t.status,t.severity,t.claimState,t.dependencyState]),
+    [['1','Task #1','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR'],
+     ['2','Task #2','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR']]);
+  assert.equal(r.rosterCoverage,'UNVERIFIED');
+  // The coherence recheck re-enumerated the roster and re-read every Issue.
+  assert.deepEqual([...getCalls.entries()].sort((a,b)=>a[0]-b[0]),[[1,2],[2,2]]);
+});
+
+
 const requirements=[{number:77,kind:'requirement',parent:null},
   {number:78,kind:'story',parent:77}];
 const intakeObservation={status:'PROJECT_INTAKE_OBSERVED',sourceQualified:true,

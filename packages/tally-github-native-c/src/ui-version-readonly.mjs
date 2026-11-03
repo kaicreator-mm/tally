@@ -26,6 +26,9 @@ const taskStatus=(state,issueState)=>{
 };
 const labelNames=raw=>Array.isArray(raw)?
   raw.map(label=>typeof label==='string'?label:label?.name):null;
+// Canonical complete label-name multiset of one Issue snapshot, for exact
+// before/after comparison during observation.
+const labelSnapshot=raw=>JSON.stringify([...(labelNames(raw)??[])].sort());
 const allowedRef=(ref,owner,repo,n)=>
   ref===`https://github.com/${owner}/${repo}/issues/${n}`;
 const correctIssue=(issue,owner,repo,n)=>{
@@ -99,12 +102,16 @@ export async function readUiNativeVersionFromClient({
     }
     if(discovered.size!==roster.size||[...discovered].some(n=>!roster.has(n)))
       return denied('FROZEN_TASK_ROSTER_INCOMPLETE_OR_EXTRA');
-    const tasks=[],nodes=[],edges=[],seenEdges=new Set();
+    const tasks=[],nodes=[],edges=[],seenEdges=new Set(),
+      firstSnapshots=new Map();
     for(const number of taskIssueNumbers){
       const args={owner,repo,issue_number:number};
       const issue=(await octokit.rest.issues.get(args))?.data;
       if(!correctIssue(issue,owner,repo,number))
         return denied('NATIVE_ISSUE_IDENTITY_UNVERIFIED');
+      firstSnapshots.set(number,{id:issue.id,html_url:issue.html_url,
+        title:issue.title,state:issue.state,updated_at:issue.updated_at,
+        labels:labelSnapshot(issue.labels)});
       // The existing C adapter rechecks Issue drift and all native
       // dependency pages. It intentionally NEVER accepts a Claim.
       const selectedReader=typeof workItemReader==='function'?workItemReader:
@@ -173,6 +180,42 @@ export async function readUiNativeVersionFromClient({
         issueState:entry.issueState,closureState:entry.closureState,
         requirementGroup:null,phase:null,lane:null,agentId:null,
         executable:false});
+    }
+    // The nested WorkItem reader re-reads each Issue but returns only
+    // workflow/dependency state, while the roster entry above is built from
+    // the FIRST Issue GET. An Issue mutating between that first snapshot and
+    // the end of observation must fail closed, never render stale metadata:
+    // re-enumerate the full type:task roster with the same query and re-read
+    // every selected Issue exactly, then compare complete snapshots.
+    const rediscovered=new Set();
+    for await(const page of octokit.paginate.iterator(octokit.rest.issues.listForRepo,{
+      owner,repo,state:'all',labels:'type:task',per_page:100})){
+      if(!Array.isArray(page?.data))
+        return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
+      for(const candidate of page.data){
+        if(candidate?.pull_request)continue;
+        const labels=labelNames(candidate?.labels);
+        if(labels?.includes('type:task')){
+          if(!Number.isSafeInteger(candidate.number)||candidate.number<1||
+             rediscovered.has(candidate.number))
+            return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
+          rediscovered.add(candidate.number);
+        }
+      }
+    }
+    if(rediscovered.size!==discovered.size||
+       [...rediscovered].some(n=>!discovered.has(n)))
+      return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
+    for(const number of taskIssueNumbers){
+      const first=firstSnapshots.get(number);
+      const current=(await octokit.rest.issues.get({owner,repo,
+        issue_number:number}))?.data;
+      if(!first||!correctIssue(current,owner,repo,number)||
+         current.id!==first.id||current.html_url!==first.html_url||
+         current.title!==first.title||current.state!==first.state||
+         current.updated_at!==first.updated_at||
+         labelSnapshot(current.labels)!==first.labels)
+        return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
     }
     if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
       return denied('VERSION_BRANCH_DRIFT');
