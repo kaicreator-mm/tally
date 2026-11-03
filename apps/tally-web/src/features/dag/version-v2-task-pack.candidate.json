@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T13:40:00.000Z",
+  "observedAt": "2026-11-03T13:45:00.000Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -666,7 +666,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T05:32:14Z",
-      "updatedAt": "2026-11-03T08:55:03Z",
+      "updatedAt": "2026-11-03T13:42:28Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -861,6 +861,22 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
       "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
+    },
+    {
+      "from": 208,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "#276's current candidate includes #208-owned release-readiness source/test; keep #276 non-dispatchable until #208 completes or F narrows its exact write set."
+    },
+    {
+      "from": 209,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "#276's current candidate includes #209-owned maintenance-intake source/test; keep #276 non-dispatchable until #209 completes or F narrows its exact write set."
     }
   ],
   "claimSubjects": [
@@ -1610,7 +1626,8 @@
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
     "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration.",
-    "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen."
+    "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
+    "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -1965,6 +1982,22 @@
           "packages/tally-engineering-business/test/attempts.test.mjs"
         ],
         "finding": "#275 owns initial Attempt read-model source; #276 may reconcile the canonical TaskAttempt model only after #275 completes and the source contract is reviewed."
+      },
+      {
+        "id": "F_DOMAIN_DATA_EXISTING_MODULE_SERIALIZATION",
+        "taskIssues": [
+          208,
+          209,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/release-readiness.mjs",
+          "packages/tally-engineering-business/test/release-readiness.test.mjs",
+          "packages/tally-engineering-business/src/maintenance-intake.mjs",
+          "packages/tally-engineering-business/test/maintenance-intake.test.mjs",
+          "packages/tally-engineering-business/test/*.test.mjs"
+        ],
+        "finding": "#276's current candidate set includes the two existing source modules and a broad test glob that overlaps #208/#209. #276 remains PLANNED/non-dispatchable, so there is no current concurrent writer; before any future Claim/JIT, narrow the glob to exact F-owned test files or serialize after #208/#209. Record both edges as PLANNED only."
       }
     ]
   }
