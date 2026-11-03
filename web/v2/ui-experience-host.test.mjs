@@ -73,7 +73,7 @@ test('next Task Context usage requires independent selected Host witness',async(
   const h=createUiExperienceHost({repository,versionId,expectedSha:sha,
     selectedHost:{
       readExperienceCandidates:async()=>({...snap(),candidates:[eligibleCandidate]}),
-      readNextTaskContextUsage:async()=>({connected:true,source,
+      readNextTaskContextUsage:async()=>({connected:true,source,versionId,
         taskIssue:20,usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})
     }});
   const r=await h.nextTaskUsage(20);
@@ -82,11 +82,24 @@ test('next Task Context usage requires independent selected Host witness',async(
   assert.equal(r.measuredBenefit,'UNKNOWN');
 
   // A REVIEWED candidate is not eligible for a real applied-usage receipt.
-  const ineligible=await make({readNextTaskContextUsage:async()=>({connected:true,source,
+  const ineligible=await make({readNextTaskContextUsage:async()=>({connected:true,source,versionId,
     taskIssue:20,usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})})
     .nextTaskUsage(20);
   assert.equal(ineligible.connected,false);
   assert.equal(ineligible.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+});
+test('next Task usage witness from another version is refused',async()=>{
+  const eligibleCandidate={...candidate,state:'ADOPTED',eligibleForNextTask:true};
+  const h=createUiExperienceHost({repository,versionId,expectedSha:sha,
+    selectedHost:{
+      readExperienceCandidates:async()=>({...snap(),candidates:[eligibleCandidate]}),
+      readNextTaskContextUsage:async()=>({connected:true,source,
+        versionId:'version/v3',taskIssue:20,
+        usageState:'EXPLICITLY_APPLIED',usedCandidates:['lesson-1']})
+    }});
+  const result=await h.nextTaskUsage(20);
+  assert.equal(result.connected,false);
+  assert.equal(result.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
 });
 test('dispatch transport failure stays UNKNOWN without automatic repeat',async()=>{
   let calls=0;
