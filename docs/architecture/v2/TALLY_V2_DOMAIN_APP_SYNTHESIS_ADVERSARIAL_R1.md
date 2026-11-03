@@ -72,6 +72,15 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 
 现有 `src/index.mjs` 是 **1,646 行**，声明 `MODULE_ID`、`PACKAGE_KIND='business'`、`ABI_VERSION='v08-business-abi/1'`、10 个 Intent 和对应 Policy/Effect routing；它主要体现 Business operation/effect 路由，不足以证明上述八个可恢复的 ALM 领域 Workflow 已全部实现。不得简单切分相对 `import` 破坏闭世界 BUILD 闭包。
 
+**同一精确基线的静态结构核对（仅源码盘点，不等于运行时调用图）**：
+- `packages/tally-engineering-business/src/` 当前包含 12 个 MJS 文件：`index.mjs` 1,646 行，另有 11 个独立模块共 1,008 行；源码总量约 2,654 行。
+- 当前 `index.mjs` 有 **0 条 import**，而 B 的 `package.json` 只将 `.` 映射到 `./src/index.mjs`。因此不能假设其余 11 个模块自动进入 sealed B 的 BUILD closure；必须逐一追踪它们的真实调用方、装配点和是否属于 B/Host/UI 的责任。
+- `index.mjs` 除 ABI 元数据外还导出多组 assess/project 函数。它们不是因为被 export 就自动成为 Agent Tool，但必须逐项分类为必要的 Package ABI、仅供同包使用的纯函数，或应由可信 Host/C 消费的适配边界。
+- 同一基线的 `packages/tally-engineering-business/README.md` 仍称此包仅拥有一个 Task-readiness advisory Intent，而当前 `index.mjs` 已声明 10 个 Intent / 10 个 Effect。这是已证实的文档漂移，应在重构中修正，但不能据此推断运行时行为已全部接通。
+
+**优化要求**：先做 source-to-runtime call-site / BUILD-closure map，再决定是保留单一入口、将纯函数收回私有、拆分 B 模块，还是由 C/Host 提供 typed adapter。禁止仅按文件行数拆分，也禁止在没有 selected BUILD/clean-consumer 证据时宣称拆分模块已被运行时加载。
+
+
 ## 3. Package 结构、初始化与运行时版本
 
 ### 3.1 不同版本坐标：ABI、SDK、应用与运行时
