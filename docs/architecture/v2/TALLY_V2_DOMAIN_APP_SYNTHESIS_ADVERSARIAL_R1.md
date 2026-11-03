@@ -158,7 +158,16 @@ B Package 初始化、业务首次进入流程、Host 初始化是三种不同�
 | #276 F | Glossary/Authority/Schema/Rule/Workflow 资产提取，现有 B ABI 闭包及真实映射 | 任意增加 B init、非选定模块、第二 Workflow Engine |
 | #264 E | F join 后的唯一集成、Node24 语法→测试→Woodpecker、Host/Browser/RQ | 合并 `main`、抢跑合并 PR #258、未授权 Release |
 
-**顺序**：A–D 已准入范围并行；F 的纯文档/资产设计可审阅，但修改与现有 B 写集冲突的源码必须等待依赖及合法 CAS/JIT；E 只有通过真实依赖读回才可集成。不得将文本依赖描述伪报为 GitHub 原生 `blocked_by` 事实。
+**顺序修订建议（2026-11-03；架构建议，不代替 Owner 对活动 Claim/任务状态的正式操作）**：
+
+1. **暂停 DAG 的最终重建/冻结**：当前 43-Task Task Pack `d6c513ca3a2dc227a079223331113f4738023500` 不包含 #276，已不能作为最终冻结候选。虽然此前曾预计加入 #276 后为 44 Tasks，但在既有重构优化审计完成前，不应假定 44 就是最终数量。暂停 #260 的最终 roster/Task Pack 快照、原生依赖物化和 Freeze writer；不复用旧 Pack 或旧 Owner approval。
+2. **暂停新的源码 Claim/Dispatch 与 E 集成准入**：#276 继续保持 PLANNED；#264 保持 BLOCKED/未准入；不为 #273–#276 新开源码执行，直到优化后的职责边界和写集确定。
+3. **不撤销已有证据**：保留 A–D 已存在的分支、提交、Claim、PR、LOCAL_VALIDATION 和 CI 证据；不强制取消或重写活动 Claim。已经合法准入、写集不重叠且不依赖本轮架构裁定的验证/收尾工作可以完成，但必须先重读 Exact HEAD、责任人和依赖。
+4. **先做只读架构优化审计**：盘点现有 B 模块、10 个 Intent、Workflow 定义、UI/Host/C 调用链和测试；建立领域术语/Authority/Schema/Rule/Knowledge 资产映射；逐个核验八个 ALM Workflow 的状态、等待、失败、恢复、UNKNOWN 和完成证据；对齐 DH v0.10.3 的 V8 Business ABI / V10 BUILD / Host 安装事实；识别重复实现、遗漏、循环依赖、错误抽象和需要调整的独占写集。
+5. **审计结论稳定后再恢复 DAG**：先确定哪些旧任务可复用、哪些任务需拆分/合并/重写，再刷新完整 Issue roster、原生 `blocked_by`、Task Pack、allowed_write_set 和依赖读回；完成独立 exact-body 审核后，重新请求绑定最终 blob 的 Owner Freeze approval，再按新 DAG 建立 CAS Claim/JIT。
+6. **CI 顺序保持不变**：任何 Woodpecker 前先执行语法预检、`git diff --check` 和 scoped tests；本轮审计本身不触发 CI、不合并 PR #258、不修改 `version/v2` / `main`、不发布。
+
+不得将文本依赖描述伪报为 GitHub 原生 `blocked_by` 事实。
 
 ## 7. 给 DomainHarness 的通用反馈及反向依赖
 
