@@ -41,16 +41,18 @@ const NOT_REUSED=Object.freeze({nextTaskContextPack:false,adoptedRule:false,
 // digest of its own observed report identity; anything else is forged.
 const provenanceBound=suggestion=>{const p=suggestion?.provenance;
   const publication=typeof p?.publicationRef==='string'?
-    /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/([1-9][0-9]*)#issuecomment-([1-9][0-9]*)$/.exec(p.publicationRef):null;
+    /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)#issuecomment-([1-9][0-9]*)$/.exec(p.publicationRef):null;
   return !!p&&typeof p.reportId==='string'&&p.reportId.length>0&&p.reportId.length<=512&&
     Number.isSafeInteger(p.revision)&&p.revision>0&&
     Number.isSafeInteger(p.commentId)&&p.commentId>0&&
     Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
     typeof p.kind==='string'&&p.kind.length>0&&p.kind.length<=512&&
     typeof p.namespace==='string'&&p.namespace.length>0&&p.namespace.length<=512&&
+    typeof p.repository==='string'&&/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(p.repository)&&
+    SHA.test(p.sourceSha??'')&&p.sourceSha===suggestion.subjectSha&&
     typeof p.dataDigest==='string'&&p.dataDigest.length>0&&p.dataDigest.length<=512&&
-    !!publication&&publication[1]===String(p.issueNumber)&&
-    publication[2]===String(p.commentId)&&
+    !!publication&&publication[1]===p.repository&&
+    publication[2]===String(p.issueNumber)&&publication[3]===String(p.commentId)&&
     suggestion.learningId===sha256([p.reportId,p.revision,p.commentId,p.kind]);};
 // Ledgers recorded before the currentness field existed can only reconstruct
 // a coarse result; qualification stays the exact observed classification.
@@ -226,7 +228,8 @@ export function learningSuggestionsFromReports(observations){
       provenance:row.source?Object.freeze({reportId:row.source.reportId,
         revision:row.source.revision,kind:row.source.kind,
         commentId:row.source.commentId,issueNumber:row.source.issueNumber,
-        namespace:row.source.namespace,dataDigest:row.source.dataDigest,
+        namespace:row.source.namespace,repository:row.source.repository,
+        sourceSha:row.source.sourceSha,dataDigest:row.source.dataDigest,
         epistemic:row.advisory?.epistemic??null,
         publicationRef:`https://github.com/${row.source.repository}/issues/${row.source.issueNumber}#issuecomment-${row.source.commentId}`}):null,
       measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false}));

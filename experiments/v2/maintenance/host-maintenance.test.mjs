@@ -1053,7 +1053,9 @@ test('provenance binding accepts the source repository and rejects incomplete pu
     {...real,provenance:{...real.provenance,
       publicationRef:'https://github.com/evil.example/tally/issues/203#issuecomment-6540000001'}},
     {...real,provenance:{...real.provenance,
-      publicationRef:'https://github.com/kaicreator-mm/tally/issues/204#issuecomment-6540000001'}}
+      publicationRef:'https://github.com/kaicreator-mm/tally/issues/204#issuecomment-6540000001'}},
+    {...real,provenance:{...real.provenance,repository:'kaicreator-mm/shun-assistant'}},
+    {...real,provenance:{...real.provenance,sourceSha:'b'.repeat(40)}}
   ];
   for(const row of malformedRows){
     const m=memoryStore();
