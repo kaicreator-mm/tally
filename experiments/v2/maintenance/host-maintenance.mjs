@@ -17,8 +17,9 @@
  * identity even when the source is STALE/UNKNOWN, it records the exact
  * provenance/currentness/qualification result, and it never creates an
  * adopted Rule/Skill/Procedure/Workflow or enters a next-Task Context Pack;
- * ADOPT stays gated by REPORTED_QUALIFIED current evidence under the existing
- * Host authority. Every deviation fails closed with a bounded reason, a lost
+ * ADOPT requires REPORTED_QUALIFIED current evidence plus a per-learning
+ * GitHub Owner/admin approval comment verified by the trusted Host C reader.
+ * Every deviation fails closed with a bounded reason, a lost
  * GitHub acknowledgment stays UNKNOWN and later reconciles WITHOUT creating a
  * duplicate Issue.
  */
