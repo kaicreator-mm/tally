@@ -300,7 +300,10 @@ export function createMaintenanceControllerExperienceAdapter({
       const snapshot=maintenanceController.snapshot();
       const row=snapshot?.learning?.find(x=>x.learningId===request.candidateId);
       const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
-      if(result?.state!=='LEARNING_RECORDED'||result?.decision!==expectedDecision||
+      if(snapshot?.status!=='OBSERVED'||snapshot.sourceSha!==expectedSha||
+         !Array.isArray(snapshot.learning)||snapshot.learning.length>100||
+         !verifiedSuggestion(row,repository,publishers)||
+         result?.state!=='LEARNING_RECORDED'||result?.decision!==expectedDecision||
          result?.claimAccepted!==true||result?.admitted!==true||
          result?.authorized!==false||result?.taskPass!==false||
          result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
