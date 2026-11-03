@@ -81,6 +81,22 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 **优化要求**：先做 source-to-runtime call-site / BUILD-closure map，再决定是保留单一入口、将纯函数收回私有、拆分 B 模块，还是由 C/Host 提供 typed adapter。禁止仅按文件行数拆分，也禁止在没有 selected BUILD/clean-consumer 证据时宣称拆分模块已被运行时加载。
 
 
+### 2.1 B Package source-to-callsite / BUILD-closure map
+
+在同一 `version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332` 上继续检查实际调用点后，结构问题可以进一步具体化：
+
+1. **V10 Producer 只选择一个 B 源文件**：`experiments/v2/selected-business-build/producer.mjs` 从 `TALLY_BUSINESS_SOURCE` 动态导入文件、读取其文本为 `bBytes`，并将这一个文件作为 Business 模块的 `moduleSource`。它没有导入 11 个 sibling modules。B 的 `index.mjs` 本身也没有 import，因此这些文件不会因为与它同目录就自动进入 sealed B。
+2. **10 个声明不等于 10 条已选路由**：B 声明 10 个 Intent / Effect type；Producer 的 route set 是条件化的。`inspectTaskReadiness` 总是选择；其余 `admitClaimedTask`、`runLocalCodexAttempt`、`joinReviewedCandidates`、`publishReviewedCandidate`、`freezeProductIntake`、`admitProjectIntake`、`publishMaintenanceIssue`、`recordTaskLearningOutcome`、`deliverQualifiedRelease` 分别取决于对应 capability/feature flag。不能把 Intent 声明数当作每个 BUILD 的完整路由覆盖。
+3. **V10 Consumer 的证明范围**：`experiments/v2/selected-business-build/consumer.mjs` 使用 public Microkernel `load()` 加载 sealed App，并发送 `inspectTaskReadiness`。它证明该条实际选择路径的 K 行为，不能单独证明其余九条可选路由全部端到端通过。
+4. **Intake Host Controller 的直接调用**：`web/v2/intake-controller.mjs` 直接导入 `guided-intake.mjs` 的 `nextGuidedStep/guidedCaseRef/GUIDED_TEMPLATE_REF`、`planning.mjs` 的 `planNextVersion`，以及 `index.mjs` 的 `assessProjectIntakeAdmission/projectProjectIntakeAdmission`。它们用于动态步骤、DAG 候选和纯预检/结果投影；真正的准入仍经注入的 `sealedDispatch` 进入 selected K。
+5. **Maintenance Host Controller 的直接调用**：`web/v2/maintenance-controller.mjs` 直接导入 `maintenance-intake.mjs` 的 `projectMaintenanceIntake`，以及 `index.mjs` 的 publication / learning assess/project helpers。实际发布和记录操作仍通过 `sealedDispatch`；未发现它直接调用 Provider。
+6. **其它 sibling 模块**：在已检查的 `web/v2` Controllers、React UI Feature Models 和 C 源文件中，没有找到 `acceptance.mjs`、`casebook.mjs`、`diagnosis.mjs`、`feedback.mjs`、`journey.mjs`、`lineage.mjs`、`release-readiness.mjs`、`work-units.mjs` 的运行时调用点；它们有各自 package-local tests。这是限定范围扫描，不宣称全仓库已证明 dead code。
+7. **React UI 边界**：检查到的 `apps/tally-web/src/features/**` Model 通过 HTTP Host adapter 获取数据，没有直接 import Business source helpers；UI 动态表单 Schema 仍是 UI Step/Field contract，不是 Domain Data Schema。
+
+**关键判断**：当前至少存在两种 Business 源码消费方式：一份 `index.mjs` 被 V10 BUILD sealed 选择；若干纯函数又被 Host Controller 从私有源码路径直接导入。现有代码显示这些 Host 预检/投影并不直接执行外部副作用，副作用仍受 `sealedDispatch` 保护；问题在于代码所有权、源码版本对齐和重复/漂移风险，而不是已经证明的 K Permit 绕过。
+
+因此重构前必须给每个 helper 记录 owner（B/Host/C/UI）、调用点、是否进入 selected `moduleSource`、副作用类别、authority、测试和 Domain Data 映射。不要仅按行数拆分，也不要未经明确契约就让跨层代码 deep-import 私有 Package 内部。新增 Host/UI/CI 写集必须单独修订准入。
+
 ## 3. Package 结构、初始化与运行时版本
 
 ### 3.1 不同版本坐标：ABI、SDK、应用与运行时
