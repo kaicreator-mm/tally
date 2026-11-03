@@ -6,7 +6,7 @@ import {Badge} from '../../components/ui/Badge.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 import {Button} from '../../components/ui/Button.tsx';
 import type {SelectedActionCatalog} from './human-action-gate.ts';
-import {workbenchActionGate} from './human-action-gate.ts';
+import {workbenchActionControl} from './human-action-gate.ts';
 
 export interface WorkbenchActionRequest{
   repository:string;versionId:string;sourceSha:string;
@@ -69,29 +69,26 @@ export function WorkbenchView({snapshot,page,onNavigate,
 }
 
 
-function WorkbenchActionButton({snapshot,catalog,action,onAction}:{
+export function WorkbenchActionButton({snapshot,catalog,action,onAction}:{
   snapshot:WorkbenchSnapshot|null;catalog:SelectedActionCatalog|null;
   action:import('./model.ts').WorkAction;
   onAction?: (request:WorkbenchActionRequest)=>void;
 }){
-  const gate=workbenchActionGate(snapshot,catalog,action);
-  const source=catalog?.source;
-  const versionId=catalog?.versionId;
-  const enabled=gate.enabled&&typeof onAction==='function'&&
-    source!==undefined&&versionId!==undefined&&
-    gate.actionId!==null&&gate.revision!==null;
+  // Display-only control model: a fresh Host action without a connected
+  // dispatch callback must not look executable, and denial reasons stay
+  // localized instead of showing raw internal codes.
+  const control=workbenchActionControl(snapshot,catalog,action,
+    typeof onAction==='function');
   const submit=()=>{
-    if(!enabled||!onAction||!source||!versionId||
-       !gate.actionId||gate.revision===null)return;
-    onAction({repository:source.repository,versionId,
-      sourceSha:source.sourceSha,actionId:gate.actionId,
-      revision:gate.revision});
+    if(!control.request)return;
+    onAction?.(control.request);
   };
   return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
-    <Button disabled={!enabled} onClick={enabled?submit:undefined}>
-      {gate.enabled?gate.label:'执行操作'}
+    <Button disabled={control.disabled}
+      onClick={control.dispatchReady?submit:undefined}>
+      {control.label}
     </Button>
-    {!enabled?<span role="status" style={{fontSize:11,
-      color:'var(--text-muted)'}}>{gate.reason}</span>:null}
+    {control.status?<span role="status" style={{fontSize:11,
+      color:'var(--text-muted)'}}>{control.status}</span>:null}
   </div>;
 }

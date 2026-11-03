@@ -1,7 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {workbenchActionGate} from './human-action-gate.ts';
+import {workbenchActionGate,workbenchActionControl,localizedActionStatus,
+  ACTION_STATUS_MESSAGES,DISPATCH_NOT_CONNECTED_MESSAGE} from './human-action-gate.ts';
 import type {WorkbenchSnapshot,WorkAction} from './model.ts';
+import {buildSync} from 'esbuild';
+import {createElement} from 'react';
+import type {FunctionComponent} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join,dirname} from 'node:path';
+import {pathToFileURL,fileURLToPath} from 'node:url';
 const sha='a'.repeat(40),repository='org/tally';
 const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
 const work:WorkAction={id:'review-260',taskId:'260',projectId:repository,
@@ -99,4 +108,101 @@ test('unsafe numeric Task identifiers cannot alias a different Host issue number
   const c={...catalog,actions:[{id:'aliased-action',kind:'REVIEW_REPAIR',
     revision:1,taskIssue:9007199254740992,state:'ELIGIBLE' as const,label:'Review'}]};
   assert.equal(workbenchActionGate(inbox,c,huge).enabled,false);
+});
+
+test('fresh Host action without dispatch callback shows explicit not-connected state, never the positive label',()=>{
+  const c=workbenchActionControl(inbox,catalog,work,false);
+  assert.equal(c.disabled,true);
+  assert.equal(c.dispatchReady,false);
+  assert.equal(c.request,null);
+  assert.notEqual(c.label,'审核候选');
+  assert.ok(!c.label.includes('审核候选'));
+  assert.equal(c.status,DISPATCH_NOT_CONNECTED_MESSAGE);
+  assert.ok(!c.status.includes('FRESH_HOST_ACTION'));
+});
+test('fresh Host action with connected dispatch callback stays the positive dispatch-ready control',()=>{
+  const c=workbenchActionControl(inbox,catalog,work,true);
+  assert.equal(c.disabled,false);
+  assert.equal(c.dispatchReady,true);
+  assert.equal(c.label,'审核候选');
+  assert.equal(c.status,null);
+  assert.deepEqual(c.request,{repository:'org/tally',versionId:'version/v2',
+    sourceSha:sha,actionId:'review-task-260',revision:1});
+});
+test('denial reasons are localized and never show raw internal codes',()=>{
+  const disconnected=workbenchActionControl(inbox,{...catalog,connected:false},
+    work,true);
+  assert.equal(disconnected.disabled,true);
+  assert.equal(disconnected.request,null);
+  assert.equal(disconnected.status,
+    ACTION_STATUS_MESSAGES.HOST_ACTION_SOURCE_NOT_CONNECTED);
+  assert.ok(!disconnected.status.includes('HOST_ACTION_SOURCE_NOT_CONNECTED'));
+  const unbound=workbenchActionControl(inbox,catalog,{...work,
+    hostActionId:null,hostActionRevision:null,hostActionKind:null},true);
+  assert.equal(unbound.disabled,true);
+  assert.equal(unbound.status,ACTION_STATUS_MESSAGES.HOST_ACTION_IDENTITY_NOT_BOUND);
+  assert.ok(!unbound.status.includes('HOST_ACTION_IDENTITY_NOT_BOUND'));
+  for(const [code,message] of Object.entries(ACTION_STATUS_MESSAGES)){
+    assert.ok(message.trim().length>0);
+    assert.ok(!message.includes(code));
+  }
+  const fallback=localizedActionStatus('FUTURE_UNKNOWN_CODE');
+  assert.ok(fallback.trim().length>0);
+  assert.ok(!fallback.includes('FUTURE_UNKNOWN_CODE'));
+});
+
+// View-level render tests: Node cannot load .tsx directly, so the real view is
+// bundled once with the repo's pinned esbuild toolchain and rendered through
+// react-dom/server; assertions cover the exact disabled/positive/localized
+// display contract for the Workbench action button.
+let viewsModule:Record<string,unknown>|null=null;
+async function loadViews():Promise<Record<string,unknown>>{
+  if(!viewsModule){
+    const dir=mkdtempSync(join(tmpdir(),'tally-workbench-view-'));
+    process.on('exit',()=>{try{rmSync(dir,{recursive:true,force:true})}
+      catch{/* best effort cleanup */}});
+    const outfile=join(dir,'views.bundle.mjs');
+    buildSync({entryPoints:[join(dirname(fileURLToPath(import.meta.url)),
+      'views.tsx')],outfile,bundle:true,format:'esm',platform:'node',
+      jsx:'automatic',logLevel:'silent'});
+    viewsModule=await import(pathToFileURL(outfile).href) as Record<string,unknown>;
+  }
+  return viewsModule;
+}
+test('rendered action button shows dispatch-not-connected state, disabled, without positive label',async()=>{
+  const {WorkbenchActionButton}=await loadViews() as
+    {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
+  const html=renderToStaticMarkup(createElement(WorkbenchActionButton,{
+    snapshot:inbox,catalog,action:work}));
+  assert.match(html,/disabled/);
+  assert.ok(html.includes('派发尚未接入'));
+  assert.ok(!html.includes('审核候选'));
+  assert.ok(!html.includes('FRESH_HOST_ACTION'));
+});
+test('rendered action button keeps positive Host label when dispatch callback is connected',async()=>{
+  const {WorkbenchActionButton}=await loadViews() as
+    {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
+  const html=renderToStaticMarkup(createElement(WorkbenchActionButton,{
+    snapshot:inbox,catalog,action:work,onAction:()=>{}}));
+  assert.ok(!html.includes('disabled'));
+  assert.ok(html.includes('审核候选'));
+  assert.ok(!html.includes('FRESH_HOST_ACTION'));
+  assert.ok(!html.includes('派发尚未接入'));
+});
+test('rendered action button maps denial codes to localized messages',async()=>{
+  const {WorkbenchActionButton}=await loadViews() as
+    {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
+  const disconnected=renderToStaticMarkup(createElement(WorkbenchActionButton,{
+    snapshot:inbox,catalog:{...catalog,connected:false},action:work,
+    onAction:()=>{}}));
+  assert.match(disconnected,/disabled/);
+  assert.ok(disconnected.includes(
+    ACTION_STATUS_MESSAGES.HOST_ACTION_SOURCE_NOT_CONNECTED));
+  assert.ok(!disconnected.includes('HOST_ACTION_SOURCE_NOT_CONNECTED'));
+  const unbound=renderToStaticMarkup(createElement(WorkbenchActionButton,{
+    snapshot:inbox,catalog,action:{...work,hostActionId:null,
+      hostActionRevision:null,hostActionKind:null},onAction:()=>{}}));
+  assert.match(unbound,/disabled/);
+  assert.ok(unbound.includes(ACTION_STATUS_MESSAGES.HOST_ACTION_IDENTITY_NOT_BOUND));
+  assert.ok(!unbound.includes('HOST_ACTION_IDENTITY_NOT_BOUND'));
 });

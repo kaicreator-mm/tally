@@ -1,5 +1,9 @@
 /** D/#263: UI display gate for action identity issued by the selected Host.
  * This is NOT authorization; selected B/K/Host must recheck and dispatch.
+ * workbenchActionControl adds the view-level display decision: a fresh Host
+ * action without a connected dispatch callback renders an explicit
+ * dispatch-not-connected state, and Host denial reasons are localized so raw
+ * internal codes never reach the user-facing view.
  */
 import type {WorkbenchSnapshot,WorkAction} from './model.ts';
 export interface SelectedActionOption{
@@ -60,4 +64,61 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
     return deny('HOST_ACTION_IDENTITY_INVALID');
   return {enabled:true,reason:'FRESH_HOST_ACTION',
     actionId:a.id,revision:a.revision,label:a.label};
+}
+
+/** Stable localized user-facing messages for Host display-gate outcomes; raw
+ * internal reason codes never reach the view. Unknown future codes fail closed
+ * to a generic localized denial instead of leaking the code.
+ */
+export const ACTION_STATUS_MESSAGES:Readonly<Record<string,string>>={
+  FRESH_HOST_ACTION:'已从受信 Host 获取新鲜且可执行的人工操作',
+  HOST_ACTION_SOURCE_NOT_CONNECTED:
+    'Host 操作源未连接：需要已连接且来源核验一致的受信 Host 操作目录',
+  WORKITEM_NOT_CURRENT:
+    '工作项不在当前可操作范围：仅当前项目与版本内的待办事项可执行操作',
+  NO_HOST_ACTION_FOR_ITEM:'该事项没有匹配的 Host 人工操作',
+  HOST_ACTION_IDENTITY_NOT_BOUND:
+    '该事项未绑定匹配类别的 Host 签发操作标识，不能视为可执行操作',
+  HOST_ACTION_NOT_ELIGIBLE_OR_AMBIGUOUS:'Host 操作不可执行或存在歧义，已拒绝启用操作',
+  HOST_ACTION_IDENTITY_INVALID:'Host 操作标识无效，已拒绝启用操作'};
+const ACTION_UNAVAILABLE_FALLBACK='操作当前不可用（来源校验未通过）';
+const ACTION_LABEL_UNAVAILABLE='执行操作';
+/** Explicit state for a fresh eligible Host action whose dispatch callback has
+ * not been supplied by the integrating app; the control stays disabled. */
+export const DISPATCH_NOT_CONNECTED_MESSAGE=
+  '操作派发尚未接入：Host 已确认该操作新鲜可执行，但应用尚未提供派发通道，操作保持禁用';
+export function localizedActionStatus(reason:string):string{
+  return ACTION_STATUS_MESSAGES[reason]??ACTION_UNAVAILABLE_FALLBACK;
+}
+export interface WorkbenchActionRequestPayload{
+  repository:string;versionId:string;sourceSha:string;
+  actionId:string;revision:number;}
+export interface WorkbenchActionControl{
+  disabled:boolean;label:string;status:string|null;
+  dispatchReady:boolean;request:WorkbenchActionRequestPayload|null;}
+/** View-level display decision combining the Host display gate with whether
+ * the integrating app supplied a dispatch callback. Display-only: a positive
+ * label is shown only when dispatch is actually connected, and no request is
+ * ever built without an exact fresh Host-issued identity.
+ */
+export function workbenchActionControl(snapshot:WorkbenchSnapshot|null,
+  catalog:SelectedActionCatalog|null,workItem:WorkAction,
+  dispatchConnected:boolean):WorkbenchActionControl{
+  const gate=workbenchActionGate(snapshot,catalog,workItem);
+  if(gate.enabled){
+    if(!dispatchConnected)return {disabled:true,label:ACTION_LABEL_UNAVAILABLE,
+      status:DISPATCH_NOT_CONNECTED_MESSAGE,dispatchReady:false,request:null};
+    const source=catalog?.source,versionId=catalog?.versionId;
+    if(gate.actionId===null||gate.revision===null||
+       !source||versionId===undefined)
+      return {disabled:true,label:ACTION_LABEL_UNAVAILABLE,
+        status:localizedActionStatus('HOST_ACTION_IDENTITY_INVALID'),
+        dispatchReady:false,request:null};
+    return {disabled:false,label:gate.label,status:null,dispatchReady:true,
+      request:{repository:source.repository,versionId,
+        sourceSha:source.sourceSha,actionId:gate.actionId,
+        revision:gate.revision}};
+  }
+  return {disabled:true,label:ACTION_LABEL_UNAVAILABLE,
+    status:localizedActionStatus(gate.reason),dispatchReady:false,request:null};
 }
