@@ -4,11 +4,11 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-02T19:22:22Z",
+  "observedAt": "2026-11-03T03:20:15.517Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 40,
+    "taskIssueCount": 43,
     "claimCommentPages": 3
   },
   "taskIssues": [
@@ -22,7 +22,10 @@
       ],
       "createdAt": "2026-10-19T16:21:36Z",
       "updatedAt": "2026-10-31T03:38:17Z",
-      "closedAt": "2026-10-31T03:38:17Z"
+      "closedAt": "2026-10-31T03:38:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed historical integration proof; closure remains independently evidence-qualified."
     },
     {
       "issueNumber": 92,
@@ -34,7 +37,10 @@
       ],
       "createdAt": "2026-10-25T21:02:14Z",
       "updatedAt": "2026-10-31T03:43:17Z",
-      "closedAt": "2026-10-31T03:43:17Z"
+      "closedAt": "2026-10-31T03:43:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
     },
     {
       "issueNumber": 137,
@@ -46,7 +52,10 @@
       ],
       "createdAt": "2026-10-27T18:21:37Z",
       "updatedAt": "2026-10-30T18:46:03Z",
-      "closedAt": "2026-10-30T18:46:03Z"
+      "closedAt": "2026-10-30T18:46:03Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-model intake."
     },
     {
       "issueNumber": 139,
@@ -58,7 +67,10 @@
       ],
       "createdAt": "2026-10-27T18:41:34Z",
       "updatedAt": "2026-10-30T21:48:38Z",
-      "closedAt": "2026-10-30T21:48:38Z"
+      "closedAt": "2026-10-30T21:48:38Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed lineage intake."
     },
     {
       "issueNumber": 140,
@@ -70,7 +82,10 @@
       ],
       "createdAt": "2026-10-27T18:42:29Z",
       "updatedAt": "2026-10-30T22:16:18Z",
-      "closedAt": "2026-10-30T22:16:18Z"
+      "closedAt": "2026-10-30T22:16:18Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed diagnosis intake."
     },
     {
       "issueNumber": 141,
@@ -82,7 +97,10 @@
       ],
       "createdAt": "2026-10-27T18:43:20Z",
       "updatedAt": "2026-10-30T22:51:29Z",
-      "closedAt": "2026-10-30T22:51:29Z"
+      "closedAt": "2026-10-30T22:51:29Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed advisory next-version planning intake; does not prove governed Replan activation."
     },
     {
       "issueNumber": 142,
@@ -94,7 +112,10 @@
       ],
       "createdAt": "2026-10-27T18:52:23Z",
       "updatedAt": "2026-10-30T23:23:52Z",
-      "closedAt": "2026-10-30T23:23:52Z"
+      "closedAt": "2026-10-30T23:23:52Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed WorkItem identity intake."
     },
     {
       "issueNumber": 143,
@@ -106,7 +127,10 @@
       ],
       "createdAt": "2026-10-27T18:52:25Z",
       "updatedAt": "2026-10-31T00:03:26Z",
-      "closedAt": "2026-10-31T00:03:26Z"
+      "closedAt": "2026-10-31T00:03:26Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Casebook intake; does not prove complete next-Task learning loop."
     },
     {
       "issueNumber": 144,
@@ -118,7 +142,10 @@
       ],
       "createdAt": "2026-10-27T18:52:27Z",
       "updatedAt": "2026-10-31T00:36:14Z",
-      "closedAt": "2026-10-31T00:36:13Z"
+      "closedAt": "2026-10-31T00:36:13Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed cross-project feedback intake."
     },
     {
       "issueNumber": 145,
@@ -130,7 +157,10 @@
       ],
       "createdAt": "2026-10-27T19:18:41Z",
       "updatedAt": "2026-10-30T19:14:40Z",
-      "closedAt": "2026-10-30T19:14:40Z"
+      "closedAt": "2026-10-30T19:14:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Version Journey Driver intake."
     },
     {
       "issueNumber": 146,
@@ -142,7 +172,10 @@
       ],
       "createdAt": "2026-10-27T19:18:43Z",
       "updatedAt": "2026-10-30T20:53:28Z",
-      "closedAt": "2026-10-30T20:53:28Z"
+      "closedAt": "2026-10-30T20:53:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL_P1",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
     },
     {
       "issueNumber": 148,
@@ -154,7 +187,10 @@
       ],
       "createdAt": "2026-10-27T21:00:52Z",
       "updatedAt": "2026-10-31T01:12:41Z",
-      "closedAt": "2026-10-31T01:12:41Z"
+      "closedAt": "2026-10-31T01:12:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
     },
     {
       "issueNumber": 166,
@@ -166,7 +202,10 @@
       ],
       "createdAt": "2026-10-29T12:29:10Z",
       "updatedAt": "2026-10-29T22:49:56Z",
-      "closedAt": "2026-10-29T22:49:56Z"
+      "closedAt": "2026-10-29T22:49:56Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Host admission source adapter task."
     },
     {
       "issueNumber": 169,
@@ -178,7 +217,10 @@
       ],
       "createdAt": "2026-10-29T23:34:19Z",
       "updatedAt": "2026-10-30T07:20:55Z",
-      "closedAt": "2026-10-30T07:20:55Z"
+      "closedAt": "2026-10-30T07:20:55Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed accepted Claim verifier task."
     },
     {
       "issueNumber": 172,
@@ -190,7 +232,10 @@
       ],
       "createdAt": "2026-10-30T08:06:27Z",
       "updatedAt": "2026-10-30T15:58:27Z",
-      "closedAt": "2026-10-30T15:58:27Z"
+      "closedAt": "2026-10-30T15:58:27Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
     },
     {
       "issueNumber": 173,
@@ -202,7 +247,10 @@
       ],
       "createdAt": "2026-10-30T08:09:16Z",
       "updatedAt": "2026-10-30T15:28:11Z",
-      "closedAt": "2026-10-30T15:28:11Z"
+      "closedAt": "2026-10-30T15:28:11Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Self-hosted Woodpecker validation carrier task."
     },
     {
       "issueNumber": 176,
@@ -214,7 +262,10 @@
       ],
       "createdAt": "2026-10-30T15:59:21Z",
       "updatedAt": "2026-10-30T18:09:43Z",
-      "closedAt": "2026-10-30T18:07:28Z"
+      "closedAt": "2026-10-30T18:07:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
     },
     {
       "issueNumber": 177,
@@ -226,7 +277,10 @@
       ],
       "createdAt": "2026-10-30T16:02:04Z",
       "updatedAt": "2026-10-30T18:09:50Z",
-      "closedAt": "2026-10-30T18:07:32Z"
+      "closedAt": "2026-10-30T18:07:32Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder A evidence."
     },
     {
       "issueNumber": 178,
@@ -238,7 +292,10 @@
       ],
       "createdAt": "2026-10-30T16:02:05Z",
       "updatedAt": "2026-10-30T18:09:59Z",
-      "closedAt": "2026-10-30T18:07:36Z"
+      "closedAt": "2026-10-30T18:07:36Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder B evidence."
     },
     {
       "issueNumber": 179,
@@ -250,7 +307,10 @@
       ],
       "createdAt": "2026-10-30T16:02:07Z",
       "updatedAt": "2026-10-30T18:10:06Z",
-      "closedAt": "2026-10-30T18:07:40Z"
+      "closedAt": "2026-10-30T18:07:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Reviewer/Repair evidence."
     },
     {
       "issueNumber": 184,
@@ -262,7 +322,10 @@
       ],
       "createdAt": "2026-10-30T19:29:27Z",
       "updatedAt": "2026-10-30T19:48:41Z",
-      "closedAt": "2026-10-30T19:48:41Z"
+      "closedAt": "2026-10-30T19:48:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-only workspace CI task."
     },
     {
       "issueNumber": 196,
@@ -274,7 +337,10 @@
       ],
       "createdAt": "2026-10-31T03:43:19Z",
       "updatedAt": "2026-10-31T05:15:24Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
     },
     {
       "issueNumber": 197,
@@ -286,7 +352,10 @@
       ],
       "createdAt": "2026-10-31T04:35:59Z",
       "updatedAt": "2026-10-31T04:37:34Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
     },
     {
       "issueNumber": 198,
@@ -298,7 +367,10 @@
       ],
       "createdAt": "2026-10-31T04:36:01Z",
       "updatedAt": "2026-10-31T04:37:45Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
     },
     {
       "issueNumber": 199,
@@ -310,7 +382,10 @@
       ],
       "createdAt": "2026-10-31T04:36:03Z",
       "updatedAt": "2026-10-31T04:37:55Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
     },
     {
       "issueNumber": 200,
@@ -322,7 +397,10 @@
       ],
       "createdAt": "2026-10-31T05:43:13Z",
       "updatedAt": "2026-10-31T05:44:27Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer Claim/Join evidence only; no source write authority."
     },
     {
       "issueNumber": 202,
@@ -334,7 +412,10 @@
       ],
       "createdAt": "2026-10-31T06:53:36Z",
       "updatedAt": "2026-10-31T07:06:55Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
     },
     {
       "issueNumber": 203,
@@ -346,7 +427,10 @@
       ],
       "createdAt": "2026-10-31T07:11:08Z",
       "updatedAt": "2026-10-31T18:53:25Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
     },
     {
       "issueNumber": 207,
@@ -358,7 +442,10 @@
       ],
       "createdAt": "2026-10-31T10:36:16Z",
       "updatedAt": "2026-10-31T12:54:16Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
     },
     {
       "issueNumber": 208,
@@ -370,7 +457,10 @@
       ],
       "createdAt": "2026-10-31T10:36:18Z",
       "updatedAt": "2026-10-31T17:32:52Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
     },
     {
       "issueNumber": 209,
@@ -382,7 +472,10 @@
       ],
       "createdAt": "2026-10-31T10:36:20Z",
       "updatedAt": "2026-10-31T12:44:25Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
     },
     {
       "issueNumber": 210,
@@ -394,7 +487,10 @@
       ],
       "createdAt": "2026-10-31T10:38:10Z",
       "updatedAt": "2026-11-02T14:29:29Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
     },
     {
       "issueNumber": 211,
@@ -406,7 +502,10 @@
       ],
       "createdAt": "2026-10-31T11:41:50Z",
       "updatedAt": "2026-10-31T12:54:22Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_NATIVE_READ_RECOVERY",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Bounded idempotent native GitHub read retry."
     },
     {
       "issueNumber": 212,
@@ -418,7 +517,10 @@
       ],
       "createdAt": "2026-10-31T12:06:28Z",
       "updatedAt": "2026-10-31T13:01:22Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
     },
     {
       "issueNumber": 219,
@@ -429,8 +531,11 @@
         "type:task"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-10-31T16:52:46Z",
-      "closedAt": null
+      "updatedAt": "2026-11-03T03:12:12Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
     },
     {
       "issueNumber": 260,
@@ -441,8 +546,11 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-02T19:22:22Z",
-      "closedAt": null
+      "updatedAt": "2026-11-03T03:18:42Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
     },
     {
       "issueNumber": 261,
@@ -453,8 +561,11 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
-      "updatedAt": "2026-11-02T18:57:36Z",
-      "closedAt": null
+      "updatedAt": "2026-11-03T03:12:18Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_UI_ACTIONS",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
     },
     {
       "issueNumber": 262,
@@ -465,8 +576,11 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:43Z",
-      "updatedAt": "2026-11-02T17:43:25Z",
-      "closedAt": null
+      "updatedAt": "2026-11-03T03:12:25Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
     },
     {
       "issueNumber": 263,
@@ -478,7 +592,10 @@
       ],
       "createdAt": "2026-11-01T20:03:45Z",
       "updatedAt": "2026-11-02T18:57:47Z",
-      "closedAt": null
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
     },
     {
       "issueNumber": 264,
@@ -489,8 +606,56 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-02T19:13:18Z",
-      "closedAt": null
+      "updatedAt": "2026-11-03T03:12:31Z",
+      "closedAt": null,
+      "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+    },
+    {
+      "issueNumber": 273,
+      "title": "[v2][P0][F30] Governed Replan with immutable history and accepted-work preservation",
+      "issueState": "open",
+      "labels": [
+        "state:planned",
+        "type:task"
+      ],
+      "createdAt": "2026-11-03T03:09:59Z",
+      "updatedAt": "2026-11-03T03:09:59Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_REPLAN_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 274,
+      "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
+      "issueState": "open",
+      "labels": [
+        "state:planned",
+        "type:task"
+      ],
+      "createdAt": "2026-11-03T03:10:06Z",
+      "updatedAt": "2026-11-03T03:10:06Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 275,
+      "title": "[v2][P0][F38/F39] Source-backed Task Attempt and telemetry read model",
+      "issueState": "open",
+      "labels": [
+        "state:planned",
+        "type:task"
+      ],
+      "createdAt": "2026-11-03T03:10:13Z",
+      "updatedAt": "2026-11-03T03:10:13Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
     }
   ],
   "edges": [
@@ -528,7 +693,95 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
-      "reason": "Issue #212 declares #211 as a dependency; GitHub native blocked_by readback is currently absent, so this remains PLANNED and is not executable."
+      "reason": "Existing declared dependency; native blocked_by is absent. Preserve as PLANNED and non-executable."
+    },
+    {
+      "from": 275,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "New Task Attempt/telemetry reader must be available before B consumes the read model."
+    },
+    {
+      "from": 203,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
+    },
+    {
+      "from": 274,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
+    },
+    {
+      "from": 219,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Maintenance/learning source and REJECT-vs-ADOPT semantics are a prerequisite for C."
+    },
+    {
+      "from": 219,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
+    },
+    {
+      "from": 261,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "Replan uses the selected B/K/Host action bridge delivered by B."
+    },
+    {
+      "from": 273,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "Final installed J01-J08 integration waits for governed Replan."
+    },
+    {
+      "from": 207,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/207",
+      "reason": "Final integration waits for real J06 browser journey acceptance."
+    },
+    {
+      "from": 208,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "Final integration waits for exact-SHA J07 Release Qualification evidence."
+    },
+    {
+      "from": 209,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "Final integration waits for J08 defect/next-version/learning acceptance."
+    },
+    {
+      "from": 210,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
     }
   ],
   "claimSubjects": [
@@ -1051,16 +1304,490 @@
       "commentId": null,
       "commentRef": null,
       "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 273,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#273:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 274,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#274:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 275,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#275:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
   "closureEvidence": "NOT_VERIFIED",
-  "plannedEdges": [],
+  "plannedEdges": [
+    {
+      "from": 211,
+      "to": 212,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "Existing declared dependency; native blocked_by is absent. Preserve as PLANNED and non-executable."
+    },
+    {
+      "from": 275,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "New Task Attempt/telemetry reader must be available before B consumes the read model."
+    },
+    {
+      "from": 203,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
+    },
+    {
+      "from": 274,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
+    },
+    {
+      "from": 219,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Maintenance/learning source and REJECT-vs-ADOPT semantics are a prerequisite for C."
+    },
+    {
+      "from": 219,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
+    },
+    {
+      "from": 261,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "Replan uses the selected B/K/Host action bridge delivered by B."
+    },
+    {
+      "from": 273,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "Final installed J01-J08 integration waits for governed Replan."
+    },
+    {
+      "from": 207,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/207",
+      "reason": "Final integration waits for real J06 browser journey acceptance."
+    },
+    {
+      "from": 208,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "Final integration waits for exact-SHA J07 Release Qualification evidence."
+    },
+    {
+      "from": 209,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "Final integration waits for J08 defect/next-version/learning acceptance."
+    },
+    {
+      "from": 210,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    }
+  ],
   "notes": [
-    "Task roster is a candidate snapshot; Host must re-read the complete type:task set.",
-    "DISPATCH_CLAIMED comments are candidate evidence only; CAS acceptance is NOT_VERIFIED.",
-    "Closed Issues remain closure-unverified until independent closeout evidence is read.",
-    "Only native blocked_by edges observed at snapshot are included.",
-    "Issue #212 describes a dependency on #211, but current GitHub native blocked_by readback is empty; preserve it as PLANNED, never project it as NATIVE."
-  ]
+    "This refreshed 43-Task pack is still CANDIDATE_NOT_FROZEN.",
+    "Four pre-existing native edges remain NATIVE: #260-#263 → #264.",
+    "Twelve PLANNED edges are listed; only #211 → #212 is the original declared-but-not-native edge. The other eleven are audit-proposed and must be materialized as native GitHub blocked_by edges and read back before freeze.",
+    "The candidate has 43 Task Issues. Three new P0 Tasks #273-#275 have NO_CLAIM_EVENT_EXPECTED and are not executable.",
+    "scopeDispositions and writeSetAudit are audit metadata pinned by the Task Pack blob; they require independent exact-body review and are not source/Claim authorization.",
+    "No Task execution, K admission, Agent dispatch, merge, version/main mutation, tag or Release is implied."
+  ],
+  "scopeDispositions": {
+    "schema": "tally/version-task-scope-dispositions/v1",
+    "status": "REVIEW_REQUIRED",
+    "items": [
+      {
+        "issueNumber": 62,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed historical integration proof; closure remains independently evidence-qualified."
+      },
+      {
+        "issueNumber": 92,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
+      },
+      {
+        "issueNumber": 137,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-model intake."
+      },
+      {
+        "issueNumber": 139,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed lineage intake."
+      },
+      {
+        "issueNumber": 140,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed diagnosis intake."
+      },
+      {
+        "issueNumber": 141,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed advisory next-version planning intake; does not prove governed Replan activation."
+      },
+      {
+        "issueNumber": 142,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed WorkItem identity intake."
+      },
+      {
+        "issueNumber": 143,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Casebook intake; does not prove complete next-Task learning loop."
+      },
+      {
+        "issueNumber": 144,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed cross-project feedback intake."
+      },
+      {
+        "issueNumber": 145,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Version Journey Driver intake."
+      },
+      {
+        "issueNumber": 146,
+        "disposition": "CLOSED_HISTORICAL_P1",
+        "dispatchableByDisposition": false,
+        "note": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
+      },
+      {
+        "issueNumber": 148,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
+      },
+      {
+        "issueNumber": 166,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Host admission source adapter task."
+      },
+      {
+        "issueNumber": 169,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed accepted Claim verifier task."
+      },
+      {
+        "issueNumber": 172,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
+      },
+      {
+        "issueNumber": 173,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Self-hosted Woodpecker validation carrier task."
+      },
+      {
+        "issueNumber": 176,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
+      },
+      {
+        "issueNumber": 177,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder A evidence."
+      },
+      {
+        "issueNumber": 178,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder B evidence."
+      },
+      {
+        "issueNumber": 179,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Reviewer/Repair evidence."
+      },
+      {
+        "issueNumber": 184,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-only workspace CI task."
+      },
+      {
+        "issueNumber": 196,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+        "dispatchableByDisposition": false,
+        "note": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
+      },
+      {
+        "issueNumber": 197,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 198,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 199,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
+      },
+      {
+        "issueNumber": 200,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer Claim/Join evidence only; no source write authority."
+      },
+      {
+        "issueNumber": 202,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+        "dispatchableByDisposition": false,
+        "note": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
+      },
+      {
+        "issueNumber": 203,
+        "disposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
+      },
+      {
+        "issueNumber": 207,
+        "disposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
+      },
+      {
+        "issueNumber": 208,
+        "disposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
+      },
+      {
+        "issueNumber": 209,
+        "disposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
+      },
+      {
+        "issueNumber": 210,
+        "disposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
+      },
+      {
+        "issueNumber": 211,
+        "disposition": "ACTIVE_NATIVE_READ_RECOVERY",
+        "dispatchableByDisposition": true,
+        "note": "Bounded idempotent native GitHub read retry."
+      },
+      {
+        "issueNumber": 212,
+        "disposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
+      },
+      {
+        "issueNumber": 219,
+        "disposition": "ACTIVE_MAINTENANCE_LEARNING",
+        "dispatchableByDisposition": true,
+        "note": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
+      },
+      {
+        "issueNumber": 260,
+        "disposition": "ACTIVE_VERSION_DAG_FREEZE",
+        "dispatchableByDisposition": true,
+        "note": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
+      },
+      {
+        "issueNumber": 261,
+        "disposition": "ACTIVE_UI_ACTIONS",
+        "dispatchableByDisposition": true,
+        "note": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
+      },
+      {
+        "issueNumber": 262,
+        "disposition": "ACTIVE_EXPERIENCE_LEARNING",
+        "dispatchableByDisposition": true,
+        "note": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
+      },
+      {
+        "issueNumber": 263,
+        "disposition": "ACTIVE_HUMAN_ALM_UI",
+        "dispatchableByDisposition": true,
+        "note": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
+      },
+      {
+        "issueNumber": 264,
+        "disposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+        "dispatchableByDisposition": false,
+        "note": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+      },
+      {
+        "issueNumber": 273,
+        "disposition": "PLANNED_REPLAN_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 274,
+        "disposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 275,
+        "disposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+      }
+    ]
+  },
+  "writeSetAudit": {
+    "schema": "tally/version-task-write-set-audit/v1",
+    "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
+    "requiredBeforeFreeze": [
+      "Read each open Task's current exact allowed_write_set from its current issue body and bind the observed updatedAt.",
+      "Hash the normalized allowed_write_set path list for every open Task; preserve the hash in the independent review report.",
+      "No two dispatchable tasks may own overlapping write paths unless a real native dependency serializes them.",
+      "Reviewer/Verifier tasks are read-only; copied Builder write-set text never grants reviewer write authority.",
+      "Closed, source-integrated, candidate-evidence-only, superseded and planned tasks remain visible but non-dispatchable until separately re-admitted.",
+      "Reconcile every overlap with a serial native edge or explicit non-dispatchable disposition; do not close Issues silently."
+    ],
+    "overlapGroups": [
+      {
+        "id": "LEGACY_J04_J06_IDENTICAL_BROAD_WRITE_SET",
+        "taskIssues": [
+          196,
+          197,
+          198,
+          199,
+          200
+        ],
+        "paths": [
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-controller.test.mjs",
+          "web/v2/journey-view.mjs",
+          "web/v2/journey-view.html",
+          "web/v2/journey-view.test.mjs",
+          ".woodpecker/v2-alm-workspace.yaml"
+        ],
+        "finding": "The five issue bodies repeat the same broad seven-file write set. #197/#198 are not disjoint as written; #199/#200 are Reviewer roles and must be read-only. PR #204/#205 each add only a separate CONCURRENT_A.md/CONCURRENT_B.md evidence file, not those seven implementation files."
+      },
+      {
+        "id": "LEGACY_INTEGRATION_SHARED_PATHS",
+        "taskIssues": [
+          202,
+          207,
+          210,
+          219,
+          264
+        ],
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-view.html",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. Old issue dispositions and exact path ownership require independent review."
+      },
+      {
+        "id": "CENTRAL_BUSINESS_ENTRYPOINT_SERIALIZATION",
+        "taskIssues": [
+          203,
+          210,
+          219,
+          273
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "Central Business entrypoint/build paths overlap. Candidate sequence must be reviewed and native dependencies materialized before any parallel execution."
+      }
+    ]
+  }
 }
