@@ -780,6 +780,10 @@ export async function freezeProductIntake(){
   return {state:'NOT_FROZEN',reason:'PRODUCT_FREEZE_INPUT_INVALID',
     authorized:false,admitted:false,taskPass:false,releasePass:false};
 }
+export async function hostReleaseDelivery(){
+  return {state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+    authorized:false,taskPass:false,releasePass:false};
+}
 `;
 // Deterministic ledger identity of the seeded fixture report (matches
 // learningSuggestionsFromReports: sha256 over the canonical identity array).
