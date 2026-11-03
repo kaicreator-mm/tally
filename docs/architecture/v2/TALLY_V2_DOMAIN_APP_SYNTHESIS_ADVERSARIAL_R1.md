@@ -149,6 +149,10 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 
 本节只记录静态配置/源码证据，不触发 CI，不代表新的 Host 物理副作用已运行。
 
+### 2.4 Detailed Domain Data and Workflow contract
+
+The full eight-Workflow lifecycle contracts, canonical 20-concept glossary, Domain Data asset metadata, authority matrix, current B/Intent/C/Host crosswalk and validation gates are detailed in [`TALLY_V2_DOMAIN_KNOWLEDGE_WORKFLOW_R1.md`](./TALLY_V2_DOMAIN_KNOWLEDGE_WORKFLOW_R1.md). This is a design-only companion for Lane F #276; it does not authorize source implementation, create eight K instances, or assert selected Runtime qualification.
+
 ## 3. Package 结构、初始化与运行时版本
 
 ### 3.1 不同版本坐标：ABI、SDK、应用与运行时
