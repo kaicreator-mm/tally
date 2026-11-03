@@ -17,6 +17,9 @@ export interface HumanActionGate{
 }
 const deny=(reason:string):HumanActionGate=>({enabled:false,reason,
   actionId:null,revision:null,label:'操作不可用'});
+// A matching Task/category is not a Host-issued action identity.
+const hostKindFor:Partial<Record<WorkAction['kind'],string>>={
+  REVIEW:'REVIEW_REPAIR',DECISION:'FREEZE_PRODUCT',RECOVERY:'START_AGENT'};
 export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   catalog:SelectedActionCatalog|null,workItem:WorkAction):HumanActionGate{
   if(snapshot?.connected!==true||catalog?.connected!==true||
@@ -35,15 +38,17 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   if(!Array.isArray(catalog.actions)||
      workItem.taskId===null||!/^\d+$/.test(workItem.taskId))
     return deny('NO_HOST_ACTION_FOR_ITEM');
+  const expectedKind=hostKindFor[workItem.kind];
+  if(!expectedKind||!workItem.hostActionId||
+     !Number.isSafeInteger(workItem.hostActionRevision)||
+     (workItem.hostActionRevision??0)<1||
+     workItem.hostActionKind!==expectedKind)
+    return deny('HOST_ACTION_IDENTITY_NOT_BOUND');
   const matching=catalog.actions.filter(a=>
     a.taskIssue===Number(workItem.taskId)&&a.state==='ELIGIBLE'&&
-    (workItem.hostActionId!==undefined&&workItem.hostActionId!==null
-      ?a.id===workItem.hostActionId&&
-        a.revision===workItem.hostActionRevision&&
-        a.kind===workItem.hostActionKind
-      :(workItem.kind==='REVIEW'&&a.kind==='REVIEW_REPAIR')||
-       (workItem.kind==='DECISION'&&a.kind==='FREEZE_PRODUCT')||
-       (workItem.kind==='RECOVERY'&&a.kind==='START_AGENT')));
+    a.id===workItem.hostActionId&&
+    a.revision===workItem.hostActionRevision&&
+    a.kind===expectedKind);
   if(matching.length!==1)return deny('HOST_ACTION_NOT_ELIGIBLE_OR_AMBIGUOUS');
   const a=matching[0];
   if(!/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(a.id)||
