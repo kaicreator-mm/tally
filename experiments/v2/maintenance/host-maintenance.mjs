@@ -40,14 +40,17 @@ const NOT_REUSED=Object.freeze({nextTaskContextPack:false,adoptedRule:false,
 // A decision may only bind to a suggestion whose learningId is exactly the
 // digest of its own observed report identity; anything else is forged.
 const provenanceBound=suggestion=>{const p=suggestion?.provenance;
-  return !!p&&typeof p.reportId==='string'&&IDENTITY.test(p.reportId)&&
+  const publication=typeof p?.publicationRef==='string'?
+    /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/([1-9][0-9]*)#issuecomment-([1-9][0-9]*)$/.exec(p.publicationRef):null;
+  return !!p&&typeof p.reportId==='string'&&p.reportId.length>0&&p.reportId.length<=512&&
     Number.isSafeInteger(p.revision)&&p.revision>0&&
     Number.isSafeInteger(p.commentId)&&p.commentId>0&&
     Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
-    typeof p.kind==='string'&&IDENTITY.test(p.kind)&&
-    typeof p.namespace==='string'&&IDENTITY.test(p.namespace)&&
-    DIGEST.test(p.dataDigest??'')&&
-    p.publicationRef===`https://github.com/${OWNER}/${REPO}/issues/${p.issueNumber}#issuecomment-${p.commentId}`&&
+    typeof p.kind==='string'&&p.kind.length>0&&p.kind.length<=512&&
+    typeof p.namespace==='string'&&p.namespace.length>0&&p.namespace.length<=512&&
+    typeof p.dataDigest==='string'&&p.dataDigest.length>0&&p.dataDigest.length<=512&&
+    !!publication&&publication[1]===String(p.issueNumber)&&
+    publication[2]===String(p.commentId)&&
     suggestion.learningId===sha256([p.reportId,p.revision,p.commentId,p.kind]);};
 // Ledgers recorded before the currentness field existed can only reconstruct
 // a coarse result; qualification stays the exact observed classification.

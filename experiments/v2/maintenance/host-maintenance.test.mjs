@@ -1030,3 +1030,38 @@ test('learning decision requires one source-matched complete currentness-qualifi
     .hostRecordTaskLearningOutcome(input('REJECTED'));
   assert.equal(duplicateResult.reason,'LEARNING_PROVENANCE_AMBIGUOUS');
 });
+
+test('provenance binding accepts the source repository and rejects incomplete publication identity',async()=>{
+  const observation=summaryObservation({native:{
+    ...summaryObservation().native,repository:'kaicreator-mm/shun-assistant'}});
+  const ctx=await reviewedFrozen();
+  const observed=await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[observation],observedAt:'2026-11-03T09:00:00.000Z'});
+  assert.equal(observed.state,'RECORDED_COMPLETE');
+  const learningId=LEARNING_ID;
+  const result=await host(ctx).hostRecordTaskLearningOutcome({
+    issueNumber:219,sourceRef:__test.ISSUE_REF,sourceSha:sha,
+    learningId,decision:'REJECTED'});
+  assert.equal(result.state,'LEARNING_RECORDED');
+  assert.equal(result.provenance.publicationRef,
+    'https://github.com/kaicreator-mm/shun-assistant/issues/203#issuecomment-6540000001');
+
+  const real=learningSuggestionsFromReports([summaryObservation()])[0];
+  const malformedRows=[
+    {...real,provenance:{...real.provenance,dataDigest:''}},
+    {...real,provenance:{...real.provenance,
+      publicationRef:'https://github.com/evil.example/tally/issues/203#issuecomment-6540000001'}},
+    {...real,provenance:{...real.provenance,
+      publicationRef:'https://github.com/kaicreator-mm/tally/issues/204#issuecomment-6540000001'}}
+  ];
+  for(const row of malformedRows){
+    const m=memoryStore();
+    await m.store.put(MAINTENANCE_LEARNING_KEY,{phase:'OBSERVED_LEARNING',
+      issueRef:__test.ISSUE_REF,sourceSha:sha,suggestions:[row]});
+    const deniedResult=await host({openStore:async()=>m.store})
+      .hostRecordTaskLearningOutcome({issueNumber:219,sourceRef:__test.ISSUE_REF,
+        sourceSha:sha,learningId:LEARNING_ID,decision:'REJECTED'});
+    assert.equal(deniedResult.reason,'LEARNING_PROVENANCE_FORGED');
+  }
+});
