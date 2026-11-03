@@ -573,7 +573,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           opened=await store(openStore,registryPath);
           raced=await opened.get(outcomeKey);
         }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-        finally{if(opened)await opened.close();}
+        finally{if(opened){await opened.close();opened=null;}}
         return sameOutcome(raced?.value)?
           outcomeReceipt(raced.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
           denied(input,'LEARNING_OUTCOME_MISMATCH');
