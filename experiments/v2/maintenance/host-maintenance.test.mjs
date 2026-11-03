@@ -243,8 +243,9 @@ test('learning decision and later independent outcome are ledger-gated and idemp
   assert.equal((await h.hostRecordTaskLearningOutcome(learningInput({decision:'ADOPTED',
     outcome:{...outcomeInput,note:'other'}}))).reason,'LEARNING_OUTCOME_MISMATCH');
   const attestedOutcome=await attestedRunner();
-  assert.equal(attestedOutcome.outcome.measuredEffect,'ATTESTED_OUTCOME_ONLY');
-  assert.equal(attestedOutcome.qualityGainClaimed,false);
+  assert.equal(attestedOutcome.state,'NOT_ADMITTED');
+  assert.equal(attestedOutcome.reason,'INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED');
+  assert.equal(attestedOutcome.githubEffect,'NOT_RUN');
   async function attestedRunner(){
     const ctx2=await reviewedFrozen();
     await observeLearningSuggestions({openStore:ctx2.openStore,
@@ -413,6 +414,37 @@ test('REJECT decisions replay exactly and can never flip to ADOPT',async()=>{
   assert.equal(outcome.outcome.measuredEffect,'NOT_MEASURED');
   assert.equal(outcome.githubEffect,'NOT_RUN');
   assert.equal(outcome.qualityGainClaimed,false);
+});
+
+test('learning decision and outcome require frozen write-set verification',async()=>{
+  const ctx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const input=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,...over});
+  const missing=createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:true}),env:env()});
+  assert.equal((await missing.hostRecordTaskLearningOutcome(
+    input({decision:'ADOPTED'}))).reason,'MAINTENANCE_HOST_CONFIG_INVALID');
+  const deniedHost=host(ctx,{verifyFrozenWriteSet:async()=>({ok:false,
+    reason:'DAG_WRITESET_NOT_VERIFIED'})});
+  const deniedDecision=await deniedHost.hostRecordTaskLearningOutcome(
+    input({decision:'ADOPTED'}));
+  assert.equal(deniedDecision.reason,'DAG_WRITESET_NOT_VERIFIED');
+  const decisionKey=`tally:v2:maintenance-learning-decision:${LEARNING_ID}`;
+  const outcomeKey=`tally:v2:maintenance-learning-outcome:${LEARNING_ID}`;
+  const cas=await ctx.openStore();
+  assert.equal(await cas.get(decisionKey),null,'write-set refusal must not record a decision');
+  const accepted=await host(ctx).hostRecordTaskLearningOutcome(
+    input({decision:'ADOPTED'}));
+  assert.equal(accepted.state,'LEARNING_RECORDED');
+  const deniedOutcome=await deniedHost.hostRecordTaskLearningOutcome(input({
+    decision:'ADOPTED',outcome:{attested:false,
+      observedAt:'2026-11-04T10:00:00.000Z',note:'unverified follow-up'}}));
+  assert.equal(deniedOutcome.reason,'DAG_WRITESET_NOT_VERIFIED');
+  assert.equal(await cas.get(outcomeKey),null,'write-set refusal must not record an outcome');
+  await cas.close();
 });
 
 test('full governed publish: claim, write-set, frozen review, publish and readback',async()=>{
@@ -945,8 +977,8 @@ test('concurrent identical learning outcomes reconcile the first CAS write',asyn
     sourceSha:sha,learningId:LEARNING_ID,...over});
   assert.equal((await h.hostRecordTaskLearningOutcome(
     input({decision:'ADOPTED'}))).reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
-  const outcome={attested:true,observedAt:'2026-11-04T10:00:00.000Z',
-    note:'independent outcome witness'};
+  const outcome={attested:false,observedAt:'2026-11-04T10:00:00.000Z',
+    note:'self-reported follow-up; no independent evidence available'};
   const results=await Promise.all([
     h.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome})),
     h.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome}))]);
@@ -956,6 +988,8 @@ test('concurrent identical learning outcomes reconcile the first CAS write',asyn
   const record=(await ctx.openStore().then(s=>s.get(
     `tally:v2:maintenance-learning-outcome:${LEARNING_ID}`))).value;
   assert.equal(record.phase,'LEARNING_OUTCOME');
+  assert.equal(record.attested,false);
+  assert.equal(record.measuredEffect,'NOT_MEASURED');
   assert.equal(record.outcomeAt!==undefined,true);
 });
 

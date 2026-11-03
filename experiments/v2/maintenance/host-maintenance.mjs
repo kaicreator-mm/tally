@@ -444,7 +444,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         repository:`${OWNER}/${REPO}`,issue:readback.issue,duplicate:false});
     },
     async hostRecordTaskLearningOutcome(input={}){
-      if(typeof verifyAcceptedClaim!=='function')
+      if(typeof verifyAcceptedClaim!=='function'||typeof verifyFrozenWriteSet!=='function')
         return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
       const outcome=input.outcome;
       if(outcome!==undefined&&(typeof outcome!=='object'||outcome===null||
@@ -452,6 +452,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         !ISO(outcome.observedAt??'')||
         typeof outcome.note!=='string'||outcome.note.length>512))
         return denied(input,'MAINTENANCE_INPUT_INVALID');
+      // A caller-supplied boolean is not an independent attestation. Until a
+      // Host-verifiable evidence/readback port exists, keep outcomes unmeasured.
+      if(outcome?.attested===true)
+        return denied(input,'INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED');
       if(!DECISIONS.has(input.decision))
         return denied(input,'MAINTENANCE_INPUT_INVALID');
       if(!pin({...input,candidateDigest:input.learningId}))
@@ -459,6 +463,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const registryPath=env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
       const claim=await verifyAcceptedClaim(ISSUE,'builder');
       if(!claim.ok)return denied(input,claim.reason);
+      const writeSet=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(!writeSet.ok)return denied(input,writeSet.reason);
       const ledger=await loadLearning(openStore,registryPath);
       if(ledger?.value?.phase!=='OBSERVED_LEARNING'||
         ledger.value.issueRef!==ISSUE_REF)
