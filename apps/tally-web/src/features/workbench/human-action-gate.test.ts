@@ -71,8 +71,7 @@ test('empty, missing or malformed project/version scope identifiers fail closed'
     {...catalog,versionId:'version/v2/extra'},
     {...work,versionId:'version/v2/extra'}).enabled,false);
   const missingVersion={...work,versionId:undefined} as unknown as WorkAction;
-  const missingVersionCatalog={...catalog,versionId:undefined}
-    as unknown as typeof catalog;
+  const missingVersionCatalog={...catalog,versionId:undefined} as unknown as typeof catalog;
   assert.equal(workbenchActionGate(inbox,
     missingVersionCatalog,missingVersion).enabled,false);
 });
