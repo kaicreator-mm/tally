@@ -131,6 +131,31 @@ const summaryObservation=over=>({envelope:{schema:'ads/github/v5',kind:'report',
     currentness:'CURRENT'},...over});
 // learningId is deterministic: sha256 of the canonical identity array.
 const LEARNING_ID=sha256HexOf(['rep-1',1,6540000001,'EXECUTION_SUMMARY']);
+// P0 amendment matrix: each lane gets its own report identity so the observed
+// ledger exposes one STALE, one UNKNOWN (no grant) and one current-but-
+// verifier-NOT_RUN suggestion; all three stay qualification UNKNOWN.
+const p0Observation=(reportId,commentId,mutate)=>{const observation=
+  summaryObservation({envelope:{schema:'ads/github/v5',kind:'report',
+      data:{report_kind:'EXECUTION_SUMMARY',report_id:reportId,revision:1,
+        publisher_namespace:'tally',capture_coverage:'COMPLETE',
+        verifier:{status:'QUALIFIED'},
+        subject:{task_ref:'https://github.com/kaicreator-mm/tally/issues/172',
+          issue_ref:'https://github.com/kaicreator-mm/tally/issues/203',
+          source_status:'PINNED'}}},
+    native:{repository:'kaicreator-mm/tally',issueNumber:203,commentId,
+      dataDigest:'e'.repeat(64),sourceSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
+      permission:'GRANTED',readback:'VERIFIED',pagination:'COMPLETE',
+      currentness:'CURRENT'}});
+  return mutate?(mutate(observation),observation):observation;};
+const P0_STALE=p0Observation('rep-p0-stale',6540000101,
+  observation=>{observation.native.currentness='STALE';});
+const P0_UNKNOWN=p0Observation('rep-p0-unknown',6540000102,
+  observation=>{observation.native.permission='DENIED';});
+const P0_UNVERIFIED=p0Observation('rep-p0-unverified',6540000103,
+  observation=>{observation.envelope.data.verifier={status:'NOT_RUN'};});
+const p0LearningId=observation=>sha256HexOf(
+  [observation.envelope.data.report_id,1,
+   observation.native.commentId,'EXECUTION_SUMMARY']);
 
 test('learning provenance derives from existing public ADS reports only',()=>{
   const suggestions=learningSuggestionsFromReports([summaryObservation()]);
@@ -145,13 +170,19 @@ test('learning provenance derives from existing public ADS reports only',()=>{
   assert.match(row.provenance.publicationRef,/issues\/203#issuecomment-/);
   assert.equal(row.measuredEffect,'NOT_MEASURED');
   assert.equal(row.noAgentRanking,true);assert.equal(row.qualityGainClaimed,false);
+  assert.equal(row.currentness,'CURRENT_OBSERVED');
+  assert.equal(row.currentnessReason,'NATIVE_REPORT_OBSERVED');
   const stale=learningSuggestionsFromReports([summaryObservation({
     native:{...summaryObservation().native,currentness:'STALE'}})]);
   assert.equal(stale[0].qualification,'UNKNOWN');
+  assert.equal(stale[0].currentness,'STALE');
+  assert.equal(stale[0].currentnessReason,'NATIVE_SOURCE_STALE');
   assert.equal(stale[0].learningId,LEARNING_ID);
   const ungranted=learningSuggestionsFromReports([summaryObservation({
     native:{...summaryObservation().native,permission:'DENIED'}})]);
   assert.equal(ungranted[0].qualification,'UNKNOWN');
+  assert.equal(ungranted[0].currentness,'UNKNOWN');
+  assert.equal(ungranted[0].currentnessReason,'GITHUB_PERMISSION_NOT_GRANTED');
   // A report that fails pinned-schema validation fails the whole set closed.
   for(const bad of [null,[{}],
     [summaryObservation({validation:{schema:'ads/github/v5',passed:false}})],
@@ -229,6 +260,142 @@ test('learning decision and later independent outcome are ledger-gated and idemp
   assert.equal(unknownLearning.reason,'LEARNING_PROVENANCE_NOT_VERIFIED');
   const badInput=await h.hostRecordTaskLearningOutcome(learningInput({decision:'RANK_FIRST'}));
   assert.equal(badInput.reason,'MAINTENANCE_INPUT_INVALID');
+});
+
+test('P0 amendment: UNKNOWN/STALE evidence is explicitly REJECTable, never adoptable',async()=>{
+  const cases=[[P0_STALE,'STALE','NATIVE_SOURCE_STALE'],
+    [P0_UNKNOWN,'UNKNOWN','GITHUB_PERMISSION_NOT_GRANTED'],
+    [P0_UNVERIFIED,'CURRENT_OBSERVED','NATIVE_REPORT_OBSERVED']];
+  for(const [observation,currentness,currentnessReason] of cases){
+    const ctx=await reviewedFrozen();
+    await observeLearningSuggestions({openStore:ctx.openStore,
+      registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+      observations:[observation],observedAt:'2026-11-03T09:00:00.000Z'});
+    const learningId=p0LearningId(observation);
+    const h=host(ctx);
+    const input=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+      sourceSha:sha,learningId,...over});
+    // Negative: unqualified evidence can never be adopted, and the refusal
+    // leaves no decision record behind in the Host CAS.
+    const adopt=await h.hostRecordTaskLearningOutcome(input({decision:'ADOPTED'}));
+    assert.equal(adopt.state,'NOT_ADMITTED');
+    assert.equal(adopt.reason,'LEARNING_ADOPTION_NOT_QUALIFIED');
+    assert.equal(adopt.githubEffect,'NOT_RUN');
+    const cas=await ctx.openStore();
+    const decisionKey=`tally:v2:maintenance-learning-decision:${learningId}`;
+    assert.equal(await cas.get(decisionKey),null,'refused ADOPT must not record');
+    // Positive: an explicit REJECT is recordable with the exact
+    // provenance/currentness/qualification result of the observed source.
+    const reject=await h.hostRecordTaskLearningOutcome(input({decision:'REJECTED'}));
+    assert.equal(reject.state,'LEARNING_RECORDED');
+    assert.equal(reject.reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+    assert.equal(reject.decision,'REJECTED');
+    assert.equal(reject.currentness,currentness);
+    assert.equal(reject.qualification,'UNKNOWN');
+    assert.equal(reject.nextTaskContextPack,false);
+    assert.equal(reject.adoptedRule,false);assert.equal(reject.adoptedSkill,false);
+    assert.equal(reject.adoptedProcedure,false);assert.equal(reject.adoptedWorkflow,false);
+    assert.equal(reject.noAgentRanking,true);
+    assert.equal(reject.qualityGainClaimed,false);
+    const record=(await cas.get(decisionKey)).value;
+    assert.equal(record.phase,'LEARNING_DECISION');
+    assert.equal(record.decision,'REJECTED');
+    assert.equal(record.currentness,currentness);
+    assert.equal(record.currentnessReason,currentnessReason);
+    assert.equal(record.qualification,'UNKNOWN');
+    assert.equal(record.provenance.reportId,observation.envelope.data.report_id);
+    assert.equal(record.nextTaskContextPack,false,
+      'a REJECT must never enter a next-Task Context Pack');
+    assert.equal(record.adoptedRule,false);assert.equal(record.adoptedSkill,false);
+    assert.equal(record.adoptedProcedure,false);assert.equal(record.adoptedWorkflow,false);
+    await cas.close();
+  }
+});
+
+test('missing or forged suggestion provenance is refused for every decision',async()=>{
+  const ctx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const h=host(ctx);
+  const input=learningId=>over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId,...over});
+  // Missing: the learningId was never observed into the ledger.
+  for(const decision of ['REJECTED','ADOPTED'])
+    assert.equal((await h.hostRecordTaskLearningOutcome(
+      input('f'.repeat(64))({decision}))).reason,
+      'LEARNING_PROVENANCE_NOT_VERIFIED',decision);
+  // Forged: a planted ledger row whose learningId does not bind to its own
+  // reported identity, and one carrying no report provenance at all.
+  const real=learningSuggestionsFromReports([summaryObservation()])[0];
+  const forgedRows=[Object.freeze({...real,learningId:'e'.repeat(64),
+      qualification:'UNKNOWN'}),
+    Object.freeze({...real,provenance:null,qualification:'UNKNOWN'})];
+  for(const row of forgedRows){
+    const m=memoryStore();
+    await m.store.put(MAINTENANCE_LEARNING_KEY,{phase:'OBSERVED_LEARNING',
+      issueRef:__test.ISSUE_REF,sourceSha:sha,suggestions:[row],
+      observedAt:'2026-11-03T09:00:00.000Z'});
+    const forgedHost=host({openStore:async()=>m.store});
+    for(const decision of ['REJECTED','ADOPTED']){
+      const result=await forgedHost.hostRecordTaskLearningOutcome(
+        input(row.learningId)({decision}));
+      assert.equal(result.state,'NOT_ADMITTED');
+      assert.equal(result.reason,'LEARNING_PROVENANCE_FORGED',
+        decision+' must refuse forged provenance');
+      assert.equal(result.githubEffect,'NOT_RUN');
+    }
+    assert.equal((await m.store.get(
+      `tally:v2:maintenance-learning-decision:${row.learningId}`)),null,
+      'forged provenance must not record any decision');
+  }
+});
+
+test('REJECT decisions replay exactly and can never flip to ADOPT',async()=>{
+  // Qualified evidence: a recorded REJECT is final — the Host CAS refuses the
+  // later ADOPT outright instead of reusing the decision slot.
+  const qualified=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:qualified.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const hq=host(qualified);
+  const qInput=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,...over});
+  const reject=await hq.hostRecordTaskLearningOutcome(qInput({decision:'REJECTED'}));
+  assert.equal(reject.reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+  assert.equal(reject.currentness,'CURRENT_OBSERVED');
+  assert.equal(reject.qualification,'REPORTED_QUALIFIED');
+  const replay=await hq.hostRecordTaskLearningOutcome(qInput({decision:'REJECTED'}));
+  assert.equal(replay.state,'LEARNING_RECORDED');
+  assert.equal(replay.reason,'LEARNING_DECISION_ALREADY_RECORDED');
+  assert.equal(replay.decision,'REJECTED');
+  assert.equal(replay.nextTaskContextPack,false);
+  assert.equal(replay.adoptedWorkflow,false);
+  assert.equal((await hq.hostRecordTaskLearningOutcome(
+    qInput({decision:'ADOPTED'}))).reason,'LEARNING_DECISION_MISMATCH');
+  // Unqualified STALE evidence: the adoption gate itself stays in front of
+  // the CAS, so a rejected STALE learning is never adoptable either way.
+  const stale=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:stale.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[P0_STALE],observedAt:'2026-11-03T09:00:00.000Z'});
+  const hs=host(stale);
+  const staleId=p0LearningId(P0_STALE);
+  const sInput=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:staleId,...over});
+  assert.equal((await hs.hostRecordTaskLearningOutcome(
+    sInput({decision:'REJECTED'}))).reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+  assert.equal((await hs.hostRecordTaskLearningOutcome(
+    sInput({decision:'ADOPTED'}))).reason,'LEARNING_ADOPTION_NOT_QUALIFIED');
+  // A later independent outcome still attaches to the rejected learning as an
+  // observed fact, without any quality-gain claim.
+  const outcome=await hs.hostRecordTaskLearningOutcome(sInput({decision:'REJECTED',
+    outcome:{attested:false,observedAt:'2026-11-04T10:00:00.000Z',
+      note:'independent follow-up found no reuse of the rejected learning'}}));
+  assert.equal(outcome.state,'LEARNING_RECORDED');
+  assert.equal(outcome.outcome.measuredEffect,'NOT_MEASURED');
+  assert.equal(outcome.githubEffect,'NOT_RUN');
+  assert.equal(outcome.qualityGainClaimed,false);
 });
 
 test('full governed publish: claim, write-set, frozen review, publish and readback',async()=>{

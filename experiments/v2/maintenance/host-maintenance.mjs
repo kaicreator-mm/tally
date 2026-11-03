@@ -10,7 +10,13 @@
  * identity only — it is never rewritten. Task Learning uses existing public
  * ADS reports with explicit provenance, an explicit use/reject decision and a
  * later independent outcome; quality gain is never inferred and Agents are
- * never ranked. Every deviation fails closed with a bounded reason, a lost
+ * never ranked. A REJECT is the explicit decline of observed evidence: it is
+ * recordable while the suggestion is bound to a legitimately observed report
+ * identity even when the source is STALE/UNKNOWN, it records the exact
+ * provenance/currentness/qualification result, and it never creates an
+ * adopted Rule/Skill/Procedure/Workflow or enters a next-Task Context Pack;
+ * ADOPT stays gated by REPORTED_QUALIFIED current evidence under the existing
+ * Host authority. Every deviation fails closed with a bounded reason, a lost
  * GitHub acknowledgment stays UNKNOWN and later reconciles WITHOUT creating a
  * duplicate Issue.
  */
@@ -27,6 +33,21 @@ const ISO=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
 const RELEASE_TAG=/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const VERSION=/^v?[0-9]+\.[0-9]+(?:\.[0-9]+)?$/;
 const DECISIONS=new Set(['ADOPTED','REJECTED']);
+// A recorded decision is a ledger fact only: it adopts nothing and no
+// decision — above all an explicit REJECT — may feed a next-Task Context Pack.
+const NOT_REUSED=Object.freeze({nextTaskContextPack:false,adoptedRule:false,
+  adoptedSkill:false,adoptedProcedure:false,adoptedWorkflow:false});
+// A decision may only bind to a suggestion whose learningId is exactly the
+// digest of its own observed report identity; anything else is forged.
+const provenanceBound=suggestion=>{const p=suggestion?.provenance;
+  return !!p&&typeof p.reportId==='string'&&
+    Number.isSafeInteger(p.revision)&&Number.isSafeInteger(p.commentId)&&
+    typeof p.kind==='string'&&suggestion.learningId===
+    sha256([p.reportId,p.revision,p.commentId,p.kind]);};
+// Ledgers recorded before the currentness field existed can only reconstruct
+// a coarse result; qualification stays the exact observed classification.
+const currentnessOf=suggestion=>suggestion?.currentness??
+  (suggestion?.qualification==='REPORTED_QUALIFIED'?STATES.CURRENT:STATES.UNKNOWN);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
@@ -170,7 +191,10 @@ export async function recordMaintenanceCandidate({openStore,registryPath,sourceS
  * public ADS report observations already collected by the native C reader.
  * Provenance keeps the exact report identity; qualification REPORTED_QUALIFIED
  * requires a CURRENT report with a QUALIFIED verifier — everything else stays
- * UNKNOWN. No quality gain and no Agent ranking can enter the ledger.
+ * UNKNOWN, while currentness/currentnessReason keep the exact observed
+ * source/currentness result (STALE/UNKNOWN/PARTIAL/CURRENT) for the explicit
+ * use/reject decision. No quality gain and no Agent ranking can enter the
+ * ledger.
  */
 export function learningSuggestionsFromReports(observations){
   if(!Array.isArray(observations)||observations.length>100)return null;
@@ -190,6 +214,7 @@ export function learningSuggestionsFromReports(observations){
       subjectSha:row.source?.sourceSha??null,
       qualification:row.status===STATES.CURRENT&&
         row.advisory?.verifierStatus==='QUALIFIED'?'REPORTED_QUALIFIED':'UNKNOWN',
+      currentness:row.status,currentnessReason:row.reason??null,
       provenance:row.source?Object.freeze({reportId:row.source.reportId,
         revision:row.source.revision,kind:row.source.kind,
         commentId:row.source.commentId,issueNumber:row.source.issueNumber,
@@ -254,8 +279,13 @@ async function loadLearning(openStore,registryPath){
 
 /**
  * J08c Host records: explicit use/reject decision and the later independent
- * outcome for one REPORTED_QUALIFIED learning suggestion. The outcome is an
- * observed fact only — measuredEffect never becomes a quality gain.
+ * outcome for one ledger learning suggestion. A REJECT is recordable for any
+ * legitimately provenance-bound suggestion — including STALE/UNKNOWN evidence
+ * — and carries the exact provenance/currentness/qualification result while
+ * never entering a next-Task Context Pack; an ADOPT still requires
+ * REPORTED_QUALIFIED current evidence under the existing Host authority. The
+ * outcome is an observed fact only — measuredEffect never becomes a quality
+ * gain.
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
   verifyFrozenWriteSet,publishIssue,findIssue,readIssue,env=process.env}={}){
@@ -421,14 +451,26 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const ledger=await loadLearning(openStore,registryPath);
       const suggestion=ledger?.value?.suggestions?.find(
         row=>row.learningId===input.learningId);
-      if(!suggestion||suggestion.qualification!=='REPORTED_QUALIFIED')
-        return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(!suggestion)return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      // A decision must bind to the exact report identity the ledger observed;
+      // a missing or identity-mismatched provenance is forged and is not
+      // decisionable — for adoption or rejection alike.
+      if(!provenanceBound(suggestion))
+        return denied(input,'LEARNING_PROVENANCE_FORGED');
+      // A REJECT explicitly declines observed evidence and stays recordable
+      // for STALE/UNKNOWN sources; only adoption demands the current,
+      // independently qualified evidence.
+      if(input.decision==='ADOPTED'&&
+        suggestion.qualification!=='REPORTED_QUALIFIED')
+        return denied(input,'LEARNING_ADOPTION_NOT_QUALIFIED');
       if(env.TALLY_LOCAL_REPLAY==='1')
         return Object.freeze({...flags,state:'REPLAY_COMPLETE',
           reason:'REPLAY_FIXTURE_ONLY',issueRef:ISSUE_REF,
           sourceSha:input.sourceSha,learningId:input.learningId,
           decision:input.decision,claimAccepted:true,admitted:true,
           replayFixture:true,githubEffect:'NOT_RUN',
+          currentness:currentnessOf(suggestion),
+          qualification:suggestion.qualification,...NOT_REUSED,
           measuredEffect:'NOT_MEASURED'});
       let opened=null,existingDecision;
       try{
@@ -445,6 +487,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
               sourceSha:input.sourceSha,learningId:input.learningId,
               decision:input.decision,claimAccepted:true,admitted:true,
               replayFixture:false,githubEffect:'NOT_RUN',
+              currentness:currentnessOf(suggestion),
+              qualification:suggestion.qualification,...NOT_REUSED,
               measuredEffect:'NOT_MEASURED',noAgentRanking:true,
               qualityGainClaimed:false});
           return denied(input,'LEARNING_DECISION_MISMATCH');
@@ -455,9 +499,12 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
             Object.freeze({phase:'LEARNING_DECISION',issueRef:ISSUE_REF,
               sourceSha:input.sourceSha,learningId:input.learningId,
               decision:input.decision,decidedAt:new Date().toISOString(),
-              provenance:suggestion.provenance,noAgentRanking:true,
-              qualityGainClaimed:false,authorized:false,taskPass:false,
-              releasePass:false}),{mustBeAbsent:true});
+              provenance:suggestion.provenance,
+              currentness:currentnessOf(suggestion),
+              currentnessReason:suggestion.currentnessReason??null,
+              qualification:suggestion.qualification,...NOT_REUSED,
+              noAgentRanking:true,qualityGainClaimed:false,authorized:false,
+              taskPass:false,releasePass:false}),{mustBeAbsent:true});
         }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
         finally{if(opened)await opened.close();}
         return Object.freeze({...flags,state:'LEARNING_RECORDED',
@@ -465,6 +512,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           sourceSha:input.sourceSha,learningId:input.learningId,
           decision:input.decision,claimAccepted:true,admitted:true,
           replayFixture:false,githubEffect:'NOT_RUN',
+          currentness:currentnessOf(suggestion),
+          qualification:suggestion.qualification,...NOT_REUSED,
           measuredEffect:'NOT_MEASURED',noAgentRanking:true,
           qualityGainClaimed:false});
       }
