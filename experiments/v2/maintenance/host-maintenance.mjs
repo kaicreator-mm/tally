@@ -635,7 +635,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }
       if(existingDecision?.value?.phase!=='LEARNING_DECISION')
         return denied(input,'LEARNING_DECISION_REQUIRED');
-      if(input.decision!==existingDecision.value.decision)
+      if(input.decision!==existingDecision.value.decision||
+        existingDecision.value.issueRef!==ISSUE_REF||
+        existingDecision.value.sourceSha!==input.sourceSha||
+        existingDecision.value.learningId!==input.learningId)
         return denied(input,'LEARNING_DECISION_MISMATCH');
       // Later outcome writes reuse only the Host-persisted, exact approval
       // receipt from the original ADOPT decision; no caller can supply it.
