@@ -399,6 +399,25 @@ The four new compiler/consumer files proposed for F1b are `experiments/v2/select
 
 This ordering avoids overlapping writers and prevents a documentation-only Domain Data tree from being mistaken for selected executable Business logic.
 
+### 8.2 Host-consumed private B helpers: explicit v2 seam decision
+
+**Selected for v2:** no new B public ABI, private C Operation, private `task-meta` import or cross-layer Provider. Keep the four currently observed Host-read helper imports as **read-only projection/preflight dependencies**, not privileged admission. Their source is pinned with the same immutable Tally source snapshot as the BUILD; Host actions still go through the selected K/C/Host seam. The shared E/#264 Host bootstrap owns verifying that pin, **before** a controller or helper is loaded.
+
+| Host consumer | Exact helper/API | Semantic owner | Boundary decision |
+|---|---|---|---|
+| `web/v2/intake-controller.mjs` | `guided-intake.mjs`: `nextGuidedStep`, `guidedCaseRef`, `GUIDED_TEMPLATE_REF` | Host-owned Journey projection, source currently inside B package | Keep AJV, `node:crypto`, `node:fs` on the Node Host side; do not embed the existing module into sealed B or infer K workflow state. |
+| `web/v2/intake-controller.mjs` | `planning.mjs`: `planNextVersion` | B-owned deterministic planning candidate | Host is a read/preflight consumer, not native dependency/Claim writer; exact helper bytes pinned alongside the selected B root. |
+| `web/v2/maintenance-controller.mjs` | `maintenance-intake.mjs`: `projectMaintenanceIntake` | B-owned maintenance candidate projection | Host reads bounded source-backed candidate only; real publication remains selected dispatch. |
+| Intake + Maintenance controllers | `index.mjs`: existing `assess*/project*` exports | B-owned selected policy facade | The exact `src/index.mjs` bytes imported by Host must be byte-identical to the selected `moduleSource` pinned by the BUILD; no separate drifting copy. |
+
+**Digest/ownership contract — `tally.b-host-projections/v1` (proposed E composition receipt):**
+1. The manifest lists the exact Tally source commit/tree and exact bytes + `SHA256` of `src/index.mjs`, `src/guided-intake.mjs`, `src/planning.mjs`, `src/maintenance-intake.mjs`; the selected BUILD receipt binds the `src/index.mjs` module digest and the Domain Data manifest digest. The Host-controller snapshot is from this same Tally tree, never `main` or an unpinned filesystem lookup.
+2. E's selected Host **preflight**, before static controller import/dynamic helper import and before exposing HTTP routes, checks all four hashes against the locked source snapshot and the selected-B `moduleSource` hash. Any missing file, hash mismatch, wrong Tally tree, wrong selected BUILD or unknown manifest version fails closed (`HOST_B_PROJECTION_SOURCE_DRIFT`) with zero dispatch and zero claimed adoption/readiness. A check performed only after controller load is insufficient.
+3. F2 refactor may move pure functions behind a strictly private, source-pinned internal seam only after each current B writer closes and a separately reviewed exact-path amendment; that seam has no public import/Tool/Provider/authorization API. If E cannot reliably perform pre-import pin verification with the existing runtime, leave this as `NOT_PROVEN`, do not turn on the affected Host journey and request an explicit E amendment rather than silently skipping the check.
+4. Clean-consumer negatives must substitute a drifted `index.mjs`/helper, stale Host snapshot, unselected Rule, missing AJV dependency and wrong DomainHarness BUILD pin: each refuses before an effectful selected K call. A positive pinned consumer must prove the same task-readiness Schema/Rule classification through the selected `inspectTaskReadiness` route and Host advisory preview; equal display text alone is not digest proof.
+
+This decision fixes the **architecture owner and digest rule**; it does **not** assert that E bootstrap currently has this preflight or that F2 source edits are accepted. Those require separately authorized exact-path code, independent review and physical selected-B/Host evidence. F1a new-only assets may proceed independently once #276 gets its fresh legal admission.
+
 ## 8. Implementation sequence for Lane F
 
 1. Complete the source-to-callsite/BUILD closure inventory and preserve the module disposition table above.
