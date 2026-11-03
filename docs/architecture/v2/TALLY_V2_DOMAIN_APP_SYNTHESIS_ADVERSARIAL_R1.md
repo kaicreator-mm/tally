@@ -97,6 +97,31 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 
 因此重构前必须给每个 helper 记录 owner（B/Host/C/UI）、调用点、是否进入 selected `moduleSource`、副作用类别、authority、测试和 Domain Data 映射。不要仅按行数拆分，也不要未经明确契约就让跨层代码 deep-import 私有 Package 内部。新增 Host/UI/CI 写集必须单独修订准入。
 
+### 2.2 现有 B 源文件逐项归属与处置
+
+以下表格以当前源码导出、已检查的调用点和 package-local test 为依据；“未发现调用点”仅表示本轮限定扫描范围，不代表全仓库死代码结论。
+
+| 文件 | 行数 | 当前函数/职责 | 已确认调用点 | 当前测试 | 初步目标归属 |
+|---|---:|---|---|---|---|
+| `index.mjs` | 1,646 | Business ABI、10 Intent/Effect 声明、Policy handlers、assess/project | V10 Producer 选为唯一 B moduleSource；Intake/Maintenance Host controller 也直接调用其纯 assess/project | `business-policy`、`native-source-diagnostic` | 保留唯一 ABI Facade；逐项区分 K handler 与 Host 预检/投影 helper |
+| `acceptance.mjs` | 82 | Acceptance item/coverage/table projection | 本轮 bounded runtime scan 未发现 | `acceptance` | B 纯 helper / Acceptance Domain Data 映射 |
+| `casebook.mjs` | 80 | Casebook replay、affected case selection | 本轮 bounded runtime scan 未发现 | `casebook` | Knowledge / positive-negative-counterexample fixtures，不自动成为 Runtime |
+| `diagnosis.mjs` | 104 | Workfront diagnosis | 本轮 bounded runtime scan 未发现 | `diagnosis` | B 纯诊断投影，需明确输入证据与 UNKNOWN |
+| `feedback.mjs` | 66 | Feedback case projection | 本轮 bounded runtime scan 未发现 | `feedback` | Experience / Feedback projection，ADS authority 不复制 |
+| `guided-intake.mjs` | 69 | Guided Journey schema digest、validation、next step | `web/v2/intake-controller.mjs` | `guided-intake` | 需要明确是 Host Journey adapter 还是 B domain step logic；当前依赖 AJV、node:crypto、node:fs，不能直接假定可进入 sealed B |
+| `journey.mjs` | 99 | Journey snapshot、next actions | 本轮 bounded runtime scan 未发现 | `journey` | Workflow/UI Journey projection；不拥有 K durable state |
+| `lineage.mjs` | 160 | Version timeline reconstruction/format | 本轮 bounded runtime scan 未发现 | `lineage` | Version/Package lineage read model；来源仍为 GitHub/ADS 原生事实 |
+| `maintenance-intake.mjs` | 71 | Maintenance candidate projection | `web/v2/maintenance-controller.mjs` | `maintenance-intake` | B 领域投影；Host 可消费的边界需显式化 |
+| `planning.mjs` | 93 | `planNextVersion` DAG candidate planning | `web/v2/intake-controller.mjs` | `planning` | B 纯 Replan/DAG 候选；不得写 native Dependency 或创建 Claim |
+| `release-readiness.mjs` | 78 | Release readiness projection / required gates | 本轮 bounded runtime scan 未发现 | `release-readiness` | B 资格投影；不能签发独立 RQ/Owner/CI 事实 |
+| `work-units.mjs` | 106 | WorkUnit projection | 本轮 bounded runtime scan 未发现 | `work-units` | B 只读 read model；Attempt 权威来源仍需 K/Host |
+
+**当前最重要的边界发现**：
+
+- B `package.json` 是 `private: true`，仅 export 根入口 `.`。Host controller 对 sibling helper 的相对路径 deep import 是 monorepo 内部源码依赖，不是已承诺的 public Package ABI。
+- `guided-intake.mjs` 依赖 AJV 和 Node 文件/加密模块；它当前由 Host controller 直接消费，不能在没有显式 bundling/Host boundary 决策时移动进 sealed B。
+- `index.mjs` 的 selected moduleSource 与 Host 直接导入的 helper 源码可能随不同构建/部署路径漂移。即使 helper 是纯函数，也需要统一 source pin / digest / consumer contract。
+- 因此目标不应预设“所有 12 个文件都要放入一个 B 包”或“拆成多个 B”。先按表中职责把纯 domain computation、Host orchestration、Domain Data、selected B handlers、read model 分开；再决定通过 Producer bundle、受控 Host port 或内部纯函数包复用，且不能扩大 ABI 或外部权限。
 ## 3. Package 结构、初始化与运行时版本
 
 ### 3.1 不同版本坐标：ABI、SDK、应用与运行时
