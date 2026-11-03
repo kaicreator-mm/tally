@@ -42,6 +42,39 @@ test('other project/version and blocked action cannot be clicked',()=>{
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:[{
     ...catalog.actions[0],state:'BLOCKED' as const}]},work).enabled,false);
 });
+test('empty, missing or malformed project/version scope identifiers fail closed',()=>{
+  assert.equal(workbenchActionGate({...inbox,
+    source:{...source,repository:''}},catalog,work).enabled,false);
+  assert.equal(workbenchActionGate({...inbox,
+    source:{...source,repository:'org/'}},
+    {...catalog,source:{...source,repository:'org/'}},
+    {...work,projectId:'org/'}).enabled,false);
+  assert.equal(workbenchActionGate(inbox,
+    {...catalog,source:{...source,repository:''}},
+    {...work,projectId:''}).enabled,false);
+  assert.equal(workbenchActionGate(inbox,catalog,
+    {...work,projectId:'org/tally/extra'}).enabled,false);
+
+  const missingRepositorySnapshot={...inbox,
+    source:{...source,repository:undefined}} as unknown as WorkbenchSnapshot;
+  const missingRepositoryCatalog={...catalog,
+    source:{...source,repository:undefined}};
+  const missingProject={...work,projectId:undefined} as unknown as WorkAction;
+  assert.equal(workbenchActionGate(missingRepositorySnapshot,
+    missingRepositoryCatalog,missingProject).enabled,false);
+
+  assert.equal(workbenchActionGate(inbox,
+    {...catalog,versionId:''},{...work,versionId:''}).enabled,false);
+  assert.equal(workbenchActionGate(inbox,
+    {...catalog,versionId:'version/'},{...work,versionId:'version/'}).enabled,false);
+  assert.equal(workbenchActionGate(inbox,
+    {...catalog,versionId:'version/v2/extra'},
+    {...work,versionId:'version/v2/extra'}).enabled,false);
+  const missingVersion={...work,versionId:undefined} as unknown as WorkAction;
+  assert.equal(workbenchActionGate(inbox,
+    {...catalog,versionId:undefined},missingVersion).enabled,false);
+});
+
 test('native blocker and unassigned approval never become fake permitted action',()=>{
   assert.equal(workbenchActionGate(inbox,catalog,{...work,kind:'BLOCKER'}).enabled,false);
   assert.equal(workbenchActionGate(inbox,catalog,{...work,kind:'APPROVAL'}).enabled,false);
