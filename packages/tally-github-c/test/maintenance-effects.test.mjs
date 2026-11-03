@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
-  readMaintenanceIssueFromClient,maintenanceMarkerFor,__test}
+  readMaintenanceIssueFromClient,readTaskLearningOwnerApprovalFromClient,
+  maintenanceMarkerFor,__test}
   from '../src/maintenance-effects.mjs';
 
 const digest='c'.repeat(64);
@@ -137,4 +138,115 @@ test('module holds no credential surface and stays repository-pinned',()=>{
   assert.equal(__test.readbackIssue({number:1,state:'closed',title,
     html_url:'https://github.com/kaicreator-mm/tally/issues/1'}),null);
   assert.equal(__test.errorReason({status:404}),'GITHUB_RESOURCE_NOT_FOUND');
+});
+
+
+const ownerSha='a'.repeat(40),ownerLearningId='b'.repeat(64);
+const ownerApprovalBlock=({approval='APPROVE',sourceSha=ownerSha,
+  learningId=ownerLearningId,decision='ADOPTED'}={})=>
+  ['OWNER_T219_LEARNING_ADOPT_APPROVAL='+approval,
+    'sourceSha='+sourceSha,'learningId='+learningId,'decision='+decision].join('\n');
+const ownerApprovalComment=(id,block=ownerApprovalBlock(),extra={})=>({
+  id,body:'Owner decision\n\n'+'\x60\x60\x60text\n'+block+'\n\x60\x60\x60',
+  issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/219',
+  html_url:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-'+id,
+  created_at:'2026-11-04T10:00:00.000Z',
+  user:{login:'kaicreator-mm'},...extra});
+const ownerApprovalClient=(comments,{permission='admin',onList,onPermission}={})=>({
+  rest:{
+    issues:{listComments:async args=>{
+      onList?.(args);return {data:typeof comments==='function'?comments(args):comments};}},
+    repos:{getCollaboratorPermissionLevel:async args=>{
+      onPermission?.(args);
+      if(permission instanceof Error)throw permission;
+      return {data:{permission}};}}
+  }
+});
+
+test('Task Learning Owner approval requires one exact GitHub comment and current repository admin',async()=>{
+  const calls=[];
+  const comment=ownerApprovalComment(6543210987);
+  const result=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient([comment],{
+      onList:args=>calls.push(['list',args]),
+      onPermission:args=>calls.push(['permission',args])}),
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.deepEqual(result,{
+    state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+    repository:'kaicreator-mm/tally',issueNumber:219,
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED',
+    commentId:6543210987,
+    commentUrl:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6543210987',
+    author:'kaicreator-mm',permission:'admin'});
+  assert.deepEqual(calls,[
+    ['list',{owner:'kaicreator-mm',repo:'tally',issue_number:219,per_page:100,page:1}],
+    ['permission',{owner:'kaicreator-mm',repo:'tally',username:'kaicreator-mm'}]
+  ]);
+});
+
+test('missing, stale, duplicate and contradictory Owner approvals fail closed',async()=>{
+  const read=comments=>readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient(comments),sourceSha:ownerSha,
+    learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal((await read([])).reason,'OWNER_APPROVAL_MISSING');
+  assert.equal((await read([ownerApprovalComment(1,ownerApprovalBlock({
+    sourceSha:'c'.repeat(40)}))])).reason,'OWNER_APPROVAL_STALE');
+  assert.equal((await read([ownerApprovalComment(2),ownerApprovalComment(3)]))
+    .reason,'OWNER_APPROVAL_CONFLICT');
+  assert.equal((await read([ownerApprovalComment(4,ownerApprovalBlock({
+    approval:'REJECT'}))])).reason,'OWNER_APPROVAL_CONFLICT');
+  assert.equal((await read([ownerApprovalComment(5,ownerApprovalBlock({
+    decision:'REJECTED'}))])).reason,'OWNER_APPROVAL_CONFLICT');
+  const malformed='OWNER_T219_LEARNING_ADOPT_APPROVAL=APPROVE\nsourceSha=bad\nlearningId='+
+    ownerLearningId+'\ndecision=ADOPTED';
+  assert.equal((await read([ownerApprovalComment(6,malformed)])).reason,
+    'OWNER_APPROVAL_CONFLICT');
+});
+
+test('Owner approval comment identity and current admin permission are mandatory',async()=>{
+  const wrongIssue=ownerApprovalComment(7,ownerApprovalBlock(),{
+    issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/220'});
+  let permissionCalls=0;
+  const invalid=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient([wrongIssue],{
+      onPermission:()=>permissionCalls++}),
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(invalid.reason,'OWNER_APPROVAL_COMMENT_IDENTITY_INVALID');
+  assert.equal(permissionCalls,0);
+
+  const nonAdmin=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient([ownerApprovalComment(8)],{permission:'write'}),
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(nonAdmin.reason,'OWNER_APPROVAL_AUTHOR_NOT_ADMIN');
+
+  const permissionUnknown=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient([ownerApprovalComment(9)],{
+      permission:Object.assign(new Error('permission read failed'),{status:403})}),
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(permissionUnknown.reason,'OWNER_APPROVAL_PERMISSION_READ_FAILED');
+  assert.equal(permissionUnknown.transportReason,'GITHUB_ACCESS_DENIED');
+});
+
+test('Owner approval comment pagination is bounded and incomplete reads fail closed',async()=>{
+  let pages=0;
+  const irrelevant=Array.from({length:100},(_,i)=>({
+    id:i+1,body:'ordinary comment',user:{login:'someone'}}));
+  const result=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient(args=>{pages++;return irrelevant;}),
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(result.reason,'OWNER_APPROVAL_READ_INCOMPLETE');
+  assert.equal(pages,10);
+});
+
+test('Owner approval reader rejects invalid input and GitHub read failures',async()=>{
+  const invalid=await readTaskLearningOwnerApprovalFromClient({
+    octokit:ownerApprovalClient([]),sourceSha:'short',
+    learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(invalid.reason,'OWNER_APPROVAL_INPUT_INVALID');
+  const failed=await readTaskLearningOwnerApprovalFromClient({
+    octokit:{rest:{issues:{listComments:async()=>{throw Object.assign(
+      new Error('read failed'),{status:401});}},repos:{getCollaboratorPermissionLevel:async()=>({data:{permission:'admin'}})}}},
+    sourceSha:ownerSha,learningId:ownerLearningId,decision:'ADOPTED'});
+  assert.equal(failed.reason,'OWNER_APPROVAL_READ_FAILED');
+  assert.equal(failed.transportReason,'GITHUB_UNAUTHENTICATED');
 });
