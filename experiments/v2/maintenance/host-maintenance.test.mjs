@@ -738,7 +738,14 @@ const env=Object.assign({},process.env,{TALLY_LOCAL_REPLAY:'1',
   TALLY_TASK_CLAIM_219_REGISTRY_PATH:registryPath});
 const host=createMaintenanceHost({env,openStore,
   verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true})});
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readOwnerApproval:async input=>({
+    state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+    repository:'kaicreator-mm/tally',issueNumber:219,
+    sourceSha:input.sourceSha,learningId:input.learningId,decision:'ADOPTED',
+    commentId:6540000002,
+    commentUrl:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6540000002',
+    author:'local-replay-owner',permission:'admin'})});
 export async function publishMaintenanceIssue(input){
   const result=await host.hostPublishMaintenanceIssue(input);
   console.error('J219_PROVIDER_PUBLISH_RETURN',JSON.stringify(result));
