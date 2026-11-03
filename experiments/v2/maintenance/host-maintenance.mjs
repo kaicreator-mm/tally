@@ -525,59 +525,60 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }
       if(existingDecision?.value?.phase!=='LEARNING_DECISION')
         return denied(input,'LEARNING_DECISION_REQUIRED');
-      const outcomeRecord=Object.freeze({phase:'LEARNING_OUTCOME',
+      if(input.decision!==existingDecision.value.decision)
+        return denied(input,'LEARNING_DECISION_MISMATCH');
+      const outcomeFacts=Object.freeze({phase:'LEARNING_OUTCOME',
         issueRef:ISSUE_REF,sourceSha:input.sourceSha,
         learningId:input.learningId,decision:existingDecision.value.decision,
         attested:outcome.attested===true,
         measuredEffect:outcome.attested===true?'ATTESTED_OUTCOME_ONLY':'NOT_MEASURED',
-        observedAt:outcome.observedAt,note:outcome.note,outcomeAt:new Date().toISOString(),
+        observedAt:outcome.observedAt,note:outcome.note,
         noAgentRanking:true,qualityGainClaimed:false,authorized:false,
         taskPass:false,releasePass:false});
-      let existingOutcome;
-      try{
-        opened=await store(openStore,registryPath);
-        existingOutcome=await opened.get(
-          `tally:v2:maintenance-learning-outcome:${input.learningId}`);
-        if(existingOutcome?.value?.phase!=='LEARNING_OUTCOME')
-          await opened.put(`tally:v2:maintenance-learning-outcome:${input.learningId}`,
-            outcomeRecord,{mustBeAbsent:true});
-      }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-      finally{if(opened)await opened.close();}
-      if(existingOutcome?.value?.phase==='LEARNING_OUTCOME'){
-        if(sha256(existingOutcome.value)===sha256(outcomeRecord))
-          return Object.freeze({...flags,state:'LEARNING_RECORDED',
-            reason:'LEARNING_OUTCOME_ALREADY_RECORDED',issueRef:ISSUE_REF,
-            sourceSha:input.sourceSha,learningId:input.learningId,
-            decision:outcomeRecord.decision,
-            provenance:suggestion.provenance,
-            currentness:currentnessOf(suggestion),
-            currentnessReason:suggestion.currentnessReason??null,
-            qualification:suggestion.qualification,
-            measuredEffect:outcomeRecord.measuredEffect,
-            outcome:Object.freeze({
-              attested:outcomeRecord.attested,
-              measuredEffect:outcomeRecord.measuredEffect,
-              observedAt:outcomeRecord.observedAt}),
-            claimAccepted:true,admitted:true,replayFixture:false,
-            githubEffect:'NOT_RUN',noAgentRanking:true,
-            qualityGainClaimed:false});
-        return denied(input,'LEARNING_OUTCOME_MISMATCH');
-      }
-      return Object.freeze({...flags,state:'LEARNING_RECORDED',
-        reason:'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',issueRef:ISSUE_REF,
+      const sameOutcome=record=>record?.phase==='LEARNING_OUTCOME'&&
+        Object.entries(outcomeFacts).every(([key,value])=>record[key]===value);
+      const outcomeReceipt=(record,reason)=>Object.freeze({...flags,
+        state:'LEARNING_RECORDED',reason,issueRef:ISSUE_REF,
         sourceSha:input.sourceSha,learningId:input.learningId,
-        decision:outcomeRecord.decision,
-        provenance:suggestion.provenance,
+        decision:record.decision,provenance:suggestion.provenance,
         currentness:currentnessOf(suggestion),
         currentnessReason:suggestion.currentnessReason??null,
         qualification:suggestion.qualification,
-        measuredEffect:outcomeRecord.measuredEffect,
-        outcome:Object.freeze({
-          attested:outcomeRecord.attested,
-          measuredEffect:outcomeRecord.measuredEffect,
-          observedAt:outcomeRecord.observedAt}),
+        measuredEffect:record.measuredEffect,
+        outcome:Object.freeze({attested:record.attested,
+          measuredEffect:record.measuredEffect,observedAt:record.observedAt}),
         claimAccepted:true,admitted:true,replayFixture:false,
         githubEffect:'NOT_RUN',noAgentRanking:true,qualityGainClaimed:false});
+      const outcomeKey=`tally:v2:maintenance-learning-outcome:${input.learningId}`;
+      let existingOutcome;
+      try{
+        opened=await store(openStore,registryPath);
+        existingOutcome=await opened.get(outcomeKey);
+      }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+      finally{if(opened)await opened.close();}
+      if(existingOutcome?.value?.phase==='LEARNING_OUTCOME')
+        return sameOutcome(existingOutcome.value)?
+          outcomeReceipt(existingOutcome.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
+          denied(input,'LEARNING_OUTCOME_MISMATCH');
+      const outcomeRecord=Object.freeze({...outcomeFacts,
+        outcomeAt:new Date().toISOString()});
+      try{
+        opened=await store(openStore,registryPath);
+        await opened.put(outcomeKey,outcomeRecord,{mustBeAbsent:true});
+      }catch(error){
+        if(error?.code!=='HOST_CAS_CONFLICT')
+          return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+        let raced=null;
+        try{
+          opened=await store(openStore,registryPath);
+          raced=await opened.get(outcomeKey);
+        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+        finally{if(opened)await opened.close();}
+        return sameOutcome(raced?.value)?
+          outcomeReceipt(raced.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
+          denied(input,'LEARNING_OUTCOME_MISMATCH');
+      }finally{if(opened)await opened.close();}
+      return outcomeReceipt(outcomeRecord,'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS');
     },
   });
 }

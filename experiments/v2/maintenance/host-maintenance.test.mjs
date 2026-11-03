@@ -221,16 +221,27 @@ test('learning decision and later independent outcome are ledger-gated and idemp
   assert.equal(replayDecision.reason,'LEARNING_DECISION_ALREADY_RECORDED');
   assert.equal((await h.hostRecordTaskLearningOutcome(
     learningInput({decision:'REJECTED'}))).reason,'LEARNING_DECISION_MISMATCH');
-  const outcome=await h.hostRecordTaskLearningOutcome(learningInput({decision:'ADOPTED',
-    outcome:{attested:false,observedAt:'2026-11-02T10:00:00.000Z',
-      note:'independent follow-up observed no measurable change'}}));
+  const outcomeInput={attested:false,observedAt:'2026-11-02T10:00:00.000Z',
+    note:'independent follow-up observed no measurable change'};
+  const outcome=await h.hostRecordTaskLearningOutcome(learningInput({
+    decision:'ADOPTED',outcome:outcomeInput}));
   assert.equal(outcome.state,'LEARNING_RECORDED');
   assert.equal(outcome.outcome.measuredEffect,'NOT_MEASURED');
   assert.equal(outcome.outcome.attested,false);
   assert.equal(outcome.githubEffect,'NOT_RUN');
+  const outcomeKey=`tally:v2:maintenance-learning-outcome:${LEARNING_ID}`;
+  const storedOutcome=(await ctx.openStore().then(s=>s.get(outcomeKey))).value;
+  const wrongDecision=await h.hostRecordTaskLearningOutcome(learningInput({
+    decision:'REJECTED',outcome:outcomeInput}));
+  assert.equal(wrongDecision.reason,'LEARNING_DECISION_MISMATCH');
+  const outcomeReplay=await h.hostRecordTaskLearningOutcome(learningInput({
+    decision:'ADOPTED',outcome:outcomeInput}));
+  assert.equal(outcomeReplay.reason,'LEARNING_OUTCOME_ALREADY_RECORDED');
+  const replayedOutcome=(await ctx.openStore().then(s=>s.get(outcomeKey))).value;
+  assert.equal(replayedOutcome.outcomeAt,storedOutcome.outcomeAt,
+    'same outcome replay must preserve the first CAS timestamp');
   assert.equal((await h.hostRecordTaskLearningOutcome(learningInput({decision:'ADOPTED',
-    outcome:{attested:false,observedAt:'2026-11-02T10:00:00.000Z',note:'other'}})))
-    .reason,'LEARNING_OUTCOME_MISMATCH');
+    outcome:{...outcomeInput,note:'other'}}))).reason,'LEARNING_OUTCOME_MISMATCH');
   const attestedOutcome=await attestedRunner();
   assert.equal(attestedOutcome.outcome.measuredEffect,'ATTESTED_OUTCOME_ONLY');
   assert.equal(attestedOutcome.qualityGainClaimed,false);
@@ -922,4 +933,28 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
 test('Task 219 frozen write-set binding names the admitted Host path',()=>{
   const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
+
+test('concurrent identical learning outcomes reconcile the first CAS write',async()=>{
+  const ctx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const h=host(ctx);
+  const input=over=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,...over});
+  assert.equal((await h.hostRecordTaskLearningOutcome(
+    input({decision:'ADOPTED'}))).reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+  const outcome={attested:true,observedAt:'2026-11-04T10:00:00.000Z',
+    note:'independent outcome witness'};
+  const results=await Promise.all([
+    h.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome})),
+    h.hostRecordTaskLearningOutcome(input({decision:'ADOPTED',outcome}))]);
+  assert.ok(results.every(r=>r.state==='LEARNING_RECORDED'));
+  assert.deepEqual(results.map(r=>r.reason).sort(),[
+    'LEARNING_OUTCOME_ALREADY_RECORDED','LEARNING_OUTCOME_RECORDED_IN_HOST_CAS']);
+  const record=(await ctx.openStore().then(s=>s.get(
+    `tally:v2:maintenance-learning-outcome:${LEARNING_ID}`))).value;
+  assert.equal(record.phase,'LEARNING_OUTCOME');
+  assert.equal(record.outcomeAt!==undefined,true);
 });
