@@ -9,6 +9,16 @@ const valueOk=(value)=>value===null||typeof value==='boolean'||
   (Array.isArray(value)&&value.length<=32&&value.every(v=>typeof v==='string'&&v.length<=128));
 const deny=(reason)=>({connected:false,status:'DENIED',reason});
 const plain=(v)=>!!v&&typeof v==='object'&&!Array.isArray(v);
+/** Structural canonical form: object keys are sorted recursively, so two
+ * semantically identical snapshots compare equal regardless of the Host's
+ * property insertion order (JSON.stringify is order-sensitive). */
+const canonicalJson=(value)=>{
+  if(Array.isArray(value))return '['+value.map(canonicalJson).join(',')+']';
+  if(value!==null&&typeof value==='object')
+    return '{'+Object.keys(value).sort().map(key=>
+      JSON.stringify(key)+':'+canonicalJson(value[key])).join(',')+'}';
+  return JSON.stringify(value);
+};
 export function verifyGuidedSnapshot(snapshot,scope,currentSha){
   if(!plain(snapshot)||snapshot.connected!==true||
      !SHA.test(currentSha??'')||snapshot.sourceSha!==currentSha||
@@ -75,7 +85,7 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
     // performs its own CAS/permit check inside dispatchStep.
     const latest=await host.readCurrentStep({...scope,sourceSha:currentSha});
     if(!verifyGuidedSnapshot(latest,scope,currentSha)||
-       JSON.stringify(latest.step)!==JSON.stringify(read.step))
+       canonicalJson(latest.step)!==canonicalJson(read.step))
       return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
     const result=await host.dispatchStep({
       ...scope,sourceSha:currentSha,journeyId:payload.journeyId,

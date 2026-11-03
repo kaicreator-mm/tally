@@ -39,8 +39,14 @@ export function businessIntentForUiAction(kind){
 const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const denied=(reason)=>({connected:false,ok:false,status:'DENIED',reason});
+// The Host read projection is a privacy boundary: credential-shaped values are
+// rejected in EVERY public text field, never masked only at render time.
+const SOURCE_KEYS='currentness,readback,repository,sourceSha';
+const qualifiedSource=source=>plain(source)&&
+  Object.keys(source).sort().join(',')===SOURCE_KEYS;
 const qualified=(snapshot,repository,versionId,sha)=>
   plain(snapshot)&&snapshot.connected===true&&
+  qualifiedSource(snapshot.source)&&
   snapshot.source?.repository===repository&&
   snapshot.source?.sourceSha===sha&&
   snapshot.source?.currentness==='CURRENT'&&
@@ -51,7 +57,7 @@ function checkActions(actions,sha){
   const seen=new Set();
   for(const action of actions){
     if(!plain(action)||!ACTION_ID.test(action.id??'')||seen.has(action.id)||
-       !KINDS.has(action.kind)||
+       SECRET.test(action.id)||!KINDS.has(action.kind)||
        !Number.isSafeInteger(action.revision)||action.revision<1||
        !['ELIGIBLE','BLOCKED'].includes(action.state)||
        typeof action.label!=='string'||!action.label.trim()||
@@ -81,21 +87,22 @@ const EXECUTION_STATES=new Set([
 const EXECUTION_ROLES=new Set(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
 const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
-const PROGRESS_SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
 const CANDIDATE_PR=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/[1-9][0-9]*$/;
 function validTaskExecution(execution,repository){
   if(!plain(execution)||Object.keys(execution).sort().join(',')!==
     'attemptId,candidateRef,costUsd,elapsedMs,heartbeatAt,progressSummary,progressSummaryKind,provider,role,state,tokensIn,tokensOut'||
     !EXECUTION_STATES.has(execution.state)||
-    !(execution.provider===null||typeof execution.provider==='string'&&PROVIDER_ID.test(execution.provider))||
+    !(execution.provider===null||typeof execution.provider==='string'&&
+      PROVIDER_ID.test(execution.provider)&&!SECRET.test(execution.provider))||
     !(execution.role===null||EXECUTION_ROLES.has(execution.role))||
-    !(execution.attemptId===null||typeof execution.attemptId==='string'&&EXECUTION_ID.test(execution.attemptId))||
+    !(execution.attemptId===null||typeof execution.attemptId==='string'&&
+      EXECUTION_ID.test(execution.attemptId)&&!SECRET.test(execution.attemptId))||
     !['SANITIZED','NOT_AVAILABLE'].includes(execution.progressSummaryKind)||
     !(execution.progressSummaryKind==='NOT_AVAILABLE'&&execution.progressSummary===null||
       execution.progressSummaryKind==='SANITIZED'&&typeof execution.progressSummary==='string'&&
       execution.progressSummary.length>0&&execution.progressSummary.length<=240&&
       !/[\u0000-\u001f\u007f]/.test(execution.progressSummary)&&
-      !PROGRESS_SECRET.test(execution.progressSummary))||
+      !SECRET.test(execution.progressSummary))||
     !(execution.heartbeatAt===null||typeof execution.heartbeatAt==='string'&&
       execution.heartbeatAt.length<=40&&Number.isFinite(Date.parse(execution.heartbeatAt)))||
     !(execution.elapsedMs===null||Number.isSafeInteger(execution.elapsedMs)&&execution.elapsedMs>=0)||
@@ -128,8 +135,11 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
       return denied('ACTION_SCOPE_MISMATCH');
     const result=await read();
     if(!qualified(result,repository,versionId,expectedSha))return result;
-    return {connected:true,source:result.source,versionId,
-      coverage:'SELECTED_HOST_ONLY',actions:sanitized(result.actions)};
+    // Reconstruct a fresh allowlisted projection: never forward the Host's own
+    // source object, so unexpected or sensitive extra keys cannot pass through.
+    return {connected:true,source:Object.freeze({
+      repository,sourceSha:expectedSha,currentness:'CURRENT',readback:'VERIFIED'
+    }),versionId,coverage:'SELECTED_HOST_ONLY',actions:sanitized(result.actions)};
   }
   async function taskExecution(taskIssue){
     if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
@@ -141,6 +151,7 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
         repository,versionId,sourceSha:expectedSha,taskIssue
       });
       if(!plain(snapshot)||snapshot.connected!==true||
+         !qualifiedSource(snapshot.source)||
          snapshot.source?.repository!==repository||
          snapshot.source?.sourceSha!==expectedSha||
          snapshot.source?.currentness!=='CURRENT'||
@@ -148,9 +159,16 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
          snapshot.versionId!==versionId||snapshot.taskIssue!==taskIssue||
          !validTaskExecution(snapshot.execution,repository))
         return denied('HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+      // Fresh allowlisted reconstruction (no spread): the exact execution key
+      // set was verified above, so only approved bounded fields are published.
+      const e=snapshot.execution;
       return {connected:true,source:Object.freeze({
         repository,sourceSha:expectedSha,currentness:'CURRENT',readback:'VERIFIED'
-      }),versionId,taskIssue,execution:Object.freeze({...snapshot.execution})};
+      }),versionId,taskIssue,execution:Object.freeze({
+        state:e.state,provider:e.provider,role:e.role,attemptId:e.attemptId,
+        progressSummary:e.progressSummary,progressSummaryKind:e.progressSummaryKind,
+        heartbeatAt:e.heartbeatAt,elapsedMs:e.elapsedMs,tokensIn:e.tokensIn,
+        tokensOut:e.tokensOut,costUsd:e.costUsd,candidateRef:e.candidateRef})};
     }catch{return denied('HOST_TASK_EXECUTION_READ_FAILED');}
   }
   async function submit(request){

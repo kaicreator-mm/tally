@@ -1,23 +1,28 @@
 /** B/#261 — read-only task execution history; users dispatch and coordinate in Tally. */
 import type {AttemptRecord} from './model.ts';
 import {durationLabel,tokenLabel,telemetryCoverage,
-  tokenTotals,stateTone} from './model.ts';
+  tokenTotals,stateTone,sanitizeAttempts} from './model.ts';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {Card,CardHeader} from '../../components/ui/Card.tsx';
 import {DataTable} from '../../components/ui/DataTable.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 
-export function AgentsPanel({attempts,locale='zh',connected=true}:
+export function AgentsPanel({attempts,locale='zh',connected=false}:
   {attempts:readonly AttemptRecord[];locale?:'zh'|'en';connected?:boolean}){
   const zh=locale==='zh';
+  // Fail-closed: a missing connection flag means DISCONNECTED, and records are
+  // bounded/secret-redacted at this projection (never trusted from upstream).
+  const records=sanitizeAttempts(attempts);
   if(!connected){
     return <EmptyState title={zh?'未连接真实数据源':'Not connected'}
       hint={zh?'等待 UI-E #232 接入 Host 读模型':'Host read model arrives with UI-E #232'}/>;
   }
-  if(attempts.length===0)
-    return <EmptyState title={zh?'当前版本没有任务执行记录':'No task execution records in this version'}/>;
-  const coverage=telemetryCoverage(attempts);
-  const totals=tokenTotals(attempts);
+  if(records.length===0)
+    return <EmptyState title={zh?'执行记录状态未知(UNKNOWN)':'Execution records UNKNOWN'}
+      hint={zh?'数据源已连接但未返回经过验证的执行记录，不视为已确认的空历史':
+        'Source connected but returned no verified records; not a confirmed empty history'}/>;
+  const coverage=telemetryCoverage(records);
+  const totals=tokenTotals(records);
   return <div style={{display:'grid',gap:'var(--s5)'}}>
     <Card>
       <CardHeader title={zh?'遥测覆盖(缺失 ≠ 0)':'Telemetry coverage (missing ≠ 0)'}
@@ -37,7 +42,7 @@ export function AgentsPanel({attempts,locale='zh',connected=true}:
     <Card>
       <CardHeader title={zh?'任务执行记录':'Task execution records'}
         sub={zh?'按任务与执行尝试展示；所有调度与操作均由 Tally 管理':'Task-centric, read-only execution history; dispatch remains Tally-managed'}/>
-      <DataTable rows={attempts} rowKey={attempt=>attempt.attemptId}
+      <DataTable rows={records} rowKey={attempt=>attempt.attemptId}
         columns={[
           {key:'tasks',header:zh?'任务':'Tasks',
             cell:attempt=>attempt.taskIds.join(', ')||'—'},

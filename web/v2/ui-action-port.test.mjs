@@ -171,3 +171,59 @@ test('task execution permits absent telemetry only as explicit nulls',async()=>{
   assert.equal(result.execution.tokensIn,null);
   assert.equal(result.execution.costUsd,null);
 });
+
+test('credential-shaped action ids, providers, attempts and summaries fail closed',async()=>{
+  const secrets=['ghp_12345678901234567890',
+    'github_pat_abcdefghijklmnopqrstuvwxyz012345',
+    'Bearer abcdefghijklmnopqrstuvwxyz'];
+  for(const secret of secrets){
+    const badAction=await make({readCurrentActions:async()=>({...snapshot(),
+      actions:[{...eligible,id:secret}]})}).actions();
+    assert.equal(badAction.connected,false,
+      `secret-shaped action id must deny: ${secret}`);
+    const badProvider=await make({readTaskExecution:async()=>({...executionSnapshot(),
+      execution:{...executionSnapshot().execution,provider:secret}})}).taskExecution(260);
+    assert.equal(badProvider.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED',
+      `secret-shaped provider must deny: ${secret}`);
+    const badAttempt=await make({readTaskExecution:async()=>({...executionSnapshot(),
+      execution:{...executionSnapshot().execution,attemptId:secret}})}).taskExecution(260);
+    assert.equal(badAttempt.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED',
+      `secret-shaped attemptId must deny: ${secret}`);
+    const badSummary=await make({readTaskExecution:async()=>({...executionSnapshot(),
+      execution:{...executionSnapshot().execution,progressSummary:secret}})}).taskExecution(260);
+    assert.equal(badSummary.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED',
+      `secret-shaped progress summary must deny: ${secret}`);
+  }
+});
+test('unexpected sensitive source keys never pass the read projections',async()=>{
+  const poisoned={...source,telemetryToken:'ghp_12345678901234567890'};
+  const catalog=await make({readCurrentActions:async()=>({...snapshot(),
+    source:poisoned})}).actions();
+  assert.equal(catalog.connected,false);
+  const execution=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    source:poisoned})}).taskExecution(260);
+  assert.equal(execution.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+});
+test('published source/execution projections are reconstructed allowlists',async()=>{
+  const catalog=await make().actions();
+  assert.deepEqual(Object.keys(catalog.source).sort(),
+    ['currentness','readback','repository','sourceSha']);
+  assert.deepEqual(catalog.source,{repository,sourceSha:sha,
+    currentness:'CURRENT',readback:'VERIFIED'});
+  const extra=await make({readTaskExecution:async()=>{
+    const ok=executionSnapshot();
+    return {...ok,execution:Object.defineProperties({...ok.execution},{
+      rawLog:{value:'secret log',enumerable:true},
+      envToken:{value:'ghp_12345678901234567890',enumerable:true}})};
+  }}).taskExecution(260);
+  assert.equal(extra.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+  const result=await make({readTaskExecution:async()=>executionSnapshot()})
+    .taskExecution(260);
+  assert.equal(result.connected,true);
+  assert.equal(Object.isFrozen(result.execution),true);
+  assert.deepEqual(Object.keys(result.execution).sort(),
+    ['attemptId','candidateRef','costUsd','elapsedMs','heartbeatAt',
+      'progressSummary','progressSummaryKind','provider','role','state',
+      'tokensIn','tokensOut']);
+  assert.equal(JSON.stringify(result).includes('rawLog'),false);
+});

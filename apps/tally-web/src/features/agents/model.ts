@@ -58,3 +58,67 @@ export function stateTone(state:AttemptRecord['state']){
   return state==='EXITED_OK'?'ok':state==='EXITED_FAIL'?'danger'
     :state==='RUNNING'?'info':'warn';
 }
+
+const ATTEMPT_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
+const IDENTIFIER=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
+const TASK_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,31}$/;
+/** Credential-shaped values are refused at the UI projection itself; the port
+ * layer redacts too, but render-side never assumes upstream sanitization. */
+const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
+const ATTEMPT_STATES=new Set<string>([
+  'RUNNING','EXITED_OK','EXITED_FAIL','CANCELLED','UNKNOWN']);
+const ATTEMPT_ROLES=new Set<string>([
+  'BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHESTRATOR','UNKNOWN']);
+const boundedText=(value:unknown,check:(value:string)=>boolean):string|null=>
+  typeof value==='string'&&value.length<=80&&check(value)&&!SECRET.test(value)
+    ?value:null;
+const boundedCount=(value:unknown):number|null=>
+  typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&
+    value<=Number.MAX_SAFE_INTEGER/2
+    ?value:null;
+const boundedTaskIds=(value:unknown):string[]=>{
+  if(!Array.isArray(value))return [];
+  const seen=new Set<string>();
+  for(const entry of value){
+    if(typeof entry!=='string'||entry.length>32||SECRET.test(entry)||
+       !TASK_ID.test(entry)||seen.has(entry))continue;
+    seen.add(entry);
+    if(seen.size>=32)break;
+  }
+  return [...seen];
+};
+/** UI projection hardening for P2-02: Attempt records are untrusted until the
+ * selected Host producer (#275) lands. Every rendered identifier/text field is
+ * bounded and secret-redacted here — missing/unsafe values degrade to
+ * UNKNOWN/null instead of passing through. */
+export function sanitizeAttempts(attempts:readonly AttemptRecord[]):
+  AttemptRecord[]{
+  return attempts.map(attempt=>{
+    const state=ATTEMPT_STATES.has(attempt.state)
+      ?attempt.state:'UNKNOWN';
+    // Absent role stays absent (optional field); present-but-invalid degrades
+    // to null rather than being inferred.
+    const role=attempt.role===undefined?undefined
+      :attempt.role!==null&&ATTEMPT_ROLES.has(attempt.role)?attempt.role:null;
+    return {
+      ...attempt,
+      attemptId:boundedText(attempt.attemptId,ATTEMPT_ID.test.bind(ATTEMPT_ID))
+        ??UNKNOWN_TEXT,
+      agentId:boundedText(attempt.agentId,IDENTIFIER.test.bind(IDENTIFIER))
+        ??UNKNOWN_TEXT,
+      state,
+      role,
+      startedAt:boundedText(attempt.startedAt,()=>true),
+      terminatedAt:boundedText(attempt.terminatedAt,()=>true),
+      durationMs:boundedCount(attempt.durationMs),
+      tokensIn:boundedCount(attempt.tokensIn),
+      tokensOut:boundedCount(attempt.tokensOut),
+      costUsd:null,
+      model:attempt.model===null?null
+        :boundedText(attempt.model,IDENTIFIER.test.bind(IDENTIFIER)),
+      provider:attempt.provider===null?null
+        :boundedText(attempt.provider,IDENTIFIER.test.bind(IDENTIFIER)),
+      taskIds:boundedTaskIds(attempt.taskIds),
+    };
+  });
+}

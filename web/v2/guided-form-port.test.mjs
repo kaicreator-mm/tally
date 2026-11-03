@@ -56,3 +56,18 @@ test('selected Business step is re-read before any dispatch side effect',async()
   assert.equal(result.reason,'GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
   assert.equal(dispatches,0);
 });
+test('reordered-key equivalent snapshots are not falsely denied as stale',async()=>{
+  let dispatches=0;
+  // Semantically identical step, every object's keys inserted in reverse order.
+  const reorderedStep={actions:['next'],fields:[
+      {required:true,kind:'text',id:'goal'}],revision:1,stepId:'goal',
+    journeyId:'journey01',title:{en:'Goal',zh:'目标'}};
+  assert.equal(JSON.stringify(reorderedStep)===JSON.stringify(step),false);
+  let first=true;
+  const host={readCurrentStep:async()=>first?(first=false,snapshot):
+      {...snapshot,step:reorderedStep},
+    dispatchStep:async()=>{dispatches++;return{ok:true,nextStep:null}}};
+  const result=await submitGuidedStep(host,scope,sha,form);
+  assert.deepEqual(result,{connected:true,ok:true,nextStep:null});
+  assert.equal(dispatches,1);
+});
