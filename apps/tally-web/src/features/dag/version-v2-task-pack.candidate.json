@@ -4,11 +4,11 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T03:20:15.517Z",
+  "observedAt": "2026-11-03T09:59:32.387Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 43,
+    "taskIssueCount": 44,
     "claimCommentPages": 3
   },
   "taskIssues": [
@@ -531,7 +531,7 @@
         "type:task"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-11-03T03:12:12Z",
+      "updatedAt": "2026-11-03T09:37:52Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
       "dispatchableByDisposition": true,
@@ -546,7 +546,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-03T03:18:42Z",
+      "updatedAt": "2026-11-03T05:33:37Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -606,7 +606,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-03T03:12:31Z",
+      "updatedAt": "2026-11-03T05:37:03Z",
       "closedAt": null,
       "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
       "dispatchableByDisposition": false,
@@ -656,6 +656,21 @@
       "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
       "dispatchableByDisposition": false,
       "dispositionNote": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 276,
+      "title": "[v2][P0][Domain Package] Extract Engineering Domain Knowledge and bounded Workflows into Tally B",
+      "issueState": "open",
+      "labels": [
+        "state:planned",
+        "type:task"
+      ],
+      "createdAt": "2026-11-03T05:32:14Z",
+      "updatedAt": "2026-11-03T08:55:03Z",
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_REQUIRED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Requires independent exact-body/write-set disposition review before freeze."
     }
   ],
   "edges": [
@@ -782,6 +797,70 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
       "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    },
+    {
+      "from": 260,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260",
+      "reason": "#276 waits for canonical Task DAG/Task Pack refresh and A-lane freeze evidence; this edge is still PLANNED until native readback."
+    },
+    {
+      "from": 219,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
+    },
+    {
+      "from": 261,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
+    },
+    {
+      "from": 262,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "reason": "#276 aligns with the Experience/Casebook consumer and evidence-use contract; do not race C-owned semantics."
+    },
+    {
+      "from": 273,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "#276 consumes the governed PlanRevision/Replan vocabulary and must wait for #273's final contract/source."
+    },
+    {
+      "from": 274,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "#276 aligns with the exact ADS v5 ExperienceUseFeedback producer/publisher contract."
+    },
+    {
+      "from": 275,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "#276 uses the canonical TaskAttempt/AttemptEvent read model only after #275 owns and completes its initial source."
+    },
+    {
+      "from": 276,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
     }
   ],
   "claimSubjects": [
@@ -1343,6 +1422,19 @@
       "commentId": null,
       "commentRef": null,
       "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 276,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#276:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1443,15 +1535,80 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
       "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    },
+    {
+      "from": 260,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260",
+      "reason": "#276 waits for canonical Task DAG/Task Pack refresh and A-lane freeze evidence; this edge is still PLANNED until native readback."
+    },
+    {
+      "from": 219,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
+    },
+    {
+      "from": 261,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
+    },
+    {
+      "from": 262,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "reason": "#276 aligns with the Experience/Casebook consumer and evidence-use contract; do not race C-owned semantics."
+    },
+    {
+      "from": 273,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "#276 consumes the governed PlanRevision/Replan vocabulary and must wait for #273's final contract/source."
+    },
+    {
+      "from": 274,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "#276 aligns with the exact ADS v5 ExperienceUseFeedback producer/publisher contract."
+    },
+    {
+      "from": 275,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "#276 uses the canonical TaskAttempt/AttemptEvent read model only after #275 owns and completes its initial source."
+    },
+    {
+      "from": 276,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
     }
   ],
   "notes": [
-    "This refreshed 43-Task pack is still CANDIDATE_NOT_FROZEN.",
-    "Four pre-existing native edges remain NATIVE: #260-#263 → #264.",
-    "Twelve PLANNED edges are listed; only #211 → #212 is the original declared-but-not-native edge. The other eleven are audit-proposed and must be materialized as native GitHub blocked_by edges and read back before freeze.",
-    "The candidate has 43 Task Issues. Three new P0 Tasks #273-#275 have NO_CLAIM_EVENT_EXPECTED and are not executable.",
-    "scopeDispositions and writeSetAudit are audit metadata pinned by the Task Pack blob; they require independent exact-body review and are not source/Claim authorization.",
-    "No Task execution, K admission, Agent dispatch, merge, version/main mutation, tag or Release is implied."
+    "This refreshed 44-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
+    "Twenty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 as PLANNED.",
+    "The roster includes all 44 current label:type:task Issues. #276 is PLANNED with NO_CLAIM_EVENT_EXPECTED and is non-dispatchable.",
+    "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
+    "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
+    "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -1714,6 +1871,12 @@
         "disposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
         "dispatchableByDisposition": false,
         "note": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 276,
+        "disposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
       }
     ]
   },
@@ -1777,7 +1940,8 @@
           203,
           210,
           219,
-          273
+          273,
+          276
         ],
         "paths": [
           "packages/tally-engineering-business/src/index.mjs",
@@ -1786,7 +1950,19 @@
           "experiments/v2/selected-business-build/bundle-local-codex.mjs",
           "experiments/v2/selected-business-build/local-codex-shim.mjs"
         ],
-        "finding": "Central Business entrypoint/build paths overlap. Candidate sequence must be reviewed and native dependencies materialized before any parallel execution."
+        "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. #276 must remain serialized after #219 and #273; do not permit parallel writers."
+      },
+      {
+        "id": "ATTEMPT_MODEL_SERIALIZATION",
+        "taskIssues": [
+          275,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/attempts.mjs",
+          "packages/tally-engineering-business/test/attempts.test.mjs"
+        ],
+        "finding": "#275 owns initial Attempt read-model source; #276 may reconcile the canonical TaskAttempt model only after #275 completes and the source contract is reviewed."
       }
     ]
   }
