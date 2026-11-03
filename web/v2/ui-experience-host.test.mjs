@@ -528,7 +528,7 @@ test('next-Task usage refuses a candidate set that changes during readback',asyn
   assert.equal(result.reason,'EXPERIENCE_SOURCE_CHANGED_DURING_USAGE_READ');
 });
 
- 
+
 test('experience projection rejects forged learning IDs and mismatched report source bindings',async()=>{
   const publisherRepository='kaicreator-mm/task-meta-e2e';
   const reportId='task-meta:bound',revision=1,commentId=6381704608;
