@@ -8,28 +8,40 @@ const snapshot={connected:true,versionId:'version/v2',
 const candidate={id:'b'.repeat(64),revision:1,title:'Rule',state:'PROPOSED',
   reportQualification:'VERIFIED',sourceRef:'https://github.com/org/tally/issues/2#issuecomment-1',
   eligibleForNextTask:false} as const satisfies ExperienceCandidate;
-test('only current source-backed proposed/reviewed candidate is actionable',()=>{
+test('verified current candidate enables both explicit decisions',()=>{
   const s={...snapshot,candidates:[candidate]};
   assert.deepEqual(eligibleExperienceDecision(s,candidate,'org/tally','version/v2'),
-    {eligible:true,reason:'HUMAN_DECISION_REQUIRED'});
+    {eligible:true,canAdopt:true,canReject:true,reason:'HUMAN_DECISION_REQUIRED'});
 });
-test('stale source, foreign project, old version and unknown report refuse',()=>{
+test('STALE, UNVERIFIED and UNKNOWN evidence is rejectable but never adoptable',()=>{
+  for(const qualification of ['STALE','UNVERIFIED','UNKNOWN'] as const){
+    const item={...candidate,reportQualification:qualification};
+    const gate=eligibleExperienceDecision({...snapshot,candidates:[item]},item,
+      'org/tally','version/v2');
+    assert.deepEqual(gate,{eligible:true,canAdopt:false,canReject:true,
+      reason:'UNQUALIFIED_REPORT_REJECT_ONLY'});
+  }
+});
+test('stale source, foreign project and old version disable both decisions',()=>{
   for(const s of [{...snapshot,source:{...snapshot.source,currentness:'STALE'}},
     {...snapshot,source:{...snapshot.source,repository:'evil/repo'}},
     {...snapshot,versionId:'version/v1'}]){
-    assert.equal(eligibleExperienceDecision({...s,candidates:[candidate]},
-      candidate,'org/tally','version/v2').eligible,false);
+    const gate=eligibleExperienceDecision({...s,candidates:[candidate]},
+      candidate,'org/tally','version/v2');
+    assert.equal(gate.canAdopt,false);assert.equal(gate.canReject,false);
   }
-  const unknown={...candidate,reportQualification:'UNKNOWN' as const};
-  assert.equal(eligibleExperienceDecision({...snapshot,candidates:[unknown]},
-    unknown,'org/tally','version/v2').eligible,false);
 });
-test('terminal decisions cannot be repeated or auto-used by next Task',()=>{
+test('terminal, already-applied and stale candidate revisions cannot be decided again',()=>{
   for(const state of ['ADOPTED','REJECTED'] as const){
-    const c={...candidate,state};
-    assert.equal(eligibleExperienceDecision({...snapshot,candidates:[c]},c,
-      'org/tally','version/v2').eligible,false);
+    const item={...candidate,state};
+    const gate=eligibleExperienceDecision({...snapshot,candidates:[item]},item,
+      'org/tally','version/v2');
+    assert.equal(gate.canAdopt,false);assert.equal(gate.canReject,false);
   }
+  const current={...candidate,revision:2};
+  const stale={...candidate,revision:1};
+  assert.equal(eligibleExperienceDecision({...snapshot,candidates:[current]},stale,
+    'org/tally','version/v2').canReject,false);
   assert.match(experienceOutcomeLabel({...candidate,state:'ADOPTED'}),
     /等待下一 Task 实际使用证据/);
 });

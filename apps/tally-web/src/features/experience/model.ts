@@ -17,24 +17,37 @@ export interface ExperienceDecisionReceipt{
   nextTaskUsage?:'NOT_VERIFIED';measuredBenefit?:'UNKNOWN';
   reason?:string;
 }
+export interface ExperienceDecisionGate{
+  eligible:boolean;canAdopt:boolean;canReject:boolean;reason:string;
+}
+const deniedDecision=(reason:string):ExperienceDecisionGate=>({
+  eligible:false,canAdopt:false,canReject:false,reason
+});
 export function eligibleExperienceDecision(snapshot:ExperienceSnapshot|null,
-  candidate:ExperienceCandidate|null,repository:string,versionId:string){
+  candidate:ExperienceCandidate|null,repository:string,versionId:string):ExperienceDecisionGate{
   if(snapshot?.connected!==true||snapshot.source?.repository!==repository||
      !/^[a-f0-9]{40}$/.test(snapshot.source.sourceSha??'')||
      snapshot.source.currentness!=='CURRENT'||snapshot.source.readback!=='VERIFIED'||
      snapshot.versionId!==versionId||!Array.isArray(snapshot.candidates)||
      new Set(snapshot.candidates.map(c=>c.id)).size!==snapshot.candidates.length)
-    return {eligible:false,reason:'EXPERIENCE_SOURCE_NOT_CURRENT'};
+    return deniedDecision('EXPERIENCE_SOURCE_NOT_CURRENT');
   if(!candidate||!/^[a-f0-9]{64}$/.test(candidate.id??'')||
      !Number.isSafeInteger(candidate.revision)||candidate.revision<1||
      typeof candidate.sourceRef!=='string'||
-     !candidate.sourceRef.startsWith('https://github.com/'+repository+'/issues/')||
-     !snapshot.candidates.some(c=>c.id===candidate.id&&
-       c.revision===candidate.revision)||candidate.state!=='PROPOSED'&&
-     candidate.state!=='REVIEWED'||candidate.reportQualification!=='VERIFIED')
-    return {eligible:false,reason:'EXPERIENCE_EVIDENCE_NOT_ELIGIBLE'};
-  if(candidate.eligibleForNextTask)return {eligible:false,reason:'ALREADY_MARKED_FOR_NEXT_TASK'};
-  return {eligible:true,reason:'HUMAN_DECISION_REQUIRED'};
+     !candidate.sourceRef.startsWith('https://github.com/'+repository+'/issues/'))
+    return deniedDecision('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
+  const current=snapshot.candidates.find(c=>c.id===candidate.id);
+  if(!current||current.revision!==candidate.revision||
+     current.state!==candidate.state||
+     current.reportQualification!==candidate.reportQualification||
+     current.sourceRef!==candidate.sourceRef||
+     current.eligibleForNextTask!==candidate.eligibleForNextTask||
+     !['PROPOSED','REVIEWED'].includes(candidate.state)||
+     candidate.eligibleForNextTask)
+    return deniedDecision('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
+  const canAdopt=candidate.reportQualification==='VERIFIED';
+  return {eligible:true,canAdopt,canReject:true,
+    reason:canAdopt?'HUMAN_DECISION_REQUIRED':'UNQUALIFIED_REPORT_REJECT_ONLY'};
 }
 export function experienceOutcomeLabel(candidate:ExperienceCandidate){
   if(candidate.state==='ADOPTED')return '已采纳 · 等待下一 Task 实际使用证据';

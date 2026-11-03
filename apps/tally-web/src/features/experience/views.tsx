@@ -62,18 +62,18 @@ export function ExperienceView({snapshot,projectId,versionId,onDecision,
           {zh?'查看 ADS 原始报告':'Open ADS source report'}
         </a>
         {!terminal?<div style={{display:'flex',gap:8,marginTop:12,flexWrap:'wrap'}}>
-          <Button disabled={!gate.eligible||pendingId!==null}
+          <Button disabled={!gate.canAdopt||pendingId!==null}
             loading={pendingId===candidate.id}
             onClick={()=>{void decide(candidate.id,candidate.revision,'ADOPT');}}>
             {zh?'采纳为后续经验':'Adopt for future Tasks'}
           </Button>
-          <Button variant="secondary" disabled={!gate.eligible||pendingId!==null}
+          <Button variant="secondary" disabled={!gate.canReject||pendingId!==null}
             loading={pendingId===candidate.id}
             onClick={()=>{void decide(candidate.id,candidate.revision,'REJECT');}}>
             {zh?'拒绝':'Reject'}
           </Button>
-          {!gate.eligible?<span role="status" style={{fontSize:12,color:'var(--text-muted)'}}>
-            {gate.reason}</span>:null}
+          {gate.reason!=='HUMAN_DECISION_REQUIRED'?<span role="status"
+            style={{fontSize:12,color:'var(--text-muted)'}}>{gate.reason}</span>:null}
         </div>:null}
       </Card>;
     })}
