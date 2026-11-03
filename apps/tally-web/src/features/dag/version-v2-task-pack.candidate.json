@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T14:05:00.000Z",
+  "observedAt": "2026-11-03T14:02:40.098Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -591,7 +591,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:45Z",
-      "updatedAt": "2026-11-02T18:57:47Z",
+      "updatedAt": "2026-11-03T14:01:26Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
       "dispatchableByDisposition": true,
@@ -1645,7 +1645,8 @@
     "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
     "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created.",
     "Re-refreshed all 44 native Task Issue timestamps/states after #219/#261/#262 LOCAL_VALIDATION requests and the #276 write-set audit comment. These requests do not create Claims or dispatch authorization; #219/#261/#262 remain open.",
-    "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only."
+    "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only.",
+    "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
