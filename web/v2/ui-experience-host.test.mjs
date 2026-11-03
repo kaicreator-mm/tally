@@ -301,7 +301,7 @@ test('selected maintenance Host independently refuses ADOPT for UNKNOWN report',
     evidenceRef:staleSuggestion.provenance.publicationRef,
     publisherRepository,reportQualification:'UNKNOWN'});
   assert.equal(result.status,'DENIED');
-  assert.equal(result.reason,'UNQUALIFIED_REPORT_CANNOT_BE_ADOPTED');
+  assert.equal(result.reason,'UNQUALIFIED_OR_TEST_ONLY_REPORT_CANNOT_BE_ADOPTED');
   assert.equal(recordCalls,0);
 });
 
@@ -414,7 +414,7 @@ test('UNVERIFIED ADS evidence is preserved and permits REJECT but never ADOPT',a
 });
 
 test('rejected learning cannot appear in a later Task Context Pack usage readback',async()=>{
-  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const publisherRepository='kaicreator-mm/task-meta';
   const id='e'.repeat(64);
   const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
   const candidate={id,revision:1,title:'Rejected stale report',state:'REJECTED',
@@ -433,7 +433,7 @@ test('rejected learning cannot appear in a later Task Context Pack usage readbac
 });
 
 test('next-Task usage accepts only unique adopted verified eligible candidates',async()=>{
-  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const publisherRepository='kaicreator-mm/task-meta';
   const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
   const id='e'.repeat(64);
   const candidate=(overrides={})=>({
@@ -501,7 +501,7 @@ test('next-Task usage accepts only unique adopted verified eligible candidates',
 });
 
 test('next-Task usage refuses a candidate set that changes during readback',async()=>{
-  const publisherRepository='kaicreator-mm/task-meta-e2e';
+  const publisherRepository='kaicreator-mm/task-meta';
   const source={repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'};
   const id='a'.repeat(64);
   const candidate=(state,eligible)=>({
