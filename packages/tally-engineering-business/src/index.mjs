@@ -1493,6 +1493,7 @@ export function projectTaskLearningOutcome({input,observation,effectId}={}){
     if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
       o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
       o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED'&&
+      ['ADOPTED','REJECTED'].includes(o.decision)&&
       (o.decision!=='ADOPTED'||validLearningOwnerApproval(input,o.ownerApproval)))
       return Object.freeze({state:o.state,reason:o.reason,effectId,
         issueRef:o.issueRef,sourceSha:o.sourceSha,learningId:o.learningId,
