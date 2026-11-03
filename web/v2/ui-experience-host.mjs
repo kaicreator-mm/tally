@@ -164,7 +164,8 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
         c.eligibleForNextTask===true&&
         (c.publisherRepository??COMMENT_REF.exec(c.sourceRef)?.[1])!==ISOLATED_TEST_PUBLISHER&&
         c.sourceKind!=='ISOLATED_E2E_TEST_ONLY').map(c=>c.id));
-      if(r?.connected!==true||r.source?.repository!==repository||
+      if(r?.connected!==true||r.versionId!==versionId||
+         r.source?.repository!==repository||
          r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
          r.source?.readback!=='VERIFIED'||r.taskIssue!==taskIssue||
          !Array.isArray(r.usedCandidates)||r.usedCandidates.length>100||
