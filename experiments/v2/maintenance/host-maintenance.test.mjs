@@ -290,7 +290,9 @@ test('P0 amendment: UNKNOWN/STALE evidence is explicitly REJECTable, never adopt
     assert.equal(reject.state,'LEARNING_RECORDED');
     assert.equal(reject.reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
     assert.equal(reject.decision,'REJECTED');
+    assert.equal(reject.provenance.reportId,observation.envelope.data.report_id);
     assert.equal(reject.currentness,currentness);
+    assert.equal(reject.currentnessReason,currentnessReason);
     assert.equal(reject.qualification,'UNKNOWN');
     assert.equal(reject.nextTaskContextPack,false);
     assert.equal(reject.adoptedRule,false);assert.equal(reject.adoptedSkill,false);
@@ -369,6 +371,10 @@ test('REJECT decisions replay exactly and can never flip to ADOPT',async()=>{
   assert.equal(replay.state,'LEARNING_RECORDED');
   assert.equal(replay.reason,'LEARNING_DECISION_ALREADY_RECORDED');
   assert.equal(replay.decision,'REJECTED');
+  assert.equal(replay.provenance.reportId,'rep-1');
+  assert.equal(replay.currentness,'CURRENT_OBSERVED');
+  assert.equal(replay.currentnessReason,'NATIVE_REPORT_OBSERVED');
+  assert.equal(replay.qualification,'REPORTED_QUALIFIED');
   assert.equal(replay.nextTaskContextPack,false);
   assert.equal(replay.adoptedWorkflow,false);
   assert.equal((await hq.hostRecordTaskLearningOutcome(
