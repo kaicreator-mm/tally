@@ -22,6 +22,11 @@ export interface HumanActionGate{
 const deny=(reason:string):HumanActionGate=>({enabled:false,reason,
   actionId:null,revision:null,label:'操作不可用'});
 // A matching Task/category is not a Host-issued action identity.
+const REPOSITORY_REF=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,38}\\/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
+const VERSION_REF=/^version\\/[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
+// Project/version identifiers are authority scope labels, not optional
+// display strings. Equality between two empty or malformed values is not
+// evidence that the work item belongs to a canonical current scope.
 const hostKindFor:Partial<Record<WorkAction['kind'],string>>={
   REVIEW:'REVIEW_REPAIR',DECISION:'FREEZE_PRODUCT',RECOVERY:'START_AGENT'};
 export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
@@ -29,6 +34,8 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   if(snapshot?.connected!==true||catalog?.connected!==true||
      !catalog.source||! /^[a-f0-9]{40}$/.test(snapshot.source?.sourceSha??'')||
      !/^[a-f0-9]{40}$/.test(catalog.source.sourceSha??'')||
+     !REPOSITORY_REF.test(snapshot.source?.repository??'')||
+     !REPOSITORY_REF.test(catalog.source.repository??'')||
      snapshot.source?.currentness!=='CURRENT'||
      snapshot.source.readback!=='VERIFIED'||
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
@@ -36,8 +43,11 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      catalog.source.sourceSha!==snapshot.source.sourceSha||
      !Array.isArray(catalog.actions))
     return deny('HOST_ACTION_SOURCE_NOT_CONNECTED');
-  if(workItem.projectId!==snapshot.source.repository||
-     workItem.versionId===null||catalog.versionId!==workItem.versionId||
+  if(!REPOSITORY_REF.test(workItem.projectId??'')||
+     workItem.projectId!==snapshot.source.repository||
+     !VERSION_REF.test(workItem.versionId??'')||
+     !VERSION_REF.test(catalog.versionId??'')||
+     catalog.versionId!==workItem.versionId||
      workItem.state!=='PENDING')return deny('WORKITEM_NOT_CURRENT');
   if(!Array.isArray(catalog.actions)||
      workItem.taskId===null||!/^\d+$/.test(workItem.taskId))
