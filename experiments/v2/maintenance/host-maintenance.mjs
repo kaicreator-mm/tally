@@ -59,6 +59,15 @@ const provenanceBound=suggestion=>{const p=suggestion?.provenance;
     suggestion.learningId===sha256([p.reportId,p.revision,p.commentId,p.kind]);};
 // Ledgers recorded before the currentness field existed can only reconstruct
 // a coarse result; qualification stays the exact observed classification.
+const validOwnerApproval=(input,approval)=>
+  approval?.state==='OWNER_APPROVAL_VERIFIED'&&
+  approval.reason==='GITHUB_OWNER_APPROVAL_VERIFIED'&&
+  approval.repository===OWNER+'/'+REPO&&approval.issueNumber===ISSUE&&
+  approval.sourceSha===input.sourceSha&&approval.learningId===input.learningId&&
+  approval.decision==='ADOPTED'&&Number.isSafeInteger(approval.commentId)&&
+  approval.commentId>0&&typeof approval.author==='string'&&
+  IDENTITY.test(approval.author)&&approval.permission==='admin'&&
+  approval.commentUrl===ISSUE_REF+'#issuecomment-'+approval.commentId;
 const currentnessOf=suggestion=>suggestion?.currentness??
   (suggestion?.qualification==='REPORTED_QUALIFIED'?STATES.CURRENT:STATES.UNKNOWN);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
@@ -317,13 +326,15 @@ async function loadLearning(openStore,registryPath){
  * outcome for one ledger learning suggestion. A REJECT is recordable for any
  * legitimately provenance-bound suggestion — including STALE/UNKNOWN evidence
  * — and carries the exact provenance/currentness/qualification result while
- * never entering a next-Task Context Pack; an ADOPT still requires
- * REPORTED_QUALIFIED current evidence under the existing Host authority. The
+ * never entering a next-Task Context Pack; an ADOPT requires
+ * REPORTED_QUALIFIED current evidence plus one exact GitHub Owner/admin
+ * approval comment verified by the trusted Host reader. The
  * outcome is an observed fact only — measuredEffect never becomes a quality
  * gain.
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
-  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,env=process.env}={}){
+  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,readOwnerApproval,
+  env=process.env}={}){
   const pin=input=>
     input?.issueNumber===ISSUE&&input.sourceRef===ISSUE_REF&&
     SHA.test(input.sourceSha??'')&&DIGEST.test(input.candidateDigest??'')&&
@@ -512,6 +523,29 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         (suggestion.qualification!=='REPORTED_QUALIFIED'||
           currentnessOf(suggestion)!==STATES.CURRENT))
         return denied(input,'LEARNING_ADOPTION_NOT_QUALIFIED');
+      // Only ADOPT requires a per-learning Owner comment. The Host reads it
+      // from GitHub through the trusted C port; caller identity/approval data
+      // is never accepted. REJECT deliberately does not call this port.
+      let ownerApproval;
+      if(input.decision==='ADOPTED'&&outcome===undefined){
+        if(typeof readOwnerApproval!=='function')
+          return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+        let observedApproval=null;
+        try{
+          observedApproval=await readOwnerApproval({repository:OWNER+'/'+REPO,
+            issueNumber:ISSUE,sourceSha:input.sourceSha,
+            learningId:input.learningId,decision:'ADOPTED'});
+        }catch{}
+        if(!validOwnerApproval(input,observedApproval))
+          return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+        ownerApproval=Object.freeze({
+          state:observedApproval.state,reason:observedApproval.reason,
+          repository:observedApproval.repository,issueNumber:observedApproval.issueNumber,
+          sourceSha:observedApproval.sourceSha,learningId:observedApproval.learningId,
+          decision:observedApproval.decision,commentId:observedApproval.commentId,
+          commentUrl:observedApproval.commentUrl,author:observedApproval.author,
+          permission:observedApproval.permission});
+      }
       if(env.TALLY_LOCAL_REPLAY==='1')
         return Object.freeze({...flags,state:'REPLAY_COMPLETE',
           reason:'REPLAY_FIXTURE_ONLY',issueRef:ISSUE_REF,
@@ -522,6 +556,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           currentness:currentnessOf(suggestion),
           currentnessReason:suggestion.currentnessReason??null,
           qualification:suggestion.qualification,...NOT_REUSED,
+          ...(ownerApproval?{ownerApproval}:{}),
           measuredEffect:'NOT_MEASURED'});
       let opened=null,existingDecision;
       try{
@@ -538,6 +573,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           currentness:currentnessOf(suggestion),
           currentnessReason:suggestion.currentnessReason??null,
           qualification:suggestion.qualification,...NOT_REUSED,
+          ...(ownerApproval?{ownerApproval}:{}),
           noAgentRanking:true,qualityGainClaimed:false,authorized:false,
           taskPass:false,releasePass:false});
         const sameDecision=record=>{
@@ -560,7 +596,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           currentness:record.currentness??currentnessOf(suggestion),
           currentnessReason:record.currentnessReason??suggestion.currentnessReason??null,
           qualification:record.qualification??suggestion.qualification,
-          ...NOT_REUSED,measuredEffect:'NOT_MEASURED',noAgentRanking:true,
+          ...NOT_REUSED,...(record.ownerApproval?{ownerApproval:record.ownerApproval}:{}),
+          measuredEffect:'NOT_MEASURED',noAgentRanking:true,
           qualityGainClaimed:false});
         const decisionKey=`tally:v2:maintenance-learning-decision:${input.learningId}`;
         if(existingDecision?.value?.phase==='LEARNING_DECISION'){
@@ -599,6 +636,11 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         return denied(input,'LEARNING_DECISION_REQUIRED');
       if(input.decision!==existingDecision.value.decision)
         return denied(input,'LEARNING_DECISION_MISMATCH');
+      // Later outcome writes reuse only the Host-persisted, exact approval
+      // receipt from the original ADOPT decision; no caller can supply it.
+      if(existingDecision.value.decision==='ADOPTED'&&
+        !validOwnerApproval(input,existingDecision.value.ownerApproval))
+        return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
       const outcomeFacts=Object.freeze({phase:'LEARNING_OUTCOME',
         issueRef:ISSUE_REF,sourceSha:input.sourceSha,
         learningId:input.learningId,decision:existingDecision.value.decision,
@@ -612,7 +654,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const outcomeReceipt=(record,reason)=>Object.freeze({...flags,
         state:'LEARNING_RECORDED',reason,issueRef:ISSUE_REF,
         sourceSha:input.sourceSha,learningId:input.learningId,
-        decision:record.decision,provenance:suggestion.provenance,
+        decision:record.decision,
+        ...(existingDecision.value.ownerApproval?
+          {ownerApproval:existingDecision.value.ownerApproval}:{}),
+        provenance:suggestion.provenance,
         currentness:currentnessOf(suggestion),
         currentnessReason:suggestion.currentnessReason??null,
         qualification:suggestion.qualification,
