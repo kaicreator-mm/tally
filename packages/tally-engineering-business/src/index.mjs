@@ -1431,11 +1431,15 @@ export function projectMaintenanceIssuePublication({input,observation,effectId}=
  * decision plus its optional later independent outcome. The learning identity
  * must be the exact ledger entry id; the outcome is an observed fact only.
  */
+// Bounded Host denial codes the projection returns as their exact reason;
+// any other Host string collapses to the generic fail-closed reason.
 const LEARNING_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
   'MAINTENANCE_HOST_CONFIG_INVALID','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
   'LEARNING_PROVENANCE_NOT_VERIFIED','LEARNING_DECISION_REQUIRED',
   'LEARNING_DECISION_MISMATCH','LEARNING_OUTCOME_MISMATCH',
-  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW']);
+  'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW',
+  'INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED','LEARNING_ADOPTION_NOT_QUALIFIED',
+  'LEARNING_REPORT_SET_EMPTY']);
 const ISO_TIME=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
 export function assessTaskLearningOutcome(input){

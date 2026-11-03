@@ -254,7 +254,10 @@ export function learningSuggestionsFromReports(observations){
 
 /**
  * Persist the observed Task Learning ledger. A re-observation of the exact
- * same set replays; a divergent ledger refuses.
+ * same set replays; a divergent ledger refuses. A valid-but-empty projected
+ * set is refused BEFORE the ledger is ever opened: recording it would
+ * permanently occupy the singleton learning key and turn every later
+ * non-empty observation into a mismatch.
  */
 export async function observeLearningSuggestions({openStore,registryPath,sourceSha,
   observations,observedAt}={}){
@@ -271,6 +274,8 @@ export async function observeLearningSuggestions({openStore,registryPath,sourceS
   if(projected.suggestions===null)
     return unqualified('LEARNING_PROVENANCE_UNVERIFIED');
   const suggestions=projected.suggestions;
+  if(suggestions.length===0)
+    return unqualified('LEARNING_REPORT_SET_EMPTY');
   let opened,existing;
   try{
     opened=await store(openStore,registryPath);

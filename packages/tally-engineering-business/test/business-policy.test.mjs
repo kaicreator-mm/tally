@@ -924,6 +924,32 @@ test('#219 learning projection records use/reject and honest outcomes only',()=>
   }
 });
 
+test('#219 learning projection preserves bounded Host denial reasons exactly',()=>{
+  const denied=reason=>projectTaskLearningOutcome({input:learningInput(),
+    observation:{...learningRecorded(),state:'NOT_ADMITTED',reason,
+      admitted:false,claimAccepted:false,githubEffect:'NOT_RUN'},effectId:'fx'});
+  // Known Host denials surface as their exact bounded reason instead of
+  // collapsing to the generic unverified record.
+  for(const reason of ['INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED',
+    'LEARNING_ADOPTION_NOT_QUALIFIED','LEARNING_REPORT_SET_EMPTY',
+    'LEARNING_PROVENANCE_NOT_VERIFIED']){
+    const y=denied(reason);
+    assert.equal(y.state,'NOT_ADMITTED',reason);
+    assert.equal(y.reason,reason,reason);
+    assert.equal(y.admitted,false);
+    assert.equal(y.taskPass,false);
+  }
+  // Unrecognized or near-miss Host strings never pass through: they keep the
+  // generic fail-closed reason instead of forwarding arbitrary Host text.
+  for(const reason of ['MADE_UP_REASON','LEARNING_ADOPTION_NOT_QUALIFIE',
+    'learning_adoption_not_qualified','INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED ']){
+    const y=denied(reason);
+    assert.equal(y.state,'NOT_ADMITTED',JSON.stringify(reason));
+    assert.equal(y.reason,'UNVERIFIED_TASK_LEARNING_RECORD',JSON.stringify(reason));
+    assert.equal(y.admitted,false);
+  }
+});
+
 test('#219 learning effect dispatches sealed resource only for qualified input',async()=>{
   const p=getPolicy();let calls=0;
   const handler=p.effectBindings['effect:tally-task-learning-outcome'].handler;

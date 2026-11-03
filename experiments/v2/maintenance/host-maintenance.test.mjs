@@ -242,6 +242,38 @@ test('conflicting report identities in one observation set fail closed before th
   await cas.close();
 });
 
+test('a valid-but-empty report set never freezes an empty learning ledger',async()=>{
+  // P2-01: an empty projected set must be refused BEFORE the Host CAS ledger
+  // is opened, so the singleton learning key is never occupied by an empty
+  // record that would mismatch every later non-empty observation.
+  const ctx=await reviewedFrozen();
+  let opens=0;
+  const countingOpenStore=async()=>{opens++;return ctx.m.store;};
+  const empty=await observeLearningSuggestions({openStore:countingOpenStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[],observedAt:'2026-11-04T09:00:00.000Z'});
+  assert.equal(empty.state,'NOT_RECORDED');
+  assert.equal(empty.reason,'LEARNING_REPORT_SET_EMPTY');
+  assert.deepEqual(empty.suggestions,[]);
+  assert.equal(empty.githubEffect,'NOT_RUN');
+  assert.equal(opens,0,'an empty report set must not even open the ledger store');
+  const cas=await ctx.openStore();
+  assert.equal(await cas.get(MAINTENANCE_LEARNING_KEY),null,
+    'an empty observation set must never enter the Host CAS ledger');
+  // The later non-empty report set still lands: the refused empty read left
+  // the singleton ledger key free instead of permanently freezing it.
+  const observed=await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-04T09:01:00.000Z'});
+  assert.equal(observed.state,'RECORDED_COMPLETE');
+  assert.equal(observed.suggestions.length,1);
+  assert.equal(observed.suggestions[0].learningId,LEARNING_ID);
+  const stored=(await cas.get(MAINTENANCE_LEARNING_KEY)).value;
+  assert.equal(stored.phase,'OBSERVED_LEARNING');
+  assert.equal(stored.suggestions.length,1);
+  await cas.close();
+});
+
 test('learning decision and later independent outcome are ledger-gated and idempotent',async()=>{
   const ctx=await reviewedFrozen();
   const unproven=await observeLearningSuggestions({openStore:ctx.openStore,
