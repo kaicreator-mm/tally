@@ -45,3 +45,29 @@ test('terminal, already-applied and stale candidate revisions cannot be decided 
   assert.match(experienceOutcomeLabel({...candidate,state:'ADOPTED'}),
     /等待下一 Task 实际使用证据/);
 });
+
+test('trusted external publisher is source-bound and isolated E2E remains reject-only',()=>{
+  const external={...candidate,
+    publisherRepository:'org/task-meta',
+    sourceKind:'PUBLIC_ADS_REPORT',
+    sourceRef:'https://github.com/org/task-meta/issues/9#issuecomment-2'};
+  const externalGate=eligibleExperienceDecision({...snapshot,candidates:[external]},
+    external,'org/tally','version/v2');
+  assert.equal(externalGate.canAdopt,true);
+  assert.equal(externalGate.canReject,true);
+
+  const isolated={...candidate,
+    publisherRepository:'kaicreator-mm/task-meta-e2e',
+    sourceKind:'ISOLATED_E2E_TEST_ONLY',
+    sourceRef:'https://github.com/kaicreator-mm/task-meta-e2e/issues/9#issuecomment-3'};
+  const isolatedGate=eligibleExperienceDecision({...snapshot,candidates:[isolated]},
+    isolated,'org/tally','version/v2');
+  assert.deepEqual(isolatedGate,{eligible:true,canAdopt:false,canReject:true,
+    reason:'ISOLATED_E2E_TEST_ONLY'});
+
+  const forged={...isolated,publisherRepository:'org/task-meta'};
+  const forgedGate=eligibleExperienceDecision({...snapshot,candidates:[isolated]},
+    forged,'org/tally','version/v2');
+  assert.equal(forgedGate.canAdopt,false);
+  assert.equal(forgedGate.canReject,false);
+});

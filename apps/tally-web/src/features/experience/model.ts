@@ -3,6 +3,8 @@ export type ReportQualification='VERIFIED'|'STALE'|'UNVERIFIED'|'UNKNOWN';
 export interface ExperienceCandidate{
   id:string;revision:number;title:string;state:ExperienceState;
   reportQualification:ReportQualification;sourceRef:string;
+  publisherRepository?:string|null;
+  sourceKind?:'PUBLIC_ADS_REPORT'|'ISOLATED_E2E_TEST_ONLY';
   eligibleForNextTask:boolean;
 }
 export interface ExperienceSnapshot{
@@ -31,23 +33,31 @@ export function eligibleExperienceDecision(snapshot:ExperienceSnapshot|null,
      snapshot.versionId!==versionId||!Array.isArray(snapshot.candidates)||
      new Set(snapshot.candidates.map(c=>c.id)).size!==snapshot.candidates.length)
     return deniedDecision('EXPERIENCE_SOURCE_NOT_CURRENT');
+  const sourceRef=typeof candidate?.sourceRef==='string'?
+    /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/.exec(candidate.sourceRef):null;
+  const publisherRepository=candidate?.publisherRepository??repository;
   if(!candidate||!/^[a-f0-9]{64}$/.test(candidate.id??'')||
      !Number.isSafeInteger(candidate.revision)||candidate.revision<1||
-     typeof candidate.sourceRef!=='string'||
-     !candidate.sourceRef.startsWith('https://github.com/'+repository+'/issues/'))
+     !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(publisherRepository)||
+     !sourceRef||sourceRef[1]!==publisherRepository)
     return deniedDecision('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
   const current=snapshot.candidates.find(c=>c.id===candidate.id);
   if(!current||current.revision!==candidate.revision||
      current.state!==candidate.state||
      current.reportQualification!==candidate.reportQualification||
      current.sourceRef!==candidate.sourceRef||
+     current.publisherRepository!==candidate.publisherRepository||
+     current.sourceKind!==candidate.sourceKind||
      current.eligibleForNextTask!==candidate.eligibleForNextTask||
      !['PROPOSED','REVIEWED'].includes(candidate.state)||
      candidate.eligibleForNextTask)
     return deniedDecision('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
-  const canAdopt=candidate.reportQualification==='VERIFIED';
+  const testOnly=candidate.sourceKind==='ISOLATED_E2E_TEST_ONLY'||
+    publisherRepository==='kaicreator-mm/task-meta-e2e';
+  const canAdopt=candidate.reportQualification==='VERIFIED'&&!testOnly;
   return {eligible:true,canAdopt,canReject:true,
-    reason:canAdopt?'HUMAN_DECISION_REQUIRED':'UNQUALIFIED_REPORT_REJECT_ONLY'};
+    reason:testOnly?'ISOLATED_E2E_TEST_ONLY':
+      canAdopt?'HUMAN_DECISION_REQUIRED':'UNQUALIFIED_REPORT_REJECT_ONLY'};
 }
 export function experienceOutcomeLabel(candidate:ExperienceCandidate){
   if(candidate.state==='ADOPTED')return '已采纳 · 等待下一 Task 实际使用证据';

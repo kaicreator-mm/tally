@@ -86,7 +86,10 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     const candidate=v.candidates.find(c=>c.id===request.candidateId);
     if(!candidate||candidate.revision!==request.revision||
        !['PROPOSED','REVIEWED'].includes(candidate.state)||
-       (request.decision==='ADOPT'&&candidate.reportQualification!=='VERIFIED'))
+       (request.decision==='ADOPT'&&
+         (candidate.reportQualification!=='VERIFIED'||
+          candidate.sourceKind==='ISOLATED_E2E_TEST_ONLY'||
+          candidate.publisherRepository===ISOLATED_TEST_PUBLISHER)))
       return denied('EXPERIENCE_EVIDENCE_NOT_ELIGIBLE');
     if(typeof selectedHost?.dispatchExperienceDecision!=='function')
       return denied('EXPERIENCE_K_HOST_DISPATCH_NOT_CONNECTED');
