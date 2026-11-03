@@ -668,9 +668,9 @@
       "createdAt": "2026-11-03T05:32:14Z",
       "updatedAt": "2026-11-03T08:55:03Z",
       "closedAt": null,
-      "scopeDisposition": "REVIEW_REQUIRED",
+      "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Requires independent exact-body/write-set disposition review before freeze."
+      "dispositionNote": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
     }
   ],
   "edges": [
