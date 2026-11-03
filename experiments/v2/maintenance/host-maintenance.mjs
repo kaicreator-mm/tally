@@ -40,10 +40,15 @@ const NOT_REUSED=Object.freeze({nextTaskContextPack:false,adoptedRule:false,
 // A decision may only bind to a suggestion whose learningId is exactly the
 // digest of its own observed report identity; anything else is forged.
 const provenanceBound=suggestion=>{const p=suggestion?.provenance;
-  return !!p&&typeof p.reportId==='string'&&
-    Number.isSafeInteger(p.revision)&&Number.isSafeInteger(p.commentId)&&
-    typeof p.kind==='string'&&suggestion.learningId===
-    sha256([p.reportId,p.revision,p.commentId,p.kind]);};
+  return !!p&&typeof p.reportId==='string'&&IDENTITY.test(p.reportId)&&
+    Number.isSafeInteger(p.revision)&&p.revision>0&&
+    Number.isSafeInteger(p.commentId)&&p.commentId>0&&
+    Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
+    typeof p.kind==='string'&&IDENTITY.test(p.kind)&&
+    typeof p.namespace==='string'&&IDENTITY.test(p.namespace)&&
+    DIGEST.test(p.dataDigest??'')&&
+    p.publicationRef===`https://github.com/${OWNER}/${REPO}/issues/${p.issueNumber}#issuecomment-${p.commentId}`&&
+    suggestion.learningId===sha256([p.reportId,p.revision,p.commentId,p.kind]);};
 // Ledgers recorded before the currentness field existed can only reconstruct
 // a coarse result; qualification stays the exact observed classification.
 const currentnessOf=suggestion=>suggestion?.currentness??
@@ -449,9 +454,16 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const claim=await verifyAcceptedClaim(ISSUE,'builder');
       if(!claim.ok)return denied(input,claim.reason);
       const ledger=await loadLearning(openStore,registryPath);
-      const suggestion=ledger?.value?.suggestions?.find(
-        row=>row.learningId===input.learningId);
-      if(!suggestion)return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(ledger?.value?.phase!=='OBSERVED_LEARNING'||
+        ledger.value.issueRef!==ISSUE_REF)
+        return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(ledger.value.sourceSha!==input.sourceSha)
+        return denied(input,'LEARNING_SOURCE_SHA_MISMATCH');
+      const matches=Array.isArray(ledger.value.suggestions)?
+        ledger.value.suggestions.filter(row=>row?.learningId===input.learningId):[];
+      if(matches.length===0)return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(matches.length!==1)return denied(input,'LEARNING_PROVENANCE_AMBIGUOUS');
+      const suggestion=matches[0];
       // A decision must bind to the exact report identity the ledger observed;
       // a missing or identity-mismatched provenance is forged and is not
       // decisionable — for adoption or rejection alike.
@@ -461,7 +473,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       // for STALE/UNKNOWN sources; only adoption demands the current,
       // independently qualified evidence.
       if(input.decision==='ADOPTED'&&
-        suggestion.qualification!=='REPORTED_QUALIFIED')
+        (suggestion.qualification!=='REPORTED_QUALIFIED'||
+          currentnessOf(suggestion)!==STATES.CURRENT))
         return denied(input,'LEARNING_ADOPTION_NOT_QUALIFIED');
       if(env.TALLY_LOCAL_REPLAY==='1')
         return Object.freeze({...flags,state:'REPLAY_COMPLETE',

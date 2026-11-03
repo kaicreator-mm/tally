@@ -996,3 +996,37 @@ test('concurrent learning decisions reconcile identical CAS writes and refuse op
   assert.equal(winner.phase,'LEARNING_DECISION');
   assert.ok(['ADOPTED','REJECTED'].includes(winner.decision));
 });
+
+test('learning decision requires one source-matched complete currentness-qualified ledger row',async()=>{
+  const sourceMismatch=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:sourceMismatch.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-03T09:00:00.000Z'});
+  const movedSha='b'.repeat(40);
+  const movedHost=host(sourceMismatch,{env:{...env(),TALLY_CLAIM_SOURCE_SHA:movedSha}});
+  const moved=await movedHost.hostRecordTaskLearningOutcome({
+    issueNumber:219,sourceRef:__test.ISSUE_REF,sourceSha:movedSha,
+    learningId:LEARNING_ID,decision:'ADOPTED'});
+  assert.equal(moved.reason,'LEARNING_SOURCE_SHA_MISMATCH');
+
+  const real=learningSuggestionsFromReports([summaryObservation()])[0];
+  const inconsistent=memoryStore();
+  await inconsistent.store.put(MAINTENANCE_LEARNING_KEY,{phase:'OBSERVED_LEARNING',
+    issueRef:__test.ISSUE_REF,sourceSha:sha,
+    suggestions:[{...real,qualification:'REPORTED_QUALIFIED',
+      currentness:'STALE',currentnessReason:'NATIVE_SOURCE_STALE'}]});
+  const inconsistentHost=host({openStore:async()=>inconsistent.store});
+  const input=decision=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,decision});
+  assert.equal((await inconsistentHost.hostRecordTaskLearningOutcome(
+    input('ADOPTED'))).reason,'LEARNING_ADOPTION_NOT_QUALIFIED');
+  assert.equal((await inconsistentHost.hostRecordTaskLearningOutcome(
+    input('REJECTED'))).state,'LEARNING_RECORDED');
+
+  const duplicate=memoryStore();
+  await duplicate.store.put(MAINTENANCE_LEARNING_KEY,{phase:'OBSERVED_LEARNING',
+    issueRef:__test.ISSUE_REF,sourceSha:sha,suggestions:[real,real]});
+  const duplicateResult=await host({openStore:async()=>duplicate.store})
+    .hostRecordTaskLearningOutcome(input('REJECTED'));
+  assert.equal(duplicateResult.reason,'LEARNING_PROVENANCE_AMBIGUOUS');
+});
