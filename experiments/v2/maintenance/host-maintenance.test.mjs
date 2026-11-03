@@ -62,10 +62,19 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
     ...over.args});
   assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
   return ctx;};
+const ownerApprovalFor=input=>({
+  state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+  repository:'kaicreator-mm/tally',issueNumber:219,
+  sourceSha:input.sourceSha,learningId:input.learningId,decision:'ADOPTED',
+  commentId:6543210987,
+  commentUrl:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6543210987',
+  author:'kaicreator-mm',permission:'admin'});
 const host=(ctx={},overrides={})=>createMaintenanceHost({
   openStore:ctx.openStore??(async()=>memoryStore().store),
   verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true}),env:env(),...overrides});
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readOwnerApproval:async input=>ownerApprovalFor(input),
+  env:env(),...overrides});
 const publishInput=(over={})=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
   sourceSha:sha,candidateDigest:digest,...over});
 const issueReadback=n=>({state:'READBACK_VERIFIED',issue:{number:n,
@@ -1204,6 +1213,96 @@ test('learning decision requires one source-matched complete currentness-qualifi
   const duplicateResult=await host({openStore:async()=>duplicate.store})
     .hostRecordTaskLearningOutcome(input('REJECTED'));
   assert.equal(duplicateResult.reason,'LEARNING_PROVENANCE_AMBIGUOUS');
+});
+
+test('ADOPT requires exact Owner approval before CAS while REJECT does not',async()=>{
+  const deniedCtx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:deniedCtx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-04T09:00:00.000Z'});
+  const input=decision=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,decision});
+  let approvalCalls=0,approvalRequest;
+  const noApproval=host(deniedCtx,{readOwnerApproval:async request=>{
+    approvalCalls++;approvalRequest=request;
+    return {state:'OWNER_APPROVAL_NOT_VERIFIED',reason:'OWNER_APPROVAL_MISSING'};
+  }});
+  const deniedAdopt=await noApproval.hostRecordTaskLearningOutcome(input('ADOPTED'));
+  assert.equal(deniedAdopt.reason,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+  assert.equal(approvalCalls,1);
+  assert.deepEqual(approvalRequest,{repository:'kaicreator-mm/tally',
+    issueNumber:219,sourceSha:sha,learningId:LEARNING_ID,decision:'ADOPTED'});
+  const noDecision=await deniedCtx.openStore().then(s=>s.get(
+    'tally:v2:maintenance-learning-decision:'+LEARNING_ID));
+  assert.equal(noDecision,null,'unapproved ADOPT must not write a decision CAS row');
+
+  const mismatched=host(deniedCtx,{readOwnerApproval:async request=>({
+    ...ownerApprovalFor(request),sourceSha:'b'.repeat(40)})});
+  const mismatchedResult=await mismatched.hostRecordTaskLearningOutcome(input('ADOPTED'));
+  assert.equal(mismatchedResult.reason,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+  assert.equal(await deniedCtx.openStore().then(s=>s.get(
+    'tally:v2:maintenance-learning-decision:'+LEARNING_ID)),null);
+
+  const rejectCtx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:rejectCtx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-04T09:00:00.000Z'});
+  let rejectApprovalCalls=0;
+  const rejectHost=host(rejectCtx,{readOwnerApproval:async()=>{
+    rejectApprovalCalls++;throw new Error('REJECT must not read Owner approval');
+  }});
+  const rejected=await rejectHost.hostRecordTaskLearningOutcome(input('REJECTED'));
+  assert.equal(rejected.state,'LEARNING_RECORDED');
+  assert.equal(rejected.decision,'REJECTED');
+  assert.equal(rejectApprovalCalls,0);
+
+  const approvedCtx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:approvedCtx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-04T09:00:00.000Z'});
+  const adopted=await host(approvedCtx).hostRecordTaskLearningOutcome(input('ADOPTED'));
+  assert.equal(adopted.state,'LEARNING_RECORDED');
+  assert.equal(adopted.decision,'ADOPTED');
+  assert.equal(adopted.ownerApproval.commentId,6543210987);
+  assert.equal(adopted.ownerApproval.sourceSha,sha);
+  assert.equal(adopted.ownerApproval.learningId,LEARNING_ID);
+  assert.equal(adopted.ownerApproval.permission,'admin');
+  assert.equal(adopted.nextTaskContextPack,false);
+  assert.equal(adopted.adoptedRule,false);
+});
+
+test('ADOPT outcome reuses only the approval receipt persisted with its decision',async()=>{
+  const ctx=await reviewedFrozen();
+  await observeLearningSuggestions({openStore:ctx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation()],observedAt:'2026-11-04T09:00:00.000Z'});
+  const input={issueNumber:219,sourceRef:__test.ISSUE_REF,
+    sourceSha:sha,learningId:LEARNING_ID,decision:'ADOPTED'};
+  const decision=await host(ctx).hostRecordTaskLearningOutcome(input);
+  assert.equal(decision.state,'LEARNING_RECORDED');
+  let approvalReads=0;
+  const outcomeHost=host(ctx,{readOwnerApproval:async()=>{
+    approvalReads++;throw new Error('outcome must use the stored approval receipt');
+  }});
+  const outcome=await outcomeHost.hostRecordTaskLearningOutcome({...input,
+    outcome:{attested:false,observedAt:'2026-11-04T10:00:00.000Z',
+      note:'later observation; no measured quality gain'}});
+  assert.equal(outcome.state,'LEARNING_RECORDED');
+  assert.equal(outcome.ownerApproval.commentId,6543210987);
+  assert.equal(approvalReads,0);
+
+  const legacy=memoryStore();
+  await legacy.store.put(MAINTENANCE_LEARNING_KEY,{phase:'OBSERVED_LEARNING',
+    issueRef:__test.ISSUE_REF,sourceSha:sha,
+    suggestions:learningSuggestionsFromReports([summaryObservation()])});
+  await legacy.store.put('tally:v2:maintenance-learning-decision:'+LEARNING_ID,{
+    phase:'LEARNING_DECISION',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    learningId:LEARNING_ID,decision:'ADOPTED'});
+  const legacyResult=await host({openStore:async()=>legacy.store})
+    .hostRecordTaskLearningOutcome({...input,
+      outcome:{attested:false,observedAt:'2026-11-04T10:00:00.000Z',
+        note:'legacy decision without Owner approval receipt'}});
+  assert.equal(legacyResult.reason,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
 });
 
 test('provenance binding accepts the source repository and rejects incomplete publication identity',async()=>{
