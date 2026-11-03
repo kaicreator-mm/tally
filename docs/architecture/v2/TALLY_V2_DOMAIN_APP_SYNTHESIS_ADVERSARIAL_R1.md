@@ -126,12 +126,12 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 
 检查了精确基线的 `.woodpecker/v2-*.yaml`、`run-clean.sh` 和 Producer 条件表达式后，当前证据如下。这里区分“源码单测/Host 测试”和“实际 selected BUILD → public K → C → Host 消费”。
 
-| Intent | Producer 选择条件 | 当前可确认的 CI / Consumer 证据 | 结论 |
+| Intent | Producer 选择条件 | CI / Consumer profile 与 DH source pin | 结论 |
 |---|---|---|---|
-| `inspectTaskReadiness` | 默认总是选择 | T02B `run-clean.sh` → `consumer.mjs` → public Microkernel `load/send/query` | selected K route 有真实 consumer 证据 |
-| `admitClaimedTask` | `T06L_CLAIM=1` | `.woodpecker/v2-t06l-kernel-admission.yaml` 设置 `T04B_NATIVE=1 T06L_CLAIM=1` 并运行 `run-clean.sh` | selected route 有安全 replay / admission 证据；不能等同真实生产 Host Claim |
-| `runLocalCodexAttempt` | `T06M_LOCAL=1` | `.woodpecker/v2-t06m-local-agent.yaml` 运行 `run-clean.sh` + local-codex tests | selected route 有 safe replay；真实 Windows isolation 另行 NOT_RUN |
-| `joinReviewedCandidates` | `T06N_CONCURRENT=1`（同时需要 local Codex） | `.woodpecker/v2-t06n-concurrent-agent.yaml` 设置 `T06M_LOCAL=1 T06N_CONCURRENT=1` | selected route 有 safe replay；真实 Windows 并发仍 NOT_RUN |
+| `inspectTaskReadiness` | 默认总是选择 | T02B 默认 `run-clean.sh` 使用 DH v0.10.2；T06M/T06N 路径也会选择该路由并使用 v0.10.3 | selected K route 有 consumer 证据；v0.10.3 证据来自 T06M/T06N profile |
+| `admitClaimedTask` | `T06L_CLAIM=1` | `.woodpecker/v2-t06l-kernel-admission.yaml` 设置 `T04B_NATIVE=1 T06L_CLAIM=1`；`run-clean.sh` 此时仍使用 DH v0.10.2（仅 T06M/T06N 切换 v0.10.3） | selected route 有安全 replay / admission 证据，但不是 v0.10.3 证据；不能等同真实生产 Host Claim |
+| `runLocalCodexAttempt` | `T06M_LOCAL=1` | `.woodpecker/v2-t06m-local-agent.yaml` 使用 DH v0.10.3，运行 `run-clean.sh` + local-codex tests | selected v0.10.3 route 有 safe replay；真实 Windows isolation 另行 NOT_RUN |
+| `joinReviewedCandidates` | `T06N_CONCURRENT=1`（同时需要 local Codex） | `.woodpecker/v2-t06n-concurrent-agent.yaml` 使用 DH v0.10.3，设置 `T06M_LOCAL=1 T06N_CONCURRENT=1` | selected v0.10.3 route 有 safe replay；真实 Windows 并发仍 NOT_RUN |
 | `publishReviewedCandidate` | `T06P_PUBLISH=1` | `.woodpecker/v2-candidate-publication.yaml` 运行 B policy + C/Host source tests，但未发现设置该 flag 并消费 selected K 的 run-clean 步骤 | selected BUILD E2E **NOT_PROVEN** |
 | `freezeProductIntake` | `T210_PROJECT_INTAKE=1` | `.woodpecker/v2-alm-workspace.yaml` / `.woodpecker/v2-guided-intake.yaml` 运行 controller、schema、B unit、C/Host source tests；未发现选中 T210 flag 的 clean consumer | selected BUILD E2E **NOT_PROVEN** |
 | `admitProjectIntake` | `T210_PROJECT_INTAKE=1` | 同上；Host controller 使用 `sealedDispatch` seam 的源测试不等于已选 B/K clean consumer | selected BUILD E2E **NOT_PROVEN** |
@@ -142,7 +142,8 @@ DomainHarness 的 `component.ts` 当前正式 Component Family 为 `semantic | t
 **关键结论**：
 
 - 10 个 Intent type 被声明，只证明 Business policy 声明面；Producer route list 证明某些 route 可条件选择；CI/clean consumer 才能证明某一特定 profile 实际选中并执行。
-- 当前至少 4 条路径有明确的 selected BUILD/K consumer 证据（inspect、Claim admission、Local Codex、Concurrent Join）；其余 6 条有不同程度的 B unit、Host/C tests 或静态负例，但不能升级成完整 selected BUILD PASS。
+- 当前至少 4 条路径有明确的 selected BUILD/K consumer 证据（inspect、Claim admission、Local Codex、Concurrent Join）；但其中 T02B 默认和 T06L 使用 DH v0.10.2，只有 T06M/T06N profile 明确使用 DH v0.10.3。其余 6 条有不同程度的 B unit、Host/C tests 或静态负例，但不能升级成完整 selected BUILD PASS。
+- 因此目前只有 Local Codex / Concurrent Join 两个可选路径具备 v0.10.3 selected consumer safe-replay 证据；inspect 是这两个 profile 的共同基础路由。Claim admission 的现有选路回执仍是 v0.10.2。完整 v0.10.3 迁移仍未完成。
 - Release profile 的 T222 检查目前证明“默认未选择时 fail-closed”，不证明“显式选择后成功执行”。
 - 下一轮优化应先为每个 Intent 建立 `declaration → selected route → C handler → Host port → positive receipt → negative zero-dispatch` 矩阵，再决定是否需要改代码或新增 CI profile。所有新增 profile 必须先做语法预检和 `git diff --check`。
 
