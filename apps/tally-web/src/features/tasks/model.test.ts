@@ -176,3 +176,11 @@ test('missing, raw, secret-bearing or malformed execution evidence remains UNKNO
   }}));
   assert.equal(raw.progressSummary,'UNKNOWN');
 });
+
+
+test('NOT_CLAIMED remains distinct from UNKNOWN and blocks dispatch',()=>{
+  const task=make({claimState:'NOT_CLAIMED'});
+  assert.equal(task.claimState,'NOT_CLAIMED');
+  assert.deepEqual(blockerSummary(task).find(item=>item.code==='CLAIM_NOT_ACCEPTED'),
+    {code:'CLAIM_NOT_ACCEPTED',detail:'任务 Claim 未接受,不能派发执行'});
+});

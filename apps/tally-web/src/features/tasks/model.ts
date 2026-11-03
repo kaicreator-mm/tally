@@ -33,7 +33,7 @@ export interface TaskRecord{
   /** Native blocked_by task ids (source-qualified only). */
   blockedBy:readonly string[];
   agentId:string|null;
-  claimState:'ACCEPTED'|'NOT_VERIFIED'|'UNKNOWN';
+  claimState:'ACCEPTED'|'NOT_CLAIMED'|'NOT_VERIFIED'|'UNKNOWN';
   attemptId:string|null;
   attemptState:'RUNNING'|'EXITED'|'UNKNOWN'|null;
   prNumber:number|null;
