@@ -337,7 +337,7 @@ Before any Woodpecker CI:
 
 The current Task bodies show that F is a **late serialized source join**, not a parallel writer for every existing B file.
 
-Before any #276 Task Pack refresh or Claim/JIT, reconcile the current candidate body: remove `docs/architecture/v2/TALLY_V2_DOMAIN_KNOWLEDGE_WORKFLOW_R1.md` because PR #277 owns it; replace the broad `test/*.test.mjs` glob with exact F-owned test paths; and keep F1a/F1b new-only before serialized F2 existing-source edits. A candidate path list is not an accepted write set.
+The authoritative #276 Task body has since been reconciled (see #276 comments 6617913719 and 6617920486): it excludes this companion document from F's write set, enumerates exact F1a/F1b/F2 paths without a test glob, defers overlapping #208/#209/#219/#273/#275 files until their owners close, and narrows the first selected BUILD to one task-readiness Schema/Rule pair. This closes the earlier textual mismatch; it does **not** admit source work. The current F path list remains proposed, not accepted, until the exact Task Pack, native dependency readbacks, accepted CAS Claim/JIT and independent review exist.
 
 | Task | Exact overlap with #276 candidate write set | Required ordering / boundary |
 |---|---|---|
