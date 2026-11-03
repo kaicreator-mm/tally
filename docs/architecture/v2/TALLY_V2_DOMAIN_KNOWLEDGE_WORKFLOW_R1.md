@@ -115,20 +115,27 @@ packages/tally-engineering-business/
 
 Create only directories with real, source-linked assets and consumers. Do not add empty folders or copy entire ADS schemas, GitHub records, task-meta traces or Kernel state into B. Existing public `getPolicy()`/BUILD contract remains the compatibility boundary unless a separately reviewed change says otherwise.
 
-### 3.2 Minimum metadata for a Domain Asset
+### 3.2 Immutable asset revision and separate lifecycle records
 
-Each asset should carry:
+Each Domain Asset revision is immutable. Its content carries only definition-time facts:
+
 - `assetId`, `assetKind`, `assetVersion`, `ownerContext`;
-- `status`: `OBSERVED | CANDIDATE | VALIDATED | SHADOW_VERIFIED | REJECTED | QUALIFIED`;
 - `sourceRefs[]`: exact GitHub/ADS/CI/Host references and source SHA where applicable;
 - `authorityRefs[]`: pointer to the owner of each fact/decision;
 - `appliesTo[]`, `exclusions[]`, `counterexamples[]`;
-- `validationRefs[]`: positive, negative, boundary, recovery evidence;
-- `supersedes[]` and `supersededBy` where applicable;
-- `buildQualification`: `NOT_SELECTED | SELECTED_UNQUALIFIED | QUALIFIED_ON_PIN` plus exact BUILD/package pin.
+- `validationRefs[]`: evidence references available when this revision was authored;
+- `supersedes[]` and `supersededBy` where applicable.
 
-Do not add runtime mutable state to a Domain Data file. K owns live Workflow occurrence state and CAS. Domain Data is versioned definition and evidence-linked knowledge.
+Do not put mutable `status`, `buildQualification`, promotion state or revocation state into the content whose digest is used to qualify that same content. Keep those as separate append-only, source-bound lifecycle records:
 
+- **Qualification record:** asset ID + exact content digest + validator/version + validation evidence + result (`VALIDATED | SHADOW_VERIFIED | REJECTED`).
+- **Governance decision:** asset ID + exact content digest + independent review/Owner decision + actor + evidence + decision time.
+- **Currentness/revocation record:** asset ID + exact content digest + `CURRENT | STALE | SUPERSEDED | REVOKED` + source/reason. A newer revision supersedes an older one; revocation excludes the exact digest from future selection.
+- **BUILD selection record:** asset ID + exact content digest + manifest digest + compiler version + selected Business/BUILD pin + clean-consumer evidence.
+
+The qualification, governance, currentness and BUILD-selection dimensions are orthogonal. `REJECTED` is terminal for that immutable asset revision; reconsideration creates a new revision and preserves the rejected revision as history. A later Task's `REJECTED_BY_LATER_TASK` is a usage decision receipt, not a transition of the Domain Asset itself.
+
+K owns live Workflow occurrence state and CAS. GitHub/ADS/Owner records remain authoritative for their respective review and governance decisions. Domain Data files remain immutable definitions and evidence-linked knowledge.
 ### 3.3 Schema and rule discipline
 
 - Use JSON Schema Draft 2020-12 for structure and typed boundaries; validate deterministically in the Producer/BUILD or a tested B helper.
@@ -247,15 +254,16 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **Trigger:** a Task/Attempt/Review/Verification outcome is available, or a later Task reports use/reject of a previously qualified ExperienceRef.
 - **Inputs:** ADS-published GitHub report, original Task/Attempt/Review/CI/Host refs, exact source SHA, applicability, exclusions, counterexamples, validation fixtures, human decision and later independently attested outcome where available.
 - **Authority:** original GitHub/CI/Host facts and ADS v5 report/profile; Tally B owns curation and qualification policy; K owns durable ADOPT/REJECT/feedback effect; Owner governs any Package promotion/build selection.
-- **Target states:** `OBSERVED → EXTRACTED → CANDIDATE → VALIDATING → SHADOW_VERIFIED | REJECTED → GOVERNED_REVIEW → PROMOTED → BUILD_QUALIFIED → SELECTED_IN_NEW_BUILD → USED | REJECTED_BY_LATER_TASK → OUTCOME_PENDING → OUTCOME_ATTESTED`. A running occurrence remains pinned to its original build.
+- **Asset revision lifecycle:** `OBSERVED → EXTRACTED → CANDIDATE → VALIDATING → SHADOW_VERIFIED → GOVERNED_REVIEW → PROMOTED → BUILD_QUALIFIED → SELECTED_IN_NEW_BUILD`. `REJECTED` is a terminal outcome for that exact immutable revision; reconsideration requires a new revision. A rejected revision cannot flow to `GOVERNED_REVIEW` or `PROMOTED`.
+- **Orthogonal dimensions:** qualification (`UNQUALIFIED | VALIDATED | SHADOW_VERIFIED | REJECTED`), governance (`NOT_REVIEWED | APPROVED | REJECTED | REVOKED`), currentness (`CURRENT | STALE | SUPERSEDED | REVOKED`) and BUILD selection (`NOT_SELECTED | SELECTED_UNQUALIFIED | QUALIFIED_ON_PIN`) are separately recorded and each binds the exact asset content digest. A running occurrence remains pinned to its original build.
+- **Usage outcome:** `APPLIED | REJECTED_BY_LATER_TASK | UNKNOWN` belongs to a later Task's use receipt, not the asset lifecycle.
 - **Business mapping:** current `recordTaskLearningOutcome` records a use/reject decision and optional later attested outcome; `casebook.mjs` and `feedback.mjs` are projections. #274 owns the missing ADS v5 EXPERIENCE_USE_FEEDBACK publisher; #262 consumes the Experience context; #60 defines the broader candidate lifecycle. No current Intent proves full DomainAsset promotion and BUILD activation.
 - **C / Host mapping:** ADS feedback Publisher is a distinct effectful C operation with K Permit, idempotency, lost-ACK reconciliation and exact GitHub readback. Read-only ADS report consumption remains separate from effectful publishing.
 - **K ownership:** durable use/reject decision and authorized publication/adoption receipts. Package activation is a new exact BUILD/Host pin, not a mutation of the active instance.
 - **Completion evidence:** source-qualified candidate, positive/negative/counterexample validation, independent qualification, Owner-governed promotion, new BUILD pin, actual next-Task Context Pack use/reject receipt and later outcome evidence. No statistically measured gain without independent measured outcomes.
 - **Wait / reject / recovery:** missing telemetry remains UNKNOWN; contradictory evidence is retained; stale/revoked asset is excluded; lost feedback ACK is reconciled; unqualified candidate cannot be selected; no Agent ranking, model-weight training or automatic promotion.
-- **Confirmed P0 gap:** `experiments/v2/maintenance/host-maintenance.mjs` currently requires the suggestion's qualification to equal `REPORTED_QUALIFIED` before recording either `ADOPTED` or `REJECTED` (see `hostRecordTaskLearningOutcome`). This blocks the required ability to record a source-qualified human REJECT for stale/unqualified evidence while keeping ADOPT denied. #219 comment 6594480790 explicitly requires this distinction; #262 LOCAL_VALIDATION R4 also reports `#219_HOST_REJECT_CONTRACT`. Repair and positive REJECT + negative ADOPT tests belong inside #219's existing Host/test write set, with a fresh valid Claim/ownership check before source mutation.
-- **Minimum #219 repair contract (proposal, not applied):** first require a source-identifiable ledger suggestion with a valid ADS publication provenance ref. For `ADOPTED`, require `qualification === 'REPORTED_QUALIFIED'` plus the existing currentness/verifier/Owner gates. For `REJECTED`, permit a source-identifiable `UNKNOWN`/stale/unqualified suggestion and persist the exact `sourceStatus`, `qualification`, verifier/currentness evidence and provenance in the K/Host CAS record; do not make it eligible for a next-Task Context Pack. Suggestions with no valid source identity/provenance remain unrecordable. Tests: positive REJECT on UNKNOWN, positive REJECT on STALE, negative ADOPT on both, negative REJECT with missing/malformed provenance, and replay/idempotency for each.
-- **Current evidence:** candidate/read projections and local learning decisions exist; ADS v5 Publisher #274 and complete promotion/BUILD-selection proof remain outstanding. `UNQUALIFIED_REJECT=BLOCKED_BY_HOST_GUARD`, `UNQUALIFIED_ADOPT=DENY_EXPECTED`, `FEEDBACK_PUBLICATION=NOT_PROVEN`, `PROMOTION_BUILD=NOT_PROVEN`.
+- **#219 Host contract readback (corrected):** the prior allegation that `hostRecordTaskLearningOutcome` requires `REPORTED_QUALIFIED` for both ADOPT and REJECT is withdrawn. At PR #278 HEAD `a1f452fdaee8c4acbc4d4e1251d34d1464523412`, provenance binding is required for both decisions; the `CURRENT + REPORTED_QUALIFIED` gate applies to ADOPT, while provenance-bound STALE/UNKNOWN/UNVERIFIED suggestions may be REJECTed. This is source-candidate evidence only: PR #278 remains unmerged and its selected installed Host/E2E qualification is not established. Do not dispatch a duplicate REJECT repair based on the withdrawn finding.
+- **Current evidence:** candidate/read projections and local learning decisions exist. PR #278 at `a1f452fdaee8c4acbc4d4e1251d34d1464523412` contains the source-level provenance-bound REJECT / qualified-current ADOPT distinction, but remains an unmerged candidate and does not prove installed Host composition. ADS v5 Publisher #274 and complete promotion/BUILD-selection proof remain outstanding. `SOURCE_REJECT_CONTRACT=IMPLEMENTED_IN_CANDIDATE`, `INSTALLED_HOST_E2E=NOT_PROVEN`, `FEEDBACK_PUBLICATION=NOT_PROVEN`, `PROMOTION_BUILD=NOT_PROVEN`.
 
 ## 5. Current Business Intent / C / Host crosswalk
 
@@ -332,7 +340,10 @@ The current Task bodies show that F is a **late serialized source join**, not a 
 | Task | Exact overlap with #276 candidate write set | Required ordering / boundary |
 |---|---|---|
 | #219 Maintenance/Learning | `src/index.mjs`, `test/business-policy.test.mjs`, and (under the proposed selected-BUILD amendment) `experiments/v2/selected-business-build/producer.mjs`; #219 also owns maintenance C/Host/controller paths | #219 must finish its B policy and Producer edits first; F reconciles the final source rather than racing it |
-| #273 Governed Replan | `src/index.mjs`, `test/business-policy.test.mjs`, `src/planning.mjs` | #273 is after #219; F must consume its final Replan contract/source and not rewrite it concurrently |
+| #208 J07a Release evidence | `src/release-readiness.mjs`, `test/release-readiness.test.mjs` | #276 must wait for #208's exact-path ownership/closeout before touching either path |
+| #209 J08a maintenance projection | `src/maintenance-intake.mjs`, `test/maintenance-intake.test.mjs` | #276 must wait for #209's exact-path ownership/closeout before touching either path |
+| #273 Governed Replan | NEW `src/replan.mjs`, NEW `test/replan.test.mjs`, EDIT `src/index.mjs`, EDIT `test/business-policy.test.mjs`; it does **not** own `src/planning.mjs` | #273 is after #219; F must consume its final Replan contract and serialize any shared `index.mjs` / policy-test changes after both owners |
+
 | #275 Attempt read model | `src/attempts.mjs`, `test/attempts.test.mjs` | #275 owns initial creation; F may reconcile only after #275 completes and the Attempt source contract is frozen |
 | #262 Experience | No current exact B path in its admitted write set; it reserves Experience/feedback integration semantics and allows existing learning/Casebook B files only by separate amendment | F must align with the delivered ExperienceRef/Qualification contract; no opportunistic Casebook/feedback edit |
 | #261 Action bridge | UI/Host action paths, not F's current B write set | Preserve B Intent and K/Host action contract; do not edit #261-owned paths |
@@ -355,6 +366,31 @@ Before freezing the final #276 write set, choose and evidence one of these expli
 Issue #276 now records a proposed but not admitted write-set amendment: edit `experiments/v2/selected-business-build/producer.mjs` serially after #219; add `domain-data-compiler.mjs`, `domain-data-compiler.test.mjs`, `consumer-domain-data.mjs` and `consumer-domain-data.test.mjs`. F supplies the deterministic consumer/test entrypoint; E/#264 owns the shared Woodpecker profile. These paths require independent review, exact Task Pack reconciliation and Owner approval before any source Claim.
 
 A Host controller reading `domain/**` directly is not an equivalent solution for B-owned business semantics: it reintroduces the existing Host deep-import/source-drift risk and does not prove selected B/K execution. Do not silently add `fs` reads or a dynamic file loader to the Business ABI.
+
+### 8.1.1 Closed-world manifest and first selected-B consumer
+
+**v2 decision:** use selected-runtime Domain Data only for the first minimal executable schema/rule pair. Other Domain Data (glossary, knowledge, patterns, recipes, skills and workflow descriptions without a selected consumer) remains authoring-time/reference-only until a named consumer and exact acceptance proof exist. This does not introduce a Workflow Engine or a new Business Intent.
+
+**First consumer:** the existing `inspectTaskReadiness` Intent and its `effect:tally-readiness-observation` route. The first assets are `tally.schema.task-readiness-input/v1` and `tally.rule.task-readiness-minimum-evidence/v1`, consumed by the existing `assessTaskEvidence()` projection. The clean consumer must demonstrate these exact observable outcomes:
+
+- Missing/malformed Issue identity, mismatched Issue number, invalid 40-hex source SHA or missing Claim reference → `UNQUALIFIED_INPUT / MISSING_SOURCE_IDENTITY`.
+- Missing/unverified dependency input → `UNQUALIFIED_INPUT / DEPENDENCIES_UNVERIFIED`.
+- Structurally valid input → `OBSERVED_INPUT_ONLY / REQUIRES_NATIVE_CLAIM_AND_KERNEL_ADMISSION`, with `admitted=false` and `taskPass=false`.
+
+This Rule validates minimum input shape only. It does **not** attest a native dependency, accepted Claim, K admission, independent Review or Task PASS. Those remain sourced from the existing C/K/Host read path. The generated B behavior must preserve the current advisory-only semantics.
+
+**Manifest contract (`tally.domain-data-manifest/v1`):**
+
+1. The compiler accepts a closed-world, explicit allowlist only. Initial selected roots are exact JSON assets under `domain/schemas/**` and `domain/rules/**`. Workflow, Skill, Knowledge, Pattern, Recipe, Example and Markdown assets are not selected unless a later reviewed manifest revision names a real consumer.
+2. Every selected asset is UTF-8 JSON without BOM. Reject duplicate object keys before canonicalization. Parse the document, canonicalize it with RFC 8785 JCS, and compute `contentSha256 = SHA256(UTF8(JCS(asset)))`. Line-ending and whitespace differences therefore do not change the semantic digest.
+3. Manifest paths are normalized POSIX-relative paths. Reject absolute paths, drive prefixes, backslashes, empty segments, `.`, `..`, percent-encoded traversal, symlinks and paths outside the exact allowlisted roots. Resolve real paths under the package root before reading bytes.
+4. Every `assetId` and normalized path is unique. Entries are sorted by `assetId`, then path using ordinal byte order. Duplicate IDs, duplicate paths, unsupported kinds/versions, unknown manifest fields and missing content digests fail closed.
+5. Schema `$ref`, Rule dependencies and typed asset references must resolve to exactly one manifest entry or an explicitly pinned external contract. Remote URLs, unresolved references, ambiguous IDs and references escaping the allowlist fail closed.
+6. The manifest digest is `SHA256(UTF8(JCS({manifestVersion, compilerVersion, assets})) )`; the digest field itself is excluded from the hashed object. The compiler version, manifest digest, each asset content digest, Tally Business ABI, exact DomainHarness source pin, V10 BUILD profile and generated B `moduleSource` digest are all bound into the BUILD receipt.
+7. Generated B bytes must be deterministic for the same canonical manifest and compiler version. The generated module exposes only an internal immutable manifest digest/asset table to the existing B implementation; no new public ABI or runtime filesystem loader is added.
+8. A clean public-API consumer must verify the exact manifest and module digests, invoke the existing `inspectTaskReadiness` Intent, observe the three outcomes above, and prove that an asset not selected in the manifest is unavailable. Negative fixtures cover traversal/symlink, duplicate ID/path/key, malformed JSON, missing/ambiguous references, digest mismatch and an unselected asset.
+
+The four new compiler/consumer files proposed for F1b are `experiments/v2/selected-business-build/domain-data-compiler.mjs`, `domain-data-compiler.test.mjs`, `consumer-domain-data.mjs` and `consumer-domain-data.test.mjs`. Editing the existing `producer.mjs` remains serialized after #219 and requires the exact Task Pack/write-set amendment and independent review. If the selected-B consumer cannot be implemented without a public ABI change, keep the assets authoring-only and do not claim selected-runtime qualification.
 
 ### 8.2 Recommended staged execution (inside the admitted F task)
 
