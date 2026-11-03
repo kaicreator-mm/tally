@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T09:59:32.387Z",
+  "observedAt": "2026-11-03T10:45:22.908Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -531,7 +531,7 @@
         "type:task"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-11-03T09:37:52Z",
+      "updatedAt": "2026-11-03T10:16:05Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
       "dispatchableByDisposition": true,
@@ -546,7 +546,7 @@
         "type:task"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-03T05:33:37Z",
+      "updatedAt": "2026-11-03T10:22:19Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
