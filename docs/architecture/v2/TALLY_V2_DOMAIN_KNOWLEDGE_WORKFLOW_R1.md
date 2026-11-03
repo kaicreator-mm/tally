@@ -337,13 +337,14 @@ Before any Woodpecker CI:
 
 The current Task bodies show that F is a **late serialized source join**, not a parallel writer for every existing B file.
 
+Before any #276 Task Pack refresh or Claim/JIT, reconcile the current candidate body: remove `docs/architecture/v2/TALLY_V2_DOMAIN_KNOWLEDGE_WORKFLOW_R1.md` because PR #277 owns it; replace the broad `test/*.test.mjs` glob with exact F-owned test paths; and keep F1a/F1b new-only before serialized F2 existing-source edits. A candidate path list is not an accepted write set.
+
 | Task | Exact overlap with #276 candidate write set | Required ordering / boundary |
 |---|---|---|
 | #219 Maintenance/Learning | `src/index.mjs`, `test/business-policy.test.mjs`, and (under the proposed selected-BUILD amendment) `experiments/v2/selected-business-build/producer.mjs`; #219 also owns maintenance C/Host/controller paths | #219 must finish its B policy and Producer edits first; F reconciles the final source rather than racing it |
 | #208 J07a Release evidence | `src/release-readiness.mjs`, `test/release-readiness.test.mjs` | #276 must wait for #208's exact-path ownership/closeout before touching either path |
 | #209 J08a maintenance projection | `src/maintenance-intake.mjs`, `test/maintenance-intake.test.mjs` | #276 must wait for #209's exact-path ownership/closeout before touching either path |
 | #273 Governed Replan | NEW `src/replan.mjs`, NEW `test/replan.test.mjs`, EDIT `src/index.mjs`, EDIT `test/business-policy.test.mjs`; it does **not** own `src/planning.mjs` | #273 is after #219; F must consume its final Replan contract and serialize any shared `index.mjs` / policy-test changes after both owners |
-
 | #275 Attempt read model | `src/attempts.mjs`, `test/attempts.test.mjs` | #275 owns initial creation; F may reconcile only after #275 completes and the Attempt source contract is frozen |
 | #262 Experience | No current exact B path in its admitted write set; it reserves Experience/feedback integration semantics and allows existing learning/Casebook B files only by separate amendment | F must align with the delivered ExperienceRef/Qualification contract; no opportunistic Casebook/feedback edit |
 | #261 Action bridge | UI/Host action paths, not F's current B write set | Preserve B Intent and K/Host action contract; do not edit #261-owned paths |
@@ -358,14 +359,9 @@ At the pinned source baseline:
 - B `package.json` exposes only its root entrypoint and the package is private.
 - `domain/**` assets and sibling source modules are therefore **not proven to enter the sealed selected B** merely because they exist in the repository.
 
-Before freezing the final #276 write set, choose and evidence one of these explicit outcomes:
+**Selected outcome for v2:** compile only the minimal executable Domain Data required by the named existing consumer into the selected B module at BUILD time, with a closed-world manifest digest. The first selected set is the task-readiness input schema and minimum-evidence Rule specified in §8.1.1. Workflow definitions and all other knowledge assets remain authoring/reference-only until each has a named existing consumer and a separate positive/negative clean-consumer proof. This deliberately avoids implying that eight Workflow descriptions are eight executable K Workflows.
 
-1. **Authoring-time/reference-only Domain Data for v2:** assets are versioned and validated by tests/Producer-side tooling but are not claimed as selected Runtime inputs. Existing B root remains the selected source. State clearly which semantics remain compiled/duplicated in `index.mjs`.
-2. **Selected Runtime Domain Data for v2:** the BUILD must deliberately include/inline/compile the required assets into the selected B module and bind the result to a digest. This is the recommended outcome for core executable schemas/rules/workflow definitions; non-executable Knowledge/Patterns/Recipes/Examples/Skills may remain authoring-only until a real consumer exists.
-
-Issue #276 now records a proposed but not admitted write-set amendment: edit `experiments/v2/selected-business-build/producer.mjs` serially after #219; add `domain-data-compiler.mjs`, `domain-data-compiler.test.mjs`, `consumer-domain-data.mjs` and `consumer-domain-data.test.mjs`. F supplies the deterministic consumer/test entrypoint; E/#264 owns the shared Woodpecker profile. These paths require independent review, exact Task Pack reconciliation and Owner approval before any source Claim.
-
-A Host controller reading `domain/**` directly is not an equivalent solution for B-owned business semantics: it reintroduces the existing Host deep-import/source-drift risk and does not prove selected B/K execution. Do not silently add `fs` reads or a dynamic file loader to the Business ABI.
+Existing B root remains the only selected Business source. No Host filesystem reads, dynamic file loader, arbitrary YAML execution or new public ABI is introduced.
 
 ### 8.1.1 Closed-world manifest and first selected-B consumer
 
@@ -395,7 +391,8 @@ The four new compiler/consumer files proposed for F1b are `experiments/v2/select
 ### 8.2 Recommended staged execution (inside the admitted F task)
 
 - **F0 — Design and inventory:** completed as docs-only analysis in PR #277; not source admission.
-- **F1 — Disjoint Domain Data assets:** after a fresh #276 Task Pack/Claim, add only the minimal glossary/authority/schema/rule/workflow assets and deterministic tests under F's new directories.
+- **F1a — New-only Domain Data foundation:** after a fresh #276 Task Pack/Claim, add only source-linked glossary/authority assets plus the minimal task-readiness schema/Rule and exact tests under new F-owned directories; only the schema/Rule pair is selected into v2 BUILD.
+- **F1b — New-only compiler/consumer:** add the four exact compiler/consumer files listed in §8.1.1. The existing Producer edit remains serialized after #219 and separately reviewed.
 - **F2 — B source reconciliation:** after #219/#273/#275 and the relevant #262 Experience contract are complete; one writer edits the overlapping B modules/tests.
 - **F3 — BUILD qualification:** only if the selected-runtime outcome above is chosen and the write set is separately amended; run exact clean-consumer positive/negative tests for every selected asset/route.
 - **F4 — Integration:** E/#264 alone composes shared Host/UI/Woodpecker paths after independent F review.
