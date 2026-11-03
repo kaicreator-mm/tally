@@ -13,18 +13,35 @@ const issue=(n,changes={})=>({
   labels:[{name:'type:task'},{name:'state:ready'},{name:'priority:P1'}],
   ...changes,
 });
-const native=(deps={},branchSha=sha,issueMap={})=>({
-  rest:{
-    repos:{
-      getBranch:async()=>({data:{commit:{sha:branchSha}}}),
-      getCommit:async()=>({data:{sha}}),
+const native=(deps={},branchSha=sha,issueMap={},taskRoster=[1,2])=>{
+  const listForRepo=async()=>({data:taskRoster.map(number=>
+    issueMap[number]??issue(number))});
+  return {
+    rest:{
+      repos:{
+        getBranch:async()=>({data:{commit:{sha:branchSha}}}),
+        getCommit:async()=>({data:{sha}}),
+      },
+      issues:{
+        get:async({issue_number})=>({
+          data:issueMap[issue_number]??issue(issue_number)}),
+        listForRepo,
+      },
     },
-    issues:{get:async({issue_number})=>({data:issueMap[issue_number]??issue(issue_number)})},
-  },
-  paginate:{iterator:async function*(_route,{issue_number}){
-    yield {data:deps[issue_number]??[]};
-  }},
-});
+    paginate:{iterator:async function*(route,params={}){
+      if(route===listForRepo){
+        yield {data:taskRoster.map(number=>
+          issueMap[number]??issue(number))};
+        return;
+      }
+      if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+        yield {data:deps[params.issue_number]??[]};
+        return;
+      }
+      throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+    }},
+  };
+};
 const sourceReader=({issueNumber,expectedSourceSha})=>({
   sourceSha:expectedSourceSha,workItemType:'type:task',
   claimStatus:'NOT_VERIFIED',authorized:false,taskPass:false,
@@ -105,14 +122,14 @@ test('out-of-roster dependency cannot be silently rendered as complete graph',as
 test('non-Task, duplicated issue roster or missing native C claim facts are denied',async()=>{
   const notTask=issue(1,{labels:[{name:'type:planning'},{name:'state:ready'}]});
   const r=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{1:notTask})),
+    ...args(native({},sha,{1:notTask},[1])),
     taskIssueNumbers:[1],workItemReader:sourceReader});
   assert.equal(r.connected,false);
   assert.equal((await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1,1],workItemReader:sourceReader})
+    ...args(native({},sha,{},[1])),taskIssueNumbers:[1,1],workItemReader:sourceReader})
     ).connected,false);
   const fake=await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1],
+    ...args(native({},sha,{},[1])),taskIssueNumbers:[1],
     workItemReader:()=>({...sourceReader({issueNumber:1,expectedSourceSha:sha}),
       authorized:true})});
   assert.equal(fake.connected,false);
@@ -121,7 +138,7 @@ test('non-Task, duplicated issue roster or missing native C claim facts are deni
 test('closed GitHub Issue with state:ready does not render task DONE',async()=>{
   const observedIssue=issue(166,{state:'closed'});
   const result=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{166:observedIssue})),taskIssueNumbers:[166],
+    ...args(native({},sha,{166:observedIssue},[166])),taskIssueNumbers:[166],
     workItemReader:({issueNumber,expectedSourceSha})=>({
       ...sourceReader({issueNumber,expectedSourceSha}),issueState:'closed',
     })});
@@ -133,7 +150,7 @@ test('state:done label alone never certifies independent closure',async()=>{
   const observedIssue=issue(201,{state:'closed',
     labels:[{name:'type:task'},{name:'state:done'}]});
   const result=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{201:observedIssue})),taskIssueNumbers:[201],
+    ...args(native({},sha,{201:observedIssue},[201])),taskIssueNumbers:[201],
     workItemReader:({issueNumber,expectedSourceSha})=>({
       ...sourceReader({issueNumber,expectedSourceSha}),
       workflowState:'state:done',issueState:'closed',
