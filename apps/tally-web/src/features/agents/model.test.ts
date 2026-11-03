@@ -99,3 +99,52 @@ test('sanitizeAttempts bounds oversized identifiers to UNKNOWN',()=>{
   assert.equal(unsafe[0].model,null);
   assert.equal(unsafe[0].taskIds.length,32);
 });
+test('sanitizeAttempts drops unknown enumerable keys, incl. secret-bearing ones',()=>{
+  // A runtime Host record can carry extra enumerable properties beyond the
+  // compile-time AttemptRecord shape; none may survive the projection.
+  const hostile=make({}) as AttemptRecord&Record<string,unknown>;
+  hostile.rawLog='ghp_123456789012345678901234';
+  hostile.environment={GITHUB_TOKEN:'sk-abcdefghijklmnopqrstuvwxyz123456'};
+  hostile.credentials='Bearer abcdefghijklmnopqrstuvwxyz';
+  const clean=sanitizeAttempts([hostile]);
+  assert.deepEqual(Object.keys(clean[0]).sort(),['agentId','attemptId','costUsd',
+    'durationMs','model','provider','role','startedAt','state','taskIds',
+    'terminatedAt','tokensIn','tokensOut']);
+  const serialized=JSON.stringify(clean[0]);
+  for(const leaked of ['rawLog','environment','GITHUB_TOKEN','credentials',
+    'ghp_','sk-','Bearer'])
+    assert.equal(serialized.includes(leaked),false,`unexpected ${leaked}`);
+});
+test('sanitizeAttempts fails closed on malformed non-object records',()=>{
+  const malformed=[null,undefined,42,'attempt',true,
+    ['not-an-object']] as unknown as readonly AttemptRecord[];
+  let projected:AttemptRecord[]=[];
+  assert.doesNotThrow(()=>{projected=sanitizeAttempts(malformed);},
+    'malformed records must never throw through the view');
+  assert.equal(projected.length,malformed.length);
+  for(const attempt of projected){
+    assert.equal(attempt.attemptId,UNKNOWN_TEXT);
+    assert.equal(attempt.agentId,UNKNOWN_TEXT);
+    assert.equal(attempt.state,'UNKNOWN');
+    assert.deepEqual(attempt.taskIds,[]);
+    assert.equal(attempt.durationMs,null);
+    assert.equal(attempt.tokensIn,null);
+    assert.equal(attempt.tokensOut,null);
+    assert.equal(attempt.model,null);
+    assert.equal(attempt.provider,null);
+  }
+});
+test('sanitizeAttempts bounds the taskIds scan length, not only the output',()=>{
+  // 500k entries must not drive a full scan; only the first scan-window
+  // entries are inspected and at most 32 valid IDs survive.
+  const huge=Array.from({length:500_000},(_,i)=>`t${i}`);
+  const bounded=sanitizeAttempts([make({taskIds:huge})]);
+  assert.deepEqual(bounded[0].taskIds,
+    Array.from({length:32},(_,i)=>`t${i}`));
+  // A prefix of invalid entries consumes the scan budget: later valid IDs
+  // past the window are never reached (this is what bounds the scan itself).
+  const padded=Array.from({length:64},()=>'!invalid')
+    .concat(['late-1','late-2']);
+  const truncated=sanitizeAttempts([make({taskIds:padded})]);
+  assert.deepEqual(truncated[0].taskIds,[]);
+});

@@ -76,17 +76,30 @@ const boundedCount=(value:unknown):number|null=>
   typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&
     value<=Number.MAX_SAFE_INTEGER/2
     ?value:null;
+/** The input array itself is untrusted: cap how many entries are inspected,
+ * not just how many survive, so a huge taskIds payload cannot drive an
+ * unbounded scan through skipped-invalid entries. */
+const TASK_ID_SCAN_LIMIT=64;
+const TASK_ID_OUTPUT_LIMIT=32;
 const boundedTaskIds=(value:unknown):string[]=>{
   if(!Array.isArray(value))return [];
   const seen=new Set<string>();
-  for(const entry of value){
+  for(let index=0;index<value.length&&index<TASK_ID_SCAN_LIMIT;index++){
+    const entry=value[index];
     if(typeof entry!=='string'||entry.length>32||SECRET.test(entry)||
        !TASK_ID.test(entry)||seen.has(entry))continue;
     seen.add(entry);
-    if(seen.size>=32)break;
+    if(seen.size>=TASK_ID_OUTPUT_LIMIT)break;
   }
   return [...seen];
 };
+/** Fail-closed projection for entries that are not readable objects: never
+ * throws through the view; every declared field degrades to UNKNOWN/null. */
+const unknownAttempt=():AttemptRecord=>({
+  attemptId:UNKNOWN_TEXT,taskIds:[],agentId:UNKNOWN_TEXT,state:'UNKNOWN',
+  startedAt:null,terminatedAt:null,durationMs:null,tokensIn:null,
+  tokensOut:null,costUsd:null,model:null,provider:null,role:null,
+});
 /** UI projection hardening for P2-02: Attempt records are untrusted until the
  * selected Host producer (#275) lands. Every rendered identifier/text field is
  * bounded and secret-redacted here — missing/unsafe values degrade to
@@ -94,14 +107,21 @@ const boundedTaskIds=(value:unknown):string[]=>{
 export function sanitizeAttempts(attempts:readonly AttemptRecord[]):
   AttemptRecord[]{
   return attempts.map(attempt=>{
+    // Entries are untrusted runtime data: null/primitive/array records have
+    // no readable fields, so degrade to an explicit UNKNOWN projection
+    // instead of throwing through the view.
+    if(typeof attempt!=='object'||attempt===null||Array.isArray(attempt))
+      return unknownAttempt();
     const state=ATTEMPT_STATES.has(attempt.state)
       ?attempt.state:'UNKNOWN';
     // Absent role stays absent (optional field); present-but-invalid degrades
     // to null rather than being inferred.
     const role=attempt.role===undefined?undefined
       :attempt.role!==null&&ATTEMPT_ROLES.has(attempt.role)?attempt.role:null;
+    // Strict allowlist: only the declared AttemptRecord fields are
+    // reconstructed. Unknown enumerable keys on a Host record (e.g. rawLog,
+    // environment, credential-bearing extensions) are dropped, never spread.
     return {
-      ...attempt,
       attemptId:boundedText(attempt.attemptId,ATTEMPT_ID.test.bind(ATTEMPT_ID))
         ??UNKNOWN_TEXT,
       agentId:boundedText(attempt.agentId,IDENTIFIER.test.bind(IDENTIFIER))
