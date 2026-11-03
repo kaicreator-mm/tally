@@ -418,10 +418,10 @@ export function getPolicy(){
       recordTaskLearningOutcome:{
         trigger:{kind:'event',eventType:'TALLY_TASK_LEARNING_OUTCOME_REQUESTED'},
         ruleId:'rule:tally-task-learning-outcome',
-        // Learning authority is ONLY the Host CAS ledger derived from
-        // existing public ADS reports with exact provenance. Explicit
-        // use/reject and a later independent outcome are recorded; no
-        // quality-gain inference and no Agent ranking can cross this intent.
+        // Any listed role may request an explicit use/reject decision.
+        // The Host alone records ADOPT after verifying the exact GitHub
+        // Owner/admin approval comment; REJECT remains available without it.
+        // No quality-gain inference or Agent ranking crosses this intent.
         roles:['requester','planner','builder','reviewer'],definition:learningWorkflow,
       },
       deliverQualifiedRelease:{
@@ -1439,7 +1439,16 @@ const LEARNING_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
   'LEARNING_DECISION_MISMATCH','LEARNING_OUTCOME_MISMATCH',
   'MAINTENANCE_INPUT_INVALID','LOCAL_AGENT_PROVIDER_THREW',
   'INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED','LEARNING_ADOPTION_NOT_QUALIFIED',
-  'LEARNING_REPORT_SET_EMPTY']);
+  'LEARNING_REPORT_SET_EMPTY','LEARNING_OWNER_APPROVAL_NOT_VERIFIED']);
+const validLearningOwnerApproval=(input,approval)=>
+  approval?.state==='OWNER_APPROVAL_VERIFIED'&&
+  approval.reason==='GITHUB_OWNER_APPROVAL_VERIFIED'&&
+  approval.repository==='kaicreator-mm/tally'&&approval.issueNumber===MAINTENANCE_ISSUE&&
+  approval.sourceSha===input?.sourceSha&&approval.learningId===input?.learningId&&
+  approval.decision==='ADOPTED'&&Number.isSafeInteger(approval.commentId)&&
+  approval.commentId>0&&typeof approval.author==='string'&&
+  /^[A-Za-z0-9-]{1,39}$/.test(approval.author)&&approval.permission==='admin'&&
+  approval.commentUrl===input?.issueRef+'#issuecomment-'+approval.commentId;
 const ISO_TIME=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value);
 export function assessTaskLearningOutcome(input){
@@ -1483,11 +1492,13 @@ export function projectTaskLearningOutcome({input,observation,effectId}={}){
       return maintenanceDenied(o.reason,effectId);
     if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
       o.admitted===true&&o.claimAccepted===true&&o.githubEffect==='NOT_RUN'&&
-      o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED')
+      o.replayFixture===true&&o.measuredEffect==='NOT_MEASURED'&&
+      (o.decision!=='ADOPTED'||validLearningOwnerApproval(input,o.ownerApproval)))
       return Object.freeze({state:o.state,reason:o.reason,effectId,
         issueRef:o.issueRef,sourceSha:o.sourceSha,learningId:o.learningId,
         decision:o.decision,claimGeneration:1,claimAccepted:true,admitted:true,
         authorized:false,replayFixture:true,githubEffect:'NOT_RUN',
+        ...(o.ownerApproval?{ownerApproval:o.ownerApproval}:{}),
         measuredEffect:'NOT_MEASURED',noAgentRanking:true,
         qualityGainClaimed:false,taskPass:false,releasePass:false});
     if(o.state==='LEARNING_RECORDED'&&
@@ -1496,6 +1507,7 @@ export function projectTaskLearningOutcome({input,observation,effectId}={}){
         .includes(o.reason)&&o.admitted===true&&o.claimAccepted===true&&
       o.githubEffect==='NOT_RUN'&&o.replayFixture===false&&
       ['ADOPTED','REJECTED'].includes(o.decision)&&
+      (o.decision!=='ADOPTED'||validLearningOwnerApproval(input,o.ownerApproval))&&
       o.noAgentRanking===true&&o.qualityGainClaimed===false&&
       (o.measuredEffect==='NOT_MEASURED'||
         o.measuredEffect==='ATTESTED_OUTCOME_ONLY'&&
@@ -1505,6 +1517,7 @@ export function projectTaskLearningOutcome({input,observation,effectId}={}){
         issueRef:o.issueRef,sourceSha:o.sourceSha,learningId:o.learningId,
         decision:o.decision,claimGeneration:1,claimAccepted:true,admitted:true,
         authorized:false,replayFixture:false,githubEffect:'NOT_RUN',
+        ...(o.ownerApproval?{ownerApproval:o.ownerApproval}:{}),
         measuredEffect:o.measuredEffect,
         outcome:o.outcome!==undefined?
           Object.freeze({attested:o.outcome.attested===true,
