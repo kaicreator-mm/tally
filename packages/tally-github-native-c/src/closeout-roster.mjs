@@ -497,6 +497,14 @@ export function createHostVersionTaskDagFreezeWriter({
         if(replay)return {status:'REPLAY',blobSha:taskPackBlobSha,frozenAt:prior.frozenAt};
         return {status:'BLOCKED',reason:'DIVERGENT_FREEZE_EXISTS'};
       }
+      // Re-read the native roster after the independent Review/Owner approval
+      // readback and immediately before the create-only CAS write. An Issue
+      // mutated inside that window is BLOCKED, never frozen as CURRENT.
+      const nativeAtWrite=await nativeRosterReader({repository,versionId,
+        sourceSha:expectedVersionSha,
+        taskIssueNumbers:pack.taskIssues.map(x=>x.issueNumber)});
+      if(!nativeRosterMatchesPack(nativeAtWrite,pack,repository,versionId,expectedVersionSha))
+        return {status:'BLOCKED',reason:'NATIVE_TASK_ROSTER_CHANGED_BEFORE_FREEZE'};
       await store.put(key,value,{mustBeAbsent:true});
       const readback=await store.get(key);
       if(!readback||!same(readback.value,value))
@@ -509,15 +517,17 @@ export function createHostVersionTaskDagFreezeWriter({
   return Object.freeze({freezeVersionTaskDag});
 }
 
-/** Re-read the frozen blob and independent witnesses on every roster request. */
+/** Re-read the frozen blob, live native roster and independent witnesses on
+ * every roster request. A Task Issue mutated after the freeze never reads
+ * back as CURRENT. */
 export function createHostVersionTaskDagReader({
   repository,versionId,expectedVersionSha,store,taskPackReader,
-  reviewWitnessReader,ownerApprovalReader
+  nativeRosterReader,reviewWitnessReader,ownerApprovalReader
 }={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedVersionSha??'')||typeof store?.get!=='function'||
-     typeof taskPackReader!=='function'||typeof reviewWitnessReader!=='function'||
-     typeof ownerApprovalReader!=='function')
+     typeof taskPackReader!=='function'||typeof nativeRosterReader!=='function'||
+     typeof reviewWitnessReader!=='function'||typeof ownerApprovalReader!=='function')
     throw new TypeError('TRUSTED_DAG_READER_REQUIRED');
   async function readFrozenDag(scope={}){
     if((scope.repository!==undefined&&scope.repository!==repository)||
@@ -559,6 +569,18 @@ export function createHostVersionTaskDagReader({
          !same(pack.taskIssues.map(x=>x.issueNumber),doc.frozen.taskIssues)||
          !same(pack.edges,doc.frozen.edges)||!same(pack.claimSubjects,doc.frozen.claimSubjects))
         return denied('FROZEN_DAG_CONTENT_MISMATCH');
+      // Freshness is re-proven on every read, not only at freeze time: the
+      // live native roster must still equal the exact frozen Task Pack.
+      const native=await nativeRosterReader({repository,versionId,
+        sourceSha:expectedVersionSha,taskIssueNumbers:doc.frozen.taskIssues});
+      if(native?.connected!==true||native.versionId!==versionId||
+         native.source?.repository!==repository||
+         native.source?.sourceSha!==expectedVersionSha||
+         native.source?.currentness!=='CURRENT'||
+         native.source?.readback!=='VERIFIED')
+        return denied('FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
+      if(!nativeRosterMatchesPack(native,pack,repository,versionId,expectedVersionSha))
+        return denied('FROZEN_DAG_NATIVE_ROSTER_STALE');
       const [review,approval]=await Promise.all([
         reviewWitnessReader({taskPackRef:doc.taskPackRef,taskPackBlobSha:doc.blobSha,
           versionId,sourceSha:expectedVersionSha}),
@@ -598,14 +620,15 @@ export function createHostCloseoutRosterPorts({
   writerLogin,writerId,taskPackReader,reviewWitnessReader,ownerApprovalReader,
   handoffReader
 }={}){
+  // One shared trusted native roster source (exact pinned version SHA) backs
+  // both the freeze writer and the freshness-rechecking frozen DAG reader.
+  const nativeRosterReader=({taskIssueNumbers})=>readUiNativeVersionFromClient({
+    octokit,owner,repo,versionId,expectedSha:expectedVersionSha,taskIssueNumbers});
   return Object.freeze({
     frozenHost:createHostVersionTaskDagReader({repository,versionId,expectedVersionSha,
-      store,taskPackReader,reviewWitnessReader,ownerApprovalReader}),
+      store,taskPackReader,nativeRosterReader,reviewWitnessReader,ownerApprovalReader}),
     freezeWriter:createHostVersionTaskDagFreezeWriter({repository,versionId,expectedVersionSha,
-      store,taskPackReader,
-      nativeRosterReader:({taskIssueNumbers})=>readUiNativeVersionFromClient({
-        octokit,owner,repo,versionId,expectedSha:expectedVersionSha,taskIssueNumbers}),
-      reviewWitnessReader,ownerApprovalReader}),
+      store,taskPackReader,nativeRosterReader,reviewWitnessReader,ownerApprovalReader}),
     claimHost:createHostCloseoutClaimReadbackPortFromClient({octokit,owner,repo,
       writerLogin,writerId,store,handoffReader,repository,versionId,expectedVersionSha})
   });

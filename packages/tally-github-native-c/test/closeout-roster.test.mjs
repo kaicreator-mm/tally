@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createUiRosterHost} from '../../../web/v2/ui-roster-host.mjs';
 import {
   createHostCloseoutClaimReadbackPortFromClient,
+  createHostCloseoutRosterPorts,
   createHostResponsibilityHandoffReaderFromClient,
   createHostVersionTaskDagFreezeWriter,
   createHostVersionTaskDagReader
@@ -31,7 +32,8 @@ function memoryStore(initial){
       rows.set(key,{revision:1,value:structuredClone(value)});
       return {revision:1};
     },
-    mutate(key,fn){const row=rows.get(key);rows.set(key,{revision:row.revision+1,value:fn(structuredClone(row.value))});}
+    mutate(key,fn){const row=rows.get(key);rows.set(key,{revision:row.revision+1,value:fn(structuredClone(row.value))});},
+    count:()=>rows.size
   };
 }
 const absentSubject=n=>({
@@ -79,22 +81,29 @@ const approval=()=>({
   owner,approvalRef:'https://github.com/'+repository+'/issues/259#issuecomment-6574693761',
   approvedAt:'2026-11-02T11:01:00.000Z'
 });
+function nativeProjection({pack=validPack(),tasks,connected=true,
+  versionId:versionValue=versionId,source:sourceValue,dag:dagValue}={}){
+  const roster=tasks??pack.taskIssues;
+  return {
+    connected,source:sourceValue??{repository,sourceSha:versionSha,
+      currentness:'CURRENT',readback:'VERIFIED'},
+    versionId:versionValue,tasks:roster.map(t=>({id:String(t.issueNumber),
+      versionId:versionValue,
+      title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
+    dag:dagValue??{connected:true,source:{repository,sourceSha:versionSha,
+      currentness:'CURRENT',readback:'VERIFIED'},versionId:versionValue,
+      asOf:{sourceSha:versionSha},
+      nodes:roster.map(t=>({taskId:String(t.issueNumber),versionId:versionValue})),
+      edges:pack.edges.filter(e=>e.kind==='NATIVE').map(e=>({...e,
+        from:String(e.from),to:String(e.to),
+        dependencyRef:issueUrl(e.from)}))}
+  };
+}
 function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=approval(),
   nativeRosterReader:nativeRosterReaderOverride,store=memoryStore()}={}){
   const content=JSON.stringify(pack);
   const taskPackReader=async()=>({status:'VERIFIED',blobSha:packBlobSha,content});
-  const nativeRosterReader=nativeRosterReaderOverride??(async()=>({
-    connected:true,source:{repository,sourceSha:versionSha,currentness:'CURRENT',readback:'VERIFIED'},
-    versionId,tasks:pack.taskIssues.map(t=>({id:String(t.issueNumber),versionId,
-      title:t.title,issueState:t.issueState,updatedAt:t.updatedAt})),
-    dag:{connected:true,source:{repository,sourceSha:versionSha,
-      currentness:'CURRENT',readback:'VERIFIED'},versionId,
-      asOf:{sourceSha:versionSha},
-      nodes:pack.taskIssues.map(t=>({taskId:String(t.issueNumber),versionId})),
-      edges:pack.edges.filter(e=>e.kind==='NATIVE').map(e=>({...e,
-        from:String(e.from),to:String(e.to),
-        dependencyRef:issueUrl(e.from)}))}
-  }));
+  const nativeRosterReader=nativeRosterReaderOverride??(async()=>nativeProjection({pack}));
   const reviewWitnessReader=async()=>reviewValue;
   const ownerApprovalReader=async()=>approvalValue;
   const writer=createHostVersionTaskDagFreezeWriter({
@@ -105,6 +114,15 @@ function freezeHarness({pack=validPack(),reviewValue=review(),approvalValue=appr
   return {store,writer,taskPackReader,nativeRosterReader,
     reviewWitnessReader,ownerApprovalReader};
 }
+function dagReader(h,{nativeRosterReader,store}={}){
+  return createHostVersionTaskDagReader({
+    repository,versionId,expectedVersionSha:versionSha,store:store??h.store,
+    taskPackReader:h.taskPackReader,
+    nativeRosterReader:nativeRosterReader??h.nativeRosterReader,
+    reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader
+  });
+}
 
 test('version Task DAG freeze and readback bind complete roster, native/planned edges and exact witnesses',async()=>{
   const h=freezeHarness();
@@ -113,11 +131,7 @@ test('version Task DAG freeze and readback bind complete roster, native/planned 
   assert.equal(frozen.taskCount,4);
   assert.equal(frozen.edgeCount,2);
   assert.equal(frozen.authorized,false);
-  const reader=createHostVersionTaskDagReader({
-    repository,versionId,expectedVersionSha:versionSha,store:h.store,
-    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
-    ownerApprovalReader:h.ownerApprovalReader
-  });
+  const reader=dagReader(h);
   const result=await reader.readFrozenDag({repository,versionId,sourceSha:versionSha});
   assert.equal(result.connected,true);
   assert.deepEqual(result.frozen.taskIssues,[211,212,260,264]);
@@ -174,12 +188,113 @@ test('frozen DAG reader refuses a changed durable revision during read',async()=
       return value;
     }
   };
-  const reader=createHostVersionTaskDagReader({
-    repository,versionId,expectedVersionSha:versionSha,store:unstableStore,
+  const reader=dagReader(h,{store:unstableStore});
+  assert.equal((await reader.readFrozenDag()).reason,'FROZEN_DAG_CHANGED_DURING_READ');
+});
+
+test('frozen DAG reader denies a native Task Issue mutated after the freeze',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const deny=async roster=>{
+    const result=await dagReader(h,{nativeRosterReader:async()=>roster})
+      .readFrozenDag({repository,versionId,sourceSha:versionSha});
+    assert.equal(result.connected,false);
+    return result.reason;
+  };
+  const staleUpdated=validPack();
+  staleUpdated.taskIssues[0].updatedAt='2026-11-03T16:04:56Z';
+  assert.equal(await deny(nativeProjection({pack:staleUpdated})),
+    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+  const staleTitle=validPack();
+  staleTitle.taskIssues[1].title='Task 212 renamed';
+  assert.equal(await deny(nativeProjection({pack:staleTitle})),
+    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+  const staleState=validPack();
+  staleState.taskIssues[0].issueState='open';
+  assert.equal(await deny(nativeProjection({pack:staleState})),
+    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+});
+
+test('frozen DAG reader denies a native roster with a missing, extra or unqualified Task set',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const deny=async roster=>{
+    const result=await dagReader(h,{nativeRosterReader:async()=>roster})
+      .readFrozenDag({repository,versionId,sourceSha:versionSha});
+    assert.equal(result.connected,false);
+    return result.reason;
+  };
+  assert.equal(await deny(nativeProjection({tasks:validPack().taskIssues.slice(1)})),
+    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+  const extra=validPack();
+  extra.taskIssues.push({issueNumber:300,title:'Task 300',issueState:'open',
+    labels:['type:task'],updatedAt:'2026-11-02T02:59:00Z'});
+  assert.equal(await deny(nativeProjection({tasks:extra.taskIssues})),
+    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+  assert.equal(await deny(nativeProjection({connected:false})),
+    'FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
+  assert.equal(await deny(nativeProjection({source:{repository,sourceSha:'a'.repeat(40),
+    currentness:'CURRENT',readback:'VERIFIED'}})),
+    'FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
+  assert.equal(await deny(nativeProjection({versionId:'version/other'})),
+    'FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
+});
+
+test('freeze blocks when a native Issue changes between the roster snapshot and the CAS write',async()=>{
+  let nativeReads=0;
+  const drifted=validPack();
+  drifted.taskIssues[0].updatedAt='2026-11-03T16:04:56Z';
+  const h=freezeHarness({nativeRosterReader:async()=>{
+    nativeReads++;
+    return nativeProjection({pack:nativeReads===1?validPack():drifted});
+  }});
+  const result=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.deepEqual(result,{status:'BLOCKED',reason:'NATIVE_TASK_ROSTER_CHANGED_BEFORE_FREEZE'});
+  assert.equal(nativeReads,2);
+  assert.equal(h.store.count(),0);
+});
+
+test('unchanged exact native roster stays readable and freeze-replayable',async()=>{
+  const h=freezeHarness();
+  assert.equal((await h.writer.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha})).status,'FROZEN');
+  const first=await dagReader(h).readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(first.connected,true);
+  const second=await dagReader(h).readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(second.connected,true);
+  assert.equal((await h.writer.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha})).status,'REPLAY');
+});
+
+test('closeout roster ports bind the shared native roster source into the frozen DAG reader',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const unreachableOctokit={rest:{repos:{
+    getBranch:async()=>{throw new Error('GITHUB_UNAVAILABLE');},
+    getCommit:async()=>{throw new Error('GITHUB_UNAVAILABLE');}
+  },issues:{
+    getComment:async()=>{throw new Error('GITHUB_UNAVAILABLE');}
+  }}};
+  const ports=createHostCloseoutRosterPorts({repository,versionId,
+    expectedVersionSha:versionSha,store:h.store,octokit:unreachableOctokit,
+    owner,repo,writerLogin:owner,writerId:'tally-host:win32:i259:closeout:1',
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader});
+  const frozen=await ports.frozenHost.readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(frozen.connected,false);
+  assert.equal(frozen.reason,'FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
+  assert.equal((await ports.freezeWriter.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha})).reason,'NATIVE_TASK_ROSTER_READBACK_FAILED');
+});
+
+test('frozen DAG reader requires the trusted native roster reader port',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.throws(()=>createHostVersionTaskDagReader({
+    repository,versionId,expectedVersionSha:versionSha,store:h.store,
     taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
     ownerApprovalReader:h.ownerApprovalReader
-  });
-  assert.equal((await reader.readFrozenDag()).reason,'FROZEN_DAG_CHANGED_DURING_READ');
+  }),/TRUSTED_DAG_READER_REQUIRED/);
 });
 
 function eventBody(){
@@ -384,11 +499,7 @@ test('freeze writer -> reader -> UI roster preserves the immutable Task Pack ref
   const h=freezeHarness();
   const frozen=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
   assert.equal(frozen.status,'FROZEN');
-  const frozenHost=createHostVersionTaskDagReader({
-    repository,versionId,expectedVersionSha:versionSha,store:h.store,
-    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
-    ownerApprovalReader:h.ownerApprovalReader
-  });
+  const frozenHost=dagReader(h);
   const ui=createUiRosterHost({repository,versionId,expectedSha:versionSha,
     frozenHost,nativeC:{version:args=>h.nativeRosterReader(args)}});
   const result=await ui.roster({projectId:repository,versionId});
