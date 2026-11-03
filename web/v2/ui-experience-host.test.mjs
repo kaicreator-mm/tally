@@ -599,6 +599,16 @@ test('isolated E2E publisher remains test-only and can never be adopted or reuse
   assert.equal(applied.connected,false);
   assert.equal(applied.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
 
+  const derivedPublisher=await hostFor({...isolated,publisherRepository:undefined},{}).candidates();
+  assert.equal(derivedPublisher.connected,true);
+  assert.equal(derivedPublisher.candidates[0].publisherRepository,publisherRepository);
+  assert.equal(derivedPublisher.candidates[0].sourceKind,'ISOLATED_E2E_TEST_ONLY');
+  const derivedUsage=await hostFor({...isolated,publisherRepository:undefined,state:'ADOPTED'},{
+    usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]
+  }).nextTaskUsage(32);
+  assert.equal(derivedUsage.connected,false);
+  assert.equal(derivedUsage.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+
   for(const mislabeled of [
     {...isolated,sourceKind:'PUBLIC_ADS_REPORT'},
     {...isolated,sourceKind:undefined},

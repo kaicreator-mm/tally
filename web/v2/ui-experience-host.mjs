@@ -66,12 +66,16 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
     if(!positive(v,repository,versionId,expectedSha))return v;
     return {connected:true,versionId,source:v.source,
       qualification:'SOURCE_OBSERVED_NOT_MEASURED_OUTCOME',
-      candidates:v.candidates.map(c=>({id:c.id,revision:c.revision,
-        title:c.title,state:c.state,reportQualification:c.reportQualification,
-        sourceRef:c.sourceRef,publisherRepository:c.publisherRepository??null,
-        sourceKind:c.publisherRepository===ISOLATED_TEST_PUBLISHER?
-          'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
-        eligibleForNextTask:c.eligibleForNextTask}))};
+      candidates:v.candidates.map(c=>{
+        const publisherRepository=c.publisherRepository??
+          COMMENT_REF.exec(c.sourceRef)?.[1]??null;
+        return {id:c.id,revision:c.revision,title:c.title,state:c.state,
+          reportQualification:c.reportQualification,sourceRef:c.sourceRef,
+          publisherRepository,
+          sourceKind:publisherRepository===ISOLATED_TEST_PUBLISHER?
+            'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
+          eligibleForNextTask:c.eligibleForNextTask};
+      })};
   }
   async function decision(request){
     if(!plain(request)||Object.keys(request).sort().join(',')!==
@@ -158,7 +162,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       const eligibleIds=new Set(current.candidates.filter(c=>
         c.state==='ADOPTED'&&c.reportQualification==='VERIFIED'&&
         c.eligibleForNextTask===true&&
-        c.publisherRepository!==ISOLATED_TEST_PUBLISHER&&
+        (c.publisherRepository??COMMENT_REF.exec(c.sourceRef)?.[1])!==ISOLATED_TEST_PUBLISHER&&
         c.sourceKind!=='ISOLATED_E2E_TEST_ONLY').map(c=>c.id));
       if(r?.connected!==true||r.source?.repository!==repository||
          r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
