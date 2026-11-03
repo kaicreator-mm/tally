@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T12:40:39.584Z",
+  "observedAt": "2026-11-03T13:40:00.000Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -17,8 +17,8 @@
       "title": "Tally v2 integration: one real ADS Task through DomainHarness B/S/K/C + task-meta observation",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-19T16:21:36Z",
       "updatedAt": "2026-10-31T03:38:17Z",
@@ -32,8 +32,8 @@
       "title": "[v2 W-F][P0 Product UX] Tally 端到端软件开发单一入口：J01–J08 可操作 UI、恢复与真实发布验收",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-25T21:02:14Z",
       "updatedAt": "2026-10-31T03:43:17Z",
@@ -47,8 +47,8 @@
       "title": "[v2][P1 Product Intake] 任务当前状态的可信只读投影：native DAG、Claim、执行、证据分层和阻塞原因",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:21:37Z",
       "updatedAt": "2026-10-30T18:46:03Z",
@@ -62,8 +62,8 @@
       "title": "[v2][P1 Product Intake] 多版本真实工程证据图谱：Product/L2 → Task/Issue/PR → Review/CI → Release/后继缺陷",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:41:34Z",
       "updatedAt": "2026-10-30T21:48:38Z",
@@ -77,8 +77,8 @@
       "title": "[v2][P1 Product Intake] 开发流程根因与瓶颈诊断：真实 DAG、Review/Repair、验证等待及 Agent 协作成本",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:42:29Z",
       "updatedAt": "2026-10-30T22:16:18Z",
@@ -92,8 +92,8 @@
       "title": "[v2][P1 Product Intake] 跨版本经验驱动的新版本规划：需求拆分、Task DAG 并行、Agent 分工与验证策略建议",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:43:20Z",
       "updatedAt": "2026-10-30T22:51:29Z",
@@ -107,8 +107,8 @@
       "title": "[v2][P1 Product Intake] Issue ≠ Task：Concern/Checkpoint 工作单元身份、并发 Claim 冲突与进度分母",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:52:23Z",
       "updatedAt": "2026-10-30T23:23:52Z",
@@ -122,8 +122,8 @@
       "title": "[v2][P1 Product Intake] 真实跨版本 Issue Casebook 与 as-of 回放：可量化验证 Tally 的诊断和下一版规划",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:52:25Z",
       "updatedAt": "2026-10-31T00:03:26Z",
@@ -137,8 +137,8 @@
       "title": "[v2][P2 Product Intake] 跨项目工程反馈工单闭环：下游缺口归属、去重、跨版本采纳和效果回读",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T18:52:27Z",
       "updatedAt": "2026-10-31T00:36:14Z",
@@ -152,8 +152,8 @@
       "title": "[v2][P0 Product Intake] Version Journey Driver：从用户目标到发布的持续下一步、并行推进与人机交接",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T19:18:41Z",
       "updatedAt": "2026-10-30T19:14:40Z",
@@ -167,8 +167,8 @@
       "title": "[v2][P1 Product Intake] 用户能力验收账本：冻结需求→真实选中执行→跨版本保留与可用性证明",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T19:18:43Z",
       "updatedAt": "2026-10-30T20:53:28Z",
@@ -182,8 +182,8 @@
       "title": "[v2 DH0103-contract] Guided Project intake: schema-pinned deterministic next step, advisory without authority",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-27T21:00:52Z",
       "updatedAt": "2026-10-31T01:12:41Z",
@@ -197,8 +197,8 @@
       "title": "T06j: privileged Host admission source adapter for T06d single-writer controller",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-29T12:29:10Z",
       "updatedAt": "2026-10-29T22:49:56Z",
@@ -212,8 +212,8 @@
       "title": "T06l: accepted Claim verifier and DomainHarness K execution admission",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-29T23:34:19Z",
       "updatedAt": "2026-10-30T07:20:55Z",
@@ -227,8 +227,8 @@
       "title": "T06m: real Local Codex execution through selected DomainHarness K/Host",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T08:06:27Z",
       "updatedAt": "2026-10-30T15:58:27Z",
@@ -242,8 +242,8 @@
       "title": "CI(v2): make self-hosted Woodpecker the sole validation carrier",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T08:09:16Z",
       "updatedAt": "2026-10-30T15:28:11Z",
@@ -257,8 +257,8 @@
       "title": "T06n: concurrent independent Builders with Reviewer Join and Repair",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T15:59:21Z",
       "updatedAt": "2026-10-30T18:09:43Z",
@@ -272,8 +272,8 @@
       "title": "T06n Builder A: disjoint real Codex candidate",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T16:02:04Z",
       "updatedAt": "2026-10-30T18:09:50Z",
@@ -287,8 +287,8 @@
       "title": "T06n Builder B: disjoint real Codex candidate",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T16:02:05Z",
       "updatedAt": "2026-10-30T18:09:59Z",
@@ -302,8 +302,8 @@
       "title": "T06n Reviewer: independent Join and Repair review",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T16:02:07Z",
       "updatedAt": "2026-10-30T18:10:06Z",
@@ -317,8 +317,8 @@
       "title": "CI(v2): validate read-only ALM workspace sources",
       "issueState": "closed",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-30T19:29:27Z",
       "updatedAt": "2026-10-30T19:48:41Z",
@@ -332,8 +332,8 @@
       "title": "[v2][P0] J04–J06 write-capable ALM workspace：真实 Local Codex、Reviewer/Repair 与读回",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T03:43:19Z",
       "updatedAt": "2026-10-31T05:15:24Z",
@@ -347,8 +347,8 @@
       "title": "[v2][P0] J05 Builder A：真实 disjoint Local Codex candidate",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T04:35:59Z",
       "updatedAt": "2026-10-31T04:37:34Z",
@@ -362,8 +362,8 @@
       "title": "[v2][P0] J05 Builder B：真实 disjoint Local Codex candidate 与 Repair",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T04:36:01Z",
       "updatedAt": "2026-10-31T04:37:45Z",
@@ -377,8 +377,8 @@
       "title": "[v2][P0] J05 Reviewer：独立 Join、Repair 与 re-Join",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T04:36:03Z",
       "updatedAt": "2026-10-31T04:37:55Z",
@@ -392,8 +392,8 @@
       "title": "[v2][P0] J05 Reviewer：独立 Reviewer Claim、Join 与 re-Join",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T05:43:13Z",
       "updatedAt": "2026-10-31T05:44:27Z",
@@ -407,8 +407,8 @@
       "title": "[v2] J04–J06 ALM dynamic binding integration correction",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T06:53:36Z",
       "updatedAt": "2026-10-31T07:06:55Z",
@@ -422,8 +422,8 @@
       "title": "[v2] Publish reviewed candidates as exact-SHA pull requests",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T07:11:08Z",
       "updatedAt": "2026-10-31T18:53:25Z",
@@ -437,8 +437,8 @@
       "title": "[v2][P0][J06] Real-browser ALM journey acceptance and truthful CI/Host readback",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:16Z",
       "updatedAt": "2026-10-31T12:54:16Z",
@@ -452,8 +452,8 @@
       "title": "[v2][P0][J07] Exact-SHA Release Qualification, version closure and authorized delivery",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:18Z",
       "updatedAt": "2026-10-31T17:32:52Z",
@@ -467,8 +467,8 @@
       "title": "[v2][P0][J08] Defect intake, next-version planning and measured Task Learning replay",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:20Z",
       "updatedAt": "2026-10-31T12:44:25Z",
@@ -482,8 +482,8 @@
       "title": "[v2][P0][J01–J03] Wire guided project intake, Product/L2 freeze and native Task DAG into ALM workspace",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T10:38:10Z",
       "updatedAt": "2026-11-02T14:29:29Z",
@@ -497,8 +497,8 @@
       "title": "[v2] Bounded recovery for native GitHub read failures",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T11:41:50Z",
       "updatedAt": "2026-10-31T12:54:22Z",
@@ -512,8 +512,8 @@
       "title": "[v2] Complete native WorkItem and Claim-event read recovery",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T12:06:28Z",
       "updatedAt": "2026-10-31T13:01:22Z",
@@ -527,11 +527,11 @@
       "title": "[v2] Governed maintenance, next version and measured Task Learning",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-11-03T12:39:18Z",
+      "updatedAt": "2026-11-03T13:39:08Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
       "dispatchableByDisposition": true,
@@ -542,11 +542,11 @@
       "title": "[v2][Closeout A][P0] Canonical per-version Task DAG, native dependencies & accepted Claim readback",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-03T10:22:19Z",
+      "updatedAt": "2026-11-03T12:41:37Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -557,8 +557,8 @@
       "title": "[v2][Closeout B][P0] Reuse selected B/K/Host for real UI-guided development and Agent/Review actions",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
       "updatedAt": "2026-11-03T03:12:18Z",
@@ -572,8 +572,8 @@
       "title": "[v2][Closeout C][P0] Real ADS/task-meta, audit and controlled experience feedback to next Task",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:43Z",
       "updatedAt": "2026-11-03T03:12:25Z",
@@ -587,8 +587,8 @@
       "title": "[v2][Closeout D][P0] Human-oriented actionable ALM UI incl. approvals, QA, Release, deployment, settings",
       "issueState": "open",
       "labels": [
-        "state:ready",
-        "type:task"
+        "type:task",
+        "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:45Z",
       "updatedAt": "2026-11-02T18:57:47Z",
@@ -602,8 +602,8 @@
       "title": "[v2][Closeout E][P0] Single final PR #258 composition, differential verification and installed J01-J08",
       "issueState": "open",
       "labels": [
-        "state:planned",
-        "type:task"
+        "type:task",
+        "state:planned"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
       "updatedAt": "2026-11-03T05:37:03Z",
@@ -617,8 +617,8 @@
       "title": "[v2][P0][F30] Governed Replan with immutable history and accepted-work preservation",
       "issueState": "open",
       "labels": [
-        "state:planned",
-        "type:task"
+        "type:task",
+        "state:planned"
       ],
       "createdAt": "2026-11-03T03:09:59Z",
       "updatedAt": "2026-11-03T03:09:59Z",
@@ -632,8 +632,8 @@
       "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
       "issueState": "open",
       "labels": [
-        "state:planned",
-        "type:task"
+        "type:task",
+        "state:planned"
       ],
       "createdAt": "2026-11-03T03:10:06Z",
       "updatedAt": "2026-11-03T03:10:06Z",
@@ -647,8 +647,8 @@
       "title": "[v2][P0][F38/F39] Source-backed Task Attempt and telemetry read model",
       "issueState": "open",
       "labels": [
-        "state:planned",
-        "type:task"
+        "type:task",
+        "state:planned"
       ],
       "createdAt": "2026-11-03T03:10:13Z",
       "updatedAt": "2026-11-03T03:10:13Z",
@@ -662,8 +662,8 @@
       "title": "[v2][P0][Domain Package] Extract Engineering Domain Knowledge and bounded Workflows into Tally B",
       "issueState": "open",
       "labels": [
-        "state:planned",
-        "type:task"
+        "type:task",
+        "state:planned"
       ],
       "createdAt": "2026-11-03T05:32:14Z",
       "updatedAt": "2026-11-03T08:55:03Z",
@@ -1609,7 +1609,8 @@
     "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
-    "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration."
+    "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration.",
+    "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
