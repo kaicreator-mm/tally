@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T15:32:39.967Z",
+  "observedAt": "2026-11-03T15:39:22.624Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-03T12:41:37Z",
+      "updatedAt": "2026-11-03T15:38:32Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -561,7 +561,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
-      "updatedAt": "2026-11-03T15:31:31Z",
+      "updatedAt": "2026-11-03T15:38:38Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_UI_ACTIONS",
       "dispatchableByDisposition": true,
@@ -576,7 +576,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:43Z",
-      "updatedAt": "2026-11-03T15:31:37Z",
+      "updatedAt": "2026-11-03T15:38:44Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING",
       "dispatchableByDisposition": true,
@@ -591,7 +591,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:45Z",
-      "updatedAt": "2026-11-03T15:31:42Z",
+      "updatedAt": "2026-11-03T15:38:51Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
       "dispatchableByDisposition": true,
@@ -1647,7 +1647,8 @@
     "Re-refreshed all 44 native Task Issue timestamps/states after #219/#261/#262 LOCAL_VALIDATION requests and the #276 write-set audit comment. These requests do not create Claims or dispatch authorization; #219/#261/#262 remain open.",
     "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only.",
     "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub.",
-    "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed."
+    "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
+    "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
