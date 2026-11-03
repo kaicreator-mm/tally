@@ -175,6 +175,13 @@ test('learning use/reject and outcome record only through the sealed seam',async
       learningId:request.input.learningId,decision:request.input.decision,
       claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
       replayFixture:false,githubEffect:'NOT_RUN',
+      ...(request.input.decision==='ADOPTED'?{ownerApproval:{
+        state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+        repository:'kaicreator-mm/tally',issueNumber:219,
+        sourceSha:request.input.sourceSha,learningId:request.input.learningId,
+        decision:'ADOPTED',commentId:6540000002,
+        commentUrl:ISSUE_REF+'#issuecomment-6540000002',
+        author:'kaicreator-mm',permission:'admin'}}:{}),
       measuredEffect:isOutcome?'ATTESTED_OUTCOME_ONLY':'NOT_MEASURED',
       ...(isOutcome?{outcome:{attested:true,measuredEffect:'ATTESTED_OUTCOME_ONLY'}}:{}),
       noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}};
