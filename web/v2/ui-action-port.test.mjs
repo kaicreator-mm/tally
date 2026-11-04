@@ -178,7 +178,7 @@ test('runtime numeric Host and request action identifiers fail closed without di
     actions:[{...eligible,id:123}]}),
     dispatchAuthorizedAction:async()=>{dispatch++;return receipt;}});
   assert.equal((await numericHost.actions()).reason,'HOST_ACTION_SOURCE_UNQUALIFIED');
-  assert.equal((await numericHost.submit({...request,actionId:123})).reason,
+  assert.equal((await numericHost.submit(request)).reason,
     'HOST_ACTION_SOURCE_UNQUALIFIED');
   const numericRequest=await make({dispatchAuthorizedAction:async()=>{
     dispatch++;return receipt;
