@@ -185,11 +185,6 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
         decision:projection.decision??decision,
         measuredEffect:projection.measuredEffect??'NOT_MEASURED',
         outcome:projection.outcome??null,githubEffect:projection.githubEffect??'NOT_RUN',
-        ...(projection.state==='LEARNING_RECORDED'?{
-          claimGeneration:projection.claimGeneration,claimAccepted:projection.claimAccepted,
-          admitted:projection.admitted,authorized:projection.authorized,
-          replayFixture:projection.replayFixture,taskPass:projection.taskPass,
-          releasePass:projection.releasePass}:{}),
         noAgentRanking:true,qualityGainClaimed:false});
       return record('record-learning',{status:'OK',learningId,
         ...state.learningRecords.get(learningId)});
