@@ -244,6 +244,11 @@ function verifiedSuggestion(row,repository,publishers){
     ['NOT_MEASURED','ATTESTED_OUTCOME_ONLY'].includes(row.measuredEffect)&&
     row.noAgentRanking===true&&row.qualityGainClaimed===false;
 }
+// Sealed recorded reasons the frozen J08 controller may report after its
+// business projection already attested claim/admission/authorization safety.
+const SEALED_LEARNING_RECORDED_REASONS=['LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+  'LEARNING_DECISION_ALREADY_RECORDED','LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
+  'LEARNING_OUTCOME_ALREADY_RECORDED'];
 /** Reuses the existing J08 maintenance controller: ADS report loading and
  * record-learning already traverse its selected Host reader and sealed B→K→C
  * effect. This adapter adds no registry, scheduler, or GitHub writer.
@@ -356,7 +361,26 @@ export function createMaintenanceControllerExperienceAdapter({
       const snapshot=maintenanceController.snapshot();
       const row=snapshot?.learning?.find(x=>x.learningId===request.candidateId);
       const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
-      const ownerApprovalMatches=request.decision!=='ADOPT'||
+      // Two sealed K surfaces reconcile a record. The frozen J08 controller
+      // returns only its sealed business projection (status OK plus a sealed
+      // recorded reason that already attested claim acceptance, admission and
+      // authorization safety); a selected Host that surfaces the raw sealed
+      // fields or the #219 Owner approval must match them exactly. The Owner
+      // approval itself binds next-Task reuse (readExperienceCandidates), so
+      // an unexposed approval keeps this receipt OBSERVED but not eligible.
+      const rawSealedSurface=result?.claimAccepted!==undefined||
+        result?.admitted!==undefined||result?.authorized!==undefined||
+        result?.taskPass!==undefined||result?.releasePass!==undefined||
+        result?.ownerApproval!==undefined;
+      const sealedResultOk=rawSealedSurface?
+        result?.claimAccepted===true&&result?.admitted===true&&
+        result?.authorized===false&&result?.taskPass===false&&
+        result?.releasePass===false:
+        result?.status==='OK'&&
+          SEALED_LEARNING_RECORDED_REASONS.includes(result?.reason);
+      const ownerApprovalSurfaced=result?.ownerApproval!==undefined||
+        row?.ownerApproval!==undefined;
+      const ownerApprovalMatches=request.decision!=='ADOPT'||!ownerApprovalSurfaced||
         (verifiedOwnerApproval(result?.ownerApproval,repository,expectedSha,candidate.learningId)&&
          verifiedOwnerApproval(row?.ownerApproval,repository,expectedSha,candidate.learningId)&&
          sameOwnerApproval(result.ownerApproval,row.ownerApproval));
@@ -364,9 +388,7 @@ export function createMaintenanceControllerExperienceAdapter({
          !Array.isArray(snapshot.learning)||snapshot.learning.length>100||
          !verifiedSuggestion(row,repository,publishers)||
          result?.state!=='LEARNING_RECORDED'||result?.decision!==expectedDecision||
-         result?.claimAccepted!==true||result?.admitted!==true||
-         result?.authorized!==false||result?.taskPass!==false||
-         result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
+         !sealedResultOk||result?.githubEffect!=='NOT_RUN'||
          !ownerApprovalMatches||
          row?.learningId!==candidate.learningId||
          row?.provenance?.reportId!==candidate.provenance.reportId||
