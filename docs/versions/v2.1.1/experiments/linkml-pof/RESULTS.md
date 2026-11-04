@@ -1,7 +1,7 @@
 # LinkML Proof-of-fit — Initial Results
 
-**Status:** DESIGN_AND_FIXTURES_READY / EXECUTION_PARTIAL / NO_ADOPTION_DECISION  
-**Test date:** 2026-11-04  
+**Status:** CLI_EXECUTED_2026-11-05 / RESULTS_RECORDED / NO_ADOPTION_DECISION  
+**Test date:** 2026-11-04 (design), 2026-11-05 (LOCAL_BUILDER execution, section 10)  
 **Pinned candidate:** LinkML v1.12.1
 
 ## 1. What exists
@@ -163,3 +163,63 @@ The official report's exact Copyright and Reprint Permissions notice is recorded
 ### Current decision
 
 `LINKML_POF=NOT_PROVEN`; `A_B_C_EQUIVALENCE=NOT_PROVEN`; `SCHEMA_REPAIR=IMPLEMENTED_CANDIDATE / CLI_NOT_RUN`; `ADOPTION=NONE`.
+
+
+## 10. LOCAL_BUILDER execution — 2026-11-05
+
+The pinned LinkML v1.12.1 CLI was executed on Windows-native Python in an isolated venv (no WSL). This section supersedes the NOT_RUN items in section 4. Raw command logs, environment capture and all generated artifacts are preserved in the builder evidence bundle referenced by the PR; per-command exit codes are reproduced below.
+
+### 10.1 Environment
+
+- OS: Windows (win32 10.0.26300), Git Bash runner; **no WSL used**.
+- Python 3.14.7 (Windows native, `python -m venv`), pip 26.2.1, index pypi.org (direct, no proxy).
+- `linkml 1.12.1`, `linkml-runtime 1.12.1` (resolved together), rdflib 7.6.0, pydantic 2.14.2, pyyaml 6.0.3, click 8.5.0, jsonschema 4.26.0.
+- `linkml --version` → 1.12.1; `linkml-convert --version` → 1.12.1.
+
+### 10.2 Defects found in the committed input (fixed inside the #305 write set)
+
+1. **Schema was not parseable YAML at HEAD 88f0050.** The `id` slot description contained an unquoted `se:` (colon-space) in a plain scalar → `mapping values are not allowed here` (line 139, col 86). PyYAML 6.0.3 confirms the identical error independently. Fix: quoted the scalar. The earlier "PyYAML parsed the schema" static claim held for an older revision, not for this HEAD.
+2. **`schema:` prefix mismatch hard-failed every generator/converter.** The schema declared `schema: https://schema.org/` while `linkml:types` maps `schema` → `http://schema.org/`; `linkml generate jsonld-context` and every `linkml-convert` invocation died with `ValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types`. Fix: aligned the prefix to `http://schema.org/` (also clears the linter's canonical_prefixes warning).
+3. **Nested record IDs without the `se:` prefix crashed the RDF dumper.** `linkml-convert -t ttl` for KnowledgeCorpus/ClaimBundle roots failed with `ValueError: Unknown CURIE prefix: @base` on the first bare id. The bare-id form passed `linkml validate` and survives in compacted JSON-LD via `@base`, but the rdflib dumper requires well-formed CURIEs — i.e. validation green does not imply conversion green. Fix: normalized all nested record ids in A/B/C fixtures to canonical `se:` CURIEs (matching the schema's `id_prefixes` and every reference form).
+
+All three are fixture/schema authoring defects, not LinkML bugs; they were fixed inside the exact write set and every affected test was rerun from scratch.
+
+### 10.3 Test matrix results (after fixes; per-command exit codes in the log bundle)
+
+| ID | Test | Result |
+|---|---|---|
+| L01 | `linkml validate <schema>` (metamodel) | **PASS** — No issues found (EXIT=0) |
+| L01 | `linkml lint <schema>` | 0 errors / 69 warnings (EXIT=1): 42× missing slot `description`, 26× UPPER_CASE enum naming, 1× canonical prefix (fixed by 10.2-2). Advisory only. |
+| L02 | Positive A (front matter extracted by adapter), C standalone, B ×4 split + ClaimBundle | **PASS ×6** — No issues found (EXIT=0) |
+| L03 | Invalid claim status / unsupported predicate (`APPROVED`, `CONTRADICTS`) | **Rejected** (EXIT=1, exact enum list in diagnostic) |
+| L04 | Missing required `statement` | **Rejected** (EXIT=1, `'statement' is a required property`) |
+| L05 | Duplicate source id | `linkml validate`: **accepted** (EXIT=0); generated JSON Schema: accepted; `linkml-convert`: **rejected** — `ValueError: duplicate key` (EXIT=1). Enforcement exists only in the convert/dump path. |
+| L06 | Dangling refs (`object_ref→SE-EVD-9999`, `source_ref→SE-SRC-MISSING-0000`) | Accepted by validate, JSON Schema and convert paths (EXIT=0). **No LinkML path resolves non-inlined references**; fail-closed only via the independent rules checker (10.4). |
+| L06a | `rdf:object` node kind | **PASS** — in A, C and B-merged: every reified `rdf:Statement` carries `rdf:object`/`rdf:subject`/`rdf:predicate` as **URIRef resource nodes, zero Literals**; `se:` IRIs expand to `https://github.com/kaicreator-mm/tally#…`. R2 P1-01 verified at the generated-graph level. |
+| L06b | `RELATIONSHIP_RULES.yaml` endpoints | RDF-level: SUPPORTED_BY→Evidence, INCLUDES→DomainNode, subjects KnowledgeClaim, evidence refs resolve — PASS on A/B/C. Data-level fail-closed checker: **6/6 negatives rejected** (duplicate id, dangling object, dangling source, wrong object class `SUPPORTED_BY→DomainNode`, compound-key duplicate, unknown predicate), each with a one-line cause. |
+| L07 | Compound (source_ref, locator) uniqueness | Not enforced by validate, JSON Schema or convert (documented generator gap **confirmed**); enforced by the independent checker. |
+| L08 | JSON Schema generation | Generated (19 `$defs`). `Source.id` and `RelationshipAssertion.object_ref` degrade to `{"type": "string"}` — no pattern, no reference semantics; no `uniqueKeys` emitted; enums and required lists work (N1/N3 rejected through jsonschema too). |
+| L09 | JSON-LD context generation | Generated. Class entries are `{"@id": …}` only — **no nested `@type` emission** (documented, now observed). Concretely: `-t json-ld` instance export parses to 48 triples vs 55 in TTL; the 7 missing are exactly each record's `rdf:type`. |
+| L10 | Schema-level RDF (`generate rdf`) | 828 triples. **Metamodel projection, not OWL** (0 `owl:Class`): 9 `linkml:ClassDefinition`, 41 `linkml:SlotDefinition`, 19 `linkml:TypeDefinition`; `Evidence`/`DomainNode is_a GraphNode` preserved; `linkml:class_uri` annotations carry the intended `…tally#Class` URIs (RelationshipAssertion → `rdf:Statement`). Quirk: element subject IRIs use the schema id with the last path segment replaced (`https://github.com/kaicreator-mm/<Element>`). |
+| L11 | `linkml-convert` instance export | A and C → TTL + JSON-LD; B's four records → TTL each; all EXIT=0 after the id normalization (before it, every root-container TTL conversion crashed — see 10.2-3). |
+| L12 | B four-file RDF merge; A/B/C graph semantics | **PASS** — A ≅ C full graphs (55 ≡ 55 triples); after excluding only container-root wrapper triples: A ≅ B-merged ≅ C at **45 ≡ 45 ≡ 45** triples. All domain, provenance and relationship triples identical across the three authoring formats. |
+| L13 | Repeat generation / determinism | **PASS** — all 10 artifacts (json-schema, context, schema TTL, 6 conversions) byte-identical across reruns. Note: `--diff-stable` **does not exist** in the 1.12.1 RDF generator CLI (`No such option`, EXIT=2); default output is already canonicalized/byte-stable for this schema. |
+| L14 | Schema evolution | Evolved copy: add optional `reviewer_note`, deprecate `applicability`. Old data → old/new schema PASS; new data → old schema **rejected** (`Additional properties are not allowed`); new data → new schema PASS; evolved schema passes metamodel. Learnings: LinkML `deprecated` is a **string note, not a boolean** (`True is not of type 'string'` from the metamodel); using a deprecated slot emits **no warning**; JSON Schema evolution surface is a clean 16-line additive diff. |
+| L15 | Human diff comparison | Same semantic edit (one added limitation) applied to A/B/C: identical 2-line diffs in all three formats — edit locality equivalent for record-level edits. Format differences are structural (see 10.5), not diff-size. |
+
+### 10.4 Independent validation paths compared (required experiment #10)
+
+1. `linkml validate` — enum/required/type structure only; blind to references, duplicates (list form), uniqueness, endpoint semantics.
+2. Generated JSON Schema + `jsonschema 4.26.0` — same coverage class as (1); additionally loses all reference semantics (`object_ref` as plain string).
+3. `RELATIONSHIP_RULES.yaml` checker (`rules_check.py` / `rdf_check.py` in the evidence bundle) — the only path that closes reference resolution, duplicate ids, compound keys and predicate-specific endpoint classes, on both YAML data and converted RDF. **Conclusion: LinkML alone does not provide graph integrity for this model; the machine-readable rules file plus a small checker is a necessary companion.**
+
+### 10.5 Format comparison (A/B/C) — operational observations
+
+- **A (front matter)** needs an extraction adapter (14-line regex script) before any LinkML operation; narrative lives next to the data; the YAML block is a full C-style corpus inline.
+- **B (YAML + Markdown)** validates per record and converts per record; the cross-record reference closure exists only at merge time; assembly procedure is now demonstrated reproducibly (four `linkml-convert` runs + RDF merge).
+- **C (standalone YAML)** is the only format whose file alone is both valid and convertible as one unit.
+- All three produce the same 45-triple domain graph (L12), so the choice is an authoring-workflow decision, not a semantic one.
+
+### 10.6 Interim verdict for SEK-05
+
+LinkML v1.12.1 handled the provenance chain end-to-end after three fixture/schema authoring fixes: metamodel-clean, structurally validating, deterministic, byte-stable outputs, and — critically for R2 P1-01 — **`rdf:object` now serializes as resource nodes (URIRef) with `se:` CURIEs expanded to the declared base**. The measured gaps are consistent with the official docs (no cross-record reference resolution, JSON-Schema unique_keys/reference degradation, no nested `@type` in JSON-LD) and are coverable by the independent rules checker. No adoption decision is made here; that remains with SEK-05 #308 and independent review of PR #303.

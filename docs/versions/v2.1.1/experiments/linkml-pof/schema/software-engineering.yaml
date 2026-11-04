@@ -9,7 +9,7 @@ version: "0.1.0"
 prefixes:
   linkml: https://w3id.org/linkml/
   se: https://github.com/kaicreator-mm/tally#
-  schema: https://schema.org/
+  schema: http://schema.org/
   dcterms: http://purl.org/dc/terms/
   prov: http://www.w3.org/ns/prov#
   rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
@@ -136,7 +136,7 @@ slots:
     id_prefixes:
       - se
     slot_uri: schema:identifier
-    description: Stable CURIE identifier for the record; the POF uses the declared se: namespace.
+    description: "Stable CURIE identifier for the record; the POF uses the declared se: namespace."
   title:
     required: true
     range: string

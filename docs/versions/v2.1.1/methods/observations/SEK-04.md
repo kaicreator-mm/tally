@@ -93,3 +93,16 @@ The repair is not yet verified by LinkML v1.12.1. Required local tests include m
 - CS2023 rights: exact Copyright and Reprint Permissions notice added to registry and dossier.
 - Native dependency edges: exact live graph materialized and read back; OUTPUT_LEDGER status corrected.
 - CI: previous exact HEAD trailer-check PASS; quality remains FAIL for repository formatting/Postgres integration checks. No unrelated Go changes were made.
+
+## LOCAL_BUILDER execution — 2026-11-05
+
+Executed the full POF matrix with the pinned LinkML v1.12.1 on Windows-native Python 3.14.7 (isolated venv, no WSL; PyPI direct). Full results: `experiments/linkml-pof/RESULTS.md` §10. Task learning recorded here:
+
+- **Validation green ≠ conversion green.** `linkml validate` accepted records with bare (non-CURIE) identifiers, while `linkml-convert -t ttl` crashed on the same data (`Unknown CURIE prefix: @base`). Any future harness must run the full validate→convert chain, not stop at validation.
+- **One prefix character killed every generator.** Declaring `schema: https://schema.org/` (vs `http://`) conflicts with `linkml:types` and hard-fails `linkml-convert` / jsonld-context with `Prefix: schema mismatch`. The linter warned; only execution made it blocking. Canonical-prefix lint findings deserve P1 attention when generators are in scope.
+- **YAML plain scalars containing `prefix:` colons break parsing** (`se:` inside an unquoted description). Quoting rule for any slot description that mentions a CURIE prefix.
+- **Reference/duplicate integrity is not LinkML's job** (measured, not assumed): validate and JSON Schema paths accept duplicates/dangling refs; only the convert/dump path rejects duplicate ids (`duplicate key`); nothing resolves cross-record references. `RELATIONSHIP_RULES.yaml` + a small checker (~150 lines) closed all six negative classes fail-closed.
+- **Documented limitations all reproduced**: JSON-Schema `unique_keys` absent and `object_ref` degrades to plain string; JSON-LD context omits nested `@type` (instance json-ld measured at 48 vs 55 triples — exactly the 7 `rdf:type` triples missing); `--diff-stable` absent from the 1.12.1 RDF generator CLI while default output was already byte-identical across reruns.
+- **Schema-RDF is a metamodel projection, not OWL** (828 triples, `linkml:ClassDefinition` nodes, 0 `owl:Class`); element subject IRIs replace the schema id's last path segment — do not consume schema RDF as the domain ontology.
+- **Schema evolution**: adding an optional slot is backward-compatible; unknown slots are rejected closed-world (`Additional properties are not allowed`); LinkML `deprecated` takes a **string** note, not a boolean; using a deprecated slot emits no warning.
+- **Effort**: ~3 authoring fixes (all in write set), 0 LinkML code changes; the whole matrix runs in minutes once fixtures are canonical. Reviewer effort concentrated in fixture ID normalization and generator-limitation bookkeeping, not in tool operation.

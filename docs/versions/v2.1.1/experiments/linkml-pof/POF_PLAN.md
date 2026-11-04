@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** DESIGN_AND_FIXTURES_READY / CLI_EXECUTION_NOT_RUN  
+**Status:** EXECUTED_2026-11-05 (LOCAL_BUILDER, LinkML v1.12.1, Windows-native Python) — see RESULTS.md §10  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -68,7 +68,7 @@ These are experimental choices, not frozen schema commitments.
 
 ## 6. Commands to run in a LinkML-enabled environment
 
-Pin the exact version and record the environment before execution:
+> **CLI correction — 2026-11-05 (post-execution).** The originally planned command forms below were corrected after execution on LinkML v1.12.1: `linkml generate json-schema` has **no `--output/-o` option** (writes to stdout; redirect instead); `linkml generate rdf` has **no `--diff-stable` option** in 1.12.1 (`No such option '--diff-stable'`, exit 2) — default output was measured byte-stable anyway (L13); the schema `schema:` prefix must be `http://schema.org/` to match `linkml:types` or every generator/converter fails with `Prefix: schema mismatch`. Executed, verified forms:
 
 ~~~bash
 python -m pip show linkml linkml-runtime
@@ -80,25 +80,25 @@ linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --tar
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml
-linkml generate json-schema experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge.schema.json
-linkml generate jsonld-context experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge.context.jsonld
+linkml generate json-schema experiments/linkml-pof/schema/software-engineering.yaml > se-knowledge.schema.json
+linkml generate jsonld-context experiments/linkml-pof/schema/software-engineering.yaml -o se-knowledge.context.jsonld
 # Schema-level RDF/OWL output only (not the instance knowledge graph).
-linkml generate rdf --diff-stable --format ttl experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge-schema.ttl
+linkml generate rdf --format ttl experiments/linkml-pof/schema/software-engineering.yaml -o se-knowledge-schema.ttl
 
 # Instance-level RDF/JSON-LD conversion for the standalone corpus.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t ttl -o /tmp/se-corpus-c.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t json-ld -o /tmp/se-corpus-c.jsonld
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t ttl -o se-corpus-c.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t json-ld -o se-corpus-c.jsonld
 
 # Extract the YAML front matter to a temporary file first, then run the same
-# KnowledgeCorpus conversion against /tmp/se-frontmatter-a.yaml.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus /tmp/se-frontmatter-a.yaml -t ttl -o /tmp/se-corpus-a.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus /tmp/se-frontmatter-a.yaml -t json-ld -o /tmp/se-corpus-a.jsonld
+# KnowledgeCorpus conversion against se-frontmatter-a.yaml.
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus se-frontmatter-a.yaml -t ttl -o se-corpus-a.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus se-frontmatter-a.yaml -t json-ld -o se-corpus-a.jsonld
 
 # Split B-format records are converted independently, then merged as RDF graphs.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml -t ttl -o /tmp/se-b-source.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml -t ttl -o /tmp/se-b-locator.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml -t ttl -o /tmp/se-b-evidence.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C ClaimBundle experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml -t ttl -o /tmp/se-b-claim-bundle.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml -t ttl -o se-b-source.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml -t ttl -o se-b-locator.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml -t ttl -o se-b-evidence.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C ClaimBundle experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml -t ttl -o se-b-claim-bundle.ttl
 ~~~
 
 The front-matter fixture must first be extracted to a temporary YAML file; that adapter is deliberately not assumed to be native LinkML functionality. The `linkml generate rdf` command emits an RDF representation of the **schema**. Actual instance-data graph export must use `linkml-convert`; these outputs are separate test products. For format B, merge the four separately converted RDF graphs with RDFLib before comparing against A/C. Compare graph semantics after excluding only the format-specific root wrapper, not domain/evidence/provenance triples.
