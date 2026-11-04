@@ -28,9 +28,13 @@ const VERSION_REF=/^version[/][A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 // display strings. Equality between two empty or malformed values is not
 // evidence that the work item belongs to a canonical current scope.
 const ACTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
-const SECRET_PREFIXES=['gh'+'p_','gh'+'o_','gh'+'u_','gh'+'s_','gh'+'r_','github_'+'pat_','sk-'];
-const secretLike=(value:string)=>/Bearer\s+\S+/i.test(value)||
-  SECRET_PREFIXES.some(prefix=>value.toLowerCase().includes(prefix));
+const SECRET_PATTERNS=[
+  new RegExp('gh[pousr]_[A-Za-z0-9_]{12,}','i'),
+  new RegExp('github_'+'pat_[A-Za-z0-9_]{12,}','i'),
+  new RegExp('sk-[A-Za-z0-9_-]{16,}','i'),
+  new RegExp('Bearer\\\\s+\\\\S+','i')
+];
+const secretLike=(value:string)=>SECRET_PATTERNS.some(pattern=>pattern.test(value));
 const hostKindFor:Partial<Record<WorkAction['kind'],string>>={
   REVIEW:'REVIEW_REPAIR',DECISION:'FREEZE_PRODUCT',RECOVERY:'START_AGENT'};
 export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
