@@ -1,0 +1,2427 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 284,
+  "parentIssue": 259,
+  "phase": "E0_PRE_FREEZE_BOOTSTRAP",
+  "integrationHandoffIssue": 264,
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332"
+  },
+  "prIntake": {
+    "branch": "review/ui-r1-integrated-candidate-20261101",
+    "sha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81"
+  },
+  "integrationBase": {
+    "branch": "wip/e0-bootstrap-base-20261104",
+    "sha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+    "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+    "mergeParents": [
+      "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "7cfe2e4ca781358a8447c473535b2c986e999166"
+    ],
+    "mergeOrder": [
+      "#219 PR #278",
+      "A #260 PR #279"
+    ],
+    "validation": "DISJOINT_9_PLUS_11_PATH_COMPARISON_PASS"
+  },
+  "stableUpstream": [
+    {
+      "issue": 219,
+      "pr": 278,
+      "headSha": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "treeSha": "a1684b7fdb355962bfdf7459edb183f57b3f63f2",
+      "sourceReviewIssueComment": 6618467645,
+      "node24IssueComment": 6618114909,
+      "mergedIntoIntegrationBase": true
+    },
+    {
+      "issue": 260,
+      "pr": 279,
+      "headSha": "7cfe2e4ca781358a8447c473535b2c986e999166",
+      "treeSha": "644ec18b909316a54e8f7f50d6e6406e47cec50a",
+      "sourceReviewIssueComment": 6619200835,
+      "node24IssueComment": 6619145583,
+      "mergedIntoIntegrationBase": true
+    }
+  ],
+  "writeSetCount": 14,
+  "allowed_write_set": [
+    {
+      "path": "packages/tally-engineering-business/src/index.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "selected Business Intent/Effect registration, policy gates"
+    },
+    {
+      "path": "packages/tally-engineering-business/test/business-policy.test.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "Business Intent/Effect positive and fail-closed tests"
+    },
+    {
+      "path": "packages/tally-github-native-c/package.json",
+      "owner": "E0",
+      "purpose": "export existing A freeze writer and selected native writer port"
+    },
+    {
+      "path": "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+      "owner": "E0",
+      "purpose": "official GitHub native dependency writer and readback"
+    },
+    {
+      "path": "packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs",
+      "owner": "E0",
+      "purpose": "C-native negative and lost-ack tests"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/producer.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "selected BUILD binding without SDK private imports"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "selected package bundling for new Intent/Effect"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/local-codex-shim.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "sealed Host invocation path; no forged grant"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+      "owner": "E0",
+      "purpose": "selected K/Host consumer and integration replay"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+      "owner": "E0",
+      "purpose": "create-only freeze, per-Task write-set CAS/readback, dependency Host"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+      "owner": "E0",
+      "purpose": "CAS idempotency, corruption, recovery and authority tests"
+    },
+    {
+      "path": "web/v2/serve.mjs",
+      "owner": "E0_BOOTSTRAP_EXCLUSIVE",
+      "purpose": "minimal same-origin privileged route only; handoff to E1"
+    },
+    {
+      "path": "web/v2/journey-server.mjs",
+      "owner": "E0_BOOTSTRAP_EXCLUSIVE",
+      "purpose": "minimal selected K Host route wiring only; handoff to E1"
+    },
+    {
+      "path": "web/v2/version-task-dag-host-http.test.mjs",
+      "owner": "E0",
+      "purpose": "CSRF/source/body/permission/zero-side-effect HTTP negatives"
+    }
+  ],
+  "consumesReadOnly": [
+    "packages/tally-github-native-c/src/closeout-roster.mjs",
+    "packages/tally-github-native-c/test/closeout-roster.test.mjs"
+  ],
+  "operations": [
+    {
+      "id": "freezeVersionTaskDag",
+      "stage": "AFTER_NATIVE_EDGE_MATERIALIZATION_AND_REVIEWED_PACK_REFRESH",
+      "subject": "current reviewed Task Pack blob + normalized native Task roster + independent review + exact Owner Approval + body-derived writeSetAudit",
+      "semantics": [
+        "fail closed on stale/cyclic/missing/overlap issue provenance",
+        "preflight and equal-or-absent create-only immutable freeze CAS",
+        "per-Task tally:v2:task-writeset:<issueNumber> exact CAS equality/readback",
+        "partial write UNKNOWN and reconciliation required",
+        "return no positive permit until all source/CAS readbacks pass"
+      ]
+    },
+    {
+      "id": "addNativeTaskDependency",
+      "stage": "PRE_FREEZE_ONLY",
+      "subject": "one exact PLANNED blocked_by edge in reviewed Owner-approved candidate",
+      "semantics": [
+        "official same-repository GitHub issue dependency API only",
+        "cycle/membership/source/currentness checks before effect",
+        "idempotent read-before write read-after; lost ACK re-read before retry",
+        "after readback A refreshes pack to NATIVE and obtains new independent approval",
+        "no frozen pack mutation and no bulk auto-materialization"
+      ],
+      "authorityPreconditions": [
+        "A genuine accepted Host CAS Claim for controller Task #284, exact repository/issue/actor/source SHA and immutable Task Pack blob",
+        "An exact FROZEN_DAG_WRITESET CAS row for #284 matching the current source SHA and this Task Pack's normalized writeSetSha256, read back through the public DomainHarness CAS API",
+        "The controller Claim and write-set authority must be current and verified by the selected Host; caller input, ADS comments and GitHub labels are not authority",
+        "The exact edge must already be PLANNED in the current reviewed, exact Owner-approved candidate pack and both endpoint Issues must be current selected-version members"
+      ],
+      "afterSuccess": [
+        "Read back the exact official GitHub blocked_by edge",
+        "A refreshes the candidate pack to mark the edge NATIVE",
+        "The refreshed blob receives new independent review and exact Owner approval",
+        "Only then may freezeVersionTaskDag run; never mutate a frozen pack"
+      ]
+    }
+  ],
+  "proposedClaimSubject": {
+    "repository": "kaicreator-mm/tally",
+    "issueNumber": 284,
+    "role": "BUILDER",
+    "sourceSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+    "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+    "taskPackBlobSha": null,
+    "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
+    "acceptedHostCasClaim": null,
+    "jitBranch": "task/i284-e0-bootstrap"
+  },
+  "authority": {
+    "splitOwnerDecision": "2026-11-04 #284 Issue Owner authorization",
+    "exactPackOwnerApproval": null,
+    "independentPackReview": null,
+    "sourceImplementationClaim": null,
+    "rootAdmissionMechanism": "NOT_PROVEN",
+    "claimFromADSCommentAlone": false,
+    "oneTimeScopeApprovalComment": 6623609416
+  },
+  "gates": {
+    "required": [
+      "independent exact-pack-blob SHA review",
+      "exact Owner approval bound to source and pack blob",
+      "genuine Host CAS Claim/JIT accepted and read back for #284",
+      "syntax-preflight FIRST",
+      "git diff --check and 14-path exact source audit",
+      "C native dependency negative/replay tests",
+      "freeze/per-Task CAS/writeSet audit negative and readback tests",
+      "real DH v0.10.3 selected BUILD+one K/Host",
+      "same-origin HTTP negative zero-effect tests",
+      "Node24 MJS and Tally-web test/typecheck/build",
+      "self-hosted Woodpecker only after preflight",
+      "independent review and exact Owner approval must bind the exact writeSetAudit.status and auditDigestSha256 and e0ScopeAudit.digestSha256; a BLOCKED status is permitted only as a fail-closed snapshot in the separate E0 bootstrap pack and never permits version-wide freeze or ordinary Task dispatch.",
+      "all open Task bodies must expose canonical exact allowed_write_set; no prose inference; body SHA256/updatedAt/path digest readback",
+      "controller #284 accepted Claim + FROZEN_DAG_WRITESET CAS must be read back before native dependency write",
+      "The one-off E0 bootstrap pack may be frozen after exact pack review/Owner approval with its version-wide audit explicitly BLOCKED; the separate version/v2 Task Pack freeze requires audit status PASS."
+    ],
+    "prohibited": [
+      "no ad-hoc SQLite/CAS seed",
+      "no browser direct GitHub writer",
+      "no unselected Host K bypass",
+      "no direct dependency mutation before claim",
+      "no version/v2/main merge",
+      "no tag/release/deployment",
+      "no GitHub Actions",
+      "no LOCAL_VALIDATION",
+      "No E0 source edit before exact bootstrap PackBlob review PASS and exact Owner approval.",
+      "Before #284's accepted T06d Claim + exact FROZEN_DAG_WRITESET readback, only the one-time pre-Claim root-admission mount may be implemented; no other E0 source operation is admitted.",
+      "No version-wide Task Pack freeze or ordinary Task dispatch while writeSetAudit.status is BLOCKED."
+    ],
+    "requiredForBootstrapPackFreeze": [
+      "Independent read-only Exact-SHA review of the exact immutable bootstrap PackBlob.",
+      "Exact repository Owner approval binding PackBlob SHA, integration base SHA/tree, source SHA, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
+      "The version-wide writeSetAudit status and digest must be bound exactly; BLOCKED is permitted only as an explicit fail-closed snapshot and does not authorize version-wide freeze or ordinary Task dispatch.",
+      "The E0 scope overlap/serial-handoff audit must be complete and its digest must match the exact PackBlob; #219 source-candidate ordering is bound to the integration-base first parent, and #264's two potential shared paths remain E0-exclusive until E1 handoff.",
+      "Bind the current #219 PR HEAD/tree and exact delta since the pinned first-parent candidate; prove the delta is disjoint from E0 paths, and explicitly block E0_AFTER_219 edits until the final #219 HEAD is integrated into a refreshed base."
+    ],
+    "requiredForOneTimeRootAdmission": [
+      "Only after bootstrap PackBlob review PASS and exact Owner approval may the one-time pre-Claim Host mount be implemented inside preClaimBootstrapMountPaths.",
+      "Issue #284 remains open/type:task; state:ready may be set only after exact pack approval.",
+      "T06d native preflight must prove exact #284 source SHA, issue state ready, dependency CLEAR and no native claim event.",
+      "The Host admission source requires a stable complete public CAS claim registry and activeIncompatibleClaimCount===0; any other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row blocks. Do not delete or clear rows.",
+      "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact native readback → Host CAS PUBLISHED_VERIFIED.",
+      "The selected Host then writes and reads back the exact #284 FROZEN_DAG_WRITESET row through public DomainHarness CAS API; no direct SQLite/CAS seed.",
+      "Only after both readbacks may the public selected-K route admit #284."
+    ],
+    "requiredForVersionTaskPackFreeze": [
+      "The version-wide writeSetAudit must be PASS and its digest must match the independently reviewed and Owner-approved current candidate blob.",
+      "All 23 open version Task Issues must have complete canonical exact write sets; #264's wildcard must be resolved to exact paths.",
+      "All overlapping dispatchable write sets must be serialized by current native blocked_by edges or made disjoint by a newly approved exact scope; planned/prose-only edges do not serialize.",
+      "Refresh the 44-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
+      "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
+    ]
+  },
+  "note": "All 23 open version Task Issues now have a top-level canonical allowed_write_set declaration: 22 scopes are complete and #264 remains incomplete with an empty writable set plus nine separately recorded declared paths. The body-derived version audit is BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS: 36 all-scope overlap groups remain in one 13-Task component; among 11 prior-disposition candidate Tasks, five overlapping pairs lack native blocked_by serialization. The #276 canonical proposed scope now includes its exact README documentation-only candidate path (42 paths); the 44-Task candidate roster is stale (7/44) and freeze-ineligible. E0's separate 14-path scope and its six #219 / two potential #264 intersections are bound by e0ScopeAudit. The one-off E0 bootstrap pack may be reviewed/frozen separately; this blocked version audit never permits ordinary Task dispatch or version-wide freeze. Root T06d admission, independent review and exact Pack Owner approval remain absent.",
+  "writeSetAudit": {
+    "schema": "tally/version-task-write-set-audit/v2",
+    "sourceRoster": {
+      "repository": "kaicreator-mm/tally",
+      "versionId": "version/v2",
+      "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "candidatePackPath": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+      "candidatePackBlobSha": "162d41b6284fe610906e33c01dcfa60f2cbbcee3",
+      "candidatePackObservedAt": "2026-11-03T15:39:22.624Z",
+      "candidatePackStatus": "CANDIDATE_NOT_FROZEN",
+      "taskIssueCount": 44,
+      "staleTaskIssueNumbers": [
+        196,
+        197,
+        198,
+        199,
+        200,
+        202,
+        203,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        219,
+        260,
+        261,
+        262,
+        263,
+        264,
+        273,
+        274,
+        275,
+        276
+      ],
+      "rosterFreshness": "STALE_AFTER_CANONICAL_23_TASK_BODY_NORMALIZATION"
+    },
+    "openTaskSnapshot": {
+      "openTaskCount": 23,
+      "records": [
+        {
+          "issueNumber": 196,
+          "state": "open",
+          "title": "[v2][P0] J04–J06 write-capable ALM workspace：真实 Local Codex、Reviewer/Repair 与读回",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T03:43:19Z",
+          "updatedAt": "2026-11-04T06:22:39Z",
+          "closedAt": null,
+          "bodySha256": "b7f56fad334c7d7a95cbd2fbef63c0e9e40bb9210e70225c7ddfdde076ea16d5",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "writeSetSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+          },
+          "overlapWith": [
+            197,
+            198,
+            202,
+            207,
+            210,
+            219
+          ],
+          "overlapPathCount": 31,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING"
+          }
+        },
+        {
+          "issueNumber": 197,
+          "state": "open",
+          "title": "[v2][P0] J05 Builder A：真实 disjoint Local Codex candidate",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T04:35:59Z",
+          "updatedAt": "2026-11-04T06:22:46Z",
+          "closedAt": null,
+          "bodySha256": "6125ba24e967de8d080d3adfd838caa415be00fa9b5f2a93bb7be0e080fb17b8",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "writeSetSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+          },
+          "overlapWith": [
+            196,
+            198,
+            202,
+            207,
+            210,
+            219
+          ],
+          "overlapPathCount": 31,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN"
+          }
+        },
+        {
+          "issueNumber": 198,
+          "state": "open",
+          "title": "[v2][P0] J05 Builder B：真实 disjoint Local Codex candidate 与 Repair",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T04:36:01Z",
+          "updatedAt": "2026-11-04T06:22:51Z",
+          "closedAt": null,
+          "bodySha256": "a83ba1c87201fb2f54125a1dd9bfe07f014775494acacd18a60319618d66484f",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "writeSetSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+          },
+          "overlapWith": [
+            196,
+            197,
+            202,
+            207,
+            210,
+            219
+          ],
+          "overlapPathCount": 31,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN"
+          }
+        },
+        {
+          "issueNumber": 199,
+          "state": "open",
+          "title": "[v2][P0] J05 Reviewer：独立 Join、Repair 与 re-Join",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T04:36:03Z",
+          "updatedAt": "2026-11-04T06:22:57Z",
+          "closedAt": null,
+          "bodySha256": "9559687b0766ba30a620f65824a1610529c4b750e4a516f10c3ba425ac090769",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_READ_ONLY",
+            "paths": [],
+            "writeSetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "readOnlyScope": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "readOnlyPathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY"
+          }
+        },
+        {
+          "issueNumber": 200,
+          "state": "open",
+          "title": "[v2][P0] J05 Reviewer：独立 Reviewer Claim、Join 与 re-Join",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T05:43:13Z",
+          "updatedAt": "2026-11-04T06:23:05Z",
+          "closedAt": null,
+          "bodySha256": "24a8ecdb5ac4ed97dff50610febbedbf3d9fb0966c649f8da8447b65243f84ce",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_READ_ONLY",
+            "paths": [],
+            "writeSetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "readOnlyScope": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "readOnlyPathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY"
+          }
+        },
+        {
+          "issueNumber": 202,
+          "state": "open",
+          "title": "[v2] J04–J06 ALM dynamic binding integration correction",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T06:53:36Z",
+          "updatedAt": "2026-11-04T06:23:11Z",
+          "closedAt": null,
+          "bodySha256": "4389445317cb8467dac90d629a92c0fdd88e589f22581406de9cc5dbdf880964",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/concurrent-codex-windows-e2e.mjs",
+              "experiments/v2/selected-business-build/consumer-concurrent-codex.mjs",
+              "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-host.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ],
+            "writeSetSha256": "d3597449101e0498917c1c30b8d43723d6ef0563496fb170636b3450e8b2fb35"
+          },
+          "overlapWith": [
+            196,
+            197,
+            198,
+            203,
+            207,
+            210,
+            219,
+            273,
+            276
+          ],
+          "overlapPathCount": 47,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE"
+          }
+        },
+        {
+          "issueNumber": 203,
+          "state": "open",
+          "title": "[v2] Publish reviewed candidates as exact-SHA pull requests",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T07:11:08Z",
+          "updatedAt": "2026-11-04T06:23:18Z",
+          "closedAt": null,
+          "bodySha256": "5b7bd4f68adbbc5dc34f463e053883b5aaa0e86cff43e1c720b22d2b256befe8",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-candidate-publication.yaml",
+              "experiments/v2/candidate-publication/host-publisher.mjs",
+              "experiments/v2/candidate-publication/host-publisher.test.mjs",
+              "experiments/v2/candidate-publication/publish-real.mjs",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-host.mjs",
+              "experiments/v2/selected-business-build/local-codex-host.test.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "packages/tally-github-c/src/candidate-publication.mjs",
+              "packages/tally-github-c/test/candidate-publication.test.mjs"
+            ],
+            "writeSetSha256": "fdd47e0e9616dccd6e87261cad6bf0d19ea8dad36082ffb14ac3e784089bab48"
+          },
+          "overlapWith": [
+            202,
+            210,
+            219,
+            273,
+            276
+          ],
+          "overlapPathCount": 18,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING"
+          }
+        },
+        {
+          "issueNumber": 207,
+          "state": "open",
+          "title": "[v2][P0][J06] Real-browser ALM journey acceptance and truthful CI/Host readback",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T10:36:16Z",
+          "updatedAt": "2026-11-04T06:23:24Z",
+          "closedAt": null,
+          "bodySha256": "8d73b23ab5b91974e53865e653aa67c1529330e42e588e4681843cb238326df3",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-browser-e2e.mjs",
+              "web/v2/journey-browser-e2e.test.mjs",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ],
+            "writeSetSha256": "915df93f7a67acf88f6d24385c63dbe68e650dd3fd5755c1759bd7e70b55dbe8"
+          },
+          "overlapWith": [
+            196,
+            197,
+            198,
+            202,
+            210,
+            219
+          ],
+          "overlapPathCount": 20,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING"
+          }
+        },
+        {
+          "issueNumber": 208,
+          "state": "open",
+          "title": "[v2][P0][J07] Exact-SHA Release Qualification, version closure and authorized delivery",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T10:36:18Z",
+          "updatedAt": "2026-11-04T06:23:31Z",
+          "closedAt": null,
+          "bodySha256": "a85fc56e597583957875e158050bdbfc44483e43226ba738e0e78a9b23ad2a52",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              "packages/tally-engineering-business/src/release-readiness.mjs",
+              "packages/tally-engineering-business/test/release-readiness.test.mjs"
+            ],
+            "writeSetSha256": "04361df43ed23b38fab742b44db031dae475483b0aa94c2093abd5e9ecc05f5f"
+          },
+          "overlapWith": [
+            276
+          ],
+          "overlapPathCount": 1,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING"
+          }
+        },
+        {
+          "issueNumber": 209,
+          "state": "open",
+          "title": "[v2][P0][J08] Defect intake, next-version planning and measured Task Learning replay",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T10:36:20Z",
+          "updatedAt": "2026-11-04T06:23:41Z",
+          "closedAt": null,
+          "bodySha256": "0c52937fdb4040cb694547ad7858374b5237686b8d683b51b3a1f56a228a65a9",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              "packages/tally-engineering-business/src/maintenance-intake.mjs",
+              "packages/tally-engineering-business/test/maintenance-intake.test.mjs"
+            ],
+            "writeSetSha256": "960fa225747d0ab39c10de8b8357cd47ffccba08a3968f89345a33d96d64652e"
+          },
+          "overlapWith": [
+            276
+          ],
+          "overlapPathCount": 1,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING"
+          }
+        },
+        {
+          "issueNumber": 210,
+          "state": "open",
+          "title": "[v2][P0][J01–J03] Wire guided project intake, Product/L2 freeze and native Task DAG into ALM workspace",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T10:38:10Z",
+          "updatedAt": "2026-11-04T06:23:49Z",
+          "closedAt": null,
+          "bodySha256": "2dffa70a9daed4d03cdf9ac9e41422a5bff7679768f4948d4a1f79f1226ea07f",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/project-intake/host-project.mjs",
+              "experiments/v2/project-intake/host-project.test.mjs",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "packages/tally-github-c/src/project-intake.mjs",
+              "packages/tally-github-c/test/project-intake.test.mjs",
+              "web/v2/intake-controller.mjs",
+              "web/v2/intake-controller.test.mjs",
+              "web/v2/intake-view.mjs",
+              "web/v2/intake-view.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ],
+            "writeSetSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
+          },
+          "overlapWith": [
+            196,
+            197,
+            198,
+            202,
+            203,
+            207,
+            219,
+            273,
+            276
+          ],
+          "overlapPathCount": 34,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING"
+          }
+        },
+        {
+          "issueNumber": 211,
+          "state": "open",
+          "title": "[v2] Bounded recovery for native GitHub read failures",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T11:41:50Z",
+          "updatedAt": "2026-11-04T06:23:54Z",
+          "closedAt": null,
+          "bodySha256": "2082327abdb04fd420e39b20cc23eb7ce975a0a257bb2c727e76015f78e66469",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "packages/tally-github-native-c/src/read-retry.mjs",
+              "packages/tally-github-native-c/src/task-claim-publication-witness.mjs",
+              "packages/tally-github-native-c/src/task-source-pair.mjs",
+              "packages/tally-github-native-c/test/read-retry.test.mjs",
+              "packages/tally-github-native-c/test/task-claim-publication-witness.test.mjs",
+              "packages/tally-github-native-c/test/task-source-pair.test.mjs"
+            ],
+            "writeSetSha256": "e192b78f9bf12395b99ac8beb2e2f8b2e8e5fe24ca97713ea76a6816bde6ef66"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_NATIVE_READ_RECOVERY"
+          }
+        },
+        {
+          "issueNumber": 212,
+          "state": "open",
+          "title": "[v2] Complete native WorkItem and Claim-event read recovery",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T12:06:28Z",
+          "updatedAt": "2026-11-04T06:24:00Z",
+          "closedAt": null,
+          "bodySha256": "4bb49525b4e1ec911f6ef4df23bd14d5504ab1b7b16706e7ec14ab559c47b027",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "packages/tally-github-native-c/src/task-claim-events.mjs",
+              "packages/tally-github-native-c/src/task-workitem-source.mjs",
+              "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+              "packages/tally-github-native-c/test/task-workitem-source.test.mjs"
+            ],
+            "writeSetSha256": "e4ed0583ea4666c7b09e951fef818e2711f372fafe1552b4b6345977a127c88d"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY"
+          }
+        },
+        {
+          "issueNumber": 219,
+          "state": "open",
+          "title": "[v2] Governed maintenance, next version and measured Task Learning",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-10-31T15:00:38Z",
+          "updatedAt": "2026-11-04T06:24:06Z",
+          "closedAt": null,
+          "bodySha256": "6661b9964143ec49aa39ee1df0e8d937f7a971554a0c0e14f92d42cd3af34430",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/maintenance/host-maintenance.mjs",
+              "experiments/v2/maintenance/host-maintenance.test.mjs",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "packages/tally-github-c/src/maintenance-effects.mjs",
+              "packages/tally-github-c/test/maintenance-effects.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/maintenance-controller.mjs",
+              "web/v2/maintenance-controller.test.mjs"
+            ],
+            "writeSetSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797"
+          },
+          "overlapWith": [
+            196,
+            197,
+            198,
+            202,
+            203,
+            207,
+            210,
+            273,
+            276
+          ],
+          "overlapPathCount": 34,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING"
+          }
+        },
+        {
+          "issueNumber": 260,
+          "state": "open",
+          "title": "[v2][Closeout A][P0] Canonical per-version Task DAG, native dependencies & accepted Claim readback",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-11-01T20:03:39Z",
+          "updatedAt": "2026-11-04T06:24:11Z",
+          "closedAt": null,
+          "bodySha256": "1588f2a6136246e9bd19c74dc929e8cbc299ec8cdb8ecd48b6721f623af9353a",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "apps/tally-web/src/features/dag/model.test.ts",
+              "apps/tally-web/src/features/dag/model.ts",
+              "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+              "apps/tally-web/src/features/dag/views.tsx",
+              "packages/tally-github-native-c/src/closeout-roster.mjs",
+              "packages/tally-github-native-c/src/ui-version-readonly.mjs",
+              "packages/tally-github-native-c/src/ui-version-readonly.test.mjs",
+              "packages/tally-github-native-c/test/closeout-roster.test.mjs",
+              "packages/tally-github-native-c/test/ui-version-readonly.test.mjs",
+              "web/v2/ui-roster-host.mjs",
+              "web/v2/ui-roster-host.test.mjs"
+            ],
+            "writeSetSha256": "14538d19c835fc7298423fb55d0fbd61bf39f14c528cc6a8faaa8f1daed85c49"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE"
+          }
+        },
+        {
+          "issueNumber": 261,
+          "state": "open",
+          "title": "[v2][Closeout B][P0] Reuse selected B/K/Host for real UI-guided development and Agent/Review actions",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-11-01T20:03:40Z",
+          "updatedAt": "2026-11-04T06:24:17Z",
+          "closedAt": null,
+          "bodySha256": "dba287687a4c91533c3105d7ebd9e3d22d519d2ad60090fc9e6c7c859f073561",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "apps/tally-web/src/features/agents/model.test.ts",
+              "apps/tally-web/src/features/agents/model.ts",
+              "apps/tally-web/src/features/agents/views.tsx",
+              "apps/tally-web/src/features/task-actions/model.test.ts",
+              "apps/tally-web/src/features/task-actions/model.ts",
+              "apps/tally-web/src/features/task-actions/views.tsx",
+              "apps/tally-web/src/features/tasks/model.test.ts",
+              "apps/tally-web/src/features/tasks/model.ts",
+              "apps/tally-web/src/features/tasks/views.tsx",
+              "web/v2/guided-form-port.mjs",
+              "web/v2/guided-form-port.test.mjs",
+              "web/v2/ui-action-http.test.mjs",
+              "web/v2/ui-action-port.mjs",
+              "web/v2/ui-action-port.test.mjs"
+            ],
+            "writeSetSha256": "f818b1ff7e9bcd3bd46d4d597506aabe06d530e99c46c18fa6766da7c617e988"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_UI_ACTIONS"
+          }
+        },
+        {
+          "issueNumber": 262,
+          "state": "open",
+          "title": "[v2][Closeout C][P0] Real ADS/task-meta, audit and controlled experience feedback to next Task",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-11-01T20:03:43Z",
+          "updatedAt": "2026-11-04T06:24:23Z",
+          "closedAt": null,
+          "bodySha256": "bfd10d8bc07efeffcc8edf64022369c9e33e6d20e393f1f12c965e935f4e13f3",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "apps/tally-web/src/features/experience/model.test.ts",
+              "apps/tally-web/src/features/experience/model.ts",
+              "apps/tally-web/src/features/experience/views.tsx",
+              "web/v2/ui-experience-host.mjs",
+              "web/v2/ui-experience-host.test.mjs"
+            ],
+            "writeSetSha256": "69fbd9da1b7b3533a3926ddbe9d2f47d5af6bc7c1dc6787379aa9fb84de0e0c1"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING"
+          }
+        },
+        {
+          "issueNumber": 263,
+          "state": "open",
+          "title": "[v2][Closeout D][P0] Human-oriented actionable ALM UI incl. approvals, QA, Release, deployment, settings",
+          "labels": [
+            "state:ready",
+            "type:task"
+          ],
+          "createdAt": "2026-11-01T20:03:45Z",
+          "updatedAt": "2026-11-04T06:24:30Z",
+          "closedAt": null,
+          "bodySha256": "7313c9e827a192631c4f97cfd9a157fbb91fc1bdd481c72deabbd37aabcb62f1",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "apps/tally-web/src/features/workbench/human-action-gate.test.ts",
+              "apps/tally-web/src/features/workbench/human-action-gate.ts",
+              "apps/tally-web/src/features/workbench/model.ts",
+              "apps/tally-web/src/features/workbench/views.tsx"
+            ],
+            "writeSetSha256": "cbeafd89071129e863add55d98a6f0afa17aa5af308de30d9bc920513f93262b"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": true,
+            "scopeDisposition": "ACTIVE_HUMAN_ALM_UI"
+          }
+        },
+        {
+          "issueNumber": 264,
+          "state": "open",
+          "title": "[v2][Closeout E][P0] Single final PR #258 composition, differential verification and installed J01-J08",
+          "labels": [
+            "state:planned",
+            "type:task"
+          ],
+          "createdAt": "2026-11-01T20:03:47Z",
+          "updatedAt": "2026-11-04T06:26:08Z",
+          "closedAt": null,
+          "bodySha256": "00039984cb12d5c70849cf8d29f5188dec8aa254fe2a31806055f90f24230fc7",
+          "canonicalAllowedWriteSet": {
+            "status": "BLOCKED_INCOMPLETE_SCOPE",
+            "paths": [],
+            "writeSetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "declaredExactPaths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "apps/tally-web/src/adapters/host.ts",
+              "apps/tally-web/src/adapters/useHost.ts",
+              "apps/tally-web/src/app/App.tsx",
+              "apps/tally-web/src/app/main.tsx",
+              "docs/implementation/v2/CLOSEOUT_EVIDENCE_REUSE_LEDGER.md",
+              "docs/implementation/v2/UI_WEBFIRST_R1_ACCEPTANCE.md",
+              "web/v2/journey-server.mjs",
+              "web/v2/serve.mjs"
+            ],
+            "potentialOverlapWith": [
+              196,
+              197,
+              198,
+              202,
+              207,
+              210,
+              219
+            ]
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES"
+          }
+        },
+        {
+          "issueNumber": 273,
+          "state": "open",
+          "title": "[v2][P0][F30] Governed Replan with immutable history and accepted-work preservation",
+          "labels": [
+            "state:planned",
+            "type:task"
+          ],
+          "createdAt": "2026-11-03T03:09:59Z",
+          "updatedAt": "2026-11-04T06:26:16Z",
+          "closedAt": null,
+          "bodySha256": "728fee50983fdc880028320b966f6cc24839fe885c6e4c22e1ef53c629023bcb",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              "apps/tally-web/src/features/replan/model.test.ts",
+              "apps/tally-web/src/features/replan/model.ts",
+              "apps/tally-web/src/features/replan/views.tsx",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/src/replan.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "packages/tally-engineering-business/test/replan.test.mjs",
+              "web/v2/replan-controller.mjs",
+              "web/v2/replan-controller.test.mjs"
+            ],
+            "writeSetSha256": "845cb2618eebab4f56aa38bd6c0176b2e6b3499d4a01db18150d02f9915d85dd"
+          },
+          "overlapWith": [
+            202,
+            203,
+            210,
+            219,
+            276
+          ],
+          "overlapPathCount": 9,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "PLANNED_REPLAN_NO_CLAIM"
+          }
+        },
+        {
+          "issueNumber": 274,
+          "state": "open",
+          "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
+          "labels": [
+            "state:planned",
+            "type:task"
+          ],
+          "createdAt": "2026-11-03T03:10:06Z",
+          "updatedAt": "2026-11-04T06:26:23Z",
+          "closedAt": null,
+          "bodySha256": "9f66d4e5c126f1cc2606bb98a8dfe75c2af8294356cf2c6a0cd52f38b659fb7b",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_NOT_ADMITTED",
+            "paths": [
+              "packages/tally-github-c/src/experience-use-feedback.mjs",
+              "packages/tally-github-c/test/experience-use-feedback.test.mjs",
+              "packages/tally-github-native-c/src/experience-use-feedback-publisher.mjs",
+              "packages/tally-github-native-c/test/experience-use-feedback-publisher.test.mjs",
+              "web/v2/ui-feedback-publisher-host.mjs",
+              "web/v2/ui-feedback-publisher-host.test.mjs"
+            ],
+            "writeSetSha256": "f92b61a438644a1c72a9babb2bd91fa9f0e279dbf253bf63319091245e3fe23a"
+          },
+          "overlapWith": [],
+          "overlapPathCount": 0,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM"
+          }
+        },
+        {
+          "issueNumber": 275,
+          "state": "open",
+          "title": "[v2][P0][F38/F39] Source-backed Task Attempt and telemetry read model",
+          "labels": [
+            "state:planned",
+            "type:task"
+          ],
+          "createdAt": "2026-11-03T03:10:13Z",
+          "updatedAt": "2026-11-04T06:26:29Z",
+          "closedAt": null,
+          "bodySha256": "653495f1abc748cd16821d895127c149484811d32020775fb4226c6e0c00197a",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              "packages/tally-engineering-business/src/attempts.mjs",
+              "packages/tally-engineering-business/test/attempts.test.mjs",
+              "web/v2/ui-attempt-host-http.test.mjs",
+              "web/v2/ui-attempt-host.mjs",
+              "web/v2/ui-attempt-host.test.mjs"
+            ],
+            "writeSetSha256": "015cb08892b9cf5215dc82c1877248a11650b220b7ab3f3f6c1e20c8a2e88a72"
+          },
+          "overlapWith": [
+            276
+          ],
+          "overlapPathCount": 1,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM"
+          }
+        },
+        {
+          "issueNumber": 276,
+          "state": "open",
+          "title": "[v2][P0][Domain Package] Extract Engineering Domain Knowledge and bounded Workflows into Tally B",
+          "labels": [
+            "state:planned",
+            "type:task"
+          ],
+          "createdAt": "2026-11-03T05:32:14Z",
+          "updatedAt": "2026-11-04T07:22:06Z",
+          "closedAt": null,
+          "bodySha256": "0b4bdd5ac75b4804418682cb515fc6477f81ca53d1d8445255944610aac46325",
+          "canonicalAllowedWriteSet": {
+            "status": "CANONICALIZED_OVERLAP_BLOCKED",
+            "paths": [
+              "experiments/v2/selected-business-build/consumer-domain-data.mjs",
+              "experiments/v2/selected-business-build/consumer-domain-data.test.mjs",
+              "experiments/v2/selected-business-build/domain-data-compiler.mjs",
+              "experiments/v2/selected-business-build/domain-data-compiler.test.mjs",
+              "packages/tally-engineering-business/README.md",
+              "packages/tally-engineering-business/domain/authority/source-authority-map.json",
+              "packages/tally-engineering-business/domain/glossary/engineering-concepts.json",
+              "packages/tally-engineering-business/domain/rules/task-readiness-minimum-evidence.rule.json",
+              "packages/tally-engineering-business/domain/schemas/task-readiness-input.schema.json",
+              "packages/tally-engineering-business/domain/validation/task-readiness-fixtures.json",
+              "packages/tally-engineering-business/domain/workflows/architecture-l2.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/experience-qualification-promotion.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/independent-review-repair.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/maintenance-replan.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/project-intake.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/qa-release.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/task-execution-attempt.workflow.json",
+              "packages/tally-engineering-business/domain/workflows/version-planning-task-dag.workflow.json",
+              "packages/tally-engineering-business/src/acceptance.mjs",
+              "packages/tally-engineering-business/src/attempts.mjs",
+              "packages/tally-engineering-business/src/casebook.mjs",
+              "packages/tally-engineering-business/src/diagnosis.mjs",
+              "packages/tally-engineering-business/src/domain-model/task-readiness.mjs",
+              "packages/tally-engineering-business/src/feedback.mjs",
+              "packages/tally-engineering-business/src/guided-intake.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/src/journey.mjs",
+              "packages/tally-engineering-business/src/lineage.mjs",
+              "packages/tally-engineering-business/src/maintenance-intake.mjs",
+              "packages/tally-engineering-business/src/planning.mjs",
+              "packages/tally-engineering-business/src/release-readiness.mjs",
+              "packages/tally-engineering-business/src/work-units.mjs",
+              "packages/tally-engineering-business/test/acceptance.test.mjs",
+              "packages/tally-engineering-business/test/casebook.test.mjs",
+              "packages/tally-engineering-business/test/diagnosis.test.mjs",
+              "packages/tally-engineering-business/test/domain-model/task-readiness.test.mjs",
+              "packages/tally-engineering-business/test/feedback.test.mjs",
+              "packages/tally-engineering-business/test/guided-intake.test.mjs",
+              "packages/tally-engineering-business/test/journey.test.mjs",
+              "packages/tally-engineering-business/test/lineage.test.mjs",
+              "packages/tally-engineering-business/test/planning.test.mjs",
+              "packages/tally-engineering-business/test/work-units.test.mjs"
+            ],
+            "writeSetSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4",
+            "pathCount": 42
+          },
+          "overlapWith": [
+            202,
+            203,
+            208,
+            209,
+            210,
+            219,
+            273,
+            275
+          ],
+          "overlapPathCount": 8,
+          "dispatchable": false,
+          "priorRosterDisposition": {
+            "dispatchableByDisposition": false,
+            "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM"
+          }
+        }
+      ],
+      "observedAt": "2026-11-04T08:18:06.946Z"
+    },
+    "controllerTask": {
+      "issueNumber": 284,
+      "state": "open",
+      "updatedAt": "2026-11-04T06:52:11Z",
+      "bodySha256": "f3f1cc3bb7a2e63040ad131af3ca0ca1e28aec6e5778130401c46326d7350d62",
+      "canonicalAllowedWriteSet": {
+        "status": "CANDIDATE_NOT_ADMITTED",
+        "paths": [
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+          "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "packages/tally-github-native-c/package.json",
+          "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+          "packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs",
+          "web/v2/journey-server.mjs",
+          "web/v2/serve.mjs",
+          "web/v2/version-task-dag-host-http.test.mjs"
+        ],
+        "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8"
+      },
+      "sourceSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+      "taskPackBlobSha": null,
+      "dispatchable": false,
+      "ownerScopeApprovalComment": 6623609416,
+      "overlapWith": [
+        219
+      ],
+      "overlapPathCount": 6,
+      "potentialOverlapWith": [
+        264
+      ],
+      "potentialOverlapPathCount": 2
+    },
+    "normalization": {
+      "schema": "tally.v2.allowed-write-set-normalization/1",
+      "completeExactPathSets": 22,
+      "incompleteScopeCount": 1,
+      "incompleteIssueNumbers": [
+        264
+      ],
+      "readOnlyTasks": 2,
+      "writeCapableCompleteTasks": 20,
+      "pairwiseOverlapGroups": 36,
+      "connectedComponents": 1,
+      "isolatedWritableTaskIssues": [
+        211,
+        212,
+        260,
+        261,
+        262,
+        263,
+        274
+      ],
+      "allDispatchable": false
+    },
+    "overlapGroups": [
+      {
+        "id": "EXACT_SHARED_WRITER_COMPONENT_01",
+        "taskIssues": [
+          196,
+          197,
+          198,
+          202,
+          203,
+          207,
+          208,
+          209,
+          210,
+          219,
+          273,
+          275,
+          276
+        ],
+        "pairwiseOverlapCount": 36,
+        "uniqueSharedPaths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-host.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/attempts.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/src/maintenance-intake.mjs",
+          "packages/tally-engineering-business/src/release-readiness.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-controller.test.mjs",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-view.html",
+          "web/v2/journey-view.mjs",
+          "web/v2/journey-view.test.mjs"
+        ],
+        "pairwiseEdges": [
+          {
+            "taskIssues": [
+              196,
+              197
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              196,
+              198
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              196,
+              202
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              196,
+              207
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              196,
+              210
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              196,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              197,
+              198
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              197,
+              202
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              197,
+              207
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              197,
+              210
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              197,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              198,
+              202
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              198,
+              207
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              198,
+              210
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              198,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              203
+            ],
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-host.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              207
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              210
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              273
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              202,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              203,
+              210
+            ],
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              203,
+              219
+            ],
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              203,
+              273
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              203,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              207,
+              210
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              207,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              208,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/release-readiness.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              209,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/maintenance-intake.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              210,
+              219
+            ],
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "taskIssues": [
+              210,
+              273
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              210,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              219,
+              273
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              219,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              273,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "taskIssues": [
+              275,
+              276
+            ],
+            "paths": [
+              "packages/tally-engineering-business/src/attempts.mjs"
+            ]
+          }
+        ]
+      }
+    ],
+    "potentialIncompleteScopeOverlaps": [
+      {
+        "issueNumber": 196,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 197,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 198,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 202,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 207,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 210,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      },
+      {
+        "issueNumber": 219,
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs"
+        ]
+      }
+    ],
+    "findings": {
+      "canonicalDeclarationsMissing": 0,
+      "canonicalDeclarationsComplete": 22,
+      "canonicalDeclarationsIncomplete": 1,
+      "incompleteCanonicalScopeIssues": [
+        264
+      ],
+      "readOnlyReviewerTasks": [
+        199,
+        200
+      ],
+      "priorDispositionDispatchableButNotAdmitted": [
+        203,
+        207,
+        208,
+        209,
+        210,
+        211,
+        219,
+        260,
+        261,
+        262,
+        263
+      ],
+      "nonDispatchableOpenTasks": [
+        196,
+        197,
+        198,
+        199,
+        200,
+        202,
+        203,
+        207,
+        208,
+        209,
+        210,
+        211,
+        212,
+        219,
+        260,
+        261,
+        262,
+        263,
+        264,
+        273,
+        274,
+        275,
+        276
+      ],
+      "exactPairwiseOverlapGroups": 36,
+      "exactOverlapComponents": 1,
+      "overlapComponentTaskIssues": [
+        196,
+        197,
+        198,
+        202,
+        203,
+        207,
+        208,
+        209,
+        210,
+        219,
+        273,
+        275,
+        276
+      ],
+      "isolatedWritableTaskIssues": [
+        211,
+        212,
+        260,
+        261,
+        262,
+        263,
+        274
+      ],
+      "potentialIncompleteScopeOverlaps": [
+        196,
+        197,
+        198,
+        202,
+        207,
+        210,
+        219
+      ],
+      "potentialIncompleteScopeOverlapPathCount": 14,
+      "nativeEdgesFromCurrentCandidate": 4,
+      "plannedEdgesFromCurrentCandidate": 20,
+      "nativeEdgeCurrentness": "VERIFIED_BY_GITHUB_DEPENDENCIES_READBACK",
+      "nativeEdgesReadback": {
+        "issueNumber": 264,
+        "blockedByIssueNumbers": [
+          260,
+          261,
+          262,
+          263
+        ]
+      },
+      "freezeEligible": false,
+      "dispatchableCandidateCount": 11,
+      "dispatchableCandidateOverlapPairs": 5,
+      "dispatchableCandidateOverlapTaskIssues": [
+        203,
+        207,
+        210,
+        219
+      ],
+      "dispatchableCandidateOverlapNativeSerializationMissing": 5,
+      "isolatedDispatchableCandidateTasks": [
+        208,
+        209,
+        211,
+        260,
+        261,
+        262,
+        263
+      ]
+    },
+    "rule": "Only each Issue's canonical top-level allowed_write_set is authoritative. #199/#200 are read-only with empty writable paths; #264 remains incomplete with an empty writable set and separate declaredExactPaths. PR-derived scopes for #260-#263 are exact base..HEAD snapshots. All 23 open Tasks remain non-dispatchable until current native edge serialization, independent review, accepted Claim/JIT and frozen CAS readback.",
+    "digestAlgorithms": {
+      "issueBodySha256": "SHA-256 over the exact UTF-8 GitHub Issue body string returned by REST",
+      "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
+      "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,dispatchableOverlapAudit,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
+    },
+    "auditObservedAt": "2026-11-04T08:18:06.946Z",
+    "status": "BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS",
+    "complete": false,
+    "freezeEligible": false,
+    "requiredBeforeFreeze": [
+      "Resolve #264's installed-write-journeys wildcard and tests into exact filenames; do not infer expansion.",
+      "Resolve the exact pairwise overlaps among the 11 currently dispatchable candidate Tasks. Five overlapping pairs currently have no native blocked_by serialization; split exact scopes or obtain authorized native edges, then read back. The remaining all-scope overlaps involve non-dispatchable tasks and remain recorded but do not authorize concurrent writes.",
+      "Refresh the version/v2 candidate Task Pack and native dependency snapshot from the current 44-Task roster after all body normalization.",
+      "Obtain independent Exact-SHA review and exact Owner Pack Approval bound to the refreshed candidate blob, source SHA and audit digest.",
+      "Only after all readbacks pass, create/read back the immutable version Task Pack freeze and per-Task FROZEN_DAG_WRITESET CAS rows.",
+      "For E0 #284, independently review the exact bootstrap pack blob and obtain exact Owner approval before one-time T06d Host mount/Claim; no source admission beforehand.",
+      "E1 #264 remains the sole final integration owner after the explicit E0 handoff."
+    ],
+    "auditDigestSha256": "170d4954a257a215a21a589aeb6b649ddf65d8648714cb059d9b675962a08677",
+    "dispatchableOverlapAudit": {
+      "candidateTaskIssues": [
+        203,
+        207,
+        208,
+        209,
+        210,
+        211,
+        219,
+        260,
+        261,
+        262,
+        263
+      ],
+      "candidateCount": 11,
+      "pairwiseOverlapCount": 5,
+      "overlapComponents": [
+        {
+          "taskIssues": [
+            203,
+            207,
+            210,
+            219
+          ],
+          "pairwiseOverlapCount": 5,
+          "edges": [
+            {
+              "taskIssues": [
+                203,
+                210
+              ],
+              "paths": [
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                203,
+                219
+              ],
+              "paths": [
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                207,
+                210
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "web/v2/journey-server.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                207,
+                219
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "web/v2/journey-server.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                210,
+                219
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs",
+                "web/v2/journey-server.mjs",
+                "web/v2/journey-view.html"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            }
+          ]
+        }
+      ],
+      "isolatedCandidateTaskIssues": [
+        208,
+        209,
+        211,
+        260,
+        261,
+        262,
+        263
+      ],
+      "nativeBlockedByReadback": [
+        {
+          "issueNumber": 203,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 207,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 208,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 209,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 210,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 211,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 219,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 260,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 261,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 262,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 263,
+          "blockedBy": []
+        }
+      ],
+      "missingNativeSerializationPairs": [
+        [
+          203,
+          210
+        ],
+        [
+          203,
+          219
+        ],
+        [
+          207,
+          210
+        ],
+        [
+          207,
+          219
+        ],
+        [
+          210,
+          219
+        ]
+      ],
+      "allCandidatesDispatchable": false
+    }
+  },
+  "rootAdmissionPlan": {
+    "schema": "tally.e0.root-admission-plan/v1",
+    "mode": "ONE_TIME_T06D_SELECTED_HOST",
+    "issueNumber": 284,
+    "status": "APPROVED_SCOPE_NOT_IMPLEMENTED",
+    "ownerScopeApprovalComment": 6623609416,
+    "exactPackOwnerApproval": "NOT_PRESENT",
+    "independentPackReview": "NOT_PRESENT",
+    "rootClaim": "NOT_PRESENT",
+    "integrationBase": {
+      "sha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0"
+    },
+    "sourceSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+    "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
+    "hostMount": {
+      "hostModule": "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+      "hostModuleTest": "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+      "integrationPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "readOnlyExistingT06dDependencies": [
+        "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+        "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs",
+        "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+        "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+        "packages/tally-github-native-c/src/task-claim-host-readback-port.mjs"
+      ],
+      "additionalWritePathsRequired": [],
+      "additionalPathRule": "If implementation discovers a required write outside the exact 14 paths, stop and request a new exact Owner amendment before editing.",
+      "oneTimeOnly": true,
+      "preconditions": [
+        "Independent Exact-SHA review of this exact pack blob",
+        "Exact Owner approval comment binding pack blob SHA + integration base SHA + source SHA + writeSetSha256 + auditDigestSha256",
+        "Issue #284 remains open/type:task; set state:ready only after exact approval",
+        "T06d native preflight proves exact #284 source SHA, dependencies CLEAR and no incompatible Claim",
+        "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact readback → Host CAS PUBLISHED_VERIFIED",
+        "Selected Host writes and reads back the exact per-Task FROZEN_DAG_WRITESET row through public DomainHarness CAS API, never direct SQLite seeding",
+        "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity"
+      ],
+      "forbidden": [
+        "direct SQLite/CAS seed",
+        "test/replay fixture as production authority",
+        "raw GitHub Claim comment without Host reservation/readback",
+        "generic Claim bypass",
+        "reusable bootstrap authority",
+        "source implementation before exact pack review/Owner approval"
+      ],
+      "preClaimBootstrapMountPaths": [
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "preClaimOperation": "admitE0BootstrapRoot",
+      "postClaimOperations": [
+        "freezeVersionTaskDag",
+        "addNativeTaskDependency"
+      ],
+      "claimRegistryRequirement": "The existing T06d admission source counts every other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row as incompatible. The root Claim blocks unless the stable public CAS registry readback has activeIncompatibleClaimCount===0; do not delete or clear rows.",
+      "t06dReturnSemantics": "PUBLISHED_VERIFIED is still VERIFIED_PENDING_KERNEL_ADMISSION; it is not a selected-K permit. Public K must independently verify the exact Claim row and exact FROZEN_DAG_WRITESET row.",
+      "after219Paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "e1ExclusiveHandoffPaths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "blockedUntil219FinalizedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "independentlyImplementablePaths": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ]
+    },
+    "preconditions": [
+      "Independent Exact-SHA review of this exact pack blob.",
+      "Exact Owner approval comment binding pack blob SHA + integration base SHA/tree + source SHA + E0 writeSetSha256 + version writeSetAudit.auditDigestSha256 + e0ScopeAudit.digestSha256.",
+      "Only after the exact approval, implement the one-time pre-Claim Host mount limited to hostMount.preClaimBootstrapMountPaths; no other E0 source operation is admitted before #284's root Claim.",
+      "Issue #284 remains open/type:task; set state:ready only after exact pack approval.",
+      "T06d native preflight proves exact #284 source SHA, state:ready, dependencies CLEAR and no incompatible Claim.",
+      "Stable complete Host CAS claim registry readback has activeIncompatibleClaimCount===0; any other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row blocks without cleanup.",
+      "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact readback → Host CAS PUBLISHED_VERIFIED.",
+      "Selected Host writes and reads back the exact per-Task FROZEN_DAG_WRITESET row through public DomainHarness CAS API, never direct SQLite seeding.",
+      "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity.",
+      "Before editing any of the five E0_AFTER_219 paths, independently review and finalize #219 PR #278 at its current exact HEAD, then refresh the E0 integration base to include that final HEAD and rebind this Pack; the current #219 successor delta is disjoint but is not integrated in the present E0 base."
+    ]
+  },
+  "notes": [
+    "2026-11-04: canonicalized all 23 open version Task Issues using exact current issue bodies. #199/#200 are read-only; #264 remains incomplete. SHA-256 verified against standard abc/empty vectors. Exact writable-path analysis: 20 complete write-capable Tasks, 36 pairwise overlaps in one 13-Task connected component, 7 isolated writable Tasks; #264's 9 declared paths create 7 potential overlaps / 14 shared path occurrences but are not admitted. Four current native blocked_by edges into #264 were read back. All Tasks remain non-dispatchable; candidate version Task Pack remains stale and freeze-ineligible.",
+    "2026-11-04: E0 root-admission Host mount is mapped to the existing 14-path E0 candidate scope; existing T06d/C controller and ports are read-only imports, with no additional write path currently required. Exact pack review/Owner approval and root Claim are still absent; no source admission.",
+    "2026-11-04 gate clarification: the one-off E0 bootstrap PackBlob is distinct from the version-wide Task Pack. Its review/Owner approval binds the exact BLOCKED version audit snapshot and digest; BLOCKED is permitted only to freeze this one-off bootstrap artifact and does not authorize version-wide freeze or ordinary Task dispatch. Version-wide freeze still requires audit PASS.",
+    "2026-11-04 E0 cross-scope check: the 14 E0 paths intersect #219's canonical issue write set on six paths and are explicitly serialized after #219; they potentially intersect #264's nine declared-but-not-admitted paths on web/v2/journey-server.mjs and web/v2/serve.mjs, serialized before E1/#264. T06d registry preflight also requires zero other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED claim rows.",
+    "E0's 14-path scope overlaps #219 on six exact paths and #264's incomplete declared scope on two potential paths; these intersections and their serial ownership are bound in e0ScopeAudit.",
+    "2026-11-04 R6 upstream freshness: #219 PR #278 advanced from the pinned first-parent candidate 2c7c027d to 46191866e; its two changed paths (web/v2/maintenance-controller.mjs and web/v2/maintenance-controller.test.mjs) are outside the E0 14-path set and all five E0_AFTER_219 paths. They are not integrated in the current E0 base. The shared E0_AFTER_219 paths remain blocked until #219 is independently reviewed/finalized and the E0 base is refreshed to include its final HEAD."
+  ],
+  "e0ScopeAudit": {
+    "schema": "tally.e0.bootstrap-scope-audit/v1",
+    "status": "EXACT_SCOPE_INTERSECTIONS_AND_SERIAL_HANDOFFS_BOUND",
+    "controllerTask": {
+      "issueNumber": 284,
+      "state": "open",
+      "workflowLabel": "state:planned",
+      "updatedAt": "2026-11-04T06:52:11Z",
+      "bodySha256": "f3f1cc3bb7a2e63040ad131af3ca0ca1e28aec6e5778130401c46326d7350d62",
+      "pathCount": 14,
+      "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8"
+    },
+    "integrationBase": {
+      "sha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+      "mergeParents": [
+        "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+        "7cfe2e4ca781358a8447c473535b2c986e999166"
+      ],
+      "mergeOrder": [
+        "#219 PR #278",
+        "A #260 PR #279"
+      ]
+    },
+    "upstream219": {
+      "issueNumber": 219,
+      "state": "open",
+      "updatedAt": "2026-11-04T06:24:06Z",
+      "bodySha256": "6661b9964143ec49aa39ee1df0e8d937f7a971554a0c0e14f92d42cd3af34430",
+      "writeSetSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+      "pathCount": 14,
+      "pr": 278,
+      "sourceReviewCommentId": 6618467645,
+      "node24ReceiptCommentId": 6618114909,
+      "pinnedCandidateHead": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "pinnedCandidateTree": "a1684b7fdb355962bfdf7459edb183f57b3f63f2",
+      "currentPullRequest": {
+        "pr": 278,
+        "state": "OPEN",
+        "draft": true,
+        "head": "46191866e911688a2b1bdc51c0bb4a85e400ae36",
+        "tree": "076a3de0666b5fd0a2e17d2a713c6ddeab5d1667",
+        "base": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+        "updatedAt": "2026-11-04T07:56:30Z",
+        "deltaSincePinnedCandidate": {
+          "from": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+          "paths": [
+            "web/v2/maintenance-controller.mjs",
+            "web/v2/maintenance-controller.test.mjs"
+          ],
+          "e0AllowedPathIntersection": [],
+          "e0After219PathIntersection": [],
+          "disposition": "NON_OVERLAPPING_SUCCESSOR_NOT_INTEGRATED_IN_E0_BASE"
+        },
+        "checks": {
+          "successful": [
+            "public-selected-business",
+            "sealed-native-readonly-c",
+            "report-projection",
+            "native-reader",
+            "real-readonly-fixture",
+            "ads-v5-correction",
+            "selected-native-task-source-pair"
+          ],
+          "failed": [
+            "trailer-check",
+            "policy"
+          ],
+          "currentHead": "46191866e911688a2b1bdc51c0bb4a85e400ae36"
+        },
+        "reviewStatus": "LATEST_HEAD_NOT_INDEPENDENTLY_REVIEWED",
+        "integrationStatus": "LATEST_SUCCESSOR_NOT_INTEGRATED_IN_E0_BASE"
+      }
+    },
+    "overlapWith219": {
+      "sharedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs"
+      ],
+      "sharedPathCount": 6,
+      "ownerAfter219Paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "exclusiveE0Paths": [
+        "web/v2/journey-server.mjs"
+      ],
+      "serialization": "The exact #219 candidate HEAD 2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129 is the first parent of the immutable E0 integration base. Current PR #278 has advanced to 46191866e911688a2b1bdc51c0bb4a85e400ae36 with only web/v2/maintenance-controller.mjs and web/v2/maintenance-controller.test.mjs changed since the pinned candidate; neither path intersects the E0 14-path set or its five E0_AFTER_219 paths. This successor is not integrated in the E0 base. No E0_AFTER_219 path may be edited until #219 is independently reviewed/closed and its final exact HEAD is integrated into a refreshed E0 base; before any shared-path write, re-read PR #278 and stop if its delta intersects an E0-owned path."
+    },
+    "upstream264": {
+      "issueNumber": 264,
+      "state": "open",
+      "updatedAt": "2026-11-04T06:26:08Z",
+      "bodySha256": "00039984cb12d5c70849cf8d29f5188dec8aa254fe2a31806055f90f24230fc7",
+      "scopeStatus": "BLOCKED_INCOMPLETE_SCOPE",
+      "declaredExactPaths": [
+        ".woodpecker/v2-alm-workspace.yaml",
+        "apps/tally-web/src/adapters/host.ts",
+        "apps/tally-web/src/adapters/useHost.ts",
+        "apps/tally-web/src/app/App.tsx",
+        "apps/tally-web/src/app/main.tsx",
+        "docs/implementation/v2/CLOSEOUT_EVIDENCE_REUSE_LEDGER.md",
+        "docs/implementation/v2/UI_WEBFIRST_R1_ACCEPTANCE.md",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "declaredExactPathCount": 9,
+      "priorPotentialOverlapWith": [
+        196,
+        197,
+        198,
+        202,
+        207,
+        210,
+        219
+      ]
+    },
+    "overlapWith264": {
+      "potentialSharedPaths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "potentialSharedPathCount": 2,
+      "exclusiveE0Paths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "serialization": "The two shared paths remain E0_BOOTSTRAP_EXCLUSIVE through E0 closeout; E1/#264 receives them only after the explicit E0 handoff. #264's scope remains incomplete and non-dispatchable; no native #264→#284 dependency is claimed."
+    },
+    "pathOwnership": {
+      "E0_AFTER_219": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "E0_BOOTSTRAP_EXCLUSIVE": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "E0": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "packages/tally-github-native-c/package.json",
+        "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+        "packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ]
+    },
+    "preClaimBootstrapMount": {
+      "paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "after219PathsIncluded": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "requiredBaseSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "additionalWritePathsRequired": [],
+      "status": "PARTIALLY_BLOCKED_ON_UPSTREAM_219_FINALIZATION",
+      "independentlyImplementablePaths": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "blockedUntil219FinalizedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "latest219DeltaDisjoint": true
+    },
+    "nativeDependencyReadback": {
+      "method": "GitHub REST issue dependencies/blocked_by",
+      "issue284": [],
+      "issue219": [],
+      "issue264": [
+        260,
+        261,
+        262,
+        263
+      ],
+      "semantics": "These readbacks are not used to claim a native edge between #284 and #219/#264. #284 T06d preflight requires dependencyState=CLEAR; E0/#219 is serialized by exact integration-base ancestry and E0 path ownership, and E0/#264 by exclusive ownership plus explicit E1 handoff."
+    },
+    "dispatchable": false,
+    "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core) in listed property order",
+    "digestSha256": "838bb9e567ea70882dabd151175bc78dc2980cc7365a62ef2600bd423c536808"
+  }
+}
