@@ -1,0 +1,378 @@
+corpus_slice_id: SE-VERTICAL-SLICE-0.1.0
+title: Software Engineering authority and boundary pilot
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-04"
+taxonomy_ref: SE-TAXONOMY-0.1.0
+registry_ref: SE-AUTHORITY-REGISTRY-0.1.0
+scope_note: "A small source-grounded pilot across professional BOK taxonomy, CS curriculum boundary and secure-development guidance. These are experimental records, not accepted corpus knowledge."
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+source_locators:
+  - locator_id: SE-LOC-SWEBOK-TITLE-2026-08
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: TITLE_PAGE
+    locator: "Official PDF page index 0; title page"
+    verified_content: "Version 4.0a; editor Hironori Washizaki; Released August 2026"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-SWEBOK-KA-TABLE
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: TABLE
+    locator: "PDF page index 39; printed page xxxix; Introduction to the Guide, Table I.1"
+    verified_content: "18 KAs; Chapters 1-15 are Software Engineering KAs and Chapters 16-18 are foundation KAs"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-SWEBOK-RELATED-DISCIPLINES
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: TABLE
+    locator: "PDF page index 39; printed page xxxix; Introduction to the Guide, Table I.2"
+    verified_content: "Eleven related disciplines; the Guide does not characterize their knowledge"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-SWEBOK-GUIDE-LIMIT
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: SECTION
+    locator: "PDF page index 26; printed page xxvi; Foreword to the 2014 Edition"
+    verified_content: "The Guide does not present the entire Software Engineering body of knowledge"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-SWEBOK-CITATION-LIMIT
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: SECTION
+    locator: "PDF page index 40; printed page xl; Introduction to the Guide, Reference Material and Matrix"
+    verified_content: "The Guide does not attempt to be comprehensive in its citations"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-SWEBOK-DEPTH
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
+    locator_type: SECTION
+    locator: "PDF page index 40; printed page xl; Introduction to the Guide, Depth of Treatment"
+    verified_content: "Generally accepted knowledge is not a uniform prescription for every project"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-CS2023-KNOWLEDGE-MODEL
+    source_ref: SE-SRC-CS2023
+    locator_type: SECTION
+    locator: "Knowledge Model PDF page indices 0-1; Definitions and Terminology; CS2023 Knowledge Model"
+    verified_content: "Curriculum knowledge model, Knowledge Area and Knowledge Unit definitions; 17 KAs"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-CS2023-BOK-TABLE
+    source_ref: SE-SRC-CS2023
+    locator_type: TABLE
+    locator: "Body of Knowledge PDF page index 0; front-matter Knowledge Areas table"
+    verified_content: "Software Engineering is one of 17 KAs and has 9 Knowledge Units"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-CS2023-CROSS-KA
+    source_ref: SE-SRC-CS2023
+    locator_type: SECTION
+    locator: "Knowledge Model PDF page index 5; Knowledge Areas are not insular"
+    verified_content: "Cross-KA references; repeated topics may represent different perspectives"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-CS2023-SE-OVERVIEW
+    source_ref: SE-SRC-CS2023
+    locator_type: SECTION
+    locator: "Body of Knowledge PDF page indices 174-176; Software Engineering (SE), Overview"
+    verified_content: "Nine SE Knowledge Units and curriculum framing"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-CS2023-SE-TOOLS
+    source_ref: SE-SRC-CS2023
+    locator_type: SECTION
+    locator: "Body of Knowledge PDF page index 178 (one-based PDF page 179); SE-Tools: Tools and Environments"
+    verified_content: "Version control, release management, testing tools, process automation and CI"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218-ABSTRACT
+    source_ref: SE-SRC-NIST-SP-800-218-V1-1
+    locator_type: ABSTRACT
+    locator: "NIST SP 800-218 PDF page index 3; printed page ii; Abstract"
+    verified_content: "SSDF is a recommended set of high-level practices that can be integrated into an SDLC"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218-GROUPS
+    source_ref: SE-SRC-NIST-SP-800-218-V1-1
+    locator_type: SECTION
+    locator: "NIST SP 800-218 PDF page index 12; printed page 4; Section 2"
+    verified_content: "Four practice groups: PO, PS, PW and RV"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218-PRACTICE-ELEMENTS
+    source_ref: SE-SRC-NIST-SP-800-218-V1-1
+    locator_type: SECTION
+    locator: "NIST SP 800-218 PDF page index 12; printed page 4; Section 2"
+    verified_content: "Practice, tasks, notional implementation examples and references; examples are not mandatory or exhaustive"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218-RISK
+    source_ref: SE-SRC-NIST-SP-800-218-V1-1
+    locator_type: SECTION
+    locator: "NIST SP 800-218 PDF page index 11; printed page 3; Section 1"
+    verified_content: "Risk, cost, feasibility and applicability guide practice selection; the SSDF is not a checklist"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218-ORDER
+    source_ref: SE-SRC-NIST-SP-800-218-V1-1
+    locator_type: SECTION
+    locator: "NIST SP 800-218 PDF page index 12; printed page 4; Section 2"
+    verified_content: "Practice/task/example ordering does not imply implementation sequence or relative importance"
+    verification_state: LOCATOR_VERIFIED
+  - locator_id: SE-LOC-NIST-218A-ABSTRACT
+    source_ref: SE-SRC-NIST-SP-800-218A-2024
+    locator_type: ABSTRACT
+    locator: "Official NIST CSRC SP 800-218A publication page; Abstract and Document History"
+    verified_content: "Companion profile adds AI model-specific practices and should be used with SP 800-218"
+    verification_state: ABSTRACT_VERIFIED
+evidence_records:
+  - evidence_id: SE-EVD-0001
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-SWEBOK-KA-TABLE
+    paraphrase: "SWEBOK v4.0a lists 18 Knowledge Areas and classifies the first 15 as Software Engineering KAs and the last three as foundation KAs."
+    context: "The claim describes the Guide's own taxonomy, not an independently exhaustive classification of the discipline."
+    limitations: ["Professional guide taxonomy; not the entire body of knowledge."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0002
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-SWEBOK-RELATED-DISCIPLINES
+    paraphrase: "SWEBOK identifies eleven related disciplines and states that characterizing their knowledge is not an objective of the Guide."
+    context: "Boundary statement made by the Guide itself."
+    limitations: ["Does not provide detailed definitions of the related disciplines."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0003
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-SWEBOK-GUIDE-LIMIT
+    paraphrase: "The Guide describes itself as a guide to the body of knowledge and explicitly says it does not present the entire Software Engineering body of knowledge."
+    context: "Scope limitation in the foreword to the 2014 edition reproduced in the v4.0a PDF."
+    limitations: ["This is the Guide's scope statement, not a completeness measurement."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0004
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-SWEBOK-CITATION-LIMIT
+    paraphrase: "SWEBOK says it does not attempt to be comprehensive in its citations and that suitable material may be unreferenced."
+    context: "Reference Material and Matrix section."
+    limitations: ["A missing citation cannot be interpreted as absence of authoritative material."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0005
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-SWEBOK-DEPTH
+    paraphrase: "SWEBOK says generally accepted knowledge should not be uniformly applied to all software engineering endeavors; project needs determine what knowledge to apply and how."
+    context: "Depth of Treatment section."
+    limitations: ["The statement is a context/applicability qualification, not a claim that all practices are optional."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0006
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-CS2023-BOK-TABLE
+    paraphrase: "CS2023's curriculum Body of Knowledge lists 17 Knowledge Areas; Software Engineering is one area and has nine Knowledge Units."
+    context: "Curriculum classification, not professional domain completeness."
+    limitations: ["The count is specific to CS2023's curriculum model and edition."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0007
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-CS2023-CROSS-KA
+    paraphrase: "CS2023 says Knowledge Areas are not insular; cross-area references connect topics and a topic appearing in more than one area may be presented from different perspectives."
+    context: "Knowledge Model explanation."
+    limitations: ["Curriculum cross-references do not prove a universal Software Engineering ontology."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0008
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-NIST-218-GROUPS
+    paraphrase: "NIST SP 800-218 v1.1 organizes SSDF practices into Prepare the Organization (PO), Protect the Software (PS), Produce Well-Secured Software (PW), and Respond to Vulnerabilities (RV)."
+    context: "Section 2, SSDF practice-group structure."
+    limitations: ["This is the structure of SP 800-218 v1.1, not a universal security taxonomy."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0009
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-NIST-218-ABSTRACT
+    paraphrase: "NIST recommends that high-level SSDF practices be integrated into each SDLC implementation; the abstract describes intended vulnerability-risk reduction outcomes."
+    context: "NIST recommendation and stated intended outcomes."
+    limitations: ["The abstract does not itself establish a measured causal effect or guarantee of vulnerability reduction."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0010
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-NIST-218-RISK
+    paraphrase: "NIST says practice selection and implementation effort should consider risk, cost, feasibility and applicability; practices are to be customized and the framework is not intended as a checklist."
+    context: "Section 1 risk-based adoption guidance."
+    limitations: ["The recommendation requires organization- and use-case-specific judgment."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0011
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-NIST-218-ORDER
+    paraphrase: "NIST says the order of practices, tasks and notional implementation examples does not imply implementation sequence or relative importance."
+    context: "Section 2 explanation of Table 1."
+    limitations: ["Does not imply that dependencies between particular tasks never exist."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0012
+    evidence_type: DIRECT_SOURCE_PARAPHRASE
+    source_locator_ref: SE-LOC-NIST-218A-ABSTRACT
+    paraphrase: "NIST describes SP 800-218A as a companion profile that adds AI-model-specific practices to SSDF 1.1 and is intended to be used with SP 800-218."
+    context: "Official NIST CSRC abstract."
+    limitations: ["Only abstract/metadata verified; detailed practice content remains unreviewed."]
+    extraction_status: EXTRACTED_PENDING_REVIEW
+knowledge_claims:
+  - claim_id: SE-CLM-0001
+    claim_type: TAXONOMY_STATEMENT
+    statement: "SWEBOK Guide v4.0a lists 18 Knowledge Areas; the first 15 are Software Engineering KAs and the final three are foundation KAs."
+    scope: "The taxonomy as defined by SWEBOK Guide v4.0a."
+    applicability: "Use as a reference mapping for domain discovery; do not claim it is the only valid taxonomy."
+    assumptions: []
+    limitations: ["Guide scope is not the entire body of knowledge."]
+    review_status: PENDING
+    source_refs: [SE-SRC-SWEBOK-GUIDE-4-0A]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0002
+    claim_type: DOMAIN_BOUNDARY
+    statement: "SWEBOK identifies eleven related disciplines but does not aim to characterize the knowledge of those related disciplines."
+    scope: "The boundary stated by SWEBOK v4.0a."
+    applicability: "Use to distinguish software engineering knowledge from adjacent/shared disciplines."
+    assumptions: []
+    limitations: ["The Guide still expects software engineers to be knowledgeable about related disciplines."]
+    review_status: PENDING
+    source_refs: [SE-SRC-SWEBOK-GUIDE-4-0A]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0003
+    claim_type: SOURCE_SCOPE_LIMITATION
+    statement: "SWEBOK Guide v4.0a explicitly does not present the entire Software Engineering body of knowledge."
+    scope: "The Guide's own stated scope."
+    applicability: "Do not use SWEBOK alone as proof of corpus completeness."
+    assumptions: []
+    limitations: ["This claim describes the Guide, not the completeness of any alternative corpus."]
+    review_status: PENDING
+    source_refs: [SE-SRC-SWEBOK-GUIDE-4-0A]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0004
+    claim_type: SOURCE_COVERAGE_LIMITATION
+    statement: "SWEBOK v4.0a does not attempt to provide comprehensive citations."
+    scope: "The Guide's reference coverage."
+    applicability: "Treat SWEBOK references as research leads rather than an exhaustive authority registry."
+    assumptions: []
+    limitations: ["No quantitative coverage percentage is stated."]
+    review_status: PENDING
+    source_refs: [SE-SRC-SWEBOK-GUIDE-4-0A]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0005
+    claim_type: APPLICABILITY_QUALIFICATION
+    statement: "SWEBOK's generally accepted knowledge should not be uniformly applied to all software engineering endeavors; project needs determine what knowledge to apply and how."
+    scope: "SWEBOK v4.0a's Depth of Treatment discussion."
+    applicability: "Use as a qualification against universal best-practice assertions."
+    assumptions: []
+    limitations: ["This does not mean engineering decisions need no justification or that all practices are optional."]
+    review_status: PENDING
+    source_refs: [SE-SRC-SWEBOK-GUIDE-4-0A]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0006
+    claim_type: CURRICULUM_BOUNDARY
+    statement: "CS2023's curriculum model contains 17 Knowledge Areas; Software Engineering is one of them and is represented by nine Knowledge Units."
+    scope: "ACM/IEEE-CS/AAAI Computer Science Curricula 2023."
+    applicability: "Use as a curriculum comparator, not as a professional domain-completeness claim."
+    assumptions: []
+    limitations: ["The count is specific to this curriculum model and publication."]
+    review_status: PENDING
+    source_refs: [SE-SRC-CS2023]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0007
+    claim_type: CROSS_AREA_RELATIONSHIP
+    statement: "CS2023 states that Knowledge Areas are not insular and that topics referenced in multiple areas may be presented from different perspectives."
+    scope: "CS2023's curriculum knowledge model."
+    applicability: "Supports testing typed cross-area relationships rather than assuming mutually exclusive topic ownership."
+    assumptions: []
+    limitations: ["A curriculum model is not a universal ontology."]
+    review_status: PENDING
+    source_refs: [SE-SRC-CS2023]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0008
+    claim_type: FRAMEWORK_STRUCTURE
+    statement: "NIST SP 800-218 v1.1 organizes its SSDF practices into four groups: PO, PS, PW and RV."
+    scope: "NIST SP 800-218 v1.1 Section 2."
+    applicability: "Use as the SSDF v1.1 framework grouping only."
+    assumptions: []
+    limitations: ["Not a universal security taxonomy."]
+    review_status: PENDING
+    source_refs: [SE-SRC-NIST-SP-800-218-V1-1]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0009
+    claim_type: PRACTICE_RECOMMENDATION
+    statement: "NIST recommends integrating high-level SSDF practices throughout the selected software development life cycle."
+    scope: "NIST SP 800-218 v1.1 abstract and Section 1."
+    applicability: "Security practice mapping must be related to the target SDLC and organization."
+    assumptions: []
+    limitations: ["This is a recommendation and stated intended outcome, not a measured causal guarantee."]
+    review_status: PENDING
+    source_refs: [SE-SRC-NIST-SP-800-218-V1-1]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0010
+    claim_type: APPLICABILITY_QUALIFICATION
+    statement: "NIST says SSDF practice selection should consider risk, cost, feasibility and applicability; the practices are to be customized and the framework is not intended as a checklist."
+    scope: "NIST SP 800-218 v1.1 Section 1."
+    applicability: "Use when modeling practice applicability and decision context."
+    assumptions: []
+    limitations: ["Selection still requires documented risk and context judgment."]
+    review_status: PENDING
+    source_refs: [SE-SRC-NIST-SP-800-218-V1-1]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0011
+    claim_type: PROCESS_QUALIFICATION
+    statement: "NIST states that the order of SSDF practices, tasks and notional examples does not imply implementation sequence or relative importance."
+    scope: "NIST SP 800-218 v1.1 Section 2 and Table 1 explanation."
+    applicability: "Do not derive a mandatory linear workflow from the presentation order of SSDF practices."
+    assumptions: []
+    limitations: ["Specific practice/task dependencies may still exist and need separate evidence."]
+    review_status: PENDING
+    source_refs: [SE-SRC-NIST-SP-800-218-V1-1]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+  - claim_id: SE-CLM-0012
+    claim_type: COMPANION_FRAMEWORK_SCOPE
+    statement: "NIST SP 800-218A augments SSDF 1.1 with AI-model-specific secure-development practices and is intended to be used in conjunction with SP 800-218."
+    scope: "NIST SP 800-218A official abstract."
+    applicability: "AI-model development requires checking the companion profile in addition to baseline SSDF 1.1."
+    assumptions: []
+    limitations: ["Only the abstract and publication metadata are verified; detailed practice content is not yet reviewed."]
+    review_status: PENDING_LIMITED_EVIDENCE
+    source_refs: [SE-SRC-NIST-SP-800-218A-2024, SE-SRC-NIST-SP-800-218-V1-1]
+    taxonomy_refs: [SE-TAXONOMY-0.1.0]
+relationship_assertions:
+  - relationship_id: SE-REL-0001
+    subject_id: SE-CLM-0001
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0001
+    status: PENDING
+  - relationship_id: SE-REL-0002
+    subject_id: SE-CLM-0002
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0002
+    status: PENDING
+  - relationship_id: SE-REL-0003
+    subject_id: SE-CLM-0003
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0003
+    status: PENDING
+  - relationship_id: SE-REL-0004
+    subject_id: SE-CLM-0004
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0004
+    status: PENDING
+  - relationship_id: SE-REL-0005
+    subject_id: SE-CLM-0005
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0005
+    status: PENDING
+  - relationship_id: SE-REL-0006
+    subject_id: SE-CLM-0006
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0006
+    status: PENDING
+  - relationship_id: SE-REL-0007
+    subject_id: SE-CLM-0007
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0007
+    status: PENDING
+  - relationship_id: SE-REL-0008
+    subject_id: SE-CLM-0008
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0008
+    status: PENDING
+  - relationship_id: SE-REL-0009
+    subject_id: SE-CLM-0009
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0009
+    status: PENDING
+  - relationship_id: SE-REL-0010
+    subject_id: SE-CLM-0010
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0010
+    status: PENDING
+  - relationship_id: SE-REL-0011
+    subject_id: SE-CLM-0011
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0011
+    status: PENDING
+  - relationship_id: SE-REL-0012
+    subject_id: SE-CLM-0012
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0012
+    status: PENDING
