@@ -160,9 +160,12 @@ test('workbench source links allow only bounded canonical GitHub issue/PR refere
   assert.equal(actionSourceLink(work),work.sourceRef);
   assert.equal(actionSourceLink({...work,sourceRef:'https://github.com/org/tally/pull/300#issuecomment-4'}),
     'https://github.com/org/tally/pull/300#issuecomment-4');
+  assert.equal(actionSourceLink({...work,projectId:'org/repo.name',sourceRef:'https://github.com/org/repo.name/issues/1'}),
+    'https://github.com/org/repo.name/issues/1');
   for(const sourceRef of ['javascript:alert(1)','https://evil.example/issues/1',
     'https://github.com/org/tally/issues/260?token=private',
     'https://github.com/org/tally.evil/issues/260',
+    'https://github.com/other/tally/issues/260',
     'https://github.com/org/tally/issues/'+'1'.repeat(300)]){
     assert.equal(actionSourceLink({...work,sourceRef}),null);
   }

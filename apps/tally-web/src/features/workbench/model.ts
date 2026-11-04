@@ -38,7 +38,8 @@ export function inboxCounts(snapshot:WorkbenchSnapshot|null){
 }
 const GITHUB_SOURCE_REF=/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
 export function actionSourceLink(action:WorkAction):string|null{
-  return typeof action.sourceRef==='string'&&action.sourceRef.length<=256&&
+  return typeof action.projectId==='string'&&typeof action.sourceRef==='string'&&
+    action.sourceRef.startsWith('https://github.com/'+action.projectId+'/')&&action.sourceRef.length<=256&&
     GITHUB_SOURCE_REF.test(action.sourceRef)?action.sourceRef:null;
 }
 export function actionTaskLink(action:WorkAction):string|null{
