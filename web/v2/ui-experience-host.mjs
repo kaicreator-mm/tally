@@ -263,6 +263,9 @@ export function createMaintenanceControllerExperienceAdapter({
         const decision=row.decision??null;
         if(decision!==null&&!['ADOPTED','REJECTED'].includes(decision))
           return {connected:false,reason:'ADS_LEARNING_DECISION_UNQUALIFIED'};
+        if(decision!==null&&row.recordState!=='LEARNING_RECORDED'||
+           decision===null&&row.recordState!==undefined&&row.recordState!=='NOT_RECORDED')
+          return {connected:false,reason:'ADS_LEARNING_DECISION_UNRECONCILED'};
         const state=decision==='ADOPTED'?'ADOPTED':
           decision==='REJECTED'?'REJECTED':'PROPOSED';
         const reportQualification=row.qualification==='REPORTED_QUALIFIED'?'VERIFIED':

@@ -130,6 +130,46 @@ test('dispatch transport failure stays UNKNOWN without automatic repeat',async()
 });
 
 import {createMaintenanceControllerExperienceAdapter} from './ui-experience-host.mjs';
+import {createMaintenanceController} from './maintenance-controller.mjs';
+
+test('real maintenance controller keeps recorded and unconfirmed decisions distinct',async()=>{
+  const reportId='real-controller',commentId=1001,revision=1;
+  const suggestion={learningId:learningIdFor(reportId,revision,commentId),
+    taskIssueRef:'https://github.com/org/tally/issues/52',
+    targetIssueRef:'https://github.com/org/tally/issues/60',subjectSha:sha,
+    qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId,revision,kind:'EXECUTION_SUMMARY',commentId,issueNumber:60,
+      namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
+      publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  for(const accepted of [true,false]){
+    const controller=createMaintenanceController({currentSourceSha:sha},{
+      host:{readTaskLearning:async()=>({suggestions:[suggestion]})},
+      sealedDispatch:async({input})=>({phase:'terminal',outcome:{ok:true,output:{
+        state:'LEARNING_RECORDED',reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+        issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+        sourceSha:input.sourceSha,learningId:input.learningId,decision:input.decision,
+        claimGeneration:1,claimAccepted:accepted,admitted:true,authorized:false,
+        replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+        noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}})});
+    const adapter=createMaintenanceControllerExperienceAdapter({
+      maintenanceController:controller,repository,versionId,expectedSha:sha});
+    const request={repository,versionId,sourceSha:sha,candidateId:suggestion.learningId,
+      revision,decision:'ADOPT',evidenceRef:suggestion.provenance.publicationRef,
+      publisherRepository:repository,reportQualification:'VERIFIED'};
+    const result=await adapter.dispatchExperienceDecision(request);
+    assert.equal(result.status,'UNKNOWN');
+    const read=await adapter.readExperienceCandidates();
+    if(accepted){
+      assert.equal(controller.snapshot().learning[0].recordState,'LEARNING_RECORDED');
+      assert.equal(read.candidates[0].state,'ADOPTED');
+    }else{
+      assert.notEqual(controller.snapshot().learning[0].recordState,'LEARNING_RECORDED');
+      assert.equal(read.connected,false);
+      assert.equal(read.reason,'ADS_LEARNING_DECISION_UNRECONCILED');
+    }
+  }
+});
 test('existing maintenance controller adapter preserves ADS provenance and sealed K decision',async()=>{
   const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
     taskIssueRef:'https://github.com/org/tally/issues/52',
