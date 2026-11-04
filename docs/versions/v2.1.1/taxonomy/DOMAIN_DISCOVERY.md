@@ -76,9 +76,21 @@ Official site: https://csed.acm.org/
 Knowledge Areas: https://csed.acm.org/knowledge-areas/  
 Final report page states endorsements by ACM (2024-01-18), IEEE-CS (2024-01-22) and AAAI (2024-02-22).
 
-CS2023 defines 17 Computer Science curriculum Knowledge Areas. Software Engineering is one of those areas and its Body of Knowledge table lists 9 Knowledge Units. Other areas include AI, Data Management, HCI, Security, Systems Fundamentals, Networking and Communication, and Society/Ethics/Profession.
+CS2023 defines 17 Computer Science curriculum Knowledge Areas. Software Engineering is one of those areas and its Body of Knowledge table lists 9 Knowledge Units:
 
-**Interpretation:** CS2023 is valuable for distinguishing Software Engineering from the wider Computer Science curriculum and identifying shared/adjacent knowledge. It is a curriculum framework, not a complete taxonomy of the Software Engineering discipline. Its 9 SE knowledge units must not be mistaken for the full scope of the SWEBOK Guide.
+1. Teamwork
+2. Tools and Environments
+3. Product Requirements
+4. Software Design
+5. Software Construction
+6. Software Verification and Validation
+7. Refactoring and Code Evolution
+8. Software Reliability
+9. Formal Methods
+
+The official Body of Knowledge report places the SE KU descriptions around printed pages 166–167 and the core-hours table on pages 167–168. The SE-Tools section explicitly includes software configuration management/version control, release management, testing tools and process automation/CI. Other CS2023 areas include AI, Data Management, HCI, Security, Systems Fundamentals, Networking and Communication, and Society/Ethics/Profession.
+
+**Interpretation:** CS2023 is valuable for distinguishing Software Engineering from the wider Computer Science curriculum and identifying shared/adjacent knowledge. It is a curriculum framework, not a complete taxonomy of the Software Engineering discipline. Its 9 SE knowledge units must not be mistaken for the full scope of the SWEBOK Guide. The KU selection also demonstrates that curriculum structures can place tools/SCM/CI, reliability and formal methods inside the Software Engineering area without reproducing SWEBOK's 18-KA hierarchy.
 
 ### 2.3 Standards and frameworks — orthogonal views, not one taxonomy
 
