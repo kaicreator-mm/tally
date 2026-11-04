@@ -160,6 +160,8 @@ test('noncanonical Task IDs, oversized catalogs and unsafe Host identities fail 
   const oversized={...catalog,actions:Array.from({length:101},(_,i)=>({
     ...catalog.actions[0],id:'action-'+i}))};
   assert.equal(workbenchActionGate(inbox,oversized,work).enabled,false);
+  const malformed={...catalog,actions:[null]} as unknown as typeof catalog;
+  assert.equal(workbenchActionGate(inbox,malformed,work).enabled,false);
   const privateActionId='gh'+'p_'+'1'.repeat(20);
   const privateAction={...catalog.actions[0],id:privateActionId};
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:[privateAction]},

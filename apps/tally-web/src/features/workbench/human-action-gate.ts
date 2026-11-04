@@ -45,7 +45,8 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.source.repository!==snapshot.source.repository||
      catalog.source.sourceSha!==snapshot.source.sourceSha||
-     !Array.isArray(catalog.actions)||catalog.actions.length>100)
+     !Array.isArray(catalog.actions)||catalog.actions.length>100||
+     catalog.actions.some(a=>a===null||typeof a!=='object'||Array.isArray(a)))
     return deny('HOST_ACTION_SOURCE_NOT_CONNECTED');
   if(!REPOSITORY_REF.test(workItem.projectId??'')||
      workItem.projectId!==snapshot.source.repository||
