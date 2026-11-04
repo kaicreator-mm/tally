@@ -148,7 +148,10 @@ Do not store credentials, private telemetry, hidden evaluator material or privat
 - Observed default-branch baseline: main@e988321439f65b55936a691c02250b6d62a29409
 - WIP integration branch: wip/v2.1.1-knowledge, created from that exact SHA.
 - No official version/v2.1.1 branch or release is created by this charter.
-- Repository .dev-standard/VERSION records ADS 4.18.0; project override applicability remains scoped and must not be overgeneralized.
+- Repository .dev-standard/VERSION records ADS 4.18.0. The effective Tally-local ADS v4.18 adoption is documented for version/v2 through PR #85; this is not silently generalized to a new v2.1.1 version branch.
+- Product PR #157 R9 exact source review (HEAD 93fe091aca5e8e367235f831bd416907bdf32d1d) is PASS with P0/P1/P2=0/0/0 and PRODUCT_FREEZE_READY=YES, but PRODUCT_FROZEN=NO because the final Controller checkpoint has not been published/read back.
+- Semantic L2 PR #158 R7 exact source review (HEAD 1cd254694de9c6b36a1c66a193c10fe29901525f) is PASS with P0/P1/P2=0/0/0, but L2_FREEZE_READY=NO and L2_OWNER_FREEZE=NOT_PUBLISHED. This experiment does not modify Product/L2 semantics or claim their Freeze.
+- This v2.1.1 work is documentation/research only: no runtime source, Host, Agent admission, CI workflow, or executable behavior is changed.
 - ADS #1359 is a Delivery-First Product/L2 intake and remains NOT_FROZEN. The user's explicit Delivery-First direction is applied as an execution preference here; it is not represented as an adopted ADS amendment.
 - #300–#302 exist as bounded Task Issues. Their textual dependency references are recorded; native dependency-edge readback remains pending.
 
