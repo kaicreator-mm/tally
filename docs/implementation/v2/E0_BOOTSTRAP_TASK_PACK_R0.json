@@ -610,8 +610,8 @@
     "controllerTask": {
       "issueNumber": 284,
       "state": "open",
-      "updatedAt": "2026-11-04T04:39:51Z",
-      "bodySha256": "9cde91cf97c0f56b10aefcd9237cff8f596e1cd014d58144a147ab867b3eff57",
+      "updatedAt": "2026-11-04T04:45:50Z",
+      "bodySha256": "2e0b6730c4d9e3510f27ad6490188a810522a2f2b217338dc9f712b0a5659337",
       "canonicalAllowedWriteSet": {
         "status": "VALID_CANDIDATE_NOT_ADMITTED",
         "paths": [
@@ -675,7 +675,7 @@
     "rule": "Only parse a top-level canonical allowed_write_set declaration. Missing declarations remain UNKNOWN/BLOCKED; never infer from prose or broad globs.",
     "status": "BLOCKED_MISSING_CANONICAL_ALLOWED_WRITE_SET",
     "complete": false,
-    "auditDigestSha256": "232318eb7ca22b4e8648e2ab919592f5415ba50365316d92d2d0392b840ecb5a",
+    "auditDigestSha256": "bf8fc75b1ef738c8156aaa1858d8eb05af26bdb0cf5d082827e216fd20d23f94",
     "e0TaskWriteSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "requiredToUnblock": [
       "Add canonical allowed_write_set declarations to all current open version Tasks, exact-path only; mark non-dispatchable/read-only Tasks with an explicit empty list and a non-dispatchable disposition.",
