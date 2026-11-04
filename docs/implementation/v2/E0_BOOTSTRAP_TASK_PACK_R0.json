@@ -1197,7 +1197,7 @@
           }
         }
       ],
-      "observedAt": "2026-11-04T06:27:24Z"
+      "observedAt": "2026-11-04T08:18:06.946Z"
     },
     "controllerTask": {
       "issueNumber": 284,
@@ -1896,7 +1896,7 @@
       "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
       "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,dispatchableOverlapAudit,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
     },
-    "auditObservedAt": "2026-11-04T07:22:06Z",
+    "auditObservedAt": "2026-11-04T08:18:06.946Z",
     "status": "BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS",
     "complete": false,
     "freezeEligible": false,
@@ -1909,7 +1909,7 @@
       "For E0 #284, independently review the exact bootstrap pack blob and obtain exact Owner approval before one-time T06d Host mount/Claim; no source admission beforehand.",
       "E1 #264 remains the sole final integration owner after the explicit E0 handoff."
     ],
-    "auditDigestSha256": "32c486f3dffae077cf3668a32b23388ffde6e62f8e6b5f428318fff832e6b5a3",
+    "auditDigestSha256": "170d4954a257a215a21a589aeb6b649ddf65d8648714cb059d9b675962a08677",
     "dispatchableOverlapAudit": {
       "candidateTaskIssues": [
         203,
