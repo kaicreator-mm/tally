@@ -3,7 +3,7 @@ status: DRAFT
 as_of: 2026-11-04
 policy_ref: docs/versions/v2.1.1/authority/RESEARCH_FRAMEWORK.md
 sources:
-  - source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - source_id: SE-SRC-SWEBOK-GUIDE-4-0A
     source_class: PROFESSIONAL_BOK
     source_role: PRIMARY_FOR_FRAMEWORK_TAXONOMY
     additional_roles:
@@ -12,12 +12,13 @@ sources:
     editor: "Hironori Washizaki"
     organization: "IEEE Computer Society"
     edition: "Version 4.0a"
-    publication_date: "2025-09"
+    publication_date: "2026-08"
     status: RELEASED
     official_url: "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
     landing_url: "https://www.computer.org/education/bodies-of-knowledge/software-engineering"
-    stable_identifier: null
-    identifier_note: "No ISBN/DOI asserted; official publisher PDF and landing URL are recorded."
+    isbn: "978-0-7695-0000-3"
+    stable_identifier: "ISBN 978-0-7695-0000-3"
+    identifier_note: "ISBN transcribed from the official PDF copyright page; no DOI asserted."
     relevant_areas:
       - "Software Engineering discipline taxonomy"
       - "Foundations"
@@ -31,7 +32,7 @@ sources:
       - "Generally accepted knowledge is not a uniform prescription for every project"
       - "Related disciplines are identified but not characterized in full"
     verified_locators:
-      - "Title/opening page: v4.0a; released September 2025"
+      - "Title/opening page: v4.0a; released August 2026"
       - "Introduction to the Guide, What Is Software Engineering?: printed pages xxxvii-xxxviii"
       - "Scope/objectives and related disciplines: printed pages xxxviii-xxxix"
       - "Table I.1, The 18 SWEBOK KAs; Table I.2, Related Disciplines: printed page xxxix"
@@ -42,15 +43,34 @@ sources:
       locator: VERIFIED_FOR_LISTED_SECTIONS
       state: LOCATOR_VERIFIED
       accessed_on: "2026-11-04"
-      method: "Official PDF opened; title, introduction, tables and stated limitations inspected."
+      method: "Official PDF opened; title/release month, copyright/ISBN page, introduction, tables and stated limitations inspected."
     rights:
       notice: "PDF copyright notice permits educational/personal use subject to conditions; commercial reprint/redistribution and new collective works require permission."
       handling: "Store bibliographic facts, concise paraphrases and original synthesis; do not reproduce substantial text."
-    notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology."
+    notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology. The previous provisional ID suffix '-2025' was incorrect because the title page states August 2026; the legacy ID is retained as an alias, not as a publication-date assertion."
   - source_id: SE-SRC-CS2023
     source_class: CURRICULUM_FRAMEWORK
     source_role: PRIMARY_FOR_CURRICULUM
-    title: "CS2023: ACM/IEEE-CS/AAAI Computer Science Curricula"
+    title: "Computer Science Curricula 2023"
+    authors:
+      - "Amruth N. Kumar"
+      - "Rajendra K. Raj"
+      - "Sherif G. Aly"
+      - "Monica D. Anderson"
+      - "Brett A. Becker"
+      - "Richard L. Blumenthal"
+      - "Eric Eaton"
+      - "Susan S. Epstein"
+      - "Michael Goldweber"
+      - "Pankaj Jalote"
+      - "Douglas Lea"
+      - "Michael Oudshoorn"
+      - "Marcelo Pias"
+      - "Susan Reiser"
+      - "Christian Servin"
+      - "Rahul Simha"
+      - "Titus Winters"
+      - "Qiao Xiang"
     organization: "Association for Computing Machinery; IEEE Computer Society; Association for the Advancement of Artificial Intelligence"
     edition: "Final report"
     publication_date: "2023"
@@ -61,8 +81,9 @@ sources:
     status: FINAL_REPORT
     official_url: "https://csed.acm.org/"
     knowledge_areas_url: "https://csed.acm.org/knowledge-areas/"
-    stable_identifier: null
-    identifier_note: "Official report site recorded; no DOI/ISBN asserted."
+    doi: "10.1145/3664191"
+    stable_identifier: "DOI 10.1145/3664191"
+    identifier_note: "DOI verified in the official report citation."
     relevant_areas:
       - "Computer Science curriculum boundary"
       - "Software Engineering education"
@@ -81,15 +102,15 @@ sources:
     verified_locators:
       - "Official CS2023 site: Final Report and endorsement dates"
       - "Body of Knowledge PDF, front-matter Knowledge Areas table: 17-area list and SE row"
-      - "Body of Knowledge PDF, Software Engineering section, printed pages 166-168: nine Knowledge Units and core-hours table"
-      - "Body of Knowledge PDF, Software Engineering section, printed page 170: SE-Tools unit"
+      - "Body of Knowledge PDF, Software Engineering (SE) section, PDF pages 174-177: nine Knowledge Units and Core Hours table (the PDF page index is recorded to avoid printed-page offset ambiguity)"
+      - "Body of Knowledge PDF, Software Engineering section, PDF page 178: SE-Tools unit"
     verification:
       identity: VERIFIED
       content: PARTIAL_CONTENT_VERIFIED
       locator: VERIFIED_FOR_LISTED_SECTIONS
       state: LOCATOR_VERIFIED
       accessed_on: "2026-11-04"
-      method: "Official CS2023 Body of Knowledge PDF opened; Knowledge Areas table, Software Engineering KU list/core-hours table and SE-Tools section inspected."
+      method: "Official CS2023 report pages and Body of Knowledge PDF opened; Knowledge Model definition, 17-KA list, Software Engineering KU list/core-hours table and SE-Tools section inspected."
     rights:
       notice: "Public report site; verify report reuse terms before reproducing substantial content."
       handling: "Store metadata and concise original paraphrase only."
@@ -293,4 +314,56 @@ sources:
     rights:
       notice: "Use official NIST citation and verify any third-party components or specific reuse restrictions before reproducing source material."
       handling: "Prefer original paraphrase, citation and locator; do not copy substantial text."
-    notes: "NIST CSRC project page describes four practice groups; detailed practice extraction is deferred to a dedicated source review."
+    related_source_ids:
+      - "SE-SRC-NIST-SP-800-218A-2024"
+    notes: "Full PDF sections and page locators were reviewed in SEK-03. NIST SP 800-218A (2024) is a separate companion profile for generative AI and dual-use foundation models; it should be used in conjunction with this v1.1 publication, not silently folded into it."
+  - source_id: SE-SRC-NIST-SP-800-218A-2024
+    source_class: GOVERNMENT_FRAMEWORK
+    source_role: PRIMARY_FOR_PROFILE_CONTENT
+    title: "Secure Software Development Practices for Generative AI and Dual-Use Foundation Models: An SSDF Community Profile"
+    authors:
+      - "Harold Booth"
+      - "Murugiah Souppaya"
+      - "Apostol Vassilev"
+      - "Michael Ogata"
+      - "Martin Stanley"
+      - "Karen Scarfone"
+    organization: "National Institute of Standards and Technology (NIST); Cybersecurity and Infrastructure Security Agency (CISA)"
+    edition: "Final"
+    publication_date: "2024-07-26"
+    publication_status: FINAL
+    report_number: "NIST SP 800-218A"
+    doi: "10.6028/NIST.SP.800-218A"
+    official_url: "https://csrc.nist.gov/pubs/sp/800/218/a/final"
+    stable_identifier: "NIST SP 800-218A"
+    related_source_ids:
+      - "SE-SRC-NIST-SP-800-218-V1-1"
+    relevant_areas:
+      - "AI Engineering"
+      - "Software Security"
+      - "Secure development of generative AI and dual-use foundation models"
+    authority_fit:
+      - "Government-published SSDF community profile for AI model and AI system development contexts"
+    authority_limitations:
+      - "Companion profile, not a replacement for SP 800-218 v1.1"
+      - "The current registry verifies official metadata and abstract only; detailed practices are not yet extracted"
+      - "Do not generalize model-development practices to every AI-enabled application without context"
+    verified_locators:
+      - "NIST CSRC publication page: title, authors, publication date and DOI"
+      - "NIST CSRC abstract: scope and relationship to SP 800-218"
+      - "NIST CSRC document history: final publication dated 2024-07-26"
+    verification:
+      identity: VERIFIED
+      content: ABSTRACT_VERIFIED
+      locator: VERIFIED_FOR_ABSTRACT_AND_METADATA
+      state: CONTENT_VERIFIED
+      accessed_on: "2026-11-04"
+      method: "Official NIST CSRC publication page and abstract inspected; full PDF practice content not yet reviewed."
+    rights:
+      notice: "Use official NIST citation; verify any third-party components or specific reuse restrictions before reproducing source material."
+      handling: "Metadata and concise original paraphrase only until detailed source review."
+    notes: "NIST states this profile augments SSDF 1.1 with AI-model-specific practices and should be used in conjunction with SP 800-218."
+source_id_aliases:
+  - alias_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    canonical_source_id: SE-SRC-SWEBOK-GUIDE-4-0A
+    reason: "Initial provisional ID incorrectly encoded 2025 as the release year. The official PDF title page states released August 2026. Preserve the old ID as a non-canonical alias so existing references do not silently break."
