@@ -196,7 +196,7 @@
       "same-origin HTTP negative zero-effect tests",
       "Node24 MJS and Tally-web test/typecheck/build",
       "self-hosted Woodpecker only after preflight",
-      "independent review and exact Owner approval must bind the exact writeSetAudit.status and auditDigestSha256; a BLOCKED status is permitted only as a fail-closed snapshot in the separate E0 bootstrap pack and never permits version-wide freeze or ordinary Task dispatch.",
+      "independent review and exact Owner approval must bind the exact writeSetAudit.status and auditDigestSha256 and e0ScopeAudit.digestSha256; a BLOCKED status is permitted only as a fail-closed snapshot in the separate E0 bootstrap pack and never permits version-wide freeze or ordinary Task dispatch.",
       "all open Task bodies must expose canonical exact allowed_write_set; no prose inference; body SHA256/updatedAt/path digest readback",
       "controller #284 accepted Claim + FROZEN_DAG_WRITESET CAS must be read back before native dependency write",
       "The one-off E0 bootstrap pack may be frozen after exact pack review/Owner approval with its version-wide audit explicitly BLOCKED; the separate version/v2 Task Pack freeze requires audit status PASS."
