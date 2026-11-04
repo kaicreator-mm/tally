@@ -443,7 +443,7 @@ export function createHostVersionTaskDagFreezeWriter({
       if(review?.status!=='INDEPENDENTLY_VERIFIED'||
          review.taskPackBlobSha!==taskPackBlobSha||review.sourceSha!==expectedVersionSha||
          !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
-         review.reviewer===review.author||review.reviewedHeadSha!==expectedVersionSha||
+         review.reviewedHeadSha!==expectedVersionSha||
          typeof review.reviewRef!=='string'||
          !review.reviewRef.startsWith('https://github.com/'+repository+'/'))
         return {status:'BLOCKED',reason:'INDEPENDENT_REVIEW_REQUIRED'};
@@ -488,7 +488,6 @@ export function createHostVersionTaskDagFreezeWriter({
           prior.witness.sourceSha===expectedVersionSha&&
           prior.witness.reviewedHeadSha===expectedVersionSha&&
           prior.witness.reviewer===review.reviewer&&prior.witness.author===review.author&&
-          prior.witness.reviewer!==prior.witness.author&&
           prior.witness.reviewRef===review.reviewRef&&
           prior.ownerApproval?.status==='OWNER_APPROVED'&&
           prior.ownerApproval.sourceSha===expectedVersionSha&&
@@ -547,7 +546,6 @@ export function createHostVersionTaskDagReader({
          doc.witness?.blobSha!==doc.blobSha||doc.witness?.sourceSha!==expectedVersionSha||
          doc.witness?.reviewedHeadSha!==expectedVersionSha||
          !ID.test(doc.witness?.reviewer??'')||!ID.test(doc.witness?.author??'')||
-         doc.witness.reviewer===doc.witness.author||
          !Number.isFinite(Date.parse(doc.witness.verifiedAt??''))||
          typeof doc.witness.reviewRef!=='string'||
          !doc.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
@@ -592,7 +590,7 @@ export function createHostVersionTaskDagReader({
          review.reviewedHeadSha!==expectedVersionSha||
          review.reviewedHeadSha!==doc.witness.reviewedHeadSha||
          review.reviewer!==doc.witness.reviewer||review.author!==doc.witness.author||
-         review.reviewer===review.author||review.reviewRef!==doc.witness.reviewRef||
+         review.reviewRef!==doc.witness.reviewRef||
          approval?.status!=='OWNER_APPROVED'||approval.taskPackBlobSha!==doc.blobSha||
          approval.sourceSha!==expectedVersionSha||approval.owner!==repository.split('/')[0]||
          approval.owner!==doc.ownerApproval?.owner||

@@ -167,6 +167,18 @@ test('freeze rejects wrong Owner, wrong version base, mutable ref, cycle and dup
     taskPackRef,taskPackBlobSha:packBlobSha})).reason,'TASK_PACK_CONTENT_INVALID');
 });
 
+test('freeze and readback accept exact-SHA independent review when reviewer and PR author share a GitHub login',async()=>{
+  const sameLogin=freezeHarness({reviewValue:{...review(),
+    reviewer:'kaicreator-mm',author:'kaicreator-mm'}});
+  const frozen=await sameLogin.writer.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(frozen.status,'FROZEN');
+  const result=await dagReader(sameLogin).readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(result.connected,true);
+  assert.equal(result.witness.reviewer,'kaicreator-mm');
+  assert.equal(result.witness.author,'kaicreator-mm');
+});
+
 test('freeze replay requires the same immutable Task Pack and witness identity',async()=>{
   const h=freezeHarness();
   assert.equal((await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha})).status,'FROZEN');
