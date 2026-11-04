@@ -13,18 +13,35 @@ const issue=(n,changes={})=>({
   labels:[{name:'type:task'},{name:'state:ready'},{name:'priority:P1'}],
   ...changes,
 });
-const native=(deps={},branchSha=sha,issueMap={})=>({
-  rest:{
-    repos:{
-      getBranch:async()=>({data:{commit:{sha:branchSha}}}),
-      getCommit:async()=>({data:{sha}}),
+const native=(deps={},branchSha=sha,issueMap={},taskRoster=[1,2])=>{
+  const listForRepo=async()=>({data:taskRoster.map(number=>
+    issueMap[number]??issue(number))});
+  return {
+    rest:{
+      repos:{
+        getBranch:async()=>({data:{commit:{sha:branchSha}}}),
+        getCommit:async()=>({data:{sha}}),
+      },
+      issues:{
+        get:async({issue_number})=>({
+          data:issueMap[issue_number]??issue(issue_number)}),
+        listForRepo,
+      },
     },
-    issues:{get:async({issue_number})=>({data:issueMap[issue_number]??issue(issue_number)})},
-  },
-  paginate:{iterator:async function*(_route,{issue_number}){
-    yield {data:deps[issue_number]??[]};
-  }},
-});
+    paginate:{iterator:async function*(route,params={}){
+      if(route===listForRepo){
+        yield {data:taskRoster.map(number=>
+          issueMap[number]??issue(number))};
+        return;
+      }
+      if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+        yield {data:deps[params.issue_number]??[]};
+        return;
+      }
+      throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+    }},
+  };
+};
 const sourceReader=({issueNumber,expectedSourceSha})=>({
   sourceSha:expectedSourceSha,workItemType:'type:task',
   claimStatus:'NOT_VERIFIED',authorized:false,taskPass:false,
@@ -105,14 +122,14 @@ test('out-of-roster dependency cannot be silently rendered as complete graph',as
 test('non-Task, duplicated issue roster or missing native C claim facts are denied',async()=>{
   const notTask=issue(1,{labels:[{name:'type:planning'},{name:'state:ready'}]});
   const r=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{1:notTask})),
+    ...args(native({},sha,{1:notTask},[1])),
     taskIssueNumbers:[1],workItemReader:sourceReader});
   assert.equal(r.connected,false);
   assert.equal((await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1,1],workItemReader:sourceReader})
+    ...args(native({},sha,{},[1])),taskIssueNumbers:[1,1],workItemReader:sourceReader})
     ).connected,false);
   const fake=await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1],
+    ...args(native({},sha,{},[1])),taskIssueNumbers:[1],
     workItemReader:()=>({...sourceReader({issueNumber:1,expectedSourceSha:sha}),
       authorized:true})});
   assert.equal(fake.connected,false);
@@ -121,7 +138,7 @@ test('non-Task, duplicated issue roster or missing native C claim facts are deni
 test('closed GitHub Issue with state:ready does not render task DONE',async()=>{
   const observedIssue=issue(166,{state:'closed'});
   const result=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{166:observedIssue})),taskIssueNumbers:[166],
+    ...args(native({},sha,{166:observedIssue},[166])),taskIssueNumbers:[166],
     workItemReader:({issueNumber,expectedSourceSha})=>({
       ...sourceReader({issueNumber,expectedSourceSha}),issueState:'closed',
     })});
@@ -133,7 +150,7 @@ test('state:done label alone never certifies independent closure',async()=>{
   const observedIssue=issue(201,{state:'closed',
     labels:[{name:'type:task'},{name:'state:done'}]});
   const result=await readUiNativeVersionFromClient({
-    ...args(native({},sha,{201:observedIssue})),taskIssueNumbers:[201],
+    ...args(native({},sha,{201:observedIssue},[201])),taskIssueNumbers:[201],
     workItemReader:({issueNumber,expectedSourceSha})=>({
       ...sourceReader({issueNumber,expectedSourceSha}),
       workflowState:'state:done',issueState:'closed',
@@ -156,6 +173,95 @@ test('dependency open/closed state drift with unchanged count is rejected',async
   assert.equal(r.connected,false);
   assert.equal(r.reason,'NATIVE_DEPENDENCY_COUNT_DRIFT');
 });
+
+// Scripted client: pages[i] is the i-th full type:task roster enumeration
+// (clamped to the last entry), gets(number,call) is the call-th issues.get
+// for that Issue (call 0 = first read, call 1 = end-of-observation recheck).
+const scriptedNative=(pages,gets,deps={})=>{
+  let enumerations=0;
+  const listForRepo=async()=>({data:pages[Math.min(enumerations,pages.length-1)]});
+  const getCalls=new Map();
+  return {getCalls,
+    rest:{
+      repos:{
+        getBranch:async()=>({data:{commit:{sha}}}),
+        getCommit:async()=>({data:{sha}}),
+      },
+      issues:{
+        get:async({issue_number})=>{
+          const call=getCalls.get(issue_number)??0;
+          getCalls.set(issue_number,call+1);
+          return {data:gets(issue_number,call)};
+        },
+        listForRepo,
+      },
+    },
+    paginate:{iterator:async function*(route,params={}){
+      if(route===listForRepo){
+        yield {data:pages[Math.min(enumerations,pages.length-1)]};
+        enumerations++;
+        return;
+      }
+      if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+        yield {data:deps[params.issue_number]??[]};
+        return;
+      }
+      throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+    }},
+  };
+};
+
+test('Task Issue metadata mutated between the first GET and the nested WorkItem observation is denied',async()=>{
+  for(const changes of [
+    {title:'Task #1 renamed mid-observation'},
+    {updated_at:'2026-11-03T12:00:00Z'},
+    {labels:[{name:'type:task'},{name:'state:claimed'},{name:'priority:P1'}]},
+  ]){
+    let armed=false;
+    const mutatingReader=observed=>{
+      armed=true;
+      return sourceReader(observed);
+    };
+    const r=await readUiNativeVersionFromClient({
+      ...args(scriptedNative(
+        [[issue(1),issue(2)],[issue(1),issue(2)]],
+        (n,call)=>armed&&call>0?issue(n,changes):issue(n))),
+      taskIssueNumbers:[1,2],workItemReader:mutatingReader});
+    assert.deepEqual(r,{connected:false,
+      reason:'NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION'});
+  }
+});
+
+test('Task Issue added or removed between roster enumerations is denied',async()=>{
+  const deny=async pages=>{
+    const r=await readUiNativeVersionFromClient({
+      ...args(scriptedNative(pages,n=>issue(n))),
+      taskIssueNumbers:[1,2],workItemReader:sourceReader});
+    assert.deepEqual(r,{connected:false,
+      reason:'NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION'});
+  };
+  await deny([[issue(1),issue(2)],[issue(1),issue(2),issue(3)]]);
+  await deny([[issue(1),issue(2)],[issue(1)]]);
+  await deny([[issue(1),issue(2)],
+    [issue(1),issue(2,{labels:[{name:'state:ready'},{name:'priority:P1'}]})]]);
+});
+
+test('stable unchanged roster still returns connected with exact metadata',async()=>{
+  const {getCalls,...octo}=scriptedNative(
+    [[issue(1),issue(2)],[issue(1),issue(2)]],n=>issue(n));
+  const r=await readUiNativeVersionFromClient({
+    ...args(octo),taskIssueNumbers:[1,2],workItemReader:sourceReader});
+  assert.equal(r.connected,true);
+  assert.equal(r.source.sourceSha,sha);
+  assert.deepEqual(r.tasks.map(t=>[t.id,t.title,t.updatedAt,t.issueState,
+    t.status,t.severity,t.claimState,t.dependencyState]),
+    [['1','Task #1','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR'],
+     ['2','Task #2','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR']]);
+  assert.equal(r.rosterCoverage,'UNVERIFIED');
+  // The coherence recheck re-enumerated the roster and re-read every Issue.
+  assert.deepEqual([...getCalls.entries()].sort((a,b)=>a[0]-b[0]),[[1,2],[2,2]]);
+});
+
 
 const requirements=[{number:77,kind:'requirement',parent:null},
   {number:78,kind:'story',parent:77}];

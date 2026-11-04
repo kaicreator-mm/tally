@@ -15,11 +15,14 @@ export interface DagNode{
   agentId:string|null;
   /** Host-derived execution availability (not graph-inferred). */
   executable:boolean;
+  claimState?:'ACCEPTED'|'NOT_CLAIMED'|'NOT_VERIFIED';
 }
 export interface DagEdge{
   from:string;to:string;kind:EdgeKind;
   /** Native acceptance evidence (issue comment ref) or null for planned. */
   evidenceRef:string|null;
+  /** Exact blocker Issue URL (from) for provenance; not a second authority. */
+  dependencyRef?:string|null;
   /** Legal amendment record if the edge was amended after freeze. */
   amendedAt:string|null;
 }
@@ -27,6 +30,15 @@ export interface VersionDag{
   versionId:string;
   /** Configured Task IDs do not prove exhaustive frozen version membership. */
   rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
+  claimReadbackCoverage?:'NOT_VERIFIED'|'VERIFIED_COMPLETE';
+  claimCoverage?:'NOT_VERIFIED'|'NONE_ACCEPTED'|'PARTIAL'|'ACCEPTED_ALL';
+  acceptedClaimCount?:number|null;
+  notVerifiedCount?:number|null;
+  notClaimedCount?:number|null;
+  activeWebResponsibilityCount?:number|null;
+  dependencyCoverage?:'NATIVE_COMPLETE'|'NATIVE_PARTIAL';
+  frozenBlobSha?:string|null;
+  taskPackRef?:string|null;
   /** Frozen as-of identity of this snapshot. */
   asOf:{sourceSha:string;frozenAt:string|null};
   nodes:readonly DagNode[];
@@ -144,7 +156,10 @@ export function toMermaid(dag:VersionDag):string{
   const aliases=new Map(dag.nodes.map((node,i)=>[node.taskId,'task_'+i]));
   const lines=['flowchart LR',
     `%% version=${safe(dag.versionId)} asOf=${safe(dag.asOf.sourceSha.slice(0,12))}`,
-    `%% frozen=${safe(dag.asOf.frozenAt??'NOT_FROZEN')} connected=${dag.connected}`];
+    `%% frozen=${safe(dag.asOf.frozenAt??'NOT_FROZEN')} connected=${dag.connected}`,
+    `%% dependencyCoverage=${safe(dag.dependencyCoverage??'UNKNOWN')}`+
+      ` frozenBlob=${safe((dag.frozenBlobSha??'NOT_FROZEN').slice(0,12))}`+
+      ` taskPack=${dag.taskPackRef?'PINNED':'ABSENT'}`];
   for(const node of dag.nodes)
     lines.push(`  ${aliases.get(node.taskId)}["${safe(node.taskId+" "+node.title)}"]`);
   for(const edge of dag.edges){
@@ -158,10 +173,22 @@ export function toMermaid(dag:VersionDag):string{
   }
   return lines.join('\n');
 }
-/** JSON export carries per-edge evidence and as-of identity. */
+/** JSON export carries per-edge evidence, as-of identity, freeze provenance
+ * (dependencyCoverage/frozenBlobSha/taskPackRef) and Claim readback coverage;
+ * absent Host metadata is exported as explicit UNKNOWN/null, never dropped. */
 export function toJson(dag:VersionDag):string{
   return JSON.stringify({versionId:dag.versionId,asOf:dag.asOf,
     connected:dag.connected,
+    rosterCoverage:dag.rosterCoverage??'UNVERIFIED',
+    claimReadbackCoverage:dag.claimReadbackCoverage??'NOT_VERIFIED',
+    claimCoverage:dag.claimCoverage??'NOT_VERIFIED',
+    acceptedClaimCount:dag.acceptedClaimCount??null,
+    notVerifiedCount:dag.notVerifiedCount??null,
+    notClaimedCount:dag.notClaimedCount??null,
+    activeWebResponsibilityCount:dag.activeWebResponsibilityCount??null,
+    dependencyCoverage:dag.dependencyCoverage??'UNKNOWN',
+    frozenBlobSha:dag.frozenBlobSha??null,
+    taskPackRef:dag.taskPackRef??null,
     nodes:dag.nodes,edges:dag.edges.map(edge=>({...edge,
       authority:edge.kind==='NATIVE'?'native_blocked_by'
         :edge.kind==='PLANNED'?'planned_candidate':'unresolved'}))},null,2);

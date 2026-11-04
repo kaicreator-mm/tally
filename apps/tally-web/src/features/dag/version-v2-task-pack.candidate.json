@@ -1,0 +1,2079 @@
+{
+  "schema": "tally/version-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+  "observedAt": "2026-11-03T15:39:22.624Z",
+  "source": {
+    "kind": "GITHUB_NATIVE_ISSUES",
+    "query": "state=all&labels=type:task",
+    "taskIssueCount": 44,
+    "claimCommentPages": 3
+  },
+  "taskIssues": [
+    {
+      "issueNumber": 62,
+      "title": "Tally v2 integration: one real ADS Task through DomainHarness B/S/K/C + task-meta observation",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-19T16:21:36Z",
+      "updatedAt": "2026-10-31T03:38:17Z",
+      "closedAt": "2026-10-31T03:38:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed historical integration proof; closure remains independently evidence-qualified."
+    },
+    {
+      "issueNumber": 92,
+      "title": "[v2 W-F][P0 Product UX] Tally 端到端软件开发单一入口：J01–J08 可操作 UI、恢复与真实发布验收",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-25T21:02:14Z",
+      "updatedAt": "2026-10-31T03:43:17Z",
+      "closedAt": "2026-10-31T03:43:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
+    },
+    {
+      "issueNumber": 137,
+      "title": "[v2][P1 Product Intake] 任务当前状态的可信只读投影：native DAG、Claim、执行、证据分层和阻塞原因",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:21:37Z",
+      "updatedAt": "2026-10-30T18:46:03Z",
+      "closedAt": "2026-10-30T18:46:03Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-model intake."
+    },
+    {
+      "issueNumber": 139,
+      "title": "[v2][P1 Product Intake] 多版本真实工程证据图谱：Product/L2 → Task/Issue/PR → Review/CI → Release/后继缺陷",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:41:34Z",
+      "updatedAt": "2026-10-30T21:48:38Z",
+      "closedAt": "2026-10-30T21:48:38Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed lineage intake."
+    },
+    {
+      "issueNumber": 140,
+      "title": "[v2][P1 Product Intake] 开发流程根因与瓶颈诊断：真实 DAG、Review/Repair、验证等待及 Agent 协作成本",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:42:29Z",
+      "updatedAt": "2026-10-30T22:16:18Z",
+      "closedAt": "2026-10-30T22:16:18Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed diagnosis intake."
+    },
+    {
+      "issueNumber": 141,
+      "title": "[v2][P1 Product Intake] 跨版本经验驱动的新版本规划：需求拆分、Task DAG 并行、Agent 分工与验证策略建议",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:43:20Z",
+      "updatedAt": "2026-10-30T22:51:29Z",
+      "closedAt": "2026-10-30T22:51:29Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed advisory next-version planning intake; does not prove governed Replan activation."
+    },
+    {
+      "issueNumber": 142,
+      "title": "[v2][P1 Product Intake] Issue ≠ Task：Concern/Checkpoint 工作单元身份、并发 Claim 冲突与进度分母",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:23Z",
+      "updatedAt": "2026-10-30T23:23:52Z",
+      "closedAt": "2026-10-30T23:23:52Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed WorkItem identity intake."
+    },
+    {
+      "issueNumber": 143,
+      "title": "[v2][P1 Product Intake] 真实跨版本 Issue Casebook 与 as-of 回放：可量化验证 Tally 的诊断和下一版规划",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:25Z",
+      "updatedAt": "2026-10-31T00:03:26Z",
+      "closedAt": "2026-10-31T00:03:26Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Casebook intake; does not prove complete next-Task learning loop."
+    },
+    {
+      "issueNumber": 144,
+      "title": "[v2][P2 Product Intake] 跨项目工程反馈工单闭环：下游缺口归属、去重、跨版本采纳和效果回读",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:27Z",
+      "updatedAt": "2026-10-31T00:36:14Z",
+      "closedAt": "2026-10-31T00:36:13Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed cross-project feedback intake."
+    },
+    {
+      "issueNumber": 145,
+      "title": "[v2][P0 Product Intake] Version Journey Driver：从用户目标到发布的持续下一步、并行推进与人机交接",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T19:18:41Z",
+      "updatedAt": "2026-10-30T19:14:40Z",
+      "closedAt": "2026-10-30T19:14:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Version Journey Driver intake."
+    },
+    {
+      "issueNumber": 146,
+      "title": "[v2][P1 Product Intake] 用户能力验收账本：冻结需求→真实选中执行→跨版本保留与可用性证明",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T19:18:43Z",
+      "updatedAt": "2026-10-30T20:53:28Z",
+      "closedAt": "2026-10-30T20:53:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL_P1",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
+    },
+    {
+      "issueNumber": 148,
+      "title": "[v2 DH0103-contract] Guided Project intake: schema-pinned deterministic next step, advisory without authority",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T21:00:52Z",
+      "updatedAt": "2026-10-31T01:12:41Z",
+      "closedAt": "2026-10-31T01:12:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
+    },
+    {
+      "issueNumber": 166,
+      "title": "T06j: privileged Host admission source adapter for T06d single-writer controller",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-29T12:29:10Z",
+      "updatedAt": "2026-10-29T22:49:56Z",
+      "closedAt": "2026-10-29T22:49:56Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Host admission source adapter task."
+    },
+    {
+      "issueNumber": 169,
+      "title": "T06l: accepted Claim verifier and DomainHarness K execution admission",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-29T23:34:19Z",
+      "updatedAt": "2026-10-30T07:20:55Z",
+      "closedAt": "2026-10-30T07:20:55Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed accepted Claim verifier task."
+    },
+    {
+      "issueNumber": 172,
+      "title": "T06m: real Local Codex execution through selected DomainHarness K/Host",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T08:06:27Z",
+      "updatedAt": "2026-10-30T15:58:27Z",
+      "closedAt": "2026-10-30T15:58:27Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
+    },
+    {
+      "issueNumber": 173,
+      "title": "CI(v2): make self-hosted Woodpecker the sole validation carrier",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T08:09:16Z",
+      "updatedAt": "2026-10-30T15:28:11Z",
+      "closedAt": "2026-10-30T15:28:11Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Self-hosted Woodpecker validation carrier task."
+    },
+    {
+      "issueNumber": 176,
+      "title": "T06n: concurrent independent Builders with Reviewer Join and Repair",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T15:59:21Z",
+      "updatedAt": "2026-10-30T18:09:43Z",
+      "closedAt": "2026-10-30T18:07:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
+    },
+    {
+      "issueNumber": 177,
+      "title": "T06n Builder A: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:04Z",
+      "updatedAt": "2026-10-30T18:09:50Z",
+      "closedAt": "2026-10-30T18:07:32Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder A evidence."
+    },
+    {
+      "issueNumber": 178,
+      "title": "T06n Builder B: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:05Z",
+      "updatedAt": "2026-10-30T18:09:59Z",
+      "closedAt": "2026-10-30T18:07:36Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder B evidence."
+    },
+    {
+      "issueNumber": 179,
+      "title": "T06n Reviewer: independent Join and Repair review",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:07Z",
+      "updatedAt": "2026-10-30T18:10:06Z",
+      "closedAt": "2026-10-30T18:07:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Reviewer/Repair evidence."
+    },
+    {
+      "issueNumber": 184,
+      "title": "CI(v2): validate read-only ALM workspace sources",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T19:29:27Z",
+      "updatedAt": "2026-10-30T19:48:41Z",
+      "closedAt": "2026-10-30T19:48:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-only workspace CI task."
+    },
+    {
+      "issueNumber": 196,
+      "title": "[v2][P0] J04–J06 write-capable ALM workspace：真实 Local Codex、Reviewer/Repair 与读回",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T03:43:19Z",
+      "updatedAt": "2026-10-31T05:15:24Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
+    },
+    {
+      "issueNumber": 197,
+      "title": "[v2][P0] J05 Builder A：真实 disjoint Local Codex candidate",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:35:59Z",
+      "updatedAt": "2026-10-31T04:37:34Z",
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+    },
+    {
+      "issueNumber": 198,
+      "title": "[v2][P0] J05 Builder B：真实 disjoint Local Codex candidate 与 Repair",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:36:01Z",
+      "updatedAt": "2026-10-31T04:37:45Z",
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+    },
+    {
+      "issueNumber": 199,
+      "title": "[v2][P0] J05 Reviewer：独立 Join、Repair 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:36:03Z",
+      "updatedAt": "2026-10-31T04:37:55Z",
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
+    },
+    {
+      "issueNumber": 200,
+      "title": "[v2][P0] J05 Reviewer：独立 Reviewer Claim、Join 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T05:43:13Z",
+      "updatedAt": "2026-10-31T05:44:27Z",
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer Claim/Join evidence only; no source write authority."
+    },
+    {
+      "issueNumber": 202,
+      "title": "[v2] J04–J06 ALM dynamic binding integration correction",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T06:53:36Z",
+      "updatedAt": "2026-10-31T07:06:55Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
+    },
+    {
+      "issueNumber": 203,
+      "title": "[v2] Publish reviewed candidates as exact-SHA pull requests",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T07:11:08Z",
+      "updatedAt": "2026-10-31T18:53:25Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
+    },
+    {
+      "issueNumber": 207,
+      "title": "[v2][P0][J06] Real-browser ALM journey acceptance and truthful CI/Host readback",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:16Z",
+      "updatedAt": "2026-10-31T12:54:16Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
+    },
+    {
+      "issueNumber": 208,
+      "title": "[v2][P0][J07] Exact-SHA Release Qualification, version closure and authorized delivery",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:18Z",
+      "updatedAt": "2026-10-31T17:32:52Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
+    },
+    {
+      "issueNumber": 209,
+      "title": "[v2][P0][J08] Defect intake, next-version planning and measured Task Learning replay",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:20Z",
+      "updatedAt": "2026-10-31T12:44:25Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
+    },
+    {
+      "issueNumber": 210,
+      "title": "[v2][P0][J01–J03] Wire guided project intake, Product/L2 freeze and native Task DAG into ALM workspace",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:38:10Z",
+      "updatedAt": "2026-11-02T14:29:29Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
+    },
+    {
+      "issueNumber": 211,
+      "title": "[v2] Bounded recovery for native GitHub read failures",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T11:41:50Z",
+      "updatedAt": "2026-10-31T12:54:22Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_NATIVE_READ_RECOVERY",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Bounded idempotent native GitHub read retry."
+    },
+    {
+      "issueNumber": 212,
+      "title": "[v2] Complete native WorkItem and Claim-event read recovery",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T12:06:28Z",
+      "updatedAt": "2026-10-31T13:01:22Z",
+      "closedAt": null,
+      "scopeDisposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
+    },
+    {
+      "issueNumber": 219,
+      "title": "[v2] Governed maintenance, next version and measured Task Learning",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T15:00:38Z",
+      "updatedAt": "2026-11-03T15:31:25Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
+    },
+    {
+      "issueNumber": 260,
+      "title": "[v2][Closeout A][P0] Canonical per-version Task DAG, native dependencies & accepted Claim readback",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:39Z",
+      "updatedAt": "2026-11-03T15:38:32Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
+    },
+    {
+      "issueNumber": 261,
+      "title": "[v2][Closeout B][P0] Reuse selected B/K/Host for real UI-guided development and Agent/Review actions",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:40Z",
+      "updatedAt": "2026-11-03T15:38:38Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_UI_ACTIONS",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
+    },
+    {
+      "issueNumber": 262,
+      "title": "[v2][Closeout C][P0] Real ADS/task-meta, audit and controlled experience feedback to next Task",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:43Z",
+      "updatedAt": "2026-11-03T15:38:44Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
+    },
+    {
+      "issueNumber": 263,
+      "title": "[v2][Closeout D][P0] Human-oriented actionable ALM UI incl. approvals, QA, Release, deployment, settings",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:45Z",
+      "updatedAt": "2026-11-03T15:38:51Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
+    },
+    {
+      "issueNumber": 264,
+      "title": "[v2][Closeout E][P0] Single final PR #258 composition, differential verification and installed J01-J08",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-01T20:03:47Z",
+      "updatedAt": "2026-11-03T05:37:03Z",
+      "closedAt": null,
+      "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+    },
+    {
+      "issueNumber": 273,
+      "title": "[v2][P0][F30] Governed Replan with immutable history and accepted-work preservation",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:09:59Z",
+      "updatedAt": "2026-11-03T14:00:26Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_REPLAN_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 274,
+      "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:10:06Z",
+      "updatedAt": "2026-11-03T14:00:33Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 275,
+      "title": "[v2][P0][F38/F39] Source-backed Task Attempt and telemetry read model",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:10:13Z",
+      "updatedAt": "2026-11-03T14:00:39Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 276,
+      "title": "[v2][P0][Domain Package] Extract Engineering Domain Knowledge and bounded Workflows into Tally B",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T05:32:14Z",
+      "updatedAt": "2026-11-03T13:42:28Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+    }
+  ],
+  "edges": [
+    {
+      "from": 260,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260"
+    },
+    {
+      "from": 261,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261"
+    },
+    {
+      "from": 262,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262"
+    },
+    {
+      "from": 263,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/263"
+    },
+    {
+      "from": 211,
+      "to": 212,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "Existing declared dependency; native blocked_by is absent. Preserve as PLANNED and non-executable."
+    },
+    {
+      "from": 275,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "New Task Attempt/telemetry reader must be available before B consumes the read model."
+    },
+    {
+      "from": 203,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
+    },
+    {
+      "from": 274,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
+    },
+    {
+      "from": 219,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Maintenance/learning source and REJECT-vs-ADOPT semantics are a prerequisite for C."
+    },
+    {
+      "from": 219,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
+    },
+    {
+      "from": 261,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "Replan uses the selected B/K/Host action bridge delivered by B."
+    },
+    {
+      "from": 273,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "Final installed J01-J08 integration waits for governed Replan."
+    },
+    {
+      "from": 207,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/207",
+      "reason": "Final integration waits for real J06 browser journey acceptance."
+    },
+    {
+      "from": 208,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "Final integration waits for exact-SHA J07 Release Qualification evidence."
+    },
+    {
+      "from": 209,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "Final integration waits for J08 defect/next-version/learning acceptance."
+    },
+    {
+      "from": 210,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    },
+    {
+      "from": 260,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260",
+      "reason": "#276 waits for canonical Task DAG/Task Pack refresh and A-lane freeze evidence; this edge is still PLANNED until native readback."
+    },
+    {
+      "from": 219,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
+    },
+    {
+      "from": 261,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
+    },
+    {
+      "from": 262,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "reason": "#276 aligns with the Experience/Casebook consumer and evidence-use contract; do not race C-owned semantics."
+    },
+    {
+      "from": 273,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "#276 consumes the governed PlanRevision/Replan vocabulary and must wait for #273's final contract/source."
+    },
+    {
+      "from": 274,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "#276 aligns with the exact ADS v5 ExperienceUseFeedback producer/publisher contract."
+    },
+    {
+      "from": 275,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "#276 uses the canonical TaskAttempt/AttemptEvent read model only after #275 owns and completes its initial source."
+    },
+    {
+      "from": 276,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
+    },
+    {
+      "from": 208,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "#276's current candidate includes #208-owned release-readiness source/test; keep #276 non-dispatchable until #208 completes or F narrows its exact write set."
+    },
+    {
+      "from": 209,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "#276's current candidate includes #209-owned maintenance-intake source/test; keep #276 non-dispatchable until #209 completes or F narrows its exact write set."
+    },
+    {
+      "from": 203,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "#276's broad Business test glob overlaps #203's business-policy test and selected publication source; keep #276 non-dispatchable until #203 completes or F narrows the exact write set."
+    },
+    {
+      "from": 210,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "#276's broad Business test glob and central Business files overlap #210's Project/Product/L2 intake write set; keep #276 non-dispatchable until #210 completes or F narrows the exact write set."
+    }
+  ],
+  "claimSubjects": [
+    {
+      "issueNumber": 62,
+      "sourceSha": "1c81a19aa7b102474e80b3b83690664cae0fe910",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i62:observation:1",
+      "dispatchId": "dispatch:62:observation:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#62:builder:__default__",
+      "commentId": 6537176701,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/62#issuecomment-6537176701",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 92,
+      "sourceSha": "ec9820c3a67e387d5ca51f736be0d6f316f36c12",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i92:workspace:1",
+      "dispatchId": "dispatch:92:workspace:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#92:builder:__default__",
+      "commentId": 6531524495,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/92#issuecomment-6531524495",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 137,
+      "sourceSha": "0bd4da9b38622148d65b81ab62946bbf80baaa64",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i137:snapshot:1",
+      "dispatchId": "dispatch:137:snapshot:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#137:builder:__default__",
+      "commentId": 6530174695,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/137#issuecomment-6530174695",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 139,
+      "sourceSha": "35c010fa429cec10f3031294c94e82c084516736",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i139:lineage:1",
+      "dispatchId": "dispatch:139:lineage:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#139:builder:__default__",
+      "commentId": 6533424893,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/139#issuecomment-6533424893",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 140,
+      "sourceSha": "469ce288cda19f0412f88c466ea0fa89a0d342dd",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i140:diagnosis:1",
+      "dispatchId": "dispatch:140:diagnosis:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#140:builder:__default__",
+      "commentId": 6534257043,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/140#issuecomment-6534257043",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 141,
+      "sourceSha": "870e0ac6159f68deb9d9cdea32bace45dd25533c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i141:planning:1",
+      "dispatchId": "dispatch:141:planning:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#141:builder:__default__",
+      "commentId": 6534697474,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/141#issuecomment-6534697474",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 142,
+      "sourceSha": "b2c7105f774db8aad190670db504bcb7f2607407",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i142:workunits:1",
+      "dispatchId": "dispatch:142:workunits:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#142:builder:__default__",
+      "commentId": 6535215977,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/142#issuecomment-6535215977",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 143,
+      "sourceSha": "8fca68161f7888d28eb439dcf9ae4c6271a17b6b",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i143:casebook:1",
+      "dispatchId": "dispatch:143:casebook:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#143:builder:__default__",
+      "commentId": 6535668951,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/143#issuecomment-6535668951",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 144,
+      "sourceSha": "fa62aade360bac74bda2577be8d516da1c5a0f45",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i144:feedback:1",
+      "dispatchId": "dispatch:144:feedback:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#144:builder:__default__",
+      "commentId": 6536266523,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/144#issuecomment-6536266523",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 145,
+      "sourceSha": "4467bfd166f881cca88317eb34381217c9fc0d6f",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i145:journey:1",
+      "dispatchId": "dispatch:145:journey:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#145:builder:__default__",
+      "commentId": 6530904740,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/145#issuecomment-6530904740",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 146,
+      "sourceSha": "fc083826788c7e1b19f0b5e33fac95deebecf82e",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i146:acceptance:1",
+      "dispatchId": "dispatch:146:acceptance:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#146:builder:__default__",
+      "commentId": 6532157396,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/146#issuecomment-6532157396",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 148,
+      "sourceSha": "2502d3a782eac609623a9d481b2da56975b52aba",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i148:guided:1",
+      "dispatchId": "dispatch:148:guided:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#148:builder:__default__",
+      "commentId": 6536630259,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/148#issuecomment-6536630259",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 166,
+      "sourceSha": "7823e18e4b9f4d4df9a2c9065de1b1fed6421264",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:t166:bootstrap:1",
+      "dispatchId": "dispatch:166:t06j:bootstrap:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#166:builder:__default__",
+      "commentId": 6507893767,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/166#issuecomment-6507893767",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 169,
+      "sourceSha": "3293aace8a07c2a4f79a75c6539245980f77e2b4",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:t125:kernel:1",
+      "dispatchId": "dispatch:169:t06l:kernel:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#169:builder:__default__",
+      "commentId": 6511046226,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/169#issuecomment-6511046226",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 172,
+      "sourceSha": "2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i172:local:1",
+      "dispatchId": "dispatch:172:t06m:local:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#172:builder:__default__",
+      "commentId": 6523851380,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/172#issuecomment-6523851380",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 173,
+      "sourceSha": "2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i173:ci:1",
+      "dispatchId": "dispatch:173:ci:woodpecker:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#173:builder:__default__",
+      "commentId": 6523858948,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/173#issuecomment-6523858948",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 176,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i176:impl:1",
+      "dispatchId": "dispatch:176:t06n:impl:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#176:builder:__default__",
+      "commentId": 6527320123,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/176#issuecomment-6527320123",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 177,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "codex:t06n:builder-a:1",
+      "dispatchId": "dispatch:177:t06n:builder-a:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#177:builder:__default__",
+      "commentId": 6527324131,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/177#issuecomment-6527324131",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 178,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "codex:t06n:builder-b:1",
+      "dispatchId": "dispatch:178:t06n:builder-b:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#178:builder:__default__",
+      "commentId": 6527327548,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/178#issuecomment-6527327548",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 179,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "reviewer",
+      "operatorKind": "other",
+      "operatorId": "zcode:t06n:reviewer:1",
+      "dispatchId": "dispatch:179:t06n:reviewer:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#179:reviewer:__default__",
+      "commentId": 6527331202,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/179#issuecomment-6527331202",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 184,
+      "sourceSha": "ec9820c3a67e387d5ca51f736be0d6f316f36c12",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i184:workspace-ci:1",
+      "dispatchId": "dispatch:184:workspace-ci:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#184:builder:__default__",
+      "commentId": 6531830250,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/184#issuecomment-6531830250",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 196,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i92:alm-write:1",
+      "dispatchId": "dispatch:92:alm-write:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#196:builder:__default__",
+      "commentId": 6538568600,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/196#issuecomment-6538568600",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 197,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:builder-a:1",
+      "dispatchId": "dispatch:197:alm:builder-a:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#197:builder:__default__",
+      "commentId": 6539092449,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/197#issuecomment-6539092449",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 198,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:builder-b:1",
+      "dispatchId": "dispatch:198:alm:builder-b:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#198:builder:__default__",
+      "commentId": 6539094169,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/198#issuecomment-6539094169",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 199,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:reviewer:1",
+      "dispatchId": "dispatch:199:alm:reviewer:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#199:builder:__default__",
+      "commentId": 6539095808,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/199#issuecomment-6539095808",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 200,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "reviewer",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:reviewer:1",
+      "dispatchId": "dispatch:200:alm:reviewer:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#200:reviewer:__default__",
+      "commentId": 6539702548,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/200#issuecomment-6539702548",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 202,
+      "sourceSha": "b490ceca33af7ed1190333436751d72d8a6176cc",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:integration:1",
+      "dispatchId": "dispatch:202:alm:integration:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#202:builder:__default__",
+      "commentId": 6540308558,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/202#issuecomment-6540308558",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 203,
+      "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:candidate-publication:1",
+      "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+      "commentId": 6540484121,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540484121",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 207,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i207:builder:1",
+      "dispatchId": "dispatch:207:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#207:builder:__default__",
+      "commentId": 6542838856,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/207#issuecomment-6542838856",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 208,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i208:builder:1",
+      "dispatchId": "dispatch:208:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#208:builder:__default__",
+      "commentId": 6542840133,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/208#issuecomment-6542840133",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 209,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i209:builder:1",
+      "dispatchId": "dispatch:209:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#209:builder:__default__",
+      "commentId": 6542841346,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/209#issuecomment-6542841346",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 210,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i210:builder:1",
+      "dispatchId": "dispatch:210:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#210:builder:__default__",
+      "commentId": 6542842623,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/210#issuecomment-6542842623",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 211,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i211:builder:1",
+      "dispatchId": "dispatch:211:native-read-retry:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#211:builder:__default__",
+      "commentId": 6542911259,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/211#issuecomment-6542911259",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 212,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i212:builder:1",
+      "dispatchId": "dispatch:212:native-read-coverage:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#212:builder:__default__",
+      "commentId": 6543151097,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/212#issuecomment-6543151097",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 219,
+      "sourceSha": "ad3123e7646428ec3b13fac5b6f510b683a133c8",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i219:builder:1",
+      "dispatchId": "dispatch:219:maintenance:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#219:builder:__default__",
+      "commentId": 6545079271,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6545079271",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 260,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:260:closeout-a:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#260:builder:__default__",
+      "commentId": 6568304709,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/260#issuecomment-6568304709",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 261,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:261:closeout-b:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#261:builder:__default__",
+      "commentId": 6568306219,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/261#issuecomment-6568306219",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 262,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:262:closeout-c:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#262:builder:__default__",
+      "commentId": 6568307808,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/262#issuecomment-6568307808",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 263,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:263:closeout-d:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#263:builder:__default__",
+      "commentId": 6568309546,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/263#issuecomment-6568309546",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 264,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#264:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 273,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#273:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 274,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#274:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 275,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#275:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 276,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#276:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    }
+  ],
+  "claimAcceptance": "NOT_VERIFIED",
+  "closureEvidence": "NOT_VERIFIED",
+  "plannedEdges": [
+    {
+      "from": 211,
+      "to": 212,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "Existing declared dependency; native blocked_by is absent. Preserve as PLANNED and non-executable."
+    },
+    {
+      "from": 275,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "New Task Attempt/telemetry reader must be available before B consumes the read model."
+    },
+    {
+      "from": 203,
+      "to": 261,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
+    },
+    {
+      "from": 274,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
+    },
+    {
+      "from": 219,
+      "to": 262,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Maintenance/learning source and REJECT-vs-ADOPT semantics are a prerequisite for C."
+    },
+    {
+      "from": 219,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
+    },
+    {
+      "from": 261,
+      "to": 273,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "Replan uses the selected B/K/Host action bridge delivered by B."
+    },
+    {
+      "from": 273,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "Final installed J01-J08 integration waits for governed Replan."
+    },
+    {
+      "from": 207,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/207",
+      "reason": "Final integration waits for real J06 browser journey acceptance."
+    },
+    {
+      "from": 208,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "Final integration waits for exact-SHA J07 Release Qualification evidence."
+    },
+    {
+      "from": 209,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "Final integration waits for J08 defect/next-version/learning acceptance."
+    },
+    {
+      "from": 210,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    },
+    {
+      "from": 260,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260",
+      "reason": "#276 waits for canonical Task DAG/Task Pack refresh and A-lane freeze evidence; this edge is still PLANNED until native readback."
+    },
+    {
+      "from": 219,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
+    },
+    {
+      "from": 261,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
+    },
+    {
+      "from": 262,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "reason": "#276 aligns with the Experience/Casebook consumer and evidence-use contract; do not race C-owned semantics."
+    },
+    {
+      "from": 273,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "#276 consumes the governed PlanRevision/Replan vocabulary and must wait for #273's final contract/source."
+    },
+    {
+      "from": 274,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "#276 aligns with the exact ADS v5 ExperienceUseFeedback producer/publisher contract."
+    },
+    {
+      "from": 275,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "#276 uses the canonical TaskAttempt/AttemptEvent read model only after #275 owns and completes its initial source."
+    },
+    {
+      "from": 276,
+      "to": 264,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
+    }
+  ],
+  "notes": [
+    "This refreshed 44-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
+    "Twenty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 as PLANNED.",
+    "The roster includes all 44 current label:type:task Issues. #276 is PLANNED with NO_CLAIM_EVENT_EXPECTED and is non-dispatchable.",
+    "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
+    "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
+    "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
+    "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration.",
+    "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
+    "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created.",
+    "Re-refreshed all 44 native Task Issue timestamps/states after #219/#261/#262 LOCAL_VALIDATION requests and the #276 write-set audit comment. These requests do not create Claims or dispatch authorization; #219/#261/#262 remain open.",
+    "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only.",
+    "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub.",
+    "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
+    "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed."
+  ],
+  "scopeDispositions": {
+    "schema": "tally/version-task-scope-dispositions/v1",
+    "status": "REVIEW_REQUIRED",
+    "items": [
+      {
+        "issueNumber": 62,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed historical integration proof; closure remains independently evidence-qualified."
+      },
+      {
+        "issueNumber": 92,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
+      },
+      {
+        "issueNumber": 137,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-model intake."
+      },
+      {
+        "issueNumber": 139,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed lineage intake."
+      },
+      {
+        "issueNumber": 140,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed diagnosis intake."
+      },
+      {
+        "issueNumber": 141,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed advisory next-version planning intake; does not prove governed Replan activation."
+      },
+      {
+        "issueNumber": 142,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed WorkItem identity intake."
+      },
+      {
+        "issueNumber": 143,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Casebook intake; does not prove complete next-Task learning loop."
+      },
+      {
+        "issueNumber": 144,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed cross-project feedback intake."
+      },
+      {
+        "issueNumber": 145,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Version Journey Driver intake."
+      },
+      {
+        "issueNumber": 146,
+        "disposition": "CLOSED_HISTORICAL_P1",
+        "dispatchableByDisposition": false,
+        "note": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
+      },
+      {
+        "issueNumber": 148,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
+      },
+      {
+        "issueNumber": 166,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Host admission source adapter task."
+      },
+      {
+        "issueNumber": 169,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed accepted Claim verifier task."
+      },
+      {
+        "issueNumber": 172,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
+      },
+      {
+        "issueNumber": 173,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Self-hosted Woodpecker validation carrier task."
+      },
+      {
+        "issueNumber": 176,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
+      },
+      {
+        "issueNumber": 177,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder A evidence."
+      },
+      {
+        "issueNumber": 178,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder B evidence."
+      },
+      {
+        "issueNumber": 179,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Reviewer/Repair evidence."
+      },
+      {
+        "issueNumber": 184,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-only workspace CI task."
+      },
+      {
+        "issueNumber": 196,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+        "dispatchableByDisposition": false,
+        "note": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
+      },
+      {
+        "issueNumber": 197,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 198,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 199,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
+      },
+      {
+        "issueNumber": 200,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer Claim/Join evidence only; no source write authority."
+      },
+      {
+        "issueNumber": 202,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+        "dispatchableByDisposition": false,
+        "note": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
+      },
+      {
+        "issueNumber": 203,
+        "disposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
+      },
+      {
+        "issueNumber": 207,
+        "disposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
+      },
+      {
+        "issueNumber": 208,
+        "disposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
+      },
+      {
+        "issueNumber": 209,
+        "disposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
+      },
+      {
+        "issueNumber": 210,
+        "disposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
+      },
+      {
+        "issueNumber": 211,
+        "disposition": "ACTIVE_NATIVE_READ_RECOVERY",
+        "dispatchableByDisposition": true,
+        "note": "Bounded idempotent native GitHub read retry."
+      },
+      {
+        "issueNumber": 212,
+        "disposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
+      },
+      {
+        "issueNumber": 219,
+        "disposition": "ACTIVE_MAINTENANCE_LEARNING",
+        "dispatchableByDisposition": true,
+        "note": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
+      },
+      {
+        "issueNumber": 260,
+        "disposition": "ACTIVE_VERSION_DAG_FREEZE",
+        "dispatchableByDisposition": true,
+        "note": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
+      },
+      {
+        "issueNumber": 261,
+        "disposition": "ACTIVE_UI_ACTIONS",
+        "dispatchableByDisposition": true,
+        "note": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
+      },
+      {
+        "issueNumber": 262,
+        "disposition": "ACTIVE_EXPERIENCE_LEARNING",
+        "dispatchableByDisposition": true,
+        "note": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
+      },
+      {
+        "issueNumber": 263,
+        "disposition": "ACTIVE_HUMAN_ALM_UI",
+        "dispatchableByDisposition": true,
+        "note": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
+      },
+      {
+        "issueNumber": 264,
+        "disposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+        "dispatchableByDisposition": false,
+        "note": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+      },
+      {
+        "issueNumber": 273,
+        "disposition": "PLANNED_REPLAN_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 274,
+        "disposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 275,
+        "disposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 276,
+        "disposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+      }
+    ]
+  },
+  "writeSetAudit": {
+    "schema": "tally/version-task-write-set-audit/v1",
+    "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
+    "requiredBeforeFreeze": [
+      "Read each open Task's current exact allowed_write_set from its current issue body and bind the observed updatedAt.",
+      "Hash the normalized allowed_write_set path list for every open Task; preserve the hash in the independent review report.",
+      "No two dispatchable tasks may own overlapping write paths unless a real native dependency serializes them.",
+      "Reviewer/Verifier tasks are read-only; copied Builder write-set text never grants reviewer write authority.",
+      "Closed, source-integrated, candidate-evidence-only, superseded and planned tasks remain visible but non-dispatchable until separately re-admitted.",
+      "Reconcile every overlap with a serial native edge or explicit non-dispatchable disposition; do not close Issues silently."
+    ],
+    "overlapGroups": [
+      {
+        "id": "LEGACY_J04_J06_IDENTICAL_BROAD_WRITE_SET",
+        "taskIssues": [
+          196,
+          197,
+          198,
+          199,
+          200
+        ],
+        "paths": [
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-controller.test.mjs",
+          "web/v2/journey-view.mjs",
+          "web/v2/journey-view.html",
+          "web/v2/journey-view.test.mjs",
+          ".woodpecker/v2-alm-workspace.yaml"
+        ],
+        "finding": "The five issue bodies repeat the same broad seven-file write set. #197/#198 are not disjoint as written; #199/#200 are Reviewer roles and must be read-only. PR #204/#205 each add only a separate CONCURRENT_A.md/CONCURRENT_B.md evidence file, not those seven implementation files."
+      },
+      {
+        "id": "LEGACY_INTEGRATION_SHARED_PATHS",
+        "taskIssues": [
+          202,
+          207,
+          210,
+          219,
+          264
+        ],
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-view.html",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. Old issue dispositions and exact path ownership require independent review."
+      },
+      {
+        "id": "CENTRAL_BUSINESS_ENTRYPOINT_SERIALIZATION",
+        "taskIssues": [
+          203,
+          210,
+          219,
+          273,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. #276 must remain serialized after #219 and #273; do not permit parallel writers."
+      },
+      {
+        "id": "ATTEMPT_MODEL_SERIALIZATION",
+        "taskIssues": [
+          275,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/attempts.mjs",
+          "packages/tally-engineering-business/test/attempts.test.mjs"
+        ],
+        "finding": "#275 owns initial Attempt read-model source; #276 may reconcile the canonical TaskAttempt model only after #275 completes and the source contract is reviewed."
+      },
+      {
+        "id": "F_DOMAIN_DATA_EXISTING_MODULE_SERIALIZATION",
+        "taskIssues": [
+          208,
+          209,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/release-readiness.mjs",
+          "packages/tally-engineering-business/test/release-readiness.test.mjs",
+          "packages/tally-engineering-business/src/maintenance-intake.mjs",
+          "packages/tally-engineering-business/test/maintenance-intake.test.mjs",
+          "packages/tally-engineering-business/test/*.test.mjs"
+        ],
+        "finding": "#276's current candidate set includes the two existing source modules and a broad test glob that overlaps #208/#209. #276 remains PLANNED/non-dispatchable, so there is no current concurrent writer; before any future Claim/JIT, narrow the glob to exact F-owned test files or serialize after #208/#209. Record both edges as PLANNED only."
+      },
+      {
+        "id": "REPLAN_E_SHARED_HOTSPOT_EXCLUSION",
+        "taskIssues": [
+          273,
+          264
+        ],
+        "paths": [
+          "web/v2/serve.mjs",
+          "web/v2/journey-server.mjs",
+          "apps/tally-web/src/app/App.tsx",
+          "apps/tally-web/src/adapters/host.ts"
+        ],
+        "finding": "#273 currently lists four E-exclusive shared files in its candidate write set. #264 is the sole integration writer. #273 must remove these paths before Claim/JIT; it should deliver feature-owned Replan source and let E mount it after completion."
+      },
+      {
+        "id": "EXPERIENCE_PUBLISHER_CONSUMER_SERIALIZATION",
+        "taskIssues": [
+          262,
+          274
+        ],
+        "paths": [
+          "web/v2/ui-experience-host.mjs"
+        ],
+        "finding": "#274 currently lists the C-owned consumer adapter already owned by #262. Keep #274 on the feedback producer/publisher and dedicated publisher Host adapter; #262 remains the sole writer of ui-experience-host.mjs and consumes the publisher after #274. Existing #274→#262 edge is PLANNED only."
+      },
+      {
+        "id": "ATTEMPT_READ_MODEL_UI_CONSUMER_SERIALIZATION",
+        "taskIssues": [
+          261,
+          275
+        ],
+        "paths": [
+          "apps/tally-web/src/features/tasks/**",
+          "apps/tally-web/src/features/agents/**"
+        ],
+        "finding": "#275 currently lists the B-owned Task/Agent UI directories already owned by #261. #275 should own the Business Attempt read model and selected Host adapter; #261 owns UI consumption. Existing #275→#261 edge is PLANNED only."
+      },
+      {
+        "id": "F_DOMAIN_DATA_TEST_GLOB_SERIALIZATION",
+        "taskIssues": [
+          203,
+          208,
+          209,
+          210,
+          219,
+          273,
+          275,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/test/*.test.mjs"
+        ],
+        "finding": "#276's broad test glob overlaps test files owned by active/pending Business Tasks #203/#208/#209/#210/#219/#273/#275. #276 is PLANNED/non-dispatchable; before Claim/JIT narrow to exact F-owned tests or serialize after all affected owners. Existing dependencies cover some, but #203/#210 edges are added as PLANNED."
+      }
+    ]
+  }
+}
