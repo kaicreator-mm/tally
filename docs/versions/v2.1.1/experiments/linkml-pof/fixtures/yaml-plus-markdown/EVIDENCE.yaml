@@ -1,0 +1,6 @@
+evidence_id: SE-EVD-0001
+evidence_type: DIRECT_BOK_TAXONOMY_FACT
+source_ref: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+locator_ref: SE-LOC-SWEBOK-TABLE-I1
+statement: "The SWEBOK Guide v4.0a Table I.1 enumerates 18 Knowledge Areas."
+extraction_status: EXTRACTED_PENDING_REVIEW
