@@ -1,0 +1,207 @@
+record_set_id: SE-VERTICAL-SLICE-0.1.0
+status: PROPOSED
+created: 2026-11-04
+purpose: "Initial authentic records for source/evidence/provenance and early LinkML proof-of-fit"
+review_state: PENDING_HUMAN_REVIEW
+sources:
+  - source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    verification_state: LOCATOR_VERIFIED
+    dossier: docs/versions/v2.1.1/authority/source-reviews/SWEBOK-GUIDE-v4.0a.md
+  - source_id: SE-SRC-CS2023
+    verification_state: LOCATOR_VERIFIED
+    dossier: docs/versions/v2.1.1/authority/source-reviews/CS2023.md
+  - source_id: SE-SRC-NIST-SP-800-218-V1-1
+    verification_state: CONTENT_VERIFIED_ABSTRACT_ONLY
+    dossier: docs/versions/v2.1.1/authority/source-reviews/NIST-SP-800-218-v1.1.md
+locators:
+  - locator_id: SE-LOC-SWEBOK-TABLE-I1
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_kind: PRINTED_PAGE_TABLE
+    locator_value: "Printed page xxxix, Table I.1 — The 18 SWEBOK KAs"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-SWEBOK-TABLE-I2
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_kind: PRINTED_PAGE_TABLE
+    locator_value: "Printed page xxxix, Table I.2 — Related Disciplines"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-SWEBOK-HIERARCHY
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_kind: PRINTED_PAGE_SECTION
+    locator_value: "Printed page xl, Introduction to the Guide — Hierarchical Organization"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-SWEBOK-SCOPE
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_kind: PRINTED_PAGE_SECTION
+    locator_value: "Printed pages xxxvii–xli, Introduction to the Guide — objectives, scope and Depth of Treatment"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-CS2023-KA-TABLE
+    source_id: SE-SRC-CS2023
+    locator_kind: PDF_PAGE_TABLE
+    locator_value: "Body of Knowledge PDF, opening Knowledge Areas table, PDF page 1"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-CS2023-SE-KUS
+    source_id: SE-SRC-CS2023
+    locator_kind: PRINTED_PAGE_SECTION
+    locator_value: "Body of Knowledge PDF, Software Engineering section, printed pages 166–168 — nine Knowledge Units and core-hours table"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-CS2023-SE-TOOLS
+    source_id: SE-SRC-CS2023
+    locator_kind: PRINTED_PAGE_SECTION
+    locator_value: "Body of Knowledge PDF, printed page 170 — SE-Tools: Tools and Environments"
+    verification_state: VERIFIED
+  - locator_id: SE-LOC-NIST-ABSTRACT
+    source_id: SE-SRC-NIST-SP-800-218-V1-1
+    locator_kind: OFFICIAL_WEB_ABSTRACT
+    locator_value: "NIST CSRC SP 800-218 v1.1 official publication page, abstract"
+    verification_state: VERIFIED_FOR_ABSTRACT_ONLY
+evidence:
+  - evidence_id: SE-EVD-0001
+    evidence_type: DIRECT_BOK_TAXONOMY_FACT
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_id: SE-LOC-SWEBOK-TABLE-I1
+    statement: "The SWEBOK Guide v4.0a Table I.1 enumerates 18 Knowledge Areas."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0002
+    evidence_type: DIRECT_BOK_TAXONOMY_FACT
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_id: SE-LOC-SWEBOK-TABLE-I2
+    statement: "The SWEBOK Guide v4.0a Table I.2 lists eleven related disciplines."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0003
+    evidence_type: DIRECT_GUIDE_SCOPE_FACT
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_id: SE-LOC-SWEBOK-SCOPE
+    statement: "The Guide describes itself as a guide to the body of knowledge and limits its claim to comprehensive coverage."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0004
+    evidence_type: DIRECT_GUIDE_STRUCTURE_FACT
+    source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_id: SE-LOC-SWEBOK-HIERARCHY
+    statement: "The Guide describes a hierarchical topic organization, generally two or three levels deep."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0005
+    evidence_type: DIRECT_CURRICULUM_TAXONOMY_FACT
+    source_id: SE-SRC-CS2023
+    locator_id: SE-LOC-CS2023-KA-TABLE
+    statement: "The CS2023 Body of Knowledge lists 17 Computer Science Knowledge Areas, including Software Engineering."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0006
+    evidence_type: DIRECT_CURRICULUM_TAXONOMY_FACT
+    source_id: SE-SRC-CS2023
+    locator_id: SE-LOC-CS2023-SE-KUS
+    statement: "The CS2023 Software Engineering area lists nine Knowledge Units: Teamwork; Tools and Environments; Product Requirements; Software Design; Software Construction; Software Verification and Validation; Refactoring and Code Evolution; Software Reliability; Formal Methods."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+  - evidence_id: SE-EVD-0007
+    evidence_type: DIRECT_CURRICULUM_TOPIC_FACT
+    source_id: SE-SRC-CS2023
+    locator_id: SE-LOC-CS2023-SE-TOOLS
+    statement: "The CS2023 SE-Tools unit includes software configuration management/version control, release management, testing tools and process automation/continuous integration."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+claims:
+  - claim_id: SE-CLM-0001
+    claim_type: TAXONOMY_FACT
+    statement: "SWEBOK Guide v4.0a organizes its reference knowledge into 18 Knowledge Areas."
+    evidence_refs:
+      - SE-EVD-0001
+    applicability: "Claim about the SWEBOK Guide v4.0a taxonomy; not a claim that the whole discipline has exactly 18 mutually exclusive areas."
+    assumptions: []
+    limitations:
+      - "The Guide is not the complete body of knowledge."
+      - "The 18 KAs are not assumed to be mutually exclusive."
+    status: PROPOSED
+  - claim_id: SE-CLM-0002
+    claim_type: TAXONOMY_FACT
+    statement: "SWEBOK Guide v4.0a identifies eleven related disciplines."
+    evidence_refs:
+      - SE-EVD-0002
+    applicability: "Claim about the related-discipline list in this edition."
+    assumptions: []
+    limitations:
+      - "The Guide does not characterize the full knowledge of each related discipline."
+    status: PROPOSED
+  - claim_id: SE-CLM-0003
+    claim_type: SCOPE_LIMITATION
+    statement: "SWEBOK Guide v4.0a is a guide to the body of knowledge and does not claim to be a complete reproduction of all Software Engineering knowledge."
+    evidence_refs:
+      - SE-EVD-0003
+    applicability: "Applies to interpretation of SWEBOK v4.0a as a reference."
+    assumptions: []
+    limitations:
+      - "This is a statement about the Guide's declared scope, not a claim that its taxonomy is poor or unusable."
+    status: PROPOSED
+  - claim_id: SE-CLM-0004
+    claim_type: TAXONOMY_STRUCTURE
+    statement: "SWEBOK v4.0a presents its topic organization hierarchically, generally at two or three levels."
+    evidence_refs:
+      - SE-EVD-0004
+    applicability: "Describes the Guide's topic organization, not all graph relationships in the discipline."
+    assumptions: []
+    limitations:
+      - "A hierarchical topic organization does not imply every concept has exactly one parent."
+    status: PROPOSED
+  - claim_id: SE-CLM-0005
+    claim_type: CURRICULUM_TAXONOMY_FACT
+    statement: "CS2023 defines 17 Computer Science Knowledge Areas, with Software Engineering as one area."
+    evidence_refs:
+      - SE-EVD-0005
+    applicability: "Claim about the CS2023 curriculum framework."
+    assumptions: []
+    limitations:
+      - "Curriculum structure is not a complete professional Software Engineering taxonomy."
+    status: PROPOSED
+  - claim_id: SE-CLM-0006
+    claim_type: CURRICULUM_TAXONOMY_FACT
+    statement: "The CS2023 Software Engineering area lists nine Knowledge Units."
+    evidence_refs:
+      - SE-EVD-0006
+    applicability: "Claim about the CS2023 Software Engineering curriculum area."
+    assumptions: []
+    limitations:
+      - "Knowledge Units are not equivalent to SWEBOK Knowledge Areas."
+    status: PROPOSED
+  - claim_id: SE-CLM-0007
+    claim_type: CURRICULUM_TOPIC_FACT
+    statement: "The CS2023 SE-Tools unit includes software configuration management/version control, release management, testing tools and process automation/continuous integration."
+    evidence_refs:
+      - SE-EVD-0007
+    applicability: "Claim about the SE-Tools Knowledge Unit in CS2023."
+    assumptions: []
+    limitations:
+      - "This does not imply that all configuration management or operations knowledge is contained in SE-Tools."
+    status: PROPOSED
+relationships:
+  - relationship_id: SE-REL-0001
+    subject_id: SE-CLM-0001
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0001
+    status: PROPOSED
+  - relationship_id: SE-REL-0002
+    subject_id: SE-CLM-0002
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0002
+    status: PROPOSED
+  - relationship_id: SE-REL-0003
+    subject_id: SE-CLM-0003
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0003
+    status: PROPOSED
+  - relationship_id: SE-REL-0004
+    subject_id: SE-CLM-0004
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0004
+    status: PROPOSED
+  - relationship_id: SE-REL-0005
+    subject_id: SE-CLM-0005
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0005
+    status: PROPOSED
+  - relationship_id: SE-REL-0006
+    subject_id: SE-CLM-0006
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0006
+    status: PROPOSED
+  - relationship_id: SE-REL-0007
+    subject_id: SE-CLM-0007
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0007
+    status: PROPOSED
