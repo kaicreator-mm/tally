@@ -388,6 +388,25 @@ This Rule validates minimum input shape only. It does **not** attest a native de
 
 The four new compiler/consumer files proposed for F1b are `experiments/v2/selected-business-build/domain-data-compiler.mjs`, `domain-data-compiler.test.mjs`, `consumer-domain-data.mjs` and `consumer-domain-data.test.mjs`. Editing the existing `producer.mjs` remains serialized after #219 and requires the exact Task Pack/write-set amendment and independent review. If the selected-B consumer cannot be implemented without a public ABI change, keep the assets authoring-only and do not claim selected-runtime qualification.
 
+### 8.1.1.1 Exact one-file composition and selected-B dataflow
+
+The one-file V10 Producer contract is binding. It selects exactly one Business `moduleSource` from `TALLY_BUSINESS_SOURCE`; sibling files and `domain/**` assets do not enter the selected module by repository proximity.
+
+**Private helper → compiler → one generated module:**
+
+1. **F1a helper role.** `packages/tally-engineering-business/src/domain-model/task-readiness.mjs` is a private compiler input. It is not a runtime sibling import and is never selected as a second Business module.
+2. **F1b compiler inputs.** The deterministic `domain-data-compiler.mjs` consumes exact raw `src/index.mjs` bytes, exact private helper bytes, the selected task-readiness Schema and minimum-evidence Rule JSON, and the closed-world canonical manifest. It validates exact asset IDs, references, schema/Rule semantics and content/manifest digests.
+3. **Single-module output.** The compiler emits one self-contained ESM source string. It inlines the helper implementation and canonical immutable Schema/Rule data into that output. There is no sibling import, runtime filesystem read, dynamic loader, second Business module or public ABI.
+4. **F2 source seam.** After #219 closes and the exact F2 write set is refreshed/reviewed, F2 changes the existing `src/index.mjs` to contain exactly one marker declaration:
+   `/* TALLY_DOMAIN_DATA_RUNTIME_SLOT */ const __tallyAssessTaskReadiness = null;`
+   `assessTaskEvidence(input)` delegates only to `__tallyAssessTaskReadiness(input)`. If the marker has not been compiled/replaced, raw source fails closed as `UNQUALIFIED_INPUT / DOMAIN_DATA_NOT_SELECTED`. The current three outcomes must not remain hardcoded as a fallback.
+5. **Compiler replacement.** F1b requires exactly one marker occurrence and replaces that declaration with a private closure built from the validated helper + selected Schema/Rule constants. Missing, duplicate or altered marker; missing/unselected asset; invalid reference; stale content/manifest digest; or helper/source mismatch fails BUILD before a selected module is emitted.
+6. **F2 Producer handoff.** After #219 and exact F2 admission, the existing `producer.mjs` passes the compiler's single generated source string as the selected Business `moduleSource`. The receipt binds three distinct digests: `inputBusinessSourceSha256` for raw `src/index.mjs`, `domainDataManifestSha256` for selected assets, and `generatedModuleSourceSha256` for the final one-file module. The generated module digest is not expected to equal the raw input digest.
+7. **Observable behavior proof.** The public clean consumer invokes the existing `inspectTaskReadiness` Intent through the selected BUILD/K path. It proves the three documented outcomes. A semantically changed Rule with a recomputed manifest must change the observed decision, proving the Rule drives behavior rather than metadata. Missing/unselected/stale assets and a stale manifest fail closed with no effect. All outputs remain advisory (`admitted=false`, `taskPass=false`).
+8. **No hidden execution.** Workflow JSON remains authoring/reference-only. No arbitrary Workflow executor, Host runtime asset loader, new K, C effect, second scheduler or ABI expansion is introduced.
+
+F1b's four compiler/consumer paths remain unchanged. The `src/index.mjs` injection slot and `producer.mjs` integration remain existing F2 paths, serialized after #219. This is a design clarification, not source authorization or a write-set expansion.
+
 ### 8.2 Recommended staged execution (inside the admitted F task)
 
 - **F0 — Design and inventory:** completed as docs-only analysis in PR #277; not source admission.
