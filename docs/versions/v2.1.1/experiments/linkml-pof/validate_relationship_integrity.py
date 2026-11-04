@@ -482,7 +482,7 @@ def self_test(rules):
     try:
         validate_rdf(bad, rules, "self-test-literal-rdf-type", [r for r in sample_records() if r[0] != "RelationshipAssertion" or r[1]["id"] == "se:R1"])
     except IntegrityError as exc:
-        if "rdf:type assertion for object must have a URIRef class" not in str(exc):
+        if "rdf:type object for" not in str(exc):
             raise
         print("SELF-TEST PASS: non-URIRef rdf:type rejected")
         passed += 1
