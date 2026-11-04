@@ -4,12 +4,12 @@
 const SHA=/^[0-9a-f]{40}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 const titleOk=value=>typeof value==='string'&&value.trim().length>0&&
-  value.length<=120&&!/[\\u0000-\\u001f\\u007f]/.test(value);
+  value.length<=120&&!/[\u0000-\u001f\u007f]/.test(value);
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const valueOk=(value)=>value===null||typeof value==='boolean'||
   (typeof value==='string'&&value.length<=4096&&!/[\u0000-\u0008\u000B-\u001F]/.test(value))||
   (Array.isArray(value)&&value.length<=32&&value.every(v=>typeof v==='string'&&
-    v.length>0&&v.length<=128&&!/[\\u0000-\\u001f\\u007f]/.test(v)));
+    v.length>0&&v.length<=128&&!/[\u0000-\u001f\u007f]/.test(v)));
 const deny=(reason)=>({connected:false,status:'DENIED',reason});
 const plain=(v)=>!!v&&typeof v==='object'&&!Array.isArray(v);
 /** Structural canonical form: object keys are sorted recursively, so two
