@@ -105,6 +105,7 @@ test('task execution summary exposes only source-provided sanitized progress and
     ...task.execution!,attemptId:'ghp_12345678901234567890'
   }}).attemptId,'UNKNOWN');
   for(const progressSummary of ['github_pat_abcdefghijklmnopqrstuvwxyz',
+    'safe_github_pat_abcdefghijklmnopqrstuvwxyz',
     'Bearer abcdefghijklmnopqrstuvwxyz']){
     assert.equal(taskExecutionSummary({...task,execution:{
       ...task.execution!,progressSummary
