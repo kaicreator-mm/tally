@@ -87,7 +87,7 @@ A repair candidate was applied:
 - Removed redundant `object_kind`; predicate-specific endpoint constraints are now in `RELATIONSHIP_RULES.yaml`.
 - Changed fixture identifiers and typed references to `se:` CURIEs with `uriorcurie`.
 
-Windows-native LinkML/linkml-runtime v1.12.1 execution subsequently verified the abstract-class range, non-inlined reference serialization, CURIE expansion and URIRef resource-node behavior in generated Turtle. A/B/C graph equivalence, exact YAML-to-RDF edge identity, JSON-LD edge identity and fail-closed endpoint validation are recorded in RESULTS.md §10.14. The final checker source passed 31/31 self-tests and independent review at source-bearing HEAD `2c5c8b3d`; the current documentation-only HEAD `5591303f` still requires exact-HEAD identity rebind before integration. No production adoption is implied.
+Windows-native LinkML/linkml-runtime v1.12.1 execution subsequently verified the abstract-class range, non-inlined reference serialization, CURIE expansion and URIRef resource-node behavior in generated Turtle. A/B/C graph equivalence, exact YAML-to-RDF edge identity, JSON-LD edge identity and fail-closed endpoint validation are recorded in RESULTS.md §10.14. The final checker source passed 31/31 self-tests and independent review at source-bearing HEAD `2c5c8b3d`; the current documentation-only PR HEAD still requires exact-HEAD identity rebind before integration. No production adoption is implied.
 
 ## R2 P2 remediation — status reconciliation
 
