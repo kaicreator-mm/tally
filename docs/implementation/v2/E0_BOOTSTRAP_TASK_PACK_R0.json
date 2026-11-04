@@ -1834,13 +1834,31 @@
           263
         ]
       },
-      "freezeEligible": false
+      "freezeEligible": false,
+      "dispatchableCandidateCount": 11,
+      "dispatchableCandidateOverlapPairs": 5,
+      "dispatchableCandidateOverlapTaskIssues": [
+        203,
+        207,
+        210,
+        219
+      ],
+      "dispatchableCandidateOverlapNativeSerializationMissing": 5,
+      "isolatedDispatchableCandidateTasks": [
+        208,
+        209,
+        211,
+        260,
+        261,
+        262,
+        263
+      ]
     },
     "rule": "Only each Issue's canonical top-level allowed_write_set is authoritative. #199/#200 are read-only with empty writable paths; #264 remains incomplete with an empty writable set and separate declaredExactPaths. PR-derived scopes for #260-#263 are exact base..HEAD snapshots. All 23 open Tasks remain non-dispatchable until current native edge serialization, independent review, accepted Claim/JIT and frozen CAS readback.",
     "digestAlgorithms": {
       "issueBodySha256": "SHA-256 over the exact UTF-8 GitHub Issue body string returned by REST",
       "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
-      "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
+      "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,dispatchableOverlapAudit,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
     },
     "auditObservedAt": "2026-11-04T06:32:31Z",
     "status": "BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS",
@@ -1848,14 +1866,189 @@
     "freezeEligible": false,
     "requiredBeforeFreeze": [
       "Resolve #264's installed-write-journeys wildcard and tests into exact filenames; do not infer expansion.",
-      "Review and serialize the 36 exact pairwise writable-path overlaps; a planned/prose edge does not serialize and all pairs remain non-dispatchable until native blocked_by readback.",
+      "Resolve the exact pairwise overlaps among the 11 currently dispatchable candidate Tasks. Five overlapping pairs currently have no native blocked_by serialization; split exact scopes or obtain authorized native edges, then read back. The remaining all-scope overlaps involve non-dispatchable tasks and remain recorded but do not authorize concurrent writes.",
       "Refresh the version/v2 candidate Task Pack and native dependency snapshot from the current 44-Task roster after all body normalization.",
       "Obtain independent Exact-SHA review and exact Owner Pack Approval bound to the refreshed candidate blob, source SHA and audit digest.",
       "Only after all readbacks pass, create/read back the immutable version Task Pack freeze and per-Task FROZEN_DAG_WRITESET CAS rows.",
       "For E0 #284, independently review the exact bootstrap pack blob and obtain exact Owner approval before one-time T06d Host mount/Claim; no source admission beforehand.",
       "E1 #264 remains the sole final integration owner after the explicit E0 handoff."
     ],
-    "auditDigestSha256": "471895ae8ac882fe577ce0ca75ebf38fbdfbd32deb180db27eb12f25dc2d3e2b"
+    "auditDigestSha256": "194ca2589513d2845bbf793392cc617fbbea29331ee755054aeb7248217e88dc",
+    "dispatchableOverlapAudit": {
+      "candidateTaskIssues": [
+        203,
+        207,
+        208,
+        209,
+        210,
+        211,
+        219,
+        260,
+        261,
+        262,
+        263
+      ],
+      "candidateCount": 11,
+      "pairwiseOverlapCount": 5,
+      "overlapComponents": [
+        {
+          "taskIssues": [
+            203,
+            207,
+            210,
+            219
+          ],
+          "pairwiseOverlapCount": 5,
+          "edges": [
+            {
+              "taskIssues": [
+                203,
+                210
+              ],
+              "paths": [
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                203,
+                219
+              ],
+              "paths": [
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                207,
+                210
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "web/v2/journey-server.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                207,
+                219
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "web/v2/journey-server.mjs"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            },
+            {
+              "taskIssues": [
+                210,
+                219
+              ],
+              "paths": [
+                ".woodpecker/v2-alm-workspace.yaml",
+                "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+                "experiments/v2/selected-business-build/local-codex-shim.mjs",
+                "experiments/v2/selected-business-build/producer.mjs",
+                "packages/tally-engineering-business/src/index.mjs",
+                "packages/tally-engineering-business/test/business-policy.test.mjs",
+                "web/v2/journey-server.mjs",
+                "web/v2/journey-view.html"
+              ],
+              "nativeBlockedBySerialization": "MISSING"
+            }
+          ]
+        }
+      ],
+      "isolatedCandidateTaskIssues": [
+        208,
+        209,
+        211,
+        260,
+        261,
+        262,
+        263
+      ],
+      "nativeBlockedByReadback": [
+        {
+          "issueNumber": 203,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 207,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 208,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 209,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 210,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 211,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 219,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 260,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 261,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 262,
+          "blockedBy": []
+        },
+        {
+          "issueNumber": 263,
+          "blockedBy": []
+        }
+      ],
+      "missingNativeSerializationPairs": [
+        [
+          203,
+          210
+        ],
+        [
+          203,
+          219
+        ],
+        [
+          207,
+          210
+        ],
+        [
+          207,
+          219
+        ],
+        [
+          210,
+          219
+        ]
+      ],
+      "allCandidatesDispatchable": false
+    }
   },
   "rootAdmissionPlan": {
     "schema": "tally.e0.root-admission-plan/v1",
