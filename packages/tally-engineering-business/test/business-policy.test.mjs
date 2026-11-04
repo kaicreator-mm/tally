@@ -769,6 +769,11 @@ const learningRecorded=()=>({state:'LEARNING_RECORDED',
   reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
   issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
   sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+  ownerApproval:{state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+    repository:'kaicreator-mm/tally',issueNumber:219,sourceSha:'d'.repeat(40),
+    learningId:'f'.repeat(64),decision:'ADOPTED',commentId:6543210987,
+    commentUrl:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6543210987',
+    author:'kaicreator-mm',permission:'admin'},
   claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
   replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
   noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false});
@@ -924,6 +929,61 @@ test('#219 learning projection records use/reject and honest outcomes only',()=>
   }
 });
 
+test('#219 ADOPT projection requires an exact verified Owner approval receipt',()=>{
+  const noApproval=projectTaskLearningOutcome({input:learningInput(),
+    observation:{...learningRecorded(),ownerApproval:undefined},effectId:'fx'});
+  assert.equal(noApproval.state,'NOT_ADMITTED');
+  assert.equal(noApproval.reason,'UNVERIFIED_TASK_LEARNING_RECORD');
+  assert.equal(noApproval.admitted,false);
+  for(const change of [
+    {sourceSha:'e'.repeat(40)},
+    {learningId:'e'.repeat(64)},
+    {decision:'REJECTED'},
+    {permission:'write'},
+    {commentId:0},
+    {commentUrl:'https://github.com/kaicreator-mm/tally/issues/220#issuecomment-1'},
+  ]){
+    const bad=projectTaskLearningOutcome({input:learningInput(),
+      observation:{...learningRecorded(),ownerApproval:{
+        ...learningRecorded().ownerApproval,...change}},effectId:'fx'});
+    assert.equal(bad.state,'NOT_ADMITTED',JSON.stringify(change));
+    assert.equal(bad.admitted,false);
+  }
+  const rejectInput={...learningInput(),decision:'REJECTED'};
+  const reject=projectTaskLearningOutcome({input:rejectInput,
+    observation:{...learningRecorded(),decision:'REJECTED',ownerApproval:undefined},
+    effectId:'fx'});
+  assert.equal(reject.state,'LEARNING_RECORDED');
+  assert.equal(reject.decision,'REJECTED');
+  assert.equal(reject.ownerApproval,undefined);
+});
+
+test('#219 learning projection preserves bounded Host denial reasons exactly',()=>{
+  const denied=reason=>projectTaskLearningOutcome({input:learningInput(),
+    observation:{...learningRecorded(),state:'NOT_ADMITTED',reason,
+      admitted:false,claimAccepted:false,githubEffect:'NOT_RUN'},effectId:'fx'});
+  // Known Host denials surface as their exact bounded reason instead of
+  // collapsing to the generic unverified record.
+  for(const reason of ['INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED',
+    'LEARNING_ADOPTION_NOT_QUALIFIED','LEARNING_REPORT_SET_EMPTY',
+    'LEARNING_OWNER_APPROVAL_NOT_VERIFIED','LEARNING_PROVENANCE_NOT_VERIFIED']){
+    const y=denied(reason);
+    assert.equal(y.state,'NOT_ADMITTED',reason);
+    assert.equal(y.reason,reason,reason);
+    assert.equal(y.admitted,false);
+    assert.equal(y.taskPass,false);
+  }
+  // Unrecognized or near-miss Host strings never pass through: they keep the
+  // generic fail-closed reason instead of forwarding arbitrary Host text.
+  for(const reason of ['MADE_UP_REASON','LEARNING_ADOPTION_NOT_QUALIFIE',
+    'learning_adoption_not_qualified','INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED ']){
+    const y=denied(reason);
+    assert.equal(y.state,'NOT_ADMITTED',JSON.stringify(reason));
+    assert.equal(y.reason,'UNVERIFIED_TASK_LEARNING_RECORD',JSON.stringify(reason));
+    assert.equal(y.admitted,false);
+  }
+});
+
 test('#219 learning effect dispatches sealed resource only for qualified input',async()=>{
   const p=getPolicy();let calls=0;
   const handler=p.effectBindings['effect:tally-task-learning-outcome'].handler;
@@ -944,6 +1004,7 @@ test('#219 learning effect dispatches sealed resource only for qualified input',
         state:'LEARNING_RECORDED',reason:'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',
         issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
         sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+        ownerApproval:learningRecorded().ownerApproval,
         claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
         replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
         outcome:{attested:false,measuredEffect:'NOT_MEASURED'},
@@ -961,6 +1022,7 @@ test('#219 learning effect dispatches sealed resource only for qualified input',
         state:'LEARNING_RECORDED',reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
         issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
         sourceSha:'d'.repeat(40),learningId:'f'.repeat(64),decision:'ADOPTED',
+        ownerApproval:learningRecorded().ownerApproval,
         claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
         replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
         noAgentRanking:true,qualityGainClaimed:false,

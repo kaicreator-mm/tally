@@ -153,7 +153,9 @@ test('Task Learning loads only through the Host seam with provenance intact',asy
   assert.equal(row.qualification,'REPORTED_QUALIFIED');
   assert.equal(row.provenance.reportId,'rep-1');
   assert.equal(row.decision,null);assert.equal(row.measuredEffect,'NOT_MEASURED');
-  assert.equal(row.noAgentRanking,true);assert.equal(row.qualityGainClaimed,false);
+  // The no-ranking guarantee is projected only from a verified Host record;
+  // the unverified loaded suggestion's own noAgentRanking:true is not trusted.
+  assert.equal(row.noAgentRanking,false);assert.equal(row.qualityGainClaimed,false);
 });
 
 test('learning use/reject and outcome record only through the sealed seam',async()=>{
@@ -163,26 +165,46 @@ test('learning use/reject and outcome record only through the sealed seam',async
     {learningId:'f'.repeat(64),decision:'ADOPTED'});
   assert.equal(notRun.state,'NOT_RUN');
   assert.equal(notRun.reason,'SEALED_K_DISPATCH_UNAVAILABLE');
+  const learningId='f'.repeat(64);
+  const suggestion={learningId,qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId:'report-1',revision:1,kind:'EXECUTION_SUMMARY',
+      commentId:6540000001,issueNumber:203,namespace:'tally',
+      publicationRef:'https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540000001'}};
+  const approval={state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+    repository:'kaicreator-mm/tally',issueNumber:219,sourceSha,learningId,
+    decision:'ADOPTED',commentId:6540000002,
+    commentUrl:ISSUE_REF+'#issuecomment-6540000002',
+    author:'kaicreator-mm',permission:'admin'};
   const envelopes=[];
-  const seam=make({sealedDispatch:async request=>{
-    envelopes.push(request);
-    const isOutcome=request.input.outcomeAttested!==null;
-    return {phase:'terminal',outcome:{ok:true,output:{
-      state:'LEARNING_RECORDED',
-      reason:isOutcome?'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS':
-        'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
-      issueRef:ISSUE_REF,sourceSha:request.input.sourceSha,
-      learningId:request.input.learningId,decision:request.input.decision,
-      claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
-      replayFixture:false,githubEffect:'NOT_RUN',
-      measuredEffect:isOutcome?'ATTESTED_OUTCOME_ONLY':'NOT_MEASURED',
-      ...(isOutcome?{outcome:{attested:true,measuredEffect:'ATTESTED_OUTCOME_ONLY'}}:{}),
-      noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}};
-  }});
-  const decision=await act(seam,'record-learning',
-    {learningId:'f'.repeat(64),decision:'ADOPTED'});
+  const seam=make({host:{readTaskLearning:async()=>({suggestions:[suggestion]})},
+    sealedDispatch:async request=>{
+      envelopes.push(request);
+      const isOutcome=request.input.outcomeAttested!==null;
+      return {phase:'terminal',outcome:{ok:true,output:{
+        state:'LEARNING_RECORDED',
+        reason:isOutcome?'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS':
+          'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+        issueRef:ISSUE_REF,sourceSha:request.input.sourceSha,
+        learningId:request.input.learningId,decision:request.input.decision,
+        claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+        replayFixture:false,githubEffect:'NOT_RUN',
+        ...(request.input.decision==='ADOPTED'?{ownerApproval:approval}:{}),
+        measuredEffect:isOutcome?'ATTESTED_OUTCOME_ONLY':'NOT_MEASURED',
+        ...(isOutcome?{outcome:{attested:true,measuredEffect:'ATTESTED_OUTCOME_ONLY'}}:{}),
+        noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}};
+    }});
+  await act(seam,'load-learning');
+  const decision=await act(seam,'record-learning',{learningId,decision:'ADOPTED'});
   assert.equal(decision.state,'LEARNING_RECORDED');
   assert.equal(decision.decision,'ADOPTED');
+  assert.equal(decision.claimAccepted,true);assert.equal(decision.admitted,true);
+  assert.equal(decision.authorized,false);assert.equal(decision.githubEffect,'NOT_RUN');
+  assert.deepEqual(decision.ownerApproval,approval);
+  const recordedRow=seam.snapshot().learning[0];
+  assert.equal(recordedRow.decision,'ADOPTED');
+  assert.equal(recordedRow.recordState,'LEARNING_RECORDED');
+  assert.deepEqual(recordedRow.ownerApproval,approval);
+  assert.equal(recordedRow.claimAccepted,true);assert.equal(recordedRow.admitted,true);
   assert.equal(decision.measuredEffect,'NOT_MEASURED');
   const outcome=await act(seam,'record-learning',{learningId:'f'.repeat(64),
     decision:'ADOPTED',outcome:{attested:true,observedAt:'2026-11-02T10:00:00.000Z',
@@ -197,6 +219,33 @@ test('learning use/reject and outcome record only through the sealed seam',async
   const badOutcome=await act(seam,'record-learning',{learningId:'f'.repeat(64),
     decision:'ADOPTED',outcome:{attested:'yes',observedAt:'x',note:'n'}});
   assert.equal(badOutcome.status,'BLOCKED');
+});
+
+
+
+test('failed Owner-gated ADOPT is not projected as an adopted decision',async()=>{
+  const learningId='d'.repeat(64);
+  const suggestion={learningId,qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId:'report-denied',revision:1,kind:'EXECUTION_SUMMARY',
+      commentId:6540000101,issueNumber:203,namespace:'tally',
+      publicationRef:'https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540000101'}};
+  const controller=make({host:{readTaskLearning:async()=>({suggestions:[suggestion]})},
+    sealedDispatch:async request=>({phase:'terminal',outcome:{ok:true,output:{
+      state:'NOT_ADMITTED',reason:'LEARNING_OWNER_APPROVAL_NOT_VERIFIED',
+      issueRef:ISSUE_REF,sourceSha:request.input.sourceSha,
+      learningId:request.input.learningId,claimGeneration:1,
+      claimAccepted:false,admitted:false,authorized:false,replayFixture:false,
+      githubEffect:'NOT_RUN',taskPass:false,releasePass:false}}})});
+  await act(controller,'load-learning');
+  const result=await act(controller,'record-learning',{learningId,decision:'ADOPTED'});
+  assert.equal(result.state,'NOT_ADMITTED');
+  assert.equal(result.decision,null);
+  const row=controller.snapshot().learning[0];
+  assert.equal(row.decision,null);
+  assert.equal(row.recordState,'NOT_ADMITTED');
+  assert.equal(row.claimAccepted,false);
+  assert.equal(row.admitted,false);
+  assert.equal(row.ownerApproval,undefined);
 });
 
 test('invalid args and unknown kinds refuse without touching state',async()=>{

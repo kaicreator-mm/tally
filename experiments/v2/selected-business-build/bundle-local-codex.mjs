@@ -36,7 +36,8 @@ import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} 
 import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
-  readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
+  readMaintenanceIssueFromClient,readTaskLearningOwnerApprovalFromClient}
+  from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
@@ -342,7 +343,18 @@ function maintenanceHostFor(){
         request:{timeout:15000}}),...publishInput});
     },
     findIssue:args=>findMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
-    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args})});
+    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
+    // Local replay uses an explicitly synthetic approval only inside the
+    // no-physical-effect fixture path. Production always reads GitHub comments
+    // and the author's current repository permission through the trusted C port.
+    readOwnerApproval:args=>env.TALLY_LOCAL_REPLAY==='1'?
+      Promise.resolve({state:'OWNER_APPROVAL_VERIFIED',
+        reason:'GITHUB_OWNER_APPROVAL_VERIFIED',repository:'kaicreator-mm/tally',
+        issueNumber:219,sourceSha:args.sourceSha,learningId:args.learningId,
+        decision:'ADOPTED',commentId:1,
+        commentUrl:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-1',
+        author:'local-replay-owner',permission:'admin'}):
+      readTaskLearningOwnerApprovalFromClient({octokit:readOctokit(),...args})});
 }
 export async function publishMaintenanceIssue(input){
   return maintenanceHostFor().hostPublishMaintenanceIssue(input);

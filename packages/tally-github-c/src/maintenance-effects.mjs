@@ -118,6 +118,116 @@ export async function readMaintenanceIssueFromClient({octokit,issueNumber,title,
     reason:errorReason(e),issue:null});}
 }
 
+const OWNER_APPROVAL_MARKER='OWNER_T219_LEARNING_ADOPT_APPROVAL=';
+const OWNER_APPROVAL_MAX_PAGES=10;
+const OWNER_APPROVAL_ISSUE_API='https://api.github.com/repos/'+OWNER+'/'+REPO+'/issues/219';
+const ownerApprovalDenied=(sourceSha,learningId,reason,extra={})=>freeze({
+  state:'OWNER_APPROVAL_NOT_VERIFIED',reason,repository:REPOSITORY,
+  issueNumber:219,sourceSha,learningId,decision:'ADOPTED',...extra});
+const parseOwnerApprovalBlock=block=>{
+  const lines=String(block).trim().split(/\r?\n/);
+  if(lines.length!==4)return null;
+  const approval=/^OWNER_T219_LEARNING_ADOPT_APPROVAL=([A-Z_]+)$/.exec(lines[0]);
+  const source=/^sourceSha=([0-9a-f]{40})$/.exec(lines[1]);
+  const learning=/^learningId=([0-9a-f]{64})$/.exec(lines[2]);
+  const decision=/^decision=([A-Z_]+)$/.exec(lines[3]);
+  return approval&&source&&learning&&decision?{
+    approval:approval[1],sourceSha:source[1],learningId:learning[1],
+    decision:decision[1]}:null;
+};
+
+/**
+ * Verify one exact #219 ADOPT approval from GitHub itself. The approval is
+ * usable only when exactly one structured comment binds this source SHA and
+ * learning ID, its actual author is a current repository admin, and every
+ * identity field is read back from the canonical GitHub API response.
+ */
+export async function readTaskLearningOwnerApprovalFromClient({
+  octokit,sourceSha,learningId,decision,perPage=100,maxPages=OWNER_APPROVAL_MAX_PAGES
+}={}){
+  if(!octokit?.rest?.issues?.listComments||
+    !octokit?.rest?.repos?.getCollaboratorPermissionLevel||
+    !SHA.test(sourceSha??'')||!DIGEST.test(learningId??'')||
+    decision!=='ADOPTED'||perPage!==100||
+    !Number.isSafeInteger(maxPages)||maxPages<1||maxPages>OWNER_APPROVAL_MAX_PAGES)
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_INPUT_INVALID');
+
+  const exact=[],stale=[];
+  let malformedRelevant=false,complete=false;
+  const fence=/\x60\x60\x60(?:[A-Za-z0-9_-]+)?[ \t]*\r?\n([\s\S]*?)\r?\n\x60\x60\x60/g;
+  try{
+    for(let page=1;page<=maxPages;page++){
+      const rows=(await octokit.rest.issues.listComments({
+        owner:OWNER,repo:REPO,issue_number:219,per_page:perPage,page
+      }))?.data;
+      if(!Array.isArray(rows))
+        return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_READ_INVALID');
+      for(const comment of rows){
+        const body=typeof comment?.body==='string'?comment.body:'';
+        if(!body.includes(OWNER_APPROVAL_MARKER))continue;
+        const blocks=[...body.matchAll(fence)];
+        const outside=body.replace(fence,'');
+        if(outside.includes(OWNER_APPROVAL_MARKER)&&
+          (outside.includes('learningId='+learningId)||
+            outside.includes('sourceSha='+sourceSha)))
+          malformedRelevant=true;
+        for(const match of blocks){
+          const block=match[1];
+          if(!block.includes(OWNER_APPROVAL_MARKER))continue;
+          const parsed=parseOwnerApprovalBlock(block);
+          if(parsed?.learningId===learningId){
+            if(parsed.sourceSha===sourceSha)exact.push({comment,parsed});
+            else stale.push({comment,parsed});
+          }else if(block.includes('learningId='+learningId)){
+            malformedRelevant=true;
+          }
+        }
+      }
+      if(rows.length<perPage){complete=true;break;}
+    }
+  }catch(error){
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_READ_FAILED',
+      {transportReason:errorReason(error)});
+  }
+  if(!complete)
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_READ_INCOMPLETE');
+  if(malformedRelevant||exact.length>1)
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_CONFLICT');
+  if(exact.length===0)
+    return ownerApprovalDenied(sourceSha,learningId,
+      stale.length?'OWNER_APPROVAL_STALE':'OWNER_APPROVAL_MISSING');
+
+  const {comment,parsed}=exact[0];
+  if(parsed.approval!=='APPROVE'||parsed.decision!=='ADOPTED')
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_CONFLICT');
+  const commentId=comment?.id,author=comment?.user?.login;
+  const commentUrl='https://github.com/'+REPOSITORY+'/issues/219#issuecomment-'+commentId;
+  if(!Number.isSafeInteger(commentId)||commentId<1||
+    typeof author!=='string'||!/^[A-Za-z0-9-]{1,39}$/.test(author)||
+    comment.issue_url!==OWNER_APPROVAL_ISSUE_API||
+    comment.html_url!==commentUrl||
+    typeof comment.created_at!=='string'||!Number.isFinite(Date.parse(comment.created_at)))
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_COMMENT_IDENTITY_INVALID');
+
+  let permission;
+  try{
+    const response=await octokit.rest.repos.getCollaboratorPermissionLevel({
+      owner:OWNER,repo:REPO,username:author
+    });
+    permission=response?.data?.permission??response?.data?.role_name;
+  }catch(error){
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_PERMISSION_READ_FAILED',
+      {transportReason:errorReason(error)});
+  }
+  if(permission!=='admin')
+    return ownerApprovalDenied(sourceSha,learningId,'OWNER_APPROVAL_AUTHOR_NOT_ADMIN');
+
+  return freeze({state:'OWNER_APPROVAL_VERIFIED',
+    reason:'GITHUB_OWNER_APPROVAL_VERIFIED',repository:REPOSITORY,
+    issueNumber:219,sourceSha,learningId,decision:'ADOPTED',
+    commentId,commentUrl,author,permission:'admin'});
+}
+
 /** Maintenance marker is derived only from the frozen candidate digest. */
 export const maintenanceMarkerFor=candidateDigest=>
   DIGEST.test(candidateDigest??'')?`tally:maintenance:219:${candidateDigest}`:null;

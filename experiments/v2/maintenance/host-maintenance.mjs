@@ -9,13 +9,23 @@
  * trusts caller authority. The prior release is an immutable reported
  * identity only — it is never rewritten. Task Learning uses existing public
  * ADS reports with explicit provenance, an explicit use/reject decision and a
- * later independent outcome; quality gain is never inferred and Agents are
- * never ranked. Every deviation fails closed with a bounded reason, a lost
+ * later independent outcome; the observation set is projected as a whole, so
+ * a projector-defined same-identity report CONFLICT refuses every suggestion
+ * in it. Quality gain is never inferred and Agents are
+ * never ranked. A REJECT is the explicit decline of observed evidence: it is
+ * recordable while the suggestion is bound to a legitimately observed report
+ * identity even when the source is STALE/UNKNOWN, it records the exact
+ * provenance/currentness/qualification result, and it never creates an
+ * adopted Rule/Skill/Procedure/Workflow or enters a next-Task Context Pack;
+ * ADOPT requires REPORTED_QUALIFIED current evidence plus a per-learning
+ * GitHub Owner/admin approval comment verified by the trusted Host C reader.
+ * Every deviation fails closed with a bounded reason, a lost
  * GitHub acknowledgment stays UNKNOWN and later reconciles WITHOUT creating a
  * duplicate Issue.
  */
 import {createHash} from 'node:crypto';
-import {projectReport,STATES} from '../../../packages/tally-github-c/src/report-projection.mjs';
+import {projectReport,projectReportSet,STATES}
+  from '../../../packages/tally-github-c/src/report-projection.mjs';
 
 const OWNER='kaicreator-mm',REPO='tally',ISSUE=219;
 const ISSUE_REF=`https://github.com/${OWNER}/${REPO}/issues/${ISSUE}`;
@@ -27,6 +37,40 @@ const ISO=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))&&
 const RELEASE_TAG=/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const VERSION=/^v?[0-9]+\.[0-9]+(?:\.[0-9]+)?$/;
 const DECISIONS=new Set(['ADOPTED','REJECTED']);
+// A recorded decision is a ledger fact only: it adopts nothing and no
+// decision — above all an explicit REJECT — may feed a next-Task Context Pack.
+const NOT_REUSED=Object.freeze({nextTaskContextPack:false,adoptedRule:false,
+  adoptedSkill:false,adoptedProcedure:false,adoptedWorkflow:false});
+// A decision may only bind to a suggestion whose learningId is exactly the
+// digest of its own observed report identity; anything else is forged.
+const provenanceBound=suggestion=>{const p=suggestion?.provenance;
+  const publication=typeof p?.publicationRef==='string'?
+    /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)#issuecomment-([1-9][0-9]*)$/.exec(p.publicationRef):null;
+  return !!p&&typeof p.reportId==='string'&&p.reportId.length>0&&p.reportId.length<=512&&
+    Number.isSafeInteger(p.revision)&&p.revision>0&&
+    Number.isSafeInteger(p.commentId)&&p.commentId>0&&
+    Number.isSafeInteger(p.issueNumber)&&p.issueNumber>0&&
+    typeof p.kind==='string'&&p.kind.length>0&&p.kind.length<=512&&
+    typeof p.namespace==='string'&&p.namespace.length>0&&p.namespace.length<=512&&
+    typeof p.repository==='string'&&/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(p.repository)&&
+    SHA.test(p.sourceSha??'')&&p.sourceSha===suggestion.subjectSha&&
+    typeof p.dataDigest==='string'&&p.dataDigest.length>0&&p.dataDigest.length<=512&&
+    !!publication&&publication[1]===p.repository&&
+    publication[2]===String(p.issueNumber)&&publication[3]===String(p.commentId)&&
+    suggestion.learningId===sha256([p.reportId,p.revision,p.commentId,p.kind]);};
+// Ledgers recorded before the currentness field existed can only reconstruct
+// a coarse result; qualification stays the exact observed classification.
+const validOwnerApproval=(input,approval)=>
+  approval?.state==='OWNER_APPROVAL_VERIFIED'&&
+  approval.reason==='GITHUB_OWNER_APPROVAL_VERIFIED'&&
+  approval.repository===OWNER+'/'+REPO&&approval.issueNumber===ISSUE&&
+  approval.sourceSha===input.sourceSha&&approval.learningId===input.learningId&&
+  approval.decision==='ADOPTED'&&Number.isSafeInteger(approval.commentId)&&
+  approval.commentId>0&&typeof approval.author==='string'&&
+  IDENTITY.test(approval.author)&&approval.permission==='admin'&&
+  approval.commentUrl===ISSUE_REF+'#issuecomment-'+approval.commentId;
+const currentnessOf=suggestion=>suggestion?.currentness??
+  (suggestion?.qualification==='REPORTED_QUALIFIED'?STATES.CURRENT:STATES.UNKNOWN);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
@@ -168,42 +212,73 @@ export async function recordMaintenanceCandidate({openStore,registryPath,sourceS
 /**
  * J08c provenance ledger: derive Task Learning suggestions ONLY from existing
  * public ADS report observations already collected by the native C reader.
- * Provenance keeps the exact report identity; qualification REPORTED_QUALIFIED
- * requires a CURRENT report with a QUALIFIED verifier — everything else stays
- * UNKNOWN. No quality gain and no Agent ranking can enter the ledger.
+ * The whole observation set is projected together first: the shared projector
+ * defines the same logical report identity (repository, issue, namespace,
+ * reportId, revision, kind) with a divergent native digest/source SHA/comment
+ * ID as a CONFLICT, and such a set is refused in full — every conflicting row
+ * alone still looks legitimately provenance-bound, so only the set-level
+ * check can catch the pair. Provenance keeps the exact report identity;
+ * qualification REPORTED_QUALIFIED requires a CURRENT report with a QUALIFIED
+ * verifier — everything else stays UNKNOWN, while currentness/currentnessReason
+ * keep the exact observed source/currentness result (STALE/UNKNOWN/PARTIAL/
+ * CURRENT) for the explicit use/reject decision. No quality gain and no Agent
+ * ranking can enter the ledger.
  */
-export function learningSuggestionsFromReports(observations){
-  if(!Array.isArray(observations)||observations.length>100)return null;
+const projectLearningSet=observations=>{
+  if(!Array.isArray(observations)||observations.length>100)
+    return {status:'INVALID',suggestions:null};
+  if(projectReportSet(observations).status===STATES.CONFLICT)
+    return {status:'CONFLICT',suggestions:null};
   const suggestions=[];
+  const byLearningId=new Map();
   for(const observation of observations){
     const row=projectReport(observation);
-    if(row.status===STATES.INVALID||row.status===STATES.UNSUPPORTED)return null;
+    if(row.status===STATES.INVALID||row.status===STATES.UNSUPPORTED)
+      return {status:row.status,suggestions:null};
     const data=observation?.envelope?.data;
     const taskIssueRef=ISSUE_URL.test(data?.subject?.task_ref??'')?
       data.subject.task_ref:null;
     const targetIssueRef=ISSUE_URL.test(data?.subject?.issue_ref??'')?
       data.subject.issue_ref:null;
-    suggestions.push(Object.freeze({
+    const suggestion=Object.freeze({
       learningId:row.source?sha256([row.source.reportId,row.source.revision,
         row.source.commentId,row.source.kind]):null,
       taskIssueRef,targetIssueRef,
       subjectSha:row.source?.sourceSha??null,
       qualification:row.status===STATES.CURRENT&&
         row.advisory?.verifierStatus==='QUALIFIED'?'REPORTED_QUALIFIED':'UNKNOWN',
+      currentness:row.status,currentnessReason:row.reason??null,
       provenance:row.source?Object.freeze({reportId:row.source.reportId,
         revision:row.source.revision,kind:row.source.kind,
         commentId:row.source.commentId,issueNumber:row.source.issueNumber,
-        namespace:row.source.namespace,dataDigest:row.source.dataDigest,
+        namespace:row.source.namespace,repository:row.source.repository,
+        sourceSha:row.source.sourceSha,dataDigest:row.source.dataDigest,
         epistemic:row.advisory?.epistemic??null,
         publicationRef:`https://github.com/${row.source.repository}/issues/${row.source.issueNumber}#issuecomment-${row.source.commentId}`}):null,
-      measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false}));
+      measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false});
+    if(typeof suggestion.learningId==='string'){
+      const prior=byLearningId.get(suggestion.learningId);
+      if(prior){
+        if(sha256(prior)!==sha256(suggestion))
+          return {status:'CONFLICT',suggestions:null};
+        continue;
+      }
+      byLearningId.set(suggestion.learningId,suggestion);
+    }
+    suggestions.push(suggestion);
   }
-  return Object.freeze(suggestions);
+  return {status:'READY',suggestions:Object.freeze(suggestions)};
+};
+export function learningSuggestionsFromReports(observations){
+  return projectLearningSet(observations).suggestions;
 }
 
 /**
  * Persist the observed Task Learning ledger. A re-observation of the exact
- * same set replays; a divergent ledger refuses.
+ * same set replays; a divergent ledger refuses. A valid-but-empty projected
+ * set is refused BEFORE the ledger is ever opened: recording it would
+ * permanently occupy the singleton learning key and turn every later
+ * non-empty observation into a mismatch.
  */
 export async function observeLearningSuggestions({openStore,registryPath,sourceSha,
   observations,observedAt}={}){
@@ -214,8 +289,14 @@ export async function observeLearningSuggestions({openStore,registryPath,sourceS
   if(typeof openStore!=='function'||typeof registryPath!=='string'||
     !SHA.test(sourceSha??'')||!ISO(observedAt??''))
     return unqualified('MAINTENANCE_INPUT_INVALID');
-  const suggestions=learningSuggestionsFromReports(observations);
-  if(suggestions===null)return unqualified('LEARNING_PROVENANCE_UNVERIFIED');
+  const projected=projectLearningSet(observations);
+  if(projected.status==='CONFLICT')
+    return unqualified('LEARNING_REPORT_SET_CONFLICT');
+  if(projected.suggestions===null)
+    return unqualified('LEARNING_PROVENANCE_UNVERIFIED');
+  const suggestions=projected.suggestions;
+  if(suggestions.length===0)
+    return unqualified('LEARNING_REPORT_SET_EMPTY');
   let opened,existing;
   try{
     opened=await store(openStore,registryPath);
@@ -254,11 +335,18 @@ async function loadLearning(openStore,registryPath){
 
 /**
  * J08c Host records: explicit use/reject decision and the later independent
- * outcome for one REPORTED_QUALIFIED learning suggestion. The outcome is an
- * observed fact only — measuredEffect never becomes a quality gain.
+ * outcome for one ledger learning suggestion. A REJECT is recordable for any
+ * legitimately provenance-bound suggestion — including STALE/UNKNOWN evidence
+ * — and carries the exact provenance/currentness/qualification result while
+ * never entering a next-Task Context Pack; an ADOPT requires
+ * REPORTED_QUALIFIED current evidence plus one exact GitHub Owner/admin
+ * approval comment verified by the trusted Host reader. The
+ * outcome is an observed fact only — measuredEffect never becomes a quality
+ * gain.
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
-  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,env=process.env}={}){
+  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,readOwnerApproval,
+  env=process.env}={}){
   const pin=input=>
     input?.issueNumber===ISSUE&&input.sourceRef===ISSUE_REF&&
     SHA.test(input.sourceSha??'')&&DIGEST.test(input.candidateDigest??'')&&
@@ -403,7 +491,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         repository:`${OWNER}/${REPO}`,issue:readback.issue,duplicate:false});
     },
     async hostRecordTaskLearningOutcome(input={}){
-      if(typeof verifyAcceptedClaim!=='function')
+      if(typeof verifyAcceptedClaim!=='function'||typeof verifyFrozenWriteSet!=='function')
         return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
       const outcome=input.outcome;
       if(outcome!==undefined&&(typeof outcome!=='object'||outcome===null||
@@ -411,6 +499,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         !ISO(outcome.observedAt??'')||
         typeof outcome.note!=='string'||outcome.note.length>512))
         return denied(input,'MAINTENANCE_INPUT_INVALID');
+      // A caller-supplied boolean is not an independent attestation. Until a
+      // Host-verifiable evidence/readback port exists, keep outcomes unmeasured.
+      if(outcome?.attested===true)
+        return denied(input,'INDEPENDENT_OUTCOME_EVIDENCE_NOT_VERIFIED');
       if(!DECISIONS.has(input.decision))
         return denied(input,'MAINTENANCE_INPUT_INVALID');
       if(!pin({...input,candidateDigest:input.learningId}))
@@ -418,17 +510,70 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const registryPath=env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
       const claim=await verifyAcceptedClaim(ISSUE,'builder');
       if(!claim.ok)return denied(input,claim.reason);
+      const writeSet=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(!writeSet.ok)return denied(input,writeSet.reason);
       const ledger=await loadLearning(openStore,registryPath);
-      const suggestion=ledger?.value?.suggestions?.find(
-        row=>row.learningId===input.learningId);
-      if(!suggestion||suggestion.qualification!=='REPORTED_QUALIFIED')
+      if(ledger?.value?.phase!=='OBSERVED_LEARNING'||
+        ledger.value.issueRef!==ISSUE_REF)
         return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(ledger.value.sourceSha!==input.sourceSha)
+        return denied(input,'LEARNING_SOURCE_SHA_MISMATCH');
+      const matches=Array.isArray(ledger.value.suggestions)?
+        ledger.value.suggestions.filter(row=>row?.learningId===input.learningId):[];
+      if(matches.length===0)return denied(input,'LEARNING_PROVENANCE_NOT_VERIFIED');
+      if(matches.length!==1)return denied(input,'LEARNING_PROVENANCE_AMBIGUOUS');
+      const suggestion=matches[0];
+      // A decision must bind to the exact report identity the ledger observed;
+      // a missing or identity-mismatched provenance is forged and is not
+      // decisionable — for adoption or rejection alike.
+      if(!provenanceBound(suggestion))
+        return denied(input,'LEARNING_PROVENANCE_FORGED');
+      // A REJECT explicitly declines observed evidence and stays recordable
+      // for STALE/UNKNOWN sources; only adoption demands the current,
+      // independently qualified evidence.
+      if(input.decision==='ADOPTED'&&
+        (suggestion.qualification!=='REPORTED_QUALIFIED'||
+          currentnessOf(suggestion)!==STATES.CURRENT))
+        return denied(input,'LEARNING_ADOPTION_NOT_QUALIFIED');
+      // Only ADOPT requires a per-learning Owner comment. The Host reads it
+      // from GitHub through the trusted C port; caller identity/approval data
+      // is never accepted. REJECT deliberately does not call this port.
+      // Production outcomes reuse only the CAS-stored receipt below; the
+      // replay fixture keeps no CAS decision row, so a replayed ADOPT outcome
+      // re-observes the same deterministic approval to carry the exact
+      // receipt every ADOPTED output must present at the sealed boundary.
+      let ownerApproval;
+      if(input.decision==='ADOPTED'&&
+        (outcome===undefined||env.TALLY_LOCAL_REPLAY==='1')){
+        if(typeof readOwnerApproval!=='function')
+          return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+        let observedApproval=null;
+        try{
+          observedApproval=await readOwnerApproval({repository:OWNER+'/'+REPO,
+            issueNumber:ISSUE,sourceSha:input.sourceSha,
+            learningId:input.learningId,decision:'ADOPTED'});
+        }catch{}
+        if(!validOwnerApproval(input,observedApproval))
+          return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+        ownerApproval=Object.freeze({
+          state:observedApproval.state,reason:observedApproval.reason,
+          repository:observedApproval.repository,issueNumber:observedApproval.issueNumber,
+          sourceSha:observedApproval.sourceSha,learningId:observedApproval.learningId,
+          decision:observedApproval.decision,commentId:observedApproval.commentId,
+          commentUrl:observedApproval.commentUrl,author:observedApproval.author,
+          permission:observedApproval.permission});
+      }
       if(env.TALLY_LOCAL_REPLAY==='1')
         return Object.freeze({...flags,state:'REPLAY_COMPLETE',
           reason:'REPLAY_FIXTURE_ONLY',issueRef:ISSUE_REF,
           sourceSha:input.sourceSha,learningId:input.learningId,
           decision:input.decision,claimAccepted:true,admitted:true,
           replayFixture:true,githubEffect:'NOT_RUN',
+          provenance:suggestion.provenance,
+          currentness:currentnessOf(suggestion),
+          currentnessReason:suggestion.currentnessReason??null,
+          qualification:suggestion.qualification,...NOT_REUSED,
+          ...(ownerApproval?{ownerApproval}:{}),
           measuredEffect:'NOT_MEASURED'});
       let opened=null,existingDecision;
       try{
@@ -438,81 +583,141 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
       if(outcome===undefined){
-        if(existingDecision?.value?.phase==='LEARNING_DECISION'){
-          if(existingDecision.value.decision===input.decision)
-            return Object.freeze({...flags,state:'LEARNING_RECORDED',
-              reason:'LEARNING_DECISION_ALREADY_RECORDED',issueRef:ISSUE_REF,
-              sourceSha:input.sourceSha,learningId:input.learningId,
-              decision:input.decision,claimAccepted:true,admitted:true,
-              replayFixture:false,githubEffect:'NOT_RUN',
-              measuredEffect:'NOT_MEASURED',noAgentRanking:true,
-              qualityGainClaimed:false});
-          return denied(input,'LEARNING_DECISION_MISMATCH');
-        }
-        try{
-          opened=await store(openStore,registryPath);
-          await opened.put(`tally:v2:maintenance-learning-decision:${input.learningId}`,
-            Object.freeze({phase:'LEARNING_DECISION',issueRef:ISSUE_REF,
-              sourceSha:input.sourceSha,learningId:input.learningId,
-              decision:input.decision,decidedAt:new Date().toISOString(),
-              provenance:suggestion.provenance,noAgentRanking:true,
-              qualityGainClaimed:false,authorized:false,taskPass:false,
-              releasePass:false}),{mustBeAbsent:true});
-        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
-        finally{if(opened)await opened.close();}
-        return Object.freeze({...flags,state:'LEARNING_RECORDED',
-          reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',issueRef:ISSUE_REF,
-          sourceSha:input.sourceSha,learningId:input.learningId,
-          decision:input.decision,claimAccepted:true,admitted:true,
+        const decisionFacts=Object.freeze({phase:'LEARNING_DECISION',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          learningId:input.learningId,decision:input.decision,
+          provenance:suggestion.provenance,
+          currentness:currentnessOf(suggestion),
+          currentnessReason:suggestion.currentnessReason??null,
+          qualification:suggestion.qualification,...NOT_REUSED,
+          ...(ownerApproval?{ownerApproval}:{}),
+          noAgentRanking:true,qualityGainClaimed:false,authorized:false,
+          taskPass:false,releasePass:false});
+        const sameDecision=record=>{
+          if(record?.phase!=='LEARNING_DECISION')return false;
+          const comparable=Object.fromEntries(Object.keys(decisionFacts).map(key=>{
+            if(key==='currentness'&&record[key]===undefined)
+              return [key,currentnessOf(suggestion)];
+            if(key==='currentnessReason'&&record[key]===undefined)
+              return [key,suggestion.currentnessReason??null];
+            return [key,record[key]];
+          }));
+          return sha256(comparable)===sha256(decisionFacts);
+        };
+        const decisionReceipt=(record,reason)=>Object.freeze({...flags,
+          state:'LEARNING_RECORDED',reason,issueRef:ISSUE_REF,
+          sourceSha:record.sourceSha,learningId:record.learningId,
+          decision:record.decision,claimAccepted:true,admitted:true,
           replayFixture:false,githubEffect:'NOT_RUN',
+          provenance:record.provenance??suggestion.provenance,
+          currentness:record.currentness??currentnessOf(suggestion),
+          currentnessReason:record.currentnessReason??suggestion.currentnessReason??null,
+          qualification:record.qualification??suggestion.qualification,
+          ...NOT_REUSED,...(record.ownerApproval?{ownerApproval:record.ownerApproval}:{}),
           measuredEffect:'NOT_MEASURED',noAgentRanking:true,
           qualityGainClaimed:false});
+        const decisionKey=`tally:v2:maintenance-learning-decision:${input.learningId}`;
+        if(existingDecision?.value?.phase==='LEARNING_DECISION'){
+          if(sameDecision(existingDecision.value))
+            return decisionReceipt(existingDecision.value,'LEARNING_DECISION_ALREADY_RECORDED');
+          return denied(input,existingDecision.value.decision===input.decision?
+            'LEARNING_DECISION_RECORD_MISMATCH':'LEARNING_DECISION_MISMATCH');
+        }
+        const decisionRecord=Object.freeze({...decisionFacts,
+          decidedAt:new Date().toISOString()});
+        try{
+          opened=await store(openStore,registryPath);
+          await opened.put(decisionKey,decisionRecord,{mustBeAbsent:true});
+        }catch(error){
+          if(error?.code!=='HOST_CAS_CONFLICT')
+            return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+          // Re-read the raced record through its own handle; the writer stays
+          // owned by the outer finally so a race never leaks a connection.
+          let raced=null,reader=null;
+          try{
+            reader=await store(openStore,registryPath);
+            raced=await reader.get(decisionKey);
+          }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+          finally{if(reader)await reader.close();}
+          if(raced?.value?.phase==='LEARNING_DECISION'){
+            if(sameDecision(raced.value))
+              return decisionReceipt(raced.value,'LEARNING_DECISION_ALREADY_RECORDED');
+            return denied(input,raced.value.decision===input.decision?
+              'LEARNING_DECISION_RECORD_MISMATCH':'LEARNING_DECISION_MISMATCH');
+          }
+          return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+        }finally{if(opened)await opened.close();}
+        return decisionReceipt(decisionRecord,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
       }
       if(existingDecision?.value?.phase!=='LEARNING_DECISION')
         return denied(input,'LEARNING_DECISION_REQUIRED');
-      const outcomeRecord=Object.freeze({phase:'LEARNING_OUTCOME',
+      if(input.decision!==existingDecision.value.decision||
+        existingDecision.value.issueRef!==ISSUE_REF||
+        existingDecision.value.sourceSha!==input.sourceSha||
+        existingDecision.value.learningId!==input.learningId)
+        return denied(input,'LEARNING_DECISION_MISMATCH');
+      // Later outcome writes reuse only the Host-persisted, exact approval
+      // receipt from the original ADOPT decision; no caller can supply it.
+      if(existingDecision.value.decision==='ADOPTED'&&
+        !validOwnerApproval(input,existingDecision.value.ownerApproval))
+        return denied(input,'LEARNING_OWNER_APPROVAL_NOT_VERIFIED');
+      const outcomeFacts=Object.freeze({phase:'LEARNING_OUTCOME',
         issueRef:ISSUE_REF,sourceSha:input.sourceSha,
         learningId:input.learningId,decision:existingDecision.value.decision,
         attested:outcome.attested===true,
         measuredEffect:outcome.attested===true?'ATTESTED_OUTCOME_ONLY':'NOT_MEASURED',
-        observedAt:outcome.observedAt,note:outcome.note,outcomeAt:new Date().toISOString(),
+        observedAt:outcome.observedAt,note:outcome.note,
         noAgentRanking:true,qualityGainClaimed:false,authorized:false,
         taskPass:false,releasePass:false});
+      const sameOutcome=record=>record?.phase==='LEARNING_OUTCOME'&&
+        Object.entries(outcomeFacts).every(([key,value])=>record[key]===value);
+      const outcomeReceipt=(record,reason)=>Object.freeze({...flags,
+        state:'LEARNING_RECORDED',reason,issueRef:ISSUE_REF,
+        sourceSha:input.sourceSha,learningId:input.learningId,
+        decision:record.decision,
+        ...(existingDecision.value.ownerApproval?
+          {ownerApproval:existingDecision.value.ownerApproval}:{}),
+        provenance:suggestion.provenance,
+        currentness:currentnessOf(suggestion),
+        currentnessReason:suggestion.currentnessReason??null,
+        qualification:suggestion.qualification,
+        measuredEffect:record.measuredEffect,
+        outcome:Object.freeze({attested:record.attested,
+          measuredEffect:record.measuredEffect,observedAt:record.observedAt}),
+        claimAccepted:true,admitted:true,replayFixture:false,
+        githubEffect:'NOT_RUN',noAgentRanking:true,qualityGainClaimed:false});
+      const outcomeKey=`tally:v2:maintenance-learning-outcome:${input.learningId}`;
       let existingOutcome;
       try{
         opened=await store(openStore,registryPath);
-        existingOutcome=await opened.get(
-          `tally:v2:maintenance-learning-outcome:${input.learningId}`);
-        if(existingOutcome?.value?.phase!=='LEARNING_OUTCOME')
-          await opened.put(`tally:v2:maintenance-learning-outcome:${input.learningId}`,
-            outcomeRecord,{mustBeAbsent:true});
+        existingOutcome=await opened.get(outcomeKey);
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
-      if(existingOutcome?.value?.phase==='LEARNING_OUTCOME'){
-        if(sha256(existingOutcome.value)===sha256(outcomeRecord))
-          return Object.freeze({...flags,state:'LEARNING_RECORDED',
-            reason:'LEARNING_OUTCOME_ALREADY_RECORDED',issueRef:ISSUE_REF,
-            sourceSha:input.sourceSha,learningId:input.learningId,
-            decision:outcomeRecord.decision,measuredEffect:outcomeRecord.measuredEffect,
-            outcome:Object.freeze({
-              attested:outcomeRecord.attested,
-              measuredEffect:outcomeRecord.measuredEffect,
-              observedAt:outcomeRecord.observedAt}),
-            claimAccepted:true,admitted:true,replayFixture:false,
-            githubEffect:'NOT_RUN',noAgentRanking:true,
-            qualityGainClaimed:false});
-        return denied(input,'LEARNING_OUTCOME_MISMATCH');
-      }
-      return Object.freeze({...flags,state:'LEARNING_RECORDED',
-        reason:'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS',issueRef:ISSUE_REF,
-        sourceSha:input.sourceSha,learningId:input.learningId,
-        decision:outcomeRecord.decision,measuredEffect:outcomeRecord.measuredEffect,
-        outcome:Object.freeze({
-          attested:outcomeRecord.attested,
-          measuredEffect:outcomeRecord.measuredEffect,
-          observedAt:outcomeRecord.observedAt}),
-        claimAccepted:true,admitted:true,replayFixture:false,
-        githubEffect:'NOT_RUN',noAgentRanking:true,qualityGainClaimed:false});
+      if(existingOutcome?.value?.phase==='LEARNING_OUTCOME')
+        return sameOutcome(existingOutcome.value)?
+          outcomeReceipt(existingOutcome.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
+          denied(input,'LEARNING_OUTCOME_MISMATCH');
+      const outcomeRecord=Object.freeze({...outcomeFacts,
+        outcomeAt:new Date().toISOString()});
+      try{
+        opened=await store(openStore,registryPath);
+        await opened.put(outcomeKey,outcomeRecord,{mustBeAbsent:true});
+      }catch(error){
+        if(error?.code!=='HOST_CAS_CONFLICT')
+          return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');
+        // Re-read the raced record through its own handle; the writer stays
+        // owned by the outer finally so a race never leaks a connection.
+        let raced=null,reader=null;
+        try{
+          reader=await store(openStore,registryPath);
+          raced=await reader.get(outcomeKey);
+        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+        finally{if(reader)await reader.close();}
+        return sameOutcome(raced?.value)?
+          outcomeReceipt(raced.value,'LEARNING_OUTCOME_ALREADY_RECORDED'):
+          denied(input,'LEARNING_OUTCOME_MISMATCH');
+      }finally{if(opened)await opened.close();}
+      return outcomeReceipt(outcomeRecord,'LEARNING_OUTCOME_RECORDED_IN_HOST_CAS');
     },
   });
 }
