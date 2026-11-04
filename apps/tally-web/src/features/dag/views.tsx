@@ -60,6 +60,31 @@ export function DagView({dag,locale='zh',onOpenTask}:
           {dag.acceptedClaimCount??'UNKNOWN'}/{dag.nodes.length} ·
           {dag.claimCoverage??'UNKNOWN'}
         </div>}
+      {dag.dependencyCoverage!=='NATIVE_COMPLETE'
+        ?<div role="status" data-dependency-coverage={dag.dependencyCoverage??'UNKNOWN'}
+          style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
+          DEPENDENCY_COVERAGE={dag.dependencyCoverage??'UNKNOWN'} ·
+          {dag.dependencyCoverage==='NATIVE_PARTIAL'
+            ?(zh?'存在仅 PLANNED 的依赖边，尚未原生物化'
+                :'planned-only edges are not materialized natively')
+            :(zh?'快照未携带依赖覆盖元数据，按未知处理'
+                :'coverage metadata absent from snapshot; treated as unknown')}
+        </div>
+        :<div role="status" data-dependency-coverage="NATIVE_COMPLETE"
+          style={{color:'var(--text-secondary)',marginBottom:'var(--s3)'}}>
+          DEPENDENCY_COVERAGE=NATIVE_COMPLETE ·
+          {zh?'冻结 DAG 内全部依赖边均有原生读回':'all frozen dependency edges read back natively'}
+        </div>}
+      <div role="status" data-frozen-provenance
+        style={{color:'var(--text-secondary)',marginBottom:'var(--s3)',
+          fontSize:12.5,wordBreak:'break-all'}}>
+        {zh?'冻结溯源':'frozen provenance'} ·
+        taskPackBlob={dag.frozenBlobSha?dag.frozenBlobSha.slice(0,12):'NOT_FROZEN'} ·
+        taskPackRef={dag.taskPackRef
+          ?<a href={dag.taskPackRef} rel="noreferrer"
+              style={{color:'var(--brand-strong)'}}>{dag.taskPackRef}</a>
+          :(zh?'未提供':'absent')}
+      </div>
       <div style={{display:'flex',gap:'var(--s2)',flexWrap:'wrap',marginBottom:'var(--s3)'}}>
         <select aria-label="status" value={filters.status??''}
           onChange={event=>setFilters({...filters,status:event.target.value||null})}>

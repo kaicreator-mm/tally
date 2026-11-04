@@ -111,13 +111,22 @@ function claimBaseOk(claim,repository,versionId,versionSha,issueNumber,subject,t
     claim.issueNumber===issueNumber&&claim.authorized===false&&
     claim.admitted===false&&claim.taskPass===false&&claim.releasePass===false;
 }
+/** Non-accepted readbacks carry no Web responsibility: forged
+ * responsibilityStatus/activeOperator fields deny the whole response. */
+const noResponsibility=claim=>
+  (claim.responsibilityStatus===undefined||claim.responsibilityStatus===null||
+   claim.responsibilityStatus==='NOT_VERIFIED')&&
+  (claim.activeOperator===undefined||claim.activeOperator===null);
+const noActiveOperator=claim=>
+  claim.activeOperator===undefined||claim.activeOperator===null;
 function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha){
   if(!claimBaseOk(claim,repository,versionId,versionSha,issueNumber,subject,taskPackRef,blobSha))
     return false;
   if(claim.claimStatus==='NOT_CLAIMED')
     return subject.candidateStatus==='NO_CLAIM_EVENT_EXPECTED'&&
       claim.claimAccepted===false&&claim.claimPublication==='NOT_VERIFIED'&&
-      claim.commentRef===null&&claim.commentId===null;
+      claim.commentRef===null&&claim.commentId===null&&
+      noResponsibility(claim);
   if(claim.claimStatus==='NOT_VERIFIED')
     return subject.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
       claim.claimAccepted===false&&claim.claimPublication==='CANDIDATE_ONLY'&&
@@ -129,7 +138,8 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
       claim.transportActor===repository.split('/')[0]&&
       claim.commentRef==='https://github.com/'+repository+'/issues/'+issueNumber+
         '#issuecomment-'+subject.commentId&&
-      /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'');
+      /^[a-f0-9]{64}$/.test(claim.commentBodySha256??'')&&
+      noResponsibility(claim);
   return claim.claimStatus==='ACCEPTED'&&
     subject.candidateStatus==='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'&&
     claim.claimAccepted===true&&
@@ -145,11 +155,12 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
     claim.transportActor===repository.split('/')[0]&&
     typeof claim.writerId==='string'&&claim.writerId.length>0&&
     ['VERIFIED','NOT_VERIFIED'].includes(claim.responsibilityStatus)&&
-    (claim.responsibilityStatus!=='VERIFIED'||
-      claim.activeOperator?.operatorId==='chatgpt-web:tally-v2'&&
-      claim.activeOperator?.operatorKind==='chatgpt-web'&&
-      claim.activeOperator?.actorRole==='builder'&&
-      claim.activeOperator?.executionEnvironment==='WEB');
+    (claim.responsibilityStatus==='NOT_VERIFIED'
+      ?noActiveOperator(claim)
+      :claim.activeOperator?.operatorId==='chatgpt-web:tally-v2'&&
+        claim.activeOperator?.operatorKind==='chatgpt-web'&&
+        claim.activeOperator?.actorRole==='builder'&&
+        claim.activeOperator?.executionEnvironment==='WEB');
 }
 export function createUiRosterHost({repository,versionId,expectedSha,
   frozenHost,nativeC,claimHost}={}){
@@ -247,6 +258,8 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       const dagNodes=native.dag.nodes.map(node=>({...node,
         claimState:claimByTaskState.get(String(node.taskId))??'NOT_VERIFIED'}));
       const plannedEdges=before.frozen.edges.filter(e=>e.kind==='PLANNED');
+      const dependencyCoverage=sameSet(planned,observed)
+        ?'NATIVE_COMPLETE':'NATIVE_PARTIAL';
       const dag={...native.dag,edges:[...native.dag.edges,...plannedEdges],
         rosterCoverage:'VERIFIED_COMPLETE',claimReadbackCoverage:claimReadback,
         claimCoverage:claimResults===null?'NOT_VERIFIED':
@@ -254,10 +267,11 @@ export function createUiRosterHost({repository,versionId,expectedSha,
           acceptedClaimCount>0?'PARTIAL':'NONE_ACCEPTED',
         acceptedClaimCount,notVerifiedCount,notClaimedCount,
         activeWebResponsibilityCount,nodes:dagNodes,
+        dependencyCoverage,frozenBlobSha:before.frozen.blobSha,taskPackRef,
         asOf:{...native.dag.asOf,frozenAt:before.frozenAt??null}};
       return {connected:true,source:native.source,versionId,
         rosterCoverage:'VERIFIED_COMPLETE',
-        dependencyCoverage:sameSet(planned,observed)?'NATIVE_COMPLETE':'NATIVE_PARTIAL',
+        dependencyCoverage,
         frozenBlobSha:before.frozen.blobSha,taskPackRef,
         taskCount:native.tasks.length,nativeEdgeCount:observed.size,
         frozenEdgeCount:before.frozen.edges.length,claimReadbackCoverage:claimReadback,

@@ -87,11 +87,23 @@ test('frozen roster drives native C and keeps version SHA separate from Task Cla
   assert.equal(r.dag.asOf.frozenAt,'2026-11-02T00:00:00Z');
 });
 
+test('nested dag projection carries the verified coverage and freeze provenance',async()=>{
+  const {host}=make();
+  const r=await host.roster();
+  assert.equal(r.dag.rosterCoverage,'VERIFIED_COMPLETE');
+  assert.equal(r.dag.dependencyCoverage,r.dependencyCoverage);
+  assert.equal(r.dag.frozenBlobSha,r.frozenBlobSha);
+  assert.equal(r.dag.frozenBlobSha,taskPackBlobSha);
+  assert.equal(r.dag.taskPackRef,r.taskPackRef);
+  assert.equal(r.dag.taskPackRef,taskPackRef);
+});
+
 test('missing native dependency remains visible and is never inferred as complete',async()=>{
   const {host}=make(async()=>frozen(),async()=>native([]));
   const r=await host.roster();
   assert.equal(r.rosterCoverage,'VERIFIED_COMPLETE');
   assert.equal(r.dependencyCoverage,'NATIVE_PARTIAL');
+  assert.equal(r.dag.dependencyCoverage,'NATIVE_PARTIAL');
 });
 
 test('partial selected native Task roster refuses complete coverage',async()=>{
@@ -129,6 +141,70 @@ test('accepted CAS Claim does not imply Web responsibility or Kernel admission',
   assert.equal(r.tasks[0].claimAccepted,true);
   assert.equal(r.tasks[0].responsibilityStatus,'NOT_VERIFIED');
   assert.equal(r.tasks[0].activeOperator,null);
+});
+
+const webOperator={operatorId:'chatgpt-web:tally-v2',operatorKind:'chatgpt-web',
+  actorRole:'builder',executionEnvironment:'WEB'};
+
+test('forged VERIFIED responsibility on NOT_CLAIMED readback denies the roster',async()=>{
+  const forged={...notClaimed(2),responsibilityStatus:'VERIFIED',
+    activeOperator:webOperator};
+  const {host}=make(async()=>frozen(),async()=>native(),
+    async args=>args.issueNumber===1?candidateClaim(1):forged);
+  assert.equal((await host.roster()).reason,
+    'ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
+});
+
+test('forged responsibility fields on NOT_VERIFIED readback deny the roster',async()=>{
+  for(const forged of [
+    {...candidateClaim(1),responsibilityStatus:'VERIFIED',activeOperator:webOperator},
+    {...candidateClaim(1),responsibilityStatus:'VERIFIED'},
+    {...candidateClaim(1),activeOperator:webOperator},
+  ]){
+    const {host}=make(async()=>frozen(),async()=>native(),
+      async args=>args.issueNumber===1?forged:notClaimed(2));
+    assert.equal((await host.roster()).reason,
+      'ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
+  }
+});
+
+test('ACCEPTED with NOT_VERIFIED responsibility must not carry an activeOperator',async()=>{
+  const forged={...acceptedClaim(1),responsibilityStatus:'NOT_VERIFIED',
+    activeOperator:webOperator};
+  const {host}=make(async()=>frozen(),async()=>native(),
+    async args=>args.issueNumber===1?forged:notClaimed(2));
+  assert.equal((await host.roster()).reason,
+    'ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
+});
+
+test('explicit NOT_VERIFIED responsibility with null operator stays qualified',async()=>{
+  const {host}=make(async()=>frozen(),async()=>native(),
+    async args=>args.issueNumber===1
+      ?{...candidateClaim(1),responsibilityStatus:'NOT_VERIFIED',activeOperator:null}
+      :{...notClaimed(2),responsibilityStatus:'NOT_VERIFIED',activeOperator:null});
+  const r=await host.roster();
+  assert.equal(r.connected,true);
+  assert.equal(r.activeWebResponsibilityCount,0);
+  assert.equal(r.tasks[0].responsibilityStatus,'NOT_VERIFIED');
+  assert.equal(r.tasks[0].activeOperator,null);
+});
+
+test('ACCEPTED with VERIFIED responsibility keeps exact WEB operator identity checks',async()=>{
+  const verified={...acceptedClaim(1),responsibilityStatus:'VERIFIED',
+    activeOperator:webOperator};
+  const {host:ok}=make(async()=>frozen(),async()=>native(),
+    async args=>args.issueNumber===1?verified:notClaimed(2));
+  const r=await ok.roster();
+  assert.equal(r.connected,true);
+  assert.equal(r.activeWebResponsibilityCount,1);
+  assert.equal(r.tasks[0].responsibilityStatus,'VERIFIED');
+  assert.equal(r.tasks[0].activeOperator.operatorId,'chatgpt-web:tally-v2');
+  const impostor={...verified,activeOperator:{...webOperator,
+    operatorId:'evil:operator:1'}};
+  const {host:bad}=make(async()=>frozen(),async()=>native(),
+    async args=>args.issueNumber===1?impostor:notClaimed(2));
+  assert.equal((await bad.roster()).reason,
+    'ACCEPTED_CLAIM_HOST_READBACK_UNQUALIFIED');
 });
 
 test('Claim subject SHA cannot be replaced with the version branch SHA',async()=>{
