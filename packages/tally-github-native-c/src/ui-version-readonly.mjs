@@ -75,7 +75,7 @@ export async function readUiNativeVersionFromClient({
   workItemReader=null
 }={}){
   if(!validInput(octokit,owner,repo,versionId,expectedSha)||
-     !octokit?.rest?.issues?.get||!octokit?.rest?.issues?.listForRepo||!octokit?.paginate?.iterator||
+     !octokit?.rest?.issues?.get||!octokit?.paginate?.iterator||
      !Array.isArray(taskIssueNumbers)||taskIssueNumbers.length<1||
      taskIssueNumbers.length>200||taskIssueNumbers.some(n=>
        !Number.isSafeInteger(n)||n<1)||
@@ -84,24 +84,10 @@ export async function readUiNativeVersionFromClient({
   try{
     if(!await verifyBranch(octokit,owner,repo,versionId,expectedSha))
       return denied('VERSION_BRANCH_NOT_PINNED');
+    // The Host-verified frozen Task Pack is the version membership boundary.
+    // Do not enumerate repository-wide type:task Issues: multiple version
+    // families share this repository and label.
     const roster=new Set(taskIssueNumbers);
-    const discovered=new Set();
-    for await(const page of octokit.paginate.iterator(octokit.rest.issues.listForRepo,{
-      owner,repo,state:'all',labels:'type:task',per_page:100})){
-      if(!Array.isArray(page?.data))return denied('NATIVE_TASK_ROSTER_PAGE_INVALID');
-      for(const candidate of page.data){
-        if(candidate?.pull_request)continue;
-        const labels=labelNames(candidate?.labels);
-        if(labels?.includes('type:task')){
-          if(!Number.isSafeInteger(candidate.number)||candidate.number<1||
-             discovered.has(candidate.number))
-            return denied('NATIVE_TASK_ROSTER_DUPLICATE_OR_INVALID');
-          discovered.add(candidate.number);
-        }
-      }
-    }
-    if(discovered.size!==roster.size||[...discovered].some(n=>!roster.has(n)))
-      return denied('FROZEN_TASK_ROSTER_INCOMPLETE_OR_EXTRA');
     const tasks=[],nodes=[],edges=[],seenEdges=new Set(),
       firstSnapshots=new Map();
     for(const number of taskIssueNumbers){
@@ -181,31 +167,10 @@ export async function readUiNativeVersionFromClient({
         requirementGroup:null,phase:null,lane:null,agentId:null,
         executable:false});
     }
-    // The nested WorkItem reader re-reads each Issue but returns only
-    // workflow/dependency state, while the roster entry above is built from
-    // the FIRST Issue GET. An Issue mutating between that first snapshot and
-    // the end of observation must fail closed, never render stale metadata:
-    // re-enumerate the full type:task roster with the same query and re-read
-    // every selected Issue exactly, then compare complete snapshots.
-    const rediscovered=new Set();
-    for await(const page of octokit.paginate.iterator(octokit.rest.issues.listForRepo,{
-      owner,repo,state:'all',labels:'type:task',per_page:100})){
-      if(!Array.isArray(page?.data))
-        return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
-      for(const candidate of page.data){
-        if(candidate?.pull_request)continue;
-        const labels=labelNames(candidate?.labels);
-        if(labels?.includes('type:task')){
-          if(!Number.isSafeInteger(candidate.number)||candidate.number<1||
-             rediscovered.has(candidate.number))
-            return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
-          rediscovered.add(candidate.number);
-        }
-      }
-    }
-    if(rediscovered.size!==discovered.size||
-       [...rediscovered].some(n=>!discovered.has(n)))
-      return denied('NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION');
+    // Membership is pinned by the Host-verified Task Pack. Every selected
+    // member is still double-read below, including title/state/labels/update
+    // time; the selected version roster must not be confused with all
+    // repository Task Issues from other version families.
     for(const number of taskIssueNumbers){
       const first=firstSnapshots.get(number);
       const current=(await octokit.rest.issues.get({owner,repo,
