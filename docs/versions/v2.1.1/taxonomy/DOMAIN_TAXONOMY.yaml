@@ -1,0 +1,217 @@
+taxonomy_id: SE-TAXONOMY-0.1.0
+title: Software Engineering Domain Taxonomy
+status: PROPOSED
+version: 0.1.0
+created: 2026-11-04
+scope: Software Engineering discipline and its explicitly linked foundations, process, quality, architecture, security, professional and application-context views
+completeness_claim: NONE
+acceptance_profile: NOT_YET_FROZEN
+primary_reference:
+  source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  locator: "Introduction to the Guide; Table I.1 (18 Knowledge Areas); Table I.2 (Related Disciplines)"
+  role: "discipline taxonomy reference spine; not exhaustive ontology"
+views:
+  - view_id: SE-VIEW-DISCIPLINE
+    label: Discipline Knowledge Areas
+    kind: hierarchical_reference_map
+    status: PROPOSED
+    nodes:
+      - id: SE-KA-01
+        label: Software Requirements
+        reference: "SWEBOK Guide v4.0a, KA 1"
+        group: engineering_practice
+      - id: SE-KA-02
+        label: Software Architecture
+        reference: "SWEBOK Guide v4.0a, KA 2"
+        group: engineering_practice
+      - id: SE-KA-03
+        label: Software Design
+        reference: "SWEBOK Guide v4.0a, KA 3"
+        group: engineering_practice
+      - id: SE-KA-04
+        label: Software Construction
+        reference: "SWEBOK Guide v4.0a, KA 4"
+        group: engineering_practice
+      - id: SE-KA-05
+        label: Software Testing
+        reference: "SWEBOK Guide v4.0a, KA 5"
+        group: engineering_practice
+      - id: SE-KA-06
+        label: Software Engineering Operations
+        reference: "SWEBOK Guide v4.0a, KA 6"
+        group: engineering_practice
+      - id: SE-KA-07
+        label: Software Maintenance
+        reference: "SWEBOK Guide v4.0a, KA 7"
+        group: engineering_practice
+      - id: SE-KA-08
+        label: Software Configuration Management
+        reference: "SWEBOK Guide v4.0a, KA 8"
+        group: engineering_practice
+      - id: SE-KA-09
+        label: Software Engineering Management
+        reference: "SWEBOK Guide v4.0a, KA 9"
+        group: engineering_practice
+      - id: SE-KA-10
+        label: Software Engineering Process
+        reference: "SWEBOK Guide v4.0a, KA 10"
+        group: engineering_practice
+      - id: SE-KA-11
+        label: Software Engineering Models and Methods
+        reference: "SWEBOK Guide v4.0a, KA 11"
+        group: engineering_practice
+      - id: SE-KA-12
+        label: Software Quality
+        reference: "SWEBOK Guide v4.0a, KA 12"
+        group: engineering_practice
+      - id: SE-KA-13
+        label: Software Security
+        reference: "SWEBOK Guide v4.0a, KA 13"
+        group: engineering_practice
+      - id: SE-KA-14
+        label: Software Engineering Professional Practice
+        reference: "SWEBOK Guide v4.0a, KA 14"
+        group: engineering_practice
+      - id: SE-KA-15
+        label: Software Engineering Economics
+        reference: "SWEBOK Guide v4.0a, KA 15"
+        group: engineering_practice
+      - id: SE-KA-16
+        label: Computing Foundations
+        reference: "SWEBOK Guide v4.0a, KA 16"
+        group: foundation
+      - id: SE-KA-17
+        label: Mathematical Foundations
+        reference: "SWEBOK Guide v4.0a, KA 17"
+        group: foundation
+      - id: SE-KA-18
+        label: Engineering Foundations
+        reference: "SWEBOK Guide v4.0a, KA 18"
+        group: foundation
+  - view_id: SE-VIEW-LIFECYCLE-PROCESS
+    label: Lifecycle and Process
+    kind: cross_cutting_process_view
+    status: PROPOSED_METADATA_ONLY
+    source_id: SE-SRC-ISO-IEC-IEEE-12207-2026
+    note: "Bibliographic reference only; no ISO clauses or normative process content are modeled in this draft."
+  - view_id: SE-VIEW-SYSTEM-LIFECYCLE
+    label: System Lifecycle Context
+    kind: adjacent_system_process_view
+    status: PROPOSED_METADATA_ONLY
+    source_id: SE-SRC-ISO-IEC-IEEE-15288-2023
+    note: "Use to investigate software-in-system boundaries after permitted human review."
+  - view_id: SE-VIEW-PRODUCT-QUALITY
+    label: Product Quality
+    kind: cross_cutting_quality_view
+    status: PROPOSED_METADATA_ONLY
+    source_id: SE-SRC-ISO-IEC-25010-2023
+    note: "No characteristic names or normative content transcribed; details require permitted review."
+  - view_id: SE-VIEW-ARCHITECTURE-DESCRIPTION
+    label: Architecture Description
+    kind: cross_cutting_concern_view
+    status: PROPOSED_METADATA_ONLY
+    source_id: SE-SRC-ISO-IEC-IEEE-42010-2022
+    note: "Bibliographic reference only; not treated as a complete architecture knowledge taxonomy."
+  - view_id: SE-VIEW-TEST-PROCESS
+    label: Software Testing Process
+    kind: cross_cutting_process_view
+    status: PROPOSED_METADATA_ONLY
+    source_id: SE-SRC-ISO-IEC-IEEE-29119-2-2021
+    note: "Bibliographic reference only; no normative test-process clauses transcribed."
+  - view_id: SE-VIEW-SECURE-DEVELOPMENT
+    label: Secure Software Development Practices
+    kind: cross_cutting_practice_view
+    status: PROPOSED
+    source_id: SE-SRC-NIST-SP-800-218-V1-1
+    note: "NIST recommendation framework; not a universal normative standard."
+  - view_id: SE-VIEW-CURRICULUM-BOUNDARY
+    label: Computer Science Curriculum Boundary
+    kind: adjacent_curriculum_view
+    status: PROPOSED
+    source_id: SE-SRC-CS2023
+    note: "CS2023 is a CS curriculum framework; its SE area is not the whole Software Engineering discipline."
+cross_cutting_dimensions:
+  - id: SE-DIM-QUALITY
+    label: Quality
+    status: PROPOSED
+  - id: SE-DIM-SECURITY
+    label: Security
+    status: PROPOSED
+  - id: SE-DIM-SAFETY
+    label: Safety
+    status: PROPOSED
+  - id: SE-DIM-PRIVACY
+    label: Privacy
+    status: PROPOSED
+  - id: SE-DIM-RELIABILITY
+    label: Reliability and Resilience
+    status: PROPOSED
+  - id: SE-DIM-PERFORMANCE
+    label: Performance and Capacity
+    status: PROPOSED
+  - id: SE-DIM-MAINTAINABILITY
+    label: Maintainability and Changeability
+    status: PROPOSED
+  - id: SE-DIM-USABILITY
+    label: Usability and Accessibility
+    status: PROPOSED
+  - id: SE-DIM-INTEROPERABILITY
+    label: Interoperability and Compatibility
+    status: PROPOSED
+  - id: SE-DIM-RISK
+    label: Engineering Risk
+    status: PROPOSED
+  - id: SE-DIM-ECONOMICS
+    label: Cost and Economic Trade-offs
+    status: PROPOSED
+  - id: SE-DIM-ETHICS
+    label: Professional Ethics and Social Impact
+    status: PROPOSED
+related_disciplines:
+  - id: SE-ADJ-COMPUTER-SCIENCE
+    label: Computer Science
+    relation: foundation_and_adjacent
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-SYSTEMS-ENGINEERING
+    label: Systems Engineering
+    relation: adjacent_and_system_context
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-CYBERSECURITY
+    label: Cybersecurity
+    relation: adjacent_and_cross_cutting
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-DATA-SCIENCE
+    label: Data Science
+    relation: adjacent
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-BUSINESS-ANALYSIS
+    label: Business Analysis
+    relation: adjacent
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-HCI
+    label: Human-Computer Interaction
+    relation: shared_boundary
+    source: SE-SRC-CS2023
+  - id: SE-ADJ-AI-ML
+    label: AI and Machine Learning
+    relation: specialized_application_and_intersection
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+  - id: SE-ADJ-EMBEDDED-SAFETY
+    label: Embedded and Safety-Critical Engineering
+    relation: specialized_context_and_adjacent
+    source: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+candidate_relationship_types:
+  - cross_cuts
+  - specializes
+  - depends_on
+  - overlaps
+  - bounded_by
+  - supported_by
+  - contradicted_by
+  - applies_to
+open_questions:
+  - "Are all 18 SWEBOK KAs retained as top-level nodes, or should selected foundations be modeled as a linked foundation layer?"
+  - "Which quality dimensions should be modeled as stable concepts versus sourced quality-model members?"
+  - "How should lifecycle process and discipline knowledge be joined without encoding a single SDLC sequence?"
+  - "What is the correct boundary between Software Engineering, AI Engineering and Data Engineering?"
+  - "Which application contexts justify specialized subdomain views?"
