@@ -17,6 +17,8 @@ Documentation-level research:
 Real-data preparation:
 - SEK-03 provides 3 source references, 8 locators, 7 evidence records, 7 claims and 7 typed support relationships.
 - The initial vertical-slice YAML parses successfully with PyYAML; all IDs are unique and all declared references resolve.
+- Candidate LinkML schema YAML parses with PyYAML; custom structural checks found no missing class slots, unknown ranges or non-inlined references to classes without identifiers.
+- Format A front matter, Format B per-entity YAML files and Format C standalone corpus YAML all parse with PyYAML; the sample claim ID is consistent and source/locator/evidence/claim/relationship references resolve.
 - The three format fixtures encode the same SE-CLM-0001 claim and evidence chain.
 
 ## 2. What has not been executed
