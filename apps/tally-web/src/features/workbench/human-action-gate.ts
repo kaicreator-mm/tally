@@ -29,7 +29,7 @@ const VERSION_REF=/^version[/][A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 // evidence that the work item belongs to a canonical current scope.
 const ACTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
 const SECRET_PREFIXES=['gh'+'p_','gh'+'o_','gh'+'u_','gh'+'s_','gh'+'r_','github_'+'pat_','sk-'];
-const secretLike=(value:string)=>/Bearer\\s+\\S+/i.test(value)||
+const secretLike=(value:string)=>/Bearer\s+\S+/i.test(value)||
   SECRET_PREFIXES.some(prefix=>value.toLowerCase().includes(prefix));
 const hostKindFor:Partial<Record<WorkAction['kind'],string>>={
   REVIEW:'REVIEW_REPAIR',DECISION:'FREEZE_PRODUCT',RECOVERY:'START_AGENT'};
@@ -54,7 +54,7 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      catalog.versionId!==workItem.versionId||
      workItem.state!=='PENDING')return deny('WORKITEM_NOT_CURRENT');
   if(!Array.isArray(catalog.actions)||
-     typeof workItem.taskId!=='string'||!/^\d+$/.test(workItem.taskId))
+     typeof workItem.taskId!=='string'||! /^[1-9][0-9]*$/.test(workItem.taskId))
     return deny('NO_HOST_ACTION_FOR_ITEM');
   const taskIssue=Number(workItem.taskId);
   if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
@@ -77,7 +77,7 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   if(typeof a.id!=='string'||!ACTION_ID.test(a.id)||secretLike(a.id)||
      !Number.isSafeInteger(a.revision)||a.revision<1||
      typeof a.label!=='string'||!a.label.trim()||a.label.length>160||
-     /[\\u0000-\\u001f\\u007f]/.test(a.label)||secretLike(a.label))
+     /[\u0000-\u001f\u007f]/.test(a.label)||secretLike(a.label))
     return deny('HOST_ACTION_IDENTITY_INVALID');
   return {enabled:true,reason:'FRESH_HOST_ACTION',
     actionId:a.id,revision:a.revision,label:a.label};
