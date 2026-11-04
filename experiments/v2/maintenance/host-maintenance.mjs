@@ -230,6 +230,7 @@ const projectLearningSet=observations=>{
   if(projectReportSet(observations).status===STATES.CONFLICT)
     return {status:'CONFLICT',suggestions:null};
   const suggestions=[];
+  const byLearningId=new Map();
   for(const observation of observations){
     const row=projectReport(observation);
     if(row.status===STATES.INVALID||row.status===STATES.UNSUPPORTED)
@@ -239,7 +240,7 @@ const projectLearningSet=observations=>{
       data.subject.task_ref:null;
     const targetIssueRef=ISSUE_URL.test(data?.subject?.issue_ref??'')?
       data.subject.issue_ref:null;
-    suggestions.push(Object.freeze({
+    const suggestion=Object.freeze({
       learningId:row.source?sha256([row.source.reportId,row.source.revision,
         row.source.commentId,row.source.kind]):null,
       taskIssueRef,targetIssueRef,
@@ -254,7 +255,17 @@ const projectLearningSet=observations=>{
         sourceSha:row.source.sourceSha,dataDigest:row.source.dataDigest,
         epistemic:row.advisory?.epistemic??null,
         publicationRef:`https://github.com/${row.source.repository}/issues/${row.source.issueNumber}#issuecomment-${row.source.commentId}`}):null,
-      measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false}));
+      measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false});
+    if(typeof suggestion.learningId==='string'){
+      const prior=byLearningId.get(suggestion.learningId);
+      if(prior){
+        if(sha256(prior)!==sha256(suggestion))
+          return {status:'CONFLICT',suggestions:null};
+        continue;
+      }
+      byLearningId.set(suggestion.learningId,suggestion);
+    }
+    suggestions.push(suggestion);
   }
   return {status:'READY',suggestions:Object.freeze(suggestions)};
 };

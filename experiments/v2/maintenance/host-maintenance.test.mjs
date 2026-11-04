@@ -215,9 +215,12 @@ test('conflicting report identities in one observation set fail closed before th
   assert.equal(learningSuggestionsFromReports(
     [summaryObservation(),movedSource]),null,
     'a divergent source SHA must refuse the set');
-  // An exact duplicate observation is a replay, not a conflict.
-  assert.equal(learningSuggestionsFromReports(
-    [summaryObservation(),summaryObservation()]).length,2);
+  // An exact duplicate observation is one logical learning item, not two
+  // ledger rows that later make the same learningId ambiguous.
+  const duplicateSuggestions=learningSuggestionsFromReports(
+    [summaryObservation(),summaryObservation()]);
+  assert.equal(duplicateSuggestions.length,1);
+  assert.equal(duplicateSuggestions[0].learningId,LEARNING_ID);
   // A conflicting pair poisons the whole observation set even alongside an
   // otherwise valid unrelated report.
   assert.equal(learningSuggestionsFromReports(
@@ -249,6 +252,28 @@ test('conflicting report identities in one observation set fail closed before th
       'no decision record may exist for a conflicting report identity');
   }
   await cas.close();
+
+  // Exact duplicates collapse before the singleton CAS ledger is written;
+  // the one remaining row can be explicitly rejected without ambiguity.
+  const duplicateCtx=await reviewedFrozen();
+  const duplicateObserved=await observeLearningSuggestions({
+    openStore:duplicateCtx.openStore,
+    registryPath:'C:/registry/registry-219.sqlite',sourceSha:sha,
+    observations:[summaryObservation(),summaryObservation()],
+    observedAt:'2026-11-04T09:00:00.000Z'});
+  assert.equal(duplicateObserved.state,'RECORDED_COMPLETE');
+  assert.equal(duplicateObserved.suggestions.length,1);
+  const duplicateCas=await duplicateCtx.openStore();
+  const duplicateLedger=(await duplicateCas.get(MAINTENANCE_LEARNING_KEY)).value;
+  assert.equal(duplicateLedger.suggestions.length,1);
+  const duplicateHost=host(duplicateCtx);
+  const duplicateReject=await duplicateHost.hostRecordTaskLearningOutcome({
+    issueNumber:219,sourceRef:__test.ISSUE_REF,sourceSha:sha,
+    learningId:LEARNING_ID,decision:'REJECTED'});
+  assert.equal(duplicateReject.state,'LEARNING_RECORDED');
+  assert.equal(duplicateReject.reason,'LEARNING_DECISION_RECORDED_IN_HOST_CAS');
+  assert.equal(duplicateReject.decision,'REJECTED');
+  await duplicateCas.close();
 });
 
 test('a valid-but-empty report set never freezes an empty learning ledger',async()=>{
