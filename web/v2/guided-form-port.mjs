@@ -3,10 +3,13 @@
  */
 const SHA=/^[0-9a-f]{40}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+const titleOk=value=>typeof value==='string'&&value.trim().length>0&&
+  value.length<=120&&!/[\\u0000-\\u001f\\u007f]/.test(value);
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const valueOk=(value)=>value===null||typeof value==='boolean'||
   (typeof value==='string'&&value.length<=4096&&!/[\u0000-\u0008\u000B-\u001F]/.test(value))||
-  (Array.isArray(value)&&value.length<=32&&value.every(v=>typeof v==='string'&&v.length<=128));
+  (Array.isArray(value)&&value.length<=32&&value.every(v=>typeof v==='string'&&
+    v.length>0&&v.length<=128&&!/[\\u0000-\\u001f\\u007f]/.test(v)));
 const deny=(reason)=>({connected:false,status:'DENIED',reason});
 const plain=(v)=>!!v&&typeof v==='object'&&!Array.isArray(v);
 /** Structural canonical form: object keys are sorted recursively, so two
@@ -29,8 +32,8 @@ export function verifyGuidedSnapshot(snapshot,scope,currentSha){
   const step=snapshot.step;
   if(!plain(step)||!ID.test(step.journeyId)||!ID.test(step.stepId)||
     !Number.isSafeInteger(step.revision)||step.revision<1||
-    !plain(step.title)||typeof step.title.zh!=='string'||
-    typeof step.title.en!=='string'||!Array.isArray(step.fields)||
+    !plain(step.title)||!titleOk(step.title.zh)||
+    !titleOk(step.title.en)||!Array.isArray(step.fields)||
     step.fields.length<1||step.fields.length>24||
     !Array.isArray(step.actions)||!step.actions.includes('next'))return false;
   const fields=new Set();
@@ -58,8 +61,21 @@ export function verifyGuidedPayload(payload,snapshot){
       (['boolean','confirm'].includes(field.kind)&&typeof value!=='boolean')||
       (['text','textArea','choice','choiceWithOther','number'].includes(field.kind)&&
         typeof value!=='string'))return false;
+    if(field.required&&(value===null||
+      typeof value==='string'&&value.trim().length===0||
+      Array.isArray(value)&&value.length===0))return false;
+  }
+  for(const field of step.fields){
+    if(field.required&&!Object.prototype.hasOwnProperty.call(payload.answers,field.id))
+      return false;
   }
   return true;
+}
+function projectStep(step){
+  return {journeyId:step.journeyId,stepId:step.stepId,revision:step.revision,
+    title:{zh:step.title.zh,en:step.title.en},
+    fields:step.fields.map(field=>({id:field.id,kind:field.kind,required:field.required})),
+    actions:['next']};
 }
 export async function readGuidedStep(host,scope,currentSha){
   if(typeof host?.readCurrentStep!=='function')
@@ -69,7 +85,7 @@ export async function readGuidedStep(host,scope,currentSha){
     if(!verifyGuidedSnapshot(snapshot,scope,currentSha))
       return deny('GUIDED_SOURCE_UNQUALIFIED');
     // Never trust the form to grant an action, even if its source looks current.
-    return {connected:true,sourceSha:currentSha,step:snapshot.step};
+    return {connected:true,sourceSha:currentSha,step:projectStep(snapshot.step)};
   }catch{return deny('GUIDED_HOST_READ_FAILED');}
 }
 export async function submitGuidedStep(host,scope,currentSha,payload){
@@ -85,7 +101,7 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
     // performs its own CAS/permit check inside dispatchStep.
     const latest=await host.readCurrentStep({...scope,sourceSha:currentSha});
     if(!verifyGuidedSnapshot(latest,scope,currentSha)||
-       canonicalJson(latest.step)!==canonicalJson(read.step))
+       canonicalJson(projectStep(latest.step))!==canonicalJson(read.step))
       return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
     const result=await host.dispatchStep({
       ...scope,sourceSha:currentSha,journeyId:payload.journeyId,
@@ -96,6 +112,7 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
          versionId:scope.versionId,currentness:'CURRENT',readback:'VERIFIED'},
          scope,currentSha)))
       return deny('GUIDED_HOST_RESULT_UNQUALIFIED');
-    return {connected:true,ok:true,nextStep:result.nextStep};
+    return {connected:true,ok:true,nextStep:
+      result.nextStep===null?null:projectStep(result.nextStep)};
   }catch{return deny('GUIDED_HOST_DISPATCH_FAILED');}
 }

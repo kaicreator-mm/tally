@@ -71,3 +71,35 @@ test('reordered-key equivalent snapshots are not falsely denied as stale',async(
   assert.deepEqual(result,{connected:true,ok:true,nextStep:null});
   assert.equal(dispatches,1);
 });
+
+test('required fields must be present and nonblank before Host dispatch',()=>{
+  assert.equal(verifyGuidedPayload({...form,answers:{}},snapshot),false);
+  assert.equal(verifyGuidedPayload({...form,answers:{goal:''}},snapshot),false);
+  assert.equal(verifyGuidedPayload({...form,answers:{goal:'   '}},snapshot),false);
+  assert.equal(verifyGuidedPayload({...form,answers:{goal:null}},snapshot),false);
+  const booleanStep={...snapshot,step:{...step,
+    fields:[{id:'confirm',kind:'boolean',required:true}]}};
+  assert.equal(verifyGuidedPayload({...form,answers:{confirm:false}},booleanStep),true);
+});
+test('Host step and next-step projections drop unrecognized extension fields',async()=>{
+  const privateValue='internal-only-value';
+  const hostileStep={...step,internalField:privateValue,
+    title:{...step.title,internalField:privateValue},
+    fields:[{...step.fields[0],internalField:privateValue}],
+    actions:['next',privateValue]};
+  const read=await readGuidedStep({readCurrentStep:async()=>({...snapshot,
+    internalField:privateValue,step:hostileStep})},scope,sha);
+  assert.equal(read.connected,true);
+  assert.deepEqual(Object.keys(read.step).sort(),
+    ['actions','fields','journeyId','revision','stepId','title']);
+  assert.deepEqual(Object.keys(read.step.fields[0]).sort(),['id','kind','required']);
+  assert.equal(JSON.stringify(read).includes(privateValue),false);
+  const submitted=await submitGuidedStep({
+    readCurrentStep:async()=>snapshot,
+    dispatchStep:async()=>({ok:true,nextStep:hostileStep})
+  },scope,sha,form);
+  assert.equal(submitted.connected,true);
+  assert.deepEqual(Object.keys(submitted.nextStep).sort(),
+    ['actions','fields','journeyId','revision','stepId','title']);
+  assert.equal(JSON.stringify(submitted).includes(privateValue),false);
+});
