@@ -175,6 +175,8 @@ test('task execution permits absent telemetry only as explicit nulls',async()=>{
 test('credential-shaped action ids, providers, attempts and summaries fail closed',async()=>{
   const secrets=['ghp_12345678901234567890',
     'github_pat_abcdefghijklmnopqrstuvwxyz012345',
+    'safe_ghp_12345678901234567890',
+    'safe_github_pat_abcdefghijklmnopqrstuvwxyz012345',
     'Bearer abcdefghijklmnopqrstuvwxyz'];
   for(const secret of secrets){
     const badAction=await make({readCurrentActions:async()=>({...snapshot(),
