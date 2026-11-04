@@ -118,7 +118,8 @@ function validTaskExecution(execution,repository){
       Number.isFinite(execution.costUsd)&&execution.costUsd>=0))
     return false;
   if(execution.candidateRef===null)return true;
-  const match=typeof execution.candidateRef==='string'&&CANDIDATE_PR.exec(execution.candidateRef);
+  const match=typeof execution.candidateRef==='string'&&
+    execution.candidateRef.length<=256&&CANDIDATE_PR.exec(execution.candidateRef);
   return Boolean(match&&match[1]+'/'+match[2]===repository);
 }
 export function createUiActionPort({repository,versionId,expectedSha,host}={}){

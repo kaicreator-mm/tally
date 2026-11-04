@@ -269,3 +269,10 @@ test('published source/execution projections are reconstructed allowlists',async
       'tokensIn','tokensOut']);
   assert.equal(JSON.stringify(result).includes('rawLog'),false);
 });
+
+test('task execution candidate PR references are length bounded',async()=>{
+  const candidateRef='https://github.com/org/tally/pull/'+'1'.repeat(300);
+  const result=await make({readTaskExecution:async()=>({...executionSnapshot(),
+    execution:{...executionSnapshot().execution,candidateRef}})}).taskExecution(260);
+  assert.equal(result.reason,'HOST_TASK_EXECUTION_SOURCE_UNQUALIFIED');
+});

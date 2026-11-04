@@ -183,8 +183,8 @@ export function taskExecutionSummary(task:Pick<TaskRecord,'attemptId'|'execution
   const tokensOut=Number.isSafeInteger(e?.tokensOut)&&e!.tokensOut!>=0?String(e!.tokensOut):'UNKNOWN';
   const cost=typeof e?.costUsd==='number'&&Number.isFinite(e.costUsd)&&e.costUsd>=0
     ?'$'+e.costUsd.toFixed(4):'UNKNOWN';
-  const candidateMatch=typeof e?.candidateRef==='string'?
-    CANDIDATE_PR.exec(e.candidateRef):null;
+  const candidateMatch=typeof e?.candidateRef==='string'&&e.candidateRef.length<=256
+    ?CANDIDATE_PR.exec(e.candidateRef):null;
   const candidateRef=candidateMatch&&task.projectId===candidateMatch[1]+'/'+candidateMatch[2]
     ?e!.candidateRef:null;
   return {state,provider,role,attemptId,progressSummary,heartbeatAt,elapsed,

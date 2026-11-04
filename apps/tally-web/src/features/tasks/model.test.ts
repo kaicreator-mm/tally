@@ -191,3 +191,13 @@ test('NOT_CLAIMED remains distinct from UNKNOWN and blocks dispatch',()=>{
   assert.deepEqual(blockerSummary(task).find(item=>item.code==='CLAIM_NOT_ACCEPTED'),
     {code:'CLAIM_NOT_ACCEPTED',detail:'任务 Claim 未接受,不能派发执行'});
 });
+
+test('task execution candidate PR references are length bounded',()=>{
+  const task=make({projectId:'kaicreator-mm/tally',execution:{
+    state:'RUNNING',provider:'local-codex',role:'BUILDER',attemptId:'attempt-300',
+    progressSummary:null,progressSummaryKind:'NOT_AVAILABLE',heartbeatAt:null,
+    elapsedMs:null,tokensIn:null,tokensOut:null,costUsd:null,
+    candidateRef:'https://github.com/kaicreator-mm/tally/pull/'+'1'.repeat(300)
+  }});
+  assert.equal(taskExecutionSummary(task).candidateRef,null);
+});
