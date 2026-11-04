@@ -8,7 +8,7 @@
 
 ## 1. Executive finding
 
-The initial ten-category list is a useful project-oriented hypothesis, but it is not a sufficient discipline taxonomy. The strongest starting point found is the IEEE Computer Society's SWEBOK Guide v4.0a, released September 2025. It presents 18 Knowledge Areas (KAs), recognizes related disciplines, and explicitly distinguishes a guide to generally accepted knowledge from the body of knowledge itself.
+The initial ten-category list is a useful project-oriented hypothesis, but it is not a sufficient discipline taxonomy. The strongest starting point found is the IEEE Computer Society's SWEBOK Guide v4.0a, released August 2026. It presents 18 Knowledge Areas (KAs), recognizes related disciplines, and explicitly distinguishes a guide to generally accepted knowledge from the body of knowledge itself.
 
 The first-pass recommendation is therefore:
 
@@ -21,7 +21,7 @@ The first-pass recommendation is therefore:
 
 ### 2.1 SWEBOK Guide v4.0a — primary discipline taxonomy reference
 
-**Identity:** Guide to the Software Engineering Body of Knowledge, Version 4.0a; editor Hironori Washizaki; IEEE Computer Society; released September 2025.
+**Identity:** Guide to the Software Engineering Body of Knowledge, Version 4.0a; editor Hironori Washizaki; IEEE Computer Society; released August 2026.
 
 Official source: https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf  
 Guide landing page: https://www.computer.org/education/bodies-of-knowledge/software-engineering
@@ -76,7 +76,7 @@ Official site: https://csed.acm.org/
 Knowledge Areas: https://csed.acm.org/knowledge-areas/  
 Final report page states endorsements by ACM (2024-01-18), IEEE-CS (2024-01-22) and AAAI (2024-02-22).
 
-CS2023 defines 17 Computer Science curriculum Knowledge Areas. Software Engineering is one of those areas and its Body of Knowledge table lists 9 Knowledge Units:
+CS2023 defines 17 Computer Science curriculum Knowledge Areas. Its own knowledge-model document defines a curriculum KA as a set of Knowledge Units and states that KAs are not insular: cross-KA topic references may reflect different perspectives. Software Engineering is one of the 17 areas and its Body of Knowledge table lists 9 Knowledge Units:
 
 1. Teamwork
 2. Tools and Environments
@@ -226,3 +226,15 @@ These are provisional and require deeper evidence:
 - ISO source records in this discovery are bibliographic-only because of the source-page AI/ML use restrictions. This draft does not assert normative clauses or use standard text as LLM prompt material.
 - NIST SP 800-218 metadata and abstract were inspected; detailed practice-level extraction is deferred to source review.
 - Search results and snippets were used for discovery only; they are not treated as full-text verification.
+
+
+## 10. SEK-03 source verification corrections and extension (2026-11-04)
+
+A full re-open of the official source artifacts found two bibliographic/locator defects in the initial discovery draft and registry:
+
+1. The official SWEBOK v4.0a PDF title page states **Released August 2026**, not September 2025. The official copyright page prints ISBN **978-0-7695-0000-3**. The provisional ID suffix that encoded 2025 was therefore wrong; it is preserved only as a registry alias while the canonical source ID omits the year.
+2. The CS2023 Software Engineering Knowledge Unit locators initially recorded as printed pages 166–168/170 were wrong. The official Body of Knowledge PDF's Software Engineering section begins at PDF page index 174; its nine-KU overview and core-hours table are on PDF page indices 175–177, and the SE-Tools unit begins at PDF page index 177/178 boundary. The registry now uses PDF page indices and named section headings to avoid printed-page offset ambiguity.
+
+The source review also identified NIST SP 800-218A (final, 2024-07-26; DOI 10.6028/NIST.SP.800-218A) as a companion SSDF profile that adds practices for generative AI and dual-use foundation models and is intended to be used with SP 800-218. It is now a separately identified source record; only metadata and abstract are verified so far. This prevents the corpus from treating SP 800-218 v1.1 as the complete secure-development guidance for AI-model development.
+
+These are material corrections from primary-source reinspection, not editorial date formatting.
