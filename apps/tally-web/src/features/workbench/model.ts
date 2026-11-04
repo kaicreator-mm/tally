@@ -36,13 +36,7 @@ export function inboxCounts(snapshot:WorkbenchSnapshot|null){
     approvals:activeWorkActions(snapshot,'approvals')!.length,
     blockers:activeWorkActions(snapshot,'blockers')!.length};
 }
-const GITHUB_SOURCE_REF=new RegExp('^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(?:issues|pull)/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?
-  if(!action.taskId||!action.versionId)return null;
-  return '#/development/tasks?projectId='+encodeURIComponent(action.projectId)
-    +'&versionId='+encodeURIComponent(action.versionId)
-    +'&taskId='+encodeURIComponent(action.taskId);
-}
-);
+const GITHUB_SOURCE_REF=/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
 export function actionSourceLink(action:WorkAction):string|null{
   return typeof action.sourceRef==='string'&&action.sourceRef.length<=256&&
     GITHUB_SOURCE_REF.test(action.sourceRef)?action.sourceRef:null;

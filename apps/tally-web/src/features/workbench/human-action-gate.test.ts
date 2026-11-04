@@ -187,6 +187,17 @@ test('noncanonical Task IDs, oversized catalogs and unsafe Host identities fail 
     ...catalog.actions[0],label:'x'.repeat(161)}]},work).enabled,false);
 });
 
+test('action source links accept only bounded canonical GitHub issue and PR references',()=>{
+  assert.equal(actionSourceLink(work),work.sourceRef);
+  for(const sourceRef of [
+    'https://evil.example/org/tally/issues/260',
+    'https://github.com/org/tally/issues/0',
+    'https://github.com/org/tally/issues/260?token=private',
+    'https://github.com/org/tally/issues/260/extra',
+    'https://github.com/org/tally/issues/260#issuecomment-0',
+    'https://github.com/org/tally/issues/'+'1'.repeat(300)
+  ])assert.equal(actionSourceLink({...work,sourceRef}),null);
+});
 test('Bearer token-shaped Host labels are rejected',()=>{
   const tokenLabel={...catalog,actions:[{
     ...catalog.actions[0],label:'Bearer abcdefghijklmnopqrstuvwxyz0123456789'
