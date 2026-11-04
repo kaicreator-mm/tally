@@ -1,13 +1,13 @@
-# LinkML Proof-of-fit — Initial Results
+# LinkML Proof-of-fit — Consolidated Results
 
-**Status:** CLI_EXECUTED_2026-11-05 / RESULTS_RECORDED / NO_ADOPTION_DECISION  
+**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / JSONLD_EDGE_NODE_CHECK_PENDING / CHECKER_23_CASE_REVALIDATION_PENDING / NO_ADOPTION_DECISION  
 **Test date:** 2026-11-04 (design), 2026-11-05 (LOCAL_BUILDER execution, section 10)  
 **Pinned candidate:** LinkML v1.12.1
 
 ## 1. What exists
 
 - A schema draft covering Source, SourceLocator, Evidence, DomainNode, KnowledgeClaim, RelationshipAssertion, ClaimBundle and KnowledgeCorpus.
-- Three authoring-format fixtures encode the same SWEBOK claim/provenance chain; LinkML-generated RDF graph equivalence PASS (L12), pending independent R2 review.
+- Three authoring-format fixtures encode the same SWEBOK claim/provenance chain; LinkML-generated Turtle domain graphs are isomorphic at 45 ≅ 45 ≅ 45 triples after excluding only container-root wrapper triples (L12). JSON-LD edge-node URIRef/Literal verification remains pending; the experiment is not adopted.
 - A compound uniqueness constraint on source + locator.
 - Non-inlined references for source, locator, claim and evidence relationships.
 - Controlled vocabularies for source class, locator type, verification state, claim type/status and relationship predicates.
@@ -20,8 +20,8 @@
 | Identifiers | All A/B/C record IDs and typed class references use canonical se: CURIEs; generated Turtle expands them to the declared base | LinkML validate/convert PASS; duplicate and closure checks require the companion validator |
 | Cross-file references | LinkML validate/JSON Schema do not resolve non-inlined cross-file references; the committed validate_relationship_integrity.py companion enforces typed closure | LinkML native resolution gap CONFIRMED; prior checker revision executed on repair HEAD 59862b9 — A/B/C PASS (§10.8); current exact-class hardening awaits rerun (§10.9) |
 | Compound uniqueness | SourceLocator has a compound key on source_ref + locator; JSON Schema omits it | Repository companion checker enforces the key; generator limitation CONFIRMED |
-| JSON-LD | Context omits nested @type; instance JSON-LD has 48 triples vs 55 in TTL, missing seven rdf:type triples | Generated and measured (L09); limitation CONFIRMED |
-| RDF | LinkML v1.12.1 RDF CLI has no --diff-stable; default schema/instance outputs were byte-identical across reruns | Generated and measured (L10/L13) |
+| JSON-LD | LinkML v1.12.1 generated A/C instance JSON-LD; the context omits nested @type, so these graphs have 48 triples vs 55 in TTL (seven rdf:type triples absent). B JSON-LD and explicit rdf:object URIRef/Literal + YAML edge-identity assertions remain pending. | Generation/context limitation measured (L09); P1-01 JSON-LD node-kind check NOT_VERIFIED |
+| RDF | LinkML v1.12.1 schema/instance Turtle generated; all rdf:object, rdf:subject and rdf:predicate values in A/B/C are URIRefs, zero Literal endpoints; A/B/C domain graphs are 45 ≅ 45 ≅ 45; default outputs were byte-identical across reruns. RDF CLI has no --diff-stable. | Generated and measured (L10/L13); Turtle P1-01 PASS |
 | Front Matter | Requires and successfully used an extraction adapter before LinkML validation | A fixture conversion PASS (L02/L11) |
 | Human review | A/B/C LinkML-generated graphs are semantically equivalent after excluding only container-root wrapper triples; timed reviewer study not run | Graph equivalence PASS (L12); timed human review NOT_RUN |
 
@@ -51,12 +51,12 @@ This was the pre-builder status on 2026-11-04. The pinned CLI was subsequently i
 
 ## 5. Interim position
 
-No production adoption decision is justified. The narrow LinkML PoF has now been executed, including generated RDF and A/B/C graph comparison. The full knowledge entity model, executable integrity companion and canonical authoring decision remain subject to independent review and SEK-05 #308.
+No production adoption decision is justified. The narrow LinkML PoF has been executed, including generated Turtle and A/B/C graph comparison. The repository integrity companion is implemented but its current 23-case revision awaits exact-HEAD local revalidation; JSON-LD resource-object assertions are also pending. The full knowledge entity model and canonical authoring decision remain subject to independent review and SEK-05 #308.
 
 
 ## 6. Static validation actually performed — 2026-11-04
 
-> **Historical snapshot — superseded by §10.** This section and the pre-builder `NOT_RUN` / `NOT_PROVEN` statements in §§7–9 describe the state before the Windows-native LinkML v1.12.1 execution and repository-checker LOCAL_VALIDATION. They are retained as chronology, not current status. For current execution status, use §§10.3–10.8: LinkML metamodel and instance conversion PASS; A/B/C graph equivalence PASS; generated `rdf:object` URIRef evidence PASS; repository checker self-test and A/B/C YAML+RDF integrity PASS. The experiment remains **NOT_ADOPTED**; independent Exact-SHA R2 review is the remaining gate.
+> **Historical snapshot — superseded by §10.** This section and the pre-builder `NOT_RUN` / `NOT_PROVEN` statements in §§7–9 describe the state before the Windows-native LinkML v1.12.1 execution and repository-checker LOCAL_VALIDATION. They are retained as chronology, not current status. For current execution status, use §§10.3–10.10: LinkML metamodel and Turtle instance conversion PASS; A/B/C Turtle graph equivalence PASS; Turtle `rdf:object` URIRef evidence PASS; the prior repository-checker revision passed 16/16, but the current strict 23-case checker revalidation remains pending; JSON-LD `rdf:object` URIRef/Literal verification also remains pending. The experiment remains **NOT_ADOPTED**; independent Exact-SHA R2 review is the remaining gate.
 
 Environment: Python 3.13; PyYAML 6.0.3; RDFLib 7.5.0.
 
