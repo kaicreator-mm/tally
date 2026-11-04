@@ -1,0 +1,394 @@
+id: https://github.com/kaicreator-mm/tally
+name: software_engineering_knowledge
+title: "Software Engineering Knowledge Model — LinkML Proof-of-fit Candidate"
+description: "Experimental schema for source, provenance, claims and typed relationships. Not adopted."
+version: 0.1.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  se: https://github.com/kaicreator-mm/tally/id/
+default_prefix: se
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  Source:
+    class_uri: se:Source
+    description: "A bibliographic or technical source record."
+    slots:
+      - source_id
+      - title
+      - source_class
+      - edition
+      - publication_date
+      - official_url
+      - verification_state
+      - rights_note
+
+  SourceLocator:
+    class_uri: se:SourceLocator
+    description: "An exact page, section, clause or official web locator within a source."
+    slots:
+      - locator_id
+      - source_ref
+      - locator_kind
+      - locator_value
+      - verification_state
+    unique_keys:
+      unique_locator_within_source:
+        unique_key_slots:
+          - source_ref
+          - locator_value
+
+  Evidence:
+    class_uri: se:Evidence
+    description: "A bounded observation or extracted support record linked to a source locator."
+    slots:
+      - evidence_id
+      - evidence_type
+      - source_ref
+      - locator_ref
+      - statement
+      - extraction_status
+
+  KnowledgeClaim:
+    class_uri: se:KnowledgeClaim
+    description: "An atomic, context-bounded knowledge assertion."
+    slots:
+      - claim_id
+      - claim_type
+      - statement
+      - evidence_refs
+      - applicability
+      - explanation
+      - limitations
+      - status
+
+  RelationshipAssertion:
+    class_uri: se:RelationshipAssertion
+    description: "A typed assertion between corpus entities; endpoint resolution is also checked by graph integrity tooling."
+    slots:
+      - relationship_id
+      - subject_id
+      - subject_kind
+      - predicate
+      - object_id
+      - object_kind
+      - relationship_evidence_refs
+      - status
+
+  DomainNode:
+    class_uri: se:DomainNode
+    description: "A node in a proposed domain taxonomy view."
+    slots:
+      - domain_node_id
+      - label
+      - source_refs
+      - status
+
+  ReviewDecision:
+    class_uri: se:ReviewDecision
+    description: "A human review outcome for a source, evidence, claim, relationship or taxonomy node."
+    slots:
+      - review_id
+      - target_id
+      - target_kind
+      - decision
+      - rationale
+      - reviewed_on
+
+  KnowledgeCorpus:
+    class_uri: se:KnowledgeCorpus
+    description: "Root collection used for the self-contained YAML fixture."
+    tree_root: true
+    slots:
+      - sources
+      - source_locators
+      - evidence_records
+      - claims
+      - relationships
+      - domain_nodes
+      - review_decisions
+
+enums:
+  SourceClass:
+    permissible_values:
+      PROFESSIONAL_BOK:
+      CURRICULUM_FRAMEWORK:
+      NORMATIVE_STANDARD:
+      GOVERNMENT_FRAMEWORK:
+      PEER_REVIEWED_EMPIRICAL:
+      TEXTBOOK_MONOGRAPH:
+      OFFICIAL_TECHNICAL_DOCUMENTATION:
+      CASE_POSTMORTEM:
+
+  VerificationState:
+    permissible_values:
+      CANDIDATE:
+      IDENTITY_VERIFIED:
+      CONTENT_VERIFIED:
+      LOCATOR_VERIFIED:
+      ACCESS_RESTRICTED:
+      BIBLIOGRAPHIC_ONLY:
+      NOT_ADMITTED:
+      DISPUTED:
+      SUPERSEDED:
+      WITHDRAWN:
+      STALE:
+
+  LocatorKind:
+    permissible_values:
+      PRINTED_PAGE_TABLE:
+      PRINTED_PAGE_SECTION:
+      PDF_PAGE_TABLE:
+      OFFICIAL_WEB_ABSTRACT:
+
+  EvidenceType:
+    permissible_values:
+      DIRECT_BOK_TAXONOMY_FACT:
+      DIRECT_GUIDE_SCOPE_FACT:
+      DIRECT_GUIDE_STRUCTURE_FACT:
+      DIRECT_CURRICULUM_TAXONOMY_FACT:
+      DIRECT_CURRICULUM_TOPIC_FACT:
+      EMPIRICAL_RESULT:
+      CASE_OBSERVATION:
+      NORMATIVE_REQUIREMENT:
+
+  ClaimType:
+    permissible_values:
+      TAXONOMY_FACT:
+      SCOPE_LIMITATION:
+      TAXONOMY_STRUCTURE:
+      CURRICULUM_TAXONOMY_FACT:
+      CURRICULUM_TOPIC_FACT:
+      CONCEPTUAL_DEFINITION:
+      EMPIRICAL_CLAIM:
+      PRACTICE_CLAIM:
+
+  RecordStatus:
+    permissible_values:
+      PROPOSED:
+      REVIEWED:
+      ACCEPTED:
+      REJECTED:
+      DISPUTED:
+      SUPERSEDED:
+
+  RelationshipPredicate:
+    permissible_values:
+      SUPPORTED_BY:
+      CONTRADICTED_BY:
+      QUALIFIED_BY:
+      APPLIES_TO:
+      DEPENDS_ON:
+      DERIVED_FROM:
+      IMPLEMENTS:
+      ILLUSTRATED_BY:
+      VALIDATED_BY:
+      SUPERSEDES:
+      RELATED_TO:
+
+  EntityKind:
+    permissible_values:
+      SOURCE:
+      SOURCE_LOCATOR:
+      EVIDENCE:
+      CLAIM:
+      CONCEPT:
+      PRINCIPLE:
+      PRACTICE:
+      PATTERN:
+      ANTI_PATTERN:
+      CASE:
+      DOMAIN_NODE:
+      REVIEW_DECISION:
+
+  ReviewOutcome:
+    permissible_values:
+      ACCEPT:
+      ACCEPT_WITH_QUALIFICATION:
+      REJECT:
+      DISPUTED:
+      NEEDS_SOURCE:
+      NEEDS_LOCATOR:
+
+slots:
+  source_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:sourceId
+  locator_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:locatorId
+  evidence_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:evidenceId
+  claim_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:claimId
+  relationship_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:relationshipId
+  domain_node_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:domainNodeId
+  review_id:
+    identifier: true
+    range: string
+    required: true
+    slot_uri: se:reviewId
+
+  title:
+    range: string
+    required: true
+  source_class:
+    range: SourceClass
+    required: true
+  edition:
+    range: string
+  publication_date:
+    range: date
+  official_url:
+    range: uri
+  verification_state:
+    range: VerificationState
+    required: true
+  rights_note:
+    range: string
+
+  source_ref:
+    range: Source
+    required: true
+    inlined: false
+    slot_uri: se:source
+  locator_ref:
+    range: SourceLocator
+    required: true
+    inlined: false
+    slot_uri: se:sourceLocator
+  locator_kind:
+    range: LocatorKind
+    required: true
+  locator_value:
+    range: string
+    required: true
+
+  evidence_type:
+    range: EvidenceType
+    required: true
+  statement:
+    range: string
+    required: true
+  extraction_status:
+    range: string
+    required: true
+
+  claim_type:
+    range: ClaimType
+    required: true
+  evidence_refs:
+    range: Evidence
+    multivalued: true
+    required: true
+    inlined: false
+    slot_uri: se:evidence
+  applicability:
+    range: string
+  explanation:
+    range: string
+  limitations:
+    range: string
+    multivalued: true
+  status:
+    range: RecordStatus
+    required: true
+
+  subject_id:
+    range: string
+    required: true
+  subject_kind:
+    range: EntityKind
+    required: true
+  predicate:
+    range: RelationshipPredicate
+    required: true
+  object_id:
+    range: string
+    required: true
+  object_kind:
+    range: EntityKind
+    required: true
+  relationship_evidence_refs:
+    range: Evidence
+    multivalued: true
+    inlined: false
+
+  label:
+    range: string
+    required: true
+  source_refs:
+    range: Source
+    multivalued: true
+    inlined: false
+
+  target_id:
+    range: string
+    required: true
+  target_kind:
+    range: EntityKind
+    required: true
+  decision:
+    range: ReviewOutcome
+    required: true
+  rationale:
+    range: string
+    required: true
+  reviewed_on:
+    range: date
+
+  sources:
+    range: Source
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  source_locators:
+    range: SourceLocator
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  evidence_records:
+    range: Evidence
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  claims:
+    range: KnowledgeClaim
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  relationships:
+    range: RelationshipAssertion
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  domain_nodes:
+    range: DomainNode
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  review_decisions:
+    range: ReviewDecision
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
