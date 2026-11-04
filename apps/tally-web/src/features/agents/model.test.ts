@@ -47,8 +47,8 @@ test('grouping by agent keeps attempts explicit',()=>{
 });
 test('sanitizeAttempts redacts credential-shaped and malformed identifiers',()=>{
   const unsafe=sanitizeAttempts([make({
-    attemptId:'ghp_12345678901234567890',
-    agentId:'github_pat_abcdefghijklmnopqrstuvwxyz012345',
+    attemptId:'safe_ghp_12345678901234567890',
+    agentId:'safe_github_pat_abcdefghijklmnopqrstuvwxyz012345',
     provider:'Bearer abcdefghijklmnopqrstuvwxyz',
     model:'sk-proj-abcdefghijklmnopqrstuvwxyz123456',
     taskIds:['101','x'.repeat(64),'ok-2','101'],
