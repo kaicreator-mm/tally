@@ -144,6 +144,16 @@ test('unsafe numeric Task identifiers cannot alias a different Host issue number
   assert.equal(workbenchActionGate(inbox,c,huge).enabled,false);
 });
 
+test('runtime numeric Task and Host action identifiers are rejected without coercion',()=>{
+  const numericTask={...work,taskId:260} as unknown as WorkAction;
+  assert.equal(workbenchActionGate(inbox,catalog,numericTask).enabled,false);
+
+  const numericWork={...work,hostActionId:123} as unknown as WorkAction;
+  const numericCatalog={...catalog,actions:[{
+    ...catalog.actions[0],id:123 as unknown as string
+  }]};
+  assert.equal(workbenchActionGate(inbox,numericCatalog,numericWork).enabled,false);
+});
 test('fresh Host action without dispatch callback shows explicit not-connected state, never the positive label',()=>{
   const c=workbenchActionControl(inbox,catalog,work,false);
   assert.equal(c.disabled,true);
