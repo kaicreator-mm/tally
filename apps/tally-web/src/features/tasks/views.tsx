@@ -5,12 +5,15 @@
 import {useState} from 'react';
 import type {TaskRecord,TaskFilters,SortKey} from './model.ts';
 import {TASK_STATUSES,STATUS_LABEL,boardColumns,blockerSummary,
-  writeSetConflicts,sortTasks} from './model.ts';
+  writeSetConflicts,sortTasks,taskExecutionSummary,taskExecutionTone,
+  TASK_EXECUTION_LABEL} from './model.ts';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {Drawer} from '../../components/ui/Drawer.tsx';
 import {DataTable} from '../../components/ui/DataTable.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 import {Collapse} from '../../components/ui/Collapse.tsx';
+import type {TaskActionCatalog,TaskActionRequest} from '../task-actions/model.ts';
+import {TaskActionsView} from '../task-actions/views.tsx';
 
 export type ViewMode='list'|'board';
 export function TasksView({tasks,filters,setFilters,onSelectTask,selectedTaskId,
@@ -110,7 +113,15 @@ export function TaskListView({tasks,onSelectTask,locale='zh'}:
       {key:'status',header:zh?'状态':'Status',
         cell:task=><Badge tone={statusTone(task.status)}>
           {zh?STATUS_LABEL[task.status].zh:STATUS_LABEL[task.status].en}</Badge>},
-      {key:'agent',header:'Agent',cell:task=>task.agentId??'—'},
+      {key:'execution',header:zh?'执行状态':'Execution',cell:task=>{
+        const execution=taskExecutionSummary(task);
+        return <Badge tone={taskExecutionTone(execution.state)}>
+          {zh?TASK_EXECUTION_LABEL[execution.state].zh:
+            TASK_EXECUTION_LABEL[execution.state].en}</Badge>;
+      }},
+      {key:'provider',header:zh?'执行方 / 角色':'Provider / role',
+        cell:task=>{const execution=taskExecutionSummary(task);
+          return execution.provider+' · '+execution.role;}},
       {key:'ci',header:'CI',cell:task=><span style={{
         color:task.ciState==='SUCCESS'?'var(--ok)'
           :task.ciState==='FAILURE'?'var(--danger)':'var(--text-muted)'}}>
@@ -148,13 +159,22 @@ export function TaskBoardView({tasks,onSelectTask,locale='zh'}:
           </div>
           <div style={{fontSize:12.5,marginTop:4,overflow:'hidden',
             textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{task.title}</div>
+          <div style={{marginTop:5}}>
+            <Badge tone={taskExecutionTone(taskExecutionSummary(task).state)}>
+              {zh?TASK_EXECUTION_LABEL[taskExecutionSummary(task).state].zh:
+                TASK_EXECUTION_LABEL[taskExecutionSummary(task).state].en}</Badge>
+          </div>
         </button>)}
     </section>)}
   </div>;
 }
-export function TaskDrawer({task,onClose,locale='zh'}:
-  {task:TaskRecord|null;onClose:()=>void;locale?:'zh'|'en'}){
+export function TaskDrawer({task,onClose,locale='zh',projectId,
+  actionCatalog,onAction}:
+  {task:TaskRecord|null;onClose:()=>void;locale?:'zh'|'en';
+   projectId?:string|null;actionCatalog?:TaskActionCatalog|null;
+   onAction?:(request:TaskActionRequest)=>void}){
   const zh=locale==='en'?false:true;
+  const execution=task?taskExecutionSummary(task):null;
   return <Drawer open={task!==null} onClose={onClose}
     title={task?`${task.id} · ${task.title}`:''}>
     {task?<div style={{display:'grid',gap:'var(--s4)'}}>
@@ -175,15 +195,36 @@ export function TaskDrawer({task,onClose,locale='zh'}:
               <code>{blocker.code}</code> — {blocker.detail}</li>)}
           </ul>}
       </section>
+      {projectId&&actionCatalog!==undefined?<section
+        aria-label={zh?'任务可执行操作':'Task actions'}>
+        <strong style={{display:'block',marginBottom:'var(--s2)'}}>
+          {zh?'当前可用操作':'Available actions'}</strong>
+        <TaskActionsView catalog={actionCatalog} projectId={projectId}
+          versionId={task.versionId} taskIssue={Number(task.id)}
+          onDispatch={onAction} locale={locale}/>
+      </section>:null}
       <section aria-label={zh?'执行与评审':'execution'}>
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
           {zh?'执行与评审':'Execution & review'}</strong>
         <dl style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'6px 12px',
           margin:0,fontSize:13}}>
-          <dt style={{color:'var(--text-muted)'}}>Agent</dt>
-          <dd style={{margin:0}}>{task.agentId??'—'}</dd>
+          <dt style={{color:'var(--text-muted)'}}>{zh?'执行方 / 角色':'Provider / role'}</dt>
+          <dd style={{margin:0}}>{execution!.provider} · {execution!.role}</dd>
+          <dt style={{color:'var(--text-muted)'}}>{zh?'执行阶段':'Execution state'}</dt>
+          <dd style={{margin:0}}>{zh?TASK_EXECUTION_LABEL[execution!.state].zh:
+            TASK_EXECUTION_LABEL[execution!.state].en}</dd>
           <dt style={{color:'var(--text-muted)'}}>Attempt</dt>
-          <dd style={{margin:0}}>{task.attemptId??'—'} · {task.attemptState??'—'}</dd>
+          <dd style={{margin:0}}>{execution!.attemptId} · {task.attemptState??'UNKNOWN'}</dd>
+          <dt style={{color:'var(--text-muted)'}}>{zh?'进度摘要':'Progress summary'}</dt>
+          <dd style={{margin:0}}>{execution!.progressSummary}</dd>
+          <dt style={{color:'var(--text-muted)'}}>Heartbeat</dt>
+          <dd style={{margin:0}}>{execution!.heartbeatAt}</dd>
+          <dt style={{color:'var(--text-muted)'}}>{zh?'耗时':'Elapsed'}</dt>
+          <dd style={{margin:0}}>{execution!.elapsed}</dd>
+          <dt style={{color:'var(--text-muted)'}}>Tokens in / out</dt>
+          <dd style={{margin:0}}>{execution!.tokensIn} / {execution!.tokensOut}</dd>
+          <dt style={{color:'var(--text-muted)'}}>{zh?'费用':'Cost'}</dt>
+          <dd style={{margin:0}}>{execution!.cost}</dd>
           <dt style={{color:'var(--text-muted)'}}>PR</dt>
           <dd style={{margin:0}}>{task.prNumber?`#${task.prNumber}`:'—'}</dd>
           <dt style={{color:'var(--text-muted)'}}>Review</dt>
@@ -194,6 +235,9 @@ export function TaskDrawer({task,onClose,locale='zh'}:
             <dt style={{color:'var(--text-muted)'}}>{zh?'需求':'Requirement'}</dt>
             <dd style={{margin:0}}><code>{task.requirementRef}</code></dd></>:null}
         </dl>
+        {execution!.candidateRef?<a href={execution!.candidateRef}
+          target="_blank" rel="noopener noreferrer">
+          {zh?'查看候选 PR':'Open candidate PR'}</a>:null}
       </section>
       <Collapse title={zh?'技术证据(原始状态)':'Technical evidence'}
         defaultOpen={false}>
