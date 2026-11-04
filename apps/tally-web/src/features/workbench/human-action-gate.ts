@@ -50,25 +50,25 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      catalog.versionId!==workItem.versionId||
      workItem.state!=='PENDING')return deny('WORKITEM_NOT_CURRENT');
   if(!Array.isArray(catalog.actions)||
-     workItem.taskId===null||!/^\d+$/.test(workItem.taskId))
+     typeof workItem.taskId!=='string'||!/^\d+$/.test(workItem.taskId))
     return deny('NO_HOST_ACTION_FOR_ITEM');
   const taskIssue=Number(workItem.taskId);
   if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
     return deny('NO_HOST_ACTION_FOR_ITEM');
   const expectedKind=hostKindFor[workItem.kind];
-  if(!expectedKind||!workItem.hostActionId||
+  if(!expectedKind||typeof workItem.hostActionId!=='string'||!workItem.hostActionId||
      !Number.isSafeInteger(workItem.hostActionRevision)||
      (workItem.hostActionRevision??0)<1||
      workItem.hostActionKind!==expectedKind)
     return deny('HOST_ACTION_IDENTITY_NOT_BOUND');
   const matching=catalog.actions.filter(a=>
-    a.taskIssue===taskIssue&&a.state==='ELIGIBLE'&&
+    typeof a.id==='string'&&a.taskIssue===taskIssue&&a.state==='ELIGIBLE'&&
     a.id===workItem.hostActionId&&
     a.revision===workItem.hostActionRevision&&
     a.kind===expectedKind);
   if(matching.length!==1)return deny('HOST_ACTION_NOT_ELIGIBLE_OR_AMBIGUOUS');
   const a=matching[0];
-  if(!/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(a.id)||
+  if(typeof a.id!=='string'||! /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(a.id)||
      !Number.isSafeInteger(a.revision)||a.revision<1||
      typeof a.label!=='string'||!a.label.trim())
     return deny('HOST_ACTION_IDENTITY_INVALID');
