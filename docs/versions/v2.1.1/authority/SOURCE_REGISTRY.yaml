@@ -115,8 +115,15 @@ sources:
       accessed_on: "2026-11-04"
       method: "Official CS2023 report pages and Body of Knowledge PDF opened; Knowledge Model definition, 17-KA list, Software Engineering KU list/core-hours table and SE-Tools section inspected."
     rights:
-      notice: "Public report site; verify report reuse terms before reproducing substantial content."
-      handling: "Store metadata and concise original paraphrase only."
+      notice: "Permission is granted to use these curriculum guidelines for the development of educational materials and programs. Other use requires specific permission."
+      notice_source: "Official CS2023 report, Copyright and Reprint Permissions notice."
+      permission_scope: "Educational-material and program development."
+      other_use: "Specific permission required."
+      permission_contacts:
+        ACM: "permissions@acm.org"
+        IEEE: "copyrights@ieee.org"
+        AAAI: "info@aaai.org"
+      handling: "Store bibliographic metadata, exact locators and concise original paraphrases only; do not reproduce substantial report text or redistribute beyond the stated permission without obtaining specific permission."
     notes: "Comparator only; do not replace SWEBOK with CS2023."
   - source_id: SE-SRC-ISO-IEC-IEEE-12207-2026
     source_class: NORMATIVE_STANDARD

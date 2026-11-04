@@ -35,9 +35,9 @@ The three fixtures must preserve identical IDs, statements, provenance and relat
 
 ## 4. Schema modeling choices under test
 
-- Each record class has a stable `id` slot marked `identifier: true`.
-- Source and locator references use non-inlined LinkML class ranges, serializing as identifier references rather than nested copies.
-- `RelationshipAssertion` carries a controlled predicate and an explicit `object_kind`; `object_ref` remains a string because this first fixture exercises two target classes (Evidence and DomainNode). A graph-integrity pass must resolve the target ID against the correct class.
+- Every record identifier uses the `uriorcurie` type with the declared `se:` prefix; non-inlined references use the same canonical CURIE form so RDF nodes expand to absolute resource IRIs.
+- Source, locator, evidence, claim and domain-node references use non-inlined LinkML class ranges, serializing as identifier references rather than nested copies.
+- `Evidence` and `DomainNode` inherit an abstract `GraphNode` superclass. `RelationshipAssertion.object_ref` has `range: GraphNode` and `inlined: false`, so it is a class reference and maps to an RDF resource node rather than a string literal. The redundant `object_kind` field is removed. Predicate-specific endpoint classes are declared in `RELATIONSHIP_RULES.yaml` and enforced by an independent graph-integrity check.
 - `SourceLocator` declares a compound uniqueness constraint on (source_ref, locator).
 - `KnowledgeCorpus` is the tree root for the standalone YAML format.
 - A separate `ClaimBundle` root supports the split YAML + Markdown format.
@@ -54,11 +54,13 @@ These are experimental choices, not frozen schema commitments.
 | L04 | Missing required statement or identifier | Validator rejects the record |
 | L05 | Duplicate identifiers | Determine which LinkML validator/generator paths enforce uniqueness |
 | L06 | Dangling source/locator/evidence/domain-node references | Determine whether non-inlined references are resolved by LinkML or require graph-integrity validation |
+| L06a | Relationship object reference RDF node kind | Assert `rdf:object` is an RDF URIRef/resource node and never an xsd:string Literal for Evidence/DomainNode targets |
+| L06b | Predicate-specific endpoint integrity | `SUPPORTED_BY` resolves to Evidence; `INCLUDES` resolves to DomainNode; wrong-class and dangling targets fail closed |
 | L07 | Compound SourceLocator uniqueness | Compare LinkML validation with generated JSON Schema |
 | L08 | Generate JSON Schema | Inspect identifier references, nullability, enum metadata and uniqueness behavior |
 | L09 | Generate JSON-LD context | Inspect @id and @type mapping at top-level and nested records |
 | L10 | Generate RDF/OWL representation of the LinkML schema | Inspect class/property URIs and schema semantics; this is schema output, not the instance knowledge graph |
-| L11 | Convert each instance fixture to RDF/TTL and JSON-LD with `linkml-convert` | Inspect actual domain nodes, claim/evidence/source provenance and typed relationship edges |
+| L11 | Convert each instance fixture to RDF/TTL and JSON-LD with `linkml-convert` | Inspect actual domain nodes, claim/evidence/source provenance and typed relationship edges; assert each `rdf:object` is a resource node, not a literal |
 | L12 | Merge the four split B-format RDF outputs and compare graph semantics with A/C | Compare graph isomorphism after excluding only format-specific container-wrapper triples; preserve all domain-record and provenance triples |
 | L13 | Repeat schema generation and instance conversion | Compare byte-level diff and RDF graph isomorphism; do not assume `--diff-stable` applies to `linkml-convert` |
 | L14 | Schema evolution | Add a new optional slot, deprecate one slot, and validate old/new fixtures |
@@ -130,3 +132,16 @@ The current analysis environment does not have `linkml` or `linkml_runtime` inst
 ## 9. Exit criteria
 
 The experiment remains OPEN until positive and negative tests, generated artifacts, schema evolution, reference integrity and human-diff comparison have actual recorded results. A final adoption decision is prohibited while CLI validation or the required output tests remain unexecuted.
+
+
+## 10. R2 P1-01 schema correction — typed resource target
+
+The former `object_ref: string` mapped to an RDF Literal despite `slot_uri: rdf:object`. The revised candidate uses:
+
+- Abstract `GraphNode` with the inherited identifier slot.
+- `Evidence` and `DomainNode` as concrete subclasses of `GraphNode`.
+- `RelationshipAssertion.object_ref` with `range: GraphNode` and `inlined: false`.
+- Canonical `se:` CURIE identifiers (`uriorcurie`) so referenced nodes expand to absolute IRIs.
+- No separate `object_kind` field; predicate-specific object classes are a single source of truth in `RELATIONSHIP_RULES.yaml`.
+
+This is a schema repair candidate, not a claim that LinkML v1.12.1 has accepted or generated the intended graph. The CLI must verify the abstract-class range, reference serialization, CURIE expansion and RDF object node kind. The independent graph check must verify predicate-specific target classes and dangling references.

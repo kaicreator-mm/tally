@@ -46,11 +46,20 @@ classes:
           - source_ref
           - locator
 
+  GraphNode:
+    abstract: true
+    class_uri: se:GraphNode
+    description: >-
+      Abstract superclass for identifiable resources that may be the target
+      of a typed relationship assertion. Concrete target classes inherit its ID.
+    slots:
+      - id
+
   Evidence:
+    is_a: GraphNode
     class_uri: se:Evidence
     description: A source-grounded observation or paraphrase with an exact locator.
     slots:
-      - id
       - evidence_type
       - source_locator_ref
       - paraphrase
@@ -58,10 +67,10 @@ classes:
       - extraction_status
 
   DomainNode:
+    is_a: GraphNode
     class_uri: se:DomainNode
     description: A node in one explicitly identified domain-taxonomy view.
     slots:
-      - id
       - label
       - view_id
       - source_ref
@@ -92,7 +101,6 @@ classes:
       - subject_ref
       - predicate
       - object_ref
-      - object_kind
       - evidence_ref
       - status
 
@@ -124,9 +132,11 @@ slots:
   id:
     identifier: true
     required: true
-    range: string
+    range: uriorcurie
+    id_prefixes:
+      - se
     slot_uri: schema:identifier
-    description: Stable identifier for the record.
+    description: Stable CURIE identifier for the record; the POF uses the declared se: namespace.
   title:
     required: true
     range: string
@@ -226,11 +236,9 @@ slots:
     slot_uri: rdf:predicate
   object_ref:
     required: true
-    range: string
+    range: GraphNode
+    inlined: false
     slot_uri: rdf:object
-  object_kind:
-    required: true
-    range: RelationshipObjectKind
   evidence_ref:
     range: Evidence
     inlined: false
@@ -311,10 +319,6 @@ enums:
         meaning: se:SUPPORTED_BY
       INCLUDES:
         meaning: se:INCLUDES
-  RelationshipObjectKind:
-    permissible_values:
-      EVIDENCE:
-      DOMAIN_NODE:
   RelationshipStatus:
     permissible_values:
       PENDING:

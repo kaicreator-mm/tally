@@ -10,7 +10,7 @@
 - Pinned v1.12.1 as the experiment candidate because the official GitHub release page identifies it as the latest release observed on this date.
 - Drafted a schema with Source, SourceLocator, Evidence, DomainNode, KnowledgeClaim, RelationshipAssertion, ClaimBundle and KnowledgeCorpus.
 - Created equivalent A/B/C fixtures from the real SWEBOK taxonomy claim and its provenance chain.
-- Included identifier slots, non-inlined references, a compound source-locator uniqueness constraint, controlled vocabularies and a typed relationship assertion with endpoint-kind metadata.
+- Included identifier slots, non-inlined references, a compound source-locator uniqueness constraint, controlled vocabularies and a reified relationship assertion; the first draft's string-valued object endpoint was later found to map to an RDF literal.
 
 ## Findings from official documentation
 
@@ -38,7 +38,7 @@ Keep the schema experimental and the CLI status NOT_RUN. Use a bounded local bui
 
 - PyYAML 6.0.3 parsed the schema and all A/B/C fixture YAML documents; a duplicate-key loader found no duplicate keys.
 - An independent static checker verified declared class slots, ranges, prefixes, required fields and enum values.
-- A/B/C logical equivalence passed: extracted front matter equals standalone YAML; the four split YAML files assemble to the same logical corpus.
+- The earlier A/B/C logical-equivalence PASS was withdrawn after exact readback found a fixture key mismatch and no reproducible B assembly procedure. A/C key was corrected; A/B/C equivalence remains NOT_PROVEN pending rerun.
 - Negative controls were rejected by the independent checker: unknown enum, missing required statement, duplicate ID, dangling source-locator reference and wrong relationship endpoint kind.
 - A manually constructed RDFLib 7.5.0 graph produced 45 triples; Turtle and JSON-LD serialization round-tripped to an isomorphic graph with 45 triples.
 
@@ -72,3 +72,24 @@ Local execution is justified only for the missing pinned toolchain. It must pres
 ## Model coverage limitation
 
 The current LinkML fixture is a narrow provenance-chain proof-of-fit, not the full v2.1.1 knowledge model. It does not model distinct Concept, Practice, Case/Counterexample, Pattern/AntiPattern, DecisionModel, ReviewDecision or CoverageGap classes. This is an explicit deferral to SEK-05 #308, not evidence that those entity types are unnecessary. No full-model fit or adoption conclusion is claimed.
+
+
+## Independent R2 P1-01 — typed RDF relationship target
+
+The independent Exact-SHA R2 review found that `RelationshipAssertion.object_ref` had `range: string` with `slot_uri: rdf:object`. LinkML maps a Type value to an RDF Literal; the separate `object_kind` enum did not turn it into a resource reference.
+
+A repair candidate was applied:
+- Introduced abstract `GraphNode`.
+- Made `Evidence` and `DomainNode` concrete subclasses of `GraphNode`.
+- Changed `object_ref` to `range: GraphNode`, `inlined: false`, `slot_uri: rdf:object`.
+- Removed redundant `object_kind`; predicate-specific endpoint constraints are now in `RELATIONSHIP_RULES.yaml`.
+- Changed fixture identifiers and typed references to `se:` CURIEs with `uriorcurie`.
+
+The repair is not yet verified by LinkML v1.12.1. Required local tests include metamodel validation, positive/negative fixtures, CURIE expansion, actual RDF/JSON-LD export, assertion that each `rdf:object` is a URIRef (not Literal), and wrong-class/dangling-target rejection. P1-01 remains open pending those results and independent Exact-SHA review.
+
+## R2 P2 remediation — status reconciliation
+
+- A/B/C equivalence: NOT_PROVEN; removed contradictory earlier PASS wording.
+- CS2023 rights: exact Copyright and Reprint Permissions notice added to registry and dossier.
+- Native dependency edges: exact live graph materialized and read back; OUTPUT_LEDGER status corrected.
+- CI: previous exact HEAD trailer-check PASS; quality remains FAIL for repository formatting/Postgres integration checks. No unrelated Go changes were made.
