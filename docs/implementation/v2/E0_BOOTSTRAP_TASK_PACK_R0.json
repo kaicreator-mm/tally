@@ -196,20 +196,44 @@
       "same-origin HTTP negative zero-effect tests",
       "Node24 MJS and Tally-web test/typecheck/build",
       "self-hosted Woodpecker only after preflight",
-      "writeSetAudit.status must be PASS and auditDigestSha256 must be bound in independent review and exact Owner approval",
+      "independent review and exact Owner approval must bind the exact writeSetAudit.status and auditDigestSha256; a BLOCKED status is permitted only as a fail-closed snapshot in the separate E0 bootstrap pack and never permits version-wide freeze or ordinary Task dispatch.",
       "all open Task bodies must expose canonical exact allowed_write_set; no prose inference; body SHA256/updatedAt/path digest readback",
-      "controller #284 accepted Claim + FROZEN_DAG_WRITESET CAS must be read back before native dependency write"
+      "controller #284 accepted Claim + FROZEN_DAG_WRITESET CAS must be read back before native dependency write",
+      "The one-off E0 bootstrap pack may be frozen after exact pack review/Owner approval with its version-wide audit explicitly BLOCKED; the separate version/v2 Task Pack freeze requires audit status PASS."
     ],
     "prohibited": [
       "no ad-hoc SQLite/CAS seed",
       "no browser direct GitHub writer",
       "no unselected Host K bypass",
       "no direct dependency mutation before claim",
-      "no source edit until pack audit/Owner/CAS admission",
       "no version/v2/main merge",
       "no tag/release/deployment",
       "no GitHub Actions",
-      "no LOCAL_VALIDATION"
+      "no LOCAL_VALIDATION",
+      "No E0 source edit before exact bootstrap PackBlob review PASS and exact Owner approval.",
+      "Before #284's accepted T06d Claim + exact FROZEN_DAG_WRITESET readback, only the one-time pre-Claim root-admission mount may be implemented; no other E0 source operation is admitted.",
+      "No version-wide Task Pack freeze or ordinary Task dispatch while writeSetAudit.status is BLOCKED."
+    ],
+    "requiredForBootstrapPackFreeze": [
+      "Independent read-only Exact-SHA review of the exact immutable bootstrap PackBlob.",
+      "Exact repository Owner approval binding PackBlob SHA, integration base SHA/tree, source SHA, E0 14-path writeSetSha256 and exact writeSetAudit digest.",
+      "The version-wide writeSetAudit status and digest must be bound exactly; BLOCKED is permitted only as an explicit fail-closed snapshot and does not authorize version-wide freeze or ordinary Task dispatch."
+    ],
+    "requiredForOneTimeRootAdmission": [
+      "Only after bootstrap PackBlob review PASS and exact Owner approval may the one-time pre-Claim Host mount be implemented inside preClaimBootstrapMountPaths.",
+      "Issue #284 remains open/type:task; state:ready may be set only after exact pack approval.",
+      "T06d native preflight must prove exact #284 source SHA, issue state ready, dependency CLEAR and no native claim event.",
+      "The Host admission source requires a stable complete public CAS claim registry and activeIncompatibleClaimCount===0; any other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row blocks. Do not delete or clear rows.",
+      "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact native readback → Host CAS PUBLISHED_VERIFIED.",
+      "The selected Host then writes and reads back the exact #284 FROZEN_DAG_WRITESET row through public DomainHarness CAS API; no direct SQLite/CAS seed.",
+      "Only after both readbacks may the public selected-K route admit #284."
+    ],
+    "requiredForVersionTaskPackFreeze": [
+      "The version-wide writeSetAudit must be PASS and its digest must match the independently reviewed and Owner-approved current candidate blob.",
+      "All 23 open version Task Issues must have complete canonical exact write sets; #264's wildcard must be resolved to exact paths.",
+      "All overlapping dispatchable write sets must be serialized by current native blocked_by edges or made disjoint by a newly approved exact scope; planned/prose-only edges do not serialize.",
+      "Refresh the 44-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
+      "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
   "note": "This governance candidate binds a live read-only audit of the 23 currently open version Task Issues plus #284. 23 existing open Tasks currently lack a top-level canonical allowed_write_set declaration, so writeSetAudit is intentionally BLOCKED and no Task Pack freeze, Claim or dependency mutation may be authorized. The 14 E0 paths are canonical candidate scope only. Root Host Claim admission is separately NOT_PROVEN. A candidate Task Pack is stale and must be refreshed before freeze.",
@@ -1174,8 +1198,8 @@
     "controllerTask": {
       "issueNumber": 284,
       "state": "open",
-      "updatedAt": "2026-11-04T06:32:31Z",
-      "bodySha256": "b68d30cb0eae7cf573e8321eb7311e2f5b3446bcb84a90a82f986dccd27d2e46",
+      "updatedAt": "2026-11-04T06:52:11Z",
+      "bodySha256": "f3f1cc3bb7a2e63040ad131af3ca0ca1e28aec6e5778130401c46326d7350d62",
       "canonicalAllowedWriteSet": {
         "status": "CANDIDATE_NOT_ADMITTED",
         "paths": [
@@ -1200,7 +1224,15 @@
       "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
       "taskPackBlobSha": null,
       "dispatchable": false,
-      "ownerScopeApprovalComment": 6623609416
+      "ownerScopeApprovalComment": 6623609416,
+      "overlapWith": [
+        219
+      ],
+      "overlapPathCount": 6,
+      "potentialOverlapWith": [
+        264
+      ],
+      "potentialOverlapPathCount": 2
     },
     "normalization": {
       "schema": "tally.v2.allowed-write-set-normalization/1",
@@ -1860,7 +1892,7 @@
       "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
       "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,dispatchableOverlapAudit,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
     },
-    "auditObservedAt": "2026-11-04T06:32:31Z",
+    "auditObservedAt": "2026-11-04T06:52:11Z",
     "status": "BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS",
     "complete": false,
     "freezeEligible": false,
@@ -1873,7 +1905,7 @@
       "For E0 #284, independently review the exact bootstrap pack blob and obtain exact Owner approval before one-time T06d Host mount/Claim; no source admission beforehand.",
       "E1 #264 remains the sole final integration owner after the explicit E0 handoff."
     ],
-    "auditDigestSha256": "194ca2589513d2845bbf793392cc617fbbea29331ee755054aeb7248217e88dc",
+    "auditDigestSha256": "e57f5708dd3ae654dbbd6ec9c79148f8f1a8d3ba67b875f08bc9fd7b4555acea",
     "dispatchableOverlapAudit": {
       "candidateTaskIssues": [
         203,
@@ -2104,11 +2136,44 @@
         "generic Claim bypass",
         "reusable bootstrap authority",
         "source implementation before exact pack review/Owner approval"
-      ]
-    }
+      ],
+      "preClaimBootstrapMountPaths": [
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "preClaimOperation": "admitE0BootstrapRoot",
+      "postClaimOperations": [
+        "freezeVersionTaskDag",
+        "addNativeTaskDependency"
+      ],
+      "claimRegistryRequirement": "The existing T06d admission source counts every other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row as incompatible. The root Claim blocks unless the stable public CAS registry readback has activeIncompatibleClaimCount===0; do not delete or clear rows.",
+      "t06dReturnSemantics": "PUBLISHED_VERIFIED is still VERIFIED_PENDING_KERNEL_ADMISSION; it is not a selected-K permit. Public K must independently verify the exact Claim row and exact FROZEN_DAG_WRITESET row."
+    },
+    "preconditions": [
+      "Independent Exact-SHA review of this exact pack blob.",
+      "Exact Owner approval comment binding pack blob SHA + integration base SHA/tree + source SHA + writeSetSha256 + writeSetAudit auditDigestSha256.",
+      "Only after the exact approval, implement the one-time pre-Claim Host mount limited to hostMount.preClaimBootstrapMountPaths; no other E0 source operation is admitted before #284's root Claim.",
+      "Issue #284 remains open/type:task; set state:ready only after exact pack approval.",
+      "T06d native preflight proves exact #284 source SHA, state:ready, dependencies CLEAR and no incompatible Claim.",
+      "Stable complete Host CAS claim registry readback has activeIncompatibleClaimCount===0; any other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row blocks without cleanup.",
+      "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact readback → Host CAS PUBLISHED_VERIFIED.",
+      "Selected Host writes and reads back the exact per-Task FROZEN_DAG_WRITESET row through public DomainHarness CAS API, never direct SQLite seeding.",
+      "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity."
+    ]
   },
   "notes": [
     "2026-11-04: canonicalized all 23 open version Task Issues using exact current issue bodies. #199/#200 are read-only; #264 remains incomplete. SHA-256 verified against standard abc/empty vectors. Exact writable-path analysis: 20 complete write-capable Tasks, 36 pairwise overlaps in one 13-Task connected component, 7 isolated writable Tasks; #264's 9 declared paths create 7 potential overlaps / 14 shared path occurrences but are not admitted. Four current native blocked_by edges into #264 were read back. All Tasks remain non-dispatchable; candidate version Task Pack remains stale and freeze-ineligible.",
-    "2026-11-04: E0 root-admission Host mount is mapped to the existing 14-path E0 candidate scope; existing T06d/C controller and ports are read-only imports, with no additional write path currently required. Exact pack review/Owner approval and root Claim are still absent; no source admission."
+    "2026-11-04: E0 root-admission Host mount is mapped to the existing 14-path E0 candidate scope; existing T06d/C controller and ports are read-only imports, with no additional write path currently required. Exact pack review/Owner approval and root Claim are still absent; no source admission.",
+    "2026-11-04 gate clarification: the one-off E0 bootstrap PackBlob is distinct from the version-wide Task Pack. Its review/Owner approval binds the exact BLOCKED version audit snapshot and digest; BLOCKED is permitted only to freeze this one-off bootstrap artifact and does not authorize version-wide freeze or ordinary Task dispatch. Version-wide freeze still requires audit PASS.",
+    "2026-11-04 E0 cross-scope check: the 14 E0 paths intersect #219's canonical issue write set on six paths and are explicitly serialized after #219; they potentially intersect #264's nine declared-but-not-admitted paths on web/v2/journey-server.mjs and web/v2/serve.mjs, serialized before E1/#264. T06d registry preflight also requires zero other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED claim rows."
   ]
 }
