@@ -237,7 +237,7 @@
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
-  "note": "All 23 open version Task Issues now have a top-level canonical allowed_write_set declaration: 22 scopes are complete and #264 remains incomplete with an empty writable set plus nine separately recorded declared paths. The body-derived version audit is BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS: 36 all-scope overlap groups remain in one 13-Task component; among 11 prior-disposition candidate Tasks, five overlapping pairs lack native blocked_by serialization. The 44-Task candidate roster is stale (7/44) and freeze-ineligible. E0's separate 14-path scope and its six #219 / two potential #264 intersections are bound by e0ScopeAudit. The one-off E0 bootstrap pack may be reviewed/frozen separately; this blocked version audit never permits ordinary Task dispatch or version-wide freeze. Root T06d admission, independent review and exact Pack Owner approval remain absent.",
+  "note": "All 23 open version Task Issues now have a top-level canonical allowed_write_set declaration: 22 scopes are complete and #264 remains incomplete with an empty writable set plus nine separately recorded declared paths. The body-derived version audit is BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS: 36 all-scope overlap groups remain in one 13-Task component; among 11 prior-disposition candidate Tasks, five overlapping pairs lack native blocked_by serialization. The #276 canonical proposed scope now includes its exact README documentation-only candidate path (42 paths); the 44-Task candidate roster is stale (7/44) and freeze-ineligible. E0's separate 14-path scope and its six #219 / two potential #264 intersections are bound by e0ScopeAudit. The one-off E0 bootstrap pack may be reviewed/frozen separately; this blocked version audit never permits ordinary Task dispatch or version-wide freeze. Root T06d admission, independent review and exact Pack Owner approval remain absent.",
   "writeSetAudit": {
     "schema": "tally/version-task-write-set-audit/v2",
     "sourceRoster": {
@@ -1126,9 +1126,9 @@
             "type:task"
           ],
           "createdAt": "2026-11-03T05:32:14Z",
-          "updatedAt": "2026-11-04T06:27:24Z",
+          "updatedAt": "2026-11-04T07:22:06Z",
           "closedAt": null,
-          "bodySha256": "2728b0a9c52a8755875f632dc95ee1626910eeafbfd975e98aa411a603c3421f",
+          "bodySha256": "0b4bdd5ac75b4804418682cb515fc6477f81ca53d1d8445255944610aac46325",
           "canonicalAllowedWriteSet": {
             "status": "CANONICALIZED_OVERLAP_BLOCKED",
             "paths": [
@@ -1136,6 +1136,7 @@
               "experiments/v2/selected-business-build/consumer-domain-data.test.mjs",
               "experiments/v2/selected-business-build/domain-data-compiler.mjs",
               "experiments/v2/selected-business-build/domain-data-compiler.test.mjs",
+              "packages/tally-engineering-business/README.md",
               "packages/tally-engineering-business/domain/authority/source-authority-map.json",
               "packages/tally-engineering-business/domain/glossary/engineering-concepts.json",
               "packages/tally-engineering-business/domain/rules/task-readiness-minimum-evidence.rule.json",
@@ -1174,7 +1175,8 @@
               "packages/tally-engineering-business/test/planning.test.mjs",
               "packages/tally-engineering-business/test/work-units.test.mjs"
             ],
-            "writeSetSha256": "8c9ad932c917fc1975b6ce22622f10538f0c799273cd8aa1ff8775a9300188c5"
+            "writeSetSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4",
+            "pathCount": 42
           },
           "overlapWith": [
             202,
@@ -1893,7 +1895,7 @@
       "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
       "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,normalization,overlapGroups,potentialIncompleteScopeOverlaps,dispatchableOverlapAudit,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
     },
-    "auditObservedAt": "2026-11-04T06:52:11Z",
+    "auditObservedAt": "2026-11-04T07:22:06Z",
     "status": "BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS",
     "complete": false,
     "freezeEligible": false,
@@ -1906,7 +1908,7 @@
       "For E0 #284, independently review the exact bootstrap pack blob and obtain exact Owner approval before one-time T06d Host mount/Claim; no source admission beforehand.",
       "E1 #264 remains the sole final integration owner after the explicit E0 handoff."
     ],
-    "auditDigestSha256": "e57f5708dd3ae654dbbd6ec9c79148f8f1a8d3ba67b875f08bc9fd7b4555acea",
+    "auditDigestSha256": "32c486f3dffae077cf3668a32b23388ffde6e62f8e6b5f428318fff832e6b5a3",
     "dispatchableOverlapAudit": {
       "candidateTaskIssues": [
         203,
