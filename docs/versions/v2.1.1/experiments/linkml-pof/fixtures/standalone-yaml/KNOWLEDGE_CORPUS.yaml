@@ -1,0 +1,42 @@
+sources:
+  - source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    title: "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a"
+    source_class: PROFESSIONAL_BOK
+    edition: "Version 4.0a"
+    publication_date: "2025-09-01"
+    official_url: "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
+    verification_state: LOCATOR_VERIFIED
+    rights_note: "Concise factual paraphrase only; commercial reprint/redistribution and new collective works require permission."
+source_locators:
+  - locator_id: SE-LOC-SWEBOK-TABLE-I1
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_kind: PRINTED_PAGE_TABLE
+    locator_value: "Printed page xxxix, Table I.1 — The 18 SWEBOK KAs"
+    verification_state: LOCATOR_VERIFIED
+evidence_records:
+  - evidence_id: SE-EVD-0001
+    evidence_type: DIRECT_BOK_TAXONOMY_FACT
+    source_ref: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    locator_ref: SE-LOC-SWEBOK-TABLE-I1
+    statement: "The SWEBOK Guide v4.0a Table I.1 enumerates 18 Knowledge Areas."
+    extraction_status: EXTRACTED_PENDING_REVIEW
+claims:
+  - claim_id: SE-CLM-0001
+    claim_type: TAXONOMY_FACT
+    statement: "SWEBOK Guide v4.0a organizes its reference knowledge into 18 Knowledge Areas."
+    evidence_refs:
+      - SE-EVD-0001
+    applicability: "Claim about the SWEBOK Guide v4.0a taxonomy; not a claim that the whole discipline has exactly 18 mutually exclusive areas."
+    explanation: "The claim is scoped to the taxonomy presented by SWEBOK Guide v4.0a."
+    limitations:
+      - "The Guide is not the complete body of knowledge."
+      - "The 18 KAs are not assumed to be mutually exclusive."
+    status: PROPOSED
+relationships:
+  - relationship_id: SE-REL-0001
+    subject_id: SE-CLM-0001
+    subject_kind: CLAIM
+    predicate: SUPPORTED_BY
+    object_id: SE-EVD-0001
+    object_kind: EVIDENCE
+    status: PROPOSED
