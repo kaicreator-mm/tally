@@ -22,3 +22,16 @@
 ## Method adjustment
 
 Evaluate source authority per claim type; keep source class and evidence role separate; use bibliographic-only records when content access is restricted; never fabricate missing locators; preserve rights/access restrictions as first-class provenance fields.
+
+
+## Source re-verification correction — 2026-11-04
+
+Primary-source reinspection exposed a real bibliographic error: the SWEBOK v4.0a title page states **Released August 2026**, not September 2025, and the copyright page prints ISBN 978-0-7695-0000-3. The initial source ID embedded the incorrect year. The old ID is preserved as a non-canonical alias; the canonical ID now omits the year. This is a useful warning against encoding mutable or weakly verified publication metadata into stable identifiers.
+
+A second locator error was found in the CS2023 registry entry: the nine SE Knowledge Units were initially assigned pages 166–168/170, but the official Body of Knowledge PDF places the Software Engineering section around PDF page indices 174–178. The registry now records PDF page indices plus named sections, avoiding the offset ambiguity between PDF indices and displayed page numbers.
+
+The NIST source review discovered the final NIST SP 800-218A (2024-07-26), a companion profile that augments SP 800-218 v1.1 for generative AI and dual-use foundation models. The profile is now separately registered with metadata/abstract-only verification. Do not silently treat v1.1 as the whole AI-specific secure-development corpus.
+
+## Method adjustment
+
+Reopen the publisher's actual PDF/report, not just the landing-page snippet, before pinning edition dates, identifiers or page locators. Preserve superseded IDs as aliases where they have already been referenced. Record the distinction between PDF page index and printed page number. Check for companion/current profiles when a source is used as a security or AI boundary reference.
