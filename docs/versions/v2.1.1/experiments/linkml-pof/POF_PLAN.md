@@ -193,3 +193,13 @@ The follow-up repair is committed inside the same #305 write set:
 - Changes: exact complete endpoint rdf:type set (only the declared class and allowed GraphNode ancestor); global URIRef-only rdf:type object check; exact rdf:Statement type set; unique fail_closed list; strict per-field RDF expectation types; seven additional negative tests.
 - Exact Windows-native revalidation of this new checker is **PENDING**. The 23/23 result does not transfer to this code blob.
 - No schema, fixture, LinkML output, production runtime, CI workflow, or out-of-write-set path changed.
+
+
+## 14. RDF reification completeness — 2026-11-05
+
+A further source audit found that the checker only enumerated nodes typed `rdf:Statement`; an additional untyped node carrying `rdf:subject`, `rdf:predicate` or `rdf:object` could be ignored. The checker now enumerates all reification edge-property subjects and rejects any that is not also a typed `rdf:Statement`. A negative self-test covers an untyped extra edge.
+
+- Repair commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
+- New self-test target: **31/31 PASS**.
+- Exact Windows-native revalidation is pending. Prior 23/23 validation applies only to the previous checker blob.

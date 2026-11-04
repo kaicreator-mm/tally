@@ -150,3 +150,13 @@ Repair completed in the same #305 write set:
 - Self-test target **30/30**. New checks cover foreign endpoint classes, statement-node type identity, unique fail_closed lists and strict RDF expectation types.
 - Exact Windows-native rerun of this new checker is pending; prior 23/23 evidence does not transfer to this code.
 - No schema, fixtures, production runtime or CI workflow changed.
+
+
+## RDF reification completeness — 2026-11-05
+
+A further independent source pass found that an extra node carrying `rdf:subject`, `rdf:predicate` or `rdf:object` without `rdf:type rdf:Statement` could be ignored. The checker now enumerates all reification edge nodes and rejects untyped extras.
+
+- Repair commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
+- Self-test target: **31/31**.
+- Exact Windows-native rerun is pending; earlier 23/23 validation applies only to the previous checker.

@@ -318,3 +318,17 @@ Repair was completed within the existing #305 write set:
 - New self-test target: **30/30**, adding coverage for foreign-namespace endpoint types, malformed and incompatible statement-node types, duplicate/incomplete fail_closed lists, non-boolean RDF expectations, and missing required predicates.
 - Exact current-HEAD Windows-native rerun is **PENDING**. The earlier 23/23 result is retained as evidence for the previous checker only.
 - No schema, fixtures, production runtime, CI workflow or out-of-write-set paths changed.
+
+
+## 10.13 RDF reification completeness — independent R2 follow-up (2026-11-05)
+
+A final source pass found that `validate_rdf` enumerated only nodes with `rdf:type rdf:Statement`. An extra node carrying one or more reification edge properties (`rdf:subject`, `rdf:predicate`, `rdf:object`) without the statement type could therefore be ignored while the expected typed statements still passed.
+
+Repair in the existing #305 write set:
+- New code commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
+- The checker now enumerates all subjects of the three reification properties and rejects any edge node not typed as `rdf:Statement`.
+- Added a deterministic negative self-test for an untyped extra edge.
+- New self-test target: **31/31 PASS**.
+- Exact Windows-native validation of this new checker is **PENDING**. The 23/23 local result remains valid for its historical checker blob only.
+- No schema, fixture, production runtime, CI workflow or out-of-write-set path changed.
