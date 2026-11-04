@@ -257,7 +257,7 @@ test('real isolated external ADS report stays UNKNOWN and permits REJECT only',a
   const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
     trustedPublisherRepositories:[publisherRepository],selectedHost:{
       ...adapter,
-      readNextTaskContextUsage:async()=>({connected:true,source,taskIssue:20,
+      readNextTaskContextUsage:async()=>({connected:true,source,versionId,taskIssue:20,
         usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[]})
     }});
   const listed=await host.candidates();
@@ -356,7 +356,7 @@ test('STALE ADS report remains visibly STALE and permits REJECT only',async()=>{
   const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
     trustedPublisherRepositories:[publisherRepository],selectedHost:{
       ...adapter,readNextTaskContextUsage:async({taskIssue})=>({
-        connected:true,source:{repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'},
+        connected:true,versionId,source:{repository,sourceSha:sha,currentness:'CURRENT',readback:'VERIFIED'},
         taskIssue,usageState:'EXPLICITLY_NOT_APPLIED',usedCandidates:[]})
     }});
   const listed=await host.candidates();
@@ -437,7 +437,7 @@ test('rejected learning cannot appear in a later Task Context Pack usage readbac
   const host=createUiExperienceHost({repository,versionId,expectedSha:sha,
     trustedPublisherRepositories:[publisherRepository],selectedHost:{
       readExperienceCandidates:async()=>({connected:true,source,versionId,candidates:[candidate]}),
-      readNextTaskContextUsage:async()=>({connected:true,source,taskIssue:21,
+      readNextTaskContextUsage:async()=>({connected:true,source,versionId,taskIssue:21,
         usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]})
     }});
   const result=await host.nextTaskUsage(21);
@@ -463,7 +463,7 @@ test('next-Task usage accepts only unique adopted verified eligible candidates',
     selectedHost:{
       readExperienceCandidates:async()=>({connected:true,source,versionId,
         candidates:[item]}),
-      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,versionId,
         taskIssue,...usage})
     }
   });
@@ -532,7 +532,7 @@ test('next-Task usage refuses a candidate set that changes during readback',asyn
         return {connected:true,source,versionId,
           candidates:[reads===1?candidate('ADOPTED',true):candidate('REJECTED',false)]};
       },
-      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,versionId,
         taskIssue,usageState:'EXPLICITLY_APPLIED',usedCandidates:[id]})
     }});
   const result=await host.nextTaskUsage(22);
@@ -597,7 +597,7 @@ test('isolated E2E publisher remains test-only and can never be adopted or reuse
         decisionReceiptRef:'https://github.com/'+repository+
           '/issues/30#issuecomment-6381704610'
       };},
-      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+      readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,versionId,
         taskIssue,...usage})
     }
   });
