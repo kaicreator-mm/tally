@@ -142,15 +142,17 @@ test('real maintenance controller keeps recorded and unconfirmed decisions disti
       namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
-  for(const accepted of [true,false]){
+  for(const fault of [null,'claim','replay','authorized']){
     const controller=createMaintenanceController({currentSourceSha:sha},{
       host:{readTaskLearning:async()=>({suggestions:[suggestion]})},
       sealedDispatch:async({input})=>({phase:'terminal',outcome:{ok:true,output:{
-        state:'LEARNING_RECORDED',reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+        state:fault==='replay'?'REPLAY_COMPLETE':'LEARNING_RECORDED',
+        reason:fault==='replay'?'REPLAY_FIXTURE_ONLY':'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
         issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
         sourceSha:input.sourceSha,learningId:input.learningId,decision:input.decision,
-        claimGeneration:1,claimAccepted:accepted,admitted:true,authorized:false,
-        replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+        claimGeneration:1,claimAccepted:fault!=='claim',admitted:true,
+        authorized:fault==='authorized',
+        replayFixture:fault==='replay',githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
         noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}})});
     const adapter=createMaintenanceControllerExperienceAdapter({
       maintenanceController:controller,repository,versionId,expectedSha:sha});
@@ -158,9 +160,9 @@ test('real maintenance controller keeps recorded and unconfirmed decisions disti
       revision,decision:'ADOPT',evidenceRef:suggestion.provenance.publicationRef,
       publisherRepository:repository,reportQualification:'VERIFIED'};
     const result=await adapter.dispatchExperienceDecision(request);
-    assert.equal(result.status,'UNKNOWN');
+    assert.equal(result.status,fault===null?'OBSERVED':'UNKNOWN');
     const read=await adapter.readExperienceCandidates();
-    if(accepted){
+    if(fault===null){
       assert.equal(controller.snapshot().learning[0].recordState,'LEARNING_RECORDED');
       assert.equal(read.candidates[0].state,'ADOPTED');
     }else{

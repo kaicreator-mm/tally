@@ -183,7 +183,26 @@ test('learning use/reject and outcome record only through the sealed seam',async
     {learningId:'f'.repeat(64),decision:'ADOPTED'});
   assert.equal(decision.state,'LEARNING_RECORDED');
   assert.equal(decision.decision,'ADOPTED');
+  assert.equal(decision.claimGeneration,1);
+  assert.equal(decision.claimAccepted,true);
+  assert.equal(decision.admitted,true);
+  assert.equal(decision.authorized,false);
+  assert.equal(decision.replayFixture,false);
+  assert.equal(decision.taskPass,false);
+  assert.equal(decision.releasePass,false);
   assert.equal(decision.measuredEffect,'NOT_MEASURED');
+  const forged=make({sealedDispatch:async request=>({phase:'terminal',outcome:{ok:true,
+    output:{state:'LEARNING_RECORDED',reason:'LEARNING_DECISION_RECORDED_IN_HOST_CAS',
+      issueRef:ISSUE_REF,sourceSha:request.input.sourceSha,
+      learningId:request.input.learningId,decision:request.input.decision,
+      claimGeneration:1,claimAccepted:false,admitted:true,authorized:false,
+      replayFixture:false,githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
+      noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}})});
+  const rejected=await act(forged,'record-learning',
+    {learningId:'f'.repeat(64),decision:'ADOPTED'});
+  assert.notEqual(rejected.state,'LEARNING_RECORDED');
+  for(const key of ['claimGeneration','claimAccepted','admitted','authorized',
+    'replayFixture','taskPass','releasePass'])assert.equal(Object.hasOwn(rejected,key),false);
   const outcome=await act(seam,'record-learning',{learningId:'f'.repeat(64),
     decision:'ADOPTED',outcome:{attested:true,observedAt:'2026-11-02T10:00:00.000Z',
       note:'independent follow-up readback'}});
