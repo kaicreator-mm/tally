@@ -56,7 +56,7 @@ const qualified=(snapshot,repository,versionId,sha)=>
 function checkActions(actions,sha){
   const seen=new Set();
   for(const action of actions){
-    if(!plain(action)||!ACTION_ID.test(action.id??'')||seen.has(action.id)||
+    if(!plain(action)||typeof action.id!=='string'||!ACTION_ID.test(action.id)||seen.has(action.id)||
        SECRET.test(action.id)||!KINDS.has(action.kind)||
        !Number.isSafeInteger(action.revision)||action.revision<1||
        !['ELIGIBLE','BLOCKED'].includes(action.state)||
@@ -88,6 +88,12 @@ const EXECUTION_ROLES=new Set(['BUILDER','REVIEWER','REPAIR','VALIDATOR','ORCHES
 const EXECUTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,79}$/;
 const PROVIDER_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
 const CANDIDATE_PR=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/pull\/[1-9][0-9]*$/;
+const GITHUB_RECEIPT_PATH=/^(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
+function validReceiptRef(value,repository){
+  const prefix=`https://github.com/${repository}/`;
+  return typeof value==='string'&&value.length<=256&&value.startsWith(prefix)&&
+    GITHUB_RECEIPT_PATH.test(value.slice(prefix.length));
+}
 function validTaskExecution(execution,repository){
   if(!plain(execution)||Object.keys(execution).sort().join(',')!==
     'attemptId,candidateRef,costUsd,elapsedMs,heartbeatAt,progressSummary,progressSummaryKind,provider,role,state,tokensIn,tokensOut'||
@@ -175,7 +181,7 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
     if(!plain(request)||Object.keys(request).sort().join(',')!==
       'actionId,repository,revision,sourceSha,versionId'||
       request.repository!==repository||request.versionId!==versionId||
-      request.sourceSha!==expectedSha||!ACTION_ID.test(request.actionId??'')||
+      request.sourceSha!==expectedSha||typeof request.actionId!=='string'||!ACTION_ID.test(request.actionId)||
       !Number.isSafeInteger(request.revision)||request.revision<1)
       return denied('ACTION_REQUEST_STALE_OR_INVALID');
     // No caller-supplied permit, Claim, payload, GitHub token or effect plan.
@@ -205,8 +211,7 @@ export function createUiActionPort({repository,versionId,expectedSha,host}={}){
          result.taskPass===true||result.releasePass===true||
          result.authorized===true||result.releasePublished===true||
          (result.status==='OBSERVED'&&
-           (typeof result.receiptRef!=='string'||
-            !result.receiptRef.startsWith('https://github.com/'+repository+'/'))))
+           !validReceiptRef(result.receiptRef,repository)))
         return denied('SELECTED_HOST_ACTION_RECEIPT_UNQUALIFIED');
       // Never promote Host receipt to independent Task/Release qualification.
       return {connected:true,ok:result.status==='OBSERVED',status:result.status,
