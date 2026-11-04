@@ -172,6 +172,46 @@ test('task execution permits absent telemetry only as explicit nulls',async()=>{
   assert.equal(result.execution.costUsd,null);
 });
 
+test('runtime numeric Host and request action identifiers fail closed without dispatch',async()=>{
+  let dispatch=0;
+  const numericHost=make({readCurrentActions:async()=>({...snapshot(),
+    actions:[{...eligible,id:123}]}),
+    dispatchAuthorizedAction:async()=>{dispatch++;return receipt;}});
+  assert.equal((await numericHost.actions()).reason,'HOST_ACTION_SOURCE_UNQUALIFIED');
+  assert.equal((await numericHost.submit({...request,actionId:123})).reason,
+    'HOST_ACTION_SOURCE_UNQUALIFIED');
+  const numericRequest=await make({dispatchAuthorizedAction:async()=>{
+    dispatch++;return receipt;
+  }}).submit({...request,actionId:123});
+  assert.equal(numericRequest.reason,'ACTION_REQUEST_STALE_OR_INVALID');
+  assert.equal(dispatch,0);
+});
+
+test('dispatch receipt accepts only canonical same-repository issue or pull comment URLs',async()=>{
+  for(const receiptRef of [
+    'https://github.com/org/tally/issues/260?token=ghp_12345678901234567890',
+    'https://github.com/org/tally/issues/260#issuecomment-100?token=ghp_12345678901234567890',
+    'https://github.com/org/tally/issues/260#Bearer_secret',
+    'https://github.com/org/tally.evil/issues/260#issuecomment-100',
+    'https://github.com/org/tally/issues/260/extra#issuecomment-100'
+  ]){
+    const result=await make({dispatchAuthorizedAction:async()=>({...receipt,receiptRef})})
+      .submit(request);
+    assert.equal(result.status,'DENIED');
+    assert.equal(JSON.stringify(result).includes('ghp_'),false);
+    assert.equal(JSON.stringify(result).includes('Bearer_secret'),false);
+  }
+  for(const receiptRef of [
+    'https://github.com/org/tally/issues/260#issuecomment-100',
+    'https://github.com/org/tally/pull/300#issuecomment-200'
+  ]){
+    const result=await make({dispatchAuthorizedAction:async()=>({...receipt,receiptRef})})
+      .submit(request);
+    assert.equal(result.status,'OBSERVED');
+    assert.equal(result.receiptRef,receiptRef);
+  }
+});
+
 test('credential-shaped action ids, providers, attempts and summaries fail closed',async()=>{
   const secrets=['ghp_12345678901234567890',
     'github_pat_abcdefghijklmnopqrstuvwxyz012345',
