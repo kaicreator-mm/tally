@@ -65,8 +65,8 @@ export function DagView({dag,locale='zh',onOpenTask}:
           style={{color:'var(--warn)',marginBottom:'var(--s3)'}}>
           DEPENDENCY_COVERAGE={dag.dependencyCoverage??'UNKNOWN'} ·
           {dag.dependencyCoverage==='NATIVE_PARTIAL'
-            ?(zh?'存在仅 PLANNED 的依赖边，尚未原生物化'
-                :'planned-only edges are not materialized natively')
+            ?(zh?'存在尚未原生读回的依赖边'
+                :'some dependency edges have not been read back natively')
             :(zh?'快照未携带依赖覆盖元数据，按未知处理'
                 :'coverage metadata absent from snapshot; treated as unknown')}
         </div>

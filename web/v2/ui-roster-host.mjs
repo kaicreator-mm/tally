@@ -256,10 +256,14 @@ export function createUiRosterHost({repository,versionId,expectedSha,
       const claimByTaskState=new Map(tasks.map(task=>[String(task.id),task.claimState??'NOT_VERIFIED']));
       const dagNodes=native.dag.nodes.map(node=>({...node,
         claimState:claimByTaskState.get(String(node.taskId))??'NOT_VERIFIED'}));
-      const plannedEdges=before.frozen.edges.filter(e=>e.kind==='PLANNED');
-      const dependencyCoverage=sameSet(planned,observed)
+      const plannedEdges=before.frozen.edges.filter(e=>e.kind==='PLANNED')
+        .map(e=>({...e,from:String(e.from),to:String(e.to),amendedAt:null}));
+      const missingEdges=before.frozen.edges.filter(e=>e.kind==='NATIVE'&&
+        !observed.has(edgeId(e.from,e.to)))
+        .map(e=>({...e,from:String(e.from),to:String(e.to),kind:'UNRESOLVED',amendedAt:null}));
+      const dependencyCoverage=plannedEdges.length===0&&sameSet(planned,observed)
         ?'NATIVE_COMPLETE':'NATIVE_PARTIAL';
-      const dag={...native.dag,edges:[...native.dag.edges,...plannedEdges],
+      const dag={...native.dag,edges:[...native.dag.edges,...plannedEdges,...missingEdges],
         rosterCoverage:'VERIFIED_COMPLETE',claimReadbackCoverage:claimReadback,
         claimCoverage:claimResults===null?'NOT_VERIFIED':
           acceptedClaimCount===native.tasks.length?'ACCEPTED_ALL':

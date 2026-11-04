@@ -104,6 +104,18 @@ test('missing native dependency remains visible and is never inferred as complet
   assert.equal(r.rosterCoverage,'VERIFIED_COMPLETE');
   assert.equal(r.dependencyCoverage,'NATIVE_PARTIAL');
   assert.equal(r.dag.dependencyCoverage,'NATIVE_PARTIAL');
+  assert.deepEqual(r.dag.edges,[{...edge,from:'1',to:'2',kind:'UNRESOLVED',amendedAt:null}]);
+});
+
+test('a planned-only dependency is visible and prevents native-complete coverage',async()=>{
+  const candidate=frozen();
+  candidate.frozen.edges=[{...edge,kind:'PLANNED'}];
+  const {host}=make(async()=>candidate,async()=>native([]));
+  const r=await host.roster();
+  assert.equal(r.connected,true);
+  assert.equal(r.dependencyCoverage,'NATIVE_PARTIAL');
+  assert.equal(r.dag.dependencyCoverage,'NATIVE_PARTIAL');
+  assert.deepEqual(r.dag.edges,[{...edge,from:'1',to:'2',kind:'PLANNED',amendedAt:null}]);
 });
 
 test('partial selected native Task roster refuses complete coverage',async()=>{
