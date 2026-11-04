@@ -121,17 +121,16 @@ Official references:
 - RDF: https://linkml.io/linkml/data/rdf.html
 - RDF generator options: https://linkml.io/linkml/cli/generate.html
 
-## 8. Current execution limitation
+## 8. Historical pre-builder environment limitation
 
-The current analysis environment does not have `linkml` or `linkml_runtime` installed. A package-install attempt did not produce an installed package. The cause has not been established. Therefore:
-- YAML syntax can be checked independently with PyYAML.
-- LinkML metamodel validation, generated outputs and actual LinkML data validation remain NOT_RUN.
-- No PASS, ADOPT or compatibility claim may be inferred from the static schema draft.
-- A bounded LOCAL_BUILDER run is needed for the exact commands above when an environment with LinkML v1.12.1 is available.
+This section records the original analysis-container limitation before the Windows-native LOCAL_BUILDER run. It is superseded by the actual execution evidence in RESULTS.md §10. The initial container did not have linkml or linkml_runtime; its package-install attempt did not produce an installed package. This was an environment-specific failure, not a schema result. The later Windows-native environment installed and executed the pinned toolchain.
+- At that historical point, only YAML syntax/static checks were available.
+- LinkML execution was subsequently completed on Windows-native Python 3.14.7 with LinkML/linkml-runtime 1.12.1.
+- No production adoption or full-model compatibility claim follows from the narrow PoF.
 
 ## 9. Exit criteria
 
-The experiment remains OPEN until positive and negative tests, generated artifacts, schema evolution, reference integrity and human-diff comparison have actual recorded results. A final adoption decision is prohibited while CLI validation or the required output tests remain unexecuted.
+The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The SEK-04 task remains OPEN until the committed repository integrity checker has been run against A/B/C and generated Turtle, the independent Exact-SHA R2 review passes, and the evidence-backed recommendation is recorded. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
 
 
 ## 10. R2 P1-01 schema correction — typed resource target
@@ -144,4 +143,36 @@ The former `object_ref: string` mapped to an RDF Literal despite `slot_uri: rdf:
 - Canonical `se:` CURIE identifiers (`uriorcurie`) so referenced nodes expand to absolute IRIs.
 - No separate `object_kind` field; predicate-specific object classes are a single source of truth in `RELATIONSHIP_RULES.yaml`.
 
-This is a schema repair candidate, not a claim that LinkML v1.12.1 has accepted or generated the intended graph. The CLI must verify the abstract-class range, reference serialization, CURIE expansion and RDF object node kind. The independent graph check must verify predicate-specific target classes and dangling references.
+LOCAL_BUILDER execution with LinkML v1.12.1 verified the abstract-class range, non-inlined reference serialization, CURIE expansion and RDF object node kind in generated Turtle. The repository companion checker added by the R2 repair independently enforces predicate-specific endpoint classes, unique IDs and dangling-reference rejection.
+
+
+## 11. R2 executable integrity checker — 2026-11-05
+
+The RELATIONSHIP_RULES.yaml file is a declarative rule source, not an executable validator by itself. The companion checker is committed at:
+
+docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py
+
+Run its deterministic self-tests:
+
+~~~bash
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --self-test
+~~~
+
+Run the checker for all three authoring formats and their LinkML-generated Turtle:
+
+~~~bash
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --frontmatter docs/versions/v2.1.1/experiments/linkml-pof/fixtures/frontmatter/SE-CLM-0001.md --ttl se-corpus-a.ttl
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --corpus docs/versions/v2.1.1/experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml --ttl se-corpus-c.ttl
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --bundle docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml --source docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml --locator docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml --evidence docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml --ttl se-b-merged.ttl
+~~~
+
+Before the B check, merge the four independently generated B Turtle outputs into se-b-merged.ttl with RDFLib. The checker enforces canonical se: CURIE IDs and typed references, uniqueness, cross-record closure, predicate-specific subject/object classes, required evidence, and RDF resource-node semantics. It rejects Literal-valued rdf:object and wrong-class/dangling endpoints.
+
+taxonomy_ref, taxonomy_refs, and view_id remain opaque string identifiers in this narrow PoF; they are not modeled as typed graph resources here. The complete taxonomy entity model is deferred to SEK-05 #308.
+
+
+## 12. Exact RDF type-node validation — 2026-11-05
+
+The strict endpoint class checker also rejects any non-URIRef value used as an endpoint's `rdf:type` object. This closes a malformed-RDF path where a valid `se:` class assertion could otherwise coexist with a Literal class assertion and be silently ignored. The checker self-test now requires 23/23 cases. The current exact-HEAD local run must execute the updated self-test before P1-03 can close.
+
+The LinkML v1.12.1 JSON-LD output has a known seven-triple nested-`rdf:type` omission (L09). Therefore, JSON-LD edge-node verification is a separate check: parse A/C and all four B JSON-LD outputs as RDF, require exactly one URIRef subject/predicate/object for every reified statement, reject Literal `rdf:object`, and compare edge identities to YAML. Do not claim JSON-LD/TTL graph equivalence or predicate-specific class validation from missing JSON-LD type triples.
