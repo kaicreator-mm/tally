@@ -297,6 +297,17 @@ def validate_rdf(graph, rules, label, records=None):
     statements = list(graph.subjects(RDF.type, RDF.Statement))
     if not statements:
         raise IntegrityError(f"{label}: no rdf:Statement nodes found")
+    reified_edge_nodes = (
+        set(graph.subjects(RDF.subject, None))
+        | set(graph.subjects(RDF.predicate, None))
+        | set(graph.subjects(RDF.object, None))
+    )
+    untyped_edge_nodes = reified_edge_nodes - set(statements)
+    if untyped_edge_nodes:
+        found = sorted(str(value) for value in untyped_edge_nodes)
+        raise IntegrityError(
+            f"{label}: untyped reification edge nodes are not allowed: {found}"
+        )
     expected = {}
     for cls, record in records or []:
         if cls != "RelationshipAssertion":
@@ -591,6 +602,23 @@ def self_test(rules):
     bad = Graph()
     for triple in graph:
         bad.add(triple)
+    untyped = URIRef(SE_BASE + "R_UNTYPED")
+    bad.add((untyped, RDF.subject, claim))
+    bad.add((untyped, RDF.predicate, SE.SUPPORTED_BY))
+    bad.add((untyped, RDF.object, evidence))
+    try:
+        validate_rdf(bad, rules, "self-test-untyped-reification", [r for r in sample_records() if r[0] != "RelationshipAssertion" or r[1]["id"] == "se:R1"])
+    except IntegrityError as exc:
+        if "untyped reification edge nodes are not allowed" not in str(exc):
+            raise
+        print("SELF-TEST PASS: untyped reification edge node rejected")
+        passed += 1
+    else:
+        raise IntegrityError("self-test: untyped reification edge node accepted")
+
+    bad = Graph()
+    for triple in graph:
+        bad.add(triple)
     bad.remove((stmt, RDF.object, evidence))
     other = URIRef(SE_BASE + "D1")
     bad.add((stmt, RDF.object, other))
@@ -619,9 +647,9 @@ def self_test(rules):
     else:
         raise IntegrityError("self-test: RDF statement ID mismatch accepted")
 
-    if passed != 30:
-        raise IntegrityError(f"self-test coverage mismatch: expected 30 checks, observed {passed}")
-    print(f"SELF-TEST SUMMARY: {passed}/30 PASS")
+    if passed != 31:
+        raise IntegrityError(f"self-test coverage mismatch: expected 31 checks, observed {passed}")
+    print(f"SELF-TEST SUMMARY: {passed}/31 PASS")
     return 0
 
 
