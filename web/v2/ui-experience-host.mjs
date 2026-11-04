@@ -17,7 +17,7 @@ const positive=(v,repo,versionId,sha)=>v?.connected===true&&
   qualifiedSource(v.source,repo,sha)&&v.versionId===versionId&&
   Array.isArray(v.candidates)&&v.candidates.length<=100;
 const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
-const RECEIPT_PATH=/^(?:issues|pull)\\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
+const RECEIPT_PATH=/^(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
 const ISOLATED_TEST_PUBLISHER='kaicreator-mm/task-meta-e2e';
 const publisherSet=(repository,extra)=>{
   if(extra!==undefined&&(!Array.isArray(extra)||extra.length>20||
