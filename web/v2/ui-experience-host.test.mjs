@@ -14,6 +14,12 @@ const request={repository,versionId,sourceSha:sha,candidateId:'lesson-1',
   revision:1,decision:'ADOPT'};
 const receipt={status:'OBSERVED',candidateId:'lesson-1',sourceSha:sha,
   decision:'ADOPTED',decisionReceiptRef:'https://github.com/org/tally/issues/52#issuecomment-1'};
+const ownerApprovalFor=learningId=>({
+  state:'OWNER_APPROVAL_VERIFIED',reason:'GITHUB_OWNER_APPROVAL_VERIFIED',
+  repository,issueNumber:219,sourceSha:sha,learningId,decision:'ADOPTED',
+  commentId:21901,commentUrl:'https://github.com/'+repository+
+    '/issues/219#issuecomment-21901',author:'owner-admin',permission:'admin'
+});
 const make=(overrides={})=>createUiExperienceHost({repository,versionId,
   expectedSha:sha,selectedHost:{readExperienceCandidates:async()=>snap(),
     dispatchExperienceDecision:async()=>receipt,...overrides}});
@@ -142,6 +148,7 @@ test('real maintenance controller keeps recorded and unconfirmed decisions disti
       namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const ownerApproval=ownerApprovalFor(suggestion.learningId);
   for(const fault of [null,'claim','replay','authorized']){
     const controller=createMaintenanceController({currentSourceSha:sha},{
       host:{readTaskLearning:async()=>({suggestions:[suggestion]})},
@@ -153,7 +160,8 @@ test('real maintenance controller keeps recorded and unconfirmed decisions disti
         claimGeneration:1,claimAccepted:fault!=='claim',admitted:true,
         authorized:fault==='authorized',
         replayFixture:fault==='replay',githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
-        noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false}}})});
+        noAgentRanking:true,qualityGainClaimed:false,taskPass:false,releasePass:false,
+        ...(fault===null?{ownerApproval}:{})}}})});
     const adapter=createMaintenanceControllerExperienceAdapter({
       maintenanceController:controller,repository,versionId,expectedSha:sha});
     const request={repository,versionId,sourceSha:sha,candidateId:suggestion.learningId,
@@ -181,6 +189,7 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
       commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const ownerApproval=ownerApprovalFor(suggestion.learningId);
   let decision=null;
   const controller={
     async dispatch(_sha,kind,args){
@@ -191,12 +200,13 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
         return {state:'LEARNING_RECORDED',decision,claimAccepted:true,
           admitted:true,authorized:false,taskPass:false,releasePass:false,
           githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
-          noAgentRanking:true,qualityGainClaimed:false};
+          noAgentRanking:true,qualityGainClaimed:false,ownerApproval};
       }
       return {status:'DENIED'};
     },
     snapshot(){return {status:'OBSERVED',sourceSha:sha,learning:[{
       ...suggestion,decision,recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED',
+      ...(decision==='ADOPTED'?{ownerApproval}:{}),
       qualityGainClaimed:false,noAgentRanking:true,measuredEffect:'NOT_MEASURED'}]};}
   };
   const adapter=createMaintenanceControllerExperienceAdapter({
@@ -214,6 +224,50 @@ test('existing maintenance controller adapter preserves ADS provenance and seale
     'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT');
   assert.equal(result.decisionReceiptRef,null);
   assert.equal(decision,'ADOPTED');
+  const adopted=await adapter.readExperienceCandidates();
+  assert.equal(adopted.candidates[0].eligibleForNextTask,true);
+});
+test('maintenance adapter permits next-Task use only with the exact Host Owner approval',async()=>{
+  const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
+    taskIssueRef:'https://github.com/org/tally/issues/52',
+    targetIssueRef:'https://github.com/org/tally/issues/60',subjectSha:sha,
+    qualification:'REPORTED_QUALIFIED',
+    provenance:{reportId:'ads-report-1',revision:2,kind:'EXECUTION_SUMMARY',
+      commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,
+      dataDigest:'d'.repeat(64),
+      publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
+    decision:'ADOPTED',recordState:'LEARNING_RECORDED',
+    measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const approval=ownerApprovalFor(suggestion.learningId);
+  const makeHost=ownerApproval=>{
+    const row={...suggestion,ownerApproval};
+    const controller={dispatch:async()=>({status:'OK',
+      reason:'PUBLIC_ADS_REPORTS_OBSERVED'}),
+      snapshot:()=>({status:'OBSERVED',sourceSha:sha,learning:[row]})};
+    const adapter=createMaintenanceControllerExperienceAdapter({
+      maintenanceController:controller,repository,versionId,expectedSha:sha});
+    return createUiExperienceHost({repository,versionId,expectedSha:sha,
+      selectedHost:{...adapter,
+        readNextTaskContextUsage:async({taskIssue})=>({connected:true,source,
+          versionId,taskIssue,usageState:'EXPLICITLY_APPLIED',
+          usedCandidates:[suggestion.learningId]})}});
+  };
+  const valid=makeHost(approval);
+  const listed=await valid.candidates();
+  assert.equal(listed.candidates[0].eligibleForNextTask,true);
+  const applied=await valid.nextTaskUsage(21);
+  assert.equal(applied.connected,true);
+  assert.equal(applied.usageState,'EXPLICITLY_APPLIED');
+  assert.deepEqual(applied.usedCandidates,[suggestion.learningId]);
+
+  for(const invalid of [null,{...approval,sourceSha:'b'.repeat(40)},
+    {...approval,learningId:'c'.repeat(64)},{...approval,permission:'write'},
+    {...approval,commentUrl:'https://github.com/org/tally/issues/219'},
+    {...approval,untrustedExtra:true}]){
+    const blocked=await makeHost(invalid).nextTaskUsage(21);
+    assert.equal(blocked.connected,false);
+    assert.equal(blocked.reason,'NEXT_TASK_CONTEXT_USAGE_UNQUALIFIED');
+  }
 });
 test('maintenance experience decision refuses post-CAS readback from a moved source',async()=>{
   const suggestion={learningId:learningIdFor('ads-report-1',2,1001),
@@ -224,6 +278,7 @@ test('maintenance experience decision refuses post-CAS readback from a moved sou
       commentId:1001,issueNumber:60,namespace:'tally',repository,sourceSha:sha,dataDigest:'d'.repeat(64),
       publicationRef:'https://github.com/org/tally/issues/60#issuecomment-1001'},
     measuredEffect:'NOT_MEASURED',noAgentRanking:true,qualityGainClaimed:false};
+  const ownerApproval=ownerApprovalFor(suggestion.learningId);
   let decision=null,snapshotReads=0,recordCalls=0;
   const controller={
     async dispatch(_sha,kind,args){
@@ -234,7 +289,7 @@ test('maintenance experience decision refuses post-CAS readback from a moved sou
         return {state:'LEARNING_RECORDED',decision,claimAccepted:true,
           admitted:true,authorized:false,taskPass:false,releasePass:false,
           githubEffect:'NOT_RUN',measuredEffect:'NOT_MEASURED',
-          noAgentRanking:true,qualityGainClaimed:false};
+          noAgentRanking:true,qualityGainClaimed:false,ownerApproval};
       }
       return {status:'DENIED'};
     },
@@ -243,6 +298,7 @@ test('maintenance experience decision refuses post-CAS readback from a moved sou
       return {status:'OBSERVED',sourceSha:snapshotReads===1?sha:'b'.repeat(40),
         learning:[{...suggestion,decision,
           recordState:decision?'LEARNING_RECORDED':'NOT_RECORDED',
+          ...(decision==='ADOPTED'?{ownerApproval}:{}),
           qualityGainClaimed:false,noAgentRanking:true,measuredEffect:'NOT_MEASURED'}]};
     }
   };
