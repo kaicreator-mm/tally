@@ -170,7 +170,7 @@
     "sourceSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
     "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
     "taskPackBlobSha": null,
-    "writeSetSha256": "f9a124d2bc019ad782f716944b50c9f39a47d90d9b0568cd4effc1d1a4e62944",
+    "writeSetSha256": "812b3c92f9caec42821470458ca6b23c3b6d9927ed2571d35015846cf1e28d78",
     "acceptedHostCasClaim": null,
     "jitBranch": "task/i284-e0-bootstrap"
   },
@@ -630,7 +630,7 @@
           "web/v2/serve.mjs",
           "web/v2/version-task-dag-host-http.test.mjs"
         ],
-        "writeSetSha256": "f9a124d2bc019ad782f716944b50c9f39a47d90d9b0568cd4effc1d1a4e62944"
+        "writeSetSha256": "812b3c92f9caec42821470458ca6b23c3b6d9927ed2571d35015846cf1e28d78"
       }
     },
     "findings": {
@@ -675,8 +675,8 @@
     "rule": "Only parse a top-level canonical allowed_write_set declaration. Missing declarations remain UNKNOWN/BLOCKED; never infer from prose or broad globs.",
     "status": "BLOCKED_MISSING_CANONICAL_ALLOWED_WRITE_SET",
     "complete": false,
-    "auditDigestSha256": "2f40424af5ac258d695b5945384ea455f0b69a8d9b056c792d4934e751f4695c",
-    "e0TaskWriteSetSha256": "f9a124d2bc019ad782f716944b50c9f39a47d90d9b0568cd4effc1d1a4e62944",
+    "auditDigestSha256": "8dfbd684fd79385d7fc5cc23363df3494f040f81ce9268d2120b89bf165ac09d",
+    "e0TaskWriteSetSha256": "812b3c92f9caec42821470458ca6b23c3b6d9927ed2571d35015846cf1e28d78",
     "requiredToUnblock": [
       "Add canonical allowed_write_set declarations to all current open version Tasks, exact-path only; mark non-dispatchable/read-only Tasks with an explicit empty list and a non-dispatchable disposition.",
       "Refresh the selected version roster and native dependency snapshot, including E0 #284, after all relevant Issue body updates.",
