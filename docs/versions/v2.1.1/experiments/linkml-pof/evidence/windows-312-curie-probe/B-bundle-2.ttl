@@ -1,0 +1,41 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix se: <https://github.com/kaicreator-mm/tally#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix schemaorg: <https://schema.org/> .
+se:SE-CLM-0001 dcterms:source se:SE-SRC-SWEBOK-GUIDE-4-0A ;
+	a se:KnowledgeClaim ;
+	se:applicability "Use as a reference mapping for domain discovery; do not claim it is the only valid taxonomy." ;
+	se:claim_type "TAXONOMY_STATEMENT" ;
+	se:domain_node_refs se:SE-KA-13 ;
+	se:limitations "Guide scope is not the entire body of knowledge." ;
+	se:review_status "PENDING" ;
+	se:scope "The taxonomy as defined by SWEBOK Guide v4.0a." ;
+	se:taxonomy_refs "SE-TAXONOMY-0.1.0" ;
+	schemaorg:text "SWEBOK Guide v4.0a lists 18 Knowledge Areas; the first 15 are Software Engineering KAs and the final three are foundation KAs." .
+se:SE-KA-13 dcterms:source se:SE-SRC-SWEBOK-GUIDE-4-0A ;
+	a se:DomainNode ;
+	rdfs:label "Software Security" ;
+	prov:wasDerivedFrom se:SE-LOC-SWEBOK-KA-TABLE ;
+	se:taxonomy_ref "SE-TAXONOMY-0.1.0" ;
+	se:view_id "SE-VIEW-DISCIPLINE" .
+se:SE-POF-BUNDLE-0001 a se:ClaimBundle ;
+	se:claim se:SE-CLM-0001 ;
+	se:domain_nodes se:SE-KA-13 ;
+	se:relationship_assertions se:SE-REL-POF-0001 , se:SE-REL-POF-0002 .
+se:SE-REL-POF-0001 rdf:object "se:SE-EVD-0001" ;
+	rdf:predicate se:SUPPORTED_BY ;
+	rdf:subject se:SE-CLM-0001 ;
+	a rdf:Statement ;
+	prov:wasDerivedFrom se:SE-EVD-0001 ;
+	se:object_kind "EVIDENCE" ;
+	se:status "PENDING" .
+se:SE-REL-POF-0002 rdf:object "se:SE-KA-13" ;
+	rdf:predicate se:INCLUDES ;
+	rdf:subject se:SE-CLM-0001 ;
+	a rdf:Statement ;
+	prov:wasDerivedFrom se:SE-EVD-0001 ;
+	se:object_kind "DOMAIN_NODE" ;
+	se:status "PENDING" .

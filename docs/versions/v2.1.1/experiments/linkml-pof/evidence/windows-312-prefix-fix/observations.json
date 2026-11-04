@@ -1,0 +1,39 @@
+{
+  "logical_equal_A_C": true,
+  "logical_equal_assembled_B_C": true,
+  "B_wrapper_metadata": "B has no corpus wrapper; C wrapper id/title/status were supplied solely for logical assembly.",
+  "closure_C": [],
+  "closure_B_assembled": [],
+  "closure_negative_controls": {
+    "duplicate_id": [
+      "duplicate id: SE-SRC-SWEBOK-GUIDE-4-0A"
+    ],
+    "dangling_locator": [
+      "SE-EVD-0001.source_locator_ref: SE-LOC-MISSING is not a SourceLocator"
+    ],
+    "wrong_object_kind": [
+      "SE-REL-POF-0001.object_ref: SE-EVD-0001 is not a DomainNode"
+    ],
+    "duplicate_unique_key": [
+      "duplicate source_ref + locator"
+    ]
+  },
+  "byte_comparison": {
+    "schema": null,
+    "context": true,
+    "rdf_stable": null,
+    "rdf_default": true,
+    "instance_A_ttl": null,
+    "instance_A_json-ld": true,
+    "instance_C_ttl": null,
+    "instance_C_json-ld": true
+  },
+  "graph_triples_before_wrapper_removal": {},
+  "graph_triples_after_wrapper_removal": {},
+  "graph_isomorphism": {
+    "A_C": null,
+    "A_B": null,
+    "B_C": null
+  },
+  "byte_comparison_correction": "Both TTL output files were zero bytes after failed conversions; they are not valid deterministic outputs."
+}

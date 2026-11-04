@@ -1,0 +1,31 @@
+{
+  "jsonschema_independent": {
+    "valid_C": [],
+    "invalid_enum": [
+      "['knowledge_claims', 0, 'review_status']: 'NOT_A_STATUS' is not one of ['PENDING', 'PENDING_LIMITED_EVIDENCE']"
+    ],
+    "missing_statement": [
+      "['knowledge_claims', 0]: 'statement' is a required property"
+    ],
+    "missing_id": [
+      "['knowledge_claims', 0]: 'id' is a required property"
+    ],
+    "duplicate_id": [],
+    "dangling_locator": [],
+    "wrong_object_kind": [],
+    "duplicate_unique_key": []
+  },
+  "json_schema_repeat_equal": true,
+  "repeat_graph_isomorphic": {
+    "schema_rdf": true,
+    "curie_A_ttl": true,
+    "curie_C_ttl": true
+  },
+  "curie_ttl_vs_jsonld": {
+    "ttl": 57,
+    "jsonld": 50,
+    "common": 50,
+    "ttl_only": 7,
+    "jsonld_only": 0
+  }
+}

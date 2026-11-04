@@ -1,0 +1,66 @@
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix ns1: <https://github.com/kaicreator-mm/tally#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <https://schema.org/> .
+
+ns1:SE-POF-BUNDLE-0001 a ns1:ClaimBundle ;
+    ns1:claim ns1:SE-CLM-0001 ;
+    ns1:domain_nodes ns1:SE-KA-13 ;
+    ns1:relationship_assertions ns1:SE-REL-POF-0001,
+        ns1:SE-REL-POF-0002 .
+
+ns1:SE-REL-POF-0001 a rdf:Statement ;
+    rdf:object "se:SE-EVD-0001" ;
+    rdf:predicate ns1:SUPPORTED_BY ;
+    rdf:subject ns1:SE-CLM-0001 ;
+    prov:wasDerivedFrom ns1:SE-EVD-0001 ;
+    ns1:object_kind "EVIDENCE" ;
+    ns1:status "PENDING" .
+
+ns1:SE-REL-POF-0002 a rdf:Statement ;
+    rdf:object "se:SE-KA-13" ;
+    rdf:predicate ns1:INCLUDES ;
+    rdf:subject ns1:SE-CLM-0001 ;
+    prov:wasDerivedFrom ns1:SE-EVD-0001 ;
+    ns1:object_kind "DOMAIN_NODE" ;
+    ns1:status "PENDING" .
+
+ns1:SE-EVD-0001 a ns1:Evidence ;
+    prov:wasDerivedFrom ns1:SE-LOC-SWEBOK-KA-TABLE ;
+    ns1:context "The claim describes the Guide's own taxonomy, not an independently exhaustive classification of the discipline." ;
+    ns1:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+    ns1:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+    schema:description "SWEBOK v4.0a lists 18 Knowledge Areas and classifies the first 15 as Software Engineering KAs and the last three as foundation KAs." .
+
+ns1:SE-KA-13 a ns1:DomainNode ;
+    rdfs:label "Software Security" ;
+    dcterms:source ns1:SE-SRC-SWEBOK-GUIDE-4-0A ;
+    prov:wasDerivedFrom ns1:SE-LOC-SWEBOK-KA-TABLE ;
+    ns1:taxonomy_ref "SE-TAXONOMY-0.1.0" ;
+    ns1:view_id "SE-VIEW-DISCIPLINE" .
+
+ns1:SE-LOC-SWEBOK-KA-TABLE a ns1:SourceLocator ;
+    dcterms:source ns1:SE-SRC-SWEBOK-GUIDE-4-0A ;
+    ns1:locator "PDF page index 39; printed page xxxix; Introduction to the Guide, Table I.1" ;
+    ns1:locator_type "TABLE" ;
+    ns1:verification_state "LOCATOR_VERIFIED" .
+
+ns1:SE-CLM-0001 a ns1:KnowledgeClaim ;
+    dcterms:source ns1:SE-SRC-SWEBOK-GUIDE-4-0A ;
+    ns1:applicability "Use as a reference mapping for domain discovery; do not claim it is the only valid taxonomy." ;
+    ns1:claim_type "TAXONOMY_STATEMENT" ;
+    ns1:domain_node_refs ns1:SE-KA-13 ;
+    ns1:limitations "Guide scope is not the entire body of knowledge." ;
+    ns1:review_status "PENDING" ;
+    ns1:scope "The taxonomy as defined by SWEBOK Guide v4.0a." ;
+    ns1:taxonomy_refs "SE-TAXONOMY-0.1.0" ;
+    schema:text "SWEBOK Guide v4.0a lists 18 Knowledge Areas; the first 15 are Software Engineering KAs and the final three are foundation KAs." .
+
+ns1:SE-SRC-SWEBOK-GUIDE-4-0A a ns1:Source ;
+    ns1:edition "Version 4.0a" ;
+    ns1:publication_date "2026-08" ;
+    ns1:source_class "PROFESSIONAL_BOK" ;
+    schema:name "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a" ;
+    schema:url "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf" .

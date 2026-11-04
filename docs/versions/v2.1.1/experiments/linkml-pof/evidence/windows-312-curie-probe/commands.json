@@ -1,0 +1,290 @@
+[
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A-1.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C-1.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Source",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-source.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-source-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "SourceLocator",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-locator.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-locator-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Evidence",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-evidence.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-evidence-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "ClaimBundle",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-bundle.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-bundle-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\A-2.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\C-2.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Source",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-source.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-source-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "SourceLocator",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-locator.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-locator-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Evidence",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-evidence.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-evidence-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "ClaimBundle",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-bundle.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-curie-probe\\B-bundle-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

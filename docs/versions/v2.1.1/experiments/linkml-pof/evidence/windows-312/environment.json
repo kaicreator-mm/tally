@@ -1,0 +1,8 @@
+{
+  "platform": "Windows-11-10.0.26300-SP0",
+  "python": "3.12.14 (main, Sep  1 2026, 14:17:39) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\python.exe",
+  "baseline": "a5e438d0f0bebc678e581f4518e17e0aeae68163",
+  "tree": "07f40bc237ae9f4ea62e49f78a5badc85e711cde",
+  "pythonutf8": "1"
+}

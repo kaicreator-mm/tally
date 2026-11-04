@@ -1,0 +1,192 @@
+{
+  "triple_counts_before": {
+    "A": 57,
+    "C": 57,
+    "B-source": 6,
+    "B-locator": 5,
+    "B-evidence": 6,
+    "B-bundle": 35,
+    "B": 52
+  },
+  "parse_errors": {},
+  "removed_wrapper_subjects": {
+    "A": [
+      "https://github.com/kaicreator-mm/tally#SE-POF-CORPUS-0001"
+    ],
+    "B": [
+      "https://github.com/kaicreator-mm/tally#SE-POF-BUNDLE-0001"
+    ],
+    "C": [
+      "https://github.com/kaicreator-mm/tally#SE-POF-CORPUS-0001"
+    ]
+  },
+  "triple_counts_after": {
+    "A": 47,
+    "B": 47,
+    "C": 47
+  },
+  "isomorphism": {
+    "A_B": true,
+    "A_C": true,
+    "B_C": true
+  },
+  "repeat_bytes": {
+    "A_ttl": true,
+    "A_json-ld": true,
+    "C_ttl": true,
+    "C_json-ld": true,
+    "B-source_ttl": true,
+    "B-locator_ttl": true,
+    "B-evidence_ttl": true,
+    "B-bundle_ttl": true
+  },
+  "instance_samples": {
+    "source": [
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "https://github.com/kaicreator-mm/tally#Source"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "https://github.com/kaicreator-mm/tally#edition",
+        "Version 4.0a"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "https://github.com/kaicreator-mm/tally#publication_date",
+        "2026-08"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "https://github.com/kaicreator-mm/tally#source_class",
+        "PROFESSIONAL_BOK"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "https://schema.org/name",
+        "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A",
+        "https://schema.org/url",
+        "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
+      ]
+    ],
+    "locator": [
+      [
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE",
+        "http://purl.org/dc/terms/source",
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "https://github.com/kaicreator-mm/tally#SourceLocator"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE",
+        "https://github.com/kaicreator-mm/tally#locator",
+        "PDF page index 39; printed page xxxix; Introduction to the Guide, Table I.1"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE",
+        "https://github.com/kaicreator-mm/tally#locator_type",
+        "TABLE"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE",
+        "https://github.com/kaicreator-mm/tally#verification_state",
+        "LOCATOR_VERIFIED"
+      ]
+    ],
+    "evidence": [
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "https://github.com/kaicreator-mm/tally#Evidence"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "http://www.w3.org/ns/prov#wasDerivedFrom",
+        "https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "https://github.com/kaicreator-mm/tally#context",
+        "The claim describes the Guide's own taxonomy, not an independently exhaustive classification of the discipline."
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "https://github.com/kaicreator-mm/tally#evidence_type",
+        "DIRECT_SOURCE_PARAPHRASE"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "https://github.com/kaicreator-mm/tally#extraction_status",
+        "EXTRACTED_PENDING_REVIEW"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-EVD-0001",
+        "https://schema.org/description",
+        "SWEBOK v4.0a lists 18 Knowledge Areas and classifies the first 15 as Software Engineering KAs and the last three as foundation KAs."
+      ]
+    ],
+    "claim": [
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "http://purl.org/dc/terms/source",
+        "https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        "https://github.com/kaicreator-mm/tally#KnowledgeClaim"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#applicability",
+        "Use as a reference mapping for domain discovery; do not claim it is the only valid taxonomy."
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#claim_type",
+        "TAXONOMY_STATEMENT"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#domain_node_refs",
+        "https://github.com/kaicreator-mm/tally#SE-KA-13"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#limitations",
+        "Guide scope is not the entire body of knowledge."
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#review_status",
+        "PENDING"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#scope",
+        "The taxonomy as defined by SWEBOK Guide v4.0a."
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://github.com/kaicreator-mm/tally#taxonomy_refs",
+        "SE-TAXONOMY-0.1.0"
+      ],
+      [
+        "https://github.com/kaicreator-mm/tally#SE-CLM-0001",
+        "https://schema.org/text",
+        "SWEBOK Guide v4.0a lists 18 Knowledge Areas; the first 15 are Software Engineering KAs and the final three are foundation KAs."
+      ]
+    ]
+  },
+  "jsonld_graph_vs_ttl": {
+    "A": false,
+    "C": false
+  }
+}

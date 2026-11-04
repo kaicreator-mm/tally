@@ -1,0 +1,319 @@
+id: https://github.com/kaicreator-mm/tally
+name: tally_software_engineering_knowledge_pof
+title: Tally Software Engineering Knowledge — LinkML Proof-of-fit
+description: Experimental model for source provenance, domain nodes, atomic claims
+  and typed relationship assertions. This schema is a proof-of-fit fixture, not an
+  adopted production ontology.
+version: 0.1.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  se: https://github.com/kaicreator-mm/tally#
+  schema: https://schema.org/
+  dcterms: http://purl.org/dc/terms/
+  prov: http://www.w3.org/ns/prov#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+default_prefix: se
+default_range: string
+imports:
+- linkml:types
+classes:
+  Source:
+    class_uri: se:Source
+    description: A bibliographically identified source used by the corpus.
+    slots:
+    - id
+    - title
+    - source_class
+    - official_url
+    - edition
+    - publication_date
+  SourceLocator:
+    class_uri: se:SourceLocator
+    description: A precise location within a source that has been inspected.
+    slots:
+    - id
+    - source_ref
+    - locator_type
+    - locator
+    - verification_state
+    unique_keys:
+      source_and_locator:
+        unique_key_slots:
+        - source_ref
+        - locator
+  Evidence:
+    class_uri: se:Evidence
+    description: A source-grounded observation or paraphrase with an exact locator.
+    slots:
+    - id
+    - evidence_type
+    - source_locator_ref
+    - paraphrase
+    - context
+    - extraction_status
+  DomainNode:
+    class_uri: se:DomainNode
+    description: A node in one explicitly identified domain-taxonomy view.
+    slots:
+    - id
+    - label
+    - view_id
+    - source_ref
+    - source_locator_ref
+    - taxonomy_ref
+  KnowledgeClaim:
+    class_uri: se:KnowledgeClaim
+    description: An atomic, scoped and reviewable statement about the domain.
+    slots:
+    - id
+    - claim_type
+    - statement
+    - scope
+    - applicability
+    - assumptions
+    - limitations
+    - source_refs
+    - taxonomy_refs
+    - domain_node_refs
+    - assessment_status
+    - migration_note
+  RelationshipAssertion:
+    class_uri: rdf:Statement
+    description: A typed, reviewable assertion between identified graph nodes.
+    slots:
+    - id
+    - subject_ref
+    - predicate
+    - object_ref
+    - object_kind
+    - evidence_ref
+    - status
+  ClaimBundle:
+    class_uri: se:ClaimBundle
+    description: A review bundle for one claim, its domain-node context and assertions.
+    slots:
+    - id
+    - claim
+    - domain_nodes
+    - relationship_assertions
+  KnowledgeCorpus:
+    class_uri: se:KnowledgeCorpus
+    tree_root: true
+    description: A self-contained knowledge graph fixture with canonical records.
+    slots:
+    - id
+    - title
+    - corpus_status
+    - sources
+    - source_locators
+    - evidence_records
+    - domain_nodes
+    - knowledge_claims
+    - relationship_assertions
+slots:
+  id:
+    identifier: true
+    required: true
+    range: string
+    slot_uri: schema:identifier
+    description: Stable identifier for the record.
+  title:
+    required: true
+    range: string
+    slot_uri: schema:name
+  source_class:
+    required: true
+    range: SourceClass
+  official_url:
+    range: string
+    slot_uri: schema:url
+  edition:
+    range: string
+  publication_date:
+    range: string
+  source_ref:
+    required: true
+    range: Source
+    inlined: false
+    slot_uri: dcterms:source
+  locator_type:
+    required: true
+    range: LocatorType
+  locator:
+    required: true
+    range: string
+  verification_state:
+    required: true
+    range: VerificationState
+  evidence_type:
+    required: true
+    range: EvidenceType
+  source_locator_ref:
+    required: true
+    range: SourceLocator
+    inlined: false
+    slot_uri: prov:wasDerivedFrom
+  paraphrase:
+    required: true
+    range: string
+    slot_uri: schema:description
+  context:
+    range: string
+  extraction_status:
+    required: true
+    range: EvidenceStatus
+  label:
+    required: true
+    range: string
+    slot_uri: rdfs:label
+  view_id:
+    required: true
+    range: string
+  taxonomy_ref:
+    required: true
+    range: string
+  claim_type:
+    required: true
+    range: ClaimType
+  statement:
+    required: true
+    range: string
+    slot_uri: schema:text
+  scope:
+    required: true
+    range: string
+  applicability:
+    range: string
+  assumptions:
+    range: string
+    multivalued: true
+  limitations:
+    range: string
+    multivalued: true
+  review_status:
+    required: true
+    range: ClaimStatus
+    deprecated: Use assessment_status instead.
+  source_refs:
+    range: Source
+    multivalued: true
+    inlined: false
+    slot_uri: dcterms:source
+  taxonomy_refs:
+    range: string
+    multivalued: true
+  domain_node_refs:
+    range: DomainNode
+    multivalued: true
+    inlined: false
+  subject_ref:
+    required: true
+    range: KnowledgeClaim
+    inlined: false
+    slot_uri: rdf:subject
+  predicate:
+    required: true
+    range: RelationshipPredicate
+    slot_uri: rdf:predicate
+  object_ref:
+    required: true
+    range: string
+    slot_uri: rdf:object
+  object_kind:
+    required: true
+    range: RelationshipObjectKind
+  evidence_ref:
+    range: Evidence
+    inlined: false
+    slot_uri: prov:wasDerivedFrom
+  status:
+    required: true
+    range: RelationshipStatus
+  corpus_status:
+    required: true
+    range: CorpusStatus
+  claim:
+    required: true
+    range: KnowledgeClaim
+    inlined: true
+  domain_nodes:
+    range: DomainNode
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  relationship_assertions:
+    range: RelationshipAssertion
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  sources:
+    range: Source
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  source_locators:
+    range: SourceLocator
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  evidence_records:
+    range: Evidence
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  knowledge_claims:
+    range: KnowledgeClaim
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  assessment_status:
+    required: true
+    range: ClaimStatus
+  migration_note:
+    range: string
+enums:
+  SourceClass:
+    permissible_values:
+      PROFESSIONAL_BOK: null
+      CURRICULUM_FRAMEWORK: null
+      GOVERNMENT_FRAMEWORK: null
+  LocatorType:
+    permissible_values:
+      TITLE_PAGE: null
+      TABLE: null
+      SECTION: null
+      ABSTRACT: null
+  VerificationState:
+    permissible_values:
+      LOCATOR_VERIFIED: null
+      ABSTRACT_VERIFIED: null
+  EvidenceType:
+    permissible_values:
+      DIRECT_SOURCE_PARAPHRASE: null
+  EvidenceStatus:
+    permissible_values:
+      EXTRACTED_PENDING_REVIEW: null
+  ClaimType:
+    permissible_values:
+      TAXONOMY_STATEMENT: null
+  ClaimStatus:
+    permissible_values:
+      PENDING: null
+      PENDING_LIMITED_EVIDENCE: null
+  RelationshipPredicate:
+    permissible_values:
+      SUPPORTED_BY:
+        meaning: se:SUPPORTED_BY
+      INCLUDES:
+        meaning: se:INCLUDES
+  RelationshipObjectKind:
+    permissible_values:
+      EVIDENCE: null
+      DOMAIN_NODE: null
+  RelationshipStatus:
+    permissible_values:
+      PENDING: null
+  CorpusStatus:
+    permissible_values:
+      DRAFT_PENDING_HUMAN_REVIEW: null

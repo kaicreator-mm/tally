@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** DESIGN_AND_FIXTURES_READY / CLI_EXECUTION_NOT_RUN  
+**Status:** WINDOWS_LOCAL_BUILDER_EXECUTED / REPEAT_EXPERIMENT; see RESULTS.md for actual outcomes
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -66,6 +66,8 @@ These are experimental choices, not frozen schema commitments.
 
 ## 6. Commands to run in a LinkML-enabled environment
 
+Execution correction: the commands below are the original planned commands and include options rejected by installed v1.12.1 (`json-schema --output` and `rdf --diff-stable`). The executed argv, successful stdout capture, failures and reproducible Python drivers are recorded in `RESULTS.md` and `evidence/`. The unchanged fixture IDs also prevent original TTL instance export; a separately labeled CURIE transformation was tested.
+
 Pin the exact version and record the environment before execution:
 
 ~~~bash
@@ -120,6 +122,8 @@ Official references:
 - RDF generator options: https://linkml.io/linkml/cli/generate.html
 
 ## 8. Current execution limitation
+
+Historical analysis-sandbox limitation only: the subsequent Windows builder execution and current unresolved issues are recorded at the beginning of `RESULTS.md`.
 
 The current analysis environment does not have `linkml` or `linkml_runtime` installed. A package-install attempt did not produce an installed package. The cause has not been established. Therefore:
 - YAML syntax can be checked independently with PyYAML.

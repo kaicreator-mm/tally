@@ -1,0 +1,9 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix se: <https://github.com/kaicreator-mm/tally#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+se:SE-LOC-SWEBOK-KA-TABLE dcterms:source se:SE-SRC-SWEBOK-GUIDE-4-0A ;
+	a se:SourceLocator ;
+	se:locator "PDF page index 39; printed page xxxix; Introduction to the Guide, Table I.1" ;
+	se:locator_type "TABLE" ;
+	se:verification_state "LOCATOR_VERIFIED" .

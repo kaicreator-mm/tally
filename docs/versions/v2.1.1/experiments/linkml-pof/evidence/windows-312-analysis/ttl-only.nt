@@ -1,0 +1,7 @@
+<https://github.com/kaicreator-mm/tally#SE-KA-13> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/kaicreator-mm/tally#DomainNode> .
+<https://github.com/kaicreator-mm/tally#SE-EVD-0001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/kaicreator-mm/tally#Evidence> .
+<https://github.com/kaicreator-mm/tally#SE-CLM-0001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/kaicreator-mm/tally#KnowledgeClaim> .
+<https://github.com/kaicreator-mm/tally#SE-REL-POF-0001> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> .
+<https://github.com/kaicreator-mm/tally#SE-LOC-SWEBOK-KA-TABLE> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/kaicreator-mm/tally#SourceLocator> .
+<https://github.com/kaicreator-mm/tally#SE-REL-POF-0002> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement> .
+<https://github.com/kaicreator-mm/tally#SE-SRC-SWEBOK-GUIDE-4-0A> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://github.com/kaicreator-mm/tally#Source> .

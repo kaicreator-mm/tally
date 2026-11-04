@@ -1,0 +1,799 @@
+[
+  {
+    "name": "python_version",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\python.exe",
+      "--version"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "Python 3.12.14\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "installed_packages",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\python.exe",
+      "-m",
+      "pip",
+      "freeze"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "alabaster==1.0.0\r\nannotated-types==0.8.0\r\nantlr4-python3-runtime==4.9.3\r\narrow==1.4.0\r\nattrs==26.1.0\r\nbabel==2.18.0\r\ncertifi==2026.10.23\r\nCFGraph==0.2.1\r\nchardet==7.7.0\r\ncharset-normalizer==3.5.2\r\nclick==8.5.0\r\ncolorama==0.4.6\r\ncuries==0.15.7\r\nDeprecated==3.0.1\r\ndocutils==0.22.4\r\net_xmlfile==2.0.0\r\nfqdn==1.6.0\r\ngraphviz==0.21\r\nhbreader==0.9.1\r\nidna==3.20\r\nimagesize==2.0.1\r\niniconfig==2.3.1\r\nisodate==0.7.2\r\nisoduration==20.11.0\r\nJinja2==3.1.6\r\njson-flattener==0.1.9\r\njsonasobj==1.3.1\r\njsonasobj2==1.0.4\r\njsonpointer==3.8\r\njsonschema==4.26.0\r\njsonschema-path==0.5.0\r\njsonschema-specifications==2025.9.1\r\nlazy-object-proxy==1.13.0\r\nlinkml==1.12.1\r\nlinkml-runtime==1.12.1\r\nMarkupSafe==3.0.4\r\nopenapi-schema-validator==0.9.0\r\nopenapi-spec-validator==0.9.0\r\nopenpyxl==3.1.5\r\npackaging==26.3\r\nparse==1.22.4\r\npathable==0.6.0\r\nplatformdirs==4.14.4\r\npluggy==1.7.0\r\nprefixcommons==0.1.12\r\nprefixmaps==0.2.6\r\npydantic==2.14.2\r\npydantic-settings==2.16.2\r\npydantic_core==2.50.2\r\nPygments==2.21.0\r\nPyJSG==0.12.5\r\npyoxigraph==0.5.13\r\npyparsing==3.3.3\r\nPyShEx==0.9.0\r\nPyShexC==0.10.3.post1\r\npytest==9.2.0\r\npytest-logging==2015.11.4\r\npython-dateutil==4.0.0\r\npython-dotenv==1.2.4\r\nPyYAML==6.0.3\r\nrdflib==7.6.0\r\nrdflib-jsonld==0.6.1\r\nrdflib-shim==1.0.3\r\nreferencing==0.37.0\r\nrequests==2.34.2\r\nrfc3339-validator==0.1.4\r\nrfc3987==1.3.8\r\nroman-numerals==4.1.0\r\nrpds-py==2026.9.1\r\nShExJSG==0.9.0\r\nsix==1.17.0\r\nsnowballstemmer==3.1.1\r\nsparqlslurper==0.5.1\r\nSPARQLWrapper==2.0.0\r\nSphinx==9.1.1\r\nsphinx-click==6.2.0\r\nsphinxcontrib-applehelp==2.0.0\r\nsphinxcontrib-devhelp==2.0.0\r\nsphinxcontrib-htmlhelp==2.1.0\r\nsphinxcontrib-jsmath==2.0.0\r\nsphinxcontrib-qthelp==2.0.0\r\nsphinxcontrib-serializinghtml==2.0.0\r\nSQLAlchemy==2.1.8\r\ntyping-inspection==0.4.5\r\ntyping_extensions==4.16.0\r\ntzdata==2026.6\r\nuri-template==1.3.0\r\nurllib3==2.8.0\r\nwatchdog==7.0.0\r\nwebcolors==25.10.0\r\nwrapt==2.5.2\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "linkml_version",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "--version"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "linkml, version 1.12.1\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "schema_metamodel",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "schema_lint",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "lint",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml\r\n  warning  Schema maps prefix 'schema' to namespace 'https://schema.org/' instead of namespace 'http://schema.org/'  (canonical_prefixes)\r\n  warning  Slot 'title' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'source_class' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'official_url' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'edition' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'publication_date' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'source_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'locator_type' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'locator' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'verification_state' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'evidence_type' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'source_locator_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'paraphrase' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'context' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'extraction_status' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'label' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'view_id' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'taxonomy_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'claim_type' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'statement' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'scope' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'applicability' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'assumptions' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'limitations' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'review_status' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'source_refs' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'taxonomy_refs' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'domain_node_refs' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'subject_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'predicate' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'object_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'object_kind' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'evidence_ref' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'status' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'corpus_status' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'claim' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'domain_nodes' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'relationship_assertions' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'sources' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'source_locators' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'evidence_records' does not have recommended slot 'description'  (recommended)\r\n  warning  Slot 'knowledge_claims' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'SourceClass' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'LocatorType' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'VerificationState' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'EvidenceType' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'EvidenceStatus' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'ClaimType' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'ClaimStatus' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'RelationshipPredicate' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'RelationshipObjectKind' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'RelationshipStatus' does not have recommended slot 'description'  (recommended)\r\n  warning  Enum 'CorpusStatus' does not have recommended slot 'description'  (recommended)\r\n  warning  Permissible value of Enum 'SourceClass' has name 'PROFESSIONAL_BOK'  (standard_naming)\r\n  warning  Permissible value of Enum 'SourceClass' has name 'CURRICULUM_FRAMEWORK'  (standard_naming)\r\n  warning  Permissible value of Enum 'SourceClass' has name 'GOVERNMENT_FRAMEWORK'  (standard_naming)\r\n  warning  Permissible value of Enum 'LocatorType' has name 'TITLE_PAGE'  (standard_naming)\r\n  warning  Permissible value of Enum 'LocatorType' has name 'TABLE'  (standard_naming)\r\n  warning  Permissible value of Enum 'LocatorType' has name 'SECTION'  (standard_naming)\r\n  warning  Permissible value of Enum 'LocatorType' has name 'ABSTRACT'  (standard_naming)\r\n  warning  Permissible value of Enum 'VerificationState' has name 'LOCATOR_VERIFIED'  (standard_naming)\r\n  warning  Permissible value of Enum 'VerificationState' has name 'ABSTRACT_VERIFIED'  (standard_naming)\r\n  warning  Permissible value of Enum 'EvidenceType' has name 'DIRECT_SOURCE_PARAPHRASE'  (standard_naming)\r\n  warning  Permissible value of Enum 'EvidenceStatus' has name 'EXTRACTED_PENDING_REVIEW'  (standard_naming)\r\n  warning  Permissible value of Enum 'ClaimType' has name 'TAXONOMY_STATEMENT'  (standard_naming)\r\n  warning  Permissible value of Enum 'ClaimStatus' has name 'PENDING'  (standard_naming)\r\n  warning  Permissible value of Enum 'ClaimStatus' has name 'PENDING_LIMITED_EVIDENCE'  (standard_naming)\r\n  warning  Permissible value of Enum 'RelationshipPredicate' has name 'SUPPORTED_BY'  (standard_naming)\r\n  warning  Permissible value of Enum 'RelationshipPredicate' has name 'INCLUDES'  (standard_naming)\r\n  warning  Permissible value of Enum 'RelationshipObjectKind' has name 'EVIDENCE'  (standard_naming)\r\n  warning  Permissible value of Enum 'RelationshipObjectKind' has name 'DOMAIN_NODE'  (standard_naming)\r\n  warning  Permissible value of Enum 'RelationshipStatus' has name 'PENDING'  (standard_naming)\r\n  warning  Permissible value of Enum 'CorpusStatus' has name 'DRAFT_PENDING_HUMAN_REVIEW'  (standard_naming)\r\n\r\n✖ Found 73 problems in 1 schema\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_A_frontmatter",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\frontmatter-extracted.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_C_corpus",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_B_source",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "Source",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_B_locator",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "SourceLocator",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE_LOCATOR.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_B_evidence",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "Evidence",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\EVIDENCE.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "positive_B_bundle",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "ClaimBundle",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SE-CLM-0001.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_invalid_enum",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\invalid_enum.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\invalid_enum.yaml/0] 'NOT_A_STATUS' is not one of ['PENDING', 'PENDING_LIMITED_EVIDENCE'] in /knowledge_claims/0/review_status\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_missing_statement",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\missing_statement.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\missing_statement.yaml/0] 'statement' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_missing_id",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\missing_id.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\missing_id.yaml/0] 'id' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_duplicate_id",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\duplicate_id.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_dangling_locator",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\dangling_locator.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_wrong_object_kind",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\wrong_object_kind.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "negative_duplicate_unique_key",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\duplicate_unique_key.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "json_schema_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "json-schema",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-1.json"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 2,
+    "stdout": "",
+    "stderr": "Usage: linkml generate json-schema [OPTIONS] YAMLFILE\r\nTry 'linkml generate json-schema --help' for help.\r\n\r\nError: No such option '--output'.\r\n"
+  },
+  {
+    "name": "context_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "jsonld-context",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\context-1.jsonld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "WARNING:linkml_runtime.Namespaces:schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "schema_rdf_stable_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "rdf",
+      "--diff-stable",
+      "--format",
+      "ttl",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-stable-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 2,
+    "stdout": "",
+    "stderr": "Usage: linkml generate rdf [OPTIONS] YAMLFILE\r\nTry 'linkml generate rdf --help' for help.\r\n\r\nError: No such option '--diff-stable'.\r\n"
+  },
+  {
+    "name": "schema_rdf_default_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "rdf",
+      "--format",
+      "ttl",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-default-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "WARNING:linkml_runtime.Namespaces:schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_A_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\frontmatter-extracted.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-A-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_A_json-ld_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\frontmatter-extracted.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-A-1.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_C_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-C-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_C_json-ld_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-C-1.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_source_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Source",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-source-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_locator_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "SourceLocator",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE_LOCATOR.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-locator-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_evidence_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Evidence",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\EVIDENCE.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-evidence-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_bundle_ttl_1",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "ClaimBundle",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SE-CLM-0001.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-bundle-1.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "json_schema_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "json-schema",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-2.json"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 2,
+    "stdout": "",
+    "stderr": "Usage: linkml generate json-schema [OPTIONS] YAMLFILE\r\nTry 'linkml generate json-schema --help' for help.\r\n\r\nError: No such option '--output'.\r\n"
+  },
+  {
+    "name": "context_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "jsonld-context",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\context-2.jsonld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "WARNING:linkml_runtime.Namespaces:schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "schema_rdf_stable_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "rdf",
+      "--diff-stable",
+      "--format",
+      "ttl",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-stable-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 2,
+    "stdout": "",
+    "stderr": "Usage: linkml generate rdf [OPTIONS] YAMLFILE\r\nTry 'linkml generate rdf --help' for help.\r\n\r\nError: No such option '--diff-stable'.\r\n"
+  },
+  {
+    "name": "schema_rdf_default_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "generate",
+      "rdf",
+      "--format",
+      "ttl",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--output",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\schema-default-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "WARNING:linkml_runtime.Namespaces:schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_A_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\frontmatter-extracted.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-A-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_A_json-ld_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\frontmatter-extracted.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-A-2.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_C_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-C-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_C_json-ld_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml",
+      "-t",
+      "json-ld",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-C-2.json-ld"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_source_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Source",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-source-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_locator_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "SourceLocator",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SOURCE_LOCATOR.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-locator-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_evidence_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "Evidence",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\EVIDENCE.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-evidence-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "instance_B_bundle_ttl_2",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "-C",
+      "ClaimBundle",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\yaml-plus-markdown\\SE-CLM-0001.yaml",
+      "-t",
+      "ttl",
+      "-o",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\instance-B-bundle-2.ttl"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "",
+    "stderr": "schema namespace is already mapped to https://schema.org/ - Overriding with mapping to http://schema.org/\r\nTraceback (most recent call last):\r\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\r\n  File \"<frozen runpy>\", line 88, in _run_code\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml-convert.exe\\__main__.py\", line 7, in <module>\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1631, in __call__\r\n    return self.main(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1552, in main\r\n    rv = self.invoke(ctx)\r\n         ^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 1415, in invoke\r\n    return ctx.invoke(self.callback, **ctx.params)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\click\\core.py\", line 910, in invoke\r\n    return callback(*args, **kwargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\converter\\cli.py\", line 172, in cli\r\n    python_module = PythonGenerator(schema).compile_module()\r\n                    ^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\deprecation.py\", line 390, in new_init\r\n    original_init(self, *args, **kwargs)\r\n  File \"<string>\", line 29, in __init__\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\generators\\pythongen.py\", line 84, in __post_init__\r\n    super().__post_init__()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 284, in __post_init__\r\n    self._initialize_using_schemaloader(schema)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\generator.py\", line 348, in _initialize_using_schemaloader\r\n    loader.resolve()\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\schemaloader.py\", line 182, in resolve\r\n    merge_schemas(\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 44, in merge_schemas\r\n    merge_namespaces(target, mergee, namespaces)\r\n  File \"C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Lib\\site-packages\\linkml\\utils\\mergeutils.py\", line 111, in merge_namespaces\r\n    raise ValueError(f\"Prefix: {prefix.prefix_prefix} mismatch between {target.name} and {mergee.name}\")\r\nValueError: Prefix: schema mismatch between tally_software_engineering_knowledge_pof and types\r\n"
+  },
+  {
+    "name": "evolution_old_on_original",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "evolution_old_on_evolved",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\evolved-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml/0] 'assessment_status' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "evolution_new_on_evolved",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\evolved-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\evolved-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "evolution_old_on_renamed",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\renamed-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml/0] Additional properties are not allowed ('review_status' was unexpected) in /knowledge_claims/0\r\n[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml/0] 'assessment_status' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "evolution_mapped_on_renamed",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\renamed-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\mapped-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "evolution_mapped_on_original",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\mapped-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\mapped-record.yaml/0] Additional properties are not allowed ('assessment_status', 'migration_note' were unexpected) in /knowledge_claims/0\r\n[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312\\mapped-record.yaml/0] 'review_status' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  }
+]
