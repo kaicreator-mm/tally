@@ -73,20 +73,23 @@ sources:
     verified_facts:
       - "The CS2023 knowledge model lists 17 Knowledge Areas."
       - "Software Engineering is one of the 17 Knowledge Areas."
-      - "The Body of Knowledge table lists 9 Knowledge Units for Software Engineering."
+      - "The Body of Knowledge table lists 9 Knowledge Units for Software Engineering: Teamwork; Tools and Environments; Product Requirements; Software Design; Software Construction; Software Verification and Validation; Refactoring and Code Evolution; Software Reliability; Formal Methods."
+      - "The SE-Tools section includes software configuration management/version control, release management, testing tools and process automation/continuous integration."
     authority_limitations:
       - "Curriculum framework, not a complete professional Software Engineering domain taxonomy"
       - "Knowledge-unit counts do not establish professional-domain completeness"
     verified_locators:
       - "Official CS2023 site: Final Report and endorsement dates"
-      - "Knowledge Areas page and Report Body of Knowledge table: SE row"
+      - "Body of Knowledge PDF, front-matter Knowledge Areas table: 17-area list and SE row"
+      - "Body of Knowledge PDF, Software Engineering section, printed pages 166-168: nine Knowledge Units and core-hours table"
+      - "Body of Knowledge PDF, Software Engineering section, printed page 170: SE-Tools unit"
     verification:
       identity: VERIFIED
-      content: OFFICIAL_SUMMARY_VERIFIED
-      locator: VERIFIED_FOR_LISTED_SUMMARY
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
       state: LOCATOR_VERIFIED
       accessed_on: "2026-11-04"
-      method: "Official report landing page and official Knowledge Areas/report summary inspected."
+      method: "Official CS2023 Body of Knowledge PDF opened; Knowledge Areas table, Software Engineering KU list/core-hours table and SE-Tools section inspected."
     rights:
       notice: "Public report site; verify report reuse terms before reproducing substantial content."
       handling: "Store metadata and concise original paraphrase only."
