@@ -30,6 +30,8 @@ These are logical business boundaries, not five independently installable Busine
 - **C Operation:** a narrow selected capability. Its handler may use an approved remote MCP/HTTP/CLI or local Host adapter; C is not itself an external Tool.
 - **Host Port:** trusted provider credentials, environment, process execution and physical persistence.
 
+Review independence is process/evidence-based: require a separately conducted exact-source technical analysis, a traceable review-process/role record and reproducible evidence. GitHub login equality with the PR author alone is not disqualifying; a UI click or self-attested status alone is not an independent Review.
+
 No assumption is made that DomainHarness v0.10.3 automatically parses `domain/workflows/*.yaml`, loads every file under `domain/`, or executes arbitrary Workflow YAML. Assets enter a runtime only through an explicit, tested BUILD selection and consumer contract.
 
 ### 1.2 Authority layers
@@ -160,7 +162,7 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **Business mapping:** existing `freezeProductIntake` and `admitProjectIntake` are the candidate Business Intents (T210 selected route); `guided-intake.mjs` describes a UI-guided step sequence, not the canonical Project state machine.
 - **C / Host mapping:** GitHub Project/Issue observation via `packages/tally-github-c/src/project-intake.mjs`; physical freeze/admission experiment via `experiments/v2/project-intake/host-project.mjs`; Host controller `web/v2/intake-controller.mjs`. Any native write must pass the selected K/Host path and canonical readback.
 - **K ownership:** freeze/admission CAS, idempotency, replay and effect receipts. Product frozen and Project admitted are different facts.
-- **Completion evidence:** exact Product digest/source SHA, independent reviewer identity, freeze CAS receipt, accepted Claim/write-set where required, Project identity and canonical GitHub readback.
+- **Completion evidence:** exact Product digest/source SHA, independent review-process identity/reference (not GitHub login inequality), freeze CAS receipt, accepted Claim/write-set where required, Project identity and canonical GitHub readback.
 - **Wait / reject / recovery:** wait for missing Product evidence or independent Review; absence of an independently conducted exact-source technical Review, stale source, missing Claim or mismatched digest blocks; GitHub reviewer/author login equality alone is not a blocker; lost ACK becomes UNKNOWN and is reconciled by reading the existing Host/GitHub record, never blind duplicate creation.
 - **Current evidence:** B/Host/C source and tests exist; selected T210 positive clean-consumer E2E was not found in the inspected Woodpecker profiles. `IMPLEMENTATION=PARTIAL`, `SELECTED_E2E=NOT_PROVEN`.
 
@@ -214,9 +216,9 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **Authority:** GitHub PR/commit/review facts; ADS reviewer independence/role semantics; actual verifier/Host results; K controls any effectful Agent dispatch or publication.
 - **Target states:** `CANDIDATE_READY → REVIEW_PENDING → REVIEWED_PASS | CHANGES_REQUESTED | REJECTED`; repair branch: `REPAIR_PENDING → REPAIR_RUNNING → RECHECK_PENDING → RE_REVIEW_PENDING → RE_REVIEWED`. Every new source SHA requires fresh applicable review/verification.
 - **Business mapping:** `joinReviewedCandidates` joins source-qualified candidate results; `publishReviewedCandidate` publishes a candidate PR. Neither function alone is the independent Review decision or full Review/Repair state machine.
-- **C / Host mapping:** selected GitHub C publishes/reads the candidate PR; Host verifier runs tests and collects real output; independent Reviewer uses a separate principal. Repair and re-review must remain separately attributable.
+- **C / Host mapping:** selected GitHub C publishes/reads the candidate PR; Host verifier runs tests and collects real output; an independently conducted Reviewer process performs exact-SHA technical analysis with a traceable role/evidence record. The GitHub login may equal the PR author's login; account equality alone does not disqualify the review. Repair and re-review must remain separately attributable.
 - **K ownership:** permitted Agent/Repair effects, idempotency and state receipts. GitHub remains authoritative for commits and PR reviews.
-- **Completion evidence:** independent reviewer identity, exact SHA/tree, findings/dispositions, verifier command/exit, all changed paths accounted, repair diff and re-review on the repaired SHA.
+- **Completion evidence:** independent review-process identity/reference (not GitHub login inequality), exact SHA/tree, findings/dispositions, verifier command/exit, all changed paths accounted, repair diff and re-review on the repaired SHA.
 - **Wait / reject / recovery:** a Review lacking separately conducted exact-SHA technical analysis, a stale Review, changed protected paths, missing verifier, incomplete diff, ambiguous candidate join or lost publish ACK cannot PASS. GitHub login equality alone does not disqualify a Review. Reconcile publication by canonical PR readback.
 - **Current evidence:** Join and candidate publication code/tests exist, plus historical concurrent Builder/Reviewer evidence; this does not prove the new installed UI/Host J01–J08. Full current selected Review→Repair→Re-Review E2E remains `NOT_PROVEN`.
 
