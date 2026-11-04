@@ -32,7 +32,7 @@ const SECRET_PATTERNS=[
   new RegExp('gh[pousr]_[A-Za-z0-9_]{12,}','i'),
   new RegExp('github_'+'pat_[A-Za-z0-9_]{12,}','i'),
   new RegExp('sk-[A-Za-z0-9_-]{16,}','i'),
-  new RegExp('Bearer\\\\s+\\\\S+','i')
+  new RegExp('Bearer\\s+\\S+','i')
 ];
 const secretLike=(value:string)=>SECRET_PATTERNS.some(pattern=>pattern.test(value));
 const hostKindFor:Partial<Record<WorkAction['kind'],string>>={

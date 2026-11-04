@@ -186,6 +186,15 @@ test('noncanonical Task IDs, oversized catalogs and unsafe Host identities fail 
   assert.equal(workbenchActionGate(inbox,{...catalog,actions:[{
     ...catalog.actions[0],label:'x'.repeat(161)}]},work).enabled,false);
 });
+
+test('Bearer token-shaped Host labels are rejected',()=>{
+  const tokenLabel={...catalog,actions:[{
+    ...catalog.actions[0],label:'Bearer abcdefghijklmnopqrstuvwxyz0123456789'
+  }]};
+  const result=workbenchActionGate(inbox,tokenLabel,work);
+  assert.equal(result.enabled,false);
+  assert.equal(result.reason,'HOST_ACTION_IDENTITY_INVALID');
+});
 test('fresh Host action without dispatch callback shows explicit not-connected state, never the positive label',()=>{
   const c=workbenchActionControl(inbox,catalog,work,false);
   assert.equal(c.disabled,true);
