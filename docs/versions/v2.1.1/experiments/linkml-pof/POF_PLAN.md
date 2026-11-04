@@ -173,6 +173,23 @@ taxonomy_ref, taxonomy_refs, and view_id remain opaque string identifiers in thi
 
 ## 12. Exact RDF type-node validation — 2026-11-05
 
-The strict endpoint class checker also rejects any non-URIRef value used as an endpoint's `rdf:type` object. This closes a malformed-RDF path where a valid `se:` class assertion could otherwise coexist with a Literal class assertion and be silently ignored. The checker self-test now requires 23/23 cases. The current exact-HEAD local run must execute the updated self-test before P1-03 can close.
+The strict endpoint class checker also rejects any non-URIRef value used as an endpoint's `rdf:type` object. This closes a malformed-RDF path where a valid `se:` class assertion could otherwise coexist with a Literal class assertion and be silently ignored. The checker self-test was expanded to 23 cases and the exact Windows-native run passed on checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` (see RESULTS.md §10.11). A subsequent independent review identified additional strictness gaps; the follow-up checker now targets 30/30 and requires a new exact-HEAD local run.
 
-The LinkML v1.12.1 JSON-LD output has a known seven-triple nested-`rdf:type` omission (L09). Therefore, JSON-LD edge-node verification is a separate check: parse A/C and all four B JSON-LD outputs as RDF, require exactly one URIRef subject/predicate/object for every reified statement, reject Literal `rdf:object`, and compare edge identities to YAML. Do not claim JSON-LD/TTL graph equivalence or predicate-specific class validation from missing JSON-LD type triples.
+The LinkML v1.12.1 JSON-LD output has a known seven-triple nested-`rdf:type` omission (L09). Therefore, JSON-LD edge-node verification is a separate check: parse A/C and all four B JSON-LD outputs as RDF, require exactly one URIRef subject/predicate/object for every reified statement, reject Literal `rdf:object`, and compare edge identities to YAML. Do not claim JSON-LD/TTL graph equivalence or predicate-specific class validation from missing JSON-LD type triples. The separate JSON-LD edge identity check subsequently passed for A/C and B's four outputs (RESULTS.md §10.11).
+
+
+## 13. Independent R2 follow-up — complete RDF type and ruleset contract
+
+The exact Windows-native 23/23 run on checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` passed, including A/B/C Turtle, JSON-LD edge identity, and the recorded negative probes. A subsequent source audit found three gaps in that checker revision:
+
+1. Endpoint class validation filtered out non-`se:` URIRef classes, allowing an expected class plus an unrelated foreign-namespace class.
+2. Reified `rdf:Statement` nodes were selected by the expected type but their full type set was not checked; malformed Literal or incompatible additional type assertions could pass.
+3. The ruleset validator compared `fail_closed` as a set (allowing duplicate list entries) and relied on Python equality (`True == 1`) for RDF expectation values.
+
+The follow-up repair is committed inside the same #305 write set:
+- Code repair commit: `148b656c39a44ff60c196438202521413b79c87c`.
+- Checker blob: `4d26401bbab6ce3e43778f7096f265ff5424eb22`.
+- New self-test target: **30/30 PASS**.
+- Changes: exact complete endpoint rdf:type set (only the declared class and allowed GraphNode ancestor); global URIRef-only rdf:type object check; exact rdf:Statement type set; unique fail_closed list; strict per-field RDF expectation types; seven additional negative tests.
+- Exact Windows-native revalidation of this new checker is **PENDING**. The 23/23 result does not transfer to this code blob.
+- No schema, fixture, LinkML output, production runtime, CI workflow, or out-of-write-set path changed.

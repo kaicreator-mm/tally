@@ -284,7 +284,37 @@ A further independent source review found that the exact-class helper filtered n
 - Updated checker blob: `8561971c0404c3031e8fc2b0e9f9fd32796218e5`.
 - Parent repair HEAD: `1eafccc7e45b579dc4bd587426844c7d86e82d89`, Tree `0029d570e92b2eba746d3abb8383ca219a9ab47c`.
 - Self-test now requires **23/23 PASS**, including malformed Literal-valued `rdf:type`.
-- Current status remains **REVALIDATION_PENDING**. No result from the previous 16/16 checker or a source-only inspection substitutes for the exact 23/23 Windows-native run.
+- Exact Windows-native validation for checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` subsequently passed 23/23 and is recorded in §10.11. That result does **not** apply to the follow-up checker blob `4d26401bbab6ce3e43778f7096f265ff5424eb22`, which requires a new 30/30 exact-HEAD run.
 - JSON-LD edge-node verification is required separately because L09 records seven missing nested `rdf:type` triples. Verify A/C and all four B JSON-LD outputs as RDF: exactly one URIRef subject/predicate/object per statement, no Literal object, and exact YAML CURIE identity. Do not claim JSON-LD/TTL graph equivalence or class validation where the JSON-LD type triples are absent.
 
 No schema, fixture, production runtime, CI workflow or out-of-write-set path changed. This remains an experiment-only repair.
+
+
+## 10.11 Exact Windows-native validation — checker blob 8561971 (2026-11-05)
+
+The local validation response on Issue #305 reports an exact detached-worktree validation of PR #311 HEAD `bc9d3f55309651eed0d5dd0f5ecd0c004c8f8035`, Tree `bd7381b3d72d87678f1570c2bfac1b45b23f8d60`, checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5`.
+
+- Environment: Windows native (no WSL), Python 3.14.7, LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, pydantic 2.14.2, PyYAML 6.0.3.
+- `py_compile`: EXIT=0.
+- Checker self-test: **23/23 PASS**, EXIT=0.
+- A/C corpus and B four-part bundle: generated Turtle and repository checker passed; B Turtle graph merged with RDFLib (50 triples, 2 relationship statements).
+- Negative probes: **5/5** fail-closed, including wrong endpoint, wrong subject, incompatible additional class, Literal-valued rdf:type, and same-class edge identity tampering with a valid positive control.
+- JSON-LD: A/C and all four B outputs passed separate edge checks; every reified statement had exactly one URIRef subject/predicate/object, zero Literal rdf:object, and exact YAML CURIE identity. B's three non-bundle split records correctly had zero relationship statements.
+- L09 remains a known limitation: A/C nested JSON-LD omits seven rdf:type triples; B bundle omits four. No JSON-LD/TTL full-graph equivalence or JSON-LD predicate-class validation is claimed.
+- Raw logs, generated outputs, validation scripts and SHA256 manifest: [secret evidence gist](https://gist.github.com/kaicreator-mm/ee23d9f76f103035c5ef95edf76e06e5). The complete result and evidence link are recorded in Issue #305's LOCAL_VALIDATION comment.
+
+This validates only the exact checker blob above, not later code.
+
+## 10.12 Independent R2 findings and follow-up repair — 2026-11-05
+
+The independent source audit of `bc9d3f55309651eed0d5dd0f5ecd0c004c8f8035` found:
+1. **P1:** `require_exact_se_class` filtered non-`se:` URIRef rdf:type values, so an expected class plus a foreign class could pass.
+2. **P1:** `rdf:Statement` nodes were not checked for non-URIRef or additional incompatible rdf:type assertions.
+3. **P2:** duplicate `fail_closed` list entries passed set comparison, and integer `1` could pass as boolean `true` in RDF expectations.
+
+Repair was completed within the existing #305 write set:
+- Repair commit: `148b656c39a44ff60c196438202521413b79c87c`.
+- Checker blob: `4d26401bbab6ce3e43778f7096f265ff5424eb22`.
+- New self-test target: **30/30**, adding coverage for foreign-namespace endpoint types, malformed and incompatible statement-node types, duplicate/incomplete fail_closed lists, non-boolean RDF expectations, and missing required predicates.
+- Exact current-HEAD Windows-native rerun is **PENDING**. The earlier 23/23 result is retained as evidence for the previous checker only.
+- No schema, fixtures, production runtime, CI workflow or out-of-write-set paths changed.

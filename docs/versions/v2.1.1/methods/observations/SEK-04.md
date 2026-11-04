@@ -136,3 +136,17 @@ The LinkML v1.12.1 builder generated JSON-LD for A/C, but the existing L06a URIR
 Independent review found that the endpoint class helper ignored non-URIRef objects of `rdf:type`. A malformed Literal-valued class assertion could coexist with the required `se:` class and pass. The helper now fails closed on any non-URIRef `rdf:type` object, with a deterministic negative self-test. Checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5`; self-test target **23/23**. Exact Windows-native local revalidation is pending.
 
 JSON-LD requires a separate edge-node check: LinkML's generated JSON-LD is known to omit seven nested `rdf:type` triples, so the current task must assert URIRef subject/predicate/object and exact YAML edge identity for A/C and B's four JSON-LD outputs, without claiming JSON-LD/TTL graph equivalence or predicate class validation.
+
+
+## Exact local validation and independent R2 follow-up — 2026-11-05
+
+The Windows-native local run passed the prior checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` at PR #311 HEAD `bc9d3f55309651eed0d5dd0f5ecd0c004c8f8035`: py_compile EXIT=0, 23/23 self-test, A/B/C Turtle, five negative probes and separate JSON-LD edge identity checks all passed. L09's nested JSON-LD rdf:type omissions remain explicitly documented; no full JSON-LD/TTL equivalence is claimed. Raw evidence and SHA256 manifest are linked in Issue #305.
+
+Independent R2 then found three checker gaps: foreign-namespace rdf:type assertions were filtered out on endpoints; statement nodes were not checked for complete rdf:type identity; and ruleset contract comparison accepted duplicate fail_closed entries and integer 1 for boolean true.
+
+Repair completed in the same #305 write set:
+- Repair commit `148b656c39a44ff60c196438202521413b79c87c`.
+- Checker blob `4d26401bbab6ce3e43778f7096f265ff5424eb22`.
+- Self-test target **30/30**. New checks cover foreign endpoint classes, statement-node type identity, unique fail_closed lists and strict RDF expectation types.
+- Exact Windows-native rerun of this new checker is pending; prior 23/23 evidence does not transfer to this code.
+- No schema, fixtures, production runtime or CI workflow changed.
