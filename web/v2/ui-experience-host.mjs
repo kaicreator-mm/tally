@@ -19,6 +19,20 @@ const positive=(v,repo,versionId,sha)=>v?.connected===true&&
 const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
 const RECEIPT_PATH=/^(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
 const ISOLATED_TEST_PUBLISHER='kaicreator-mm/task-meta-e2e';
+const OWNER_APPROVAL_KEYS='author,commentId,commentUrl,decision,issueNumber,learningId,permission,reason,repository,sourceSha,state';
+const GITHUB_LOGIN=/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/;
+const verifiedOwnerApproval=(approval,repository,sourceSha,learningId)=>
+  plain(approval)&&Object.keys(approval).sort().join(',')===OWNER_APPROVAL_KEYS&&
+  approval.state==='OWNER_APPROVAL_VERIFIED'&&
+  approval.reason==='GITHUB_OWNER_APPROVAL_VERIFIED'&&
+  approval.repository===repository&&approval.issueNumber===219&&
+  approval.sourceSha===sourceSha&&approval.learningId===learningId&&
+  approval.decision==='ADOPTED'&&Number.isSafeInteger(approval.commentId)&&
+  approval.commentId>0&&typeof approval.author==='string'&&
+  GITHUB_LOGIN.test(approval.author)&&approval.permission==='admin'&&
+  approval.commentUrl==='https://github.com/'+repository+
+    '/issues/219#issuecomment-'+approval.commentId;
+const sameOwnerApproval=(a,b)=>Object.keys(a).every(key=>a[key]===b[key]);
 const publisherSet=(repository,extra)=>{
   if(extra!==undefined&&(!Array.isArray(extra)||extra.length>20||
      extra.some(x=>!REPO.test(x))))throw new TypeError('TRUSTED_PUBLISHER_REPOSITORIES_INVALID');
@@ -282,8 +296,12 @@ export function createMaintenanceControllerExperienceAdapter({
           sourceKind:publisherRepository==='kaicreator-mm/task-meta-e2e'?
             'ISOLATED_E2E_TEST_ONLY':'PUBLIC_ADS_REPORT',
           sourceRef:row.provenance.publicationRef,
-          // Adoption is not proof that a later Task Context Pack used it.
-          eligibleForNextTask:false
+          // Reuse is permitted only after the selected Host has read back the
+          // exact per-learning Owner approval for this adopted current report.
+          eligibleForNextTask:state==='ADOPTED'&&reportQualification==='VERIFIED'&&
+            row.recordState==='LEARNING_RECORDED'&&
+            publisherRepository!==ISOLATED_TEST_PUBLISHER&&
+            verifiedOwnerApproval(row.ownerApproval,repository,expectedSha,row.learningId)
         });
       }
       return {connected:true,source:{repository,sourceSha:expectedSha,
@@ -338,6 +356,10 @@ export function createMaintenanceControllerExperienceAdapter({
       const snapshot=maintenanceController.snapshot();
       const row=snapshot?.learning?.find(x=>x.learningId===request.candidateId);
       const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
+      const ownerApprovalMatches=request.decision!=='ADOPT'||
+        (verifiedOwnerApproval(result?.ownerApproval,repository,expectedSha,candidate.learningId)&&
+         verifiedOwnerApproval(row?.ownerApproval,repository,expectedSha,candidate.learningId)&&
+         sameOwnerApproval(result.ownerApproval,row.ownerApproval));
       if(snapshot?.status!=='OBSERVED'||snapshot.sourceSha!==expectedSha||
          !Array.isArray(snapshot.learning)||snapshot.learning.length>100||
          !verifiedSuggestion(row,repository,publishers)||
@@ -345,6 +367,7 @@ export function createMaintenanceControllerExperienceAdapter({
          result?.claimAccepted!==true||result?.admitted!==true||
          result?.authorized!==false||result?.taskPass!==false||
          result?.releasePass!==false||result?.githubEffect!=='NOT_RUN'||
+         !ownerApprovalMatches||
          row?.learningId!==candidate.learningId||
          row?.provenance?.reportId!==candidate.provenance.reportId||
          row?.provenance?.revision!==candidate.provenance.revision||
