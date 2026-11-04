@@ -1,0 +1,200 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 284,
+  "parentIssue": 259,
+  "phase": "E0_PRE_FREEZE_BOOTSTRAP",
+  "integrationHandoffIssue": 264,
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332"
+  },
+  "prIntake": {
+    "branch": "review/ui-r1-integrated-candidate-20261101",
+    "sha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81"
+  },
+  "integrationBase": {
+    "branch": "wip/e0-bootstrap-base-20261104",
+    "sha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+    "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+    "mergeParents": [
+      "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "7cfe2e4ca781358a8447c473535b2c986e999166"
+    ],
+    "mergeOrder": [
+      "#219 PR #278",
+      "A #260 PR #279"
+    ],
+    "validation": "DISJOINT_9_PLUS_11_PATH_COMPARISON_PASS"
+  },
+  "stableUpstream": [
+    {
+      "issue": 219,
+      "pr": 278,
+      "headSha": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "treeSha": "a1684b7fdb355962bfdf7459edb183f57b3f63f2",
+      "sourceReviewIssueComment": 6618448745,
+      "node24IssueComment": 6618114909,
+      "mergedIntoIntegrationBase": true
+    },
+    {
+      "issue": 260,
+      "pr": 279,
+      "headSha": "7cfe2e4ca781358a8447c473535b2c986e999166",
+      "treeSha": "644ec18b909316a54e8f7f50d6e6406e47cec50a",
+      "sourceReviewIssueComment": 6619200835,
+      "node24IssueComment": 6619145583,
+      "mergedIntoIntegrationBase": true
+    }
+  ],
+  "writeSetCount": 14,
+  "allowed_write_set": [
+    {
+      "path": "packages/tally-engineering-business/src/index.mjs",
+      "owner": "E0",
+      "purpose": "selected Business Intent/Effect registration, policy gates"
+    },
+    {
+      "path": "packages/tally-engineering-business/test/business-policy.test.mjs",
+      "owner": "E0",
+      "purpose": "Business Intent/Effect positive and fail-closed tests"
+    },
+    {
+      "path": "packages/tally-github-native-c/package.json",
+      "owner": "E0",
+      "purpose": "export existing A freeze writer and selected native writer port"
+    },
+    {
+      "path": "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+      "owner": "E0",
+      "purpose": "official GitHub native dependency writer and readback"
+    },
+    {
+      "path": "packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs",
+      "owner": "E0",
+      "purpose": "C-native negative and lost-ack tests"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/producer.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "selected BUILD binding without SDK private imports"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "selected package bundling for new Intent/Effect"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/local-codex-shim.mjs",
+      "owner": "E0_AFTER_219",
+      "purpose": "sealed Host invocation path; no forged grant"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+      "owner": "E0",
+      "purpose": "selected K/Host consumer and integration replay"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+      "owner": "E0",
+      "purpose": "create-only freeze, per-Task write-set CAS/readback, dependency Host"
+    },
+    {
+      "path": "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+      "owner": "E0",
+      "purpose": "CAS idempotency, corruption, recovery and authority tests"
+    },
+    {
+      "path": "web/v2/serve.mjs",
+      "owner": "E0_BOOTSTRAP_EXCLUSIVE",
+      "purpose": "minimal same-origin privileged route only; handoff to E1"
+    },
+    {
+      "path": "web/v2/journey-server.mjs",
+      "owner": "E0_BOOTSTRAP_EXCLUSIVE",
+      "purpose": "minimal selected K Host route wiring only; handoff to E1"
+    },
+    {
+      "path": "web/v2/version-task-dag-host-http.test.mjs",
+      "owner": "E0",
+      "purpose": "CSRF/source/body/permission/zero-side-effect HTTP negatives"
+    }
+  ],
+  "consumesReadOnly": [
+    "packages/tally-github-native-c/src/closeout-roster.mjs",
+    "packages/tally-github-native-c/test/closeout-roster.test.mjs"
+  ],
+  "operations": [
+    {
+      "id": "freezeVersionTaskDag",
+      "stage": "AFTER_NATIVE_EDGE_MATERIALIZATION_AND_REVIEWED_PACK_REFRESH",
+      "subject": "current reviewed Task Pack blob + normalized native Task roster + independent review + exact Owner Approval + body-derived writeSetAudit",
+      "semantics": [
+        "fail closed on stale/cyclic/missing/overlap issue provenance",
+        "preflight and equal-or-absent create-only immutable freeze CAS",
+        "per-Task tally:v2:task-writeset:<issueNumber> exact CAS equality/readback",
+        "partial write UNKNOWN and reconciliation required",
+        "return no positive permit until all source/CAS readbacks pass"
+      ]
+    },
+    {
+      "id": "addNativeTaskDependency",
+      "stage": "PRE_FREEZE_ONLY",
+      "subject": "one exact PLANNED blocked_by edge in reviewed Owner-approved candidate",
+      "semantics": [
+        "official same-repository GitHub issue dependency API only",
+        "cycle/membership/source/currentness checks before effect",
+        "idempotent read-before write read-after; lost ACK re-read before retry",
+        "after readback A refreshes pack to NATIVE and obtains new independent approval",
+        "no frozen pack mutation and no bulk auto-materialization"
+      ]
+    }
+  ],
+  "proposedClaimSubject": {
+    "repository": "kaicreator-mm/tally",
+    "issueNumber": 284,
+    "role": "BUILDER",
+    "sourceSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+    "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+    "taskPackBlobSha": null,
+    "writeSetSha256": null,
+    "acceptedHostCasClaim": null,
+    "jitBranch": "task/i284-e0-bootstrap"
+  },
+  "authority": {
+    "splitOwnerDecision": "2026-11-04 #284 Issue Owner authorization",
+    "exactPackOwnerApproval": null,
+    "independentPackReview": null,
+    "sourceImplementationClaim": null,
+    "rootAdmissionMechanism": "NOT_YET_PROVEN",
+    "claimFromADSCommentAlone": false
+  },
+  "gates": {
+    "required": [
+      "independent exact-pack-blob SHA review",
+      "exact Owner approval bound to source and pack blob",
+      "genuine Host CAS Claim/JIT accepted and read back for #284",
+      "syntax-preflight FIRST",
+      "git diff --check and 14-path exact source audit",
+      "C native dependency negative/replay tests",
+      "freeze/per-Task CAS/writeSet audit negative and readback tests",
+      "real DH v0.10.3 selected BUILD+one K/Host",
+      "same-origin HTTP negative zero-effect tests",
+      "Node24 MJS and Tally-web test/typecheck/build",
+      "self-hosted Woodpecker only after preflight"
+    ],
+    "prohibited": [
+      "no ad-hoc SQLite/CAS seed",
+      "no browser direct GitHub writer",
+      "no unselected Host K bypass",
+      "no direct dependency mutation before claim",
+      "no source edit until pack audit/Owner/CAS admission",
+      "no version/v2/main merge",
+      "no tag/release/deployment",
+      "no GitHub Actions",
+      "no LOCAL_VALIDATION"
+    ]
+  },
+  "note": "This JSON is a governance-only candidate. Its Git blob SHA, not the text of this note, is the later independent review/Owner Approval anchor. The source write set is NOT ADMITTED."
+}
