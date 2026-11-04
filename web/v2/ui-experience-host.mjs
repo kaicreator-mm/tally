@@ -17,6 +17,7 @@ const positive=(v,repo,versionId,sha)=>v?.connected===true&&
   qualifiedSource(v.source,repo,sha)&&v.versionId===versionId&&
   Array.isArray(v.candidates)&&v.candidates.length<=100;
 const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
+const RECEIPT_PATH=/^(?:issues|pull)\\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
 const ISOLATED_TEST_PUBLISHER='kaicreator-mm/task-meta-e2e';
 const publisherSet=(repository,extra)=>{
   if(extra!==undefined&&(!Array.isArray(extra)||extra.length>20||
@@ -121,8 +122,10 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
         reportQualification:candidate.reportQualification,
         publisherRepository:candidate.publisherRepository??null});
       const expectedDecision=request.decision==='ADOPT'?'ADOPTED':'REJECTED';
+      const receiptPrefix='https://github.com/'+repository+'/';
       const githubReceipt=typeof r?.decisionReceiptRef==='string'&&
-        r.decisionReceiptRef.startsWith('https://github.com/'+repository+'/');
+        r.decisionReceiptRef.length<=256&&r.decisionReceiptRef.startsWith(receiptPrefix)&&
+        RECEIPT_PATH.test(r.decisionReceiptRef.slice(receiptPrefix.length));
       const casReceipt=r?.decisionReceiptAuthority===
         'SELECTED_HOST_K_RESPONSE_AND_HOST_SNAPSHOT'&&
         r.decisionReceiptRef===null;

@@ -75,9 +75,11 @@ test('candidate changed during recheck blocks dispatch',async()=>{
   assert.equal((await h.decision(request)).reason,'EXPERIENCE_DECISION_STALE');
   assert.equal(calls,0);
 });
-test('Host cannot smuggle unqualified benefit or foreign receipt',async()=>{
+test('Host cannot smuggle unqualified benefit or foreign or noncanonical receipt',async()=>{
   for(const bad of [{...receipt,qualityImproved:true},
-    {...receipt,taskPass:true},{...receipt,decisionReceiptRef:'https://evil/repo'}]){
+    {...receipt,taskPass:true},{...receipt,decisionReceiptRef:'https://evil/repo'},
+    {...receipt,decisionReceiptRef:'https://github.com/org/tally/other'},
+    {...receipt,decisionReceiptRef:'https://github.com/org/tally/issues/52?token=private'}]){
     assert.equal((await make({dispatchExperienceDecision:async()=>bad})
       .decision(request)).status,'DENIED');
   }
