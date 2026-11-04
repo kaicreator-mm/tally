@@ -180,12 +180,24 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
       }
       const projection=projectTaskLearningOutcome({input:normalizedInput,
         observation,effectId:'maintenance-workbench-seam'});
+      const accepted=projection.state==='LEARNING_RECORDED'&&
+        projection.claimAccepted===true&&projection.admitted===true&&
+        projection.authorized===false&&projection.replayFixture===false&&
+        projection.githubEffect==='NOT_RUN'&&projection.taskPass===false&&
+        projection.releasePass===false;
       state.learningRecords.set(learningId,{
         state:projection.state,reason:projection.reason,
-        decision:projection.decision??decision,
+        decision:accepted?(projection.decision??decision):null,
+        ...(accepted&&projection.ownerApproval?
+          {ownerApproval:projection.ownerApproval}:{}),
+        claimAccepted:accepted,admitted:accepted,
+        authorized:projection.authorized===true,
+        replayFixture:projection.replayFixture===true,
         measuredEffect:projection.measuredEffect??'NOT_MEASURED',
         outcome:projection.outcome??null,githubEffect:projection.githubEffect??'NOT_RUN',
-        noAgentRanking:true,qualityGainClaimed:false});
+        taskPass:projection.taskPass===true,releasePass:projection.releasePass===true,
+        noAgentRanking:projection.noAgentRanking===true,
+        qualityGainClaimed:projection.qualityGainClaimed===true});
       return record('record-learning',{status:'OK',learningId,
         ...state.learningRecords.get(learningId)});
     },
@@ -240,12 +252,24 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
         immutable:true}:null;
     const learning=state.learning.map(row=>{
       const recordState=state.learningRecords.get(row.learningId);
-      return {...row,decision:recordState?.decision??null,
+      const recorded=recordState?.state==='LEARNING_RECORDED'&&
+        recordState.claimAccepted===true&&recordState.admitted===true&&
+        recordState.replayFixture===false;
+      return {...row,decision:recorded?recordState.decision:null,
+        ...(recorded&&recordState.ownerApproval?
+          {ownerApproval:recordState.ownerApproval}:{}),
+        claimAccepted:recordState?.claimAccepted===true,
+        admitted:recordState?.admitted===true,
+        authorized:recordState?.authorized===true,
+        replayFixture:recordState?.replayFixture===true,
         measuredEffect:recordState?.measuredEffect??row.measuredEffect??'NOT_MEASURED',
         outcome:recordState?.outcome??null,recordState:recordState?.state??'NOT_RECORDED',
         recordReason:recordState?.reason??null,
         githubEffect:recordState?.githubEffect??'NOT_RUN',
-        noAgentRanking:true,qualityGainClaimed:false};
+        taskPass:recordState?.taskPass===true,
+        releasePass:recordState?.releasePass===true,
+        noAgentRanking:recordState?.noAgentRanking===true,
+        qualityGainClaimed:recordState?.qualityGainClaimed===true};
     });
     const digestValid=DIGEST.test(state.digest??'');
     return {status:'OBSERVED',project:OWNER,version:'v2',journeyId:JOURNEY_ID,
