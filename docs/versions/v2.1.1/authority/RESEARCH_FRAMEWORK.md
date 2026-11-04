@@ -17,6 +17,7 @@ A source record is not itself a knowledge claim. A verified source identity does
 |---|---|---|---|
 | NORMATIVE_STANDARD | ISO/IEC/IEEE, IEEE, IETF, W3C, national standards | Normative requirements, defined terms and conformance scope | Applicability, edition, jurisdiction/contract and licensing matter; not proof of universal effectiveness |
 | PROFESSIONAL_BOK | SWEBOK and professional consensus guides | Discipline taxonomy, generally accepted knowledge and topic maps | Guide is not the complete literature or an exhaustive ontology |
+| GOVERNMENT_FRAMEWORK | NIST and other public-sector technical frameworks | Government-published recommendations, controls or practice frameworks | Distinguish recommendations from normative standards; jurisdiction and currentness matter |
 | CURRICULUM_FRAMEWORK | ACM/IEEE-CS/AAAI curricula | Educational scope, competency and curriculum boundaries | Curriculum coverage is not professional-domain completeness |
 | PEER_REVIEWED_EMPIRICAL | Journal/conference paper, systematic review, replication | Empirical findings, measured associations and tested interventions | Population, method, bias, confidence and replication limit generalization |
 | TEXTBOOK_MONOGRAPH | Recognized academic/professional books | Explanations, established theories, methods and worked examples | Edition, author expertise, citation trail and publication date matter |
@@ -26,7 +27,7 @@ A source record is not itself a knowledge claim. A verified source identity does
 | SECONDARY_SYNTHESIS | Systematic mapping, literature review, meta-analysis | Synthesis across primary research | Inclusion/exclusion rules, search date and publication bias matter |
 | INDEX_CATALOG | DOI registry, ISBN catalog, publisher catalog | Identity resolution and bibliographic metadata | Not evidence for the substantive claim |
 
-Keep source class, source role (primary/secondary/tertiary), evidence type and claim-authority fit as separate fields.
+Keep source class, source role (primary/secondary/tertiary), evidence type and claim-authority fit as separate fields. Source role is claim-relative: a professional BOK can be primary evidence for what its own taxonomy states while serving as a secondary synthesis for the underlying discipline knowledge. Record the role on each evidence assertion rather than forcing one permanent role onto the source.
 
 ## 3. Claim-authority fit
 
