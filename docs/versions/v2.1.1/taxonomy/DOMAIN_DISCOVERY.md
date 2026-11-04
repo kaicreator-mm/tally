@@ -86,11 +86,11 @@ The following official publication identities were verified. ISO source pages in
 
 | Reference | Verified identity | Intended discovery use | Content status |
 |---|---|---|---|
-| ISO/IEC/IEEE 12207:2026 | Edition 2, published 2026-04; Software life cycle processes; https://www.iso.org/standard/90219.html | Candidate lifecycle/process view | Bibliographic metadata only; no normative text ingested |
-| ISO/IEC/IEEE 15288:2023 | Edition 2, published 2023-05; System life cycle processes; https://www.iso.org/standard/81702.html | Systems-engineering boundary and software-in-system context | Bibliographic metadata only |
-| ISO/IEC 25010:2023 | Edition 2, published 2023-11; Product quality model; https://www.iso.org/standard/78176.html | Candidate product-quality view | Bibliographic metadata only |
-| ISO/IEC/IEEE 42010:2022 | Edition 2, published 2022-11; Architecture description; https://www.iso.org/standard/74393.html | Candidate architecture-description view | Bibliographic metadata only |
-| ISO/IEC/IEEE 29119-2:2021 | Edition 2, published 2021-10; Software testing — Test processes; https://www.iso.org/standard/79428.html | Candidate testing-process reference | Bibliographic metadata only |
+| ISO/IEC/IEEE 12207:2026 | Edition 2, published 2026-04-29; Software life cycle processes; https://www.iso.org/standard/90219.html | Candidate lifecycle/process view | Bibliographic metadata only; no normative text ingested |
+| ISO/IEC/IEEE 15288:2023 | Edition 2, published 2023-05-16; System life cycle processes; https://www.iso.org/standard/81702.html | Systems-engineering boundary and software-in-system context | Bibliographic metadata only |
+| ISO/IEC 25010:2023 | Edition 2, published 2023-11-15; Product quality model; https://www.iso.org/standard/78176.html | Candidate product-quality view | Bibliographic metadata only |
+| ISO/IEC/IEEE 42010:2022 | Edition 2, published 2022-11-07; Architecture description; https://www.iso.org/standard/74393.html | Candidate architecture-description view | Bibliographic metadata only |
+| ISO/IEC/IEEE 29119-2:2021 | Edition 2, published 2021-10-28; Software testing — Test processes; https://www.iso.org/standard/79428.html | Candidate testing-process reference | Bibliographic metadata only |
 | NIST SP 800-218 v1.1 | February 2022; Secure Software Development Framework; https://csrc.nist.gov/pubs/sp/800/218/final | Security-practice framework and lifecycle cross-cutting | Official publication metadata and abstract verified |
 
 These references are not interchangeable:
