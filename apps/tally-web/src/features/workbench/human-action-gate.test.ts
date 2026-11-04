@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {workbenchActionGate,workbenchActionControl,localizedActionStatus,
   ACTION_STATUS_MESSAGES,DISPATCH_NOT_CONNECTED_MESSAGE} from './human-action-gate.ts';
+import {actionSourceLink} from './model.ts';
 import type {WorkbenchSnapshot,WorkAction} from './model.ts';
 import {buildSync} from 'esbuild';
 import {createElement} from 'react';
@@ -155,6 +156,17 @@ test('runtime numeric Task and Host action identifiers are rejected without coer
   assert.equal(workbenchActionGate(inbox,numericCatalog,numericWork).enabled,false);
 });
 
+test('workbench source links allow only bounded canonical GitHub issue/PR references',()=>{
+  assert.equal(actionSourceLink(work),work.sourceRef);
+  assert.equal(actionSourceLink({...work,sourceRef:'https://github.com/org/tally/pull/300#issuecomment-4'}),
+    'https://github.com/org/tally/pull/300#issuecomment-4');
+  for(const sourceRef of ['javascript:alert(1)','https://evil.example/issues/1',
+    'https://github.com/org/tally/issues/260?token=private',
+    'https://github.com/org/tally.evil/issues/260',
+    'https://github.com/org/tally/issues/'+'1'.repeat(300)]){
+    assert.equal(actionSourceLink({...work,sourceRef}),null);
+  }
+});
 test('noncanonical Task IDs, oversized catalogs and unsafe Host identities fail closed',()=>{
   assert.equal(workbenchActionGate(inbox,catalog,{...work,taskId:'0260'}).enabled,false);
   const oversized={...catalog,actions:Array.from({length:101},(_,i)=>({
