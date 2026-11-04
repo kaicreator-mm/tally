@@ -12,7 +12,8 @@
 4. The official JSON Schema generator documentation lists unsupported LinkML features, including unique_keys. This is a concrete generator parity test.
 5. The official JSON-LD documentation states that @type information is not generated at all levels. RDF output and explicit class/slot URI mappings must be inspected separately.
 6. The initial schema includes a SourceLocator unique key and polymorphic relationship endpoint IDs specifically to expose the boundary between schema validation and graph-integrity validation.
-7. The current analysis sandbox does not have LinkML installed. A package-install attempt did not produce a usable installation; no specific DNS/network cause is established. The LinkML CLI, generators and validators have not been executed.
+7. Candidate schema YAML and all three format fixtures pass PyYAML parsing and custom structural/reference checks. These are not LinkML metamodel or LinkML runtime validation.
+8. The current analysis sandbox does not have LinkML installed. A package-install attempt did not produce a usable installation; no specific DNS/network cause is established. The LinkML CLI, generators and validators have not been executed.
 
 ## Negative / unresolved observations
 
