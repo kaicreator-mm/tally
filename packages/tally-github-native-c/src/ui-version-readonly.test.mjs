@@ -20,13 +20,11 @@ function client({issues=[makeIssue(1),makeIssue(2,'closed','state:done'),
         getCommit:async()=>({data:{sha}})
       },
       issues:{
-        listForRepo:async()=>({data:issues}),
         get:async({issue_number})=>({data:byNumber.get(issue_number)})
       }
     },
     paginate:{
       iterator:async function*(route,args){
-        if(route===octokit.rest.issues.listForRepo){yield {data:issues};return;}
         const n=args.issue_number;
         yield {data:deps[n]??[]};
       }
@@ -63,18 +61,24 @@ test('complete frozen roster includes closed Issues and marks closure unverified
   assert.equal(r.dag.edges[0].dependencyRef,url(1));
 });
 
-test('missing or extra repository Task Issue denies roster completeness',async()=>{
-  const missing=client({issues:[makeIssue(1),makeIssue(2,'closed','state:done')]});
-  assert.equal((await read(missing)).reason,'FROZEN_TASK_ROSTER_INCOMPLETE_OR_EXTRA');
-  const extra=client({issues:[makeIssue(1),makeIssue(2,'closed','state:done'),
-    makeIssue(3,'open','state:ready'),makeIssue(4)]});
-  assert.equal((await read(extra)).reason,'FROZEN_TASK_ROSTER_INCOMPLETE_OR_EXTRA');
+test('unrelated repository Task Issues from another version do not contaminate the frozen roster',async()=>{
+  const otherVersionTask={...makeIssue(4),labels:[
+    {name:'type:task'},{name:'state:planned'},{name:'priority:P1'},
+    {name:'version:v2.1.1'}
+  ]};
+  const c=client({issues:[makeIssue(1),makeIssue(2,'closed','state:done'),
+    makeIssue(3,'open','state:ready'),otherVersionTask]});
+  const r=await read(c);
+  assert.equal(r.connected,true);
+  assert.equal(r.tasks.length,3);
+  assert.equal(r.tasks.some(task=>task.id==='4'),false);
 });
 
-test('duplicate Task Issue discovery refuses completeness',async()=>{
-  const c=client({issues:[makeIssue(1),makeIssue(1),makeIssue(2,'closed','state:done'),
-    makeIssue(3,'open','state:ready')]});
-  assert.equal((await read(c)).reason,'NATIVE_TASK_ROSTER_DUPLICATE_OR_INVALID');
+test('a missing selected frozen Task Issue fails closed',async()=>{
+  const c=client({issues:[makeIssue(1),makeIssue(2,'closed','state:done')]});
+  const r=await read(c);
+  assert.equal(r.connected,false);
+  assert.equal(r.reason,'NATIVE_ISSUE_IDENTITY_UNVERIFIED');
 });
 
 test('dependency outside the frozen roster fails closed',async()=>{
