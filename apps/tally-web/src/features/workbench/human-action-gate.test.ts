@@ -154,6 +154,21 @@ test('runtime numeric Task and Host action identifiers are rejected without coer
   }]};
   assert.equal(workbenchActionGate(inbox,numericCatalog,numericWork).enabled,false);
 });
+
+test('noncanonical Task IDs, oversized catalogs and unsafe Host identities fail closed',()=>{
+  assert.equal(workbenchActionGate(inbox,catalog,{...work,taskId:'0260'}).enabled,false);
+  const oversized={...catalog,actions:Array.from({length:101},(_,i)=>({
+    ...catalog.actions[0],id:'action-'+i}))};
+  assert.equal(workbenchActionGate(inbox,oversized,work).enabled,false);
+  const privateActionId='gh'+'p_'+'1'.repeat(20);
+  const privateAction={...catalog.actions[0],id:privateActionId};
+  assert.equal(workbenchActionGate(inbox,{...catalog,actions:[privateAction]},
+    {...work,hostActionId:privateActionId}).enabled,false);
+  assert.equal(workbenchActionGate(inbox,{...catalog,actions:[{
+    ...catalog.actions[0],label:'private '+privateActionId}]},work).enabled,false);
+  assert.equal(workbenchActionGate(inbox,{...catalog,actions:[{
+    ...catalog.actions[0],label:'x'.repeat(161)}]},work).enabled,false);
+});
 test('fresh Host action without dispatch callback shows explicit not-connected state, never the positive label',()=>{
   const c=workbenchActionControl(inbox,catalog,work,false);
   assert.equal(c.disabled,true);

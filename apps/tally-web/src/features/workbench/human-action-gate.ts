@@ -27,6 +27,10 @@ const VERSION_REF=/^version[/][A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 // Project/version identifiers are authority scope labels, not optional
 // display strings. Equality between two empty or malformed values is not
 // evidence that the work item belongs to a canonical current scope.
+const ACTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
+const SECRET_PREFIXES=['gh'+'p_','gh'+'o_','gh'+'u_','gh'+'s_','gh'+'r_','github_'+'pat_','sk-'];
+const secretLike=(value:string)=>/Bearer\\s+\\S+/i.test(value)||
+  SECRET_PREFIXES.some(prefix=>value.toLowerCase().includes(prefix));
 const hostKindFor:Partial<Record<WorkAction['kind'],string>>={
   REVIEW:'REVIEW_REPAIR',DECISION:'FREEZE_PRODUCT',RECOVERY:'START_AGENT'};
 export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
@@ -41,7 +45,7 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.source.repository!==snapshot.source.repository||
      catalog.source.sourceSha!==snapshot.source.sourceSha||
-     !Array.isArray(catalog.actions))
+     !Array.isArray(catalog.actions)||catalog.actions.length>100)
     return deny('HOST_ACTION_SOURCE_NOT_CONNECTED');
   if(!REPOSITORY_REF.test(workItem.projectId??'')||
      workItem.projectId!==snapshot.source.repository||
@@ -56,21 +60,24 @@ export function workbenchActionGate(snapshot:WorkbenchSnapshot|null,
   if(!Number.isSafeInteger(taskIssue)||taskIssue<1)
     return deny('NO_HOST_ACTION_FOR_ITEM');
   const expectedKind=hostKindFor[workItem.kind];
-  if(!expectedKind||typeof workItem.hostActionId!=='string'||!workItem.hostActionId||
+  if(!expectedKind||typeof workItem.hostActionId!=='string'||
+     !ACTION_ID.test(workItem.hostActionId)||secretLike(workItem.hostActionId)||
      !Number.isSafeInteger(workItem.hostActionRevision)||
      (workItem.hostActionRevision??0)<1||
      workItem.hostActionKind!==expectedKind)
     return deny('HOST_ACTION_IDENTITY_NOT_BOUND');
   const matching=catalog.actions.filter(a=>
-    typeof a.id==='string'&&a.taskIssue===taskIssue&&a.state==='ELIGIBLE'&&
+    typeof a.id==='string'&&ACTION_ID.test(a.id)&&!secretLike(a.id)&&
+    a.taskIssue===taskIssue&&a.state==='ELIGIBLE'&&
     a.id===workItem.hostActionId&&
     a.revision===workItem.hostActionRevision&&
     a.kind===expectedKind);
   if(matching.length!==1)return deny('HOST_ACTION_NOT_ELIGIBLE_OR_AMBIGUOUS');
   const a=matching[0];
-  if(typeof a.id!=='string'||! /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(a.id)||
+  if(typeof a.id!=='string'||!ACTION_ID.test(a.id)||secretLike(a.id)||
      !Number.isSafeInteger(a.revision)||a.revision<1||
-     typeof a.label!=='string'||!a.label.trim())
+     typeof a.label!=='string'||!a.label.trim()||a.label.length>160||
+     /[\\u0000-\\u001f\\u007f]/.test(a.label)||secretLike(a.label))
     return deny('HOST_ACTION_IDENTITY_INVALID');
   return {enabled:true,reason:'FRESH_HOST_ACTION',
     actionId:a.id,revision:a.revision,label:a.label};
