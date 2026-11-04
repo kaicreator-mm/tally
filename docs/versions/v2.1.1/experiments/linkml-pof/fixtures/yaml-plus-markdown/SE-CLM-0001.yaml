@@ -1,0 +1,11 @@
+claim_id: SE-CLM-0001
+claim_type: TAXONOMY_FACT
+statement: "SWEBOK Guide v4.0a organizes its reference knowledge into 18 Knowledge Areas."
+evidence_refs:
+  - SE-EVD-0001
+applicability: "Claim about the SWEBOK Guide v4.0a taxonomy; not a claim that the whole discipline has exactly 18 mutually exclusive areas."
+explanation: "The claim is scoped to the taxonomy presented by SWEBOK Guide v4.0a."
+limitations:
+  - "The Guide is not the complete body of knowledge."
+  - "The 18 KAs are not assumed to be mutually exclusive."
+status: PROPOSED
