@@ -161,7 +161,7 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **C / Host mapping:** GitHub Project/Issue observation via `packages/tally-github-c/src/project-intake.mjs`; physical freeze/admission experiment via `experiments/v2/project-intake/host-project.mjs`; Host controller `web/v2/intake-controller.mjs`. Any native write must pass the selected K/Host path and canonical readback.
 - **K ownership:** freeze/admission CAS, idempotency, replay and effect receipts. Product frozen and Project admitted are different facts.
 - **Completion evidence:** exact Product digest/source SHA, independent reviewer identity, freeze CAS receipt, accepted Claim/write-set where required, Project identity and canonical GitHub readback.
-- **Wait / reject / recovery:** wait for missing Product evidence or independent Review; same author/reviewer, stale source, missing Claim or mismatched digest blocks; lost ACK becomes UNKNOWN and is reconciled by reading the existing Host/GitHub record, never blind duplicate creation.
+- **Wait / reject / recovery:** wait for missing Product evidence or independent Review; absence of an independently conducted exact-source technical Review, stale source, missing Claim or mismatched digest blocks; GitHub reviewer/author login equality alone is not a blocker; lost ACK becomes UNKNOWN and is reconciled by reading the existing Host/GitHub record, never blind duplicate creation.
 - **Current evidence:** B/Host/C source and tests exist; selected T210 positive clean-consumer E2E was not found in the inspected Woodpecker profiles. `IMPLEMENTATION=PARTIAL`, `SELECTED_E2E=NOT_PROVEN`.
 
 ### WF02 — Architecture / L2
@@ -169,7 +169,7 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **ID / owner:** `tally.workflow.architecture-l2/v1` / B1+B2.
 - **Trigger:** Product baseline is frozen, a material architecture constraint changes, or a new Version requires an L2 decision.
 - **Inputs:** ProductRevision, requirements and risks, architecture constraints, alternatives, ADR/design refs, prior L2 revision and exact source SHA.
-- **Authority:** Product Owner scope; independent architecture/L2 Reviewer; GitHub design artifacts; ADS review semantics. A UI click or author self-review is not an L2 PASS.
+- **Authority:** Product Owner scope; independent architecture/L2 Reviewer; GitHub design artifacts; ADS review semantics. A UI click or self-attested status without a separately conducted, exact-source technical Review is not an L2 PASS. The reviewer may use the same GitHub login as the PR author when the review process and evidence are independently produced.
 - **Target states:** `DRAFT → OPTIONS_RECORDED → L2_REVIEW_PENDING → INDEPENDENTLY_REVIEWED → L2_FROZEN`; side outcomes: `REJECTED | STALE | BLOCKED | UNKNOWN`.
 - **Business mapping:** no dedicated Architecture/L2 Business Intent was found among the current ten `INTENT_TYPES`. Do not reuse `freezeProductIntake` as a generic L2 freeze and do not infer that a Product Review implies L2 Review.
 - **C / Host mapping:** GitHub read/PR/review evidence can be consumed through selected C; any durable L2 freeze requires a separately explicit authorized B→K→C contract. The current bounded scan did not identify a complete selected Architecture/L2 effect path.
@@ -217,7 +217,7 @@ The following states are the proposed **domain lifecycle vocabulary**. They are 
 - **C / Host mapping:** selected GitHub C publishes/reads the candidate PR; Host verifier runs tests and collects real output; independent Reviewer uses a separate principal. Repair and re-review must remain separately attributable.
 - **K ownership:** permitted Agent/Repair effects, idempotency and state receipts. GitHub remains authoritative for commits and PR reviews.
 - **Completion evidence:** independent reviewer identity, exact SHA/tree, findings/dispositions, verifier command/exit, all changed paths accounted, repair diff and re-review on the repaired SHA.
-- **Wait / reject / recovery:** self-review, stale Review, changed protected paths, missing verifier, incomplete diff, ambiguous candidate join or lost publish ACK cannot PASS. Reconcile publication by canonical PR readback.
+- **Wait / reject / recovery:** a Review lacking separately conducted exact-SHA technical analysis, a stale Review, changed protected paths, missing verifier, incomplete diff, ambiguous candidate join or lost publish ACK cannot PASS. GitHub login equality alone does not disqualify a Review. Reconcile publication by canonical PR readback.
 - **Current evidence:** Join and candidate publication code/tests exist, plus historical concurrent Builder/Reviewer evidence; this does not prove the new installed UI/Host J01–J08. Full current selected Review→Repair→Re-Review E2E remains `NOT_PROVEN`.
 
 ### WF06 — QA / Release (Deployment remains a separate effect)
@@ -311,7 +311,7 @@ Every Workflow and promoted Rule must be tested through the exact layers it clai
 1. **Definition:** schema parses; IDs and versions are stable; owner, source authority, applicability and exclusions are explicit.
 2. **Positive:** one eligible real or isolated clean-consumer path executes the selected B Intent → one K → selected C → trusted Host and returns the authoritative receipt.
 3. **Negative:** missing/stale source, invalid role, absent Claim, wrong repository, changed write set, unauthorized effect and unselected route all refuse; effectful Provider dispatch count is zero on denial.
-4. **Boundary:** duplicate IDs, cross-repository input, empty/oversized evidence, cyclic DAG, same author/reviewer, protected-path edits and conflicting dependencies remain blocked/UNKNOWN.
+4. **Boundary:** duplicate IDs, cross-repository input, empty/oversized evidence, cyclic DAG, absence of an independently conducted exact-source Review, protected-path edits and conflicting dependencies remain blocked/UNKNOWN. The reviewer and PR author may share a GitHub login.
 5. **Recovery:** lost ACK, restart, timeout, retry, replay and concurrent writer conflict reconcile by exact operation key and canonical readback; no duplicate external action.
 6. **Currentness:** bind the evidence to exact source SHA/tree, Task Pack blob, selected Package/ABI, DH source tag, V10 BUILD profile, Host source and installed dependency digest.
 7. **UI:** dynamic form is a projection of an issued/validated Workflow step; stale step/source and CSRF fail closed; UI cannot mint Claim, alter K state or write GitHub directly.
