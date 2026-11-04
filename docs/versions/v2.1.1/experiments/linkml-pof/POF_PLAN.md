@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** EXECUTED_2026-11-05 (LOCAL_BUILDER, LinkML v1.12.1, Windows-native Python) — see RESULTS.md §10  
+**Status:** EXECUTED_2026-11-05 / CHECKER_31_CASE_LOCAL_VALIDATION_PASS_ON_2c5c8b3d / SOURCE_REVIEW_PASS_ON_2c5c8b3d / CURRENT_DOCS_ONLY_HEAD_REBIND_REQUIRED — see RESULTS.md §10.14 and POF_PLAN.md §15  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -130,7 +130,7 @@ This section records the original analysis-container limitation before the Windo
 
 ## 9. Exit criteria
 
-The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The SEK-04 task remains OPEN until the committed repository integrity checker has been run against A/B/C and generated Turtle, the independent Exact-SHA R2 review passes, and the evidence-backed recommendation is recorded. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
+The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The committed repository integrity checker passed Windows-native exact-source-HEAD validation at `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (31/31 self-tests, A/B/C YAML+Turtle, JSON-LD edge identity and 24/24 CLI probes); the independent source review also found no remaining P0/P1/P2 defect at that SHA. The validation and review evidence are recorded in RESULTS.md §10.14 and Issue #305 comments #6643352340 / the current review terminal. The subsequent changes to this PR are documentation-only reconciliation within the same four-path write set; the resulting new PR HEAD must receive a fresh exact-HEAD local validation binding before integration. SEK-04 remains OPEN pending that rebind, integration into #310 → #303, and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
 
 
 ## 10. R2 P1-01 schema correction — typed resource target
@@ -191,7 +191,7 @@ The follow-up repair is committed inside the same #305 write set:
 - Checker blob: `4d26401bbab6ce3e43778f7096f265ff5424eb22`.
 - New self-test target: **30/30 PASS**.
 - Changes: exact complete endpoint rdf:type set (only the declared class and allowed GraphNode ancestor); global URIRef-only rdf:type object check; exact rdf:Statement type set; unique fail_closed list; strict per-field RDF expectation types; seven additional negative tests.
-- Exact Windows-native revalidation of this new checker is **PENDING**. The 23/23 result does not transfer to this code blob.
+- At this historical checkpoint, exact Windows-native revalidation of the 30-case checker was **PENDING**. It was superseded by the 31-case checker and its exact-source-HEAD validation recorded in §15 / RESULTS.md §10.14.
 - No schema, fixture, LinkML output, production runtime, CI workflow, or out-of-write-set path changed.
 
 
@@ -202,4 +202,18 @@ A further source audit found that the checker only enumerated nodes typed `rdf:S
 - Repair commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
 - Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
 - New self-test target: **31/31 PASS**.
-- Exact Windows-native revalidation is pending. Prior 23/23 validation applies only to the previous checker blob.
+- At this historical checkpoint, exact Windows-native revalidation was pending. The 31-case checker subsequently passed at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; see §15 / RESULTS.md §10.14. The documentation-only reconciliation commits after that source-bearing HEAD require a final exact-HEAD identity rebind before integration.
+
+
+## 15. Exact-source-HEAD validation and independent review — 2026-11-05
+
+The final checker implementation was locally validated on Windows-native Python 3.14.7 (no WSL) at:
+
+- Source-bearing HEAD: `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`
+- Tree: `174c3512337b60c1083f8d75882c88cbcfe8659b`
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+
+Results: py_compile EXIT=0; checker self-test 31/31 PASS; A/B/C LinkML conversions and YAML+Turtle integrity PASS; 24/24 CLI negative/positive probes PASS; seven JSON-LD artifact edge-identity checks PASS. L09 nested `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed. Full command evidence, environment versions, artifacts and SHA256 manifest are in Issue #305 comment #6643352340 and its linked evidence bundle.
+
+The independent source audit at the same source-bearing HEAD found no remaining P0/P1/P2 defect. The subsequent PR changes reconcile this validation ledger and observation only; they do not change the checker blob, schema, fixtures, or runtime. **A fresh LOCAL_VALIDATION must bind the resulting documentation-reconciliation HEAD/Tree before integration.** No merge, LinkML adoption, release or deployment is authorized by this record.
