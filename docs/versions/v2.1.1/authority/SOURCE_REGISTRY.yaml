@@ -5,7 +5,9 @@ policy_ref: docs/versions/v2.1.1/authority/RESEARCH_FRAMEWORK.md
 sources:
   - source_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
     source_class: PROFESSIONAL_BOK
-    source_role: SECONDARY_SYNTHESIS
+    source_role: PRIMARY_FOR_FRAMEWORK_TAXONOMY
+    additional_roles:
+      - SECONDARY_SYNTHESIS_FOR_DOMAIN_KNOWLEDGE
     title: "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a"
     editor: "Hironori Washizaki"
     organization: "IEEE Computer Society"
@@ -47,7 +49,7 @@ sources:
     notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology."
   - source_id: SE-SRC-CS2023
     source_class: CURRICULUM_FRAMEWORK
-    source_role: SECONDARY_SYNTHESIS
+    source_role: PRIMARY_FOR_CURRICULUM
     title: "CS2023: ACM/IEEE-CS/AAAI Computer Science Curricula"
     organization: "Association for Computing Machinery; IEEE Computer Society; Association for the Advancement of Artificial Intelligence"
     edition: "Final report"
@@ -95,7 +97,7 @@ sources:
     title: "Systems and software engineering — Software life cycle processes"
     organization: "ISO/IEC/IEEE"
     edition: "Edition 2"
-    publication_date: "2026-04"
+    publication_date: "2026-04-29"
     publication_status: PUBLISHED
     standard_number: "ISO/IEC/IEEE 12207:2026"
     official_url: "https://www.iso.org/standard/90219.html"
@@ -113,11 +115,11 @@ sources:
       - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
     verification:
       identity: VERIFIED
-      content: BIBLIOGRAPHIC_ONLY
+      content: NOT_ADMITTED
       locator: BIBLIOGRAPHIC_METADATA_ONLY
       state: ACCESS_RESTRICTED
       accessed_on: "2026-11-04"
-      method: "Official publication metadata only; normative content not ingested or reviewed."
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
     rights:
       notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
       handling: "Bibliographic record only. No normative text, clause extracts or generated clause summaries. Any deeper review requires a permitted human-access procedure."
@@ -128,7 +130,7 @@ sources:
     title: "Systems and software engineering — System life cycle processes"
     organization: "ISO/IEC/IEEE"
     edition: "Edition 2"
-    publication_date: "2023-05"
+    publication_date: "2023-05-16"
     publication_status: PUBLISHED
     standard_number: "ISO/IEC/IEEE 15288:2023"
     official_url: "https://www.iso.org/standard/81702.html"
@@ -145,11 +147,11 @@ sources:
       - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
     verification:
       identity: VERIFIED
-      content: BIBLIOGRAPHIC_ONLY
+      content: NOT_ADMITTED
       locator: BIBLIOGRAPHIC_METADATA_ONLY
       state: ACCESS_RESTRICTED
       accessed_on: "2026-11-04"
-      method: "Official publication metadata only; normative content not ingested or reviewed."
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
     rights:
       notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
       handling: "Bibliographic record only; no normative content is copied or prompted into an LLM."
@@ -160,7 +162,7 @@ sources:
     title: "Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model"
     organization: "ISO/IEC"
     edition: "Edition 2"
-    publication_date: "2023-11"
+    publication_date: "2023-11-15"
     publication_status: PUBLISHED
     standard_number: "ISO/IEC 25010:2023"
     official_url: "https://www.iso.org/standard/78176.html"
@@ -177,11 +179,11 @@ sources:
       - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
     verification:
       identity: VERIFIED
-      content: BIBLIOGRAPHIC_ONLY
+      content: NOT_ADMITTED
       locator: BIBLIOGRAPHIC_METADATA_ONLY
       state: ACCESS_RESTRICTED
       accessed_on: "2026-11-04"
-      method: "Official publication metadata only; normative content not ingested or reviewed."
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
     rights:
       notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
       handling: "Bibliographic record only; no normative characteristics, clauses or generated summaries are stored."
@@ -192,7 +194,7 @@ sources:
     title: "Software, systems and enterprise — Architecture description"
     organization: "ISO/IEC/IEEE"
     edition: "Edition 2"
-    publication_date: "2022-11"
+    publication_date: "2022-11-07"
     publication_status: PUBLISHED
     standard_number: "ISO/IEC/IEEE 42010:2022"
     official_url: "https://www.iso.org/standard/74393.html"
@@ -209,11 +211,11 @@ sources:
       - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
     verification:
       identity: VERIFIED
-      content: BIBLIOGRAPHIC_ONLY
+      content: NOT_ADMITTED
       locator: BIBLIOGRAPHIC_METADATA_ONLY
       state: ACCESS_RESTRICTED
       accessed_on: "2026-11-04"
-      method: "Official publication metadata only; normative content not ingested or reviewed."
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
     rights:
       notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
       handling: "Bibliographic record only; no normative text is copied or prompted into an LLM."
@@ -224,7 +226,7 @@ sources:
     title: "Software and systems engineering — Software testing — Part 2: Test processes"
     organization: "ISO/IEC/IEEE"
     edition: "Edition 2"
-    publication_date: "2021-10"
+    publication_date: "2021-10-28"
     publication_status: PUBLISHED
     standard_number: "ISO/IEC/IEEE 29119-2:2021"
     official_url: "https://www.iso.org/standard/79428.html"
@@ -241,18 +243,18 @@ sources:
       - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
     verification:
       identity: VERIFIED
-      content: BIBLIOGRAPHIC_ONLY
+      content: NOT_ADMITTED
       locator: BIBLIOGRAPHIC_METADATA_ONLY
       state: ACCESS_RESTRICTED
       accessed_on: "2026-11-04"
-      method: "Official publication metadata only; normative content not ingested or reviewed."
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
     rights:
       notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
       handling: "Bibliographic record only; no normative text is copied or prompted into an LLM."
     notes: "Older 2013 edition is shown as withdrawn on the official page."
   - source_id: SE-SRC-NIST-SP-800-218-V1-1
-    source_class: PROFESSIONAL_FRAMEWORK
-    source_role: PRIMARY
+    source_class: GOVERNMENT_FRAMEWORK
+    source_role: PRIMARY_FOR_FRAMEWORK_CONTENT
     title: "Secure Software Development Framework (SSDF) Version 1.1: Recommendations for Mitigating the Risk of Software Vulnerabilities"
     authors:
       - "Murugiah Souppaya"
@@ -260,7 +262,7 @@ sources:
       - "Donna Dodson"
     organization: "National Institute of Standards and Technology (NIST)"
     edition: "Version 1.1"
-    publication_date: "2022-02"
+    publication_date: "2022-02-03"
     publication_status: FINAL
     report_number: "NIST SP 800-218"
     doi: "10.6028/NIST.SP.800-218"
