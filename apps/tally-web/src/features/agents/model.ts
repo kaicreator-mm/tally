@@ -64,7 +64,7 @@ const IDENTIFIER=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/;
 const TASK_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,31}$/;
 /** Credential-shaped values are refused at the UI projection itself; the port
  * layer redacts too, but render-side never assumes upstream sanitization. */
-const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
+const SECRET=/(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)/i;
 const ATTEMPT_STATES=new Set<string>([
   'RUNNING','EXITED_OK','EXITED_FAIL','CANCELLED','UNKNOWN']);
 const ATTEMPT_ROLES=new Set<string>([
