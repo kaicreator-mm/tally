@@ -1,0 +1,11 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix se: <https://github.com/kaicreator-mm/tally#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schemaorg: <https://schema.org/> .
+se:SE-EVD-0001 a se:Evidence ;
+	prov:wasDerivedFrom se:SE-LOC-SWEBOK-KA-TABLE ;
+	se:context "The claim describes the Guide's own taxonomy, not an independently exhaustive classification of the discipline." ;
+	se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+	se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+	schemaorg:description "SWEBOK v4.0a lists 18 Knowledge Areas and classifies the first 15 as Software Engineering KAs and the last three as foundation KAs." .

@@ -1,0 +1,561 @@
+{
+    "$defs": {
+        "ClaimBundle": {
+            "additionalProperties": false,
+            "description": "A review bundle for one claim, its domain-node context and assertions.",
+            "properties": {
+                "claim": {
+                    "$ref": "#/$defs/KnowledgeClaim"
+                },
+                "domain_nodes": {
+                    "items": {
+                        "$ref": "#/$defs/DomainNode"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "relationship_assertions": {
+                    "items": {
+                        "$ref": "#/$defs/RelationshipAssertion"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "claim"
+            ],
+            "title": "ClaimBundle",
+            "type": "object"
+        },
+        "ClaimStatus": {
+            "description": "",
+            "enum": [
+                "PENDING",
+                "PENDING_LIMITED_EVIDENCE"
+            ],
+            "title": "ClaimStatus",
+            "type": "string"
+        },
+        "ClaimType": {
+            "description": "",
+            "enum": [
+                "TAXONOMY_STATEMENT"
+            ],
+            "title": "ClaimType",
+            "type": "string"
+        },
+        "CorpusStatus": {
+            "description": "",
+            "enum": [
+                "DRAFT_PENDING_HUMAN_REVIEW"
+            ],
+            "title": "CorpusStatus",
+            "type": "string"
+        },
+        "DomainNode": {
+            "additionalProperties": false,
+            "description": "A node in one explicitly identified domain-taxonomy view.",
+            "properties": {
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "source_locator_ref": {
+                    "type": "string"
+                },
+                "source_ref": {
+                    "type": "string"
+                },
+                "taxonomy_ref": {
+                    "type": "string"
+                },
+                "view_id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "label",
+                "view_id",
+                "source_ref",
+                "source_locator_ref",
+                "taxonomy_ref"
+            ],
+            "title": "DomainNode",
+            "type": "object"
+        },
+        "Evidence": {
+            "additionalProperties": false,
+            "description": "A source-grounded observation or paraphrase with an exact locator.",
+            "properties": {
+                "context": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "evidence_type": {
+                    "$ref": "#/$defs/EvidenceType"
+                },
+                "extraction_status": {
+                    "$ref": "#/$defs/EvidenceStatus"
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "paraphrase": {
+                    "type": "string"
+                },
+                "source_locator_ref": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "evidence_type",
+                "source_locator_ref",
+                "paraphrase",
+                "extraction_status"
+            ],
+            "title": "Evidence",
+            "type": "object"
+        },
+        "EvidenceStatus": {
+            "description": "",
+            "enum": [
+                "EXTRACTED_PENDING_REVIEW"
+            ],
+            "title": "EvidenceStatus",
+            "type": "string"
+        },
+        "EvidenceType": {
+            "description": "",
+            "enum": [
+                "DIRECT_SOURCE_PARAPHRASE"
+            ],
+            "title": "EvidenceType",
+            "type": "string"
+        },
+        "KnowledgeClaim": {
+            "additionalProperties": false,
+            "description": "An atomic, scoped and reviewable statement about the domain.",
+            "properties": {
+                "applicability": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "assumptions": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "claim_type": {
+                    "$ref": "#/$defs/ClaimType"
+                },
+                "domain_node_refs": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "limitations": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "review_status": {
+                    "$ref": "#/$defs/ClaimStatus"
+                },
+                "scope": {
+                    "type": "string"
+                },
+                "source_refs": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "statement": {
+                    "type": "string"
+                },
+                "taxonomy_refs": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id",
+                "claim_type",
+                "statement",
+                "scope",
+                "review_status"
+            ],
+            "title": "KnowledgeClaim",
+            "type": "object"
+        },
+        "KnowledgeCorpus": {
+            "additionalProperties": false,
+            "description": "A self-contained knowledge graph fixture with canonical records.",
+            "properties": {
+                "corpus_status": {
+                    "$ref": "#/$defs/CorpusStatus"
+                },
+                "domain_nodes": {
+                    "items": {
+                        "$ref": "#/$defs/DomainNode"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "evidence_records": {
+                    "items": {
+                        "$ref": "#/$defs/Evidence"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "knowledge_claims": {
+                    "items": {
+                        "$ref": "#/$defs/KnowledgeClaim"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "relationship_assertions": {
+                    "items": {
+                        "$ref": "#/$defs/RelationshipAssertion"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "source_locators": {
+                    "items": {
+                        "$ref": "#/$defs/SourceLocator"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "sources": {
+                    "items": {
+                        "$ref": "#/$defs/Source"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "title",
+                "corpus_status"
+            ],
+            "title": "KnowledgeCorpus",
+            "type": "object"
+        },
+        "LocatorType": {
+            "description": "",
+            "enum": [
+                "TITLE_PAGE",
+                "TABLE",
+                "SECTION",
+                "ABSTRACT"
+            ],
+            "title": "LocatorType",
+            "type": "string"
+        },
+        "RelationshipAssertion": {
+            "additionalProperties": false,
+            "description": "A typed, reviewable assertion between identified graph nodes.",
+            "properties": {
+                "evidence_ref": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "object_kind": {
+                    "$ref": "#/$defs/RelationshipObjectKind"
+                },
+                "object_ref": {
+                    "type": "string"
+                },
+                "predicate": {
+                    "$ref": "#/$defs/RelationshipPredicate"
+                },
+                "status": {
+                    "$ref": "#/$defs/RelationshipStatus"
+                },
+                "subject_ref": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "subject_ref",
+                "predicate",
+                "object_ref",
+                "object_kind",
+                "status"
+            ],
+            "title": "RelationshipAssertion",
+            "type": "object"
+        },
+        "RelationshipObjectKind": {
+            "description": "",
+            "enum": [
+                "EVIDENCE",
+                "DOMAIN_NODE"
+            ],
+            "title": "RelationshipObjectKind",
+            "type": "string"
+        },
+        "RelationshipPredicate": {
+            "description": "",
+            "enum": [
+                "SUPPORTED_BY",
+                "INCLUDES"
+            ],
+            "title": "RelationshipPredicate",
+            "type": "string"
+        },
+        "RelationshipStatus": {
+            "description": "",
+            "enum": [
+                "PENDING"
+            ],
+            "title": "RelationshipStatus",
+            "type": "string"
+        },
+        "Source": {
+            "additionalProperties": false,
+            "description": "A bibliographically identified source used by the corpus.",
+            "properties": {
+                "edition": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "official_url": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "publication_date": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_class": {
+                    "$ref": "#/$defs/SourceClass"
+                },
+                "title": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "title",
+                "source_class"
+            ],
+            "title": "Source",
+            "type": "object"
+        },
+        "SourceClass": {
+            "description": "",
+            "enum": [
+                "PROFESSIONAL_BOK",
+                "CURRICULUM_FRAMEWORK",
+                "GOVERNMENT_FRAMEWORK"
+            ],
+            "title": "SourceClass",
+            "type": "string"
+        },
+        "SourceLocator": {
+            "additionalProperties": false,
+            "description": "A precise location within a source that has been inspected.",
+            "properties": {
+                "id": {
+                    "description": "Stable identifier for the record.",
+                    "type": "string"
+                },
+                "locator": {
+                    "type": "string"
+                },
+                "locator_type": {
+                    "$ref": "#/$defs/LocatorType"
+                },
+                "source_ref": {
+                    "type": "string"
+                },
+                "verification_state": {
+                    "$ref": "#/$defs/VerificationState"
+                }
+            },
+            "required": [
+                "id",
+                "source_ref",
+                "locator_type",
+                "locator",
+                "verification_state"
+            ],
+            "title": "SourceLocator",
+            "type": "object"
+        },
+        "VerificationState": {
+            "description": "",
+            "enum": [
+                "LOCATOR_VERIFIED",
+                "ABSTRACT_VERIFIED"
+            ],
+            "title": "VerificationState",
+            "type": "string"
+        }
+    },
+    "$id": "https://github.com/kaicreator-mm/tally",
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "additionalProperties": false,
+    "description": "A self-contained knowledge graph fixture with canonical records.",
+    "metamodel_version": "1.12.0",
+    "properties": {
+        "corpus_status": {
+            "$ref": "#/$defs/CorpusStatus"
+        },
+        "domain_nodes": {
+            "items": {
+                "$ref": "#/$defs/DomainNode"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "evidence_records": {
+            "items": {
+                "$ref": "#/$defs/Evidence"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "id": {
+            "description": "Stable identifier for the record.",
+            "type": "string"
+        },
+        "knowledge_claims": {
+            "items": {
+                "$ref": "#/$defs/KnowledgeClaim"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "relationship_assertions": {
+            "items": {
+                "$ref": "#/$defs/RelationshipAssertion"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "source_locators": {
+            "items": {
+                "$ref": "#/$defs/SourceLocator"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "sources": {
+            "items": {
+                "$ref": "#/$defs/Source"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "title": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "id",
+        "title",
+        "corpus_status"
+    ],
+    "title": "tally_software_engineering_knowledge_pof",
+    "type": "object",
+    "version": "0.1.0"
+}

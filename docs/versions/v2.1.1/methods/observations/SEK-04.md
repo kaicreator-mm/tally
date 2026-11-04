@@ -1,5 +1,11 @@
 # SEK-04 — Method Observation
 
+## Windows builder update — 2026-11-04
+
+The pinned LinkML 1.12.1 CLI was executed in an isolated Windows Python 3.12.14 environment; the earlier NOT_RUN statements below are historical. Full commands, outputs, fixtures and graph comparisons are in `../../experiments/linkml-pof/RESULTS.md` and its `evidence/` directory. The schema metamodel and positive fixtures passed, while lint returned 1 and negative integrity cases exposed missing closure/uniqueness enforcement. The initial HTTPS `schema` prefix conflicted with imported LinkML types; an alias-only correction unblocked schema generators. Original bare IDs still blocked instance TTL conversion.
+
+On explicitly CURIE-qualified copies, separately converted and merged B records match A/C after removing only format-wrapper subjects. LinkML's JSON-LD output nevertheless loses seven nested `rdf:type` triples relative to its TTL output, and `rdf:object` remains a literal. The installed RDF generator rejects `--diff-stable`; successful default output was stable across the two measured runs. Optional-slot evolution and an explicit breaking rename/migration were exercised. Result: **REPEAT_EXPERIMENT**, pending IRI policy, semantic graph fidelity, reference validation, lint policy and independent review; this is not an adoption or full-model result.
+
 **Task:** #305  
 **Date:** 2026-11-04  
 **Status:** OBSERVED / DRAFT

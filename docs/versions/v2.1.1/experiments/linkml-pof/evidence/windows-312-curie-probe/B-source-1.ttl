@@ -1,0 +1,10 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix se: <https://github.com/kaicreator-mm/tally#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schemaorg: <https://schema.org/> .
+se:SE-SRC-SWEBOK-GUIDE-4-0A a se:Source ;
+	se:edition "Version 4.0a" ;
+	se:publication_date "2026-08" ;
+	se:source_class "PROFESSIONAL_BOK" ;
+	schemaorg:name "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a" ;
+	schemaorg:url "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf" .

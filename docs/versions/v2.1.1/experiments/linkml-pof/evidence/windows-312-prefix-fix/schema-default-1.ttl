@@ -1,0 +1,685 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix linkml: <https://w3id.org/linkml/> .
+@prefix pav: <http://purl.org/pav/> .
+<https://github.com/kaicreator-mm/ClaimBundle> a linkml:ClassDefinition ;
+	skos:exactMatch "se:ClaimBundle"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#ClaimBundle"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#ClaimBundle"^^xsd:anyURI ;
+	linkml:description "A review bundle for one claim, its domain-node context and assertions." ;
+	linkml:slot_usage _:c14n11 ;
+	linkml:slots <https://github.com/kaicreator-mm/claim> , <https://github.com/kaicreator-mm/domain_nodes> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/relationship_assertions> .
+<https://github.com/kaicreator-mm/ClaimStatus> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#ClaimStatus"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/PENDING> , <https://github.com/kaicreator-mm/PENDING_LIMITED_EVIDENCE> .
+<https://github.com/kaicreator-mm/ClaimType> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#ClaimType"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/TAXONOMY_STATEMENT> .
+<https://github.com/kaicreator-mm/CorpusStatus> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#CorpusStatus"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/DRAFT_PENDING_HUMAN_REVIEW> .
+<https://github.com/kaicreator-mm/DomainNode> a linkml:ClassDefinition ;
+	skos:exactMatch "se:DomainNode"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#DomainNode"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#DomainNode"^^xsd:anyURI ;
+	linkml:description "A node in one explicitly identified domain-taxonomy view." ;
+	linkml:slot_usage _:c14n12 ;
+	linkml:slots <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/label> , <https://github.com/kaicreator-mm/source_locator_ref> , <https://github.com/kaicreator-mm/source_ref> , <https://github.com/kaicreator-mm/taxonomy_ref> , <https://github.com/kaicreator-mm/view_id> .
+<https://github.com/kaicreator-mm/Evidence> a linkml:ClassDefinition ;
+	skos:exactMatch "se:Evidence"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#Evidence"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#Evidence"^^xsd:anyURI ;
+	linkml:description "A source-grounded observation or paraphrase with an exact locator." ;
+	linkml:slot_usage _:c14n8 ;
+	linkml:slots <https://github.com/kaicreator-mm/context> , <https://github.com/kaicreator-mm/evidence_type> , <https://github.com/kaicreator-mm/extraction_status> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/paraphrase> , <https://github.com/kaicreator-mm/source_locator_ref> .
+<https://github.com/kaicreator-mm/EvidenceStatus> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#EvidenceStatus"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/EXTRACTED_PENDING_REVIEW> .
+<https://github.com/kaicreator-mm/EvidenceType> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#EvidenceType"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/DIRECT_SOURCE_PARAPHRASE> .
+<https://github.com/kaicreator-mm/INCLUDES> linkml:meaning "se:INCLUDES"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/KnowledgeClaim> a linkml:ClassDefinition ;
+	skos:exactMatch "se:KnowledgeClaim"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#KnowledgeClaim"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#KnowledgeClaim"^^xsd:anyURI ;
+	linkml:description "An atomic, scoped and reviewable statement about the domain." ;
+	linkml:slot_usage _:c14n3 ;
+	linkml:slots <https://github.com/kaicreator-mm/applicability> , <https://github.com/kaicreator-mm/assumptions> , <https://github.com/kaicreator-mm/claim_type> , <https://github.com/kaicreator-mm/domain_node_refs> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/limitations> , <https://github.com/kaicreator-mm/review_status> , <https://github.com/kaicreator-mm/scope> , <https://github.com/kaicreator-mm/source_refs> , <https://github.com/kaicreator-mm/statement> , <https://github.com/kaicreator-mm/taxonomy_refs> .
+<https://github.com/kaicreator-mm/KnowledgeCorpus> a linkml:ClassDefinition ;
+	skos:exactMatch "se:KnowledgeCorpus"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#KnowledgeCorpus"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#KnowledgeCorpus"^^xsd:anyURI ;
+	linkml:description "A self-contained knowledge graph fixture with canonical records." ;
+	linkml:slot_usage _:c14n13 ;
+	linkml:slots <https://github.com/kaicreator-mm/corpus_status> , <https://github.com/kaicreator-mm/domain_nodes> , <https://github.com/kaicreator-mm/evidence_records> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/knowledge_claims> , <https://github.com/kaicreator-mm/relationship_assertions> , <https://github.com/kaicreator-mm/source_locators> , <https://github.com/kaicreator-mm/sources> , <https://github.com/kaicreator-mm/title> ;
+	linkml:tree_root true .
+<https://github.com/kaicreator-mm/LocatorType> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#LocatorType"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/ABSTRACT> , <https://github.com/kaicreator-mm/SECTION> , <https://github.com/kaicreator-mm/TABLE> , <https://github.com/kaicreator-mm/TITLE_PAGE> .
+<https://github.com/kaicreator-mm/RelationshipAssertion> a linkml:ClassDefinition ;
+	skos:exactMatch "rdf:Statement"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#RelationshipAssertion"^^xsd:anyURI ;
+	linkml:description "A typed, reviewable assertion between identified graph nodes." ;
+	linkml:slot_usage _:c14n4 ;
+	linkml:slots <https://github.com/kaicreator-mm/evidence_ref> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/object_kind> , <https://github.com/kaicreator-mm/object_ref> , <https://github.com/kaicreator-mm/predicate> , <https://github.com/kaicreator-mm/status> , <https://github.com/kaicreator-mm/subject_ref> .
+<https://github.com/kaicreator-mm/RelationshipObjectKind> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#RelationshipObjectKind"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/DOMAIN_NODE> , <https://github.com/kaicreator-mm/EVIDENCE> .
+<https://github.com/kaicreator-mm/RelationshipPredicate> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#RelationshipPredicate"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/INCLUDES> , <https://github.com/kaicreator-mm/SUPPORTED_BY> .
+<https://github.com/kaicreator-mm/RelationshipStatus> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#RelationshipStatus"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/PENDING> .
+<https://github.com/kaicreator-mm/SUPPORTED_BY> linkml:meaning "se:SUPPORTED_BY"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/Source> a linkml:ClassDefinition ;
+	skos:exactMatch "se:Source"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#Source"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#Source"^^xsd:anyURI ;
+	linkml:description "A bibliographically identified source used by the corpus." ;
+	linkml:slot_usage _:c14n6 ;
+	linkml:slots <https://github.com/kaicreator-mm/edition> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/official_url> , <https://github.com/kaicreator-mm/publication_date> , <https://github.com/kaicreator-mm/source_class> , <https://github.com/kaicreator-mm/title> .
+<https://github.com/kaicreator-mm/SourceClass> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#SourceClass"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/CURRICULUM_FRAMEWORK> , <https://github.com/kaicreator-mm/GOVERNMENT_FRAMEWORK> , <https://github.com/kaicreator-mm/PROFESSIONAL_BOK> .
+<https://github.com/kaicreator-mm/SourceLocator> a linkml:ClassDefinition ;
+	skos:exactMatch "se:SourceLocator"^^xsd:anyURI ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:class_uri "https://github.com/kaicreator-mm/tally#SourceLocator"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#SourceLocator"^^xsd:anyURI ;
+	linkml:description "A precise location within a source that has been inspected." ;
+	linkml:slot_usage _:c14n2 ;
+	linkml:slots <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/locator> , <https://github.com/kaicreator-mm/locator_type> , <https://github.com/kaicreator-mm/source_ref> , <https://github.com/kaicreator-mm/verification_state> ;
+	linkml:unique_keys _:c14n15 .
+<https://github.com/kaicreator-mm/VerificationState> skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#VerificationState"^^xsd:anyURI ;
+	linkml:permissible_values <https://github.com/kaicreator-mm/ABSTRACT_VERIFIED> , <https://github.com/kaicreator-mm/LOCATOR_VERIFIED> .
+<https://github.com/kaicreator-mm/applicability> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#applicability"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#applicability"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/assumptions> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#assumptions"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#assumptions"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/boolean> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"boolean\"." ;
+	skos:exactMatch "schema:Boolean"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "Bool" ;
+	linkml:definition_uri "https://w3id.org/linkml/Boolean"^^xsd:anyURI ;
+	linkml:description "A binary (true or false) value" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "bool" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#boolean"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/claim> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#claim"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/ClaimBundle> ;
+	linkml:inlined true ;
+	linkml:owner <https://github.com/kaicreator-mm/ClaimBundle> ;
+	linkml:range <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#claim"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/claim_type> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#claim_type"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/ClaimType> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#claim_type"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/context> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#context"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:owner <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#context"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/corpus_status> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#corpus_status"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/CorpusStatus> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#corpus_status"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/curie> dcterms:conformsTo "https://www.w3.org/TR/curie/" ;
+	a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"curie\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	skos:note "in RDF serializations this MUST be expanded to a URI" , "in non-RDF serializations MAY be serialized as the compact representation" ;
+	linkml:base "Curie" ;
+	linkml:definition_uri "https://w3id.org/linkml/Curie"^^xsd:anyURI ;
+	linkml:description "a compact URI" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/date> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"date\"." , "URI is dateTime because OWL reasoners don't work with straight date or time" ;
+	skos:exactMatch "schema:Date"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "XSDDate" ;
+	linkml:definition_uri "https://w3id.org/linkml/Date"^^xsd:anyURI ;
+	linkml:description "a date (year, month and day) in an idealized calendar" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#date"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/date_or_datetime> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"date_or_datetime\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "str" ;
+	linkml:definition_uri "https://w3id.org/linkml/DateOrDatetime"^^xsd:anyURI ;
+	linkml:description "Either a date or a datetime" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "https://w3id.org/linkml/DateOrDatetime"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/datetime> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"datetime\"." ;
+	skos:exactMatch "schema:DateTime"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "XSDDateTime" ;
+	linkml:definition_uri "https://w3id.org/linkml/Datetime"^^xsd:anyURI ;
+	linkml:description "The combination of a date and time" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#dateTime"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/decimal> a linkml:TypeDefinition ;
+	skos:broadMatch "schema:Number"^^xsd:anyURI ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"decimal\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "Decimal" ;
+	linkml:definition_uri "https://w3id.org/linkml/Decimal"^^xsd:anyURI ;
+	linkml:description "A real number with arbitrary precision that conforms to the xsd:decimal specification" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#decimal"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/domain_node_refs> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#domain_node_refs"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#domain_node_refs"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/domain_nodes> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#domain_nodes"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/ClaimBundle> , <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#domain_nodes"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/double> a linkml:TypeDefinition ;
+	skos:closeMatch "schema:Float"^^xsd:anyURI ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"double\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "float" ;
+	linkml:definition_uri "https://w3id.org/linkml/Double"^^xsd:anyURI ;
+	linkml:description "A real number that conforms to the xsd:double specification" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#double"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/edition> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#edition"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Source> ;
+	linkml:owner <https://github.com/kaicreator-mm/Source> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#edition"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/evidence_records> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#evidence_records"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#evidence_records"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/evidence_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/ns/prov#wasDerivedFrom"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#evidence_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:slot_uri "http://www.w3.org/ns/prov#wasDerivedFrom"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/evidence_type> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#evidence_type"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:owner <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:range <https://github.com/kaicreator-mm/EvidenceType> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#evidence_type"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/extraction_status> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#extraction_status"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:owner <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:range <https://github.com/kaicreator-mm/EvidenceStatus> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#extraction_status"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/float> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"float\"." ;
+	skos:exactMatch "schema:Float"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "float" ;
+	linkml:definition_uri "https://w3id.org/linkml/Float"^^xsd:anyURI ;
+	linkml:description "A real number that conforms to the xsd:float specification" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#float"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/id> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "https://schema.org/identifier"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#id"^^xsd:anyURI ;
+	linkml:description "Stable identifier for the record." ;
+	linkml:domain_of <https://github.com/kaicreator-mm/ClaimBundle> , <https://github.com/kaicreator-mm/DomainNode> , <https://github.com/kaicreator-mm/Evidence> , <https://github.com/kaicreator-mm/KnowledgeClaim> , <https://github.com/kaicreator-mm/KnowledgeCorpus> , <https://github.com/kaicreator-mm/RelationshipAssertion> , <https://github.com/kaicreator-mm/Source> , <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:identifier true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://schema.org/identifier"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/integer> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"integer\"." ;
+	skos:exactMatch "schema:Integer"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "int" ;
+	linkml:definition_uri "https://w3id.org/linkml/Integer"^^xsd:anyURI ;
+	linkml:description "An integer" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#integer"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/jsonpath> dcterms:conformsTo "https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html" ;
+	a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"jsonpath\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "str" ;
+	linkml:definition_uri "https://w3id.org/linkml/Jsonpath"^^xsd:anyURI ;
+	linkml:description "A string encoding a JSON Path. The value of the string MUST conform to JSON Point syntax and SHOULD dereference to zero or more valid objects within the current instance document when encoded in tree form." ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/jsonpointer> dcterms:conformsTo "https://datatracker.ietf.org/doc/html/rfc6901" ;
+	a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"jsonpointer\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "str" ;
+	linkml:definition_uri "https://w3id.org/linkml/Jsonpointer"^^xsd:anyURI ;
+	linkml:description "A string encoding a JSON Pointer. The value of the string MUST conform to JSON Point syntax and SHOULD dereference to a valid object within the current instance document when encoded in tree form." ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/knowledge_claims> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#knowledge_claims"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#knowledge_claims"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/label> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/2000/01/rdf-schema#label"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#label"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:owner <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "http://www.w3.org/2000/01/rdf-schema#label"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/limitations> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#limitations"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#limitations"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/locator> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#locator"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:owner <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#locator"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/locator_type> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#locator_type"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:owner <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:range <https://github.com/kaicreator-mm/LocatorType> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#locator_type"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/ncname> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"ncname\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "NCName" ;
+	linkml:definition_uri "https://w3id.org/linkml/Ncname"^^xsd:anyURI ;
+	linkml:description "Prefix part of CURIE" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/nodeidentifier> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"nodeidentifier\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "NodeIdentifier" ;
+	linkml:definition_uri "https://w3id.org/linkml/Nodeidentifier"^^xsd:anyURI ;
+	linkml:description "A URI, CURIE or BNODE that represents a node in a model." ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/ns/shex#nonLiteral"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/object_kind> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#object_kind"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/RelationshipObjectKind> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#object_kind"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/object_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#object_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/objectidentifier> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"objectidentifier\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	skos:note "Used for inheritance and type checking" ;
+	linkml:base "ElementIdentifier" ;
+	linkml:definition_uri "https://w3id.org/linkml/Objectidentifier"^^xsd:anyURI ;
+	linkml:description "A URI or CURIE that represents an object in the model." ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/ns/shex#iri"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/official_url> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "https://schema.org/url"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#official_url"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Source> ;
+	linkml:owner <https://github.com/kaicreator-mm/Source> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://schema.org/url"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/paraphrase> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "https://schema.org/description"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#paraphrase"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:owner <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://schema.org/description"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/predicate> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#predicate"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/RelationshipPredicate> ;
+	linkml:required true ;
+	linkml:slot_uri "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/publication_date> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#publication_date"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Source> ;
+	linkml:owner <https://github.com/kaicreator-mm/Source> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#publication_date"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/relationship_assertions> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#relationship_assertions"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/ClaimBundle> , <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#relationship_assertions"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/review_status> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#review_status"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/ClaimStatus> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#review_status"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/scope> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#scope"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#scope"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/source_class> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#source_class"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/Source> ;
+	linkml:owner <https://github.com/kaicreator-mm/Source> ;
+	linkml:range <https://github.com/kaicreator-mm/SourceClass> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#source_class"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/source_locator_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/ns/prov#wasDerivedFrom"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#source_locator_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/DomainNode> , <https://github.com/kaicreator-mm/Evidence> ;
+	linkml:owner <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:range <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:required true ;
+	linkml:slot_uri "http://www.w3.org/ns/prov#wasDerivedFrom"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/source_locators> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#source_locators"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#source_locators"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/source_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://purl.org/dc/terms/source"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#source_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/DomainNode> , <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:owner <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:range <https://github.com/kaicreator-mm/Source> ;
+	linkml:required true ;
+	linkml:slot_uri "http://purl.org/dc/terms/source"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/source_refs> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://purl.org/dc/terms/source"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#source_refs"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/Source> ;
+	linkml:slot_uri "http://purl.org/dc/terms/source"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/sources> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#sources"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:inlined true ;
+	linkml:inlined_as_list true ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/Source> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#sources"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/sparqlpath> dcterms:conformsTo "https://www.w3.org/TR/sparql11-query/#propertypaths" ;
+	a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"sparqlpath\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "str" ;
+	linkml:definition_uri "https://w3id.org/linkml/Sparqlpath"^^xsd:anyURI ;
+	linkml:description "A string encoding a SPARQL Property Path. The value of the string MUST conform to SPARQL syntax and SHOULD dereference to zero or more valid objects within the current instance document when encoded as RDF." ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/statement> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "https://schema.org/text"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#statement"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://schema.org/text"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/status> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#status"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/RelationshipStatus> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#status"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/string> a linkml:TypeDefinition ;
+	skos:editorialNote "In RDF serializations, a slot with range of string is treated as a literal or type xsd:string. If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"string\"." ;
+	skos:exactMatch "schema:Text"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "str" ;
+	linkml:definition_uri "https://w3id.org/linkml/String"^^xsd:anyURI ;
+	linkml:description "A character string" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#string"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/subject_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#subject_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:owner <https://github.com/kaicreator-mm/RelationshipAssertion> ;
+	linkml:range <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:required true ;
+	linkml:slot_uri "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/tally_software_engineering_knowledge_pof> dcterms:license "https://creativecommons.org/publicdomain/zero/1.0/" ;
+	dcterms:title "Tally Software Engineering Knowledge — LinkML Proof-of-fit" ;
+	pav:version "0.1.0" ;
+	a linkml:SchemaDefinition ;
+	sh:declare _:c14n0 , _:c14n1 , _:c14n10 , _:c14n14 , _:c14n5 , _:c14n7 , _:c14n9 ;
+	linkml:classes <https://github.com/kaicreator-mm/ClaimBundle> , <https://github.com/kaicreator-mm/DomainNode> , <https://github.com/kaicreator-mm/Evidence> , <https://github.com/kaicreator-mm/KnowledgeClaim> , <https://github.com/kaicreator-mm/KnowledgeCorpus> , <https://github.com/kaicreator-mm/RelationshipAssertion> , <https://github.com/kaicreator-mm/Source> , <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:default_prefix "se" ;
+	linkml:default_range <https://github.com/kaicreator-mm/string> ;
+	linkml:description "Experimental model for source provenance, domain nodes, atomic claims and typed relationship assertions. This schema is a proof-of-fit fixture, not an adopted production ontology." ;
+	linkml:enums <https://github.com/kaicreator-mm/ClaimStatus> , <https://github.com/kaicreator-mm/ClaimType> , <https://github.com/kaicreator-mm/CorpusStatus> , <https://github.com/kaicreator-mm/EvidenceStatus> , <https://github.com/kaicreator-mm/EvidenceType> , <https://github.com/kaicreator-mm/LocatorType> , <https://github.com/kaicreator-mm/RelationshipObjectKind> , <https://github.com/kaicreator-mm/RelationshipPredicate> , <https://github.com/kaicreator-mm/RelationshipStatus> , <https://github.com/kaicreator-mm/SourceClass> , <https://github.com/kaicreator-mm/VerificationState> ;
+	linkml:id "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:imports "linkml:types"^^xsd:anyURI ;
+	linkml:metamodel_version "1.12.0" ;
+	linkml:slots <https://github.com/kaicreator-mm/applicability> , <https://github.com/kaicreator-mm/assumptions> , <https://github.com/kaicreator-mm/claim> , <https://github.com/kaicreator-mm/claim_type> , <https://github.com/kaicreator-mm/context> , <https://github.com/kaicreator-mm/corpus_status> , <https://github.com/kaicreator-mm/domain_node_refs> , <https://github.com/kaicreator-mm/domain_nodes> , <https://github.com/kaicreator-mm/edition> , <https://github.com/kaicreator-mm/evidence_records> , <https://github.com/kaicreator-mm/evidence_ref> , <https://github.com/kaicreator-mm/evidence_type> , <https://github.com/kaicreator-mm/extraction_status> , <https://github.com/kaicreator-mm/id> , <https://github.com/kaicreator-mm/knowledge_claims> , <https://github.com/kaicreator-mm/label> , <https://github.com/kaicreator-mm/limitations> , <https://github.com/kaicreator-mm/locator> , <https://github.com/kaicreator-mm/locator_type> , <https://github.com/kaicreator-mm/object_kind> , <https://github.com/kaicreator-mm/object_ref> , <https://github.com/kaicreator-mm/official_url> , <https://github.com/kaicreator-mm/paraphrase> , <https://github.com/kaicreator-mm/predicate> , <https://github.com/kaicreator-mm/publication_date> , <https://github.com/kaicreator-mm/relationship_assertions> , <https://github.com/kaicreator-mm/review_status> , <https://github.com/kaicreator-mm/scope> , <https://github.com/kaicreator-mm/source_class> , <https://github.com/kaicreator-mm/source_locator_ref> , <https://github.com/kaicreator-mm/source_locators> , <https://github.com/kaicreator-mm/source_ref> , <https://github.com/kaicreator-mm/source_refs> , <https://github.com/kaicreator-mm/sources> , <https://github.com/kaicreator-mm/statement> , <https://github.com/kaicreator-mm/status> , <https://github.com/kaicreator-mm/subject_ref> , <https://github.com/kaicreator-mm/taxonomy_ref> , <https://github.com/kaicreator-mm/taxonomy_refs> , <https://github.com/kaicreator-mm/title> , <https://github.com/kaicreator-mm/verification_state> , <https://github.com/kaicreator-mm/view_id> ;
+	linkml:source_file "software-engineering.yaml" ;
+	linkml:source_file_date "2026-11-04T23:52:02"^^xsd:dateTime ;
+	linkml:source_file_size 7130 ;
+	linkml:types <https://github.com/kaicreator-mm/boolean> , <https://github.com/kaicreator-mm/curie> , <https://github.com/kaicreator-mm/date> , <https://github.com/kaicreator-mm/date_or_datetime> , <https://github.com/kaicreator-mm/datetime> , <https://github.com/kaicreator-mm/decimal> , <https://github.com/kaicreator-mm/double> , <https://github.com/kaicreator-mm/float> , <https://github.com/kaicreator-mm/integer> , <https://github.com/kaicreator-mm/jsonpath> , <https://github.com/kaicreator-mm/jsonpointer> , <https://github.com/kaicreator-mm/ncname> , <https://github.com/kaicreator-mm/nodeidentifier> , <https://github.com/kaicreator-mm/objectidentifier> , <https://github.com/kaicreator-mm/sparqlpath> , <https://github.com/kaicreator-mm/string> , <https://github.com/kaicreator-mm/time> , <https://github.com/kaicreator-mm/uri> , <https://github.com/kaicreator-mm/uriorcurie> .
+<https://github.com/kaicreator-mm/taxonomy_ref> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#taxonomy_ref"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:owner <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#taxonomy_ref"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/taxonomy_refs> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#taxonomy_refs"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:multivalued true ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeClaim> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#taxonomy_refs"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/time> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"time\"." , "URI is dateTime because OWL reasoners do not work with straight date or time" ;
+	skos:exactMatch "schema:Time"^^xsd:anyURI ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "XSDTime" ;
+	linkml:definition_uri "https://w3id.org/linkml/Time"^^xsd:anyURI ;
+	linkml:description "A time object represents a (local) time of day, independent of any particular day" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#time"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/title> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	skos:mappingRelation "https://schema.org/name"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#title"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/KnowledgeCorpus> , <https://github.com/kaicreator-mm/Source> ;
+	linkml:owner <https://github.com/kaicreator-mm/KnowledgeCorpus> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://schema.org/name"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/uri> dcterms:conformsTo "https://www.ietf.org/rfc/rfc3987.txt" ;
+	a linkml:TypeDefinition ;
+	skos:closeMatch "schema:URL"^^xsd:anyURI ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"uri\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	skos:note "in RDF serializations a slot with range of uri is treated as a literal or type xsd:anyURI unless it is an identifier or a reference to an identifier, in which case it is translated directly to a node" ;
+	linkml:base "URI" ;
+	linkml:definition_uri "https://w3id.org/linkml/Uri"^^xsd:anyURI ;
+	linkml:description "a complete URI" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#anyURI"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/uriorcurie> a linkml:TypeDefinition ;
+	skos:editorialNote "If you are authoring schemas in LinkML YAML, the type is referenced with the lower case \"uriorcurie\"." ;
+	skos:inScheme "https://w3id.org/linkml/types"^^xsd:anyURI ;
+	linkml:base "URIorCURIE" ;
+	linkml:definition_uri "https://w3id.org/linkml/Uriorcurie"^^xsd:anyURI ;
+	linkml:description "a URI or a CURIE" ;
+	linkml:imported_from "linkml:types" ;
+	linkml:repr "str" ;
+	linkml:uri "http://www.w3.org/2001/XMLSchema#anyURI"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/verification_state> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#verification_state"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:owner <https://github.com/kaicreator-mm/SourceLocator> ;
+	linkml:range <https://github.com/kaicreator-mm/VerificationState> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#verification_state"^^xsd:anyURI .
+<https://github.com/kaicreator-mm/view_id> a linkml:SlotDefinition ;
+	skos:inScheme "https://github.com/kaicreator-mm/tally"^^xsd:anyURI ;
+	linkml:definition_uri "https://github.com/kaicreator-mm/tally#view_id"^^xsd:anyURI ;
+	linkml:domain_of <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:owner <https://github.com/kaicreator-mm/DomainNode> ;
+	linkml:range <https://github.com/kaicreator-mm/string> ;
+	linkml:required true ;
+	linkml:slot_uri "https://github.com/kaicreator-mm/tally#view_id"^^xsd:anyURI .
+_:c14n0 sh:namespace "https://w3id.org/linkml/"^^xsd:anyURI ;
+	sh:prefix "linkml" .
+_:c14n1 sh:namespace "https://github.com/kaicreator-mm/tally#"^^xsd:anyURI ;
+	sh:prefix "se" .
+_:c14n10 sh:namespace "http://www.w3.org/2000/01/rdf-schema#"^^xsd:anyURI ;
+	sh:prefix "rdfs" .
+_:c14n14 sh:namespace "http://www.w3.org/ns/prov#"^^xsd:anyURI ;
+	sh:prefix "prov" .
+_:c14n15 a linkml:UniqueKey ;
+	linkml:unique_key_name "source_and_locator" ;
+	linkml:unique_key_slots <https://github.com/kaicreator-mm/locator> , <https://github.com/kaicreator-mm/source_ref> .
+_:c14n5 sh:namespace "http://purl.org/dc/terms/"^^xsd:anyURI ;
+	sh:prefix "dcterms" .
+_:c14n7 sh:namespace "https://schema.org/"^^xsd:anyURI ;
+	sh:prefix "schemaorg" .
+_:c14n9 sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#"^^xsd:anyURI ;
+	sh:prefix "rdf" .

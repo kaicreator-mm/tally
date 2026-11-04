@@ -1,0 +1,114 @@
+[
+  {
+    "name": "old_original",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "old_compatible",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\compatible-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "dual_compatible",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\compatible-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\dual-write-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "dual_original",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\dual-write-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\dual-write-record.yaml/0] Additional properties are not allowed ('assessment_status' was unexpected) in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "old_renamed",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\renamed-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml/0] Additional properties are not allowed ('review_status' was unexpected) in /knowledge_claims/0\r\n[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\fixtures\\standalone-yaml\\KNOWLEDGE_CORPUS.yaml/0] 'assessment_status' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "mapped_renamed",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\renamed-schema.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\mapped-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 0,
+    "stdout": "No issues found\r\n",
+    "stderr": ""
+  },
+  {
+    "name": "mapped_original",
+    "argv": [
+      "C:\\xDev\\kAiCreator\\_tmp\\tally-i305-builder-codex\\venv\\Scripts\\linkml.exe",
+      "validate",
+      "-s",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\schema\\software-engineering.yaml",
+      "--target-class",
+      "KnowledgeCorpus",
+      "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\mapped-record.yaml"
+    ],
+    "cwd": "C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof",
+    "exit_code": 1,
+    "stdout": "[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\mapped-record.yaml/0] Additional properties are not allowed ('assessment_status' was unexpected) in /knowledge_claims/0\r\n[ERROR] [C:\\xDev\\kAiCreator\\tally\\tally-i305-builder-codex\\docs\\versions\\v2.1.1\\experiments\\linkml-pof\\evidence\\windows-312-evolution\\mapped-record.yaml/0] 'review_status' is a required property in /knowledge_claims/0\r\n",
+    "stderr": ""
+  }
+]

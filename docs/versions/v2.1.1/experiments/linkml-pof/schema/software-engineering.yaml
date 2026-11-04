@@ -9,7 +9,7 @@ version: "0.1.0"
 prefixes:
   linkml: https://w3id.org/linkml/
   se: https://github.com/kaicreator-mm/tally#
-  schema: https://schema.org/
+  schemaorg: https://schema.org/
   dcterms: http://purl.org/dc/terms/
   prov: http://www.w3.org/ns/prov#
   rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
@@ -125,18 +125,18 @@ slots:
     identifier: true
     required: true
     range: string
-    slot_uri: schema:identifier
+    slot_uri: schemaorg:identifier
     description: Stable identifier for the record.
   title:
     required: true
     range: string
-    slot_uri: schema:name
+    slot_uri: schemaorg:name
   source_class:
     required: true
     range: SourceClass
   official_url:
     range: string
-    slot_uri: schema:url
+    slot_uri: schemaorg:url
   edition:
     range: string
   publication_date:
@@ -166,7 +166,7 @@ slots:
   paraphrase:
     required: true
     range: string
-    slot_uri: schema:description
+    slot_uri: schemaorg:description
   context:
     range: string
   extraction_status:
@@ -188,7 +188,7 @@ slots:
   statement:
     required: true
     range: string
-    slot_uri: schema:text
+    slot_uri: schemaorg:text
   scope:
     required: true
     range: string
