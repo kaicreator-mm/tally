@@ -23,6 +23,24 @@ test('actual selected evidence is projected without private reviewer grant',asyn
   assert.equal(r.qualification,'SOURCE_OBSERVED_NOT_MEASURED_OUTCOME');
   assert.equal(r.candidates[0].sourceRef,candidate.sourceRef);
 });
+
+test('experience source projection rejects unrecognized Host source fields',async()=>{
+  const normal=await make().candidates();
+  assert.deepEqual(Object.keys(normal.source).sort(),
+    ['currentness','readback','repository','sourceSha']);
+  const polluted=await make({readExperienceCandidates:async()=>({...snap(),
+    source:{...source,internalField:'internal-only-value'}})}).candidates();
+  assert.equal(polluted.connected,false);
+  assert.equal(polluted.reason,'EXPERIENCE_PROVENANCE_UNQUALIFIED');
+});
+test('overlong candidate source references fail closed',async()=>{
+  const sourceRef='https://github.com/org/tally/issues/'+'1'.repeat(300)+'#issuecomment-1';
+  const result=await make({readExperienceCandidates:async()=>({...snap(),
+    candidates:[{...candidate,sourceRef}]})}).candidates();
+  assert.equal(result.connected,false);
+  assert.equal(result.reason,'EXPERIENCE_PROVENANCE_UNQUALIFIED');
+});
+
 test('no Host, stale or stale ADS report cannot be adopted',async()=>{
   assert.equal((await createUiExperienceHost({repository,versionId,expectedSha:sha})
     .candidates()).connected,false);

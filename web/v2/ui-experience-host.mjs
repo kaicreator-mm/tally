@@ -8,11 +8,14 @@ const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
 const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+const qualifiedSource=(value,repository,sha)=>plain(value)&&
+  Object.keys(value).sort().join(',')==='currentness,readback,repository,sourceSha'&&
+  value.repository===repository&&value.sourceSha===sha&&
+  value.currentness==='CURRENT'&&value.readback==='VERIFIED';
 const denied=reason=>({connected:false,ok:false,status:'DENIED',reason});
 const positive=(v,repo,versionId,sha)=>v?.connected===true&&
-  v.source?.repository===repo&&v.source?.sourceSha===sha&&
-  v.source?.currentness==='CURRENT'&&v.source?.readback==='VERIFIED'&&
-  v.versionId===versionId&&Array.isArray(v.candidates)&&v.candidates.length<=100;
+  qualifiedSource(v.source,repo,sha)&&v.versionId===versionId&&
+  Array.isArray(v.candidates)&&v.candidates.length<=100;
 const COMMENT_REF=/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/issues\/([1-9][0-9]*)(?:#issuecomment-([1-9][0-9]*))?$/;
 const ISOLATED_TEST_PUBLISHER='kaicreator-mm/task-meta-e2e';
 const publisherSet=(repository,extra)=>{
@@ -21,7 +24,8 @@ const publisherSet=(repository,extra)=>{
   return new Set([repository,...(extra??[])]);
 };
 const validCandidate=(v,repo,publishers)=> {
-  const ref=COMMENT_REF.exec(v?.sourceRef??'');
+  const ref=typeof v?.sourceRef==='string'&&v.sourceRef.length<=256?
+    COMMENT_REF.exec(v.sourceRef):null;
   const publisher=v?.publisherRepository??ref?.[1]??null;
   const sameIssue=ref&&publisher===ref[1]&&publishers.has(publisher)&&
     (ref[3]!==undefined||publisher===repo);
@@ -64,7 +68,8 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
       return denied('EXPERIENCE_SCOPE_MISMATCH');
     const v=await read();
     if(!positive(v,repository,versionId,expectedSha))return v;
-    return {connected:true,versionId,source:v.source,
+    return {connected:true,versionId,source:{repository,sourceSha:expectedSha,
+      currentness:'CURRENT',readback:'VERIFIED'},
       qualification:'SOURCE_OBSERVED_NOT_MEASURED_OUTCOME',
       candidates:v.candidates.map(c=>{
         const publisherRepository=c.publisherRepository??
@@ -165,9 +170,7 @@ export function createUiExperienceHost({repository,versionId,expectedSha,selecte
         (c.publisherRepository??COMMENT_REF.exec(c.sourceRef)?.[1])!==ISOLATED_TEST_PUBLISHER&&
         c.sourceKind!=='ISOLATED_E2E_TEST_ONLY').map(c=>c.id));
       if(r?.connected!==true||r.versionId!==versionId||
-         r.source?.repository!==repository||
-         r.source?.sourceSha!==expectedSha||r.source?.currentness!=='CURRENT'||
-         r.source?.readback!=='VERIFIED'||r.taskIssue!==taskIssue||
+         !qualifiedSource(r.source,repository,expectedSha)||r.taskIssue!==taskIssue||
          !Array.isArray(r.usedCandidates)||r.usedCandidates.length>100||
          new Set(r.usedCandidates).size!==r.usedCandidates.length||
          r.usedCandidates.some(id=>!ID.test(id)||!eligibleIds.has(id))||
