@@ -216,8 +216,9 @@
     ],
     "requiredForBootstrapPackFreeze": [
       "Independent read-only Exact-SHA review of the exact immutable bootstrap PackBlob.",
-      "Exact repository Owner approval binding PackBlob SHA, integration base SHA/tree, source SHA, E0 14-path writeSetSha256 and exact writeSetAudit digest.",
-      "The version-wide writeSetAudit status and digest must be bound exactly; BLOCKED is permitted only as an explicit fail-closed snapshot and does not authorize version-wide freeze or ordinary Task dispatch."
+      "Exact repository Owner approval binding PackBlob SHA, integration base SHA/tree, source SHA, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
+      "The version-wide writeSetAudit status and digest must be bound exactly; BLOCKED is permitted only as an explicit fail-closed snapshot and does not authorize version-wide freeze or ordinary Task dispatch.",
+      "The E0 scope overlap/serial-handoff audit must be complete and its digest must match the exact PackBlob; #219 source-candidate ordering is bound to the integration-base first parent, and #264's two potential shared paths remain E0-exclusive until E1 handoff."
     ],
     "requiredForOneTimeRootAdmission": [
       "Only after bootstrap PackBlob review PASS and exact Owner approval may the one-time pre-Claim Host mount be implemented inside preClaimBootstrapMountPaths.",
@@ -236,7 +237,7 @@
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
-  "note": "This governance candidate binds a live read-only audit of the 23 currently open version Task Issues plus #284. 23 existing open Tasks currently lack a top-level canonical allowed_write_set declaration, so writeSetAudit is intentionally BLOCKED and no Task Pack freeze, Claim or dependency mutation may be authorized. The 14 E0 paths are canonical candidate scope only. Root Host Claim admission is separately NOT_PROVEN. A candidate Task Pack is stale and must be refreshed before freeze.",
+  "note": "All 23 open version Task Issues now have a top-level canonical allowed_write_set declaration: 22 scopes are complete and #264 remains incomplete with an empty writable set plus nine separately recorded declared paths. The body-derived version audit is BLOCKED_INCOMPLETE_SCOPE_AND_OVERLAPS: 36 all-scope overlap groups remain in one 13-Task component; among 11 prior-disposition candidate Tasks, five overlapping pairs lack native blocked_by serialization. The 44-Task candidate roster is stale (7/44) and freeze-ineligible. E0's separate 14-path scope and its six #219 / two potential #264 intersections are bound by e0ScopeAudit. The one-off E0 bootstrap pack may be reviewed/frozen separately; this blocked version audit never permits ordinary Task dispatch or version-wide freeze. Root T06d admission, independent review and exact Pack Owner approval remain absent.",
   "writeSetAudit": {
     "schema": "tally/version-task-write-set-audit/v2",
     "sourceRoster": {
@@ -2156,11 +2157,22 @@
         "addNativeTaskDependency"
       ],
       "claimRegistryRequirement": "The existing T06d admission source counts every other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row as incompatible. The root Claim blocks unless the stable public CAS registry readback has activeIncompatibleClaimCount===0; do not delete or clear rows.",
-      "t06dReturnSemantics": "PUBLISHED_VERIFIED is still VERIFIED_PENDING_KERNEL_ADMISSION; it is not a selected-K permit. Public K must independently verify the exact Claim row and exact FROZEN_DAG_WRITESET row."
+      "t06dReturnSemantics": "PUBLISHED_VERIFIED is still VERIFIED_PENDING_KERNEL_ADMISSION; it is not a selected-K permit. Public K must independently verify the exact Claim row and exact FROZEN_DAG_WRITESET row.",
+      "after219Paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "e1ExclusiveHandoffPaths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ]
     },
     "preconditions": [
       "Independent Exact-SHA review of this exact pack blob.",
-      "Exact Owner approval comment binding pack blob SHA + integration base SHA/tree + source SHA + writeSetSha256 + writeSetAudit auditDigestSha256.",
+      "Exact Owner approval comment binding pack blob SHA + integration base SHA/tree + source SHA + E0 writeSetSha256 + version writeSetAudit.auditDigestSha256 + e0ScopeAudit.digestSha256.",
       "Only after the exact approval, implement the one-time pre-Claim Host mount limited to hostMount.preClaimBootstrapMountPaths; no other E0 source operation is admitted before #284's root Claim.",
       "Issue #284 remains open/type:task; set state:ready only after exact pack approval.",
       "T06d native preflight proves exact #284 source SHA, state:ready, dependencies CLEAR and no incompatible Claim.",
@@ -2174,6 +2186,166 @@
     "2026-11-04: canonicalized all 23 open version Task Issues using exact current issue bodies. #199/#200 are read-only; #264 remains incomplete. SHA-256 verified against standard abc/empty vectors. Exact writable-path analysis: 20 complete write-capable Tasks, 36 pairwise overlaps in one 13-Task connected component, 7 isolated writable Tasks; #264's 9 declared paths create 7 potential overlaps / 14 shared path occurrences but are not admitted. Four current native blocked_by edges into #264 were read back. All Tasks remain non-dispatchable; candidate version Task Pack remains stale and freeze-ineligible.",
     "2026-11-04: E0 root-admission Host mount is mapped to the existing 14-path E0 candidate scope; existing T06d/C controller and ports are read-only imports, with no additional write path currently required. Exact pack review/Owner approval and root Claim are still absent; no source admission.",
     "2026-11-04 gate clarification: the one-off E0 bootstrap PackBlob is distinct from the version-wide Task Pack. Its review/Owner approval binds the exact BLOCKED version audit snapshot and digest; BLOCKED is permitted only to freeze this one-off bootstrap artifact and does not authorize version-wide freeze or ordinary Task dispatch. Version-wide freeze still requires audit PASS.",
-    "2026-11-04 E0 cross-scope check: the 14 E0 paths intersect #219's canonical issue write set on six paths and are explicitly serialized after #219; they potentially intersect #264's nine declared-but-not-admitted paths on web/v2/journey-server.mjs and web/v2/serve.mjs, serialized before E1/#264. T06d registry preflight also requires zero other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED claim rows."
-  ]
+    "2026-11-04 E0 cross-scope check: the 14 E0 paths intersect #219's canonical issue write set on six paths and are explicitly serialized after #219; they potentially intersect #264's nine declared-but-not-admitted paths on web/v2/journey-server.mjs and web/v2/serve.mjs, serialized before E1/#264. T06d registry preflight also requires zero other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED claim rows.",
+    "E0's 14-path scope overlaps #219 on six exact paths and #264's incomplete declared scope on two potential paths; these intersections and their serial ownership are bound in e0ScopeAudit."
+  ],
+  "e0ScopeAudit": {
+    "schema": "tally.e0.bootstrap-scope-audit/v1",
+    "status": "EXACT_SCOPE_INTERSECTIONS_AND_SERIAL_HANDOFFS_BOUND",
+    "controllerTask": {
+      "issueNumber": 284,
+      "state": "open",
+      "workflowLabel": "state:planned",
+      "updatedAt": "2026-11-04T06:52:11Z",
+      "bodySha256": "f3f1cc3bb7a2e63040ad131af3ca0ca1e28aec6e5778130401c46326d7350d62",
+      "pathCount": 14,
+      "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8"
+    },
+    "integrationBase": {
+      "sha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "treeSha": "0bf8d0ebb75db76843aada5a800991912dd82bd0",
+      "mergeParents": [
+        "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+        "7cfe2e4ca781358a8447c473535b2c986e999166"
+      ],
+      "mergeOrder": [
+        "#219 PR #278",
+        "A #260 PR #279"
+      ]
+    },
+    "upstream219": {
+      "issueNumber": 219,
+      "state": "open",
+      "updatedAt": "2026-11-04T06:24:06Z",
+      "bodySha256": "6661b9964143ec49aa39ee1df0e8d937f7a971554a0c0e14f92d42cd3af34430",
+      "writeSetSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+      "pathCount": 14,
+      "pr": 278,
+      "sourceReviewCommentId": 6618467645,
+      "node24ReceiptCommentId": 6618114909
+    },
+    "overlapWith219": {
+      "sharedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs"
+      ],
+      "sharedPathCount": 6,
+      "ownerAfter219Paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "exclusiveE0Paths": [
+        "web/v2/journey-server.mjs"
+      ],
+      "serialization": "The exact #219 PR #278 candidate is the first parent of the immutable E0 integration base; E0 writes are permitted only on descendants of that base. E0_AFTER_219 paths must never be edited on a base that omits that exact #219 head. Issue #219 remains open; this records source-candidate ordering and does not claim task closure."
+    },
+    "upstream264": {
+      "issueNumber": 264,
+      "state": "open",
+      "updatedAt": "2026-11-04T06:26:08Z",
+      "bodySha256": "00039984cb12d5c70849cf8d29f5188dec8aa254fe2a31806055f90f24230fc7",
+      "scopeStatus": "BLOCKED_INCOMPLETE_SCOPE",
+      "declaredExactPaths": [
+        ".woodpecker/v2-alm-workspace.yaml",
+        "apps/tally-web/src/adapters/host.ts",
+        "apps/tally-web/src/adapters/useHost.ts",
+        "apps/tally-web/src/app/App.tsx",
+        "apps/tally-web/src/app/main.tsx",
+        "docs/implementation/v2/CLOSEOUT_EVIDENCE_REUSE_LEDGER.md",
+        "docs/implementation/v2/UI_WEBFIRST_R1_ACCEPTANCE.md",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "declaredExactPathCount": 9,
+      "priorPotentialOverlapWith": [
+        196,
+        197,
+        198,
+        202,
+        207,
+        210,
+        219
+      ]
+    },
+    "overlapWith264": {
+      "potentialSharedPaths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "potentialSharedPathCount": 2,
+      "exclusiveE0Paths": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "serialization": "The two shared paths remain E0_BOOTSTRAP_EXCLUSIVE through E0 closeout; E1/#264 receives them only after the explicit E0 handoff. #264's scope remains incomplete and non-dispatchable; no native #264→#284 dependency is claimed."
+    },
+    "pathOwnership": {
+      "E0_AFTER_219": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "E0_BOOTSTRAP_EXCLUSIVE": [
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs"
+      ],
+      "E0": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "packages/tally-github-native-c/package.json",
+        "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+        "packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ]
+    },
+    "preClaimBootstrapMount": {
+      "paths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "after219PathsIncluded": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "requiredBaseSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
+      "additionalWritePathsRequired": []
+    },
+    "nativeDependencyReadback": {
+      "method": "GitHub REST issue dependencies/blocked_by",
+      "issue284": [],
+      "issue219": [],
+      "issue264": [
+        260,
+        261,
+        262,
+        263
+      ],
+      "semantics": "These readbacks are not used to claim a native edge between #284 and #219/#264. #284 T06d preflight requires dependencyState=CLEAR; E0/#219 is serialized by exact integration-base ancestry and E0 path ownership, and E0/#264 by exclusive ownership plus explicit E1 handoff."
+    },
+    "dispatchable": false,
+    "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core) in listed property order",
+    "digestSha256": "a5d30ef8f8339384d39725d002c8444be4675ac52f83a8700ab6ee03e815b6d3"
+  }
 }
