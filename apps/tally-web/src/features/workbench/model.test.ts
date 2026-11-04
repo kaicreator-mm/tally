@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {activeWorkActions,inboxCounts,actionTaskLink} from './model.ts';
+import {activeWorkActions,inboxCounts,actionTaskLink,actionSourceLink} from './model.ts';
 import type {WorkbenchSnapshot,WorkAction} from './model.ts';
 const base:WorkAction={id:'1',taskId:'227',projectId:'org/tally',
   versionId:'version/v2',title:'Review',kind:'REVIEW',state:'PENDING',
@@ -27,6 +27,18 @@ test('partial roster never turns a zero scoped blocker count into zero human inb
 });
 test('resolved decisions never reappear as pending',()=>{
   assert.equal(activeWorkActions(ready,'inbox')!.some(a=>a.id==='4'),false);
+});
+test('workbench source links allow only bounded canonical GitHub issue/PR references',()=>{
+  assert.equal(actionSourceLink({...base,sourceRef:'https://github.com/org/tally/issues/227'}),
+    'https://github.com/org/tally/issues/227');
+  assert.equal(actionSourceLink({...base,sourceRef:'https://github.com/org/tally/pull/300#issuecomment-4'}),
+    'https://github.com/org/tally/pull/300#issuecomment-4');
+  for(const sourceRef of ['javascript:alert(1)','https://evil.example/issues/1',
+    'https://github.com/org/tally/issues/227?token=private',
+    'https://github.com/org/tally.evil/issues/227',
+    'https://github.com/org/tally/issues/'+'1'.repeat(300)]){
+    assert.equal(actionSourceLink({...base,sourceRef}),null);
+  }
 });
 test('task deep link includes verified project and version identity',()=>{
   assert.equal(actionTaskLink(base),

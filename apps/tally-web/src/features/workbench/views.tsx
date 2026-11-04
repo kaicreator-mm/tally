@@ -1,6 +1,6 @@
 /** Human actions from one qualified Host inbox; all effects remain Host-owned. */
 import type {WorkbenchSnapshot,WorkbenchPage} from './model.ts';
-import {activeWorkActions,inboxCounts,actionTaskLink} from './model.ts';
+import {activeWorkActions,inboxCounts,actionTaskLink,actionSourceLink} from './model.ts';
 import {Card,CardHeader} from '../../components/ui/Card.tsx';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
@@ -51,8 +51,9 @@ export function WorkbenchView({snapshot,page,onNavigate,
               {action.kind} · {action.state} · {action.ownerRole} · {action.projectId}
               {action.versionId?' / '+action.versionId:''}</span>
             {action.reason?<span style={{fontSize:12,color:'var(--warn)'}}>{action.reason}</span>:null}
-            <a href={action.sourceRef} target="_blank" rel="noopener noreferrer"
-              style={{fontSize:12}}>查看原始证据</a>
+            {actionSourceLink(action)?<a href={actionSourceLink(action)!}
+              target="_blank" rel="noopener noreferrer"
+              style={{fontSize:12}}>查看原始证据</a>:null}
           </div>
           <div style={{display:'grid',gap:6,justifyItems:'end'}}>
             {actionTaskLink(action)?<button type="button"
