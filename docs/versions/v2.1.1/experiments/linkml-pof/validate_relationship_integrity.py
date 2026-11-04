@@ -143,10 +143,15 @@ def validate_rules_document(doc, label):
     fail_closed = validation["fail_closed"]
     if not isinstance(fail_closed, list) or any(not isinstance(x, str) for x in fail_closed):
         raise IntegrityError(f"{label}: fail_closed must be a string list")
-    if set(fail_closed) != REQUIRED_FAIL_CLOSED:
+    if len(fail_closed) != len(set(fail_closed)) or set(fail_closed) != REQUIRED_FAIL_CLOSED:
         raise IntegrityError(f"{label}: fail_closed contract is incomplete or contains unsupported checks")
-    if validation["rdf_expectations"] != EXPECTED_RDF_EXPECTATIONS:
+    rdf_expectations = validation["rdf_expectations"]
+    if not isinstance(rdf_expectations, dict) or set(rdf_expectations) != set(EXPECTED_RDF_EXPECTATIONS):
         raise IntegrityError(f"{label}: RDF expectations do not match the executable contract")
+    for key, expected_value in EXPECTED_RDF_EXPECTATIONS.items():
+        actual_value = rdf_expectations[key]
+        if type(actual_value) is not type(expected_value) or actual_value != expected_value:
+            raise IntegrityError(f"{label}: RDF expectations do not match the executable contract")
     return rules
 
 
@@ -271,23 +276,24 @@ def validate_records(records, rules):
 
 
 def require_exact_se_class(graph, node, expected, label, role):
-    type_values = list(graph.objects(node, RDF.type))
+    type_values = set(graph.objects(node, RDF.type))
     if any(not isinstance(value, URIRef) for value in type_values):
         raise IntegrityError(f"{label}: rdf:type assertion for {role} must have a URIRef class")
-    actual = {
-        str(value)[len(SE_BASE):]
-        for value in type_values
-        if str(value).startswith(SE_BASE)
-    }
-    allowed = {expected} | CLASS_ANCESTORS.get(expected, set())
-    if expected not in actual or not actual.issubset(allowed):
+    expected_uri = URIRef(SE_BASE + expected)
+    allowed = {expected_uri}
+    allowed.update(URIRef(SE_BASE + ancestor) for ancestor in CLASS_ANCESTORS.get(expected, set()))
+    if expected_uri not in type_values or not type_values.issubset(allowed):
+        found = sorted(str(value) for value in type_values)
         raise IntegrityError(
             f"{label}: rdf:{role} must have exactly class {expected} "
-            f"(allowing declared ancestors), found {sorted(actual)}"
+            f"(allowing declared ancestors), found {found}"
         )
 
 
 def validate_rdf(graph, rules, label, records=None):
+    for node, rdf_type in graph.subject_objects(RDF.type):
+        if not isinstance(rdf_type, URIRef):
+            raise IntegrityError(f"{label}: rdf:type object for {node} must be a URIRef class")
     statements = list(graph.subjects(RDF.type, RDF.Statement))
     if not statements:
         raise IntegrityError(f"{label}: no rdf:Statement nodes found")
@@ -308,6 +314,12 @@ def validate_rdf(graph, rules, label, records=None):
     for node in statements:
         if not isinstance(node, URIRef) or not str(node).startswith(SE_BASE):
             raise IntegrityError(f"{label}: rdf:Statement identifier is not a canonical se: URIRef")
+        statement_types = set(graph.objects(node, RDF.type))
+        if statement_types != {RDF.Statement}:
+            found = sorted(str(value) for value in statement_types)
+            raise IntegrityError(
+                f"{label}: rdf:Statement node must have exactly rdf:Statement type, found {found}"
+            )
         def one(prop, name):
             values = list(graph.objects(node, prop))
             if len(values) != 1:
@@ -383,6 +395,10 @@ def self_test(rules):
         ("duplicate rule predicate", lambda d: d["rules"].append(copy.deepcopy(d["rules"][0])), "duplicate predicate"),
         ("unknown rule predicate", lambda d: d["rules"][0].update(predicate="CONTRADICTS"), "unknown predicate"),
         ("malformed rule", lambda d: d["rules"][0].pop("object_slot"), "malformed rule fields"),
+        ("duplicate fail_closed entry", lambda d: d["validation"]["fail_closed"].append(d["validation"]["fail_closed"][0]), "fail_closed contract is incomplete"),
+        ("incomplete fail_closed contract", lambda d: d["validation"]["fail_closed"].remove("unknown_predicate"), "fail_closed contract is incomplete"),
+        ("non-boolean RDF expectation", lambda d: d["validation"]["rdf_expectations"].update(reject_object_literal=1), "RDF expectations do not match"),
+        ("missing required predicate", lambda d: d["rules"].pop(), "missing required predicates"),
     )
     for name, mutate, expected in rule_cases:
         candidate = copy.deepcopy(rule_doc)
@@ -533,6 +549,48 @@ def self_test(rules):
     bad = Graph()
     for triple in graph:
         bad.add(triple)
+    bad.add((evidence, RDF.type, URIRef("https://example.org/ExternalClass")))
+    try:
+        validate_rdf(bad, rules, "self-test-foreign-object-class", [r for r in sample_records() if r[0] != "RelationshipAssertion" or r[1]["id"] == "se:R1"])
+    except IntegrityError as exc:
+        if "rdf:object must have exactly class Evidence" not in str(exc):
+            raise
+        print("SELF-TEST PASS: foreign-namespace additional object class rejected")
+        passed += 1
+    else:
+        raise IntegrityError("self-test: foreign-namespace additional object class accepted")
+
+    bad = Graph()
+    for triple in graph:
+        bad.add(triple)
+    bad.add((stmt, RDF.type, Literal("Statement")))
+    try:
+        validate_rdf(bad, rules, "self-test-literal-statement-type", [r for r in sample_records() if r[0] != "RelationshipAssertion" or r[1]["id"] == "se:R1"])
+    except IntegrityError as exc:
+        if "rdf:type object for" not in str(exc):
+            raise
+        print("SELF-TEST PASS: non-URIRef rdf:type on statement node rejected")
+        passed += 1
+    else:
+        raise IntegrityError("self-test: non-URIRef rdf:type on statement node accepted")
+
+    bad = Graph()
+    for triple in graph:
+        bad.add(triple)
+    bad.add((stmt, RDF.type, URIRef("https://example.org/ExternalStatement")))
+    try:
+        validate_rdf(bad, rules, "self-test-extra-statement-class", [r for r in sample_records() if r[0] != "RelationshipAssertion" or r[1]["id"] == "se:R1"])
+    except IntegrityError as exc:
+        if "rdf:Statement node must have exactly rdf:Statement type" not in str(exc):
+            raise
+        print("SELF-TEST PASS: incompatible additional statement class rejected")
+        passed += 1
+    else:
+        raise IntegrityError("self-test: incompatible additional statement class accepted")
+
+    bad = Graph()
+    for triple in graph:
+        bad.add(triple)
     bad.remove((stmt, RDF.object, evidence))
     other = URIRef(SE_BASE + "D1")
     bad.add((stmt, RDF.object, other))
@@ -561,9 +619,9 @@ def self_test(rules):
     else:
         raise IntegrityError("self-test: RDF statement ID mismatch accepted")
 
-    if passed != 23:
-        raise IntegrityError(f"self-test coverage mismatch: expected 23 checks, observed {passed}")
-    print(f"SELF-TEST SUMMARY: {passed}/23 PASS")
+    if passed != 30:
+        raise IntegrityError(f"self-test coverage mismatch: expected 30 checks, observed {passed}")
+    print(f"SELF-TEST SUMMARY: {passed}/30 PASS")
     return 0
 
 
