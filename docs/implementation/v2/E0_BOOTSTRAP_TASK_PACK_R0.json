@@ -675,13 +675,19 @@
     "rule": "Only parse a top-level canonical allowed_write_set declaration. Missing declarations remain UNKNOWN/BLOCKED; never infer from prose or broad globs.",
     "status": "BLOCKED_MISSING_CANONICAL_ALLOWED_WRITE_SET",
     "complete": false,
-    "auditDigestSha256": "bf8fc75b1ef738c8156aaa1858d8eb05af26bdb0cf5d082827e216fd20d23f94",
+    "auditDigestSha256": "2d19d7a7159dcc4a4d5f1d7de6ff6d9a9b0a2a52469eb8ee9421252f183f0fc0",
     "e0TaskWriteSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "requiredToUnblock": [
       "Add canonical allowed_write_set declarations to all current open version Tasks, exact-path only; mark non-dispatchable/read-only Tasks with an explicit empty list and a non-dispatchable disposition.",
       "Refresh the selected version roster and native dependency snapshot, including E0 #284, after all relevant Issue body updates.",
       "Recompute each Task body SHA256 + updatedAt + normalized path list + per-Task writeSetSha256; independently review overlaps and NATIVE-edge serialization.",
       "Require exact audit digest in independent Review, exact Owner Approval and the frozen CAS rows before positive freeze."
-    ]
+    ],
+    "auditObservedAt": "2026-11-04T04:45:50Z",
+    "digestAlgorithms": {
+      "issueBodySha256": "SHA-256 over the exact UTF-8 GitHub Issue body string returned by REST",
+      "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
+      "auditDigestSha256": "SHA-256 over UTF-8 JSON.stringify({schema,sourceRoster,openTaskSnapshot,controllerTask,findings,rule,digestAlgorithms,auditObservedAt}) in that property order"
+    }
   }
 }
