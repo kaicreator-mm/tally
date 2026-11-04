@@ -1,15 +1,24 @@
 /** Human actions from one qualified Host inbox; all effects remain Host-owned. */
 import type {WorkbenchSnapshot,WorkbenchPage} from './model.ts';
-import {activeWorkActions,inboxCounts,actionTaskLink} from './model.ts';
+import {activeWorkActions,inboxCounts,actionTaskLink,actionSourceLink} from './model.ts';
 import {Card,CardHeader} from '../../components/ui/Card.tsx';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
+import {Button} from '../../components/ui/Button.tsx';
+import type {SelectedActionCatalog} from './human-action-gate.ts';
+import {workbenchActionControl} from './human-action-gate.ts';
 
+export interface WorkbenchActionRequest{
+  repository:string;versionId:string;sourceSha:string;
+  actionId:string;revision:number;
+}
 const pageNames:Record<WorkbenchPage,string>={
   inbox:'我的待办',approvals:'审批与决策',blockers:'阻塞与恢复',overview:'工作概览'};
-export function WorkbenchView({snapshot,page,onNavigate}:
+export function WorkbenchView({snapshot,page,onNavigate,
+  actionCatalog,onAction}:
   {snapshot:WorkbenchSnapshot|null;page:WorkbenchPage;
-   onNavigate:(hash:string)=>void}){
+   onNavigate:(hash:string)=>void;actionCatalog?:SelectedActionCatalog|null;
+   onAction?:(request:WorkbenchActionRequest)=>void}){
   const rows=activeWorkActions(snapshot,page);
   if(!rows)return <EmptyState title="NOT_CONNECTED"
     hint="工作台需要当前用户有权读取的受信 Host 人工待办队列；不可将未知当作零待办。"/>;
@@ -42,14 +51,45 @@ export function WorkbenchView({snapshot,page,onNavigate}:
               {action.kind} · {action.state} · {action.ownerRole} · {action.projectId}
               {action.versionId?' / '+action.versionId:''}</span>
             {action.reason?<span style={{fontSize:12,color:'var(--warn)'}}>{action.reason}</span>:null}
-            <a href={action.sourceRef} target="_blank" rel="noopener noreferrer"
-              style={{fontSize:12}}>查看原始证据</a>
+            {actionSourceLink(action)?<a href={actionSourceLink(action)!}
+              target="_blank" rel="noopener noreferrer"
+              style={{fontSize:12}}>查看原始证据</a>:null}
           </div>
-          {actionTaskLink(action)?<button type="button"
-            onClick={()=>onNavigate(actionTaskLink(action)!)}
-            style={{font:'inherit',cursor:'pointer'}}>查看任务</button>:null}
+          <div style={{display:'grid',gap:6,justifyItems:'end'}}>
+            {actionTaskLink(action)?<button type="button"
+              onClick={()=>onNavigate(actionTaskLink(action)!)}
+              style={{font:'inherit',cursor:'pointer'}}>查看任务</button>:null}
+            {actionCatalog!==undefined?<WorkbenchActionButton
+              snapshot={snapshot} catalog={actionCatalog} action={action}
+              onAction={onAction}/>:null}
+          </div>
         </div>)}
       </div>}
     </Card>
+  </div>;
+}
+
+
+export function WorkbenchActionButton({snapshot,catalog,action,onAction}:{
+  snapshot:WorkbenchSnapshot|null;catalog:SelectedActionCatalog|null;
+  action:import('./model.ts').WorkAction;
+  onAction?: (request:WorkbenchActionRequest)=>void;
+}){
+  // Display-only control model: a fresh Host action without a connected
+  // dispatch callback must not look executable, and denial reasons stay
+  // localized instead of showing raw internal codes.
+  const control=workbenchActionControl(snapshot,catalog,action,
+    typeof onAction==='function');
+  const submit=()=>{
+    if(!control.request)return;
+    onAction?.(control.request);
+  };
+  return <div style={{display:'grid',gap:3,justifyItems:'end'}}>
+    <Button disabled={control.disabled}
+      onClick={control.dispatchReady?submit:undefined}>
+      {control.label}
+    </Button>
+    {control.status?<span role="status" style={{fontSize:11,
+      color:'var(--text-muted)'}}>{control.status}</span>:null}
   </div>;
 }

@@ -7,6 +7,9 @@ export interface WorkAction{
   id:string;taskId:string|null;projectId:string;versionId:string|null;
   title:string;kind:WorkActionKind;state:WorkActionState;
   ownerRole:string;sourceRef:string;reason:string|null;updatedAt:string|null;
+  /** Exact Host-issued action identity; absence means display-only. */
+  hostActionId?:string|null;hostActionRevision?:number|null;
+  hostActionKind?:string|null;
 }
 export interface WorkbenchSnapshot{
   connected:boolean;
@@ -32,6 +35,12 @@ export function inboxCounts(snapshot:WorkbenchSnapshot|null){
   return {pending:actions.length,
     approvals:activeWorkActions(snapshot,'approvals')!.length,
     blockers:activeWorkActions(snapshot,'blockers')!.length};
+}
+const GITHUB_SOURCE_REF=/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/;
+export function actionSourceLink(action:WorkAction):string|null{
+  return typeof action.projectId==='string'&&typeof action.sourceRef==='string'&&
+    action.sourceRef.startsWith('https://github.com/'+action.projectId+'/')&&action.sourceRef.length<=256&&
+    GITHUB_SOURCE_REF.test(action.sourceRef)?action.sourceRef:null;
 }
 export function actionTaskLink(action:WorkAction):string|null{
   if(!action.taskId||!action.versionId)return null;
