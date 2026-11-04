@@ -321,7 +321,7 @@
           "issueNumber": 202,
           "state": "open",
           "updatedAt": "2026-10-31T07:06:55Z",
-          "bodySha256": "fa3b06fe5c6fa2f297ad35aefd48cd71074cbddb9a75ea8f9aec4e9129225161",
+          "bodySha256": "57c4b5fffb4ff5ffcd060444358cc4c53cf577e43ff01734e1b601dc2310f403",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -337,7 +337,7 @@
           "issueNumber": 203,
           "state": "open",
           "updatedAt": "2026-10-31T18:53:25Z",
-          "bodySha256": "5dfc948aaaef855535e50b79f5fb00fddb9a2588081423eafe19d4494e794c50",
+          "bodySha256": "54f2767b7411e9dbc1885c9b941d25c61e23b6ef551b7c55e2452743da3e282e",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -353,7 +353,7 @@
           "issueNumber": 207,
           "state": "open",
           "updatedAt": "2026-10-31T12:54:16Z",
-          "bodySha256": "f10cc3342eab56054ec4d3190fba02de21a1b941856654d6043450fdea477366",
+          "bodySha256": "d15af16fd82d1298bece1c726f7efd70d7ca44450349937db2ae8b3605d8591a",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -369,7 +369,7 @@
           "issueNumber": 208,
           "state": "open",
           "updatedAt": "2026-10-31T17:32:52Z",
-          "bodySha256": "77310269426a7edba8baa97fb75740ea00157de9f7160924cbd5c7342b15b38d",
+          "bodySha256": "e2933af25a803d0bf6024cc7456a34e17d18c272836e47ab181215f79d236331",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -385,7 +385,7 @@
           "issueNumber": 209,
           "state": "open",
           "updatedAt": "2026-10-31T12:44:25Z",
-          "bodySha256": "290a43002ce8b41cc5ef90f44d6596f10ecb0ac21c5163b6d94b7b5d102f75c3",
+          "bodySha256": "596a18dbc10a43db079556b06b359b3e03fed0309f381413f01b94c1a2edea9f",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -401,7 +401,7 @@
           "issueNumber": 210,
           "state": "open",
           "updatedAt": "2026-11-02T14:29:29Z",
-          "bodySha256": "a4f619cf2de0dab026c2031f934a970c0195fbb9bc0a31d8b21eff6d27c7c6f9",
+          "bodySha256": "591bb6de751e7eda6c8012659a74ff0410fcbee31f804cccc39b2bfa3bcc6a98",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -417,7 +417,7 @@
           "issueNumber": 211,
           "state": "open",
           "updatedAt": "2026-10-31T12:54:22Z",
-          "bodySha256": "017fdc2bf299e09ae27b39b104e8b4d4249ea56ccf9e10748c488fb8401dc3a2",
+          "bodySha256": "9282927fc6dacf083325b4196b149407e0fe53de7ed3c3d430a5b092af98aebd",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -433,7 +433,7 @@
           "issueNumber": 212,
           "state": "open",
           "updatedAt": "2026-10-31T13:01:22Z",
-          "bodySha256": "a18844deeb9ab5e6eba227842cab5b0fcb73d041e114b230a8f9c8e9540c718b",
+          "bodySha256": "00d8c294a4296dab1672d1c03eae750ef055a043e195d3e32dbbb2780674cf35",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -449,7 +449,7 @@
           "issueNumber": 219,
           "state": "open",
           "updatedAt": "2026-11-03T23:27:16Z",
-          "bodySha256": "3eb81db405e74b9af921fe57ad105bc958782b94f2d266c81081db4bcd591391",
+          "bodySha256": "0fd9c9780700d188658183df350bcce5fc1011a1a7721a571ef77aef6d6bd4ca",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -465,7 +465,7 @@
           "issueNumber": 260,
           "state": "open",
           "updatedAt": "2026-11-04T00:45:11Z",
-          "bodySha256": "069d466d58136a1be40ec93ec2806c4b684822540ee10c78310ded8675a13ef2",
+          "bodySha256": "9f7847e5af66b5fd3cf25fe52d1f1c7e7509995b8e677196ca31099fd646dd64",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -480,8 +480,8 @@
         {
           "issueNumber": 261,
           "state": "open",
-          "updatedAt": "2026-11-04T00:26:05Z",
-          "bodySha256": "42b2e9777c35404195f518c159a6785e4a35a2686881d779bbe4bf247ffb9b6f",
+          "updatedAt": "2026-11-04T04:54:06Z",
+          "bodySha256": "254be53e77ef51cb68d9111b97ac5e6cdd6dc9f6b6eb51a2af15adb6ec053236",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -497,7 +497,7 @@
           "issueNumber": 262,
           "state": "open",
           "updatedAt": "2026-11-04T00:34:58Z",
-          "bodySha256": "3c7b1f7c2e40eebfc33280b20a175b12807dda8e3fc957f3d9ffe4f86170f342",
+          "bodySha256": "6b3b6cd231e7a89078c6ef7b81fd22c72047baccdb305d012cbd2ac5b77ffc69",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -512,8 +512,8 @@
         {
           "issueNumber": 263,
           "state": "open",
-          "updatedAt": "2026-11-04T00:25:18Z",
-          "bodySha256": "c30fd8f0901cf6c4b82360663161f4c7c24322d1ca2b9b104af05234e20be338",
+          "updatedAt": "2026-11-04T04:55:23Z",
+          "bodySha256": "75866ec779347fbe195c9f6eea5a72f532d000c953d0eb6ca937748099cd1fd7",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -528,8 +528,8 @@
         {
           "issueNumber": 264,
           "state": "open",
-          "updatedAt": "2026-11-04T02:48:52Z",
-          "bodySha256": "d0a0b9f9a062ea7989cbb86a839d2ef96a13ac0f1718c85d4f0dbcf62b033a0b",
+          "updatedAt": "2026-11-04T05:00:20Z",
+          "bodySha256": "ebbfa9a7c1413ce1a7973e2b87d2309b9e5ac8d596c0bee461098fa2c1bf404e",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -545,7 +545,7 @@
           "issueNumber": 273,
           "state": "open",
           "updatedAt": "2026-11-03T14:00:26Z",
-          "bodySha256": "003a13463e1d1d9b88feee66d9eef0c4bd937cae3811dde426b81e63c3cb7eac",
+          "bodySha256": "ed6eef93b41d9988aeb9d665ed1f4f1977c03bae060b11edafa44b5d7a2c872d",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -561,7 +561,7 @@
           "issueNumber": 274,
           "state": "open",
           "updatedAt": "2026-11-03T14:00:33Z",
-          "bodySha256": "add5350e7d9ea49436ae604eeebc478c07ce4b45cf0ad4cfcea931d9bc5e3f3f",
+          "bodySha256": "c61e34c261b34ee1918375427582ef3f34c5f1c91ad13692685fba5b87426670",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -577,7 +577,7 @@
           "issueNumber": 275,
           "state": "open",
           "updatedAt": "2026-11-03T23:55:01Z",
-          "bodySha256": "efdd8fa0765124900a3dbac0da2c66f499c1911bdca8ed2f1453f11239e6252f",
+          "bodySha256": "c54fbc09121c7d521804235227612c40edcd27e735f8088f87d69115d4f418ec",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -592,8 +592,8 @@
         {
           "issueNumber": 276,
           "state": "open",
-          "updatedAt": "2026-11-03T23:48:24Z",
-          "bodySha256": "df95bcaed91c650dc12cdd3db1da6f0cfe2310218268e5fd149834ce89d9432e",
+          "updatedAt": "2026-11-04T05:00:08Z",
+          "bodySha256": "2181cd548add75a8b0ef9218e493821dfb14921f1962384d7758526e57eb2339",
           "canonicalAllowedWriteSet": {
             "status": "MISSING",
             "paths": null,
@@ -610,7 +610,7 @@
     "controllerTask": {
       "issueNumber": 284,
       "state": "open",
-      "updatedAt": "2026-11-04T04:45:50Z",
+      "updatedAt": "2026-11-04T04:50:02Z",
       "bodySha256": "2e0b6730c4d9e3510f27ad6490188a810522a2f2b217338dc9f712b0a5659337",
       "canonicalAllowedWriteSet": {
         "status": "VALID_CANDIDATE_NOT_ADMITTED",
@@ -675,7 +675,7 @@
     "rule": "Only parse a top-level canonical allowed_write_set declaration. Missing declarations remain UNKNOWN/BLOCKED; never infer from prose or broad globs.",
     "status": "BLOCKED_MISSING_CANONICAL_ALLOWED_WRITE_SET",
     "complete": false,
-    "auditDigestSha256": "2d19d7a7159dcc4a4d5f1d7de6ff6d9a9b0a2a52469eb8ee9421252f183f0fc0",
+    "auditDigestSha256": "f5e518212aa1f1ef18eb907f2233f4330259f1399859d552248b8a24497fa804",
     "e0TaskWriteSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "requiredToUnblock": [
       "Add canonical allowed_write_set declarations to all current open version Tasks, exact-path only; mark non-dispatchable/read-only Tasks with an explicit empty list and a non-dispatchable disposition.",
@@ -683,7 +683,7 @@
       "Recompute each Task body SHA256 + updatedAt + normalized path list + per-Task writeSetSha256; independently review overlaps and NATIVE-edge serialization.",
       "Require exact audit digest in independent Review, exact Owner Approval and the frozen CAS rows before positive freeze."
     ],
-    "auditObservedAt": "2026-11-04T04:45:50Z",
+    "auditObservedAt": "2026-11-04T05:00:20Z",
     "digestAlgorithms": {
       "issueBodySha256": "SHA-256 over the exact UTF-8 GitHub Issue body string returned by REST",
       "taskWriteSetSha256": "SHA-256 over UTF-8 JSON.stringify(sorted normalized exact path array)",
