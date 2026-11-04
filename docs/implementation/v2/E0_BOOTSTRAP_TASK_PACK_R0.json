@@ -218,7 +218,8 @@
       "Independent read-only Exact-SHA review of the exact immutable bootstrap PackBlob.",
       "Exact repository Owner approval binding PackBlob SHA, integration base SHA/tree, source SHA, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
       "The version-wide writeSetAudit status and digest must be bound exactly; BLOCKED is permitted only as an explicit fail-closed snapshot and does not authorize version-wide freeze or ordinary Task dispatch.",
-      "The E0 scope overlap/serial-handoff audit must be complete and its digest must match the exact PackBlob; #219 source-candidate ordering is bound to the integration-base first parent, and #264's two potential shared paths remain E0-exclusive until E1 handoff."
+      "The E0 scope overlap/serial-handoff audit must be complete and its digest must match the exact PackBlob; #219 source-candidate ordering is bound to the integration-base first parent, and #264's two potential shared paths remain E0-exclusive until E1 handoff.",
+      "Bind the current #219 PR HEAD/tree and exact delta since the pinned first-parent candidate; prove the delta is disjoint from E0 paths, and explicitly block E0_AFTER_219 edits until the final #219 HEAD is integrated into a refreshed base."
     ],
     "requiredForOneTimeRootAdmission": [
       "Only after bootstrap PackBlob review PASS and exact Owner approval may the one-time pre-Claim Host mount be implemented inside preClaimBootstrapMountPaths.",
@@ -2170,6 +2171,21 @@
       "e1ExclusiveHandoffPaths": [
         "web/v2/journey-server.mjs",
         "web/v2/serve.mjs"
+      ],
+      "blockedUntil219FinalizedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "independentlyImplementablePaths": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
       ]
     },
     "preconditions": [
@@ -2181,7 +2197,8 @@
       "Stable complete Host CAS claim registry readback has activeIncompatibleClaimCount===0; any other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED row blocks without cleanup.",
       "T06d Host CAS PENDING reservation → native GitHub DISPATCH_CLAIMED publication → exact readback → Host CAS PUBLISHED_VERIFIED.",
       "Selected Host writes and reads back the exact per-Task FROZEN_DAG_WRITESET row through public DomainHarness CAS API, never direct SQLite seeding.",
-      "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity."
+      "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity.",
+      "Before editing any of the five E0_AFTER_219 paths, independently review and finalize #219 PR #278 at its current exact HEAD, then refresh the E0 integration base to include that final HEAD and rebind this Pack; the current #219 successor delta is disjoint but is not integrated in the present E0 base."
     ]
   },
   "notes": [
@@ -2189,7 +2206,8 @@
     "2026-11-04: E0 root-admission Host mount is mapped to the existing 14-path E0 candidate scope; existing T06d/C controller and ports are read-only imports, with no additional write path currently required. Exact pack review/Owner approval and root Claim are still absent; no source admission.",
     "2026-11-04 gate clarification: the one-off E0 bootstrap PackBlob is distinct from the version-wide Task Pack. Its review/Owner approval binds the exact BLOCKED version audit snapshot and digest; BLOCKED is permitted only to freeze this one-off bootstrap artifact and does not authorize version-wide freeze or ordinary Task dispatch. Version-wide freeze still requires audit PASS.",
     "2026-11-04 E0 cross-scope check: the 14 E0 paths intersect #219's canonical issue write set on six paths and are explicitly serialized after #219; they potentially intersect #264's nine declared-but-not-admitted paths on web/v2/journey-server.mjs and web/v2/serve.mjs, serialized before E1/#264. T06d registry preflight also requires zero other PENDING_GITHUB_PUBLISH/PUBLISHED_VERIFIED claim rows.",
-    "E0's 14-path scope overlaps #219 on six exact paths and #264's incomplete declared scope on two potential paths; these intersections and their serial ownership are bound in e0ScopeAudit."
+    "E0's 14-path scope overlaps #219 on six exact paths and #264's incomplete declared scope on two potential paths; these intersections and their serial ownership are bound in e0ScopeAudit.",
+    "2026-11-04 R6 upstream freshness: #219 PR #278 advanced from the pinned first-parent candidate 2c7c027d to 46191866e; its two changed paths (web/v2/maintenance-controller.mjs and web/v2/maintenance-controller.test.mjs) are outside the E0 14-path set and all five E0_AFTER_219 paths. They are not integrated in the current E0 base. The shared E0_AFTER_219 paths remain blocked until #219 is independently reviewed/finalized and the E0 base is refreshed to include its final HEAD."
   ],
   "e0ScopeAudit": {
     "schema": "tally.e0.bootstrap-scope-audit/v1",
@@ -2224,7 +2242,46 @@
       "pathCount": 14,
       "pr": 278,
       "sourceReviewCommentId": 6618467645,
-      "node24ReceiptCommentId": 6618114909
+      "node24ReceiptCommentId": 6618114909,
+      "pinnedCandidateHead": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+      "pinnedCandidateTree": "a1684b7fdb355962bfdf7459edb183f57b3f63f2",
+      "currentPullRequest": {
+        "pr": 278,
+        "state": "OPEN",
+        "draft": true,
+        "head": "46191866e911688a2b1bdc51c0bb4a85e400ae36",
+        "tree": "076a3de0666b5fd0a2e17d2a713c6ddeab5d1667",
+        "base": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+        "updatedAt": "2026-11-04T07:56:30Z",
+        "deltaSincePinnedCandidate": {
+          "from": "2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129",
+          "paths": [
+            "web/v2/maintenance-controller.mjs",
+            "web/v2/maintenance-controller.test.mjs"
+          ],
+          "e0AllowedPathIntersection": [],
+          "e0After219PathIntersection": [],
+          "disposition": "NON_OVERLAPPING_SUCCESSOR_NOT_INTEGRATED_IN_E0_BASE"
+        },
+        "checks": {
+          "successful": [
+            "public-selected-business",
+            "sealed-native-readonly-c",
+            "report-projection",
+            "native-reader",
+            "real-readonly-fixture",
+            "ads-v5-correction",
+            "selected-native-task-source-pair"
+          ],
+          "failed": [
+            "trailer-check",
+            "policy"
+          ],
+          "currentHead": "46191866e911688a2b1bdc51c0bb4a85e400ae36"
+        },
+        "reviewStatus": "LATEST_HEAD_NOT_INDEPENDENTLY_REVIEWED",
+        "integrationStatus": "LATEST_SUCCESSOR_NOT_INTEGRATED_IN_E0_BASE"
+      }
     },
     "overlapWith219": {
       "sharedPaths": [
@@ -2246,7 +2303,7 @@
       "exclusiveE0Paths": [
         "web/v2/journey-server.mjs"
       ],
-      "serialization": "The exact #219 PR #278 candidate is the first parent of the immutable E0 integration base; E0 writes are permitted only on descendants of that base. E0_AFTER_219 paths must never be edited on a base that omits that exact #219 head. Issue #219 remains open; this records source-candidate ordering and does not claim task closure."
+      "serialization": "The exact #219 candidate HEAD 2c7c027d8018ba3b1c1ed1298cffe9bb54b1f129 is the first parent of the immutable E0 integration base. Current PR #278 has advanced to 46191866e911688a2b1bdc51c0bb4a85e400ae36 with only web/v2/maintenance-controller.mjs and web/v2/maintenance-controller.test.mjs changed since the pinned candidate; neither path intersects the E0 14-path set or its five E0_AFTER_219 paths. This successor is not integrated in the E0 base. No E0_AFTER_219 path may be edited until #219 is independently reviewed/closed and its final exact HEAD is integrated into a refreshed E0 base; before any shared-path write, re-read PR #278 and stop if its delta intersects an E0-owned path."
     },
     "upstream264": {
       "issueNumber": 264,
@@ -2332,7 +2389,24 @@
         "packages/tally-engineering-business/test/business-policy.test.mjs"
       ],
       "requiredBaseSha": "dac5f07dfd42812877d79a6d9ea4cb015d982e08",
-      "additionalWritePathsRequired": []
+      "additionalWritePathsRequired": [],
+      "status": "PARTIALLY_BLOCKED_ON_UPSTREAM_219_FINALIZATION",
+      "independentlyImplementablePaths": [
+        "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.mjs",
+        "experiments/v2/selected-business-build/version-task-dag-host.test.mjs",
+        "web/v2/journey-server.mjs",
+        "web/v2/serve.mjs",
+        "web/v2/version-task-dag-host-http.test.mjs"
+      ],
+      "blockedUntil219FinalizedPaths": [
+        "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+        "experiments/v2/selected-business-build/local-codex-shim.mjs",
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "latest219DeltaDisjoint": true
     },
     "nativeDependencyReadback": {
       "method": "GitHub REST issue dependencies/blocked_by",
@@ -2348,6 +2422,6 @@
     },
     "dispatchable": false,
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core) in listed property order",
-    "digestSha256": "a5d30ef8f8339384d39725d002c8444be4675ac52f83a8700ab6ee03e815b6d3"
+    "digestSha256": "838bb9e567ea70882dabd151175bc78dc2980cc7365a62ef2600bd423c536808"
   }
 }
