@@ -153,7 +153,9 @@ test('Task Learning loads only through the Host seam with provenance intact',asy
   assert.equal(row.qualification,'REPORTED_QUALIFIED');
   assert.equal(row.provenance.reportId,'rep-1');
   assert.equal(row.decision,null);assert.equal(row.measuredEffect,'NOT_MEASURED');
-  assert.equal(row.noAgentRanking,true);assert.equal(row.qualityGainClaimed,false);
+  // The no-ranking guarantee is projected only from a verified Host record;
+  // the unverified loaded suggestion's own noAgentRanking:true is not trusted.
+  assert.equal(row.noAgentRanking,false);assert.equal(row.qualityGainClaimed,false);
 });
 
 test('learning use/reject and outcome record only through the sealed seam',async()=>{
