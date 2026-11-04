@@ -179,6 +179,20 @@ test('freeze and readback accept exact-SHA independent review when reviewer and 
   assert.equal(result.witness.author,'kaicreator-mm');
 });
 
+test('selected UI roster accepts a same-login ReviewWitness through freeze writer and frozen Host readback',async()=>{
+  const h=freezeHarness({reviewValue:{...review(),reviewer:owner,author:owner}});
+  const frozen=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(frozen.status,'FROZEN');
+  const frozenHost=dagReader(h);
+  const ui=createUiRosterHost({repository,versionId,expectedSha:versionSha,
+    frozenHost,nativeC:{version:async()=>nativeProjection({pack:validPack()})}});
+  const roster=await ui.roster({projectId:repository,versionId});
+  assert.equal(roster.connected,true);
+  assert.equal(roster.rosterCoverage,'VERIFIED_COMPLETE');
+  assert.equal(roster.frozenBlobSha,packBlobSha);
+  assert.equal(roster.taskCount,4);
+});
+
 test('freeze replay requires the same immutable Task Pack and witness identity',async()=>{
   const h=freezeHarness();
   assert.equal((await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha})).status,'FROZEN');

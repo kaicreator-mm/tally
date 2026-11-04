@@ -22,7 +22,6 @@ function frozenOk(doc,repository,versionId,expectedSha){
      doc.witness?.reviewedHeadSha!==expectedSha||
      typeof doc.witness?.author!=='string'||!doc.witness.author||
      typeof doc.witness?.reviewer!=='string'||!doc.witness.reviewer||
-     doc.witness.author===doc.witness.reviewer||
      doc.ownerApproval?.sourceSha!==expectedSha||
      doc.ownerApproval?.owner!==repository.split('/')[0]||
      !SHA.test(doc.witness.blobSha??'')||

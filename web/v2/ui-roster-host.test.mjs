@@ -268,3 +268,26 @@ test('missing Owner approval or independent reviewer denies frozen roster',async
     status:'SELF_REPORTED'}}));
   assert.equal((await b.roster()).connected,false);
 });
+
+test('wrong source SHA, Task Pack blob, review reference or Owner approval denies the frozen roster',async()=>{
+  const good=frozen();
+  const badDocuments=[
+    {...good,source:{...versionSource,sourceSha:'f'.repeat(40)}},
+    {...good,witness:{...good.witness,sourceSha:'f'.repeat(40)}},
+    {...good,witness:{...good.witness,reviewedHeadSha:'f'.repeat(40)}},
+    {...good,witness:{...good.witness,blobSha:'f'.repeat(40)}},
+    {...good,frozen:{...good.frozen,blobSha:'f'.repeat(40)}},
+    {...good,witness:{...good.witness,reviewRef:'https://github.com/evil/tally/pull/258#pullrequestreview-1'}},
+    {...good,taskPackRef:'https://github.com/org/tally/blob/version/v2/pack.json'},
+    {...good,ownerApproval:{...good.ownerApproval,status:'UNKNOWN'}},
+    {...good,ownerApproval:{...good.ownerApproval,sourceSha:'f'.repeat(40)}},
+    {...good,ownerApproval:{...good.ownerApproval,owner:'evil'}},
+    {...good,ownerApproval:{...good.ownerApproval,approvalRef:'https://github.com/evil/tally/issues/260#issuecomment-1'}}
+  ];
+  for(const doc of badDocuments){
+    const {host}=make(async()=>doc);
+    const result=await host.roster();
+    assert.equal(result.connected,false);
+    assert.equal(result.reason,'FROZEN_DAG_SOURCE_UNQUALIFIED');
+  }
+});
