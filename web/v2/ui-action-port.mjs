@@ -36,7 +36,7 @@ export function businessIntentForUiAction(kind){
   return BUSINESS_INTENT_BY_KIND[kind];
 }
 
-const SECRET=/\b(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)\b/i;
+const SECRET=/(?:gh[pousr]_[A-Za-z0-9_]{12,}|github_pat_[A-Za-z0-9_]{12,}|sk-[A-Za-z0-9_-]{16,}|Bearer\s+\S+)/i;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const denied=(reason)=>({connected:false,ok:false,status:'DENIED',reason});
 // The Host read projection is a privacy boundary: credential-shaped values are
