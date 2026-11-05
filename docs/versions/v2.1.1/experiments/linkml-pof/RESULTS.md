@@ -56,7 +56,7 @@ No production adoption decision is justified. The narrow LinkML PoF has been exe
 
 ## 6. Static validation actually performed — 2026-11-04
 
-> **Historical snapshot — superseded by §10.** This section and the pre-builder `NOT_RUN` / `NOT_PROVEN` statements in §§7–9 describe the state before the Windows-native LinkML v1.12.1 execution and repository-checker LOCAL_VALIDATION. They are retained as chronology, not current status. For current execution status, use §§10.3–10.14: LinkML metamodel and Turtle instance conversion PASS; A/B/C Turtle graph equivalence PASS; Turtle `rdf:object` URIRef evidence PASS; the final 31-case checker, A/B/C YAML+Turtle, CLI probes and JSON-LD edge identity checks passed at source-bearing HEAD `2c5c8b3d` (§10.14). The subsequent documentation-only reconciliation HEAD requires a fresh exact-HEAD local identity rebind. The experiment remains **NOT_ADOPTED**.
+> **Historical snapshot — superseded by §10.** This section and the pre-builder `NOT_RUN` / `NOT_PROVEN` statements in §§7–9 describe the state before the Windows-native LinkML v1.12.1 execution and repository-checker LOCAL_VALIDATION. They are retained as chronology, not current status. For current execution status, use §§10.3–10.15: LinkML metamodel and Turtle instance conversion PASS; A/B/C Turtle graph equivalence PASS; Turtle `rdf:object` URIRef evidence PASS; the previous 31-case checker and seven-artifact JSON-LD edge identity checks passed at source-bearing HEAD `2c5c8b3d` (§10.14). The final R2 source/locator coherence repair is recorded in §10.15 and its 32-case exact-HEAD validation is pending. The experiment remains **NOT_ADOPTED**.
 
 Environment: Python 3.13; PyYAML 6.0.3; RDFLib 7.5.0.
 
