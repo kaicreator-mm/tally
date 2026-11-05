@@ -120,3 +120,18 @@ Direct LinkML 1.12.1 JSON-LD output must not be represented as graph-equivalent 
 - Turtle contained 666 triples and 16 typed RDF statements. The direct LinkML JSON-LD preserved the subject/predicate/object URIRefs and source-to-evidence identity closure, but contained 614 triples and no nested statement types. RDFLib JSON-LD serialized from Turtle preserved all 666 triples and was graph-isomorphic to Turtle.
 - A 0.2.0 fixture without the new required fields was accepted by 0.2.0 and rejected by 0.3.0 until explicitly migrated using the original fixture values. A temporary optional-field addition accepted old records, while old closed schemas rejected the new field; a temporary rename required explicit migration in both directions.
 - Reviewer comprehension and elapsed review time were not measured. Independent review must bind the final commit and assess the profile, the JSON-LD limitation, and the proposed `REPEAT_EXPERIMENT` outcome before downstream use.
+
+
+## Independent Exact-SHA R7 review — 2026-11-06
+
+Reviewed exact candidate HEAD `64b65e34f06b7f2b77fbc29210499a6c29fd1aef` / Tree `0b8f0cb4d2fa9a9c17252a2ba4d548b5a51a4c44` / Base `e146b1894e6bdf5f41faf18816627e117d44db07` after the Windows-native full-model receipt. The receipt's machine results are retained; they are not treated as independent source approval.
+
+R7 found and repaired within the original seven-path write set:
+- PART_OF now requires both TaxonomyNode endpoints to share the same TaxonomyView; cross-view mapping must use an explicit mapping predicate.
+- Accepted evidence provenance now rejects REJECTED/WITHDRAWN/RETRACTED Source and SourceLocator records and requires Source verification at least IDENTITY_VERIFIED.
+- Optional empty claim_refs/case_refs arrays are accepted, while malformed and dangling members remain rejected.
+- VALIDATED_BY referencing ReviewDecision now binds the exact active ReviewDecision record ID, target ID, version and digest. Any active exact outcome records a review event; it does not imply acceptance. Inactive review records cannot be borrowed through another active event for the same target.
+- Format B explanations are optional as the authoring contract states; present explanations remain unique and ID-bound. Format B rejects unexpected graph-root fields and non-text explanations. Format A/C duplicate YAML keys now fail closed.
+- Added regression coverage for all of the above. Expected validator self-tests: **63**.
+
+The full-model machine receipt at `64b65e34f06b7f2b77fbc29210499a6c29fd1aef` remains historical. The R7 repair candidate requires a fresh Windows-native exact-HEAD rerun of all validator, LinkML, RDF/JSON-LD and schema-evolution checks. HUMAN_REVIEW_BURDEN remains NOT_MEASURED; the candidate remains experimental and the proposed decision remains REPEAT_EXPERIMENT. No model freeze, production adoption, merge, release, deployment, Domain Package or DomainForge promotion.

@@ -44,7 +44,7 @@ entity_families:
     identity_example: "se:SRC-SWEBOK-GUIDE-4-0A"
     purpose: "Bibliographic identity, authority fit, content verification and rights metadata."
     required_fields: [id, record_version, lifecycle_status, created_on, title, source_class, source_roles, rights_handling, verification_state]
-    provenance: "Identity/content/locator verification are separate; source record is its own authority anchor."
+    provenance: "Identity/content/locator verification are separate; accepted evidence requires a source that is at least IDENTITY_VERIFIED and neither the Source nor its SourceLocator may be REJECTED, WITHDRAWN or RETRACTED."
     scope_rule: "Authority is claim-specific; a source class is not a universal rank."
   - class: SourceLocator
     identity_example: "se:LOC-SWEBOK-KA-TABLE"
@@ -56,7 +56,7 @@ entity_families:
     identity_example: "se:EVD-0001"
     purpose: "An extracted observation or explicitly marked synthetic fixture."
     required_fields: [id, record_version, lifecycle_status, created_on, source_locator_ref, evidence_type, statement, extraction_status, synthetic]
-    provenance: "Exactly one verified SourceLocator; evidence used by accepted knowledge must itself be ACCEPTED, extraction_status=REVIEWED and bound to an exact ACCEPT ReviewDecision digest."
+    provenance: "Exactly one LOCATOR_VERIFIED SourceLocator; evidence used by accepted knowledge must itself be ACCEPTED, extraction_status=REVIEWED and bound to an exact ACTIVE ACCEPT ReviewDecision digest. Its Source must be at least IDENTITY_VERIFIED; Source and SourceLocator lifecycle states REJECTED, WITHDRAWN and RETRACTED invalidate the chain."
     scope_rule: "Extraction is not human review or accepted knowledge; synthetic evidence is never acceptable provenance."
   - class: Concept
     identity_example: "se:CON-REQUIREMENTS-TRACEABILITY"

@@ -180,3 +180,16 @@ MERGE=NO
 RELEASE=NO
 DEPLOYMENT=NO
 ```
+
+
+## Full-model Windows-native experiment R6 — 2026-11-06
+
+**Executed candidate:** PR #318 HEAD `64b65e34f06b7f2b77fbc29210499a6c29fd1aef` / Tree `0b8f0cb4d2fa9a9c17252a2ba4d548b5a51a4c44` / Base `e146b1894e6bdf5f41faf18816627e117d44db07`, exact original seven-path write set. Python 3.14.7 and LinkML 1.12.1. Trailer check and Python compile passed; graph validator passed 52/52; A/B/C semantic digest and deterministic rebuild passed; LinkML schema lint under the documented uppercase-enum profile and positive instance validation passed; seven class-required negatives and two unrelated optional-field cases passed; JSON Schema metaschema/positive instance passed; Turtle and RDFLib-serialized JSON-LD each preserved 16 typed statements, URIRef endpoints and source/locator/evidence closure; schema evolution tests passed.
+
+Explicit limitations: default LinkML lint still exits 1 with 152 uppercase-enum naming warnings; direct LinkML JSON-LD is not graph-isomorphic to Turtle (614 vs 666 triples and zero nested rdf:Statement types). The documented RDFLib-from-Turtle export is graph-isomorphic and preserves all 666 triples. Human comprehension/review time was NOT_MEASURED. Proposed outcome remains REPEAT_EXPERIMENT, not adoption.
+
+## Independent Exact-SHA R7 review and in-scope repair — 2026-11-06
+
+Reviewed the R6 exact candidate and repaired the following in the original seven-path write set: same-view PART_OF enforcement; Source/SourceLocator lifecycle and source-verification provenance gates; optional empty typed-reference arrays; exact active ReviewDecision object binding and outcome-neutral VALIDATED_BY semantics; optional Format B explanations, root-field closure and Format A/C duplicate-key rejection.
+
+R7 source changes are committed at the successor HEAD. **Fresh exact-HEAD Windows-native validation is pending**; do not transfer R6's 52/52 or export results to the R7 candidate. Expected self-test count is 63. Independent source review is pending exact readback of the successor commit. No merge, freeze, production adoption, release or deployment.

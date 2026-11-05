@@ -97,6 +97,7 @@ predicates:
     inverse_semantics: "No automatic inverse; validation does not imply acceptance."
     evidence_required: false
     object_carries_provenance: true
+    review_decision_policy: ACTIVE_EXACT_TARGET_ANY_OUTCOME
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: SUPERSEDES
@@ -122,10 +123,11 @@ predicates:
     meaning: se:PART_OF
     subject_classes: [TaxonomyNode]
     object_classes: [TaxonomyNode]
-    direction: "subject is a constituent of object"
-    inverse_semantics: "Inverse is has_part; not materialized automatically."
+    direction: "subject is a constituent of object within the same TaxonomyView"
+    inverse_semantics: "Inverse is has_part; not materialized automatically. Cross-view mappings use explicit typed relations such as SPECIALIZES, CROSS_CUTS or OVERLAPS."
     evidence_required: false
     qualifiers_required: false
+    same_taxonomy_view_required: true
     cardinality: "0..many"
   - predicate: SPECIALIZES
     meaning: se:SPECIALIZES

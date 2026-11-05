@@ -239,11 +239,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             if evidence_type == "SYNTHETIC_FIXTURE" and record.get("synthetic") is not True:
                 _error(errors, "SYNTHETIC_EVIDENCE_FLAG_MISSING", record_id)
         elif class_name == "Concept":
-            ref(record_id, "claim_refs", {"KnowledgeClaim"})
+            ref(record_id, "claim_refs", {"KnowledgeClaim"}, allow_empty_list=True)
         elif class_name in {"Principle", "Practice", "DecisionModel"}:
-            ref(record_id, "claim_refs", {"KnowledgeClaim"})
+            ref(record_id, "claim_refs", {"KnowledgeClaim"}, allow_empty_list=True)
         elif class_name in {"Pattern", "AntiPattern"}:
-            ref(record_id, "case_refs", {"Case", "Counterexample"})
+            ref(record_id, "case_refs", {"Case", "Counterexample"}, allow_empty_list=True)
         elif class_name == "Counterexample":
             ref(record_id, "counterexample_to_refs", KNOWLEDGE_CLASSES, True)
         elif class_name == "ReviewDecision":
@@ -312,6 +312,20 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if not isinstance(source_id, str) or classes.get(locator_id) != "SourceLocator" or classes.get(source_id) != "Source":
             _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", f"{owner_id}->{evidence_id}")
             return False
+        invalid_provenance_statuses = {"REJECTED", "WITHDRAWN", "RETRACTED"}
+        if locator.get("lifecycle_status") in invalid_provenance_statuses:
+            _error(errors, "SOURCE_LOCATOR_NOT_USABLE", f"{owner_id}->{evidence_id}")
+            return False
+        source = entities.get(source_id, {})
+        if source.get("lifecycle_status") in invalid_provenance_statuses:
+            _error(errors, "SOURCE_NOT_USABLE", f"{owner_id}->{evidence_id}")
+            return False
+        if source.get("verification_state") not in {
+            "IDENTITY_VERIFIED", "CONTENT_PARTIAL_VERIFIED",
+            "CONTENT_VERIFIED", "ABSTRACT_VERIFIED",
+        }:
+            _error(errors, "SOURCE_NOT_VERIFIED", f"{owner_id}->{evidence_id}")
+            return False
         if locator.get("verification_state") != "LOCATOR_VERIFIED":
             _error(errors, "SOURCE_LOCATOR_NOT_VERIFIED", f"{owner_id}->{evidence_id}")
             return False
@@ -337,6 +351,7 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
 
     # Bind review outcomes to the exact target revision and content digest.
     accepted_review_bindings = set()
+    active_review_decision_bindings = set()
     review_outcomes = defaultdict(set)
     for class_name, record_id, record in records:
         if class_name != "ReviewDecision":
@@ -387,6 +402,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         exact_target = version_matches and digest_matches
         decision = record.get("decision")
         if exact_target and isinstance(decision, str):
+            active_review_decision_bindings.add(
+                (record_id, target_id, target_version, digest)
+            )
             review_outcomes[(target_id, target.get("record_version"), digest)].add(decision)
         if decision == "ACCEPT":
             if target.get("lifecycle_status") != "ACCEPTED":
@@ -532,6 +550,13 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             graph_edges[predicate].append((subject_id, object_id))
         if rule.get("same_class_required") and subject_class != object_class:
             _error(errors, "SUPERSEDES_CLASS_MISMATCH", record_id)
+        if rule.get("same_taxonomy_view_required") and subject_class == object_class == "TaxonomyNode":
+            subject_view = entities.get(subject_id, {}).get("view_ref")
+            object_view = entities.get(object_id, {}).get("view_ref")
+            if not isinstance(subject_view, str) or not isinstance(object_view, str):
+                _error(errors, "INVALID_TAXONOMY_VIEW_REFERENCE", record_id)
+            elif subject_view != object_view:
+                _error(errors, "PART_OF_CROSSES_TAXONOMY_VIEW", f"{record_id}: {subject_view} != {object_view}")
 
         if record.get("lifecycle_status") == "ACCEPTED":
             evidence_ids = _ids(record.get("evidence_refs"))
@@ -554,8 +579,17 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                     ):
                         _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
                     else:
-                        review_binding = (review_target_id, review_target_version, review_target_digest)
-                        if object_record.get("decision") != "ACCEPT" or review_target_id != subject_id or review_binding not in accepted_review_bindings:
+                        review_binding = (
+                            object_id,
+                            review_target_id,
+                            review_target_version,
+                            review_target_digest,
+                        )
+                        if (
+                            rule.get("review_decision_policy") != "ACTIVE_EXACT_TARGET_ANY_OUTCOME"
+                            or review_target_id != subject_id
+                            or review_binding not in active_review_decision_bindings
+                        ):
                             _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
                         else:
                             evidence_ids = _ids(entities.get(review_target_id, {}).get("evidence_refs"))
@@ -777,6 +811,16 @@ def run_self_tests(catalog, rules):
         not positive_errors,
         positive_errors,
     ))
+
+    def optional_empty_reference_lists(g):
+        g["concepts"][0]["claim_refs"] = []
+        g["principles"][0]["claim_refs"] = []
+        g["patterns"][0]["case_refs"] = []
+    optional_ref_graph = copy.deepcopy(base)
+    optional_empty_reference_lists(optional_ref_graph)
+    optional_ref_errors = validate_graph(optional_ref_graph, catalog, rules)
+    cases.append(("optional-empty-reference-lists", not optional_ref_errors, optional_ref_errors))
+
     expect("duplicate-id", lambda g: g["concepts"].append(copy.deepcopy(g["concepts"][0])), "DUPLICATE_IDENTIFIER")
     expect("dangling-reference", lambda g: g["evidence_records"][0].update(source_locator_ref="se:LOC-MISSING"), "DANGLING_REFERENCE")
     expect("wrong-endpoint-class", lambda g: g["relationship_assertions"][0].update(object_ref="se:CON-SOFTWARE-REQUIREMENTS"), "WRONG_OBJECT_CLASS_FOR_PREDICATE")
@@ -799,6 +843,17 @@ def run_self_tests(catalog, rules):
             {**g["relationship_assertions"][11], "id": "se:REL-PART-B", "subject_ref": "se:NODE-SWEBOK-ENG", "object_ref": "se:NODE-SWEBOK-REQ"},
         ])
     expect("part-of-cycle", part_of_cycle, "PART_OF_CYCLE")
+
+    def part_of_cross_view(g):
+        g["relationship_assertions"].append({
+            **g["relationship_assertions"][11],
+            "id": "se:REL-PART-CROSS-VIEW",
+            "subject_ref": "se:NODE-SWEBOK-REQ",
+            "object_ref": "se:NODE-CS2023-SE",
+            "context": "Cross-view containment must use an explicit mapping relation.",
+        })
+    expect("part-of-cross-view", part_of_cross_view, "PART_OF_CROSSES_TAXONOMY_VIEW")
+
     expect("duplicate-source-locator", lambda g: g["source_locators"].append({
         **g["source_locators"][0], "id": "se:LOC-DUP",
     }), "DUPLICATE_SOURCE_LOCATOR")
@@ -825,6 +880,24 @@ def run_self_tests(catalog, rules):
         evidence = g["evidence_records"][0]
         evidence["extraction_status"] = "REVIEWED"
         add_exact_acceptance(g, evidence)
+
+    def accepted_with_retracted_source(g):
+        g["sources"][0]["lifecycle_status"] = "RETRACTED"
+        accept_fixture_evidence(g)
+        add_exact_acceptance(g, g["concepts"][0])
+    expect("accepted-source-retracted", accepted_with_retracted_source, "SOURCE_NOT_USABLE")
+
+    def accepted_with_retracted_locator(g):
+        g["source_locators"][0]["lifecycle_status"] = "RETRACTED"
+        accept_fixture_evidence(g)
+        add_exact_acceptance(g, g["concepts"][0])
+    expect("accepted-source-locator-retracted", accepted_with_retracted_locator, "SOURCE_LOCATOR_NOT_USABLE")
+
+    def accepted_with_unverified_source(g):
+        g["sources"][0]["verification_state"] = "NOT_VERIFIED"
+        accept_fixture_evidence(g)
+        add_exact_acceptance(g, g["concepts"][0])
+    expect("accepted-source-not-verified", accepted_with_unverified_source, "SOURCE_NOT_VERIFIED")
 
     def accepted_relationship_without_review(g):
         accept_fixture_evidence(g)
@@ -1040,6 +1113,87 @@ def run_self_tests(catalog, rules):
     review_object_errors = validate_graph(review_object_graph, catalog, rules)
     cases.append(("accepted-validated-by-review-object-provenance", not review_object_errors, review_object_errors))
 
+    def validated_by_inactive_review_object_graph(g):
+        accept_fixture_evidence(g)
+        target = g["knowledge_claims"][0]
+        add_exact_acceptance(g, target)
+        inactive_review = copy.deepcopy(g["review_decisions"][-1])
+        inactive_review["id"] = "se:REV-TEST-INACTIVE-OBJECT"
+        inactive_review["lifecycle_status"] = "RETRACTED"
+        g["review_decisions"].append(inactive_review)
+        edge = {
+            "id": "se:REL-VALIDATED-BY-INACTIVE-REVIEW",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "PROPOSED",
+            "subject_ref": target["id"],
+            "predicate": "VALIDATED_BY",
+            "object_ref": inactive_review["id"],
+            "qualifiers": ["inactive review event must not be cited as current"],
+            "context": "SEK-05 inactive-review-object fixture.",
+            "rationale": "An inactive event cannot be borrowed through another active decision with the same target digest.",
+            "evidence_refs": [],
+        }
+        g["relationship_assertions"].append(edge)
+        add_exact_acceptance(g, edge)
+        return g
+    inactive_review_object_errors = validate_graph(
+        validated_by_inactive_review_object_graph(copy.deepcopy(base)),
+        catalog,
+        rules,
+    )
+    cases.append((
+        "accepted-validated-by-inactive-review-object-rejected",
+        any(error.startswith("VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT:") for error in inactive_review_object_errors),
+        inactive_review_object_errors,
+    ))
+
+    def validated_by_active_negative_review_object_graph(g):
+        accept_fixture_evidence(g)
+        target = g["knowledge_claims"][0]
+        negative_review = {
+            "id": "se:REV-TEST-ACTIVE-NEGATIVE-OBJECT",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "ACTIVE",
+            "target_ref": target["id"],
+            "target_record_version": target["record_version"],
+            "target_digest_sha256": canonical_record_digest(target),
+            "reviewer_role": "HUMAN_DOMAIN_REVIEWER",
+            "reviewer_ref": "reviewer:test-fixture-negative",
+            "decision": "REJECT",
+            "rationale": "An active negative review is still a review event; VALIDATED_BY does not mean accepted.",
+            "reviewed_on": "2026-11-05",
+            "review_policy_ref": "SE-REVIEW-POLICY-0.1",
+        }
+        g["review_decisions"].append(negative_review)
+        edge = {
+            "id": "se:REL-VALIDATED-BY-ACTIVE-NEGATIVE",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "PROPOSED",
+            "subject_ref": target["id"],
+            "predicate": "VALIDATED_BY",
+            "object_ref": negative_review["id"],
+            "qualifiers": ["negative review outcome"],
+            "context": "SEK-05 active negative-review fixture.",
+            "rationale": "A validated-by edge records the review event and does not infer approval.",
+            "evidence_refs": [],
+        }
+        g["relationship_assertions"].append(edge)
+        add_exact_acceptance(g, edge)
+        return g
+    active_negative_review_errors = validate_graph(
+        validated_by_active_negative_review_object_graph(copy.deepcopy(base)),
+        catalog,
+        rules,
+    )
+    cases.append((
+        "accepted-validated-by-active-negative-review-object",
+        not active_negative_review_errors,
+        active_negative_review_errors,
+    ))
+
     def expect_format_failure(name, mutate, expected_code):
         format_files = _serialize_format_b(base)
         mutate(format_files)
@@ -1053,11 +1207,19 @@ def run_self_tests(catalog, rules):
 
     concept_slug = base["concepts"][0]["id"].split(":", 1)[1].lower()
     concept_explanation = f"explanations/{concept_slug}.md"
-    expect_format_failure(
-        "format-b-missing-explanation",
-        lambda files: files.pop(concept_explanation, None),
-        "FORMAT_B_MISSING_EXPLANATION",
+    optional_explanation_files = _serialize_format_b(base)
+    optional_explanation_files.pop(concept_explanation, None)
+    optional_explanation_graph = _parse_format_b(optional_explanation_files)
+    optional_explanation_errors = (
+        []
+        if canonical_record_digest(optional_explanation_graph) == canonical_record_digest(base)
+        else ["optional explanation changed the structured graph"]
     )
+    cases.append((
+        "format-b-optional-explanation",
+        not optional_explanation_errors,
+        optional_explanation_errors,
+    ))
     expect_format_failure(
         "format-b-explanation-id-mismatch",
         lambda files: files.__setitem__(concept_explanation, "# se:WRONG-RECORD-ID\\n\\nWrong link.\\n"),
@@ -1074,6 +1236,18 @@ def run_self_tests(catalog, rules):
         root["collection_order"][0] = []
         files["graph-root.yaml"] = _yaml_dump(root)
     expect_format_failure("format-b-invalid-collection-order-type", format_b_invalid_collection_order, "FORMAT_B_INVALID_COLLECTION_ORDER")
+
+    def format_b_unexpected_root_field(files):
+        root = yaml.safe_load(files["graph-root.yaml"])
+        root["unexpected_root_field"] = "must not be ignored"
+        files["graph-root.yaml"] = _yaml_dump(root)
+    expect_format_failure("format-b-unexpected-root-field", format_b_unexpected_root_field, "FORMAT_B_UNEXPECTED_GRAPH_ROOT_FIELD")
+
+    expect_format_failure(
+        "format-b-invalid-explanation-type",
+        lambda files: files.__setitem__(concept_explanation, ["# invalid type"]),
+        "FORMAT_B_INVALID_EXPLANATION",
+    )
 
     def format_b_missing_root_field(files):
         root = yaml.safe_load(files["graph-root.yaml"])
@@ -1111,6 +1285,36 @@ def run_self_tests(catalog, rules):
     def format_b_unexpected_path(files):
         files["metadata.json"] = "{}"
     expect_format_failure("format-b-unexpected-path", format_b_unexpected_path, "FORMAT_B_UNEXPECTED_PATH")
+
+    format_a_files = _serialize_format_a(base)
+    format_a_record = next(path for path in format_a_files if path.startswith("records/concepts/"))
+    format_a_document = format_a_files[format_a_record]
+    format_a_frontmatter, format_a_body = format_a_document.split("\n---\n", 1)
+    format_a_files[format_a_record] = (
+        format_a_frontmatter + "\nrecord: {}\n---\n" + format_a_body
+    )
+    try:
+        _parse_format_a(format_a_files)
+        format_a_errors = []
+    except ValidationError as exc:
+        format_a_errors = [str(exc)]
+    cases.append((
+        "format-a-duplicate-frontmatter-key",
+        any(error.startswith("FORMAT_A_INVALID_FRONTMATTER:") for error in format_a_errors),
+        format_a_errors,
+    ))
+
+    format_c_duplicate = _serialize_format_c(base) + "\nid: se:OVERRIDE\n"
+    try:
+        _parse_format_c(format_c_duplicate)
+        format_c_errors = []
+    except ValidationError as exc:
+        format_c_errors = [str(exc)]
+    cases.append((
+        "format-c-duplicate-yaml-key",
+        any(error.startswith("FORMAT_C_INVALID_GRAPH:") for error in format_c_errors),
+        format_c_errors,
+    ))
 
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
@@ -1163,7 +1367,10 @@ def _parse_frontmatter(document, key):
     parts = document.split("---", 2)
     if len(parts) != 3 or parts[0].strip():
         raise ValidationError("Markdown front matter delimiters are invalid")
-    payload = yaml.safe_load(parts[1])
+    try:
+        payload = yaml.load(parts[1], Loader=UniqueLoader)
+    except (ValidationError, yaml.YAMLError) as exc:
+        raise ValidationError(f"FORMAT_A_INVALID_FRONTMATTER: {exc}") from exc
     if not isinstance(payload, dict) or not isinstance(payload.get(key), dict):
         raise ValidationError(f"Markdown front matter does not contain {key} mapping")
     return payload[key]
@@ -1220,6 +1427,10 @@ def _parse_format_b(files):
     missing_root_fields = [field for field in root_fields if field not in root]
     if missing_root_fields:
         raise ValidationError(f"FORMAT_B_MISSING_GRAPH_ROOT_FIELD: {missing_root_fields}")
+    expected_root_fields = set(root_fields) | {"collection_order"}
+    unexpected_root_fields = set(root) - expected_root_fields
+    if unexpected_root_fields:
+        raise ValidationError(f"FORMAT_B_UNEXPECTED_GRAPH_ROOT_FIELD: {sorted(unexpected_root_fields)}")
     collection_order = root.get("collection_order")
     if (
         not isinstance(collection_order, list)
@@ -1254,13 +1465,14 @@ def _parse_format_b(files):
             explanation_path = f"explanations/{slug}.md"
             if explanation_path in expected_explanations:
                 raise ValidationError(f"FORMAT_B_DUPLICATE_EXPLANATION: {explanation_path} maps to multiple records")
-            expected_explanations.add(explanation_path)
-            explanation = files.get(explanation_path)
-            if explanation is None:
-                raise ValidationError(f"FORMAT_B_MISSING_EXPLANATION: {record_id} requires {explanation_path}")
-            lines = explanation.splitlines()
-            if not lines or lines[0].strip() != f"# {record_id}":
-                raise ValidationError(f"FORMAT_B_EXPLANATION_ID_MISMATCH: {explanation_path} must identify {record_id}")
+            if explanation_path in files:
+                explanation = files[explanation_path]
+                if not isinstance(explanation, str):
+                    raise ValidationError(f"FORMAT_B_INVALID_EXPLANATION: {explanation_path} must be text")
+                lines = explanation.splitlines()
+                if not lines or lines[0].strip() != f"# {record_id}":
+                    raise ValidationError(f"FORMAT_B_EXPLANATION_ID_MISMATCH: {explanation_path} must identify {record_id}")
+                expected_explanations.add(explanation_path)
             graph[collection].append(record)
             consumed_record_paths.add(path)
 
@@ -1286,9 +1498,12 @@ def _serialize_format_c(graph):
 
 
 def _parse_format_c(document):
-    graph = yaml.safe_load(document)
+    try:
+        graph = yaml.load(document, Loader=UniqueLoader)
+    except (ValidationError, yaml.YAMLError) as exc:
+        raise ValidationError(f"FORMAT_C_INVALID_GRAPH: {exc}") from exc
     if not isinstance(graph, dict):
-        raise ValidationError("Format C root must be a graph mapping")
+        raise ValidationError("FORMAT_C root must be a graph mapping")
     return graph
 
 
