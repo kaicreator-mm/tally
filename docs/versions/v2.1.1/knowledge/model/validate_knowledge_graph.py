@@ -179,10 +179,12 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         for field in ("record_version", "lifecycle_status", "created_on"):
             if not record.get(field):
                 _error(errors, "MISSING_COMMON_FIELD", f"{record_id}.{field}")
-        if not VERSION_PATTERN.fullmatch(str(record.get("record_version", ""))):
+        record_version = record.get("record_version")
+        if not isinstance(record_version, str) or not VERSION_PATTERN.fullmatch(record_version):
             _error(errors, "INVALID_RECORD_VERSION", record_id)
-        if allowed_lifecycle and record.get("lifecycle_status") not in allowed_lifecycle:
-            _error(errors, "INVALID_LIFECYCLE_STATUS", f"{record_id}: {record.get('lifecycle_status')!r}")
+        lifecycle_status = record.get("lifecycle_status")
+        if not isinstance(lifecycle_status, str) or (allowed_lifecycle and lifecycle_status not in allowed_lifecycle):
+            _error(errors, "INVALID_LIFECYCLE_STATUS", f"{record_id}: {lifecycle_status!r}")
         if record.get("created_on"):
             try:
                 date.fromisoformat(str(record["created_on"]))
@@ -311,7 +313,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if locator.get("verification_state") != "LOCATOR_VERIFIED":
             _error(errors, "SOURCE_LOCATOR_NOT_VERIFIED", f"{owner_id}->{evidence_id}")
             return False
-        binding = (evidence_id, evidence.get("record_version"), canonical_record_digest(evidence))
+        evidence_version = evidence.get("record_version")
+        if not isinstance(evidence_version, str):
+            _error(errors, "INVALID_RECORD_VERSION", evidence_id)
+            return False
+        binding = (evidence_id, evidence_version, canonical_record_digest(evidence))
         if binding not in accepted_review_bindings:
             _error(errors, "EVIDENCE_WITHOUT_HUMAN_REVIEW", f"{owner_id}->{evidence_id}")
             return False
@@ -336,11 +342,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         reviewer_ref = record.get("reviewer_ref")
         review_policy_ref = record.get("review_policy_ref")
         review_rationale = record.get("rationale")
-        if reviewer_ref is None or not str(reviewer_ref).strip():
+        if not isinstance(reviewer_ref, str) or not reviewer_ref.strip():
             _error(errors, "MISSING_REVIEWER_IDENTITY", record_id)
-        if review_policy_ref is None or not str(review_policy_ref).strip():
+        if not isinstance(review_policy_ref, str) or not review_policy_ref.strip():
             _error(errors, "MISSING_REVIEW_POLICY", record_id)
-        if review_rationale is None or not str(review_rationale).strip():
+        if not isinstance(review_rationale, str) or not review_rationale.strip():
             _error(errors, "MISSING_REVIEW_RATIONALE", record_id)
         target_id = record.get("target_ref")
         target = entities.get(target_id) if isinstance(target_id, str) else None
@@ -360,7 +366,13 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if record.get("lifecycle_status") != "ACTIVE":
             continue
 
-        version_matches = target_version == target.get("record_version")
+        current_target_version = target.get("record_version")
+        version_matches = (
+            isinstance(target_version, str)
+            and isinstance(current_target_version, str)
+            and bool(VERSION_PATTERN.fullmatch(target_version))
+            and target_version == current_target_version
+        )
         if not version_matches:
             _error(errors, "REVIEW_VERSION_MISMATCH", record_id)
         digest_matches = digest_valid and digest == canonical_record_digest(target)
@@ -392,7 +404,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             continue
         if record.get("extraction_status") != "REVIEWED":
             _error(errors, "ACCEPTED_EVIDENCE_NOT_REVIEWED", record_id)
-        binding = (record_id, record.get("record_version"), canonical_record_digest(record))
+        evidence_version = record.get("record_version")
+        if not isinstance(evidence_version, str):
+            _error(errors, "INVALID_RECORD_VERSION", record_id)
+            continue
+        binding = (record_id, evidence_version, canonical_record_digest(record))
         if binding not in accepted_review_bindings:
             _error(errors, "EVIDENCE_WITHOUT_HUMAN_REVIEW", record_id)
 
@@ -433,13 +449,15 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                 usable_evidence_refs(record_id, record.get("evidence_refs"))
             if class_name == "KnowledgeClaim" and record.get("review_status") != "ACCEPTED":
                 _error(errors, "CLAIM_REVIEW_STATUS_MISMATCH", record_id)
-        expected_binding = (
-            record_id,
-            record.get("record_version"),
-            canonical_record_digest(record),
-        )
-        if expected_binding not in accepted_review_bindings:
-            _error(errors, "ACCEPTED_WITHOUT_HUMAN_REVIEW", record_id)
+        record_version = record.get("record_version")
+        if isinstance(record_version, str):
+            expected_binding = (
+                record_id,
+                record_version,
+                canonical_record_digest(record),
+            )
+            if expected_binding not in accepted_review_bindings:
+                _error(errors, "ACCEPTED_WITHOUT_HUMAN_REVIEW", record_id)
 
     # Validate every relationship against the controlled endpoint/predicate catalog.
     edge_signatures = set()
@@ -512,10 +530,16 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                     evidence_ids = [object_id]
                 elif object_class == "ReviewDecision":
                     review_target_id = object_record.get("target_ref")
-                    if not isinstance(review_target_id, str):
+                    review_target_version = object_record.get("target_record_version")
+                    review_target_digest = object_record.get("target_digest_sha256")
+                    if (
+                        not isinstance(review_target_id, str)
+                        or not isinstance(review_target_version, str)
+                        or not isinstance(review_target_digest, str)
+                    ):
                         _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
                     else:
-                        review_binding = (review_target_id, object_record.get("target_record_version"), object_record.get("target_digest_sha256"))
+                        review_binding = (review_target_id, review_target_version, review_target_digest)
                         if object_record.get("decision") != "ACCEPT" or review_target_id != subject_id or review_binding not in accepted_review_bindings:
                             _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
                         else:
@@ -799,6 +823,8 @@ def run_self_tests(catalog, rules):
         target["evidence_refs"] = [{"not": "an-id"}]
         add_exact_acceptance(g, target)
     expect("invalid-evidence-reference-type", invalid_evidence_reference_type, "INVALID_EVIDENCE_REFERENCE")
+    expect("invalid-lifecycle-status-type", lambda g: g["concepts"][0].update(lifecycle_status=["ACCEPTED"]), "INVALID_LIFECYCLE_STATUS")
+    expect("invalid-record-version-type", lambda g: g["concepts"][0].update(record_version=["0.1.0"]), "INVALID_RECORD_VERSION")
 
     def accepted_evidence_without_own_review(g):
         evidence = g["evidence_records"][0]
@@ -855,6 +881,12 @@ def run_self_tests(catalog, rules):
         add_exact_acceptance(g, target)
         g["review_decisions"][-1]["reviewer_ref"] = " "
     expect("missing-reviewer-identity", missing_reviewer_identity, "MISSING_REVIEWER_IDENTITY")
+
+    def invalid_reviewer_identity_type(g):
+        target = g["concepts"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"][-1]["reviewer_ref"] = ["reviewer:test-fixture"]
+    expect("invalid-reviewer-identity-type", invalid_reviewer_identity_type, "MISSING_REVIEWER_IDENTITY")
 
     def inactive_accept_review_does_not_bind(g):
         accept_fixture_evidence(g)

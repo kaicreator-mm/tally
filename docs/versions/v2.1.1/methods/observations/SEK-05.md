@@ -102,3 +102,22 @@ DEPLOYMENT=NO
 ```
 
 The exact local validation handoff must bind the final branch HEAD/Tree after this documentation update. No final LinkML adoption decision is recorded until that validation and a fresh independent Exact-SHA review complete.
+
+
+## Independent Exact-SHA source review R3 — 2026-11-06
+
+**Reviewed input:** PR #318 HEAD `fb7020430b46a73a1d7656932c51fbf6086c1ed8` / Tree `5cb2aeb12fa6c9178f4149bf91878d229fca8181` / Base `e146b1894e6bdf5f41faf18816627e117d44db07`.
+
+### Additional P2 repaired within the original write set
+
+Malformed lifecycle and record-version values could reach set/hash membership before their type was rejected, causing a validator exception instead of a fail-closed graph error. ReviewDecision identity fields and exact review-object bindings now require strings before comparison or set membership. Added negative coverage for list-valued lifecycle, record version and reviewer identity.
+
+```ini
+SOURCE_REVIEW=REPAIRED_IN_SCOPE
+P0=0
+P1=0
+P2=0
+SELF_TEST_EXPECTED=41
+WINDOWS_NATIVE_VALIDATION=PENDING
+LINKML_FULL_MODEL_VALIDATION=PENDING
+```
