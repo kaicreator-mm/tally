@@ -318,6 +318,12 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
     for class_name, record_id, record in records:
         if class_name != "ReviewDecision":
             continue
+        if not str(record.get("reviewer_ref", "")).strip():
+            _error(errors, "MISSING_REVIEWER_IDENTITY", record_id)
+        if not str(record.get("review_policy_ref", "")).strip():
+            _error(errors, "MISSING_REVIEW_POLICY", record_id)
+        if not str(record.get("rationale", "")).strip():
+            _error(errors, "MISSING_REVIEW_RATIONALE", record_id)
         target_id = record.get("target_ref")
         target = entities.get(target_id) if isinstance(target_id, str) else None
         if not target:
@@ -788,6 +794,40 @@ def run_self_tests(catalog, rules):
     except (TypeError, ValueError):
         date_digest_ok = False
     cases.append(("canonical-digest-normalizes-yaml-date", date_digest_ok, []))
+
+    def missing_reviewer_identity(g):
+        target = g["concepts"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"][-1]["reviewer_ref"] = " "
+    expect("missing-reviewer-identity", missing_reviewer_identity, "MISSING_REVIEWER_IDENTITY")
+
+    def validated_by_review_decision_graph(g):
+        evidence = g["evidence_records"][0]
+        evidence["extraction_status"] = "REVIEWED"
+        add_exact_acceptance(g, evidence)
+        target = g["knowledge_claims"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"][0]["target_digest_sha256"] = canonical_record_digest(target)
+        review = g["review_decisions"][-1]
+        edge = {
+            "id": "se:REL-VALIDATED-BY-REVIEW",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "ACCEPTED",
+            "subject_ref": target["id"],
+            "predicate": "VALIDATED_BY",
+            "object_ref": review["id"],
+            "qualifiers": ["exact human review fixture"],
+            "context": "SEK-05 test-only validation relationship.",
+            "rationale": "Exercises ReviewDecision object provenance.",
+            "evidence_refs": [],
+        }
+        g["relationship_assertions"].append(edge)
+        add_exact_acceptance(g, edge)
+        return g
+    review_object_graph = validated_by_review_decision_graph(copy.deepcopy(base))
+    review_object_errors = validate_graph(review_object_graph, catalog, rules)
+    cases.append(("accepted-validated-by-review-object-provenance", not review_object_errors, review_object_errors))
 
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
