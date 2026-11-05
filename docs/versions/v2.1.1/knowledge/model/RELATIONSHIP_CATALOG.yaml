@@ -10,8 +10,10 @@ common_requirements:
   - accepted assertions require evidence_refs unless the object is itself the direct evidence/review resource
   - duplicate subject/predicate/object assertions are rejected unless a distinct qualifier/context is recorded
   - no inverse edge is inferred or materialized automatically
+  - predicate enum meanings map to the exact URI used for rdf:predicate; a literal predicate value is invalid
 predicates:
   - predicate: DERIVED_FROM
+    meaning: se:DERIVED_FROM
     subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, CoverageGap]
     object_classes: [Evidence, KnowledgeClaim, Concept]
     direction: "subject was derived from object"
@@ -20,6 +22,7 @@ predicates:
     qualifiers_required: false
     cardinality: "0..many"
   - predicate: SUPPORTED_BY
+    meaning: se:SUPPORTED_BY
     subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, CoverageGap]
     object_classes: [Evidence]
     direction: "subject is supported by object evidence"
@@ -29,6 +32,7 @@ predicates:
     qualifiers_required: false
     cardinality: "0..many"
   - predicate: CONTRADICTED_BY
+    meaning: se:CONTRADICTED_BY
     subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode]
     object_classes: [Evidence, KnowledgeClaim, Counterexample]
     direction: "subject is challenged by object"
@@ -38,6 +42,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: QUALIFIED_BY
+    meaning: se:QUALIFIED_BY
     subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Concept]
     object_classes: [Evidence, KnowledgeClaim, Case]
     direction: "object qualifies the scope or applicability of subject"
@@ -47,6 +52,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: APPLIES_TO
+    meaning: se:APPLIES_TO
     subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, Concept]
     object_classes: [Domain, Subdomain, TaxonomyNode]
     direction: "subject applies within object scope"
@@ -55,6 +61,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: DEPENDS_ON
+    meaning: se:DEPENDS_ON
     subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode]
     object_classes: [Concept, KnowledgeClaim, Principle, Practice, TaxonomyNode]
     direction: "subject depends on object"
@@ -63,6 +70,7 @@ predicates:
     qualifiers_required: false
     cardinality: "0..many"
   - predicate: IMPLEMENTS
+    meaning: se:IMPLEMENTS
     subject_classes: [Practice, Pattern, DecisionModel]
     object_classes: [Principle, Concept, KnowledgeClaim, Practice]
     direction: "subject implements or operationalizes object"
@@ -71,6 +79,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: ILLUSTRATED_BY
+    meaning: se:ILLUSTRATED_BY
     subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel]
     object_classes: [Case, Counterexample]
     direction: "subject is illustrated by object case"
@@ -80,6 +89,7 @@ predicates:
     qualifiers_required: false
     cardinality: "0..many"
   - predicate: VALIDATED_BY
+    meaning: se:VALIDATED_BY
     subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel]
     object_classes: [Evidence, Case, ReviewDecision]
     direction: "subject has been checked or assessed by object"
@@ -89,6 +99,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: SUPERSEDES
+    meaning: se:SUPERSEDES
     subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode, Source]
     object_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode, Source]
     direction: "subject supersedes object"
@@ -98,6 +109,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: RELATED_TO
+    meaning: se:RELATED_TO
     subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, Subdomain]
     object_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, Subdomain]
     direction: "subject has a qualified relation to object"
@@ -106,6 +118,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: PART_OF
+    meaning: se:PART_OF
     subject_classes: [TaxonomyNode]
     object_classes: [TaxonomyNode]
     direction: "subject is a constituent of object"
@@ -114,6 +127,7 @@ predicates:
     qualifiers_required: false
     cardinality: "0..many"
   - predicate: SPECIALIZES
+    meaning: se:SPECIALIZES
     subject_classes: [Subdomain, TaxonomyNode, Concept]
     object_classes: [Subdomain, TaxonomyNode, Concept]
     direction: "subject is a specialization of object"
@@ -122,6 +136,7 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: CROSS_CUTS
+    meaning: se:CROSS_CUTS
     subject_classes: [TaxonomyNode, Subdomain, Concept, Practice]
     object_classes: [TaxonomyNode, Subdomain, Concept, Practice]
     direction: "subject concerns or intersects object across its primary view"
@@ -130,14 +145,16 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: OVERLAPS
+    meaning: se:OVERLAPS
     subject_classes: [TaxonomyNode, Subdomain, Concept]
     object_classes: [TaxonomyNode, Subdomain, Concept]
     direction: "subject partially shares scope with object"
-    inverse_semantics: "Semantically symmetric; store one canonical ordered pair and do not infer a second edge."
+    inverse_semantics: "Semantically symmetric; store one canonical ordered pair with subject_ref lexically less than object_ref; do not infer a second edge."
     evidence_required: true
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: BOUNDED_BY
+    meaning: se:BOUNDED_BY
     subject_classes: [Domain, Subdomain, TaxonomyView, TaxonomyNode]
     object_classes: [Domain, Subdomain, TaxonomyNode, Evidence]
     direction: "subject boundary is constrained or evidenced by object"
@@ -163,6 +180,12 @@ validation:
     - accepted_without_evidence
     - supersedes_cycle
     - part_of_cycle
+    - duplicate_source_locator
+    - duplicate_relationship_signature
+    - overlaps_noncanonical_pair
+    - review_digest_mismatch
+    - accepted_evidence_not_reviewed
+    - accepted_synthetic_evidence
   canonical_identifier_pattern: "^se:[A-Z0-9][A-Z0-9._-]*$"
   evidence_closure:
     Evidence.source_locator_ref: SourceLocator

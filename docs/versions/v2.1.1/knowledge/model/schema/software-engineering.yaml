@@ -577,6 +577,10 @@ slots:
   case_kind:
     required: true
     range: CaseKind
+  case_refs:
+    range: Case
+    multivalued: true
+    inlined: false
   intervention:
     range: string
   outcome:
@@ -774,6 +778,7 @@ enums:
       PROFESSIONAL_BOK: {}
       CURRICULUM_FRAMEWORK: {}
       NORMATIVE_STANDARD: {}
+      GOVERNMENT_FRAMEWORK: {}
       GOVERNMENT_GUIDANCE: {}
       PEER_REVIEWED_RESEARCH: {}
       TEXTBOOK: {}
@@ -930,20 +935,37 @@ enums:
       CLOSED: {}
       ACCEPTED_LIMITATION: {}
   RelationshipPredicate:
+    description: Controlled predicates mapped to RDF IRIs; meaning is required so rdf:predicate exports as a URIRef rather than a string literal.
     permissible_values:
-      DERIVED_FROM: {}
-      SUPPORTED_BY: {}
-      CONTRADICTED_BY: {}
-      QUALIFIED_BY: {}
-      APPLIES_TO: {}
-      DEPENDS_ON: {}
-      IMPLEMENTS: {}
-      ILLUSTRATED_BY: {}
-      VALIDATED_BY: {}
-      SUPERSEDES: {}
-      RELATED_TO: {}
-      PART_OF: {}
-      SPECIALIZES: {}
-      CROSS_CUTS: {}
-      OVERLAPS: {}
-      BOUNDED_BY: {}
+      DERIVED_FROM:
+        meaning: se:DERIVED_FROM
+      SUPPORTED_BY:
+        meaning: se:SUPPORTED_BY
+      CONTRADICTED_BY:
+        meaning: se:CONTRADICTED_BY
+      QUALIFIED_BY:
+        meaning: se:QUALIFIED_BY
+      APPLIES_TO:
+        meaning: se:APPLIES_TO
+      DEPENDS_ON:
+        meaning: se:DEPENDS_ON
+      IMPLEMENTS:
+        meaning: se:IMPLEMENTS
+      ILLUSTRATED_BY:
+        meaning: se:ILLUSTRATED_BY
+      VALIDATED_BY:
+        meaning: se:VALIDATED_BY
+      SUPERSEDES:
+        meaning: se:SUPERSEDES
+      RELATED_TO:
+        meaning: se:RELATED_TO
+      PART_OF:
+        meaning: se:PART_OF
+      SPECIALIZES:
+        meaning: se:SPECIALIZES
+      CROSS_CUTS:
+        meaning: se:CROSS_CUTS
+      OVERLAPS:
+        meaning: se:OVERLAPS
+      BOUNDED_BY:
+        meaning: se:BOUNDED_BY

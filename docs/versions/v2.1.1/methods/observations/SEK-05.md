@@ -22,7 +22,8 @@
 3. A knowledge claim is not a concept, principle, practice, pattern or case. They have distinct semantics and required fields.
 4. Source identity is not evidence. SourceLocator is an exact inspected location; Evidence is an extracted observation; downstream knowledge references Evidence.
 5. RelationshipAssertion is a first-class record with its own ID, revision, lifecycle, context, rationale, evidence and predicate-specific endpoint constraints.
-6. ReviewDecision is a human audit event bound to exact target ID, record version and SHA-256. Schema validation cannot accept knowledge.
+6. ReviewDecision is a human audit event bound to exact target ID, record version and a recomputed canonical JSON SHA-256. Schema validation cannot accept knowledge.
+7. Every RelationshipPredicate enum value has an explicit URI meaning; RDF export must preserve rdf:subject, rdf:predicate and rdf:object as resource nodes.
 7. CoverageGap is first-class so partial evidence or unknown coverage is visible rather than silently omitted.
 8. Synthetic fixtures are valid for structural testing but cannot be accepted corpus knowledge.
 
@@ -33,7 +34,7 @@ The candidate schema and graph validator are not yet qualified. Run the exact co
 - Emit the embedded positive graph fixture and validate it as KnowledgeGraph.
 - Execute repository validator positive and negative self-tests.
 - Generate JSON Schema and JSON-LD context.
-- Convert the complete fixture to Turtle and JSON-LD; verify every reified relationship has URIRef subject/predicate/object and the exact source/evidence identity chain.
+- Convert the complete fixture to Turtle and JSON-LD; verify every reified relationship has URIRef subject/predicate/object and the exact source/evidence identity chain. Predicate enum values must serialize as URIRefs, not literals.
 - Run A/B/C full-model serialization equivalence, deterministic rebuild, and compatible/breaking schema evolution.
 - Measure edit locality and two-writer merge conflict behavior; record limitations.
 

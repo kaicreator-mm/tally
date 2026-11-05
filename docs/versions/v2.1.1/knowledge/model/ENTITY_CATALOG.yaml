@@ -35,7 +35,7 @@ entity_families:
     identity_example: "se:NODE-SWEBOK-KA-05"
     purpose: "A node belonging to exactly one TaxonomyView."
     required_fields: [id, record_version, lifecycle_status, created_on, label, definition, node_kind, view_ref]
-    provenance: "Evidence or source-locator refs required when ACCEPTED."
+    provenance: "Evidence refs required when ACCEPTED; the SourceLocator is reached through Evidence, avoiding a duplicated direct locator reference."
     scope_rule: "Cross-view links use RelationshipAssertion; do not duplicate view membership in a generic edge."
   - class: Source
     identity_example: "se:SRC-SWEBOK-GUIDE-4-0A"

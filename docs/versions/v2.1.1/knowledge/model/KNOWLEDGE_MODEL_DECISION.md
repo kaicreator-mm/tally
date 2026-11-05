@@ -55,6 +55,7 @@ All records have a stable canonical se: CURIE, record_version, lifecycle_status 
 ## Known risks and mitigations
 
 - LinkML reference closure is not a substitute for a graph validator. Mitigation: validate all IDs and typed endpoints in validate_knowledge_graph.py.
+- LinkML enum values without a `meaning` serialize as RDF literals. Mitigation: every RelationshipPredicate permissible value maps to a stable `se:` URI so `rdf:predicate` is a URIRef; verify this in both Turtle and JSON-LD.
 - JSON Schema generation may not preserve LinkML unique-key/reference semantics. Mitigation: executable graph validator is authoritative for graph-wide invariants.
 - LinkML 1.12.1 JSON-LD conversion previously omitted some nested rdf:type triples (SEK-04 L09). This must be retested with the full model; do not declare RDF/JSON-LD parity from Turtle alone.
 - A full entity catalog can encourage premature ontology freezing. Mitigation: keep the schema experimental, lifecycle statuses explicit and CoverageGap first-class.
