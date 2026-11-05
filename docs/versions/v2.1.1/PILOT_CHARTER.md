@@ -153,7 +153,7 @@ Do not store credentials, private telemetry, hidden evaluator material or privat
 - Semantic L2 PR #158 R7 exact source review (HEAD 1cd254694de9c6b36a1c66a193c10fe29901525f) is PASS with P0/P1/P2=0/0/0, but L2_FREEZE_READY=NO and L2_OWNER_FREEZE=NOT_PUBLISHED. This experiment does not modify Product/L2 semantics or claim their Freeze.
 - This v2.1.1 work is documentation/research only: no runtime source, Host, Agent admission, CI workflow, or executable behavior is changed.
 - ADS #1359 is a Delivery-First Product/L2 intake and remains NOT_FROZEN. The user's explicit Delivery-First direction is applied as an execution preference here; it is not represented as an adopted ADS amendment.
-- SEK-00 #300, SEK-01 #301, SEK-02 #302, SEK-03 #304 and SEK-04 #305 exist as bounded Task Issues; SEK-05 #308 is preplanned and NOT_DISPATCHABLE until #305's real CLI results and PR #303's independent review are complete. Native dependency edges must be materialized and read back before downstream Task Packs can be admitted/accepted.
+- SEK-00 #300, SEK-01 #301, SEK-02 #302, SEK-03 #304 and SEK-04 #305 exist as bounded Task Issues; SEK-05 #308 is preplanned and NOT_DISPATCHABLE until the SEK-04 repository checker has passed exact-HEAD local validation, its terminal independent review has passed, the builder/repair PRs are integrated into WIP PR #303, and the resulting #303 HEAD receives independent Exact-SHA review. Native dependency edges are now MATERIALIZED and exact-readback verified; the graph is live but not frozen.
 
 **Current decision state:** taxonomy, authority framework, LinkML, authoring format and ontology remain PROPOSED / EXPERIMENTAL. This charter itself is DRAFT pending review.
 
