@@ -855,7 +855,7 @@ def run_self_tests(catalog, rules):
         target = g["concepts"][0]
         target["evidence_refs"] = [{"not": "an-id"}]
         add_exact_acceptance(g, target)
-        malformed_container = g["concepts"][1]
+        malformed_container = g["knowledge_claims"][0]
         malformed_container["evidence_refs"] = {"not": "a-list"}
         add_exact_acceptance(g, malformed_container)
     expect(
