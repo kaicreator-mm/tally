@@ -106,8 +106,8 @@ predicates:
     qualifiers_required: true
     cardinality: "0..many"
   - predicate: PART_OF
-    subject_classes: [TaxonomyNode, Subdomain]
-    object_classes: [TaxonomyNode, Subdomain, Domain]
+    subject_classes: [TaxonomyNode]
+    object_classes: [TaxonomyNode]
     direction: "subject is a constituent of object"
     inverse_semantics: "Inverse is has_part; not materialized automatically."
     evidence_required: false

@@ -83,7 +83,6 @@ classes:
       - definition
       - node_kind
       - view_ref
-      - source_locator_refs
       - evidence_refs
 
   Source:
@@ -458,10 +457,6 @@ slots:
     range: SourceLocator
     inlined: false
     slot_uri: prov:wasDerivedFrom
-  source_locator_refs:
-    range: SourceLocator
-    multivalued: true
-    inlined: false
   evidence_type:
     required: true
     range: EvidenceType

@@ -49,7 +49,7 @@ COLLECTIONS = {
 KNOWLEDGE_CLASSES = {
     "Domain", "Subdomain", "TaxonomyView", "TaxonomyNode", "Concept",
     "KnowledgeClaim", "Principle", "Practice", "Pattern", "AntiPattern",
-    "DecisionModel", "Case", "Counterexample", "CoverageGap",
+    "DecisionModel", "Case", "Counterexample", "CoverageGap", "RelationshipAssertion",
 }
 NON_KNOWLEDGE_CLASSES = {"Source", "SourceLocator", "Evidence", "ReviewDecision"}
 PROVENANCE_EXEMPT = {"Source", "SourceLocator", "Evidence", "ReviewDecision"}
@@ -184,7 +184,6 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             ref(record_id, "domain_ref", {"Domain"}, True)
         elif class_name == "TaxonomyNode":
             ref(record_id, "view_ref", {"TaxonomyView"}, True)
-            ref(record_id, "source_locator_refs", {"SourceLocator"})
         elif class_name == "SourceLocator":
             ref(record_id, "source_ref", {"Source"}, True)
         elif class_name == "Evidence":
@@ -221,8 +220,8 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             ref(record_id, "target_scope_ref", {"Domain", "Subdomain", "TaxonomyView", "TaxonomyNode"}, True)
             ref(record_id, "evidence_refs", {"Evidence"})
         elif class_name == "RelationshipAssertion":
-            ref(record_id, "subject_ref", set(COLLECTIONS.values()) - {"ReviewDecision"}, True)
-            ref(record_id, "object_ref", set(COLLECTIONS.values()) - {"ReviewDecision"}, True)
+            ref(record_id, "subject_ref", set(COLLECTIONS.values()), True)
+            ref(record_id, "object_ref", set(COLLECTIONS.values()), True)
             ref(record_id, "evidence_refs", {"Evidence"})
 
     locator_keys = {}
@@ -341,11 +340,12 @@ def positive_fixture():
         "subdomains": [rec("se:SUB-REQ", label="Requirements Engineering", definition="Elicitation, analysis and specification.", domain_ref="se:DOMAIN-SE", boundary_notes=["Interfaces with business analysis."], evidence_refs=["se:EVD-001"])],
         "taxonomy_views": [
             rec("se:VIEW-DISCIPLINE", label="Discipline view", view_kind="DISCIPLINE", purpose="Classify professional knowledge areas.", coverage_state="PARTIAL", limitations=["SWEBOK is not exhaustive."], evidence_refs=["se:EVD-001"]),
-            rec("se:VIEW-SECURITY", label="Security view", view_kind="SECURITY", purpose="Classify secure development practices.", coverage_state="PROPOSED", limitations=["NIST content is scoped to inspected sections."], evidence_refs=["se:EVD-001"]),
+            rec("se:VIEW-SECURITY", label="Security view", view_kind="SECURITY", purpose="Classify secure development practices.", coverage_state="PROPOSED", limitations=["NIST content is scoped to inspected sections."], evidence_refs=["se:EVD-002"]),
         ],
         "taxonomy_nodes": [
-            rec("se:NODE-REQ", label="Requirements Engineering", definition="Requirements knowledge area.", node_kind="KNOWLEDGE_AREA", view_ref="se:VIEW-DISCIPLINE", source_locator_refs=["se:LOC-001"], evidence_refs=["se:EVD-001"]),
-            rec("se:NODE-SSDF", label="Secure Software Development", definition="Secure development practice view.", node_kind="PRACTICE_GROUP", view_ref="se:VIEW-SECURITY", source_locator_refs=["se:LOC-001"], evidence_refs=["se:EVD-001"]),
+            rec("se:NODE-SWEBOK-ENG", label="Software Engineering", definition="A discipline-level knowledge-area grouping.", node_kind="KNOWLEDGE_AREA", view_ref="se:VIEW-DISCIPLINE", evidence_refs=["se:EVD-001"]),
+            rec("se:NODE-REQ", label="Software Requirements", definition="Requirements knowledge area.", node_kind="KNOWLEDGE_AREA", view_ref="se:VIEW-DISCIPLINE", evidence_refs=["se:EVD-001"]),
+            rec("se:NODE-SSDF", label="Secure Software Development", definition="Secure development practice view.", node_kind="PRACTICE_GROUP", view_ref="se:VIEW-SECURITY", evidence_refs=["se:EVD-002"]),
         ],
         "sources": [rec("se:SRC-001", "ACTIVE", title="SWEBOK Guide v4.0a", source_class="PROFESSIONAL_BOK", source_roles=["PRIMARY"], organization="IEEE Computer Society", authors=["Hironori Washizaki"], edition="4.0a", publication_date="2026-08", official_url="https://example.invalid/swebok.pdf", stable_identifier="ISBN 978-0-7695-0000-3", authority_fit=["Professional BOK taxonomy"], authority_limitations=["Not exhaustive."], rights_handling="Concise paraphrase only.", verification_state="CONTENT_PARTIAL_VERIFIED")],
         "source_locators": [rec("se:LOC-001", "ACTIVE", source_ref="se:SRC-001", locator_type="TABLE", locator="Table I.1", verified_content_summary="The Guide lists knowledge areas.", verification_state="LOCATOR_VERIFIED", accessed_on="2026-11-05")],
@@ -356,11 +356,11 @@ def positive_fixture():
             rec("se:CLM-002", "PENDING_REVIEW", statement="A later edition may replace an earlier taxonomy statement.", claim_kind="LIMITATION", scope_description="Versioned source comparison.", applicability="When editions differ.", assumptions=[], exceptions=[], limitations=[], uncertainty=[], evidence_refs=["se:EVD-001"], review_status="PENDING"),
         ],
         "principles": [rec("se:PRI-001", label="Context matters", statement="Engineering guidance is applied in context.", rationale="Different systems have different constraints.", scope_description="Engineering practice.", applicability="Evaluate project risk.", exceptions=["Mandatory contractual constraints remain binding."], limitations=["Illustrative fixture."], evidence_refs=["se:EVD-001"], claim_refs=["se:CLM-001"])],
-        "practices": [rec("se:PRA-001", label="Review requirements", intent="Detect ambiguity and omissions.", description="Conduct structured review.", preconditions=["A candidate baseline exists."], steps=["Review each requirement."], expected_outcomes=["Recorded findings."], risks=["Review bias."], scope_description="Requirements work.", applicability="Adapt to project size.", evidence_refs=["se:EVD-001"], claim_refs=["se:CLM-001"])],
-        "patterns": [rec("se:PAT-001", label="Incremental refinement", problem="Large requirements sets contain uncertainty.", context="Evolving products.", forces=["Feedback speed", "Traceability"], solution="Refine in increments.", consequences=["Earlier feedback."], tradeoffs=["Coordination overhead."], scope_description="Requirements and delivery.", evidence_refs=["se:EVD-001"], case_refs=["se:CASE-001"])],
-        "anti_patterns": [rec("se:ANT-001", label="Big-bang specification", symptoms=["Late discovery of ambiguity."], causes=["No incremental feedback."], consequences=["Expensive rework."], remediation="Use staged review and validation.", scope_description="Requirements work.", evidence_refs=["se:EVD-001"], case_refs=["se:CASE-001"])],
-        "decision_models": [rec("se:DM-001", decision_question="How much requirements detail is appropriate?", options=["Lightweight", "Formal"], criteria=["Risk", "Change rate", "Regulatory context"], constraints=["Time", "Stakeholder availability"], procedure="Score options against context-specific criteria.", tradeoffs=["Cost versus assurance."], scope_description="Project planning.", evidence_refs=["se:EVD-001"], claim_refs=["se:CLM-001"])],
-        "cases": [rec("se:CASE-001", label="Illustrative review case", case_kind="CASE_STUDY", context="Synthetic scenario for validator coverage.", problem="Ambiguous requirement.", intervention="Peer review.", outcome="Ambiguity recorded.", lessons=["Review is context-sensitive."], synthetic=False, evidence_refs=["se:EVD-001"])],
+        "practices": [rec("se:PRA-001", label="Risk-based practice selection", intent="Select security practices proportionate to context.", description="Evaluate risk, cost, feasibility and applicability before selecting practices.", preconditions=["A system and risk context are known."], steps=["Assess risk.", "Compare cost and feasibility.", "Record applicability."], expected_outcomes=["A context-specific practice selection."], risks=["Incomplete risk information."], scope_description="Secure software development.", applicability="NIST SP 800-218 v1.1 recommendation context.", evidence_refs=["se:EVD-002"], claim_refs=["se:CLM-001"])],
+        "patterns": [rec("se:PAT-001", label="Incremental refinement", problem="Large requirements sets contain uncertainty.", context="Evolving products.", forces=["Feedback speed", "Traceability"], solution="Refine in increments.", consequences=["Earlier feedback."], tradeoffs=["Coordination overhead."], scope_description="Requirements and delivery.", evidence_refs=[], case_refs=["se:CASE-001"])],
+        "anti_patterns": [rec("se:ANT-001", label="Big-bang specification", symptoms=["Late discovery of ambiguity."], causes=["No incremental feedback."], consequences=["Expensive rework."], remediation="Use staged review and validation.", scope_description="Requirements work.", evidence_refs=[], case_refs=["se:CASE-001"])],
+        "decision_models": [rec("se:DM-001", decision_question="How much secure-development practice effort is appropriate?", options=["Lightweight", "Enhanced"], criteria=["Risk", "Cost", "Feasibility", "Applicability"], constraints=["Time", "Organizational capability"], procedure="Evaluate options against the context-specific risk and feasibility profile.", tradeoffs=["Cost versus assurance."], scope_description="Secure software development.", evidence_refs=["se:EVD-002"], claim_refs=["se:CLM-001"])],
+        "cases": [rec("se:CASE-001", label="Synthetic review scenario", case_kind="SYNTHETIC_TEST", context="Synthetic scenario used only to test case references.", problem="Ambiguous requirement.", intervention="Peer review.", outcome="Ambiguity recorded.", lessons=["A case fixture is not domain evidence."], synthetic=True, evidence_refs=[])],
         "counterexamples": [rec("se:COUNTER-001", label="Synthetic counterexample", case_kind="SYNTHETIC_TEST", context="Validator-only negative example.", problem="A counterexample challenges an overbroad rule.", intervention="Construct a boundary condition.", outcome="Rule requires qualification.", lessons=["Do not generalize."], synthetic=True, evidence_refs=[], counterexample_to_refs=["se:CLM-001"], contrary_observation="A constrained project may intentionally omit this practice.")],
         "review_decisions": [rec("se:REV-001", "ACTIVE", target_ref="se:CLM-001", target_record_version="0.1.0", target_digest_sha256="0"*64, reviewer_role="HUMAN_DOMAIN_REVIEWER", reviewer_ref="reviewer:test-fixture", decision="DEFER", rationale="Fixture only; no human acceptance is asserted.", reviewed_on="2026-11-05", review_policy_ref="SE-REVIEW-POLICY-0.1")],
         "coverage_gaps": [rec("se:GAP-001", label="Detailed practice coverage gap", target_scope_ref="se:NODE-SSDF", gap_kind="SOURCE_GAP", description="Detailed practices are not yet extracted.", severity="MEDIUM", coverage_status="OPEN", impact="Do not claim full secure-development coverage.", resolution_notes=["Inspect permitted source material."], evidence_refs=[])],
@@ -371,7 +371,7 @@ def positive_fixture():
     graph["relationship_assertions"] = [
         rel("se:REL-001", "se:CLM-001", "SUPPORTED_BY", "se:EVD-001"),
         rel("se:REL-002", "se:CLM-001", "APPLIES_TO", "se:NODE-REQ", ["se:EVD-001"], ["taxonomy scope"]),
-        rel("se:REL-003", "se:SUB-REQ", "PART_OF", "se:DOMAIN-SE"),
+        rel("se:REL-003", "se:NODE-REQ", "PART_OF", "se:NODE-SWEBOK-ENG"),
         rel("se:REL-004", "se:PRA-001", "DEPENDS_ON", "se:CON-REQ", ["se:EVD-001"]),
         rel("se:REL-005", "se:PRA-001", "IMPLEMENTS", "se:PRI-001", ["se:EVD-001"], ["operationalization"]),
         rel("se:REL-006", "se:PAT-001", "ILLUSTRATED_BY", "se:CASE-001"),
@@ -418,18 +418,9 @@ def run_self_tests(catalog, rules):
         "object_ref": "se:CLM-002",
     }), "SUPERSEDES_CYCLE")
     def part_of_cycle(g):
-        g["subdomains"].append({
-            "id": "se:SUB-CHILD",
-            "record_version": "0.1.0",
-            "created_on": "2026-11-05",
-            "lifecycle_status": "PROPOSED",
-            "label": "Child",
-            "definition": "A test child subdomain.",
-            "domain_ref": "se:DOMAIN-SE",
-        })
         g["relationship_assertions"].extend([
-            {**g["relationship_assertions"][2], "id": "se:REL-PART-A", "subject_ref": "se:SUB-REQ", "object_ref": "se:SUB-CHILD"},
-            {**g["relationship_assertions"][2], "id": "se:REL-PART-B", "subject_ref": "se:SUB-CHILD", "object_ref": "se:SUB-REQ"},
+            {**g["relationship_assertions"][2], "id": "se:REL-PART-A", "subject_ref": "se:NODE-REQ", "object_ref": "se:NODE-SSDF"},
+            {**g["relationship_assertions"][2], "id": "se:REL-PART-B", "subject_ref": "se:NODE-SSDF", "object_ref": "se:NODE-REQ"},
         ])
     expect("part-of-cycle", part_of_cycle, "PART_OF_CYCLE")
     expect("duplicate-source-locator", lambda g: g["source_locators"].append({
