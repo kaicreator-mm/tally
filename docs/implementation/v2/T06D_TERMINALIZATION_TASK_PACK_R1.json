@@ -31,10 +31,10 @@
     {
       "issue": 260,
       "pr": 279,
-      "headSha": "e2a5d65854ada8e1fe043493dae8ebb00b5ad71f",
-      "treeSha": "26fad7fe3a1143bc198de5a4a3f82e0587f0231a",
+      "headSha": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+      "treeSha": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a",
       "taskPackPath": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
-      "taskPackBlobSha": "cf721ba70472026678a171be5ed8513bc891c5f7",
+      "taskPackBlobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
       "taskCount": 47,
       "openTaskCount": 26,
       "closedTaskCount": 21,
@@ -52,7 +52,11 @@
         "currentR11Review": "PASS_WITH_P2",
         "currentR11ReviewComment": 5791273111,
         "currentR11Head": "e2a5d65854ada8e1fe043493dae8ebb00b5ad71f",
-        "currentR11Tree": "26fad7fe3a1143bc198de5a4a3f82e0587f0231a"
+        "currentR11Tree": "26fad7fe3a1143bc198de5a4a3f82e0587f0231a",
+        "currentR12Review": "PASS_WITH_P2",
+        "currentR12ReviewComment": 5791335743,
+        "currentR12Head": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+        "currentR12Tree": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a"
       },
       "builderEvidence": {
         "head": "dc9d452104af7c68a79bf2d6a13e6ff02b8d8047",
@@ -190,7 +194,7 @@
     "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
     "pathCount": 9,
     "pathsSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2",
-    "baselineVersionPackBlobSha": "cf721ba70472026678a171be5ed8513bc891c5f7",
+    "baselineVersionPackBlobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
     "baselineTaskCount": 47,
     "baselineOpenTaskOverlapPairs": 66,
     "overlapWithOpenTasks": [],
@@ -233,9 +237,9 @@
   ],
   "versionTaskPackReference": {
     "path": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
-    "ref": "https://github.com/kaicreator-mm/tally/blob/e2a5d65854ada8e1fe043493dae8ebb00b5ad71f/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
-    "blobSha": "cf721ba70472026678a171be5ed8513bc891c5f7",
-    "observedAt": "2026-11-05T19:58:07.493Z",
+    "ref": "https://github.com/kaicreator-mm/tally/blob/96442c147dcf2d047020d36e0c32d66be6e9979a/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "blobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+    "observedAt": "2026-11-05T20:07:07.582Z",
     "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
     "taskIssueCount": 47,
     "openTaskCount": 26,
@@ -287,6 +291,18 @@
       "dispatchId"
     ],
     "nullTaskPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
-    "actualClaimRequirement": "Before reserveAndPublish, construct the Claim subject with the exact PackBlob SHA read back from GitHub and the exact Owner receipt. A null/missing/mismatched PackBlob SHA fails closed."
+    "actualClaimRequirement": "Before source edits, publish/read back the #319 DISPATCH_CLAIMED start record through the Host single-writer, then create and read back the per-task FROZEN_DAG_WRITESET through the public DomainHarness v0.10.3 API with every frozenWriteSetMustBind field. The Owner receipt must bind the exact PackBlob/source SHA/write-set digest/protected key/generation/dispatch ID. The current publisher may carry task_pack_ref/pack_identity as additive event provenance, but the frozen record remains mandatory. No raw SQLite write, direct CAS seed, version-wide freeze or #203 registry reuse.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final PR #320 HEAD after reading the final Contents API blob SHA; the Task Pack file must not self-embed its own commit SHA.",
+    "frozenWriteSetMustBind": [
+      "taskPackRef (immutable URL at the final PR #320 commit)",
+      "taskPackBlobSha (exact Contents API blob SHA)",
+      "sourceSha (version/v2 baseline)",
+      "writeSetSha256 (exact nine-path digest)",
+      "ownerApprovalRef (exact PackBlob-bound PR comment)",
+      "protectedClaimKey and generation",
+      "dispatchId and original DISPATCH_CLAIMED comment ID/ref",
+      "writerId and frozenAt"
+    ],
+    "claimEventProvenance": "The #319 DISPATCH_CLAIMED event should include task_pack_ref and pack_identity=<exact PackBlob SHA> where the current publisher supports them. The per-task FROZEN_DAG_WRITESET record is the mandatory exact admission binding; missing/mismatched pack, Owner receipt or write-set readback blocks source edits."
   }
 }
