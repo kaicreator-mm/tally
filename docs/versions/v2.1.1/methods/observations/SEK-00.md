@@ -40,7 +40,7 @@ Use the exact main SHA as the WIP ancestry; retain the WIP-only branch name; kee
 The initial-state observations above are retained as method history and must not be read as current status.
 
 - Native GitHub Issue Dependencies are now MATERIALIZED and exact-readback verified: #301 blocked by #300; #302 blocked by #300; #304 blocked by #301 and #302; #305 blocked by #301, #302 and #304; #308 blocked by #305. The graph is live but not frozen.
-- The WIP integration remains `wip/v2.1.1-knowledge`, represented by Draft PR #303 at HEAD `59054299271b1447ceaad212251bc49da0e8dcb3`; it is not an official version branch and has no main/release/deployment authority.
+- The WIP integration remains `wip/v2.1.1-knowledge` under Draft PR #303; its exact HEAD is intentionally read live from GitHub rather than pinned in this observation. It is not an official version branch and has no main/release/deployment authority.
 - LinkML/linkml-runtime v1.12.1 L01–L15 has since been executed in Windows-native Python 3.14.7 under builder PR #310. This is experimental evidence only; LinkML remains NOT_ADOPTED.
 - The repository-contained checker repair is in PR #311. Its current 32-case source/locator coherence revision awaits exact-HEAD Windows-native validation and terminal independent review.
 - An independent Exact-SHA review of the current integration PR #303 exists, but its overall result remains BLOCK because SEK-04 builder/repair integration gates are still open. No task acceptance or product freeze is implied.
