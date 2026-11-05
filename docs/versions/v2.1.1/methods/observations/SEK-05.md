@@ -121,3 +121,34 @@ SELF_TEST_EXPECTED=41
 WINDOWS_NATIVE_VALIDATION=PENDING
 LINKML_FULL_MODEL_VALIDATION=PENDING
 ```
+
+
+## Independent Exact-SHA source review R4 — 2026-11-06
+
+**Reviewed input:** PR #318 HEAD `f2c91bac48acbcd215e2215f06e606e641681fac` / Tree `f217df290c4905e3443c445b9ecaf1fada5be692` / Base `e146b1894e6bdf5f41faf18816627e117d44db07`.
+
+### Additional P2 findings repaired within the original seven-path write set
+
+1. **Malformed relationship lifecycle could escape validation.** A list-valued lifecycle on a PART_OF/SUPERSEDES edge reached set membership and raised TypeError. The cycle detector now only evaluates string lifecycle values; the common-field validator reports the invalid type.
+2. **Accepted Pattern case-version binding could raise TypeError.** A malformed case record_version was inserted into a set-membership tuple without type validation. The validator now checks semantic-version syntax before binding the case review.
+3. **Historical review digest accepted numeric coercion.** A 64-digit integer could stringify to a SHA-256-shaped value. Review target versions and digests now require actual strings before syntax validation.
+4. **Format B parser had malformed-input escape paths.** It now rejects unhashable/non-string collection names, missing graph-root fields, noncanonical IDs, mismatched record paths, duplicate YAML keys, orphan records and unexpected paths with explicit ValidationError codes.
+
+Added nine fail-closed regression cases across graph lifecycle/review binding and Format B parsing.
+
+```ini
+SOURCE_REVIEW_R4=REPAIRED_IN_SCOPE
+P0=0
+P1=0
+P2=0
+SELF_TEST_EXPECTED=50
+WINDOWS_NATIVE_VALIDATION=PENDING
+LINKML_FULL_MODEL_VALIDATION=PENDING
+RDF_TURTLE_JSONLD_VALIDATION=PENDING
+SCHEMA_EVOLUTION_VALIDATION=PENDING
+PRODUCTION_ADOPTION=NO
+FREEZE=NO
+MERGE=NO
+RELEASE=NO
+DEPLOYMENT=NO
+```

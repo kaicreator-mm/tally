@@ -353,10 +353,14 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if not target:
             continue
         target_version = record.get("target_record_version")
-        if not VERSION_PATTERN.fullmatch(str(target_version or "")):
+        target_version_valid = (
+            isinstance(target_version, str)
+            and bool(VERSION_PATTERN.fullmatch(target_version))
+        )
+        if not target_version_valid:
             _error(errors, "INVALID_REVIEW_TARGET_VERSION", record_id)
-        digest = record.get("target_digest_sha256", "")
-        digest_valid = bool(SHA256_PATTERN.fullmatch(str(digest)))
+        digest = record.get("target_digest_sha256")
+        digest_valid = isinstance(digest, str) and bool(SHA256_PATTERN.fullmatch(digest))
         if not digest_valid:
             _error(errors, "INVALID_REVIEW_DIGEST", record_id)
 
@@ -441,9 +445,13 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                     elif case.get("lifecycle_status") != "ACCEPTED":
                         _error(errors, "ACCEPTED_PATTERN_REFERENCES_UNACCEPTED_CASE", f"{record_id}->{case_id}")
                     else:
-                        case_binding = (case_id, case.get("record_version"), canonical_record_digest(case))
-                        if case_binding not in accepted_review_bindings:
-                            _error(errors, "ACCEPTED_PATTERN_CASE_WITHOUT_HUMAN_REVIEW", f"{record_id}->{case_id}")
+                        case_version = case.get("record_version")
+                        if not isinstance(case_version, str) or not VERSION_PATTERN.fullmatch(case_version):
+                            _error(errors, "INVALID_RECORD_VERSION", case_id)
+                        else:
+                            case_binding = (case_id, case_version, canonical_record_digest(case))
+                            if case_binding not in accepted_review_bindings:
+                                _error(errors, "ACCEPTED_PATTERN_CASE_WITHOUT_HUMAN_REVIEW", f"{record_id}->{case_id}")
                         usable_evidence_refs(case_id, case.get("evidence_refs"))
             else:
                 usable_evidence_refs(record_id, record.get("evidence_refs"))
@@ -513,7 +521,12 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "DUPLICATE_RELATIONSHIP_SIGNATURE", record_id)
         edge_signatures.add(signature)
         terminal_edge_states = {"REJECTED", "WITHDRAWN", "RETRACTED", "SUPERSEDED", "DEPRECATED"}
-        if predicate in {"PART_OF", "SUPERSEDES"} and record.get("lifecycle_status") not in terminal_edge_states:
+        edge_lifecycle = record.get("lifecycle_status")
+        if (
+            predicate in {"PART_OF", "SUPERSEDES"}
+            and isinstance(edge_lifecycle, str)
+            and edge_lifecycle not in terminal_edge_states
+        ):
             graph_edges[predicate].append((subject_id, object_id))
         if rule.get("same_class_required") and subject_class != object_class:
             _error(errors, "SUPERSEDES_CLASS_MISMATCH", record_id)
@@ -818,6 +831,7 @@ def run_self_tests(catalog, rules):
     expect("graph-id-collides-with-entity", lambda g: g.update(id=g["domains"][0]["id"]), "GRAPH_ID_COLLIDES_WITH_ENTITY")
     expect("invalid-root-domain-type", lambda g: g.update(domain_ref=["se:DOMAIN-SOFTWARE-ENGINEERING"]), "INVALID_GRAPH_DOMAIN")
     expect("invalid-relationship-endpoint-type", lambda g: g["relationship_assertions"][0].update(subject_ref=["se:CLM-SWEBOK-KA"]), "INVALID_RELATIONSHIP_ENDPOINT")
+    expect("invalid-relationship-lifecycle-type", lambda g: g["relationship_assertions"][11].update(lifecycle_status=["ACCEPTED"]), "INVALID_LIFECYCLE_STATUS")
     def invalid_evidence_reference_type(g):
         target = g["concepts"][0]
         target["evidence_refs"] = [{"not": "an-id"}]
@@ -860,6 +874,16 @@ def run_self_tests(catalog, rules):
         add_exact_acceptance(g, pattern)
     expect("accepted-pattern-synthetic-case", accepted_pattern_with_synthetic_case, "ACCEPTED_SYNTHETIC_CASE")
 
+    def accepted_pattern_with_malformed_case_version(g):
+        case = g["cases"][0]
+        case["synthetic"] = False
+        case["lifecycle_status"] = "ACCEPTED"
+        case["record_version"] = ["0.1.0"]
+        pattern = g["patterns"][0]
+        pattern["lifecycle_status"] = "ACCEPTED"
+        add_exact_acceptance(g, pattern)
+    expect("accepted-pattern-case-version-type", accepted_pattern_with_malformed_case_version, "INVALID_RECORD_VERSION")
+
     def rejected_part_of_cycle(g):
         first = {**g["relationship_assertions"][11], "id": "se:REL-REJECTED-PART-A", "subject_ref": "se:NODE-SWEBOK-REQ", "object_ref": "se:NODE-SWEBOK-ENG", "lifecycle_status": "REJECTED", "context": "rejected cycle fixture A"}
         second = {**g["relationship_assertions"][11], "id": "se:REL-REJECTED-PART-B", "subject_ref": "se:NODE-SWEBOK-ENG", "object_ref": "se:NODE-SWEBOK-REQ", "lifecycle_status": "REJECTED", "context": "rejected cycle fixture B"}
@@ -887,6 +911,25 @@ def run_self_tests(catalog, rules):
         add_exact_acceptance(g, target)
         g["review_decisions"][-1]["reviewer_ref"] = ["reviewer:test-fixture"]
     expect("invalid-reviewer-identity-type", invalid_reviewer_identity_type, "MISSING_REVIEWER_IDENTITY")
+
+    def inactive_nonstring_review_digest(g):
+        target = g["concepts"][0]
+        g["review_decisions"].append({
+            "id": "se:REV-TEST-NONSTRING-DIGEST",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "RETRACTED",
+            "target_ref": target["id"],
+            "target_record_version": target["record_version"],
+            "target_digest_sha256": int("1" * 64),
+            "reviewer_role": "HUMAN_DOMAIN_REVIEWER",
+            "reviewer_ref": "reviewer:test-fixture-digest",
+            "decision": "ACCEPT",
+            "rationale": "Historical event must still require a string digest.",
+            "reviewed_on": "2026-11-05",
+            "review_policy_ref": "SE-REVIEW-POLICY-0.1",
+        })
+    expect("inactive-nonstring-review-digest", inactive_nonstring_review_digest, "INVALID_REVIEW_DIGEST")
 
     def inactive_accept_review_does_not_bind(g):
         accept_fixture_evidence(g)
@@ -1000,6 +1043,44 @@ def run_self_tests(catalog, rules):
         "FORMAT_B_ORPHAN_EXPLANATION",
     )
 
+    def format_b_invalid_collection_order(files):
+        root = yaml.safe_load(files["graph-root.yaml"])
+        root["collection_order"][0] = []
+        files["graph-root.yaml"] = _yaml_dump(root)
+    expect_format_failure("format-b-invalid-collection-order-type", format_b_invalid_collection_order, "FORMAT_B_INVALID_COLLECTION_ORDER")
+
+    def format_b_missing_root_field(files):
+        root = yaml.safe_load(files["graph-root.yaml"])
+        root.pop("domain_ref")
+        files["graph-root.yaml"] = _yaml_dump(root)
+    expect_format_failure("format-b-missing-root-field", format_b_missing_root_field, "FORMAT_B_MISSING_GRAPH_ROOT_FIELD")
+
+    def format_b_invalid_record_id(files):
+        record_path = next(path for path in files if path.startswith("records/concepts/"))
+        record = yaml.safe_load(files[record_path])
+        record["id"] = ["se:INVALID-ID"]
+        files[record_path] = _yaml_dump(record)
+    expect_format_failure("format-b-invalid-record-id", format_b_invalid_record_id, "FORMAT_B_INVALID_RECORD_ID")
+
+    def format_b_record_path_id_mismatch(files):
+        record_path = next(path for path in files if path.startswith("records/concepts/"))
+        wrong_path = record_path.rsplit("-", 1)[0] + "-wrong.yaml"
+        files[wrong_path] = files.pop(record_path)
+    expect_format_failure("format-b-record-path-id-mismatch", format_b_record_path_id_mismatch, "FORMAT_B_RECORD_PATH_ID_MISMATCH")
+
+    def format_b_duplicate_record_yaml_key(files):
+        record_path = next(path for path in files if path.startswith("records/concepts/"))
+        files[record_path] += "\\nid: se:OVERRIDE\\n"
+    expect_format_failure("format-b-duplicate-record-yaml-key", format_b_duplicate_record_yaml_key, "FORMAT_B_INVALID_RECORD_YAML")
+
+    def format_b_orphan_record(files):
+        files["records/unrecognized/0001-orphan.yaml"] = _yaml_dump({"id": "se:ORPHAN"})
+    expect_format_failure("format-b-orphan-record", format_b_orphan_record, "FORMAT_B_ORPHAN_RECORD")
+
+    def format_b_unexpected_path(files):
+        files["metadata.json"] = "{}"
+    expect_format_failure("format-b-unexpected-path", format_b_unexpected_path, "FORMAT_B_UNEXPECTED_PATH")
+
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
         print(f"{'PASS' if ok else 'FAIL'} {name}")
@@ -1094,61 +1175,77 @@ def _serialize_format_b(graph):
 
 
 def _parse_format_b(files):
+    if not isinstance(files, dict):
+        raise ValidationError("FORMAT_B_INVALID_FILE_MAP: files must be a path-to-content mapping")
     if "graph-root.yaml" not in files:
         raise ValidationError("FORMAT_B_MISSING_GRAPH_ROOT: graph-root.yaml is absent")
-    root = yaml.safe_load(files["graph-root.yaml"])
+    try:
+        root = yaml.load(files["graph-root.yaml"], Loader=UniqueLoader)
+    except ValidationError as exc:
+        raise ValidationError(f"FORMAT_B_INVALID_GRAPH_ROOT: {exc}") from exc
     if not isinstance(root, dict):
         raise ValidationError("FORMAT_B_INVALID_GRAPH_ROOT: graph root must be a mapping")
+    root_fields = ("id", "graph_version", "generated_on", "domain_ref")
+    missing_root_fields = [field for field in root_fields if field not in root]
+    if missing_root_fields:
+        raise ValidationError(f"FORMAT_B_MISSING_GRAPH_ROOT_FIELD: {missing_root_fields}")
     collection_order = root.get("collection_order")
     if (
         not isinstance(collection_order, list)
         or len(collection_order) != len(COLLECTIONS)
+        or any(not isinstance(item, str) for item in collection_order)
+        or len(set(collection_order)) != len(COLLECTIONS)
         or set(collection_order) != set(COLLECTIONS)
     ):
         raise ValidationError("FORMAT_B_INVALID_COLLECTION_ORDER: every entity collection must appear exactly once")
-    graph = {
-        key: root[key]
-        for key in ("id", "graph_version", "generated_on", "domain_ref")
-    }
+    graph = {key: root[key] for key in root_fields}
     expected_explanations = set()
     consumed_record_paths = set()
     for collection in collection_order:
         prefix = f"records/{collection}/"
-        record_paths = sorted(path for path in files if path.startswith(prefix) and path.endswith(".yaml"))
+        record_paths = sorted(path for path in files if path.startswith(prefix))
         graph[collection] = []
         for path in record_paths:
-            record = yaml.safe_load(files[path])
-            if not isinstance(record, dict) or not isinstance(record.get("id"), str):
-                raise ValidationError(f"FORMAT_B_INVALID_RECORD: {path} must contain a record with a canonical id")
-            slug = record["id"].split(":", 1)[-1].lower()
+            relative_path = path[len(prefix):]
+            if "/" in relative_path or not relative_path.endswith(".yaml"):
+                raise ValidationError(f"FORMAT_B_INVALID_RECORD_PATH: {path}")
+            try:
+                record = yaml.load(files[path], Loader=UniqueLoader)
+            except ValidationError as exc:
+                raise ValidationError(f"FORMAT_B_INVALID_RECORD_YAML: {path}: {exc}") from exc
+            record_id = record.get("id") if isinstance(record, dict) else None
+            if not isinstance(record_id, str) or not ID_PATTERN.fullmatch(record_id):
+                raise ValidationError(f"FORMAT_B_INVALID_RECORD_ID: {path} must contain a canonical se: CURIE")
+            slug = record_id.split(":", 1)[1].lower()
+            filename = relative_path.rsplit("/", 1)[-1]
+            if not filename.endswith(f"-{slug}.yaml"):
+                raise ValidationError(f"FORMAT_B_RECORD_PATH_ID_MISMATCH: {path} does not match {record_id}")
             explanation_path = f"explanations/{slug}.md"
             if explanation_path in expected_explanations:
                 raise ValidationError(f"FORMAT_B_DUPLICATE_EXPLANATION: {explanation_path} maps to multiple records")
             expected_explanations.add(explanation_path)
             explanation = files.get(explanation_path)
             if explanation is None:
-                raise ValidationError(f"FORMAT_B_MISSING_EXPLANATION: {record['id']} requires {explanation_path}")
+                raise ValidationError(f"FORMAT_B_MISSING_EXPLANATION: {record_id} requires {explanation_path}")
             lines = explanation.splitlines()
-            if not lines or lines[0].strip() != f"# {record['id']}":
-                raise ValidationError(f"FORMAT_B_EXPLANATION_ID_MISMATCH: {explanation_path} must identify {record['id']}")
+            if not lines or lines[0].strip() != f"# {record_id}":
+                raise ValidationError(f"FORMAT_B_EXPLANATION_ID_MISMATCH: {explanation_path} must identify {record_id}")
             graph[collection].append(record)
             consumed_record_paths.add(path)
 
-    actual_record_paths = {
-        path for path in files
-        if path.startswith("records/") and path.endswith(".yaml")
-    }
+    actual_record_paths = {path for path in files if path.startswith("records/")}
     orphan_records = actual_record_paths - consumed_record_paths
     if orphan_records:
         raise ValidationError(f"FORMAT_B_ORPHAN_RECORD: {sorted(orphan_records)}")
 
-    actual_explanations = {
-        path for path in files
-        if path.startswith("explanations/") and path.endswith(".md")
-    }
+    actual_explanations = {path for path in files if path.startswith("explanations/")}
     orphan_explanations = actual_explanations - expected_explanations
     if orphan_explanations:
         raise ValidationError(f"FORMAT_B_ORPHAN_EXPLANATION: {sorted(orphan_explanations)}")
+
+    unexpected_paths = set(files) - {"graph-root.yaml"} - actual_record_paths - actual_explanations
+    if unexpected_paths:
+        raise ValidationError(f"FORMAT_B_UNEXPECTED_PATH: {sorted(unexpected_paths)}")
     return graph
 
 
