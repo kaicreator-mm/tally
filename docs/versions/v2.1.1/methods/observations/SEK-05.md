@@ -25,7 +25,7 @@
 6. ReviewDecision is a human audit event bound to exact target ID, record version and a recomputed canonical JSON SHA-256. YAML date values are normalized before hashing; schema validation cannot accept knowledge.
 7. Every RelationshipPredicate enum value has an explicit URI meaning; RDF export must preserve rdf:subject, rdf:predicate and rdf:object as resource nodes.
 8. CoverageGap is first-class so partial evidence or unknown coverage is visible rather than silently omitted.
-8. Synthetic fixtures are valid for structural testing but cannot be accepted corpus knowledge.
+9. Synthetic fixtures are valid for structural testing but cannot be accepted corpus knowledge.
 
 ## Full-model execution still required
 
