@@ -49,7 +49,10 @@
         "treeSha": "f14c22be8b87aed36d983b5491afb35292140b32",
         "reviewComment": 5791123512,
         "verdict": "PASS_WITH_P2",
-        "currentR11Review": "PENDING"
+        "currentR11Review": "PASS_WITH_P2",
+        "currentR11ReviewComment": 5791273111,
+        "currentR11Head": "e2a5d65854ada8e1fe043493dae8ebb00b5ad71f",
+        "currentR11Tree": "26fad7fe3a1143bc198de5a4a3f82e0587f0231a"
       },
       "builderEvidence": {
         "head": "dc9d452104af7c68a79bf2d6a13e6ff02b8d8047",
@@ -158,7 +161,7 @@
     "taskPackBlobSha": null
   },
   "authority": {
-    "ownerAuthorization": "standing Owner instruction in current project conversation: continue under ADS #1359 Delivery-First; no routine re-approval gate.",
+    "ownerAuthorization": "Standing Owner instruction in the current project conversation authorizes routine Delivery-First execution; the exact PackBlob-bound GitHub Owner receipt remains a required durable gate before Host Claim.",
     "requiredArtifacts": [
       "independent Exact-SHA review of this exact PackBlob",
       "Owner receipt bound to this exact PackBlob/source SHA/write-set digest",
@@ -213,7 +216,12 @@
     "claimSequence": "PUBLISHED_VERIFIED via existing T06d single-writer; then per-task FROZEN_DAG_WRITESET via public DomainHarness v0.10.3 API.",
     "registry": "dedicated #319 Host CAS registry; do not reuse _tmp/tally-alm-claims/registry-203.sqlite",
     "sourceMutationGate": "accepted Claim + exact per-task FROZEN_DAG_WRITESET readback",
-    "noDirectStoreMutation": true
+    "noDirectStoreMutation": true,
+    "basis": [
+      "Tally #284 R8 preconditions explicitly separate root Claim + per-task FROZEN_DAG_WRITESET public-API readback from the later version-wide freezeVersionTaskDag stage.",
+      "This standalone #319 Task Pack uses only that pre-freeze per-task write-set mechanism; it does not create, replace or claim FROZEN_VERSION_TASK_DAG authority.",
+      "The #319 protected claim key and CAS registry are dedicated to #319; the historical #203 registry is never reused."
+    ]
   },
   "revision": "R1",
   "serialSuccessors": [
