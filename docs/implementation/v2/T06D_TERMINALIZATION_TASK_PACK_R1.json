@@ -303,6 +303,56 @@
       "dispatchId and original DISPATCH_CLAIMED comment ID/ref",
       "writerId and frozenAt"
     ],
-    "claimEventProvenance": "The #319 DISPATCH_CLAIMED event should include task_pack_ref and pack_identity=<exact PackBlob SHA> where the current publisher supports them. The per-task FROZEN_DAG_WRITESET record is the mandatory exact admission binding; missing/mismatched pack, Owner receipt or write-set readback blocks source edits."
+    "claimEventProvenance": "The #319 DISPATCH_CLAIMED event should include task_pack_ref and pack_identity=<exact PackBlob SHA> where the current publisher supports them. The per-task FROZEN_DAG_WRITESET record is the mandatory exact admission binding; missing/mismatched pack, Owner receipt or write-set readback blocks source edits.",
+    "targetClaimBinding": [
+      "Exact original #203 CAS key, generation, revision, phase, source SHA, dispatch ID, writer ID and original comment ID/ref.",
+      "Exact original native DISPATCH_CLAIMED event is unedited and matches the CAS row.",
+      "No active writer/attempt/in-flight effect and no unresolved resource/write-set operation; all are freshly re-read at execution time."
+    ]
+  },
+  "normativeContract": {
+    "repository": "kaicreator-mm/ai-development-standard",
+    "version": "4.18.0",
+    "revision": "2c395c55569fe2edf3f4135f12d3d069e526d0b7",
+    "blobs": {
+      "githubAgentInteractionProtocol": "49ecd802c5bf14237e23d5e321c56c220eb8974e",
+      "executionArchitectureStandard": "1f1601a20db08d263955241607dfd08d8b8f77e1",
+      "agentEventV2Schema": "cad9434e11febfd29657b564dbe710700c674888",
+      "dispatchSchema": "90bea62524beb0215d5f40cf0be9986786648fec"
+    },
+    "terminalEvent": {
+      "event": "DISPATCH_STATE_CHANGED",
+      "actorRole": "scheduler",
+      "stateFor203": "DONE",
+      "gaiSection": "8.5",
+      "executionArchitectureSection": "11.2",
+      "roleReleasedIsNotTerminal": true,
+      "newEventTypeRequired": false
+    }
+  },
+  "targetClaim": {
+    "issueNumber": 203,
+    "repository": "kaicreator-mm/tally",
+    "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+    "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+    "actorRole": "builder",
+    "operatorKind": "other",
+    "operatorId": "zcode:candidate-publication:1",
+    "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+    "generation": 1,
+    "casKey": "tally:v2:claim-admission:6fcd893012c987f014c78de5b444bd16db522a6137a568d9de0e98a6af6401c4",
+    "observedPhase": "PUBLISHED_VERIFIED",
+    "observedRevision": 1,
+    "writerId": "tally-host:win32:candidate-publication:1",
+    "originalClaimCommentId": 6540484121,
+    "originalClaimCommentRef": "https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540484121",
+    "originalClaimEvent": "DISPATCH_CLAIMED",
+    "originalClaimEventUnedited": true,
+    "registryPath": "_tmp/tally-alm-claims/registry-203.sqlite",
+    "observedFrozenDagWriteSet": "NONE",
+    "observedActiveWriter": "NONE_OBSERVED",
+    "observedTerminality": "NOT_PROVEN",
+    "readbackEvidenceRef": "https://github.com/kaicreator-mm/tally/issues/284#issuecomment-6662889780",
+    "recheckRequiredBeforeMutation": true
   }
 }
