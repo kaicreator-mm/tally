@@ -5,7 +5,7 @@ description: >-
   Experimental full-domain knowledge model for Tally v2.1.1. It separates
   authority/provenance, domain content, taxonomy views, review events and typed
   relationship assertions. It is not a production ontology or runtime dependency.
-version: "0.2.0"
+version: "0.3.0"
 prefixes:
   linkml: https://w3id.org/linkml/
   se: https://github.com/kaicreator-mm/tally#
@@ -214,6 +214,9 @@ classes:
       - scope_description
       - evidence_refs
       - case_refs
+    slot_usage:
+      context:
+        required: true
 
   AntiPattern:
     is_a: KnowledgeEntity
@@ -228,6 +231,13 @@ classes:
       - scope_description
       - evidence_refs
       - case_refs
+    slot_usage:
+      symptoms:
+        required: true
+      causes:
+        required: true
+      consequences:
+        required: true
 
   DecisionModel:
     is_a: KnowledgeEntity
@@ -258,6 +268,9 @@ classes:
       - lessons
       - synthetic
       - evidence_refs
+    slot_usage:
+      context:
+        required: true
 
   Counterexample:
     is_a: Case
@@ -310,6 +323,9 @@ classes:
       - context
       - rationale
       - evidence_refs
+    slot_usage:
+      context:
+        required: true
 
   KnowledgeGraph:
     tree_root: true

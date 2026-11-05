@@ -4,7 +4,7 @@
 **Parent:** [v2.1.1 Product/Knowledge Pilot #299](https://github.com/kaicreator-mm/tally/issues/299)  
 **Baseline:** PR #303 HEAD e146b1894e6bdf5f41faf18816627e117d44db07 / Tree 1a68d62e4f6e7583e66aeecfd45f7147eee87b06  
 **Status:** EXPERIMENTAL_CANDIDATE / FULL_MODEL_VALIDATION_PENDING / NO_PRODUCTION_ADOPTION  
-**Model version:** 0.2.0
+**Model version:** 0.3.0
 
 ## Decision summary
 
@@ -71,3 +71,10 @@ All records have a stable canonical se: CURIE, record_version, lifecycle_status 
 - **REJECT:** LinkML causes material semantic loss or disproportionate burden and a tested proportionate alternative performs better.
 
 A final outcome may only be recorded after exact local execution and independent Exact-SHA review. No outcome implies production adoption or DomainForge promotion.
+
+
+## R5 schema/catalog required-field conformance — 2026-11-06
+
+A fresh source comparison of ENTITY_CATALOG.yaml against the LinkML class/slot declarations found four required-field gaps: Pattern.context, Case.context (inherited by Counterexample), RelationshipAssertion.context, and AntiPattern.symptoms/causes/consequences. The catalog was already explicit about these fields, but the LinkML schema did not enforce all of them.
+
+The schema candidate is now 0.3.0 and uses class-level `slot_usage` to enforce those requirements without making the shared context/consequences slots globally required for unrelated classes. This is a breaking constraint refinement to the experimental schema; the full-model validation must include negative instances omitting each required field. The candidate remains experimental and unadopted.

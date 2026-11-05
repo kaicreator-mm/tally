@@ -100,3 +100,8 @@ The local full-model validation must record:
 - reviewer comprehension/time estimate, with method and limitations;
 - deterministic output hashes;
 - any LinkML JSON-LD type/identity loss and the companion validation needed.
+
+
+## Required-field conformance
+
+The LinkML class-level `slot_usage` constraints must match the entity catalog's per-class `required_fields`. Shared slots such as `context` and `consequences` are not globally required because their necessity is class-specific. Full-model schema validation must include negative instances missing Pattern.context, Case.context, RelationshipAssertion.context, and AntiPattern.symptoms/causes/consequences.

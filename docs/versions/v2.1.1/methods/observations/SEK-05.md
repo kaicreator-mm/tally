@@ -152,3 +152,31 @@ MERGE=NO
 RELEASE=NO
 DEPLOYMENT=NO
 ```
+
+
+## Independent Exact-SHA source review R5 — 2026-11-06
+
+**Reviewed input:** PR #318 HEAD `c33eba0b7f262e2560dea9ac6b7ce8e163be3cb5` / Tree `3140774ca233731f42540060059127fccba3d253` / Base `e146b1894e6bdf5f41faf18816627e117d44db07`.
+
+### P2 finding repaired within the original seven-path write set
+
+The Entity Catalog's class-level `required_fields` were stricter than the LinkML schema for Pattern.context, Case.context (inherited by Counterexample), RelationshipAssertion.context, and AntiPattern.symptoms/causes/consequences. Added class-level `slot_usage` requirements, preserving the optional nature of shared slots for unrelated entity classes. Bumped the experimental schema/model version from 0.2.0 to 0.3.0 because the added required constraints are breaking for prior candidate instances.
+
+The positive fixture already supplies these fields. Native LinkML validation must additionally prove each omission is rejected and that unrelated classes can still omit optional context/consequences.
+
+```ini
+SOURCE_REVIEW_R5=REPAIRED_IN_SCOPE
+P0=0
+P1=0
+P2=0
+SCHEMA_VERSION=0.3.0
+SELF_TEST_EXPECTED=52
+WINDOWS_NATIVE_VALIDATION=PENDING
+LINKML_REQUIRED_FIELD_NEGATIVES=PENDING
+RDF_TURTLE_JSONLD_VALIDATION=PENDING
+PRODUCTION_ADOPTION=NO
+FREEZE=NO
+MERGE=NO
+RELEASE=NO
+DEPLOYMENT=NO
+```
