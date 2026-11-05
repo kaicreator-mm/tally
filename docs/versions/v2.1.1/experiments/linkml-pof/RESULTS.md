@@ -366,4 +366,34 @@ The final independent R2 review found that the checker resolved DomainNode.sourc
 
 The checker is repaired within the existing #305 write set. DomainNode validation now resolves both records, validates SourceLocator.source_ref as a canonical se: CURIE, and rejects a mismatch. A dedicated self-test constructs a second valid Source and SourceLocator and binds the DomainNode to the mismatched locator. The self-test target is now **32/32**.
 
-**Current result: REVALIDATION_PENDING.** The prior 31/31 run, 12/12 LinkML conversions, 24/24 CLI probes and seven JSON-LD artifact checks in §10.14 apply to checker blob 503b370b016616c629f97fb47fc06b0079b574d9 at source-bearing HEAD 2c5c8b3d only. They do not validate the new checker blob. Re-run py_compile, 32/32 self-test, A/B/C YAML+Turtle integrity, the 24 existing CLI probes plus the new source/locator mismatch negative probe, and seven-artifact JSON-LD edge identity on the new exact HEAD/Tree. Preserve logs and SHA256 manifest. No schema, fixture, runtime, CI or out-of-write-set path changes; LinkML remains EXPERIMENTAL / NOT_ADOPTED.
+**Status at the time this repair was first committed: REVALIDATION_PENDING.** That pending state is superseded by §10.16, which records the successful exact-HEAD Windows-native run for checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7` at HEAD `8257aea33538b96300b91be66e2d22c28c926882`. The earlier 31/31 evidence remains historical and does not validate the repaired checker. LinkML remains EXPERIMENTAL / NOT_ADOPTED.
+
+
+## 10.16 Final exact-HEAD LOCAL_VALIDATION — source/locator coherence repair — 2026-11-05
+
+**Result: PASS.** This record supersedes the pending state in §10.15 for the exact checker revision below.
+
+Exact detached-worktree identity and refs:
+- HEAD: `8257aea33538b96300b91be66e2d22c28c926882`
+- Tree: `102d6a6ee41b08065ecca8cd0750540a3784962c`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+- Branch, PR #311 head and `refs/pull/311/head` all matched; merge-base confirmed; exactly four #305 write-set paths; worktree clean before and after validation.
+
+Environment: Windows-native Python 3.14.7 (no WSL), isolated pinned environment: LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Results:
+1. Exact HEAD/Tree/checker blob, clean worktree and four-path diff: PASS.
+2. `py_compile`: EXIT=0.
+3. Repository checker `--self-test`: **32/32 PASS**, EXIT=0, including DomainNode Source/SourceLocator coherence.
+4. LinkML conversions: **12/12 EXIT=0** — A front matter and C standalone corpus to Turtle + JSON-LD; B's Source, SourceLocator, Evidence and ClaimBundle split records to Turtle + JSON-LD. B Turtle merged to 50 triples; B JSON-LD merged to 46 triples. Repository checker on A/B/C YAML + generated Turtle: all PASS, exactly two relationship statements per graph, exact statement/subject/predicate/object/evidence CURIE identity.
+5. CLI probes: **25/25 PASS** — 24 negative probes EXIT=1 with expected diagnostics, plus one positive GraphNode-ancestor control EXIT=0. The new `data-source-coherence` negative case uses Source S2 / Locator L2 while DomainNode names Source S1; it exits 1 with `belongs to source se:S2, expected se:S1`.
+6. Independent JSON-LD edge identity: **PASS across all seven generated artifacts**. Each reified statement has exactly one URIRef subject/predicate/object, zero Literal `rdf:object`, and exact statement/edge/evidence CURIE identity to YAML. L09 nested `rdf:type` omissions remain explicit (A/C 48 vs 55 TTL triples; B merged 46 vs 50); no JSON-LD/TTL full-graph equivalence is claimed.
+7. Raw stdout/stderr, per-command exit codes, package versions, generated artifacts and SHA256 manifest are preserved.
+
+Evidence:
+- Issue #305 LOCAL_VALIDATION handoff: [#6651423815](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6651423815)
+- Exact-HEAD PASS receipt: [#6656869638](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6656869638)
+- 57-file evidence bundle: https://gist.github.com/kaicreator-mm/45dd6427fbc2146fb35daf7ac6051ccf
+
+The validation itself made no repository edits, commits, pushes, branch changes, PR metadata changes or merges. This evidence is bound to the exact HEAD/checker blob above. Any successor commit, including documentation-only reconciliation, requires a fresh exact-HEAD identity rebind before final R2 integration disposition. LinkML remains EXPERIMENTAL / NOT_ADOPTED; no main merge, release or deployment is implied.

@@ -184,4 +184,22 @@ The earlier documentation reconciliation was docs-only and remained inside the o
 
 The checker previously required DomainNode.source_ref to resolve to a Source and DomainNode.source_locator_ref to resolve to a SourceLocator, but did not verify that the SourceLocator's own source_ref equals the DomainNode's source_ref. This permits a provenance mismatch even when both references are individually valid.
 
-The checker now resolves the locator record and rejects a mismatch between the two canonical source CURIEs. A dedicated negative self-test covers this case; the required self-test total is 32/32. This is a bounded #305 integrity repair, not a schema or production-model change. The new checker must receive exact-HEAD local revalidation before P1-03 can close; the prior 31/31 evidence applies only to its previous checker blob.
+The checker now resolves the locator record and rejects a mismatch between the two canonical source CURIEs. A dedicated negative self-test covers this case; the required self-test total is 32/32. This is a bounded #305 integrity repair, not a schema or production-model change. The exact-HEAD Windows-native validation subsequently passed at HEAD `8257aea33538b96300b91be66e2d22c28c926882` / Tree `102d6a6ee41b08065ecca8cd0750540a3784962c` / checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`; see the final validation record below. The prior 31/31 evidence applies only to its previous checker blob.
+
+
+## Final LOCAL_VALIDATION — source/locator coherence repair — 2026-11-05
+
+**Result: PASS** — Issue #305 receipt [#6656869638](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6656869638).
+
+- Exact HEAD: `8257aea33538b96300b91be66e2d22c28c926882`
+- Exact Tree: `102d6a6ee41b08065ecca8cd0750540a3784962c`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+- Environment: Windows-native Python 3.14.7 (no WSL), LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0, linkml-convert 1.12.1.
+- `py_compile` EXIT=0; checker self-test **32/32 PASS**.
+- LinkML conversions **12/12 PASS**; A/B/C YAML + generated Turtle integrity PASS; exactly two relationship statements per graph and exact YAML/RDF statement, subject, predicate, object and evidence CURIE identity.
+- CLI probes **25/25 PASS**: 24 negative cases exit 1 with expected diagnostics, including the new cross-source DomainNode locator mismatch; one positive GraphNode-ancestor control exits 0.
+- Independent JSON-LD edge identity **PASS across seven artifacts**: URIRef subject/predicate/object, zero Literal rdf:object, exact YAML edge/evidence identity. Known L09 nested rdf:type omissions remain explicit; no full JSON-LD/TTL graph equivalence is claimed.
+- Raw logs, generated artifacts, environment versions and SHA256 manifest are preserved in the [57-file evidence bundle](https://gist.github.com/kaicreator-mm/45dd6427fbc2146fb35daf7ac6051ccf).
+
+This receipt supersedes the earlier 31/31 result for the prior checker blob and the pending status recorded when the source/locator repair was first committed. The validation was read-only in a detached worktree and made no repository changes. A subsequent documentation-only reconciliation commit requires a new exact-HEAD identity rebind before final R2 integration disposition. LinkML remains EXPERIMENTAL / NOT_ADOPTED.
