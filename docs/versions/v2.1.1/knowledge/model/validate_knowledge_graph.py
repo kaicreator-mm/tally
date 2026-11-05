@@ -318,11 +318,14 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
     for class_name, record_id, record in records:
         if class_name != "ReviewDecision":
             continue
-        if not str(record.get("reviewer_ref", "")).strip():
+        reviewer_ref = record.get("reviewer_ref")
+        review_policy_ref = record.get("review_policy_ref")
+        review_rationale = record.get("rationale")
+        if reviewer_ref is None or not str(reviewer_ref).strip():
             _error(errors, "MISSING_REVIEWER_IDENTITY", record_id)
-        if not str(record.get("review_policy_ref", "")).strip():
+        if review_policy_ref is None or not str(review_policy_ref).strip():
             _error(errors, "MISSING_REVIEW_POLICY", record_id)
-        if not str(record.get("rationale", "")).strip():
+        if review_rationale is None or not str(review_rationale).strip():
             _error(errors, "MISSING_REVIEW_RATIONALE", record_id)
         target_id = record.get("target_ref")
         target = entities.get(target_id) if isinstance(target_id, str) else None
