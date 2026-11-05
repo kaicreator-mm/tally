@@ -56,6 +56,7 @@ All records have a stable canonical se: CURIE, record_version, lifecycle_status 
 
 - LinkML reference closure is not a substitute for a graph validator. Mitigation: validate all IDs and typed endpoints in validate_knowledge_graph.py.
 - YAML date scalars may load as native date objects; canonical review digests normalize dates to ISO-8601 before JSON hashing so the same record hashes consistently across YAML and JSON representations.
+- The graph validator checks that reviewer identity, policy and rationale are non-empty and binds each decision to an exact target digest. It cannot independently authenticate that identity or verify the external review event; an integrating host must verify the reviewer against its authoritative review system before production adoption.
 - LinkML enum values without a `meaning` serialize as RDF literals. Mitigation: every RelationshipPredicate permissible value maps to a stable `se:` URI so `rdf:predicate` is a URIRef; verify this in both Turtle and JSON-LD.
 - JSON Schema generation may not preserve LinkML unique-key/reference semantics. Mitigation: executable graph validator is authoritative for graph-wide invariants.
 - LinkML 1.12.1 JSON-LD conversion previously omitted some nested rdf:type triples (SEK-04 L09). This must be retested with the full model; do not declare RDF/JSON-LD parity from Turtle alone.
