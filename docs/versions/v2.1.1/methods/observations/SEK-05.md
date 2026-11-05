@@ -71,3 +71,34 @@ DEPLOYMENT=NO
 ```
 
 The source repairs are not a substitute for native Windows execution at the resulting exact HEAD/Tree. No LinkML adoption decision or production promotion is made here.
+
+
+## Post-R2 source hardening — 2026-11-06
+
+**Code snapshot before this documentation update:** HEAD `4a0bdb30777a20f2ecab5f7274c6c26006074105` / Tree `eefaf3ab2aedf95bf3148f842a6f63101c82f210`.
+
+The R2 source review was anchored to its stated earlier exact HEAD. Subsequent in-scope repairs preserve the seven-path Task Pack boundary:
+
+1. Format A snapshots are now represented as the actual per-entity Markdown file map, allowing the A/B/C round-trip and edit-locality comparison to execute.
+2. The graph validator rejects malformed root-domain, evidence, source-locator and relationship endpoint types with explicit validation errors rather than unhandled hash/type errors.
+3. Added negative fixtures for malformed references. Together with the R2 review-lifecycle and Format B explanation-link fixtures, the current expected repository self-test count is **38**.
+4. The missing `Refs: #308` trailer in one intermediate repair commit was corrected by rebuilding that commit and its descendants while preserving their exact trees. The latest trailer-check is SUCCESS.
+
+**Current qualification state:**
+
+```ini
+SOURCE_REVIEW_R2=HISTORICAL_EXACT_SHA_PASS_AFTER_IN_SCOPE_REPAIRS
+SELF_TEST_EXPECTED=38
+WINDOWS_NATIVE_VALIDATION=PENDING
+LINKML_FULL_MODEL_VALIDATION=PENDING
+RDF_TURTLE_JSONLD_VALIDATION=PENDING
+SCHEMA_EVOLUTION_VALIDATION=PENDING
+HUMAN_REVIEW_BURDEN=NOT_MEASURED
+PRODUCTION_ADOPTION=NO
+FREEZE=NO
+MERGE=NO
+RELEASE=NO
+DEPLOYMENT=NO
+```
+
+The exact local validation handoff must bind the final branch HEAD/Tree after this documentation update. No final LinkML adoption decision is recorded until that validation and a fresh independent Exact-SHA review complete.
