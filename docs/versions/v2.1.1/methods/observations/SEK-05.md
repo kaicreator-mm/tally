@@ -22,9 +22,9 @@
 3. A knowledge claim is not a concept, principle, practice, pattern or case. They have distinct semantics and required fields.
 4. Source identity is not evidence. SourceLocator is an exact inspected location; Evidence is an extracted observation; downstream knowledge references Evidence.
 5. RelationshipAssertion is a first-class record with its own ID, revision, lifecycle, context, rationale, evidence and predicate-specific endpoint constraints.
-6. ReviewDecision is a human audit event bound to exact target ID, record version and a recomputed canonical JSON SHA-256. Schema validation cannot accept knowledge.
+6. ReviewDecision is a human audit event bound to exact target ID, record version and a recomputed canonical JSON SHA-256. YAML date values are normalized before hashing; schema validation cannot accept knowledge.
 7. Every RelationshipPredicate enum value has an explicit URI meaning; RDF export must preserve rdf:subject, rdf:predicate and rdf:object as resource nodes.
-7. CoverageGap is first-class so partial evidence or unknown coverage is visible rather than silently omitted.
+8. CoverageGap is first-class so partial evidence or unknown coverage is visible rather than silently omitted.
 8. Synthetic fixtures are valid for structural testing but cannot be accepted corpus knowledge.
 
 ## Full-model execution still required
@@ -36,6 +36,7 @@ The candidate schema and graph validator are not yet qualified. Run the exact co
 - Generate JSON Schema and JSON-LD context.
 - Convert the complete fixture to Turtle and JSON-LD; verify every reified relationship has URIRef subject/predicate/object and the exact source/evidence identity chain. Predicate enum values must serialize as URIRefs, not literals.
 - Run `python validate_knowledge_graph.py --format-compare` for A/B/C full-model serialization equivalence, deterministic rebuild, edit locality and two-writer file-conflict simulation; then run compatible/breaking schema evolution.
+- Verify accepted Evidence has its own exact ACCEPT ReviewDecision and verified SourceLocator; verify conflicting review outcomes and synthetic cases fail closed.
 - Measure edit locality and two-writer merge conflict behavior; record limitations.
 
 No final LinkML adoption outcome is recorded before those results. No production adoption, runtime dependency, model freeze, Domain Package, DomainForge promotion, main merge, release or deployment is implied.
