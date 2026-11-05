@@ -135,3 +135,8 @@ R7 found and repaired within the original seven-path write set:
 - Added regression coverage for all of the above. Expected validator self-tests: **63**.
 
 The full-model machine receipt at `64b65e34f06b7f2b77fbc29210499a6c29fd1aef` remains historical. The R7 repair candidate requires a fresh Windows-native exact-HEAD rerun of all validator, LinkML, RDF/JSON-LD and schema-evolution checks. HUMAN_REVIEW_BURDEN remains NOT_MEASURED; the candidate remains experimental and the proposed decision remains REPEAT_EXPERIMENT. No model freeze, production adoption, merge, release, deployment, Domain Package or DomainForge promotion.
+
+
+## R7b fail-closed hardening — 2026-11-06
+
+A final static pass over the R7 repair identified malformed non-string provenance lifecycle/verification values and non-string YAML mapping keys as possible TypeError escape paths. The validator now type-checks Source/SourceLocator lifecycle and Source verification before set membership, and the shared UniqueLoader rejects non-string mapping keys with ValidationError. Added three regression cases. Expected validator self-tests: **66**. All R7/R7b source changes remain in the original seven-path write set; fresh Windows-native validation is still pending.

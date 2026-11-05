@@ -193,3 +193,8 @@ Explicit limitations: default LinkML lint still exits 1 with 152 uppercase-enum 
 Reviewed the R6 exact candidate and repaired the following in the original seven-path write set: same-view PART_OF enforcement; Source/SourceLocator lifecycle and source-verification provenance gates; optional empty typed-reference arrays; exact active ReviewDecision object binding and outcome-neutral VALIDATED_BY semantics; optional Format B explanations, root-field closure and Format A/C duplicate-key rejection.
 
 R7 source changes are committed at the successor HEAD. **Fresh exact-HEAD Windows-native validation is pending**; do not transfer R6's 52/52 or export results to the R7 candidate. Expected self-test count is 63. Independent source review is pending exact readback of the successor commit. No merge, freeze, production adoption, release or deployment.
+
+
+## R7b fail-closed hardening — 2026-11-06
+
+A final static pass identified and repaired TypeError escape paths for malformed Source/SourceLocator lifecycle values, malformed Source verification values, and non-string YAML mapping keys. Added three regression cases. Expected self-test count is now **66**. The R7/R7b candidate must be validated from its final exact HEAD/Tree; earlier 52/52 R6 results do not transfer.

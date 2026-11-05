@@ -69,8 +69,12 @@ def _construct_unique_mapping(loader, node, deep=False):
     result = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
+        mark = key_node.start_mark
+        if not isinstance(key, str):
+            raise ValidationError(
+                f"non-string YAML mapping key {key!r} at line {mark.line + 1}"
+            )
         if key in result:
-            mark = key_node.start_mark
             raise ValidationError(
                 f"duplicate YAML key {key!r} at line {mark.line + 1}"
             )
@@ -313,17 +317,27 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", f"{owner_id}->{evidence_id}")
             return False
         invalid_provenance_statuses = {"REJECTED", "WITHDRAWN", "RETRACTED"}
-        if locator.get("lifecycle_status") in invalid_provenance_statuses:
+        locator_lifecycle = locator.get("lifecycle_status")
+        if not isinstance(locator_lifecycle, str):
+            return False  # Common-field validation already reports the malformed lifecycle.
+        if locator_lifecycle in invalid_provenance_statuses:
             _error(errors, "SOURCE_LOCATOR_NOT_USABLE", f"{owner_id}->{evidence_id}")
             return False
         source = entities.get(source_id, {})
-        if source.get("lifecycle_status") in invalid_provenance_statuses:
+        source_lifecycle = source.get("lifecycle_status")
+        if not isinstance(source_lifecycle, str):
+            return False  # Common-field validation already reports the malformed lifecycle.
+        if source_lifecycle in invalid_provenance_statuses:
             _error(errors, "SOURCE_NOT_USABLE", f"{owner_id}->{evidence_id}")
             return False
-        if source.get("verification_state") not in {
-            "IDENTITY_VERIFIED", "CONTENT_PARTIAL_VERIFIED",
-            "CONTENT_VERIFIED", "ABSTRACT_VERIFIED",
-        }:
+        source_verification_state = source.get("verification_state")
+        if (
+            not isinstance(source_verification_state, str)
+            or source_verification_state not in {
+                "IDENTITY_VERIFIED", "CONTENT_PARTIAL_VERIFIED",
+                "CONTENT_VERIFIED", "ABSTRACT_VERIFIED",
+            }
+        ):
             _error(errors, "SOURCE_NOT_VERIFIED", f"{owner_id}->{evidence_id}")
             return False
         if locator.get("verification_state") != "LOCATOR_VERIFIED":
@@ -899,6 +913,27 @@ def run_self_tests(catalog, rules):
         add_exact_acceptance(g, g["concepts"][0])
     expect("accepted-source-not-verified", accepted_with_unverified_source, "SOURCE_NOT_VERIFIED")
 
+    def accepted_with_malformed_provenance_lifecycle(g):
+        g["sources"][0]["lifecycle_status"] = ["ACTIVE"]
+        g["source_locators"][0]["lifecycle_status"] = ["ACTIVE"]
+        accept_fixture_evidence(g)
+        add_exact_acceptance(g, g["concepts"][0])
+    expect(
+        "accepted-malformed-provenance-lifecycle",
+        accepted_with_malformed_provenance_lifecycle,
+        "INVALID_LIFECYCLE_STATUS",
+    )
+
+    def accepted_with_malformed_source_verification_type(g):
+        g["sources"][0]["verification_state"] = ["CONTENT_PARTIAL_VERIFIED"]
+        accept_fixture_evidence(g)
+        add_exact_acceptance(g, g["concepts"][0])
+    expect(
+        "accepted-malformed-source-verification-type",
+        accepted_with_malformed_source_verification_type,
+        "SOURCE_NOT_VERIFIED",
+    )
+
     def accepted_relationship_without_review(g):
         accept_fixture_evidence(g)
         g["relationship_assertions"][0]["lifecycle_status"] = "ACCEPTED"
@@ -1277,6 +1312,12 @@ def run_self_tests(catalog, rules):
         record_path = next(path for path in files if path.startswith("records/concepts/"))
         files[record_path] = "id: [unterminated"
     expect_format_failure("format-b-invalid-record-yaml", format_b_invalid_record_yaml, "FORMAT_B_INVALID_RECORD_YAML")
+
+    expect_format_failure(
+        "format-b-non-string-root-key",
+        lambda files: files.__setitem__("graph-root.yaml", "? [unhashable, key]\\n: value\\n"),
+        "FORMAT_B_INVALID_GRAPH_ROOT",
+    )
 
     def format_b_orphan_record(files):
         files["records/unrecognized/0001-orphan.yaml"] = _yaml_dump({"id": "se:ORPHAN"})
