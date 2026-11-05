@@ -36,7 +36,7 @@ The model separates:
 5. **Governance:** ReviewDecision and CoverageGap.
 6. **Graph semantics:** RelationshipAssertion is a first-class, directed, versioned entity governed by RELATIONSHIP_CATALOG.yaml.
 
-All records have a stable canonical se: CURIE, record_version, lifecycle_status and created_on. Aliases are non-canonical lookup hints, never graph endpoints. Record revisions keep identity; changed conceptual identity creates a new ID. Accepted knowledge requires evidence closure and a human ReviewDecision. Synthetic fixtures can validate structure but can never be accepted knowledge.
+All records have a stable canonical se: CURIE, record_version, lifecycle_status and created_on. Aliases are non-canonical lookup hints, never graph endpoints. Record revisions keep identity; changed conceptual identity creates a new ID. Accepted knowledge requires evidence closure: each Evidence record must itself be ACCEPTED, have extraction_status=REVIEWED, point to a verified SourceLocator and carry an exact ACCEPT ReviewDecision digest. The accepted knowledge record also has its own ReviewDecision. Conflicting ACCEPT versus REJECT/REQUEST_CHANGES decisions on the same exact revision fail closed. Synthetic fixtures can validate structure but can never be accepted knowledge.
 
 ## Required validation profile
 
@@ -55,6 +55,7 @@ All records have a stable canonical se: CURIE, record_version, lifecycle_status 
 ## Known risks and mitigations
 
 - LinkML reference closure is not a substitute for a graph validator. Mitigation: validate all IDs and typed endpoints in validate_knowledge_graph.py.
+- YAML date scalars may load as native date objects; canonical review digests normalize dates to ISO-8601 before JSON hashing so the same record hashes consistently across YAML and JSON representations.
 - LinkML enum values without a `meaning` serialize as RDF literals. Mitigation: every RelationshipPredicate permissible value maps to a stable `se:` URI so `rdf:predicate` is a URIRef; verify this in both Turtle and JSON-LD.
 - JSON Schema generation may not preserve LinkML unique-key/reference semantics. Mitigation: executable graph validator is authoritative for graph-wide invariants.
 - LinkML 1.12.1 JSON-LD conversion previously omitted some nested rdf:type triples (SEK-04 L09). This must be retested with the full model; do not declare RDF/JSON-LD parity from Turtle alone.
