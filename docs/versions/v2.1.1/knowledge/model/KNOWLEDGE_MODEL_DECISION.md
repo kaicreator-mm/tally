@@ -3,7 +3,8 @@
 **Task:** [SEK-05 #308](https://github.com/kaicreator-mm/tally/issues/308)  
 **Parent:** [v2.1.1 Product/Knowledge Pilot #299](https://github.com/kaicreator-mm/tally/issues/299)  
 **Baseline:** PR #303 HEAD e146b1894e6bdf5f41faf18816627e117d44db07 / Tree 1a68d62e4f6e7583e66aeecfd45f7147eee87b06  
-**Status:** EXPERIMENTAL_CANDIDATE / FULL_MODEL_VALIDATION_PENDING / NO_PRODUCTION_ADOPTION  
+**Status:** EXPERIMENTAL_CANDIDATE / INDEPENDENT_REVIEW_PENDING / NO_PRODUCTION_ADOPTION
+
 **Model version:** 0.3.0
 
 ## Decision summary
@@ -12,7 +13,7 @@ This file defines the full-model candidate and the decision gates. It does not c
 
 - **Canonical authoring candidate:** Format B — structured YAML records paired with Markdown explanations.
 - **Schema candidate:** LinkML 1.12.1 with amendments: a repository-contained deterministic graph-integrity validator, explicit relationship catalog, and explicit RDF/JSON-LD identity checks.
-- **Decision state:** PENDING_FULL_MODEL_EXECUTION. The final decision must be exactly one of ADOPT, ADOPT_WITH_AMENDMENTS, REPEAT_EXPERIMENT or REJECT after the acceptance matrix is complete.
+- **Proposed decision:** REPEAT_EXPERIMENT. Structural and machine-validation evidence is available, but human review effort has not been measured and the resulting exact revision still requires independent review. Format B is the selected experimental authoring direction for that follow-up, not a production adoption.
 - **Production boundary:** no runtime dependency, production ontology, Tally UI integration, Domain Package, DomainForge promotion, official version freeze, release or deployment is authorized by this experiment.
 
 ## Why Format B is the leading candidate
@@ -111,3 +112,11 @@ rules:
 The default, unconfigured lint still reports uppercase enum values as naming warnings; report those separately rather than treating default lint as clean. `CoverageGap.label` is an optional slot, matching existing fixtures without imposing a new required field on older records.
 
 Direct LinkML 1.12.1 JSON-LD output must not be represented as graph-equivalent to its Turtle output: the full-model experiment found nested `rdf:type` triples missing in the direct JSON-LD. For graph-equivalent JSON-LD, convert the validated instance to Turtle with LinkML, then serialize that RDF graph to JSON-LD with RDFLib. For example, with both paths outside the repository, run `python -c "from rdflib import Graph; Graph().parse('fixture.ttl', format='turtle').serialize(destination='fixture-rdf.jsonld', format='json-ld')"`. Compare the parsed RDF graphs and separately check relationship URIRefs and source-to-evidence closure. The directly generated JSON-LD remains useful as a diagnostic artifact; it is not the canonical RDF-equivalent export.
+
+### Full-model local observations
+
+- The graph validator passed 52/52 self-tests; the positive fixture passed LinkML schema and instance validation. The seven class-level required-field omissions were rejected, while Evidence.context and Pattern.consequences remained optional.
+- Formats A, B and C round-tripped to the same canonical graph digest. Their file counts were 53, 105 and 1 respectively; independent-record edit conflicts were 0, 0 and 1. Data-versus-narrative edits to one entity conflicted in A but not B; C has no separate narrative channel. These are deterministic layout measurements, not a human comprehension or time study.
+- Turtle contained 666 triples and 16 typed RDF statements. The direct LinkML JSON-LD preserved the subject/predicate/object URIRefs and source-to-evidence identity closure, but contained 614 triples and no nested statement types. RDFLib JSON-LD serialized from Turtle preserved all 666 triples and was graph-isomorphic to Turtle.
+- A 0.2.0 fixture without the new required fields was accepted by 0.2.0 and rejected by 0.3.0 until explicitly migrated using the original fixture values. A temporary optional-field addition accepted old records, while old closed schemas rejected the new field; a temporary rename required explicit migration in both directions.
+- Reviewer comprehension and elapsed review time were not measured. Independent review must bind the final commit and assess the profile, the JSON-LD limitation, and the proposed `REPEAT_EXPERIMENT` outcome before downstream use.
