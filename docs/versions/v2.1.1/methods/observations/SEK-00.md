@@ -44,3 +44,14 @@ The initial-state observations above are retained as method history and must not
 - LinkML/linkml-runtime v1.12.1 L01–L15 has since been executed in Windows-native Python 3.14.7 under builder PR #310. This is experimental evidence only; LinkML remains NOT_ADOPTED.
 - The repository-contained checker repair is in PR #311. Its current 32-case source/locator coherence revision awaits exact-HEAD Windows-native validation and terminal independent review.
 - An independent Exact-SHA review of the current integration PR #303 exists, but its overall result remains BLOCK because SEK-04 builder/repair integration gates are still open. No task acceptance or product freeze is implied.
+
+
+## Integrated WIP current-state supersession — 2026-11-05
+
+The earlier current-state reconciliation above is retained as a dated execution snapshot. The following integration events supersede its PR #311 pending-validation and PR #303 BLOCK statements:
+
+- SEK-04 repair PR #311 received terminal Exact-SHA R2 PASS (P0/P1/P2=0/0/0) and was merged into builder PR #310.
+- PR #310 was independently reviewed at its integrated head and merged into the declared WIP branch `wip/v2.1.1-knowledge`.
+- PR #313 records the early LinkML PoF outcome `REPEAT_EXPERIMENT`; the full-model decision remains assigned to SEK-05 #308.
+- Current integrated WIP PR #303 HEAD at this checkpoint: `a2536324c0f3711229a7b3257d6f7f6a44e36b50`. It remains DRAFT/WIP, not an official version branch and has no main/release/deployment authority.
+- The next gate is a fresh independent Exact-SHA review of this resulting PR #303 HEAD. No formal task acceptance or product freeze is implied by the integrations above.
