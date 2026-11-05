@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** EXECUTED_2026-11-05 / HISTORICAL_CHECKER_31_CASE_VALIDATION_PASS_ON_2c5c8b3d / FINAL_R2_SOURCE_LOCATOR_COHERENCE_REPAIR_PENDING_VALIDATION — see RESULTS.md §10.15 and POF_PLAN.md §16  
+**Status:** EXECUTED_2026-11-05 / FINAL_R2_SOURCE_LOCATOR_COHERENCE_VALIDATED_32_CASES_ON_8257AEA / LINKML_EXPERIMENT_ONLY / NO_ADOPTION_DECISION — see RESULTS.md §10.16 and POF_PLAN.md §17  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -130,7 +130,7 @@ This section records the original analysis-container limitation before the Windo
 
 ## 9. Exit criteria
 
-The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The committed repository integrity checker passed Windows-native exact-source-HEAD validation at `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (31/31 self-tests, A/B/C YAML+Turtle, JSON-LD edge identity and 24/24 CLI probes); the earlier independent source review found no remaining P0/P1/P2 defect at that SHA; a subsequent final R2 pass found a missing DomainNode source/locator coherence invariant in the same checker blob, superseding that clean disposition (see §16). The validation and review evidence are recorded in RESULTS.md §10.14 and Issue #305 comments #6643352340 / the current review terminal. The two commits immediately following the source-bearing HEAD were documentation-only reconciliation within the same four-path write set. The later final R2 source-coherence repair in §16 changes the checker; its resulting exact HEAD must receive fresh 32-case local validation before integration. SEK-04 remains OPEN pending that rebind, integration into #310 → #303, and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
+The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The final source-coherence checker revision passed Windows-native exact-HEAD validation at `8257aea33538b96300b91be66e2d22c28c926882` / Tree `102d6a6ee41b08065ecca8cd0750540a3784962c` / checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`: py_compile EXIT=0; 32/32 self-tests; 12/12 LinkML conversions; A/B/C YAML+Turtle integrity; 25/25 CLI probes; and seven JSON-LD edge-identity artifacts. The exact execution receipt and evidence bundle are recorded in RESULTS.md §10.16 and Issue #305 comment #6656869638. Subsequent documentation-only reconciliation commits preserve the validated checker blob and experiment inputs; the terminal R2 review must still verify the current PR tip, tree, checker blob and four-path write set before integration. SEK-04 remains OPEN pending integration into #310 → #303 and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
 
 
 ## 10. R2 P1-01 schema correction — typed resource target
@@ -225,4 +225,21 @@ The final independent R2 review found one remaining cross-record integrity gap i
 
 The checker is repaired within the existing #305 write set. It now resolves the DomainNode source and locator records, validates the locator's own source_ref, and rejects a mismatch. A dedicated self-test constructs two valid Source records and two valid SourceLocator records, then binds the DomainNode to mismatched source/locator values. The test must fail with the exact source-coherence diagnostic. Self-test target is now **32/32**.
 
-**Current status: REVALIDATION_PENDING.** Run py_compile, the 32/32 self-test, all existing A/B/C YAML+Turtle checks, 24 existing CLI probes plus the new DomainNode source/locator mismatch negative probe, and the independent seven-artifact JSON-LD edge check on the exact new HEAD/Tree. The earlier 31/31 evidence applies to checker blob 503b370b... only and does not validate the repaired checker. No schema, fixture, runtime, CI or out-of-write-set path changes.
+**Status when the source-coherence repair was first committed: REVALIDATION_PENDING.** This historical pending state is superseded by the successful exact-HEAD validation in §17 and RESULTS.md §10.16. The 32-case checker passed on Windows-native Python 3.14.7 at HEAD `8257aea33538b96300b91be66e2d22c28c926882`, Tree `102d6a6ee41b08065ecca8cd0750540a3784962c`, checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`. No schema, fixture, runtime, CI or out-of-write-set path changed.
+
+
+## 17. Final exact-HEAD validation — source/locator coherence repair — 2026-11-05
+
+The final source-coherence checker was validated on Windows-native Python 3.14.7 (no WSL) with LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Exact validation binding:
+- HEAD: `8257aea33538b96300b91be66e2d22c28c926882`
+- Tree: `102d6a6ee41b08065ecca8cd0750540a3784962c`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+
+Results: py_compile EXIT=0; self-test 32/32 PASS; 12/12 LinkML conversions EXIT=0; A/B/C YAML+Turtle integrity PASS with exact statement/subject/predicate/object/evidence CURIE identity; 25/25 CLI probes PASS (24 expected negative EXIT=1 plus one GraphNode-ancestor positive control EXIT=0); independent JSON-LD edge identity PASS across all seven artifacts. The new DomainNode source/locator mismatch negative case exits 1 with the expected diagnostic. L09 nested JSON-LD rdf:type omissions remain explicitly recorded; no JSON-LD/TTL full-graph equivalence is claimed.
+
+Full execution receipt: Issue #305 comment [#6656869638](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6656869638). The 57-file evidence bundle and SHA256 manifest are linked from that receipt.
+
+The validation ran read-only in a detached worktree and made no repository changes. This is an experiment-only result: LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production adoption, main merge, release or deployment follows.
