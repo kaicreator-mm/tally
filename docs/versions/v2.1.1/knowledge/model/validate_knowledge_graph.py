@@ -251,21 +251,30 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             ref(record_id, "object_ref", set(COLLECTIONS.values()), True)
 
     root_domain = graph.get("domain_ref")
-    if root_domain not in entities or classes.get(root_domain) != "Domain":
+    if not isinstance(root_domain, str) or root_domain not in entities or classes.get(root_domain) != "Domain":
         _error(errors, "INVALID_GRAPH_DOMAIN", str(root_domain))
 
     # A locator is unique within its source; evidence has exactly one source locator.
     locator_keys = {}
     for class_name, record_id, record in records:
         if class_name == "SourceLocator":
-            key = (record.get("source_ref"), record.get("locator"))
+            source_ref = record.get("source_ref")
+            locator_value = record.get("locator")
+            if not isinstance(source_ref, str) or not isinstance(locator_value, str):
+                _error(errors, "INVALID_SOURCE_LOCATOR_IDENTITY", record_id)
+                continue
+            key = (source_ref, locator_value)
             if key in locator_keys:
                 _error(errors, "DUPLICATE_SOURCE_LOCATOR", f"{record_id} duplicates {locator_keys[key]}")
             locator_keys[key] = record_id
         elif class_name == "Evidence":
-            locator = entities.get(record.get("source_locator_ref"), {})
+            locator_id = record.get("source_locator_ref")
+            if not isinstance(locator_id, str):
+                _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", record_id)
+                continue
+            locator = entities.get(locator_id, {})
             source_id = locator.get("source_ref")
-            if not source_id or classes.get(source_id) != "Source":
+            if not isinstance(source_id, str) or classes.get(source_id) != "Source":
                 _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", record_id)
 
     predicate_rules = {
@@ -274,6 +283,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
     }
 
     def evidence_is_usable(evidence_id, owner_id):
+        if not isinstance(evidence_id, str):
+            _error(errors, "INVALID_EVIDENCE_REFERENCE", f"{owner_id}->{evidence_id!r}")
+            return False
         evidence = entities.get(evidence_id)
         if not evidence or classes.get(evidence_id) != "Evidence":
             _error(errors, "DANGLING_EVIDENCE", f"{owner_id}->{evidence_id}")
@@ -288,9 +300,12 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "EVIDENCE_NOT_ACCEPTED", f"{owner_id}->{evidence_id}")
             return False
         locator_id = evidence.get("source_locator_ref")
+        if not isinstance(locator_id, str):
+            _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", f"{owner_id}->{evidence_id}")
+            return False
         locator = entities.get(locator_id, {})
         source_id = locator.get("source_ref")
-        if classes.get(locator_id) != "SourceLocator" or classes.get(source_id) != "Source":
+        if not isinstance(source_id, str) or classes.get(locator_id) != "SourceLocator" or classes.get(source_id) != "Source":
             _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", f"{owner_id}->{evidence_id}")
             return False
         if locator.get("verification_state") != "LOCATOR_VERIFIED":
@@ -401,6 +416,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                 if evidence_ids:
                     usable_evidence_refs(record_id, evidence_ids)
                 for case_id in case_ids:
+                    if not isinstance(case_id, str):
+                        _error(errors, "INVALID_CASE_REFERENCE", f"{record_id}->{case_id!r}")
+                        continue
                     case = entities.get(case_id, {})
                     if case.get("synthetic") is True:
                         _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{case_id}")
@@ -430,12 +448,18 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if class_name != "RelationshipAssertion":
             continue
         predicate = record.get("predicate")
+        if not isinstance(predicate, str):
+            _error(errors, "UNKNOWN_PREDICATE", f"{record_id}: {predicate!r}")
+            continue
         rule = predicate_rules.get(predicate)
         if not rule:
             _error(errors, "UNKNOWN_PREDICATE", f"{record_id}: {predicate!r}")
             continue
         subject_id = record.get("subject_ref")
         object_id = record.get("object_ref")
+        if not isinstance(subject_id, str) or not isinstance(object_id, str):
+            _error(errors, "INVALID_RELATIONSHIP_ENDPOINT", f"{record_id}: subject={subject_id!r}, object={object_id!r}")
+            continue
         subject_class = classes.get(subject_id)
         object_class = classes.get(object_id)
         if subject_class not in set(rule.get("subject_classes", [])):
@@ -446,18 +470,26 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "MISSING_REQUIRED_EVIDENCE", record_id)
         if rule.get("qualifiers_required") and not _ids(record.get("qualifiers")):
             _error(errors, "MISSING_REQUIRED_QUALIFIER", record_id)
-        if not record.get("context") or not record.get("rationale"):
+        context = record.get("context")
+        rationale = record.get("rationale")
+        if not isinstance(context, str) or not context.strip() or not isinstance(rationale, str) or not rationale.strip():
             _error(errors, "MISSING_RELATION_CONTEXT", record_id)
         if subject_id == object_id:
             _error(errors, "SELF_REFERENTIAL_RELATIONSHIP", record_id)
-        if predicate == "OVERLAPS" and isinstance(subject_id, str) and isinstance(object_id, str) and subject_id >= object_id:
+        if predicate == "OVERLAPS" and subject_id >= object_id:
             _error(errors, "OVERLAPS_NONCANONICAL_PAIR", record_id)
+        qualifiers = _ids(record.get("qualifiers"))
+        if any(not isinstance(value, str) or not value.strip() for value in qualifiers):
+            _error(errors, "INVALID_RELATIONSHIP_QUALIFIER", record_id)
+            qualifier_signature = ()
+        else:
+            qualifier_signature = tuple(sorted(qualifiers))
         signature = (
             subject_id,
             predicate,
             object_id,
-            tuple(sorted(_ids(record.get("qualifiers")))),
-            record.get("context"),
+            qualifier_signature,
+            context if isinstance(context, str) else "",
         )
         if signature in edge_signatures:
             _error(errors, "DUPLICATE_RELATIONSHIP_SIGNATURE", record_id)
@@ -480,11 +512,14 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                     evidence_ids = [object_id]
                 elif object_class == "ReviewDecision":
                     review_target_id = object_record.get("target_ref")
-                    review_binding = (review_target_id, object_record.get("target_record_version"), object_record.get("target_digest_sha256"))
-                    if object_record.get("decision") != "ACCEPT" or review_target_id != subject_id or review_binding not in accepted_review_bindings:
+                    if not isinstance(review_target_id, str):
                         _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
                     else:
-                        evidence_ids = _ids(entities.get(review_target_id, {}).get("evidence_refs"))
+                        review_binding = (review_target_id, object_record.get("target_record_version"), object_record.get("target_digest_sha256"))
+                        if object_record.get("decision") != "ACCEPT" or review_target_id != subject_id or review_binding not in accepted_review_bindings:
+                            _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
+                        else:
+                            evidence_ids = _ids(entities.get(review_target_id, {}).get("evidence_refs"))
                 else:
                     evidence_ids = _ids(object_record.get("evidence_refs"))
             if not evidence_ids:
@@ -757,6 +792,9 @@ def run_self_tests(catalog, rules):
     expect("duplicate-relationship-signature", duplicate_relationship_signature, "DUPLICATE_RELATIONSHIP_SIGNATURE")
 
     expect("graph-id-collides-with-entity", lambda g: g.update(id=g["domains"][0]["id"]), "GRAPH_ID_COLLIDES_WITH_ENTITY")
+    expect("invalid-root-domain-type", lambda g: g.update(domain_ref=["se:DOMAIN-SOFTWARE-ENGINEERING"]), "INVALID_GRAPH_DOMAIN")
+    expect("invalid-relationship-endpoint-type", lambda g: g["relationship_assertions"][0].update(subject_ref=["se:CLM-SWEBOK-KA"]), "INVALID_RELATIONSHIP_ENDPOINT")
+    expect("invalid-evidence-reference-type", lambda g: g["concepts"][0].update(evidence_refs=[{"not": "an-id"}]), "INVALID_EVIDENCE_REFERENCE")
 
     def accepted_evidence_without_own_review(g):
         evidence = g["evidence_records"][0]
