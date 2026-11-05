@@ -11,12 +11,13 @@
 - **Editor:** Hironori Washizaki
 - **Organization / publisher:** IEEE Computer Society
 - **Edition:** Version 4.0a
-- **Release statement:** The official PDF title page says **Released August 2026**.
-- **ISBN:** 978-0-7695-0000-3 (printed on the official PDF copyright page)
+- **Release statement:** The current official PDF title page says **Released Sept 2025**. The official IEEE landing page records the **25 September 2025** update that identifies the v4.0a release.
+- **ISBN / DOI:** No ISBN or DOI is asserted. The current official PDF copyright page (PDF page index 4; printed page iv) does not display the ISBN previously recorded in this dossier, and the official landing-page citation does not establish that ISBN.
 - **Official PDF:** https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf
-- **Official landing page:** https://www.computer.org/education/bodies-of-knowledge/software-engineering
+- **Official landing page:** https://www.computer.org/education/bodies-of-knowledge/software-engineering/resources/
+- **Official download page:** https://www.computer.org/education/bodies-of-knowledge/software-engineering/v4
 
-The prior provisional ID suffix `-2025` was based on an incorrect initial date assumption. The old ID is retained as a non-canonical alias in the Source Registry; new references use the canonical year-free ID above. The suffix is not publication metadata.
+The canonical Source ID remains the year-free `SE-SRC-SWEBOK-GUIDE-4-0A`. The previous claims “Released August 2026” and “ISBN 978-0-7695-0000-3” are superseded and must not be reused. The old title-locator identifier is replaced by a September-2025 locator; downstream references in the initial vertical-slice fixture are updated in this task.
 
 ## 2. Authority fit
 
@@ -40,8 +41,8 @@ Locators below use the PDF's zero-based page index where stated, plus the docume
 
 | Locator ID | Exact locator | Verified content |
 |---|---|---|
-| SE-LOC-SWEBOK-TITLE-2026-08 | PDF page index 0, title page | Version 4.0a; editor; Released August 2026 |
-| SE-LOC-SWEBOK-ISBN-COPYRIGHT | PDF page index 4; printed page iv | ISBN and copyright/reprint permission notice |
+| SE-LOC-SWEBOK-TITLE-2025-09 | PDF page index 0, title page | Version 4.0a; editor Hironori Washizaki; Released Sept 2025 |
+| SE-LOC-SWEBOK-COPYRIGHT | PDF page index 4; printed page iv | Copyright © 2014–2025 and copyright/reprint permission notice; no ISBN is displayed on this page |
 | SE-LOC-SWEBOK-SE-DEFINITION | PDF page indices 37–38; printed pages xxxvii–xxxviii; Introduction, “What Is Software Engineering?” | The Guide attributes a definition to ISO/IEC/IEEE SEVOCAB; historical definitions and scope discussion |
 | SE-LOC-SWEBOK-KA-TABLE | PDF page index 39; printed page xxxix; Table I.1 | 18 Knowledge Areas; Chapters 1–15 are Software Engineering KAs and Chapters 16–18 are foundation KAs |
 | SE-LOC-SWEBOK-RELATED-DISCIPLINES | PDF page index 39; printed page xxxix; Table I.2 | Eleven related disciplines; the Guide says characterizing their knowledge is not its objective |
@@ -88,13 +89,16 @@ Table I.2 lists Business Analysis, Computer Engineering, Computer Science, Cyber
 
 ## 5. Rights and handling
 
-The official copyright page permits educational or personal use subject to conditions. Commercial reprint/republishing, advertising/promotional use, and creating new collective works for resale or redistribution require permission from IEEE. The corpus therefore stores bibliographic facts, exact locators, short original paraphrases and original analysis only; it does not reproduce substantial Guide text.
+The current official PDF copyright page (printed page iv) permits educational or personal use subject to its stated conditions: copies must not be made for profit or in lieu of class purchases, the notice and full citation must accompany copies, and copies must not imply IEEE endorsement. Commercial reprint/republishing, advertising/promotional use, and new collective works for resale or redistribution require IEEE permission.
+
+The current official IEEE landing page states additional restrictions on copying, sharing, public access to downloaded copies, translation and significant commercial reuse. Treat the landing-page restrictions as part of the source's access/rights metadata; do not infer broader permission from the PDF notice. The corpus must not commit, mirror, publish or redistribute the PDF. Store bibliographic facts, exact locators and concise original paraphrases only; seek IEEE permission if a proposed use exceeds the stated personal/educational conditions.
 
 ## 6. Verification record
 
-- Identity: VERIFIED against the official PDF title and copyright pages.
+- Identity: VERIFIED for title, editor, organization and edition against the current official PDF and IEEE landing page; the earlier date and ISBN assertions are superseded.
 - Content: VERIFIED for the introduction, Tables I.1/I.2 and stated scope limitations listed above.
-- Locator: VERIFIED for the listed PDF page indices and printed page labels.
+- Locator: VERIFIED for the listed PDF page indices and printed page labels, including the current title and copyright pages.
+- Current official PDF SHA-256: PENDING native download verification; do not reuse an older cached-file digest.
 - Claim extraction: separate records in `knowledge/vertical-slice/KNOWLEDGE_RECORDS.yaml`.
 - Human review: PENDING.
 - Acceptance into final corpus: NOT_YET_ACCEPTED.

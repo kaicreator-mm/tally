@@ -7,11 +7,11 @@ registry_ref: SE-AUTHORITY-REGISTRY-0.1.0
 scope_note: "A small source-grounded pilot across professional BOK taxonomy, CS curriculum boundary and secure-development guidance. These are experimental records, not accepted corpus knowledge."
 review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
 source_locators:
-  - locator_id: SE-LOC-SWEBOK-TITLE-2026-08
+  - locator_id: SE-LOC-SWEBOK-TITLE-2025-09
     source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
     locator_type: TITLE_PAGE
     locator: "Official PDF page index 0; title page"
-    verified_content: "Version 4.0a; editor Hironori Washizaki; Released August 2026"
+    verified_content: "Version 4.0a; editor Hironori Washizaki; Released Sept 2025"
     verification_state: LOCATOR_VERIFIED
   - locator_id: SE-LOC-SWEBOK-KA-TABLE
     source_ref: SE-SRC-SWEBOK-GUIDE-4-0A

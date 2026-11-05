@@ -51,10 +51,15 @@ Review source dossiers in `authority/source-reviews/`, then follow each claim to
 
 | Evidence family | Current coverage | Status |
 |---|---|---|
-| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Selected content/locators verified |
+| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Source metadata corrected by SEK-02R: Released Sept 2025; no ISBN/DOI asserted; current rights limits recorded; human review pending |
 | CS2023 | CS curriculum boundary, nine SE Knowledge Units, explicit cross-KA perspective references | Selected content/locators verified |
 | NIST SP 800-218 v1.1 | Secure-development practice groups, SDLC integration, risk-based applicability and ordering caveat | Selected PDF sections verified |
 | NIST SP 800-218A | AI-model-specific companion profile relationship | Metadata and abstract only |
 | ISO/IEC/IEEE 12207, 15288, 25010, 42010, 29119-2 | Bibliographic identity and boundary candidates only | No ISO normative content admitted |
 
 The first slice does **not** yet cover authoritative detailed claims for requirements, architecture/design, construction, testing, operations, configuration management, maintenance, quality, process/methods, engineering management/economics, professional practice or the three foundation KAs. These gaps are intentional and must drive the next source-research lanes. SWEBOK's reference list is a lead set, not a complete authority registry.
+
+
+## SWEBOK source identity correction — SEK-02R
+
+The current official IEEE PDF and landing page identify SWEBOK v4.0a as released/updated in September 2025. Earlier repository claims of “Released August 2026” and ISBN 978-0-7695-0000-3 are superseded; the current PDF copyright page does not display that ISBN. The canonical Source ID remains year-free. Do not reuse the superseded metadata. See the SEK-02R source dossier and observation for the exact official locators and rights boundary.

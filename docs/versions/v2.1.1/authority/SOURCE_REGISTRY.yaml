@@ -13,13 +13,11 @@ sources:
     editor: "Hironori Washizaki"
     organization: "IEEE Computer Society"
     edition: "Version 4.0a"
-    publication_date: "2026-08"
+    publication_date: "2025-09"
     status: RELEASED
     official_url: "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
     landing_url: "https://www.computer.org/education/bodies-of-knowledge/software-engineering"
-    isbn: "978-0-7695-0000-3"
-    stable_identifier: "ISBN 978-0-7695-0000-3"
-    identifier_note: "ISBN transcribed from the official PDF copyright page; no DOI asserted."
+    identifier_note: "No ISBN or DOI is asserted: the current official PDF copyright page and official IEEE landing-page citation do not establish one."
     relevant_areas:
       - "Software Engineering discipline taxonomy"
       - "Foundations"
@@ -33,7 +31,9 @@ sources:
       - "Generally accepted knowledge is not a uniform prescription for every project"
       - "Related disciplines are identified but not characterized in full"
     verified_locators:
-      - "Title/opening page: v4.0a; released August 2026"
+      - "Title page: v4.0a; Released Sept 2025"
+      - "Official IEEE landing page: 25 September 2025 update identifying the v4.0a release"
+      - "Copyright and Reprint Permissions: PDF page index 4; printed page iv; copyright © 2014–2025; no ISBN is printed on this page"
       - "Introduction to the Guide, What Is Software Engineering?: printed pages xxxvii-xxxviii"
       - "Scope/objectives and related disciplines: printed pages xxxviii-xxxix"
       - "Table I.1, The 18 SWEBOK KAs; Table I.2, Related Disciplines: printed page xxxix"
@@ -45,11 +45,11 @@ sources:
       locator: VERIFIED_FOR_LISTED_SECTIONS
       state: LOCATOR_VERIFIED
       accessed_on: "2026-11-04"
-      method: "Official PDF opened; title/release month, copyright/ISBN page, introduction, tables and stated limitations inspected."
+      method: "Current official IEEE PDF and official landing/download pages re-opened on 2026-11-06. The title page states Released Sept 2025; the landing page records the 25 September 2025 update; PDF page index 4 (printed page iv) contains the copyright/reprint notice and no ISBN. Current PDF SHA-256 is pending native download verification."
     rights:
-      notice: "PDF copyright notice permits educational/personal use subject to conditions; commercial reprint/redistribution and new collective works require permission."
-      handling: "Store bibliographic facts, concise paraphrases and original synthesis; do not reproduce substantial text."
-    notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology. The previous provisional ID suffix '-2025' was incorrect because the title page states August 2026; the legacy ID is retained as an alias, not as a publication-date assertion."
+      notice: "The current PDF copyright page permits educational or personal use subject to its stated conditions and requires IEEE permission for commercial reprint/republishing, advertising/promotional use, or new collective works for resale/redistribution. The current official landing page states additional restrictions on copying, sharing, public access and significant commercial reuse."
+      handling: "Do not commit, mirror, publish or redistribute the PDF. Store bibliographic metadata, exact locators and concise original paraphrases only. Do not infer broad commercial or public-redistribution permission; seek IEEE permission where the proposed use exceeds the stated personal/educational conditions."
+    notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology. SEK-02R supersedes the earlier incorrect registry/dossier assertions of Released August 2026 and ISBN 978-0-7695-0000-3. The current official PDF and landing page identify v4.0a as released/updated in September 2025. The canonical source ID remains year-free; no ISBN or DOI is asserted without independent primary-source evidence."
   - source_id: SE-SRC-CS2023
     source_class: CURRICULUM_FRAMEWORK
     source_role: PRIMARY
