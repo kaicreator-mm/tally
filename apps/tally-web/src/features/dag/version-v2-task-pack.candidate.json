@@ -4,12 +4,12 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-05T13:19:32.023Z",
+  "observedAt": "2026-11-05T19:25:12.828Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 46,
-    "claimCommentPages": 46
+    "taskIssueCount": 47,
+    "claimCommentPages": 47
   },
   "taskIssues": [
     {
@@ -520,7 +520,7 @@
       "closedAt": null,
       "scopeDisposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
+      "dispositionNote": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable. Its write set also overlaps #319 on two Claim-event paths; serialize or narrow before either shared-path write."
     },
     {
       "issueNumber": 219,
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-05T12:23:45Z",
+      "updatedAt": "2026-11-05T18:57:42Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -681,7 +681,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-04T00:27:42Z",
-      "updatedAt": "2026-11-05T11:52:19Z",
+      "updatedAt": "2026-11-05T18:57:51Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_E0_PRE_FREEZE_BOOTSTRAP_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -696,11 +696,26 @@
         "state:planned"
       ],
       "createdAt": "2026-11-05T04:00:25Z",
-      "updatedAt": "2026-11-05T11:58:06Z",
+      "updatedAt": "2026-11-05T17:01:51Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
       "dispatchableByDisposition": false,
       "dispositionNote": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
+    },
+    {
+      "issueNumber": 319,
+      "title": "[v2][P0][T06d Successor] Append-only terminal disposition for accepted Claims",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-05T18:54:59Z",
+      "updatedAt": "2026-11-05T18:54:59Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "T06d Host-only Claim terminalization successor, planned and not admitted. Exact current Task Pack/Claim admission, independent review and native Windows validation are pending. Two candidate paths overlap #212; both tasks remain non-dispatchable and must be serialized or narrowed before either shared-path write. #203 historical Claim terminality remains NOT_PROVEN."
     }
   ],
   "edges": [
@@ -937,6 +952,13 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
+    },
+    {
+      "from": 319,
+      "to": 284,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319"
     }
   ],
   "claimSubjects": [
@@ -1537,6 +1559,19 @@
       "commentId": null,
       "commentRef": null,
       "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 319,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#319:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1747,13 +1782,21 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
+    },
+    {
+      "from": 319,
+      "to": 284,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
+      "reason": "#284 waits for #319 T06d terminalization implementation; PLANNED only, not a native dependency or admission."
     }
   ],
   "notes": [
-    "This refreshed 46-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "This refreshed 47-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
     "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
-    "Twenty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 as PLANNED.",
-    "The roster includes all 46 current label:type:task Issues (25 open / 21 closed). #276 is PLANNED with NO_CLAIM_EVENT_EXPECTED and is non-dispatchable.",
+    "Twenty-seven PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 and #319 → #284 as PLANNED.",
+    "The roster includes all 47 current label:type:task Issues (26 open / 21 closed). #319 and #276 are PLANNED, have NO_CLAIM_EVENT_EXPECTED and are non-dispatchable.",
     "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
@@ -1768,8 +1811,10 @@
     "R8 additions #284 (E0 pre-freeze Bootstrap) and #312 (Product ReviewWitness successor to merged #210) are in the roster as state:planned with NO_CLAIM_EVENT_EXPECTED (zero ADS claim comments observed on either Issue); both are non-dispatchable.",
     "Executable-status corrections from current native evidence: #203 CANONICALIZED_OVERLAP_BLOCKED with unproven historical-Claim terminality (non-dispatchable); #210 successor ownership transferred to #312 with no #210 mutation authorized; #219 on HOLD (state:planned) until #312 review/integration.",
     "New PLANNED edges #284 -> #312 and #312 -> #219 record R8 serial ownership only. No GitHub Native dependency (blocked_by) was written for them or any other pair; the 4 NATIVE edges remain #260-#263 -> #264.",
-    "Write-set audit recomputed from the current allowed_write_set of all 25 open Task bodies: 66 nonzero pairwise intersections (23 open Tasks carry an allowed_write_set; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices match the paths_sha256-normalized blocks in Issues #312/#219/#284 exactly.",
-    "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied."
+    "Previous 46-Task snapshot: 25 open Task bodies had 66 nonzero pairwise intersections (23 nonempty write sets; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices matched the paths_sha256-normalized blocks in Issues #312/#219/#284.",
+    "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied.",
+    "Current full read: 47 Task bodies, all Claim comments and blocked_by lists; 39 observed self-reported Claims and 8 no-Claim rows. #260, #284 and #312 updatedAt refreshed. #319 → #284 is PLANNED only. #203 Claim terminality remains NOT_PROVEN.",
+    "Current 26-open-Task write-set audit: 24 nonempty sets, 67 nonzero exact-path pairs. Contrary to the #319 planning text, #319 overlaps #212 on two Claim-event paths; no other #319 exact-path overlap was found. Both remain non-dispatchable pending serialization or narrowing."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -1977,7 +2022,7 @@
         "issueNumber": 212,
         "disposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
         "dispatchableByDisposition": false,
-        "note": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable."
+        "note": "Issue declares #211 dependency, but native blocked_by is absent; keep PLANNED and non-executable. Its write set also overlaps #319 on two Claim-event paths; serialize or narrow before either shared-path write."
       },
       {
         "issueNumber": 219,
@@ -2050,6 +2095,12 @@
         "disposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
         "dispatchableByDisposition": false,
         "note": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
+      },
+      {
+        "issueNumber": 319,
+        "disposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "T06d Host-only Claim terminalization successor, planned and not admitted. Exact current Task Pack/Claim admission, independent review and native Windows validation are pending. Two candidate paths overlap #212; both tasks remain non-dispatchable and must be serialized or narrowed before either shared-path write. #203 historical Claim terminality remains NOT_PROVEN."
       }
     ]
   },
@@ -2262,16 +2313,28 @@
           "packages/tally-engineering-business/test/business-policy.test.mjs"
         ],
         "finding": "#284 shares five paths with #203 (#203x#284=5). #203 is the R8 historical predecessor: its source/PRs are merged but its old Claim terminality is unproven, so before #284 root admission the single Host registry must prove no active #203 writer/Claim; UNKNOWN blocks. No edge is recorded; this is an admission gate, not a dispatch edge."
+      },
+      {
+        "id": "CLAIM_EVENT_212_319_SERIALIZATION",
+        "taskIssues": [
+          212,
+          319
+        ],
+        "paths": [
+          "packages/tally-github-native-c/src/task-claim-events.mjs",
+          "packages/tally-github-native-c/test/task-claim-events.test.mjs"
+        ],
+        "finding": "#212 and #319 both list these two Claim-event paths. Both are non-dispatchable; serialize through a verified native dependency or narrow ownership before either shared-path write. No additional dependency is asserted here."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Pairwise intersection of the allowed_write_set block parsed from each of the 25 open Task issue bodies at this observedAt; cross-checked against #312 paths_sha256-normalized overlap matrix and #219/#284 R8 notes (all counts matched).",
-      "openTasksWithWriteSet": 23,
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 26 open Task issue bodies at observedAt; path patterns are retained literally.",
+      "openTasksWithWriteSet": 24,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 66,
+      "nonzeroPairs": 67,
       "pairs": [
         {
           "tasks": [
@@ -2943,6 +3006,17 @@
         },
         {
           "tasks": [
+            212,
+            319
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-github-native-c/src/task-claim-events.mjs",
+            "packages/tally-github-native-c/test/task-claim-events.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
             219,
             264
           ],
@@ -3105,6 +3179,128 @@
           ]
         }
       ]
-    }
+    },
+    "openTaskWriteSetDigests": [
+      {
+        "issueNumber": 196,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 197,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 198,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 202,
+        "pathCount": 15,
+        "pathsSha256": "d3597449101e0498917c1c30b8d43723d6ef0563496fb170636b3450e8b2fb35"
+      },
+      {
+        "issueNumber": 203,
+        "pathCount": 13,
+        "pathsSha256": "fdd47e0e9616dccd6e87261cad6bf0d19ea8dad36082ffb14ac3e784089bab48"
+      },
+      {
+        "issueNumber": 207,
+        "pathCount": 6,
+        "pathsSha256": "915df93f7a67acf88f6d24385c63dbe68e650dd3fd5755c1759bd7e70b55dbe8"
+      },
+      {
+        "issueNumber": 208,
+        "pathCount": 2,
+        "pathsSha256": "04361df43ed23b38fab742b44db031dae475483b0aa94c2093abd5e9ecc05f5f"
+      },
+      {
+        "issueNumber": 209,
+        "pathCount": 2,
+        "pathsSha256": "960fa225747d0ab39c10de8b8357cd47ffccba08a3968f89345a33d96d64652e"
+      },
+      {
+        "issueNumber": 210,
+        "pathCount": 16,
+        "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
+      },
+      {
+        "issueNumber": 211,
+        "pathCount": 6,
+        "pathsSha256": "e192b78f9bf12395b99ac8beb2e2f8b2e8e5fe24ca97713ea76a6816bde6ef66"
+      },
+      {
+        "issueNumber": 212,
+        "pathCount": 4,
+        "pathsSha256": "e4ed0583ea4666c7b09e951fef818e2711f372fafe1552b4b6345977a127c88d"
+      },
+      {
+        "issueNumber": 219,
+        "pathCount": 14,
+        "pathsSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797"
+      },
+      {
+        "issueNumber": 260,
+        "pathCount": 11,
+        "pathsSha256": "14538d19c835fc7298423fb55d0fbd61bf39f14c528cc6a8faaa8f1daed85c49"
+      },
+      {
+        "issueNumber": 261,
+        "pathCount": 15,
+        "pathsSha256": "71f199a056b0d83ea562ccd619af2ef79cd72917ababe28f4dfc448df4f19836"
+      },
+      {
+        "issueNumber": 262,
+        "pathCount": 5,
+        "pathsSha256": "69fbd9da1b7b3533a3926ddbe9d2f47d5af6bc7c1dc6787379aa9fb84de0e0c1"
+      },
+      {
+        "issueNumber": 263,
+        "pathCount": 4,
+        "pathsSha256": "cbeafd89071129e863add55d98a6f0afa17aa5af308de30d9bc920513f93262b"
+      },
+      {
+        "issueNumber": 264,
+        "pathCount": 11,
+        "pathsSha256": "a2ef95f245aebfcb64f259be8192e50cbbae0cb1a4d995d640a5c33ade2c81d0"
+      },
+      {
+        "issueNumber": 273,
+        "pathCount": 9,
+        "pathsSha256": "845cb2618eebab4f56aa38bd6c0176b2e6b3499d4a01db18150d02f9915d85dd"
+      },
+      {
+        "issueNumber": 274,
+        "pathCount": 6,
+        "pathsSha256": "f92b61a438644a1c72a9babb2bd91fa9f0e279dbf253bf63319091245e3fe23a"
+      },
+      {
+        "issueNumber": 275,
+        "pathCount": 5,
+        "pathsSha256": "015cb08892b9cf5215dc82c1877248a11650b220b7ab3f3f6c1e20c8a2e88a72"
+      },
+      {
+        "issueNumber": 276,
+        "pathCount": 42,
+        "pathsSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4"
+      },
+      {
+        "issueNumber": 284,
+        "pathCount": 14,
+        "pathsSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8"
+      },
+      {
+        "issueNumber": 312,
+        "pathCount": 16,
+        "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
+      },
+      {
+        "issueNumber": 319,
+        "pathCount": 9,
+        "pathsSha256": "a84548c5fdeaa6188976e331a2785b54c78f430bf50dec75a3034bfdb818305e"
+      }
+    ]
   }
 }
