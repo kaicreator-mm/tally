@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** EXECUTED_2026-11-05 / CHECKER_31_CASE_LOCAL_VALIDATION_PASS_ON_2c5c8b3d / SOURCE_REVIEW_PASS_ON_2c5c8b3d / CURRENT_DOCS_ONLY_HEAD_REBIND_REQUIRED — see RESULTS.md §10.14 and POF_PLAN.md §15  
+**Status:** EXECUTED_2026-11-05 / HISTORICAL_CHECKER_31_CASE_VALIDATION_PASS_ON_2c5c8b3d / FINAL_R2_SOURCE_LOCATOR_COHERENCE_REPAIR_PENDING_VALIDATION — see RESULTS.md §10.15 and POF_PLAN.md §16  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -130,7 +130,7 @@ This section records the original analysis-container limitation before the Windo
 
 ## 9. Exit criteria
 
-The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The committed repository integrity checker passed Windows-native exact-source-HEAD validation at `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (31/31 self-tests, A/B/C YAML+Turtle, JSON-LD edge identity and 24/24 CLI probes); the independent source review also found no remaining P0/P1/P2 defect at that SHA. The validation and review evidence are recorded in RESULTS.md §10.14 and Issue #305 comments #6643352340 / the current review terminal. The subsequent changes to this PR are documentation-only reconciliation within the same four-path write set; the resulting new PR HEAD must receive a fresh exact-HEAD local validation binding before integration. SEK-04 remains OPEN pending that rebind, integration into #310 → #303, and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
+The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The committed repository integrity checker passed Windows-native exact-source-HEAD validation at `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (31/31 self-tests, A/B/C YAML+Turtle, JSON-LD edge identity and 24/24 CLI probes); the earlier independent source review found no remaining P0/P1/P2 defect at that SHA; a subsequent final R2 pass found a missing DomainNode source/locator coherence invariant in the same checker blob, superseding that clean disposition (see §16). The validation and review evidence are recorded in RESULTS.md §10.14 and Issue #305 comments #6643352340 / the current review terminal. The subsequent changes to this PR are documentation-only reconciliation within the same four-path write set; the resulting new PR HEAD must receive a fresh exact-HEAD local validation binding before integration. SEK-04 remains OPEN pending that rebind, integration into #310 → #303, and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
 
 
 ## 10. R2 P1-01 schema correction — typed resource target
@@ -216,4 +216,13 @@ The final checker implementation was locally validated on Windows-native Python 
 
 Results: py_compile EXIT=0; checker self-test 31/31 PASS; A/B/C LinkML conversions and YAML+Turtle integrity PASS; 24/24 CLI negative/positive probes PASS; seven JSON-LD artifact edge-identity checks PASS. L09 nested `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed. Full command evidence, environment versions, artifacts and SHA256 manifest are in Issue #305 comment #6643352340 and its linked evidence bundle.
 
-The independent source audit at the same source-bearing HEAD found no remaining P0/P1/P2 defect. The subsequent PR changes reconcile this validation ledger and observation only; they do not change the checker blob, schema, fixtures, or runtime. **A fresh LOCAL_VALIDATION must bind the resulting documentation-reconciliation HEAD/Tree before integration.** No merge, LinkML adoption, release or deployment is authorized by this record.
+The earlier independent source audit at that source-bearing HEAD reported no remaining P0/P1/P2 defect; the final follow-up audit identified a missing DomainNode source/locator coherence invariant in the same checker blob, superseding that disposition (see §16). The subsequent PR changes reconcile this validation ledger and observation only; they do not change the checker blob, schema, fixtures, or runtime. **A fresh LOCAL_VALIDATION must bind the resulting documentation-reconciliation HEAD/Tree before integration.** No merge, LinkML adoption, release or deployment is authorized by this record.
+
+
+## 16. Final R2 follow-up — DomainNode source/locator coherence — 2026-11-05
+
+The final independent R2 review found one remaining cross-record integrity gap in checker blob 503b370b016616c629f97fb47fc06b0079b574d9: DomainNode.source_ref and DomainNode.source_locator_ref were each resolved independently, but the referenced SourceLocator.source_ref was not required to equal the DomainNode.source_ref. A malformed DomainNode could therefore name Source A while citing a locator owned by Source B, with both references individually valid.
+
+The checker is repaired within the existing #305 write set. It now resolves the DomainNode source and locator records, validates the locator's own source_ref, and rejects a mismatch. A dedicated self-test constructs two valid Source records and two valid SourceLocator records, then binds the DomainNode to mismatched source/locator values. The test must fail with the exact source-coherence diagnostic. Self-test target is now **32/32**.
+
+**Current status: REVALIDATION_PENDING.** Run py_compile, the 32/32 self-test, all existing A/B/C YAML+Turtle checks, 24 existing CLI probes plus the new DomainNode source/locator mismatch negative probe, and the independent seven-artifact JSON-LD edge check on the exact new HEAD/Tree. The earlier 31/31 evidence applies to checker blob 503b370b... only and does not validate the repaired checker. No schema, fixture, runtime, CI or out-of-write-set path changes.

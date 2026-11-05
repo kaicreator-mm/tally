@@ -2,7 +2,7 @@
 
 **Task:** #305  
 **Date:** 2026-11-04  
-**Status:** EXECUTED / SOURCE_REVIEWED / EXPERIMENTAL / NOT_ADOPTED — checker and LinkML PoF passed at source-bearing HEAD `2c5c8b3d`; current documentation-only PR HEAD requires exact-HEAD identity rebind before integration.
+**Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — historical checker and LinkML PoF passed at source-bearing HEAD `2c5c8b3d`; final R2 found and repaired DomainNode source/locator coherence; current checker validation pending.
 
 > **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The current checker blob is `503b370b016616c629f97fb47fc06b0079b574d9`; the final source-bearing validation is at `2c5c8b3d`, while the current docs-only PR head still needs exact HEAD/Tree rebind.
 
@@ -87,7 +87,7 @@ A repair candidate was applied:
 - Removed redundant `object_kind`; predicate-specific endpoint constraints are now in `RELATIONSHIP_RULES.yaml`.
 - Changed fixture identifiers and typed references to `se:` CURIEs with `uriorcurie`.
 
-Windows-native LinkML/linkml-runtime v1.12.1 execution subsequently verified the abstract-class range, non-inlined reference serialization, CURIE expansion and URIRef resource-node behavior in generated Turtle. A/B/C graph equivalence, exact YAML-to-RDF edge identity, JSON-LD edge identity and fail-closed endpoint validation are recorded in RESULTS.md §10.14. The final checker source passed 31/31 self-tests and independent review at source-bearing HEAD `2c5c8b3d`; the current documentation-only PR HEAD still requires exact-HEAD identity rebind before integration. No production adoption is implied.
+Windows-native LinkML/linkml-runtime v1.12.1 execution subsequently verified the abstract-class range, non-inlined reference serialization, CURIE expansion and URIRef resource-node behavior in generated Turtle. A/B/C graph equivalence, exact YAML-to-RDF edge identity, JSON-LD edge identity and fail-closed endpoint validation are recorded in RESULTS.md §10.14. The checker source passed 31/31 self-tests and earlier independent review at source-bearing HEAD `2c5c8b3d`; the final follow-up review found a missing DomainNode source/locator coherence invariant in that checker blob, so the earlier clean disposition is superseded and the repaired checker requires 32/32 revalidation. No production adoption is implied.
 
 ## R2 P2 remediation — status reconciliation
 
@@ -178,3 +178,10 @@ Results: py_compile EXIT=0; self-test 31/31 PASS; 12/12 LinkML conversions EXIT=
 Raw stdout/stderr, per-command exit codes, generated artifacts and SHA256 manifest are preserved in the evidence bundle linked from Issue #305 LOCAL_VALIDATION comment #6643352340. The independent source review of this same source-bearing HEAD found P0=0 / P1=0 / P2=0.
 
 The subsequent reconciliation changes are documentation-only and remain inside the original four-path #305 write set. A new exact-HEAD local validation record must bind the final documentation-reconciliation HEAD/Tree before integration. No LinkML adoption, merge to main, release or deployment is implied.
+
+
+## Final independent R2 follow-up — DomainNode source/locator coherence — 2026-11-05
+
+The checker previously required DomainNode.source_ref to resolve to a Source and DomainNode.source_locator_ref to resolve to a SourceLocator, but did not verify that the SourceLocator's own source_ref equals the DomainNode's source_ref. This permits a provenance mismatch even when both references are individually valid.
+
+The checker now resolves the locator record and rejects a mismatch between the two canonical source CURIEs. A dedicated negative self-test covers this case; the required self-test total is 32/32. This is a bounded #305 integrity repair, not a schema or production-model change. The new checker must receive exact-HEAD local revalidation before P1-03 can close; the prior 31/31 evidence applies only to its previous checker blob.

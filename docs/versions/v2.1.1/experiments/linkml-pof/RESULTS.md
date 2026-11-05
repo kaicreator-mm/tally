@@ -1,6 +1,6 @@
 # LinkML Proof-of-fit — Consolidated Results
 
-**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / CHECKER_31_CASE_VALIDATION_PASS_ON_2c5c8b3d / JSONLD_EDGE_IDENTITY_PASS / DOCS_ONLY_HEAD_REBIND_REQUIRED / NO_ADOPTION_DECISION  
+**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / HISTORICAL_CHECKER_31_CASE_VALIDATION_PASS_ON_2c5c8b3d / JSONLD_EDGE_IDENTITY_PASS / DOMAINNODE_SOURCE_LOCATOR_COHERENCE_REPAIR_PENDING_VALIDATION / NO_ADOPTION_DECISION  
 **Test date:** 2026-11-04 (design), 2026-11-05 (LOCAL_BUILDER execution, section 10)  
 **Pinned candidate:** LinkML v1.12.1
 
@@ -51,7 +51,7 @@ This was the pre-builder status on 2026-11-04. The pinned CLI was subsequently i
 
 ## 5. Interim position
 
-No production adoption decision is justified. The narrow LinkML PoF has been executed, including generated Turtle and A/B/C graph comparison. The final checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks, 24/24 CLI probes and the separate seven-artifact JSON-LD edge identity checks at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (§10.14). Independent source review found no remaining P0/P1/P2 issue at that SHA. A subsequent documentation-only reconciliation head requires a fresh exact-HEAD local identity rebind before integration. The full knowledge entity model and canonical authoring decision remain subject to SEK-05 #308; no LinkML adoption is implied.
+No production adoption decision is justified. The narrow LinkML PoF has been executed, including generated Turtle and A/B/C graph comparison. The final checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks, 24/24 CLI probes and the separate seven-artifact JSON-LD edge identity checks at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (§10.14). The earlier independent source review found no remaining P0/P1/P2 issue at that SHA. The final R2 follow-up subsequently found a DomainNode source/locator coherence gap in the same checker blob and repaired it in the current revision; the earlier clean disposition is superseded (see §10.15). The full knowledge entity model and canonical authoring decision remain subject to SEK-05 #308; no LinkML adoption is implied.
 
 
 ## 6. Static validation actually performed — 2026-11-04
@@ -358,3 +358,12 @@ Evidence:
 - Evidence bundle: https://gist.github.com/kaicreator-mm/cad56c015ed4f09b95f685c468dcb010
 
 The independent source review of the same source-bearing HEAD found **P0=0 / P1=0 / P2=0**. This entry documents the validated source-bearing HEAD; the documentation-only reconciliation commits that add this record do not change the checker blob. A fresh exact-HEAD identity rebind is required for the final documentation-reconciliation HEAD before integration.
+
+
+## 10.15 Final R2 follow-up — DomainNode source/locator coherence repair — 2026-11-05
+
+The final independent R2 review found that the checker resolved DomainNode.source_ref and DomainNode.source_locator_ref independently but did not require the SourceLocator to belong to the same Source. A DomainNode could therefore combine two individually valid references that describe conflicting provenance (source A with a locator owned by source B).
+
+The checker is repaired within the existing #305 write set. DomainNode validation now resolves both records, validates SourceLocator.source_ref as a canonical se: CURIE, and rejects a mismatch. A dedicated self-test constructs a second valid Source and SourceLocator and binds the DomainNode to the mismatched locator. The self-test target is now **32/32**.
+
+**Current result: REVALIDATION_PENDING.** The prior 31/31 run, 12/12 LinkML conversions, 24/24 CLI probes and seven JSON-LD artifact checks in §10.14 apply to checker blob 503b370b016616c629f97fb47fc06b0079b574d9 at source-bearing HEAD 2c5c8b3d only. They do not validate the new checker blob. Re-run py_compile, 32/32 self-test, A/B/C YAML+Turtle integrity, the 24 existing CLI probes plus the new source/locator mismatch negative probe, and seven-artifact JSON-LD edge identity on the new exact HEAD/Tree. Preserve logs and SHA256 manifest. No schema, fixture, runtime, CI or out-of-write-set path changes; LinkML remains EXPERIMENTAL / NOT_ADOPTED.

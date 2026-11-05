@@ -251,9 +251,18 @@ def validate_records(records, rules):
             resolve(record.get("source_locator_ref"), "SourceLocator",
                     rid + ".source_locator_ref")
         elif cls == "DomainNode":
-            resolve(record.get("source_ref"), "Source", rid + ".source_ref")
-            resolve(record.get("source_locator_ref"), "SourceLocator",
-                    rid + ".source_locator_ref")
+            source_ref = require_curie(record.get("source_ref"), rid + ".source_ref")
+            resolve(source_ref, "Source", rid + ".source_ref")
+            locator_ref = require_curie(record.get("source_locator_ref"), rid + ".source_locator_ref")
+            locator_record = resolve(locator_ref, "SourceLocator", rid + ".source_locator_ref")
+            locator_source_ref = require_curie(
+                locator_record.get("source_ref"), locator_ref + ".source_ref"
+            )
+            if locator_source_ref != source_ref:
+                raise IntegrityError(
+                    f"{rid}.source_locator_ref belongs to source {locator_source_ref}, "
+                    f"expected {source_ref}"
+                )
         elif cls == "KnowledgeClaim":
             for ref in as_list(record.get("source_refs", []), rid + ".source_refs"):
                 resolve(ref, "Source", rid + ".source_refs")
@@ -424,7 +433,17 @@ def self_test(rules):
         else:
             raise IntegrityError("self-test " + name + ": invalid rules accepted")
 
+    def mismatch_domain_source_locator(records):
+        records.append(("Source", {"id": "se:S2"}))
+        records.append(("SourceLocator", {
+            "id": "se:L2", "source_ref": "se:S2", "locator": "p.2"
+        }))
+        domain_node = next(record for cls, record in records if cls == "DomainNode")
+        domain_node["source_locator_ref"] = "se:L2"
+
     cases = (
+        ("domain source/locator mismatch", mismatch_domain_source_locator,
+         "belongs to source se:S2, expected se:S1"),
         ("duplicate id", lambda r: r.append(("Evidence", {"id": "se:E1"})), "duplicate identifier"),
         ("dangling object", lambda r: r[-2][1].update(object_ref="se:MISSING"), "dangling reference"),
         ("dangling source", lambda r: r[1][1].update(source_ref="se:MISSING"), "dangling reference"),
@@ -647,9 +666,9 @@ def self_test(rules):
     else:
         raise IntegrityError("self-test: RDF statement ID mismatch accepted")
 
-    if passed != 31:
-        raise IntegrityError(f"self-test coverage mismatch: expected 31 checks, observed {passed}")
-    print(f"SELF-TEST SUMMARY: {passed}/31 PASS")
+    if passed != 32:
+        raise IntegrityError(f"self-test coverage mismatch: expected 32 checks, observed {passed}")
+    print(f"SELF-TEST SUMMARY: {passed}/32 PASS")
     return 0
 
 
