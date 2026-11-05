@@ -650,23 +650,59 @@ def _yaml_dump(value):
 
 
 def _serialize_format_a(graph):
-    """Markdown document with a YAML front matter graph payload."""
-    frontmatter = _yaml_dump({"graph": graph})
-    return f"---\n{frontmatter}---\n\n# Software Engineering knowledge fixture\n\nNarrative explanation is kept outside the structured graph.\n"
+    """One Markdown file per entity with YAML front matter and inline narrative."""
+    files = {}
+    root = {
+        key: graph[key]
+        for key in ("id", "graph_version", "generated_on", "domain_ref")
+    }
+    root["collection_order"] = list(COLLECTIONS)
+    root_text = _yaml_dump({"graph_root": root})
+    files["graph-root.md"] = (
+        f"---\n{root_text}---\n\n"
+        "# Software Engineering knowledge graph\n\n"
+        "Graph-level narrative is stored beside its YAML front matter.\n"
+    )
+    for collection in COLLECTIONS:
+        for index, record in enumerate(graph.get(collection, [])):
+            slug = record["id"].split(":", 1)[1].lower()
+            record_text = _yaml_dump({"record": record})
+            files[f"records/{collection}/{index:04d}-{slug}.md"] = (
+                f"---\n{record_text}---\n\n"
+                f"# {record['id']}\n\n"
+                "Entity explanation is stored in the same Markdown file as its front matter.\n"
+            )
+    return files
 
 
-def _parse_format_a(document):
+def _parse_frontmatter(document, key):
     parts = document.split("---", 2)
     if len(parts) != 3 or parts[0].strip():
-        raise ValidationError("Format A front matter delimiters are invalid")
+        raise ValidationError("Markdown front matter delimiters are invalid")
     payload = yaml.safe_load(parts[1])
-    if not isinstance(payload, dict) or not isinstance(payload.get("graph"), dict):
-        raise ValidationError("Format A front matter does not contain graph mapping")
-    return payload["graph"]
+    if not isinstance(payload, dict) or not isinstance(payload.get(key), dict):
+        raise ValidationError(f"Markdown front matter does not contain {key} mapping")
+    return payload[key]
+
+
+def _parse_format_a(files):
+    root = _parse_frontmatter(files["graph-root.md"], "graph_root")
+    graph = {
+        key: root[key]
+        for key in ("id", "graph_version", "generated_on", "domain_ref")
+    }
+    for collection in root["collection_order"]:
+        prefix = f"records/{collection}/"
+        record_paths = sorted(path for path in files if path.startswith(prefix) and path.endswith(".md"))
+        graph[collection] = [
+            _parse_frontmatter(files[path], "record")
+            for path in record_paths
+        ]
+    return graph
 
 
 def _serialize_format_b(graph):
-    """One structured YAML file per entity plus linked Markdown explanations."""
+    """One YAML data file per entity plus a separate linked Markdown explanation."""
     files = {}
     root = {
         key: graph[key]
@@ -680,7 +716,7 @@ def _serialize_format_b(graph):
             files[f"records/{collection}/{index:04d}-{slug}.yaml"] = _yaml_dump(record)
             files[f"explanations/{slug}.md"] = (
                 f"# {record['id']}\n\n"
-                "Narrative explanation placeholder; structured facts remain in YAML.\n"
+                "Entity explanation is separate from the authoritative structured YAML record.\n"
             )
     return files
 
@@ -788,6 +824,32 @@ def run_format_comparison():
         for name in ("A", "B", "C")
     }
 
+    # Simulate concurrent structured-data and narrative edits to the same entity.
+    data_writer = copy.deepcopy(graph)
+    data_writer["concepts"][0]["definition"] += " Structured edit."
+    data_snapshots = _format_snapshots(data_writer)
+    narrative_writer = {
+        name: dict(files)
+        for name, files in snapshots.items()
+    }
+    concept_slug = graph["concepts"][0]["id"].split(":", 1)[1].lower()
+    for path in narrative_writer["A"]:
+        if path.endswith(f"-{concept_slug}.md"):
+            narrative_writer["A"][path] += "\nConcurrent narrative edit.\n"
+            break
+    narrative_writer["B"][f"explanations/{concept_slug}.md"] += "\nConcurrent narrative edit.\n"
+    same_entity_conflicts = {
+        "A": sorted(
+            set(_changed_metrics(snapshots["A"], data_snapshots["A"])[0])
+            & set(_changed_metrics(snapshots["A"], narrative_writer["A"])[0])
+        ),
+        "B": sorted(
+            set(_changed_metrics(snapshots["B"], data_snapshots["B"])[0])
+            & set(_changed_metrics(snapshots["B"], narrative_writer["B"])[0])
+        ),
+        "C": None,
+    }
+
     print(f"FORMAT_EQUIVALENCE={'PASS' if equivalent else 'FAIL'}")
     print(f"CANONICAL_GRAPH_SHA256={original}")
     for name in ("A", "B", "C"):
@@ -800,6 +862,10 @@ def run_format_comparison():
         print(f"FORMAT_{name}_TWO_RECORD_CHANGED_FILES={len(paths)}")
         print(f"FORMAT_{name}_TWO_RECORD_CHANGED_LINES={lines}")
         print(f"FORMAT_{name}_TWO_WRITER_CONFLICT_FILES={len(conflict_paths[name])}")
+        if same_entity_conflicts[name] is None:
+            print(f"FORMAT_{name}_SAME_ENTITY_DATA_NARRATIVE_CONFLICT=NOT_APPLICABLE_NO_SEPARATE_NARRATIVE_CHANNEL")
+        else:
+            print(f"FORMAT_{name}_SAME_ENTITY_DATA_NARRATIVE_CONFLICT_FILES={len(same_entity_conflicts[name])}")
     print(f"DETERMINISTIC_REBUILD={'PASS' if deterministic else 'FAIL'}")
     print("HUMAN_REVIEW_BURDEN=NOT_AUTOMATED_REQUIRES_REVIEWER_ASSESSMENT")
     return 0 if equivalent and deterministic else 1

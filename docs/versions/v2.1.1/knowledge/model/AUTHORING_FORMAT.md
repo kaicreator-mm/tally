@@ -89,7 +89,7 @@ The repository validator provides `python validate_knowledge_graph.py --format-c
 - B: one YAML file per entity plus linked Markdown explanations and a graph root;
 - C: one standalone YAML graph document.
 
-The command round-trips all three forms and compares canonical graph SHA-256 digests. It also reports one-record and two-record edit locality, a two-writer file-conflict simulation, file counts and deterministic rebuild. These are deterministic structural measurements for the declared layouts, not a substitute for a human reviewer measuring comprehension or actual team merge behavior.
+The command round-trips all three forms and compares canonical graph SHA-256 digests. It also reports one-record and two-record edit locality, independent-entity two-writer conflicts, same-entity structured-data-versus-narrative conflicts, file counts and deterministic rebuild. A and B both use one file per entity; A combines front matter and narrative in one Markdown file, while B separates authoritative YAML from Markdown explanation. C is one standalone YAML graph document. These are deterministic structural measurements for the declared layouts, not a substitute for a human reviewer measuring comprehension or actual team merge behavior.
 
 ## Remaining measurement
 
