@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-05T19:25:12.828Z",
+  "observedAt": "2026-11-05T19:44:58.786Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-05T18:57:42Z",
+      "updatedAt": "2026-11-05T19:28:01Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -711,11 +711,11 @@
         "state:planned"
       ],
       "createdAt": "2026-11-05T18:54:59Z",
-      "updatedAt": "2026-11-05T18:54:59Z",
+      "updatedAt": "2026-11-05T19:43:23Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
       "dispatchableByDisposition": false,
-      "dispositionNote": "T06d Host-only Claim terminalization successor, planned and not admitted. Exact current Task Pack/Claim admission, independent review and native Windows validation are pending. Two candidate paths overlap #212; both tasks remain non-dispatchable and must be serialized or narrowed before either shared-path write. #203 historical Claim terminality remains NOT_PROVEN."
+      "dispositionNote": "T06d Host-only Claim terminalization successor, planned and not admitted. Uses a dedicated terminal-event reader/test pair and does not modify #212's merged native Claim-event read-recovery paths. Exact Task Pack/Claim admission, independent review and native Windows validation are pending. #203 historical Claim terminality remains NOT_PROVEN."
     }
   ],
   "edges": [
@@ -2100,7 +2100,7 @@
         "issueNumber": 319,
         "disposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
         "dispatchableByDisposition": false,
-        "note": "T06d Host-only Claim terminalization successor, planned and not admitted. Exact current Task Pack/Claim admission, independent review and native Windows validation are pending. Two candidate paths overlap #212; both tasks remain non-dispatchable and must be serialized or narrowed before either shared-path write. #203 historical Claim terminality remains NOT_PROVEN."
+        "note": "T06d Host-only Claim terminalization successor; planned and non-dispatchable. Dedicated terminal-event reader avoids #212's Claim-event read-recovery paths. Exact Task Pack/Claim admission, independent review and native Windows validation remain pending. #203 terminality remains NOT_PROVEN."
       }
     ]
   },
@@ -2313,18 +2313,6 @@
           "packages/tally-engineering-business/test/business-policy.test.mjs"
         ],
         "finding": "#284 shares five paths with #203 (#203x#284=5). #203 is the R8 historical predecessor: its source/PRs are merged but its old Claim terminality is unproven, so before #284 root admission the single Host registry must prove no active #203 writer/Claim; UNKNOWN blocks. No edge is recorded; this is an admission gate, not a dispatch edge."
-      },
-      {
-        "id": "CLAIM_EVENT_212_319_SERIALIZATION",
-        "taskIssues": [
-          212,
-          319
-        ],
-        "paths": [
-          "packages/tally-github-native-c/src/task-claim-events.mjs",
-          "packages/tally-github-native-c/test/task-claim-events.test.mjs"
-        ],
-        "finding": "#212 and #319 both list these two Claim-event paths. Both are non-dispatchable; serialize through a verified native dependency or narrow ownership before either shared-path write. No additional dependency is asserted here."
       }
     ],
     "recomputedOpenTaskOverlaps": {
@@ -2334,7 +2322,7 @@
         199,
         200
       ],
-      "nonzeroPairs": 67,
+      "nonzeroPairs": 66,
       "pairs": [
         {
           "tasks": [
@@ -3006,17 +2994,6 @@
         },
         {
           "tasks": [
-            212,
-            319
-          ],
-          "sharedPathCount": 2,
-          "paths": [
-            "packages/tally-github-native-c/src/task-claim-events.mjs",
-            "packages/tally-github-native-c/test/task-claim-events.test.mjs"
-          ]
-        },
-        {
-          "tasks": [
             219,
             264
           ],
@@ -3299,7 +3276,7 @@
       {
         "issueNumber": 319,
         "pathCount": 9,
-        "pathsSha256": "a84548c5fdeaa6188976e331a2785b54c78f430bf50dec75a3034bfdb818305e"
+        "pathsSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2"
       }
     ]
   }
