@@ -1,6 +1,6 @@
 # LinkML Proof-of-fit — Consolidated Results
 
-**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / FINAL_CHECKER_32_CASE_VALIDATION_PASS / CURRENT_TIP_E27217E_REVALIDATED / JSONLD_EDGE_IDENTITY_PASS / DOMAINNODE_SOURCE_LOCATOR_COHERENCE_PASS / NO_ADOPTION_DECISION  
+**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / FINAL_CHECKER_32_CASE_VALIDATION_PASS / CURRENT_TIP_E27217E_FULL_MATRIX_PLUS_DA721EE_IDENTITY_REBIND / JSONLD_EDGE_IDENTITY_PASS / DOMAINNODE_SOURCE_LOCATOR_COHERENCE_PASS / EARLY_POF_DECISION_REPEAT_EXPERIMENT / NO_PRODUCTION_ADOPTION  
 **Test date:** 2026-11-04 (design), 2026-11-05 (LOCAL_BUILDER execution, section 10)  
 **Pinned candidate:** LinkML v1.12.1
 
@@ -427,3 +427,24 @@ Evidence:
 - 57-file secret evidence bundle: https://gist.github.com/kaicreator-mm/db70a4410907e630b8fce4153a5b2bb1
 
 The receipt is read-only and makes no source changes. LinkML remains EXPERIMENTAL / NOT_ADOPTED; this result does not freeze the full entity model or select a canonical authoring format.
+
+
+## 10.18 Early PoF decision — REPEAT_EXPERIMENT — 2026-11-05
+
+**Decision for SEK-04's early LinkML proof-of-fit: `REPEAT_EXPERIMENT`.**
+
+The experiment proves that LinkML v1.12.1 can represent and convert the tested narrow provenance chain when paired with the repository-contained fail-closed integrity checker. It does not prove that LinkML is suitable as the canonical format for the full Software Engineering knowledge model.
+
+Evidence supporting the decision:
+1. A/B/C encode the same tested logical provenance slice and produce isomorphic 45-triple domain graphs.
+2. The metamodel, 12/12 conversions, 32/32 checker self-tests, 25/25 CLI probes, and seven-artifact JSON-LD edge-identity checks pass.
+3. LinkML alone does not enforce non-inlined cross-file reference closure; the companion integrity checker is required.
+4. Generated JSON Schema loses reference/unique-key semantics; JSON-LD has the documented nested `@type` omission (L09). These limitations require explicit companion handling and must be retested against the complete model.
+5. The experiment does not cover the full entity families, review/lifecycle semantics, complete relationship catalog, applicability/uncertainty/contradiction model, schema evolution across the full graph, or the full authoring/review burden.
+
+Therefore:
+- `ADOPT` is premature because the tested sample is too narrow for a full-model adoption decision.
+- `REJECT` is not justified because the experiment demonstrates useful capabilities with a bounded companion integrity layer.
+- `REPEAT_EXPERIMENT` is the correct early-PoF outcome: SEK-05 #308 must test the complete entity/relationship model and decide the final outcome.
+
+**Decision boundary:** this is the decision for the early experiment only. The final full-model LinkML/authoring decision remains an explicit SEK-05 #308 acceptance item. No production adoption, canonical model freeze, Domain Package, DomainForge promotion, main merge, release or deployment is implied.
