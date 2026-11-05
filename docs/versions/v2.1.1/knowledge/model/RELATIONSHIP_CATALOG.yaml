@@ -7,7 +7,8 @@ common_requirements:
   - predicate is declared in this catalog
   - context and rationale are non-empty
   - endpoints satisfy the predicate's subject_classes and object_classes
-  - accepted assertions require evidence_refs unless the object is itself the direct evidence/review resource
+  - accepted assertions require evidence_refs unless the object is itself the direct evidence/review resource; any reused evidence must be ACCEPTED, REVIEWED and exactly human-reviewed
+  - an object-carrying-provenance edge must resolve the object's own evidence_refs, or an exact ACCEPT ReviewDecision for the subject
   - duplicate subject/predicate/object assertions are rejected unless a distinct qualifier/context is recorded
   - no inverse edge is inferred or materialized automatically
   - predicate enum meanings map to the exact URI used for rdf:predicate; a literal predicate value is invalid
@@ -186,6 +187,13 @@ validation:
     - review_digest_mismatch
     - accepted_evidence_not_reviewed
     - accepted_synthetic_evidence
+    - evidence_without_human_review
+    - evidence_not_accepted
+    - source_locator_not_verified
+    - conflicting_review_decisions
+    - validation_review_does_not_bind_subject
+    - graph_id_collides_with_entity
+    - accepted_pattern_references_unaccepted_case
   canonical_identifier_pattern: "^se:[A-Z0-9][A-Z0-9._-]*$"
   evidence_closure:
     Evidence.source_locator_ref: SourceLocator
