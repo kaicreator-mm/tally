@@ -2,7 +2,7 @@
 
 **Task:** #304  
 **Date:** 2026-11-04  
-**Status:** OBSERVED / DRAFT
+**Status:** OBSERVED / EXECUTED / HUMAN_REVIEW_PENDING / DRAFT
 
 ## Work performed
 
@@ -35,8 +35,7 @@ These are meaningful source-verification corrections and should remain in the me
 - CS2023 is a curriculum framework, not a professional-domain coverage guarantee.
 - NIST SP 800-218A detailed practice content has not yet been reviewed; only identity and abstract are verified.
 - No independent reviewer has accepted any claim.
-- Native GitHub Issue Dependency edges remain unmaterialized/readback-pending.
-- LinkML CLI validation remains NOT_RUN in the current execution environment. Do not state that schema validation passed.
+- At the initial observation time (2026-11-04), native GitHub Issue Dependency edges were unmaterialized and the LinkML CLI had not been run. Both statements are historical and are superseded by the current-state reconciliation below.
 
 ## Method adjustment
 
@@ -51,3 +50,12 @@ The committed vertical-slice fixture was parsed with PyYAML 6.0.3. The current d
 ## CS2023 author and SE-Tools locator correction — 2026-11-04
 
 The official CS2023 report identifies Susan **L.** Epstein. The official Body of Knowledge PDF places “SE-Tools: Tools and Environments” at zero-based page index 178 (one-based PDF page 179); index 177 remains in SE-Teamwork. The registry, dossier, discovery report and knowledge locator were corrected together. The earlier index-177 correction was itself off by one and is superseded.
+
+
+## Current-state reconciliation — 2026-11-05
+
+- Native GitHub Issue Dependency edges are now MATERIALIZED and exact-readback verified: #301←#300; #302←#300; #304←#301/#302; #305←#301/#302/#304; #308←#305.
+- The LinkML v1.12.1 L01–L15 CLI and instance-conversion experiment has since been executed in Windows-native Python 3.14.7 under SEK-04 builder PR #310. This does not accept any SEK-03 claim and does not imply LinkML adoption.
+- All 12 claims remain PENDING / PENDING_LIMITED_EVIDENCE; all 12 evidence records remain EXTRACTED_PENDING_REVIEW. No claim is accepted corpus knowledge.
+- The NIST SP 800-218A detailed-practice limitation remains current: only official identity and abstract are verified; detailed practices are not yet extracted.
+- The independent Exact-SHA review of the current PR #303 remains BLOCK on SEK-04 integration findings; no claim-level human review has been recorded.
