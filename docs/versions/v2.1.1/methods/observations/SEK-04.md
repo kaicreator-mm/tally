@@ -2,9 +2,9 @@
 
 **Task:** #305  
 **Date:** 2026-11-04  
-**Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — final checker and LinkML PoF passed at exact source-bearing HEAD `8257aea33538b96300b91be66e2d22c28c926882` (32/32 self-tests, 12/12 conversions, 25/25 CLI probes, seven JSON-LD artifacts); see RESULTS.md §10.16 and Issue #305 comment #6656869638. Subsequent changes are documentation-only; final current-tip identity rebind remains an integration gate.
+**Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — final checker and LinkML PoF passed at source-bearing HEAD `8257aea33538b96300b91be66e2d22c28c926882`; the current PR tip `e27217ec122a50b31876d71a1cdda780fe681462` was also fully revalidated (32/32, 12/12 conversions, 25/25 probes, seven JSON-LD artifacts). See §18 and Issue #305 comment #6657512368.
 
-> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The earlier checker blob `503b370b016616c629f97fb47fc06b0079b574d9` at source-bearing HEAD `2c5c8b3d` is historical. The final checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7` passed 32/32 self-tests, 12/12 LinkML conversions, 25/25 CLI probes and seven-artifact JSON-LD edge identity at exact HEAD `8257aea33538b96300b91be66e2d22c28c926882`; see RESULTS.md §10.16 and Issue #305 comment #6656869638. Later changes are documentation-only and do not alter the validated checker or fixtures; final current-tip identity rebind remains an integration gate.
+> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The earlier checker blob `503b370b016616c629f97fb47fc06b0079b574d9` at source-bearing HEAD `2c5c8b3d` is historical. The final checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7` passed 32/32 self-tests, 12/12 LinkML conversions, 25/25 CLI probes and seven-artifact JSON-LD edge identity at source-bearing HEAD `8257aea33538b96300b91be66e2d22c28c926882`, then passed a full current-tip revalidation at `e27217ec122a50b31876d71a1cdda780fe681462`; see RESULTS.md §10.16–§10.17 and Issue #305 comments #6656869638 / #6657512368.
 
 ## Work performed
 
@@ -202,4 +202,17 @@ The checker now resolves the locator record and rejects a mismatch between the t
 - Independent JSON-LD edge identity **PASS across seven artifacts**: URIRef subject/predicate/object, zero Literal rdf:object, exact YAML edge/evidence identity. Known L09 nested rdf:type omissions remain explicit; no full JSON-LD/TTL graph equivalence is claimed.
 - Raw logs, generated artifacts, environment versions and SHA256 manifest are preserved in the [57-file evidence bundle](https://gist.github.com/kaicreator-mm/45dd6427fbc2146fb35daf7ac6051ccf).
 
-This receipt supersedes the earlier 31/31 result for the prior checker blob and the pending status recorded when the source/locator repair was first committed. The validation was read-only in a detached worktree and made no repository changes. A subsequent documentation-only reconciliation commit requires a new exact-HEAD identity rebind before final R2 integration disposition. LinkML remains EXPERIMENTAL / NOT_ADOPTED.
+This receipt supersedes the earlier 31/31 result for the prior checker blob and the pending status recorded when the source/locator repair was first committed. The validation was read-only in a detached worktree and made no repository changes. The later documentation-only reconciliation commit was also fully revalidated at current tip `e27217ec122a50b31876d71a1cdda780fe681462`; see §18 and Issue #305 comment #6657512368. LinkML remains EXPERIMENTAL / NOT_ADOPTED.
+
+
+## Current-tip final validation rebind — 2026-11-05
+
+The current PR #311 tip was fully revalidated after the final documentation reconciliation.
+
+- HEAD: `e27217ec122a50b31876d71a1cdda780fe681462`
+- Tree: `eec4341820c557abf5918e1fc45db6acb3c06436`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Result: py_compile PASS; self-test 32/32; LinkML conversions 12/12; A/B/C YAML+Turtle PASS; CLI 25/25; seven JSON-LD artifacts PASS.
+- Current-tip receipt: Issue #305 comment [#6657512368](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657512368).
+
+This supersedes the pending-rebind wording in earlier chronology. LinkML remains experimental and not adopted.

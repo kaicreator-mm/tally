@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** EXECUTED_2026-11-05 / FINAL_R2_SOURCE_LOCATOR_COHERENCE_VALIDATED_32_CASES_ON_8257AEA / LINKML_EXPERIMENT_ONLY / NO_ADOPTION_DECISION — see RESULTS.md §10.16 and POF_PLAN.md §17  
+**Status:** EXECUTED_2026-11-05 / FINAL_R2_SOURCE_LOCATOR_COHERENCE_VALIDATED_32_CASES_ON_8257AEA / CURRENT_TIP_FULL_REVALIDATION_PASS_ON_E27217E / LINKML_EXPERIMENT_ONLY / NO_ADOPTION_DECISION — see §18 and Issue #305 comment #6657512368  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -202,7 +202,7 @@ A further source audit found that the checker only enumerated nodes typed `rdf:S
 - Repair commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
 - Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
 - New self-test target: **31/31 PASS**.
-- At this historical checkpoint, exact Windows-native revalidation was pending. The 31-case checker subsequently passed at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; see §15 / RESULTS.md §10.14. The documentation-only reconciliation commits after that source-bearing HEAD require a final exact-HEAD identity rebind before integration.
+- At this historical checkpoint, exact Windows-native revalidation was pending. The 31-case checker subsequently passed at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; see §15 / RESULTS.md §10.14. The later documentation-only reconciliation and its exact-tip rebind are recorded in §18; no source-bearing checker or fixture input changed.
 
 
 ## 15. Exact-source-HEAD validation and independent review — 2026-11-05
@@ -243,3 +243,23 @@ Results: py_compile EXIT=0; self-test 32/32 PASS; 12/12 LinkML conversions EXIT=
 Full execution receipt: Issue #305 comment [#6656869638](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6656869638). The 57-file evidence bundle and SHA256 manifest are linked from that receipt.
 
 The validation ran read-only in a detached worktree and made no repository changes. This is an experiment-only result: LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production adoption, main merge, release or deployment follows.
+
+
+## 18. Current-tip final validation rebind — 2026-11-05
+
+The 32-case checker and complete LinkML experiment were re-run at the current PR #311 tip after the final documentation reconciliation. This closes the exact-tip rebind gate without changing the checker or any tested input.
+
+Exact binding:
+- HEAD: `e27217ec122a50b31876d71a1cdda780fe681462`
+- Tree: `eec4341820c557abf5918e1fc45db6acb3c06436`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+- Exact four-path #305 write set; three paths changed after the previous source-bearing validation and all are documentation-only. Branch, PR head and mirror refs matched; detached worktree clean before and after.
+
+Windows-native Python 3.14.7 (no WSL), LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Results: `py_compile` EXIT=0; checker self-test **32/32 PASS**; LinkML conversions **12/12 PASS**; A/B/C YAML+Turtle integrity PASS; **25/25 CLI probes PASS**; independent JSON-LD edge identity PASS across all seven artifacts. Source/locator mismatch rejection remains covered. L09 nested JSON-LD `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed.
+
+Full current-tip execution receipt: Issue #305 comment [#6657512368](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657512368). The 57-file secret evidence bundle and SHA256 manifest are linked from that receipt.
+
+The validation is experiment-only. LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production runtime, canonical model adoption, main merge, release or deployment follows.

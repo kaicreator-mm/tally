@@ -1,6 +1,6 @@
 # LinkML Proof-of-fit — Consolidated Results
 
-**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / FINAL_CHECKER_32_CASE_VALIDATION_PASS_ON_8257AEA / JSONLD_EDGE_IDENTITY_PASS / DOMAINNODE_SOURCE_LOCATOR_COHERENCE_PASS / NO_ADOPTION_DECISION  
+**Status:** LINKML_V1_12_1_EXECUTED / TURTLE_A_B_C_GRAPH_EQUIVALENCE_PASS / FINAL_CHECKER_32_CASE_VALIDATION_PASS / CURRENT_TIP_E27217E_REVALIDATED / JSONLD_EDGE_IDENTITY_PASS / DOMAINNODE_SOURCE_LOCATOR_COHERENCE_PASS / NO_ADOPTION_DECISION  
 **Test date:** 2026-11-04 (design), 2026-11-05 (LOCAL_BUILDER execution, section 10)  
 **Pinned candidate:** LinkML v1.12.1
 
@@ -397,3 +397,33 @@ Evidence:
 - 57-file evidence bundle: https://gist.github.com/kaicreator-mm/45dd6427fbc2146fb35daf7ac6051ccf
 
 The validation itself made no repository edits, commits, pushes, branch changes, PR metadata changes or merges. This evidence is bound to the exact HEAD/checker blob above. Any successor commit, including documentation-only reconciliation, requires a fresh exact-HEAD identity rebind before final R2 integration disposition. LinkML remains EXPERIMENTAL / NOT_ADOPTED; no main merge, release or deployment is implied.
+
+
+## 10.17 Current-tip final LOCAL_VALIDATION — exact PR #311 tip — 2026-11-05
+
+**Result: PASS.** This record supersedes any pending current-tip rebind language in earlier observations.
+
+Exact binding:
+- HEAD: `e27217ec122a50b31876d71a1cdda780fe681462`
+- Tree: `eec4341820c557abf5918e1fc45db6acb3c06436`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+- Exact four-path #305 write set; the three paths after the previous source-bearing validation are documentation-only. The PR head, branch and mirror refs matched; detached worktree clean before and after.
+
+Environment: Windows-native Python 3.14.7 (no WSL), LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Results:
+1. Exact HEAD/Tree/checker blob, branch refs, four-path write set and clean worktree: PASS.
+2. `py_compile`: EXIT=0.
+3. Checker `--self-test`: **32/32 PASS**.
+4. LinkML instance conversions: **12/12 PASS**; A/B/C YAML+Turtle integrity PASS with exact statement/subject/predicate/object/evidence CURIE identity.
+5. CLI probes: **25/25 PASS** (24 negative EXIT=1 with expected diagnostics; one GraphNode-ancestor positive control EXIT=0), including the DomainNode source/locator mismatch.
+6. Independent JSON-LD edge identity: **PASS across all seven artifacts**; URIRef subject/predicate/object, zero Literal `rdf:object`, exact YAML edge/evidence identity. L09 nested `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed.
+7. Raw stdout/stderr, per-command exit codes, environment versions, generated artifacts and SHA256 manifest are preserved.
+
+Evidence:
+- Current-tip handoff: Issue #305 comment [#6657254149](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657254149)
+- Current-tip PASS receipt: Issue #305 comment [#6657512368](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657512368)
+- 57-file secret evidence bundle: https://gist.github.com/kaicreator-mm/db70a4410907e630b8fce4153a5b2bb1
+
+The receipt is read-only and makes no source changes. LinkML remains EXPERIMENTAL / NOT_ADOPTED; this result does not freeze the full entity model or select a canonical authoring format.
