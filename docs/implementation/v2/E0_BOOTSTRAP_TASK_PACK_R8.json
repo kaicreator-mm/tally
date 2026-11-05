@@ -1706,7 +1706,7 @@
     },
     "dispatchable": false,
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestSha256 and including digestAlgorithm)",
-    "digestSha256": "7ed7ed70aa5f6a568d5bb37fdfa3cd4bb7da92482f43f5a196fa5c8a7bbc7ef2"
+    "digestSha256": "b9ae745fa76c6ab7964905626b0c4b2e345f6f67530f454fc4e377a326551f71"
   },
   "revision": "R8",
   "serialSuccessors": [
@@ -1819,7 +1819,7 @@
     "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity.",
     "No E0 source edit before root Claim + exact FROZEN_DAG_WRITESET readback."
   ],
-  "e0ScopeAuditDigest": "7ed7ed70aa5f6a568d5bb37fdfa3cd4bb7da92482f43f5a196fa5c8a7bbc7ef2",
+  "e0ScopeAuditDigest": "b9ae745fa76c6ab7964905626b0c4b2e345f6f67530f454fc4e377a326551f71",
   "versionAuditBinding": {
     "schema": "tally.e0.version-audit-binding/v1",
     "candidatePackBlobSha": "b14f958b83b2b2789893b0e648e2ebbd1fbe06ad",
