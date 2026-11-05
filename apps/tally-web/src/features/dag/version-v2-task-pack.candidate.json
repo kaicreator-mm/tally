@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-05T12:17:29.848Z",
+  "observedAt": "2026-11-05T13:19:32.023Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-04T18:48:36Z",
+      "updatedAt": "2026-11-05T12:23:45Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -1703,20 +1703,50 @@
       "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
     },
     {
+      "from": 208,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "#276's current candidate includes #208-owned release-readiness source/test; keep #276 non-dispatchable until #208 completes or F narrows its exact write set."
+    },
+    {
+      "from": 209,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "#276's current candidate includes #209-owned maintenance-intake source/test; keep #276 non-dispatchable until #209 completes or F narrows its exact write set."
+    },
+    {
+      "from": 203,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "#276's broad Business test glob overlaps #203's business-policy test and selected publication source; keep #276 non-dispatchable until #203 completes or F narrows the exact write set."
+    },
+    {
+      "from": 210,
+      "to": 276,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "#276's broad Business test glob and central Business files overlap #210's Project/Product/L2 intake write set; keep #276 non-dispatchable until #210 completes or F narrows the exact write set."
+    },
+    {
       "from": 284,
       "to": 312,
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/312",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/284",
-      "reason": "R8 serial ownership places E0 root admission before the Product successor; #312 implementation starts only after #284 root admission and reviewed E0 source. PLANNED only; no native blocked_by was written."
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/284"
     },
     {
       "from": 312,
       "to": 219,
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312",
-      "reason": "#219 Maintenance consumes the reviewed Product contract after #312 exact source review/integration and must refresh/rebase before its eight shared-path writes. PLANNED only; no native blocked_by was written."
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
     }
   ],
   "notes": [
