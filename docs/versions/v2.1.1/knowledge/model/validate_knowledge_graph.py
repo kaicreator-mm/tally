@@ -164,7 +164,22 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             elif expected and classes[target] not in expected:
                 _error(errors, "WRONG_REFERENCE_CLASS", f"{record_id}.{field}->{target} is {classes[target]}, expected {sorted(expected)}")
 
+    # The root's declared domain is the canonical graph scope.
+    root_domain = graph.get("domain_ref")
+    if root_domain not in entities or classes.get(root_domain) != "Domain":
+        _error(errors, "INVALID_GRAPH_DOMAIN", str(root_domain))
+
+    allowed_lifecycle = set(
+        entity_catalog.get("identity_contract", {}).get("lifecycle", {}).get("values", [])
+    )
     for class_name, record_id, record in records:
+        if allowed_lifecycle and record.get("lifecycle_status") not in allowed_lifecycle:
+            _error(errors, "INVALID_LIFECYCLE_STATUS", f"{record_id}: {record.get('lifecycle_status')!r}")
+        if "evidence_refs" in record:
+            ref(record_id, "evidence_refs", {"Evidence"})
+        if class_name == "KnowledgeClaim" and record.get("lifecycle_status") == "ACCEPTED":
+            if record.get("review_status") != "ACCEPTED":
+                _error(errors, "CLAIM_REVIEW_STATUS_MISMATCH", record_id)
         if class_name == "Subdomain":
             ref(record_id, "domain_ref", {"Domain"}, True)
         elif class_name == "TaxonomyNode":
@@ -200,6 +215,8 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                 _error(errors, "REVIEW_VERSION_MISMATCH", record_id)
             if not SHA256_PATTERN.fullmatch(str(record.get("target_digest_sha256", ""))):
                 _error(errors, "INVALID_REVIEW_DIGEST", record_id)
+            if record.get("decision") == "ACCEPT" and target.get("lifecycle_status") != "ACCEPTED":
+                _error(errors, "REVIEW_ACCEPT_TARGET_NOT_ACCEPTED", record_id)
         elif class_name == "CoverageGap":
             ref(record_id, "target_scope_ref", {"Domain", "Subdomain", "TaxonomyView", "TaxonomyNode"}, True)
             ref(record_id, "evidence_refs", {"Evidence"})
@@ -208,7 +225,13 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             ref(record_id, "object_ref", set(COLLECTIONS.values()) - {"ReviewDecision"}, True)
             ref(record_id, "evidence_refs", {"Evidence"})
 
+    locator_keys = {}
     for class_name, record_id, record in records:
+        if class_name == "SourceLocator":
+            key = (record.get("source_ref"), record.get("locator"))
+            if key in locator_keys:
+                _error(errors, "DUPLICATE_SOURCE_LOCATOR", f"{record_id} duplicates {locator_keys[key]}")
+            locator_keys[key] = record_id
         if class_name == "Evidence":
             locator = entities.get(record.get("source_locator_ref"), {})
             if locator and locator.get("source_ref") not in entities:
@@ -248,6 +271,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "MISSING_REQUIRED_EVIDENCE", record_id)
         if rule.get("qualifiers_required") and not _ids(record.get("qualifiers")):
             _error(errors, "MISSING_REQUIRED_QUALIFIER", record_id)
+        if record.get("lifecycle_status") == "ACCEPTED":
+            if not _ids(record.get("evidence_refs")) and not rule.get("object_is_evidence") and not rule.get("object_carries_provenance"):
+                _error(errors, "ACCEPTED_RELATIONSHIP_WITHOUT_EVIDENCE", record_id)
         if not record.get("context") or not record.get("rationale"):
             _error(errors, "MISSING_RELATION_CONTEXT", record_id)
         edge_key = (subject_id, predicate, object_id)
@@ -391,6 +417,25 @@ def run_self_tests(catalog, rules):
         "subject_ref": "se:CLM-001",
         "object_ref": "se:CLM-002",
     }), "SUPERSEDES_CYCLE")
+    def part_of_cycle(g):
+        g["subdomains"].append({
+            "id": "se:SUB-CHILD",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "PROPOSED",
+            "label": "Child",
+            "definition": "A test child subdomain.",
+            "domain_ref": "se:DOMAIN-SE",
+        })
+        g["relationship_assertions"].extend([
+            {**g["relationship_assertions"][2], "id": "se:REL-PART-A", "subject_ref": "se:SUB-REQ", "object_ref": "se:SUB-CHILD"},
+            {**g["relationship_assertions"][2], "id": "se:REL-PART-B", "subject_ref": "se:SUB-CHILD", "object_ref": "se:SUB-REQ"},
+        ])
+    expect("part-of-cycle", part_of_cycle, "PART_OF_CYCLE")
+    expect("duplicate-source-locator", lambda g: g["source_locators"].append({
+        **g["source_locators"][0], "id": "se:LOC-DUP",
+    }), "DUPLICATE_SOURCE_LOCATOR")
+    expect("review-version-mismatch", lambda g: g["review_decisions"][0].update(target_record_version="9.9.9"), "REVIEW_VERSION_MISMATCH")
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
         print(f"{'PASS' if ok else 'FAIL'} {name}")

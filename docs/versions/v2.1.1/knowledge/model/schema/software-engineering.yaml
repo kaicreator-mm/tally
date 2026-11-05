@@ -116,6 +116,11 @@ classes:
       - verified_content_summary
       - verification_state
       - accessed_on
+    unique_keys:
+      source_and_locator:
+        unique_key_slots:
+          - source_ref
+          - locator
 
   Evidence:
     is_a: KnowledgeEntity
@@ -659,10 +664,6 @@ slots:
   generated_on:
     required: true
     range: date
-  domain_ref:
-    required: true
-    range: Domain
-    inlined: false
   domains:
     range: Domain
     multivalued: true
