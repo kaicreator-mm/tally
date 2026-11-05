@@ -219,7 +219,7 @@
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
-  "note": "R8 binds current A/#260 R9 exact candidate and its 46-task PackBlob read-only. E0 source base contains A only; #219/#312 source is not imported. All 14 E0 paths are post-root-Claim and E0 first-writer paths. Version-wide writeSetAudit remains non-PASS and does not authorize ordinary Task dispatch or version-wide freeze. Root Claim is feasible through existing T06d Host-only ports but remains blocked by missing exact Pack review/Owner receipt, #203 predecessor terminality, #284 dedicated registry configuration and actual root Claim/readback.",
+  "note": "R8 binds current A/#260 R9 exact candidate and its 46-task PackBlob read-only. E0 source base contains A only; #219/#312 source is not imported. All 14 E0 paths are post-root-Claim and E0 first-writer paths. Version-wide writeSetAudit remains non-PASS and does not authorize ordinary Task dispatch or version-wide freeze. Root Claim is feasible through existing T06d Host-only ports but remains blocked by missing exact Pack review/Owner receipt, #203 predecessor terminality, #284 dedicated registry configuration and actual root Claim/readback. Version audit binding digest is SHA-256 over the exact A PackBlob reference, roster/Claim/edge counts, native dependency readback, complete writeSetAudit object and scope disposition summary.",
   "writeSetAudit": {
     "schema": "tally/version-task-write-set-audit/v1",
     "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
@@ -1789,7 +1789,8 @@
     "claimObservationCounts": {
       "observedSelfReported": 39,
       "noClaimEventExpected": 7
-    }
+    },
+    "versionAuditDigest": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c"
   },
   "scopeDispositionReference": {
     "count": 46,
@@ -1817,5 +1818,1106 @@
     "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity.",
     "No E0 source edit before root Claim + exact FROZEN_DAG_WRITESET readback."
   ],
-  "e0ScopeAuditDigest": "b2903b093e4fe76e3fe1b89043ba98cf8dc85cf6da2c0a030798c07b3299773e"
+  "e0ScopeAuditDigest": "b2903b093e4fe76e3fe1b89043ba98cf8dc85cf6da2c0a030798c07b3299773e",
+  "versionAuditBinding": {
+    "schema": "tally.e0.version-audit-binding/v1",
+    "candidatePackBlobSha": "b14f958b83b2b2789893b0e648e2ebbd1fbe06ad",
+    "observedAt": "2026-11-05T13:19:32.023Z",
+    "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "taskIssueCount": 46,
+    "openTaskCount": 25,
+    "closedTaskCount": 21,
+    "claimSubjectCount": 46,
+    "claimAcceptance": "NOT_VERIFIED",
+    "closureEvidence": "NOT_VERIFIED",
+    "edges": {
+      "total": 30,
+      "native": 4,
+      "planned": 26
+    },
+    "nativeDependencyReadback": {
+      "issue264BlockedBy": [
+        260,
+        261,
+        262,
+        263
+      ],
+      "issue284BlockedBy": [],
+      "issue312BlockedBy": [],
+      "issue219BlockedBy": [],
+      "issue273BlockedBy": [],
+      "issue276BlockedBy": []
+    },
+    "writeSetAudit": {
+      "schema": "tally/version-task-write-set-audit/v1",
+      "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
+      "requiredBeforeFreeze": [
+        "Read each open Task's current exact allowed_write_set from its current issue body and bind the observed updatedAt.",
+        "Hash the normalized allowed_write_set path list for every open Task; preserve the hash in the independent review report.",
+        "No two dispatchable tasks may own overlapping write paths unless a real native dependency serializes them.",
+        "Reviewer/Verifier tasks are read-only; copied Builder write-set text never grants reviewer write authority.",
+        "Closed, source-integrated, candidate-evidence-only, superseded and planned tasks remain visible but non-dispatchable until separately re-admitted.",
+        "Reconcile every overlap with a serial native edge or explicit non-dispatchable disposition; do not close Issues silently."
+      ],
+      "overlapGroups": [
+        {
+          "id": "LEGACY_J04_J06_IDENTICAL_BROAD_WRITE_SET",
+          "taskIssues": [
+            196,
+            197,
+            198,
+            199,
+            200
+          ],
+          "paths": [
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.test.mjs",
+            ".woodpecker/v2-alm-workspace.yaml"
+          ],
+          "finding": "The five issue bodies repeat the same broad seven-file write set. #197/#198 are not disjoint as written; #199/#200 are Reviewer roles and must be read-only. PR #204/#205 each add only a separate CONCURRENT_A.md/CONCURRENT_B.md evidence file, not those seven implementation files."
+        },
+        {
+          "id": "LEGACY_INTEGRATION_SHARED_PATHS",
+          "taskIssues": [
+            196,
+            197,
+            198,
+            202,
+            207,
+            210,
+            219,
+            264,
+            284,
+            312
+          ],
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-view.html",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs"
+          ],
+          "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. #284 (web/v2/journey-server.mjs, web/v2/serve.mjs) and #312 (.woodpecker/v2-alm-workspace.yaml, web/v2/journey-server.mjs, web/v2/journey-view.html) now also intersect this legacy set and stay PLANNED/non-dispatchable. Old issue dispositions and exact path ownership require independent review."
+        },
+        {
+          "id": "CENTRAL_BUSINESS_ENTRYPOINT_SERIALIZATION",
+          "taskIssues": [
+            203,
+            210,
+            219,
+            273,
+            276,
+            284,
+            312
+          ],
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs"
+          ],
+          "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. R8 adds #284 (E0 Bootstrap) and #312 (Product successor), whose candidate sets each include all five central paths plus web/v2/journey-server.mjs. Serial ownership is #284 -> #312 -> #219 -> #273/#276 -> #264; every group member is currently non-dispatchable and no pair may run concurrently until serialized by native edges read back through E0."
+        },
+        {
+          "id": "ATTEMPT_MODEL_SERIALIZATION",
+          "taskIssues": [
+            275,
+            276
+          ],
+          "paths": [
+            "packages/tally-engineering-business/src/attempts.mjs",
+            "packages/tally-engineering-business/test/attempts.test.mjs"
+          ],
+          "finding": "#275 owns initial Attempt read-model source; #276 may reconcile the canonical TaskAttempt model only after #275 completes and the source contract is reviewed."
+        },
+        {
+          "id": "F_DOMAIN_DATA_EXISTING_MODULE_SERIALIZATION",
+          "taskIssues": [
+            208,
+            209,
+            276
+          ],
+          "paths": [
+            "packages/tally-engineering-business/src/release-readiness.mjs",
+            "packages/tally-engineering-business/test/release-readiness.test.mjs",
+            "packages/tally-engineering-business/src/maintenance-intake.mjs",
+            "packages/tally-engineering-business/test/maintenance-intake.test.mjs",
+            "packages/tally-engineering-business/test/*.test.mjs"
+          ],
+          "finding": "#276's current candidate set includes the two existing source modules and a broad test glob that overlaps #208/#209. #276 remains PLANNED/non-dispatchable, so there is no current concurrent writer; before any future Claim/JIT, narrow the glob to exact F-owned test files or serialize after #208/#209. Record both edges as PLANNED only."
+        },
+        {
+          "id": "REPLAN_E_SHARED_HOTSPOT_EXCLUSION",
+          "taskIssues": [
+            273,
+            264
+          ],
+          "paths": [
+            "web/v2/serve.mjs",
+            "web/v2/journey-server.mjs",
+            "apps/tally-web/src/app/App.tsx",
+            "apps/tally-web/src/adapters/host.ts"
+          ],
+          "finding": "#273 currently lists four E-exclusive shared files in its candidate write set. #264 is the sole integration writer. #273 must remove these paths before Claim/JIT; it should deliver feature-owned Replan source and let E mount it after completion."
+        },
+        {
+          "id": "EXPERIENCE_PUBLISHER_CONSUMER_SERIALIZATION",
+          "taskIssues": [
+            262,
+            274
+          ],
+          "paths": [
+            "web/v2/ui-experience-host.mjs"
+          ],
+          "finding": "#274 currently lists the C-owned consumer adapter already owned by #262. Keep #274 on the feedback producer/publisher and dedicated publisher Host adapter; #262 remains the sole writer of ui-experience-host.mjs and consumes the publisher after #274. Existing #274→#262 edge is PLANNED only."
+        },
+        {
+          "id": "ATTEMPT_READ_MODEL_UI_CONSUMER_SERIALIZATION",
+          "taskIssues": [
+            261,
+            275
+          ],
+          "paths": [
+            "apps/tally-web/src/features/tasks/**",
+            "apps/tally-web/src/features/agents/**"
+          ],
+          "finding": "#275 currently lists the B-owned Task/Agent UI directories already owned by #261. #275 should own the Business Attempt read model and selected Host adapter; #261 owns UI consumption. Existing #275→#261 edge is PLANNED only."
+        },
+        {
+          "id": "F_DOMAIN_DATA_TEST_GLOB_SERIALIZATION",
+          "taskIssues": [
+            203,
+            208,
+            209,
+            210,
+            219,
+            273,
+            275,
+            276
+          ],
+          "paths": [
+            "packages/tally-engineering-business/test/*.test.mjs"
+          ],
+          "finding": "#276's broad test glob overlaps test files owned by active/pending Business Tasks #203/#208/#209/#210/#219/#273/#275. #276 is PLANNED/non-dispatchable; before Claim/JIT narrow to exact F-owned tests or serialize after all affected owners. Existing dependencies cover some, but #203/#210 edges are added as PLANNED."
+        },
+        {
+          "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
+          "taskIssues": [
+            284,
+            312
+          ],
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ],
+          "finding": "E0 Bootstrap #284 and Product successor #312 share six candidate paths (#284x#312=6). R8 declares #284 -> #312 serial ownership; both are state:planned with no Claim event. Recorded as a PLANNED edge only; no native dependency was created."
+        },
+        {
+          "id": "R8_PRODUCT_312_MAINTENANCE_219_SERIALIZATION",
+          "taskIssues": [
+            219,
+            312
+          ],
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ],
+          "finding": "#219 Maintenance shares eight paths with #312 (#219x#312=8). #219 is HOLD/state:planned until #312 exact source review/integration and must refresh/rebase its base before any shared-path write. Recorded as a PLANNED edge only (#312 -> #219); the native blocked_by remains absent."
+        },
+        {
+          "id": "E0_284_PREDECESSOR_203_GATE",
+          "taskIssues": [
+            203,
+            284
+          ],
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ],
+          "finding": "#284 shares five paths with #203 (#203x#284=5). #203 is the R8 historical predecessor: its source/PRs are merged but its old Claim terminality is unproven, so before #284 root admission the single Host registry must prove no active #203 writer/Claim; UNKNOWN blocks. No edge is recorded; this is an admission gate, not a dispatch edge."
+        }
+      ],
+      "recomputedOpenTaskOverlaps": {
+        "method": "Pairwise intersection of the allowed_write_set block parsed from each of the 25 open Task issue bodies at this observedAt; cross-checked against #312 paths_sha256-normalized overlap matrix and #219/#284 R8 notes (all counts matched).",
+        "openTasksWithWriteSet": 23,
+        "openTasksWithoutWriteSet": [
+          199,
+          200
+        ],
+        "nonzeroPairs": 66,
+        "pairs": [
+          {
+            "tasks": [
+              196,
+              197
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              198
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              202
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              207
+            ],
+            "sharedPathCount": 4,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              210
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              219
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              284
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              196,
+              312
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              198
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              202
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              207
+            ],
+            "sharedPathCount": 4,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              210
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              219
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              284
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              197,
+              312
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              202
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html",
+              "web/v2/journey-view.mjs",
+              "web/v2/journey-view.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              207
+            ],
+            "sharedPathCount": 4,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              210
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              219
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              284
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              198,
+              312
+            ],
+            "sharedPathCount": 3,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              203
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-host.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              207
+            ],
+            "sharedPathCount": 4,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-controller.mjs",
+              "web/v2/journey-controller.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              210
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              219
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              273
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              284
+            ],
+            "sharedPathCount": 6,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              202,
+              312
+            ],
+            "sharedPathCount": 7,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              210
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              219
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              273
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              284
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              203,
+              312
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              207,
+              210
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              207,
+              219
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              207,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              207,
+              284
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              207,
+              312
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              208,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/release-readiness.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              209,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/maintenance-intake.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              219
+            ],
+            "sharedPathCount": 8,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              273
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              284
+            ],
+            "sharedPathCount": 6,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              210,
+              312
+            ],
+            "sharedPathCount": 16,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/project-intake/host-project.mjs",
+              "experiments/v2/project-intake/host-project.test.mjs",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "packages/tally-github-c/src/project-intake.mjs",
+              "packages/tally-github-c/test/project-intake.test.mjs",
+              "web/v2/intake-controller.mjs",
+              "web/v2/intake-controller.test.mjs",
+              "web/v2/intake-view.mjs",
+              "web/v2/intake-view.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              219,
+              264
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              219,
+              273
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              219,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              219,
+              284
+            ],
+            "sharedPathCount": 6,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              219,
+              312
+            ],
+            "sharedPathCount": 8,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs",
+              "web/v2/journey-view.html"
+            ]
+          },
+          {
+            "tasks": [
+              264,
+              284
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "web/v2/journey-server.mjs",
+              "web/v2/serve.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              264,
+              312
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              ".woodpecker/v2-alm-workspace.yaml",
+              "web/v2/journey-server.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              273,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              273,
+              284
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              273,
+              312
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              275,
+              276
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/attempts.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              276,
+              284
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              276,
+              312
+            ],
+            "sharedPathCount": 1,
+            "paths": [
+              "packages/tally-engineering-business/src/index.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              284,
+              312
+            ],
+            "sharedPathCount": 6,
+            "paths": [
+              "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+              "experiments/v2/selected-business-build/local-codex-shim.mjs",
+              "experiments/v2/selected-business-build/producer.mjs",
+              "packages/tally-engineering-business/src/index.mjs",
+              "packages/tally-engineering-business/test/business-policy.test.mjs",
+              "web/v2/journey-server.mjs"
+            ]
+          }
+        ]
+      }
+    },
+    "scopeDispositionReference": {
+      "count": 46,
+      "dispatchableIssueNumbers": [
+        207,
+        208,
+        209,
+        211,
+        260,
+        261,
+        262,
+        263
+      ],
+      "nonDispatchableCount": 38
+    },
+    "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(core in insertion order; excluding digestAlgorithm and digestSha256)",
+    "digestSha256": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c"
+  },
+  "versionAuditDigest": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c"
 }
