@@ -311,6 +311,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if class_name not in KNOWLEDGE_CLASSES or record.get("lifecycle_status") != "ACCEPTED":
             continue
         accepted_ids.add(record_id)
+        if class_name == "RelationshipAssertion":
+            # Predicate-specific evidence and object provenance are checked below.
+            continue
         if class_name == "CoverageGap":
             if record.get("coverage_status") != "ACCEPTED_LIMITATION" or not _ids(record.get("resolution_notes")):
                 _error(errors, "ACCEPTED_GAP_WITHOUT_DISPOSITION", record_id)
@@ -621,6 +624,7 @@ def run_self_tests(catalog, rules):
 
     def accepted_with_synthetic_evidence(g):
         g["evidence_records"][-1]["synthetic"] = True
+        g["concepts"][0]["evidence_refs"] = ["se:EVD-SEK05-TEST"]
         add_exact_acceptance(g, g["concepts"][0])
     expect("accepted-synthetic-evidence", accepted_with_synthetic_evidence, "ACCEPTED_SYNTHETIC_EVIDENCE")
 
@@ -634,6 +638,173 @@ def run_self_tests(catalog, rules):
     return 0 if passed == len(cases) else 1
 
 
+
+
+def _yaml_dump(value):
+    return yaml.safe_dump(
+        value,
+        allow_unicode=True,
+        sort_keys=False,
+        default_flow_style=False,
+    )
+
+
+def _serialize_format_a(graph):
+    """Markdown document with a YAML front matter graph payload."""
+    frontmatter = _yaml_dump({"graph": graph})
+    return f"---\n{frontmatter}---\n\n# Software Engineering knowledge fixture\n\nNarrative explanation is kept outside the structured graph.\n"
+
+
+def _parse_format_a(document):
+    parts = document.split("---", 2)
+    if len(parts) != 3 or parts[0].strip():
+        raise ValidationError("Format A front matter delimiters are invalid")
+    payload = yaml.safe_load(parts[1])
+    if not isinstance(payload, dict) or not isinstance(payload.get("graph"), dict):
+        raise ValidationError("Format A front matter does not contain graph mapping")
+    return payload["graph"]
+
+
+def _serialize_format_b(graph):
+    """One structured YAML file per entity plus linked Markdown explanations."""
+    files = {}
+    root = {
+        key: graph[key]
+        for key in ("id", "graph_version", "generated_on", "domain_ref")
+    }
+    root["collection_order"] = list(COLLECTIONS)
+    files["graph-root.yaml"] = _yaml_dump(root)
+    for collection in COLLECTIONS:
+        for index, record in enumerate(graph.get(collection, [])):
+            slug = record["id"].split(":", 1)[1].lower()
+            files[f"records/{collection}/{index:04d}-{slug}.yaml"] = _yaml_dump(record)
+            files[f"explanations/{slug}.md"] = (
+                f"# {record['id']}\n\n"
+                "Narrative explanation placeholder; structured facts remain in YAML.\n"
+            )
+    return files
+
+
+def _parse_format_b(files):
+    root = yaml.safe_load(files["graph-root.yaml"])
+    graph = {
+        key: root[key]
+        for key in ("id", "graph_version", "generated_on", "domain_ref")
+    }
+    for collection in root["collection_order"]:
+        prefix = f"records/{collection}/"
+        record_paths = sorted(path for path in files if path.startswith(prefix) and path.endswith(".yaml"))
+        graph[collection] = [yaml.safe_load(files[path]) for path in record_paths]
+    return graph
+
+
+def _serialize_format_c(graph):
+    """One standalone YAML graph document."""
+    return _yaml_dump(graph)
+
+
+def _parse_format_c(document):
+    graph = yaml.safe_load(document)
+    if not isinstance(graph, dict):
+        raise ValidationError("Format C root must be a graph mapping")
+    return graph
+
+
+def _changed_metrics(before, after):
+    import difflib
+
+    changed_paths = sorted(
+        path for path in set(before) | set(after)
+        if before.get(path) != after.get(path)
+    )
+    changed_lines = 0
+    for path in changed_paths:
+        old_lines = before.get(path, "").splitlines()
+        new_lines = after.get(path, "").splitlines()
+        diff = difflib.unified_diff(old_lines, new_lines, lineterm="")
+        changed_lines += sum(
+            1 for line in diff
+            if (line.startswith("+") or line.startswith("-"))
+            and not line.startswith("+++") and not line.startswith("---")
+        )
+    return changed_paths, changed_lines
+
+
+def _format_snapshots(graph):
+    return {
+        "A": {"knowledge.md": _serialize_format_a(graph)},
+        "B": _serialize_format_b(graph),
+        "C": {"knowledge.yaml": _serialize_format_c(graph)},
+    }
+
+
+def run_format_comparison():
+    graph = positive_fixture()
+    original = canonical_record_digest(graph)
+    snapshots = _format_snapshots(graph)
+    roundtrips = {
+        "A": _parse_format_a(snapshots["A"]["knowledge.md"]),
+        "B": _parse_format_b(snapshots["B"]),
+        "C": _parse_format_c(snapshots["C"]["knowledge.yaml"]),
+    }
+    roundtrip_digests = {
+        name: canonical_record_digest(value)
+        for name, value in roundtrips.items()
+    }
+    equivalent = all(value == original for value in roundtrip_digests.values())
+    deterministic = all(
+        _format_snapshots(graph)[name] == snapshots[name]
+        for name in ("A", "B", "C")
+    )
+
+    one_record = copy.deepcopy(graph)
+    one_record["concepts"][0]["definition"] += " Revised once."
+    one_record_snapshots = _format_snapshots(one_record)
+    one_record_metrics = {
+        name: _changed_metrics(snapshots[name], one_record_snapshots[name])
+        for name in ("A", "B", "C")
+    }
+
+    two_records = copy.deepcopy(graph)
+    two_records["concepts"][0]["definition"] += " Revised once."
+    two_records["knowledge_claims"][0]["statement"] += " Revised once."
+    two_record_snapshots = _format_snapshots(two_records)
+    two_record_metrics = {
+        name: _changed_metrics(snapshots[name], two_record_snapshots[name])
+        for name in ("A", "B", "C")
+    }
+
+    writer_a = copy.deepcopy(graph)
+    writer_b = copy.deepcopy(graph)
+    writer_a["concepts"][0]["definition"] += " Writer A."
+    writer_b["knowledge_claims"][0]["statement"] += " Writer B."
+    writer_a_snapshots = _format_snapshots(writer_a)
+    writer_b_snapshots = _format_snapshots(writer_b)
+    conflict_paths = {
+        name: sorted(
+            set(_changed_metrics(snapshots[name], writer_a_snapshots[name])[0])
+            & set(_changed_metrics(snapshots[name], writer_b_snapshots[name])[0])
+        )
+        for name in ("A", "B", "C")
+    }
+
+    print(f"FORMAT_EQUIVALENCE={'PASS' if equivalent else 'FAIL'}")
+    print(f"CANONICAL_GRAPH_SHA256={original}")
+    for name in ("A", "B", "C"):
+        print(f"FORMAT_{name}_ROUNDTRIP_SHA256={roundtrip_digests[name]}")
+        print(f"FORMAT_{name}_FILE_COUNT={len(snapshots[name])}")
+        paths, lines = one_record_metrics[name]
+        print(f"FORMAT_{name}_ONE_RECORD_CHANGED_FILES={len(paths)}")
+        print(f"FORMAT_{name}_ONE_RECORD_CHANGED_LINES={lines}")
+        paths, lines = two_record_metrics[name]
+        print(f"FORMAT_{name}_TWO_RECORD_CHANGED_FILES={len(paths)}")
+        print(f"FORMAT_{name}_TWO_RECORD_CHANGED_LINES={lines}")
+        print(f"FORMAT_{name}_TWO_WRITER_CONFLICT_FILES={len(conflict_paths[name])}")
+    print(f"DETERMINISTIC_REBUILD={'PASS' if deterministic else 'FAIL'}")
+    print("HUMAN_REVIEW_BURDEN=NOT_AUTOMATED_REQUIRES_REVIEWER_ASSESSMENT")
+    return 0 if equivalent and deterministic else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--catalog", type=Path, default=DEFAULT_CATALOG)
@@ -641,6 +812,7 @@ def main():
     parser.add_argument("--input", type=Path)
     parser.add_argument("--self-test", action="store_true")
     parser.add_argument("--emit-fixture", type=Path)
+    parser.add_argument("--format-compare", action="store_true")
     args = parser.parse_args()
     try:
         catalog = load_yaml(args.catalog)
@@ -652,6 +824,8 @@ def main():
             print(f"FIXTURE_WRITTEN={args.emit_fixture}")
         if args.self_test:
             return run_self_tests(catalog, rules)
+        if args.format_compare:
+            return run_format_comparison()
         if args.input:
             graph = load_yaml(args.input)
             errors = validate_graph(graph, catalog, rules)

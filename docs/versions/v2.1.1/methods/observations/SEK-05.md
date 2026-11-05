@@ -35,7 +35,7 @@ The candidate schema and graph validator are not yet qualified. Run the exact co
 - Execute repository validator positive and negative self-tests.
 - Generate JSON Schema and JSON-LD context.
 - Convert the complete fixture to Turtle and JSON-LD; verify every reified relationship has URIRef subject/predicate/object and the exact source/evidence identity chain. Predicate enum values must serialize as URIRefs, not literals.
-- Run A/B/C full-model serialization equivalence, deterministic rebuild, and compatible/breaking schema evolution.
+- Run `python validate_knowledge_graph.py --format-compare` for A/B/C full-model serialization equivalence, deterministic rebuild, edit locality and two-writer file-conflict simulation; then run compatible/breaking schema evolution.
 - Measure edit locality and two-writer merge conflict behavior; record limitations.
 
 No final LinkML adoption outcome is recorded before those results. No production adoption, runtime dependency, model freeze, Domain Package, DomainForge promotion, main merge, release or deployment is implied.

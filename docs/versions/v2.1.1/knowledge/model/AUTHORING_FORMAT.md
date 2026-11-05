@@ -82,10 +82,19 @@ SEK-04 tested a narrow A/B/C slice. It proved serialization and conversion behav
 - Reviewers inspect both the structured record and its explanation, then create a ReviewDecision only after source, locator, applicability, rights and contradictions are checked.
 - A reviewer must be able to trace every accepted claim to evidence, locator and source without searching prose.
 
+## Reproducible format comparison
+
+The repository validator provides `python validate_knowledge_graph.py --format-compare`. It serializes the same logical graph as:
+- A: one Markdown document with YAML front matter;
+- B: one YAML file per entity plus linked Markdown explanations and a graph root;
+- C: one standalone YAML graph document.
+
+The command round-trips all three forms and compares canonical graph SHA-256 digests. It also reports one-record and two-record edit locality, a two-writer file-conflict simulation, file counts and deterministic rebuild. These are deterministic structural measurements for the declared layouts, not a substitute for a human reviewer measuring comprehension or actual team merge behavior.
+
 ## Remaining measurement
 
 The local full-model validation must record:
-- A/B/C conversion and graph isomorphism results;
+- A/B/C conversion and graph isomorphism results from `--format-compare`;
 - edit diff sizes for one-record and multi-record changes;
 - merge-conflict simulation for two independent record edits;
 - reviewer comprehension/time estimate, with method and limitations;
