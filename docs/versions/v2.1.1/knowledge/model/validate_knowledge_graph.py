@@ -779,7 +779,7 @@ def run_format_comparison():
     original = canonical_record_digest(graph)
     snapshots = _format_snapshots(graph)
     roundtrips = {
-        "A": _parse_format_a(snapshots["A"]["knowledge.md"]),
+        "A": _parse_format_a(snapshots["A"]),
         "B": _parse_format_b(snapshots["B"]),
         "C": _parse_format_c(snapshots["C"]["knowledge.yaml"]),
     }
