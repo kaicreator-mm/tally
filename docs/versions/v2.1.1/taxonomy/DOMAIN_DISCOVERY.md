@@ -103,7 +103,7 @@ The following official publication identities were verified. ISO source pages in
 | ISO/IEC 25010:2023 | Edition 2, published 2023-11-15; Product quality model; https://www.iso.org/standard/78176.html | Candidate product-quality view | Bibliographic metadata only |
 | ISO/IEC/IEEE 42010:2022 | Edition 2, published 2022-11-07; Architecture description; https://www.iso.org/standard/74393.html | Candidate architecture-description view | Bibliographic metadata only |
 | ISO/IEC/IEEE 29119-2:2021 | Edition 2, published 2021-10-28; Software testing — Test processes; https://www.iso.org/standard/79428.html | Candidate testing-process reference | Bibliographic metadata only |
-| NIST SP 800-218 v1.1 | February 2022; Secure Software Development Framework; https://csrc.nist.gov/pubs/sp/800/218/final | Security-practice framework and lifecycle cross-cutting | Official publication metadata and abstract verified |
+| NIST SP 800-218 v1.1 | February 2022; Secure Software Development Framework; https://csrc.nist.gov/pubs/sp/800/218/final | Security-practice framework and lifecycle cross-cutting | Selected PDF sections and exact locators verified in SEK-03; not an exhaustive extraction of all practices |
 
 These references are not interchangeable:
 - a lifecycle/process standard is not a knowledge-area taxonomy;
