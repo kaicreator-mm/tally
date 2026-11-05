@@ -59,3 +59,15 @@ The official CS2023 report identifies Susan **L.** Epstein. The official Body of
 - All 12 claims remain PENDING / PENDING_LIMITED_EVIDENCE; all 12 evidence records remain EXTRACTED_PENDING_REVIEW. No claim is accepted corpus knowledge.
 - The NIST SP 800-218A detailed-practice limitation remains current: only official identity and abstract are verified; detailed practices are not yet extracted.
 - The independent Exact-SHA review of the current PR #303 remains BLOCK on SEK-04 integration findings; no claim-level human review has been recorded.
+
+
+## Integrated WIP current-state supersession — 2026-11-05
+
+The earlier current-state reconciliation above is retained as a dated execution snapshot. The prior statement that PR #303 remains BLOCK on SEK-04 integration is superseded:
+
+- SEK-04 repair PR #311 passed terminal Exact-SHA R2 and was merged into builder PR #310; PR #310 was then independently reviewed and merged into WIP PR #303.
+- The early LinkML PoF outcome is now explicitly `REPEAT_EXPERIMENT` in #305's experiment plan/results. This is not a LinkML production adoption or rejection.
+- Current integrated WIP PR #303 HEAD at this checkpoint: `a2536324c0f3711229a7b3257d6f7f6a44e36b50`; it remains DRAFT/WIP and awaits fresh independent Exact-SHA review.
+- All 12 claims remain PENDING / PENDING_LIMITED_EVIDENCE; all 12 evidence records remain EXTRACTED_PENDING_REVIEW. No claim is accepted corpus knowledge. This claim-level human-review boundary is unchanged by integration review.
+- The NIST SP 800-218A detailed-practice limitation remains current: only official identity and abstract are verified; detailed practices are not yet extracted.
+- SEK-05 #308 remains preplanned and not dispatchable until the post-integration PR #303 review and SEK-04 acceptance/dependency gates pass.
