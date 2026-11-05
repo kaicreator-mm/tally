@@ -78,3 +78,36 @@ A final outcome may only be recorded after exact local execution and independent
 A fresh source comparison of ENTITY_CATALOG.yaml against the LinkML class/slot declarations found four required-field gaps: Pattern.context, Case.context (inherited by Counterexample), RelationshipAssertion.context, and AntiPattern.symptoms/causes/consequences. The catalog was already explicit about these fields, but the LinkML schema did not enforce all of them.
 
 The schema candidate is now 0.3.0 and uses class-level `slot_usage` to enforce those requirements without making the shared context/consequences slots globally required for unrelated classes. This is a breaking constraint refinement to the experimental schema; the full-model validation must include negative instances omitting each required field. The candidate remains experimental and unadopted.
+
+## SEK-05 lint and RDF export profile
+
+LinkML 1.12.1's default recommended linter expects lowercase permissible values. This model deliberately uses uppercase controlled values already referenced by the entity and relationship catalogs, fixtures, and RDF predicate meanings; changing their spelling would change the data contract. The schema now includes descriptions for the previously undocumented slots and enums. Use the following explicit profile, which retains the 1.12.1 recommended rules and selects uppercase permissible values; it does not disable metamodel errors or suppress warnings. Save it as a temporary `sek05-lint.yaml`, then run `linkml-lint -c <temporary-path>/sek05-lint.yaml schema/software-engineering.yaml` from the model directory.
+
+```yaml
+rules:
+  recommended:
+    level: warning
+  no_xsd_int_type:
+    level: error
+  no_invalid_slot_usage:
+    level: error
+  no_undeclared_slots:
+    level: error
+  no_undeclared_ranges:
+    level: error
+  one_identifier_per_class:
+    level: error
+  one_key_per_class:
+    level: error
+  root_type_checks:
+    level: error
+  standard_naming:
+    level: warning
+    permissible_values_upper_case: true
+  canonical_prefixes:
+    level: warning
+```
+
+The default, unconfigured lint still reports uppercase enum values as naming warnings; report those separately rather than treating default lint as clean. `CoverageGap.label` is an optional slot, matching existing fixtures without imposing a new required field on older records.
+
+Direct LinkML 1.12.1 JSON-LD output must not be represented as graph-equivalent to its Turtle output: the full-model experiment found nested `rdf:type` triples missing in the direct JSON-LD. For graph-equivalent JSON-LD, convert the validated instance to Turtle with LinkML, then serialize that RDF graph to JSON-LD with RDFLib. For example, with both paths outside the repository, run `python -c "from rdflib import Graph; Graph().parse('fixture.ttl', format='turtle').serialize(destination='fixture-rdf.jsonld', format='json-ld')"`. Compare the parsed RDF graphs and separately check relationship URIRefs and source-to-evidence closure. The directly generated JSON-LD remains useful as a diagnostic artifact; it is not the canonical RDF-equivalent export.

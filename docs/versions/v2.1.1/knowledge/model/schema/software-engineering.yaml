@@ -300,6 +300,7 @@ classes:
     class_uri: se:CoverageGap
     description: An explicit missing, weak, disputed or out-of-scope coverage item.
     slots:
+      - label
       - target_scope_ref
       - gap_kind
       - description
@@ -308,6 +309,9 @@ classes:
       - impact
       - resolution_notes
       - evidence_refs
+    slot_usage:
+      label:
+        required: false
 
   RelationshipAssertion:
     is_a: KnowledgeEntity
@@ -358,6 +362,7 @@ classes:
 
 slots:
   id:
+    description: "Stable canonical identifier for this record."
     identifier: true
     required: true
     range: uriorcurie
@@ -369,407 +374,525 @@ slots:
     range: string
     description: Revision of this record under a stable ID, using MAJOR.MINOR.PATCH.
   lifecycle_status:
+    description: "Lifecycle state of the record."
     required: true
     range: LifecycleStatus
   created_on:
+    description: "Date when the record was created."
     required: true
     range: date
   updated_on:
+    description: "Date when the record was last updated."
     range: date
   aliases:
     range: string
     multivalued: true
     description: Non-canonical legacy identifiers; never used as relationship targets.
   label:
+    description: "Human-readable name of the record."
     required: true
     range: string
     slot_uri: rdfs:label
   definition:
+    description: "Definition of the named subject."
     required: true
     range: string
     slot_uri: schema:description
   scope_inclusions:
+    description: "Subjects included in the stated scope."
     range: string
     multivalued: true
   scope_exclusions:
+    description: "Subjects excluded from the stated scope."
     range: string
     multivalued: true
   boundary_notes:
+    description: "Notes describing the boundary of the scope."
     range: string
     multivalued: true
   domain_ref:
+    description: "Reference to the associated domain."
     required: true
     range: Domain
     inlined: false
   view_kind:
+    description: "Kind of classification view."
     required: true
     range: TaxonomyViewKind
   purpose:
+    description: "Purpose of the record or view."
     required: true
     range: string
   coverage_state:
+    description: "State of coverage under the specified profile."
     required: true
     range: CoverageState
   node_kind:
+    description: "Kind of taxonomy node."
     required: true
     range: TaxonomyNodeKind
   view_ref:
+    description: "Reference to the taxonomy view containing the node."
     required: true
     range: TaxonomyView
     inlined: false
   source_class:
+    description: "Classification of the source."
     required: true
     range: SourceClass
   source_roles:
+    description: "Roles attributed to the source."
     required: true
     range: SourceRole
     multivalued: true
   organization:
+    description: "Organization associated with the source."
     range: string
   authors:
+    description: "Authors associated with the source."
     range: string
     multivalued: true
   title:
+    description: "Title of the source."
     required: true
     range: string
   edition:
+    description: "Edition or version of the source."
     range: string
   publication_date:
+    description: "Publication date as reported for the source."
     range: string
   official_url:
+    description: "Official URL of the source."
     range: uri
   stable_identifier:
+    description: "Persistent bibliographic or source identifier."
     range: string
   authority_fit:
+    description: "Purposes for which the source has relevant authority."
     range: string
     multivalued: true
   authority_limitations:
+    description: "Limits on the source's authority or applicability."
     range: string
     multivalued: true
   rights_handling:
+    description: "Rights and access handling for the source."
     required: true
     range: string
   verification_state:
+    description: "Recorded state of source or locator verification."
     required: true
     range: VerificationState
   source_ref:
+    description: "Reference to the source containing the locator."
     required: true
     range: Source
     inlined: false
     slot_uri: dcterms:source
   locator_type:
+    description: "Kind of source location."
     required: true
     range: LocatorType
   locator:
+    description: "Location within the referenced source."
     required: true
     range: string
   verified_content_summary:
+    description: "Summary of content verified at the locator."
     range: string
   accessed_on:
+    description: "Date on which the source location was accessed."
     required: true
     range: date
   source_locator_ref:
+    description: "Reference to the source location supporting the evidence."
     required: true
     range: SourceLocator
     inlined: false
     slot_uri: prov:wasDerivedFrom
   evidence_type:
+    description: "Kind of evidence record."
     required: true
     range: EvidenceType
   statement:
+    description: "Statement expressed by the record."
     required: true
     range: string
     slot_uri: schema:text
   context:
+    description: "Context in which the record or assertion applies."
     range: string
   method:
+    description: "Method used to obtain the observation."
     range: string
   result:
+    description: "Result of the observation or method."
     range: string
   limitations:
+    description: "Known limits of the record or observation."
     range: string
     multivalued: true
   uncertainty:
+    description: "Recorded uncertainties relevant to the record."
     range: string
     multivalued: true
   extraction_status:
+    description: "Review state of the evidence extraction."
     required: true
     range: EvidenceStatus
   synthetic:
+    description: "Whether the record is a synthetic fixture."
     required: true
     range: boolean
   concept_kind:
+    description: "Kind of concept represented."
     required: true
     range: ConceptKind
   synonyms:
+    description: "Alternative terms for the concept."
     range: string
     multivalued: true
   scope_description:
+    description: "Description of the applicable scope."
     required: true
     range: string
   applicability:
+    description: "Conditions under which the record applies."
     range: string
   evidence_refs:
+    description: "References to evidence supporting the record."
     range: Evidence
     multivalued: true
     inlined: false
     slot_uri: prov:wasDerivedFrom
   claim_refs:
+    description: "References to related knowledge claims."
     range: KnowledgeClaim
     multivalued: true
     inlined: false
   claim_kind:
+    description: "Kind of knowledge claim."
     required: true
     range: ClaimKind
   assumptions:
+    description: "Assumptions associated with the claim."
     range: string
     multivalued: true
   exceptions:
+    description: "Known exceptions to the record."
     range: string
     multivalued: true
   review_status:
+    description: "Review status of the knowledge claim."
     required: true
     range: ReviewStatus
   rationale:
+    description: "Reasoning supporting the record or decision."
     required: true
     range: string
   intent:
+    description: "Intended purpose of the practice."
     required: true
     range: string
   description:
+    description: "Description of the record's subject."
     required: true
     range: string
   preconditions:
+    description: "Conditions expected before applying the practice."
     range: string
     multivalued: true
   steps:
+    description: "Steps in the practice."
     range: string
     multivalued: true
   expected_outcomes:
+    description: "Outcomes expected from applying the practice."
     range: string
     multivalued: true
   risks:
+    description: "Risks associated with the practice."
     range: string
     multivalued: true
   problem:
+    description: "Problem addressed by the pattern or case."
     required: true
     range: string
   forces:
+    description: "Forces influencing the pattern's solution."
     range: string
     multivalued: true
   solution:
+    description: "Solution proposed by the pattern."
     required: true
     range: string
   consequences:
+    description: "Consequences associated with the pattern or anti-pattern."
     range: string
     multivalued: true
   tradeoffs:
+    description: "Trade-offs associated with the pattern."
     range: string
     multivalued: true
   symptoms:
+    description: "Observable symptoms of the anti-pattern."
     range: string
     multivalued: true
   causes:
+    description: "Causes associated with the anti-pattern."
     range: string
     multivalued: true
   remediation:
+    description: "Approach for addressing the anti-pattern."
     required: true
     range: string
   decision_question:
+    description: "Question addressed by the decision model."
     required: true
     range: string
   options:
+    description: "Options considered by the decision model."
     range: string
     multivalued: true
   criteria:
+    description: "Criteria used to compare decision options."
     range: string
     multivalued: true
   constraints:
+    description: "Constraints on the decision."
     range: string
     multivalued: true
   procedure:
+    description: "Procedure for applying the decision model."
     required: true
     range: string
   case_kind:
+    description: "Kind of case or counterexample."
     required: true
     range: CaseKind
   case_refs:
+    description: "References to cases associated with the record."
     range: Case
     multivalued: true
     inlined: false
   intervention:
+    description: "Intervention described by the case."
     range: string
   outcome:
+    description: "Observed or stated outcome of the case."
     range: string
   lessons:
+    description: "Lessons recorded from the case."
     range: string
     multivalued: true
   counterexample_to_refs:
+    description: "References to claims challenged by the counterexample."
     required: true
     range: KnowledgeEntity
     multivalued: true
     inlined: false
   contrary_observation:
+    description: "Observation that challenges a referenced claim."
     required: true
     range: string
   target_ref:
+    description: "Reference to the record reviewed by a decision."
     required: true
     range: KnowledgeEntity
     inlined: false
   target_record_version:
+    description: "Revision of the target record covered by the review."
     required: true
     range: string
   target_digest_sha256:
+    description: "SHA-256 digest binding the review to the target record."
     required: true
     range: string
   reviewer_role:
+    description: "Role of the reviewer."
     required: true
     range: ReviewerRole
   reviewer_ref:
+    description: "Identifier of the reviewer."
     required: true
     range: string
   decision:
+    description: "Outcome of the review decision."
     required: true
     range: ReviewOutcome
   reviewed_on:
+    description: "Date on which the review was performed."
     required: true
     range: date
   review_policy_ref:
+    description: "Reference to the policy used for the review."
     required: true
     range: string
   target_scope_ref:
+    description: "Reference to the scope affected by the coverage gap."
     required: true
     range: KnowledgeEntity
     inlined: false
   gap_kind:
+    description: "Kind of coverage gap."
     required: true
     range: GapKind
   severity:
+    description: "Severity assigned to the coverage gap."
     required: true
     range: GapSeverity
   coverage_status:
+    description: "Status of the coverage gap."
     required: true
     range: GapStatus
   impact:
+    description: "Impact of the coverage gap."
     required: true
     range: string
   resolution_notes:
+    description: "Notes on resolution or disposition of the gap."
     range: string
     multivalued: true
   subject_ref:
+    description: "Reference to the subject of the relationship assertion."
     required: true
     range: KnowledgeEntity
     inlined: false
     slot_uri: rdf:subject
   predicate:
+    description: "Controlled predicate of the relationship assertion."
     required: true
     range: RelationshipPredicate
     slot_uri: rdf:predicate
   object_ref:
+    description: "Reference to the object of the relationship assertion."
     required: true
     range: KnowledgeEntity
     inlined: false
     slot_uri: rdf:object
   qualifiers:
+    description: "Qualifiers constraining the relationship assertion."
     range: string
     multivalued: true
   graph_version:
+    description: "Version of the knowledge graph snapshot."
     required: true
     range: string
   generated_on:
+    description: "Date on which the graph snapshot was generated."
     required: true
     range: date
   domains:
+    description: "Domain records included in the graph."
     range: Domain
     multivalued: true
     inlined: true
     inlined_as_list: true
   subdomains:
+    description: "Subdomain records included in the graph."
     range: Subdomain
     multivalued: true
     inlined: true
     inlined_as_list: true
   taxonomy_views:
+    description: "Taxonomy view records included in the graph."
     range: TaxonomyView
     multivalued: true
     inlined: true
     inlined_as_list: true
   taxonomy_nodes:
+    description: "Taxonomy node records included in the graph."
     range: TaxonomyNode
     multivalued: true
     inlined: true
     inlined_as_list: true
   sources:
+    description: "Source records included in the graph."
     range: Source
     multivalued: true
     inlined: true
     inlined_as_list: true
   source_locators:
+    description: "Source locator records included in the graph."
     range: SourceLocator
     multivalued: true
     inlined: true
     inlined_as_list: true
   evidence_records:
+    description: "Evidence records included in the graph."
     range: Evidence
     multivalued: true
     inlined: true
     inlined_as_list: true
   concepts:
+    description: "Concept records included in the graph."
     range: Concept
     multivalued: true
     inlined: true
     inlined_as_list: true
   knowledge_claims:
+    description: "Knowledge claim records included in the graph."
     range: KnowledgeClaim
     multivalued: true
     inlined: true
     inlined_as_list: true
   principles:
+    description: "Principle records included in the graph."
     range: Principle
     multivalued: true
     inlined: true
     inlined_as_list: true
   practices:
+    description: "Practice records included in the graph."
     range: Practice
     multivalued: true
     inlined: true
     inlined_as_list: true
   patterns:
+    description: "Pattern records included in the graph."
     range: Pattern
     multivalued: true
     inlined: true
     inlined_as_list: true
   anti_patterns:
+    description: "Anti-pattern records included in the graph."
     range: AntiPattern
     multivalued: true
     inlined: true
     inlined_as_list: true
   decision_models:
+    description: "Decision model records included in the graph."
     range: DecisionModel
     multivalued: true
     inlined: true
     inlined_as_list: true
   cases:
+    description: "Case records included in the graph."
     range: Case
     multivalued: true
     inlined: true
     inlined_as_list: true
   counterexamples:
+    description: "Counterexample records included in the graph."
     range: Counterexample
     multivalued: true
     inlined: true
     inlined_as_list: true
   review_decisions:
+    description: "Review decision records included in the graph."
     range: ReviewDecision
     multivalued: true
     inlined: true
     inlined_as_list: true
   coverage_gaps:
+    description: "Coverage gap records included in the graph."
     range: CoverageGap
     multivalued: true
     inlined: true
     inlined_as_list: true
   relationship_assertions:
+    description: "Relationship assertion records included in the graph."
     range: RelationshipAssertion
     multivalued: true
     inlined: true
@@ -777,6 +900,7 @@ slots:
 
 enums:
   LifecycleStatus:
+    description: "Lifecycle states for knowledge records."
     permissible_values:
       DRAFT: {}
       PROPOSED: {}
@@ -790,6 +914,7 @@ enums:
       WITHDRAWN: {}
       RETRACTED: {}
   SourceClass:
+    description: "Classes of knowledge sources."
     permissible_values:
       PROFESSIONAL_BOK: {}
       CURRICULUM_FRAMEWORK: {}
@@ -802,12 +927,14 @@ enums:
       EMPIRICAL_CASE: {}
       OTHER: {}
   SourceRole:
+    description: "Roles a source can serve."
     permissible_values:
       PRIMARY: {}
       SECONDARY: {}
       COMPARATOR: {}
       CONTEXT: {}
   VerificationState:
+    description: "Verification states for sources and locators."
     permissible_values:
       IDENTITY_VERIFIED: {}
       CONTENT_PARTIAL_VERIFIED: {}
@@ -818,6 +945,7 @@ enums:
       LOCATOR_UNKNOWN: {}
       NOT_VERIFIED: {}
   LocatorType:
+    description: "Kinds of locations within a source."
     permissible_values:
       TITLE_PAGE: {}
       SECTION: {}
@@ -830,6 +958,7 @@ enums:
       URL_FRAGMENT: {}
       OTHER: {}
   EvidenceType:
+    description: "Kinds of evidence records."
     permissible_values:
       DIRECT_SOURCE_PARAPHRASE: {}
       OBSERVATION: {}
@@ -839,6 +968,7 @@ enums:
       NEGATIVE_FINDING: {}
       SYNTHETIC_FIXTURE: {}
   EvidenceStatus:
+    description: "Extraction and review states for evidence."
     permissible_values:
       EXTRACTED_PENDING_REVIEW: {}
       REVIEWED: {}
@@ -846,6 +976,7 @@ enums:
       SUPERSEDED: {}
       DISPUTED: {}
   TaxonomyViewKind:
+    description: "Kinds of taxonomy views."
     permissible_values:
       DISCIPLINE: {}
       CURRICULUM: {}
@@ -860,6 +991,7 @@ enums:
       CROSS_CUTTING: {}
       ADJACENT_BOUNDARY: {}
   CoverageState:
+    description: "Coverage states for a taxonomy view."
     permissible_values:
       PROPOSED: {}
       PARTIAL: {}
@@ -867,6 +999,7 @@ enums:
       COMPLETE_RELATIVE_TO_PROFILE: {}
       NOT_ASSESSED: {}
   TaxonomyNodeKind:
+    description: "Kinds of taxonomy nodes."
     permissible_values:
       KNOWLEDGE_AREA: {}
       KNOWLEDGE_UNIT: {}
@@ -879,6 +1012,7 @@ enums:
       APPLICATION_CONTEXT: {}
       BOUNDARY_NODE: {}
   ConceptKind:
+    description: "Kinds of concepts."
     permissible_values:
       TERM: {}
       ABSTRACTION: {}
@@ -889,6 +1023,7 @@ enums:
       QUALITY_ATTRIBUTE: {}
       BOUNDARY_CONCEPT: {}
   ClaimKind:
+    description: "Kinds of knowledge claims."
     permissible_values:
       DEFINITION: {}
       TAXONOMY_STATEMENT: {}
@@ -901,6 +1036,7 @@ enums:
       COUNTERCLAIM: {}
       SYNTHESIS: {}
   ReviewStatus:
+    description: "Review states for knowledge claims."
     permissible_values:
       PENDING: {}
       ACCEPTED: {}
@@ -908,6 +1044,7 @@ enums:
       REJECTED: {}
       NEEDS_REVISION: {}
   CaseKind:
+    description: "Kinds of cases and counterexamples."
     permissible_values:
       CASE_STUDY: {}
       INCIDENT: {}
@@ -916,18 +1053,21 @@ enums:
       COUNTEREXAMPLE: {}
       SYNTHETIC_TEST: {}
   ReviewerRole:
+    description: "Roles of human reviewers."
     permissible_values:
       HUMAN_DOMAIN_REVIEWER: {}
       HUMAN_SUBJECT_EXPERT: {}
       HUMAN_SOURCE_REVIEWER: {}
       MAINTAINER: {}
   ReviewOutcome:
+    description: "Outcomes of review decisions."
     permissible_values:
       ACCEPT: {}
       REJECT: {}
       REQUEST_CHANGES: {}
       DEFER: {}
   GapKind:
+    description: "Kinds of coverage gaps."
     permissible_values:
       SOURCE_GAP: {}
       LOCATOR_GAP: {}
@@ -938,12 +1078,14 @@ enums:
       REVIEW_GAP: {}
       COVERAGE_GAP: {}
   GapSeverity:
+    description: "Severity levels for coverage gaps."
     permissible_values:
       LOW: {}
       MEDIUM: {}
       HIGH: {}
       CRITICAL: {}
   GapStatus:
+    description: "Lifecycle states of coverage gaps."
     permissible_values:
       OPEN: {}
       INVESTIGATING: {}
