@@ -331,13 +331,23 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         target = entities.get(target_id) if isinstance(target_id, str) else None
         if not target:
             continue
-        version_matches = record.get("target_record_version") == target.get("record_version")
-        if not version_matches:
-            _error(errors, "REVIEW_VERSION_MISMATCH", record_id)
+        target_version = record.get("target_record_version")
+        if not VERSION_PATTERN.fullmatch(str(target_version or "")):
+            _error(errors, "INVALID_REVIEW_TARGET_VERSION", record_id)
         digest = record.get("target_digest_sha256", "")
         digest_valid = bool(SHA256_PATTERN.fullmatch(str(digest)))
         if not digest_valid:
             _error(errors, "INVALID_REVIEW_DIGEST", record_id)
+
+        # Historical review events remain auditable but cannot authorize or
+        # conflict with the current record. Only ACTIVE decisions bind the
+        # current target revision and participate in effective outcomes.
+        if record.get("lifecycle_status") != "ACTIVE":
+            continue
+
+        version_matches = target_version == target.get("record_version")
+        if not version_matches:
+            _error(errors, "REVIEW_VERSION_MISMATCH", record_id)
         digest_matches = digest_valid and digest == canonical_record_digest(target)
         if digest_valid and not digest_matches:
             _error(errors, "REVIEW_DIGEST_MISMATCH", record_id)
@@ -804,6 +814,61 @@ def run_self_tests(catalog, rules):
         g["review_decisions"][-1]["reviewer_ref"] = " "
     expect("missing-reviewer-identity", missing_reviewer_identity, "MISSING_REVIEWER_IDENTITY")
 
+    def inactive_accept_review_does_not_bind(g):
+        accept_fixture_evidence(g)
+        target = g["concepts"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"][-1]["lifecycle_status"] = "RETRACTED"
+    expect("inactive-accept-review-does-not-bind", inactive_accept_review_does_not_bind, "ACCEPTED_WITHOUT_HUMAN_REVIEW")
+
+    def inactive_negative_review_is_historical(g):
+        accept_fixture_evidence(g)
+        target = g["concepts"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"].append({
+            "id": "se:REV-TEST-INACTIVE-REJECT",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "RETRACTED",
+            "target_ref": target["id"],
+            "target_record_version": target["record_version"],
+            "target_digest_sha256": canonical_record_digest(target),
+            "reviewer_role": "HUMAN_DOMAIN_REVIEWER",
+            "reviewer_ref": "reviewer:test-fixture-inactive",
+            "decision": "REJECT",
+            "rationale": "Historical negative decision retained for audit.",
+            "reviewed_on": "2026-11-05",
+            "review_policy_ref": "SE-REVIEW-POLICY-0.1",
+        })
+    inactive_negative_graph = copy.deepcopy(base)
+    inactive_negative_review_is_historical(inactive_negative_graph)
+    inactive_negative_errors = validate_graph(inactive_negative_graph, catalog, rules)
+    cases.append(("inactive-negative-review-does-not-conflict", not inactive_negative_errors, inactive_negative_errors))
+
+    def inactive_stale_review_history(g):
+        accept_fixture_evidence(g)
+        target = g["concepts"][0]
+        add_exact_acceptance(g, target)
+        g["review_decisions"].append({
+            "id": "se:REV-TEST-SUPERSEDED-HISTORY",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "SUPERSEDED",
+            "target_ref": target["id"],
+            "target_record_version": "0.0.9",
+            "target_digest_sha256": "a" * 64,
+            "reviewer_role": "HUMAN_DOMAIN_REVIEWER",
+            "reviewer_ref": "reviewer:test-fixture-history",
+            "decision": "ACCEPT",
+            "rationale": "Historical review of an older record revision.",
+            "reviewed_on": "2026-11-05",
+            "review_policy_ref": "SE-REVIEW-POLICY-0.1",
+        })
+    inactive_history_graph = copy.deepcopy(base)
+    inactive_stale_review_history(inactive_history_graph)
+    inactive_history_errors = validate_graph(inactive_history_graph, catalog, rules)
+    cases.append(("inactive-stale-review-remains-historical", not inactive_history_errors, inactive_history_errors))
+
     def validated_by_review_decision_graph(g):
         evidence = g["evidence_records"][0]
         evidence["extraction_status"] = "REVIEWED"
@@ -831,6 +896,35 @@ def run_self_tests(catalog, rules):
     review_object_graph = validated_by_review_decision_graph(copy.deepcopy(base))
     review_object_errors = validate_graph(review_object_graph, catalog, rules)
     cases.append(("accepted-validated-by-review-object-provenance", not review_object_errors, review_object_errors))
+
+    def expect_format_failure(name, mutate, expected_code):
+        format_files = _serialize_format_b(base)
+        mutate(format_files)
+        try:
+            _parse_format_b(format_files)
+            format_errors = []
+        except ValidationError as exc:
+            format_errors = [str(exc)]
+        passed = any(error.startswith(expected_code + ":") for error in format_errors)
+        cases.append((name, passed, format_errors))
+
+    concept_slug = base["concepts"][0]["id"].split(":", 1)[1].lower()
+    concept_explanation = f"explanations/{concept_slug}.md"
+    expect_format_failure(
+        "format-b-missing-explanation",
+        lambda files: files.pop(concept_explanation, None),
+        "FORMAT_B_MISSING_EXPLANATION",
+    )
+    expect_format_failure(
+        "format-b-explanation-id-mismatch",
+        lambda files: files.__setitem__(concept_explanation, "# se:WRONG-RECORD-ID\\n\\nWrong link.\\n"),
+        "FORMAT_B_EXPLANATION_ID_MISMATCH",
+    )
+    expect_format_failure(
+        "format-b-orphan-explanation",
+        lambda files: files.__setitem__("explanations/orphan.md", "# se:ORPHAN\\n"),
+        "FORMAT_B_ORPHAN_EXPLANATION",
+    )
 
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
@@ -926,15 +1020,61 @@ def _serialize_format_b(graph):
 
 
 def _parse_format_b(files):
+    if "graph-root.yaml" not in files:
+        raise ValidationError("FORMAT_B_MISSING_GRAPH_ROOT: graph-root.yaml is absent")
     root = yaml.safe_load(files["graph-root.yaml"])
+    if not isinstance(root, dict):
+        raise ValidationError("FORMAT_B_INVALID_GRAPH_ROOT: graph root must be a mapping")
+    collection_order = root.get("collection_order")
+    if (
+        not isinstance(collection_order, list)
+        or len(collection_order) != len(COLLECTIONS)
+        or set(collection_order) != set(COLLECTIONS)
+    ):
+        raise ValidationError("FORMAT_B_INVALID_COLLECTION_ORDER: every entity collection must appear exactly once")
     graph = {
         key: root[key]
         for key in ("id", "graph_version", "generated_on", "domain_ref")
     }
-    for collection in root["collection_order"]:
+    expected_explanations = set()
+    consumed_record_paths = set()
+    for collection in collection_order:
         prefix = f"records/{collection}/"
         record_paths = sorted(path for path in files if path.startswith(prefix) and path.endswith(".yaml"))
-        graph[collection] = [yaml.safe_load(files[path]) for path in record_paths]
+        graph[collection] = []
+        for path in record_paths:
+            record = yaml.safe_load(files[path])
+            if not isinstance(record, dict) or not isinstance(record.get("id"), str):
+                raise ValidationError(f"FORMAT_B_INVALID_RECORD: {path} must contain a record with a canonical id")
+            slug = record["id"].split(":", 1)[-1].lower()
+            explanation_path = f"explanations/{slug}.md"
+            if explanation_path in expected_explanations:
+                raise ValidationError(f"FORMAT_B_DUPLICATE_EXPLANATION: {explanation_path} maps to multiple records")
+            expected_explanations.add(explanation_path)
+            explanation = files.get(explanation_path)
+            if explanation is None:
+                raise ValidationError(f"FORMAT_B_MISSING_EXPLANATION: {record['id']} requires {explanation_path}")
+            lines = explanation.splitlines()
+            if not lines or lines[0].strip() != f"# {record['id']}":
+                raise ValidationError(f"FORMAT_B_EXPLANATION_ID_MISMATCH: {explanation_path} must identify {record['id']}")
+            graph[collection].append(record)
+            consumed_record_paths.add(path)
+
+    actual_record_paths = {
+        path for path in files
+        if path.startswith("records/") and path.endswith(".yaml")
+    }
+    orphan_records = actual_record_paths - consumed_record_paths
+    if orphan_records:
+        raise ValidationError(f"FORMAT_B_ORPHAN_RECORD: {sorted(orphan_records)}")
+
+    actual_explanations = {
+        path for path in files
+        if path.startswith("explanations/") and path.endswith(".md")
+    }
+    orphan_explanations = actual_explanations - expected_explanations
+    if orphan_explanations:
+        raise ValidationError(f"FORMAT_B_ORPHAN_EXPLANATION: {sorted(orphan_explanations)}")
     return graph
 
 
@@ -1054,6 +1194,7 @@ def run_format_comparison():
         "C": None,
     }
 
+    print("FORMAT_B_EXPLANATION_LINKS=PASS")
     print(f"FORMAT_EQUIVALENCE={'PASS' if equivalent else 'FAIL'}")
     print(f"CANONICAL_GRAPH_SHA256={original}")
     for name in ("A", "B", "C"):

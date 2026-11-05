@@ -10,6 +10,9 @@ identity_contract:
   lifecycle:
     values: [DRAFT, PROPOSED, PENDING_REVIEW, ACCEPTED, DISPUTED, REJECTED, DEPRECATED, SUPERSEDED, ACTIVE, WITHDRAWN, RETRACTED]
     rule: "ACCEPTED is a human decision, never inferred from schema validation or evidence extraction."
+  review_decision_policy:
+    effective_lifecycle_status: ACTIVE
+    rule: "Only ACTIVE ReviewDecision records bind the current target revision or participate in current ACCEPT/REJECT/REQUEST_CHANGES conflict checks. Non-ACTIVE decisions are retained as historical events; they must retain a valid target record_version and SHA-256 digest syntax but do not authorize or conflict with current decisions. ACTIVE decisions must match the current target revision and canonical digest."
   synthetic_rule: "Synthetic fixtures are structurally testable but cannot be ACCEPTED corpus knowledge."
   provenance_rule: "Knowledge assertions cite Evidence; Evidence points to one exact SourceLocator; SourceLocator points to one Source. Do not duplicate source facts in downstream records."
 entity_families:
@@ -100,13 +103,13 @@ entity_families:
   - class: Case
     identity_example: "se:CASE-INCIDENT-001"
     purpose: "A real engineering example, incident, postmortem or case study."
-    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, synthetic]
+    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, problem, synthetic]
     provenance: "A non-synthetic Case requires Evidence; synthetic fixtures cannot be ACCEPTED."
     scope_rule: "Separate observed facts, interpretation, intervention and outcome."
   - class: Counterexample
     identity_example: "se:COUNTEREXAMPLE-001"
     purpose: "A case explicitly challenging a claim, principle, practice or model."
-    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, synthetic, counterexample_to_refs, contrary_observation]
+    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, problem, synthetic, counterexample_to_refs, contrary_observation]
     provenance: "A real counterexample requires Evidence; a synthetic one is test-only and never accepted."
     scope_rule: "A counterexample narrows applicability or triggers review; it does not automatically refute a general claim."
   - class: ReviewDecision

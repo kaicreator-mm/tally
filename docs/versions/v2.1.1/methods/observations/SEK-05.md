@@ -41,3 +41,33 @@ The candidate schema and graph validator are not yet qualified. Run the exact co
 - Measure edit locality and two-writer merge conflict behavior; record limitations.
 
 No final LinkML adoption outcome is recorded before those results. No production adoption, runtime dependency, model freeze, Domain Package, DomainForge promotion, main merge, release or deployment is implied.
+
+
+## Independent Exact-SHA source review R2 — 2026-11-06
+
+**Reviewed input:** PR #318 HEAD `23407a082875249de60d699f1d522675fa67376b` / Tree `9dbf57cf07a496eb2bdaa94f011580494e3f9ac5` / Base `e146b1894e6bdf5f41faf18816627e117d44db07`.
+
+### Findings repaired within the original seven-path write set
+
+1. **P1 — inactive ReviewDecision could still authorize or conflict with current knowledge.** The validator previously counted RETRACTED/SUPERSEDED/non-current review events as current decisions. It now treats only ACTIVE ReviewDecision records as effective; non-ACTIVE events remain historical and are checked for valid target-version/digest syntax without binding the current record. Added negative/positive coverage for revoked acceptance, inactive rejection and stale historical digest.
+2. **P2 — Format B explanation integrity was not actually checked.** The parser previously ignored the Markdown explanation collection, allowing missing, orphaned or wrong-ID explanations to pass. It now enforces the one-to-one record/explanation mapping and canonical-ID heading; added three negative tests.
+3. **P2 — Entity Catalog and LinkML schema disagreed on Case fields.** The schema requires `problem` for Case and inherited Counterexample, but the catalog omitted it. The catalog required-field lists now match the schema.
+
+### Review status
+
+```ini
+SOURCE_REVIEW=REPAIRED_IN_SCOPE
+P0=0
+P1=0
+P2=0
+SELF_TEST_EXPECTED=35
+WINDOWS_NATIVE_VALIDATION=PENDING
+LINKML_FULL_MODEL_VALIDATION=PENDING
+PRODUCTION_ADOPTION=NO
+FREEZE=NO
+MERGE=NO
+RELEASE=NO
+DEPLOYMENT=NO
+```
+
+The source repairs are not a substitute for native Windows execution at the resulting exact HEAD/Tree. No LinkML adoption decision or production promotion is made here.
