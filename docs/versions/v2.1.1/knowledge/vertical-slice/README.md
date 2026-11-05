@@ -51,7 +51,7 @@ Review source dossiers in `authority/source-reviews/`, then follow each claim to
 
 | Evidence family | Current coverage | Status |
 |---|---|---|
-| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Source metadata corrected by SEK-02R: Released Sept 2025; no ISBN/DOI asserted; current rights limits recorded; human review pending |
+| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | SEK-02R proposes Released Sept 2025 and removes the unverified ISBN/DOI; native verification is pending in #325/PR #326 |
 | CS2023 | CS curriculum boundary, nine SE Knowledge Units, explicit cross-KA perspective references | Selected content/locators verified |
 | NIST SP 800-218 v1.1 | Secure-development practice groups, SDLC integration, risk-based applicability and ordering caveat | Selected PDF sections verified |
 | NIST SP 800-218A | AI-model-specific companion profile relationship | Metadata and abstract only |

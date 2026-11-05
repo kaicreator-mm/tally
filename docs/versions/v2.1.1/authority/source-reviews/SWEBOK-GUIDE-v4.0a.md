@@ -3,7 +3,7 @@
 **Source ID:** `SE-SRC-SWEBOK-GUIDE-4-0A`  
 **Source class:** PROFESSIONAL_BOK  
 **Review state:** CONTENT_AND_LOCATORS_VERIFIED / HUMAN_REVIEW_PENDING  
-**Accessed:** 2026-11-04
+**Accessed:** 2026-11-06
 
 ## 1. Identity verification
 
