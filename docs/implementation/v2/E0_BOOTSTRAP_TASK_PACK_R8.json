@@ -165,7 +165,8 @@
     "taskPackBlobSha": null,
     "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "acceptedHostCasClaim": null,
-    "jitBranch": "task/i284-e0-bootstrap-r8-20261105"
+    "jitBranch": "task/i284-e0-bootstrap-r8-20261105",
+    "taskPackBlobBinding": "The actual Claim input MUST use the exact GitHub Contents API blob SHA of this R8 file at the independently reviewed PR HEAD, bound by the exact Owner receipt. taskPackBlobSha=null is a non-executable self-reference placeholder only; null MUST NOT be passed to Host CAS or selected K."
   },
   "authority": {
     "splitOwnerDecision": "2026-11-04 #284 Issue Owner authorization",
@@ -197,7 +198,7 @@
     ],
     "requiredForBootstrapPackFreeze": [
       "Independent read-only Exact-SHA review of the exact immutable R8 PackBlob.",
-      "Exact repository Owner approval binding PackBlob SHA, A source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
+      "Exact repository Owner approval binding PackBlob SHA, A source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, versionAuditBinding.digestSha256 (which binds the exact A candidate PackBlob, roster/Claim/edge/dependency readbacks, complete writeSetAudit and scope dispositions) and e0ScopeAudit.digestSha256.",
       "The version-wide writeSetAudit status and digest must be bound exactly; its current non-PASS state is permitted only as an explicit fail-closed snapshot and never permits version-wide freeze or ordinary Task dispatch.",
       "E0 scope overlap/serial-handoff audit must bind #203→#284→#312→#219→#273→#276→#264, all exact shared paths and the current native dependency readbacks.",
       "Integration base must contain current A/#260 R9 source only; no #219 or #312 implementation diff may be imported."
@@ -219,7 +220,7 @@
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
-  "note": "R8 binds current A/#260 R9 exact candidate and its 46-task PackBlob read-only. E0 source base contains A only; #219/#312 source is not imported. All 14 E0 paths are post-root-Claim and E0 first-writer paths. Version-wide writeSetAudit remains non-PASS and does not authorize ordinary Task dispatch or version-wide freeze. Root Claim is feasible through existing T06d Host-only ports but remains blocked by missing exact Pack review/Owner receipt, #203 predecessor terminality, #284 dedicated registry configuration and actual root Claim/readback. Version audit binding digest is SHA-256 over the exact A PackBlob reference, roster/Claim/edge counts, native dependency readback, complete writeSetAudit object and scope disposition summary.",
+  "note": "R8 binds current A/#260 R9 exact candidate and its 46-task PackBlob read-only. E0 source base contains A only; #219/#312 source is not imported. All 14 E0 paths are post-root-Claim and E0 first-writer paths. Version-wide writeSetAudit remains non-PASS and does not authorize ordinary Task dispatch or version-wide freeze. Root Claim is feasible through existing T06d Host-only ports but remains blocked by missing exact Pack review/Owner receipt, #203 predecessor terminality, #284 dedicated registry configuration and actual root Claim/readback. Version audit binding digest (`versionAuditBinding.digestSha256`) is SHA-256 over the exact A PackBlob reference, roster/Claim/edge counts, native dependency readback, complete writeSetAudit object and scope disposition summary.",
   "writeSetAudit": {
     "schema": "tally/version-task-write-set-audit/v1",
     "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
@@ -1323,7 +1324,7 @@
     },
     "preconditions": [
       "Independent Exact-SHA review of this exact immutable R8 PackBlob.",
-      "Exact Owner approval comment binding PackBlob SHA, A/#260 source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
+      "Exact Owner approval comment binding PackBlob SHA, A/#260 source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, versionAuditBinding.digestSha256 (which binds the exact A candidate PackBlob, roster/Claim/edge/dependency readbacks, complete writeSetAudit and scope dispositions) and e0ScopeAudit.digestSha256.",
       "The #203 predecessor must have a read-only Host/CAS terminality and no-active-writer disposition; its existing PUBLISHED_VERIFIED row is historical evidence, not proof of terminality. UNKNOWN blocks.",
       "Only after exact Pack review + Owner approval may #284 be moved to state:ready and the existing Host-only T06d root publisher invoked; zero tracked pre-Claim source paths.",
       "Use a new dedicated stable #284 registry in the actual one-shot Host config. Do not reuse any existing per-issue registry or seed SQLite directly; public API readback must prove activeIncompatibleClaimCount===0 for that exact store.",
@@ -1704,8 +1705,8 @@
       "semantics": "Only official GitHub blocked_by readback establishes NATIVE. Current proposed edges remain PLANNED; no native dependency mutation is included in this Pack."
     },
     "dispatchable": false,
-    "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestAlgorithm and digestSha256)",
-    "digestSha256": "b2903b093e4fe76e3fe1b89043ba98cf8dc85cf6da2c0a030798c07b3299773e"
+    "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestSha256 and including digestAlgorithm)",
+    "digestSha256": "7ed7ed70aa5f6a568d5bb37fdfa3cd4bb7da92482f43f5a196fa5c8a7bbc7ef2"
   },
   "revision": "R8",
   "serialSuccessors": [
@@ -1808,7 +1809,7 @@
   },
   "preconditions": [
     "Independent Exact-SHA review of this exact immutable R8 PackBlob.",
-    "Exact Owner approval comment binding PackBlob SHA, A/#260 source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, version writeSetAudit.auditDigestSha256 and e0ScopeAudit.digestSha256.",
+    "Exact Owner approval comment binding PackBlob SHA, A/#260 source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, versionAuditBinding.digestSha256 (which binds the exact A candidate PackBlob, roster/Claim/edge/dependency readbacks, complete writeSetAudit and scope dispositions) and e0ScopeAudit.digestSha256.",
     "The #203 predecessor must have a read-only Host/CAS terminality and no-active-writer disposition; its existing PUBLISHED_VERIFIED row is historical evidence, not proof of terminality. UNKNOWN blocks.",
     "Only after exact Pack review + Owner approval may #284 be moved to state:ready and the existing Host-only T06d root publisher invoked; zero tracked pre-Claim source paths.",
     "Use a new dedicated stable #284 registry in the actual one-shot Host config. Do not reuse any existing per-issue registry or seed SQLite directly; public API readback must prove activeIncompatibleClaimCount===0 for that exact store.",
@@ -1818,7 +1819,7 @@
     "Public selected-K route admits only #284 and the exact approved Task Pack/source/write-set identity.",
     "No E0 source edit before root Claim + exact FROZEN_DAG_WRITESET readback."
   ],
-  "e0ScopeAuditDigest": "b2903b093e4fe76e3fe1b89043ba98cf8dc85cf6da2c0a030798c07b3299773e",
+  "e0ScopeAuditDigest": "7ed7ed70aa5f6a568d5bb37fdfa3cd4bb7da92482f43f5a196fa5c8a7bbc7ef2",
   "versionAuditBinding": {
     "schema": "tally.e0.version-audit-binding/v1",
     "candidatePackBlobSha": "b14f958b83b2b2789893b0e648e2ebbd1fbe06ad",
@@ -2919,5 +2920,21 @@
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(core in insertion order; excluding digestAlgorithm and digestSha256)",
     "digestSha256": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c"
   },
-  "versionAuditDigest": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c"
+  "versionAuditDigest": "cfd4129fa72be94a9eae9cccb9ed65fc596ae3fde7c922a5070a2142068ef29c",
+  "claimBindingRules": {
+    "schema": "tally.e0.claim-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/E0_BOOTSTRAP_TASK_PACK_R8.json at the exact independently reviewed PR HEAD",
+    "ownerReceiptMustBind": [
+      "packBlobSha",
+      "sourceSha",
+      "treeSha",
+      "integrationBaseSha",
+      "integrationBaseTreeSha",
+      "writeSetSha256",
+      "versionAuditBinding.digestSha256",
+      "e0ScopeAudit.digestSha256"
+    ],
+    "nullTaskPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "actualClaimRequirement": "Before T06d reserveAndPublish, construct the Claim subject with the exact packBlobSha read back from GitHub and the exact Owner receipt. A null/missing/mismatched PackBlob SHA fails closed."
+  }
 }
