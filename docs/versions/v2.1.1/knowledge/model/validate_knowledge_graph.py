@@ -311,28 +311,26 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if class_name not in KNOWLEDGE_CLASSES or record.get("lifecycle_status") != "ACCEPTED":
             continue
         accepted_ids.add(record_id)
-        if class_name == "RelationshipAssertion":
-            # Predicate-specific evidence and object provenance are checked below.
-            continue
-        if class_name == "CoverageGap":
-            if record.get("coverage_status") != "ACCEPTED_LIMITATION" or not _ids(record.get("resolution_notes")):
-                _error(errors, "ACCEPTED_GAP_WITHOUT_DISPOSITION", record_id)
-            if _ids(record.get("evidence_refs")):
+        if class_name != "RelationshipAssertion":
+            if class_name == "CoverageGap":
+                if record.get("coverage_status") != "ACCEPTED_LIMITATION" or not _ids(record.get("resolution_notes")):
+                    _error(errors, "ACCEPTED_GAP_WITHOUT_DISPOSITION", record_id)
+                if _ids(record.get("evidence_refs")):
+                    usable_evidence_refs(record_id, record.get("evidence_refs"))
+            elif class_name in {"Pattern", "AntiPattern"} and not _ids(record.get("evidence_refs")):
+                case_ids = _ids(record.get("case_refs"))
+                if not case_ids:
+                    _error(errors, "ACCEPTED_WITHOUT_EVIDENCE_OR_CASE", record_id)
+                for case_id in case_ids:
+                    case = entities.get(case_id, {})
+                    if case.get("synthetic") is True:
+                        _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{case_id}")
+                    else:
+                        usable_evidence_refs(record_id, case.get("evidence_refs"))
+            else:
                 usable_evidence_refs(record_id, record.get("evidence_refs"))
-        elif class_name in {"Pattern", "AntiPattern"} and not _ids(record.get("evidence_refs")):
-            case_ids = _ids(record.get("case_refs"))
-            if not case_ids:
-                _error(errors, "ACCEPTED_WITHOUT_EVIDENCE_OR_CASE", record_id)
-            for case_id in case_ids:
-                case = entities.get(case_id, {})
-                if case.get("synthetic") is True:
-                    _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{case_id}")
-                else:
-                    usable_evidence_refs(record_id, case.get("evidence_refs"))
-        else:
-            usable_evidence_refs(record_id, record.get("evidence_refs"))
-        if class_name == "KnowledgeClaim" and record.get("review_status") != "ACCEPTED":
-            _error(errors, "CLAIM_REVIEW_STATUS_MISMATCH", record_id)
+            if class_name == "KnowledgeClaim" and record.get("review_status") != "ACCEPTED":
+                _error(errors, "CLAIM_REVIEW_STATUS_MISMATCH", record_id)
         expected_binding = (
             record_id,
             record.get("record_version"),
@@ -388,6 +386,8 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if record.get("lifecycle_status") == "ACCEPTED":
             evidence_ids = _ids(record.get("evidence_refs"))
             if not evidence_ids and rule.get("object_is_evidence") and object_class == "Evidence":
+                evidence_ids = [object_id]
+            elif not evidence_ids and rule.get("object_carries_provenance") and object_class == "Evidence":
                 evidence_ids = [object_id]
             elif not evidence_ids and rule.get("object_carries_provenance") and object_class in {"Case", "Counterexample"}:
                 object_record = entities.get(object_id, {})
