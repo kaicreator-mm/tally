@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-05T19:44:58.786Z",
+  "observedAt": "2026-11-05T19:58:07.493Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -708,14 +708,14 @@
       "issueState": "open",
       "labels": [
         "type:task",
-        "state:planned"
+        "state:ready"
       ],
       "createdAt": "2026-11-05T18:54:59Z",
-      "updatedAt": "2026-11-05T19:43:23Z",
+      "updatedAt": "2026-11-05T19:57:48Z",
       "closedAt": null,
-      "scopeDisposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
+      "scopeDisposition": "READY_NOT_ADMITTED",
       "dispatchableByDisposition": false,
-      "dispositionNote": "T06d Host-only Claim terminalization successor, planned and not admitted. Uses a dedicated terminal-event reader/test pair and does not modify #212's merged native Claim-event read-recovery paths. Exact Task Pack/Claim admission, independent review and native Windows validation are pending. #203 historical Claim terminality remains NOT_PROVEN."
+      "dispositionNote": "T06d Host-only Claim terminalization successor; Issue is state:ready for standalone Pack/Claim admission only. Dedicated terminal-event reader/test pair avoids #212's merged native Claim-event read-recovery paths. Standalone R1 Task Pack, independent review, exact Owner receipt, accepted Host Claim and per-task FROZEN_DAG_WRITESET remain pending; source edits are prohibited until readback. #203 historical terminality remains NOT_PROVEN."
     }
   ],
   "edges": [
@@ -2098,9 +2098,9 @@
       },
       {
         "issueNumber": 319,
-        "disposition": "PLANNED_CLAIM_TERMINALIZATION_SUCCESSOR_NO_CLAIM",
+        "disposition": "READY_NOT_ADMITTED",
         "dispatchableByDisposition": false,
-        "note": "T06d Host-only Claim terminalization successor; planned and non-dispatchable. Dedicated terminal-event reader avoids #212's Claim-event read-recovery paths. Exact Task Pack/Claim admission, independent review and native Windows validation remain pending. #203 terminality remains NOT_PROVEN."
+        "note": "T06d successor is state:ready for standalone Pack/Claim admission only; non-dispatchable until exact Pack review, Owner receipt, accepted Host Claim and per-task FROZEN_DAG_WRITESET readback. Dedicated terminal-event reader avoids #212's merged read-recovery paths."
       }
     ]
   },
