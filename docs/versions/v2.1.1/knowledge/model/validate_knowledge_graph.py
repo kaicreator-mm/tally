@@ -972,7 +972,7 @@ def _changed_metrics(before, after):
 
 def _format_snapshots(graph):
     return {
-        "A": {"knowledge.md": _serialize_format_a(graph)},
+        "A": _serialize_format_a(graph),
         "B": _serialize_format_b(graph),
         "C": {"knowledge.yaml": _serialize_format_c(graph)},
     }
