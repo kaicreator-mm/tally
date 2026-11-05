@@ -1,0 +1,441 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 319,
+  "parentIssue": 259,
+  "phase": "T06D_CLAIM_TERMINALIZATION_SUCCESSOR",
+  "integrationHandoffIssue": 284,
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "treeSha": "4c3529b612f0e5a80de8f7508cd7d178e8069980"
+  },
+  "prIntake": {
+    "branch": "task/i319-t06d-terminalization",
+    "sha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332"
+  },
+  "integrationBase": {
+    "branch": "version/v2",
+    "sha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "treeSha": "4c3529b612f0e5a80de8f7508cd7d178e8069980",
+    "mergeParents": [
+      "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332"
+    ],
+    "mergeOrder": [
+      "T06d terminalization successor; no unrelated source imported"
+    ],
+    "validation": "VERSION_V2_EXACT_BASE_ONLY"
+  },
+  "stableUpstream": [
+    {
+      "issue": 260,
+      "pr": 279,
+      "headSha": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+      "treeSha": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a",
+      "taskPackPath": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+      "taskPackBlobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+      "taskCount": 47,
+      "openTaskCount": 26,
+      "closedTaskCount": 21,
+      "claimSubjectCount": 47,
+      "claimAcceptance": "NOT_VERIFIED",
+      "edges": 31,
+      "nativeEdges": 4,
+      "plannedEdges": 27,
+      "openWriteSetOverlapPairs": 66,
+      "sourceReview": {
+        "previousExactHead": "33b9a95a5c26cc854f3390a9a33e34b8e4931dc8",
+        "treeSha": "f14c22be8b87aed36d983b5491afb35292140b32",
+        "reviewComment": 5791123512,
+        "verdict": "PASS_WITH_P2",
+        "currentR11Review": "PASS_WITH_P2",
+        "currentR11ReviewComment": 5791273111,
+        "currentR11Head": "e2a5d65854ada8e1fe043493dae8ebb00b5ad71f",
+        "currentR11Tree": "26fad7fe3a1143bc198de5a4a3f82e0587f0231a",
+        "currentR12Review": "PASS_WITH_P2",
+        "currentR12ReviewComment": 5791335743,
+        "currentR12Head": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+        "currentR12Tree": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a"
+      },
+      "builderEvidence": {
+        "head": "dc9d452104af7c68a79bf2d6a13e6ff02b8d8047",
+        "comment": 6667224299,
+        "node": "24.21.0",
+        "syntaxPreflightFiles": 161,
+        "focusedTests": "68/68",
+        "tallyWebTests": "99/99",
+        "note": "Later A candidate commits are Task Pack JSON-only deltas; current candidate is re-parsed and structurally re-audited."
+      }
+    }
+  ],
+  "writeSetCount": 9,
+  "allowed_write_set": [
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Add append-only terminalization operation to the existing single-writer Host controller; preserve reserveAndPublish semantics."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "CAS transition, retry, race, ambiguity and no-overwrite regressions."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Read-only Host proof of original Claim, no active writer/effect and terminal event readback."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Host binding, exact predecessor, active-writer and unknown-effect negative tests."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-dispatch-state-events.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Dedicated read-only parser/reader for ADS v4.18 DISPATCH_STATE_CHANGED events; avoid #212 Claim-event reader paths."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-dispatch-state-events.test.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Schema-pinned terminal event parse, pagination, exact binding and duplicate/edit rejection tests."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Append one scheduler terminal event using the existing Host-bound GitHub publisher boundary."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Terminal event publish boundary, exact payload and lost-ACK tests."
+    },
+    {
+      "path": ".woodpecker/v2-t06d-terminalization.yaml",
+      "owner": "T06D_FIRST_WRITER",
+      "purpose": "Syntax-first and focused T06d source validation on self-hosted Woodpecker only."
+    }
+  ],
+  "consumesReadOnly": [
+    "packages/tally-github-native-c/src/task-claim-events.mjs",
+    "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+    "packages/tally-github-native-c/src/task-claim-host-readback-port.mjs",
+    "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+    "packages/tally-github-native-c/src/task-source-pair.mjs",
+    "packages/tally-github-native-c/src/read-retry.mjs",
+    "packages/tally-github-native-c/vendor/agent-event-v2.schema.json",
+    "packages/tally-github-native-c/package.json"
+  ],
+  "operations": [
+    {
+      "id": "terminalizePublishedClaim",
+      "stage": "AFTER_T06D_TASK_CLAIM_AND_PER_TASK_FROZEN_DAG_WRITESET",
+      "subject": "one exact historical PUBLISHED_VERIFIED Claim row and its unedited native DISPATCH_CLAIMED start event",
+      "authorityPreconditions": [
+        "Issue #319 has its exact reviewed Task PackBlob, exact Owner receipt, accepted Host CAS Claim and exact per-task FROZEN_DAG_WRITESET readback.",
+        "The target Claim row is re-read through the public DomainHarness v0.10.3 CAS API and matches the exact expected key, phase, generation, revision, source SHA, dispatch ID, writer ID and original native comment ID/ref.",
+        "The original native DISPATCH_CLAIMED comment is complete, paginated, unedited and matches the CAS row field-for-field.",
+        "Fresh Host evidence proves no active writer, attempt, subprocess, in-flight external effect or unresolved write-set/resource action for the target dispatch; absence of a process alone is insufficient.",
+        "All terminal evidence is unambiguous and no prior terminal event exists; changed revision, unknown external effect or incomplete readback blocks."
+      ],
+      "semantics": [
+        "CAS compare-and-set PUBLISHED_VERIFIED -> PENDING_GITHUB_TERMINALIZATION using the exact observed revision; no delete, seed, reset, direct SQLite edit or in-place history rewrite.",
+        "Append exactly one ADS v4.18 event-v2 DISPATCH_STATE_CHANGED with actor_role=scheduler and dispatch_state=DONE for this Pack's exact #203 target; do not expose a generic terminal-state override.",
+        "Set operator_kind=other and operator_id to the exact trusted Host writerId; set transport_actor to the exact trusted Host githubWriterLogin. The terminal reader verifies these values against the same trusted Host configuration; callers cannot supply or override them.",
+        "Bind the terminal event to the original #203 task/issue, source SHA, dispatch_id, protected_claim_key, admission_generation and predecessor Claim comment ID/ref; include reason, occurred_at and all exact #319/#203 evidence references listed in normativeContract.terminalEvent.evidenceMustBind.",
+        "Read all native #203 GitHub comments with complete pagination and verify exactly one unedited exact terminal event matching the reservation and predecessor Claim.",
+        "CAS compare-and-set PENDING_GITHUB_TERMINALIZATION -> TERMINAL_VERIFIED using the exact reservation revision; persist terminal comment ID/ref and preserve the original Claim comment ID/ref.",
+        "Lost ACK, incomplete read, duplicate/conflicting/edited event, stale source, revision mismatch or unknown effect remains UNKNOWN/pending; no blind POST retry and no successor Claim.",
+        "A terminal row is not an active incompatible Claim; pending/unknown rows remain incompatible and fail closed.",
+        "DONE terminates only the #203 dispatch execution authority. It does not imply Task PASS, CI PASS, PR merge, Release PASS, Issue closure or Deployment."
+      ]
+    }
+  ],
+  "proposedClaimSubject": {
+    "repository": "kaicreator-mm/tally",
+    "issue": "#319",
+    "actorRole": "builder",
+    "operatorKind": "other",
+    "operatorId": "zcode:i319:t06d-terminalization:1",
+    "dispatchId": "dispatch:319:t06d-terminalization:20261106:1",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "protectedClaimKey": "kaicreator-mm/tally#319:builder:__default__",
+    "generation": 1,
+    "taskPackRef": "docs/implementation/v2/T06D_TERMINALIZATION_TASK_PACK_R1.json",
+    "taskPackBlobSha": null,
+    "packArtifactBranch": "task/i319-t06d-terminalization",
+    "sourceJitBranch": "task/i319-t06d-terminalization-impl"
+  },
+  "authority": {
+    "ownerAuthorization": "Standing Owner instruction in the current project conversation authorizes routine Delivery-First execution; the exact PackBlob-bound GitHub Owner receipt remains a required durable gate before Host Claim.",
+    "requiredArtifacts": [
+      "independent Exact-SHA review of this exact PackBlob",
+      "Owner receipt bound to this exact PackBlob/source SHA/write-set digest",
+      "accepted Host CAS Claim",
+      "per-task FROZEN_DAG_WRITESET public-API readback"
+    ],
+    "authorized": false,
+    "admitted": false,
+    "taskPass": false,
+    "releasePass": false
+  },
+  "gates": [
+    "Exact current Issue #319 state:ready/type:task and no native blocked_by dependency.",
+    "Exact Task Pack R1 Blob SHA, source SHA and nine-path write-set digest.",
+    "Independent review and exact PackBlob-bound Owner receipt.",
+    "Fresh Host CAS Claim publication/readback for #319 using a dedicated Host registry; never reuse #203's registry.",
+    "Per-task FROZEN_DAG_WRITESET write/readback through public DomainHarness v0.10.3 CAS API; no raw SQLite manipulation.",
+    "Source implementation and syntax preflight before focused tests/CI.",
+    "Native Windows Node 24 Host validation of real GitHub pagination/publish/readback and public DomainHarness CAS revision behavior.",
+    "Self-hosted Woodpecker source validation; no GitHub Actions.",
+    "Fresh independent Exact-SHA review of the implementation HEAD; reviewer repairs in-scope defects and revalidates."
+  ],
+  "note": "This is an independently admitted T06d repair task, not an E0 #284 root task. #203 is the remediation target, not a predecessor dependency for #319. The #319 source may be edited only after its own exact Pack/Owner/Claim/FROZEN_DAG_WRITESET gates pass. #203 itself must not be mutated until the completed implementation passes independent review and Windows Host validation.",
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
+    "pathCount": 9,
+    "pathsSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2",
+    "baselineVersionPackBlobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+    "baselineTaskCount": 47,
+    "baselineOpenTaskOverlapPairs": 66,
+    "overlapWithOpenTasks": [],
+    "explicitNonOverlap": [
+      {
+        "issue": 212,
+        "reason": "Dedicated task-dispatch-state-events reader/test paths; #212 Claim-event recovery paths remain read-only."
+      },
+      {
+        "issue": 260,
+        "reason": "A lane owns only the version Task Pack candidate and closeout roster/UI paths."
+      },
+      {
+        "issue": 284,
+        "reason": "E0 owns selected Business/Kernel/Host freeze and native dependency routes; no shared source paths."
+      }
+    ]
+  },
+  "rootAdmissionPlan": {
+    "kind": "STANDALONE_TASK_CLAIM_AND_PER_TASK_WRITESET_FREEZE",
+    "versionWideDagFreezeRequired": false,
+    "taskPackMustBeExactAndImmutable": true,
+    "claimSequence": "PUBLISHED_VERIFIED via existing T06d single-writer; then per-task FROZEN_DAG_WRITESET via public DomainHarness v0.10.3 API.",
+    "registry": "dedicated #319 Host CAS registry; do not reuse _tmp/tally-alm-claims/registry-203.sqlite",
+    "sourceMutationGate": "accepted Claim + exact per-task FROZEN_DAG_WRITESET readback",
+    "noDirectStoreMutation": true,
+    "basis": [
+      "Tally #284 R8 preconditions explicitly separate root Claim + per-task FROZEN_DAG_WRITESET public-API readback from the later version-wide freezeVersionTaskDag stage.",
+      "This standalone #319 Task Pack uses only that pre-freeze per-task write-set mechanism; it does not create, replace or claim FROZEN_VERSION_TASK_DAG authority.",
+      "The #319 protected claim key and CAS registry are dedicated to #319; the historical #203 registry is never reused."
+    ],
+    "packArtifactBranch": {
+      "branch": "task/i319-t06d-terminalization",
+      "pr": 320,
+      "purpose": "immutable governance-only Task Pack artifact",
+      "sourceChangesAllowed": false,
+      "mustRemainDocsOnly": true
+    },
+    "sourceJitBranch": {
+      "branch": "task/i319-t06d-terminalization-impl",
+      "baseRef": "version/v2",
+      "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createOnlyAfter": "accepted #319 Host CAS Claim and exact per-task FROZEN_DAG_WRITESET public-API readback",
+      "sourceChangesAllowed": true,
+      "exactWriteSetSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2",
+      "mustNotReusePackArtifactBranch": true
+    }
+  },
+  "revision": "R1",
+  "serialSuccessors": [
+    {
+      "issue": 284,
+      "order": 1,
+      "reason": "#284 E0 Root Admission waits for #319 T06d terminalization implementation and #203 terminality proof."
+    }
+  ],
+  "versionTaskPackReference": {
+    "path": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "ref": "https://github.com/kaicreator-mm/tally/blob/96442c147dcf2d047020d36e0c32d66be6e9979a/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "blobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+    "observedAt": "2026-11-05T20:07:07.582Z",
+    "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "taskIssueCount": 47,
+    "openTaskCount": 26,
+    "closedTaskCount": 21,
+    "claimSubjectCount": 47,
+    "claimAcceptance": "NOT_VERIFIED",
+    "closureEvidence": "NOT_VERIFIED",
+    "edges": 31,
+    "nativeEdges": 4,
+    "plannedEdges": 27,
+    "openTaskWriteSetOverlapPairs": 66,
+    "claimObservationCounts": {
+      "observedSelfReported": 39,
+      "noClaimEventExpected": 8
+    }
+  },
+  "scopeDispositionReference": {
+    "count": 47,
+    "dispatchableIssueNumbers": [
+      207,
+      208,
+      209,
+      211,
+      260,
+      261,
+      262,
+      263
+    ],
+    "nonDispatchableCount": 39
+  },
+  "preconditions": [
+    "Independent Exact-SHA review of this exact immutable R1 PackBlob.",
+    "Owner receipt on the Pack PR bound to PackBlob SHA, version source SHA and writeSetSha256.",
+    "Issue #319 remains open, type:task, state:ready, exact source SHA and no native blocked_by dependency.",
+    "No pre-existing #319 Claim or incompatible row in the dedicated #319 Host CAS registry.",
+    "T06d Host preflight re-reads exact #319 Issue/source/dependencies and the original #203 target evidence; no authority boolean is caller-supplied.",
+    "The per-task FROZEN_DAG_WRITESET is created/read back through the public DomainHarness v0.10.3 CAS API; no raw SQLite writes or version-wide DAG freeze.",
+    "No source edit until accepted Claim and FROZEN_DAG_WRITESET are both independently read back."
+  ],
+  "claimBindingRules": {
+    "schema": "tally.t06d-claim-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/T06D_TERMINALIZATION_TASK_PACK_R1.json at the exact Pack PR HEAD.",
+    "ownerReceiptMustBind": [
+      "packBlobSha",
+      "sourceSha",
+      "writeSetSha256",
+      "protectedClaimKey",
+      "generation",
+      "dispatchId"
+    ],
+    "nullTaskPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "actualClaimRequirement": "Before source edits, publish/read back the #319 DISPATCH_CLAIMED start record through the Host single-writer, then create and read back the per-task FROZEN_DAG_WRITESET through the public DomainHarness v0.10.3 API with every frozenWriteSetMustBind field. The Owner receipt must bind the exact PackBlob/source SHA/write-set digest/protected key/generation/dispatch ID. The current publisher may carry task_pack_ref/pack_identity as additive event provenance, but the frozen record remains mandatory. No raw SQLite write, direct CAS seed, version-wide freeze or #203 registry reuse.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final PR #320 HEAD after reading the final Contents API blob SHA; the Task Pack file must not self-embed its own commit SHA.",
+    "frozenWriteSetMustBind": [
+      "taskPackRef (immutable URL at the final PR #320 commit)",
+      "taskPackBlobSha (exact Contents API blob SHA)",
+      "sourceSha (version/v2 baseline)",
+      "writeSetSha256 (exact nine-path digest)",
+      "ownerApprovalRef (exact PackBlob-bound PR comment)",
+      "protectedClaimKey and generation",
+      "dispatchId and original DISPATCH_CLAIMED comment ID/ref",
+      "writerId and frozenAt"
+    ],
+    "claimEventProvenance": "The #319 DISPATCH_CLAIMED event should include task_pack_ref and pack_identity=<exact PackBlob SHA> where the current publisher supports them. The per-task FROZEN_DAG_WRITESET record is the mandatory exact admission binding; missing/mismatched pack, Owner receipt or write-set readback blocks source edits.",
+    "targetClaimBinding": [
+      "Exact original #203 CAS key, generation, revision, phase, source SHA, dispatch ID, writer ID and original comment ID/ref.",
+      "Exact original native DISPATCH_CLAIMED event is unedited and matches the CAS row.",
+      "No active writer/attempt/in-flight effect and no unresolved resource/write-set operation; all are freshly re-read at execution time."
+    ],
+    "sourceJitBranch": {
+      "branch": "task/i319-t06d-terminalization-impl",
+      "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createdAfterClaimAndFrozenWriteSetReadback": true,
+      "packArtifactBranchMustRemainDocsOnly": "task/i319-t06d-terminalization"
+    }
+  },
+  "normativeContract": {
+    "repository": "kaicreator-mm/ai-development-standard",
+    "version": "4.18.0",
+    "revision": "2c395c55569fe2edf3f4135f12d3d069e526d0b7",
+    "blobs": {
+      "githubAgentInteractionProtocol": "49ecd802c5bf14237e23d5e321c56c220eb8974e",
+      "executionArchitectureStandard": "1f1601a20db08d263955241607dfd08d8b8f77e1",
+      "agentEventV2Schema": "cad9434e11febfd29657b564dbe710700c674888",
+      "dispatchSchema": "90bea62524beb0215d5f40cf0be9986786648fec"
+    },
+    "terminalEvent": {
+      "event": "DISPATCH_STATE_CHANGED",
+      "actorRole": "scheduler",
+      "stateFor203": "DONE",
+      "gaiSection": "8.5",
+      "executionArchitectureSection": "11.2",
+      "roleReleasedIsNotTerminal": true,
+      "newEventTypeRequired": false,
+      "operatorKind": "other",
+      "operatorIdSource": "exact writerId from the trusted one-shot T06d Host configuration",
+      "transportActorSource": "exact githubWriterLogin from the trusted one-shot T06d Host configuration",
+      "identityCallerSupplied": false,
+      "evidenceMustBind": [
+        "immutable #319 Task Pack R1 blob URL and exact PackBlob SHA",
+        "accepted #319 Host Claim comment ID/ref and exact protected key/generation/dispatch ID",
+        "per-task #319 FROZEN_DAG_WRITESET public-CAS key/revision/digest readback",
+        "fresh exact #203 PUBLISHED_VERIFIED CAS row identity/revision readback",
+        "original unedited #203 DISPATCH_CLAIMED comment ID/ref",
+        "fresh #203 no-active-writer/no-attempt/no-in-flight-effect/no-unresolved-resource evidence"
+      ]
+    },
+    "publisherBoundary": {
+      "existingPublishClaim": "PRESERVE_UNCHANGED",
+      "newTerminalMethod": "publishDispatchStateChange",
+      "newMethodActorRole": "scheduler",
+      "newMethodDispatchStateAllowlist": [
+        "DONE"
+      ],
+      "boundedTarget": "only the exact #203 targetClaim in this Pack",
+      "genericTerminalStateOverride": false,
+      "existingClaimPublisherMustNotAcceptScheduler": true,
+      "hostOnly": true
+    }
+  },
+  "targetClaim": {
+    "issueNumber": 203,
+    "repository": "kaicreator-mm/tally",
+    "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+    "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+    "actorRole": "builder",
+    "operatorKind": "other",
+    "operatorId": "zcode:candidate-publication:1",
+    "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+    "generation": 1,
+    "casKey": "tally:v2:claim-admission:6fcd893012c987f014c78de5b444bd16db522a6137a568d9de0e98a6af6401c4",
+    "observedPhase": "PUBLISHED_VERIFIED",
+    "observedRevision": 1,
+    "writerId": "tally-host:win32:candidate-publication:1",
+    "originalClaimCommentId": 6540484121,
+    "originalClaimCommentRef": "https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540484121",
+    "originalClaimEvent": "DISPATCH_CLAIMED",
+    "originalClaimEventUnedited": true,
+    "registryPath": "_tmp/tally-alm-claims/registry-203.sqlite",
+    "observedFrozenDagWriteSet": "NONE",
+    "observedActiveWriter": "NONE_OBSERVED",
+    "observedTerminality": "NOT_PROVEN",
+    "readbackEvidenceRef": "https://github.com/kaicreator-mm/tally/issues/284#issuecomment-6662889780",
+    "recheckRequiredBeforeMutation": true
+  },
+  "implementationControls": {
+    "hostController": {
+      "existingOperation": "reserveAndPublish",
+      "existingOperationMustRemainBehaviorallyUnchanged": true,
+      "addedOperation": "terminalizePublishedClaim",
+      "hostOnly": true,
+      "targetAllowlist": "exact targetClaim #203 only",
+      "neverCallerSuppliedAuthority": true
+    },
+    "publisher": {
+      "existingMethod": "publishClaim",
+      "existingMethodMustRemainUnchanged": true,
+      "addedMethod": "publishDispatchStateChange",
+      "schedulerOnly": true,
+      "terminalStateAllowlist": [
+        "DONE"
+      ],
+      "noBlindPostRetry": true
+    },
+    "terminalEventReader": {
+      "module": "packages/tally-github-native-c/src/task-dispatch-state-events.mjs",
+      "readOnly": true,
+      "schemaBlobSha": "cad9434e11febfd29657b564dbe710700c674888",
+      "completePagination": true,
+      "rejectDuplicateEditedCrossTaskOrConflictingEvents": true
+    },
+    "branchIsolation": {
+      "packBranch": "task/i319-t06d-terminalization",
+      "packBranchMustRemainDocsOnly": true,
+      "sourceJitBranch": "task/i319-t06d-terminalization-impl",
+      "sourceJitBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createSourceJitBranchOnlyAfterClaimAndFrozenWriteSetReadback": true
+    }
+  }
+}
