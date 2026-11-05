@@ -16,7 +16,7 @@ sources:
     publication_date: "2025-09"
     status: RELEASED
     official_url: "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
-    landing_url: "https://www.computer.org/education/bodies-of-knowledge/software-engineering"
+    landing_url: "https://www.computer.org/education/bodies-of-knowledge/software-engineering/resources/"
     identifier_note: "No ISBN or DOI is asserted: the current official PDF copyright page and official IEEE landing-page citation do not establish one."
     relevant_areas:
       - "Software Engineering discipline taxonomy"
@@ -44,7 +44,7 @@ sources:
       content: PARTIAL_CONTENT_VERIFIED
       locator: VERIFIED_FOR_LISTED_SECTIONS
       state: LOCATOR_VERIFIED
-      accessed_on: "2026-11-04"
+      accessed_on: "2026-11-06"
       method: "Current official IEEE PDF and official landing/download pages re-opened on 2026-11-06. The title page states Released Sept 2025; the landing page records the 25 September 2025 update; PDF page index 4 (printed page iv) contains the copyright/reprint notice and no ISBN. Current PDF SHA-256 is pending native download verification."
     rights:
       notice: "The current PDF copyright page permits educational or personal use subject to its stated conditions and requires IEEE permission for commercial reprint/republishing, advertising/promotional use, or new collective works for resale/redistribution. The current official landing page states additional restrictions on copying, sharing, public access and significant commercial reuse."
