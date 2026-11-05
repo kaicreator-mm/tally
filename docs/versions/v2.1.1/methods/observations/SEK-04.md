@@ -175,7 +175,7 @@ Exact source-bearing binding:
 
 Results: py_compile EXIT=0; self-test 31/31 PASS; 12/12 LinkML conversions EXIT=0; A/B/C YAML+Turtle checker PASS with exact statement/subject/predicate/object/evidence CURIE identity; 24/24 CLI negative/positive probes PASS; independent JSON-LD edge identity PASS across all seven generated artifacts. L09's missing nested rdf:type triples remain explicit and no JSON-LD/TTL full-graph equivalence is claimed.
 
-Raw stdout/stderr, per-command exit codes, generated artifacts and SHA256 manifest are preserved in the evidence bundle linked from Issue #305 LOCAL_VALIDATION comment #6643352340. The independent source review of this same source-bearing HEAD found P0=0 / P1=0 / P2=0.
+Raw stdout/stderr, per-command exit codes, generated artifacts and SHA256 manifest are preserved in the evidence bundle linked from Issue #305 LOCAL_VALIDATION comment #6643352340. The earlier independent source review of this same source-bearing HEAD reported P0=0 / P1=0 / P2=0; the final follow-up finding in §183 supersedes that clean disposition.
 
 The earlier documentation reconciliation was docs-only and remained inside the original four-path #305 write set. The subsequent final R2 repair also changes the checker within that same write set; exact-HEAD 32-case validation is now required before integration. No LinkML adoption, merge to main, release or deployment is implied.
 
