@@ -201,13 +201,15 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             if record.get("synthetic") is True:
                 _error(errors, "ACCEPTED_SYNTHETIC_RECORD", record_id)
 
-    def ref(record_id, field, expected, required=False):
+    def ref(record_id, field, expected, required=False, allow_empty_list=False):
         record = entities.get(record_id, {})
         value = record.get(field)
         if required and not value:
             _error(errors, "MISSING_REQUIRED_REFERENCE", f"{record_id}.{field}")
             return
         if value is None:
+            return
+        if allow_empty_list and isinstance(value, list) and not value:
             return
         values = _ids(value)
         if not values:
@@ -222,7 +224,7 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
     # Any explicit evidence_refs field is type-checked, regardless of entity family.
     for class_name, record_id, record in records:
         if "evidence_refs" in record:
-            ref(record_id, "evidence_refs", {"Evidence"})
+            ref(record_id, "evidence_refs", {"Evidence"}, allow_empty_list=True)
         if class_name == "Subdomain":
             ref(record_id, "domain_ref", {"Domain"}, True)
         elif class_name == "TaxonomyNode":
@@ -729,11 +731,17 @@ def run_self_tests(catalog, rules):
     base = positive_fixture()
     cases = []
 
+    baseline_errors = validate_graph(base, catalog, rules)
+
     def expect(name, mutate, expected_code):
         candidate = copy.deepcopy(base)
         mutate(candidate)
         errors = validate_graph(candidate, catalog, rules)
-        passed = any(error.startswith(expected_code + ":") for error in errors)
+        expected_codes = (expected_code,) if isinstance(expected_code, str) else tuple(expected_code)
+        passed = (
+            not baseline_errors
+            and all(any(error.startswith(code + ":") for error in errors) for code in expected_codes)
+        )
         cases.append((name, passed, errors))
 
     def add_exact_acceptance(graph, target, review_id=None):
@@ -756,8 +764,19 @@ def run_self_tests(catalog, rules):
             "review_policy_ref": "SE-REVIEW-POLICY-0.1",
         })
 
-    baseline_errors = validate_graph(base, catalog, rules)
-    cases.append(("positive-full-entity-and-predicate-coverage", not baseline_errors, baseline_errors))
+    omitted_optional_evidence = copy.deepcopy(base)
+    omitted_optional_evidence["concepts"][0].pop("evidence_refs", None)
+    omitted_optional_errors = validate_graph(omitted_optional_evidence, catalog, rules)
+    positive_errors = list(baseline_errors)
+    positive_errors.extend(
+        f"omitted-optional-evidence_refs: {error}"
+        for error in omitted_optional_errors
+    )
+    cases.append((
+        "positive-full-entity-and-predicate-coverage",
+        not positive_errors,
+        positive_errors,
+    ))
     expect("duplicate-id", lambda g: g["concepts"].append(copy.deepcopy(g["concepts"][0])), "DUPLICATE_IDENTIFIER")
     expect("dangling-reference", lambda g: g["evidence_records"][0].update(source_locator_ref="se:LOC-MISSING"), "DANGLING_REFERENCE")
     expect("wrong-endpoint-class", lambda g: g["relationship_assertions"][0].update(object_ref="se:CON-SOFTWARE-REQUIREMENTS"), "WRONG_OBJECT_CLASS_FOR_PREDICATE")
@@ -836,7 +855,14 @@ def run_self_tests(catalog, rules):
         target = g["concepts"][0]
         target["evidence_refs"] = [{"not": "an-id"}]
         add_exact_acceptance(g, target)
-    expect("invalid-evidence-reference-type", invalid_evidence_reference_type, "INVALID_EVIDENCE_REFERENCE")
+        malformed_container = g["concepts"][1]
+        malformed_container["evidence_refs"] = {"not": "a-list"}
+        add_exact_acceptance(g, malformed_container)
+    expect(
+        "invalid-evidence-reference-type",
+        invalid_evidence_reference_type,
+        ("INVALID_EVIDENCE_REFERENCE", "INVALID_REFERENCE_VALUE"),
+    )
     expect("invalid-lifecycle-status-type", lambda g: g["concepts"][0].update(lifecycle_status=["ACCEPTED"]), "INVALID_LIFECYCLE_STATUS")
     expect("invalid-record-version-type", lambda g: g["concepts"][0].update(record_version=["0.1.0"]), "INVALID_RECORD_VERSION")
 
