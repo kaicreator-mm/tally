@@ -37,6 +37,7 @@ The candidate schema and graph validator are not yet qualified. Run the exact co
 - Convert the complete fixture to Turtle and JSON-LD; verify every reified relationship has URIRef subject/predicate/object and the exact source/evidence identity chain. Predicate enum values must serialize as URIRefs, not literals.
 - Run `python validate_knowledge_graph.py --format-compare` for A/B/C full-model serialization equivalence, deterministic rebuild, edit locality and two-writer file-conflict simulation; then run compatible/breaking schema evolution.
 - Verify accepted Evidence has its own exact ACCEPT ReviewDecision and verified SourceLocator; verify conflicting review outcomes and synthetic cases fail closed.
+- Verify ReviewDecision reviewer identity, policy and rationale are non-empty. External identity/event authenticity remains an integrating-host responsibility, not a graph-validator claim.
 - Measure edit locality and two-writer merge conflict behavior; record limitations.
 
 No final LinkML adoption outcome is recorded before those results. No production adoption, runtime dependency, model freeze, Domain Package, DomainForge promotion, main merge, release or deployment is implied.
