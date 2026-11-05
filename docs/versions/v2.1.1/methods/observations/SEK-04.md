@@ -4,7 +4,7 @@
 **Date:** 2026-11-04  
 **Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — historical checker and LinkML PoF passed at source-bearing HEAD `2c5c8b3d`; final R2 found and repaired DomainNode source/locator coherence; current checker validation pending.
 
-> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The current checker blob is `503b370b016616c629f97fb47fc06b0079b574d9`; the final source-bearing validation is at `2c5c8b3d`, while the current docs-only PR head still needs exact HEAD/Tree rebind.
+> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The previously validated checker blob is `503b370b016616c629f97fb47fc06b0079b574d9` at source-bearing HEAD `2c5c8b3d`. The current checker blob is `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`; its new 32-case source/locator coherence repair requires exact-HEAD local revalidation.
 
 ## Work performed
 
@@ -177,7 +177,7 @@ Results: py_compile EXIT=0; self-test 31/31 PASS; 12/12 LinkML conversions EXIT=
 
 Raw stdout/stderr, per-command exit codes, generated artifacts and SHA256 manifest are preserved in the evidence bundle linked from Issue #305 LOCAL_VALIDATION comment #6643352340. The independent source review of this same source-bearing HEAD found P0=0 / P1=0 / P2=0.
 
-The subsequent reconciliation changes are documentation-only and remain inside the original four-path #305 write set. A new exact-HEAD local validation record must bind the final documentation-reconciliation HEAD/Tree before integration. No LinkML adoption, merge to main, release or deployment is implied.
+The earlier documentation reconciliation was docs-only and remained inside the original four-path #305 write set. The subsequent final R2 repair also changes the checker within that same write set; exact-HEAD 32-case validation is now required before integration. No LinkML adoption, merge to main, release or deployment is implied.
 
 
 ## Final independent R2 follow-up — DomainNode source/locator coherence — 2026-11-05

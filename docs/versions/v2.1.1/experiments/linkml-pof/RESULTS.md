@@ -7,7 +7,7 @@
 ## 1. What exists
 
 - A schema draft covering Source, SourceLocator, Evidence, DomainNode, KnowledgeClaim, RelationshipAssertion, ClaimBundle and KnowledgeCorpus.
-- Three authoring-format fixtures encode the same SWEBOK claim/provenance chain; LinkML-generated Turtle domain graphs are isomorphic at 45 ≅ 45 ≅ 45 triples after excluding only container-root wrapper triples (L12). The final checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks and 24/24 CLI probes at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; independent JSON-LD edge identity checks passed for A/C and all four B outputs (§10.14). The experiment is not adopted.
+- Three authoring-format fixtures encode the same SWEBOK claim/provenance chain; LinkML-generated Turtle domain graphs are isomorphic at 45 ≅ 45 ≅ 45 triples after excluding only container-root wrapper triples (L12). The previously validated checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks and 24/24 CLI probes at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; independent JSON-LD edge identity checks passed for A/C and all four B outputs (§10.14). The experiment is not adopted.
 - A compound uniqueness constraint on source + locator.
 - Non-inlined references for source, locator, claim and evidence relationships.
 - Controlled vocabularies for source class, locator type, verification state, claim type/status and relationship predicates.
@@ -18,7 +18,7 @@
 |---|---|---|
 | Schema and fixture YAML | PyYAML 6.0.3 and LinkML v1.12.1 parsed/validated the schema and all A/B/C fixtures after three execution-discovered repairs | YAML syntax PASS; LinkML metamodel PASS (L01); positive data validation PASS (L02) |
 | Identifiers | All A/B/C record IDs and typed class references use canonical se: CURIEs; generated Turtle expands them to the declared base | LinkML validate/convert PASS; duplicate and closure checks require the companion validator |
-| Cross-file references | LinkML validate/JSON Schema do not resolve non-inlined cross-file references; the committed validate_relationship_integrity.py companion enforces typed closure | LinkML native resolution gap CONFIRMED; final checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 exact-source-HEAD self-tests plus A/B/C closure and RDF identity checks at `2c5c8b3d` (§10.14); documentation-only head rebind remains required |
+| Cross-file references | LinkML validate/JSON Schema do not resolve non-inlined cross-file references; the committed validate_relationship_integrity.py companion enforces typed closure | LinkML native resolution gap CONFIRMED; previous checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 exact-source-HEAD self-tests plus A/B/C closure and RDF identity checks at `2c5c8b3d` (§10.14); final source/locator coherence repair is recorded in §10.15 and requires 32-case exact-HEAD revalidation |
 | Compound uniqueness | SourceLocator has a compound key on source_ref + locator; JSON Schema omits it | Repository companion checker enforces the key; generator limitation CONFIRMED |
 | JSON-LD | LinkML v1.12.1 generated A/C and all four B instance JSON-LD outputs; the context omits nested @type, so A/C have 48 triples vs 55 in TTL (seven rdf:type triples absent). Independent edge-node checks passed for A/C and all four B outputs on the final source-bearing HEAD; every statement has URIRef subject/predicate/object, zero Literal rdf:object, and exact YAML edge/evidence identity (§10.14). | L09 limitation measured and retained; JSON-LD edge identity PASS; no full JSON-LD/TTL graph-equivalence or predicate-class validation claim |
 | RDF | LinkML v1.12.1 schema/instance Turtle generated; all rdf:object, rdf:subject and rdf:predicate values in A/B/C are URIRefs, zero Literal endpoints; A/B/C domain graphs are 45 ≅ 45 ≅ 45; default outputs were byte-identical across reruns. RDF CLI has no --diff-stable. | Generated and measured (L10/L13); Turtle P1-01 PASS |
@@ -51,7 +51,7 @@ This was the pre-builder status on 2026-11-04. The pinned CLI was subsequently i
 
 ## 5. Interim position
 
-No production adoption decision is justified. The narrow LinkML PoF has been executed, including generated Turtle and A/B/C graph comparison. The final checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks, 24/24 CLI probes and the separate seven-artifact JSON-LD edge identity checks at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (§10.14). The earlier independent source review found no remaining P0/P1/P2 issue at that SHA. The final R2 follow-up subsequently found a DomainNode source/locator coherence gap in the same checker blob and repaired it in the current revision; the earlier clean disposition is superseded (see §10.15). The full knowledge entity model and canonical authoring decision remain subject to SEK-05 #308; no LinkML adoption is implied.
+No production adoption decision is justified. The narrow LinkML PoF has been executed, including generated Turtle and A/B/C graph comparison. The previously validated checker blob `503b370b016616c629f97fb47fc06b0079b574d9` passed 31/31 self-tests, A/B/C YAML+Turtle checks, 24/24 CLI probes and the separate seven-artifact JSON-LD edge identity checks at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3` (§10.14). The earlier independent source review found no remaining P0/P1/P2 issue at that SHA. The final R2 follow-up subsequently found a DomainNode source/locator coherence gap in the same checker blob and repaired it in the current revision; the earlier clean disposition is superseded (see §10.15). The full knowledge entity model and canonical authoring decision remain subject to SEK-05 #308; no LinkML adoption is implied.
 
 
 ## 6. Static validation actually performed — 2026-11-04
@@ -357,7 +357,7 @@ Evidence:
 - Issue #305 LOCAL_VALIDATION comment: [#6643352340](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6643352340)
 - Evidence bundle: https://gist.github.com/kaicreator-mm/cad56c015ed4f09b95f685c468dcb010
 
-The independent source review of the same source-bearing HEAD found **P0=0 / P1=0 / P2=0**. This entry documents the validated source-bearing HEAD; the documentation-only reconciliation commits that add this record do not change the checker blob. A fresh exact-HEAD identity rebind is required for the final documentation-reconciliation HEAD before integration.
+The earlier independent source review of the same source-bearing HEAD reported **P0=0 / P1=0 / P2=0**. That disposition is superseded by the final follow-up finding in §10.15. The later documentation-only reconciliation did not change the prior checker blob; the current source-coherence repair changes it to `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`, and this revision requires 32-case exact-HEAD local revalidation before integration.
 
 
 ## 10.15 Final R2 follow-up — DomainNode source/locator coherence repair — 2026-11-05
