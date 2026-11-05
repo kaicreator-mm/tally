@@ -794,7 +794,11 @@ def run_self_tests(catalog, rules):
     expect("graph-id-collides-with-entity", lambda g: g.update(id=g["domains"][0]["id"]), "GRAPH_ID_COLLIDES_WITH_ENTITY")
     expect("invalid-root-domain-type", lambda g: g.update(domain_ref=["se:DOMAIN-SOFTWARE-ENGINEERING"]), "INVALID_GRAPH_DOMAIN")
     expect("invalid-relationship-endpoint-type", lambda g: g["relationship_assertions"][0].update(subject_ref=["se:CLM-SWEBOK-KA"]), "INVALID_RELATIONSHIP_ENDPOINT")
-    expect("invalid-evidence-reference-type", lambda g: g["concepts"][0].update(evidence_refs=[{"not": "an-id"}]), "INVALID_EVIDENCE_REFERENCE")
+    def invalid_evidence_reference_type(g):
+        target = g["concepts"][0]
+        target["evidence_refs"] = [{"not": "an-id"}]
+        add_exact_acceptance(g, target)
+    expect("invalid-evidence-reference-type", invalid_evidence_reference_type, "INVALID_EVIDENCE_REFERENCE")
 
     def accepted_evidence_without_own_review(g):
         evidence = g["evidence_records"][0]
