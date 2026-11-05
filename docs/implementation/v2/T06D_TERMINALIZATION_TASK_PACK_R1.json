@@ -141,14 +141,14 @@
       ],
       "semantics": [
         "CAS compare-and-set PUBLISHED_VERIFIED -> PENDING_GITHUB_TERMINALIZATION using the exact observed revision; no delete, seed, reset, direct SQLite edit or in-place history rewrite.",
-        "Append exactly one ADS v4.18 event-v2 DISPATCH_STATE_CHANGED with actor_role=scheduler and an existing terminal dispatch_state; for #203 the proposed state is DONE because the candidate-publication dispatch completed its publication operation.",
+        "Append exactly one ADS v4.18 event-v2 DISPATCH_STATE_CHANGED with actor_role=scheduler and dispatch_state=DONE for this Pack's exact #203 target; do not expose a generic terminal-state override.",
         "Set operator_kind=other and operator_id to the exact trusted Host writerId; set transport_actor to the exact trusted Host githubWriterLogin. The terminal reader verifies these values against the same trusted Host configuration; callers cannot supply or override them.",
-        "Bind the terminal event to the original task/issue, source SHA, dispatch_id, protected_claim_key, admission_generation, predecessor Claim comment ID/ref, reason, durable evidence references and occurred_at.",
-        "Read all native GitHub comments with complete pagination and verify exactly one unedited exact terminal event matching the reservation and predecessor Claim.",
+        "Bind the terminal event to the original #203 task/issue, source SHA, dispatch_id, protected_claim_key, admission_generation and predecessor Claim comment ID/ref; include reason, occurred_at and all exact #319/#203 evidence references listed in normativeContract.terminalEvent.evidenceMustBind.",
+        "Read all native #203 GitHub comments with complete pagination and verify exactly one unedited exact terminal event matching the reservation and predecessor Claim.",
         "CAS compare-and-set PENDING_GITHUB_TERMINALIZATION -> TERMINAL_VERIFIED using the exact reservation revision; persist terminal comment ID/ref and preserve the original Claim comment ID/ref.",
         "Lost ACK, incomplete read, duplicate/conflicting/edited event, stale source, revision mismatch or unknown effect remains UNKNOWN/pending; no blind POST retry and no successor Claim.",
         "A terminal row is not an active incompatible Claim; pending/unknown rows remain incompatible and fail closed.",
-        "DONE terminates only the dispatch execution authority. It does not imply Task PASS, CI PASS, PR merge, Release PASS, Issue closure or Deployment."
+        "DONE terminates only the #203 dispatch execution authority. It does not imply Task PASS, CI PASS, PR merge, Release PASS, Issue closure or Deployment."
       ]
     }
   ],
@@ -356,7 +356,27 @@
       "operatorKind": "other",
       "operatorIdSource": "exact writerId from the trusted one-shot T06d Host configuration",
       "transportActorSource": "exact githubWriterLogin from the trusted one-shot T06d Host configuration",
-      "identityCallerSupplied": false
+      "identityCallerSupplied": false,
+      "evidenceMustBind": [
+        "immutable #319 Task Pack R1 blob URL and exact PackBlob SHA",
+        "accepted #319 Host Claim comment ID/ref and exact protected key/generation/dispatch ID",
+        "per-task #319 FROZEN_DAG_WRITESET public-CAS key/revision/digest readback",
+        "fresh exact #203 PUBLISHED_VERIFIED CAS row identity/revision readback",
+        "original unedited #203 DISPATCH_CLAIMED comment ID/ref",
+        "fresh #203 no-active-writer/no-attempt/no-in-flight-effect/no-unresolved-resource evidence"
+      ]
+    },
+    "publisherBoundary": {
+      "existingPublishClaim": "PRESERVE_UNCHANGED",
+      "newTerminalMethod": "publishDispatchStateChange",
+      "newMethodActorRole": "scheduler",
+      "newMethodDispatchStateAllowlist": [
+        "DONE"
+      ],
+      "boundedTarget": "only the exact #203 targetClaim in this Pack",
+      "genericTerminalStateOverride": false,
+      "existingClaimPublisherMustNotAcceptScheduler": true,
+      "hostOnly": true
     }
   },
   "targetClaim": {
@@ -383,5 +403,39 @@
     "observedTerminality": "NOT_PROVEN",
     "readbackEvidenceRef": "https://github.com/kaicreator-mm/tally/issues/284#issuecomment-6662889780",
     "recheckRequiredBeforeMutation": true
+  },
+  "implementationControls": {
+    "hostController": {
+      "existingOperation": "reserveAndPublish",
+      "existingOperationMustRemainBehaviorallyUnchanged": true,
+      "addedOperation": "terminalizePublishedClaim",
+      "hostOnly": true,
+      "targetAllowlist": "exact targetClaim #203 only",
+      "neverCallerSuppliedAuthority": true
+    },
+    "publisher": {
+      "existingMethod": "publishClaim",
+      "existingMethodMustRemainUnchanged": true,
+      "addedMethod": "publishDispatchStateChange",
+      "schedulerOnly": true,
+      "terminalStateAllowlist": [
+        "DONE"
+      ],
+      "noBlindPostRetry": true
+    },
+    "terminalEventReader": {
+      "module": "packages/tally-github-native-c/src/task-dispatch-state-events.mjs",
+      "readOnly": true,
+      "schemaBlobSha": "cad9434e11febfd29657b564dbe710700c674888",
+      "completePagination": true,
+      "rejectDuplicateEditedCrossTaskOrConflictingEvents": true
+    },
+    "branchIsolation": {
+      "packBranch": "task/i319-t06d-terminalization",
+      "packBranchMustRemainDocsOnly": true,
+      "sourceJitBranch": "task/i319-t06d-terminalization-impl",
+      "sourceJitBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createSourceJitBranchOnlyAfterClaimAndFrozenWriteSetReadback": true
+    }
   }
 }
