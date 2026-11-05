@@ -53,8 +53,8 @@ entity_families:
     identity_example: "se:EVD-0001"
     purpose: "An extracted observation or explicitly marked synthetic fixture."
     required_fields: [id, record_version, lifecycle_status, created_on, source_locator_ref, evidence_type, statement, extraction_status, synthetic]
-    provenance: "Exactly one SourceLocator; no copied source text beyond permitted concise quotation/paraphrase."
-    scope_rule: "Extraction is not human review or accepted knowledge."
+    provenance: "Exactly one verified SourceLocator; evidence used by accepted knowledge must itself be ACCEPTED, extraction_status=REVIEWED and bound to an exact ACCEPT ReviewDecision digest."
+    scope_rule: "Extraction is not human review or accepted knowledge; synthetic evidence is never acceptable provenance."
   - class: Concept
     identity_example: "se:CON-REQUIREMENTS-TRACEABILITY"
     purpose: "A defined term, abstraction, entity, property, mechanism or metric."
@@ -131,7 +131,7 @@ cross_cutting_invariants:
   - "All entity ids are canonical se: CURIEs and globally unique."
   - "A record revision keeps its id and increments record_version; identity changes create a new id."
   - "Only human ReviewDecision can move a knowledge assertion to ACCEPTED."
-  - "Accepted knowledge must have a complete evidence provenance path."
+  - "Accepted knowledge must have a complete evidence provenance path; each evidence record must itself be accepted by an exact human ReviewDecision."
   - "No accepted record may be synthetic."
   - "A source fact is stored once; downstream records reference Evidence, not duplicate source metadata."
   - "Multi-view taxonomy membership is explicit on TaxonomyNode; cross-view mappings are typed relationships."
