@@ -1,0 +1,139 @@
+catalog_id: SE-KNOWLEDGE-ENTITY-CATALOG-0.2.0
+status: EXPERIMENTAL_CANDIDATE
+schema_ref: docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml
+identity_contract:
+  canonical_identifier: "se: CURIE expanded under https://github.com/kaicreator-mm/tally#"
+  aliases: "Legacy aliases are non-canonical lookup hints; never relationship targets and never silently rewritten."
+  versioning: "Stable id plus record_version MAJOR.MINOR.PATCH. A revision changes record_version; a changed conceptual identity receives a new id."
+  uniqueness: "Canonical ids and aliases are globally unique across the graph."
+  dates: "created_on is required; updated_on changes only when record content changes."
+  lifecycle:
+    values: [DRAFT, PROPOSED, PENDING_REVIEW, ACCEPTED, DISPUTED, REJECTED, DEPRECATED, SUPERSEDED, ACTIVE, WITHDRAWN, RETRACTED]
+    rule: "ACCEPTED is a human decision, never inferred from schema validation or evidence extraction."
+  synthetic_rule: "Synthetic fixtures are structurally testable but cannot be ACCEPTED corpus knowledge."
+  provenance_rule: "Knowledge assertions cite Evidence; Evidence points to one exact SourceLocator; SourceLocator points to one Source. Do not duplicate source facts in downstream records."
+entity_families:
+  - class: Domain
+    identity_example: "se:DOMAIN-SOFTWARE-ENGINEERING"
+    purpose: "A bounded discipline or application domain."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, definition]
+    provenance: "Evidence refs required when lifecycle_status=ACCEPTED; explicit scope inclusion/exclusion and boundary notes."
+    scope_rule: "A Domain is not an assertion that its corpus is encyclopedically complete."
+  - class: Subdomain
+    identity_example: "se:SUB-REQUIREMENTS-ENGINEERING"
+    purpose: "A specialization or bounded part of a Domain."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, definition, domain_ref]
+    provenance: "Evidence refs required when ACCEPTED; domain_ref is the sole canonical parent-domain fact."
+    scope_rule: "May overlap with other subdomains; do not force exclusive partitioning."
+  - class: TaxonomyView
+    identity_example: "se:VIEW-DISCIPLINE"
+    purpose: "A classification lens with one explicit question and coverage profile."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, view_kind, purpose, coverage_state]
+    provenance: "Evidence refs required when ACCEPTED; source limitations and coverage state remain explicit."
+    scope_rule: "Different views are not merged into one universal hierarchy."
+  - class: TaxonomyNode
+    identity_example: "se:NODE-SWEBOK-KA-05"
+    purpose: "A node belonging to exactly one TaxonomyView."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, definition, node_kind, view_ref]
+    provenance: "Evidence or source-locator refs required when ACCEPTED."
+    scope_rule: "Cross-view links use RelationshipAssertion; do not duplicate view membership in a generic edge."
+  - class: Source
+    identity_example: "se:SRC-SWEBOK-GUIDE-4-0A"
+    purpose: "Bibliographic identity, authority fit, content verification and rights metadata."
+    required_fields: [id, record_version, lifecycle_status, created_on, title, source_class, source_roles, rights_handling, verification_state]
+    provenance: "Identity/content/locator verification are separate; source record is its own authority anchor."
+    scope_rule: "Authority is claim-specific; a source class is not a universal rank."
+  - class: SourceLocator
+    identity_example: "se:LOC-SWEBOK-KA-TABLE"
+    purpose: "One inspected location within exactly one Source."
+    required_fields: [id, record_version, lifecycle_status, created_on, source_ref, locator_type, locator, verification_state, accessed_on]
+    provenance: "source_ref must resolve to one Source; compound uniqueness on source_ref + locator."
+    scope_rule: "Unknown page/section is LOCATOR_UNKNOWN, never guessed."
+  - class: Evidence
+    identity_example: "se:EVD-0001"
+    purpose: "An extracted observation or explicitly marked synthetic fixture."
+    required_fields: [id, record_version, lifecycle_status, created_on, source_locator_ref, evidence_type, statement, extraction_status, synthetic]
+    provenance: "Exactly one SourceLocator; no copied source text beyond permitted concise quotation/paraphrase."
+    scope_rule: "Extraction is not human review or accepted knowledge."
+  - class: Concept
+    identity_example: "se:CON-REQUIREMENTS-TRACEABILITY"
+    purpose: "A defined term, abstraction, entity, property, mechanism or metric."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, definition, concept_kind, scope_description]
+    provenance: "Evidence refs required when ACCEPTED; claim_refs may link atomic claims without duplicating them."
+    scope_rule: "Store one canonical definition; synonyms are aliases, not parallel definitions."
+  - class: KnowledgeClaim
+    identity_example: "se:CLM-0001"
+    purpose: "An atomic, scoped, reviewable statement."
+    required_fields: [id, record_version, lifecycle_status, created_on, statement, claim_kind, scope_description, review_status]
+    provenance: "Evidence refs required for ACCEPTED; evidence-to-locator-to-source chain is transitive."
+    scope_rule: "Keep contradiction, uncertainty, applicability, assumptions and limitations explicit."
+  - class: Principle
+    identity_example: "se:PRI-SEPARATION-OF-CONCERNS"
+    purpose: "A generalizable guiding proposition with context, rationale and exceptions."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, statement, rationale, scope_description]
+    provenance: "Evidence refs required when ACCEPTED; claim_refs may express its atomic basis."
+    scope_rule: "Not a universal prescription; applicability and exceptions are first-class."
+  - class: Practice
+    identity_example: "se:PRA-CONTINUOUS-INTEGRATION"
+    purpose: "An actionable engineering activity."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, intent, description, scope_description]
+    provenance: "Evidence refs required when ACCEPTED; claim_refs may provide atomic basis."
+    scope_rule: "Preconditions, steps, outcomes and risks are context-sensitive."
+  - class: Pattern
+    identity_example: "se:PAT-STRANGLER"
+    purpose: "A recurring problem/context/solution structure."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, problem, context, solution, scope_description]
+    provenance: "Evidence refs or real Case refs required when ACCEPTED."
+    scope_rule: "Consequences and trade-offs are recorded; avoid treating patterns as prescriptions."
+  - class: AntiPattern
+    identity_example: "se:ANT-BIG-BANG-REWRITE"
+    purpose: "A counterproductive recurring approach."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, symptoms, causes, consequences, remediation, scope_description]
+    provenance: "Evidence refs or real Case refs required when ACCEPTED."
+    scope_rule: "Remediation is contextual; do not generalize from an isolated anecdote."
+  - class: DecisionModel
+    identity_example: "se:DM-BUILD-OR-BUY"
+    purpose: "A reusable decision question, alternatives, criteria and procedure."
+    required_fields: [id, record_version, lifecycle_status, created_on, decision_question, procedure, scope_description]
+    provenance: "Evidence refs required when ACCEPTED; criteria and trade-offs must be explicit."
+    scope_rule: "A decision model structures judgment; it does not make an automatic decision."
+  - class: Case
+    identity_example: "se:CASE-INCIDENT-001"
+    purpose: "A real engineering example, incident, postmortem or case study."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, synthetic]
+    provenance: "A non-synthetic Case requires Evidence; synthetic fixtures cannot be ACCEPTED."
+    scope_rule: "Separate observed facts, interpretation, intervention and outcome."
+  - class: Counterexample
+    identity_example: "se:COUNTEREXAMPLE-001"
+    purpose: "A case explicitly challenging a claim, principle, practice or model."
+    required_fields: [id, record_version, lifecycle_status, created_on, label, case_kind, context, synthetic, counterexample_to_refs, contrary_observation]
+    provenance: "A real counterexample requires Evidence; a synthetic one is test-only and never accepted."
+    scope_rule: "A counterexample narrows applicability or triggers review; it does not automatically refute a general claim."
+  - class: ReviewDecision
+    identity_example: "se:REV-CLM-0001-R1"
+    purpose: "An auditable human decision bound to one exact record revision and content digest."
+    required_fields: [id, record_version, lifecycle_status, created_on, target_ref, target_record_version, target_digest_sha256, reviewer_role, reviewer_ref, decision, rationale, reviewed_on, review_policy_ref]
+    provenance: "The reviewed record identity, version and SHA-256 are mandatory; a machine validation is not a human ReviewDecision."
+    scope_rule: "ACCEPT/REJECT/REQUEST_CHANGES/DEFER are explicit outcomes; no inferred acceptance."
+  - class: CoverageGap
+    identity_example: "se:GAP-NIST-218A-DETAILED-PRACTICES"
+    purpose: "A missing, weak, disputed or out-of-scope coverage item."
+    required_fields: [id, record_version, lifecycle_status, created_on, target_scope_ref, gap_kind, description, severity, coverage_status, impact]
+    provenance: "Evidence is optional while OPEN; accepted limitations record the basis and decision."
+    scope_rule: "A gap is a first-class result, not silently dropped from completeness reporting."
+  - class: RelationshipAssertion
+    identity_example: "se:REL-CLM-0001-SUPPORTED-BY-EVD-0001"
+    purpose: "A directed, typed, reviewable graph edge."
+    required_fields: [id, record_version, lifecycle_status, created_on, subject_ref, predicate, object_ref, context, rationale]
+    provenance: "Evidence refs required by predicate rule or ACCEPTED status; SUPPORTED_BY points directly to Evidence."
+    scope_rule: "Predicate, endpoint classes, direction, inverse semantics and qualifiers are controlled by RELATIONSHIP_CATALOG.yaml."
+cross_cutting_invariants:
+  - "All entity ids are canonical se: CURIEs and globally unique."
+  - "A record revision keeps its id and increments record_version; identity changes create a new id."
+  - "Only human ReviewDecision can move a knowledge assertion to ACCEPTED."
+  - "Accepted knowledge must have a complete evidence provenance path."
+  - "No accepted record may be synthetic."
+  - "A source fact is stored once; downstream records reference Evidence, not duplicate source metadata."
+  - "Multi-view taxonomy membership is explicit on TaxonomyNode; cross-view mappings are typed relationships."
+  - "A graph can be partial; CoverageGap records and coverage_state prevent false completeness claims."
+  - "RelationshipAssertion is a first-class record with its own id, version, lifecycle and provenance."

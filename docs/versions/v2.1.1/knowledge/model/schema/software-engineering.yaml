@@ -1,0 +1,953 @@
+id: https://github.com/kaicreator-mm/tally
+name: tally_software_engineering_knowledge_model
+title: Tally Software Engineering Knowledge Model
+description: >-
+  Experimental full-domain knowledge model for Tally v2.1.1. It separates
+  authority/provenance, domain content, taxonomy views, review events and typed
+  relationship assertions. It is not a production ontology or runtime dependency.
+version: "0.2.0"
+prefixes:
+  linkml: https://w3id.org/linkml/
+  se: https://github.com/kaicreator-mm/tally#
+  schema: http://schema.org/
+  dcterms: http://purl.org/dc/terms/
+  prov: http://www.w3.org/ns/prov#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+default_prefix: se
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  KnowledgeEntity:
+    abstract: true
+    description: >-
+      Common identity and lifecycle contract. Every entity is a stable resource
+      with an explicit record revision; changes create a new record revision,
+      not a new identity, unless the conceptual identity itself changes.
+    slots:
+      - id
+      - record_version
+      - lifecycle_status
+      - created_on
+      - updated_on
+      - aliases
+
+  Domain:
+    is_a: KnowledgeEntity
+    class_uri: se:Domain
+    description: A bounded discipline or application domain.
+    slots:
+      - label
+      - definition
+      - scope_inclusions
+      - scope_exclusions
+      - boundary_notes
+      - evidence_refs
+
+  Subdomain:
+    is_a: KnowledgeEntity
+    class_uri: se:Subdomain
+    description: A named specialization or bounded part of a Domain.
+    slots:
+      - label
+      - definition
+      - domain_ref
+      - boundary_notes
+      - evidence_refs
+
+  TaxonomyView:
+    is_a: KnowledgeEntity
+    class_uri: se:TaxonomyView
+    description: >-
+      One classification lens. Discipline, curriculum, lifecycle, quality,
+      architecture and application views remain separate questions.
+    slots:
+      - label
+      - view_kind
+      - purpose
+      - coverage_state
+      - limitations
+      - evidence_refs
+
+  TaxonomyNode:
+    is_a: KnowledgeEntity
+    class_uri: se:TaxonomyNode
+    description: >-
+      A node belonging to exactly one taxonomy view. The same topic may have
+      separate nodes in different views; cross-view semantics are expressed by
+      typed RelationshipAssertion records rather than a forced universal tree.
+    slots:
+      - label
+      - definition
+      - node_kind
+      - view_ref
+      - source_locator_refs
+      - evidence_refs
+
+  Source:
+    is_a: KnowledgeEntity
+    class_uri: se:Source
+    description: Bibliographic identity and authority/access metadata for a source.
+    slots:
+      - title
+      - source_class
+      - source_roles
+      - organization
+      - authors
+      - edition
+      - publication_date
+      - official_url
+      - stable_identifier
+      - authority_fit
+      - authority_limitations
+      - rights_handling
+      - verification_state
+
+  SourceLocator:
+    is_a: KnowledgeEntity
+    class_uri: se:SourceLocator
+    description: An exact inspected location within one identified source.
+    slots:
+      - source_ref
+      - locator_type
+      - locator
+      - verified_content_summary
+      - verification_state
+      - accessed_on
+
+  Evidence:
+    is_a: KnowledgeEntity
+    class_uri: se:Evidence
+    description: A source-grounded observation, extraction or explicitly synthetic fixture.
+    slots:
+      - source_locator_ref
+      - evidence_type
+      - statement
+      - context
+      - method
+      - result
+      - limitations
+      - uncertainty
+      - extraction_status
+      - synthetic
+
+  Concept:
+    is_a: KnowledgeEntity
+    class_uri: se:Concept
+    description: A defined domain idea, term or abstraction.
+    slots:
+      - label
+      - definition
+      - concept_kind
+      - synonyms
+      - scope_description
+      - applicability
+      - evidence_refs
+      - claim_refs
+
+  KnowledgeClaim:
+    is_a: KnowledgeEntity
+    class_uri: se:KnowledgeClaim
+    description: An atomic, scoped, falsifiable or reviewable statement about the domain.
+    slots:
+      - statement
+      - claim_kind
+      - scope_description
+      - applicability
+      - assumptions
+      - exceptions
+      - limitations
+      - uncertainty
+      - evidence_refs
+      - review_status
+
+  Principle:
+    is_a: KnowledgeEntity
+    class_uri: se:Principle
+    description: A generalizable rationale or guiding proposition, not a universal prescription.
+    slots:
+      - label
+      - statement
+      - rationale
+      - scope_description
+      - applicability
+      - exceptions
+      - limitations
+      - evidence_refs
+      - claim_refs
+
+  Practice:
+    is_a: KnowledgeEntity
+    class_uri: se:Practice
+    description: An actionable engineering activity with context and trade-offs.
+    slots:
+      - label
+      - intent
+      - description
+      - preconditions
+      - steps
+      - expected_outcomes
+      - risks
+      - scope_description
+      - applicability
+      - evidence_refs
+      - claim_refs
+
+  Pattern:
+    is_a: KnowledgeEntity
+    class_uri: se:Pattern
+    description: A recurring problem/context/solution structure with documented trade-offs.
+    slots:
+      - label
+      - problem
+      - context
+      - forces
+      - solution
+      - consequences
+      - tradeoffs
+      - scope_description
+      - evidence_refs
+      - case_refs
+
+  AntiPattern:
+    is_a: KnowledgeEntity
+    class_uri: se:AntiPattern
+    description: A recurring counterproductive approach with symptoms, causes and remediation.
+    slots:
+      - label
+      - symptoms
+      - causes
+      - consequences
+      - remediation
+      - scope_description
+      - evidence_refs
+      - case_refs
+
+  DecisionModel:
+    is_a: KnowledgeEntity
+    class_uri: se:DecisionModel
+    description: A reusable decision question, options, criteria and trade-off procedure.
+    slots:
+      - decision_question
+      - options
+      - criteria
+      - constraints
+      - procedure
+      - tradeoffs
+      - scope_description
+      - evidence_refs
+      - claim_refs
+
+  Case:
+    is_a: KnowledgeEntity
+    class_uri: se:Case
+    description: A real, source-grounded engineering example, incident or case study.
+    slots:
+      - label
+      - case_kind
+      - context
+      - problem
+      - intervention
+      - outcome
+      - lessons
+      - synthetic
+      - evidence_refs
+
+  Counterexample:
+    is_a: Case
+    class_uri: se:Counterexample
+    description: A case explicitly challenging a claim, principle, practice or model.
+    slots:
+      - counterexample_to_refs
+      - contrary_observation
+
+  ReviewDecision:
+    is_a: KnowledgeEntity
+    class_uri: se:ReviewDecision
+    description: An auditable human review event bound to an exact record revision and digest.
+    slots:
+      - target_ref
+      - target_record_version
+      - target_digest_sha256
+      - reviewer_role
+      - reviewer_ref
+      - decision
+      - rationale
+      - reviewed_on
+      - review_policy_ref
+
+  CoverageGap:
+    is_a: KnowledgeEntity
+    class_uri: se:CoverageGap
+    description: An explicit missing, weak, disputed or out-of-scope coverage item.
+    slots:
+      - target_scope_ref
+      - gap_kind
+      - description
+      - severity
+      - coverage_status
+      - impact
+      - resolution_notes
+      - evidence_refs
+
+  RelationshipAssertion:
+    is_a: KnowledgeEntity
+    class_uri: rdf:Statement
+    description: >-
+      A directed, typed, versioned and reviewable edge. The predicate catalog
+      supplies endpoint classes and evidence requirements; it is not a free string.
+    slots:
+      - subject_ref
+      - predicate
+      - object_ref
+      - qualifiers
+      - context
+      - rationale
+      - evidence_refs
+
+  KnowledgeGraph:
+    tree_root: true
+    class_uri: se:KnowledgeGraph
+    description: Versioned collection root for the experimental corpus.
+    slots:
+      - id
+      - graph_version
+      - generated_on
+      - domain_ref
+      - domains
+      - subdomains
+      - taxonomy_views
+      - taxonomy_nodes
+      - sources
+      - source_locators
+      - evidence_records
+      - concepts
+      - knowledge_claims
+      - principles
+      - practices
+      - patterns
+      - anti_patterns
+      - decision_models
+      - cases
+      - counterexamples
+      - review_decisions
+      - coverage_gaps
+      - relationship_assertions
+
+slots:
+  id:
+    identifier: true
+    required: true
+    range: uriorcurie
+    id_prefixes:
+      - se
+    slot_uri: schema:identifier
+  record_version:
+    required: true
+    range: string
+    description: Revision of this record under a stable ID, using MAJOR.MINOR.PATCH.
+  lifecycle_status:
+    required: true
+    range: LifecycleStatus
+  created_on:
+    required: true
+    range: date
+  updated_on:
+    range: date
+  aliases:
+    range: string
+    multivalued: true
+    description: Non-canonical legacy identifiers; never used as relationship targets.
+  label:
+    required: true
+    range: string
+    slot_uri: rdfs:label
+  definition:
+    required: true
+    range: string
+    slot_uri: schema:description
+  scope_inclusions:
+    range: string
+    multivalued: true
+  scope_exclusions:
+    range: string
+    multivalued: true
+  boundary_notes:
+    range: string
+    multivalued: true
+  domain_ref:
+    required: true
+    range: Domain
+    inlined: false
+  view_kind:
+    required: true
+    range: TaxonomyViewKind
+  purpose:
+    required: true
+    range: string
+  coverage_state:
+    required: true
+    range: CoverageState
+  node_kind:
+    required: true
+    range: TaxonomyNodeKind
+  view_ref:
+    required: true
+    range: TaxonomyView
+    inlined: false
+  source_class:
+    required: true
+    range: SourceClass
+  source_roles:
+    required: true
+    range: SourceRole
+    multivalued: true
+  organization:
+    range: string
+  authors:
+    range: string
+    multivalued: true
+  title:
+    required: true
+    range: string
+  edition:
+    range: string
+  publication_date:
+    range: string
+  official_url:
+    range: uri
+  stable_identifier:
+    range: string
+  authority_fit:
+    range: string
+    multivalued: true
+  authority_limitations:
+    range: string
+    multivalued: true
+  rights_handling:
+    required: true
+    range: string
+  verification_state:
+    required: true
+    range: VerificationState
+  source_ref:
+    required: true
+    range: Source
+    inlined: false
+    slot_uri: dcterms:source
+  locator_type:
+    required: true
+    range: LocatorType
+  locator:
+    required: true
+    range: string
+  verified_content_summary:
+    range: string
+  accessed_on:
+    required: true
+    range: date
+  source_locator_ref:
+    required: true
+    range: SourceLocator
+    inlined: false
+    slot_uri: prov:wasDerivedFrom
+  source_locator_refs:
+    range: SourceLocator
+    multivalued: true
+    inlined: false
+  evidence_type:
+    required: true
+    range: EvidenceType
+  statement:
+    required: true
+    range: string
+    slot_uri: schema:text
+  context:
+    range: string
+  method:
+    range: string
+  result:
+    range: string
+  limitations:
+    range: string
+    multivalued: true
+  uncertainty:
+    range: string
+    multivalued: true
+  extraction_status:
+    required: true
+    range: EvidenceStatus
+  synthetic:
+    required: true
+    range: boolean
+  concept_kind:
+    required: true
+    range: ConceptKind
+  synonyms:
+    range: string
+    multivalued: true
+  scope_description:
+    required: true
+    range: string
+  applicability:
+    range: string
+  evidence_refs:
+    range: Evidence
+    multivalued: true
+    inlined: false
+    slot_uri: prov:wasDerivedFrom
+  claim_refs:
+    range: KnowledgeClaim
+    multivalued: true
+    inlined: false
+  claim_kind:
+    required: true
+    range: ClaimKind
+  assumptions:
+    range: string
+    multivalued: true
+  exceptions:
+    range: string
+    multivalued: true
+  review_status:
+    required: true
+    range: ReviewStatus
+  rationale:
+    required: true
+    range: string
+  intent:
+    required: true
+    range: string
+  description:
+    required: true
+    range: string
+  preconditions:
+    range: string
+    multivalued: true
+  steps:
+    range: string
+    multivalued: true
+  expected_outcomes:
+    range: string
+    multivalued: true
+  risks:
+    range: string
+    multivalued: true
+  problem:
+    required: true
+    range: string
+  forces:
+    range: string
+    multivalued: true
+  solution:
+    required: true
+    range: string
+  consequences:
+    range: string
+    multivalued: true
+  tradeoffs:
+    range: string
+    multivalued: true
+  symptoms:
+    range: string
+    multivalued: true
+  causes:
+    range: string
+    multivalued: true
+  remediation:
+    required: true
+    range: string
+  decision_question:
+    required: true
+    range: string
+  options:
+    range: string
+    multivalued: true
+  criteria:
+    range: string
+    multivalued: true
+  constraints:
+    range: string
+    multivalued: true
+  procedure:
+    required: true
+    range: string
+  case_kind:
+    required: true
+    range: CaseKind
+  intervention:
+    range: string
+  outcome:
+    range: string
+  lessons:
+    range: string
+    multivalued: true
+  counterexample_to_refs:
+    required: true
+    range: KnowledgeEntity
+    multivalued: true
+    inlined: false
+  contrary_observation:
+    required: true
+    range: string
+  target_ref:
+    required: true
+    range: KnowledgeEntity
+    inlined: false
+  target_record_version:
+    required: true
+    range: string
+  target_digest_sha256:
+    required: true
+    range: string
+  reviewer_role:
+    required: true
+    range: ReviewerRole
+  reviewer_ref:
+    required: true
+    range: string
+  decision:
+    required: true
+    range: ReviewOutcome
+  reviewed_on:
+    required: true
+    range: date
+  review_policy_ref:
+    required: true
+    range: string
+  target_scope_ref:
+    required: true
+    range: KnowledgeEntity
+    inlined: false
+  gap_kind:
+    required: true
+    range: GapKind
+  severity:
+    required: true
+    range: GapSeverity
+  coverage_status:
+    required: true
+    range: GapStatus
+  impact:
+    required: true
+    range: string
+  resolution_notes:
+    range: string
+    multivalued: true
+  subject_ref:
+    required: true
+    range: KnowledgeEntity
+    inlined: false
+    slot_uri: rdf:subject
+  predicate:
+    required: true
+    range: RelationshipPredicate
+    slot_uri: rdf:predicate
+  object_ref:
+    required: true
+    range: KnowledgeEntity
+    inlined: false
+    slot_uri: rdf:object
+  qualifiers:
+    range: string
+    multivalued: true
+  graph_version:
+    required: true
+    range: string
+  generated_on:
+    required: true
+    range: date
+  domain_ref:
+    required: true
+    range: Domain
+    inlined: false
+  domains:
+    range: Domain
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  subdomains:
+    range: Subdomain
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  taxonomy_views:
+    range: TaxonomyView
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  taxonomy_nodes:
+    range: TaxonomyNode
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  sources:
+    range: Source
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  source_locators:
+    range: SourceLocator
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  evidence_records:
+    range: Evidence
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  concepts:
+    range: Concept
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  knowledge_claims:
+    range: KnowledgeClaim
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  principles:
+    range: Principle
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  practices:
+    range: Practice
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  patterns:
+    range: Pattern
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  anti_patterns:
+    range: AntiPattern
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  decision_models:
+    range: DecisionModel
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  cases:
+    range: Case
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  counterexamples:
+    range: Counterexample
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  review_decisions:
+    range: ReviewDecision
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  coverage_gaps:
+    range: CoverageGap
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+  relationship_assertions:
+    range: RelationshipAssertion
+    multivalued: true
+    inlined: true
+    inlined_as_list: true
+
+enums:
+  LifecycleStatus:
+    permissible_values:
+      DRAFT: {}
+      PROPOSED: {}
+      PENDING_REVIEW: {}
+      ACCEPTED: {}
+      DISPUTED: {}
+      REJECTED: {}
+      DEPRECATED: {}
+      SUPERSEDED: {}
+      ACTIVE: {}
+      WITHDRAWN: {}
+      RETRACTED: {}
+  SourceClass:
+    permissible_values:
+      PROFESSIONAL_BOK: {}
+      CURRICULUM_FRAMEWORK: {}
+      NORMATIVE_STANDARD: {}
+      GOVERNMENT_GUIDANCE: {}
+      PEER_REVIEWED_RESEARCH: {}
+      TEXTBOOK: {}
+      OFFICIAL_TECHNICAL_DOCUMENTATION: {}
+      EMPIRICAL_CASE: {}
+      OTHER: {}
+  SourceRole:
+    permissible_values:
+      PRIMARY: {}
+      SECONDARY: {}
+      COMPARATOR: {}
+      CONTEXT: {}
+  VerificationState:
+    permissible_values:
+      IDENTITY_VERIFIED: {}
+      CONTENT_PARTIAL_VERIFIED: {}
+      CONTENT_VERIFIED: {}
+      ABSTRACT_VERIFIED: {}
+      METADATA_ONLY: {}
+      LOCATOR_VERIFIED: {}
+      LOCATOR_UNKNOWN: {}
+      NOT_VERIFIED: {}
+  LocatorType:
+    permissible_values:
+      TITLE_PAGE: {}
+      SECTION: {}
+      CHAPTER: {}
+      PAGE: {}
+      TABLE: {}
+      FIGURE: {}
+      ABSTRACT: {}
+      DOI: {}
+      URL_FRAGMENT: {}
+      OTHER: {}
+  EvidenceType:
+    permissible_values:
+      DIRECT_SOURCE_PARAPHRASE: {}
+      OBSERVATION: {}
+      EMPIRICAL_RESULT: {}
+      SYNTHESIS: {}
+      COUNTEREVIDENCE: {}
+      NEGATIVE_FINDING: {}
+      SYNTHETIC_FIXTURE: {}
+  EvidenceStatus:
+    permissible_values:
+      EXTRACTED_PENDING_REVIEW: {}
+      REVIEWED: {}
+      REJECTED: {}
+      SUPERSEDED: {}
+      DISPUTED: {}
+  TaxonomyViewKind:
+    permissible_values:
+      DISCIPLINE: {}
+      CURRICULUM: {}
+      LIFECYCLE: {}
+      PROCESS: {}
+      QUALITY: {}
+      ARCHITECTURE: {}
+      TESTING: {}
+      SECURITY: {}
+      OPERATIONS: {}
+      APPLICATION_DOMAIN: {}
+      CROSS_CUTTING: {}
+      ADJACENT_BOUNDARY: {}
+  CoverageState:
+    permissible_values:
+      PROPOSED: {}
+      PARTIAL: {}
+      ASSESSED: {}
+      COMPLETE_RELATIVE_TO_PROFILE: {}
+      NOT_ASSESSED: {}
+  TaxonomyNodeKind:
+    permissible_values:
+      KNOWLEDGE_AREA: {}
+      KNOWLEDGE_UNIT: {}
+      SUBDOMAIN: {}
+      PROCESS: {}
+      QUALITY_ATTRIBUTE: {}
+      CONCERN: {}
+      PRACTICE_GROUP: {}
+      PRACTICE: {}
+      APPLICATION_CONTEXT: {}
+      BOUNDARY_NODE: {}
+  ConceptKind:
+    permissible_values:
+      TERM: {}
+      ABSTRACTION: {}
+      ENTITY: {}
+      PROPERTY: {}
+      MECHANISM: {}
+      METRIC: {}
+      QUALITY_ATTRIBUTE: {}
+      BOUNDARY_CONCEPT: {}
+  ClaimKind:
+    permissible_values:
+      DEFINITION: {}
+      TAXONOMY_STATEMENT: {}
+      DOMAIN_BOUNDARY: {}
+      EMPIRICAL_FINDING: {}
+      CAUSAL_CLAIM: {}
+      NORMATIVE_CLAIM: {}
+      PRACTICE_CLAIM: {}
+      LIMITATION: {}
+      COUNTERCLAIM: {}
+      SYNTHESIS: {}
+  ReviewStatus:
+    permissible_values:
+      PENDING: {}
+      ACCEPTED: {}
+      DISPUTED: {}
+      REJECTED: {}
+      NEEDS_REVISION: {}
+  CaseKind:
+    permissible_values:
+      CASE_STUDY: {}
+      INCIDENT: {}
+      POSTMORTEM: {}
+      EXAMPLE: {}
+      COUNTEREXAMPLE: {}
+      SYNTHETIC_TEST: {}
+  ReviewerRole:
+    permissible_values:
+      HUMAN_DOMAIN_REVIEWER: {}
+      HUMAN_SUBJECT_EXPERT: {}
+      HUMAN_SOURCE_REVIEWER: {}
+      MAINTAINER: {}
+  ReviewOutcome:
+    permissible_values:
+      ACCEPT: {}
+      REJECT: {}
+      REQUEST_CHANGES: {}
+      DEFER: {}
+  GapKind:
+    permissible_values:
+      SOURCE_GAP: {}
+      LOCATOR_GAP: {}
+      EXTRACTION_GAP: {}
+      TAXONOMY_GAP: {}
+      ENTITY_GAP: {}
+      RELATIONSHIP_GAP: {}
+      REVIEW_GAP: {}
+      COVERAGE_GAP: {}
+  GapSeverity:
+    permissible_values:
+      LOW: {}
+      MEDIUM: {}
+      HIGH: {}
+      CRITICAL: {}
+  GapStatus:
+    permissible_values:
+      OPEN: {}
+      INVESTIGATING: {}
+      MITIGATED: {}
+      CLOSED: {}
+      ACCEPTED_LIMITATION: {}
+  RelationshipPredicate:
+    permissible_values:
+      DERIVED_FROM: {}
+      SUPPORTED_BY: {}
+      CONTRADICTED_BY: {}
+      QUALIFIED_BY: {}
+      APPLIES_TO: {}
+      DEPENDS_ON: {}
+      IMPLEMENTS: {}
+      ILLUSTRATED_BY: {}
+      VALIDATED_BY: {}
+      SUPERSEDES: {}
+      RELATED_TO: {}
+      PART_OF: {}
+      SPECIALIZES: {}
+      CROSS_CUTS: {}
+      OVERLAPS: {}
+      BOUNDED_BY: {}
