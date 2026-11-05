@@ -2,14 +2,14 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** EXECUTED_2026-11-05 / FINAL_R2_SOURCE_LOCATOR_COHERENCE_VALIDATED_32_CASES_ON_8257AEA / CURRENT_TIP_FULL_REVALIDATION_PASS_ON_E27217E / LINKML_EXPERIMENT_ONLY / NO_ADOPTION_DECISION — see §18 and Issue #305 comment #6657512368  
+**Status:** EXECUTED_2026-11-05 / EARLY_POF_DECISION_REPEAT_EXPERIMENT / CURRENT_TIP_IDENTITY_REBIND_PASS_ON_DA721EE / FULL_MODEL_DECISION_DEFERRED_TO_SEK-05_#308 / NO_PRODUCTION_ADOPTION — see §19  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
 
 Can LinkML model the source → locator → evidence → claim → domain-node → relationship chain with stronger validation and reliable JSON-LD/RDF projection, without imposing disproportionate authoring, review and migration costs?
 
-This experiment does not presume adoption. The final decision remains one of ADOPT, ADOPT_WITH_AMENDMENTS, REPEAT_EXPERIMENT or REJECT.
+This experiment does not presume adoption. Its decision for this narrow early proof-of-fit is **REPEAT_EXPERIMENT**: the tested provenance slice is insufficient to qualify a full entity model or canonical authoring format. SEK-05 #308 owns the full-model repeat and the subsequent final outcome, which must be one of ADOPT, ADOPT_WITH_AMENDMENTS, REPEAT_EXPERIMENT or REJECT. This decision does not imply production adoption.
 
 ## 2. Real-data fixture
 
@@ -263,3 +263,17 @@ Results: `py_compile` EXIT=0; checker self-test **32/32 PASS**; LinkML conversio
 Full current-tip execution receipt: Issue #305 comment [#6657512368](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657512368). The 57-file secret evidence bundle and SHA256 manifest are linked from that receipt.
 
 The validation is experiment-only. LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production runtime, canonical model adoption, main merge, release or deployment follows.
+
+
+## 19. Early PoF decision — REPEAT_EXPERIMENT — 2026-11-05
+
+**Decision for SEK-04's narrow experiment: `REPEAT_EXPERIMENT`.**
+
+The LinkML v1.12.1 PoF successfully modeled and validated the tested source → locator → evidence → claim → domain-node → relationship slice. It also demonstrated that LinkML alone is insufficient for graph integrity and that a companion fail-closed checker is required. The A/B/C authoring formats preserve the same tested logical graph, but the sample does not cover the full entity catalog required by #299/#308.
+
+The decision is therefore not ADOPT or REJECT:
+- **Not ADOPT:** the tested slice does not qualify the full entity model, canonical authoring format, lifecycle/review model, or complete relationship catalog.
+- **Not REJECT:** the experiment demonstrates useful schema/metamodel validation, deterministic conversion and RDF resource identity when paired with the companion integrity checker.
+- **REPEAT_EXPERIMENT:** SEK-05 #308 must repeat the proof-of-fit over the complete candidate entity/relationship model, including representative positive/negative records, cross-file closure, RDF/JSON-LD identity, schema evolution and human review burden. It must compare LinkML with a proportionate alternative if LinkML limitations remain material.
+
+The final full-model outcome remains independently open in SEK-05 #308 and must be one of ADOPT, ADOPT_WITH_AMENDMENTS, REPEAT_EXPERIMENT or REJECT. No production dependency, canonical model freeze, Domain Package, DomainForge promotion, main merge, release or deployment follows from this early decision.
