@@ -142,6 +142,7 @@
       "semantics": [
         "CAS compare-and-set PUBLISHED_VERIFIED -> PENDING_GITHUB_TERMINALIZATION using the exact observed revision; no delete, seed, reset, direct SQLite edit or in-place history rewrite.",
         "Append exactly one ADS v4.18 event-v2 DISPATCH_STATE_CHANGED with actor_role=scheduler and an existing terminal dispatch_state; for #203 the proposed state is DONE because the candidate-publication dispatch completed its publication operation.",
+        "Set operator_kind=other and operator_id to the exact trusted Host writerId; set transport_actor to the exact trusted Host githubWriterLogin. The terminal reader verifies these values against the same trusted Host configuration; callers cannot supply or override them.",
         "Bind the terminal event to the original task/issue, source SHA, dispatch_id, protected_claim_key, admission_generation, predecessor Claim comment ID/ref, reason, durable evidence references and occurred_at.",
         "Read all native GitHub comments with complete pagination and verify exactly one unedited exact terminal event matching the reservation and predecessor Claim.",
         "CAS compare-and-set PENDING_GITHUB_TERMINALIZATION -> TERMINAL_VERIFIED using the exact reservation revision; persist terminal comment ID/ref and preserve the original Claim comment ID/ref.",
@@ -162,7 +163,9 @@
     "protectedClaimKey": "kaicreator-mm/tally#319:builder:__default__",
     "generation": 1,
     "taskPackRef": "docs/implementation/v2/T06D_TERMINALIZATION_TASK_PACK_R1.json",
-    "taskPackBlobSha": null
+    "taskPackBlobSha": null,
+    "packArtifactBranch": "task/i319-t06d-terminalization",
+    "sourceJitBranch": "task/i319-t06d-terminalization-impl"
   },
   "authority": {
     "ownerAuthorization": "Standing Owner instruction in the current project conversation authorizes routine Delivery-First execution; the exact PackBlob-bound GitHub Owner receipt remains a required durable gate before Host Claim.",
@@ -225,7 +228,23 @@
       "Tally #284 R8 preconditions explicitly separate root Claim + per-task FROZEN_DAG_WRITESET public-API readback from the later version-wide freezeVersionTaskDag stage.",
       "This standalone #319 Task Pack uses only that pre-freeze per-task write-set mechanism; it does not create, replace or claim FROZEN_VERSION_TASK_DAG authority.",
       "The #319 protected claim key and CAS registry are dedicated to #319; the historical #203 registry is never reused."
-    ]
+    ],
+    "packArtifactBranch": {
+      "branch": "task/i319-t06d-terminalization",
+      "pr": 320,
+      "purpose": "immutable governance-only Task Pack artifact",
+      "sourceChangesAllowed": false,
+      "mustRemainDocsOnly": true
+    },
+    "sourceJitBranch": {
+      "branch": "task/i319-t06d-terminalization-impl",
+      "baseRef": "version/v2",
+      "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createOnlyAfter": "accepted #319 Host CAS Claim and exact per-task FROZEN_DAG_WRITESET public-API readback",
+      "sourceChangesAllowed": true,
+      "exactWriteSetSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2",
+      "mustNotReusePackArtifactBranch": true
+    }
   },
   "revision": "R1",
   "serialSuccessors": [
@@ -308,7 +327,13 @@
       "Exact original #203 CAS key, generation, revision, phase, source SHA, dispatch ID, writer ID and original comment ID/ref.",
       "Exact original native DISPATCH_CLAIMED event is unedited and matches the CAS row.",
       "No active writer/attempt/in-flight effect and no unresolved resource/write-set operation; all are freshly re-read at execution time."
-    ]
+    ],
+    "sourceJitBranch": {
+      "branch": "task/i319-t06d-terminalization-impl",
+      "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "createdAfterClaimAndFrozenWriteSetReadback": true,
+      "packArtifactBranchMustRemainDocsOnly": "task/i319-t06d-terminalization"
+    }
   },
   "normativeContract": {
     "repository": "kaicreator-mm/ai-development-standard",
@@ -327,7 +352,11 @@
       "gaiSection": "8.5",
       "executionArchitectureSection": "11.2",
       "roleReleasedIsNotTerminal": true,
-      "newEventTypeRequired": false
+      "newEventTypeRequired": false,
+      "operatorKind": "other",
+      "operatorIdSource": "exact writerId from the trusted one-shot T06d Host configuration",
+      "transportActorSource": "exact githubWriterLogin from the trusted one-shot T06d Host configuration",
+      "identityCallerSupplied": false
     }
   },
   "targetClaim": {
