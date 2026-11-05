@@ -2,9 +2,9 @@
 
 **Task:** #305  
 **Date:** 2026-11-04  
-**Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — historical checker and LinkML PoF passed at source-bearing HEAD `2c5c8b3d`; final R2 found and repaired DomainNode source/locator coherence; current checker validation pending.
+**Status:** EXECUTED / EXPERIMENTAL / NOT_ADOPTED — final checker and LinkML PoF passed at exact source-bearing HEAD `8257aea33538b96300b91be66e2d22c28c926882` (32/32 self-tests, 12/12 conversions, 25/25 CLI probes, seven JSON-LD artifacts); see RESULTS.md §10.16 and Issue #305 comment #6656869638. Subsequent changes are documentation-only; final current-tip identity rebind remains an integration gate.
 
-> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The previously validated checker blob is `503b370b016616c629f97fb47fc06b0079b574d9` at source-bearing HEAD `2c5c8b3d`. The current checker blob is `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`; its new 32-case source/locator coherence repair requires exact-HEAD local revalidation.
+> **Current-state note:** The initial environment and static-review findings below are retained as historical method evidence. They are superseded by the Windows-native LinkML execution and final checker validation/review in the later sections. The earlier checker blob `503b370b016616c629f97fb47fc06b0079b574d9` at source-bearing HEAD `2c5c8b3d` is historical. The final checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7` passed 32/32 self-tests, 12/12 LinkML conversions, 25/25 CLI probes and seven-artifact JSON-LD edge identity at exact HEAD `8257aea33538b96300b91be66e2d22c28c926882`; see RESULTS.md §10.16 and Issue #305 comment #6656869638. Later changes are documentation-only and do not alter the validated checker or fixtures; final current-tip identity rebind remains an integration gate.
 
 ## Work performed
 
