@@ -14,6 +14,7 @@ import json
 import re
 import sys
 from collections import defaultdict
+from datetime import date, datetime
 from pathlib import Path
 
 import yaml
@@ -98,10 +99,23 @@ def _ids(value):
     return []
 
 
+def _canonical_json_value(value):
+    """Normalize YAML-native dates before canonical JSON hashing."""
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {str(key): _canonical_json_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_canonical_json_value(item) for item in value]
+    return value
+
+
 def canonical_record_digest(record):
     """SHA-256 over canonical UTF-8 JSON for one exact record revision."""
     payload = json.dumps(
-        record,
+        _canonical_json_value(record),
         sort_keys=True,
         ensure_ascii=False,
         separators=(",", ":"),
@@ -125,6 +139,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         _error(errors, "INVALID_GRAPH_ID", str(graph["id"]))
     if graph.get("graph_version") and not VERSION_PATTERN.fullmatch(str(graph["graph_version"])):
         _error(errors, "INVALID_GRAPH_VERSION", str(graph["graph_version"]))
+    if graph.get("generated_on"):
+        try:
+            date.fromisoformat(str(graph["generated_on"]))
+        except ValueError:
+            _error(errors, "INVALID_GRAPH_GENERATED_ON", str(graph["generated_on"]))
 
     entities = {}
     classes = {}
@@ -149,6 +168,9 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             classes[record_id] = class_name
             records.append((class_name, record_id, record))
 
+    if isinstance(graph.get("id"), str) and graph["id"] in entities:
+        _error(errors, "GRAPH_ID_COLLIDES_WITH_ENTITY", str(graph.get("id")))
+
     allowed_lifecycle = set(
         entity_catalog.get("identity_contract", {}).get("lifecycle", {}).get("values", [])
     )
@@ -161,8 +183,11 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             _error(errors, "INVALID_RECORD_VERSION", record_id)
         if allowed_lifecycle and record.get("lifecycle_status") not in allowed_lifecycle:
             _error(errors, "INVALID_LIFECYCLE_STATUS", f"{record_id}: {record.get('lifecycle_status')!r}")
-        if record.get("created_on") and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(record["created_on"])):
-            _error(errors, "INVALID_CREATED_ON", record_id)
+        if record.get("created_on"):
+            try:
+                date.fromisoformat(str(record["created_on"]))
+            except ValueError:
+                _error(errors, "INVALID_CREATED_ON", record_id)
         for alias in _ids(record.get("aliases")):
             if not isinstance(alias, str) or not alias.strip():
                 _error(errors, "INVALID_ALIAS", record_id)
@@ -259,11 +284,21 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if evidence.get("extraction_status") != "REVIEWED":
             _error(errors, "EVIDENCE_NOT_REVIEWED", f"{owner_id}->{evidence_id}")
             return False
+        if evidence.get("lifecycle_status") != "ACCEPTED":
+            _error(errors, "EVIDENCE_NOT_ACCEPTED", f"{owner_id}->{evidence_id}")
+            return False
         locator_id = evidence.get("source_locator_ref")
         locator = entities.get(locator_id, {})
         source_id = locator.get("source_ref")
         if classes.get(locator_id) != "SourceLocator" or classes.get(source_id) != "Source":
             _error(errors, "BROKEN_EVIDENCE_SOURCE_CHAIN", f"{owner_id}->{evidence_id}")
+            return False
+        if locator.get("verification_state") != "LOCATOR_VERIFIED":
+            _error(errors, "SOURCE_LOCATOR_NOT_VERIFIED", f"{owner_id}->{evidence_id}")
+            return False
+        binding = (evidence_id, evidence.get("record_version"), canonical_record_digest(evidence))
+        if binding not in accepted_review_bindings:
+            _error(errors, "EVIDENCE_WITHOUT_HUMAN_REVIEW", f"{owner_id}->{evidence_id}")
             return False
         return True
 
@@ -277,33 +312,55 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
             valid = evidence_is_usable(evidence_id, owner_id) and valid
         return valid
 
-    # Validate the exact review binding for every ReviewDecision.
+    # Bind review outcomes to the exact target revision and content digest.
     accepted_review_bindings = set()
+    review_outcomes = defaultdict(set)
     for class_name, record_id, record in records:
         if class_name != "ReviewDecision":
             continue
         target_id = record.get("target_ref")
-        target = entities.get(target_id)
+        target = entities.get(target_id) if isinstance(target_id, str) else None
         if not target:
             continue
-        if record.get("target_record_version") != target.get("record_version"):
+        version_matches = record.get("target_record_version") == target.get("record_version")
+        if not version_matches:
             _error(errors, "REVIEW_VERSION_MISMATCH", record_id)
         digest = record.get("target_digest_sha256", "")
-        if not SHA256_PATTERN.fullmatch(str(digest)):
+        digest_valid = bool(SHA256_PATTERN.fullmatch(str(digest)))
+        if not digest_valid:
             _error(errors, "INVALID_REVIEW_DIGEST", record_id)
-        elif digest != canonical_record_digest(target):
+        digest_matches = digest_valid and digest == canonical_record_digest(target)
+        if digest_valid and not digest_matches:
             _error(errors, "REVIEW_DIGEST_MISMATCH", record_id)
-        if record.get("decision") == "ACCEPT":
+        exact_target = version_matches and digest_matches
+        decision = record.get("decision")
+        if exact_target and isinstance(decision, str):
+            review_outcomes[(target_id, target.get("record_version"), digest)].add(decision)
+        if decision == "ACCEPT":
             if target.get("lifecycle_status") != "ACCEPTED":
                 _error(errors, "REVIEW_ACCEPT_TARGET_NOT_ACCEPTED", record_id)
             if classes.get(target_id) == "KnowledgeClaim" and target.get("review_status") != "ACCEPTED":
                 _error(errors, "CLAIM_REVIEW_STATUS_MISMATCH", target_id)
-            if (
-                record.get("target_record_version") == target.get("record_version")
-                and digest == canonical_record_digest(target)
-                and target.get("lifecycle_status") == "ACCEPTED"
-            ):
+            if classes.get(target_id) == "Evidence" and target.get("extraction_status") != "REVIEWED":
+                _error(errors, "ACCEPTED_EVIDENCE_NOT_REVIEWED", target_id)
+            if exact_target and target.get("lifecycle_status") == "ACCEPTED":
                 accepted_review_bindings.add((target_id, target.get("record_version"), digest))
+        elif isinstance(decision, str) and decision in {"REJECT", "REQUEST_CHANGES"} and target.get("lifecycle_status") == "ACCEPTED":
+            _error(errors, "REVIEW_NEGATIVE_DECISION_TARGET_ACCEPTED", record_id)
+
+    for binding, outcomes in review_outcomes.items():
+        if "ACCEPT" in outcomes and outcomes.intersection({"REJECT", "REQUEST_CHANGES"}):
+            _error(errors, "CONFLICTING_REVIEW_DECISIONS", f"{binding[0]} has conflicting outcomes {sorted(outcomes)}")
+
+    # An accepted Evidence record must have its own exact human acceptance.
+    for class_name, record_id, record in records:
+        if class_name != "Evidence" or record.get("lifecycle_status") != "ACCEPTED":
+            continue
+        if record.get("extraction_status") != "REVIEWED":
+            _error(errors, "ACCEPTED_EVIDENCE_NOT_REVIEWED", record_id)
+        binding = (record_id, record.get("record_version"), canonical_record_digest(record))
+        if binding not in accepted_review_bindings:
+            _error(errors, "EVIDENCE_WITHOUT_HUMAN_REVIEW", record_id)
 
     # Accepted records must have reviewed, non-synthetic evidence and an exact human decision.
     accepted_ids = set()
@@ -317,16 +374,24 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
                     _error(errors, "ACCEPTED_GAP_WITHOUT_DISPOSITION", record_id)
                 if _ids(record.get("evidence_refs")):
                     usable_evidence_refs(record_id, record.get("evidence_refs"))
-            elif class_name in {"Pattern", "AntiPattern"} and not _ids(record.get("evidence_refs")):
+            elif class_name in {"Pattern", "AntiPattern"}:
+                evidence_ids = _ids(record.get("evidence_refs"))
                 case_ids = _ids(record.get("case_refs"))
-                if not case_ids:
+                if not evidence_ids and not case_ids:
                     _error(errors, "ACCEPTED_WITHOUT_EVIDENCE_OR_CASE", record_id)
+                if evidence_ids:
+                    usable_evidence_refs(record_id, evidence_ids)
                 for case_id in case_ids:
                     case = entities.get(case_id, {})
                     if case.get("synthetic") is True:
                         _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{case_id}")
+                    elif case.get("lifecycle_status") != "ACCEPTED":
+                        _error(errors, "ACCEPTED_PATTERN_REFERENCES_UNACCEPTED_CASE", f"{record_id}->{case_id}")
                     else:
-                        usable_evidence_refs(record_id, case.get("evidence_refs"))
+                        case_binding = (case_id, case.get("record_version"), canonical_record_digest(case))
+                        if case_binding not in accepted_review_bindings:
+                            _error(errors, "ACCEPTED_PATTERN_CASE_WITHOUT_HUMAN_REVIEW", f"{record_id}->{case_id}")
+                        usable_evidence_refs(case_id, case.get("evidence_refs"))
             else:
                 usable_evidence_refs(record_id, record.get("evidence_refs"))
             if class_name == "KnowledgeClaim" and record.get("review_status") != "ACCEPTED":
@@ -378,22 +443,31 @@ def validate_graph(graph, entity_catalog, relationship_catalog):
         if signature in edge_signatures:
             _error(errors, "DUPLICATE_RELATIONSHIP_SIGNATURE", record_id)
         edge_signatures.add(signature)
-        if predicate in {"PART_OF", "SUPERSEDES"}:
+        terminal_edge_states = {"REJECTED", "WITHDRAWN", "RETRACTED", "SUPERSEDED", "DEPRECATED"}
+        if predicate in {"PART_OF", "SUPERSEDES"} and record.get("lifecycle_status") not in terminal_edge_states:
             graph_edges[predicate].append((subject_id, object_id))
         if rule.get("same_class_required") and subject_class != object_class:
             _error(errors, "SUPERSEDES_CLASS_MISMATCH", record_id)
 
         if record.get("lifecycle_status") == "ACCEPTED":
             evidence_ids = _ids(record.get("evidence_refs"))
+            object_record = entities.get(object_id, {})
+            if object_class in {"Case", "Counterexample"} and object_record.get("synthetic") is True:
+                _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{object_id}")
             if not evidence_ids and rule.get("object_is_evidence") and object_class == "Evidence":
                 evidence_ids = [object_id]
-            elif not evidence_ids and rule.get("object_carries_provenance") and object_class == "Evidence":
-                evidence_ids = [object_id]
-            elif not evidence_ids and rule.get("object_carries_provenance") and object_class in {"Case", "Counterexample"}:
-                object_record = entities.get(object_id, {})
-                if object_record.get("synthetic") is True:
-                    _error(errors, "ACCEPTED_SYNTHETIC_CASE", f"{record_id}->{object_id}")
-                evidence_ids = _ids(object_record.get("evidence_refs"))
+            elif not evidence_ids and rule.get("object_carries_provenance"):
+                if object_class == "Evidence":
+                    evidence_ids = [object_id]
+                elif object_class == "ReviewDecision":
+                    review_target_id = object_record.get("target_ref")
+                    review_binding = (review_target_id, object_record.get("target_record_version"), object_record.get("target_digest_sha256"))
+                    if object_record.get("decision") != "ACCEPT" or review_target_id != subject_id or review_binding not in accepted_review_bindings:
+                        _error(errors, "VALIDATION_REVIEW_DOES_NOT_BIND_SUBJECT", f"{record_id}->{object_id}")
+                    else:
+                        evidence_ids = _ids(entities.get(review_target_id, {}).get("evidence_refs"))
+                else:
+                    evidence_ids = _ids(object_record.get("evidence_refs"))
             if not evidence_ids:
                 _error(errors, "ACCEPTED_RELATIONSHIP_WITHOUT_EVIDENCE", record_id)
             else:
@@ -553,7 +627,9 @@ def positive_fixture():
 
 def accepted_relationship_with_exact_review_graph(base, add_exact_acceptance):
     graph = copy.deepcopy(base)
-    graph["evidence_records"][0]["extraction_status"] = "REVIEWED"
+    evidence = graph["evidence_records"][0]
+    evidence["extraction_status"] = "REVIEWED"
+    add_exact_acceptance(graph, evidence)
     add_exact_acceptance(graph, graph["relationship_assertions"][0])
     return graph
 
@@ -569,12 +645,12 @@ def run_self_tests(catalog, rules):
         passed = any(error.startswith(expected_code + ":") for error in errors)
         cases.append((name, passed, errors))
 
-    def add_exact_acceptance(graph, target):
+    def add_exact_acceptance(graph, target, review_id=None):
         target["lifecycle_status"] = "ACCEPTED"
         if "review_status" in target:
             target["review_status"] = "ACCEPTED"
         graph["review_decisions"].append({
-            "id": "se:REV-TEST-ACCEPT",
+            "id": review_id or f"se:REV-TEST-ACCEPT-{target['id'].split(':', 1)[1]}",
             "record_version": "0.1.0",
             "created_on": "2026-11-05",
             "lifecycle_status": "ACTIVE",
@@ -635,13 +711,18 @@ def run_self_tests(catalog, rules):
         add_exact_acceptance(g, g["concepts"][0])
     expect("accepted-synthetic-evidence", accepted_with_synthetic_evidence, "ACCEPTED_SYNTHETIC_EVIDENCE")
 
+    def accept_fixture_evidence(g):
+        evidence = g["evidence_records"][0]
+        evidence["extraction_status"] = "REVIEWED"
+        add_exact_acceptance(g, evidence)
+
     def accepted_relationship_without_review(g):
-        g["evidence_records"][0]["extraction_status"] = "REVIEWED"
+        accept_fixture_evidence(g)
         g["relationship_assertions"][0]["lifecycle_status"] = "ACCEPTED"
     expect("accepted-relationship-without-review", accepted_relationship_without_review, "ACCEPTED_WITHOUT_HUMAN_REVIEW")
 
     def accepted_relationship_with_exact_review(g):
-        g["evidence_records"][0]["extraction_status"] = "REVIEWED"
+        accept_fixture_evidence(g)
         add_exact_acceptance(g, g["relationship_assertions"][0])
     valid_relation_errors = validate_graph(
         accepted_relationship_with_exact_review_graph(base, add_exact_acceptance),
@@ -655,6 +736,58 @@ def run_self_tests(catalog, rules):
         duplicate["id"] = "se:REL-DUPLICATE-SIGNATURE"
         g["relationship_assertions"].append(duplicate)
     expect("duplicate-relationship-signature", duplicate_relationship_signature, "DUPLICATE_RELATIONSHIP_SIGNATURE")
+
+    expect("graph-id-collides-with-entity", lambda g: g.update(id=g["domains"][0]["id"]), "GRAPH_ID_COLLIDES_WITH_ENTITY")
+
+    def accepted_evidence_without_own_review(g):
+        evidence = g["evidence_records"][0]
+        evidence["extraction_status"] = "REVIEWED"
+        evidence["lifecycle_status"] = "ACCEPTED"
+        add_exact_acceptance(g, g["concepts"][0])
+    expect("accepted-evidence-without-own-review", accepted_evidence_without_own_review, "EVIDENCE_WITHOUT_HUMAN_REVIEW")
+
+    def conflicting_review_outcomes(g):
+        target = g["concepts"][0]
+        target["lifecycle_status"] = "ACCEPTED"
+        add_exact_acceptance(g, target)
+        g["review_decisions"].append({
+            "id": "se:REV-TEST-REJECT-CONFLICT",
+            "record_version": "0.1.0",
+            "created_on": "2026-11-05",
+            "lifecycle_status": "ACTIVE",
+            "target_ref": target["id"],
+            "target_record_version": target["record_version"],
+            "target_digest_sha256": canonical_record_digest(target),
+            "reviewer_role": "HUMAN_DOMAIN_REVIEWER",
+            "reviewer_ref": "reviewer:test-fixture-2",
+            "decision": "REJECT",
+            "rationale": "Conflicting exact-revision decision fixture.",
+            "reviewed_on": "2026-11-05",
+            "review_policy_ref": "SE-REVIEW-POLICY-0.1",
+        })
+    expect("conflicting-review-outcomes", conflicting_review_outcomes, "CONFLICTING_REVIEW_DECISIONS")
+
+    def accepted_pattern_with_synthetic_case(g):
+        pattern = g["patterns"][0]
+        pattern["lifecycle_status"] = "ACCEPTED"
+        add_exact_acceptance(g, pattern)
+    expect("accepted-pattern-synthetic-case", accepted_pattern_with_synthetic_case, "ACCEPTED_SYNTHETIC_CASE")
+
+    def rejected_part_of_cycle(g):
+        first = {**g["relationship_assertions"][11], "id": "se:REL-REJECTED-PART-A", "subject_ref": "se:NODE-SWEBOK-REQ", "object_ref": "se:NODE-SWEBOK-ENG", "lifecycle_status": "REJECTED", "context": "rejected cycle fixture A"}
+        second = {**g["relationship_assertions"][11], "id": "se:REL-REJECTED-PART-B", "subject_ref": "se:NODE-SWEBOK-ENG", "object_ref": "se:NODE-SWEBOK-REQ", "lifecycle_status": "REJECTED", "context": "rejected cycle fixture B"}
+        g["relationship_assertions"].extend([first, second])
+    rejected_cycle_graph = copy.deepcopy(base)
+    rejected_part_of_cycle(rejected_cycle_graph)
+    rejected_cycle_errors = validate_graph(rejected_cycle_graph, catalog, rules)
+    cases.append(("rejected-edges-do-not-form-active-cycle", not any(error.startswith("PART_OF_CYCLE:") for error in rejected_cycle_errors), rejected_cycle_errors))
+
+    try:
+        canonical_record_digest({"created_on": date(2026, 11, 5)})
+        date_digest_ok = True
+    except (TypeError, ValueError):
+        date_digest_ok = False
+    cases.append(("canonical-digest-normalizes-yaml-date", date_digest_ok, []))
 
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
