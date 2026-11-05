@@ -38,7 +38,41 @@
         "lastExactReceiptHead": "a13c5bcc71cab912b420fe3454dee8bce85771a1",
         "lastExactReceiptTree": "6e8e628d90277adefd2803f0bcc5e440fdf4dc35",
         "receiptComment": 6657897225,
-        "currentHeadRecheck": "PENDING_PACK_ONLY_DELTA"
+        "currentHeadRecheck": {
+          "status": "PASS_EXACT_HEAD_SOURCE_REVIEW_AND_DATA_ONLY_DELTA",
+          "currentHead": "7f4aa5eb24aa96d262402decbed9d37adad4be91",
+          "currentTree": "d902f639902135d255f12089442a8f159240318b",
+          "exactSourceReview": {
+            "commentId": 5785624699,
+            "head": "7f4aa5eb24aa96d262402decbed9d37adad4be91",
+            "tree": "d902f639902135d255f12089442a8f159240318b",
+            "verdict": "PASS",
+            "p0": 0,
+            "p1": 0,
+            "p2": 0
+          },
+          "priorNode24BuilderReceipt": {
+            "commentId": 6657897225,
+            "head": "a13c5bcc71cab912b420fe3454dee8bce85771a1",
+            "tree": "6e8e628d90277adefd2803f0bcc5e440fdf4dc35",
+            "result": "PASS"
+          },
+          "interveningDelta": {
+            "base": "a13c5bcc71cab912b420fe3454dee8bce85771a1",
+            "head": "7f4aa5eb24aa96d262402decbed9d37adad4be91",
+            "commits": 1,
+            "paths": [
+              "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json"
+            ],
+            "additions": 36,
+            "deletions": 6,
+            "insideAWriteSet": true,
+            "runtimeSourceChanges": 0
+          },
+          "currentCandidatePackBlob": "b14f958b83b2b2789893b0e648e2ebbd1fbe06ad",
+          "disposition": "NO_ADDITIONAL_LOCAL_NODE24_BUILDER_REQUIRED_FOR_DATA_ONLY_DELTA; current Task Pack is separately parsed and independently audited at exact HEAD"
+        },
+        "node24IssueComment": 6657897225
       },
       "mergedIntoIntegrationBase": false
     }
