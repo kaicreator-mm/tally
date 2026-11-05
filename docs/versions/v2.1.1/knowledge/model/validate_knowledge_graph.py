@@ -551,6 +551,13 @@ def positive_fixture():
     return graph
 
 
+def accepted_relationship_with_exact_review_graph(base, add_exact_acceptance):
+    graph = copy.deepcopy(base)
+    graph["evidence_records"][0]["extraction_status"] = "REVIEWED"
+    add_exact_acceptance(graph, graph["relationship_assertions"][0])
+    return graph
+
+
 def run_self_tests(catalog, rules):
     base = positive_fixture()
     cases = []
@@ -627,6 +634,27 @@ def run_self_tests(catalog, rules):
         g["concepts"][0]["evidence_refs"] = ["se:EVD-SEK05-TEST"]
         add_exact_acceptance(g, g["concepts"][0])
     expect("accepted-synthetic-evidence", accepted_with_synthetic_evidence, "ACCEPTED_SYNTHETIC_EVIDENCE")
+
+    def accepted_relationship_without_review(g):
+        g["evidence_records"][0]["extraction_status"] = "REVIEWED"
+        g["relationship_assertions"][0]["lifecycle_status"] = "ACCEPTED"
+    expect("accepted-relationship-without-review", accepted_relationship_without_review, "ACCEPTED_WITHOUT_HUMAN_REVIEW")
+
+    def accepted_relationship_with_exact_review(g):
+        g["evidence_records"][0]["extraction_status"] = "REVIEWED"
+        add_exact_acceptance(g, g["relationship_assertions"][0])
+    valid_relation_errors = validate_graph(
+        accepted_relationship_with_exact_review_graph(base, add_exact_acceptance),
+        catalog,
+        rules,
+    )
+    cases.append(("accepted-relationship-with-exact-review-and-evidence", not valid_relation_errors, valid_relation_errors))
+
+    def duplicate_relationship_signature(g):
+        duplicate = copy.deepcopy(g["relationship_assertions"][4])
+        duplicate["id"] = "se:REL-DUPLICATE-SIGNATURE"
+        g["relationship_assertions"].append(duplicate)
+    expect("duplicate-relationship-signature", duplicate_relationship_signature, "DUPLICATE_RELATIONSHIP_SIGNATURE")
 
     passed = sum(1 for _, ok, _ in cases if ok)
     for name, ok, errors in cases:
