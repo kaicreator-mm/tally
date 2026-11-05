@@ -1313,11 +1313,18 @@ def run_self_tests(catalog, rules):
         files[record_path] = "id: [unterminated"
     expect_format_failure("format-b-invalid-record-yaml", format_b_invalid_record_yaml, "FORMAT_B_INVALID_RECORD_YAML")
 
-    expect_format_failure(
+    non_string_root_key_files = _serialize_format_b(base)
+    non_string_root_key_files["graph-root.yaml"] = "? [unhashable, key]\n: value\n"
+    try:
+        _parse_format_b(non_string_root_key_files)
+        non_string_root_key_errors = []
+    except ValidationError as exc:
+        non_string_root_key_errors = [str(exc)]
+    cases.append((
         "format-b-non-string-root-key",
-        lambda files: files.__setitem__("graph-root.yaml", "? [unhashable, key]\\n: value\\n"),
-        "FORMAT_B_INVALID_GRAPH_ROOT",
-    )
+        any("non-string YAML mapping key" in error for error in non_string_root_key_errors),
+        non_string_root_key_errors,
+    ))
 
     def format_b_orphan_record(files):
         files["records/unrecognized/0001-orphan.yaml"] = _yaml_dump({"id": "se:ORPHAN"})
