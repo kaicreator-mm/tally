@@ -4,12 +4,12 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-03T15:39:22.624Z",
+  "observedAt": "2026-11-05T12:17:29.848Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 44,
-    "claimCommentPages": 3
+    "taskIssueCount": 46,
+    "claimCommentPages": 46
   },
   "taskIssues": [
     {
@@ -336,7 +336,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T03:43:19Z",
-      "updatedAt": "2026-10-31T05:15:24Z",
+      "updatedAt": "2026-11-04T06:22:39Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
       "dispatchableByDisposition": false,
@@ -351,7 +351,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T04:35:59Z",
-      "updatedAt": "2026-10-31T04:37:34Z",
+      "updatedAt": "2026-11-04T06:22:46Z",
       "closedAt": null,
       "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
       "dispatchableByDisposition": false,
@@ -366,7 +366,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T04:36:01Z",
-      "updatedAt": "2026-10-31T04:37:45Z",
+      "updatedAt": "2026-11-04T06:22:51Z",
       "closedAt": null,
       "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
       "dispatchableByDisposition": false,
@@ -381,7 +381,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T04:36:03Z",
-      "updatedAt": "2026-10-31T04:37:55Z",
+      "updatedAt": "2026-11-04T06:22:57Z",
       "closedAt": null,
       "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
       "dispatchableByDisposition": false,
@@ -396,7 +396,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T05:43:13Z",
-      "updatedAt": "2026-10-31T05:44:27Z",
+      "updatedAt": "2026-11-04T06:23:05Z",
       "closedAt": null,
       "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
       "dispatchableByDisposition": false,
@@ -411,7 +411,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T06:53:36Z",
-      "updatedAt": "2026-10-31T07:06:55Z",
+      "updatedAt": "2026-11-04T06:23:11Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
       "dispatchableByDisposition": false,
@@ -426,11 +426,11 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T07:11:08Z",
-      "updatedAt": "2026-10-31T18:53:25Z",
+      "updatedAt": "2026-11-04T06:23:18Z",
       "closedAt": null,
-      "scopeDisposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
-      "dispatchableByDisposition": true,
-      "dispositionNote": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
+      "scopeDisposition": "SOURCE_PRESENT_OVERLAP_BLOCKED_TERMINALITY_UNPROVEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Candidate-publication source exists in version/v2, but the current issue normalization is CANONICALIZED_OVERLAP_BLOCKED with dispatchable=false. The historical DISPATCH_CLAIMED is bound to source 00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769 and no current active Host CAS terminality readback exists. R8 names #203 the historical predecessor to #284; do not dispatch concurrently or assume the old Claim is terminal."
     },
     {
       "issueNumber": 207,
@@ -441,7 +441,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:16Z",
-      "updatedAt": "2026-10-31T12:54:16Z",
+      "updatedAt": "2026-11-04T06:23:24Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
       "dispatchableByDisposition": true,
@@ -456,7 +456,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:18Z",
-      "updatedAt": "2026-10-31T17:32:52Z",
+      "updatedAt": "2026-11-04T06:23:31Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
       "dispatchableByDisposition": true,
@@ -471,7 +471,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T10:36:20Z",
-      "updatedAt": "2026-10-31T12:44:25Z",
+      "updatedAt": "2026-11-04T06:23:41Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
       "dispatchableByDisposition": true,
@@ -483,14 +483,14 @@
       "issueState": "open",
       "labels": [
         "type:task",
-        "state:ready"
+        "state:planned"
       ],
       "createdAt": "2026-10-31T10:38:10Z",
-      "updatedAt": "2026-11-02T14:29:29Z",
+      "updatedAt": "2026-11-05T05:52:40Z",
       "closedAt": null,
-      "scopeDisposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
-      "dispatchableByDisposition": true,
-      "dispositionNote": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
+      "scopeDisposition": "SUCCESSOR_TRANSFERRED_TO_312_NO_NEW_MUTATION",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #218 merged the #210 Product Intake source and consumed its generation-1 Claim (immutable historical evidence). The Product ReviewWitness implementation is now solely owned by successor #312 under new protected key kaicreator-mm/tally#312:builder:__default__. No source mutation is authorized under #210."
     },
     {
       "issueNumber": 211,
@@ -501,7 +501,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T11:41:50Z",
-      "updatedAt": "2026-10-31T12:54:22Z",
+      "updatedAt": "2026-11-04T06:23:54Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_NATIVE_READ_RECOVERY",
       "dispatchableByDisposition": true,
@@ -516,7 +516,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T12:06:28Z",
-      "updatedAt": "2026-10-31T13:01:22Z",
+      "updatedAt": "2026-11-04T06:24:00Z",
       "closedAt": null,
       "scopeDisposition": "BLOCKED_ON_211_PLANNED_EDGE_ONLY",
       "dispatchableByDisposition": false,
@@ -528,14 +528,14 @@
       "issueState": "open",
       "labels": [
         "type:task",
-        "state:ready"
+        "state:planned"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-11-03T15:31:25Z",
+      "updatedAt": "2026-11-05T06:35:23Z",
       "closedAt": null,
-      "scopeDisposition": "ACTIVE_MAINTENANCE_LEARNING",
-      "dispatchableByDisposition": true,
-      "dispositionNote": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
+      "scopeDisposition": "MAINTENANCE_HOLD_UNTIL_312_INTEGRATED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Native label is now state:planned with CANONICALIZED_OVERLAP_BLOCKED (50 overlap intersections). R8 serial ownership is #284 -> #312 -> #219; #219 shares eight paths with #312 and must refresh/rebase its source base after #312 exact review/integration before any shared-path write. Existing #219 PR/Claim/history is preserved unchanged."
     },
     {
       "issueNumber": 260,
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-03T15:38:32Z",
+      "updatedAt": "2026-11-04T18:48:36Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -561,7 +561,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
-      "updatedAt": "2026-11-03T15:38:38Z",
+      "updatedAt": "2026-11-04T20:37:53Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_UI_ACTIONS",
       "dispatchableByDisposition": true,
@@ -576,7 +576,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:43Z",
-      "updatedAt": "2026-11-03T15:38:44Z",
+      "updatedAt": "2026-11-04T20:36:40Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING",
       "dispatchableByDisposition": true,
@@ -591,7 +591,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:45Z",
-      "updatedAt": "2026-11-03T15:38:51Z",
+      "updatedAt": "2026-11-04T18:48:53Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
       "dispatchableByDisposition": true,
@@ -606,7 +606,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-03T05:37:03Z",
+      "updatedAt": "2026-11-05T06:32:21Z",
       "closedAt": null,
       "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
       "dispatchableByDisposition": false,
@@ -621,7 +621,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T03:09:59Z",
-      "updatedAt": "2026-11-03T14:00:26Z",
+      "updatedAt": "2026-11-04T06:26:16Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_REPLAN_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -636,7 +636,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T03:10:06Z",
-      "updatedAt": "2026-11-03T14:00:33Z",
+      "updatedAt": "2026-11-04T06:26:23Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -651,7 +651,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T03:10:13Z",
-      "updatedAt": "2026-11-03T14:00:39Z",
+      "updatedAt": "2026-11-04T06:26:29Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -666,11 +666,41 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T05:32:14Z",
-      "updatedAt": "2026-11-03T13:42:28Z",
+      "updatedAt": "2026-11-05T06:34:31Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
       "dispatchableByDisposition": false,
       "dispositionNote": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+    },
+    {
+      "issueNumber": 284,
+      "title": "[v2][Closeout E0][P0] Pre-freeze Bootstrap — selected K→Host Task Pack Freeze + native dependency writes",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-04T00:27:42Z",
+      "updatedAt": "2026-11-05T11:52:19Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_E0_PRE_FREEZE_BOOTSTRAP_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "E0 pre-freeze Bootstrap owns the selected K->Host Task Pack Freeze and native dependency write routes (14-path candidate write set; E0=CREATED_PLANNED, state:planned). Root admission, an immutable E0 Task Pack, independent review, exact Owner Approval and an accepted Host CAS Claim/JIT are all pending; #203 terminality proof is a predecessor gate. Non-dispatchable."
+    },
+    {
+      "issueNumber": 312,
+      "title": "[v2][P0][Product ReviewWitness] New-Claim successor to completed #210 — exact draft, independent review and trusted freeze",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-05T04:00:25Z",
+      "updatedAt": "2026-11-05T11:58:06Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
     }
   ],
   "edges": [
@@ -893,6 +923,20 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
       "reason": "#276's broad Business test glob and central Business files overlap #210's Project/Product/L2 intake write set; keep #276 non-dispatchable until #210 completes or F narrows the exact write set."
+    },
+    {
+      "from": 284,
+      "to": 312,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/312",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/284"
+    },
+    {
+      "from": 312,
+      "to": 219,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
     }
   ],
   "claimSubjects": [
@@ -1467,6 +1511,32 @@
       "commentId": null,
       "commentRef": null,
       "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 284,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#284:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 312,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#312:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1631,24 +1701,45 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
       "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
+    },
+    {
+      "from": 284,
+      "to": 312,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/312",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "reason": "R8 serial ownership places E0 root admission before the Product successor; #312 implementation starts only after #284 root admission and reviewed E0 source. PLANNED only; no native blocked_by was written."
+    },
+    {
+      "from": 312,
+      "to": 219,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312",
+      "reason": "#219 Maintenance consumes the reviewed Product contract after #312 exact source review/integration and must refresh/rebase before its eight shared-path writes. PLANNED only; no native blocked_by was written."
     }
   ],
   "notes": [
-    "This refreshed 44-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "This refreshed 46-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
     "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
     "Twenty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 as PLANNED.",
-    "The roster includes all 44 current label:type:task Issues. #276 is PLANNED with NO_CLAIM_EVENT_EXPECTED and is non-dispatchable.",
+    "The roster includes all 46 current label:type:task Issues (25 open / 21 closed). #276 is PLANNED with NO_CLAIM_EVENT_EXPECTED and is non-dispatchable.",
     "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
     "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration.",
     "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
     "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created.",
-    "Re-refreshed all 44 native Task Issue timestamps/states after #219/#261/#262 LOCAL_VALIDATION requests and the #276 write-set audit comment. These requests do not create Claims or dispatch authorization; #219/#261/#262 remain open.",
+    "Re-refreshed all 46 native Task Issue timestamps/states/labels: all 25 open Issues now match current native updatedAt/state/labels; the 21 closed Issues were unchanged since the prior snapshot.",
     "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only.",
     "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub.",
     "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
-    "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed."
+    "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed.",
+    "R8 additions #284 (E0 pre-freeze Bootstrap) and #312 (Product ReviewWitness successor to merged #210) are in the roster as state:planned with NO_CLAIM_EVENT_EXPECTED (zero ADS claim comments observed on either Issue); both are non-dispatchable.",
+    "Executable-status corrections from current native evidence: #203 CANONICALIZED_OVERLAP_BLOCKED with unproven historical-Claim terminality (non-dispatchable); #210 successor ownership transferred to #312 with no #210 mutation authorized; #219 on HOLD (state:planned) until #312 review/integration.",
+    "New PLANNED edges #284 -> #312 and #312 -> #219 record R8 serial ownership only. No GitHub Native dependency (blocked_by) was written for them or any other pair; the 4 NATIVE edges remain #260-#263 -> #264.",
+    "Write-set audit recomputed from the current allowed_write_set of all 25 open Task bodies: 66 nonzero pairwise intersections (23 open Tasks carry an allowed_write_set; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices match the paths_sha256-normalized blocks in Issues #312/#219/#284 exactly.",
+    "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -1818,9 +1909,9 @@
       },
       {
         "issueNumber": 203,
-        "disposition": "SOURCE_PRESENT_HOST_PUBLICATION_PENDING",
-        "dispatchableByDisposition": true,
-        "note": "Candidate-publication source exists in version/v2; real selected Host/C publish and exact GitHub readback remain unqualified. #261 consumes it."
+        "disposition": "SOURCE_PRESENT_OVERLAP_BLOCKED_TERMINALITY_UNPROVEN",
+        "dispatchableByDisposition": false,
+        "note": "Candidate-publication source exists in version/v2, but the current issue normalization is CANONICALIZED_OVERLAP_BLOCKED with dispatchable=false. The historical DISPATCH_CLAIMED is bound to source 00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769 and no current active Host CAS terminality readback exists. R8 names #203 the historical predecessor to #284; do not dispatch concurrently or assume the old Claim is terminal."
       },
       {
         "issueNumber": 207,
@@ -1842,9 +1933,9 @@
       },
       {
         "issueNumber": 210,
-        "disposition": "SOURCE_PRESENT_J01_J03_ACCEPTANCE_PENDING",
-        "dispatchableByDisposition": true,
-        "note": "Guided intake/Project/L2/DAG sources exist; real selected Host/user journeys remain required in #260/#261/#264."
+        "disposition": "SUCCESSOR_TRANSFERRED_TO_312_NO_NEW_MUTATION",
+        "dispatchableByDisposition": false,
+        "note": "PR #218 merged the #210 Product Intake source and consumed its generation-1 Claim (immutable historical evidence). The Product ReviewWitness implementation is now solely owned by successor #312 under new protected key kaicreator-mm/tally#312:builder:__default__. No source mutation is authorized under #210."
       },
       {
         "issueNumber": 211,
@@ -1860,9 +1951,9 @@
       },
       {
         "issueNumber": 219,
-        "disposition": "ACTIVE_MAINTENANCE_LEARNING",
-        "dispatchableByDisposition": true,
-        "note": "Must complete source-qualified maintenance, next-Task learning and REJECT-vs-ADOPT contract."
+        "disposition": "MAINTENANCE_HOLD_UNTIL_312_INTEGRATED",
+        "dispatchableByDisposition": false,
+        "note": "Native label is now state:planned with CANONICALIZED_OVERLAP_BLOCKED (50 overlap intersections). R8 serial ownership is #284 -> #312 -> #219; #219 shares eight paths with #312 and must refresh/rebase its source base after #312 exact review/integration before any shared-path write. Existing #219 PR/Claim/history is preserved unchanged."
       },
       {
         "issueNumber": 260,
@@ -1917,6 +2008,18 @@
         "disposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
         "dispatchableByDisposition": false,
         "note": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+      },
+      {
+        "issueNumber": 284,
+        "disposition": "PLANNED_E0_PRE_FREEZE_BOOTSTRAP_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "E0 pre-freeze Bootstrap owns the selected K->Host Task Pack Freeze and native dependency write routes (14-path candidate write set; E0=CREATED_PLANNED, state:planned). Root admission, an immutable E0 Task Pack, independent review, exact Owner Approval and an accepted Host CAS Claim/JIT are all pending; #203 terminality proof is a predecessor gate. Non-dispatchable."
+      },
+      {
+        "issueNumber": 312,
+        "disposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
       }
     ]
   },
@@ -1955,11 +2058,16 @@
       {
         "id": "LEGACY_INTEGRATION_SHARED_PATHS",
         "taskIssues": [
+          196,
+          197,
+          198,
           202,
           207,
           210,
           219,
-          264
+          264,
+          284,
+          312
         ],
         "paths": [
           ".woodpecker/v2-alm-workspace.yaml",
@@ -1972,7 +2080,7 @@
           "experiments/v2/selected-business-build/bundle-local-codex.mjs",
           "experiments/v2/selected-business-build/local-codex-shim.mjs"
         ],
-        "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. Old issue dispositions and exact path ownership require independent review."
+        "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. #284 (web/v2/journey-server.mjs, web/v2/serve.mjs) and #312 (.woodpecker/v2-alm-workspace.yaml, web/v2/journey-server.mjs, web/v2/journey-view.html) now also intersect this legacy set and stay PLANNED/non-dispatchable. Old issue dispositions and exact path ownership require independent review."
       },
       {
         "id": "CENTRAL_BUSINESS_ENTRYPOINT_SERIALIZATION",
@@ -1981,7 +2089,9 @@
           210,
           219,
           273,
-          276
+          276,
+          284,
+          312
         ],
         "paths": [
           "packages/tally-engineering-business/src/index.mjs",
@@ -1990,7 +2100,7 @@
           "experiments/v2/selected-business-build/bundle-local-codex.mjs",
           "experiments/v2/selected-business-build/local-codex-shim.mjs"
         ],
-        "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. #276 must remain serialized after #219 and #273; do not permit parallel writers."
+        "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. R8 adds #284 (E0 Bootstrap) and #312 (Product successor), whose candidate sets each include all five central paths plus web/v2/journey-server.mjs. Serial ownership is #284 -> #312 -> #219 -> #273/#276 -> #264; every group member is currently non-dispatchable and no pair may run concurrently until serialized by native edges read back through E0."
       },
       {
         "id": "ATTEMPT_MODEL_SERIALIZATION",
@@ -2073,7 +2183,898 @@
           "packages/tally-engineering-business/test/*.test.mjs"
         ],
         "finding": "#276's broad test glob overlaps test files owned by active/pending Business Tasks #203/#208/#209/#210/#219/#273/#275. #276 is PLANNED/non-dispatchable; before Claim/JIT narrow to exact F-owned tests or serialize after all affected owners. Existing dependencies cover some, but #203/#210 edges are added as PLANNED."
+      },
+      {
+        "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
+        "taskIssues": [
+          284,
+          312
+        ],
+        "paths": [
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "web/v2/journey-server.mjs"
+        ],
+        "finding": "E0 Bootstrap #284 and Product successor #312 share six candidate paths (#284x#312=6). R8 declares #284 -> #312 serial ownership; both are state:planned with no Claim event. Recorded as a PLANNED edge only; no native dependency was created."
+      },
+      {
+        "id": "R8_PRODUCT_312_MAINTENANCE_219_SERIALIZATION",
+        "taskIssues": [
+          219,
+          312
+        ],
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-view.html"
+        ],
+        "finding": "#219 Maintenance shares eight paths with #312 (#219x#312=8). #219 is HOLD/state:planned until #312 exact source review/integration and must refresh/rebase its base before any shared-path write. Recorded as a PLANNED edge only (#312 -> #219); the native blocked_by remains absent."
+      },
+      {
+        "id": "E0_284_PREDECESSOR_203_GATE",
+        "taskIssues": [
+          203,
+          284
+        ],
+        "paths": [
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 is the R8 historical predecessor: its source/PRs are merged but its old Claim terminality is unproven, so before #284 root admission the single Host registry must prove no active #203 writer/Claim; UNKNOWN blocks. No edge is recorded; this is an admission gate, not a dispatch edge."
       }
-    ]
+    ],
+    "recomputedOpenTaskOverlaps": {
+      "method": "Pairwise intersection of the allowed_write_set block parsed from each of the 25 open Task issue bodies at this observedAt; cross-checked against #312 paths_sha256-normalized overlap matrix and #219/#284 R8 notes (all counts matched).",
+      "openTasksWithWriteSet": 23,
+      "openTasksWithoutWriteSet": [
+        199,
+        200
+      ],
+      "nonzeroPairs": 66,
+      "pairs": [
+        {
+          "tasks": [
+            196,
+            197
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            198
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            198
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            203
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-host.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            210
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            219
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            312
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            210
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            219
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            284
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            312
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            210
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            219
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            208,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/release-readiness.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            209,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/maintenance-intake.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            219
+          ],
+          "sharedPathCount": 8,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            312
+          ],
+          "sharedPathCount": 16,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/project-intake/host-project.mjs",
+            "experiments/v2/project-intake/host-project.test.mjs",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "packages/tally-github-c/src/project-intake.mjs",
+            "packages/tally-github-c/test/project-intake.test.mjs",
+            "web/v2/intake-controller.mjs",
+            "web/v2/intake-controller.test.mjs",
+            "web/v2/intake-view.mjs",
+            "web/v2/intake-view.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            312
+          ],
+          "sharedPathCount": 8,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            264,
+            284
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "web/v2/journey-server.mjs",
+            "web/v2/serve.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            264,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            284
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            275,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/attempts.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            276,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            276,
+            312
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            284,
+            312
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        }
+      ]
+    }
   }
 }
