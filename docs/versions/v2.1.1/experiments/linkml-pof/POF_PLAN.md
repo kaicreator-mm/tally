@@ -2,7 +2,7 @@
 
 **Task:** [SEK-04 #305](https://github.com/kaicreator-mm/tally/issues/305)  
 **Parent:** [SEK-03 #304](https://github.com/kaicreator-mm/tally/issues/304)  
-**Status:** DESIGN_AND_FIXTURES_READY / CLI_EXECUTION_NOT_RUN  
+**Status:** EXECUTED_2026-11-05 / FINAL_R2_SOURCE_LOCATOR_COHERENCE_VALIDATED_32_CASES_ON_8257AEA / CURRENT_TIP_FULL_REVALIDATION_PASS_ON_E27217E / LINKML_EXPERIMENT_ONLY / NO_ADOPTION_DECISION — see §18 and Issue #305 comment #6657512368  
 **Candidate version:** LinkML v1.12.1 (pin for this experiment only)
 
 ## 1. Decision question
@@ -68,7 +68,7 @@ These are experimental choices, not frozen schema commitments.
 
 ## 6. Commands to run in a LinkML-enabled environment
 
-Pin the exact version and record the environment before execution:
+> **CLI correction — 2026-11-05 (post-execution).** The originally planned command forms below were corrected after execution on LinkML v1.12.1: `linkml generate json-schema` has **no `--output/-o` option** (writes to stdout; redirect instead); `linkml generate rdf` has **no `--diff-stable` option** in 1.12.1 (`No such option '--diff-stable'`, exit 2) — default output was measured byte-stable anyway (L13); the schema `schema:` prefix must be `http://schema.org/` to match `linkml:types` or every generator/converter fails with `Prefix: schema mismatch`. Executed, verified forms:
 
 ~~~bash
 python -m pip show linkml linkml-runtime
@@ -80,25 +80,25 @@ linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --tar
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml
 linkml validate -s experiments/linkml-pof/schema/software-engineering.yaml --target-class Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml
-linkml generate json-schema experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge.schema.json
-linkml generate jsonld-context experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge.context.jsonld
+linkml generate json-schema experiments/linkml-pof/schema/software-engineering.yaml > se-knowledge.schema.json
+linkml generate jsonld-context experiments/linkml-pof/schema/software-engineering.yaml -o se-knowledge.context.jsonld
 # Schema-level RDF/OWL output only (not the instance knowledge graph).
-linkml generate rdf --diff-stable --format ttl experiments/linkml-pof/schema/software-engineering.yaml --output /tmp/se-knowledge-schema.ttl
+linkml generate rdf --format ttl experiments/linkml-pof/schema/software-engineering.yaml -o se-knowledge-schema.ttl
 
 # Instance-level RDF/JSON-LD conversion for the standalone corpus.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t ttl -o /tmp/se-corpus-c.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t json-ld -o /tmp/se-corpus-c.jsonld
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t ttl -o se-corpus-c.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml -t json-ld -o se-corpus-c.jsonld
 
 # Extract the YAML front matter to a temporary file first, then run the same
-# KnowledgeCorpus conversion against /tmp/se-frontmatter-a.yaml.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus /tmp/se-frontmatter-a.yaml -t ttl -o /tmp/se-corpus-a.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus /tmp/se-frontmatter-a.yaml -t json-ld -o /tmp/se-corpus-a.jsonld
+# KnowledgeCorpus conversion against se-frontmatter-a.yaml.
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus se-frontmatter-a.yaml -t ttl -o se-corpus-a.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C KnowledgeCorpus se-frontmatter-a.yaml -t json-ld -o se-corpus-a.jsonld
 
 # Split B-format records are converted independently, then merged as RDF graphs.
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml -t ttl -o /tmp/se-b-source.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml -t ttl -o /tmp/se-b-locator.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml -t ttl -o /tmp/se-b-evidence.ttl
-linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C ClaimBundle experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml -t ttl -o /tmp/se-b-claim-bundle.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Source experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml -t ttl -o se-b-source.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C SourceLocator experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml -t ttl -o se-b-locator.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C Evidence experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml -t ttl -o se-b-evidence.ttl
+linkml-convert -s experiments/linkml-pof/schema/software-engineering.yaml -C ClaimBundle experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml -t ttl -o se-b-claim-bundle.ttl
 ~~~
 
 The front-matter fixture must first be extracted to a temporary YAML file; that adapter is deliberately not assumed to be native LinkML functionality. The `linkml generate rdf` command emits an RDF representation of the **schema**. Actual instance-data graph export must use `linkml-convert`; these outputs are separate test products. For format B, merge the four separately converted RDF graphs with RDFLib before comparing against A/C. Compare graph semantics after excluding only the format-specific root wrapper, not domain/evidence/provenance triples.
@@ -121,17 +121,16 @@ Official references:
 - RDF: https://linkml.io/linkml/data/rdf.html
 - RDF generator options: https://linkml.io/linkml/cli/generate.html
 
-## 8. Current execution limitation
+## 8. Historical pre-builder environment limitation
 
-The current analysis environment does not have `linkml` or `linkml_runtime` installed. A package-install attempt did not produce an installed package. The cause has not been established. Therefore:
-- YAML syntax can be checked independently with PyYAML.
-- LinkML metamodel validation, generated outputs and actual LinkML data validation remain NOT_RUN.
-- No PASS, ADOPT or compatibility claim may be inferred from the static schema draft.
-- A bounded LOCAL_BUILDER run is needed for the exact commands above when an environment with LinkML v1.12.1 is available.
+This section records the original analysis-container limitation before the Windows-native LOCAL_BUILDER run. It is superseded by the actual execution evidence in RESULTS.md §10. The initial container did not have linkml or linkml_runtime; its package-install attempt did not produce an installed package. This was an environment-specific failure, not a schema result. The later Windows-native environment installed and executed the pinned toolchain.
+- At that historical point, only YAML syntax/static checks were available.
+- LinkML execution was subsequently completed on Windows-native Python 3.14.7 with LinkML/linkml-runtime 1.12.1.
+- No production adoption or full-model compatibility claim follows from the narrow PoF.
 
 ## 9. Exit criteria
 
-The experiment remains OPEN until positive and negative tests, generated artifacts, schema evolution, reference integrity and human-diff comparison have actual recorded results. A final adoption decision is prohibited while CLI validation or the required output tests remain unexecuted.
+The L01–L15 CLI and authoring-format experiment has been executed and recorded in RESULTS.md §10. The final source-coherence checker revision passed Windows-native exact-HEAD validation at `8257aea33538b96300b91be66e2d22c28c926882` / Tree `102d6a6ee41b08065ecca8cd0750540a3784962c` / checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`: py_compile EXIT=0; 32/32 self-tests; 12/12 LinkML conversions; A/B/C YAML+Turtle integrity; 25/25 CLI probes; and seven JSON-LD edge-identity artifacts. The exact execution receipt and evidence bundle are recorded in RESULTS.md §10.16 and Issue #305 comment #6656869638. Subsequent documentation-only reconciliation commits preserve the validated checker blob and experiment inputs; the terminal R2 review must still verify the current PR tip, tree, checker blob and four-path write set before integration. SEK-04 remains OPEN pending integration into #310 → #303 and the evidence-backed recommendation. The final canonical schema/authoring adoption decision remains in SEK-05 #308; SEK-04 does not adopt LinkML for production.
 
 
 ## 10. R2 P1-01 schema correction — typed resource target
@@ -144,4 +143,123 @@ The former `object_ref: string` mapped to an RDF Literal despite `slot_uri: rdf:
 - Canonical `se:` CURIE identifiers (`uriorcurie`) so referenced nodes expand to absolute IRIs.
 - No separate `object_kind` field; predicate-specific object classes are a single source of truth in `RELATIONSHIP_RULES.yaml`.
 
-This is a schema repair candidate, not a claim that LinkML v1.12.1 has accepted or generated the intended graph. The CLI must verify the abstract-class range, reference serialization, CURIE expansion and RDF object node kind. The independent graph check must verify predicate-specific target classes and dangling references.
+LOCAL_BUILDER execution with LinkML v1.12.1 verified the abstract-class range, non-inlined reference serialization, CURIE expansion and RDF object node kind in generated Turtle. The repository companion checker added by the R2 repair independently enforces predicate-specific endpoint classes, unique IDs and dangling-reference rejection.
+
+
+## 11. R2 executable integrity checker — 2026-11-05
+
+The RELATIONSHIP_RULES.yaml file is a declarative rule source, not an executable validator by itself. The companion checker is committed at:
+
+docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py
+
+Run its deterministic self-tests:
+
+~~~bash
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --self-test
+~~~
+
+Run the checker for all three authoring formats and their LinkML-generated Turtle:
+
+~~~bash
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --frontmatter docs/versions/v2.1.1/experiments/linkml-pof/fixtures/frontmatter/SE-CLM-0001.md --ttl se-corpus-a.ttl
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --corpus docs/versions/v2.1.1/experiments/linkml-pof/fixtures/standalone-yaml/KNOWLEDGE_CORPUS.yaml --ttl se-corpus-c.ttl
+python docs/versions/v2.1.1/experiments/linkml-pof/validate_relationship_integrity.py --bundle docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SE-CLM-0001.yaml --source docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE.yaml --locator docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/SOURCE_LOCATOR.yaml --evidence docs/versions/v2.1.1/experiments/linkml-pof/fixtures/yaml-plus-markdown/EVIDENCE.yaml --ttl se-b-merged.ttl
+~~~
+
+Before the B check, merge the four independently generated B Turtle outputs into se-b-merged.ttl with RDFLib. The checker enforces canonical se: CURIE IDs and typed references, uniqueness, cross-record closure, predicate-specific subject/object classes, required evidence, and RDF resource-node semantics. It rejects Literal-valued rdf:object and wrong-class/dangling endpoints.
+
+taxonomy_ref, taxonomy_refs, and view_id remain opaque string identifiers in this narrow PoF; they are not modeled as typed graph resources here. The complete taxonomy entity model is deferred to SEK-05 #308.
+
+
+## 12. Exact RDF type-node validation — 2026-11-05
+
+The strict endpoint class checker also rejects any non-URIRef value used as an endpoint's `rdf:type` object. This closes a malformed-RDF path where a valid `se:` class assertion could otherwise coexist with a Literal class assertion and be silently ignored. The checker self-test was expanded to 23 cases and the exact Windows-native run passed on checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` (see RESULTS.md §10.11). A subsequent independent review identified additional strictness gaps; the follow-up checker now targets 30/30 and requires a new exact-HEAD local run.
+
+The LinkML v1.12.1 JSON-LD output has a known seven-triple nested-`rdf:type` omission (L09). Therefore, JSON-LD edge-node verification is a separate check: parse A/C and all four B JSON-LD outputs as RDF, require exactly one URIRef subject/predicate/object for every reified statement, reject Literal `rdf:object`, and compare edge identities to YAML. Do not claim JSON-LD/TTL graph equivalence or predicate-specific class validation from missing JSON-LD type triples. The separate JSON-LD edge identity check subsequently passed for A/C and B's four outputs (RESULTS.md §10.11).
+
+
+## 13. Independent R2 follow-up — complete RDF type and ruleset contract
+
+The exact Windows-native 23/23 run on checker blob `8561971c0404c3031e8fc2b0e9f9fd32796218e5` passed, including A/B/C Turtle, JSON-LD edge identity, and the recorded negative probes. A subsequent source audit found three gaps in that checker revision:
+
+1. Endpoint class validation filtered out non-`se:` URIRef classes, allowing an expected class plus an unrelated foreign-namespace class.
+2. Reified `rdf:Statement` nodes were selected by the expected type but their full type set was not checked; malformed Literal or incompatible additional type assertions could pass.
+3. The ruleset validator compared `fail_closed` as a set (allowing duplicate list entries) and relied on Python equality (`True == 1`) for RDF expectation values.
+
+The follow-up repair is committed inside the same #305 write set:
+- Code repair commit: `148b656c39a44ff60c196438202521413b79c87c`.
+- Checker blob: `4d26401bbab6ce3e43778f7096f265ff5424eb22`.
+- New self-test target: **30/30 PASS**.
+- Changes: exact complete endpoint rdf:type set (only the declared class and allowed GraphNode ancestor); global URIRef-only rdf:type object check; exact rdf:Statement type set; unique fail_closed list; strict per-field RDF expectation types; seven additional negative tests.
+- At this historical checkpoint, exact Windows-native revalidation of the 30-case checker was **PENDING**. It was superseded by the 31-case checker and its exact-source-HEAD validation recorded in §15 / RESULTS.md §10.14.
+- No schema, fixture, LinkML output, production runtime, CI workflow, or out-of-write-set path changed.
+
+
+## 14. RDF reification completeness — 2026-11-05
+
+A further source audit found that the checker only enumerated nodes typed `rdf:Statement`; an additional untyped node carrying `rdf:subject`, `rdf:predicate` or `rdf:object` could be ignored. The checker now enumerates all reification edge-property subjects and rejects any that is not also a typed `rdf:Statement`. A negative self-test covers an untyped extra edge.
+
+- Repair commit: `5c0966de7f42b8dbe71c87994732177d4cd43846`.
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`.
+- New self-test target: **31/31 PASS**.
+- At this historical checkpoint, exact Windows-native revalidation was pending. The 31-case checker subsequently passed at source-bearing HEAD `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`; see §15 / RESULTS.md §10.14. The later documentation-only reconciliation and its exact-tip rebind are recorded in §18; no source-bearing checker or fixture input changed.
+
+
+## 15. Exact-source-HEAD validation and independent review — 2026-11-05
+
+The final checker implementation was locally validated on Windows-native Python 3.14.7 (no WSL) at:
+
+- Source-bearing HEAD: `2c5c8b3dfe877e4e9dc335d3c6d50b4440359ac3`
+- Tree: `174c3512337b60c1083f8d75882c88cbcfe8659b`
+- Checker blob: `503b370b016616c629f97fb47fc06b0079b574d9`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+
+Results: py_compile EXIT=0; checker self-test 31/31 PASS; A/B/C LinkML conversions and YAML+Turtle integrity PASS; 24/24 CLI negative/positive probes PASS; seven JSON-LD artifact edge-identity checks PASS. L09 nested `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed. Full command evidence, environment versions, artifacts and SHA256 manifest are in Issue #305 comment #6643352340 and its linked evidence bundle.
+
+The earlier independent source audit at that source-bearing HEAD reported no remaining P0/P1/P2 defect; the final follow-up audit identified a missing DomainNode source/locator coherence invariant in the same checker blob, superseding that disposition (see §16). The documentation reconciliation described at this historical checkpoint did not change the checker blob. The later final R2 source-coherence repair in §16 does change the checker; its 32-case validation must pass on the new exact HEAD/Tree before integration. No merge, LinkML adoption, release or deployment is authorized by this record.
+
+
+## 16. Final R2 follow-up — DomainNode source/locator coherence — 2026-11-05
+
+The final independent R2 review found one remaining cross-record integrity gap in checker blob 503b370b016616c629f97fb47fc06b0079b574d9: DomainNode.source_ref and DomainNode.source_locator_ref were each resolved independently, but the referenced SourceLocator.source_ref was not required to equal the DomainNode.source_ref. A malformed DomainNode could therefore name Source A while citing a locator owned by Source B, with both references individually valid.
+
+The checker is repaired within the existing #305 write set. It now resolves the DomainNode source and locator records, validates the locator's own source_ref, and rejects a mismatch. A dedicated self-test constructs two valid Source records and two valid SourceLocator records, then binds the DomainNode to mismatched source/locator values. The test must fail with the exact source-coherence diagnostic. Self-test target is now **32/32**.
+
+**Status when the source-coherence repair was first committed: REVALIDATION_PENDING.** This historical pending state is superseded by the successful exact-HEAD validation in §17 and RESULTS.md §10.16. The 32-case checker passed on Windows-native Python 3.14.7 at HEAD `8257aea33538b96300b91be66e2d22c28c926882`, Tree `102d6a6ee41b08065ecca8cd0750540a3784962c`, checker blob `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`. No schema, fixture, runtime, CI or out-of-write-set path changed.
+
+
+## 17. Final exact-HEAD validation — source/locator coherence repair — 2026-11-05
+
+The final source-coherence checker was validated on Windows-native Python 3.14.7 (no WSL) with LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Exact validation binding:
+- HEAD: `8257aea33538b96300b91be66e2d22c28c926882`
+- Tree: `102d6a6ee41b08065ecca8cd0750540a3784962c`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+
+Results: py_compile EXIT=0; self-test 32/32 PASS; 12/12 LinkML conversions EXIT=0; A/B/C YAML+Turtle integrity PASS with exact statement/subject/predicate/object/evidence CURIE identity; 25/25 CLI probes PASS (24 expected negative EXIT=1 plus one GraphNode-ancestor positive control EXIT=0); independent JSON-LD edge identity PASS across all seven artifacts. The new DomainNode source/locator mismatch negative case exits 1 with the expected diagnostic. L09 nested JSON-LD rdf:type omissions remain explicitly recorded; no JSON-LD/TTL full-graph equivalence is claimed.
+
+Full execution receipt: Issue #305 comment [#6656869638](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6656869638). The 57-file evidence bundle and SHA256 manifest are linked from that receipt.
+
+The validation ran read-only in a detached worktree and made no repository changes. This is an experiment-only result: LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production adoption, main merge, release or deployment follows.
+
+
+## 18. Current-tip final validation rebind — 2026-11-05
+
+The 32-case checker and complete LinkML experiment were re-run at the current PR #311 tip after the final documentation reconciliation. This closes the exact-tip rebind gate without changing the checker or any tested input.
+
+Exact binding:
+- HEAD: `e27217ec122a50b31876d71a1cdda780fe681462`
+- Tree: `eec4341820c557abf5918e1fc45db6acb3c06436`
+- Checker blob: `11c0845d9b1b61ccce1c3ee109b86d0bc6e353b7`
+- Base / PR #310 HEAD: `41722b8b024760fd61d56d312b2916a3bd6c66d2`
+- Exact four-path #305 write set; three paths changed after the previous source-bearing validation and all are documentation-only. Branch, PR head and mirror refs matched; detached worktree clean before and after.
+
+Windows-native Python 3.14.7 (no WSL), LinkML/linkml-runtime 1.12.1, RDFLib 7.6.0, PyYAML 6.0.3, pydantic 2.14.2, click 8.5.0, jsonschema 4.26.0 and linkml-convert 1.12.1.
+
+Results: `py_compile` EXIT=0; checker self-test **32/32 PASS**; LinkML conversions **12/12 PASS**; A/B/C YAML+Turtle integrity PASS; **25/25 CLI probes PASS**; independent JSON-LD edge identity PASS across all seven artifacts. Source/locator mismatch rejection remains covered. L09 nested JSON-LD `rdf:type` omissions remain explicit; no JSON-LD/TTL full-graph equivalence is claimed.
+
+Full current-tip execution receipt: Issue #305 comment [#6657512368](https://github.com/kaicreator-mm/tally/issues/305#issuecomment-6657512368). The 57-file secret evidence bundle and SHA256 manifest are linked from that receipt.
+
+The validation is experiment-only. LinkML remains EXPERIMENTAL / NOT_ADOPTED; no production runtime, canonical model adoption, main merge, release or deployment follows.
