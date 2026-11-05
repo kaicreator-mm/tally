@@ -188,6 +188,9 @@ validation:
     - accepted_evidence_not_reviewed
     - accepted_synthetic_evidence
     - evidence_without_human_review
+    - missing_reviewer_identity
+    - missing_review_policy
+    - missing_review_rationale
     - evidence_not_accepted
     - source_locator_not_verified
     - conflicting_review_decisions
