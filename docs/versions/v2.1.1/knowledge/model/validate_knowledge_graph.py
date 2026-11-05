@@ -1070,8 +1070,13 @@ def run_self_tests(catalog, rules):
 
     def format_b_duplicate_record_yaml_key(files):
         record_path = next(path for path in files if path.startswith("records/concepts/"))
-        files[record_path] += "\\nid: se:OVERRIDE\\n"
+        files[record_path] += "\nid: se:OVERRIDE\n"
     expect_format_failure("format-b-duplicate-record-yaml-key", format_b_duplicate_record_yaml_key, "FORMAT_B_INVALID_RECORD_YAML")
+
+    def format_b_invalid_record_yaml(files):
+        record_path = next(path for path in files if path.startswith("records/concepts/"))
+        files[record_path] = "id: [unterminated"
+    expect_format_failure("format-b-invalid-record-yaml", format_b_invalid_record_yaml, "FORMAT_B_INVALID_RECORD_YAML")
 
     def format_b_orphan_record(files):
         files["records/unrecognized/0001-orphan.yaml"] = _yaml_dump({"id": "se:ORPHAN"})
@@ -1181,7 +1186,7 @@ def _parse_format_b(files):
         raise ValidationError("FORMAT_B_MISSING_GRAPH_ROOT: graph-root.yaml is absent")
     try:
         root = yaml.load(files["graph-root.yaml"], Loader=UniqueLoader)
-    except ValidationError as exc:
+    except (ValidationError, yaml.YAMLError) as exc:
         raise ValidationError(f"FORMAT_B_INVALID_GRAPH_ROOT: {exc}") from exc
     if not isinstance(root, dict):
         raise ValidationError("FORMAT_B_INVALID_GRAPH_ROOT: graph root must be a mapping")
@@ -1211,7 +1216,7 @@ def _parse_format_b(files):
                 raise ValidationError(f"FORMAT_B_INVALID_RECORD_PATH: {path}")
             try:
                 record = yaml.load(files[path], Loader=UniqueLoader)
-            except ValidationError as exc:
+            except (ValidationError, yaml.YAMLError) as exc:
                 raise ValidationError(f"FORMAT_B_INVALID_RECORD_YAML: {path}: {exc}") from exc
             record_id = record.get("id") if isinstance(record, dict) else None
             if not isinstance(record_id, str) or not ID_PATTERN.fullmatch(record_id):

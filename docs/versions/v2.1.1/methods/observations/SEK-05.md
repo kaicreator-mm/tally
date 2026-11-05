@@ -134,14 +134,14 @@ LINKML_FULL_MODEL_VALIDATION=PENDING
 3. **Historical review digest accepted numeric coercion.** A 64-digit integer could stringify to a SHA-256-shaped value. Review target versions and digests now require actual strings before syntax validation.
 4. **Format B parser had malformed-input escape paths.** It now rejects unhashable/non-string collection names, missing graph-root fields, noncanonical IDs, mismatched record paths, duplicate YAML keys, orphan records and unexpected paths with explicit ValidationError codes.
 
-Added nine fail-closed regression cases across graph lifecycle/review binding and Format B parsing.
+Added eleven fail-closed regression cases across graph lifecycle/review binding and Format B parsing.
 
 ```ini
 SOURCE_REVIEW_R4=REPAIRED_IN_SCOPE
 P0=0
 P1=0
 P2=0
-SELF_TEST_EXPECTED=50
+SELF_TEST_EXPECTED=52
 WINDOWS_NATIVE_VALIDATION=PENDING
 LINKML_FULL_MODEL_VALIDATION=PENDING
 RDF_TURTLE_JSONLD_VALIDATION=PENDING
