@@ -1,0 +1,326 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 331,
+  "parentIssue": 319,
+  "phase": "T06D_PREPOST_RESERVATION_RECOVERY",
+  "integrationHandoffIssue": 284,
+  "revision": "R1",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "treeSha": "4c3529b612f0e5a80de8f7508cd7d178e8069980"
+  },
+  "packArtifactBranch": {
+    "branch": "task/i331-t06d-prepost-recovery-pack",
+    "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "purpose": "immutable governance-only Task Pack artifact",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "stableUpstream": [
+    {
+      "issue": 319,
+      "pr": 330,
+      "headSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
+      "treeSha": "1532079c1e94c3142b1874327d9ae223dd8bc27d",
+      "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "reviewComment": 5799002403,
+      "sourceReview": "PASS",
+      "disposition": "IMPLEMENTATION_ACCEPTED_HOST_OPERATION_FAILED_BEFORE_POST",
+      "note": "Reuse the reviewed #319 implementation and native reader/publisher. Do not edit PR #330 or its original nine-path write set."
+    },
+    {
+      "issue": 203,
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:blocked"
+      ],
+      "originalClaimCommentId": 6540484121,
+      "originalClaimCommentRef": "https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540484121",
+      "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+      "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+      "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+      "generation": 1,
+      "casKey": "tally:v2:claim-admission:6fcd893012c987f014c78de5b444bd16db522a6137a568d9de0e98a6af6401c4",
+      "observedPhase": "PENDING_GITHUB_TERMINALIZATION",
+      "observedRevision": 2,
+      "observedRowValueSha256": "bcebd6e05bd1fe4a1658c4e65bfa13cc94963643079270f6529560dd42fcdcc2",
+      "terminalWriterId": "tally-host:win32:t06d-terminalization:1",
+      "terminalReservationRevision": 2,
+      "terminalOccurredAt": "2026-11-06T11:20:59.974Z",
+      "nativeTerminalEvent": "ABSENT",
+      "recheckRequiredBeforeAnyMutation": true
+    },
+    {
+      "issue": 319,
+      "hostExecutionReceiptComment": 6683687251,
+      "originalClaimCommentId": 6668875091,
+      "claimCasPhase": "PUBLISHED_VERIFIED",
+      "claimCasRevision": 1,
+      "frozenWriteSetKey": "tally:v2:task-writeset:319",
+      "frozenWriteSetRevision": 0,
+      "frozenWriteSetDigest": "9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b",
+      "packBlobSha": "10593bb79ee8e9834a6720d27335aad931de1dc3",
+      "priorRunLogPath": "_tmp/i319-terminalization/run.log",
+      "priorRunLogSha256": "473fcf7ae0d7a7359a910e9761ea1fde3556ff91d5c637b4a3f78b59fa91de1c",
+      "priorResult": "TERMINAL_PREFLIGHT_CHANGED",
+      "publisherInvocationCount": 0,
+      "httpPostCount": 0,
+      "localArtifactRecheckRequired": true
+    },
+    {
+      "issue": 260,
+      "pr": 279,
+      "headSha": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+      "treeSha": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a",
+      "baseSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "packBlobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+      "taskCount": 47,
+      "openTaskCount": 26,
+      "closedTaskCount": 21,
+      "latestReviewComment": 5791335743,
+      "latestCandidateReview": "R13_BLOCK",
+      "r13ReviewComment": 5791410000,
+      "r13Disposition": "P0=0/P1=3/P2=2; A_CANDIDATE_R13=BLOCK",
+      "note": "Historical R12 baseline only. R13 must refresh to 48 Tasks / 27 OPEN / 21 CLOSED and include #331 before #331 Claim/source admission."
+    }
+  ],
+  "targetReservation": {
+    "repository": "kaicreator-mm/tally",
+    "issueNumber": 203,
+    "casKey": "tally:v2:claim-admission:6fcd893012c987f014c78de5b444bd16db522a6137a568d9de0e98a6af6401c4",
+    "expectedStartingRevision": 2,
+    "expectedPhase": "PENDING_GITHUB_TERMINALIZATION",
+    "originalClaim": {
+      "commentId": 6540484121,
+      "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+      "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+      "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+      "generation": 1,
+      "originalWriterId": "tally-host:win32:candidate-publication:1"
+    },
+    "reservation": {
+      "terminalWriterId": "tally-host:win32:t06d-terminalization:1",
+      "terminalReservationRevision": 2,
+      "terminalOccurredAt": "2026-11-06T11:20:59.974Z"
+    },
+    "observedRowValueSha256": "bcebd6e05bd1fe4a1658c4e65bfa13cc94963643079270f6529560dd42fcdcc2",
+    "nativeTerminalEvent": "ABSENT"
+  },
+  "allowed_write_set": [
+    {
+      "path": ".woodpecker/v2-t06d-prepost-recovery.yaml",
+      "owner": "T06D_PREPOST_RECOVERY",
+      "purpose": "Syntax-first and focused Windows Node24/self-hosted Woodpecker validation for the isolated recovery operation."
+    },
+    {
+      "path": "experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.mjs",
+      "owner": "T06D_PREPOST_RECOVERY",
+      "purpose": "Single-use, exact-#203 revision-2 pre-POST recovery using public CAS, a target-specific Host fence, a durable one-shot marker, the existing trusted publisher and read-only exact event reconciliation."
+    },
+    {
+      "path": "experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.test.mjs",
+      "owner": "T06D_PREPOST_RECOVERY",
+      "purpose": "Positive and fail-closed tests for exact reservation exclusion, Host fence, no-POST receipt, CAS marker races, one POST maximum, lost ACK, readback and final CAS."
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "status": "EXACT_BODY_AUDIT_CANDIDATE_PASS",
+    "pathCount": 3,
+    "pathsSha256": "625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a",
+    "openTaskIssueNumbers": [
+      331,
+      319,
+      203,
+      260,
+      284,
+      312,
+      219,
+      276,
+      264,
+      210,
+      261,
+      262,
+      263,
+      275,
+      274,
+      273,
+      212,
+      211,
+      209,
+      208,
+      207,
+      202,
+      200,
+      199,
+      198,
+      197,
+      196
+    ],
+    "openTaskIssueCount": 27,
+    "openTasksWithNormalizedWriteSet": 25,
+    "openTasksWithoutWriteSet": [
+      199,
+      200
+    ],
+    "overlapWithOpenTasks": [],
+    "overlapPathCount": 0,
+    "baselineCandidatePairCount": 66,
+    "pairCountTreatment": "The existing A/R12 candidate matrix reports 66 nonzero pairs. The #331 exact three-path set intersects no other current open Task write set, so it adds zero pairs; A/R13 must still recompute the complete matrix from all live exact Issue bodies before acceptance.",
+    "note": "Exact path audit only. It does not admit source writes, establish a Claim, freeze a Task Pack or create native dependencies."
+  },
+  "recoveryContract": {
+    "operation": "recoverPrePostReservation",
+    "hostOnly": true,
+    "exactTargetOnly": true,
+    "genericRetryApi": false,
+    "existingReviewedImplementation": {
+      "pr": 330,
+      "headSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
+      "treeSha": "1532079c1e94c3142b1874327d9ae223dd8bc27d",
+      "useExistingPublisherMethod": "publishDispatchStateChange",
+      "useExistingNativeReader": "readDispatchStateEventsFromClient",
+      "editExistingPr": false
+    },
+    "preconditions": [
+      "Read the exact #203 CAS key through public DomainHarness v0.10.3 APIs; require revision 2 and PENDING_GITHUB_TERMINALIZATION with every original Claim/reservation field exact.",
+      "Read the actual local prior run.log and verify SHA256 473fcf7ae0d7a7359a910e9761ea1fde3556ff91d5c637b4a3f78b59fa91de1c; parse the exact run identity/reason and prove publisher invocation count=0 and HTTP POST count=0. A GitHub comment alone is insufficient. Missing/mismatched artifact means STOP before any write.",
+      "Re-read the original #203 DISPATCH_CLAIMED comment through complete native pagination; require exact ID/ref, author, body, timestamps and unedited status. Prove no DISPATCH_STATE_CHANGED event exists. Duplicate, edited, conflicting, absent-original or incomplete pagination means STOP.",
+      "Re-read the exact #319 accepted Claim and FROZEN_DAG_WRITESET rows through public DomainHarness v0.10.3 CAS APIs; require the expected revisions, PackBlob and digest. No raw SQLite, manual CAS edit, seed/reset/delete or registry copy for writes.",
+      "Re-read #204/#205 exact PR state/head and historical failed status evidence if included in the recovery evidence. Any identity drift or unknown status means STOP.",
+      "Acquire a Host-exclusive fence for the exact #203 target and retain it through marker CAS, the one publisher invocation, complete native readback and final CAS/readback.",
+      "The fresh Host proof must exclude ONLY the exact #203 revision-2 reservation owned by tally-host:win32:t06d-terminalization:1. It must identify the excluded reservation by exact CAS key, revision, phase, writer, protected key, source SHA, dispatch ID and generation; excludedReservationCount must equal 1. All other writers, attempts, subprocesses, effects and unresolved resources must remain zero. Never ignore the registry or suppress unrelated activity.",
+      "The proof must be target-bound, complete, no older than 30 seconds at use, include the same fence ID and exactly six durable evidence references (writer, attempt, subprocess, effect, resource, writeSet) validated as safe HTTPS references without credentials/query/fragment."
+    ],
+    "markerProtocol": {
+      "schema": "tally.t06d-prepost-recovery-marker/v1",
+      "write": "CAS revision 2 -> revision 3 using mustMatchRevision=2; preserve phase PENDING_GITHUB_TERMINALIZATION and every original Claim/reservation field; append an immutable recoveryAttempt marker.",
+      "markerState": "POST_ATTEMPT_CONSUMED",
+      "markerMustBind": [
+        "one unique recovery attempt ID",
+        "prior no-POST run.log SHA256 and parsed zero-publisher/zero-POST receipt",
+        "exact #203 target CAS key and revision-2 reservation identity",
+        "exact #319 PackBlob, accepted Claim and frozen write-set evidence",
+        "fresh target-bound quiescence proof digest and all six safe evidence references",
+        "Host fence ID, observedAt and event occurredAt",
+        "exact #331 PackBlob, Owner receipt, Claim identity and frozen write-set identity"
+      ],
+      "postMarkerRule": "After revision 3 is committed and exact readback succeeds, the single POST attempt is consumed. If the process crashes after marker creation, or the marker already exists and no exact terminal event is visible, never POST again.",
+      "event": "Use the existing ADS v4.18 DISPATCH_STATE_CHANGED event with actor_role=scheduler and dispatch_state=DONE. Preserve the original #203 Claim and reservation evidence; bind the new recovery marker/proof in the event evidence and record its digest in the marker.",
+      "finalCas": "Only exactly one complete, exact, unedited native terminal event plus exact original Claim readback permits CAS mustMatchRevision=3 to TERMINAL_VERIFIED (revision 4), followed by exact public-API final row readback."
+    },
+    "postMarkerBehavior": [
+      "Revision 2 with no marker: perform all preflight checks, acquire/hold fence, then CAS the single-use marker.",
+      "Revision 3 with exact marker: read-only native reconciliation only. If exactly one complete exact event is present, finalize with CAS mustMatchRevision=3; otherwise remain UNKNOWN/PENDING and never publish.",
+      "Revision 4 TERMINAL_VERIFIED: read-only verify the exact event and return already verified; never publish.",
+      "Any other revision, malformed marker, row drift, fence loss, duplicate event, incomplete readback, CAS race or unknown external effect: preserve the row and return UNKNOWN."
+    ],
+    "failureSemantics": {
+      "beforeMarker": "No write and no POST; target remains revision 2 PENDING.",
+      "markerWriteAmbiguous": "No POST. Re-read public CAS; if exact marker exists, treat attempt as consumed and reconcile read-only only; if state cannot be proven, STOP.",
+      "afterMarkerBeforePostCrash": "Marker remains consumed; no retry or second POST is permitted.",
+      "publisherThrowOrLostAck": "No retry. Perform complete read-only native event reconciliation once; finalize only if the exact event is proven.",
+      "eventAbsentOrIncomplete": "Remain pending/unknown; no POST retry.",
+      "finalCasAmbiguous": "Read-only final row/event reconciliation only; never POST again."
+    }
+  },
+  "hostIdentity": {
+    "existingTerminalWriterId": "tally-host:win32:t06d-terminalization:1",
+    "writerIdentitySource": "trusted existing Host configuration only; never caller-supplied",
+    "task331Claim": {
+      "protectedClaimKey": "kaicreator-mm/tally#331:builder:__default__",
+      "sourceSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i331:t06d-prepost-recovery:1",
+      "dispatchId": "dispatch:331:t06d-prepost-recovery:20261106:1",
+      "generation": 1,
+      "registryPath": "_tmp/tally-alm-claims/registry-331.sqlite",
+      "registryRule": "Dedicated #331 registry only; never reuse #203, #319 or #321 registries."
+    }
+  },
+  "versionTaskPackReference": {
+    "path": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "ref": "https://github.com/kaicreator-mm/tally/blob/96442c147dcf2d047020d36e0c32d66be6e9979a/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "blobSha": "a43fbd800d2d05a11869827f666317de2cbcf722",
+    "headSha": "96442c147dcf2d047020d36e0c32d66be6e9979a",
+    "treeSha": "f6c3ee78feb54ecfa24cc8bbee5ff8a22cbcda9a",
+    "taskCount": 47,
+    "openTaskCount": 26,
+    "closedTaskCount": 21,
+    "status": "HISTORICAL_R12_BASELINE_ONLY",
+    "nextRequiredRefresh": "A/#260 R13 must include #331 as PLANNED_PREPOST_RECOVERY_NO_CLAIM, 48 Tasks / 27 OPEN / 21 CLOSED, 48 Claim observations, exact #331 three-path digest and zero-overlap result; update #203 to PENDING_REVISION_2_PREPOST_RECOVERY_REQUIRED; update #319 Claim/Host/review facts; correct #211/#212 source-integrated dispositions; recompute all Issue metadata, pair matrix, scope dispositions and notes. No native dependency write."
+  },
+  "plannedEdges": [
+    {
+      "from": 319,
+      "to": 331,
+      "kind": "PLANNED",
+      "reason": "#319 implementation source has final independent PASS; #331 is its bounded pre-POST recovery successor. This is a source-evidence sequencing relation, not #319 Outcome Closure."
+    },
+    {
+      "from": 331,
+      "to": 284,
+      "kind": "PLANNED",
+      "reason": "#284 E0 cannot proceed until #203 terminality is proven through #331."
+    }
+  ],
+  "authority": {
+    "ownerAuthorization": "Current project conversation authorizes routine Delivery-First analysis, pack preparation, implementation planning and bounded repair. The exact PackBlob-bound Owner receipt remains a required durable gate before #331 Host Claim/source writes and before the one-time #203 recovery side effect.",
+    "requiredArtifacts": [
+      "Fresh independent Exact-SHA review of the exact immutable R1 PackBlob.",
+      "Owner receipt on the Pack PR bound to exact PackBlob SHA, source base SHA, three-path digest, protected Claim key, generation and dispatch ID.",
+      "A/#260 R13 candidate PASS including #331 before #331 Claim admission.",
+      "Accepted dedicated #331 Host CAS Claim and exact native readback.",
+      "Per-task FROZEN_DAG_WRITESET public DomainHarness v0.10.3 CAS write/readback for #331."
+    ],
+    "authorized": false,
+    "admitted": false,
+    "taskPass": false,
+    "releasePass": false
+  },
+  "gates": [
+    "Exact Issue #331 body and its three-path allowed_write_set; no native blocked_by dependency.",
+    "Immutable governance-only R1 Task Pack and exact Contents API PackBlob SHA.",
+    "Independent Exact-SHA review of the Pack PR and exact PackBlob-bound Owner receipt.",
+    "A/#260 R13 exact-head PASS including the current #331 issue metadata and planned-only chain; current R12 candidate and R13 BLOCK are not sufficient.",
+    "Issue #331 may then move from state:planned to state:ready; re-read current metadata.",
+    "Dedicated #331 Host Claim via existing Host single-writer and public DomainHarness v0.10.3 CAS API; never reuse #203/#319/#321 registries.",
+    "Per-task FROZEN_DAG_WRITESET public CAS readback bound to exact PackBlob, Owner receipt, source base and three-path digest.",
+    "Only then create source JIT branch stacked on exact PR #330 HEAD 72ce3067213b75ffbc04762d866759c3af4324f8.",
+    "Windows Node 24.21.0 syntax preflight FIRST, focused and complete affected tests, self-hosted Woodpecker, then fresh independent Exact-SHA review of the implementation SHA.",
+    "Only after all source gates pass may the single-use Host recovery operation run."
+  ],
+  "validationPlan": [
+    "Syntax/parse checks on all three changed files before any test or CI.",
+    "Exact target revision-2 row positive; every original Claim/reservation field mismatch denies with zero writes and zero POSTs.",
+    "Prior run.log missing, wrong SHA, wrong exact HEAD, nonzero publisher invocation or nonzero POST count denies before marker and POST.",
+    "Original #203 Claim missing, edited, duplicate, malformed, wrong author/body/ref/timestamps or incomplete pagination denies.",
+    "Terminal event already present, duplicate, edited, conflicting or pagination incomplete denies.",
+    "Quiescence proof excludes exactly the target reservation once; any second reservation, writer, attempt, subprocess, effect or unresolved resource denies.",
+    "Fence stale, changed or released before final readback denies.",
+    "Marker CAS race, wrong revision, malformed marker or ambiguous marker readback never invokes publisher.",
+    "Marker present with absent event performs read-only reconciliation only and never POSTs.",
+    "Successful path produces exactly one publisher invocation and exactly one HTTP POST; exact native event readback and final CAS revision 4 are verified.",
+    "Lost ACK/append-then-throw path reconciles the exact event without a second POST.",
+    "Crash after marker before POST leaves consumed marker and never retries.",
+    "Final CAS race/ambiguous readback remains UNKNOWN/PENDING with no POST retry.",
+    "Public event contains only bounded allowlisted evidence; no token, proxy credential, private path or diagnostic dump.",
+    "Use public DomainHarness v0.10.3 CAS APIs only; no raw SQLite or direct store mutation.",
+    "Woodpecker must run only after syntax preflight and must be bound to the final exact HEAD."
+  ],
+  "boundaries": [
+    "Do not modify PR #330, its branch, or the original #319 nine-path write set.",
+    "Do not create a generic terminalization/retry API or a new event type.",
+    "Do not reset, delete, reseed, rewrite or manually mutate the #203 CAS row.",
+    "Do not issue a second POST; the durable marker consumes the only attempt before POST.",
+    "Do not modify the historical #203 DISPATCH_CLAIMED event.",
+    "Do not start #284 root Claim/source work or write native dependencies.",
+    "No version-wide Freeze, version/v2/main write, merge, tag, release or deployment."
+  ],
+  "note": "This Pack authorizes no source edit or external side effect by itself. It defines one narrowly scoped recovery for the exact #203 revision-2 pre-POST reservation and preserves all existing ADS, Claim/CAS, write-set, single-writer, independent review, CI and Host gates."
+}
