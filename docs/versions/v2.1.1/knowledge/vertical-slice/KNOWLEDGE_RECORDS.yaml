@@ -11,7 +11,7 @@ source_locators:
     source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
     locator_type: TITLE_PAGE
     locator: "Official PDF page index 0; title page"
-    verified_content: "Version 4.0a; editor Hironori Washizaki; Released August 2026"
+    verified_content: "Version 4.0a; editor Hironori Washizaki; Released August 2026. The official IEEE landing page separately records a 25 September 2025 update identifying v4.0a; the cross-source release-date discrepancy remains open."
     verification_state: LOCATOR_VERIFIED
   - locator_id: SE-LOC-SWEBOK-KA-TABLE
     source_ref: SE-SRC-SWEBOK-GUIDE-4-0A
