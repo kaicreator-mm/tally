@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-06T14:04:17Z",
+  "observedAt": "2026-11-06T14:08:23Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -726,7 +726,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-06T12:00:56Z",
-      "updatedAt": "2026-11-06T12:55:23Z",
+      "updatedAt": "2026-11-06T14:08:17Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_PREPOST_RECOVERY_NO_CLAIM",
       "dispatchableByDisposition": false,
