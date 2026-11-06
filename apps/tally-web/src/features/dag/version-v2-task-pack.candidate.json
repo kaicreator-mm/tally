@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-06T13:42:27.580Z",
+  "observedAt": "2026-11-06T14:04:17Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-06T12:59:32Z",
+      "updatedAt": "2026-11-06T13:44:50Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -730,7 +730,7 @@
       "closedAt": null,
       "scopeDisposition": "PLANNED_PREPOST_RECOVERY_NO_CLAIM",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt still pending. Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
+      "dispositionNote": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt is OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00). Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
     }
   ],
   "edges": [
@@ -1860,7 +1860,7 @@
     "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied.",
     "Current full read: 48 Task bodies, all Claim comments and blocked_by lists; 40 observed self-reported Claims and 8 no-Claim rows. #260, #284, #331 and #319 updatedAt refreshed. #319 → #331 → #284 is PLANNED only. #203 CAS revision 2 remains PENDING_GITHUB_TERMINALIZATION with terminality NOT_PROVEN.",
     "Current 27-open-Task write-set audit: 25 nonempty sets (24 prior plus new #331), 66 nonzero exact-path pairs recomputed from the full live pair matrix. The prior 67-pair note and its #212/#319 two-path overlap claim were false: #212's four paths and #319's nine paths are disjoint (digests e4ed0583… and 252cbcd0… preserved). #331's three proposed recovery paths overlap no open Task write set. No native dependency was invented for any pair.",
-    "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt pending). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
+    "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2152,7 +2152,7 @@
         "issueNumber": 331,
         "disposition": "PLANNED_PREPOST_RECOVERY_NO_CLAIM",
         "dispatchableByDisposition": false,
-        "note": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt still pending. Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
+        "note": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt is OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00). Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
       }
     ]
   },
