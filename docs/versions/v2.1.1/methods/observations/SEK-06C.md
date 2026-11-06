@@ -3,7 +3,7 @@
 **Task:** #324 (SEK-06C lane builder; refs #321, #299)
 **Date:** 2026-11-06
 **Worktree:** `tally-i324-zcode`, branch `task/tally-v211-sek06c-testing-verification`
-**Base HEAD:** `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`
+**Base HEAD:** `7a70211b4460e4c753c97798670de9f34861d4a4` (after the Owner-authorized 2026-11-06 WIP rebase; original authoring base `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`)
 **Status:** EXECUTED / EXPERIMENTAL / HUMAN_REVIEW_PENDING
 **Write set (exactly four files):** lane `README.md`, `records.yaml`,
 `EXPLANATIONS.md` (under
@@ -209,7 +209,7 @@ committed tip `293efbc46299b0827e426e5708c7d2b9d8c38893` / tree
 `_tmp/tally-sek06-lanes/validation/06C-bld3`), passing in both runs
 (`LANE_VALIDATION=PASS`, `coverage_gaps=4`).
 
-## Final-tip receipt — Builder batch `a1ef094` (2026-11-06 R2 repair append)
+## Historical final-tip receipt — Builder batch `a1ef094` (2026-11-06 R2 repair append; old WIP base, superseded by the 2026-11-06 WIP rebase onto `7a70211`)
 
 The R2 Exact-SHA review of PR #329 required the observation to name the final
 Builder-batch tip; the `293efbc` receipt above (and the earlier `2b8464a`
@@ -251,3 +251,67 @@ PDF SHA-256
 `617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22`
 (739,891 bytes) and page-level anchors, the shared HIGH/OPEN CS2023
 rights-clearance gap, and the SWEBOK hold (#325/#326 unmerged).
+
+## WIP-rebase receipt — Owner-authorized rebase onto `7a70211` (2026-11-06)
+
+Owner authorization recorded on #321 (2026-11-06) merged PR #326 (SEK-02R)
+into `wip/v2.1.1-knowledge` — linear rebase merge, no merge commit — moving
+the WIP head from `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (tree
+`da5deb5eac25cd019883772967d288a1f2679a84`) to
+`7a70211b4460e4c753c97798670de9f34861d4a4` (tree
+`f9b01c74f39993299d9ee179c76cdc08d3baae9d`). This lane branch was then
+rebased with `git rebase --onto 7a70211b4460e4c753c97798670de9f34861d4a4
+cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`: all six lane commits replayed
+with **zero conflicts**, and the three lane content files are byte-identical
+to the pre-rebase reviewed tip `8fa8cd2385690bbbf96cc34cacb5e35c8749d29c`
+(verified by path-scoped diff against a pre-rebase backup ref). The earlier
+receipts above (final-tip `a1ef094` and its predecessors, all on the old
+base) are **historical** and preserved unchanged.
+
+- Identity at the rebased tip: HEAD `343f30b91bc38e6ccdaca42103c5b201353faa3e`,
+  tree `7e01679b45acbf0ffad0abe6b0555d7e9d3bbd00`, base / merge-base
+  `7a70211b4460e4c753c97798670de9f34861d4a4`; clean worktree before/after:
+  0/0 dirty.
+- Validation rerun at that exact tip (Windows-native venv Python 3.14.7 /
+  PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1,
+  `PYTHONDONTWRITEBYTECODE=1`): `validate_knowledge_graph.py --self-test` →
+  `SELF_TESTS=66/66`, exit 0; `assemble_and_validate.py <worktree> 06C
+  <records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
+  `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+  `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (counts
+  unchanged: 69 lane records, 20 relationship assertions, `coverage_gaps=4`,
+  2 derived sources `se:SRC-CS2023` + `se:SRC-NIST-SP-800-218-V1-1`).
+  Cross-lane check across the three rebased tips (06A `944cfee` /
+  06B `eff5e86` / 06C `343f30b`): `CROSS_LANE_CHECK=PASS` — 6 shared
+  records semantically identical in all three lanes, 148 unique lane IDs,
+  merged three-lane graph `GRAPH_VALIDATION=PASS` +
+  `NO_ACCEPTED_RECORDS=PASS` + LinkML PASS. Logs:
+  `_tmp/tally-sek06-lanes/validation/06C-rb1/`
+  (`selftest-tip.log`, `lane-validate-tip.log`, exit receipts) and
+  `_tmp/tally-sek06-lanes/validation/cross-lane-rb1-tip.log` (all exit 0).
+- Content manifest at the rebased tip (three content files unchanged from
+  the R2-reviewed `a1ef094` / `8fa8cd2` manifest — the rebase changed only
+  base history, not lane content):
+
+```text
+4e7c733e934d4e937213b25b55ee71874a4a446f2eaeaaa293bbab25e466b447  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/README.md
+2d66085c5357b783a0dfa9c8a4fc3bab8173e00c3d954ece2c3c1ca26d24a468  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/records.yaml
+fdb49b03410ea38bf0cce7288969d44b4c833fc837cf2c0056994e5b38a87445  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/EXPLANATIONS.md
+```
+
+- SWEBOK state after the rebase: the corrected SWEBOK v4.0a source record
+  (SEK-02R / PR #326, including the native PDF SHA-256 and the open
+  title-page/landing-page date discrepancy) is now part of this branch's
+  base, and the source-identity hold is lifted at the registry level.
+  **No SWEBOK-derived claim, locator or evidence was added by this rebase**:
+  direct SWEBOK reinspection was not performed in this stage, and every
+  knowledge record remains PROPOSED / PENDING_REVIEW. Preserved unchanged:
+  the CS2023 PDF binary SHA-256 **NOT_OBTAINED** limit, the NIST PDF
+  SHA-256 `617746e5...` and page-level anchors, and the shared HIGH/OPEN
+  CS2023 rights-clearance gap.
+- This append itself is an observation-only rebase-receipt commit and
+  becomes the newest tip; its exact HEAD/TREE, the post-commit rerun (same
+  commands, exit 0), the updated four-path SHA256 manifest and
+  clean-worktree evidence are delivered in the rebase delivery comment on
+  PR #329 / coordinator #321, with logs in
+  `_tmp/tally-sek06-lanes/validation/06C-rb1-post/`.
