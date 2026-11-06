@@ -71,7 +71,7 @@ lane assumes commercial redistribution or product-embedding rights.
 | patterns | 1 | user-story-structured functional specification |
 | anti_patterns | 1 | implicit or deferred quality attributes |
 | decision_models | 1 | functional-requirement documentation-method choice |
-| coverage_gaps | 2 | professional-BOK gap (HIGH/OPEN), real-case gap (MEDIUM/OPEN) |
+| coverage_gaps | 3 | professional-BOK gap; real-case gap; shared CS2023 rights-clearance gap (HIGH/OPEN) |
 | relationship_assertions | 14 | 7 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 RELATED_TO |
 
 Shared records (domain, view, three locators) are copied verbatim from the

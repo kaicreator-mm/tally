@@ -181,3 +181,8 @@ elicitation claim, with the fidelity-delta qualifier); one `DERIVED_FROM`
 `RELATED_TO` (pattern ↔ quality-attribute concept as the boundary fence
 described above). Evidence-bearing edges cite the same evidence records their
 endpoints use — no evidence is invented for an edge alone.
+
+- `se:GAP-CS2023-RIGHTS-CLEARANCE` — HIGH/OPEN and shared across all
+  three SEK-06 lanes. The registered educational-material/program permission
+  is not presumed to cover Tally's general engineering knowledge graph; no
+  public/commercial rights clearance is claimed.
