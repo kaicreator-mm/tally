@@ -356,5 +356,30 @@
     "createOnlyAfter": "PackBlob-bound Owner receipt, A/#260 R13 PASS, accepted #331 Host Claim and per-task FROZEN_DAG_WRITESET readback",
     "sourceChangesAllowed": true,
     "mustNotReusePackArtifactBranch": true
+  },
+  "claimBindingRules": {
+    "schema": "tally.t06d-claim-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/T06D_PREPOST_RECOVERY_TASK_PACK_R1.json at the final PR #332 HEAD.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final PR #332 commit after reading the final Contents API blob SHA; the Pack file must not self-embed its own commit or blob SHA.",
+    "ownerReceiptMustBind": [
+      "exact PackBlob SHA",
+      "source SHA 72ce3067213b75ffbc04762d866759c3af4324f8",
+      "writeSetSha256 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a",
+      "protectedClaimKey kaicreator-mm/tally#331:builder:__default__",
+      "generation 1",
+      "dispatchId dispatch:331:t06d-prepost-recovery:20261106:1"
+    ],
+    "frozenWriteSetMustBind": [
+      "immutable Task Pack blob URL and exact PackBlob SHA",
+      "source SHA 72ce3067213b75ffbc04762d866759c3af4324f8",
+      "three-path write-set digest",
+      "exact PackBlob-bound Owner approval reference",
+      "protected Claim key, generation and dispatch ID",
+      "original #331 DISPATCH_CLAIMED comment ID/ref and trusted Host writer ID",
+      "frozenAt"
+    ],
+    "claimEventProvenance": "The #331 DISPATCH_CLAIMED event should include task_pack_ref and pack_identity=<exact PackBlob SHA> where the existing Host publisher supports these additive provenance fields. The per-task FROZEN_DAG_WRITESET public-CAS record is mandatory; missing/mismatched Pack, Owner receipt or write-set readback blocks source edits.",
+    "nullPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "registry": "Dedicated _tmp/tally-alm-claims/registry-331.sqlite via public DomainHarness v0.10.3 APIs only; never reuse #203/#319/#321 registries."
   }
 }
