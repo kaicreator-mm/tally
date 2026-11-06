@@ -913,6 +913,57 @@ test('live claim-331 observed issueRef shape binds exactly (tampering denies, is
   });
 });
 
+
+test('revision-4 read-only verification rejects marker/envelope tampering against original evidence and live lineage', async () => {
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
+      terminalWriterId:undefined,terminalEvidence:undefined,terminalOccurredAt:undefined,
+      terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const p=ports();
+    const recovered=await createPrePostRecoveryController({store,...p,writerAuthority})
+      .recoverPrePostReservation();
+    assert.equal(recovered.status,'RECORDED');
+    const final=await store.get(TARGET.casKey);
+    const mutations=[
+      ['original evidence digest',m=>{m.originalTerminalEvidenceSha256='0'.repeat(64);}],
+      ['original occurredAt',m=>{m.originalTerminalOccurredAt='2026-01-01T00:00:00.000Z';}],
+      ['target reservation source',m=>{m.targetReservation.sourceSha='b'.repeat(40);}],
+      ['task319 frozen digest',m=>{m.task319Evidence.frozenWriteSetDigest='0'.repeat(64);}],
+      ['quiescence proof digest',m=>{m.quiescenceProofSha256='0'.repeat(64);}],
+      ['envelope original evidence',m=>{
+        const e=JSON.parse(m.eventEvidence);e.originalTerminalEvidence='tampered';
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+      }],
+      ['envelope #331 Claim digest',m=>{
+        const e=JSON.parse(m.eventEvidence);
+        e.task331PackBlobOwnerClaimAndFrozenWriteSetBindings.exactClaimValueSha256='0'.repeat(64);
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+      }],
+    ];
+    for(const [label,mutate] of mutations){
+      const value=structuredClone(final.value);
+      mutate(value.recoveryAttempt);
+      const readonlyStore={
+        async get(){return {revision:4,value};},
+        async put(){throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');},
+      };
+      const rp=ports();rp.terminalEvents.present=true;
+      const verifier=createPrePostRecoveryController({store:readonlyStore,...rp,
+        publisher:{async publishDispatchStateChange(){throw new Error('PUBLISH_FORBIDDEN');}},
+        writerAuthority});
+      const result=await verifier.verifyTerminalReservationReadOnly();
+      assert.equal(result.status,'UNKNOWN',label);
+      assert.equal(result.casWrites,0,label);
+      assert.equal(result.publisherInvocationCount,0,label);
+      assert.equal(result.httpPostCount,0,label);
+      assert.equal(rp.counts.publishes,0,label);
+    }
+  });
+});
+
 test('revision-4 verification is read-only and reports the historical review-order deviation', async () => {
   await harness(async ({store})=>{
     await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,

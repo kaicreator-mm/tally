@@ -351,6 +351,139 @@ export function createPrePostRecoveryController({
       frozen331ValueSha256:sha256hex(JSON.stringify(frozen)),frozen319ValueSha256:frozen319Digest};
   }
 
+
+  /** Revalidate the immutable marker/event envelope against the final row and
+   *  the current public Claim/FSW readbacks. A matching event comment alone
+   *  is insufficient if its persisted marker no longer binds the original
+   *  reservation evidence and exact admission lineage. Historical CI is
+   *  checked structurally here; its original freshness window is not replayed. */
+  function readOnlyMarkerEvidenceExact(rowValue,marker,rows,bindings) {
+    if(marker?.markerVersion!==2||
+      marker.originalTerminalEvidenceSha256!==sha256hex(rowValue.terminalEvidence)||
+      marker.originalTerminalOccurredAt!==rowValue.terminalOccurredAt||
+      !/^[a-f0-9]{64}$/.test(marker.originalTerminalEvidenceSha256??''))return false;
+    const target=marker.targetReservation;
+    if(target?.casKey!==TARGET.casKey||target.revision!==2||
+      target.phase!=='PENDING_GITHUB_TERMINALIZATION'||
+      target.terminalWriterId!==RECOVERY_IDENTITY.terminalWriterId||
+      target.protectedClaimKey!==TARGET.protectedClaimKey||
+      target.sourceSha!==TARGET.sourceSha||target.dispatchId!==TARGET.dispatchId||
+      target.generation!==1)return false;
+    let envelope;
+    try{envelope=JSON.parse(marker.eventEvidence);}catch{return false;}
+    const proof=envelope?.freshTargetBoundQuiescenceProof;
+    if(envelope?.schema!==ENVELOPE_SCHEMA||
+      envelope.originalTerminalEvidence!==rowValue.terminalEvidence||
+      envelope.originalTerminalOccurredAt!==rowValue.terminalOccurredAt||
+      envelope.priorNoPostRunLogSha256!==RECOVERY_IDENTITY.prior.runLogSha256||
+      envelope.recoveryAttemptId!==marker.recoveryAttemptId||
+      envelope.recoveryOccurredAt!==marker.recoveryOccurredAt||
+      envelope.hostFenceId!==marker.hostFenceId||
+      proof?.fenceId!==marker.hostFenceId||proof?.observedAt!==marker.proofObservedAt||
+      !proof?.fenceHeld||proof.dispatchId!==TARGET.dispatchId||
+      proof.sourceSha!==TARGET.sourceSha||proof.protectedClaimKey!==TARGET.protectedClaimKey||
+      proof.generation!==1||proof.activeWriterCount!==0||proof.activeAttemptCount!==0||
+      proof.activeSubprocessCount!==0||proof.inflightEffectCount!==0||
+      proof.unresolvedResourceCount!==0||proof.writeSetReconciled!==true||
+      !Number.isFinite(Date.parse(proof.observedAt))||
+      !Number.isSafeInteger(proof.fenceOwnerPid)||proof.fenceOwnerPid<1||
+      !proof.registryInventory||proof.registryInventory.registryCount<3||
+      proof.registryInventory.targetReservationCount!==1||
+      proof.registryInventory.targetExactCount!==1||
+      proof.registryInventory.unresolvedRecordCount!==0||
+      !/^[a-f0-9]{64}$/.test(proof.registryInventory.registryPathsSha256??'')||
+      !proof.processInventory||proof.processInventory.inventoryComplete!==true||
+      proof.processInventory.activeWriterCount!==0||
+      proof.processInventory.activeSubprocessCount!==0||
+      proof.processInventory.unknownWriterCount!==0||
+      !/^[a-f0-9]{64}$/.test(proof.processInventory.processTableSha256??'')||
+      !exactHistoricalCiEvidence(proof.historicalCiEvidence,{requireFresh:false})||
+      sha256hex(JSON.stringify(proof))!==marker.quiescenceProofSha256)return false;
+    const refs=proof.evidenceRefs;
+    if(!refs||typeof refs!=='object'||Array.isArray(refs)||
+      Object.keys(refs).length!==REF_KEYS.length||
+      !REF_KEYS.every(k=>reference(refs[k]))||
+      JSON.stringify(refs)!==JSON.stringify(marker.evidenceRefs)||
+      JSON.stringify(proof.excludedReservation)!==JSON.stringify(marker.excludedReservation)||
+      envelope.exactExcludedReservationIdentity===undefined||
+      JSON.stringify(envelope.exactExcludedReservationIdentity)!==JSON.stringify(marker.excludedReservation)||
+      envelope.sixDurableEvidenceRefs===undefined||
+      JSON.stringify(envelope.sixDurableEvidenceRefs)!==JSON.stringify(marker.evidenceRefs)||
+      marker.excludedReservationCount!==1)return false;
+    const t319=RECOVERY_IDENTITY.task319,t331=RECOVERY_IDENTITY.task331;
+    const e319=envelope.task319Evidence,m319=marker.task319Evidence;
+    if(m319?.claimCasKey!==t319.claimCasKey||
+      m319.claimRevision!==rows.claim319.revision||
+      m319.claimCommentId!==t319.claimCommentId||
+      m319.frozenWriteSetKey!==t319.frozenWriteSetKey||
+      m319.frozenWriteSetDigest!==bindings.frozen319ValueSha256||
+      m319.packBlobSha!==t319.packBlobSha||
+      e319?.claimCommentId!==t319.claimCommentId||
+      e319.frozenWriteSetDigest!==bindings.frozen319ValueSha256||
+      e319.packBlobSha!==t319.packBlobSha)return false;
+    const b331=envelope.task331PackBlobOwnerClaimAndFrozenWriteSetBindings;
+    const m331=marker.task331Bindings;
+    const c=rows.claim331.value,f=rows.frozen331.value;
+    if(m331?.packBlobSha!==t331.packBlobSha||
+      m331.packPRHeadSha!==t331.packPRHeadSha||
+      m331.ownerReceiptComment!==t331.ownerReceiptComment||
+      m331.ownerAmendmentComment!==t331.ownerAmendmentComment||
+      m331.claim?.casKey!==t331.claimCasKey||
+      m331.claim.revision!==rows.claim331.revision||
+      m331.claim.commentId!==t331.claimCommentId||
+      m331.claim.commentRef!==t331.claimCommentRef||
+      m331.claim.sourceSha!==t331.sourceSha||
+      m331.claim.actorRole!==t331.actorRole||
+      m331.claim.operatorKind!==t331.operatorKind||
+      m331.claim.operatorId!==t331.operatorId||
+      m331.claim.writerId!==t331.writerId||
+      m331.claim.dispatchId!==t331.dispatchId||
+      m331.claim.protectedClaimKey!==t331.protectedClaimKey||
+      m331.claim.generation!==1||
+      m331.claim.valueSha256!==bindings.claim331ValueSha256||
+      m331.frozenWriteSet?.key!==t331.frozenWriteSetKey||
+      m331.frozenWriteSet.revision!==rows.frozen331.revision||
+      m331.frozenWriteSet.writeSetSha256!==t331.writeSetSha256||
+      m331.frozenWriteSet.pathCount!==t331.pathCount||
+      m331.frozenWriteSet.sourceSha!==t331.sourceSha||
+      m331.frozenWriteSet.taskPackRef!==t331.taskPackRef||
+      m331.frozenWriteSet.taskPackBlobSha!==t331.packBlobSha||
+      m331.frozenWriteSet.packPRHeadSha!==t331.packPRHeadSha||
+      m331.frozenWriteSet.ownerReceiptRef!==t331.ownerReceiptRef||
+      m331.frozenWriteSet.protectedClaimKey!==t331.protectedClaimKey||
+      m331.frozenWriteSet.generation!==1||
+      m331.frozenWriteSet.dispatchId!==t331.dispatchId||
+      m331.frozenWriteSet.claimCommentId!==t331.claimCommentId||
+      m331.frozenWriteSet.claimCommentRef!==t331.claimCommentRef||
+      m331.frozenWriteSet.writerId!==t331.writerId||
+      m331.frozenWriteSet.frozenAt!==f.frozenAt||
+      m331.frozenWriteSet.valueSha256!==bindings.frozen331ValueSha256||
+      b331?.packBlobSha!==t331.packBlobSha||
+      b331.exactClaimValueSha256!==bindings.claim331ValueSha256||
+      b331.exactFrozenWriteSetValueSha256!==bindings.frozen331ValueSha256||
+      b331.packPRHeadSha!==t331.packPRHeadSha||
+      b331.ownerReceiptComment!==t331.ownerReceiptComment||
+      b331.ownerAmendmentComment!==t331.ownerAmendmentComment)return false;
+    const ec=b331.claim,ef=b331.frozenWriteSet;
+    if(ec?.casKey!==t331.claimCasKey||ec.revision!==rows.claim331.revision||
+      ec.phase!==t331.claimPhase||ec.sourceSha!==c.sourceSha||
+      ec.actorRole!==c.actorRole||ec.operatorKind!==c.operatorKind||
+      ec.operatorId!==c.operatorId||ec.writerId!==c.writerId||
+      ec.commentId!==c.commentId||ec.commentRef!==c.commentRef||
+      ec.dispatchId!==c.dispatchId||ec.protectedClaimKey!==c.protectedClaimKey||
+      ec.generation!==c.generation||ec.valueSha256!==bindings.claim331ValueSha256||
+      ef?.key!==t331.frozenWriteSetKey||ef.revision!==rows.frozen331.revision||
+      ef.writeSetSha256!==f.writeSetSha256||ef.pathCount!==f.pathCount||
+      ef.sourceSha!==f.sourceSha||ef.taskPackRef!==f.taskPackRef||
+      ef.taskPackBlobSha!==f.taskPackBlobSha||ef.packPRHeadSha!==f.packPRHeadSha||
+      ef.ownerReceiptRef!==f.ownerReceiptRef||ef.protectedClaimKey!==f.protectedClaimKey||
+      ef.generation!==f.generation||ef.dispatchId!==f.dispatchId||
+      ef.claimCommentId!==f.claimCommentId||ef.claimCommentRef!==f.claimCommentRef||
+      ef.writerId!==f.writerId||ef.frozenAt!==f.frozenAt||
+      ef.valueSha256!==bindings.frozen331ValueSha256)return false;
+    return true;
+  }
+
   /** Read-only proof that no terminal event exists at all. */
   async function terminalAbsent() {
     try {
@@ -678,17 +811,18 @@ export function createPrePostRecoveryController({
     const originalShape=exactPendingRow({...rest,phase:'PENDING_GITHUB_TERMINALIZATION'});
     const clone=reservationCloneFor(value,recoveryAttempt);
     const observed=await exactTerminalEvent(clone),claimOk=await originalClaimUnedited();
-    let lineageRows, lineageBindings;
+    let lineageRows, lineageBindings, normalizedLineageRows, markerEvidenceOk=false;
     try {
       lineageRows = await Promise.all([
         lineage.readClaim319(), lineage.readFrozen319(), lineage.readClaim331(), lineage.readFrozen331(),
       ]);
-      lineageBindings = lineageExact({
-        claim319:lineageRows[0],frozen319:lineageRows[1],
-        claim331:lineageRows[2],frozen331:lineageRows[3],
-      });
-    } catch { lineageBindings = null; }
-    if(!originalShape||!observed||!claimOk||!lineageBindings||
+      normalizedLineageRows={claim319:lineageRows[0],frozen319:lineageRows[1],
+        claim331:lineageRows[2],frozen331:lineageRows[3]};
+      lineageBindings = lineageExact(normalizedLineageRows);
+      markerEvidenceOk=Boolean(lineageBindings&&
+        readOnlyMarkerEvidenceExact(value,recoveryAttempt,normalizedLineageRows,lineageBindings));
+    } catch { lineageBindings = null; markerEvidenceOk=false; }
+    if(!originalShape||!observed||!claimOk||!lineageBindings||!markerEvidenceOk||
       terminalCommentId!==observed.commentId||terminalCommentRef!==observed.commentRef)
       return unknown('READ_ONLY_TERMINAL_OR_LINEAGE_VERIFICATION_FAILED',{casWrites:0});
     if(recoveryAttempt.markerVersion===2&&
@@ -779,10 +913,11 @@ const FROZEN_331_KEYS = ['phase','repository','issueNumber','sourceSha','writeSe
   'writeSetDigestBasis','taskPackRef','taskPackBlobSha','packPRHeadSha','ownerReceiptRef',
   'protectedClaimKey','generation','dispatchId','claimCommentId','claimCommentRef','writerId','frozenAt'];
 
-function exactHistoricalCiEvidence(value) {
+function exactHistoricalCiEvidence(value,{requireFresh=true}={}) {
   const observed = Date.parse(value?.observedAt);
   if (value?.schema !== 'tally.t06d-historical-ci-evidence/v1' ||
-    !Number.isFinite(observed) || observed > Date.now() || Date.now() - observed > 30000 ||
+    !Number.isFinite(observed) || observed > Date.now() ||
+    (requireFresh && Date.now() - observed > 30000) ||
     !Array.isArray(value.pullRequests) || value.pullRequests.length !== 2) return false;
   return HISTORICAL_CI_EXPECTED.every(expected => {
     const pr = value.pullRequests.find(x => x?.number === expected.number);
