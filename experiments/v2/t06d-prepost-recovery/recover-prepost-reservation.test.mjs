@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp, rm, writeFile, mkdir, readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join, dirname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY,
@@ -688,7 +688,7 @@ test('complete registry inventory discovers nested registries and detects a seco
   try{
     const paths=[join(dir,'a','registry-203.sqlite'),join(dir,'a','registry-319.sqlite'),
       join(dir,'b','registry-331.sqlite'),join(dir,'b','registry-284.sqlite')];
-    for(const path of paths){await mkdir(path.slice(0,path.lastIndexOf('/')),{recursive:true});await writeFile(path,'','utf8');}
+    for(const path of paths){await mkdir(dirname(path),{recursive:true});await writeFile(path,'','utf8');}
     const data=new Map([
       [paths[0],new Map([[TARGET.casKey,{revision:2,value:strandedRow()}]])],
       [paths[1],new Map([['tally:v2:claim-admission:319',{revision:1,value:{phase:'PUBLISHED_VERIFIED'}}]])],

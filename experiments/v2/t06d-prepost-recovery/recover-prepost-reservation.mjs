@@ -91,7 +91,7 @@ export const RECOVERY_IDENTITY = Object.freeze({
       '.woodpecker/v2-t06d-prepost-recovery.yaml',
       'experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.mjs',
       'experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.test.mjs',
-    ].join('\\n'),
+    ].join('\n'),
     writerId: 'tally-host:win32:t06d-terminalization:1',
     ownerApprovedAt: '2026-11-06T13:28:12.000Z',
   }),
@@ -732,7 +732,7 @@ export async function readHistoricalCiEvidenceFromClient(octokit) {
     return exactHistoricalCiEvidence(evidence)?evidence:null;
   } catch { return null; }
 }
-function normalizedPath(value) { return resolve(value).replace(/[\\\\/]+/g,'/').toLowerCase(); }
+function normalizedPath(value) { return resolve(value).replace(/[\\/]+/g,'/').toLowerCase(); }
 
 export function discoverHostRegistryPaths(root) {
   const rootPath=resolve(root);
@@ -746,7 +746,7 @@ export function discoverHostRegistryPaths(root) {
       const path=resolve(dir,entry.name), stat=lstatSync(path);
       if (stat.isSymbolicLink()) throw new Error('HOST_REGISTRY_INVENTORY_SYMLINK');
       if (stat.isDirectory()) pending.push(path);
-      else if (stat.isFile() && /^registry-[A-Za-z0-9_.-]+\\\\.sqlite$/i.test(entry.name)) found.push(path);
+      else if (stat.isFile() && /^registry-[A-Za-z0-9_.-]+\.sqlite$/i.test(entry.name)) found.push(path);
       if (++visited>10000) throw new Error('HOST_REGISTRY_INVENTORY_LIMIT_EXCEEDED');
     }
   }
@@ -785,7 +785,7 @@ export async function inspectHostRegistryInventory(registryStores,root,targetReg
       else if (!QUIESCENT_PHASES.has(row.value.phase)) pendingRecordCount++;
     }
   }
-  const relativePaths=discovered.map(p=>relative(rootPath,p).replace(/\\\\/g,'/')).sort();
+  const relativePaths=discovered.map(p=>relative(rootPath,p).replace(/\\/g,'/')).sort();
   return {registryCount:discovered.length,registryPathsSha256:sha256hex(JSON.stringify(relativePaths)),
     targetReservationCount:targetOccurrences,targetExactCount,targetReservation,
     pendingRecordCount,unknownRecordCount,unresolvedRecordCount:pendingRecordCount+unknownRecordCount};
@@ -862,7 +862,7 @@ function cliExcludedSelfTree(table,selfPid=process.pid) {
 }
 export function inspectHostProcessInventory(table,selfPid,hostRoot) {
   const {byPid,children,excluded}=cliExcludedSelfTree(table,selfPid);
-  const root=resolve(hostRoot).replace(/\\\\/g,'/').toLowerCase(),candidates=new Set();
+  const root=resolve(hostRoot).replace(/\\/g,'/').toLowerCase(),candidates=new Set();
   for(const row of byPid.values()){
     if(excluded.has(row.ProcessId))continue;
     const name=row.Name.toLowerCase();
@@ -1026,7 +1026,6 @@ async function runSelectedHostCli() {
       log({step:'HOST_FENCE_RELEASE_FAILED',reason:String(error?.message??error)});process.exitCode=5;}}
     for(const store of registryStores.values()){try{await store.close();}catch{process.exitCode=5;}}
   }
-}
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
