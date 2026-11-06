@@ -26,6 +26,8 @@ const PHASES=new Set(['PENDING_GITHUB_PUBLISH','PUBLISHED_VERIFIED',
   'PENDING_GITHUB_TERMINALIZATION','TERMINAL_VERIFIED']);
 const CLAIM_KEY=new RegExp('^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*):'+
   '(builder|reviewer|validator):__default__$');
+const CONTEXT=/^[A-Za-z0-9][A-Za-z0-9 .:_/-]{0,127}$/;
+const REF_KEYS=['writer','attempt','subprocess','effect','resource','writeSet'];
 const readbackFailure=()=>new Error('NATIVE_GITHUB_EXACT_CLAIM_READBACK_UNVERIFIED');
 
 function denied(reason,request){
@@ -183,7 +185,17 @@ export function createHostTerminalizationSourceFromClient({octokit,admissionStor
     octokit,owner:'kaicreator-mm',repo:'tally',writerLogin:'kaicreator-mm'});
   const claim={...TARGET,actorRole:'builder',operatorKind:'other',operatorId:'zcode:candidate-publication:1'};
   const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-  const reference=x=>typeof x==='string'&&x.length>0&&x.length<=2048&&/^https:\/\//.test(x);
+  // Durable public evidence reference: an exact https URL with no userinfo,
+  // no query or fragment material and no characters the URL parser would
+  // normalize away. Credential-bearing or secret-carrying URLs fail closed
+  // and can never be published in the public #203 terminal evidence.
+  const reference=x=>{
+    if(typeof x!=='string'||x.length===0||x.length>2048)return false;
+    let url;
+    try{url=new URL(x);}catch{return false;}
+    return url.protocol==='https:'&&url.href===x&&
+      url.username===''&&url.password===''&&url.search===''&&url.hash==='';
+  };
   async function readTerminalizationPreflight(row){
     const deny=()=>Object.freeze({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',complete:false});
     try{
@@ -213,8 +225,10 @@ export function createHostTerminalizationSourceFromClient({octokit,admissionStor
           !SHA.test(pr.data.head?.sha??'')))return deny();
       const historicalPulls=await Promise.all([pr204,pr205].map(async pr=>{
         const state=(await octokit.rest.repos.getCombinedStatusForRef({owner:'kaicreator-mm',repo:'tally',ref:pr.data.head.sha}))?.data;
-        if(state?.state!=='failure'||!Array.isArray(state.statuses))throw Error('PR_CI_STATUS_UNKNOWN');
-        const failures=state.statuses.filter(x=>x.state==='failure'&&typeof x.context==='string'&&reference(x.target_url))
+        if(state?.state!=='failure'||!Array.isArray(state.statuses)||state.statuses.length>100)
+          throw Error('PR_CI_STATUS_UNKNOWN');
+        const failures=state.statuses.filter(x=>x.state==='failure'&&
+          CONTEXT.test(x.context??'')&&reference(x.target_url))
           .map(x=>({context:x.context,ref:x.target_url}));
         if(!failures.length)throw Error('PR_CI_FAILURE_NOT_PROVEN');
         return {number:pr.data.number,state:'open',merged:false,headSha:pr.data.head.sha,failures};
@@ -226,15 +240,27 @@ export function createHostTerminalizationSourceFromClient({octokit,admissionStor
         proof.sourceSha!==TARGET.sourceSha||proof.protectedClaimKey!==TARGET.protectedClaimKey||proof.generation!==1||
         proof.activeWriterCount!==0||proof.activeAttemptCount!==0||proof.activeSubprocessCount!==0||
         proof.inflightEffectCount!==0||proof.unresolvedResourceCount!==0||proof.writeSetReconciled!==true||
-        !['writer','attempt','subprocess','effect','resource','writeSet'].every(k=>reference(proof.evidenceRefs?.[k])))return deny();
+        !proof.evidenceRefs||Object.keys(proof.evidenceRefs).length!==REF_KEYS.length||
+        !REF_KEYS.every(k=>reference(proof.evidenceRefs[k])))return deny();
       const occurredAt=new Date().toISOString();
+      // Explicit allowlist: the arbitrary Host proof object is NEVER
+      // serialized verbatim into the public #203 evidence. Only the exact
+      // fields validated above — and no unknown proof field or extra
+      // evidence reference — may appear in the published event.
       const evidence=JSON.stringify({
         taskPackRef:frozen.value.taskPackRef,taskPackBlobSha:frozen.value.taskPackBlobSha,
         claim319:{key:'kaicreator-mm/tally#319:builder:__default__',generation:1,
           dispatchId:admission.value.dispatchId,commentId:admission.value.commentId,commentRef:admission.value.commentRef},
         frozenWriteSet:{key:'tally:v2:task-writeset:319',revision:frozen.revision,digest:hash(frozen.value)},
         targetClaim:{casKey:TARGET.casKey,revision:row.revision,commentId:TARGET.claimCommentId,commentRef:TARGET.claimCommentRef},
-        quiescence:proof,openHistoricalPulls:historicalPulls
+        quiescence:{observedAt:proof.observedAt,fenceHeld:proof.fenceHeld,fenceId:proof.fenceId,
+          dispatchId:proof.dispatchId,sourceSha:proof.sourceSha,
+          protectedClaimKey:proof.protectedClaimKey,generation:proof.generation,
+          activeWriterCount:proof.activeWriterCount,activeAttemptCount:proof.activeAttemptCount,
+          activeSubprocessCount:proof.activeSubprocessCount,inflightEffectCount:proof.inflightEffectCount,
+          unresolvedResourceCount:proof.unresolvedResourceCount,writeSetReconciled:proof.writeSetReconciled,
+          evidenceRefs:proof.evidenceRefs},
+        openHistoricalPulls:historicalPulls
       });
       return Object.freeze({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',complete:true,targetRevision:row.revision,
         fenceId:proof.fenceId,evidence,occurredAt});

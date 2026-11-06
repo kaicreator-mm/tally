@@ -12,6 +12,7 @@
  */
 import {createHash} from 'node:crypto';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+import {terminalEventForReservation} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const SHA=/^[0-9a-f]{40}$/;
@@ -156,6 +157,12 @@ export function createHostSingleWriterClaimController({store,source,publisher,wr
       const reservation={...v,phase:'PENDING_GITHUB_TERMINALIZATION',
         terminalWriterId:writerAuthority.writerId,terminalEvidence:facts.evidence,
         terminalOccurredAt:facts.occurredAt,terminalReservationRevision:row.revision+1};
+      // The complete public terminal event — including its 16,384-character
+      // evidence bound and this same trusted writer identity — must already
+      // be valid BEFORE the first CAS mutation. Oversized or unbound
+      // evidence leaves the Claim row untouched: zero CAS writes, zero POSTs.
+      try{terminalEventForReservation(reservation,writerAuthority);}
+      catch{return unknown('TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');}
       let revision;
       try{({revision}=await store.put(TARGET.casKey,reservation,{mustMatchRevision:row.revision}));}
       catch{return unknown('TERMINAL_RESERVATION_RACE');}
@@ -170,18 +177,25 @@ export function createHostSingleWriterClaimController({store,source,publisher,wr
       const beforePost=await store.get(TARGET.casKey);
       if(beforePost?.revision!==revision||JSON.stringify(beforePost.value)!==JSON.stringify(reservation))
         return unknown('TERMINAL_RESERVATION_CHANGED');
-      let ack;
+      let ack=null;
       try{ack=await publisher.publishDispatchStateChange(Object.freeze({...reservation}));}
-      catch{return unknown('TERMINAL_PUBLICATION_AMBIGUOUS');}
-      if(!Number.isSafeInteger(ack?.commentId)||ack.commentId<1||
-        ack.commentRef!==`${TARGET.issueRef}#issuecomment-${ack.commentId}`)
-        return unknown('TERMINAL_PUBLICATION_AMBIGUOUS');
+      catch{ack=null;}
+      const ackValid=Number.isSafeInteger(ack?.commentId)&&ack.commentId>=1&&
+        ack.commentRef===`${TARGET.issueRef}#issuecomment-${ack.commentId}`;
+      // An ambiguous POST (publisher throw or unusable ACK) is resolved ONLY
+      // by this read-only exact native event readback — never by a second
+      // POST. Absent, incomplete, duplicate, edited or conflicting readback
+      // keeps the durable reservation PENDING at its reserved revision.
       const observed=await source.readTerminalEvent(reservation);
       if(observed?.status!=='EXACT'||observed.complete!==true||observed.edited!==false||
-        observed.commentId!==ack.commentId||observed.commentRef!==ack.commentRef)
+        !Number.isSafeInteger(observed.commentId)||observed.commentId<1||
+        observed.commentRef!==`${TARGET.issueRef}#issuecomment-${observed.commentId}`)
+        return unknown(ackValid?'TERMINAL_READBACK_UNVERIFIED':'TERMINAL_PUBLICATION_AMBIGUOUS');
+      if(ackValid&&(observed.commentId!==ack.commentId||
+        observed.commentRef!==ack.commentRef))
         return unknown('TERMINAL_READBACK_UNVERIFIED');
       const terminal={...reservation,phase:'TERMINAL_VERIFIED',
-        terminalCommentId:ack.commentId,terminalCommentRef:ack.commentRef};
+        terminalCommentId:observed.commentId,terminalCommentRef:observed.commentRef};
       let finalRevision;
       try{({revision:finalRevision}=await store.put(TARGET.casKey,terminal,{mustMatchRevision:revision}));}
       catch{return unknown('TERMINAL_CONFIRMATION_AMBIGUOUS');}
@@ -189,7 +203,7 @@ export function createHostSingleWriterClaimController({store,source,publisher,wr
       if(final?.revision!==finalRevision||JSON.stringify(final.value)!==JSON.stringify(terminal))
         return unknown('TERMINAL_FINAL_READBACK_UNVERIFIED');
       return Object.freeze({status:'RECORDED',claimTerminality:'VERIFIED',
-        terminalCommentRef:ack.commentRef,authorized:false,admitted:false,taskPass:false,releasePass:false});
+        terminalCommentRef:observed.commentRef,authorized:false,admitted:false,taskPass:false,releasePass:false});
     }catch{return unknown('TERMINAL_HOST_SOURCE_UNAVAILABLE');}
   }
   return Object.freeze({reserveAndPublish,terminalizePublishedClaim});

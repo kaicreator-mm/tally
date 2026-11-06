@@ -354,6 +354,38 @@ test('terminal Host proof requires all fresh measurements, exact #319 freeze, or
     {inflightEffectCount:1},{unresolvedResourceCount:1},{writeSetReconciled:false},
     {fenceHeld:false},{dispatchId:'wrong'},{generation:2},{observedAt:'2020-01-01T00:00:00Z'},{evidenceRefs:{}}])
     assert.equal((await run(changes)).complete,false,JSON.stringify(changes));
+  // P1-01: the public evidence carries ONLY the allowlisted proof fields;
+  // unknown proof fields — however secret-bearing — never reach the event.
+  const good=await run({});
+  const published=JSON.parse(good.evidence);
+  assert.deepEqual(Object.keys(published.quiescence).sort(),['activeAttemptCount',
+    'activeSubprocessCount','activeWriterCount','dispatchId','evidenceRefs','fenceHeld',
+    'fenceId','generation','inflightEffectCount','observedAt','protectedClaimKey',
+    'sourceSha','unresolvedResourceCount','writeSetReconciled']);
+  const leaked=await run({canaryHostSecret:'PRIVATE_HOST_CANARY_7f3a',
+    diagnosticDump:{accessToken:'SECRET_TOKEN_9b1c'}});
+  assert.equal(leaked.complete,true);
+  assert.equal(leaked.evidence.includes('PRIVATE_HOST_CANARY_7f3a'),false);
+  assert.equal(leaked.evidence.includes('SECRET_TOKEN_9b1c'),false);
+  assert.equal(leaked.evidence.includes('diagnosticDump'),false);
+  assert.equal(leaked.evidence.includes('canaryHostSecret'),false);
+  // Credential-bearing or query-carrying evidence references deny fail closed.
+  for(const bad of [
+    {evidenceRefs:{...proof.evidenceRefs,writer:'https://user:pass@example.com/writer'}},
+    {evidenceRefs:{...proof.evidenceRefs,writer:'https://example.com/writer?token=SECRET'}},
+    {evidenceRefs:{...proof.evidenceRefs,writer:'https://example.com/writer#f?x'}},
+    {evidenceRefs:{...proof.evidenceRefs,extra:'https://example.com/extra'}}]){
+    const denied=await run(bad);
+    assert.equal(denied.complete,false,JSON.stringify(bad));
+    assert.equal(denied.evidence,undefined);
+  }
+  // A credential-bearing CI status target URL can never become durable evidence.
+  const statusCall=octokit.rest.repos.getCombinedStatusForRef;
+  octokit.rest.repos.getCombinedStatusForRef=async()=>({data:{state:'failure',statuses:[
+    {state:'failure',context:'ci/woodpecker/test',
+      target_url:'https://ci.example/build?token=PRIVATE_QUERY_SECRET'}]}});
+  assert.equal((await run({})).complete,false);
+  octokit.rest.repos.getCombinedStatusForRef=statusCall;
   const getIssue=octokit.rest.issues.get;
   octokit.rest.issues.get=async()=>({data:{...(await getIssue()).data,body:'stale source'}});
   assert.equal((await run({})).complete,false);octokit.rest.issues.get=getIssue;

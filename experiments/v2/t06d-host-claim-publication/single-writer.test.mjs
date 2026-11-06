@@ -5,7 +5,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createHostSingleWriterClaimController} from './single-writer.mjs';
-import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+import {TARGET,readDispatchStateEventsFromClient} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+import {terminalEventForReservation,createHostBoundNativeGitHubClaimPublisher} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 
 const sourceSha='a'.repeat(40);
 const req={owner:'kaicreator-mm',repo:'tally',issueNumber:125,
@@ -28,7 +29,8 @@ const exactReadback=(i,commentId)=>({
   commentRef:i.issueRef+'#issuecomment-'+commentId
 });
 const writerAuthority={mode:'SINGLE_WRITER_ADMISSION',
-  exclusiveHostControl:true,writerId:'tally-host:one'};
+  exclusiveHostControl:true,writerId:'tally-host:one',
+  repository:'kaicreator-mm/tally',githubWriterLogin:'tally-host[bot]'};
 async function harness(fn){
   const dir=await mkdtemp(join(tmpdir(),'tally-v2-admission-cas-'));
   const path=join(dir,'cas.sqlite');
@@ -180,7 +182,7 @@ test('wrong identity, missing proof, lost ACK and unverified native readback rem
       assert.equal(p.posts(),0);assert.equal((await store.get(TARGET.casKey)).revision,1);
     });
   for(const options of [{preflight:async()=>({complete:false})},
-    {publish:async()=>{throw Error('lost');}},
+    {publish:async()=>{throw Error('lost');},readback:async()=>({status:'UNKNOWN'})},
     {readback:async()=>({status:'UNKNOWN'})}])await harness(async({store})=>{
       await seedFixture(store);const p=terminalPorts(options),c=controller(store,p);
       assert.equal((await c.terminalizePublishedClaim()).claimTerminality,'UNKNOWN');
@@ -188,6 +190,99 @@ test('wrong identity, missing proof, lost ACK and unverified native readback rem
       assert.equal(row.value.phase,options.preflight?'PUBLISHED_VERIFIED':'PENDING_GITHUB_TERMINALIZATION');
       await c.terminalizePublishedClaim();assert.ok(p.posts()<=1);
     });
+});
+test('lost ACK with the exact event already appended reconciles read-only; exactly one POST',async()=>{
+  await harness(async({store,reopen})=>{
+    await seedFixture(store);
+    // End-to-end append-then-throw: the real native transport appends the
+    // exact terminal event to GitHub-visible comments and then loses the
+    // ACK. Reconciliation must use read-only exact native pagination only.
+    const comments=[];let posts=0;
+    const octokit={rest:{issues:{
+      async get(){return {data:{id:2030,number:203,html_url:TARGET.issueRef,state:'open',
+        comments:comments.length,updated_at:'now',body:`version/v2@${TARGET.sourceSha}`}};},
+      async listComments(){throw Error('pagination required');},
+      async getComment({comment_id}){return {data:comments.find(c=>c.id===comment_id)};},
+      async createComment({body}){
+        posts++;
+        comments.push({id:901,body,html_url:TARGET.issueRef+'#issuecomment-901',
+          issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/203',
+          user:{login:'kaicreator-mm'},created_at:'now',updated_at:'now'});
+        throw Error('NATIVE_GITHUB_ACK_LOST');
+      }},
+      repos:{async getCommit(){return {data:{sha:TARGET.sourceSha}};}}},
+      paginate:{async *iterator(){yield {data:[...comments]};}}};
+    const terminalAuthority={...writerAuthority,githubWriterLogin:'kaicreator-mm'};
+    const p=ports();
+    p.source.readTerminalizationPreflight=async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+      complete:true,targetRevision:1,fenceId:'fence:one',evidence:'durable proof',
+      occurredAt:new Date().toISOString()});
+    p.source.readTerminalEvent=async reservation=>readDispatchStateEventsFromClient({
+      octokit,writerLogin:terminalAuthority.githubWriterLogin,
+      expectedEvent:terminalEventForReservation(reservation,terminalAuthority)});
+    const publisher=createHostBoundNativeGitHubClaimPublisher({octokit,
+      owner:'kaicreator-mm',repo:'tally',writerAuthority:terminalAuthority});
+    const c=createHostSingleWriterClaimController({store,source:p.source,publisher,
+      writerAuthority:terminalAuthority});
+    const result=await c.terminalizePublishedClaim();
+    assert.equal(result.claimTerminality,'VERIFIED',JSON.stringify(result));
+    assert.equal(result.terminalCommentRef,TARGET.issueRef+'#issuecomment-901');
+    assert.equal(posts,1);
+    const reopened=await reopen(),row=await reopened.get(TARGET.casKey);
+    assert.equal(row.revision,3);assert.equal(row.value.phase,'TERMINAL_VERIFIED');
+    assert.equal(row.value.terminalCommentId,901);
+    assert.equal(row.value.terminalEvidence,'durable proof');
+    assert.equal((await c.terminalizePublishedClaim()).claimTerminality,'UNKNOWN');
+    assert.equal(posts,1);
+  });
+});
+test('absent, incomplete, edited or conflicting readback after a lost ACK stays PENDING with no second POST',async()=>{
+  const readbacks=[
+    {status:'ABSENT',complete:true},
+    {status:'UNKNOWN'},
+    {status:'UNKNOWN',reason:'INCOMPLETE_PAGINATION'},
+    {status:'EXACT',complete:true,edited:true,commentId:901,
+      commentRef:TARGET.issueRef+'#issuecomment-901'},
+    {status:'EXACT',complete:true,edited:false,commentId:901,
+      commentRef:'https://github.com/evil/repo/issues/1#issuecomment-901'}];
+  for(const observed of readbacks)await harness(async({store})=>{
+    await seedFixture(store);let posts=0;
+    const p=ports();
+    p.source.readTerminalizationPreflight=async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+      complete:true,targetRevision:1,fenceId:'fence:one',evidence:'durable proof',
+      occurredAt:new Date().toISOString()});
+    p.source.readTerminalEvent=async()=>structuredClone(observed);
+    p.publisher.publishDispatchStateChange=async()=>{posts++;throw Error('ACK lost');};
+    const c=controller(store,p);
+    const result=await c.terminalizePublishedClaim();
+    assert.equal(result.claimTerminality,'UNKNOWN');
+    assert.equal(result.reason,'TERMINAL_PUBLICATION_AMBIGUOUS');
+    assert.equal(posts,1);
+    const row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,2);
+    assert.equal(row.value.phase,'PENDING_GITHUB_TERMINALIZATION');
+    assert.equal((await c.terminalizePublishedClaim()).reason,'TARGET_CLAIM_NOT_EXACT');
+    assert.equal(posts,1);
+  });
+});
+test('oversized evidence or an unbound writer identity is rejected before any CAS write or POST',async()=>{
+  await harness(async({store})=>{
+    await seedFixture(store);
+    const p=terminalPorts({preflight:async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+      complete:true,targetRevision:1,fenceId:'fence:one',evidence:'x'.repeat(16385),
+      occurredAt:new Date().toISOString()})});
+    const oversized=await controller(store,p).terminalizePublishedClaim();
+    assert.equal(oversized.claimTerminality,'UNKNOWN');
+    assert.equal(oversized.reason,'TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');
+    assert.equal(p.posts(),0);
+    let row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,1);assert.equal(row.value.phase,'PUBLISHED_VERIFIED');
+    const unbound=await createHostSingleWriterClaimController({store,...terminalPorts(),
+      writerAuthority:{...writerAuthority,repository:'other/repo'}}).terminalizePublishedClaim();
+    assert.equal(unbound.reason,'TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');
+    row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,1);assert.equal(row.value.phase,'PUBLISHED_VERIFIED');
+  });
 });
 test('competing expected-revision reservations publish at most once',async()=>{
   await harness(async({store})=>{
