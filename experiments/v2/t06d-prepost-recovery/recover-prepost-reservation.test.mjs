@@ -962,6 +962,15 @@ test('revision-4 read-only verification rejects marker/envelope tampering agains
         m.eventEvidence=JSON.stringify(e);
         m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
       }],
+      ['prior receipt extra key',m=>{m.priorReceipt.unexpected='not-allowed';}],
+      ['proof fenceHeld is not boolean true',m=>{
+        const e=JSON.parse(m.eventEvidence);
+        e.freshTargetBoundQuiescenceProof.fenceHeld='true';
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+        m.quiescenceProofSha256=createHash('sha256')
+          .update(JSON.stringify(e.freshTargetBoundQuiescenceProof),'utf8').digest('hex');
+      }],
     ];
     for(const [label,mutate] of mutations){
       const value=structuredClone(final.value);
@@ -981,6 +990,64 @@ test('revision-4 read-only verification rejects marker/envelope tampering agains
       assert.equal(result.httpPostCount,0,label);
       assert.equal(rp.counts.publishes,0,label);
     }
+  });
+});
+
+test('revision-3 reconciliation and revision-4 recovery entry share full marker and live-lineage verification', async () => {
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
+      terminalWriterId:undefined,terminalEvidence:undefined,terminalOccurredAt:undefined,
+      terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const firstPorts=ports();
+    const first=await createPrePostRecoveryController({store,...firstPorts,writerAuthority})
+      .recoverPrePostReservation();
+    assert.equal(first.status,'RECORDED');
+    const final=await store.get(TARGET.casKey);
+    const revision3Value=structuredClone(final.value);
+    revision3Value.phase='PENDING_GITHUB_TERMINALIZATION';
+    delete revision3Value.terminalCommentId;
+    delete revision3Value.terminalCommentRef;
+
+    // A malformed revision-3 marker must not be finalized, even when the
+    // event reader reports the exact event.
+    const malformed=structuredClone(revision3Value);
+    malformed.recoveryAttempt.unexpected='tampered';
+    let writes=0;
+    const malformedStore={async get(){return {revision:3,value:malformed};},
+      async put(){writes++;throw new Error('WRITE_FORBIDDEN_IN_TEST');}};
+    const malformedPorts=ports();malformedPorts.terminalEvents.present=true;
+    const malformedResult=await createPrePostRecoveryController({
+      store:malformedStore,...malformedPorts,writerAuthority}).recoverPrePostReservation();
+    assert.equal(malformedResult.status,'UNKNOWN');
+    assert.equal(writes,0);
+    assert.equal(malformedPorts.counts.publishes,0);
+
+    // A live #331 Claim drift must also stop before revision-3 final CAS.
+    const badRows=lineageRows();
+    badRows.claim331={...badRows.claim331,value:{
+      ...badRows.claim331.value,writerId:'tampered-writer'}};
+    const driftStore={async get(){return {revision:3,value:revision3Value};},
+      async put(){writes++;throw new Error('WRITE_FORBIDDEN_IN_TEST');}};
+    const driftPorts=ports({rows:()=>badRows});driftPorts.terminalEvents.present=true;
+    const driftResult=await createPrePostRecoveryController({
+      store:driftStore,...driftPorts,writerAuthority}).recoverPrePostReservation();
+    assert.equal(driftResult.status,'UNKNOWN');
+    assert.equal(writes,0);
+    assert.equal(driftPorts.counts.publishes,0);
+
+    // Revision-4 entry through the general recovery API delegates to the
+    // same full verifier; it must not accept an extra marker field.
+    const badFinal=structuredClone(final.value);
+    badFinal.recoveryAttempt.unexpected='tampered';
+    const finalStore={async get(){return {revision:4,value:badFinal};},
+      async put(){writes++;throw new Error('WRITE_FORBIDDEN_IN_TEST');}};
+    const finalPorts=ports();finalPorts.terminalEvents.present=true;
+    const finalResult=await createPrePostRecoveryController({
+      store:finalStore,...finalPorts,writerAuthority}).recoverPrePostReservation();
+    assert.equal(finalResult.status,'UNKNOWN');
+    assert.equal(writes,0);
+    assert.equal(finalPorts.counts.publishes,0);
   });
 });
 

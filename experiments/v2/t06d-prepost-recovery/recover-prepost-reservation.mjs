@@ -77,6 +77,7 @@ const PROOF_KEYS = ['observedAt','fenceHeld','fenceId','dispatchId','sourceSha',
   'protectedClaimKey','generation','activeWriterCount','activeAttemptCount',
   'activeSubprocessCount','inflightEffectCount','unresolvedResourceCount',
   'writeSetReconciled','evidenceRefs','excludedReservation','excludedReservationCount'];
+const PRIOR_RECEIPT_KEYS = ['status','reason','publisherInvocationCount','httpPostCount'];
 const keysExact=(x,keys)=>x&&typeof x==='object'&&!Array.isArray(x)&&
   JSON.stringify(Object.keys(x).sort())===JSON.stringify([...keys].sort());
 
@@ -248,7 +249,7 @@ function allowlistedProof(proof) {
 }
 
 function validMarker(m) {
-  if (!m || typeof m !== 'object' || Array.isArray(m)) return false;
+  if (!keysExact(m,MARKER_KEYS) || !keysExact(m.priorReceipt,PRIOR_RECEIPT_KEYS)) return false;
   if (m.schema !== MARKER_SCHEMA || m.state !== 'POST_ATTEMPT_CONSUMED') return false;
   if (!ID.test(m.recoveryAttemptId ?? '')) return false;
   if (typeof m.eventEvidence !== 'string' || m.eventEvidence.length === 0 ||
@@ -424,7 +425,7 @@ export function createPrePostRecoveryController({
       envelope.hostFenceId!==marker.hostFenceId||
       !keysExact(proof,PROOF_KEYS)||
       proof.fenceId!==marker.hostFenceId||proof.observedAt!==marker.proofObservedAt||
-      !proof.fenceHeld||proof.dispatchId!==TARGET.dispatchId||
+      proof.fenceHeld!==true||proof.dispatchId!==TARGET.dispatchId||
       proof.sourceSha!==TARGET.sourceSha||proof.protectedClaimKey!==TARGET.protectedClaimKey||
       proof.generation!==1||proof.activeWriterCount!==0||proof.activeAttemptCount!==0||
       proof.activeSubprocessCount!==0||proof.inflightEffectCount!==0||
@@ -538,25 +539,9 @@ export function createPrePostRecoveryController({
     catch { return unknown('TARGET_ROW_UNAVAILABLE'); }
     const v = row?.value;
 
-    // ---- Revision 4: already terminal; read-only verify, never publish. ----
-    if (row?.revision === 4 && v?.phase === 'TERMINAL_VERIFIED' &&
-      validMarker(v?.recoveryAttempt)) {
-      const {terminalCommentId, terminalCommentRef, recoveryAttempt, ...rest} = v;
-      const originalShape = exactPendingRow(
-        {...rest, phase: 'PENDING_GITHUB_TERMINALIZATION'});
-      const clone = reservationCloneFor(v, v.recoveryAttempt);
-      const observed = await exactTerminalEvent(clone);
-      const claimOk = await originalClaimUnedited();
-      if (!originalShape || !observed || !claimOk ||
-        terminalCommentId !== observed.commentId ||
-        terminalCommentRef !== observed.commentRef)
-        return unknown('ALREADY_VERIFIED_RECHECK_FAILED');
-      return Object.freeze({status: 'ALREADY_VERIFIED', reason: 'TERMINAL_VERIFIED_READ_ONLY',
-        claimTerminality: 'VERIFIED', terminalCommentRef,
-        recoveryAttemptId: recoveryAttempt.recoveryAttemptId,
-        publisherInvocationCount: 0, httpPostCount: 0,
-        authorized: false, admitted: false, taskPass: false, releasePass: false});
-    }
+    // ---- Revision 4: one canonical read-only verifier for every entry. ----
+    if (row?.revision === 4 && v?.phase === 'TERMINAL_VERIFIED')
+      return verifyTerminalReservationReadOnly();
 
     // ---- Revision 3 with marker: attempt consumed; read-only only. --------
     if (row?.revision === 3 && v?.phase === 'PENDING_GITHUB_TERMINALIZATION' &&
@@ -569,6 +554,16 @@ export function createPrePostRecoveryController({
         original.terminalOccurredAt === marker.originalTerminalOccurredAt;
       if (!originalShape || !evidenceVerbatim)
         return unknown('CONSUMED_MARKER_ROW_NOT_EXACT');
+      let lineageRows;
+      try {
+        lineageRows = {
+          claim319: await lineage.readClaim319(), frozen319: await lineage.readFrozen319(),
+          claim331: await lineage.readClaim331(), frozen331: await lineage.readFrozen331(),
+        };
+      } catch { return unknown('CONSUMED_MARKER_LINEAGE_UNAVAILABLE'); }
+      const lineageBindings = lineageExact(lineageRows);
+      if (!lineageBindings || !readOnlyMarkerEvidenceExact(v,marker,lineageRows,lineageBindings))
+        return unknown('CONSUMED_MARKER_EVIDENCE_NOT_EXACT');
       const clone = reservationCloneFor(v, marker);
       try { terminalEventForReservation(clone, writerAuthority); }
       catch { return unknown('MARKER_EVENT_NOT_RECONSTRUCTIBLE'); }
