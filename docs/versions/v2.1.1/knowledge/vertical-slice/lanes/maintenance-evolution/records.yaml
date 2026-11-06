@@ -25,11 +25,12 @@ scope_note: >-
 review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
 collections:
   domains:
-    # --- shared Domain: field values per shared-snippets-sek07.yaml, which was derived
-    #     from the reviewed SEK-06A final tip (origin/task/tally-v211-sek06a-requirements).
-    #     The snippets file line-wraps boundary_notes[1] mid-sentence at "(SEK-02R";
-    #     the complete reviewed sentence is restored from the SEK-06A tip it was
-    #     derived from. All other field values copied exactly. ---
+    # --- shared Domain: copied verbatim from shared-snippets-sek07.yaml, parsed-identical
+    #     to the reviewed SEK-06 lane tips. boundary_notes[1] ends mid-sentence at
+    #     "(SEK-02R": the SEK-06 lanes store it as an unquoted scalar whose " #" starts a
+    #     YAML comment, so the parsed, validated and reviewed content IS the truncated
+    #     string. Carried verbatim; the truncation originates in SEK-06 and is flagged
+    #     for SEK-08 single-writer repair. ---
     - id: se:DOMAIN-SOFTWARE-ENGINEERING
       record_version: 0.1.0
       lifecycle_status: PROPOSED
@@ -48,11 +49,7 @@ collections:
         - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
       boundary_notes:
         - No single source is treated as a complete ontology of the discipline.
-        - >-
-          SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R #325
-          merged via PR #326); SWEBOK content is cited only where a lane has directly
-          reinspected the located sections, and such records stay
-          PROPOSED/PENDING_REVIEW until human review.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R
       evidence_refs: []
 
   taxonomy_views:

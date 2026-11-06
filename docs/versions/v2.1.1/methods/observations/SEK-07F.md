@@ -49,13 +49,24 @@ All locators were directly inspected on 2026-11-07 before any record was written
 1. `se:REL-07F-011` initially referenced a non-existent subject id
    (`se:PRI-07F-EVOLUTION-COMPLEXITY` instead of `se:PRI-07F-MANAGE-EVOLUTION-COMPLEXITY`);
    caught by the lane graph validator dry run (DANGLING_REFERENCE) and fixed before commit.
-2. The shared-snippets file `_tmp/tally-sek07-lanes/shared-snippets-sek07.yaml` carries the
-   shared Domain record's second `boundary_notes` entry line-wrap-truncated mid-sentence
-   (it ends "(SEK-02R"; verified by strict YAML parse of that file). The lane restores the
-   complete reviewed sentence from the SEK-06A final tip
-   (`origin/task/tally-v211-sek06a-requirements`), which the snippets were programmatically
-   derived from. All other shared field values are copied exactly; the truncation is
-   recorded here so SEK-08 deduplication does not propagate the corrupted variant.
+2. The shared Domain record's second `boundary_notes` entry is carried verbatim per the
+   parsed content of the reviewed SEK-06 lane tips: it ends mid-sentence at "(SEK-02R"
+   because the SEK-06 lanes store an unquoted scalar whose " #" starts a YAML comment,
+   so the full sentence exists only as raw-text intent that was never parsed, validated
+   or reviewed. The mid-sentence truncation originates in the SEK-06 lanes (out of
+   SEK-07 scope) and is flagged for SEK-08 single-writer repair; it is recorded here so
+   deduplication does not propagate either variant silently.
+
+## R1 repair (2026-11-07, independent exact-SHA review)
+
+- **P1, pre-authorized by the review brief** — shared-record divergence: this lane's
+  initial commit had replaced the truncated shared `boundary_notes[1]` with a quoted,
+  generalized full sentence, changing the parsed content of the shared Domain record
+  relative to the reviewed SEK-06 tips and the other six SEK-07 lanes (which carry it
+  parsed-identical). Restored the parsed content verbatim in `records.yaml` (second note
+  ends "(SEK-02R") and corrected this observation's earlier description of that
+  decision. The underlying SEK-06 truncation remains open for SEK-08 single-writer
+  repair; no other lane content was changed.
 
 ## Limitations and honest boundaries
 
