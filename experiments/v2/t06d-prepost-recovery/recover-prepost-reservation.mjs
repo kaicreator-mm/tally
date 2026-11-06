@@ -277,9 +277,22 @@ export function createPrePostRecoveryController({
     const frozenAt=Date.parse(frozen?.frozenAt);
     const keys=frozen&&typeof frozen==='object'&&!Array.isArray(frozen)?Object.keys(frozen).sort():[];
     const wanted=[...FROZEN_331_KEYS].sort();
+    // Observed live row (frozen 2026-11-06T17:21:59Z, before the recovery at
+    // 18:11Z) matches the pack's frozenWriteSetMustBind exactly: no
+    // reviewWitnessRef field (the pack review witness is an authority
+    // artifact, not a frozen-row binding) plus the append-only owner
+    // amendment and the builder activation receipt on PR #332. Extra refs
+    // are accepted only as the exact observed key-set shapes with exact
+    // ref values; any other key set stays denied.
+    const OWNER_AMENDMENT_REF='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689612741';
+    const BUILDER_ACTIVATION_REF='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689637743';
     const keysExact=JSON.stringify(keys)===JSON.stringify(wanted)||
       (JSON.stringify(keys)===JSON.stringify([...wanted,'ownerAmendmentRef'].sort())&&
-       frozen?.ownerAmendmentRef==='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689612741');
+       frozen?.ownerAmendmentRef===OWNER_AMENDMENT_REF)||
+      (JSON.stringify(keys)===JSON.stringify(
+        [...wanted,'ownerAmendmentRef','builderActivationRef'].sort())&&
+       frozen?.ownerAmendmentRef===OWNER_AMENDMENT_REF&&
+       frozen?.builderActivationRef===BUILDER_ACTIVATION_REF);
     const claimExact=claim?.phase===i331.claimPhase&&claim?.repository==='kaicreator-mm/tally'&&
       claim?.issueNumber===331&&claim?.sourceSha===i331.sourceSha&&claim?.actorRole===i331.actorRole&&
       claim?.operatorKind===i331.operatorKind&&claim?.operatorId===i331.operatorId&&
@@ -292,7 +305,7 @@ export function createPrePostRecoveryController({
       frozen?.document===i331.writeSetDocument&&frozen?.pathCount===i331.pathCount&&
       frozen?.writeSetDigestBasis===i331.writeSetDigestBasis&&frozen?.taskPackRef===i331.taskPackRef&&
       frozen?.taskPackBlobSha===i331.packBlobSha&&frozen?.packPRHeadSha===i331.packPRHeadSha&&
-      frozen?.ownerReceiptRef===i331.ownerReceiptRef&&frozen?.reviewWitnessRef===i331.reviewWitnessRef&&
+      frozen?.ownerReceiptRef===i331.ownerReceiptRef&&
       frozen?.protectedClaimKey===i331.protectedClaimKey&&frozen?.generation===1&&
       frozen?.dispatchId===i331.dispatchId&&frozen?.claimCommentId===i331.claimCommentId&&
       frozen?.claimCommentRef===i331.claimCommentRef&&frozen?.writerId===i331.writerId&&
@@ -693,6 +706,29 @@ const THREE_PATHS = Object.freeze([
   'experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.test.mjs',
 ]);
 
+/** Parse the #319 prior-run JSONL artifact into the zero-POST receipt the
+ *  controller requires (raw observed values; wiring asserts semantics). */
+export function parsePriorRunLog(text) {
+  const events = [];
+  for (const line of String(text ?? '').split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    try { events.push(JSON.parse(line)); } catch { return null; }
+  }
+  const resultLine = events.find(e => e?.step === 'TERMINALIZE_RESULT');
+  const stoppedLine = events.find(e => e?.step === 'STOPPED');
+  if (!resultLine || !stoppedLine) return null;
+  const publisherInvocationCount = events
+    .filter(e => typeof e?.step === 'string' && e.step !== 'STOPPED' &&
+      /POST|PUBLISH/.test(e.step)).length;
+  return {
+    status: resultLine.result?.status, reason: resultLine.result?.reason,
+    // Raw observed values; the CLI wiring asserts their exact semantics.
+    casWriteBlocked: stoppedLine.casWriteBlocked,
+    retry: stoppedLine.retry,
+    publisherInvocationCount, httpPostCount: publisherInvocationCount,
+  };
+}
+
 const HISTORICAL_CI_EXPECTED = Object.freeze([
   {number:204,headSha:'3a894ddbdef8d4a8513c1c33837d32a816e2234e',statuses:[
     {context:'ci/woodpecker/pr/v2-t06l-kernel-admission',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/195/1'},
@@ -707,8 +743,11 @@ const HISTORICAL_CI_EXPECTED = Object.freeze([
 ]);
 const QUIESCENT_PHASES = new Set(['PUBLISHED_VERIFIED','FROZEN_DAG_WRITESET','TERMINAL_VERIFIED','DONE','CLOSED','PASS','SUCCESS','COMPLETE','COMPLETED']);
 const HOST_AGENT_NAMES = new Set(['node.exe','node','powershell.exe','pwsh.exe','python.exe','python','git.exe','cmd.exe','codex.exe','zcode.exe','woodpecker-agent.exe']);
+// Observed frozen-row schema per task pack R1 frozenWriteSetMustBind: the
+// pack review witness (PR #332 pullrequestreview-5800344352) is an authority
+// artifact, not a frozen-row field; the live row carries no reviewWitnessRef.
 const FROZEN_331_KEYS = ['phase','repository','issueNumber','sourceSha','writeSetSha256','document','pathCount',
-  'writeSetDigestBasis','taskPackRef','taskPackBlobSha','packPRHeadSha','ownerReceiptRef','reviewWitnessRef',
+  'writeSetDigestBasis','taskPackRef','taskPackBlobSha','packPRHeadSha','ownerReceiptRef',
   'protectedClaimKey','generation','dispatchId','claimCommentId','claimCommentRef','writerId','frozenAt'];
 
 function exactHistoricalCiEvidence(value) {

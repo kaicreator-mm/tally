@@ -151,7 +151,7 @@ function lineageRows(overrides = {}) {
     sourceSha:i331.sourceSha,writeSetSha256:i331.writeSetSha256,document:i331.writeSetDocument,
     pathCount:i331.pathCount,writeSetDigestBasis:i331.writeSetDigestBasis,
     taskPackRef:i331.taskPackRef,taskPackBlobSha:i331.packBlobSha,packPRHeadSha:i331.packPRHeadSha,
-    ownerReceiptRef:i331.ownerReceiptRef,reviewWitnessRef:i331.reviewWitnessRef,
+    ownerReceiptRef:i331.ownerReceiptRef,
     protectedClaimKey:i331.protectedClaimKey,generation:1,dispatchId:i331.dispatchId,
     claimCommentId:i331.claimCommentId,claimCommentRef:i331.claimCommentRef,writerId:i331.writerId,
     frozenAt:'2026-11-06T16:18:32.000Z',
@@ -753,7 +753,7 @@ test('full #331 Claim and FSW bindings reject field tampering before marker CAS 
       'writerId','commentId','commentRef','dispatchId','protectedClaimKey','generation'];
     const frozenFields=['repository','issueNumber','sourceSha','writeSetSha256','document','pathCount',
       'writeSetDigestBasis','taskPackRef','taskPackBlobSha','packPRHeadSha','ownerReceiptRef',
-      'reviewWitnessRef','protectedClaimKey','generation','dispatchId','claimCommentId',
+      'protectedClaimKey','generation','dispatchId','claimCommentId',
       'claimCommentRef','writerId','frozenAt'];
     for(const field of claimFields){
       const bad=structuredClone(base);bad.claim331.value[field]=
@@ -771,6 +771,61 @@ test('full #331 Claim and FSW bindings reject field tampering before marker CAS 
       assert.equal(result.reason,'LINEAGE_BINDINGS_NOT_EXACT','FSW field '+field);
       assert.equal(p.counts.publishes,0);assert.equal((await store.get(TARGET.casKey)).revision,2);
     }
+  });
+});
+
+test('live frozen-331 amendment variants bind exactly (observed 19/20/21-key rows pass, tampering denies)', async () => {
+  const AMEND='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689612741';
+  const ACT='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689637743';
+  const seed=async store=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
+      terminalEvidence:undefined,terminalOccurredAt:undefined,terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+  };
+  // The exact observed live row frozen at 2026-11-06T17:21:59.209Z (before
+  // the successful 18:11Z recovery): pack-conformant base with no
+  // reviewWitnessRef, carrying both append-only PR #332 refs.
+  const liveRow=()=>{const v=structuredClone(lineageRows().frozen331.value);
+    v.frozenAt='2026-11-06T17:21:59.209Z';v.ownerAmendmentRef=AMEND;v.builderActivationRef=ACT;return v;};
+  // Deny first: tampered refs, unknown extra keys (including the pre-repair
+  // reviewWitnessRef-only schema), or activation without the amendment must
+  // leave the row at revision 2 with zero publishes.
+  await harness(async ({store})=>{
+    await seed(store);
+    const base=lineageRows();
+    for(const [label,mut] of [
+      ['ownerAmendmentRef tampered',v=>{v.ownerAmendmentRef='https://example.com/a';}],
+      ['builderActivationRef tampered',v=>{v.builderActivationRef='https://example.com/b';}],
+      ['unknown extra key',v=>{v.rogueRef='https://example.com/c';}],
+      ['reviewWitnessRef extra key',v=>{v.reviewWitnessRef=RECOVERY_IDENTITY.task331.reviewWitnessRef;}],
+      ['activation without amendment',v=>{delete v.ownerAmendmentRef;}],
+    ]){
+      const value=liveRow();mut(value);
+      const p=ports({rows:()=>({...base,frozen331:{revision:0,value}})});
+      const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+      assert.equal(result.reason,'LINEAGE_BINDINGS_NOT_EXACT',label);
+      assert.equal(p.counts.publishes,0,label);
+      assert.equal((await store.get(TARGET.casKey)).revision,2,label);
+    }
+  });
+  // Positive: the exact observed 21-key live row completes the full recovery.
+  await harness(async ({store})=>{
+    await seed(store);
+    const base=lineageRows();
+    const p=ports({rows:()=>({...base,frozen331:{revision:0,value:liveRow()}})});
+    const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+    assert.equal(result.status,'RECORDED');
+    assert.equal(p.counts.publishes,1);
+    assert.equal((await store.get(TARGET.casKey)).revision,4);
+  });
+  // Positive: the amendment-only 20-key variant still binds exactly.
+  await harness(async ({store})=>{
+    await seed(store);
+    const base=lineageRows();
+    const value=structuredClone(base.frozen331.value);value.ownerAmendmentRef=AMEND;
+    const p=ports({rows:()=>({...base,frozen331:{revision:0,value}})});
+    const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+    assert.equal(result.status,'RECORDED');
   });
 });
 
