@@ -443,3 +443,97 @@ exit codes, clean-worktree-after evidence, and `CROSS_LANE_CHECK` at the three
 R2-final tips. No LOCAL_VALIDATION-only task exists; no record is ACCEPTED;
 ISO/IEC/IEEE 42010 remains metadata-only; HUMAN_REVIEW_BURDEN remains
 NOT_MEASURED.
+
+## R3 ownership/dispatch readback receipt — Claim/CAS NOT_PRESENT (2026-11-06)
+
+R3 review 5801169940 (P2-01) and handoff #321:6687306225 require an
+independently readable Claim/CAS identity, numeric `claim_generation`, status,
+owner/lease readback and Execution Pack / Dispatch ID — explicitly not
+inferable from Owner comments, Task Pack issue numbers, PR authorship or
+`--force-with-lease`. This receipt records the concrete authoritative readback
+performed for this batch (initial HEAD `fc19da5ed5baa346457ea0cd0057d7db661e403c`
+/ tree `057f329507f198619df2d31dce34b320e1148eb7` / base
+`7a70211b4460e4c753c97798670de9f34861d4a4`; PR #328 OPEN, headRefOid == branch
+ref == local HEAD, worktree clean 0/0 immediately before this write). It
+supersedes the R2 receipt's Owner-comment "claim chain" framing, which remains
+above as history.
+
+### Authoritative store query (reproducible; log `r3-claim-readback/store-sweep.log`)
+
+The workspace's tally Claim/CAS authority is the host single-writer claim
+controller family: `openSqliteCasStore` SQLite registries (records
+`tally:v2:claim-admission:<sha>` with `protectedClaimKey`
+`kaicreator-mm/tally#<issue>:<role>:__default__`, numeric `generation`, phase,
+`dispatchId`, `writerId`) plus its GitHub-native publication channel
+(`<!-- ads:github -->` claim-event comments per
+`packages/tally-github-native-c/src/task-claim-github-publisher.mjs`).
+Queried on 2026-11-06:
+
+1. Every accessible registry enumerated and each claim record's
+   protectedClaimKey read: `_tmp/tally-alm-claims/registry-{197,198,199,200,
+   202,203,207,208,209,210,211,212,219}.sqlite`,
+   `_tmp/i319-claim/run-20261106T043955/registry-319.sqlite`,
+   `_tmp/i319-terminalization/*.bak`,
+   `tally-host-state/release-{claim-222,operations}.sqlite` — 15 claim
+   admissions total, all bound to tally issues #197–#212, #219, #319 and the
+   #222 release chain. **None is bound to #321, #322, #323 or #324.**
+2. Byte-level scan of all those registries for `#32x` / `321` / `sek06` key
+   material: `NO_MATCH_IN_ANY_REGISTRY`.
+3. GitHub-native claim-event channel: all comments on #321/#322/#323/#324
+   paginated and scanned for the `<!-- ads:github -->` marker: **0 matches**.
+4. Workspace sweep for claim/ledger stores modified since 2026-11-05: no store
+   covering the v2.1.1 knowledge workstream exists (SEK-02R #325 session
+   artifacts likewise contain none).
+
+### Concrete readback values (explicit; no substitution)
+
+- Claim ID / CAS key: **NOT_PRESENT** — no `tally:v2:claim-admission:*` record
+  bound to `kaicreator-mm/tally#323` (or the SEK-06 lanes) exists in any
+  accessible registry. The stores are readable, so this is an authoritative
+  NOT_PRESENT, not an inaccessible/UNKNOWN store.
+- `claim_generation`: **NOT_PRESENT** (no protected claim key exists; numeric
+  generation undefined — deliberately not recorded as "unchanged").
+- Claim status / Task-Pack claim binding / owner/lease/fencing tokens:
+  **NOT_PRESENT** (none exist; no secret tokens to withhold).
+- Execution Pack / Dispatch / attempt ID with target SHA and state:
+  **NOT_PRESENT** — no dispatch record exists in any store; the R1/R2/R3
+  coordination comments on #321 are Owner handoffs, not claim events, and per
+  the R3 finding are not claimed here as claim evidence.
+- Exclusive-Writer mechanism actually in force: single-writer discipline with
+  git `--force-with-lease` fencing (expected old head re-read immediately
+  before push) and live `headRefOid` == branch-ref == local-HEAD readback per
+  write. This is fencing evidence only; it is not represented as Claim/CAS
+  identity.
+
+### Authoritative ownership mechanism and ADS basis for this receipt
+
+Write authorization for this lane is the Owner-frozen Task Pack #323 (original
+four-path write set) exercised through the coordinator #321 combined
+Builder/Repairer handoffs, with single-writer fencing as above; the SEK-06
+workstream has never instantiated Claim/CAS objects. Per the R3 handoff rule 4,
+this NOT_PRESENT receipt is appended because the existing ADS protocol
+explicitly permits it: ADS #1359 v4.19 §10.8 final paragraph — Claim/event
+fields "暂不可用时，可在结构化回执中明确表达，不应阻塞真实交付" (when the
+fields are unavailable, state so explicitly in a structured receipt; do not
+block real delivery) — and Task Pack #323 §"Independent review and repair"
+authorizes reviewer-repairs within the four paths including updating this
+observation. ADS acceptance criterion 7 (Owner ordinary instructions must not
+bypass Claim/CAS constraints) is respected: no Claim/CAS object exists to
+bypass, and **no new Task, Pack, Claim, Dispatch or repair generation was
+created** for this batch. Knowledge records, lifecycle/review states and all
+non-observation paths are untouched; this is an observation-only append.
+
+### Validation at the resulting exact HEAD (Windows-native venv Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Run after this receipt commit (records.yaml unchanged by this batch; per
+handoff rule 7 the applicable checks are rerun and rebound at the new SHA):
+`git diff --check` exit 0; `validate_knowledge_graph.py --self-test` →
+`SELF_TESTS=66/66` exit 0; `assemble_and_validate.py <worktree> 06B …` →
+exit 0 with every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`,
+`NO_ACCEPTED_RECORDS=PASS`, `LINKML_INSTANCE_VALIDATION=PASS`,
+`LANE_VALIDATION=PASS` (62 records; DERIVED_SOURCES=2); clean worktree 0/0;
+four-path SHA256 manifest at the new HEAD and one cross-lane check against all
+three R3-final tips are bound in the R3 delivery comment on coordinator #321
+(receipt dir `_tmp/tally-sek06-lanes/validation/06B-r3/`). Builder/Repairer
+writing stops after this single combined batch; final Exact-SHA verification
+belongs to an independent Verifier.
