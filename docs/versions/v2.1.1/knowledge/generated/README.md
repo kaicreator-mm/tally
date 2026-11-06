@@ -30,8 +30,9 @@ Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection
   expanded canonical CURIE (`se:` = `https://github.com/kaicreator-mm/tally#`), `@type`
   is the model class IRI (`se:Domain`, `se:Evidence`, …).
 - **Slot predicates.** Record fields serialize under `se:<slot_name>` predicates.
-  Reference-valued slots (`*_ref`, `*_refs`) serialize as URIRefs (never literals);
-  `se:synthetic` as `xsd:boolean`; all other fields as plain string literals.
+  Reference-valued slots (`*_ref`, `*_refs`) and `se:predicate` serialize as
+  URIRefs (never literals); `se:synthetic` as `xsd:boolean`; remaining fields
+  as plain string literals.
 - **Typed relationship edges.** In addition to the `se:RelationshipAssertion` resource
   nodes (which carry context, rationale, qualifiers and lifecycle), each assertion also
   materializes the direct triple `<subject_ref> <predicate-URI> <object_ref>` using the
