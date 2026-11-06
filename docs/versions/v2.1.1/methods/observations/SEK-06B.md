@@ -67,12 +67,16 @@ snippet file after writing.
 Repository validator self-test (`validate_knowledge_graph.py --self-test`,
 `PYTHONDONTWRITEBYTECODE=1`): exit 0, final line `SELF_TESTS=66/66`.
 
-**Exact final committed tip receipt** — the full validator run and exit codes
-bind to the committed tree, not a working-tree approximation: HEAD
+**Historical receipt — exact committed-tip validation at `d46cfc4`** (the
+full validator run and exit codes bind to that committed tree, not a
+working-tree approximation; it was the PR tip until the Builder receipt-rebind
+commit `9342aec` and is preserved here as receipt history — see the final-tip
+receipt appended at the end of this file): HEAD
 `d46cfc4af8381fabd13ec1dfd6f10149d2ed1294`, tree
 `932ad13f9aed93322c471fd97da1501e4e401662`, base
 `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #328
-headRefOid equals this HEAD; clean worktree before 0 dirty / after 0 dirty).
+headRefOid equalled this HEAD at that time; clean worktree before 0 dirty /
+after 0 dirty).
 Commands on the committed tree: `validate_knowledge_graph.py --self-test`
 → exit 0 (`SELF_TESTS=66/66`); `assemble_and_validate.py <worktree> 06B
 <records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
@@ -174,3 +178,42 @@ validation rerun after the fix is fully green
 (`_tmp/tally-sek06-lanes/validation/06B-rev1/lane-validation-postfix.log`),
 matching the receipt above line-for-line. No shared-record or
 schema/catalog/validator change was needed.
+
+## Final-tip receipt — Builder batch `9342aec` (2026-11-06 R2 repair append)
+
+The R2 Exact-SHA review of PR #328 required the observation to name the final
+Builder-batch tip; the `d46cfc4` receipt above (and the earlier `7c57d80` /
+`eb32a2e` receipts) are historical context, preserved unchanged.
+
+- Identity: HEAD `9342aecb6f70c65248e7d0c1e279fcd1acf45abb`, tree
+  `04e0b76212b4f1a79189b39d2ca45834f82bc741`, base
+  `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #328
+  headRefOid equalled this HEAD at the R2 review).
+- Commands and exit codes at this exact tip: `validate_knowledge_graph.py
+  --self-test` → `SELF_TESTS=66/66`, exit 0; `assemble_and_validate.py
+  <worktree> 06B <records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
+  `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+  `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (counts unchanged:
+  50 lane records, 13 relationship assertions, `coverage_gaps=4`, derived
+  source `se:SRC-CS2023`). Clean worktree before/after: 0/0 dirty. Logs:
+  Builder batch `_tmp/tally-sek06-lanes/validation/06B-bld4/`
+  (`identity-post.txt`, `selftest-post.log`, `lane-validate-post.log`,
+  `manifest-four-paths-post.sha256`), independently re-run for this repair in
+  `_tmp/tally-sek06-lanes/validation/06B-r2r/`.
+- Four-path SHA256 manifest at HEAD `9342aec` / tree `04e0b76`:
+
+```text
+3ec0a34cb3187b1f6f9cd8bcb4f98d57b09eda1ebedc326d91511b470cacede8  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/architecture-design/README.md
+298751c49f2ab5008585e72ae7cf15025aebd83d52ba42264ca20a310fac55fa  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/architecture-design/records.yaml
+c299cea74c2f764ed43df51a8de4d1336c7151ebeb715c65b38e5e071cb88482  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/architecture-design/EXPLANATIONS.md
+c1de34d3b2369fe088f3aae6f5cf8f8c45371e1c1c256c48978068638d9e9ea2  docs/versions/v2.1.1/methods/observations/SEK-06B.md
+```
+
+This append itself is an observation-only R2-repair commit and becomes the
+newest tip; its exact HEAD/TREE, the post-commit rerun (same commands, exit
+0), the updated four-path manifest and clean-worktree evidence are delivered
+in the R2 repair delivery comment on PR #328 / coordinator #321, with logs in
+`_tmp/tally-sek06-lanes/validation/06B-r2r/`. The ISO/IEC/IEEE 42010
+metadata-only gap (`se:GAP-ARC-ISO42010-ARCH-DESCRIPTION`) and the no-case
+gap (`se:GAP-ARC-DESIGN-REAL-CASES`) are unchanged by this receipt, as is the
+SWEBOK hold (#325/#326 unmerged).
