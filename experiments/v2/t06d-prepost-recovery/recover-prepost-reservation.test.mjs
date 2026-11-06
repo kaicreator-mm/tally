@@ -689,7 +689,7 @@ test('read-only Host CAS opener requires an existing DB and rejects every write'
   const missing=join(dir,'missing.sqlite'),path=join(dir,'existing.sqlite');
   const key='tally:v2:readonly-fixture';
   try{
-    await assert.rejects(openReadOnlySqliteCasStore({path:missing}),/READ_ONLY_SQLITE_OPEN_FAILED/);
+    assert.throws(()=>openReadOnlySqliteCasStore({path:missing}),/READ_ONLY_SQLITE_OPEN_FAILED/);
     assert.equal((await readdir(dir)).includes('missing.sqlite'),false);
     const writable=await openSqliteCasStore({path,busyTimeoutMs:1000});
     await writable.put(key,{phase:'PUBLISHED_VERIFIED'},{mustBeAbsent:true});
