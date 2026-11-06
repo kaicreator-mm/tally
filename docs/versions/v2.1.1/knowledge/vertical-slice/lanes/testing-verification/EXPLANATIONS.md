@@ -124,10 +124,12 @@ DecisionModel contract that a model structures rather than decides.
 
 ## What the gaps say about the lane
 
-The three gap records (`se:GAP-TVV-ISO-29119-2-METADATA-ONLY`,
-`se:GAP-TVV-SWEBOK-KA5-HOLD`, `se:GAP-TVV-NO-EMPIRICAL-CASES`) are first-class
-results: they mark where this lane cannot speak. No normative test-process
-standard content, no professional BOK alignment, and no real-world case
-evidence currently exist behind these records. Until those close, the lane is
-a curriculum-plus-recommendation view of testing, verification and validation
-— coherent within its sources, silent beyond them.
+The four gap records (`se:GAP-TVV-ISO-29119-2-METADATA-ONLY`,
+`se:GAP-TVV-SWEBOK-KA5-HOLD`, `se:GAP-TVV-NO-EMPIRICAL-CASES`, and
+`se:GAP-TVV-CS2023-RIGHTS-CLEARANCE`) are first-class results. They mark the
+unavailable normative test-process source, the professional-BOK hold, the lack
+of empirical cases, and the unresolved permission scope for using CS2023 in a
+general engineering knowledge graph. No educational-use permission is
+presumed to cover this project's broader purpose. Until these gaps close, the
+lane remains a curriculum-plus-recommendation view with explicit authority and
+rights limits.

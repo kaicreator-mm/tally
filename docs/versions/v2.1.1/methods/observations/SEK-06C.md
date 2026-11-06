@@ -70,6 +70,10 @@ modified.
   stays a candidate and the coverage-theater anti-pattern is derived from
   explicitly marked synthesis evidence (`se:EVD-TVV-0014`,
   `se:REL-TVV-0019`).
+- CS2023's registered permission scope is educational materials/programs;
+  Tally's general engineering knowledge graph is not presumed to qualify.
+  This was corrected as the first-class rights gap
+  `se:GAP-TVV-CS2023-RIGHTS-CLEARANCE`. No license clearance is claimed.
 - Per issue #324: test execution is never equated with correctness and
   validation is never equated with acceptance; the distinction is carried in
   `se:CON-TVV-VERIFICATION-VALIDATION`, `se:CLM-TVV-0001` limitations, the
@@ -149,3 +153,14 @@ MERGE=NO
 RELEASE=NO
 DEPLOYMENT=NO
 ```
+
+
+## Rights-clearance correction
+
+The initial README wording could be read as assuming that the CS2023 educational
+permission covers this project's use. That inference is not supported by the
+registry's source-specific rights note. The revised lane treats the permission
+scope as unresolved for a general engineering knowledge graph and records a
+HIGH/OPEN REVIEW_GAP. The earlier lane-validation receipt predates this
+four-path correction and must not be used as validation evidence for the new
+HEAD; exact-tip native validation is required.

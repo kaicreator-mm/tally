@@ -54,11 +54,14 @@ or incident content (no empirical source registered — see gaps).
 
 ## Rights
 
-- CS2023: educational-material/program permission covers paraphrase in
-  educational-corpus context; this lane stores bibliographic metadata, exact
-  locators and concise original paraphrases only (short verbatim topic titles
-  are retained solely for locator anchoring). Other use requires specific
-  permission (ACM/IEEE-CS/AAAI contacts in the source dossier).
+- CS2023: the registry records permission for educational materials/programs
+  and requires specific permission for other uses. Tally's general software-
+  engineering knowledge graph is **not presumed** to fall within the educational
+  permission scope; no license clearance is inferred. This lane stores only
+  metadata, exact locators and concise original paraphrases, but that handling
+  does not itself establish permission. Obtain a rights determination/specific
+  permission before public redistribution or commercial product embedding
+  (ACM/IEEE-CS/AAAI contacts in the source dossier).
 - NIST SP 800-218 v1.1: US-government publication not subject to US copyright;
   voluntary use; official citation appreciated
   (Souppaya, Scarfone, Dodson, NIST SP 800-218, February 2022,
@@ -80,7 +83,7 @@ or incident content (no empirical source registered — see gaps).
 | patterns | 1 | regression safety net (candidate, no real case) |
 | anti_patterns | 1 | coverage theater (synthesis-derived) |
 | decision_models | 1 | pre-commit vs post-commit test placement |
-| coverage_gaps | 3 | ISO 29119-2 metadata-only; SWEBOK KA5 hold; no empirical cases |
+| coverage_gaps | 4 | ISO 29119-2 metadata-only; SWEBOK KA5 hold; no empirical cases; CS2023 rights clearance |
 | relationship_assertions | 20 | 13 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 CROSS_CUTS |
 
 Lifecycle contract: all knowledge records `PROPOSED`/`PENDING_REVIEW`; all
@@ -98,6 +101,9 @@ deduplicate by canonical ID.
    until #325 merges.
 3. `se:GAP-TVV-NO-EMPIRICAL-CASES` — no Case/Counterexample records; pattern
    and anti-pattern records lack real-world case grounding.
+4. `se:GAP-TVV-CS2023-RIGHTS-CLEARANCE` — the source's educational-material
+   permission is not assumed to cover Tally's general engineering knowledge
+   graph; specific permission/rights determination remains open.
 
 Also unpopulated: SSDF PO/PS groups (the security view is PARTIAL by design).
 
