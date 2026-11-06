@@ -573,7 +573,9 @@ const THREE_PATHS = Object.freeze([
   'experiments/v2/t06d-prepost-recovery/recover-prepost-reservation.test.mjs',
 ]);
 
-function parsePriorRunLog(text) {
+/** Parse the #319 prior-run JSONL artifact into the zero-POST receipt the
+ *  controller requires (raw observed values; wiring asserts semantics). */
+export function parsePriorRunLog(text) {
   const events = [];
   for (const line of String(text ?? '').split(/\r?\n/)) {
     if (!line.trim()) continue;
@@ -587,8 +589,9 @@ function parsePriorRunLog(text) {
       /POST|PUBLISH/.test(e.step)).length;
   return {
     status: resultLine.result?.status, reason: resultLine.result?.reason,
-    casWriteBlocked: stoppedLine.casWriteBlocked === true,
-    retry: stoppedLine.retry === false,
+    // Raw observed values; the CLI wiring asserts their exact semantics.
+    casWriteBlocked: stoppedLine.casWriteBlocked,
+    retry: stoppedLine.retry,
     publisherInvocationCount, httpPostCount: publisherInvocationCount,
   };
 }

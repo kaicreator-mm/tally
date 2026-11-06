@@ -5,9 +5,46 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
-import {createPrePostRecoveryController, RECOVERY_IDENTITY}
+import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY}
   from './recover-prepost-reservation.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+
+/** The exact #319 prior-run artifact bytes (sha256 473fcf7a…): pin the CLI
+ *  parser semantics against the real zero-POST receipt it must accept. */
+const PRIOR_RUN_LOG_TEXT = [
+  '{"step":"ENV","node":"v24.21.0","HTTP_PROXY":"present(127.0.0.1:10808)","HTTPS_PROXY":"present(127.0.0.1:10808)","NO_PROXY":"localhost,127.0.0.1,::1","NODE_USE_ENV_PROXY":"1","apiGithubBypassed":false,"tokenPresent":true}',
+  '{"step":"CAS_BEFORE","target203":{"revision":1,"phase":"PUBLISHED_VERIFIED","commentId":6540484121},"claim319":{"revision":1,"phase":"PUBLISHED_VERIFIED","commentId":6668875091}}',
+  '{"step":"QUIESCENCE_PROOF","call":1,"fenceId":"fence:i319-terminalization:20261106T112054Z","fenceHeld":true,"activeWriterCount":0,"activeAttemptCount":0,"activeSubprocessCount":0,"inflightEffectCount":0,"unresolvedResourceCount":0,"writeSetReconciled":true,"evidenceRefCount":6,"observedAt":"2026-11-06T11:20:59.974Z"}',
+  '{"step":"QUIESCENCE_PROOF","call":2,"fenceId":"fence:i319-terminalization:20261106T112054Z","fenceHeld":false,"activeWriterCount":0,"activeAttemptCount":1,"activeSubprocessCount":0,"inflightEffectCount":1,"unresolvedResourceCount":0,"writeSetReconciled":true,"evidenceRefCount":6,"observedAt":"2026-11-06T11:21:05.210Z"}',
+  '{"step":"TERMINALIZE_RESULT","elapsedMs":10283,"result":{"status":"UNKNOWN","reason":"TERMINAL_PREFLIGHT_CHANGED","claimTerminality":"UNKNOWN","authorized":false,"admitted":false,"taskPass":false,"releasePass":false}}',
+  '{"step":"STOPPED","reason":"TERMINAL_PREFLIGHT_CHANGED","casWriteBlocked":true,"retry":false}',
+].join('\n') + '\n';
+{
+  const {createHash} = await import('node:crypto');
+  assert.equal(createHash('sha256').update(PRIOR_RUN_LOG_TEXT, 'utf8').digest('hex'),
+    RECOVERY_IDENTITY.prior.runLogSha256);
+}
+
+test('prior-run artifact parser accepts the exact no-POST receipt with raw semantics', () => {
+  const parsed = parsePriorRunLog(PRIOR_RUN_LOG_TEXT);
+  assert.deepEqual(parsed, {
+    status: 'UNKNOWN', reason: 'TERMINAL_PREFLIGHT_CHANGED',
+    casWriteBlocked: true, retry: false,
+    publisherInvocationCount: 0, httpPostCount: 0,
+  });
+  // Any publisher/POST step in the artifact raises both counts; the
+  // controller then denies on the nonzero receipt before any write.
+  const lines = PRIOR_RUN_LOG_TEXT.split('\n');
+  lines.splice(lines.findIndex(l => l.includes('"step":"STOPPED"')), 0,
+    '{"step":"PUBLISHED_POST_ACK","commentId":123}');
+  const withPost = parsePriorRunLog(lines.join('\n'));
+  assert.equal(withPost.publisherInvocationCount, 1);
+  assert.equal(withPost.httpPostCount, 1);
+  assert.equal(parsePriorRunLog(null), null);
+  assert.equal(parsePriorRunLog('not json\n'), null);
+  assert.equal(parsePriorRunLog('{"step":"ENV"}'), null);
+  assert.equal(parsePriorRunLog(PRIOR_RUN_LOG_TEXT.replace('"retry":false', '"retry":true'))?.retry, true);
+});
 
 /** Exact public bytes of the accepted #319 frozen write-set row (its JSON
  *  digest is pinned by the Pack as 9f6a949a…; the fixture must match it). */
