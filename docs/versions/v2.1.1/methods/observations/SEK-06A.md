@@ -70,28 +70,47 @@ review passes before validation:
 3. **Provenance-hygiene pass.** Claim records carry no evidence list; their
    evidence links are canonical `SUPPORTED_BY` edges, matching the SEK-03 slice
    convention. Evidence-bearing edges cite existing evidence records only. The
-   five shared records were copied verbatim from the shared snippet pack and
-   verified parsed-identical to the pack before validation.
+   five snippet-pack shared records were copied verbatim from the shared
+   snippet pack and verified parsed-identical to the pack before validation.
 4. **Counterfeit-page pass.** Every locator string was checked against the
    registry anchors / extraction; no page number appears that the registry or
    the extraction does not support.
+5. **Review-repair pass (exact tip, after the rights-clearance fix).** Four
+   in-write-set corrections, no record added or removed: (a) the
+   requirement-properties evidence statement now keeps the source's
+   "including" hedge instead of a definite "the properties" enumeration;
+   (b) README cites the shared rights gap by canonical ID, counts the sixth
+   shared record, and points at the exact-tip receipt; (c) EXPLANATIONS moves
+   the rights-gap entry into the Coverage gaps section and completes the
+   shared-record inventory; (d) this validation section was rewritten to the
+   exact-tip receipt (`coverage_gaps=3`). All six shared records re-verified
+   parsed-identical to their shared sources (snippet pack; rights gap identical
+   across the 06A/06B/06C worktrees).
 
 ## Validation — commands and results
 
 Environment: Python 3.14.7, LinkML 1.12.1, linkml-runtime 1.12.1 (SEK venv).
-Full logs are saved under `_tmp/tally-sek06-lanes/validation/06A/`
-(`self-test.log`, `assemble.log`).
+The initial receipt (pre rights-clearance fix, `coverage_gaps=2`) is retained
+under `_tmp/tally-sek06-lanes/validation/06A/`. The exact-tip rerun below was
+first performed at the rights-clearance fix tip
+`7aa2777bd27604eb7b18c923347d84eb98ee2c05` (PR #327 head, clean worktree,
+`PYTHONDONTWRITEBYTECODE=1`) and repeated on the repaired working tree after
+the review-repair edits (evidence-statement fidelity hedge plus narrative
+fixes; no record added or removed); both runs produced the identical key
+lines. Logs (`self-test.log`, `lane-validation.log`) live under
+`_tmp/tally-sek06-lanes/validation/06A-bld2/`.
 
-1. Worktree clean at baseline: `git rev-parse HEAD` = `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`.
+1. Worktree clean at baseline: `git rev-parse HEAD` = `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`;
+   exact-tip rerun clean at `7aa2777bd27604eb7b18c923347d84eb98ee2c05`.
 2. Repository validator self-test:
    `validate_knowledge_graph.py --self-test` → exit 0, final line
    `SELF_TESTS=66/66`.
 3. Lane assembly and validation:
    `assemble_and_validate.py <worktree> 06A <records.yaml> <outdir>` → exit 0.
-   Key output lines:
+   Key output lines (exact tip, post-fix):
 
 ```text
-LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 2, "coverage_gaps": 2, "decision_models": 1, "domains": 1, "evidence_records": 10, "knowledge_claims": 5, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 14, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
+LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 2, "coverage_gaps": 3, "decision_models": 1, "domains": 1, "evidence_records": 10, "knowledge_claims": 5, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 14, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
 COUNT_source_locators=4 MIN=3 PASS
 COUNT_evidence_records=10 MIN=3 PASS
 COUNT_knowledge_claims=5 MIN=4 PASS
@@ -101,7 +120,7 @@ COUNT_practices=2 MIN=2 PASS
 COUNT_patterns=1 MIN=1 PASS
 COUNT_anti_patterns=1 MIN=1 PASS
 COUNT_decision_models=1 MIN=1 PASS
-COUNT_coverage_gaps=2 MIN=1 PASS
+COUNT_coverage_gaps=3 MIN=1 PASS
 COUNT_relationship_assertions=14 MIN=10 PASS
 DERIVED_SOURCES=1 se:SRC-CS2023
 GRAPH_VALIDATION=PASS
@@ -146,6 +165,8 @@ and requires specific permission for other uses. This lane is part of Tally's
 general software-engineering knowledge graph; it is not presumed to qualify
 under that permission. The shared HIGH/OPEN record
 `se:GAP-CS2023-RIGHTS-CLEARANCE` is therefore included verbatim across SEK-06A,
-SEK-06B and SEK-06C. No rights clearance is claimed. This four-path correction
-postdates the prior lane-validation receipt; exact-tip native validation is
-required before review can pass.
+SEK-06B and SEK-06C (verified parsed-identical in all three lane worktrees
+during the exact-tip repair pass). No rights clearance is claimed. The
+four-path correction initially postdated the prior lane-validation receipt;
+the exact-tip native validation quoted above (post-fix, `coverage_gaps=3`,
+`LANE_VALIDATION=PASS`) has since been run and supersedes it.

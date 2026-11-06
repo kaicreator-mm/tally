@@ -53,7 +53,11 @@ specific permission (ACM / IEEE-CS / AAAI contacts in
 bibliographic metadata, exact locators and concise original paraphrases of the
 verified anchors; short verbatim topic titles appear only where needed for
 locator anchoring. No substantial report text is reproduced, and nothing in this
-lane assumes commercial redistribution or product-embedding rights.
+lane assumes commercial redistribution or product-embedding rights. The
+unresolved boundary is tracked as a first-class shared CoverageGap record,
+`se:GAP-CS2023-RIGHTS-CLEARANCE` (HIGH / OPEN, identical across SEK-06A/06B/06C
+for SEK-08 deduplication); it stays OPEN until a documented rights determination
+or specific permission exists.
 
 ## Record counts
 
@@ -76,7 +80,10 @@ lane assumes commercial redistribution or product-embedding rights.
 
 Shared records (domain, view, three locators) are copied verbatim from the
 lane-shared snippet pack so that SEK-08 integration can deduplicate them by
-canonical ID across SEK-06A/06B/06C. Source entities are **not** stored in this
+canonical ID across SEK-06A/06B/06C; the sixth shared record, the
+rights-clearance gap `se:GAP-CS2023-RIGHTS-CLEARANCE`, was added by the
+coordinated three-lane correction and is byte-identical across the lanes for
+the same reason. Source entities are **not** stored in this
 file; the validation harness derives them from `authority/SOURCE_REGISTRY.yaml`.
 
 ## Known gaps
@@ -114,7 +121,9 @@ $VENV/Scripts/python.exe /c/xDev/kAiCreator/_tmp/tally-sek06-lanes/scripts/assem
 
 Expected key lines: every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`,
 `NO_ACCEPTED_RECORDS=PASS`, `LINKML_INSTANCE_VALIDATION=PASS`,
-`LANE_VALIDATION=PASS`. Full saved output lives in
+`LANE_VALIDATION=PASS`. The exact-tip receipt (post rights-clearance fix,
+`coverage_gaps=3`) lives in `_tmp/tally-sek06-lanes/validation/06A-bld2/`;
+the pre-fix receipt (`coverage_gaps=2`) is retained at
 `_tmp/tally-sek06-lanes/validation/06A/` (see
 `methods/observations/SEK-06A.md` for the quoted lines).
 

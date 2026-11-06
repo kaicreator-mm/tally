@@ -16,6 +16,10 @@ store of the record's data. Field values are discussed, not duplicated.
   page anchors the registry has verified for the CS2023 SE section. Copying them
   unchanged lets the SEK-08 integrator collapse duplicates by canonical ID
   instead of reconciling near-duplicates by hand.
+- `se:GAP-CS2023-RIGHTS-CLEARANCE` — the sixth shared record, added to all
+  three lanes by the coordinated rights-clearance correction. It is a
+  CoverageGap, so its narrative entry lives in the Coverage gaps section below;
+  it is listed here so the shared-record inventory stays complete.
 
 ## Taxonomy
 
@@ -163,6 +167,12 @@ professional consensus.
   and the pattern/anti-pattern records rest on curriculum text plus one marked
   synthesis. This gap is why the lane has an evidence-shaped hole rather than
   invented war stories.
+- `se:GAP-CS2023-RIGHTS-CLEARANCE` — HIGH/OPEN and shared across all
+  three SEK-06 lanes (copied verbatim for SEK-08 deduplication). The registered
+  educational-material/program permission is not presumed to cover Tally's
+  general engineering knowledge graph; no public/commercial rights clearance is
+  claimed. Scoped to the domain rather than to this lane's unit, because the
+  permission question attaches to the CS2023 source as a whole.
 
 ## Relationship assertions
 
@@ -181,8 +191,3 @@ elicitation claim, with the fidelity-delta qualifier); one `DERIVED_FROM`
 `RELATED_TO` (pattern ↔ quality-attribute concept as the boundary fence
 described above). Evidence-bearing edges cite the same evidence records their
 endpoints use — no evidence is invented for an edge alone.
-
-- `se:GAP-CS2023-RIGHTS-CLEARANCE` — HIGH/OPEN and shared across all
-  three SEK-06 lanes. The registered educational-material/program permission
-  is not presumed to cover Tally's general engineering knowledge graph; no
-  public/commercial rights clearance is claimed.

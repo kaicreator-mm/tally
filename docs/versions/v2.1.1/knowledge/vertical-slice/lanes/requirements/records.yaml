@@ -206,8 +206,9 @@ collections:
       source_locator_ref: se:LOC-CS2023-SE-REQ-KU
       evidence_type: DIRECT_SOURCE_PARAPHRASE
       statement: >-
-        CS2023 lists consistency, validity, completeness and feasibility as the
-        properties of requirements.
+        CS2023 lists consistency, validity, completeness and feasibility as
+        properties of requirements ("including" in the source topic sentence,
+        so the enumeration is the named, not necessarily exhaustive, set).
       context: "SE-Requirements: Product Requirements, KA Core topic 2."
       method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
       result: "The four named requirement properties were confirmed."
