@@ -62,18 +62,46 @@ snippet file after writing.
 - No record is ACCEPTED; no Case/Counterexample records were created (no real-case
   evidence source admitted; recorded as `se:GAP-ARC-DESIGN-REAL-CASES`).
 
-## Validation results (2026-11-06, Windows native, venv Python 3.14.7 / LinkML 1.12.1)
+## Validation results (2026-11-06, Windows native, venv Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1)
 
-Repository validator self-test:
+Repository validator self-test (`validate_knowledge_graph.py --self-test`,
+`PYTHONDONTWRITEBYTECODE=1`): exit 0, final line `SELF_TESTS=66/66`.
 
+**Exact final committed tip receipt** — the full validator run and exit codes
+bind to the committed tree, not a working-tree approximation: HEAD
+`d46cfc4af8381fabd13ec1dfd6f10149d2ed1294`, tree
+`932ad13f9aed93322c471fd97da1501e4e401662`, base
+`cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #328
+headRefOid equals this HEAD; clean worktree before 0 dirty / after 0 dirty).
+Commands on the committed tree: `validate_knowledge_graph.py --self-test`
+→ exit 0 (`SELF_TESTS=66/66`); `assemble_and_validate.py <worktree> 06B
+<records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
+`GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+`LINKML_INSTANCE_VALIDATION=PASS` (LinkML 1.12.1 / linkml-runtime 1.12.1),
+`LANE_VALIDATION=PASS`; key lines identical to the quoted block below.
+Receipt dir `_tmp/tally-sek06-lanes/validation/06B-bld4/` (`identity-tip.txt`,
+`selftest-tip.log`, `lane-validate-tip.log`,
+`manifest-four-paths-tip.sha256`).
+
+Four-path SHA256 manifest at this committed tip (repo-relative; this
+receipt-rebind commit changes only this observation file, so the first three
+hashes remain valid at the pushed HEAD; the post-commit rerun and full-path
+manifest at the pushed HEAD are recorded in the receipt dir as
+`selftest-post.log`, `lane-validate-post.log`,
+`manifest-four-paths-post.sha256`):
+
+```text
+3ec0a34cb3187b1f6f9cd8bcb4f98d57b09eda1ebedc326d91511b470cacede8  lanes/architecture-design/README.md
+298751c49f2ab5008585e72ae7cf15025aebd83d52ba42264ca20a310fac55fa  lanes/architecture-design/records.yaml
+c299cea74c2f764ed43df51a8de4d1336c7151ebeb715c65b38e5e071cb88482  lanes/architecture-design/EXPLANATIONS.md
+057b225936ec4d44f4dfa23229bdc0df326f0df318ecf056392208e44ad7fc72  methods/observations/SEK-06B.md
 ```
-SELF_TESTS=66/66
-```
 
-Lane assembly and validation, exact tip `eb32a2e` revalidated 2026-11-06
-(`_tmp/tally-sek06-lanes/validation/06B-bld2/lane-validation.log`; script
-`_tmp/tally-sek06-lanes/scripts/assemble_and_validate.py`; the pre-fix initial runs
-remain archived under `_tmp/tally-sek06-lanes/validation/06B/`):
+Earlier receipts retained as history only (all superseded by the exact-tip
+receipt above): `eb32a2e` (`06B-bld2`), the builder pass at `7c57d80`
+(`06B-bld3`), the post-quotation-fix rerun (`06B-rev1/lane-validation-postfix.log`),
+and the pre-fix initial runs (`06B/`). The quoted assembly block is identical
+at every green receipt tip:
 
 ```
 LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 3, "coverage_gaps": 4, "decision_models": 1, "domains": 1, "evidence_records": 11, "knowledge_claims": 6, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 13, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
