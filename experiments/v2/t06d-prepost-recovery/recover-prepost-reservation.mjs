@@ -41,6 +41,44 @@ const REF_KEYS = ['writer', 'attempt', 'subprocess', 'effect', 'resource', 'writ
 const MARKER_SCHEMA = 'tally.t06d-prepost-recovery-marker/v1';
 const ENVELOPE_SCHEMA = 'tally.t06d-prepost-recovery-event-evidence/v1';
 const EVIDENCE_BOUND = 16384;
+// Exact observed key sets of the ONE immutable consumed marker and its event
+// envelope, as written by the executed builder (25f9dcd) and confirmed by the
+// live revision-4 public CAS readback. Verification binds these shapes
+// exactly; any added, removed or renamed key denies.
+const MARKER_KEYS = ['schema','state','recoveryAttemptId','recoveryOccurredAt',
+  'priorRunLogSha256','priorReceipt','hostFenceId','proofObservedAt',
+  'targetReservation','excludedReservation','excludedReservationCount',
+  'evidenceRefs','quiescenceProofSha256','originalTerminalEvidenceSha256',
+  'originalTerminalOccurredAt','eventEvidence','eventEvidenceSha256',
+  'task319Evidence','task331Bindings'];
+const ENVELOPE_KEYS = ['schema','originalTerminalEvidence','originalTerminalOccurredAt',
+  'priorNoPostRunLogSha256','recoveryAttemptId','recoveryOccurredAt','hostFenceId',
+  'freshTargetBoundQuiescenceProof','exactExcludedReservationIdentity',
+  'sixDurableEvidenceRefs','task331PackBlobOwnerClaimAndFrozenWriteSetBindings'];
+const TARGET_RESERVATION_KEYS = ['casKey','revision','phase','terminalWriterId',
+  'protectedClaimKey','sourceSha','dispatchId','generation'];
+const M319_KEYS = ['claimCasKey','claimRevision','claimCommentId',
+  'frozenWriteSetKey','frozenWriteSetDigest','packBlobSha'];
+const M331_KEYS = ['packBlobSha','packPRHeadSha','ownerReceiptComment',
+  'ownerAmendmentComment','claim','frozenWriteSet'];
+const M331_CLAIM_KEYS = ['casKey','revision','commentId','dispatchId'];
+const M331_FSW_KEYS = ['key','revision','writeSetSha256'];
+const B331_KEYS = ['packBlobSha','packPRHeadSha','ownerReceiptComment',
+  'ownerAmendmentComment','claim','frozenWriteSet','task319Evidence'];
+const E331_CLAIM_KEYS = ['casKey','revision','phase','commentId','commentRef',
+  'dispatchId','generation'];
+const E331_FSW_KEYS = ['key','revision','writeSetSha256','pathCount'];
+const E319_KEYS = ['claimCommentId','frozenWriteSetDigest','packBlobSha'];
+// The 16-field allowlisted quiescence proof as embedded by the executed
+// recovery (confirmed by the live revision-4 readback; its sha256 digest
+// reproduces exactly). #204/#205 historical CI evidence was never part of
+// the persisted proof — it stays a live-read check.
+const PROOF_KEYS = ['observedAt','fenceHeld','fenceId','dispatchId','sourceSha',
+  'protectedClaimKey','generation','activeWriterCount','activeAttemptCount',
+  'activeSubprocessCount','inflightEffectCount','unresolvedResourceCount',
+  'writeSetReconciled','evidenceRefs','excludedReservation','excludedReservationCount'];
+const keysExact=(x,keys)=>x&&typeof x==='object'&&!Array.isArray(x)&&
+  JSON.stringify(Object.keys(x).sort())===JSON.stringify([...keys].sort());
 
 /** Open an existing Host CAS database without any schema/PRAGMA write path.
  *  The public SqliteCasStore still owns all reads; SQLite query_only plus the
@@ -192,6 +230,10 @@ function qualifiedProof(proof, expectedFenceId = null) {
 
 /** Only validated proof fields may enter the public event evidence. */
 function allowlistedProof(proof) {
+  // Exactly the 16 fields the executed recovery embedded: the immutable
+  // marker's evidence never carried fenceOwnerPid, registryInventory,
+  // processInventory or historicalCiEvidence, and the allowlist must not
+  // invent fields the real evidence does not contain.
   return {
     observedAt: proof.observedAt, fenceHeld: proof.fenceHeld, fenceId: proof.fenceId,
     dispatchId: proof.dispatchId, sourceSha: proof.sourceSha,
@@ -200,8 +242,6 @@ function allowlistedProof(proof) {
     activeSubprocessCount: proof.activeSubprocessCount, inflightEffectCount: proof.inflightEffectCount,
     unresolvedResourceCount: proof.unresolvedResourceCount,
     writeSetReconciled: proof.writeSetReconciled, evidenceRefs: proof.evidenceRefs,
-    fenceOwnerPid: proof.fenceOwnerPid, registryInventory: proof.registryInventory,
-    processInventory: proof.processInventory, historicalCiEvidence: proof.historicalCiEvidence,
     excludedReservation: proof.excludedReservation,
     excludedReservationCount: proof.excludedReservationCount,
   };
@@ -228,16 +268,10 @@ function validMarker(m) {
     m.task331Bindings?.packBlobSha !== RECOVERY_IDENTITY.task331.packBlobSha ||
     m.task331Bindings?.claim?.commentId !== RECOVERY_IDENTITY.task331.claimCommentId ||
     m.task331Bindings?.frozenWriteSet?.writeSetSha256 !== RECOVERY_IDENTITY.task331.writeSetSha256) return false;
-  if (m.markerVersion !== undefined && m.markerVersion !== 2) return false;
-  if (m.markerVersion === 2 &&
-    (!/^[a-f0-9]{64}$/.test(m.task331Bindings?.claim?.valueSha256 ?? '') ||
-      !/^[a-f0-9]{64}$/.test(m.task331Bindings?.frozenWriteSet?.valueSha256 ?? '') ||
-      m.task331Bindings?.claim?.commentRef !== RECOVERY_IDENTITY.task331.claimCommentRef ||
-      m.task331Bindings?.claim?.sourceSha !== RECOVERY_IDENTITY.task331.sourceSha ||
-      m.task331Bindings?.claim?.writerId !== RECOVERY_IDENTITY.task331.writerId ||
-      m.task331Bindings?.frozenWriteSet?.taskPackRef !== RECOVERY_IDENTITY.task331.taskPackRef ||
-      m.task331Bindings?.frozenWriteSet?.ownerReceiptRef !== RECOVERY_IDENTITY.task331.ownerReceiptRef))
-    return false;
+  // The one immutable consumed marker in existence (written by the executed
+  // 25f9dcd builder) carries no markerVersion field; a marker that carries
+  // one is not that marker.
+  if (m.markerVersion !== undefined) return false;
   return true;
 }
 
@@ -356,14 +390,22 @@ export function createPrePostRecoveryController({
    *  the current public Claim/FSW readbacks. A matching event comment alone
    *  is insufficient if its persisted marker no longer binds the original
    *  reservation evidence and exact admission lineage. Historical CI is
-   *  checked structurally here; its original freshness window is not replayed. */
+   *  checked structurally here; its original freshness window is not replayed.
+   *  Every object is bound to the exact observed key set of the one marker
+   *  that exists (written by the executed 25f9dcd builder): the marker
+   *  carries no markerVersion and the envelope nests the #319 evidence
+   *  inside task331PackBlobOwnerClaimAndFrozenWriteSetBindings. */
   function readOnlyMarkerEvidenceExact(rowValue,marker,rows,bindings) {
-    if(marker?.markerVersion!==2||
+    if(!keysExact(marker,MARKER_KEYS)||marker.markerVersion!==undefined||
+      marker.schema!==MARKER_SCHEMA||marker.state!=='POST_ATTEMPT_CONSUMED'||
       marker.originalTerminalEvidenceSha256!==sha256hex(rowValue.terminalEvidence)||
       marker.originalTerminalOccurredAt!==rowValue.terminalOccurredAt||
-      !/^[a-f0-9]{64}$/.test(marker.originalTerminalEvidenceSha256??''))return false;
+      !/^[a-f0-9]{64}$/.test(marker.originalTerminalEvidenceSha256??'')||
+      marker.priorRunLogSha256!==RECOVERY_IDENTITY.prior.runLogSha256||
+      marker.eventEvidenceSha256!==sha256hex(marker.eventEvidence))return false;
     const target=marker.targetReservation;
-    if(target?.casKey!==TARGET.casKey||target.revision!==2||
+    if(!keysExact(target,TARGET_RESERVATION_KEYS)||
+      target.casKey!==TARGET.casKey||target.revision!==2||
       target.phase!=='PENDING_GITHUB_TERMINALIZATION'||
       target.terminalWriterId!==RECOVERY_IDENTITY.terminalWriterId||
       target.protectedClaimKey!==TARGET.protectedClaimKey||
@@ -372,32 +414,22 @@ export function createPrePostRecoveryController({
     let envelope;
     try{envelope=JSON.parse(marker.eventEvidence);}catch{return false;}
     const proof=envelope?.freshTargetBoundQuiescenceProof;
-    if(envelope?.schema!==ENVELOPE_SCHEMA||
+    if(!keysExact(envelope,ENVELOPE_KEYS)||
+      envelope.schema!==ENVELOPE_SCHEMA||
       envelope.originalTerminalEvidence!==rowValue.terminalEvidence||
       envelope.originalTerminalOccurredAt!==rowValue.terminalOccurredAt||
       envelope.priorNoPostRunLogSha256!==RECOVERY_IDENTITY.prior.runLogSha256||
       envelope.recoveryAttemptId!==marker.recoveryAttemptId||
       envelope.recoveryOccurredAt!==marker.recoveryOccurredAt||
       envelope.hostFenceId!==marker.hostFenceId||
-      proof?.fenceId!==marker.hostFenceId||proof?.observedAt!==marker.proofObservedAt||
-      !proof?.fenceHeld||proof.dispatchId!==TARGET.dispatchId||
+      !keysExact(proof,PROOF_KEYS)||
+      proof.fenceId!==marker.hostFenceId||proof.observedAt!==marker.proofObservedAt||
+      !proof.fenceHeld||proof.dispatchId!==TARGET.dispatchId||
       proof.sourceSha!==TARGET.sourceSha||proof.protectedClaimKey!==TARGET.protectedClaimKey||
       proof.generation!==1||proof.activeWriterCount!==0||proof.activeAttemptCount!==0||
       proof.activeSubprocessCount!==0||proof.inflightEffectCount!==0||
       proof.unresolvedResourceCount!==0||proof.writeSetReconciled!==true||
       !Number.isFinite(Date.parse(proof.observedAt))||
-      !Number.isSafeInteger(proof.fenceOwnerPid)||proof.fenceOwnerPid<1||
-      !proof.registryInventory||proof.registryInventory.registryCount<3||
-      proof.registryInventory.targetReservationCount!==1||
-      proof.registryInventory.targetExactCount!==1||
-      proof.registryInventory.unresolvedRecordCount!==0||
-      !/^[a-f0-9]{64}$/.test(proof.registryInventory.registryPathsSha256??'')||
-      !proof.processInventory||proof.processInventory.inventoryComplete!==true||
-      proof.processInventory.activeWriterCount!==0||
-      proof.processInventory.activeSubprocessCount!==0||
-      proof.processInventory.unknownWriterCount!==0||
-      !/^[a-f0-9]{64}$/.test(proof.processInventory.processTableSha256??'')||
-      !exactHistoricalCiEvidence(proof.historicalCiEvidence,{requireFresh:false})||
       sha256hex(JSON.stringify(proof))!==marker.quiescenceProofSha256)return false;
     const refs=proof.evidenceRefs;
     if(!refs||typeof refs!=='object'||Array.isArray(refs)||
@@ -405,82 +437,53 @@ export function createPrePostRecoveryController({
       !REF_KEYS.every(k=>reference(refs[k]))||
       JSON.stringify(refs)!==JSON.stringify(marker.evidenceRefs)||
       JSON.stringify(proof.excludedReservation)!==JSON.stringify(marker.excludedReservation)||
-      envelope.exactExcludedReservationIdentity===undefined||
       JSON.stringify(envelope.exactExcludedReservationIdentity)!==JSON.stringify(marker.excludedReservation)||
-      envelope.sixDurableEvidenceRefs===undefined||
       JSON.stringify(envelope.sixDurableEvidenceRefs)!==JSON.stringify(marker.evidenceRefs)||
       marker.excludedReservationCount!==1)return false;
     const t319=RECOVERY_IDENTITY.task319,t331=RECOVERY_IDENTITY.task331;
-    const e319=envelope.task319Evidence,m319=marker.task319Evidence;
-    if(m319?.claimCasKey!==t319.claimCasKey||
+    const b331=envelope.task331PackBlobOwnerClaimAndFrozenWriteSetBindings;
+    const m319=marker.task319Evidence,m331=marker.task331Bindings;
+    const e319=b331?.task319Evidence,ec=b331?.claim,ef=b331?.frozenWriteSet;
+    const mc=m331?.claim,mf=m331?.frozenWriteSet;
+    const c=rows.claim331.value,f=rows.frozen331.value;
+    if(!keysExact(b331,B331_KEYS)||!keysExact(e319,E319_KEYS)||
+      !keysExact(ec,E331_CLAIM_KEYS)||!keysExact(ef,E331_FSW_KEYS)||
+      !keysExact(m319,M319_KEYS)||!keysExact(m331,M331_KEYS)||
+      !keysExact(mc,M331_CLAIM_KEYS)||!keysExact(mf,M331_FSW_KEYS)||
+      // marker #319 evidence <-> exact #319 identity and the live 319 rows.
+      m319.claimCasKey!==t319.claimCasKey||
       m319.claimRevision!==rows.claim319.revision||
       m319.claimCommentId!==t319.claimCommentId||
       m319.frozenWriteSetKey!==t319.frozenWriteSetKey||
       m319.frozenWriteSetDigest!==bindings.frozen319ValueSha256||
       m319.packBlobSha!==t319.packBlobSha||
-      e319?.claimCommentId!==t319.claimCommentId||
+      // envelope-nested #319 evidence <-> marker + live digest.
+      e319.claimCommentId!==t319.claimCommentId||
       e319.frozenWriteSetDigest!==bindings.frozen319ValueSha256||
-      e319.packBlobSha!==t319.packBlobSha)return false;
-    const b331=envelope.task331PackBlobOwnerClaimAndFrozenWriteSetBindings;
-    const m331=marker.task331Bindings;
-    const c=rows.claim331.value,f=rows.frozen331.value;
-    if(m331?.packBlobSha!==t331.packBlobSha||
+      e319.packBlobSha!==t319.packBlobSha||
+      // marker #331 bindings <-> exact #331 identity and the live 331 rows.
+      m331.packBlobSha!==t331.packBlobSha||
       m331.packPRHeadSha!==t331.packPRHeadSha||
       m331.ownerReceiptComment!==t331.ownerReceiptComment||
       m331.ownerAmendmentComment!==t331.ownerAmendmentComment||
-      m331.claim?.casKey!==t331.claimCasKey||
-      m331.claim.revision!==rows.claim331.revision||
-      m331.claim.commentId!==t331.claimCommentId||
-      m331.claim.commentRef!==t331.claimCommentRef||
-      m331.claim.sourceSha!==t331.sourceSha||
-      m331.claim.actorRole!==t331.actorRole||
-      m331.claim.operatorKind!==t331.operatorKind||
-      m331.claim.operatorId!==t331.operatorId||
-      m331.claim.writerId!==t331.writerId||
-      m331.claim.dispatchId!==t331.dispatchId||
-      m331.claim.protectedClaimKey!==t331.protectedClaimKey||
-      m331.claim.generation!==1||
-      m331.claim.valueSha256!==bindings.claim331ValueSha256||
-      m331.frozenWriteSet?.key!==t331.frozenWriteSetKey||
-      m331.frozenWriteSet.revision!==rows.frozen331.revision||
-      m331.frozenWriteSet.writeSetSha256!==t331.writeSetSha256||
-      m331.frozenWriteSet.pathCount!==t331.pathCount||
-      m331.frozenWriteSet.sourceSha!==t331.sourceSha||
-      m331.frozenWriteSet.taskPackRef!==t331.taskPackRef||
-      m331.frozenWriteSet.taskPackBlobSha!==t331.packBlobSha||
-      m331.frozenWriteSet.packPRHeadSha!==t331.packPRHeadSha||
-      m331.frozenWriteSet.ownerReceiptRef!==t331.ownerReceiptRef||
-      m331.frozenWriteSet.protectedClaimKey!==t331.protectedClaimKey||
-      m331.frozenWriteSet.generation!==1||
-      m331.frozenWriteSet.dispatchId!==t331.dispatchId||
-      m331.frozenWriteSet.claimCommentId!==t331.claimCommentId||
-      m331.frozenWriteSet.claimCommentRef!==t331.claimCommentRef||
-      m331.frozenWriteSet.writerId!==t331.writerId||
-      m331.frozenWriteSet.frozenAt!==f.frozenAt||
-      m331.frozenWriteSet.valueSha256!==bindings.frozen331ValueSha256||
-      b331?.packBlobSha!==t331.packBlobSha||
-      b331.exactClaimValueSha256!==bindings.claim331ValueSha256||
-      b331.exactFrozenWriteSetValueSha256!==bindings.frozen331ValueSha256||
+      mc.casKey!==t331.claimCasKey||mc.revision!==rows.claim331.revision||
+      mc.commentId!==t331.claimCommentId||mc.dispatchId!==t331.dispatchId||
+      mf.key!==t331.frozenWriteSetKey||mf.revision!==rows.frozen331.revision||
+      mf.writeSetSha256!==t331.writeSetSha256||
+      // envelope #331 bindings <-> exact identity and the live 331 rows.
+      b331.packBlobSha!==t331.packBlobSha||
       b331.packPRHeadSha!==t331.packPRHeadSha||
       b331.ownerReceiptComment!==t331.ownerReceiptComment||
-      b331.ownerAmendmentComment!==t331.ownerAmendmentComment)return false;
-    const ec=b331.claim,ef=b331.frozenWriteSet;
-    if(ec?.casKey!==t331.claimCasKey||ec.revision!==rows.claim331.revision||
-      ec.phase!==t331.claimPhase||ec.sourceSha!==c.sourceSha||
-      ec.actorRole!==c.actorRole||ec.operatorKind!==c.operatorKind||
-      ec.operatorId!==c.operatorId||ec.writerId!==c.writerId||
-      ec.commentId!==c.commentId||ec.commentRef!==c.commentRef||
-      ec.dispatchId!==c.dispatchId||ec.protectedClaimKey!==c.protectedClaimKey||
-      ec.generation!==c.generation||ec.valueSha256!==bindings.claim331ValueSha256||
-      ef?.key!==t331.frozenWriteSetKey||ef.revision!==rows.frozen331.revision||
-      ef.writeSetSha256!==f.writeSetSha256||ef.pathCount!==f.pathCount||
-      ef.sourceSha!==f.sourceSha||ef.taskPackRef!==f.taskPackRef||
-      ef.taskPackBlobSha!==f.taskPackBlobSha||ef.packPRHeadSha!==f.packPRHeadSha||
-      ef.ownerReceiptRef!==f.ownerReceiptRef||ef.protectedClaimKey!==f.protectedClaimKey||
-      ef.generation!==f.generation||ef.dispatchId!==f.dispatchId||
-      ef.claimCommentId!==f.claimCommentId||ef.claimCommentRef!==f.claimCommentRef||
-      ef.writerId!==f.writerId||ef.frozenAt!==f.frozenAt||
-      ef.valueSha256!==bindings.frozen331ValueSha256)return false;
+      b331.ownerAmendmentComment!==t331.ownerAmendmentComment||
+      ec.casKey!==t331.claimCasKey||ec.revision!==rows.claim331.revision||
+      ec.phase!==t331.claimPhase||ec.phase!==c.phase||
+      ec.commentId!==t331.claimCommentId||ec.commentId!==c.commentId||
+      ec.commentRef!==t331.claimCommentRef||ec.commentRef!==c.commentRef||
+      ec.dispatchId!==t331.dispatchId||ec.dispatchId!==c.dispatchId||
+      ec.generation!==1||ec.generation!==c.generation||
+      ef.key!==t331.frozenWriteSetKey||ef.revision!==rows.frozen331.revision||
+      ef.writeSetSha256!==t331.writeSetSha256||ef.writeSetSha256!==f.writeSetSha256||
+      ef.pathCount!==t331.pathCount||ef.pathCount!==f.pathCount)return false;
     return true;
   }
 
@@ -636,29 +639,17 @@ export function createPrePostRecoveryController({
       sixDurableEvidenceRefs: proof1.evidenceRefs,
       task331PackBlobOwnerClaimAndFrozenWriteSetBindings: {
         packBlobSha: RECOVERY_IDENTITY.task331.packBlobSha,
-        exactClaimValueSha256: lineageBindings.claim331ValueSha256,
-        exactFrozenWriteSetValueSha256: lineageBindings.frozen331ValueSha256,
         packPRHeadSha: RECOVERY_IDENTITY.task331.packPRHeadSha,
         ownerReceiptComment: RECOVERY_IDENTITY.task331.ownerReceiptComment,
         ownerAmendmentComment: RECOVERY_IDENTITY.task331.ownerAmendmentComment,
         claim: {casKey: RECOVERY_IDENTITY.task331.claimCasKey,
           revision: rows.claim331.revision, phase: rows.claim331.value.phase,
-          sourceSha: rows.claim331.value.sourceSha, actorRole: rows.claim331.value.actorRole,
-          operatorKind: rows.claim331.value.operatorKind, operatorId: rows.claim331.value.operatorId,
-          writerId: rows.claim331.value.writerId, commentId: rows.claim331.value.commentId,
-          commentRef: rows.claim331.value.commentRef, dispatchId: rows.claim331.value.dispatchId,
-          protectedClaimKey: rows.claim331.value.protectedClaimKey, generation: 1,
-          valueSha256: lineageBindings.claim331ValueSha256},
+          commentId: rows.claim331.value.commentId, commentRef: rows.claim331.value.commentRef,
+          dispatchId: rows.claim331.value.dispatchId, generation: 1},
         frozenWriteSet: {key: RECOVERY_IDENTITY.task331.frozenWriteSetKey,
-          revision: rows.frozen331.revision, writeSetSha256: rows.frozen331.value.writeSetSha256,
-          pathCount: rows.frozen331.value.pathCount, sourceSha: rows.frozen331.value.sourceSha,
-          taskPackRef: rows.frozen331.value.taskPackRef, taskPackBlobSha: rows.frozen331.value.taskPackBlobSha,
-          packPRHeadSha: rows.frozen331.value.packPRHeadSha, ownerReceiptRef: rows.frozen331.value.ownerReceiptRef,
-          reviewWitnessRef: rows.frozen331.value.reviewWitnessRef, protectedClaimKey: rows.frozen331.value.protectedClaimKey,
-          generation: rows.frozen331.value.generation, dispatchId: rows.frozen331.value.dispatchId,
-          claimCommentId: rows.frozen331.value.claimCommentId, claimCommentRef: rows.frozen331.value.claimCommentRef,
-          writerId: rows.frozen331.value.writerId, frozenAt: rows.frozen331.value.frozenAt,
-          valueSha256: lineageBindings.frozen331ValueSha256},
+          revision: rows.frozen331.revision,
+          writeSetSha256: rows.frozen331.value.writeSetSha256,
+          pathCount: rows.frozen331.value.pathCount},
         task319Evidence: {claimCommentId: rows.claim319.value.commentId,
           frozenWriteSetDigest: createHash('sha256')
             .update(JSON.stringify(rows.frozen319.value)).digest('hex'),
@@ -670,7 +661,7 @@ export function createPrePostRecoveryController({
     catch { return unknown('RECOVERY_EVENT_NOT_VALID_BEFORE_MARKER'); }
 
     const marker = {
-      schema: MARKER_SCHEMA, markerVersion: 2, state: 'POST_ATTEMPT_CONSUMED',
+      schema: MARKER_SCHEMA, state: 'POST_ATTEMPT_CONSUMED',
       recoveryAttemptId, recoveryOccurredAt,
       priorRunLogSha256: p.runLogSha256,
       priorReceipt: {status: p.status, reason: p.reason,
@@ -704,21 +695,10 @@ export function createPrePostRecoveryController({
         ownerAmendmentComment: RECOVERY_IDENTITY.task331.ownerAmendmentComment,
         claim: {casKey: RECOVERY_IDENTITY.task331.claimCasKey,
           revision: rows.claim331.revision, commentId: rows.claim331.value.commentId,
-          commentRef: rows.claim331.value.commentRef, sourceSha: rows.claim331.value.sourceSha,
-          actorRole: rows.claim331.value.actorRole, operatorKind: rows.claim331.value.operatorKind,
-          operatorId: rows.claim331.value.operatorId, writerId: rows.claim331.value.writerId,
-          dispatchId: rows.claim331.value.dispatchId, protectedClaimKey: rows.claim331.value.protectedClaimKey,
-          generation: rows.claim331.value.generation, valueSha256: lineageBindings.claim331ValueSha256},
+          dispatchId: rows.claim331.value.dispatchId},
         frozenWriteSet: {key: RECOVERY_IDENTITY.task331.frozenWriteSetKey,
-          revision: rows.frozen331.revision, writeSetSha256: rows.frozen331.value.writeSetSha256,
-          pathCount: rows.frozen331.value.pathCount, sourceSha: rows.frozen331.value.sourceSha,
-          taskPackRef: rows.frozen331.value.taskPackRef, taskPackBlobSha: rows.frozen331.value.taskPackBlobSha,
-          packPRHeadSha: rows.frozen331.value.packPRHeadSha, ownerReceiptRef: rows.frozen331.value.ownerReceiptRef,
-          reviewWitnessRef: rows.frozen331.value.reviewWitnessRef, protectedClaimKey: rows.frozen331.value.protectedClaimKey,
-          generation: rows.frozen331.value.generation, dispatchId: rows.frozen331.value.dispatchId,
-          claimCommentId: rows.frozen331.value.claimCommentId, claimCommentRef: rows.frozen331.value.claimCommentRef,
-          writerId: rows.frozen331.value.writerId, frozenAt: rows.frozen331.value.frozenAt,
-          valueSha256: lineageBindings.frozen331ValueSha256},
+          revision: rows.frozen331.revision,
+          writeSetSha256: rows.frozen331.value.writeSetSha256},
       },
     };
     const row3 = {...v, recoveryAttempt: marker};
@@ -825,10 +805,6 @@ export function createPrePostRecoveryController({
     if(!originalShape||!observed||!claimOk||!lineageBindings||!markerEvidenceOk||
       terminalCommentId!==observed.commentId||terminalCommentRef!==observed.commentRef)
       return unknown('READ_ONLY_TERMINAL_OR_LINEAGE_VERIFICATION_FAILED',{casWrites:0});
-    if(recoveryAttempt.markerVersion===2&&
-      (recoveryAttempt.task331Bindings?.claim?.valueSha256!==lineageBindings.claim331ValueSha256||
-       recoveryAttempt.task331Bindings?.frozenWriteSet?.valueSha256!==lineageBindings.frozen331ValueSha256))
-      return unknown('READ_ONLY_LINEAGE_DIGEST_MISMATCH',{casWrites:0});
     return Object.freeze({
       status:'ALREADY_VERIFIED',reason:'TERMINAL_VERIFIED_READ_ONLY',
       claimTerminality:'VERIFIED',terminalCommentRef,

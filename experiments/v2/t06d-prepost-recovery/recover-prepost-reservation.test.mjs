@@ -936,9 +936,29 @@ test('revision-4 read-only verification rejects marker/envelope tampering agains
         m.eventEvidence=JSON.stringify(e);
         m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
       }],
-      ['envelope #331 Claim digest',m=>{
+      ['envelope #331 Claim identity',m=>{
         const e=JSON.parse(m.eventEvidence);
-        e.task331PackBlobOwnerClaimAndFrozenWriteSetBindings.exactClaimValueSha256='0'.repeat(64);
+        e.task331PackBlobOwnerClaimAndFrozenWriteSetBindings.claim.commentId=6700000099;
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+      }],
+      ['envelope nested #319 pack blob',m=>{
+        const e=JSON.parse(m.eventEvidence);
+        e.task331PackBlobOwnerClaimAndFrozenWriteSetBindings.task319Evidence.packBlobSha='0'.repeat(40);
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+      }],
+      ['envelope hoists #319 evidence to top level',m=>{
+        const e=JSON.parse(m.eventEvidence);
+        e.task319Evidence=e.task331PackBlobOwnerClaimAndFrozenWriteSetBindings.task319Evidence;
+        m.eventEvidence=JSON.stringify(e);
+        m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
+      }],
+      ['envelope embeds a proof field that never existed',m=>{
+        const e=JSON.parse(m.eventEvidence);
+        e.freshTargetBoundQuiescenceProof.registryInventory={registryCount:3,
+          registryPathsSha256:'a'.repeat(64),targetReservationCount:1,
+          targetExactCount:1,unresolvedRecordCount:0};
         m.eventEvidence=JSON.stringify(e);
         m.eventEvidenceSha256=createHash('sha256').update(m.eventEvidence,'utf8').digest('hex');
       }],
