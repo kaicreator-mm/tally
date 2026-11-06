@@ -19,7 +19,9 @@ traceability, secure-design principles and design-tradeoff evaluation.
 registry-derived Source entities into the full knowledge graph; the shared records
 (`se:DOMAIN-SOFTWARE-ENGINEERING`, `se:VIEW-CS2023-SE`, and the three registry-anchored
 locators) are copied verbatim from the shared snippet set so integration can deduplicate
-them by canonical ID.
+them by canonical ID. The sixth shared record, the CS2023 rights-clearance gap
+`se:GAP-CS2023-RIGHTS-CLEARANCE`, was added by the coordinated three-lane correction and
+is byte-identical across SEK-06A/06B/06C for the same reason.
 
 ## The three-layer distinction (scope boundary of this lane)
 
