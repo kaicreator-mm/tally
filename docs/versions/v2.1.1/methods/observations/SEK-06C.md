@@ -90,7 +90,7 @@ modified.
 3. Every evidence `statement` is a concise original paraphrase of verbatim
    extracted content or of a registry-verified fact; nothing else was admitted.
 
-## Validation results (2026-11-06, Windows native, exact tip 293efbc)
+## Validation results (2026-11-06, Windows native, exact tip `293efbc` — historical receipt)
 
 Environment: Python 3.14.7, PyYAML 6.0.3; LinkML 1.12.1 / linkml-runtime
 1.12.1 (SEK venv, `PYTHONDONTWRITEBYTECODE=1`). Validator compile check:
@@ -101,8 +101,10 @@ Validator self-test:
 
 Lane assembly + validation
 (`assemble_and_validate.py <worktree> 06C <records.yaml> <outdir>`), rerun at
-the exact committed final tip after the rights-gap correction and the
-documentation-only follow-up — worktree HEAD
+the then-exact committed final tip after the rights-gap correction and the
+documentation-only follow-up (historical receipt — superseded as tip by the
+Builder-batch commit `a1ef094`, whose final-tip receipt is appended at the end
+of this file) — worktree HEAD
 `293efbc46299b0827e426e5708c7d2b9d8c38893`, tree
 `e99afa5b47eebac710e76a6a3ea6ddfbce6b0e56`, base
 `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #329
@@ -135,8 +137,8 @@ RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
 LANE_VALIDATION=PASS
 ```
 
-Exact-tip receipt directories (outside the repo write set): the current
-final-tip receipt is `_tmp/tally-sek06-lanes/validation/06C-bld3/`
+Exact-tip receipt directories (outside the repo write set): the
+final-tip receipt at `293efbc` is `_tmp/tally-sek06-lanes/validation/06C-bld3/`
 (`identity-tip.txt`, `selftest-tip.log`, `lane-validate-tip.log`,
 `manifest-four-paths-tip.sha256`; post-commit rerun and manifest at the
 pushed HEAD: `selftest-post.log`, `lane-validate-post.log`,
@@ -206,3 +208,46 @@ committed tip `293efbc46299b0827e426e5708c7d2b9d8c38893` / tree
 `e99afa5b47eebac710e76a6a3ea6ddfbce6b0e56` (receipt
 `_tmp/tally-sek06-lanes/validation/06C-bld3`), passing in both runs
 (`LANE_VALIDATION=PASS`, `coverage_gaps=4`).
+
+## Final-tip receipt — Builder batch `a1ef094` (2026-11-06 R2 repair append)
+
+The R2 Exact-SHA review of PR #329 required the observation to name the final
+Builder-batch tip; the `293efbc` receipt above (and the earlier `2b8464a`
+receipt) are historical context, preserved unchanged.
+
+- Identity: HEAD `a1ef094c00c45a32f3dfa11663ad251d2bd23ed3`, tree
+  `fb925ea6878b6531da7ee8febff845c356387344`, base
+  `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #329
+  headRefOid equalled this HEAD at the R2 review).
+- Commands and exit codes at this exact tip: `validate_knowledge_graph.py
+  --self-test` → `SELF_TESTS=66/66`, exit 0; `assemble_and_validate.py
+  <worktree> 06C <records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
+  `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+  `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (counts unchanged:
+  69 lane records, 20 relationship assertions, `coverage_gaps=4`, 2 derived
+  sources `se:SRC-CS2023` + `se:SRC-NIST-SP-800-218-V1-1`). Clean worktree
+  before/after: 0/0 dirty. Logs: Builder batch
+  `_tmp/tally-sek06-lanes/validation/06C-bld3/` (`identity-post.txt`,
+  `selftest-post.log`, `lane-validate-post.log`,
+  `manifest-four-paths-post.sha256`), independently re-run for this repair in
+  `_tmp/tally-sek06-lanes/validation/06C-r2r/`.
+- Four-path SHA256 manifest at HEAD `a1ef094` / tree `fb925ea`:
+
+```text
+4e7c733e934d4e937213b25b55ee71874a4a446f2eaeaaa293bbab25e466b447  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/README.md
+2d66085c5357b783a0dfa9c8a4fc3bab8173e00c3d954ece2c3c1ca26d24a468  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/records.yaml
+fdb49b03410ea38bf0cce7288969d44b4c833fc837cf2c0056994e5b38a87445  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/EXPLANATIONS.md
+44141dfa4a5616b2fbc3bb4c8fa8446ca02b7fe80933937e853283e6efd507ff  docs/versions/v2.1.1/methods/observations/SEK-06C.md
+```
+
+This append itself is an observation-only R2-repair commit and becomes the
+newest tip; its exact HEAD/TREE, the post-commit rerun (same commands, exit
+0), the updated four-path manifest and clean-worktree evidence are delivered
+in the R2 repair delivery comment on PR #329 / coordinator #321, with logs in
+`_tmp/tally-sek06-lanes/validation/06C-r2r/`. Preserved unchanged by this
+receipt: the CS2023 PDF binary SHA-256 remains **NOT_OBTAINED**
+(text-extraction provenance, heading-anchored compensating control), the NIST
+PDF SHA-256
+`617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22`
+(739,891 bytes) and page-level anchors, the shared HIGH/OPEN CS2023
+rights-clearance gap, and the SWEBOK hold (#325/#326 unmerged).
