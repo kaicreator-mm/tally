@@ -1,7 +1,9 @@
 # SEK-06B lane records — Software Engineering architecture and design vertical slice.
 # Lane file, not a graph root: SEK-08 single-writer integration assembles the full graph.
-# Shared snippets (domain, view, three locators) are copied verbatim from
-# _tmp/tally-sek06-lanes/extract/shared-snippets.yaml and must not be reworded here.
+# Shared snippets (domain, view, three locators) originate from
+# _tmp/tally-sek06-lanes/extract/shared-snippets.yaml; the 2026-11-06 P2 repair reworded
+# the domain's and view's stale hold statements identically in all three lane files, so
+# the shared records remain identical across SEK-06A/06B/06C for SEK-08 deduplication.
 lane_id: SEK-06B-ARCHITECTURE-DESIGN-LANE-0.1.0
 title: Software Engineering architecture and design lane records
 status: DRAFT_PENDING_HUMAN_REVIEW
@@ -11,12 +13,15 @@ base_head_sha: cf2dbc845bfc2dcbc110ed52e240e79953a4cba9
 parent_issue: "#323"
 scope_note: >-
   Architecture and design depth slice for the CS2023 Software Engineering knowledge unit
-  SE-Design: Software Design. Curriculum-scoped evidence only: CS2023 (SE-SRC-CS2023) is the
-  sole admitted content source. SWEBOK v4.0a is on source-identity hold (#325) and
-  ISO/IEC/IEEE 42010:2022 is bibliographic-metadata-only, so neither is cited as verified
-  content. Architecture design and detailed design are distinguished only as curriculum
-  abstraction levels (CS Core 1a); architecture description as a normative concept is out
-  of scope and recorded as a coverage gap.
+  SE-Design: Software Design, plus the SWEBOK Guide v4.0a KA2 Software Architecture and
+  KA3 Software Design anchors admitted by the 2026-11-06 P2 repair after direct
+  reinspection (identity/registry reconciliation complete: SEK-02R #325 merged via PR
+  #326 into the WIP base). ISO/IEC/IEEE 42010:2022 remains bibliographic-metadata-only.
+  Architecture design and detailed design are distinguished only as curriculum
+  abstraction levels (CS Core 1a) in the CS2023 records; the SWEBOK records add the
+  professional-BOK distinctions between architecture description, architectural design
+  and detailed design at their inspected sections. No SWEBOK-derived claim is
+  automatically accepted.
 collections:
   domains:
     - id: se:DOMAIN-SOFTWARE-ENGINEERING
@@ -34,10 +39,10 @@ collections:
         - secure-development cross-cutting guidance
       scope_exclusions:
         - the entirety of computer science
-        - unreviewed professional body-of-knowledge claims pending SEK-02R
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
       boundary_notes:
         - No single source is treated as a complete ontology of the discipline.
-        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R #325 merged via PR #326); SWEBOK content is cited only where a lane has directly reinspected the located sections, and such records stay PROPOSED/PENDING_REVIEW until human review.
       evidence_refs: []
   taxonomy_views:
     - id: se:VIEW-CS2023-SE
@@ -54,7 +59,7 @@ collections:
       limitations:
         - Curriculum classification is not professional-domain completeness.
         - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
-        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
       evidence_refs: []
   taxonomy_nodes:
     - id: se:NODE-CS2023-SE-SOFTWARE-DESIGN
@@ -118,6 +123,41 @@ collections:
       verified_content_summary: "SE-Design topics: system design principles (abstraction levels, separation of concerns, information hiding, coupling and cohesion); design paradigms and standard architectures; component boundaries and dependencies; programming in the large vs small; code smells vs correctness; API design principles; data invariants; structural and behavioral models; data design; requirement traceability; non-core design modeling, design-quality measurement, secure design principles and design-tradeoff evaluation."
       verification_state: LOCATOR_VERIFIED
       accessed_on: "2026-11-06"
+    # --- SWEBOK v4.0a KA2/KA3 locators (2026-11-06 P2 repair reinspection; official
+    #     PDF SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are 0-based,
+    #     printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 2 Software Architecture, section 2 Software Architecture Description, including 2.1 Architecture Views and Viewpoints and 2.2 Architecture Patterns, Styles and Reference Architectures; PDF page indices 69-71; printed pages 2-4 to 2-6"
+      verified_content_summary: "Architecture descriptions as work products addressed to stakeholder concerns; views addressing distinct concerns; viewpoints as the conventions governing views; pattern/style families and reference architectures."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA2-ARCH-DECISIONS-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 2 Software Architecture, section 2.4 Architecture as Significant Decisions and section 3 Software Architecture Process (3.1 Architecture in Context, 3.1.1 Relation of Architecture to Design, 3.2 Architectural Design); PDF page indices 72-74; printed pages 2-7 to 2-9"
+      verified_content_summary: "Architectural design as a network of significant decisions with recorded rationale and trade-offs; architectural technical debt; architecture's life-cycle contexts; what architectural design involves versus detailed design."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA3-DESIGN-PROCESSES
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 3 Software Design, section 1 Software Design Fundamentals (1.1 Design Thinking, 1.3 Key Issues in Software Design, 1.4 Software Design Principles) and section 2 Software Design Processes (2.1 High-Level Design, 2.2 Detailed Design); PDF page indices 83-87; printed pages 3-2 to 3-6"
+      verified_content_summary: "Design's four senses and the software design description; key crosscutting issues; design principles; the two design stages beneath architecture — high-level (external-facing component interaction) and detailed (internal module characteristics)."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+
   evidence_records:
     - id: se:EVD-ARC-0001
       record_version: 0.1.0
@@ -153,7 +193,7 @@ collections:
       result: "The named principles are taught as adaptable design guidance, not merely as vocabulary."
       limitations:
         - The curriculum lists the principles by name; no detailed treatment of each principle was extracted.
-        - Curriculum scope only; professional-consensus status is not asserted (SWEBOK hold).
+        - Curriculum scope only; professional-consensus status is not asserted (see the SWEBOK-derived records for the reinspected professional-BOK counterparts).
       uncertainty: []
       extraction_status: EXTRACTED_PENDING_REVIEW
       synthetic: false
@@ -342,6 +382,84 @@ collections:
       uncertainty: []
       extraction_status: EXTRACTED_PENDING_REVIEW
       synthetic: false
+    # --- SWEBOK v4.0a KA2/KA3 evidence (2026-11-06 P2 repair reinspection) ---
+    - id: se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA2 distinguishes a software system's architecture from its
+        architecture description: for large, team-developed systems a tangible
+        representation is needed, and architecture descriptions are the work
+        products that document the architecture for stakeholders whose concerns
+        the architecture answers. Descriptions commonly use multiple
+        architecture views, each addressing specific concerns, with the
+        conventions for each view documented as an architecture viewpoint;
+        architectural styles and patterns express recurring large-scale
+        organization, and reference architectures codify proven structures for
+        a domain.
+      context: "SWEBOK Guide v4.0a Chapter 2 section 2 (2.1, 2.2), printed pages 2-4 to 2-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-06; original paraphrase."
+      result: "The description/views/viewpoints vocabulary and the style/pattern/reference-architecture layer were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The section surveys generally accepted description practice; it does not prescribe a mandatory viewpoint set."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-SWEBOK-DECISIONS-DEBT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA2-ARCH-DECISIONS-PROCESS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA2 frames architectural design as a creative process whose
+        outcome is a network of significant decisions: decisions affect quality
+        attributes and trade-offs, their rationale (assumptions, alternatives
+        considered, selection and rejection criteria) can be documented, and
+        decisions deferred today can accumulate architectural technical debt
+        that later work must pay. The chapter's process model situates
+        architectural design across life-cycle contexts — traditional stages,
+        product lines, Agile settings where architecture may only "emerge", and
+        enterprise/system-of-systems baselines — and separates architecture's
+        concern (shaping requirements and wide-ranging concerns) from design's
+        focus on an established requirement set.
+      context: "SWEBOK Guide v4.0a Chapter 2 sections 2.4 and 3 (3.1, 3.1.1, 3.2), printed pages 2-7 to 2-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06; original paraphrase."
+      result: "The decision/rationale/technical-debt framing and the architecture-versus-design contrast were confirmed."
+      limitations:
+        - "The contexts are described qualitatively; the Guide asserts no quantitative measure of architectural debt here."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-SWEBOK-DESIGN-STAGES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA3-DESIGN-PROCESSES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA3 presents software design as a life-cycle activity with
+        three stages — architectural design (treated in the Software
+        Architecture KA), high-level or external-facing design, and detailed or
+        internal-facing design. High-level design specifies the interaction of
+        major components with one another and the environment (external events
+        and messages, data formats and protocols, ordering and timing,
+        end-to-end transactions, data persistence) within the envelope
+        established by the architecture; detailed design proceeds within the
+        high-level design's constraints and specifies components' internal
+        modules, responsibilities, states, algorithms and data structures. Key
+        issues and design principles apply across the stages.
+      context: "SWEBOK Guide v4.0a Chapter 3 sections 1 and 2 (1.1, 1.3, 1.4, 2.1, 2.2), printed pages 3-2 to 3-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06; original paraphrase."
+      result: "The three-stage decomposition and the high-level versus detailed design content split were confirmed."
+      limitations:
+        - "The stage decomposition is a conceptual model; the Guide does not mandate stage-gate sequencing for every project."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
   concepts:
     - id: se:CON-ARC-SEPARATION-OF-CONCERNS
       record_version: 0.1.0
@@ -515,6 +633,70 @@ collections:
       evidence_refs:
         - se:EVD-ARC-0011
       review_status: PENDING
+    # --- SWEBOK v4.0a KA2/KA3 claims (2026-11-06 P2 repair reinspection) ---
+    - id: se:CLM-ARC-SWEBOK-DESCRIPTION-DISTINCTION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA2 distinguishes a software system's architecture
+        from its architecture description, and characterizes descriptions as
+        stakeholder-addressed work products commonly organized as multiple
+        views whose conventions are documented as viewpoints, with styles,
+        patterns and reference architectures as recurring organization
+        vocabularies.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 2 section 2 (printed pages 2-4 to 2-6); generally accepted KA content, not a prescription of a mandatory viewpoint set."
+      applicability: "Professional-BOK grounding for the architecture-description boundary this lane previously had to leave as curriculum abstraction levels only; complements, and does not replace, the ISO/IEC/IEEE 42010 metadata-only record."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The Guide's authority limitations apply: a guide to generally accepted knowledge, not a uniform prescription; its citations are not comprehensive."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS
+      review_status: PENDING
+    - id: se:CLM-ARC-SWEBOK-DECISIONS-RATIONALE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA2 frames architectural design as producing a
+        network of significant decisions whose quality-attribute trade-offs
+        and rationale can be recorded, and warns that deferred decisions can
+        accumulate architectural technical debt borne by later work.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 2 sections 2.4 and 3 (printed pages 2-7 to 2-9); generally accepted KA content, not a mandated documentation procedure."
+      applicability: "Professional-BOK counterpart to the decision-record and rationale themes in this lane's curriculum records."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The debt characterization is qualitative in the inspected sections; no measurement method is asserted."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-SWEBOK-DECISIONS-DEBT
+      review_status: PENDING
+    - id: se:CLM-ARC-SWEBOK-DESIGN-STAGE-SPLIT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA3 decomposes software design into architectural,
+        high-level (external-facing) and detailed (internal-facing) stages,
+        with high-level design fixing component interaction and environment
+        contracts within the architectural envelope and detailed design fixing
+        internal module characteristics within the high-level constraints.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a Chapter 3 sections 1-2 (printed pages 3-2 to 3-6); a conceptual stage decomposition, not a mandated stage-gate process."
+      applicability: "Professional-BOK counterpart to the CS2023 architectural-design/detailed-design abstraction-level distinction in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The decomposition is conceptual; projects may blend stages, and the Guide does not prescribe sequencing."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-SWEBOK-DESIGN-STAGES
+      review_status: PENDING
   principles:
     - id: se:PRI-ARC-SEPARATION-OF-CONCERNS
       record_version: 0.1.0
@@ -535,7 +717,7 @@ collections:
         - "The curriculum does not state that separation of concerns always dominates other goals; design-tradeoff evaluation is a separate Non-core topic (13)."
       limitations:
         - Name-level curriculum anchor; the extracted text provides no detailed treatment of the principle.
-        - Not a universal prescription; SWEBOK professional-consensus status is unavailable under the source-identity hold.
+        - Not a universal prescription; the professional-BOK counterpart is carried separately by the reinspected SWEBOK records, not by this curriculum record.
       evidence_refs:
         - se:EVD-ARC-0002
       claim_refs: []
@@ -727,22 +909,30 @@ collections:
       record_version: 0.1.0
       lifecycle_status: PENDING_REVIEW
       created_on: "2026-11-06"
-      label: Professional architecture and design consensus unavailable under SWEBOK hold
+      label: Professional-BOK architecture/design coverage limited to inspected SWEBOK KA2/KA3 sections
       target_scope_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
       gap_kind: SOURCE_GAP
       description: >-
-        SWEBOK Guide v4.0a is under source-identity hold (SEK-02R, #325 unmerged), so its
-        software design and software architecture knowledge areas cannot be cited as
-        verified content. This lane's design knowledge is therefore curriculum-scoped
-        (CS2023) only, and no curriculum statement may be promoted to professional
-        consensus.
+        SWEBOK Guide v4.0a identity and registry reconciliation is complete (#326
+        merged into the WIP base) and the 2026-11-06 repair reinspected KA2
+        sections 2 (2.1, 2.2), 2.4 and 3 (3.1, 3.1.1, 3.2) plus KA3 sections 1
+        (1.1, 1.3, 1.4) and 2 (2.1, 2.2) directly, admitting locators, evidence
+        and claims at content level. The remaining professional-BOK gap is
+        content breadth and evidence depth: KA2 section 4 (architecture
+        evaluation) and KA3 sections 3-6 (qualities, recording designs,
+        strategies and methods, quality analysis) were not reinspected for this
+        lane, no SWEBOK-derived record has passed human review, and no
+        curriculum statement is promoted to professional consensus by this
+        partial admission.
       severity: MEDIUM
       coverage_status: OPEN
       impact: >-
-        Principles, practices and patterns in this lane carry curriculum-scope qualifiers;
-        a professional-consensus comparison layer is missing until the hold is released.
+        SWEBOK-derived records are content-verified paraphrases of inspected
+        sections only and remain PROPOSED/PENDING_REVIEW; the uninspected KA2/KA3
+        topics stay uncovered, and curriculum-scoped records keep their
+        curriculum-scope qualifiers.
       resolution_notes:
-        - "Revisit after SEK-02R #325 merges and SWEBOK locators become citable."
+        - "Reinspect KA2 section 4 and KA3 sections 3-6 when the lane needs them; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
       evidence_refs: []
     - id: se:GAP-ARC-DESIGN-REAL-CASES
       record_version: 0.1.0
@@ -962,3 +1152,31 @@ collections:
       evidence_refs:
         - se:EVD-ARC-0005
         - se:EVD-ARC-0006
+    # --- SWEBOK v4.0a KA2/KA3 edges (2026-11-06 P2 repair reinspection) ---
+    - id: se:REL-ARC-0014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-SWEBOK-DESCRIPTION-DISTINCTION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS
+      context: "Canonical claim-to-evidence trace for the SWEBOK architecture-description claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 2 section 2 at its verified locator (PDF page indices 69-71; printed 2-4 to 2-6), the sole basis of the claim."
+    - id: se:REL-ARC-0015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-SWEBOK-DECISIONS-RATIONALE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-SWEBOK-DECISIONS-DEBT
+      context: "Canonical claim-to-evidence trace for the SWEBOK architectural-decisions claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 2 sections 2.4 and 3 at their verified locator (PDF page indices 72-74; printed 2-7 to 2-9), which carry the decision/rationale/debt framing."
+    - id: se:REL-ARC-0016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-SWEBOK-DESIGN-STAGE-SPLIT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-SWEBOK-DESIGN-STAGES
+      context: "Canonical claim-to-evidence trace for the SWEBOK design-stage claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 3 sections 1-2 at their verified locator (PDF page indices 83-87; printed 3-2 to 3-6), which state the three-stage decomposition."

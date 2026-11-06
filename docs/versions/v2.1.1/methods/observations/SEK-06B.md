@@ -31,6 +31,11 @@
 - SWEBOK v4.0a remains on source-identity hold (#325 unmerged); no SWEBOK KA2/KA3 content
   is cited by this lane (`se:GAP-ARC-SWEBOK-DESIGN-CONSENSUS`).
 
+  *(Historical authoring-time statement. Current status after the 2026-11-06 P2 repair:
+  #325 merged via PR #326 into the WIP base; identity/registry reconciliation complete;
+  KA2/KA3 sections reinspected directly and cited at content level — see the P2 repair
+  receipt at the end of this observation.)*
+
 ## Locator verification
 
 | Locator | Type | Anchor | State |
@@ -279,3 +284,79 @@ c299cea74c2f764ed43df51a8de4d1336c7151ebeb715c65b38e5e071cb88482  docs/versions/
   clean-worktree evidence are delivered in the rebase delivery comment on
   PR #328 / coordinator #321, with logs in
   `_tmp/tally-sek06-lanes/validation/06B-rb1-post/`.
+
+## P2 repair receipt — SWEBOK KA2/KA3 reinspection + stale-hold correction (2026-11-06)
+
+Repair batch executed under the combined handoff on #321 (R1 review of the
+post-WIP-rebase tips, both findings P2), within the original #323 four-path
+write set, against reviewed tip `6b963b7345aa974d0c91af9c23ee63813beb46b6` /
+tree `e7add997ca5ff8e80f1e854d3a971cca4dc96db8`, base
+`7a70211b4460e4c753c97798670de9f34861d4a4`. Pre-write readback: PR #328 OPEN,
+headRefOid equalled the branch ref and the reviewed tip; worktree clean; no
+concurrent writer observed; write set unchanged.
+
+### P2-01 — stale source-hold statements corrected
+
+README.md, records.yaml and EXPLANATIONS.md no longer state that #325 is
+unmerged or that SWEBOK is on source-identity hold. Current-state wording now
+says: identity/registry reconciliation complete (#326 merged into this lane's
+WIP base); content-level reinspection performed by this repair;
+`se:GAP-ARC-SWEBOK-DESIGN-CONSENSUS` preserved as a stable ID but redescribed
+as a content/evidence coverage gap (KA2 §4 and KA3 §3-6 uninspected; no human
+review of SWEBOK-derived records), still MEDIUM/OPEN. The shared Domain and
+View records' hold language was reworded **identically in all three lane
+files** (06A/06B/06C) so the six shared records remain byte-identical for
+SEK-08. Historical statements in this observation are preserved and labeled.
+The ISO/IEC/IEEE 42010 metadata-only boundary is untouched.
+
+### P2-02 — SWEBOK KA2/KA3 locator re-verification performed
+
+Official source reopened locally: the retained official PDF copy
+(`_tmp/i325-localval-r3/pdf/swebok-v4.pdf`) re-verified as SHA-256
+`0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`,
+6,015,672 bytes, 411 pages, `%PDF-1.7`, matching the SEK-02R registry record
+(canonical source `SE-SRC-SWEBOK-GUIDE-4-0A`). Chapter/section headings and
+printed folios were verified by direct text extraction at the exact page
+indices. Admitted locators (PDF page indices 0-based; printed pages use the
+Guide's chapter-page folios):
+
+| Locator ID | Section(s) verified | PDF page indices | Printed pages |
+|---|---|---|---|
+| `se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION` | Ch.2 §2 Software Architecture Description (§2.1 Views and Viewpoints, §2.2 Patterns, Styles and Reference Architectures) | 69–71 | 2-4 to 2-6 |
+| `se:LOC-SWEBOK-KA2-ARCH-DECISIONS-PROCESS` | Ch.2 §2.4 Architecture as Significant Decisions and §3 Software Architecture Process (§3.1 incl. 3.1.1, §3.2 Architectural Design) | 72–74 | 2-7 to 2-9 |
+| `se:LOC-SWEBOK-KA3-DESIGN-PROCESSES` | Ch.3 §1 Software Design Fundamentals (§1.1, §1.3, §1.4) and §2 Software Design Processes (§2.1 High-Level, §2.2 Detailed) | 83–87 | 3-2 to 3-6 |
+
+Chapter 2 opens at PDF page index 66 (printed 2-1) and Chapter 3 at PDF page
+index 82 (printed 3-1). Added records: the three locators above, three
+`DIRECT_SOURCE_PARAPHRASE` evidence records
+(`se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS`, `se:EVD-ARC-SWEBOK-DECISIONS-DEBT`,
+`se:EVD-ARC-SWEBOK-DESIGN-STAGES`), three claims
+(`se:CLM-ARC-SWEBOK-DESCRIPTION-DISTINCTION`,
+`se:CLM-ARC-SWEBOK-DECISIONS-RATIONALE`,
+`se:CLM-ARC-SWEBOK-DESIGN-STAGE-SPLIT`) and three canonical `SUPPORTED_BY`
+edges (`se:REL-ARC-0014/0015/0016`). No page number, section or claim was
+written that the extracted PDF text does not support; the Guide's
+generally-accepted-knowledge-not-prescription limitation is carried inside each
+claim. Rights boundaries kept: PDF not committed/mirrored/redistributed,
+original paraphrases only, release-date discrepancy remains OPEN, all records
+PROPOSED/PENDING_REVIEW, zero ACCEPTED, ISO 42010 metadata-only preserved.
+
+### Validation (Windows-native, Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Run on the exact repaired working tree (= the committed tree of this repair
+commit); rerun after the commit and the final four-path SHA256 manifest at the
+pushed HEAD are delivered in the P2 repair delivery comment on PR #328 /
+coordinator #321, logs in `_tmp/tally-sek06-lanes/validation/06B-p2/`.
+
+1. `validate_knowledge_graph.py --self-test` → `SELF_TESTS=66/66`, exit 0.
+2. `assemble_and_validate.py <worktree> 06B <records.yaml> <outdir>` → exit 0:
+   every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+   `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (62 lane records:
+   `source_locators=7`, `evidence_records=14`, `knowledge_claims=9`,
+   `relationship_assertions=16`, `coverage_gaps=4`; derived sources
+   `se:SRC-CS2023` + `se:SRC-SWEBOK-GUIDE-4-0A`). 50 → 62 lane records (three
+   content files plus this observation are the only paths changed).
+
+Cross-lane check at the three repaired tips and clean-worktree evidence are
+recorded in the delivery comment. Human review burden remains NOT_MEASURED; no
+record is ACCEPTED.

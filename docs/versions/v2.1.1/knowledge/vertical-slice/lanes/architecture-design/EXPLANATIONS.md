@@ -8,11 +8,13 @@ exact revision.
 
 ## Shared records (used, not owned, by this lane)
 
-- `se:DOMAIN-SOFTWARE-ENGINEERING` and `se:VIEW-CS2023-SE` are copied verbatim from the
-  SEK-06 shared snippet set so that SEK-08 integration can deduplicate them across lanes.
-  The domain record's boundary notes already encode the two constraints this lane
-  depends on: no single source is a complete ontology, and SWEBOK is not citable until
-  #325 merges.
+- `se:DOMAIN-SOFTWARE-ENGINEERING` and `se:VIEW-CS2023-SE` are carried identically in
+  all three SEK-06 lanes so that SEK-08 integration can deduplicate them. The domain
+  record's boundary notes encode the two constraints this lane depends on: no single
+  source is a complete ontology, and SWEBOK content is citable only where a lane has
+  directly reinspected it (identity/registry reconciliation is complete since #326
+  merged; the 2026-11-06 P2 repair reworded these two shared records identically across
+  the lanes to state that current state).
 - The three shared locators anchor the registry-verified page positions. This lane uses
   `se:LOC-CS2023-SE-OVERVIEW` for the Software Design unit framing and
   `se:LOC-CS2023-SE-KU-TABLE` for the core-hours fact; `se:LOC-CS2023-BOK-TABLE` is
@@ -27,7 +29,7 @@ for engineer-facing internal design — because that contrast is what keeps this
 swallowing requirements topics. The node deliberately claims nothing about professional
 software design writ large.
 
-## Evidence family — `se:EVD-ARC-0001` … `se:EVD-ARC-0011`
+## Evidence family — `se:EVD-ARC-0001` … `se:EVD-ARC-0011`, plus SWEBOK `se:EVD-ARC-SWEBOK-*`
 
 The evidence set walks the SE-Design knowledge unit top to bottom. Three records carry the
 weight of the lane's central distinction: `se:EVD-ARC-0001` (architectural vs detailed
@@ -51,7 +53,15 @@ anti-pattern's observable attributes are interpretations. A reviewer who finds t
 inference too aggressive can reject the anti-pattern without touching the paraphrase
 evidence.
 
-## Claims — `se:CLM-ARC-0001` … `se:CLM-ARC-0006`
+The three `se:EVD-ARC-SWEBOK-*` records (`…-DESCRIPTION-VIEWS`, `…-DECISIONS-DEBT`,
+`…-DESIGN-STAGES`) are the professional-BOK side added by the 2026-11-06 P2 repair:
+each paraphrases only the KA2/KA3 sections at its verified locator in the hash-checked
+official PDF, and each carries the Guide's generally-accepted-knowledge caution inside
+its limitations field. They were written to close the exact holes the hold left —
+architecture description vocabulary, decision rationale and the high-level/detailed
+stage split — without touching the ISO metadata-only boundary.
+
+## Claims — `se:CLM-ARC-0001` … `se:CLM-ARC-0006`, plus SWEBOK `se:CLM-ARC-SWEBOK-*`
 
 The claims are deliberately small. `se:CLM-ARC-0001` asserts only what CS Core 1a
 supports: two abstraction levels presented as distinct. It explicitly disclaims the
@@ -62,6 +72,13 @@ normative architecture-description layer, which has no admissible source.
 the practices are industry-consensus or effective. `se:CLM-ARC-0006` is a curriculum
 design fact (core hours) that exists to support curriculum analysis, never importance
 rankings.
+
+The three SWEBOK claims (`se:CLM-ARC-SWEBOK-DESCRIPTION-DISTINCTION`,
+`se:CLM-ARC-SWEBOK-DECISIONS-RATIONALE`, `se:CLM-ARC-SWEBOK-DESIGN-STAGE-SPLIT`) follow
+the same smallness rule at professional-BOK fidelity: each asserts what the Guide's
+inspected KA2/KA3 sections state, scopes itself to those printed pages, and repeats the
+Guide's not-a-prescription caution, so none can be quoted as an industry consensus
+verdict.
 
 ## Concepts — `se:CON-ARC-SEPARATION-OF-CONCERNS`, `se:CON-ARC-COUPLING-COHESION`, `se:CON-ARC-DESIGN-ABSTRACTION-LEVELS`
 
@@ -78,8 +95,9 @@ point at the ISO 42010 gap for everything the corpus cannot say.
 The principle record turns the curriculum's topic-plus-learning-outcome pair into a
 guiding proposition with a stated rationale. Its exceptions and limitations do the heavy
 lifting: the curriculum itself separates tradeoff evaluation from any single principle
-(Non-core 13), the anchor is name-level, and professional-consensus status is unavailable
-under the SWEBOK hold. It is guidance with a curriculum passport, not a prescription.
+(Non-core 13) and the anchor is name-level; the professional-BOK counterpart now exists
+in the SWEBOK-derived records but stays PENDING_REVIEW, so this principle remains
+guidance with a curriculum passport, not a prescription.
 
 ## Practices — `se:PRA-ARC-BOUNDARY-IDENTIFICATION`, `se:PRA-ARC-API-CONTRACT-DOCUMENTATION`
 
@@ -118,17 +136,22 @@ the curriculum's own examples.
 
 ## Coverage gaps — `se:GAP-ARC-ISO42010-ARCH-DESCRIPTION`, `se:GAP-ARC-SWEBOK-DESIGN-CONSENSUS`, `se:GAP-ARC-DESIGN-REAL-CASES`
 
-The three gaps are the lane's honest edges. The first keeps the architecture-description
-layer explicitly unsourced rather than quietly borrowing the ISO standard's title. The
-second prevents any curriculum statement here from being read as professional consensus
-while SWEBOK is held. The third records why no Case or Counterexample records exist: with
+The three gaps are the lane's honest edges. The first keeps the ISO architecture-description
+layer explicitly unsourced rather than quietly borrowing the standard's title (the
+SWEBOK KA2 description vocabulary admitted by the P2 repair is the Guide's content, not
+the ISO normative concept). The second is now a coverage-breadth gap: the reinspected
+KA2/KA3 sections are cited directly, KA2 §4 and KA3 §3-6 are not yet reinspected, no
+SWEBOK-derived record has passed human review, and no curriculum statement becomes
+professional consensus by adjacency. The third records why no Case or Counterexample records exist: with
 no admitted real-case source, inventing one would violate the corpus's provenance rules,
 so Pattern and AntiPattern records stand on curriculum and declared-synthesis evidence
 alone.
 
-## Relationship assertions — `se:REL-ARC-0001` … `se:REL-ARC-0013`
+## Relationship assertions — `se:REL-ARC-0001` … `se:REL-ARC-0016`
 
-The edge set follows the required mix. Six SUPPORTED_BY edges bind claims to evidence.
+The edge set follows the required mix. Nine SUPPORTED_BY edges bind claims to evidence
+(six CS2023 plus the three SWEBOK claims added by the P2 repair, `se:REL-ARC-0014` …
+`se:REL-ARC-0016`).
 Two APPLIES_TO edges scope a claim and a practice to the SE-Design node with explicit
 qualifiers. The QUALIFIED_BY edge lets the tradeoff evidence temper the
 separation-of-concerns principle. DEPENDS_ON and IMPLEMENTS express the structural
