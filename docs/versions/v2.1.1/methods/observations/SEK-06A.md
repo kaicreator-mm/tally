@@ -89,25 +89,37 @@ review passes before validation:
 
 ## Validation — commands and results
 
-Environment: Python 3.14.7, LinkML 1.12.1, linkml-runtime 1.12.1 (SEK venv).
-The initial receipt (pre rights-clearance fix, `coverage_gaps=2`) is retained
-under `_tmp/tally-sek06-lanes/validation/06A/`. The exact-tip rerun below was
-first performed at the rights-clearance fix tip
-`7aa2777bd27604eb7b18c923347d84eb98ee2c05` (PR #327 head, clean worktree,
-`PYTHONDONTWRITEBYTECODE=1`) and repeated on the repaired working tree after
-the review-repair edits (evidence-statement fidelity hedge plus narrative
-fixes; no record added or removed); both runs produced the identical key
-lines. Logs (`self-test.log`, `lane-validation.log`) live under
-`_tmp/tally-sek06-lanes/validation/06A-bld2/`.
+Environment: Python 3.14.7, PyYAML 6.0.3, LinkML 1.12.1 / linkml-runtime
+1.12.1, `PYTHONDONTWRITEBYTECODE=1`. Receipt history: the initial receipt
+(pre rights-clearance fix, `coverage_gaps=2`) is retained under
+`_tmp/tally-sek06-lanes/validation/06A/`; the second receipt covered the
+rights-clearance fix tip `7aa2777bd27604eb7b18c923347d84eb98ee2c05` and the
+then-repaired working tree (logs under
+`_tmp/tally-sek06-lanes/validation/06A-bld2/`), both producing the identical
+key lines quoted below.
 
-1. Worktree clean at baseline: `git rev-parse HEAD` = `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`;
-   exact-tip rerun clean at `7aa2777bd27604eb7b18c923347d84eb98ee2c05`.
-2. Repository validator self-test:
+**Exact final committed tip receipt** — the full validator run and exit codes
+below bind to the committed tree, not a working-tree approximation: HEAD
+`925ab717686a2d6e46d8df3018af675879eb56f4`, tree
+`339e28827084363d7ab8540b5653347f2b480203`, base
+`cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #327
+headRefOid equals this HEAD), clean worktree before (0 dirty) and after
+(0 dirty). Receipt dir `_tmp/tally-sek06-lanes/validation/06A-bld3/`
+(`identity-tip.txt`, `selftest-tip.log`, `lane-validate-tip.log`,
+`manifest-four-paths-tip.sha256`).
+
+1. Repository validator self-test on the committed tree:
    `validate_knowledge_graph.py --self-test` → exit 0, final line
    `SELF_TESTS=66/66`.
-3. Lane assembly and validation:
+2. Lane assembly and validation:
    `assemble_and_validate.py <worktree> 06A <records.yaml> <outdir>` → exit 0.
-   Key output lines (exact tip, post-fix):
+   Key output lines (exact committed tip; identical to the earlier receipts):
+3. Four-path SHA256 manifest at this committed tip (repo-relative; the
+   receipt-rebind commit that carries this receipt changes only this
+   observation file, so the first three hashes remain valid at the pushed
+   HEAD; the post-commit rerun and full-path manifest at the pushed HEAD are
+   recorded in the receipt dir as `selftest-post.log`,
+   `lane-validate-post.log`, `manifest-four-paths-post.sha256`):
 
 ```text
 LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 2, "coverage_gaps": 3, "decision_models": 1, "domains": 1, "evidence_records": 10, "knowledge_claims": 5, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 14, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
@@ -130,6 +142,15 @@ LINKML_RUNTIME_VERSION=1.12.1
 LINKML_INSTANCE_VALIDATION=PASS
 RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
 LANE_VALIDATION=PASS
+```
+
+Four-path manifest at the committed tip `925ab717` (tree `339e2882`):
+
+```text
+10ad4ea3bb8307a2e95ca5c9076d1a9660fefee9e4fe3477087393f963791022  lanes/requirements/README.md
+30d2c404f2063f548b88d6bcbcd657e034b9655ce498dcc89cb6daa70ee3314c  lanes/requirements/records.yaml
+0ada45a5b3940c2c381dadad26ad5a0e650da1d28e311be59d5847edadf460c1  lanes/requirements/EXPLANATIONS.md
+ab5a686cfeb89305a9e62e05783322d22734896589a27144a0e4508989292c33  methods/observations/SEK-06A.md
 ```
 
 All record-count minimums PASS; the assembled lane graph passes the repository
