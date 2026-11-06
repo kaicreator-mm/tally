@@ -865,6 +865,54 @@ test('live frozen-331 amendment variants bind exactly (observed 19/20/21-key row
   });
 });
 
+test('live claim-331 observed issueRef shape binds exactly (tampering denies, issueNumber row still binds)', async () => {
+  // The exact observed live claim row written by the #331 admission path
+  // carries issueRef='https://github.com/kaicreator-mm/tally/issues/331'
+  // instead of issueNumber (13 keys); the fixture's issueNumber form stays
+  // the pack-conformant base. Both bind; anything else denies.
+  const ISSUE_REF='https://github.com/kaicreator-mm/tally/issues/331';
+  const liveClaim=()=>{const v=structuredClone(lineageRows().claim331.value);
+    delete v.issueNumber;v.issueRef=ISSUE_REF;return v;};
+  const seed=async store=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
+      terminalEvidence:undefined,terminalOccurredAt:undefined,terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+  };
+  await harness(async ({store})=>{
+    await seed(store);
+    const base=lineageRows();
+    for(const [label,mut] of [
+      ['issueRef tampered',v=>{v.issueRef='https://example.com/claim';}],
+      ['issueRef absent too',v=>{delete v.issueRef;}],
+      ['issueNumber alongside issueRef',v=>{v.issueNumber=331;}],
+    ]){
+      const value=liveClaim();mut(value);
+      const p=ports({rows:()=>({...base,claim331:{revision:1,value}})});
+      const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+      assert.equal(result.reason,'LINEAGE_BINDINGS_NOT_EXACT',label);
+      assert.equal(p.counts.publishes,0,label);
+      assert.equal((await store.get(TARGET.casKey)).revision,2,label);
+    }
+  });
+  // Positive: the exact observed issueRef-shaped claim completes recovery.
+  await harness(async ({store})=>{
+    await seed(store);
+    const base=lineageRows();
+    const p=ports({rows:()=>({...base,claim331:{revision:1,value:liveClaim()}})});
+    const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+    assert.equal(result.status,'RECORDED');
+    assert.equal(p.counts.publishes,1);
+    assert.equal((await store.get(TARGET.casKey)).revision,4);
+  });
+  // Positive: the pack-conformant issueNumber form still binds exactly.
+  await harness(async ({store})=>{
+    await seed(store);
+    const p=ports();
+    const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+    assert.equal(result.status,'RECORDED');
+  });
+});
+
 test('revision-4 verification is read-only and reports the historical review-order deviation', async () => {
   await harness(async ({store})=>{
     await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,

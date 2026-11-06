@@ -313,8 +313,17 @@ export function createPrePostRecoveryController({
         [...wanted,'ownerAmendmentRef','builderActivationRef'].sort())&&
        frozen?.ownerAmendmentRef===OWNER_AMENDMENT_REF&&
        frozen?.builderActivationRef===BUILDER_ACTIVATION_REF);
+    // Observed live claim row (admitted by the #331 publication path before
+    // the 18:11Z recovery) carries issueRef instead of issueNumber. Accept
+    // exactly one of the two observed shapes — the pack-conformant base
+    // (issueNumber, no issueRef) or the exact live form (no issueNumber,
+    // the exact ref) — never both keys, never any other value.
+    const claimIssueExact=
+      (claim?.issueNumber===331&&claim?.issueRef===undefined)||
+      (claim?.issueNumber===undefined&&
+        claim?.issueRef==='https://github.com/kaicreator-mm/tally/issues/331');
     const claimExact=claim?.phase===i331.claimPhase&&claim?.repository==='kaicreator-mm/tally'&&
-      claim?.issueNumber===331&&claim?.sourceSha===i331.sourceSha&&claim?.actorRole===i331.actorRole&&
+      claimIssueExact&&claim?.sourceSha===i331.sourceSha&&claim?.actorRole===i331.actorRole&&
       claim?.operatorKind===i331.operatorKind&&claim?.operatorId===i331.operatorId&&
       claim?.writerId===i331.writerId&&claim?.commentId===i331.claimCommentId&&
       claim?.commentRef===i331.claimCommentRef&&claim?.dispatchId===i331.dispatchId&&
