@@ -132,3 +132,17 @@ postdated the lane-validation receipt above; the receipt was re-run at the
 exact tip `eb32a2e` on 2026-11-06
 (`_tmp/tally-sek06-lanes/validation/06B-bld2/lane-validation.log`) and is
 fully green, including `COUNT_coverage_gaps=4`.
+
+## Independent review repair (rev1, 2026-11-06)
+
+Exact-SHA review at `7c57d808` (identity, mechanism, semantics) found one
+quotation-accuracy defect: the README three-layer item 2 presented "as large
+as software architecture" in quotation marks as SE Overview wording, but the
+verbatim source phrase is "large design concerns such as software
+architecture". Fixed in the README by quoting the verbatim phrase; no other
+file changed (`records.yaml` byte-identical to the `eb32a2e` receipt tip, all
+six shared records verified record-equal to the shared snippet set). Lane
+validation rerun after the fix is fully green
+(`_tmp/tally-sek06-lanes/validation/06B-rev1/lane-validation-postfix.log`),
+matching the receipt above line-for-line. No shared-record or
+schema/catalog/validator change was needed.

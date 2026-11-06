@@ -34,9 +34,9 @@ This lane deliberately keeps three notions apart:
    lane may be read as a claim about architecture description as a standardized artifact.
 2. **Architecture design** — covered only as a curriculum abstraction level: CS2023
    SE-Design CS Core 1a lists "levels of abstraction (e.g., architectural design and
-   detailed design)", and the SE Overview frames Software Design as spanning concerns "as
-   large as software architecture". The lane does not promote this to a professional
-   definition.
+   detailed design)", and the SE Overview frames Software Design as encompassing "large
+   design concerns such as software architecture". The lane does not promote this to a
+   professional definition.
 3. **Detailed software design** — covered as the other example abstraction level of the
    same curriculum topic, with the Overview's "small-scale design choices like API design"
    framing the detailed end of the span.
