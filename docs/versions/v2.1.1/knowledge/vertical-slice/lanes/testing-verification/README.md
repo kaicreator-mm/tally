@@ -101,7 +101,7 @@ deduplicate by canonical ID.
    until #325 merges.
 3. `se:GAP-TVV-NO-EMPIRICAL-CASES` — no Case/Counterexample records; pattern
    and anti-pattern records lack real-world case grounding.
-4. `se:GAP-TVV-CS2023-RIGHTS-CLEARANCE` — the source's educational-material
+4. `se:GAP-CS2023-RIGHTS-CLEARANCE` — the source's educational-material
    permission is not assumed to cover Tally's general engineering knowledge
    graph; specific permission/rights determination remains open.
 

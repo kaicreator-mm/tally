@@ -126,7 +126,7 @@ DecisionModel contract that a model structures rather than decides.
 
 The four gap records (`se:GAP-TVV-ISO-29119-2-METADATA-ONLY`,
 `se:GAP-TVV-SWEBOK-KA5-HOLD`, `se:GAP-TVV-NO-EMPIRICAL-CASES`, and
-`se:GAP-TVV-CS2023-RIGHTS-CLEARANCE`) are first-class results. They mark the
+`se:GAP-CS2023-RIGHTS-CLEARANCE`) are first-class results. They mark the
 unavailable normative test-process source, the professional-BOK hold, the lack
 of empirical cases, and the unresolved permission scope for using CS2023 in a
 general engineering knowledge graph. No educational-use permission is

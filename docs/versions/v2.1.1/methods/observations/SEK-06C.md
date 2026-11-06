@@ -73,7 +73,7 @@ modified.
 - CS2023's registered permission scope is educational materials/programs;
   Tally's general engineering knowledge graph is not presumed to qualify.
   This was corrected as the first-class rights gap
-  `se:GAP-TVV-CS2023-RIGHTS-CLEARANCE`. No license clearance is claimed.
+  `se:GAP-CS2023-RIGHTS-CLEARANCE`. No license clearance is claimed.
 - Per issue #324: test execution is never equated with correctness and
   validation is never equated with acceptance; the distinction is carried in
   `se:CON-TVV-VERIFICATION-VALIDATION`, `se:CLM-TVV-0001` limitations, the

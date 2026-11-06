@@ -1012,11 +1012,11 @@ collections:
       resolution_notes:
         - "Register and review at least one empirical case source (RESEARCH_FRAMEWORK CASE_POSTMORTEM-type) before promoting lane patterns or anti-patterns."
       evidence_refs: []
-    - id: se:GAP-TVV-CS2023-RIGHTS-CLEARANCE
-      record_version: "0.1.0"
-      lifecycle_status: PENDING_REVIEW
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
       created_on: "2026-11-06"
-      label: CS2023 permission scope for general engineering knowledge reuse is unresolved
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
       target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
       gap_kind: REVIEW_GAP
       description: >-
@@ -1027,7 +1027,7 @@ collections:
         broader use is asserted by this lane.
       severity: HIGH
       coverage_status: OPEN
-      impact: "The lane must not claim that the CS2023-derived records are cleared for public redistribution or commercial product embedding until the rights scope is confirmed."
+      impact: "The lane must not claim that CS2023-derived records are cleared for public redistribution or commercial product embedding until the rights scope is confirmed."
       resolution_notes:
         - "Obtain a documented rights determination or specific permission before public redistribution or commercial product embedding; otherwise replace the source or remove the affected records from those uses."
       evidence_refs: []
