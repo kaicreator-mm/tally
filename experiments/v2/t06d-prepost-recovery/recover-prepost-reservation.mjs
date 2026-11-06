@@ -636,12 +636,28 @@ export function createPrePostRecoveryController({
     const originalShape=exactPendingRow({...rest,phase:'PENDING_GITHUB_TERMINALIZATION'});
     const clone=reservationCloneFor(value,recoveryAttempt);
     const observed=await exactTerminalEvent(clone),claimOk=await originalClaimUnedited();
-    if(!originalShape||!observed||!claimOk||terminalCommentId!==observed.commentId||
-      terminalCommentRef!==observed.commentRef)
-      return unknown('READ_ONLY_TERMINAL_VERIFICATION_FAILED',{casWrites:0});
+    let lineageRows, lineageBindings;
+    try {
+      lineageRows = await Promise.all([
+        lineage.readClaim319(), lineage.readFrozen319(), lineage.readClaim331(), lineage.readFrozen331(),
+      ]);
+      lineageBindings = lineageExact({
+        claim319:lineageRows[0],frozen319:lineageRows[1],
+        claim331:lineageRows[2],frozen331:lineageRows[3],
+      });
+    } catch { lineageBindings = null; }
+    if(!originalShape||!observed||!claimOk||!lineageBindings||
+      terminalCommentId!==observed.commentId||terminalCommentRef!==observed.commentRef)
+      return unknown('READ_ONLY_TERMINAL_OR_LINEAGE_VERIFICATION_FAILED',{casWrites:0});
+    if(recoveryAttempt.markerVersion===2&&
+      (recoveryAttempt.task331Bindings?.claim?.valueSha256!==lineageBindings.claim331ValueSha256||
+       recoveryAttempt.task331Bindings?.frozenWriteSet?.valueSha256!==lineageBindings.frozen331ValueSha256))
+      return unknown('READ_ONLY_LINEAGE_DIGEST_MISMATCH',{casWrites:0});
     return Object.freeze({
       status:'ALREADY_VERIFIED',reason:'TERMINAL_VERIFIED_READ_ONLY',
       claimTerminality:'VERIFIED',terminalCommentRef,
+      claim331ValueSha256:lineageBindings.claim331ValueSha256,
+      frozen331ValueSha256:lineageBindings.frozen331ValueSha256,
       recoveryAttemptId:recoveryAttempt.recoveryAttemptId,
       publisherInvocationCount:0,httpPostCount:0,casWrites:0,
       historicalReviewOrderDeviation:{status:'NOT_RETROACTIVELY_REMEDIABLE',
@@ -867,7 +883,7 @@ export function inspectHostProcessInventory(table,selfPid,hostRoot) {
     if(excluded.has(row.ProcessId))continue;
     const name=row.Name.toLowerCase();
     const joined=(name+' '+String(row.CommandLine??'')+' '+String(row.ExecutablePath??''))
-      .replace(/\\\\/g,'/').toLowerCase();
+      .replace(/\\/g,'/').toLowerCase();
     if(joined.includes(root)||HOST_AGENT_NAMES.has(name))candidates.add(row.ProcessId);
   }
   const roots=[];
