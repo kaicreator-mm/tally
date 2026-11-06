@@ -29,9 +29,21 @@ Two admitted evidence families:
   (RV.1/RV.2/RV.3), plus the registry-verified Section 1 risk-based adoption
   guidance that qualifies every NIST-sourced record.
 
-Out of scope by design: SWEBOK v4.0a (hold, #325 not merged); ISO/IEC/IEEE
-29119-2 content (ACCESS_RESTRICTED/METADATA_ONLY); any real engineering case
-or incident content (no empirical source registered — see gaps).
+SWEBOK Guide v4.0a (`se:SRC-SWEBOK-GUIDE-4-0A`) — identity/registry
+reconciliation is complete (SEK-02R #325 merged via PR #326 into this lane's
+WIP base), and the 2026-11-06 P2 repair reinspected KA5 Software Testing
+sections 1 (1.1, 1.2.7, 1.2.8), 2 (2.1 incl. 2.1.1-2.1.4, 2.2) and 3 (intro,
+3.1, 3.2, 3.3 heading) directly from the official PDF (SHA-256
+`0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`, 411
+pages), admitting three locators, three evidence records and three claims. All
+SWEBOK-derived records stay PENDING_REVIEW with the Guide's
+generally-accepted-knowledge caution carried inside each claim; the
+coverage-breadth limitation is recorded as `se:GAP-TVV-SWEBOK-KA5-HOLD`.
+
+Out of scope by design: SWEBOK KA5 topics beyond the reinspected sections;
+ISO/IEC/IEEE 29119-2 content (ACCESS_RESTRICTED/METADATA_ONLY); any real
+engineering case or incident content (no empirical source registered — see
+gaps).
 
 ## Authority fit and limitations
 
@@ -81,17 +93,17 @@ or incident content (no empirical source registered — see gaps).
 | domains | 1 | shared `se:DOMAIN-SOFTWARE-ENGINEERING` |
 | taxonomy_views | 2 | shared `se:VIEW-CS2023-SE`; new `se:VIEW-SSDF-SECURITY` |
 | taxonomy_nodes | 3 | `se:NODE-CS2023-SE-VALIDATION`, `se:NODE-CS2023-SE-TOOLS`, `se:NODE-SSDF-RV` |
-| source_locators | 9 | 3 shared + 2 CS2023 lane + 4 NIST page-level |
-| evidence_records | 15 | 14 DIRECT_SOURCE_PARAPHRASE + 1 marked SYNTHESIS (`se:EVD-TVV-0014`) |
+| source_locators | 12 | 3 shared + 2 CS2023 lane + 4 NIST page-level + 3 SWEBOK KA5 (PDF-page-index + printed-folio verified) |
+| evidence_records | 18 | 14 DIRECT_SOURCE_PARAPHRASE + 1 marked SYNTHESIS (`se:EVD-TVV-0014`) + 3 SWEBOK KA5 DIRECT_SOURCE_PARAPHRASE |
 | concepts | 2 | V&V boundary concept; test coverage |
-| knowledge_claims | 7 | all `review_status: PENDING` |
+| knowledge_claims | 10 | all `review_status: PENDING` (7 curriculum/NIST + 3 SWEBOK-derived) |
 | principles | 1 | DAMP over DRY in test code |
 | practices | 2 | context-gated executable code testing; defect tracking with reproducibility |
 | patterns | 1 | regression safety net (candidate, no real case) |
 | anti_patterns | 1 | coverage theater (synthesis-derived) |
 | decision_models | 1 | pre-commit vs post-commit test placement |
-| coverage_gaps | 4 | ISO 29119-2 metadata-only; SWEBOK KA5 hold; no empirical cases; CS2023 rights clearance |
-| relationship_assertions | 20 | 13 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 CROSS_CUTS |
+| coverage_gaps | 4 | ISO 29119-2 metadata-only; SWEBOK KA5 coverage-breadth; no empirical cases; CS2023 rights clearance |
+| relationship_assertions | 23 | 16 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 CROSS_CUTS |
 
 Lifecycle contract: all knowledge records `PROPOSED`/`PENDING_REVIEW`; all
 evidence `EXTRACTED_PENDING_REVIEW`, `synthetic: false`; no `ACCEPTED`
@@ -104,8 +116,12 @@ deduplicate by canonical ID.
 
 1. `se:GAP-TVV-ISO-29119-2-METADATA-ONLY` — no normative test-process standard
    content is citable; curriculum-to-ISO alignment unverified.
-2. `se:GAP-TVV-SWEBOK-KA5-HOLD` — professional BOK reconciliation deferred
-   until #325 merges.
+2. `se:GAP-TVV-SWEBOK-KA5-HOLD` — professional-BOK coverage now exists for
+   the reinspected KA5 fundamentals/levels/technique sections, but the
+   remaining KA5 topics (measures, process, development-process and domain
+   testing, emerging technologies, tools) are uninspected and no
+   SWEBOK-derived record has passed human review; a content/evidence coverage
+   gap, no longer an unmerged dependency.
 3. `se:GAP-TVV-NO-EMPIRICAL-CASES` — no Case/Counterexample records; pattern
    and anti-pattern records lack real-world case grounding.
 4. `se:GAP-CS2023-RIGHTS-CLEARANCE` — the source's educational-material

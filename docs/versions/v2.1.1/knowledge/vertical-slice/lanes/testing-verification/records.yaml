@@ -21,11 +21,14 @@ scope_note: >-
   Deep vertical slice over software testing, verification and validation.
   Evidence base: CS2023 SE-Validation knowledge unit (curriculum authority for
   the V&V topics; heading-anchored locator, page anchors only where the source
-  registry already verified them) and NIST SP 800-218 v1.1 PW.7/PW.8 and the
+  registry already verified them), NIST SP 800-218 v1.1 PW.7/PW.8 and the
   RV group (secure-development cross-cutting source; page-level verified
-  locators from the locally downloaded official PDF). SWEBOK v4.0a remains on
-  hold (#325 not merged). No record asserts that executing tests establishes
-  correctness or that validation equals acceptance.
+  locators from the locally downloaded official PDF), and SWEBOK Guide v4.0a
+  KA5 Software Testing anchors admitted by the 2026-11-06 P2 repair after
+  direct reinspection (identity/registry reconciliation complete: SEK-02R #325
+  merged via PR #326 into the WIP base). No record asserts that executing
+  tests establishes correctness or that validation equals acceptance; no
+  SWEBOK-derived claim is automatically accepted.
 
 collections:
 
@@ -46,10 +49,10 @@ collections:
         - secure-development cross-cutting guidance
       scope_exclusions:
         - the entirety of computer science
-        - unreviewed professional body-of-knowledge claims pending SEK-02R
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
       boundary_notes:
         - No single source is treated as a complete ontology of the discipline.
-        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R #325 merged via PR #326); SWEBOK content is cited only where a lane has directly reinspected the located sections, and such records stay PROPOSED/PENDING_REVIEW until human review.
       evidence_refs: []
 
   # --------------------------------------------------------- taxonomy_views
@@ -68,7 +71,7 @@ collections:
       limitations:
         - Curriculum classification is not professional-domain completeness.
         - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
-        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
       evidence_refs: []
     - id: se:VIEW-SSDF-SECURITY
       record_version: "0.1.0"
@@ -231,6 +234,40 @@ collections:
       locator_type: SECTION
       locator: "NIST SP 800-218 PDF page index 11; printed page 3; Section 1"
       verified_content_summary: "Registry-verified risk-based adoption guidance: risk, cost, feasibility and applicability should inform practice selection; practices are customizable and the framework is not a checklist."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- SWEBOK v4.0a KA5 locators (2026-11-06 P2 repair reinspection; official
+    #     PDF SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are 0-based,
+    #     printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-SWEBOK-KA5-FUNDAMENTALS
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 5 Software Testing, section 1 Software Testing Fundamentals, including 1.1 Faults vs. Failures, 1.2.7 The Oracle Problem and 1.2.8 Theoretical and Practical Limitations; PDF page indices 118-120; printed pages 5-3 to 5-5"
+      verified_content_summary: "Fault (cause) versus failure (observed effect) distinction; the oracle as the pass/fail deciding agent with possible inconclusive outcomes; testing theory's negative results and the presence-not-absence limitation of testing."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA5-LEVELS-OBJECTIVES
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 5 Software Testing, section 2 Test Levels, including 2.1 The Target of the Test (2.1.1 Unit, 2.1.2 Integration, 2.1.3 System, 2.1.4 Acceptance) and 2.2 Objectives of Testing; PDF page indices 121-122; printed pages 5-6 to 5-7"
+      verified_content_summary: "Four test stages distinguished by target without implying any development process or ranking; testing objectives stated to support measurement and control of the test process."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA5-TECHNIQUES
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 5 Software Testing, section 3 Test Techniques introduction with 3.1 Specification-Based Techniques and 3.2 Structure-Based Test Techniques (with 3.3 Experience-Based Techniques heading); PDF page indices 125-128; printed pages 5-10 to 5-13"
+      verified_content_summary: "Technique classification by available information: specification-based (black-box) generation from input/output behavior versus structure-based (white-box) generation from design/code information, with experience-based techniques as a further class."
       verification_state: LOCATOR_VERIFIED
       accessed_on: "2026-11-06"
 
@@ -542,6 +579,79 @@ collections:
       uncertainty: []
       extraction_status: EXTRACTED_PENDING_REVIEW
       synthetic: false
+    # --- SWEBOK v4.0a KA5 evidence (2026-11-06 P2 repair reinspection) ---
+    - id: se:EVD-TVV-SWEBOK-FAULTS-ORACLES-LIMITS
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA5-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA5 distinguishes a fault (the cause of a malfunction)
+        from a failure (the undesired effect observed in delivered service),
+        noting that faults may never manifest as failures and that a failure's
+        cause cannot always be unequivocally identified. It defines the oracle
+        as any human or mechanical agent deciding whether the system under test
+        behaved correctly, with inconclusive outcomes possible and oracle
+        automation difficult and expensive. It also records testing theory's
+        warning against ascribing unjustified confidence to successful tests:
+        the established results are negative, and testing can show the presence
+        of defects but not their absence, since complete testing is not
+        feasible.
+      context: "SWEBOK Guide v4.0a Chapter 5 section 1 (1.1, 1.2.7, 1.2.8), printed pages 5-3 to 5-5."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-06; original paraphrase."
+      result: "The fault/failure distinction, the oracle concept and the presence-not-absence limitation were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The limitation statement is the Guide's reported testing-theory position; the Guide does not quantify attainable confidence."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-SWEBOK-LEVELS-OBJECTIVES
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA5-LEVELS-OBJECTIVES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA5 distinguishes four test stages by the target of the
+        test — unit (separately testable elements in isolation), integration
+        (interactions among elements, with incremental strategies such as
+        top-down, bottom-up, mixed and big bang), system and acceptance — and
+        states that these stages do not imply any development process and that
+        none is assumed more important than the others. It adds that testing is
+        conducted against specific objectives, and that stating objectives in
+        precise, quantitative terms supports measurement and control of the
+        test process.
+      context: "SWEBOK Guide v4.0a Chapter 5 section 2 (2.1 with 2.1.1-2.1.4, 2.2), printed pages 5-6 to 5-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06; original paraphrase."
+      result: "The four-stage target-based taxonomy with its no-process-implication caveat and the objective-stating guidance were confirmed."
+      limitations:
+        - "The stage list is target-based; objective-based taxonomies in the same chapter add further test types not covered by this locator."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-SWEBOK-TECHNIQUE-CLASSES
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA5-TECHNIQUES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA5 classifies test techniques by the kind of information
+        available about the system under test: specification-based (black-box)
+        techniques generate test cases only from input/output behavior, while
+        structure-based (white-box, also called glass-box or clear-box)
+        techniques use information about how the system was designed or coded;
+        experience-based techniques form a further class, and the Guide notes
+        classification overlap and combination of techniques.
+      context: "SWEBOK Guide v4.0a Chapter 5 section 3 (intro, 3.1, 3.2, 3.3 heading), printed pages 5-10 to 5-13."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06; original paraphrase."
+      result: "The black-box/white-box/experience-based classification and its overlap caveat were confirmed."
+      limitations:
+        - "The classification names the classes; technique-by-technique detail beyond the inspected pages is not covered by this locator."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
 
   # ---------------------------------------------------------------- concepts
   concepts:
@@ -657,7 +767,7 @@ collections:
       assumptions: []
       exceptions: []
       limitations:
-        - "Curriculum enumeration; SWEBOK KA5 remains on hold and ISO 29119-2 content is inaccessible, so no cross-source objective list is asserted."
+        - "Curriculum enumeration; the SWEBOK KA5 objective taxonomy beyond the reinspected sections and the inaccessible ISO 29119-2 content mean no cross-source objective list is asserted."
       uncertainty: []
       evidence_refs:
         - se:EVD-TVV-0005
@@ -747,6 +857,70 @@ collections:
       uncertainty: []
       evidence_refs:
         - se:EVD-TVV-0009
+      review_status: PENDING
+    # --- SWEBOK v4.0a KA5 claims (2026-11-06 P2 repair reinspection) ---
+    - id: se:CLM-TVV-SWEBOK-FAULT-FAILURE-LIMIT
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA5 distinguishes faults (causes) from failures
+        (observed effects), identifies oracles as the agents that decide test
+        verdicts, and reports testing theory's limitation that testing can show
+        the presence of defects but not their absence.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 5 section 1 (1.1, 1.2.7, 1.2.8; printed pages 5-3 to 5-5); generally accepted KA content, not a claim that any specific test suite attains a measured confidence level."
+      applicability: "Professional-BOK grounding for the lane's testing-limitation records; complements the curriculum and secure-development sources without replacing them."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The presence-not-absence limitation is a theory-level statement; it does not itself quantify the residual risk of a passing suite."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-SWEBOK-FAULTS-ORACLES-LIMITS
+      review_status: PENDING
+    - id: se:CLM-TVV-SWEBOK-LEVELS-NO-PROCESS
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA5 distinguishes the unit, integration, system and
+        acceptance test stages by the target of the test, states that the four
+        stages imply no particular development process and none is more
+        important than the others, and recommends stating test objectives in
+        precise quantitative terms to support measurement and control.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a Chapter 5 section 2 (printed pages 5-6 to 5-7); generally accepted KA content, not a mandated stage-gate process."
+      applicability: "Professional-BOK counterpart to the curriculum's test-level and V&V records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Target-based classification only; the same chapter's objective-based test types are outside this locator."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-SWEBOK-LEVELS-OBJECTIVES
+      review_status: PENDING
+    - id: se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA5 classifies test techniques by the information
+        available about the system under test: specification-based (black-box)
+        techniques from input/output behavior, structure-based (white-box)
+        techniques from design and code information, and experience-based
+        techniques as a further class, with classification overlap and
+        combination explicitly acknowledged.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a Chapter 5 section 3 (intro, 3.1-3.3 heading; printed pages 5-10 to 5-13); generally accepted KA content, not a prescription of which class to use."
+      applicability: "Professional-BOK counterpart to the curriculum's technique-teaching records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Class names only; the Guide's per-technique treatments beyond the inspected pages are not asserted here."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-SWEBOK-TECHNIQUE-CLASSES
       review_status: PENDING
 
   # -------------------------------------------------------------- principles
@@ -979,19 +1153,25 @@ collections:
       record_version: "0.1.0"
       lifecycle_status: PENDING_REVIEW
       created_on: "2026-11-06"
-      label: SWEBOK professional BOK reconciliation on hold
+      label: Professional-BOK testing coverage limited to inspected SWEBOK KA5 sections
       target_scope_ref: se:VIEW-CS2023-SE
       gap_kind: TAXONOMY_GAP
       description: >-
-        SWEBOK v4.0a is not yet an admitted source for this lane (SEK-02R #325
-        not merged), so the Software Engineering curriculum V&V unit cannot be
-        aligned with the SWEBOK software testing knowledge area and no
-        SWEBOK-based testing claims are made.
+        SWEBOK v4.0a identity and registry reconciliation is complete (#326
+        merged into the WIP base) and the 2026-11-06 repair reinspected KA5
+        sections 1 (1.1, 1.2.7, 1.2.8), 2 (2.1 with 2.1.1-2.1.4, 2.2) and 3
+        (intro, 3.1, 3.2, 3.3 heading) directly, admitting locators, evidence
+        and claims at content level. The remaining professional-BOK gap is
+        content breadth and evidence depth: KA5 topics beyond the inspected
+        pages (test-related measures, the test process, testing in development
+        processes and application domains, emerging-technology testing, tools)
+        were not reinspected for this lane, no SWEBOK-derived record has passed
+        human review, and the curriculum-to-KA5 alignment remains partial.
       severity: MEDIUM
       coverage_status: OPEN
-      impact: "The lane reflects curriculum and secure-development views only; professional body-of-knowledge reconciliation for testing, verification and validation is deferred."
+      impact: "The lane now carries professional-BOK anchors for the fault/failure, test-level and technique-class fundamentals only; the uninspected KA5 topics stay uncovered and all SWEBOK-derived records remain PROPOSED/PENDING_REVIEW."
       resolution_notes:
-        - "Revisit after SEK-02R #325 merges; do not cite SWEBOK KA5 as verified before then."
+        - "Reinspect the remaining KA5 topics when the lane needs them; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
       evidence_refs: []
     - id: se:GAP-TVV-NO-EMPIRICAL-CASES
       record_version: "0.1.0"
@@ -1280,3 +1460,31 @@ collections:
       evidence_refs:
         - se:EVD-TVV-0011
         - se:EVD-TVV-0009
+    # --- SWEBOK v4.0a KA5 edges (2026-11-06 P2 repair reinspection) ---
+    - id: se:REL-TVV-0021
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-SWEBOK-FAULT-FAILURE-LIMIT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-SWEBOK-FAULTS-ORACLES-LIMITS
+      context: "Canonical claim-to-evidence trace for the SWEBOK fault/failure/oracle claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 5 section 1 (1.1, 1.2.7, 1.2.8) at its verified locator (PDF page indices 118-120; printed 5-3 to 5-5), the sole basis of the claim."
+    - id: se:REL-TVV-0022
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-SWEBOK-LEVELS-NO-PROCESS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-SWEBOK-LEVELS-OBJECTIVES
+      context: "Canonical claim-to-evidence trace for the SWEBOK test-levels claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 5 section 2 at its verified locator (PDF page indices 121-122; printed 5-6 to 5-7), which carries the four-stage taxonomy and its no-process caveat."
+    - id: se:REL-TVV-0023
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-SWEBOK-TECHNIQUE-CLASSES
+      context: "Canonical claim-to-evidence trace for the SWEBOK technique-classification claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 5 section 3 (intro, 3.1-3.3) at its verified locator (PDF page indices 125-128; printed 5-10 to 5-13), which states the black-box/white-box/experience-based classification."

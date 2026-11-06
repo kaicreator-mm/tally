@@ -59,6 +59,12 @@ modified.
 
 - SWEBOK v4.0a hold (#325 not merged): no SWEBOK KA5 citation anywhere; the
   hold is recorded as `se:GAP-TVV-SWEBOK-KA5-HOLD`.
+
+  *(Historical authoring-time statement. Current status after the 2026-11-06
+  P2 repair: #325 merged via PR #326 into the WIP base; identity/registry
+  reconciliation complete; KA5 sections 1/2/3 reinspected directly and cited
+  at content level — see the P2 repair receipt at the end of this
+  observation.)*
 - NIST content is used only as a secure-development cross-cutting source:
   risk/cost/feasibility/applicability govern practice selection, SSDF is not a
   checklist, Table 1 order implies no implementation sequence, and notional
@@ -315,3 +321,83 @@ fdb49b03410ea38bf0cce7288969d44b4c833fc837cf2c0056994e5b38a87445  docs/versions/
   clean-worktree evidence are delivered in the rebase delivery comment on
   PR #329 / coordinator #321, with logs in
   `_tmp/tally-sek06-lanes/validation/06C-rb1-post/`.
+
+## P2 repair receipt — SWEBOK KA5 reinspection + stale-hold correction (2026-11-06)
+
+Repair batch executed under the combined handoff on #321 (R1 review of the
+post-WIP-rebase tips, both findings P2), within the original #324 four-path
+write set, against reviewed tip `858d3d7604e598b41178119859f7dd24356faa10` /
+tree `70e3336124a350b7facb6c49b10e52d8fb1b802c`, base
+`7a70211b4460e4c753c97798670de9f34861d4a4`. Pre-write readback: PR #329 OPEN,
+headRefOid equalled the branch ref and the reviewed tip; worktree clean; no
+concurrent writer observed; write set unchanged.
+
+### P2-01 — stale source-hold statements corrected
+
+README.md, records.yaml and EXPLANATIONS.md no longer state that #325 is not
+merged or that SWEBOK is on hold. Current-state wording now says:
+identity/registry reconciliation complete (#326 merged into this lane's WIP
+base); content-level reinspection performed by this repair;
+`se:GAP-TVV-SWEBOK-KA5-HOLD` preserved as a stable ID but redescribed as a
+content/evidence coverage gap (KA5 topics beyond sections 1/2/3 uninspected;
+no human review of SWEBOK-derived records), still MEDIUM/OPEN. The shared
+Domain and View records' hold language was reworded **identically in all
+three lane files** (06A/06B/06C) so the six shared records remain
+byte-identical for SEK-08. Historical statements in this observation are
+preserved and labeled. The ISO/IEC/IEEE 29119-2 metadata-only boundary and the
+CS2023 PDF SHA-256 NOT_OBTAINED disclosure are untouched.
+
+### P2-02 — SWEBOK KA5 locator re-verification performed
+
+Official source reopened locally: the retained official PDF copy
+(`_tmp/i325-localval-r3/pdf/swebok-v4.pdf`) re-verified as SHA-256
+`0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`,
+6,015,672 bytes, 411 pages, `%PDF-1.7`, matching the SEK-02R registry record
+(canonical source `SE-SRC-SWEBOK-GUIDE-4-0A`). Chapter/section headings and
+printed folios were verified by direct text extraction at the exact page
+indices. Admitted locators (PDF page indices 0-based; printed pages use the
+Guide's chapter-page folios):
+
+| Locator ID | Section(s) verified | PDF page indices | Printed pages |
+|---|---|---|---|
+| `se:LOC-SWEBOK-KA5-FUNDAMENTALS` | Ch.5 §1 Software Testing Fundamentals (§1.1 Faults vs. Failures, §1.2.7 The Oracle Problem, §1.2.8 Theoretical and Practical Limitations) | 118–120 | 5-3 to 5-5 |
+| `se:LOC-SWEBOK-KA5-LEVELS-OBJECTIVES` | Ch.5 §2 Test Levels (§2.1 The Target of the Test incl. 2.1.1–2.1.4; §2.2 Objectives of Testing) | 121–122 | 5-6 to 5-7 |
+| `se:LOC-SWEBOK-KA5-TECHNIQUES` | Ch.5 §3 Test Techniques (intro; §3.1 Specification-Based; §3.2 Structure-Based; §3.3 heading) | 125–128 | 5-10 to 5-13 |
+
+Chapter 5 opens at PDF page index 116 (printed 5-1). Added records: the three
+locators above, three `DIRECT_SOURCE_PARAPHRASE` evidence records
+(`se:EVD-TVV-SWEBOK-FAULTS-ORACLES-LIMITS`,
+`se:EVD-TVV-SWEBOK-LEVELS-OBJECTIVES`,
+`se:EVD-TVV-SWEBOK-TECHNIQUE-CLASSES`), three claims
+(`se:CLM-TVV-SWEBOK-FAULT-FAILURE-LIMIT`,
+`se:CLM-TVV-SWEBOK-LEVELS-NO-PROCESS`,
+`se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES`) and three canonical `SUPPORTED_BY`
+edges (`se:REL-TVV-0021/0022/0023`). No page number, section or claim was
+written that the extracted PDF text does not support; the Guide's
+generally-accepted-knowledge-not-prescription limitation is carried inside
+each claim, and the Dijkstra-attributed presence-not-absence point is
+paraphrased, not quoted. Rights boundaries kept: PDF not
+committed/mirrored/redistributed, original paraphrases only, release-date
+discrepancy remains OPEN, all records PROPOSED/PENDING_REVIEW, zero ACCEPTED,
+ISO 29119-2 metadata-only preserved.
+
+### Validation (Windows-native, Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Run on the exact repaired working tree (= the committed tree of this repair
+commit); rerun after the commit and the final four-path SHA256 manifest at the
+pushed HEAD are delivered in the P2 repair delivery comment on PR #329 /
+coordinator #321, logs in `_tmp/tally-sek06-lanes/validation/06C-p2/`.
+
+1. `validate_knowledge_graph.py --self-test` → `SELF_TESTS=66/66`, exit 0.
+2. `assemble_and_validate.py <worktree> 06C <records.yaml> <outdir>` → exit 0:
+   every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+   `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (81 lane records:
+   `source_locators=12`, `evidence_records=18`, `knowledge_claims=10`,
+   `relationship_assertions=23`, `coverage_gaps=4`; derived sources
+   `se:SRC-CS2023` + `se:SRC-NIST-SP-800-218-V1-1` +
+   `se:SRC-SWEBOK-GUIDE-4-0A`). 69 → 81 lane records (three content files plus
+   this observation are the only paths changed).
+
+Cross-lane check at the three repaired tips and clean-worktree evidence are
+recorded in the delivery comment. Human review burden remains NOT_MEASURED; no
+record is ACCEPTED.

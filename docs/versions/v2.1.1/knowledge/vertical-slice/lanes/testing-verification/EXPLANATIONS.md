@@ -127,9 +127,13 @@ DecisionModel contract that a model structures rather than decides.
 The four gap records (`se:GAP-TVV-ISO-29119-2-METADATA-ONLY`,
 `se:GAP-TVV-SWEBOK-KA5-HOLD`, `se:GAP-TVV-NO-EMPIRICAL-CASES`, and
 `se:GAP-CS2023-RIGHTS-CLEARANCE`) are first-class results. They mark the
-unavailable normative test-process source, the professional-BOK hold, the lack
-of empirical cases, and the unresolved permission scope for using CS2023 in a
-general engineering knowledge graph. No educational-use permission is
-presumed to cover this project's broader purpose. Until these gaps close, the
-lane remains a curriculum-plus-recommendation view with explicit authority and
-rights limits.
+unavailable normative test-process source, the professional-BOK
+coverage-breadth limit, the lack of empirical cases, and the unresolved
+permission scope for using CS2023 in a general engineering knowledge graph.
+No educational-use permission is presumed to cover this project's broader
+purpose. After the 2026-11-06 P2 repair the lane is a
+curriculum-plus-recommendation-plus-reinspected-BOK view: the SWEBOK KA5
+fundamentals/levels/technique anchors are cited from direct PDF reinspection
+(see the three `se:EVD-TVV-SWEBOK-*` records and their claims), while the
+remaining KA5 topics stay uncovered until separately reinspected and every
+record keeps its authority and rights limits.
