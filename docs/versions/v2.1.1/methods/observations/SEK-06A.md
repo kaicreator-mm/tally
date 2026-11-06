@@ -393,3 +393,59 @@ LANE_VALIDATION=PASS
 paths changed). Cross-lane check at the three repaired tips and clean-worktree
 evidence are recorded in the delivery comment. Human review burden remains
 NOT_MEASURED; no record is ACCEPTED.
+
+## R2 consolidated delivery receipt — evidence closure (2026-11-06)
+
+R2 review finding (#327, P2-01): the P2 receipt promised a delivery comment that
+was not posted, and the receipt did not identify the active Claim/CAS identity,
+generation/status or exclusive-Writer readback. This receipt closes that gap
+for SEK-06A; per the R2 handoff, no source-content change was indicated for
+this lane, so this commit changes **only this observation file** (write set
+intact).
+
+### Claim/CAS identity, generation/status and exclusive-Writer readback (pre-write)
+
+- Active claim chain for this repair batch: Owner-authorized combined
+  Builder/Repairer handoffs on coordinator #321 — P2 stage comment 6684006230
+  and R2 checkpoint comment 6686070478 ("Next action — one Combined
+  Builder/Repairer batch") — plus the R2 Repairer dispatch to the local
+  executor on 2026-11-06. Status: ACTIVE for this batch; it authorizes exactly
+  the in-write-set R2 repairs and receipt closure. No new Task, Pack or Claim
+  was created for R2 (forbidden by the handoff); generation is unchanged: the
+  original Task Pack issue #322 and its four-path write set remain the sole
+  authority, re-read before writing.
+- Exclusive Writer readback (2026-11-06, immediately before writing): PR #327
+  OPEN; live PR headRefOid `9257f78621b2228041dd44b467c6e6bd046ef0c3` == branch
+  ref `task/tally-v211-sek06a-requirements` == R2-reviewed HEAD; local worktree
+  at that HEAD with 0 dirty paths; no other writer observed on the branch since
+  the P2 push (remote head unchanged at readback). Push after commit uses
+  `--force-with-lease` with expected remote head `9257f786…`, fencing any
+  concurrent writer.
+- Identity bound by this receipt: R2-reviewed HEAD
+  `9257f78621b2228041dd44b467c6e6bd046ef0c3` / tree
+  `0f622bcfb54cb006983577c00d46257ba9b167a4` / base (merge-base)
+  `7a70211b4460e4c753c97798670de9f34861d4a4`.
+
+### Validation — actual commands and exit codes (repaired tree = this commit's tree; Windows-native venv Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Receipt dir `_tmp/tally-sek06-lanes/validation/06A-r2/` (`identity-pre.txt`,
+`selftest-pre.log`, `lane-validate-pre.log`); `git diff --check` exit 0.
+
+1. `…/knowledge/model/validate_knowledge_graph.py --self-test` → exit 0,
+   final line `SELF_TESTS=66/66`.
+2. `…/tally-sek06-lanes/scripts/assemble_and_validate.py <worktree> 06A
+   <records.yaml> <outdir>` → exit 0: `LANE_RECORD_COUNTS` 59 records
+   (source_locators 7, evidence_records 13, knowledge_claims 8,
+   relationship_assertions 17, coverage_gaps 3), every `COUNT_*` PASS,
+   `DERIVED_SOURCES=2 se:SRC-CS2023,se:SRC-SWEBOK-GUIDE-4-0A`,
+   `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+   `LINKML_INSTANCE_VALIDATION=PASS` (1.12.1/1.12.1), `LANE_VALIDATION=PASS`.
+
+Clean worktree before this receipt: 0 dirty. The identical command set is
+re-run at the committed final HEAD (logs `selftest-post.log`,
+`lane-validate-post.log`, exit codes recorded in the delivery comment), and the
+consolidated R2 delivery comment on coordinator #321 binds to the final
+HEAD/TREE: the four-path SHA256 manifest at the final HEAD, the post-commit
+exit codes, clean-worktree-after evidence, and `CROSS_LANE_CHECK` at the three
+R2-final tips. No LOCAL_VALIDATION-only task exists; no record is ACCEPTED;
+HUMAN_REVIEW_BURDEN remains NOT_MEASURED.
