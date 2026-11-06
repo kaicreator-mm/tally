@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, rm, writeFile, mkdir, readFile} from 'node:fs/promises';
+import {mkdtemp, rm, writeFile, mkdir, readFile, readdir} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, dirname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY,
   acquireExclusiveHostFence, discoverHostRegistryPaths, inspectHostRegistryInventory,
-  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient}
+  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient, openReadOnlySqliteCasStore}
   from './recover-prepost-reservation.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
@@ -683,6 +683,27 @@ test('exclusive Host fence rejects competing and stale owners without stealing t
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+
+test('read-only Host CAS opener requires an existing DB and rejects every write', async () => {
+  const dir=await mkdtemp(join(tmpdir(),'tally-i331-readonly-cas-'));
+  const missing=join(dir,'missing.sqlite'),path=join(dir,'existing.sqlite');
+  const key='tally:v2:readonly-fixture';
+  try{
+    await assert.rejects(openReadOnlySqliteCasStore({path:missing}),/READ_ONLY_SQLITE_OPEN_FAILED/);
+    assert.equal((await readdir(dir)).includes('missing.sqlite'),false);
+    const writable=await openSqliteCasStore({path,busyTimeoutMs:1000});
+    await writable.put(key,{phase:'PUBLISHED_VERIFIED'},{mustBeAbsent:true});
+    await writable.close();
+    const before=await readFile(path);
+    const readonly=openReadOnlySqliteCasStore({path,busyTimeoutMs:1000});
+    assert.deepEqual(await readonly.get(key),{value:{phase:'PUBLISHED_VERIFIED'},revision:0});
+    assert.deepEqual(await readonly.list('tally:v2:'),[key]);
+    await assert.rejects(readonly.put(key,{phase:'DONE'},{mustMatchRevision:0}));
+    await readonly.close();
+    assert.deepEqual(await readFile(path),before);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('complete registry inventory discovers nested registries and detects a second pending Task', async () => {
   const dir=await mkdtemp(join(tmpdir(),'tally-i331-inventory-'));
   try{
@@ -708,6 +729,21 @@ test('complete registry inventory discovers nested registries and detects a seco
     data.get(paths[3]).set('tally:v2:claim-admission:284',{revision:1,value:{phase:'PUBLISHED_VERIFIED'}});
     const clean=await inspectHostRegistryInventory(stores,dir,paths[0],paths.slice(0,3));
     assert.equal(clean.unresolvedRecordCount,0);
+
+    const terminalMarker={schema:'tally.t06d-prepost-recovery-marker/v1',
+      state:'POST_ATTEMPT_CONSUMED',recoveryAttemptId:'recovery:331:fixture:1'};
+    data.get(paths[0]).set(TARGET.casKey,{revision:4,value:strandedRow({
+      phase:'TERMINAL_VERIFIED',recoveryAttempt:terminalMarker,
+      terminalCommentId:6700000001,
+      terminalCommentRef:\`\${TARGET.issueRef}#issuecomment-6700000001\`,
+    })});
+    const terminal=await inspectHostRegistryInventory(
+      stores,dir,paths[0],paths.slice(0,3),'TERMINAL_VERIFIED');
+    assert.equal(terminal.targetReservationCount,1);
+    assert.equal(terminal.targetExactCount,1);
+    assert.equal(terminal.targetReservation.revision,4);
+    assert.equal(terminal.targetReservation.phase,'TERMINAL_VERIFIED');
+    assert.equal(terminal.unresolvedRecordCount,0);
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 

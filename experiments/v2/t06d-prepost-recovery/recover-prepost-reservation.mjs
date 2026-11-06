@@ -29,7 +29,8 @@ import {closeSync, fstatSync, lstatSync, openSync, readFileSync, readdirSync, st
 import {dirname, relative, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {Octokit} from '@octokit/rest';
-import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
+import Database from 'better-sqlite3';
+import {SqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {TARGET, readDispatchStateEventsFromClient} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 import {terminalEventForReservation} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 import {createHostNativeGitHubClaimReadbackPortFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-readback-port.mjs';
@@ -40,6 +41,25 @@ const REF_KEYS = ['writer', 'attempt', 'subprocess', 'effect', 'resource', 'writ
 const MARKER_SCHEMA = 'tally.t06d-prepost-recovery-marker/v1';
 const ENVELOPE_SCHEMA = 'tally.t06d-prepost-recovery-event-evidence/v1';
 const EVIDENCE_BOUND = 16384;
+
+/** Open an existing Host CAS database without any schema/PRAGMA write path.
+ *  The public SqliteCasStore still owns all reads; SQLite query_only plus the
+ *  readonly/fileMustExist flags make accidental CAS writes impossible. */
+export function openReadOnlySqliteCasStore({path,busyTimeoutMs=1000}) {
+  if(typeof path!=='string'||path.length===0||
+    !Number.isSafeInteger(busyTimeoutMs)||busyTimeoutMs<0)
+    throw new TypeError('READ_ONLY_SQLITE_OPTIONS_INVALID');
+  let db;
+  try {
+    db=new Database(path,{readonly:true,fileMustExist:true});
+    db.pragma('query_only = ON');
+    db.pragma('busy_timeout = '+busyTimeoutMs);
+    return new SqliteCasStore(db);
+  } catch(error) {
+    try { db?.close(); } catch {}
+    throw new Error('READ_ONLY_SQLITE_OPEN_FAILED: '+String(error?.message??error));
+  }
+}
 
 /** Exact immutable identity of the recovery task and its lineage (Pack R1). */
 export const RECOVERY_IDENTITY = Object.freeze({
@@ -807,7 +827,9 @@ export function discoverHostRegistryPaths(root) {
   }
   return found.sort((a,b)=>normalizedPath(a).localeCompare(normalizedPath(b)));
 }
-export async function inspectHostRegistryInventory(registryStores,root,targetRegistryPath,requiredPaths) {
+export async function inspectHostRegistryInventory(registryStores,root,targetRegistryPath,requiredPaths,targetMode='PREPOST') {
+  if(targetMode!=='PREPOST'&&targetMode!=='TERMINAL_VERIFIED')
+    throw new Error('HOST_REGISTRY_TARGET_MODE_INVALID');
   const rootPath=resolve(root), discovered=discoverHostRegistryPaths(rootPath);
   const byPath=new Map([...registryStores.entries()].map(([p,store])=>[normalizedPath(p),store]));
   const discoveredKeys=discovered.map(normalizedPath);
@@ -828,11 +850,22 @@ export async function inspectHostRegistryInventory(registryStores,root,targetReg
       }
       if (key===TARGET.casKey) {
         targetOccurrences++;
-        if (normalizedPath(path)===targetPath&&row.revision===2&&exactPendingRow(row.value)) {
+        const targetExact=normalizedPath(path)===targetPath&&(
+          targetMode==='PREPOST'
+            ? row.revision===2&&exactPendingRow(row.value)
+            : row.revision===4&&row.value.phase==='TERMINAL_VERIFIED'&&
+              row.value.recoveryAttempt?.schema===MARKER_SCHEMA&&
+              row.value.recoveryAttempt?.state==='POST_ATTEMPT_CONSUMED'&&
+              Number.isSafeInteger(row.value.terminalCommentId)&&row.value.terminalCommentId>0&&
+              row.value.terminalCommentRef===`${TARGET.issueRef}#issuecomment-${row.value.terminalCommentId}`);
+        if(targetExact) {
           targetExactCount++;
-          targetReservation={casKey:TARGET.casKey,revision:2,phase:row.value.phase,
+          targetReservation={casKey:TARGET.casKey,revision:row.revision,phase:row.value.phase,
             terminalWriterId:row.value.terminalWriterId,protectedClaimKey:row.value.protectedClaimKey,
-            sourceSha:row.value.sourceSha,dispatchId:row.value.dispatchId,generation:row.value.generation};
+            sourceSha:row.value.sourceSha,dispatchId:row.value.dispatchId,generation:row.value.generation,
+            terminalCommentId:row.value.terminalCommentId??null,
+            terminalCommentRef:row.value.terminalCommentRef??null,
+            recoveryAttemptId:row.value.recoveryAttempt?.recoveryAttemptId??null};
         } else pendingRecordCount++;
         continue;
       }
@@ -994,7 +1027,7 @@ async function runSelectedHostCli() {
     for(const required of [REG203,REG319,REG331])
       if(!registryPaths.some(p=>normalizedPath(p)===normalizedPath(required)))throw new Error('REQUIRED_HOST_REGISTRY_MISSING');
     for(const path of registryPaths){
-      const store=await openSqliteCasStore({path,busyTimeoutMs:1000});
+      const store=openReadOnlySqliteCasStore({path,busyTimeoutMs:1000});
       registryStores.set(normalizedPath(path),store);
     }
     const store203=registryStores.get(normalizedPath(REG203));
@@ -1016,6 +1049,27 @@ async function runSelectedHostCli() {
       if(parsed?.casWriteBlocked!==true||parsed?.retry!==false)return null;
       return {sha256:sha256hex(bytes.toString('utf8')),parsed};
     }};
+    const processInventory=inspectHostProcessInventory(cliProcessTable(),process.pid,repoRoot);
+    const registryInventory=await inspectHostRegistryInventory(
+      registryStores,HOST_TMP_ROOT,REG203,[REG203,REG319,REG331],'TERMINAL_VERIFIED');
+    const historicalCiEvidence=await readHistoricalCiEvidenceFromClient(octokit);
+    if(!fence.isHeld()||registryInventory.registryCount<3||
+      registryInventory.targetReservationCount!==1||registryInventory.targetExactCount!==1||
+      registryInventory.unresolvedRecordCount!==0||
+      processInventory.activeWriterCount!==0||processInventory.activeSubprocessCount!==0||
+      processInventory.unknownWriterCount!==0||!historicalCiEvidence)
+      throw new Error('READ_ONLY_HOST_INVENTORY_NOT_QUIESCENT');
+    log({step:'READ_ONLY_HOST_INVENTORY',fenceHeld:fence.isHeld(),
+      registryCount:registryInventory.registryCount,
+      targetReservationCount:registryInventory.targetReservationCount,
+      targetExactCount:registryInventory.targetExactCount,
+      unresolvedRecordCount:registryInventory.unresolvedRecordCount,
+      processCount:processInventory.processCount,
+      activeWriterCount:processInventory.activeWriterCount,
+      activeSubprocessCount:processInventory.activeSubprocessCount,
+      unknownWriterCount:processInventory.unknownWriterCount,
+      historicalCiVerified:true,registryPathsSha256:registryInventory.registryPathsSha256,
+      processTableSha256:processInventory.processTableSha256});
     const lineage={
       readClaim319:()=>store319.get(RECOVERY_IDENTITY.task319.claimCasKey),
       readFrozen319:()=>store319.get(RECOVERY_IDENTITY.task319.frozenWriteSetKey),
