@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, rm} from 'node:fs/promises';
+import {mkdtemp, rm, writeFile, mkdir, readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
-import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY}
+import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY,
+  acquireExclusiveHostFence, discoverHostRegistryPaths, inspectHostRegistryInventory,
+  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient}
   from './recover-prepost-reservation.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
@@ -85,6 +87,20 @@ const SIX_REFS = Object.freeze({
 });
 const FIXTURE_EVIDENCE = '{"taskPackRef":"https://example/pack","fixture":true}';
 
+function expectedHistoricalCiEvidence() {
+  return {schema:'tally.t06d-historical-ci-evidence/v1',observedAt:new Date().toISOString(),
+    pullRequests:[
+      {number:204,headSha:'3a894ddbdef8d4a8513c1c33837d32a816e2234e',state:'open',merged:false,combinedState:'failure',statuses:[
+        {context:'ci/woodpecker/pr/v2-t06l-kernel-admission',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/195/1'},
+        {context:'ci/woodpecker/pr/v2-t06m-local-agent',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/195/2'},
+        {context:'ci/woodpecker/pr/v2-t06n-concurrent-agent',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/195/3'}]},
+      {number:205,headSha:'ca985bb9cd125c6359eb393fa5243a04199a53b4',state:'open',merged:false,combinedState:'failure',statuses:[
+        {context:'ci/woodpecker/pr/v2-t06l-kernel-admission',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/196/1'},
+        {context:'ci/woodpecker/pr/v2-t06m-local-agent',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/196/2'},
+        {context:'ci/woodpecker/pr/v2-t06n-concurrent-agent',state:'failure',targetUrl:'https://ci.kaicreator.com/repos/12/pipeline/196/3'}]},
+    ]};
+}
+
 /** The exact observed revision-2 stranded reservation (field values only). */
 function strandedRow(overrides = {}) {
   return {
@@ -110,6 +126,12 @@ function goodProof(overrides = {}) {
     generation: 1, activeWriterCount: 0, activeAttemptCount: 0,
     activeSubprocessCount: 0, inflightEffectCount: 0, unresolvedResourceCount: 0,
     writeSetReconciled: true, evidenceRefs: SIX_REFS,
+    fenceOwnerPid: process.pid,
+    registryInventory: {registryCount:3,registryPathsSha256:'a'.repeat(64),
+      targetReservationCount:1,targetExactCount:1,unresolvedRecordCount:0},
+    processInventory: {inventoryComplete:true,processCount:1,processTableSha256:'b'.repeat(64),
+      activeWriterCount:0,activeSubprocessCount:0,unknownWriterCount:0},
+    historicalCiEvidence: expectedHistoricalCiEvidence(),
     excludedReservation: {
       casKey: TARGET.casKey, revision: 2,
       phase: 'PENDING_GITHUB_TERMINALIZATION',
@@ -124,19 +146,26 @@ function goodProof(overrides = {}) {
 function lineageRows(overrides = {}) {
   const i319 = RECOVERY_IDENTITY.task319, i331 = RECOVERY_IDENTITY.task331;
   const frozen319Value = FROZEN_319_VALUE;
-  const frozen331Value = {phase: 'FROZEN_DAG_WRITESET', taskPackBlobSha: i331.packBlobSha,
-    writeSetSha256: i331.writeSetSha256, pathCount: i331.pathCount,
-    claimCommentId: i331.claimCommentId};
+  const frozen331Value = {
+    phase:'FROZEN_DAG_WRITESET',repository:'kaicreator-mm/tally',issueNumber:331,
+    sourceSha:i331.sourceSha,writeSetSha256:i331.writeSetSha256,document:i331.writeSetDocument,
+    pathCount:i331.pathCount,writeSetDigestBasis:i331.writeSetDigestBasis,
+    taskPackRef:i331.taskPackRef,taskPackBlobSha:i331.packBlobSha,packPRHeadSha:i331.packPRHeadSha,
+    ownerReceiptRef:i331.ownerReceiptRef,reviewWitnessRef:i331.reviewWitnessRef,
+    protectedClaimKey:i331.protectedClaimKey,generation:1,dispatchId:i331.dispatchId,
+    claimCommentId:i331.claimCommentId,claimCommentRef:i331.claimCommentRef,writerId:i331.writerId,
+    frozenAt:'2026-11-06T16:18:32.000Z',
+  };
   return {
-    claim319: {revision: i319.claimRevision, value: {
-      phase: i319.claimPhase, commentId: i319.claimCommentId,
-      writerId: i319.terminalWriterId ?? RECOVERY_IDENTITY.terminalWriterId}},
-    frozen319: {revision: i319.frozenWriteSetRevision, value: frozen319Value},
-    claim331: {revision: i331.claimRevision, value: {
-      phase: i331.claimPhase, commentId: i331.claimCommentId,
-      dispatchId: i331.dispatchId, operatorId: i331.operatorId,
-      protectedClaimKey: i331.protectedClaimKey, generation: 1}},
-    frozen331: {revision: i331.frozenWriteSetRevision, value: frozen331Value},
+    claim319: {revision:i319.claimRevision,value:{
+      phase:i319.claimPhase,commentId:i319.claimCommentId,writerId:i319.terminalWriterId??RECOVERY_IDENTITY.terminalWriterId}},
+    frozen319:{revision:i319.frozenWriteSetRevision,value:frozen319Value},
+    claim331:{revision:i331.claimRevision,value:{
+      phase:i331.claimPhase,repository:'kaicreator-mm/tally',issueNumber:331,sourceSha:i331.sourceSha,
+      actorRole:i331.actorRole,operatorKind:i331.operatorKind,operatorId:i331.operatorId,writerId:i331.writerId,
+      commentId:i331.claimCommentId,commentRef:i331.claimCommentRef,dispatchId:i331.dispatchId,
+      protectedClaimKey:i331.protectedClaimKey,generation:1}},
+    frozen331:{revision:i331.frozenWriteSetRevision,value:frozen331Value},
     ...overrides,
   };
 }
@@ -639,3 +668,128 @@ test('RECOVER_REHEARSE=1 completes preflight, writes nothing, posts nothing', as
     } finally { delete process.env.RECOVER_REHEARSE; }
   });
 });
+
+test('exclusive Host fence rejects competing and stale owners without stealing the lock', async () => {
+  const dir=await mkdtemp(join(tmpdir(),'tally-i331-fence-')),path=join(dir,'fence.lock');
+  try{
+    const first=acquireExclusiveHostFence(path);
+    assert.equal(first.isHeld(),true);
+    assert.throws(()=>acquireExclusiveHostFence(path),/HOST_FENCE_ALREADY_HELD_OR_STALE/);
+    first.release();assert.equal(first.isHeld(),false);
+    const second=acquireExclusiveHostFence(path);assert.equal(second.isHeld(),true);second.release();
+    await writeFile(path,'stale-owner','utf8');
+    assert.throws(()=>acquireExclusiveHostFence(path),/HOST_FENCE_ALREADY_HELD_OR_STALE/);
+    assert.equal(await readFile(path,'utf8'),'stale-owner');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('complete registry inventory discovers nested registries and detects a second pending Task', async () => {
+  const dir=await mkdtemp(join(tmpdir(),'tally-i331-inventory-'));
+  try{
+    const paths=[join(dir,'a','registry-203.sqlite'),join(dir,'a','registry-319.sqlite'),
+      join(dir,'b','registry-331.sqlite'),join(dir,'b','registry-284.sqlite')];
+    for(const path of paths){await mkdir(path.slice(0,path.lastIndexOf('/')),{recursive:true});await writeFile(path,'','utf8');}
+    const data=new Map([
+      [paths[0],new Map([[TARGET.casKey,{revision:2,value:strandedRow()}]])],
+      [paths[1],new Map([['tally:v2:claim-admission:319',{revision:1,value:{phase:'PUBLISHED_VERIFIED'}}]])],
+      [paths[2],new Map([['tally:v2:task-writeset:331',{revision:0,value:{phase:'FROZEN_DAG_WRITESET'}}]])],
+      [paths[3],new Map([['tally:v2:claim-admission:284',{revision:1,value:{phase:'PENDING_NATIVE_ADMISSION'}}]])],
+    ]);
+    const stores=new Map([...data].map(([path,rows])=>[path,{
+      async list(prefix){return [...rows.keys()].filter(k=>k.startsWith(prefix));},
+      async get(key){return rows.get(key);},
+    }]));
+    assert.equal(discoverHostRegistryPaths(dir).length,4);
+    const result=await inspectHostRegistryInventory(stores,dir,paths[0],paths.slice(0,3));
+    assert.equal(result.targetReservationCount,1);assert.equal(result.targetExactCount,1);
+    assert.equal(result.pendingRecordCount,1);assert.equal(result.unresolvedRecordCount,1);
+    await assert.rejects(inspectHostRegistryInventory(new Map([...stores].slice(0,3)),dir,paths[0],paths.slice(0,3)),
+      /HOST_REGISTRY_INVENTORY_INCOMPLETE/);
+    data.get(paths[3]).set('tally:v2:claim-admission:284',{revision:1,value:{phase:'PUBLISHED_VERIFIED'}});
+    const clean=await inspectHostRegistryInventory(stores,dir,paths[0],paths.slice(0,3));
+    assert.equal(clean.unresolvedRecordCount,0);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('process inventory recursively counts unknown writers and grandchildren', () => {
+  const table=[
+    {ProcessId:100,ParentProcessId:1,Name:'zcode.exe',ExecutablePath:'C:/agent/zcode.exe',CommandLine:'zcode agent'},
+    {ProcessId:200,ParentProcessId:100,Name:'node.exe',ExecutablePath:'C:/Program Files/nodejs/node.exe',CommandLine:'node recover-prepost-reservation.mjs'},
+    {ProcessId:201,ParentProcessId:100,Name:'node.exe',ExecutablePath:'C:/Program Files/nodejs/node.exe',CommandLine:'node unknown-writer.mjs'},
+    {ProcessId:202,ParentProcessId:201,Name:'powershell.exe',ExecutablePath:'C:/Windows/powershell.exe',CommandLine:'powershell -File nested.ps1'},
+    {ProcessId:203,ParentProcessId:202,Name:'mystery.exe',ExecutablePath:'C:/xDev/kAiCreator/mystery.exe',CommandLine:'mystery'},
+  ];
+  const result=inspectHostProcessInventory(table,200,'C:/xDev/kAiCreator');
+  assert.equal(result.activeWriterCount,1);assert.equal(result.activeSubprocessCount,2);
+  assert.equal(result.unknownWriterCount,1);
+  assert.throws(()=>inspectHostProcessInventory(table.slice(0,1),200,'C:/xDev/kAiCreator'),
+    /HOST_PROCESS_SELF_NOT_IN_INVENTORY/);
+});
+
+test('historical #204/#205 CI evidence is bound to exact heads, contexts and failure URLs', async () => {
+  const expected=expectedHistoricalCiEvidence();
+  const fake={rest:{
+    pulls:{async get({pull_number}){const p=expected.pullRequests.find(x=>x.number===pull_number);
+      return {data:{state:p.state,merged_at:null,head:{sha:p.headSha}}};}},
+    repos:{async getCombinedStatusForRef({ref}){const p=expected.pullRequests.find(x=>x.headSha===ref);
+      return {data:{state:p.combinedState,statuses:p.statuses.map(x=>({context:x.context,state:x.state,target_url:x.targetUrl}))}};}},
+  }};
+  const actual=await readHistoricalCiEvidenceFromClient(fake);
+  assert.ok(actual);assert.equal(actual.pullRequests.length,2);
+  const drift={rest:{...fake.rest,repos:{async getCombinedStatusForRef(args){
+    const result=await fake.rest.repos.getCombinedStatusForRef(args);
+    result.data.statuses[0].target_url='https://ci.kaicreator.com/wrong';return result;
+  }}}};
+  assert.equal(await readHistoricalCiEvidenceFromClient(drift),null);
+});
+
+test('full #331 Claim and FSW bindings reject field tampering before marker CAS and POST', async () => {
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
+      terminalEvidence:undefined,terminalOccurredAt:undefined,terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const base=lineageRows();
+    const claimFields=['repository','issueNumber','sourceSha','actorRole','operatorKind','operatorId',
+      'writerId','commentId','commentRef','dispatchId','protectedClaimKey','generation'];
+    const frozenFields=['repository','issueNumber','sourceSha','writeSetSha256','document','pathCount',
+      'writeSetDigestBasis','taskPackRef','taskPackBlobSha','packPRHeadSha','ownerReceiptRef',
+      'reviewWitnessRef','protectedClaimKey','generation','dispatchId','claimCommentId',
+      'claimCommentRef','writerId','frozenAt'];
+    for(const field of claimFields){
+      const bad=structuredClone(base);bad.claim331.value[field]=
+        ['issueNumber','commentId','generation'].includes(field)?999:'tampered';
+      const p=ports({rows:()=>bad});
+      const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+      assert.equal(result.reason,'LINEAGE_BINDINGS_NOT_EXACT','Claim field '+field);
+      assert.equal(p.counts.publishes,0);assert.equal((await store.get(TARGET.casKey)).revision,2);
+    }
+    for(const field of frozenFields){
+      const bad=structuredClone(base);bad.frozen331.value[field]=
+        ['issueNumber','pathCount','claimCommentId','generation'].includes(field)?999:'tampered';
+      const p=ports({rows:()=>bad});
+      const result=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+      assert.equal(result.reason,'LINEAGE_BINDINGS_NOT_EXACT','FSW field '+field);
+      assert.equal(p.counts.publishes,0);assert.equal((await store.get(TARGET.casKey)).revision,2);
+    }
+  });
+});
+
+test('revision-4 verification is read-only and reports the historical review-order deviation', async () => {
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
+      terminalEvidence:undefined,terminalOccurredAt:undefined,terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const p=ports();
+    const first=await createPrePostRecoveryController({store,...p,writerAuthority}).recoverPrePostReservation();
+    assert.equal(first.status,'RECORDED');
+    const readonlyStore={async get(key){return store.get(key);},async put(){throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');}};
+    const readPorts=ports();readPorts.terminalEvents.present=true;
+    const verifier=createPrePostRecoveryController({store:readonlyStore,...readPorts,
+      publisher:{async publishDispatchStateChange(){throw new Error('PUBLISH_FORBIDDEN');}},writerAuthority});
+    const receipt=await verifier.verifyTerminalReservationReadOnly();
+    assert.equal(receipt.status,'ALREADY_VERIFIED');assert.equal(receipt.publisherInvocationCount,0);
+    assert.equal(receipt.httpPostCount,0);assert.equal(receipt.casWrites,0);
+    assert.equal(receipt.historicalReviewOrderDeviation.status,'NOT_RETROACTIVELY_REMEDIABLE');
+  });
+});
+
