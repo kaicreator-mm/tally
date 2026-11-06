@@ -922,6 +922,11 @@ function cliExcludedSelfTree(table,selfPid=process.pid) {
   const byPid=new Map();
   for(const row of table){
     const pid=Number(row?.ProcessId),parentPid=Number(row?.ParentProcessId);
+    // PID 0 is the System Idle Process: a kernel pseudo-process some CIM
+    // hosts enumerate (no executable, parentless by definition). It can
+    // never be a writer, subprocess or ancestor; skip it instead of
+    // failing the whole inventory as a malformed row.
+    if(pid===0)continue;
     if(!Number.isSafeInteger(pid)||pid<1||!Number.isSafeInteger(parentPid)||parentPid<0||
       byPid.has(pid)||typeof row?.Name!=='string'||!row.Name||
       (row.CommandLine!=null&&typeof row.CommandLine!=='string')||
