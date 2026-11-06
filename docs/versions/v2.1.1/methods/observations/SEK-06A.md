@@ -36,6 +36,15 @@
 
 ## Scope decisions forced by the source-identity hold
 
+> **Current status (2026-11-06 P2 repair).** The hold described in this
+> historical section no longer exists: SEK-02R #325 merged via PR #326 into the
+> WIP base this branch was rebased onto, so SWEBOK identity/registry
+> reconciliation is complete. The required post-merge reinspection of SWEBOK
+> locators was performed in the P2 repair (see the final receipt section);
+> KA1 sections 2, 5, 6 and 7 are now cited from direct PDF reinspection. The
+> decisions below are preserved as the historical record of how the lane was
+> originally authored.
+
 - SWEBOK v4.0a is under source-identity hold (#325 unmerged), so this lane uses
   CS2023 as **curriculum authority only**. Every claim's scope field names the
   CS2023 SE curriculum and its topic number; no record is worded as a
@@ -292,3 +301,95 @@ base) are **historical** and preserved unchanged.
   clean-worktree evidence are delivered in the rebase delivery comment on
   PR #327 / coordinator #321, with logs in
   `_tmp/tally-sek06-lanes/validation/06A-rb1-post/`.
+
+## P2 repair receipt — SWEBOK KA1 reinspection + stale-hold correction (2026-11-06)
+
+Repair batch executed under the combined handoff on #321 (R1 review of the
+post-WIP-rebase tips, both findings P2), within the original #322 four-path
+write set, against reviewed tip `322ed01509bc66f4f335821847ab73ca67c9f33d` /
+tree `1b6eee58a805042480b8245194fcf2943e95bc67`, base
+`7a70211b4460e4c753c97798670de9f34861d4a4`. Pre-write readback: PR #327 OPEN,
+headRefOid equalled the branch ref and the reviewed tip; worktree clean; no
+concurrent writer observed; write set unchanged.
+
+### P2-01 — stale source-hold statements corrected
+
+README.md, records.yaml and EXPLANATIONS.md no longer state that #325 is
+unmerged or that SWEBOK is under source-identity hold. Current-state wording
+now says: identity/registry reconciliation complete (#326 merged into this
+lane's WIP base); content-level reinspection performed by this repair;
+`se:GAP-REQ-PROFESSIONAL-BOK-EVIDENCE` preserved as a stable ID but redescribed
+as a content/evidence coverage gap (uninspected KA1 sections 1/3/4/8; no human
+review of SWEBOK-derived records), severity HIGH → MEDIUM. The shared Domain
+and View records' hold language was reworded **identically in all three lane
+files** (06A/06B/06C) so the six shared records remain byte-identical for
+SEK-08. Historical statements in this observation are preserved and labeled.
+
+### P2-02 — SWEBOK KA1 locator re-verification performed
+
+Official source reopened locally: the retained official PDF copy
+(`_tmp/i325-localval-r3/pdf/swebok-v4.pdf`) re-verified as SHA-256
+`0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`,
+6,015,672 bytes, 411 pages, `%PDF-1.7`, matching the SEK-02R registry record
+(canonical source `SE-SRC-SWEBOK-GUIDE-4-0A`). Chapter/section headings and
+printed folios were verified by direct text extraction at the exact page
+indices. Admitted locators (PDF page indices 0-based; printed pages use the
+Guide's chapter-page folios):
+
+| Locator ID | Section(s) verified | PDF page indices | Printed pages |
+|---|---|---|---|
+| `se:LOC-SWEBOK-KA1-ELICITATION` | Ch.1 §2 Requirements Elicitation (§2.1 Sources, §2.2 Common Elicitation Techniques) | 47–48 | 1-6 to 1-7 |
+| `se:LOC-SWEBOK-KA1-VALIDATION` | Ch.1 §5 Requirements Validation (§5.1 Reviews, §5.2 Simulation and Execution, §5.3 Prototyping) | 56–57 | 1-15 to 1-16 |
+| `se:LOC-SWEBOK-KA1-MANAGEMENT` | Ch.1 §6 Requirements Management Activities (§6.1–6.3) and §7 Practical Considerations (§7.1–7.4) | 57–60 | 1-16 to 1-19 |
+
+Chapter 1 opens at PDF page index 42 (printed 1-1). Added records: the three
+locators above, three `DIRECT_SOURCE_PARAPHRASE` evidence records
+(`se:EVD-REQ-SWEBOK-ELICITATION`, `se:EVD-REQ-SWEBOK-VALIDATION-METHODS`,
+`se:EVD-REQ-SWEBOK-CHANGE-SCOPE`), three claims
+(`se:CLM-REQ-SWEBOK-ELICITATION-ACTIVE`,
+`se:CLM-REQ-SWEBOK-VALIDATION-TRIO`,
+`se:CLM-REQ-SWEBOK-MANAGEMENT-AGREEMENT`) and three canonical `SUPPORTED_BY`
+edges (`se:REL-REQ-015/016/017`). No page number, section or claim was written
+that the extracted PDF text does not support; the Guide's
+generally-accepted-knowledge-not-prescription limitation is carried inside each
+claim. Rights boundaries kept: PDF not committed/mirrored/redistributed,
+original paraphrases only, release-date discrepancy remains OPEN, all records
+PROPOSED/PENDING_REVIEW, zero ACCEPTED.
+
+### Validation (Windows-native, Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Run on the exact repaired working tree (= the committed tree of this repair
+commit); rerun after the commit and the final four-path SHA256 manifest at the
+pushed HEAD are delivered in the P2 repair delivery comment on PR #327 /
+coordinator #321, logs in `_tmp/tally-sek06-lanes/validation/06A-p2/`.
+
+1. `validate_knowledge_graph.py --self-test` → `SELF_TESTS=66/66`, exit 0.
+2. `assemble_and_validate.py <worktree> 06A <records.yaml> <outdir>` → exit 0:
+
+```text
+LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 2, "coverage_gaps": 3, "decision_models": 1, "domains": 1, "evidence_records": 13, "knowledge_claims": 8, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 17, "source_locators": 7, "taxonomy_nodes": 1, "taxonomy_views": 1}
+COUNT_source_locators=7 MIN=3 PASS
+COUNT_evidence_records=13 MIN=3 PASS
+COUNT_knowledge_claims=8 MIN=4 PASS
+COUNT_concepts=2 MIN=2 PASS
+COUNT_principles=1 MIN=1 PASS
+COUNT_practices=2 MIN=2 PASS
+COUNT_patterns=1 MIN=1 PASS
+COUNT_anti_patterns=1 MIN=1 PASS
+COUNT_decision_models=1 MIN=1 PASS
+COUNT_coverage_gaps=3 MIN=1 PASS
+COUNT_relationship_assertions=17 MIN=10 PASS
+DERIVED_SOURCES=2 se:SRC-CS2023,se:SRC-SWEBOK-GUIDE-4-0A
+GRAPH_VALIDATION=PASS
+NO_ACCEPTED_RECORDS=PASS
+LINKML_VERSION=1.12.1
+LINKML_RUNTIME_VERSION=1.12.1
+LINKML_INSTANCE_VALIDATION=PASS
+RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
+LANE_VALIDATION=PASS
+```
+
+47 → 59 lane records (three content files plus this observation are the only
+paths changed). Cross-lane check at the three repaired tips and clean-worktree
+evidence are recorded in the delivery comment. Human review burden remains
+NOT_MEASURED; no record is ACCEPTED.

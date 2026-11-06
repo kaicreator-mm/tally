@@ -6,14 +6,17 @@ integration_target: wip/v2.1.1-knowledge
 base_head_sha: cf2dbc845bfc2dcbc110ed52e240e79953a4cba9
 parent_issue: "#322"
 scope_note: >-
-  Requirements Engineering vertical-slice lane (SEK-06A) grounded solely in the
-  CS2023 Software Engineering knowledge unit "SE-Requirements: Product
-  Requirements" plus registry-verified SE Overview / Core Hours anchors.
-  SWEBOK v4.0a remains under source-identity hold (#325), so no professional
-  body-of-knowledge evidence is cited and every claim is scoped to the CS2023
-  curriculum. All knowledge records are PROPOSED or PENDING_REVIEW; none is
-  ACCEPTED. Source entities are not stored in this lane file; the validation
-  harness derives shared Source records from SOURCE_REGISTRY.yaml.
+  Requirements Engineering vertical-slice lane (SEK-06A) grounded in the CS2023
+  Software Engineering knowledge unit "SE-Requirements: Product Requirements"
+  plus registry-verified SE Overview / Core Hours anchors. SWEBOK Guide v4.0a
+  source identity and registry reconciliation is complete (SEK-02R #325 merged
+  via PR #326 into this lane's WIP base), and the 2026-11-06 P2 repair performed
+  the required direct content reinspection of SWEBOK KA1 Software Requirements
+  sections, admitting KA1 locators, evidence and claims at content level; no
+  SWEBOK-derived claim is automatically accepted. All knowledge records remain
+  PROPOSED or PENDING_REVIEW; none is ACCEPTED. Source entities are not stored
+  in this lane file; the validation harness derives shared Source records from
+  SOURCE_REGISTRY.yaml.
 review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
 collections:
   domains:
@@ -33,10 +36,10 @@ collections:
         - secure-development cross-cutting guidance
       scope_exclusions:
         - the entirety of computer science
-        - unreviewed professional body-of-knowledge claims pending SEK-02R
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
       boundary_notes:
         - No single source is treated as a complete ontology of the discipline.
-        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R #325 merged via PR #326); SWEBOK content is cited only where a lane has directly reinspected the located sections, and such records stay PROPOSED/PENDING_REVIEW until human review.
       evidence_refs: []
 
   taxonomy_views:
@@ -55,7 +58,7 @@ collections:
       limitations:
         - Curriculum classification is not professional-domain completeness.
         - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
-        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
       evidence_refs: []
 
   taxonomy_nodes:
@@ -115,6 +118,40 @@ collections:
       locator_type: SECTION
       locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements' (KA Core topics 1-6, Non-core topics 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
       verified_content_summary: "KA Core topics: functional-requirement documentation methods (use cases / user stories); requirement properties (consistency, validity, completeness, feasibility); requirements elicitation sources and methods; non-functional requirements as Quality Attributes; risk identification and management with ethical considerations; communicating and/or formalizing requirement specifications. Non-core topics: prototyping for eliciting and validating requirements; product evolution and change impact; effort estimation."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- SWEBOK v4.0a KA1 locators (2026-11-06 P2 repair reinspection; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are
+    #     0-based, printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-SWEBOK-KA1-ELICITATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 1 Software Requirements, section 2 Requirements Elicitation, including 2.1 Requirements Sources and 2.2 Common Requirements Elicitation Techniques; PDF page indices 47-48; printed pages 1-6 to 1-7"
+      verified_content_summary: "Elicitation goal (surfacing candidate requirements, minimizing incompleteness), stakeholder classes and non-person sources, and the technique families (interviews, facilitated workshops, questionnaires, prototyping, user story mapping, observation and others)."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA1-VALIDATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 1 Software Requirements, section 5 Requirements Validation, including 5.1 Requirements Reviews, 5.2 Simulation and Execution and 5.3 Prototyping; PDF page indices 56-57; printed pages 1-15 to 1-16"
+      verified_content_summary: "Validation purpose (confidence that requirements represent stakeholders' true needs as currently understood) and the three named methods: multidisciplinary reviews, simulation or execution of the specification, and prototyping."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-SWEBOK-KA1-MANAGEMENT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 1 Software Requirements, section 6 Requirements Management Activities (6.1 Requirements Scrubbing, 6.2 Requirements Change Control, 6.3 Scope Matching) and section 7 Practical Considerations (7.1 Iterative Nature, 7.2 Requirements Prioritization, 7.3 Requirements Tracing, 7.4 Requirements Stability and Volatility); PDF page indices 57-60; printed pages 1-16 to 1-19"
+      verified_content_summary: "Requirements management framed as maintaining the requirements agreement over time: change-control process elements, scope matching against cost/schedule/staffing constraints, prioritization factors (including dissatisfaction-based weighting), bidirectional tracing purposes and stability/volatility assessment."
       verification_state: LOCATOR_VERIFIED
       accessed_on: "2026-11-06"
 
@@ -315,6 +352,81 @@ collections:
         - "Whether real teams that defer quality attributes always incur the listed consequences is untested in this lane."
       extraction_status: EXTRACTED_PENDING_REVIEW
       synthetic: false
+    # --- SWEBOK v4.0a KA1 evidence (2026-11-06 P2 repair reinspection) ---
+    - id: se:EVD-REQ-SWEBOK-ELICITATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA1-ELICITATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA1 presents requirements elicitation as an active activity
+        whose goal is to surface candidate requirements and thereby minimize
+        (though not eliminate) incompleteness: it names stakeholder classes
+        (clients, customers, users, subject matter experts, operations and
+        support staff, regulators and others) plus non-person sources
+        (documentation, other systems, business context, computing environment),
+        and lists technique families including interviews, facilitated workshops,
+        questionnaires and surveys, exploratory prototyping, user story mapping,
+        observation and apprenticing, noting that stakeholders may be tacit,
+        unarticulate or uncooperative and that elicitation is not passive.
+      context: "SWEBOK Guide v4.0a Chapter 1 section 2 (2.1 Requirements Sources; 2.2 Common Requirements Elicitation Techniques), printed pages 1-6 to 1-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-06; text extracted at the verified page indices and paraphrased originally."
+      result: "The elicitation activity's goal, source typology and technique families were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The Guide's technique list is a survey of generally accepted techniques, not a comparative effectiveness ranking."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-SWEBOK-VALIDATION-METHODS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA1-VALIDATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA1 defines requirements validation as gaining confidence
+        that the requirements represent the stakeholders' true needs as
+        currently understood, and names three methods that tend to be used:
+        requirements reviews (preferably from multiple perspectives —
+        stakeholders, specification experts and downstream
+        designers/implementers), simulation or execution of the specification
+        where the requirements are formally or model-based specified, and
+        prototyping where direct simulation or execution is not possible.
+      context: "SWEBOK Guide v4.0a Chapter 1 section 5 (5.1-5.3), printed pages 1-15 to 1-16."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06 at the verified page indices; original paraphrase."
+      result: "The validation definition and the three-method enumeration were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The section names the three methods without prescribing when each must be used."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-SWEBOK-CHANGE-SCOPE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-SWEBOK-KA1-MANAGEMENT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA1 frames requirements management as maintaining the
+        agreed requirements over time: requirements scrubbing, change control
+        (request channel, optional impact analysis, an acceptance authority,
+        notification and closure tracking, with plan-based and Agile life cycles
+        handling it explicitly versus implicitly) and scope matching (keeping
+        the requirements scope within cost, schedule and staffing constraints,
+        quantitatively where possible). Its practical-considerations topics add
+        that prioritization should weigh both the satisfaction a requirement
+        creates and the dissatisfaction its absence causes, that tracing serves
+        consistency accounting and change-impact analysis, and that identifying
+        volatile requirements supports change-tolerant design.
+      context: "SWEBOK Guide v4.0a Chapter 1 sections 6 (6.1-6.3) and 7 (7.1-7.4), printed pages 1-16 to 1-19."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-06 at the verified page indices; original paraphrase."
+      result: "The management-activities framing, change-control elements, scope-matching rule and the prioritization/tracing/stability considerations were confirmed."
+      limitations:
+        - "The sections describe generally accepted activities; they do not assert that every project must instantiate all listed elements."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
 
   concepts:
     - id: se:CON-REQ-REQUIREMENTS-ELICITATION
@@ -434,6 +546,64 @@ collections:
       exceptions: []
       limitations:
         - "Non-core status means the curriculum does not require coverage in every CS program."
+      uncertainty: []
+      review_status: PENDING
+    # --- SWEBOK v4.0a KA1 claims (2026-11-06 P2 repair reinspection) ---
+    - id: se:CLM-REQ-SWEBOK-ELICITATION-ACTIVE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA1 presents requirements elicitation as an active,
+        multi-source activity whose goal is to surface candidate requirements
+        and minimize incompleteness, drawing on identified stakeholder classes
+        and non-person sources and on a surveyed set of elicitation techniques.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 1 section 2 (printed pages 1-6 to 1-7); a description of generally accepted KA content, not a prescription that every project apply every listed technique."
+      applicability: "Professional-BOK characterization of the elicitation activity; usable as the professional-counterpart anchor for the CS2023-scoped elicitation records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The Guide's authority limitations apply: it is a guide to generally accepted knowledge, not a uniform prescription, and its technique citations are not comprehensive."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-SWEBOK-VALIDATION-TRIO
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA1 defines requirements validation as gaining
+        confidence that the requirements represent stakeholders' true needs as
+        currently understood, and characterizes it as typically using three
+        methods: requirements reviews (preferably from multiple perspectives),
+        simulation or execution of the specification, and prototyping.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 1 section 5 (printed pages 1-15 to 1-16); generally accepted KA content, not a mandate of all three methods on every project."
+      applicability: "Professional-BOK counterpart to the curriculum's prototyping-as-validation records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definition covers stated requirements as currently understood; it does not claim validation proves completeness."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-SWEBOK-MANAGEMENT-AGREEMENT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        SWEBOK Guide v4.0a KA1 frames requirements management as maintaining the
+        agreed requirements over time through scrubbing, change control and
+        scope matching, with practical considerations that prioritization weigh
+        satisfaction and dissatisfaction, that tracing serve consistency
+        accounting and impact analysis, and that volatility assessment inform
+        change-tolerant design.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 1 sections 6-7 (printed pages 1-16 to 1-19); generally accepted KA content, not a claim that every project instantiates every listed element."
+      applicability: "Professional-BOK counterpart to the change-expectation principle and evolution records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The sections describe activities in plan-based and Agile life cycles without asserting one universal process shape."
       uncertainty: []
       review_status: PENDING
 
@@ -629,23 +799,27 @@ collections:
       record_version: 0.1.0
       lifecycle_status: PROPOSED
       created_on: "2026-11-06"
-      label: No professional-BOK evidence for requirements engineering during SWEBOK hold
+      label: Professional-BOK requirements coverage limited to inspected SWEBOK KA1 sections
       target_scope_ref: se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS
       gap_kind: SOURCE_GAP
       description: >-
-        While SWEBOK v4.0a is under source-identity hold (#325 unmerged), this lane
-        cites only CS2023 curriculum evidence for the Product Requirements unit;
-        no professional body-of-knowledge or professional-consensus evidence for
-        requirements engineering is present in the lane.
-      severity: HIGH
+        SWEBOK v4.0a identity and registry reconciliation is complete (#326
+        merged into the WIP base) and the 2026-11-06 repair reinspected KA1
+        sections 2, 5, 6 and 7 directly, admitting locators, evidence and
+        claims at content level. The remaining professional-BOK coverage gap is
+        content breadth and evidence depth: KA1 sections 1 (fundamentals), 3
+        (analysis), 4 (specification) and 8 (tools) were not reinspected for
+        this lane, no SWEBOK-derived record has passed human review, and no
+        SWEBOK content beyond the inspected sections may be inferred.
+      severity: MEDIUM
       coverage_status: OPEN
       impact: >-
-        Records in this lane must not be read as professional-consensus
-        requirements-engineering knowledge; every claim is curriculum-scoped and
-        remains PROPOSED or PENDING_REVIEW until professional sources are admitted
-        and separately reviewed.
+        SWEBOK-derived records in this lane are content-verified paraphrases of
+        inspected sections only, remain PROPOSED or PENDING_REVIEW, and do not
+        make the lane a professional-consensus requirements-engineering
+        reference; uninspected KA1 topics stay uncovered.
       resolution_notes:
-        - "Revisit after the SWEBOK source reconciliation (#325) merges; then add professional-BOK locators and evidence under their own review chain."
+        - "Reinspect the remaining KA1 sections and admit their records under the same locator-verified chain when needed; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
     - id: se:GAP-REQ-REAL-CASE-EVIDENCE
       record_version: 0.1.0
       lifecycle_status: PROPOSED
@@ -843,3 +1017,31 @@ collections:
       object_ref: se:EVD-REQ-FUNCTIONAL-REQ-METHODS
       context: "Canonical claim-to-evidence trace for the documentation-method decision model."
       rationale: "The decision model's options and criteria are structured directly from the curriculum's topic 1 example methods and comparison axes, so the same evidence anchors it."
+    # --- SWEBOK v4.0a KA1 edges (2026-11-06 P2 repair reinspection) ---
+    - id: se:REL-REQ-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-SWEBOK-ELICITATION-ACTIVE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-SWEBOK-ELICITATION
+      context: "Canonical claim-to-evidence trace for the SWEBOK KA1 elicitation claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 1 section 2 at its verified locator (PDF page indices 47-48; printed 1-6 to 1-7), which is the sole basis of the claim."
+    - id: se:REL-REQ-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-SWEBOK-VALIDATION-TRIO
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-SWEBOK-VALIDATION-METHODS
+      context: "Canonical claim-to-evidence trace for the SWEBOK KA1 validation claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 1 section 5 at its verified locator (PDF page indices 56-57; printed 1-15 to 1-16), which states the validation definition and the three methods."
+    - id: se:REL-REQ-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-SWEBOK-MANAGEMENT-AGREEMENT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-SWEBOK-CHANGE-SCOPE
+      context: "Canonical claim-to-evidence trace for the SWEBOK KA1 requirements-management claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 1 sections 6-7 at their verified locator (PDF page indices 57-60; printed 1-16 to 1-19), which carry the management framing and the practical considerations."

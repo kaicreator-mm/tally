@@ -15,7 +15,11 @@ store of the record's data. Field values are discussed, not duplicated.
   separate from professional taxonomies, and the three locators carry the only
   page anchors the registry has verified for the CS2023 SE section. Copying them
   unchanged lets the SEK-08 integrator collapse duplicates by canonical ID
-  instead of reconciling near-duplicates by hand.
+  instead of reconciling near-duplicates by hand. (2026-11-06 P2 repair: the
+  domain's exclusion and boundary note and the view's SWEBOK limitation were
+  reworded — identically in all three lanes — to state the post-#326 reality:
+  identity/registry reconciliation complete, SWEBOK content citable only where
+  a lane directly reinspected it. The three CS2023 locators are unchanged.)
 - `se:GAP-CS2023-RIGHTS-CLEARANCE` — the sixth shared record, added to all
   three lanes by the coordinated rights-clearance correction. It is a
   CoverageGap, so its narrative entry lives in the Coverage gaps section below;
@@ -87,6 +91,15 @@ store of the record's data. Field values are discussed, not duplicated.
   *unit*, instead of being smuggled into an anti-pattern record as if the
   curriculum had said it. Its context line says in plain words that no such
   sentence appears in CS2023.
+- `se:EVD-REQ-SWEBOK-ELICITATION`, `se:EVD-REQ-SWEBOK-VALIDATION-METHODS`,
+  `se:EVD-REQ-SWEBOK-CHANGE-SCOPE` — the professional-BOK side of the lane,
+  added by the 2026-11-06 P2 repair after direct reinspection of the official
+  SWEBOK v4.0a PDF (hash-checked against the SEK-02R registry record). Each
+  record paraphrases only the sections at its verified locator and keeps the
+  Guide's own authority limitations (generally accepted knowledge, not
+  prescription; citations not comprehensive) inside its limitations field, so
+  the lane cannot drift from "what the Guide says these sections contain" into
+  "what practitioners must do".
 
 ## Concepts
 
@@ -100,9 +113,13 @@ store of the record's data. Field values are discussed, not duplicated.
 
 ## Claims
 
-All five claims carry a scope field naming the CS2023 SE curriculum and the
-specific topic number, per the SWEBOK-hold rule: nothing here is promoted to
-professional consensus.
+The five CS2023 claims carry a scope field naming the CS2023 SE curriculum and
+the specific topic number: nothing curriculum-derived is promoted to
+professional consensus. The three SWEBOK claims added by the P2 repair carry a
+scope field naming the exact reinspected KA1 sections and repeat the Guide's
+"generally accepted knowledge, not a uniform prescription" limitation, so they
+are professional-BOK *content* claims, not professional-consensus verdicts, and
+none is automatically accepted.
 
 - `se:CLM-REQ-FUNCTIONAL-DOC-METHODS` (practice claim) — what the curriculum
   *asks students to do* with functional requirements, including the
@@ -118,6 +135,14 @@ professional consensus.
 - `se:CLM-REQ-PROTOTYPE-DUAL-ROLE` (practice claim) — the dual instrumental
   role of prototypes, with the Non-core status inside the claim itself so the
   claim cannot be quoted without its elective context.
+- `se:CLM-REQ-SWEBOK-ELICITATION-ACTIVE` (practice claim),
+  `se:CLM-REQ-SWEBOK-VALIDATION-TRIO` (definition),
+  `se:CLM-REQ-SWEBOK-MANAGEMENT-AGREEMENT` (practice claim) — the
+  professional-BOK counterparts of the lane's elicitation, prototyping and
+  change-expectation records. They were deliberately written as claims about
+  *what the Guide's KA1 sections present*, not as free-standing professional
+  imperatives, because the inspected sections are the entire evidentiary basis;
+  the coverage-breadth gap below records what was not reinspected.
 
 ## Principle, practices, pattern, anti-pattern, decision model
 
@@ -159,9 +184,12 @@ professional consensus.
 ## Coverage gaps
 
 - `se:GAP-REQ-PROFESSIONAL-BOK-EVIDENCE` — scoped to the taxonomy node and
-  marked HIGH/OPEN: while SWEBOK is on hold, this lane's records must not be
-  read as professional requirements-engineering knowledge. The resolution note
-  names the unblocking event (#325) so the gap is actionable, not decorative.
+  marked MEDIUM/OPEN after the 2026-11-06 P2 repair: identity/registry
+  reconciliation is complete and KA1 sections 2, 5, 6 and 7 are now cited from
+  direct reinspection, so the remaining gap is content breadth (KA1 sections 1,
+  3, 4 and 8 uninspected) and review depth (no SWEBOK-derived record has passed
+  human review). It is no longer an unmerged-dependency blocker; the resolution
+  note names the concrete next inspection and review steps.
 - `se:GAP-REQ-REAL-CASE-EVIDENCE` — scoped to the view and marked MEDIUM/OPEN:
   no case-class source is registered, so no Case/Counterexample records exist
   and the pattern/anti-pattern records rest on curriculum text plus one marked
@@ -176,18 +204,19 @@ professional consensus.
 
 ## Relationship assertions
 
-Fourteen edges, chosen to exercise the predicate catalog meaningfully rather
-than to pad counts: seven `SUPPORTED_BY` (five claims plus the principle and
-the decision model, keeping the canonical claim-to-evidence pattern of the
-vertical slice — which is also why claim records themselves do not repeat an
-evidence list); two `APPLIES_TO` (claim and practice each bound to the
-curriculum node, both carrying evidence and qualifiers as the catalog
-requires); one `QUALIFIED_BY` (principle ← prototype/change evidence, carrying
-the elective-status qualifiers); one `DEPENDS_ON` (prototype-validation
-practice needs the elicitation concept, since the curriculum's prototype serves
-elicitation too); one `IMPLEMENTS` (elicitation practice operationalizes the
-elicitation claim, with the fidelity-delta qualifier); one `DERIVED_FROM`
-(anti-pattern ← synthesis evidence, making the inference auditable); one
-`RELATED_TO` (pattern ↔ quality-attribute concept as the boundary fence
-described above). Evidence-bearing edges cite the same evidence records their
-endpoints use — no evidence is invented for an edge alone.
+Seventeen edges, chosen to exercise the predicate catalog meaningfully rather
+than to pad counts: ten `SUPPORTED_BY` (five CS2023 claims, the principle and
+the decision model, plus the three SWEBOK claims added by the P2 repair,
+keeping the canonical claim-to-evidence pattern of the vertical slice — which
+is also why claim records themselves do not repeat an evidence list); two
+`APPLIES_TO` (claim and practice each bound to the curriculum node, both
+carrying evidence and qualifiers as the catalog requires); one `QUALIFIED_BY`
+(principle ← prototype/change evidence, carrying the elective-status
+qualifiers); one `DEPENDS_ON` (prototype-validation practice needs the
+elicitation concept, since the curriculum's prototype serves elicitation too);
+one `IMPLEMENTS` (elicitation practice operationalizes the elicitation claim,
+with the fidelity-delta qualifier); one `DERIVED_FROM` (anti-pattern ←
+synthesis evidence, making the inference auditable); one `RELATED_TO` (pattern
+↔ quality-attribute concept as the boundary fence described above).
+Evidence-bearing edges cite the same evidence records their endpoints use — no
+evidence is invented for an edge alone.
