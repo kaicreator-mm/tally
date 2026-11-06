@@ -98,13 +98,16 @@ then-repaired working tree (logs under
 `_tmp/tally-sek06-lanes/validation/06A-bld2/`), both producing the identical
 key lines quoted below.
 
-**Exact final committed tip receipt** — the full validator run and exit codes
-below bind to the committed tree, not a working-tree approximation: HEAD
+**Historical receipt — exact committed-tip validation at `925ab717`** (the
+full validator run and exit codes below bind to that committed tree, not a
+working-tree approximation; it was the PR tip until the Builder receipt-rebind
+commit `657297c` and is preserved here as receipt history — see the
+final-tip receipt appended after this section): HEAD
 `925ab717686a2d6e46d8df3018af675879eb56f4`, tree
 `339e28827084363d7ab8540b5653347f2b480203`, base
 `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #327
-headRefOid equals this HEAD), clean worktree before (0 dirty) and after
-(0 dirty). Receipt dir `_tmp/tally-sek06-lanes/validation/06A-bld3/`
+headRefOid equalled this HEAD at that time), clean worktree before (0 dirty)
+and after (0 dirty). Receipt dir `_tmp/tally-sek06-lanes/validation/06A-bld3/`
 (`identity-tip.txt`, `selftest-tip.log`, `lane-validate-tip.log`,
 `manifest-four-paths-tip.sha256`).
 
@@ -158,6 +161,43 @@ graph validator (typed endpoints, evidence/qualifier rules, locator uniqueness,
 no ACCEPTED knowledge), the no-ACCEPTED lane gate, and LinkML 1.12.1 instance
 validation. RDF/JSON-LD export is not claimed at lane level; it belongs to the
 SEK-08 integration experiment.
+
+### Final-tip receipt — Builder batch `657297c` (2026-11-06 R2 repair append)
+
+The R2 Exact-SHA review of PR #327 required the observation to name the final
+Builder-batch tip; the `925ab717` receipt above (and the earlier `7aa2777b`
+receipt) are historical context, preserved unchanged.
+
+- Identity: HEAD `657297c63142661bd2da5ce1763b07dd68700667`, tree
+  `b225e57d2c40a58c6f0bdc7d3c9d360540ca6fc6`, base
+  `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #327
+  headRefOid equalled this HEAD at the R2 review).
+- Commands and exit codes at this exact tip: `validate_knowledge_graph.py
+  --self-test` → `SELF_TESTS=66/66`, exit 0; `assemble_and_validate.py
+  <worktree> 06A <records.yaml> <outdir>` → exit 0 with every `COUNT_*` PASS,
+  `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+  `LINKML_INSTANCE_VALIDATION=PASS`, `LANE_VALIDATION=PASS` (counts unchanged:
+  47 lane records, 14 relationship assertions, `coverage_gaps=3`, derived
+  source `se:SRC-CS2023`). Clean worktree before/after: 0/0 dirty. Logs:
+  Builder batch `_tmp/tally-sek06-lanes/validation/06A-bld3/`
+  (`identity-post.txt`, `selftest-post.log`, `lane-validate-post.log`,
+  `manifest-four-paths-post.sha256`), independently re-run for this repair in
+  `_tmp/tally-sek06-lanes/validation/06A-r2r/`.
+- Four-path SHA256 manifest at HEAD `657297c` / tree `b225e57`:
+
+```text
+10ad4ea3bb8307a2e95ca5c9076d1a9660fefee9e4fe3477087393f963791022  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/requirements/README.md
+30d2c404f2063f548b88d6bcbcd657e034b9655ce498dcc89cb6daa70ee3314c  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/requirements/records.yaml
+0ada45a5b3940c2c381dadad26ad5a0e650da1d28e311be59d5847edadf460c1  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/requirements/EXPLANATIONS.md
+09eb732499983f1a4f87f6483d51025680e6db5c7d68f90153a6f3fbca98f4e8  docs/versions/v2.1.1/methods/observations/SEK-06A.md
+```
+
+This append itself is an observation-only R2-repair commit and becomes the
+newest tip; its exact HEAD/TREE, the post-commit rerun (same commands, exit
+0), the updated four-path manifest and clean-worktree evidence are delivered
+in the R2 repair delivery comment on PR #327 / coordinator #321, with logs in
+`_tmp/tally-sek06-lanes/validation/06A-r2r/`. The SWEBOK hold (#325/#326
+unmerged) is unchanged: no SWEBOK-derived content was added by this receipt.
 
 ## Limitations and review burden
 
