@@ -90,10 +90,10 @@ modified.
 3. Every evidence `statement` is a concise original paraphrase of verbatim
    extracted content or of a registry-verified fact; nothing else was admitted.
 
-## Validation results (2026-11-06, Windows native, exact tip 2b8464a)
+## Validation results (2026-11-06, Windows native, exact tip 293efbc)
 
-Environment: Python 3.14.7; LinkML 1.12.1 / linkml-runtime 1.12.1 (shared
-SEK-06 venv). Validator compile check:
+Environment: Python 3.14.7, PyYAML 6.0.3; LinkML 1.12.1 / linkml-runtime
+1.12.1 (SEK venv, `PYTHONDONTWRITEBYTECODE=1`). Validator compile check:
 `py_compile validate_knowledge_graph.py` — exit 0.
 
 Validator self-test:
@@ -101,9 +101,16 @@ Validator self-test:
 
 Lane assembly + validation
 (`assemble_and_validate.py <worktree> 06C <records.yaml> <outdir>`), rerun at
-the exact tip after the rights-gap correction — worktree HEAD
-`2b8464a348afd982d5c4a0a4793cb7b390cce906`, tree
-`21f0484e6a4fe1385b2270ed9356760bc9f0110c`, clean worktree:
+the exact committed final tip after the rights-gap correction and the
+documentation-only follow-up — worktree HEAD
+`293efbc46299b0827e426e5708c7d2b9d8c38893`, tree
+`e99afa5b47eebac710e76a6a3ea6ddfbce6b0e56`, base
+`cf2dbc845bfc2dcbc110ed52e240e79953a4cba9` (merge-base equals base; PR #329
+headRefOid equals this HEAD; clean worktree before 0 dirty / after 0 dirty;
+exit 0). The earlier rerun at
+`2b8464a348afd982d5c4a0a4793cb7b390cce906` / tree
+`21f0484e6a4fe1385b2270ed9356760bc9f0110c` (`records.yaml` byte-identical to
+the final tip) is retained as historical context:
 
 ```text
 LANE_RECORD_COUNTS={"anti_patterns":1,"concepts":2,"coverage_gaps":4,"decision_models":1,"domains":1,"evidence_records":15,"knowledge_claims":7,"patterns":1,"practices":2,"principles":1,"relationship_assertions":20,"source_locators":9,"taxonomy_nodes":3,"taxonomy_views":2}
@@ -128,14 +135,30 @@ RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
 LANE_VALIDATION=PASS
 ```
 
-Exact-tip receipt directory: `_tmp/tally-sek06-lanes/validation/06C-bld2`
-(outside the repo write set). It supersedes the pre-correction receipt at
-`_tmp/tally-sek06-lanes/validation/06C` (which measured `coverage_gaps=3`
-before `se:GAP-CS2023-RIGHTS-CLEARANCE` was added); the old directory is
-retained as history only. A post-fix rerun after the documentation-only
-follow-up commit (README provenance note plus this observation update;
-`records.yaml` byte-identical to `2b8464a`) is recorded in the same receipt
-directory. Machine validation is not human review: every record remains
+Exact-tip receipt directories (outside the repo write set): the current
+final-tip receipt is `_tmp/tally-sek06-lanes/validation/06C-bld3/`
+(`identity-tip.txt`, `selftest-tip.log`, `lane-validate-tip.log`,
+`manifest-four-paths-tip.sha256`; post-commit rerun and manifest at the
+pushed HEAD: `selftest-post.log`, `lane-validate-post.log`,
+`manifest-four-paths-post.sha256`). It supersedes the receipts at
+`06C-bld2` (the rerun at the `2b8464a`-lineage tip after the
+documentation-only follow-up commit) and at `06C` (pre-correction,
+`coverage_gaps=3` before `se:GAP-CS2023-RIGHTS-CLEARANCE` was added); those
+directories are retained as history only.
+
+Four-path SHA256 manifest at the committed tip `293efbc` (tree `e99afa5`;
+repo-relative; the receipt-rebind commit that carries this receipt changes
+only this observation file, so the first three hashes remain valid at the
+pushed HEAD):
+
+```text
+4e7c733e934d4e937213b25b55ee71874a4a446f2eaeaaa293bbab25e466b447  lanes/testing-verification/README.md
+2d66085c5357b783a0dfa9c8a4fc3bab8173e00c3d954ece2c3c1ca26d24a468  lanes/testing-verification/records.yaml
+fdb49b03410ea38bf0cce7288969d44b4c833fc837cf2c0056994e5b38a87445  lanes/testing-verification/EXPLANATIONS.md
+c54985a0562f9720ad31818116ae2931d469b3ab989fb56132652f9e760aaa01  methods/observations/SEK-06C.md
+```
+
+Machine validation is not human review: every record remains
 PROPOSED/PENDING_REVIEW with evidence EXTRACTED_PENDING_REVIEW.
 
 ## Deviations and notes
@@ -176,7 +199,10 @@ registry's source-specific rights note. The revised lane treats the permission
 scope as unresolved for a general engineering knowledge graph and records a
 HIGH/OPEN REVIEW_GAP. The earlier lane-validation receipt predates this
 four-path correction and must not be used as validation evidence for the new
-HEAD; the required exact-tip native validation was performed on 2026-11-06 at
-HEAD `2b8464a348afd982d5c4a0a4793cb7b390cce906` and passed
-(`LANE_VALIDATION=PASS`, `coverage_gaps=4`; receipt
-`_tmp/tally-sek06-lanes/validation/06C-bld2`).
+HEAD; exact-tip native validation was first performed at HEAD
+`2b8464a348afd982d5c4a0a4793cb7b390cce906` (historical receipt
+`_tmp/tally-sek06-lanes/validation/06C-bld2`) and is now bound to the final
+committed tip `293efbc46299b0827e426e5708c7d2b9d8c38893` / tree
+`e99afa5b47eebac710e76a6a3ea6ddfbce6b0e56` (receipt
+`_tmp/tally-sek06-lanes/validation/06C-bld3`), passing in both runs
+(`LANE_VALIDATION=PASS`, `coverage_gaps=4`).
