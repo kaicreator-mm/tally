@@ -1,0 +1,824 @@
+lane_id: SEK-06A-REQUIREMENTS-LANE-0.1.0
+title: Software Engineering Requirements Engineering lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-06"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: cf2dbc845bfc2dcbc110ed52e240e79953a4cba9
+parent_issue: "#322"
+scope_note: >-
+  Requirements Engineering vertical-slice lane (SEK-06A) grounded solely in the
+  CS2023 Software Engineering knowledge unit "SE-Requirements: Product
+  Requirements" plus registry-verified SE Overview / Core Hours anchors.
+  SWEBOK v4.0a remains under source-identity hold (#325), so no professional
+  body-of-knowledge evidence is cited and every claim is scoped to the CS2023
+  curriculum. All knowledge records are PROPOSED or PENDING_REVIEW; none is
+  ACCEPTED. Source entities are not stored in this lane file; the validation
+  harness derives shared Source records from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek06-lanes/extract/shared-snippets.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending SEK-02R
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+      evidence_refs: []
+
+  taxonomy_nodes:
+    - id: se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: "CS2023 SE-Requirements: Product Requirements"
+      definition: >-
+        The Product Requirements knowledge unit of the CS2023 Software Engineering
+        area, positioned by the SE Overview as introducing the processes surrounding
+        specification of the broad requirements governing development of a new
+        product or feature.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-REQ-SE-OVERVIEW-PRODUCT-REQUIREMENTS
+
+  source_locators:
+    # --- shared SourceLocators: copied verbatim from shared-snippets.yaml ---
+    - id: se:LOC-CS2023-SE-OVERVIEW
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge PDF page indices 174-176; Software Engineering (SE), Overview"
+      verified_content_summary: "SE curriculum framing: nine knowledge units; Product Requirements and Software Design unit purposes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table"
+      verified_content_summary: "Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-BOK-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page index 0; front-matter Knowledge Areas table"
+      verified_content_summary: "17 knowledge areas; Software Engineering is one area with nine knowledge units."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- lane-specific KU-level locator: heading-anchored, no invented page numbers ---
+    - id: se:LOC-CS2023-SE-REQ-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements' (KA Core topics 1-6, Non-core topics 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "KA Core topics: functional-requirement documentation methods (use cases / user stories); requirement properties (consistency, validity, completeness, feasibility); requirements elicitation sources and methods; non-functional requirements as Quality Attributes; risk identification and management with ethical considerations; communicating and/or formalizing requirement specifications. Non-core topics: prototyping for eliciting and validating requirements; product evolution and change impact; effort estimation."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+
+  evidence_records:
+    - id: se:EVD-REQ-SE-OVERVIEW-PRODUCT-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-OVERVIEW
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Software Engineering overview positions SE-Requirements (Product
+        Requirements) as the unit introducing the processes surrounding specification
+        of the broad requirements governing development of a new product or feature,
+        observing that knowing how to build something is of little help without
+        knowing what to build, and listing Requirements Engineering, Product Design
+        and Product Requirements Documents among its other names.
+      context: "SE knowledge-area Overview, item 3; curriculum positioning of the knowledge unit within the nine-unit SE area."
+      method: "Read the SE Overview in the official Body of Knowledge PDF full text obtained via a text-extraction service on 2026-11-06; locator anchored to registry-verified PDF page indices 174-176."
+      result: "The unit's purpose and alias family were confirmed for heading-anchored citation and for the taxonomy-node definition."
+      limitations:
+        - "Overview text only; the unit's topic detail lives in the SE-Requirements subsection cited separately."
+      uncertainty:
+        - "The printed page number of the Overview subsection was not independently confirmed; the locator relies on registry page indices plus heading anchoring."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-SE-PREAMBLE-MULTIVERSION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-OVERVIEW
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE preamble frames software engineering projects as usually
+        multi-version: a project has an expected lifespan of months, years or
+        decades, features may be added or removed to meet product requirements,
+        and a delivered system must keep working rather than merely work once.
+      context: "SE knowledge-area Preamble; motivation for the nine-unit curriculum structure."
+      method: "Read the SE Preamble in the extracted full text on 2026-11-06; heading-anchored within the registry-verified SE Overview page span."
+      result: "The multi-version framing and its explicit link to product requirements were confirmed as curriculum motivation."
+      limitations:
+        - "Curriculum framing; the Preamble does not prescribe a professional requirements-change process."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-CORE-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE Core Hours table allocates the Product Requirements knowledge
+        unit 0 CS Core hours delivered jointly with SEP (shown as 0 + 3 SEP) and
+        2 KA Core hours.
+      context: "SE Core Hours table row for Product Requirements within the nine-unit SE area."
+      method: "Read the Software Engineering Core Hours table in the extracted full text on 2026-11-06; registry-verified PDF page indices 176-177."
+      result: "Product Requirements is confirmed as a KA Core unit whose CS Core exposure is delivered jointly with the SEP area."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 asks students to describe functional requirements using at least one
+        method of documenting and structuring them, giving use cases and user
+        stories as examples, to understand how the chosen method supports design
+        and implementation, and to weigh the strengths and weaknesses of a specific
+        approach.
+      context: "SE-Requirements: Product Requirements, KA Core topic 1 with subtopics 1a-1c."
+      method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "Topic 1 and subtopics 1a-1c were confirmed against the verbatim extraction."
+      limitations:
+        - "The curriculum names example methods only; it does not rank use cases against user stories."
+      uncertainty:
+        - "The KU subsection's printed page number was not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-REQUIREMENT-PROPERTIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 lists consistency, validity, completeness and feasibility as the
+        properties of requirements.
+      context: "SE-Requirements: Product Requirements, KA Core topic 2."
+      method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "The four named requirement properties were confirmed."
+      limitations:
+        - "The topic names the properties without defining measurement or checking procedures for them."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-ELICITATION-SOURCES-METHODS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 presents requirements elicitation as drawing on multiple source
+        groups — users, administrators and support personnel are the named
+        examples — and on multiple gathering methods, naming surveys, interviews
+        and behavioral analysis as examples.
+      context: "SE-Requirements: Product Requirements, KA Core topic 3 with subtopics 3a-3b."
+      method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "The elicitation source and method example lists were confirmed."
+      limitations:
+        - "The example lists are illustrative rather than exhaustive; the curriculum does not compare the methods."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-QUALITY-ATTRIBUTES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 states that non-functional requirements are also called Quality
+        Attributes, names security, usability and performance as examples, and
+        cross-references the SEP-Sustainability unit.
+      context: "SE-Requirements: Product Requirements, KA Core topic 4."
+      method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "The terminology equivalence, the three examples and the SEP cross-reference were confirmed."
+      limitations:
+        - "Terminology equivalence is stated for this curriculum; other frameworks may distinguish the two terms."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-RISK-ETHICS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 makes risk identification and management a core requirements topic
+        and explicitly includes ethical considerations surrounding the proposed
+        product, cross-referencing SEP-Professional-Ethics.
+      context: "SE-Requirements: Product Requirements, KA Core topic 5."
+      method: "Read the SE-Requirements topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "The risk-management topic and its embedded ethical considerations were confirmed."
+      limitations:
+        - "The curriculum names the topic without prescribing a risk-analysis technique."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-PROTOTYPE-AND-CHANGE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 lists prototyping (Non-core) as a single tool serving both eliciting
+        requirements and validating or confirming them, and lists product evolution
+        (Non-core) as understanding, when requirements change, what effect that has
+        and what changes need to be made.
+      context: "SE-Requirements: Product Requirements, Non-core topics 7 and 8."
+      method: "Read the SE-Requirements non-core topic list in the extracted full text on 2026-11-06; heading-anchored KU locator."
+      result: "The dual-role prototyping topic and the change-impact topic were confirmed."
+      limitations:
+        - "Both topics are Non-core (elective) in the CS2023 curriculum model."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-REQ-SYNTHESIS-QA-DEFERRED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-REQ-KU
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-06A): within the CS2023 SE-Requirements unit, quality
+        attributes (non-functional requirements) form a named KA Core topic
+        (topic 4) alongside the requirement that functional-requirement
+        documentation methods demonstrably support design and implementation
+        (topic 1); on that combined reading, leaving quality attributes implicit
+        or deferring their specification discards information the curriculum
+        itself treats as core requirements knowledge.
+      context: "Cross-topic inference combining KA Core topics 1 and 4 of the SE-Requirements unit; this is not a sentence that appears in CS2023."
+      method: "Lane-level comparison of two verified topic statements from the same knowledge unit."
+      result: "Provides the inference trail motivating the se:ANT-REQ-IMPLICIT-QUALITY-ATTRIBUTES record."
+      limitations:
+        - "Synthesis inference, not a direct curriculum statement."
+        - "No empirical case evidence in this lane supports the severity of the anti-pattern's consequences."
+      uncertainty:
+        - "Whether real teams that defer quality attributes always incur the listed consequences is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-REQ-REQUIREMENTS-ELICITATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Requirements Elicitation (CS2023 curriculum sense)
+      definition: >-
+        The activity of obtaining requirements for a product or feature; the CS2023
+        SE-Requirements unit characterizes it by its sources (users, administrators
+        and support personnel as examples) and its gathering methods (surveys,
+        interviews and behavioral analysis as examples).
+      concept_kind: TERM
+      synonyms:
+        - requirements gathering
+      scope_description: "Defined at CS2023 SE curriculum fidelity for this lane; not asserted as a professional-consensus definition."
+      evidence_refs:
+        - se:EVD-REQ-ELICITATION-SOURCES-METHODS
+    - id: se:CON-REQ-QUALITY-ATTRIBUTE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Quality Attribute (CS2023 non-functional requirement)
+      definition: >-
+        A requirement concerning a non-functional property of the software being
+        specified; CS2023 calls non-functional requirements Quality Attributes and
+        names security, usability and performance as examples.
+      concept_kind: QUALITY_ATTRIBUTE
+      synonyms:
+        - non-functional requirement
+      scope_description: "CS2023 SE-Requirements KA Core topic 4 terminology scope; the term equivalence holds within this curriculum."
+      evidence_refs:
+        - se:EVD-REQ-QUALITY-ATTRIBUTES
+
+  knowledge_claims:
+    - id: se:CLM-REQ-FUNCTIONAL-DOC-METHODS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        In the CS2023 curriculum, functional requirements are to be described using
+        at least one documentation and structuring method (use cases and user
+        stories are the named examples), with explicit attention to how the method
+        supports design and implementation and to the strengths and weaknesses of
+        the specific approach.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE knowledge unit SE-Requirements: Product Requirements, KA Core topic 1 (subtopics 1a-1c); a curriculum teaching expectation, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 SE requirements curriculum; usable by practitioners only as curriculum guidance."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum does not evaluate which method is superior; it requires understanding of support and trade-offs."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-REQUIREMENT-PROPERTIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        Within the CS2023 SE curriculum, consistency, validity, completeness and
+        feasibility are the named properties of requirements.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE-Requirements KA Core topic 2; curriculum terminology scope only, not a professional-standard definition."
+      applicability: "Interpreting requirement quality discussions within the CS2023 curriculum model."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum names the properties but does not operationalize how to measure or check them."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-ELICITATION-MULTI-SOURCE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        The CS2023 curriculum teaches requirements elicitation through multiple
+        source groups (users, administrators and support personnel as examples) and
+        multiple gathering methods (surveys, interviews and behavioral analysis as
+        examples).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Requirements KA Core topic 3; curriculum teaching scope, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 SE requirements curriculum."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The example lists are illustrative, not exhaustive; the curriculum does not compare the methods."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-QA-TERMINOLOGY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        In CS2023 terminology, non-functional requirements are also called Quality
+        Attributes; security, usability and performance are the named examples.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE-Requirements KA Core topic 4; a curriculum-scope terminology equivalence, not a professional standard definition."
+      applicability: "Terminology mapping within CS2023-grounded records; other bodies may use the terms differently."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The equivalence is asserted for this curriculum and is not evidence of industry-wide usage."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-REQ-PROTOTYPE-DUAL-ROLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        The CS2023 curriculum presents prototyping as a single tool serving both
+        eliciting requirements and validating or confirming them, and places this
+        topic outside the core (Non-core, elective).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Requirements Non-core topic 7; elective curriculum scope, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 SE requirements curriculum; elective coverage means CS programs need not include it."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Non-core status means the curriculum does not require coverage in every CS program."
+      uncertainty: []
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-REQ-EXPECT-CHANGE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Expect requirements change
+      statement: >-
+        Requirements on a software product should be expected to change over the
+        product's lifetime, and when they change the effect of the change — what
+        must be modified as a result — needs to be understood.
+      rationale: >-
+        The CS2023 SE preamble frames software engineering projects as usually
+        multi-version, with features added or removed to meet product requirements
+        over an expected lifespan, and the SE-Requirements unit includes product
+        evolution (understanding the effect of changed requirements and what
+        changes are needed) as a topic.
+      scope_description: "Derived within CS2023 SE curriculum scope (SE Preamble plus SE-Requirements Non-core topic 8); not asserted as a professional-consensus principle."
+      applicability: "Products with an expected multi-release lifespan in which requirements evolve."
+      exceptions:
+        - "Single-delivery or throwaway artifacts that are explicitly not expected to evolve."
+      limitations:
+        - "Product evolution is a Non-core (elective) topic in CS2023, so the curriculum itself does not make change-impact analysis mandatory for all programs."
+        - "Strength of the principle beyond curriculum scope is untested in this lane (no empirical evidence cited)."
+
+  practices:
+    - id: se:PRA-REQ-MULTI-SOURCE-ELICITATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Multi-source, multi-method requirements elicitation
+      intent: >-
+        Reduce single-source bias in the gathered requirement set by deliberately
+        combining requirement sources and gathering methods.
+      description: >-
+        Elicit requirements from multiple source groups — users, administrators and
+        support personnel are the curriculum's examples — using multiple gathering
+        methods such as surveys, interviews and behavioral analysis, as presented in
+        the CS2023 SE-Requirements elicitation topic.
+      preconditions:
+        - "Access to at least two distinguishable requirement source groups."
+        - "A chosen combination of gathering methods appropriate to the product context."
+      steps:
+        - "Identify the requirement source groups touching the product (for example users, administrators, support personnel)."
+        - "Select gathering methods (for example surveys, interviews, behavioral analysis) suited to each group."
+        - "Collect and record elicited requirements with source and method provenance."
+        - "Compare and merge results across sources and methods, flagging conflicts for resolution."
+      expected_outcomes:
+        - "A requirement set reflecting more than one source group and more than one gathering method."
+        - "Recorded source and method provenance for elicited requirements."
+      risks:
+        - "Sources may be unavailable or unrepresentative."
+        - "Different methods yield requirements at incompatible levels of detail."
+        - "Merging across sources surfaces conflicts that must be resolved, adding effort."
+      scope_description: "Operationalizes CS2023 SE-Requirements KA Core topic 3 (elicitation sources and methods) at curriculum-scope fidelity; not a professional-standard procedure."
+      applicability: "Products with multiple stakeholder groups; the example lists are illustrative, not exhaustive."
+      evidence_refs:
+        - se:EVD-REQ-ELICITATION-SOURCES-METHODS
+      claim_refs:
+        - se:CLM-REQ-ELICITATION-MULTI-SOURCE
+    - id: se:PRA-REQ-PROTOTYPE-VALIDATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Prototype-based requirement validation
+      intent: >-
+        Use a prototype both to surface new requirements and to validate or confirm
+        an existing requirement set.
+      description: >-
+        Build a lightweight representation of the software system — the curriculum's
+        learning-outcome examples include a mock-up or MVP — and use the same
+        artifact for eliciting requirements and for validating or confirming them
+        with stakeholders.
+      preconditions:
+        - "A candidate requirement set to validate, or an elicitation target."
+        - "Stakeholders able to react to a prototype."
+        - "Capacity to build and discard a minimal or throwaway artifact."
+      steps:
+        - "Choose the prototype fidelity needed for the decision at hand (mock-up, MVP, etc.)."
+        - "Build the minimal prototype covering the requirements in question."
+        - "Walk stakeholders through the prototype, recording reactions as newly elicited or confirmed/refuted requirements."
+        - "Update the requirement set and record which requirements the prototype validated."
+      expected_outcomes:
+        - "Requirements confirmed, refuted or newly elicited through stakeholder reaction to the prototype."
+      risks:
+        - "Stakeholders may mistake a throwaway prototype for the product direction."
+        - "Prototype fidelity may over- or under-represent the real system, biasing feedback."
+        - "Prototype effort can exceed the value of the validated decisions."
+      scope_description: "Operationalizes CS2023 SE-Requirements Non-core topic 7 (prototyping as a tool for both eliciting and validating/confirming requirements); an elective curriculum topic, not a mandated practice."
+      applicability: "Requirement sets whose correctness is hard to assess in the abstract and where stakeholders can inspect an artifact."
+      evidence_refs:
+        - se:EVD-REQ-PROTOTYPE-AND-CHANGE
+      claim_refs:
+        - se:CLM-REQ-PROTOTYPE-DUAL-ROLE
+
+  patterns:
+    - id: se:PAT-REQ-USER-STORY-SPECIFICATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: User-story-structured functional specification
+      problem: >-
+        Functional requirements need a documentation and structuring method that
+        stakeholders can read and that designers and implementers can trace to
+        their work.
+      context: >-
+        A team specifying the functional scope of a new product or feature chooses
+        among documented structuring methods such as use cases and user stories,
+        per the CS2023 SE-Requirements instruction to use at least one such method.
+      forces:
+        - "Stakeholder readability versus implementation traceability."
+        - "The chosen method must support design and implementation, not only description."
+        - "Each specific approach has its own strengths and weaknesses."
+        - "Team familiarity differs across methods."
+      solution: >-
+        Express each functional requirement as a short user story (actor,
+        capability, purpose) — or a comparable structured unit — and keep the chosen
+        structure uniform across the requirement set, following the curriculum's
+        example methods for documenting and structuring functional requirements.
+      consequences:
+        - "A uniform, stakeholder-readable functional requirement set whose entries can be traced into design and implementation work."
+        - "The choice of method explicitly shapes how well the specification supports later design and implementation."
+      tradeoffs:
+        - "User stories are lightweight and readable but carry less structured interaction detail than full use cases; use cases capture more detail at higher documentation cost."
+      scope_description: "CS2023 SE-Requirements KA Core topic 1 curriculum scope (use cases / user stories as the named example methods); not a claim that user stories dominate other methods."
+      evidence_refs:
+        - se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+
+  anti_patterns:
+    - id: se:ANT-REQ-IMPLICIT-QUALITY-ATTRIBUTES
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Implicit or deferred quality attributes
+      symptoms:
+        - "Quality concerns such as security, usability and performance surface late as retrofit requests rather than stated requirements."
+        - "The requirement set contains only functional items; quality expectations are assumed to be understood."
+        - "Design and implementation decisions lack explicit quality anchors to be checked against."
+      causes:
+        - "Treating non-functional requirements as separate from the 'real' (functional) requirements."
+        - "No owner or method for capturing quality attributes alongside functional requirements."
+        - "Confusing software that works once with software that keeps working under quality constraints."
+      consequences:
+        - "Quality attributes surface as late, expensive rework in design and implementation."
+        - "Unstated quality expectations diverge between stakeholders, producing validation disputes."
+        - "Security, usability and performance risks are discovered after structural decisions are fixed."
+      remediation: >-
+        Name quality attributes explicitly as requirements — following the CS2023
+        placement of non-functional requirements (Quality Attributes) as a core
+        requirements topic with security, usability and performance as examples —
+        and capture them with the same documentation discipline as functional
+        requirements.
+      scope_description: "Lane-level characterization grounded in the CS2023 SE-Requirements unit (KA Core topics 1 and 4); the counterproductive nature of this approach is a SEK-06A synthesis inference (see se:EVD-REQ-SYNTHESIS-QA-DEFERRED), not a statement made by the CS2023 report."
+      evidence_refs:
+        - se:EVD-REQ-SYNTHESIS-QA-DEFERRED
+
+  decision_models:
+    - id: se:DM-REQ-FUNCTIONAL-DOC-METHOD
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      decision_question: "Which method should a team use to document and structure the functional requirements of a product or feature?"
+      options:
+        - "Use cases"
+        - "User stories"
+        - "A defined combination of both, or another structured method, applied uniformly"
+      criteria:
+        - "How well the method supports design and implementation."
+        - "Strengths and weaknesses of the specific approach."
+        - "Team familiarity with the method."
+        - "Stakeholder readability of the resulting specification."
+      constraints:
+        - "At least one documentation and structuring method must actually be used (CS2023 topic 1a)."
+        - "The chosen method applies uniformly across the requirement set for consistency."
+      procedure: >-
+        For each candidate method, assess it against the agreed criteria for the
+        product context — the CS2023 curriculum frames the comparison axes as the
+        method's support for design and implementation and its approach-specific
+        strengths and weaknesses — then select one method (or a defined
+        combination) and record the selection rationale with the requirement set.
+      tradeoffs:
+        - "A lighter method such as user stories is faster and more readable but less detailed; a heavier method such as full use cases captures interaction detail at higher documentation cost."
+      scope_description: "Structured around CS2023 SE-Requirements KA Core topic 1 (subtopics 1a-1c); curriculum-scope decision aid, not a professional-standard decision procedure."
+      evidence_refs:
+        - se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+      claim_refs:
+        - se:CLM-REQ-FUNCTIONAL-DOC-METHODS
+
+  coverage_gaps:
+    - id: se:GAP-REQ-PROFESSIONAL-BOK-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: No professional-BOK evidence for requirements engineering during SWEBOK hold
+      target_scope_ref: se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS
+      gap_kind: SOURCE_GAP
+      description: >-
+        While SWEBOK v4.0a is under source-identity hold (#325 unmerged), this lane
+        cites only CS2023 curriculum evidence for the Product Requirements unit;
+        no professional body-of-knowledge or professional-consensus evidence for
+        requirements engineering is present in the lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: >-
+        Records in this lane must not be read as professional-consensus
+        requirements-engineering knowledge; every claim is curriculum-scoped and
+        remains PROPOSED or PENDING_REVIEW until professional sources are admitted
+        and separately reviewed.
+      resolution_notes:
+        - "Revisit after the SWEBOK source reconciliation (#325) merges; then add professional-BOK locators and evidence under their own review chain."
+    - id: se:GAP-REQ-REAL-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: No real requirements-engineering case evidence
+      target_scope_ref: se:VIEW-CS2023-SE
+      gap_kind: SOURCE_GAP
+      description: >-
+        CS2023 contains no real requirements-engineering case material usable as
+        Case or Counterexample evidence, and no case-class source (incident report,
+        postmortem or case study touching requirements work) is registered for this
+        scope; the lane therefore contains no Case or Counterexample records, and
+        its pattern and anti-pattern records rest on curriculum text plus one
+        lane-marked synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern records lack real-world illustration; the
+        anti-pattern's counterproductive characterization remains a synthesis
+        inference rather than an observed outcome.
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public postmortems or requirements-related case studies) before promoting these records toward acceptance."
+
+  relationship_assertions:
+    - id: se:REL-REQ-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-FUNCTIONAL-DOC-METHODS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+      context: "Canonical claim-to-evidence trace for the functional-requirement documentation-methods claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements KA Core topic 1 with subtopics 1a-1c, which is exactly the curriculum basis of the claim."
+    - id: se:REL-REQ-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-REQUIREMENT-PROPERTIES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-REQUIREMENT-PROPERTIES
+      context: "Canonical claim-to-evidence trace for the requirement-properties claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements KA Core topic 2, the sole curriculum basis for the four named properties."
+    - id: se:REL-REQ-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-ELICITATION-MULTI-SOURCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-ELICITATION-SOURCES-METHODS
+      context: "Canonical claim-to-evidence trace for the multi-source multi-method elicitation claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements KA Core topic 3 subtopics 3a-3b, which name the source groups and gathering methods the claim reports."
+    - id: se:REL-REQ-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-QA-TERMINOLOGY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-QUALITY-ATTRIBUTES
+      context: "Canonical claim-to-evidence trace for the quality-attribute terminology claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements KA Core topic 4, which states the terminology equivalence and the three examples."
+    - id: se:REL-REQ-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-PROTOTYPE-DUAL-ROLE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-PROTOTYPE-AND-CHANGE
+      context: "Canonical claim-to-evidence trace for the prototyping dual-role claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements Non-core topic 7 (with topic 8 in the same locator), which presents prototyping as serving both elicitation and validation/confirmation."
+    - id: se:REL-REQ-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-REQ-FUNCTIONAL-DOC-METHODS
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS
+      qualifiers:
+        - "Applies to the CS2023 SE-Requirements: Product Requirements knowledge unit scope only (KA Core topic 1)."
+        - "Curriculum-authority scope; not a professional body-of-knowledge applicability claim."
+      context: "Locating the functional-requirement documentation-methods claim within the curriculum knowledge unit it describes."
+      rationale: "The claim is a teaching expectation of this specific CS2023 knowledge unit, so its applicability is bounded by that unit's taxonomy node."
+      evidence_refs:
+        - se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+    - id: se:REL-REQ-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-REQ-MULTI-SOURCE-ELICITATION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS
+      qualifiers:
+        - "Practice is operationalized from CS2023 SE-Requirements KA Core topic 3 at curriculum fidelity."
+        - "Example sources and methods are the curriculum's illustrations, not an exhaustive professional procedure."
+      context: "Locating the multi-source elicitation practice within the curriculum knowledge unit it operationalizes."
+      rationale: "The practice's steps and examples derive directly from the elicitation topic of this knowledge unit, so its declared applicability is that unit's scope."
+      evidence_refs:
+        - se:EVD-REQ-ELICITATION-SOURCES-METHODS
+    - id: se:REL-REQ-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRI-REQ-EXPECT-CHANGE
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-REQ-PROTOTYPE-AND-CHANGE
+      qualifiers:
+        - "Product evolution (change impact) is a Non-core, elective topic in CS2023."
+        - "Prototyping is the curriculum's example vehicle for surfacing and confirming changed requirements, not the only mechanism."
+      context: "Qualifying how strongly the expect-change principle is supported within the curriculum model."
+      rationale: "The same evidence record that documents the prototyping and product-evolution topics also shows both are Non-core, which limits how far the curriculum itself pushes the principle."
+    - id: se:REL-REQ-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-REQ-PROTOTYPE-VALIDATION
+      predicate: DEPENDS_ON
+      object_ref: se:CON-REQ-REQUIREMENTS-ELICITATION
+      context: "Structural dependency between the prototype-validation practice and the elicitation concept."
+      rationale: "The practice uses the prototype as an elicitation tool as well as a validation tool, so it presumes the elicitation concept (its sources and methods) defined in this lane."
+      evidence_refs:
+        - se:EVD-REQ-PROTOTYPE-AND-CHANGE
+    - id: se:REL-REQ-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-REQ-MULTI-SOURCE-ELICITATION
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-REQ-ELICITATION-MULTI-SOURCE
+      qualifiers:
+        - "Operationalization is at CS2023 curriculum fidelity (illustrative example lists)."
+        - "The practice adds procedural detail (provenance recording, merge step) beyond the curriculum sentence."
+      context: "The practice operationalizes the curriculum claim about elicitation sources and methods."
+      rationale: "The claim states what the curriculum teaches about elicitation; the practice turns that statement into an actionable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-REQ-ELICITATION-SOURCES-METHODS
+    - id: se:REL-REQ-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:ANT-REQ-IMPLICIT-QUALITY-ATTRIBUTES
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-REQ-SYNTHESIS-QA-DEFERRED
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a curriculum sentence; it is derived from the lane synthesis that combines the quality-attribute core topic with the method-supports-design requirement, and the edge records that derivation."
+      evidence_refs:
+        - se:EVD-REQ-SYNTHESIS-QA-DEFERRED
+    - id: se:REL-REQ-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PAT-REQ-USER-STORY-SPECIFICATION
+      predicate: RELATED_TO
+      object_ref: se:CON-REQ-QUALITY-ATTRIBUTE
+      qualifiers:
+        - "Relation is boundary-keeping: the pattern structures functional requirements only, while quality attributes are a separate requirement category in the same curriculum unit."
+        - "A specification built with this pattern must still capture quality attributes explicitly; the pattern does not subsume them."
+      context: "Relating the functional-specification pattern to the requirement category it must not absorb."
+      rationale: "CS2023 lists functional-requirement documentation methods (topic 1) and quality attributes (topic 4) as distinct core topics; linking the pattern to the concept records that boundary."
+      evidence_refs:
+        - se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+    - id: se:REL-REQ-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRI-REQ-EXPECT-CHANGE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-SE-PREAMBLE-MULTIVERSION
+      context: "Canonical claim-to-evidence trace for the expect-change principle's primary curriculum anchor."
+      rationale: "The SE preamble's multi-version framing is the curriculum basis from which the principle's rationale starts; the change-impact topic itself is carried by the QUALIFIED_BY edge instead."
+    - id: se:REL-REQ-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:DM-REQ-FUNCTIONAL-DOC-METHOD
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-REQ-FUNCTIONAL-REQ-METHODS
+      context: "Canonical claim-to-evidence trace for the documentation-method decision model."
+      rationale: "The decision model's options and criteria are structured directly from the curriculum's topic 1 example methods and comparison axes, so the same evidence anchors it."
