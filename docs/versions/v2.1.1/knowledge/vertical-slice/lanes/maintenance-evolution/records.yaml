@@ -1,0 +1,1655 @@
+lane_id: SEK-07F-MAINTENANCE-EVOLUTION-LANE-0.1.0
+title: Software Maintenance, Evolution, Refactoring and Technical Debt lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#339"
+scope_note: >-
+  Maintenance, evolution, refactoring and technical-debt vertical-slice lane
+  (SEK-07F) grounded in directly inspected SWEBOK Guide v4.0a KA7 Software
+  Maintenance sections (Introduction/1.1, 1.5, 1.6, 2.1.3, 2.1.4, 2.2.1, 2.3.1,
+  4.2, 4.3; official PDF SHA-256
+  0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511), the
+  maintenance-relevant SWEBOK KA8 Software Configuration Management change
+  control sections (3, 3.1, 3.1.1, 3.2), and the CS2023 SE knowledge unit
+  "SE-Refactoring: Refactoring and Code Evolution" (heading-anchored). Lane
+  boundaries: construction-time code practices stay in 07B; CI/CD delivery
+  mechanics (SWEBOK KA7 section 4.4) stay in 07E; lifecycle/process models stay
+  in 07A; planning and estimation governance stays in 07G. ISO/IEC/IEEE 14764
+  and 12207 are cited only as SWEBOK-reported attributions; the ISO standards
+  themselves remain registry metadata-only. All knowledge records remain
+  PROPOSED or PENDING_REVIEW; none is ACCEPTED. Source entities are not stored
+  in this lane file; the validation harness derives shared Source records from
+  SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: field values per shared-snippets-sek07.yaml, which was derived
+    #     from the reviewed SEK-06A final tip (origin/task/tally-v211-sek06a-requirements).
+    #     The snippets file line-wraps boundary_notes[1] mid-sentence at "(SEK-02R";
+    #     the complete reviewed sentence is restored from the SEK-06A tip it was
+    #     derived from. All other field values copied exactly. ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - >-
+          SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R #325
+          merged via PR #326); SWEBOK content is cited only where a lane has directly
+          reinspected the located sections, and such records stay
+          PROPOSED/PENDING_REVIEW until human review.
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane lifecycle lens over the maintenance/evolution subject area ---
+    - id: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Maintenance and evolution lifecycle lens (SEK-07F)
+      view_kind: LIFECYCLE
+      purpose: >-
+        Classify software-maintenance, evolution, change-impact, refactoring and
+        technical-debt knowledge by its role in the post-delivery life of an
+        operational software product, as one lifecycle lens grounded in the
+        SWEBOK v4.0a KA7/KA8 sections this lane directly inspected.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the SWEBOK KA7 sections 1.1/1.5/1.6/2.1.3/2.1.4/2.2.1/2.3.1/4.2/4.3 and KA8 sections 3/3.1/3.2 inspected by this lane; other KA7/KA8 topics remain uncovered.
+        - CI/CD delivery mechanics (KA7 4.4) are deliberately excluded here and belong to the 07E lane boundary.
+        - This lens does not absorb the CS2023 curriculum units; cross-view relations are typed RelationshipAssertions, not a merged hierarchy.
+      evidence_refs: []
+
+  taxonomy_nodes:
+    - id: se:NODE-07F-SOFTWARE-MAINTENANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software maintenance (post-delivery support of operational software)
+      definition: >-
+        The activity SWEBOK v4.0a KA7 defines as the totality of activities required
+        to provide cost-effective support for software in operation, spanning
+        pre-delivery preparation (planning for post-delivery operations,
+        maintainability and logistics) and post-delivery activities (surveillance,
+        modification, training, help-desk operation), with the reported
+        ISO/IEC/IEEE 14764 objective of modifying existing software while
+        preserving its integrity.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINT-DEFINITION
+    - id: se:NODE-07F-CHANGE-IMPACT-AND-CONTROL
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Change impact and change control
+      definition: >-
+        The concern of assessing the detailed effects proposed changes have on
+        existing software (SWEBOK KA7 2.1.3 impact analysis) and of routing change
+        requests through a formal evaluate-and-approve control process (SWEBOK KA8
+        3.1 software change request process, configuration control board), which
+        KA7 locates after a change request enters the SCM process.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+        - se:EVD-07F-SWEBOK-KA8-SCR-PROCESS
+    - id: se:NODE-07F-REFACTORING-AND-TECH-DEBT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Refactoring, reengineering and technical debt management
+      definition: >-
+        The techniques SWEBOK KA7 sections 4.2/4.3 describe for evolving existing
+        software: reengineering to reconstitute software in a new form (often to
+        replace aging legacy software), refactoring to reorganize a program without
+        changing behavior in order to improve internal structure and
+        maintainability and reduce technical debt, passive reverse engineering to
+        recover higher-abstraction representations, and the measurement of debt
+        with size, complexity, flaw and practice-violation indicators (2.3.1).
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-REFACTORING
+        - se:EVD-07F-SWEBOK-TECH-DEBT-COST
+    - id: se:NODE-07F-CS2023-SE-REFACTORING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SE-Refactoring: Refactoring and Code Evolution"
+      definition: >-
+        The Refactoring and Code Evolution knowledge unit of the CS2023 Software
+        Engineering area, whose KA Core topics are Hyrum's Law (the Law of Implicit
+        Interfaces), backward compatibility as a relationship property,
+        refactoring (standard patterns, IDE tooling, static analysis, value as a
+        technical-debt remedy) and versioning (Semantic Versioning, trunk-based
+        development), with large-scale refactoring as a Non-core topic.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+
+  source_locators:
+    # --- shared SourceLocator: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table"
+      verified_content_summary: "Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- lane CS2023 KU-level locator: heading-anchored, no invented page numbers ---
+    - id: se:LOC-07F-CS2023-REFACTORING-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: >-
+        Body of Knowledge, Software Engineering (SE), knowledge unit
+        'SE-Refactoring: Refactoring and Code Evolution' (KA Core topics 1-4,
+        Non-core topic 5); heading and topic text verified by full-text extraction
+        of the official PDF on 2026-11-07; printed page not independently
+        confirmed, page anchor per registry: SE section content spans PDF pages
+        174-177 (registry-recorded)
+      verified_content_summary: >-
+        KA Core topics: Hyrum's Law/Law of Implicit Interfaces; backward
+        compatibility (relationship property; provider+consumer evaluation);
+        refactoring (standard patterns, IDE tools, static-analysis application,
+        value as technical-debt remedy); versioning (SemVer, trunk-based
+        development). Non-core: large-scale refactoring (coexisting old/new APIs,
+        minimized behavior change, unseen consumers).
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- SWEBOK v4.0a locators (direct content reinspection 2026-11-07; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, re-verified against the registry record; PDF page indices are
+    #     0-based, printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-07F-SWEBOK-KA7-MAINT-DEF
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, chapter Introduction plus section 1.1 Definitions and Terminology; PDF page indices 166-167; printed pages 7-1 to 7-2"
+      verified_content_summary: "Definition of software maintenance as the totality of activities required to provide cost-effective support for software in operation; pre-delivery and post-delivery activity stages; ISO/IEC/IEEE 14764 objective of modifying existing software while preserving its integrity."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-EVOLUTION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 1.5 Evolution of Software; PDF page indices 168-169; printed pages 7-3 to 7-4"
+      verified_content_summary: "Eight laws of software evolution attributed to research by Lehman and others over twenty years; maintenance as evolutionary development; large programs never complete and grow more complex unless complexity is actively reduced."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-CATEGORIES
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 1.6 Categories of Software Maintenance; PDF page indices 169-170; printed pages 7-4 to 7-5"
+      verified_content_summary: "Five standardized maintenance categories (corrective, preventive, adaptive, additive, perfective) regrouped by ISO/IEC/IEEE 14764 into corrections and enhancements; sixth category emergency maintenance; additive-versus-perfective distinction."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-IMPACT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 2.1.3 Impact Analysis; PDF page index 171; printed page 7-6"
+      verified_content_summary: "Purpose and outputs of maintenance impact analysis (affected systems and products, resource estimates, risks); performed after a change request enters the SCM process; PR severity as a fix-prioritization guide."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-MAINTAINABILITY-DEBT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 2.1.4 Maintainability; PDF page indices 171-172; printed pages 7-6 to 7-7"
+      verified_content_summary: "ISO/IEC/IEEE 14764 maintainability definition (capability of the software product to be modified); compromised maintainability creating technical debt; accumulation under time and comprehension pressure; three in-depth investigation areas for debt."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-ORG-OBJECTIVES
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 2.2.1 Alignment with Organizational Objectives; PDF page indices 172-173; printed pages 7-7 to 7-8"
+      verified_content_summary: "New features commonly prioritized over refactoring, security or performance improvement; objectives and constraints to be balanced with maintainability and engineering standards to avoid code decay and technical debt; develop-new versus enhance-existing comparison."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-TECH-DEBT-COST
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 2.3.1 Technical Debt Cost Estimation; PDF page index 174; printed page 7-9"
+      verified_content_summary: "Technical-debt definition (effort to fix problems remaining at initial release); measurement indicators (size, complexity, flaws, practice violations); uncertain-reward barrier; four organizational determinations; root-cause handling rather than isolation."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-REENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 4.2 Software Reengineering; PDF page indices 178-179; printed pages 7-13 to 7-14"
+      verified_content_summary: "Reengineering as reconstituting software in a new form, often to replace aging legacy software; refactoring as behavior-preserving reorganization improving internal structure and maintainability; refactoring to reduce technical debt before and after code changes; continuous refactoring managing growing complexity."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA7-REVERSE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, section 4.3 Reverse Engineering; PDF page index 179; printed page 7-14"
+      verified_content_summary: "Reverse engineering as passive analysis producing higher-abstraction representations; re-documentation, design recovery and data reverse engineering; visualization tooling with quality metrics, technical-debt estimation and code-smell detection."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07F-SWEBOK-KA8-CHANGE-CONTROL
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: >-
+        SWEBOK Guide v4.0a, Chapter 8 Software Configuration Management, section 3
+        Software Configuration Change Control, including 3.1 Requesting,
+        Evaluating, and Approving Software Changes (3.1.1 Software Configuration
+        Control Board, 3.1.2 SCR Process, 3.1.3 SCR Forms) and 3.2 Implementing
+        Software Changes; PDF page indices 192-193; printed pages 8-9 to 8-10
+      verified_content_summary: >-
+        SCR process formal procedures (submit/record change requests, evaluate
+        cost and impact, accept/modify/defer/reject); the technical evaluation
+        also known as impact analysis; configuration control board authority
+        including the small-project single-authority variant; implementation
+        tracking into versions and baselines; configuration audits verifying
+        only approved changes were made.
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    - id: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-MAINT-DEF
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 defines software maintenance as the totality of
+        activities required to provide cost-effective support for software in
+        operation, with activities performed during a pre-delivery stage
+        (planning for post-delivery operations, maintainability, and logistics
+        support for the transition from development to maintenance) and a
+        post-delivery stage (software surveillance, modification, training, and
+        operating or interfacing with a help desk). Citing ISO/IEC/IEEE 14764,
+        it states the objective of software maintenance as modifying existing
+        software while preserving its integrity, and notes the maintenance phase
+        begins after a warranty or post-implementation support period while
+        maintenance activities occur much earlier.
+      context: "SWEBOK Guide v4.0a Chapter 7 Introduction and section 1.1 Definitions and Terminology, printed pages 7-1 to 7-2."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07; text extracted at the verified page indices with pypdf 7.0.0 and paraphrased originally."
+      result: "The maintenance definition, the pre-/post-delivery stage split and the ISO/IEC/IEEE 14764 objective were confirmed for the lane's foundational definition claim and concept."
+      limitations:
+        - "The ISO/IEC/IEEE 14764 standard itself is registry metadata-only in this project; the objective is cited as SWEBOK reports it, not from the ISO text."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-EVOLUTION-LAWS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-EVOLUTION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 1.5 reports that research by Lehman and
+        others over a period of twenty years led to eight laws of software
+        evolution, which it names Continuing Change (software must be continually
+        adapted or it becomes progressively less satisfactory), Increasing
+        Complexity (complexity increases unless work is done to maintain or
+        reduce it), Self-Regulation, Invariant Work Rate, Conservation of
+        Familiarity, Continuing Growth, Declining Quality and Feedback System.
+        It records key findings that maintenance is evolutionary development,
+        that maintenance decisions are aided by understanding what happens to
+        software over time, and that large software programs are never complete,
+        continuing to evolve and growing more complex unless action is taken to
+        reduce that complexity.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 1.5 Evolution of Software, printed pages 7-3 to 7-4."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase of the eight named laws and the key-findings sentences."
+      result: "The eight law names and the evolutionary-development interpretation were confirmed for the lane's evolution claim and principle."
+      limitations:
+        - "The laws are reported secondhand by SWEBOK as a summary of Lehman's research; the primary Lehman publications are not registered sources in this project."
+        - "The paraphrase names all eight laws but restates in full only the two laws the lane's principle uses (Continuing Change, Increasing Complexity)."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-MAINT-CATEGORIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-CATEGORIES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 1.6 states that five categories of
+        software maintenance have been standardized to classify a maintenance
+        request — corrective (reactive repair of discovered problems after
+        delivery), preventive (correcting latent faults before they occur in the
+        live system), adaptive (keeping the product usable in an evolving
+        environment), additive (adding functionality or features with relatively
+        large additions) and perfective (enhancements for users, documentation
+        improvement and recoding to improve performance, maintainability or other
+        attributes) — that ISO/IEC/IEEE 14764 regroups these as either
+        corrections or enhancements, and that the standard also defines a sixth
+        category, emergency maintenance: unscheduled modification performed to
+        temporarily keep a system operational pending corrective maintenance.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 1.6 Categories of Software Maintenance, printed pages 7-4 to 7-5."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase of the category definitions."
+      result: "The five standardized categories, the corrections/enhancements regrouping, the emergency sixth category and the additive-versus-perfective distinction were confirmed."
+      limitations:
+        - "Category definitions are attributed by SWEBOK to ISO/IEC/IEEE 14764; the ISO text itself was not ingested (registry metadata-only)."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-IMPACT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 2.1.3 describes impact analysis as
+        assessing the detailed effects of proposed changes on existing software:
+        it is performed after a change request (originating from a modification
+        request or problem report) enters the software configuration management
+        process; it identifies all systems and software products that would be
+        affected by the change request, develops an estimate of the resources
+        needed to accomplish the change, and determines the risks involved in
+        making it. Maintainers often use the severity of a problem report as a
+        guide when deciding how and when to fix, conduct the analysis to identify
+        affected components, develop potential solutions and recommend a course
+        of action; designing software with maintainability in mind greatly
+        facilitates impact analysis.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 2.1.3 Impact Analysis, printed page 7-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The impact-analysis purpose, its SCM entry point, its identified outputs (affected items, resources, risks) and the severity guidance were confirmed."
+      limitations:
+        - "The section describes generally accepted activity; it does not prescribe a specific impact-analysis technique or tool."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-MAINTAINABILITY-DEBT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 2.1.4, citing ISO/IEC/IEEE 14764, defines
+        maintainability as the capability of the software product to be modified
+        (corrections, improvements, adaptation to environment changes, and
+        changes in requirements and functional specifications), states it should
+        be specified, reviewed and controlled during development to reduce
+        maintenance costs, and states that compromised maintainability typically
+        increases the burden on the engineers who maintain the software in the
+        future — in other words, it creates technical debt. It describes debt
+        accumulating when the need to quickly address corrective, emergency and
+        additive maintenance tasks, constrained by limited time and understanding
+        of the software, leads to immediate but potentially under-considered
+        solutions that are often not peer-reviewed, and names three areas to
+        investigate in depth when addressing technical debt: code quality versus
+        relevance (not all technical debt is urgent), alignment with
+        organizational objectives, and process loss (complementary skills of the
+        engineers involved).
+      context: "SWEBOK Guide v4.0a Chapter 7 section 2.1.4 Maintainability, printed pages 7-6 to 7-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The maintainability definition, the maintainability-to-technical-debt linkage, the accumulation mechanism and the three investigation areas were confirmed."
+      limitations:
+        - "The maintainability definition is attributed to ISO/IEC/IEEE 14764, whose text remains metadata-only in this project."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-ORG-PRIORITIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-ORG-OBJECTIVES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 2.2.1 observes that, as a consequence of
+        maintenance economics being less visible than development economics,
+        adding new features is often given higher priority than other maintenance
+        activities such as refactoring, security or performance improvement, and
+        that such organizational objectives and constraints must be balanced with
+        software maintainability and engineering standards to avoid code decay
+        and technical debt. It also notes that applying product management
+        approaches to development and maintenance can help organizations
+        understand the total cost of operational software over its full life
+        cycle and compare the costs and benefits of developing new software
+        versus enhancing existing software.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 2.2.1 Alignment with Organizational Objectives, printed pages 7-7 to 7-8."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The feature-priority pressure, the balance-against-maintainability requirement and the develop-new versus enhance-existing comparison were confirmed."
+      limitations:
+        - "The section characterizes common organizational behavior; it does not quantify the priority skew."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-TECH-DEBT-COST
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-TECH-DEBT-COST
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 2.3.1 states that technical debt generally
+        makes code more expensive to maintain than it has to be and represents
+        the effort required to fix problems that remain in the code when an
+        application is initially released by the development team. It names size,
+        complexity, the number of engineering flaws, and violations of good
+        architectural design and coding practices in the source code as
+        indicators and techniques that can help engineers measure technical debt,
+        and attributes to ISO/IEC/IEEE 14764 a list of maintainability
+        improvements (legibility, structured code, reduced complexity, accurate
+        comments, error tracing, code-to-design traceability, inspections and
+        code reviews). It identifies the uncertain reward for addressing debt —
+        or for implementing any potential enhancement — as a common barrier, and
+        lists what organizations need to determine: the quality of their current
+        software, the extent of their technical debt, the potential savings from
+        investing in quality enhancement, and the impact of current quality
+        issues on their business. It closes that technical debt is only one of
+        several factors contributing to excess unplanned work, and should not be
+        handled in isolation but through examination of its root causes.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 2.3.1 Technical Debt Cost Estimation, printed page 7-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The debt definition, the measurement indicators, the uncertain-reward barrier, the four organizational determinations and the root-cause requirement were confirmed."
+      limitations:
+        - "The listed maintainability improvements are SWEBOK's report of ISO/IEC/IEEE 14764 suggestions; the ISO text was not ingested."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-REFACTORING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-REENGINEERING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 4.2 defines software reengineering as the
+        examination and alteration of software to reconstitute it in a new form,
+        including the subsequent implementation of the new form, noting it is
+        often undertaken not to improve maintainability but to replace aging
+        legacy software. It defines refactoring as a reengineering technique that
+        aims to reorganize a program without changing its behavior, seeking to
+        improve the internal structure and maintainability of software, and
+        states refactoring techniques can be used during maintenance activities
+        to reduce the technical debt of the codebase before and after code
+        changes. It further notes that in Agile development the incremental
+        nature of continuous integration often requires the code to be
+        continuously refactored, supporting volatile life cycles by reducing and
+        managing growing complexity while improving developer productivity.
+      context: "SWEBOK Guide v4.0a Chapter 7 section 4.2 Software Reengineering, printed pages 7-13 to 7-14."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The reengineering definition including the legacy-replacement purpose, the behavior-preserving refactoring definition, the debt-reduction role before and after changes, and the continuous-refactoring observation were confirmed."
+      limitations:
+        - "The continuous-integration remark is cited here only as refactoring context; CI/CD delivery mechanics belong to the 07E lane boundary and are not recorded by this lane."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-REVERSE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-REVERSE-ENGINEERING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA7 section 4.3 defines reverse engineering as the
+        process of analyzing software to identify its components and their
+        interrelationships and to create representations of the software in
+        another form or at higher levels of abstraction; it is passive, changing
+        neither the software nor producing new software. Its named types are
+        re-documentation, design recovery and data reverse engineering (recovering
+        logical schemata from physical databases), and software visualization
+        tools commonly accompany quality assurance features such as quality
+        metrics calculation, technical debt estimation and detection of bad
+        design and coding practices (code smells).
+      context: "SWEBOK Guide v4.0a Chapter 7 section 4.3 Reverse Engineering, printed page 7-14."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The passive-analysis definition, the three named types and the tooling features including debt estimation and code-smell detection were confirmed."
+      limitations:
+        - "The section names tool categories without evaluating specific tools."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SWEBOK-KA8-SCR-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA8-CHANGE-CONTROL
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA8 section 3.1 describes the software change request
+        (SCR) process as providing formal procedures for submitting and recording
+        change requests, evaluating the potential cost and impact of a proposed
+        change, and accepting, modifying, deferring or rejecting it; a change
+        request may be originated by anyone at any point in the life cycle, with
+        the type of change (defect or enhancement) usually recorded, and an
+        emergency path usually also exists where changes are implemented with the
+        change process performed afterward. Once an SCR is received, a technical
+        evaluation — also known as an impact analysis — determines the extent of
+        the modifications necessary should the request be accepted. The authority
+        for accepting or rejecting proposed changes rests with a configuration
+        control board (on smaller projects possibly the leader or an assigned
+        individual, with an SCM representative always present), whose composition
+        can vary by criticality, nature of the change and life-cycle position.
+        Section 3.2 adds that approved SCRs are implemented using defined
+        procedures, that a means for tracking which SCRs are incorporated into
+        particular software versions and baselines must be provided, and that
+        completed changes may undergo configuration audits and quality
+        verification including ensuring that only approved changes have been
+        made.
+      context: "SWEBOK Guide v4.0a Chapter 8 sections 3-3.2 Software Configuration Change Control, printed pages 8-9 to 8-10."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase. Cited for maintenance/change-control relevance only; CI/CD delivery mechanics remain outside this lane."
+      result: "The SCR process steps, the impact-analysis technical evaluation, the CCB authority and the implementation tracking and audit close-out were confirmed."
+      limitations:
+        - "Only the change-control sections of KA8 were inspected; the rest of the SCM knowledge area belongs to other lanes' scope."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-CS2023-REFACTORING-KU
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-CS2023-REFACTORING-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE knowledge unit 'SE-Refactoring: Refactoring and Code
+        Evolution' lists as KA Core topics: Hyrum's Law (the Law of Implicit
+        Interfaces); backward compatibility, including that compatibility is not
+        a property of a single entity but a property of a relationship, and that
+        it needs to be evaluated in terms of provider plus consumer(s) or with a
+        well-specified model of what forms of compatibility a provider aspires to
+        or promises; refactoring, covering standard refactoring patterns (rename,
+        inline, outline, etc.), use of refactoring tools in IDEs, application of
+        static-analysis tools to identify code in need of refactoring and to
+        generate changes, and the value of refactoring as a remedy for technical
+        debt; and versioning, covering Semantic Versioning and trunk-based
+        development. Its Non-core topic addresses large-scale refactoring —
+        techniques for when a refactoring change is too large to commit safely
+        or when change cannot be synchronized between a provider and all
+        consumers (multiple repositories, consumers with private code) — naming
+        the techniques of expressing both old and new APIs so that they can
+        co-exist and minimizing the size of behavior changes, and asking why the
+        techniques are required ('API consumers I can see' versus 'consumers I
+        can't see'). Its illustrative learning outcomes include identifying both
+        explicit and implicit behavior of an interface and the potential risks
+        from Hyrum's Law, identifying changes that can be broadly considered
+        backward compatible, and evaluating whether a proposed change is
+        sufficiently safe given the versioning methodology in use.
+      context: "CS2023 Software Engineering knowledge unit SE-Refactoring: Refactoring and Code Evolution, KA Core topics 1-4 and Non-core topic 5 with illustrative learning outcomes."
+      method: "Read the verbatim topic extraction of the official CS2023 Body of Knowledge PDF produced on 2026-11-07 (full text via extraction service; binary download unavailable from this network); heading-anchored KU locator, printed page not independently confirmed."
+      result: "Topics 1-5 with their subtopics and the selected learning outcomes were confirmed against the verbatim extraction."
+      limitations:
+        - "Curriculum topic titles and outcomes only; the unit does not rank methods or prescribe professional procedure."
+        - "Semantic Versioning and trunk-based development are named as versioning topics without the curriculum defining them here."
+      uncertainty:
+        - "The knowledge unit's printed page number was not independently confirmed; heading-anchored citation within the registry-recorded SE section span is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-CS2023-REFACTORING-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        In the CS2023 Software Engineering Core Hours table, the 'Refactoring and
+        Code Evolution' knowledge unit carries 2 KA Core hours and no CS Core
+        hours.
+      context: "SE Core Hours table row for Refactoring and Code Evolution within the nine-unit SE area."
+      method: "Read the Software Engineering Core Hours table in the 2026-11-07 full-text extraction of the official Body of Knowledge PDF; registry-verified PDF page indices 176-177."
+      result: "The unit is confirmed as KA Core-only exposure in the curriculum model: 2 KA Core hours, no CS Core hours."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07F-SYNTHESIS-DEBT-PRIORITIZATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07F-SWEBOK-KA7-TECH-DEBT-COST
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07F): SWEBOK KA7 section 2.2.1 reports that
+        organizations commonly give new features higher priority than debt work
+        such as refactoring, while section 2.3.1 reports that debt decisions
+        should rest on measured determinations of current quality, debt extent,
+        potential savings and business impact, and section 2.1.4 adds that not
+        all technical debt is urgent. Read together, the inspected sections
+        imply a repeatable decision procedure — quantify debt against business
+        objectives before choosing between feature work and debt reduction —
+        that no single inspected section states as one procedure. This is a lane
+        inference, not a sentence in SWEBOK.
+      context: "Cross-section inference combining SWEBOK KA7 sections 2.1.4, 2.2.1 and 2.3.1; synthesis evidence anchored at the section 2.3.1 locator."
+      method: "Lane-level comparison of three verified evidence records from the same knowledge area."
+      result: "Provides the inference trail motivating the lane's debt-versus-features decision model (se:DEC-07F-DEBT-VERSUS-FEATURES)."
+      limitations:
+        - "Synthesis inference, not a direct SWEBOK statement."
+        - "No empirical case evidence in this lane tests the procedure's effectiveness."
+      uncertainty:
+        - "Whether real organizations applying the quantification step make better feature-versus-debt choices is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07F-SOFTWARE-MAINTENANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software maintenance (SWEBOK KA7 sense)
+      definition: >-
+        The totality of activities required to provide cost-effective support for
+        software in operation, per SWEBOK Guide v4.0a KA7, spanning pre-delivery
+        preparation (planning for post-delivery operations, maintainability and
+        transition logistics) and post-delivery activities (surveillance,
+        modification, training, help-desk operation), with the reported
+        ISO/IEC/IEEE 14764 objective of modifying existing software while
+        preserving its integrity.
+      concept_kind: TERM
+      scope_description: "Defined at SWEBOK v4.0a KA7 fidelity as directly inspected; the ISO/IEC/IEEE 14764 attribution is reported, not ingested."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINT-DEFINITION
+    - id: se:CON-07F-TECHNICAL-DEBT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Technical debt (SWEBOK KA7 sense)
+      definition: >-
+        The effort required to fix problems that remain in the code when an
+        application is initially released, per SWEBOK Guide v4.0a KA7 section
+        2.3.1, which also states debt generally makes code more expensive to
+        maintain than it has to be; KA7 section 2.1.4 adds that compromised
+        maintainability creates technical debt when quick, under-considered and
+        often unreviewed maintenance solutions accumulate.
+      concept_kind: TERM
+      scope_description: "SWEBOK v4.0a KA7 fidelity; a cost/effort framing of debt, not a particular commercial debt-tracking methodology."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-TECH-DEBT-COST
+        - se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+    - id: se:CON-07F-REFACTORING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Refactoring
+      definition: >-
+        A software reengineering technique that aims to reorganize a program
+        without changing its behavior, per SWEBOK Guide v4.0a KA7 section 4.2,
+        seeking to improve the internal structure and maintainability of
+        software; CS2023 additionally names standard refactoring patterns, IDE
+        refactoring tools and static-analysis support among its curriculum
+        topics and describes refactoring as a remedy for technical debt.
+      concept_kind: MECHANISM
+      scope_description: "Behavior-preserving restructuring at SWEBOK KA7 fidelity with CS2023 curriculum complements; the definition claims behavior preservation as the technique's aim, not that every real refactoring achieves it."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-REFACTORING
+        - se:EVD-07F-CS2023-REFACTORING-KU
+    - id: se:CON-07F-MAINTAINABILITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Maintainability (ISO/IEC/IEEE 14764 via SWEBOK)
+      definition: >-
+        The capability of the software product to be modified, per
+        ISO/IEC/IEEE 14764 as reported by SWEBOK Guide v4.0a KA7 section 2.1.4,
+        where modifications include corrections, improvements, adaptation to
+        environment changes, and changes in requirements and functional
+        specifications; SWEBOK adds that it should be specified, reviewed and
+        controlled during development to reduce maintenance costs.
+      concept_kind: QUALITY_ATTRIBUTE
+      scope_description: "Quality-attribute sense at SWEBOK KA7 fidelity; the ISO standard text is metadata-only and the definition is cited as SWEBOK reports it."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+    - id: se:CON-07F-HYRUMS-LAW
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Hyrum's Law (Law of Implicit Interfaces, CS2023 curriculum sense)
+      definition: >-
+        A named law (the Law of Implicit Interfaces) that the CS2023 SE-Refactoring
+        unit lists as its first KA Core topic; the unit's illustrative learning
+        outcomes operationalize it as identifying both explicit and implicit
+        behavior of an interface and identifying potential risks from the law.
+        The lane records the curriculum topic and outcome, not an independent
+        statement of the law's content.
+      concept_kind: TERM
+      scope_description: "CS2023 curriculum-scope entry point; the full statement of the law is not contained in the inspected topic text and is not asserted by this lane."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+
+  knowledge_claims:
+    - id: se:CLM-07F-SWEBOK-MAINT-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a defines software maintenance as the totality of
+        activities required to provide cost-effective support for software in
+        operation, performed in pre-delivery and post-delivery stages, and
+        reports the ISO/IEC/IEEE 14764 objective of software maintenance as
+        modifying existing software while preserving its integrity.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA7 Introduction and section 1.1; a professional-BOK definition citing ISO/IEC/IEEE 14764, whose text is metadata-only in this project."
+      applicability: "Professional-BOK characterization of what software maintenance is; usable wherever the lane's maintenance records need a definitional anchor."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The ISO/IEC/IEEE 14764 objective is reported by SWEBOK; the ISO text was not independently inspected."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-MAINT-CATEGORIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA7 states that five categories of software
+        maintenance have been standardized — corrective, preventive, adaptive,
+        additive and perfective — that ISO/IEC/IEEE 14764 regroups them as
+        corrections or enhancements, and that the standard also defines a sixth
+        category, emergency maintenance (unscheduled modification to temporarily
+        keep a system operational pending corrective maintenance).
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a KA7 section 1.6; a BOK-reported standard taxonomy of maintenance request categories."
+      applicability: "Classifying maintenance requests wherever a SWEBOK-grounded category scheme is appropriate; additive/perfective distinction is this edition's refinement."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Older SWEBOK editions and other taxonomies use a four-category scheme without additive maintenance; this claim is scoped to v4.0a's report."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-EVOLUTION-LAWS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA7 reports that research by Lehman and others over
+        twenty years produced eight laws of software evolution (Continuing
+        Change, Increasing Complexity, Self-Regulation, Invariant Work Rate,
+        Conservation of Familiarity, Continuing Growth, Declining Quality,
+        Feedback System) and concludes that maintenance is evolutionary
+        development: large software programs are never complete, continue to
+        evolve, and grow more complex unless action is taken to reduce the
+        complexity.
+      claim_kind: EMPIRICAL_FINDING
+      scope_description: "SWEBOK Guide v4.0a KA7 section 1.5 as a secondhand report of Lehman's research; the primary publications are not registered sources and the finding is not independently verified by this lane."
+      applicability: "Framing long-term system evolution wherever the BOK-reported laws are cited as reported research, not as lane-verified empiricism."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Secondhand summary; the underlying studies, their systems of origin and their applicability conditions are not available in this lane's sources."
+      uncertainty:
+        - "Whether each named law generalizes beyond the large-system context Lehman studied is not assessable from SWEBOK's summary alone."
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-IMPACT-ANALYSIS-ROLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA7 presents impact analysis as assessing the detailed
+        effects of proposed changes on existing software: performed after a
+        change request enters the software configuration management process, it
+        identifies the systems and software products that would be affected,
+        estimates the resources needed and determines the risks involved, with
+        problem-report severity guiding how and when to fix.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA7 section 2.1.3; description of generally accepted activity, not a mandate that every project run a formal analysis of this shape."
+      applicability: "Maintenance change requests routed through SCM-controlled change processes, in plan-based and Agile life cycles alike."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section names the activity and its outputs; it does not prescribe a specific technique or tool."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-TECH-DEBT-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA7 defines technical debt as the effort required to
+        fix problems that remain in the code when an application is initially
+        released, states that debt generally makes code more expensive to
+        maintain than it has to be and that compromised maintainability creates
+        it, names size, complexity, flaw counts and violations of good
+        architectural design and coding practices as measurable indicators,
+        identifies uncertain reward as the common barrier to addressing it, and
+        requires handling it through root causes rather than in isolation.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA7 sections 2.1.4 and 2.3.1; a cost/effort definition plus measurement guidance at BOK fidelity."
+      applicability: "Identification and management framing for technical debt in operational codebases; not tied to a specific debt-quantification method."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definition quantifies debt as remediation effort; other communities use metaphor-forward definitions this claim does not address."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-REFACTORING-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA7 defines refactoring as a reengineering technique
+        that aims to reorganize a program without changing its behavior while
+        improving its internal structure and maintainability, and states that
+        refactoring techniques can be used during maintenance to reduce the
+        technical debt of the codebase before and after code changes; it frames
+        reengineering more broadly as reconstituting software in a new form, often
+        to replace aging legacy software.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA7 section 4.2; professional-BOK definitions of refactoring and reengineering including the modernization purpose."
+      applicability: "Maintenance-time restructuring of existing code and legacy modernization framing; behavior preservation is the technique's aim."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Behavior preservation is stated as the aim of the technique, not a guarantee that every refactoring preserves behavior in practice."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-CS2023-REFACTORING-DEBT-REMEDY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum lists the value of refactoring as a remedy for
+        technical debt as a KA Core topic of the SE-Refactoring unit, alongside
+        standard refactoring patterns (rename, inline, outline, etc.), the use of
+        refactoring tools in IDEs and the application of static-analysis tools to
+        identify code in need of refactoring and to generate changes.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Refactoring KA Core topic 3 with subtopics 3a-3d; a curriculum teaching expectation, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 refactoring curriculum; the topic names the tool families without ranking them."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Curriculum topic statement; it does not evidence real-world remediation effectiveness."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-CS2023-COMPAT-RELATIONSHIP
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        CS2023 teaches that backward compatibility is not a property of a single
+        entity but a property of a relationship, and that it needs to be evaluated
+        in terms of provider plus consumer(s), or with a well-specified model of
+        what forms of compatibility a provider aspires to or promises.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE-Refactoring KA Core topic 2 with subtopics 2a-2b; a curriculum-scope relational definition of compatibility."
+      applicability: "Reasoning about interface change and evolution wherever this relational framing applies; other frameworks may define compatibility per artifact."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum asserts the relational framing without exemplar evaluation procedures; the topic names no specific compatibility model."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07F-SWEBOK-KA8-SCR-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA8 section 3 presents software configuration change
+        control as a process for determining what changes to make, the authority
+        for approving them, and support for implementing them: the SCR process
+        provides formal procedures for submitting and recording change requests,
+        evaluating potential cost and impact, and accepting, modifying, deferring
+        or rejecting them; the technical evaluation is also known as an impact
+        analysis; authority rests with a configuration control board (or a leader
+        or assigned individual on smaller projects); and implementation includes
+        tracking which SCRs enter particular versions and baselines, closing with
+        audits that verify only approved changes were made.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA8 sections 3-3.2; generally accepted change-control process description, cited here for its maintenance relevance."
+      applicability: "Controlled change to configuration items during the software life cycle, including maintenance-phase changes."
+      assumptions: []
+      exceptions:
+        - "The section itself notes an emergency path usually also exists, where changes are implemented first and the change process is performed afterward."
+      limitations:
+        - "Change-to-CI rules can differ by industrial sector and company; SWEBOK states its description applies where no specific rules exist."
+      uncertainty: []
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07F-PRESERVE-INTEGRITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Preserve integrity while modifying operational software
+      statement: >-
+        Modifications to operational software should be made in a way that
+        preserves the integrity of the existing software product: the objective
+        of maintenance is to modify existing software while preserving its
+        integrity, and change should flow through analysis and control rather
+        than unmanaged direct alteration.
+      rationale: >-
+        SWEBOK Guide v4.0a KA7 section 1.1 reports the ISO/IEC/IEEE 14764
+        objective of software maintenance as modifying existing software while
+        preserving its integrity, and KA8 section 3 describes the formal SCR
+        evaluation and approval process with end-of-process audits that verify
+        only approved changes have been made.
+      scope_description: "Derived within SWEBOK v4.0a KA7/KA8 inspected-section scope; not asserted as a universal law beyond professional-BOK report."
+      applicability: "Operational software products receiving maintenance modification, plan-based or Agile."
+      exceptions:
+        - "Emergency maintenance performs unscheduled modification to temporarily keep a system operational, with the formal process performed afterward (SWEBOK KA8 emergency path; KA7 1.6)."
+      limitations:
+        - "The principle's strength beyond the inspected sections is untested in this lane; no case evidence is cited."
+    - id: se:PRI-07F-MANAGE-EVOLUTION-COMPLEXITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Actively counter complexity growth in evolving software
+      statement: >-
+        In an evolving software product, growth in complexity must be actively
+        countered — for example by refactoring to reduce technical debt — or the
+        product becomes progressively less satisfactory to its users; change is
+        continuous, so complexity management is a continuing activity rather
+        than a one-time fix.
+      rationale: >-
+        SWEBOK Guide v4.0a KA7 section 1.5 reports Lehman's laws of Continuing
+        Change (software must be continually adapted or it becomes progressively
+        less satisfactory) and Increasing Complexity (complexity increases unless
+        work is done to maintain or reduce it), and section 4.2 presents
+        refactoring during maintenance as the behavior-preserving technique for
+        improving internal structure and reducing technical debt.
+      scope_description: "Derived from SWEBOK KA7 sections 1.5 and 4.2 as BOK-reported findings; the underlying evolution research is cited secondhand and is not lane-verified."
+      applicability: "Long-lived software products expected to evolve across multiple releases; short-lived or throwaway artifacts are out of scope."
+      exceptions:
+        - "Software approaching retirement, where investment in complexity reduction has no payback horizon."
+      limitations:
+        - "The laws are empirical research summaries reported by SWEBOK; their generalization is contested territory this lane does not adjudicate."
+
+  practices:
+    - id: se:PRA-07F-CHANGE-IMPACT-ANALYSIS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Maintenance impact analysis before change
+      intent: >-
+        Understand the detailed effects a proposed maintenance change has on
+        existing software before implementing it, so that affected items,
+        resource needs and risks are known when the change decision is made.
+      description: >-
+        Translate the modification request or problem report into software terms,
+        identify the systems and software products the change would affect,
+        estimate the resources needed to accomplish it, determine the risks
+        involved, and recommend a course of action — following SWEBOK KA7
+        2.1.3, which locates the analysis after the change request enters the
+        SCM process and matches KA8 3.1's technical evaluation of an SCR.
+      preconditions:
+        - "A logged change request (MR or PR) with enough context to translate into software terms."
+        - "Maintainer knowledge of the software's structure and content, supported where possible by maintainability-conscious design."
+      steps:
+        - "Receive the change request through the SCM/SCR process and record its type (defect or enhancement) and severity."
+        - "Translate the request into software terms using knowledge of the software's structure and content."
+        - "Identify all systems and software products that would be affected by the change."
+        - "Estimate the resources needed to accomplish the change and determine the risks involved."
+        - "Develop potential solutions and recommend a course of action to the change authority."
+      expected_outcomes:
+        - "An impact statement covering affected items, resource estimate and risk determination attached to the change request."
+        - "A recommendation that the change authority can accept, modify, defer or reject on an informed basis."
+      risks:
+        - "Analysis cost grows with system size; SWEBOK asks that it be conducted as cost-effectively as possible."
+        - "Incomplete structural knowledge yields missed affected items."
+      scope_description: "Operationalizes SWEBOK v4.0a KA7 2.1.3 and KA8 3.1 at BOD-described fidelity; not a tool-specific procedure."
+      applicability: "Maintenance change requests routed through SCM-controlled change processes."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+        - se:EVD-07F-SWEBOK-KA8-SCR-PROCESS
+      claim_refs:
+        - se:CLM-07F-SWEBOK-IMPACT-ANALYSIS-ROLE
+    - id: se:PRA-07F-TECH-DEBT-ASSESSMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Measured technical-debt assessment before debt decisions
+      intent: >-
+        Base technical-debt decisions on measured evidence about current
+        quality, debt extent, potential savings and business impact instead of
+        treating debt work as uniformly urgent or uniformly deferrable.
+      description: >-
+        Use available tooling and indicators — size, complexity, engineering
+        flaw counts and violations of good architectural design and coding
+        practices — to measure technical debt, then determine the quality of
+        current software, the extent of the debt, the potential savings from
+        quality investment and the impact of current quality issues on the
+        business, treating debt as one contributor to unplanned work and
+        examining root causes rather than handling it in isolation, per SWEBOK
+        KA7 2.3.1 with the urgency triage of 2.1.4.
+      preconditions:
+        - "Access to tooling that computes the debt indicators on the codebase (SWEBOK names static analysis and quality assessment tooling, including visualization tools with debt estimation and code-smell detection)."
+        - "A business owner able to state the impact of quality issues on the business."
+      steps:
+        - "Measure debt indicators (size, complexity, flaws, practice violations) with available tooling."
+        - "Triage urgency: not all technical debt is urgent (code quality versus relevance)."
+        - "Determine potential savings from investing in quality enhancement."
+        - "Determine the impact of current quality issues on the business."
+        - "Examine root causes, including team and process factors, before selecting remediation."
+      expected_outcomes:
+        - "A quantified debt picture with urgency and business-impact attribution that can drive prioritization."
+      risks:
+        - "Indicator tooling measures proxies; numbers can be gamed or misread."
+        - "Uncertain reward is a common barrier; measurement alone does not create stakeholder buy-in."
+      scope_description: "Operationalizes SWEBOK v4.0a KA7 2.3.1 (with 2.1.4 triage and 4.3 tooling) at BOK-described fidelity."
+      applicability: "Organizations deciding whether and where to invest maintenance capacity in debt reduction."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-TECH-DEBT-COST
+        - se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+      claim_refs:
+        - se:CLM-07F-SWEBOK-TECH-DEBT-DEFINITION
+    - id: se:PRA-07F-REFACTORING-WITH-TOOLS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Tool-assisted refactoring around maintenance changes
+      intent: >-
+        Reduce the technical debt of the codebase around functional change work
+        by applying standard refactoring patterns with IDE and static-analysis
+        tool support, without changing program behavior.
+      description: >-
+        Identify code in need of refactoring with static-analysis tools, apply
+        standard refactoring patterns (rename, inline, outline, etc.) using IDE
+        refactoring tooling, and use refactoring before and after code changes
+        during maintenance to reduce technical debt — combining the CS2023
+        SE-Refactoring tool topics (3a-3c) with SWEBOK KA7 4.2's placement of
+        refactoring in maintenance activity.
+      preconditions:
+        - "Behavior-preserving safety net (tests or verification) sufficient to detect unintended behavior change."
+        - "IDE refactoring support and static-analysis tooling for the language and codebase."
+      steps:
+        - "Run static analysis to identify code in need of refactoring and to help generate candidate changes."
+        - "Select standard refactoring patterns appropriate to the identified problem."
+        - "Apply refactorings with IDE tool support around the planned functional change."
+        - "Verify behavior is unchanged (regression testing is the maintenance-relevant check per SWEBOK KA7 2.1.2 context)."
+      expected_outcomes:
+        - "Reduced technical debt and improved internal structure without intended behavior change, applied incrementally alongside maintenance work."
+      risks:
+        - "Refactorings too large to commit safely require large-scale techniques (see se:PAT-07F-DUAL-API-LARGE-SCALE-REFACTORING)."
+        - "Tool-assisted changes can still alter observable behavior; behavior preservation is an aim, not a guarantee."
+      scope_description: "Operationalizes CS2023 SE-Refactoring KA Core topics 3a-3c with SWEBOK KA7 4.2 maintenance framing; curriculum and BOK sources are combined at their respective fidelities."
+      applicability: "Maintained codebases with tool support and a behavior safety net."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+        - se:EVD-07F-SWEBOK-REFACTORING
+      claim_refs:
+        - se:CLM-07F-CS2023-REFACTORING-DEBT-REMEDY
+
+  patterns:
+    - id: se:PAT-07F-DUAL-API-LARGE-SCALE-REFACTORING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Dual-API coexistence for large-scale refactoring
+      problem: >-
+        A needed refactoring is too large to commit safely, or the change cannot
+        be synchronized between the provider and all its consumers (multiple
+        repositories, consumers with private code), so a single atomic breaking
+        change is not feasible.
+      context: >-
+        An evolving interface or subsystem whose consumers are not all visible or
+        not all controllable at once, per the CS2023 SE-Refactoring Non-core
+        large-scale refactoring topic, whose rationale contrasts 'API consumers
+        I can see' with 'consumers I can't see'.
+      forces:
+        - "Old and new forms must both remain usable while consumers migrate."
+        - "Behavior changes should stay small enough to evaluate for compatibility."
+        - "Unseen consumers may depend on implicit interface behavior (Hyrum's Law topic of the same unit)."
+        - "Migration coordination across repositories costs time and organization."
+      solution: >-
+        Express both the old and the new APIs so that they can co-exist during
+        migration, and minimize the size of behavior changes, per the CS2023
+        Non-core techniques for large-scale refactoring.
+      consequences:
+        - "Consumers migrate incrementally instead of in one forced cutover."
+        - "Smaller behavior changes are easier to evaluate as backward compatible, consistent with the unit's relational compatibility topic."
+        - "The dual-API period itself carries maintenance cost until the old API is retired."
+      tradeoffs:
+        - "Coexistence plumbing adds temporary complexity that must eventually be removed; the curriculum topic names the techniques without prescribing the retirement timeline."
+      scope_description: "CS2023 SE-Refactoring Non-core topic 5 (elective curriculum scope); a curriculum-named technique pair, not a lane-invented procedure."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+
+  anti_patterns:
+    - id: se:ANT-07F-UNMANAGED-TECH-DEBT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Unmanaged technical-debt accumulation
+      symptoms:
+        - "The codebase is more expensive to maintain than it has to be; maintenance burden on engineers keeps rising."
+        - "Quick fixes land without peer review under corrective, emergency and additive pressure."
+        - "New features are consistently prioritized over refactoring, security or performance improvement; code decay sets in."
+      causes:
+        - "Compromised maintainability: maintainability not specified, reviewed and controlled during development."
+        - "Time and comprehension constraints on maintainers producing immediate but under-considered solutions."
+        - "Maintenance economics less visible than development economics, so debt cost is not quantified in management reporting."
+        - "Uncertain reward for debt work discouraging investment."
+      consequences:
+        - "Technical debt accumulates and takes additional time and effort to address during later maintenance."
+        - "Excess unplanned work grows, with team and process issues compounding the code-level debt."
+        - "Program comprehension and subsequent impact analysis become harder as structure degrades."
+      remediation: >-
+        Measure the debt (size, complexity, flaws, practice violations) with
+        available tooling; determine current quality, debt extent, potential
+        savings and business impact; triage urgency (not all debt is urgent);
+        balance organizational objectives with maintainability and engineering
+        standards; and address root causes including team and process factors
+        rather than handling debt in isolation — per SWEBOK KA7 2.1.4, 2.2.1
+        and 2.3.1, with refactoring (KA7 4.2, CS2023 topic 3) as the named
+        remediation technique for code-level debt.
+      scope_description: "Grounded in SWEBOK v4.0a KA7 sections 2.1.4, 2.2.1 and 2.3.1, whose text directly characterizes this accumulation pattern and its costs; severity of specific consequences is not evidenced by real cases in this lane."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+        - se:EVD-07F-SWEBOK-ORG-PRIORITIES
+        - se:EVD-07F-SWEBOK-TECH-DEBT-COST
+
+  decision_models:
+    - id: se:DEC-07F-DEBT-VERSUS-FEATURES
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: >-
+        When should a maintenance organization invest capacity in reducing
+        technical debt (for example refactoring) instead of delivering new
+        features?
+      options:
+        - "Invest in debt reduction (refactoring, quality enhancement) now"
+        - "Prioritize new features and defer debt reduction"
+        - "Mixed allocation: debt work sized against measured urgency and business impact"
+      criteria:
+        - "Quality of the current software (measured)."
+        - "Extent of technical debt (measured with size, complexity, flaw and practice-violation indicators)."
+        - "Potential savings from investing in quality enhancement."
+        - "Impact of current quality issues on the business."
+        - "Urgency triage: not all technical debt is urgent (code quality versus relevance)."
+        - "Alignment of the software architecture with organizational objectives."
+      constraints:
+        - "Organizational objectives and constraints must be balanced with maintainability and engineering standards to avoid code decay and technical debt."
+        - "Debt is only one of several factors contributing to excess unplanned work; team and process issues may dominate."
+      procedure: >-
+        Measure the debt indicators; record current quality, debt extent,
+        potential savings and business impact; triage debt items by urgency;
+        compare the measured case for debt reduction against the feature
+        roadmap's business objectives; choose an allocation (debt now, features
+        now, or mixed) and re-measure after the next interval, examining root
+        causes wherever unplanned work stays high. This procedure structures the
+        SWEBOK KA7 2.1.4/2.2.1/2.3.1 guidance; the single-procedure form is a
+        lane synthesis (see se:EVD-07F-SYNTHESIS-DEBT-PRIORITIZATION).
+      tradeoffs:
+        - "Debt-first allocation improves future velocity but delays user-visible value; feature-first allocation delivers value now at the risk of code decay."
+        - "Mixed allocation needs measurement discipline to avoid becoming an unprincipled split."
+      scope_description: "Structured from SWEBOK v4.0a KA7 sections 2.1.4, 2.2.1 and 2.3.1; a lane-structured decision aid, not a professional-standard decision procedure."
+      evidence_refs:
+        - se:EVD-07F-SYNTHESIS-DEBT-PRIORITIZATION
+      claim_refs:
+        - se:CLM-07F-SWEBOK-TECH-DEBT-DEFINITION
+
+  coverage_gaps:
+    - id: se:GAP-07F-KA7-CONTENT-BREADTH
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA7/KA8 coverage limited to the sections this lane inspected
+      target_scope_ref: se:NODE-07F-SOFTWARE-MAINTENANCE
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane directly inspected SWEBOK v4.0a KA7 sections 1.1 (plus chapter
+        Introduction), 1.5, 1.6, 2.1.3, 2.1.4, 2.2.1, 2.3.1, 4.2 and 4.3, and
+        KA8 sections 3, 3.1 and 3.2. Other KA7 content — including maintenance
+        processes detail (3.x), measurement (2.4), staffing and organizational
+        aspects (2.2.2, 2.2.5), program comprehension (4.1), CI/CD (4.4,
+        deliberately left to the 07E lane) and maintenance tools (5) — was not
+        reinspected for this lane, and no content beyond the inspected sections
+        may be inferred. ISO/IEC/IEEE 14764 and 12207 remain metadata-only; all
+        ISO attributions in this lane are SWEBOK-reported.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        SWEBOK-derived records in this lane are content-verified paraphrases of
+        inspected sections only and remain PROPOSED or PENDING_REVIEW; the lane
+        is not a professional-consensus maintenance reference, and uninspected
+        KA7/KA8 topics stay uncovered until separately reinspected.
+      resolution_notes:
+        - "Reinspect the remaining KA7/KA8 sections under the same locator-verified chain when needed; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
+    - id: se:GAP-07F-NO-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real maintenance/refactoring case evidence
+      target_scope_ref: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      gap_kind: SOURCE_GAP
+      description: >-
+        Neither SWEBOK KA7/KA8 nor the CS2023 SE-Refactoring unit contains real
+        case material (incident, postmortem or case study) usable as Case or
+        Counterexample evidence for maintenance, evolution, refactoring or
+        technical debt; no case-class source is registered for this scope. The
+        lane therefore contains no Case or Counterexample records, and its
+        pattern, anti-pattern and decision-model records rest on BOK/curriculum
+        text plus one lane-marked synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        The anti-pattern's consequences and the decision model's effectiveness
+        lack real-world illustration; the Lehman evolution laws are reported
+        secondhand and are not tested against any registered primary or
+        case-class source in this lane.
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public maintenance postmortems or refactoring case studies) before promoting these records toward acceptance."
+
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: >-
+        The registered CS2023 permission scope expressly covers educational
+        materials and programs and requires specific permission for other uses.
+        Tally's general software-engineering knowledge graph is not presumed to
+        qualify as an educational material or program; no rights clearance for
+        broader use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: "The lane must not claim that CS2023-derived records are cleared for public redistribution or commercial product embedding until the rights scope is confirmed."
+      resolution_notes:
+        - "Obtain a documented rights determination or specific permission before public redistribution or commercial product embedding; otherwise replace the source or remove the affected records from those uses."
+      evidence_refs: []
+
+  relationship_assertions:
+    - id: se:REL-07F-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-MAINT-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      context: "Canonical claim-to-evidence trace for the SWEBOK maintenance-definition claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 Introduction plus section 1.1 at its verified locator (PDF page indices 166-167; printed 7-1 to 7-2), which is the sole basis of the claim."
+    - id: se:REL-07F-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-MAINT-CATEGORIES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-CATEGORIES
+      context: "Canonical claim-to-evidence trace for the maintenance-categories claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 section 1.6 at its verified locator (PDF page indices 169-170; printed 7-4 to 7-5), which states the five categories, the corrections/enhancements regrouping and emergency maintenance."
+    - id: se:REL-07F-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-EVOLUTION-LAWS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-EVOLUTION-LAWS
+      context: "Canonical claim-to-evidence trace for the evolution-laws claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 section 1.5 at its verified locator (PDF page indices 168-169; printed 7-3 to 7-4), which names the eight laws and the evolutionary-development finding."
+    - id: se:REL-07F-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-IMPACT-ANALYSIS-ROLE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+      context: "Canonical claim-to-evidence trace for the impact-analysis role claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 section 2.1.3 at its verified locator (PDF page index 171; printed 7-6), which carries the analysis purpose, SCM entry point and outputs."
+    - id: se:REL-07F-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-TECH-DEBT-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-TECH-DEBT-COST
+      context: "Canonical claim-to-evidence trace for the technical-debt definition claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 section 2.3.1 at its verified locator (PDF page index 174; printed 7-9), which defines debt, names the indicators and states the root-cause requirement."
+    - id: se:REL-07F-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-REFACTORING-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-REFACTORING
+      context: "Canonical claim-to-evidence trace for the refactoring/reengineering definition claim."
+      rationale: "The evidence record paraphrases SWEBOK KA7 section 4.2 at its verified locator (PDF page indices 178-179; printed 7-13 to 7-14), which defines reengineering and behavior-preserving refactoring and links it to debt reduction."
+    - id: se:REL-07F-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-CS2023-REFACTORING-DEBT-REMEDY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-CS2023-REFACTORING-KU
+      context: "Canonical claim-to-evidence trace for the refactoring-as-debt-remedy curriculum claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Refactoring KA Core topic 3 with subtopics 3a-3d at the heading-anchored KU locator, which names the patterns, tooling and debt-remedy value."
+    - id: se:REL-07F-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-CS2023-COMPAT-RELATIONSHIP
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-CS2023-REFACTORING-KU
+      context: "Canonical claim-to-evidence trace for the relational compatibility claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Refactoring KA Core topic 2 subtopics 2a-2b at the same heading-anchored locator, which states the relationship-property framing."
+    - id: se:REL-07F-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-KA8-SCR-PROCESS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-KA8-SCR-PROCESS
+      context: "Canonical claim-to-evidence trace for the SCR change-control process claim."
+      rationale: "The evidence record paraphrases SWEBOK KA8 sections 3-3.2 at the verified locator (PDF page indices 192-193; printed 8-9 to 8-10), which describes the SCR process, CCB authority and audit close-out."
+    - id: se:REL-07F-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07F-PRESERVE-INTEGRITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      context: "Primary evidence anchor for the preserve-integrity principle."
+      rationale: "The evidence record carries the SWEBOK-reported ISO/IEC/IEEE 14764 objective of modifying existing software while preserving its integrity, which is the principle's core; the procedural qualification is carried by the QUALIFIED_BY edge to the SCR-process evidence."
+    - id: se:REL-07F-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07F-MANAGE-EVOLUTION-COMPLEXITY
+      predicate: DERIVED_FROM
+      object_ref: se:CLM-07F-SWEBOK-EVOLUTION-LAWS
+      context: "Provenance of the complexity-management principle."
+      rationale: "The principle operationalizes the Continuing Change and Increasing Complexity laws carried by the evolution-laws claim; the edge records that derivation."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-EVOLUTION-LAWS
+    - id: se:REL-07F-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-SOFTWARE-MAINTENANCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      context: "Canonical concept-to-evidence trace for the software-maintenance concept."
+      rationale: "The concept's definition restates the SWEBOK KA7 maintenance definition the evidence record paraphrases."
+    - id: se:REL-07F-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-TECHNICAL-DEBT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-TECH-DEBT-COST
+      context: "Primary evidence anchor for the technical-debt concept."
+      rationale: "The concept's effort-based definition comes from the section 2.3.1 evidence; the maintainability formation path is carried by the second evidence ref on the concept and the section 2.1.4 record."
+    - id: se:REL-07F-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-REFACTORING
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-REFACTORING
+      context: "Primary evidence anchor for the refactoring concept."
+      rationale: "The concept's behavior-preservation definition comes from the SWEBOK KA7 section 4.2 evidence; the CS2023 tooling complements are attached to the concept's second evidence ref."
+    - id: se:REL-07F-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-MAINTAINABILITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+      context: "Canonical concept-to-evidence trace for the maintainability concept."
+      rationale: "The concept's definition is the ISO/IEC/IEEE 14764 capability-to-be-modified definition as reported in the section 2.1.4 evidence."
+    - id: se:REL-07F-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-HYRUMS-LAW
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-CS2023-REFACTORING-KU
+      context: "Canonical concept-to-evidence trace for the Hyrum's Law curriculum entry point."
+      rationale: "The concept is scoped to the curriculum topic title and its learning outcome, both carried by the KU evidence record."
+    - id: se:REL-07F-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07F-CS2023-SE-REFACTORING
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-CS2023-REFACTORING-KU
+      context: "Canonical node-to-evidence trace for the CS2023 SE-Refactoring taxonomy node."
+      rationale: "The node's definition summarizes the knowledge unit's topic list, which the evidence record paraphrases at the heading-anchored locator."
+    - id: se:REL-07F-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07F-SOFTWARE-MAINTENANCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      context: "Canonical node-to-evidence trace for the software-maintenance knowledge-area node."
+      rationale: "The node's definition restates the SWEBOK KA7 definition of maintenance the evidence record paraphrases."
+    - id: se:REL-07F-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07F-CHANGE-IMPACT-AND-CONTROL
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+      context: "Canonical node-to-evidence trace for the change-impact-and-control concern node."
+      rationale: "The node's impact-analysis half is defined by the section 2.1.3 evidence; the change-control half is anchored by the KA8 evidence ref attached to the node."
+    - id: se:REL-07F-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07F-REFACTORING-AND-TECH-DEBT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07F-SWEBOK-REFACTORING
+      context: "Canonical node-to-evidence trace for the refactoring-and-tech-debt unit node."
+      rationale: "The node's techniques definition is anchored by the section 4.2 evidence; its debt-measurement half is anchored by the section 2.3.1 evidence ref attached to the node."
+    - id: se:REL-07F-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-SWEBOK-MAINT-CATEGORIES
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07F-SOFTWARE-MAINTENANCE
+      qualifiers:
+        - "Applies to the classification of maintenance requests within the SWEBOK-grounded maintenance knowledge-area node."
+        - "Professional-BOK scope as reported by SWEBOK KA7 section 1.6; not a curriculum applicability claim."
+      context: "Locating the maintenance-categories claim within the taxonomy node it classifies."
+      rationale: "The five-category taxonomy exists to classify maintenance requests, which is exactly the scope of the software-maintenance node in this lane's lifecycle view."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINT-CATEGORIES
+    - id: se:REL-07F-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07F-CS2023-REFACTORING-DEBT-REMEDY
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07F-CS2023-SE-REFACTORING
+      qualifiers:
+        - "Applies to the CS2023 SE-Refactoring knowledge unit scope only (KA Core topic 3)."
+        - "Curriculum-authority scope; not a professional body-of-knowledge applicability claim."
+      context: "Locating the refactoring-as-debt-remedy claim within the curriculum knowledge unit it describes."
+      rationale: "The claim is a teaching expectation of this specific CS2023 knowledge unit, so its applicability is bounded by that unit's taxonomy node."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+    - id: se:REL-07F-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07F-CHANGE-IMPACT-ANALYSIS
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07F-SWEBOK-IMPACT-ANALYSIS-ROLE
+      qualifiers:
+        - "Operationalization at SWEBOK BOK-described fidelity; the practice adds procedural ordering (steps) beyond the section's description."
+        - "The practice combines KA7 2.1.3 with the KA8 3.1 technical-evaluation framing."
+      context: "The practice operationalizes the impact-analysis role claim."
+      rationale: "The claim states what SWEBOK says impact analysis is for; the practice turns it into an actionable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-IMPACT-ANALYSIS
+    - id: se:REL-07F-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07F-REFACTORING-WITH-TOOLS
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07F-CS2023-REFACTORING-DEBT-REMEDY
+      qualifiers:
+        - "Operationalization combines the curriculum tool topics with the SWEBOK maintenance framing; neither source alone describes the full practice."
+        - "Behavior verification step is practice-added scaffolding, not a curriculum sentence."
+      context: "The practice operationalizes the curriculum claim about refactoring tools and debt remedy."
+      rationale: "The claim names patterns, IDE tools and static analysis as the debt-remedy toolkit; the practice sequences their use around maintenance changes."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+        - se:EVD-07F-SWEBOK-REFACTORING
+    - id: se:REL-07F-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07F-TECH-DEBT-ASSESSMENT
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07F-TECHNICAL-DEBT
+      context: "Structural dependency between the debt-assessment practice and the technical-debt concept."
+      rationale: "The practice measures and triages the debt the concept defines; without the effort-based definition the measurement steps have no defined quantity."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-TECH-DEBT-COST
+    - id: se:REL-07F-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07F-UNMANAGED-TECH-DEBT
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+      context: "Provenance of the unmanaged-debt anti-pattern characterization."
+      rationale: "The anti-pattern's accumulation mechanism (quick, under-considered, unreviewed fixes creating debt) is stated by SWEBOK KA7 2.1.4 as paraphrased in this evidence; the feature-pressure and measurement halves are anchored by the record's other evidence refs."
+      evidence_refs:
+        - se:EVD-07F-SWEBOK-MAINTAINABILITY-DEBT
+    - id: se:REL-07F-027
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07F-DUAL-API-LARGE-SCALE-REFACTORING
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07F-CS2023-REFACTORING-KU
+      context: "Provenance of the dual-API large-scale refactoring pattern."
+      rationale: "The pattern's problem and solution rest on the CS2023 Non-core large-scale refactoring topic (coexisting APIs, minimized behavior change, unseen consumers) carried by this evidence."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+    - id: se:REL-07F-028
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07F-DEBT-VERSUS-FEATURES
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07F-SYNTHESIS-DEBT-PRIORITIZATION
+      context: "Provenance of the debt-versus-features decision model."
+      rationale: "The decision model's single-procedure form is the lane synthesis combining SWEBOK KA7 2.1.4, 2.2.1 and 2.3.1; the edge records that derivation."
+      evidence_refs:
+        - se:EVD-07F-SYNTHESIS-DEBT-PRIORITIZATION
+    - id: se:REL-07F-029
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07F-DEBT-VERSUS-FEATURES
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07F-SWEBOK-ORG-PRIORITIES
+      qualifiers:
+        - "Organizations commonly prioritize new features over refactoring; the model must work under that pressure, not assume neutral prioritization."
+        - "Objectives and constraints must be balanced with maintainability and engineering standards to avoid code decay."
+      context: "Qualifying the decision model with the organizational feature-priority reality it must operate in."
+      rationale: "The section 2.2.1 evidence records why a debt-versus-features decision is hard in practice; the model's criteria and constraints import that balancing requirement."
+    - id: se:REL-07F-030
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07F-CS2023-SE-REFACTORING
+      predicate: RELATED_TO
+      object_ref: se:NODE-07F-REFACTORING-AND-TECH-DEBT
+      qualifiers:
+        - "Cross-view relation: the CS2023 curriculum unit and the SWEBOK-grounded lifecycle node classify the same subject through different lenses and are not merged."
+        - "Neither node subsumes the other; curriculum hours and professional-BOK technique coverage answer different questions."
+      context: "Relating the curriculum view's refactoring node to the lifecycle view's refactoring-and-debt node without collapsing the two taxonomies."
+      rationale: "The lane keeps multiple taxonomic views explicit per the pilot's multi-view rule; this edge is the typed cross-view link for the refactoring subject."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+    - id: se:REL-07F-031
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07F-HYRUMS-LAW
+      predicate: RELATED_TO
+      object_ref: se:PAT-07F-DUAL-API-LARGE-SCALE-REFACTORING
+      qualifiers:
+        - "Relation is motivational: the curriculum's 'consumers I can't see' rationale for large-scale refactoring techniques is the practical consequence of implicit interface dependencies."
+        - "The link is made within CS2023 curriculum scope; the lane does not assert the law's content beyond the inspected topic text."
+      context: "Relating the implicit-interface dependency concept to the pattern whose techniques it motivates."
+      rationale: "Both records derive from the same knowledge unit, where Hyrum's Law is topic 1 and the unseen-consumer rationale is the Non-core topic's 'why' clause."
+      evidence_refs:
+        - se:EVD-07F-CS2023-REFACTORING-KU
+    - id: se:REL-07F-032
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07F-PRESERVE-INTEGRITY
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07F-SWEBOK-KA8-SCR-PROCESS
+      qualifiers:
+        - "Integrity preservation is procedurally supported by formal change evaluation (SCR technical evaluation/impact analysis), CCB approval and end-of-process audits."
+        - "The emergency path allows implementation before the process runs, temporarily relaxing the procedural form while keeping the integrity objective."
+      context: "Qualifying how the preserve-integrity principle is achieved procedurally in controlled maintenance."
+      rationale: "The KA8 evidence describes the accept/modify/defer/reject authority and the audit that verifies only approved changes were made, which is the process shape the principle presumes."
+    - id: se:REL-07F-033
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:VIEW-07F-MAINTENANCE-EVOLUTION
+      predicate: BOUNDED_BY
+      object_ref: se:EVD-07F-SWEBOK-MAINT-DEFINITION
+      qualifiers:
+        - "The lifecycle view's maintenance node is bounded by the inspected SWEBOK KA7 definition sections; coverage is partial and no claim of KA completeness is made."
+        - "Boundaries with 07A/07B/07E/07G lanes are recorded in the lane scope note and the view's limitations."
+      context: "Evidential boundary for the lane's lifecycle taxonomy view."
+      rationale: "The view's foundational node is defined by this evidence; recording the bound prevents reading the view as a complete maintenance ontology."
