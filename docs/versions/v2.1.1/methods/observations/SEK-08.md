@@ -146,17 +146,19 @@ pins re-checked via `importlib.metadata`). Build scripts under the workspace tem
 # A. determinism — 5 assemblies, 3 lane orders (canonical ×3, reversed, rotate)
 python materialize.py --worktree <wt> --out scratch/<o> --order <o>   # ×5, each EXIT=0
 # unique (ttl_sha256, jsonld_sha256, canonical_digest) tuples across orders: 1
-ttl_sha256   = cdbee8d52137a43e86bd5b94ba4afd23014c9e9469b8bbdaa88a420d10c8758c
-jsonld_sha256= f4eba494db3c8eb4e3c6b248b842856af013d6a45999a4145fbde783987356bc
+ttl_sha256   = 84627b8e32d47ae769e4a78de07cde5062664cb407d7194ad0bf211e4bb5fad7
+jsonld_sha256= 21755df44c722c4bdd9fccb28446dd6aa12bbcfad168931344502f37d2aab7a4
 
 # B. export equivalence + identity checks (rdflib parse-back)
 python verify_exports.py --worktree <wt> --dir <wt>/…/knowledge/generated
 # → {"VERIFY":"PASS","ttl_triples":9461,"jsonld_triples":9461,"internal_triples":9461,
-#    "canonical_digest":"ec18a1aac76d91230337ab68d39173ec4ddf9195ab5424b10af32836693fc3cd"}
-# checks: TTL ≡ JSON-LD ≡ internal canonical set (triple-for-triple); every reference
-# slot object is a URIRef; se:predicate values are URIRefs; typed-edge endpoints are
-# URIRefs; every IRI under se:/rdf:/xsd namespaces; no dangling record references;
-# relationship endpoints/predicates/qualifier requirements satisfied vs catalog.
+#    "canonical_digest":"d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9"}
+# checks: TTL ≡ JSON-LD ≡ internal canonical set (triple-for-triple); the canonical
+# N-Triples digest payload parses as valid NT and equals the exports; every reference
+# slot object is a URIRef; se:predicate values are URIRefs (catalog enum meaning IRI);
+# typed-edge endpoints are URIRefs; every IRI under se:/rdf:/xsd namespaces; no
+# dangling record references; relationship endpoints/predicates/qualifier
+# requirements satisfied vs catalog.
 EXIT=0
 
 # C. repository validator on the merged graph (raw parsed values + derived sources)
@@ -182,22 +184,56 @@ EXIT=0
 ```
 
 Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection):
-`ec18a1aac76d91230337ab68d39173ec4ddf9195ab5424b10af32836693fc3cd` — stable across all
-five assemblies and both serialization formats. (The SEK-07 receipt's digest
-`368a212a…` was computed by the SEK-07 builder's own canonicalization over the merged
-YAML records; SEK-08 defines its digest over the RDF projection and additionally
-re-verifies every SEK-07 merged-graph count instead of reusing the number.)
+`d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9` — stable across all
+five assemblies and both serialization formats, and machine-checkable: the digest
+payload is valid N-Triples that parses back to the same 9,461-triple set. (The SEK-07
+receipt's digest `368a212a…` was computed by the SEK-07 builder's own canonicalization
+over the merged YAML records; SEK-08 defines its digest over the RDF projection and
+additionally re-verifies every SEK-07 merged-graph count instead of reusing the number.)
 
 ## Corrections and deviations
 
-- Two serialization defects were found and fixed during the build (before any commit):
-  a Turtle subject/`a` concatenation and a JSON-LD top-level `@id`+`@graph` form that
-  rdflib parses as an empty named graph. Both were caught by the parse-back
-  equivalence gate; after the fix, determinism was re-proven end-to-end (five
-  assemblies). No repository content was affected by these iterations.
-- `REPAIR_BATCH` (in-write-set repairs found by review): **none required so far** —
-  all gates green at first full run after the tooling fixes above; awaiting the
-  independent final verifier's Exact-SHA readback.
+- Three serialization/verification defects were found and fixed during the build
+  (the first two before any commit, the third after independent verification — see
+  the repair batch below): a Turtle subject/`a` concatenation; a JSON-LD top-level
+  `@id`+`@graph` form that rdflib parses as an empty named graph; and (R1) the
+  `se:predicate` slot rendering plus verification holes detailed below. Each was
+  caught by parse-back/equivalence gates or by the independent verifier; after every
+  fix, determinism was re-proven end-to-end (five assemblies, three lane orders).
+
+### Repair batch R1 (from the independent final verifier's Exact-SHA review)
+
+The different-verifier review of the first delivered SHA (`be1a9201…`, receipt comment
+6695406247 — now superseded by the R1 receipt) returned `SEK08_FINAL=BLOCK` with the
+data face fully independently confirmed and three in-scope tooling/output defects. All
+were repaired by the same Builder in one bounded batch inside the original write set:
+
+- **P1 `se:predicate` as string literal + hollow checks.** The committed projection
+  rendered the RelationshipAssertion `se:predicate` slot as a plain literal
+  (`se:predicate "SUPPORTED_BY"`, 271/271), contrary to the relationship catalog's
+  "a literal predicate value is invalid" export intent (the typed edges were already
+  correct URIs). Additionally the builder's `verify_exports.py` predicate/reference
+  checks never fired: rdflib `URIRef.__eq__` is type-strict against plain `str`
+  (`URIRef(x) == x` is False), so predicate comparisons silently matched nothing —
+  a false-green verification. Fix: the projection now renders the slot as the catalog
+  enum `meaning` IRI (`se:predicate se:SUPPORTED_BY`, URIRef in both exports), and the
+  verifier compares predicates via `str()`; the digest recipe additionally
+  round-trips through an N-Triples parse. New digest/hashes below; the superseded
+  receipt's "se:predicate values URIRefs" claim is true of this SHA and was false of
+  the first SHA.
+- **P2 digest recipe defect.** The internal N-Triples line renderer appended a stray
+  `>` on URI-object lines (invalid NT; the first digest `ec18a1aa…` hashed those
+  bytes). Fixed to spec-conformant N-Triples; the published digest is now exactly
+  "SHA-256 over the sorted valid N-Triples form" and machine-checkable.
+- **P3 wording + verification normalization.** "SEK-05-era" → "SEK-03-era" for the
+  legacy fixture in `generated/README.md`/`COVERAGE_REPORT.md`; rdflib term
+  comparisons normalized (same root cause as P1).
+
+R1 result: 9,461 triples unchanged in count and substance except the 271 predicate
+slot objects (literal → IRI); digest `d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9`;
+`graph.ttl` sha256 `84627b8e32d47ae769e4a78de07cde5062664cb407d7194ad0bf211e4bb5fad7`;
+`graph.jsonld` sha256 `21755df44c722c4bdd9fccb28446dd6aa12bbcfad168931344502f37d2aab7a4`;
+all gates A–F re-run green on the repaired tree.
 
 ## Limitations
 

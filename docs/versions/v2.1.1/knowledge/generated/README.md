@@ -22,7 +22,7 @@ production ontology adoption, not a Domain Package and not DomainForge promotion
 | `COVERAGE_REPORT.md` | Covered areas, explicit gaps, excluded legacy material, rights, unmeasured review burden |
 
 Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection):
-`ec18a1aac76d91230337ab68d39173ec4ddf9195ab5424b10af32836693fc3cd`.
+`d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9`.
 
 ## Projection semantics
 
@@ -85,7 +85,7 @@ file is rewritten and the source defect stays visible in-repo:
 
 ## Locator ID-space crosswalk (deterministic)
 
-Four locator identities overlap between the legacy SEK-05-era fixture
+Four locator identities overlap between the legacy SEK-03-era fixture
 (`../vertical-slice/KNOWLEDGE_RECORDS.yaml`, `SE-LOC-*` id space) and lane records
 (`se:LOC-*`). Mechanical comparison over (mapped source, locator text, locator type,
 verification state) confirms equivalence in all four cases; the canonical graph identity

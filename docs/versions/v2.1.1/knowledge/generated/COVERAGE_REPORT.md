@@ -82,7 +82,7 @@ them: 783 lane-owned + 6 shared + 3 derived sources = 792 records.)
 
 ## Excluded legacy material
 
-The SEK-05-era pilot fixture `../vertical-slice/KNOWLEDGE_RECORDS.yaml`
+The SEK-03-era legacy pilot fixture `../vertical-slice/KNOWLEDGE_RECORDS.yaml`
 (`SE-VERTICAL-SLICE-0.1.0`, 2026-11-04: 17 locators, 12 evidence records, 12 claims,
 12 relationship assertions) was inspected for a lossless mapping into model 0.3.0 and
 **excluded from the projection; retained untouched as a historical fixture**. The
