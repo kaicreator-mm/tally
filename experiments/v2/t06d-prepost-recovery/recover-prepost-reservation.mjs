@@ -288,7 +288,9 @@ export function createPrePostRecoveryController({
       ({revision: finalRevision} = await store.put(TARGET.casKey, terminal,
         {mustMatchRevision: 3}));
     } catch { return {fail: 'FINAL_CAS_AMBIGUOUS'}; }
-    const final = await store.get(TARGET.casKey);
+    let final;
+    try { final = await store.get(TARGET.casKey); }
+    catch { return {fail: 'FINAL_READBACK_UNVERIFIED'}; }
     if (final?.revision !== 4 || JSON.stringify(final.value) !== JSON.stringify(terminal))
       return {fail: 'FINAL_READBACK_UNVERIFIED'};
     return {terminal, finalRevision};
@@ -480,9 +482,22 @@ export function createPrePostRecoveryController({
     let markerRevision;
     try {
       ({revision: markerRevision} = await store.put(TARGET.casKey, row3, {mustMatchRevision: 2}));
-    } catch { return unknown('MARKER_CAS_RACE'); }
+    } catch {
+      // markerWriteAmbiguous: re-read the public CAS first. If our exact
+      // marker exists, the attempt is consumed and only read-only
+      // reconciliation may follow; unknown state stops. Never a re-put.
+      let recheck;
+      try { recheck = await store.get(TARGET.casKey); } catch { recheck = null; }
+      if (recheck?.revision === 3 && validMarker(recheck.value?.recoveryAttempt) &&
+        JSON.stringify(recheck.value) === JSON.stringify(row3))
+        return unknown('MARKER_WRITE_AMBIGUOUS_CONSUMED', {
+          recoveryAttemptId: marker.recoveryAttemptId});
+      return unknown('MARKER_CAS_RACE');
+    }
     if (markerRevision !== 3) return unknown('MARKER_CAS_UNEXPECTED_REVISION');
-    const reserved = await store.get(TARGET.casKey);
+    let reserved;
+    try { reserved = await store.get(TARGET.casKey); }
+    catch { return unknown('MARKER_READBACK_UNVERIFIED'); }
     if (reserved?.revision !== 3 ||
       JSON.stringify(reserved.value) !== JSON.stringify(row3))
       return unknown('MARKER_READBACK_UNVERIFIED');
@@ -612,7 +627,7 @@ async function runSelectedHostCli() {
   if (!/^[0-9a-f]{40}$/.test(EXPECTED_HEAD ?? '') || !/^[0-9a-f]{40}$/.test(EXPECTED_TREE ?? ''))
     { log({step: 'ABORT', reason: 'RECOVERY_EXPECTED_HEAD_AND_TREE_REQUIRED'}); process.exitCode = 2; return; }
 
-  const repoRoot = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../../..');
+  const repoRoot = resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '../../..');
   const git = args => execSync(`git ${args}`, {cwd: repoRoot, encoding: 'utf8', timeout: 20000, windowsHide: true});
   const REG203 = 'C:/xDev/kAiCreator/_tmp/tally-alm-claims/registry-203.sqlite';
   const REG319 = 'C:/xDev/kAiCreator/_tmp/i319-claim/run-20261106T043955/registry-319.sqlite';
@@ -725,7 +740,15 @@ async function runSelectedHostCli() {
 
     log({step: 'CAS_BEFORE', target203: await (async () => {
       const r = await store203.get(TARGET.casKey);
-      return {revision: r?.revision, phase: r?.value?.phase, marker: r?.value?.recoveryAttempt?.state ?? null};
+      // Pack-observed revision-2 row digest: pins the exact row bytes on top
+      // of the controller's per-field exactness at the Host wiring boundary.
+      const rowSha = r?.revision === 2 && r.value?.phase === 'PENDING_GITHUB_TERMINALIZATION'
+        ? sha256hex(JSON.stringify(r.value)) : null;
+      return {revision: r?.revision, phase: r?.value?.phase,
+        marker: r?.value?.recoveryAttempt?.state ?? null,
+        rowValueSha256: rowSha,
+        rowShaMatchesPack: rowSha === null ? null
+          : rowSha === 'bcebd6e05bd1fe4a1658c4e65bfa13cc94963643079270f6529560dd42fcdcc2'};
     })()});
 
     const controller = createPrePostRecoveryController({

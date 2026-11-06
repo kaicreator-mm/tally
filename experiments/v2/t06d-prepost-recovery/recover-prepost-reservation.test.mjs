@@ -243,6 +243,10 @@ test('prior no-POST artifact mismatch (wrong sha / nonzero counts / missing) den
       {sha256: RECOVERY_IDENTITY.prior.runLogSha256,
         parsed: {...RECOVERY_IDENTITY.prior, httpPostCount: 1}},
       {sha256: RECOVERY_IDENTITY.prior.runLogSha256,
+        parsed: {...RECOVERY_IDENTITY.prior, publisherInvocationCount: 1}},
+      {sha256: RECOVERY_IDENTITY.prior.runLogSha256,
+        parsed: {...RECOVERY_IDENTITY.prior, status: 'RECORDED'}},
+      {sha256: RECOVERY_IDENTITY.prior.runLogSha256,
         parsed: {...RECOVERY_IDENTITY.prior, reason: 'OTHER_REASON'}},
       null,
     ]) {
@@ -295,6 +299,7 @@ test('quiescence proof must exclude exactly the target reservation; any other ac
       goodProof({fenceHeld: false}),
       goodProof({activeWriterCount: 1}),
       goodProof({activeAttemptCount: 1}),
+      goodProof({activeSubprocessCount: 1}),
       goodProof({inflightEffectCount: 2}),
       goodProof({unresolvedResourceCount: 1}),
       goodProof({writeSetReconciled: false}),
@@ -496,6 +501,53 @@ test('readback absent/ambiguous after POST keeps UNKNOWN pending/unknown; never 
     assert.equal(r2.reason, 'CONSUMED_MARKER_RECONCILED_READ_ONLY');
     assert.equal(later.counts.publishes, 0);
     assert.equal((await store.get(TARGET.casKey)).revision, 4);
+  });
+});
+
+test('fence released before final CAS (proof 3) keeps the row pending; no second POST', async () => {
+  await harness(async ({store}) => {
+    await store.put(TARGET.casKey, strandedRow(), {mustMatchRevision: 0});
+    await store.put(TARGET.casKey, strandedRow(), {mustMatchRevision: 1});
+    let call = 0;
+    const p = ports({quiescence: {async readFreshProof() {
+      call++;
+      return call <= 2 ? goodProof() : goodProof({fenceHeld: false});
+    }}});
+    const r = await createPrePostRecoveryController({store, ...p, writerAuthority})
+      .recoverPrePostReservation();
+    assert.equal(r.status, 'UNKNOWN');
+    assert.equal(r.reason, 'FENCE_CHANGED_BEFORE_FINAL_CAS');
+    assert.equal(p.counts.publishes, 1);
+    const row = await store.get(TARGET.casKey);
+    assert.equal(row.revision, 3);
+    assert.equal(row.value.phase, 'PENDING_GITHUB_TERMINALIZATION');
+    // reconciliation-only re-entry can still finalize once the event is proven
+    const later = ports();
+    later.terminalEvents.present = true;
+    const r2 = await createPrePostRecoveryController({store, ...later, writerAuthority})
+      .recoverPrePostReservation();
+    assert.equal(r2.status, 'RECORDED');
+    assert.equal(later.counts.publishes, 0);
+  });
+});
+
+test('malformed marker at revision 3 denies read-only with zero writes', async () => {
+  await harness(async ({store}) => {
+    await store.put(TARGET.casKey, strandedRow(), {mustMatchRevision: 0});
+    // hand-corrupt marker shape: revision 3 row whose marker fails validation
+    await store.put(TARGET.casKey, {...strandedRow(),
+      recoveryAttempt: {schema: 'tally.t06d-prepost-recovery-marker/v1',
+        state: 'POST_ATTEMPT_CONSUMED', eventEvidence: 'x',
+        eventEvidenceSha256: '0'.repeat(64)}}, {mustMatchRevision: 1});
+    const markerRow = await store.get(TARGET.casKey);
+    assert.equal(markerRow.revision, 2); // fixture convenience: rev2-with-marker shape
+    const p = ports();
+    const r = await createPrePostRecoveryController({store, ...p, writerAuthority})
+      .recoverPrePostReservation();
+    // rev2 with an unexpected recoveryAttempt field is not the exact stranded row
+    assert.equal(r.status, 'UNKNOWN');
+    assert.equal(r.reason, 'TARGET_ROW_NOT_EXACT_REVISION_2_PREPOST');
+    assert.equal(p.counts.publishes, 0);
   });
 });
 
