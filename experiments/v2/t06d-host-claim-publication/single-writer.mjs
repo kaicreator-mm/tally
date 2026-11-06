@@ -143,6 +143,43 @@ export function createHostSingleWriterClaimController({store,source,publisher,wr
       return unknown('TRUSTED_TERMINAL_HOST_PORTS_REQUIRED');
     try{
       const row=await store.get(TARGET.casKey),v=row?.value;
+      // A stranded revision-2 PENDING_GITHUB_TERMINALIZATION reservation (lost
+      // ACK with an absent, incomplete or unavailable first readback) is
+      // recovered ONLY by this strictly read-only reconciliation: complete
+      // native pagination for the exact terminal event, then a public CAS
+      // mustMatchRevision=2 confirm. Never a second POST, reset, delete,
+      // reseed, new Claim or fresh reservation.
+      if(row?.revision===2&&v?.phase==='PENDING_GITHUB_TERMINALIZATION'){
+        if(v.terminalReservationRevision!==2||v.repository!==TARGET.repository||
+          v.issueRef!==TARGET.issueRef||v.sourceSha!==TARGET.sourceSha||v.dispatchId!==TARGET.dispatchId||
+          v.protectedClaimKey!==TARGET.protectedClaimKey||v.generation!==1||v.actorRole!=='builder'||
+          v.operatorKind!=='other'||v.operatorId!=='zcode:candidate-publication:1'||
+          v.writerId!=='tally-host:win32:candidate-publication:1'||v.commentId!==TARGET.claimCommentId||
+          v.commentRef!==TARGET.claimCommentRef||v.terminalWriterId!==writerAuthority.writerId||
+          typeof v.terminalEvidence!=='string'||!v.terminalEvidence||
+          !Number.isFinite(Date.parse(v.terminalOccurredAt)))
+          return unknown('PENDING_TERMINAL_RESERVATION_NOT_EXACT');
+        try{terminalEventForReservation(v,writerAuthority);}
+        catch{return unknown('TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');}
+        let observed;
+        try{observed=await source.readTerminalEvent(v);}
+        catch{return unknown('TERMINAL_READBACK_UNAVAILABLE');}
+        if(observed?.status!=='EXACT'||observed.complete!==true||observed.edited!==false||
+          !Number.isSafeInteger(observed.commentId)||observed.commentId<1||
+          observed.commentRef!==`${TARGET.issueRef}#issuecomment-${observed.commentId}`)
+          return unknown('TERMINAL_READBACK_NOT_VERIFIED');
+        const terminal={...v,phase:'TERMINAL_VERIFIED',
+          terminalCommentId:observed.commentId,terminalCommentRef:observed.commentRef};
+        let finalRevision;
+        try{({revision:finalRevision}=await store.put(TARGET.casKey,terminal,{mustMatchRevision:row.revision}));}
+        catch{return unknown('TERMINAL_CONFIRMATION_AMBIGUOUS');}
+        const final=await store.get(TARGET.casKey);
+        if(final?.revision!==finalRevision||JSON.stringify(final.value)!==JSON.stringify(terminal))
+          return unknown('TERMINAL_FINAL_READBACK_UNVERIFIED');
+        return Object.freeze({status:'RECORDED',reason:'PENDING_RESERVATION_RECONCILED_READ_ONLY',
+          claimTerminality:'VERIFIED',terminalCommentRef:observed.commentRef,
+          authorized:false,admitted:false,taskPass:false,releasePass:false});
+      }
       if(row?.revision!==1||v?.phase!=='PUBLISHED_VERIFIED'||v.repository!==TARGET.repository||
         v.issueRef!==TARGET.issueRef||v.sourceSha!==TARGET.sourceSha||v.dispatchId!==TARGET.dispatchId||
         v.protectedClaimKey!==TARGET.protectedClaimKey||v.generation!==1||v.actorRole!=='builder'||

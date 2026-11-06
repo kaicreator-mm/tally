@@ -236,6 +236,126 @@ test('lost ACK with the exact event already appended reconciles read-only; exact
     assert.equal(posts,1);
   });
 });
+test('stranded pending reservation recovers read-only once pagination is complete; exactly one POST total',async()=>{
+  await harness(async({store,reopen})=>{
+    await seedFixture(store);
+    // End-to-end stranded reservation: the POST appended the exact terminal
+    // event and lost its ACK, and the first readback saw incomplete native
+    // pagination. Later calls must reconcile read-only — complete pagination
+    // proving the exact unedited event, public CAS mustMatchRevision=2, and
+    // never a second POST — while every earlier failure stays PENDING.
+    const comments=[];let posts=0,paginationComplete=false;
+    const octokit={rest:{issues:{
+      async get(){return {data:{id:2030,number:203,html_url:TARGET.issueRef,state:'open',
+        comments:comments.length,updated_at:'now',body:`version/v2@${TARGET.sourceSha}`}};},
+      async listComments(){throw Error('pagination required');},
+      async getComment({comment_id}){return {data:comments.find(c=>c.id===comment_id)};},
+      async createComment({body}){
+        posts++;
+        comments.push({id:901,body,html_url:TARGET.issueRef+'#issuecomment-901',
+          issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/203',
+          user:{login:'kaicreator-mm'},created_at:'now',updated_at:'now'});
+        throw Error('NATIVE_GITHUB_ACK_LOST');
+      }},
+      repos:{async getCommit(){return {data:{sha:TARGET.sourceSha}};}}},
+      paginate:{async *iterator(){
+        if(!paginationComplete){yield {data:null};return;}
+        yield {data:[...comments]};
+      }}};
+    const terminalAuthority={...writerAuthority,githubWriterLogin:'kaicreator-mm'};
+    const p=ports();
+    p.source.readTerminalizationPreflight=async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+      complete:true,targetRevision:1,fenceId:'fence:one',evidence:'durable proof',
+      occurredAt:new Date().toISOString()});
+    p.source.readTerminalEvent=async reservation=>readDispatchStateEventsFromClient({
+      octokit,writerLogin:terminalAuthority.githubWriterLogin,
+      expectedEvent:terminalEventForReservation(reservation,terminalAuthority)});
+    p.publisher.publishDispatchStateChange=async r=>
+      createHostBoundNativeGitHubClaimPublisher({octokit,
+        owner:'kaicreator-mm',repo:'tally',writerAuthority:terminalAuthority})
+        .publishDispatchStateChange(r);
+    const c=createHostSingleWriterClaimController({store,source:p.source,
+      publisher:p.publisher,writerAuthority:terminalAuthority});
+    const first=await c.terminalizePublishedClaim();
+    assert.equal(first.reason,'TERMINAL_PUBLICATION_AMBIGUOUS');
+    assert.equal(posts,1);
+    let row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,2);assert.equal(row.value.phase,'PENDING_GITHUB_TERMINALIZATION');
+    const stillBroken=await c.terminalizePublishedClaim();
+    assert.equal(stillBroken.reason,'TERMINAL_READBACK_NOT_VERIFIED');
+    assert.equal(posts,1);
+    row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,2);assert.equal(row.value.phase,'PENDING_GITHUB_TERMINALIZATION');
+    paginationComplete=true;
+    const recovered=await c.terminalizePublishedClaim();
+    assert.equal(recovered.claimTerminality,'VERIFIED',JSON.stringify(recovered));
+    assert.equal(recovered.reason,'PENDING_RESERVATION_RECONCILED_READ_ONLY');
+    assert.equal(recovered.terminalCommentRef,TARGET.issueRef+'#issuecomment-901');
+    assert.equal(posts,1);
+    const reopened=await reopen();row=await reopened.get(TARGET.casKey);
+    assert.equal(row.revision,3);assert.equal(row.value.phase,'TERMINAL_VERIFIED');
+    assert.equal(row.value.terminalCommentId,901);
+    assert.equal(row.value.terminalEvidence,'durable proof');
+    assert.equal(row.value.commentRef,TARGET.claimCommentRef);
+    assert.equal((await createHostSingleWriterClaimController({store:reopened,source:p.source,
+      publisher:p.publisher,writerAuthority:terminalAuthority}).terminalizePublishedClaim())
+      .reason,'TARGET_CLAIM_NOT_EXACT');
+    assert.equal(posts,1);
+  });
+});
+test('CAS contention during pending read-only reconciliation never verifies and preserves the row',async()=>{
+  await harness(async({store})=>{
+    await seedFixture(store);let posts=0,reads=0;
+    const p=ports();
+    p.source.readTerminalizationPreflight=async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+      complete:true,targetRevision:1,fenceId:'fence:one',evidence:'durable proof',
+      occurredAt:new Date().toISOString()});
+    p.source.readTerminalEvent=async()=>{
+      reads++;
+      if(reads===1)return {status:'ABSENT',complete:true};
+      // A competing writer moves the CAS row between the exact read-only
+      // readback and the mustMatchRevision=2 confirm.
+      const current=await store.get(TARGET.casKey);
+      await store.put(TARGET.casKey,{...current.value,externalChange:true},
+        {mustMatchRevision:current.revision});
+      return {status:'EXACT',complete:true,edited:false,commentId:901,
+        commentRef:TARGET.issueRef+'#issuecomment-901'};
+    };
+    p.publisher.publishDispatchStateChange=async()=>{posts++;throw Error('ACK lost');};
+    const c=controller(store,p);
+    assert.equal((await c.terminalizePublishedClaim()).reason,'TERMINAL_PUBLICATION_AMBIGUOUS');
+    const contended=await c.terminalizePublishedClaim();
+    assert.equal(contended.claimTerminality,'UNKNOWN');
+    assert.equal(contended.reason,'TERMINAL_CONFIRMATION_AMBIGUOUS');
+    assert.equal(posts,1);
+    const row=await store.get(TARGET.casKey);
+    assert.equal(row.revision,3);
+    assert.equal(row.value.externalChange,true);
+    assert.notEqual(row.value.phase,'TERMINAL_VERIFIED');
+  });
+});
+test('an inexact or invalid pending reservation row is never reconciled; zero POSTs, row preserved',async()=>{
+  const pending={...historical,phase:'PENDING_GITHUB_TERMINALIZATION',
+    terminalWriterId:writerAuthority.writerId,terminalEvidence:'durable proof',
+    terminalOccurredAt:new Date().toISOString(),terminalReservationRevision:2};
+  for(const change of [{terminalWriterId:'other-host'},{dispatchId:'wrong'},
+    {operatorId:'someone-else:1'},{terminalEvidence:''},
+    {terminalEvidence:'x'.repeat(16385)},{terminalReservationRevision:3}])
+    await harness(async({store})=>{
+      await seedFixture(store);
+      await store.put(TARGET.casKey,{...pending,...change},{mustMatchRevision:1});
+      const p=terminalPorts();
+      const result=await controller(store,p).terminalizePublishedClaim();
+      assert.equal(result.claimTerminality,'UNKNOWN');
+      assert.ok(['PENDING_TERMINAL_RESERVATION_NOT_EXACT',
+        'TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION'].includes(result.reason),result.reason);
+      assert.equal(p.posts(),0);
+      const row=await store.get(TARGET.casKey);
+      assert.equal(row.revision,2);
+      assert.equal(row.value.phase,'PENDING_GITHUB_TERMINALIZATION');
+      assert.equal(row.value.terminalEvidence,({...pending,...change}).terminalEvidence);
+    });
+});
 test('absent, incomplete, edited or conflicting readback after a lost ACK stays PENDING with no second POST',async()=>{
   const readbacks=[
     {status:'ABSENT',complete:true},
@@ -261,8 +381,15 @@ test('absent, incomplete, edited or conflicting readback after a lost ACK stays 
     const row=await store.get(TARGET.casKey);
     assert.equal(row.revision,2);
     assert.equal(row.value.phase,'PENDING_GITHUB_TERMINALIZATION');
-    assert.equal((await c.terminalizePublishedClaim()).reason,'TARGET_CLAIM_NOT_EXACT');
+    // Later reconciliation is read-only: the still-negative readback leaves
+    // the pending reservation untouched and never issues a second POST.
+    const again=await c.terminalizePublishedClaim();
+    assert.equal(again.claimTerminality,'UNKNOWN');
+    assert.equal(again.reason,'TERMINAL_READBACK_NOT_VERIFIED');
     assert.equal(posts,1);
+    const rowAfter=await store.get(TARGET.casKey);
+    assert.equal(rowAfter.revision,2);
+    assert.equal(rowAfter.value.phase,'PENDING_GITHUB_TERMINALIZATION');
   });
 });
 test('oversized evidence or an unbound writer identity is rejected before any CAS write or POST',async()=>{
