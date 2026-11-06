@@ -133,8 +133,8 @@ collections:
       created_on: "2026-11-06"
       source_ref: se:SRC-SWEBOK-GUIDE-4-0A
       locator_type: SECTION
-      locator: "SWEBOK Guide v4.0a, Chapter 2 Software Architecture, section 2 Software Architecture Description, including 2.1 Architecture Views and Viewpoints and 2.2 Architecture Patterns, Styles and Reference Architectures; PDF page indices 69-71; printed pages 2-4 to 2-6"
-      verified_content_summary: "Architecture descriptions as work products addressed to stakeholder concerns; views addressing distinct concerns; viewpoints as the conventions governing views; pattern/style families and reference architectures."
+      locator: "SWEBOK Guide v4.0a, Chapter 2 Software Architecture, section 2 Software Architecture Description, including 2.1 Architecture Views and Viewpoints and 2.2 Architecture Patterns, Styles and Reference Architectures (the 2.2 reference-architecture passage completes on printed page 2-7; section 2.3 content beginning on that page is not part of this locator); PDF page indices 69-72; printed pages 2-4 to 2-7"
+      verified_content_summary: "Architecture descriptions as work products addressed to stakeholder concerns; views addressing distinct concerns; viewpoints as the conventions governing views; architectural styles and patterns as documented solution forms with pattern catalogs; reference architectures as architectures that constrain or guide other architectures, providing a common basis and capturing commonalities to promote development, integration, interoperability and standardization."
       verification_state: LOCATOR_VERIFIED
       accessed_on: "2026-11-06"
     - id: se:LOC-SWEBOK-KA2-ARCH-DECISIONS-PROCESS
@@ -397,12 +397,18 @@ collections:
         the architecture answers. Descriptions commonly use multiple
         architecture views, each addressing specific concerns, with the
         conventions for each view documented as an architecture viewpoint;
-        architectural styles and patterns express recurring large-scale
-        organization, and reference architectures codify proven structures for
-        a domain.
-      context: "SWEBOK Guide v4.0a Chapter 2 section 2 (2.1, 2.2), printed pages 2-4 to 2-6."
+        architectural styles and patterns are documented solution forms (an
+        architectural style expresses a system's global organization and can be
+        expressed as an architectural pattern; pattern catalogs coordinate
+        them), and a reference architecture is an architecture constraining or
+        guiding other architectures that provides a common basis for developing
+        architectures for individual systems, product lines, families of
+        systems and application domains, capturing commonalities to promote
+        ease of development, integration, interoperability and other kinds of
+        standardization.
+      context: "SWEBOK Guide v4.0a Chapter 2 section 2 (2.1, 2.2), printed pages 2-4 to 2-7 (the reference-architecture passage spans the 2-6/2-7 page break)."
       method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-06; original paraphrase."
-      result: "The description/views/viewpoints vocabulary and the style/pattern/reference-architecture layer were confirmed for the professional-BOK scoped claim."
+      result: "The description/views/viewpoints vocabulary and the style/pattern/reference-architecture definitions were confirmed for the professional-BOK scoped claim, including the reference-architecture definition completing on printed page 2-7."
       limitations:
         - "The section surveys generally accepted description practice; it does not prescribe a mandatory viewpoint set."
       uncertainty: []
@@ -642,11 +648,13 @@ collections:
         SWEBOK Guide v4.0a KA2 distinguishes a software system's architecture
         from its architecture description, and characterizes descriptions as
         stakeholder-addressed work products commonly organized as multiple
-        views whose conventions are documented as viewpoints, with styles,
-        patterns and reference architectures as recurring organization
-        vocabularies.
+        views whose conventions are documented as viewpoints, with
+        architectural styles and patterns as documented solution forms and
+        reference architectures as architectures that constrain or guide other
+        architectures and provide a common basis for further architectural
+        development.
       claim_kind: DEFINITION
-      scope_description: "SWEBOK Guide v4.0a Chapter 2 section 2 (printed pages 2-4 to 2-6); generally accepted KA content, not a prescription of a mandatory viewpoint set."
+      scope_description: "SWEBOK Guide v4.0a Chapter 2 section 2 (printed pages 2-4 to 2-7); generally accepted KA content, not a prescription of a mandatory viewpoint set."
       applicability: "Professional-BOK grounding for the architecture-description boundary this lane previously had to leave as curriculum abstraction levels only; complements, and does not replace, the ISO/IEC/IEEE 42010 metadata-only record."
       assumptions: []
       exceptions: []
@@ -1161,7 +1169,7 @@ collections:
       predicate: SUPPORTED_BY
       object_ref: se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS
       context: "Canonical claim-to-evidence trace for the SWEBOK architecture-description claim."
-      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 2 section 2 at its verified locator (PDF page indices 69-71; printed 2-4 to 2-6), the sole basis of the claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 2 section 2 at its verified locator (PDF page indices 69-72; printed 2-4 to 2-7), the sole basis of the claim."
     - id: se:REL-ARC-0015
       record_version: 0.1.0
       lifecycle_status: PENDING_REVIEW

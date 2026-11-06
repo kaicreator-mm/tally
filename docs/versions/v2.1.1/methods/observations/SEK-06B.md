@@ -322,7 +322,7 @@ Guide's chapter-page folios):
 
 | Locator ID | Section(s) verified | PDF page indices | Printed pages |
 |---|---|---|---|
-| `se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION` | Ch.2 §2 Software Architecture Description (§2.1 Views and Viewpoints, §2.2 Patterns, Styles and Reference Architectures) | 69–71 | 2-4 to 2-6 |
+| `se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION` | Ch.2 §2 Software Architecture Description (§2.1 Views and Viewpoints, §2.2 Patterns, Styles and Reference Architectures incl. its reference-architecture passage completing on printed 2-7; §2.3 excluded) | 69–72 | 2-4 to 2-7 |
 | `se:LOC-SWEBOK-KA2-ARCH-DECISIONS-PROCESS` | Ch.2 §2.4 Architecture as Significant Decisions and §3 Software Architecture Process (§3.1 incl. 3.1.1, §3.2 Architectural Design) | 72–74 | 2-7 to 2-9 |
 | `se:LOC-SWEBOK-KA3-DESIGN-PROCESSES` | Ch.3 §1 Software Design Fundamentals (§1.1, §1.3, §1.4) and §2 Software Design Processes (§2.1 High-Level, §2.2 Detailed) | 83–87 | 3-2 to 3-6 |
 
@@ -360,3 +360,86 @@ coordinator #321, logs in `_tmp/tally-sek06-lanes/validation/06B-p2/`.
 Cross-lane check at the three repaired tips and clean-worktree evidence are
 recorded in the delivery comment. Human review burden remains NOT_MEASURED; no
 record is ACCEPTED.
+
+## R2 consolidated delivery receipt — reference-architecture fidelity + evidence closure (2026-11-06)
+
+R2 review findings (#328, P2-01 source fidelity; P2-02 evidence closure). This
+commit repairs both within the original #323 four-path write set.
+
+### P2-01 repair — §2.2 reference-architecture locator and wording
+
+Official PDF re-opened at the relevant pages (retained hash-verified copy,
+SHA-256 `0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`):
+the §2.2 reference-architecture passage begins on PDF page index 71 (printed
+2-6) — "A reference architecture (RA) is an architecture constraining or
+guiding other architectures…" — and completes on PDF page index 72 (printed
+2-7) with the commonalities/standardization clause and the domain list;
+section 2.3 begins later on the same printed page 2-7. Corrections applied:
+
+- `se:LOC-SWEBOK-KA2-ARCH-DESCRIPTION`: locator extended to **PDF page indices
+  69-72 / printed 2-4 to 2-7**, explicitly scoping the §2.2 continuation on
+  printed 2-7 and excluding §2.3 content on that page; summary rewritten to
+  the source's own definitions (styles/patterns as documented solution forms
+  with pattern catalogs; reference architectures as architectures constraining
+  or guiding other architectures, providing a common basis and capturing
+  commonalities to promote development, integration, interoperability and
+  standardization).
+- `se:EVD-ARC-SWEBOK-DESCRIPTION-VIEWS`: the mischaracterized "codify proven
+  structures for a domain" clause replaced by the source definition above
+  (including the product-line/families/domains common-basis wording); context
+  now states the passage spans the 2-6/2-7 page break; result line updated.
+- `se:CLM-ARC-SWEBOK-DESCRIPTION-DISTINCTION`: "recurring organization
+  vocabularies" replaced — styles/patterns as documented solution forms,
+  reference architectures as architectures that constrain or guide other
+  architectures and provide a common basis; scope pages updated to 2-4 to 2-7.
+- `se:REL-ARC-0014` rationale: locator range updated to PDF indices 69-72 /
+  printed 2-4 to 2-7.
+- The P2-receipt locator table above was corrected in place (row previously
+  read 69–71 / 2-4 to 2-6); this note records that correction explicitly.
+- README/EXPLANATIONS carried none of the mischaracterized wording or the old
+  page range (checked); no change needed there.
+
+### Claim/CAS identity, generation/status and exclusive-Writer readback (pre-write)
+
+- Active claim chain for this repair batch: Owner-authorized combined
+  Builder/Repairer handoffs on coordinator #321 — P2 stage comment 6684006230
+  and R2 checkpoint comment 6686070478 — plus the R2 Repairer dispatch to the
+  local executor on 2026-11-06. Status: ACTIVE for this batch; authorizes
+  exactly the in-write-set R2 repairs and receipt closure. No new Task, Pack
+  or Claim created for R2; generation unchanged: Task Pack issue #323 and its
+  four-path write set remain the sole authority, re-read before writing.
+- Exclusive Writer readback (2026-11-06, immediately before writing): PR #328
+  OPEN; live PR headRefOid `0bd24b94ddf410c2d6519320f82d206a1227d549` ==
+  branch ref `task/tally-v211-sek06b-architecture-design` == R2-reviewed HEAD;
+  local worktree at that HEAD with 0 dirty paths; no other writer observed on
+  the branch since the P2 push. Push after commit uses `--force-with-lease`
+  with expected remote head `0bd24b94…`, fencing any concurrent writer.
+- Identity bound by this receipt: R2-reviewed HEAD
+  `0bd24b94ddf410c2d6519320f82d206a1227d549` / tree
+  `f5ff424b996a037de2aad1c7e008a43182109bbf` / base (merge-base)
+  `7a70211b4460e4c753c97798670de9f34861d4a4`.
+
+### Validation — actual commands and exit codes (repaired tree = this commit's tree; Windows-native venv Python 3.14.7 / PyYAML 6.0.3 / LinkML 1.12.1 / linkml-runtime 1.12.1, PYTHONDONTWRITEBYTECODE=1)
+
+Receipt dir `_tmp/tally-sek06-lanes/validation/06B-r2/` (`identity-pre.txt`,
+`selftest-pre.log`, `lane-validate-pre.log`); `git diff --check` exit 0.
+
+1. `…/knowledge/model/validate_knowledge_graph.py --self-test` → exit 0,
+   final line `SELF_TESTS=66/66`.
+2. `…/tally-sek06-lanes/scripts/assemble_and_validate.py <worktree> 06B
+   <records.yaml> <outdir>` → exit 0: `LANE_RECORD_COUNTS` 62 records
+   unchanged (source_locators 7, evidence_records 14, knowledge_claims 9,
+   relationship_assertions 16, coverage_gaps 4), every `COUNT_*` PASS,
+   `DERIVED_SOURCES=2 se:SRC-CS2023,se:SRC-SWEBOK-GUIDE-4-0A`,
+   `GRAPH_VALIDATION=PASS`, `NO_ACCEPTED_RECORDS=PASS`,
+   `LINKML_INSTANCE_VALIDATION=PASS` (1.12.1/1.12.1), `LANE_VALIDATION=PASS`.
+
+Clean worktree before this receipt: 0 dirty. The identical command set is
+re-run at the committed final HEAD (logs `selftest-post.log`,
+`lane-validate-post.log`, exit codes recorded in the delivery comment), and the
+consolidated R2 delivery comment on coordinator #321 binds to the final
+HEAD/TREE: the four-path SHA256 manifest at the final HEAD, the post-commit
+exit codes, clean-worktree-after evidence, and `CROSS_LANE_CHECK` at the three
+R2-final tips. No LOCAL_VALIDATION-only task exists; no record is ACCEPTED;
+ISO/IEC/IEEE 42010 remains metadata-only; HUMAN_REVIEW_BURDEN remains
+NOT_MEASURED.
