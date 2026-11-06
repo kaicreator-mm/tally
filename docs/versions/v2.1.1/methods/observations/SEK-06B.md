@@ -41,7 +41,7 @@
 | `se:LOC-CS2023-SE-DESIGN-KU` | SECTION (new this lane) | heading-anchored 'SE-Design: Software Design' unit, CS Core 1-4 / KA Core 5-9 / Non-core 10-13; printed page not asserted | LOCATOR_VERIFIED (full-text extraction 2026-11-06) |
 
 All evidence `source_locator_ref` values resolve to the above; all `source_ref` values are
-`se:SRC-CS2023`. The three shared records (domain, view, three registry locators) were
+`se:SRC-CS2023`. The five shared records (domain, view, three registry locators) were
 copied verbatim from the SEK-06 shared snippet set and verified record-equivalent to the
 snippet file after writing.
 
@@ -55,7 +55,8 @@ snippet file after writing.
   touching the unavailable architecture-description layer.
 - 3 concepts, 1 principle, 2 practices, 1 pattern (layered architecture, context
   provided), 1 anti-pattern (inconsistent API surface, DERIVED_FROM the synthesis
-  evidence), 1 decision model (design tradeoffs), 3 coverage gaps, 13 typed relationship
+  evidence), 1 decision model (design tradeoffs), 4 coverage gaps (three lane gaps plus
+  the shared CS2023 rights-clearance gap), 13 typed relationship
   assertions (6 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS,
   1 DERIVED_FROM, 1 RELATED_TO).
 - No record is ACCEPTED; no Case/Counterexample records were created (no real-case
@@ -69,12 +70,13 @@ Repository validator self-test:
 SELF_TESTS=66/66
 ```
 
-Lane assembly and validation
-(`_tmp/tally-sek06-lanes/validation/06B/run2.log`; script
-`_tmp/tally-sek06-lanes/scripts/assemble_and_validate.py`):
+Lane assembly and validation, exact tip `eb32a2e` revalidated 2026-11-06
+(`_tmp/tally-sek06-lanes/validation/06B-bld2/lane-validation.log`; script
+`_tmp/tally-sek06-lanes/scripts/assemble_and_validate.py`; the pre-fix initial runs
+remain archived under `_tmp/tally-sek06-lanes/validation/06B/`):
 
 ```
-LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 3, "coverage_gaps": 3, "decision_models": 1, "domains": 1, "evidence_records": 11, "knowledge_claims": 6, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 13, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
+LANE_RECORD_COUNTS={"anti_patterns": 1, "concepts": 3, "coverage_gaps": 4, "decision_models": 1, "domains": 1, "evidence_records": 11, "knowledge_claims": 6, "patterns": 1, "practices": 2, "principles": 1, "relationship_assertions": 13, "source_locators": 4, "taxonomy_nodes": 1, "taxonomy_views": 1}
 COUNT_source_locators=4 MIN=3 PASS
 COUNT_evidence_records=11 MIN=3 PASS
 COUNT_knowledge_claims=6 MIN=4 PASS
@@ -84,12 +86,13 @@ COUNT_practices=2 MIN=2 PASS
 COUNT_patterns=1 MIN=1 PASS
 COUNT_anti_patterns=1 MIN=1 PASS
 COUNT_decision_models=1 MIN=1 PASS
-COUNT_coverage_gaps=3 MIN=1 PASS
+COUNT_coverage_gaps=4 MIN=1 PASS
 COUNT_relationship_assertions=13 MIN=10 PASS
 DERIVED_SOURCES=1 se:SRC-CS2023
 GRAPH_VALIDATION=PASS
 NO_ACCEPTED_RECORDS=PASS
 LINKML_VERSION=1.12.1
+LINKML_RUNTIME_VERSION=1.12.1
 LINKML_INSTANCE_VALIDATION=PASS
 RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
 LANE_VALIDATION=PASS
@@ -124,6 +127,8 @@ and requires specific permission for other uses. This lane is part of Tally's
 general software-engineering knowledge graph; it is not presumed to qualify
 under that permission. The shared HIGH/OPEN record
 `se:GAP-CS2023-RIGHTS-CLEARANCE` is included verbatim across SEK-06A, SEK-06B
-and SEK-06C. No rights clearance is claimed. This four-path correction
-postdates the prior lane-validation receipt; exact-tip native validation is
-required before review can pass.
+and SEK-06C. No rights clearance is claimed. The four-path correction initially
+postdated the lane-validation receipt above; the receipt was re-run at the
+exact tip `eb32a2e` on 2026-11-06
+(`_tmp/tally-sek06-lanes/validation/06B-bld2/lane-validation.log`) and is
+fully green, including `COUNT_coverage_gaps=4`.

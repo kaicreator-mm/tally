@@ -123,5 +123,7 @@ python <extract-dir>/assemble_and_validate.py <worktree> 06B \
 ```
 
 Validation outputs for this lane are archived outside the repository under
-`_tmp/tally-sek06-lanes/validation/06B/`; key lines are quoted in
+`_tmp/tally-sek06-lanes/validation/06B/` (initial runs) and
+`_tmp/tally-sek06-lanes/validation/06B-bld2/` (exact-tip revalidation after the
+rights-gap fix); key lines are quoted in
 `docs/versions/v2.1.1/methods/observations/SEK-06B.md`.
