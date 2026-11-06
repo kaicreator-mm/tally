@@ -51,7 +51,7 @@ Review source dossiers in `authority/source-reviews/`, then follow each claim to
 
 | Evidence family | Current coverage | Status |
 |---|---|---|
-| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Current PDF states Released August 2026 and prints ISBN 978-0-7695-0000-3; landing page records a 25 September 2025 update (date discrepancy open); native hash pending in #325/PR #326 |
+| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Current PDF states Released August 2026 and prints ISBN 978-0-7695-0000-3; landing page records a 25 September 2025 update (date discrepancy open); native PDF hash verified 2026-11-06 in #325/PR #326 |
 | CS2023 | CS curriculum boundary, nine SE Knowledge Units, explicit cross-KA perspective references | Selected content/locators verified |
 | NIST SP 800-218 v1.1 | Secure-development practice groups, SDLC integration, risk-based applicability and ordering caveat | Selected PDF sections verified |
 | NIST SP 800-218A | AI-model-specific companion profile relationship | Metadata and abstract only |
@@ -62,4 +62,4 @@ The first slice does **not** yet cover authoritative detailed claims for require
 
 ## SWEBOK source identity correction — SEK-02R
 
-The current official PDF title page states “Released August 2026” and its copyright page prints ISBN 978-0-7695-0000-3. The official IEEE landing page separately records a 25 September 2025 update identifying v4.0a; this release-date discrepancy remains open pending clarification. The canonical Source ID remains year-free. Native PDF SHA-256 and byte-size verification is pending; see the SEK-02R source dossier and observation for exact locators and rights boundaries.
+The current official PDF title page states “Released August 2026” and its copyright page prints ISBN 978-0-7695-0000-3. The official IEEE landing page separately records a 25 September 2025 update identifying v4.0a; this release-date discrepancy remains open pending clarification. The canonical Source ID remains year-free. Native PDF SHA-256 and byte-size verification completed 2026-11-06 by independent Exact-SHA review (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511, 6,015,672 bytes); see the SEK-02R source dossier and observation for exact locators and rights boundaries.

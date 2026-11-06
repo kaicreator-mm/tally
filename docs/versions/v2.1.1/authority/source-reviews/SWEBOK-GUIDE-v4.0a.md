@@ -100,7 +100,7 @@ The current official IEEE landing page states additional restrictions on copying
 - Cross-source release metadata: OPEN DISCREPANCY — the official landing page records a 25 September 2025 update while the current PDF title page says Released August 2026.
 - Content: VERIFIED for the introduction, Tables I.1/I.2 and stated scope limitations listed above.
 - Locator: VERIFIED for the listed PDF page indices and printed page labels, including the current title and copyright/ISBN pages.
-- Current official PDF SHA-256 and byte size: PENDING native download verification; do not reuse an older cached-file digest.
+- Current official PDF SHA-256 and byte size: VERIFIED by native download on 2026-11-06 (independent Exact-SHA review; fresh fetch from the official URL) — SHA-256 `0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`, 6,015,672 bytes; the fresh bytes were compared directly against the official URL response and against the retained verification copy, not a cached digest.
 - Claim extraction: separate records in `knowledge/vertical-slice/KNOWLEDGE_RECORDS.yaml`.
 - Human review: PENDING.
 - Acceptance into final corpus: NOT_YET_ACCEPTED.
