@@ -11,6 +11,8 @@
  * may qualify one recorded Start event; Kernel execution admission is separate.
  */
 import {createHash} from 'node:crypto';
+import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+import {terminalEventForReservation} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const SHA=/^[0-9a-f]{40}$/;
@@ -133,5 +135,113 @@ export function createHostSingleWriterClaimController({store,source,publisher,wr
       });
     }catch{return deny('ADMISSION_STORE_OR_SOURCE_UNAVAILABLE');}
   }
-  return Object.freeze({reserveAndPublish});
+  async function terminalizePublishedClaim(request){
+    const unknown=reason=>Object.freeze({status:'UNKNOWN',reason,claimTerminality:'UNKNOWN',
+      authorized:false,admitted:false,taskPass:false,releasePass:false});
+    if(request!==undefined||typeof source.readTerminalizationPreflight!=='function'||
+      typeof source.readTerminalEvent!=='function'||typeof publisher.publishDispatchStateChange!=='function')
+      return unknown('TRUSTED_TERMINAL_HOST_PORTS_REQUIRED');
+    try{
+      const row=await store.get(TARGET.casKey),v=row?.value;
+      // A stranded revision-2 PENDING_GITHUB_TERMINALIZATION reservation (lost
+      // ACK with an absent, incomplete or unavailable first readback) is
+      // recovered ONLY by this strictly read-only reconciliation: complete
+      // native pagination for the exact terminal event, then a public CAS
+      // mustMatchRevision=2 confirm. Never a second POST, reset, delete,
+      // reseed, new Claim or fresh reservation.
+      if(row?.revision===2&&v?.phase==='PENDING_GITHUB_TERMINALIZATION'){
+        if(v.terminalReservationRevision!==2||v.repository!==TARGET.repository||
+          v.issueRef!==TARGET.issueRef||v.sourceSha!==TARGET.sourceSha||v.dispatchId!==TARGET.dispatchId||
+          v.protectedClaimKey!==TARGET.protectedClaimKey||v.generation!==1||v.actorRole!=='builder'||
+          v.operatorKind!=='other'||v.operatorId!=='zcode:candidate-publication:1'||
+          v.writerId!=='tally-host:win32:candidate-publication:1'||v.commentId!==TARGET.claimCommentId||
+          v.commentRef!==TARGET.claimCommentRef||v.terminalWriterId!==writerAuthority.writerId||
+          typeof v.terminalEvidence!=='string'||!v.terminalEvidence||
+          !Number.isFinite(Date.parse(v.terminalOccurredAt)))
+          return unknown('PENDING_TERMINAL_RESERVATION_NOT_EXACT');
+        try{terminalEventForReservation(v,writerAuthority);}
+        catch{return unknown('TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');}
+        let observed;
+        try{observed=await source.readTerminalEvent(v);}
+        catch{return unknown('TERMINAL_READBACK_UNAVAILABLE');}
+        if(observed?.status!=='EXACT'||observed.complete!==true||observed.edited!==false||
+          !Number.isSafeInteger(observed.commentId)||observed.commentId<1||
+          observed.commentRef!==`${TARGET.issueRef}#issuecomment-${observed.commentId}`)
+          return unknown('TERMINAL_READBACK_NOT_VERIFIED');
+        const terminal={...v,phase:'TERMINAL_VERIFIED',
+          terminalCommentId:observed.commentId,terminalCommentRef:observed.commentRef};
+        let finalRevision;
+        try{({revision:finalRevision}=await store.put(TARGET.casKey,terminal,{mustMatchRevision:row.revision}));}
+        catch{return unknown('TERMINAL_CONFIRMATION_AMBIGUOUS');}
+        const final=await store.get(TARGET.casKey);
+        if(final?.revision!==finalRevision||JSON.stringify(final.value)!==JSON.stringify(terminal))
+          return unknown('TERMINAL_FINAL_READBACK_UNVERIFIED');
+        return Object.freeze({status:'RECORDED',reason:'PENDING_RESERVATION_RECONCILED_READ_ONLY',
+          claimTerminality:'VERIFIED',terminalCommentRef:observed.commentRef,
+          authorized:false,admitted:false,taskPass:false,releasePass:false});
+      }
+      if(row?.revision!==1||v?.phase!=='PUBLISHED_VERIFIED'||v.repository!==TARGET.repository||
+        v.issueRef!==TARGET.issueRef||v.sourceSha!==TARGET.sourceSha||v.dispatchId!==TARGET.dispatchId||
+        v.protectedClaimKey!==TARGET.protectedClaimKey||v.generation!==1||v.actorRole!=='builder'||
+        v.operatorKind!=='other'||v.operatorId!=='zcode:candidate-publication:1'||
+        v.writerId!=='tally-host:win32:candidate-publication:1'||v.commentId!==TARGET.claimCommentId||
+        v.commentRef!==TARGET.claimCommentRef)return unknown('TARGET_CLAIM_NOT_EXACT');
+      const facts=await source.readTerminalizationPreflight(row);
+      if(facts?.sourceKind!=='HOST_TERMINALIZATION_PREFLIGHT'||facts.complete!==true||
+        facts.targetRevision!==row.revision||typeof facts.evidence!=='string'||!facts.evidence||
+        !Number.isFinite(Date.parse(facts.occurredAt))||Date.now()-Date.parse(facts.occurredAt)>30000||
+        Date.parse(facts.occurredAt)>Date.now())return unknown('TERMINAL_PREFLIGHT_UNQUALIFIED');
+      const reservation={...v,phase:'PENDING_GITHUB_TERMINALIZATION',
+        terminalWriterId:writerAuthority.writerId,terminalEvidence:facts.evidence,
+        terminalOccurredAt:facts.occurredAt,terminalReservationRevision:row.revision+1};
+      // The complete public terminal event — including its 16,384-character
+      // evidence bound and this same trusted writer identity — must already
+      // be valid BEFORE the first CAS mutation. Oversized or unbound
+      // evidence leaves the Claim row untouched: zero CAS writes, zero POSTs.
+      try{terminalEventForReservation(reservation,writerAuthority);}
+      catch{return unknown('TERMINAL_EVENT_NOT_VALID_BEFORE_RESERVATION');}
+      let revision;
+      try{({revision}=await store.put(TARGET.casKey,reservation,{mustMatchRevision:row.revision}));}
+      catch{return unknown('TERMINAL_RESERVATION_RACE');}
+      const reserved=await store.get(TARGET.casKey);
+      if(revision!==reservation.terminalReservationRevision||reserved?.revision!==revision||
+        JSON.stringify(reserved.value)!==JSON.stringify(reservation))return unknown('TERMINAL_RESERVATION_UNVERIFIED');
+      const recheck=await source.readTerminalizationPreflight(row);
+      if(recheck?.complete!==true||recheck.targetRevision!==row.revision||
+        !Number.isFinite(Date.parse(recheck.occurredAt))||Date.now()-Date.parse(recheck.occurredAt)>30000||
+        Date.parse(recheck.occurredAt)>Date.now()||!facts.fenceId||recheck.fenceId!==facts.fenceId)
+        return unknown('TERMINAL_PREFLIGHT_CHANGED');
+      const beforePost=await store.get(TARGET.casKey);
+      if(beforePost?.revision!==revision||JSON.stringify(beforePost.value)!==JSON.stringify(reservation))
+        return unknown('TERMINAL_RESERVATION_CHANGED');
+      let ack=null;
+      try{ack=await publisher.publishDispatchStateChange(Object.freeze({...reservation}));}
+      catch{ack=null;}
+      const ackValid=Number.isSafeInteger(ack?.commentId)&&ack.commentId>=1&&
+        ack.commentRef===`${TARGET.issueRef}#issuecomment-${ack.commentId}`;
+      // An ambiguous POST (publisher throw or unusable ACK) is resolved ONLY
+      // by this read-only exact native event readback — never by a second
+      // POST. Absent, incomplete, duplicate, edited or conflicting readback
+      // keeps the durable reservation PENDING at its reserved revision.
+      const observed=await source.readTerminalEvent(reservation);
+      if(observed?.status!=='EXACT'||observed.complete!==true||observed.edited!==false||
+        !Number.isSafeInteger(observed.commentId)||observed.commentId<1||
+        observed.commentRef!==`${TARGET.issueRef}#issuecomment-${observed.commentId}`)
+        return unknown(ackValid?'TERMINAL_READBACK_UNVERIFIED':'TERMINAL_PUBLICATION_AMBIGUOUS');
+      if(ackValid&&(observed.commentId!==ack.commentId||
+        observed.commentRef!==ack.commentRef))
+        return unknown('TERMINAL_READBACK_UNVERIFIED');
+      const terminal={...reservation,phase:'TERMINAL_VERIFIED',
+        terminalCommentId:observed.commentId,terminalCommentRef:observed.commentRef};
+      let finalRevision;
+      try{({revision:finalRevision}=await store.put(TARGET.casKey,terminal,{mustMatchRevision:revision}));}
+      catch{return unknown('TERMINAL_CONFIRMATION_AMBIGUOUS');}
+      const final=await store.get(TARGET.casKey);
+      if(final?.revision!==finalRevision||JSON.stringify(final.value)!==JSON.stringify(terminal))
+        return unknown('TERMINAL_FINAL_READBACK_UNVERIFIED');
+      return Object.freeze({status:'RECORDED',claimTerminality:'VERIFIED',
+        terminalCommentRef:observed.commentRef,authorized:false,admitted:false,taskPass:false,releasePass:false});
+    }catch{return unknown('TERMINAL_HOST_SOURCE_UNAVAILABLE');}
+  }
+  return Object.freeze({reserveAndPublish,terminalizePublishedClaim});
 }

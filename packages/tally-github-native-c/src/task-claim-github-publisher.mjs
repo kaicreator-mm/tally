@@ -10,6 +10,7 @@
  */
 import {stringify} from 'yaml';
 import {createHash} from 'node:crypto';
+import {TARGET} from './task-dispatch-state-events.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const GH_LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
@@ -22,6 +23,30 @@ const marker='<!-- ads:github -->';
 const hash=x=>createHash('sha256').update(x,'utf8').digest('hex');
 const forbidden=()=>new Error('HOST_EXCLUSIVE_GITHUB_PUBLISHER_REQUIRED');
 const ambiguous=()=>new Error('NATIVE_GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
+
+/** Values here are selected by the Host, never by an Agent or HTTP caller. */
+export function terminalEventForReservation(reservation,writerAuthority){
+  if(writerAuthority?.mode!=='SINGLE_WRITER_ADMISSION'||writerAuthority?.exclusiveHostControl!==true||
+    writerAuthority?.repository!==TARGET.repository||reservation?.phase!=='PENDING_GITHUB_TERMINALIZATION'||
+    reservation.repository!==TARGET.repository||reservation.issueRef!==TARGET.issueRef||
+    reservation.sourceSha!==TARGET.sourceSha||reservation.dispatchId!==TARGET.dispatchId||
+    reservation.protectedClaimKey!==TARGET.protectedClaimKey||reservation.generation!==1||
+    reservation.commentId!==TARGET.claimCommentId||reservation.commentRef!==TARGET.claimCommentRef||
+    reservation.terminalReservationRevision!==2||
+    reservation.terminalWriterId!==writerAuthority?.writerId||
+    !ID.test(writerAuthority?.writerId??'')||!GH_LOGIN.test(writerAuthority?.githubWriterLogin??'')||
+    typeof reservation.terminalEvidence!=='string'||reservation.terminalEvidence.length<1||reservation.terminalEvidence.length>16384||
+    typeof reservation.terminalOccurredAt!=='string'||!Number.isFinite(Date.parse(reservation.terminalOccurredAt)))
+    throw new Error('HOST_TERMINAL_RESERVATION_NOT_BOUND');
+  return Object.freeze({schema:'ai-dev/event-v2',event:'DISPATCH_STATE_CHANGED',
+    actor_role:'scheduler',operator_kind:'other',operator_id:writerAuthority.writerId,
+    transport_actor:writerAuthority.githubWriterLogin,task:'#203',issue:'#203',sha:TARGET.sourceSha,
+    dispatch_id:TARGET.dispatchId,dispatch_state:'DONE',protected_claim_key:TARGET.protectedClaimKey,
+    admission_generation:1,predecessor_claim_comment_id:TARGET.claimCommentId,
+    predecessor_claim_comment_ref:TARGET.claimCommentRef,terminal_reservation_revision:reservation.terminalReservationRevision,
+    reason:'Candidate publication dispatch completed',
+    occurred_at:reservation.terminalOccurredAt,evidence:reservation.terminalEvidence});
+}
 
 function requireReservation(i,owner,repo,writerId){
   if(!i||typeof i!=='object'||Array.isArray(i)||
@@ -74,6 +99,8 @@ export function createHostBoundNativeGitHubClaimPublisher({
     throw forbidden();
   const writerId=writerAuthority.writerId;
   const login=writerAuthority.githubWriterLogin;
+  const terminalAuthority=Object.freeze({mode:'SINGLE_WRITER_ADMISSION',exclusiveHostControl:true,
+    repository:owner+'/'+repo,writerId,githubWriterLogin:login});
   async function publishClaim(request){
     const i=requireReservation(request,owner,repo,writerId);
     const issueUrl=i.issueRef;
@@ -109,5 +136,23 @@ export function createHostBoundNativeGitHubClaimPublisher({
       taskPass:false,releasePass:false
     });
   }
-  return Object.freeze({publishClaim});
+  async function publishDispatchStateChange(reservation){
+    const event=terminalEventForReservation(reservation,terminalAuthority);
+    const body=marker+'\n'+String.fromCharCode(96).repeat(3)+'yaml\n'+
+      stringify({schema:'ads/github/v3',kind:'event',data:event}).trimEnd()+
+      '\n'+String.fromCharCode(96).repeat(3)+'\n';
+    const apiIssueUrl='https://api.github.com/repos/kaicreator-mm/tally/issues/203';
+    let response;
+    try{response=await octokit.rest.issues.createComment({owner,repo,issue_number:203,body});}
+    catch{throw ambiguous();}
+    const id=response?.data?.id;
+    if(!Number.isSafeInteger(id)||id<1||!readbackValid(response.data,id,TARGET.issueRef,apiIssueUrl,login,body))throw ambiguous();
+    let reread;
+    try{reread=(await octokit.rest.issues.getComment({owner,repo,comment_id:id}))?.data;}
+    catch{throw ambiguous();}
+    if(!readbackValid(reread,id,TARGET.issueRef,apiIssueUrl,login,body))throw ambiguous();
+    return Object.freeze({commentId:id,commentRef:`${TARGET.issueRef}#issuecomment-${id}`,
+      authorized:false,admitted:false,taskPass:false,releasePass:false});
+  }
+  return Object.freeze({publishClaim,publishDispatchStateChange});
 }
