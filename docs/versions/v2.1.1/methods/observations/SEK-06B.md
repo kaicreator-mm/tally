@@ -115,3 +115,15 @@ All records remain PENDING_REVIEW / EXTRACTED_PENDING_REVIEW pending human revie
 synthesis evidence and the two interpretive edges (DEPENDS_ON, RELATED_TO) are flagged as
 the highest-priority review targets because their inferential content exceeds the
 paraphrase base by design.
+
+
+## Shared CS2023 rights-clearance gap
+
+The CS2023 source registry limits permission to educational materials/programs
+and requires specific permission for other uses. This lane is part of Tally's
+general software-engineering knowledge graph; it is not presumed to qualify
+under that permission. The shared HIGH/OPEN record
+`se:GAP-CS2023-RIGHTS-CLEARANCE` is included verbatim across SEK-06A, SEK-06B
+and SEK-06C. No rights clearance is claimed. This four-path correction
+postdates the prior lane-validation receipt; exact-tip native validation is
+required before review can pass.

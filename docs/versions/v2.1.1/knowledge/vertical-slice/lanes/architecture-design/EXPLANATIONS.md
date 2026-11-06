@@ -137,3 +137,8 @@ separation-of-concerns concept and principle respectively — both marked as lan
 interpretation in their rationales. DERIVED_FROM ties the anti-pattern to its synthesis
 evidence, and RELATED_TO links the API-contract and traceability claims with the
 interpretive character of that link stated in its qualifier.
+
+- `se:GAP-CS2023-RIGHTS-CLEARANCE` — HIGH/OPEN and shared across all
+  three SEK-06 lanes. The registered educational-material/program permission
+  is not presumed to cover Tally's general engineering knowledge graph; no
+  public/commercial rights clearance is claimed.

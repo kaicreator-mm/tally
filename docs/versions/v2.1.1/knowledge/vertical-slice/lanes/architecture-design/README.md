@@ -61,10 +61,13 @@ the distinction has no admissible source in this corpus.
 
 ## Rights and access restrictions
 
-- CS2023 permission scope is educational-material and program development; the corpus
-  stores bibliographic metadata, exact locators and concise original paraphrases only, with
-  no substantial report text. Verbatim reuse is limited to short topic titles needed for
-  locator anchoring.
+- CS2023 permission scope is educational-material and program development; Tally's
+  general software-engineering knowledge graph is **not presumed** to qualify for that
+  permission. No rights clearance is inferred. This lane stores bibliographic metadata,
+  exact locators and concise original paraphrases only, but that handling does not itself
+  establish permission. Obtain a documented rights determination/specific permission
+  before public redistribution or commercial product embedding. Verbatim reuse is limited
+  to short topic titles needed for locator anchoring.
 - The ISO AI/ML-use notice bars prompting ISO content; ISO records remain bibliographic
   only, and no ISO text was extracted or retained.
 
@@ -84,7 +87,7 @@ the distinction has no admissible source in this corpus.
 | patterns | 1 | layered architecture (context required and provided) |
 | anti_patterns | 1 | inconsistent API surface (derived from SYNTHESIS evidence) |
 | decision_models | 1 | design-tradeoff evaluation |
-| coverage_gaps | 3 | ISO 42010 metadata-only; SWEBOK hold; real-case evidence |
+| coverage_gaps | 4 | ISO 42010 metadata-only; SWEBOK hold; real-case evidence; shared CS2023 rights-clearance gap (HIGH/OPEN) |
 | relationship_assertions | 13 | 6 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 RELATED_TO |
 
 No record is ACCEPTED. All knowledge records are PENDING_REVIEW (shared domain/view are
@@ -102,6 +105,8 @@ real-case evidence source is admitted.
 3. `se:GAP-ARC-DESIGN-REAL-CASES` (SOURCE_GAP, MEDIUM, OPEN) — no real architecture or
    design case evidence source admitted; Pattern/AntiPattern records are curriculum- and
    synthesis-grounded, never case-grounded.
+4. `se:GAP-CS2023-RIGHTS-CLEARANCE` (REVIEW_GAP, HIGH, OPEN) — CS2023 educational
+   permission is not presumed to cover Tally's general engineering knowledge graph.
 
 ## Reproduction
 
