@@ -51,7 +51,7 @@ Review source dossiers in `authority/source-reviews/`, then follow each claim to
 
 | Evidence family | Current coverage | Status |
 |---|---|---|
-| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | SEK-02R proposes Released Sept 2025 and removes the unverified ISBN/DOI; native verification is pending in #325/PR #326 |
+| SWEBOK v4.0a | Discipline taxonomy, related-discipline boundary, Guide scope and applicability limitations | Current PDF states Released August 2026 and prints ISBN 978-0-7695-0000-3; landing page records a 25 September 2025 update (date discrepancy open); native hash pending in #325/PR #326 |
 | CS2023 | CS curriculum boundary, nine SE Knowledge Units, explicit cross-KA perspective references | Selected content/locators verified |
 | NIST SP 800-218 v1.1 | Secure-development practice groups, SDLC integration, risk-based applicability and ordering caveat | Selected PDF sections verified |
 | NIST SP 800-218A | AI-model-specific companion profile relationship | Metadata and abstract only |
@@ -62,4 +62,4 @@ The first slice does **not** yet cover authoritative detailed claims for require
 
 ## SWEBOK source identity correction — SEK-02R
 
-The current official IEEE PDF and landing page identify SWEBOK v4.0a as released/updated in September 2025. Earlier repository claims of “Released August 2026” and ISBN 978-0-7695-0000-3 are superseded; the current PDF copyright page does not display that ISBN. The canonical Source ID remains year-free. Do not reuse the superseded metadata. See the SEK-02R source dossier and observation for the exact official locators and rights boundary.
+The current official PDF title page states “Released August 2026” and its copyright page prints ISBN 978-0-7695-0000-3. The official IEEE landing page separately records a 25 September 2025 update identifying v4.0a; this release-date discrepancy remains open pending clarification. The canonical Source ID remains year-free. Native PDF SHA-256 and byte-size verification is pending; see the SEK-02R source dossier and observation for exact locators and rights boundaries.
