@@ -1,0 +1,945 @@
+# SEK-06B lane records — Software Engineering architecture and design vertical slice.
+# Lane file, not a graph root: SEK-08 single-writer integration assembles the full graph.
+# Shared snippets (domain, view, three locators) are copied verbatim from
+# _tmp/tally-sek06-lanes/extract/shared-snippets.yaml and must not be reworded here.
+lane_id: SEK-06B-ARCHITECTURE-DESIGN-LANE-0.1.0
+title: Software Engineering architecture and design lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-06"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: cf2dbc845bfc2dcbc110ed52e240e79953a4cba9
+parent_issue: "#323"
+scope_note: >-
+  Architecture and design depth slice for the CS2023 Software Engineering knowledge unit
+  SE-Design: Software Design. Curriculum-scoped evidence only: CS2023 (SE-SRC-CS2023) is the
+  sole admitted content source. SWEBOK v4.0a is on source-identity hold (#325) and
+  ISO/IEC/IEEE 42010:2022 is bibliographic-metadata-only, so neither is cited as verified
+  content. Architecture design and detailed design are distinguished only as curriculum
+  abstraction levels (CS Core 1a); architecture description as a normative concept is out
+  of scope and recorded as a coverage gap.
+collections:
+  domains:
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending SEK-02R
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+      evidence_refs: []
+  taxonomy_views:
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+      evidence_refs: []
+  taxonomy_nodes:
+    - id: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: SE-Design Software Design CS2023 knowledge unit
+      definition: >-
+        The Software Design knowledge unit of the CS2023 Software Engineering area. Per the
+        SE Overview, while Product Requirements focus on the user-facing functionality of a
+        software system, Software Design focuses on the engineer-facing design of internal
+        software components, spanning concerns as large as software architecture and
+        choices as small as API design. Its topics cover system design principles, software
+        architecture, programming in the large vs small and code quality indicators
+        (CS Core), API design principles, data invariants, design models, data design and
+        requirement traceability (KA Core), plus non-core design modeling, design-quality
+        measurement, secure design principles and design-tradeoff evaluation.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-ARC-0009
+        - se:EVD-ARC-0011
+  source_locators:
+    - id: se:LOC-CS2023-SE-OVERVIEW
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge PDF page indices 174-176; Software Engineering (SE), Overview"
+      verified_content_summary: "SE curriculum framing: nine knowledge units; Product Requirements and Software Design unit purposes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table"
+      verified_content_summary: "Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-BOK-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page index 0; front-matter Knowledge Areas table"
+      verified_content_summary: "17 knowledge areas; Software Engineering is one area with nine knowledge units."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-SE-DESIGN-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Design: Software Design' (CS Core topics 1-4, KA Core topics 5-9, Non-core topics 10-13); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "SE-Design topics: system design principles (abstraction levels, separation of concerns, information hiding, coupling and cohesion); design paradigms and standard architectures; component boundaries and dependencies; programming in the large vs small; code smells vs correctness; API design principles; data invariants; structural and behavioral models; data design; requirement traceability; non-core design modeling, design-quality measurement, secure design principles and design-tradeoff evaluation."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+  evidence_records:
+    - id: se:EVD-ARC-0001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design lists levels of abstraction as a system design topic in CS Core
+        topic 1, giving architectural design and detailed design as its examples.
+      context: "CS Core topic 1a of the SE-Design knowledge unit, heading-anchored extraction."
+      method: "Verbatim topic text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Architectural design and detailed design appear as example levels of abstraction within one design topic."
+      limitations:
+        - Example-level curriculum listing; the topic text does not define the levels or their boundary criteria.
+        - Curriculum scope only; not a normative distinction from ISO/IEC/IEEE 42010, which remains metadata-only.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design lists separation of concerns, information hiding, and coupling and
+        cohesion as system design topics (CS Core topics 1b-1d), and its CS Core illustrative
+        learning outcomes include adapting a flawed system design to better follow principles
+        such as separation of concerns or information hiding.
+      context: "System design principles topics and CS Core illustrative learning outcome 3 of the SE-Design unit."
+      method: "Verbatim topic and learning-outcome text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "The named principles are taught as adaptable design guidance, not merely as vocabulary."
+      limitations:
+        - The curriculum lists the principles by name; no detailed treatment of each principle was extracted.
+        - Curriculum scope only; professional-consensus status is not asserted (SWEBOK hold).
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design CS Core topic 2a presents design paradigms, listing top-down
+        functional decomposition/layered design, data-oriented architecture,
+        object-oriented analysis and design, and event-driven design.
+      context: "Design paradigms sub-topic of the software architecture topic (CS Core topic 2a.i-2a.iv)."
+      method: "Verbatim topic text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Four design paradigms are enumerated for the software architecture topic."
+      limitations:
+        - Enumeration only; the curriculum text extracted for this lane does not elaborate each paradigm.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design CS Core topic 2b lists standard architectures, citing client-server
+        and microservice architectures including REST discussions, n-layer,
+        pipes-and-filters, and Model View Controller, and CS Core topic 2c lists identifying
+        component boundaries and dependencies; the CS Core illustrative learning outcomes
+        include identifying the standard software architecture of a given high-level design
+        and identifying the dependencies among a set of software components in an
+        architectural design.
+      context: "Standard architectures and component-boundary topics plus CS Core illustrative learning outcomes 1 and 4."
+      method: "Verbatim topic and learning-outcome text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Standard architecture recognition and component dependency identification are named CS Core competencies."
+      limitations:
+        - The curriculum names the architectures and outcomes without elaborating their properties.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design covers API design principles in KA Core topic 5: consistency, where
+        consistent APIs are easier to learn and less error-prone and consistency is both
+        internal (between different portions of the API) and external (following common API
+        patterns); composability; documenting contracts, where API operations should
+        describe their effect on the system but not generally their implementation,
+        including preconditions, postconditions and invariants; expandability; and error
+        reporting, where errors should be clear, predictable and actionable, input that does
+        not match the contract should produce an error, and errors that can be reliably
+        managed without reporting should be managed. A KA Core illustrative learning outcome
+        asks students to design an API for a single component of a large software system,
+        including identifying and documenting each operation's invariants, contract and
+        error conditions.
+      context: "KA Core topic 5 with sub-topics 5a-5e and KA Core illustrative learning outcome 5 of the SE-Design unit."
+      method: "Verbatim topic and learning-outcome text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "API contract documentation and error-reporting expectations are stated as KA Core curriculum content."
+      limitations:
+        - Curriculum teaching guidance; not professional API-design consensus or a standard.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design lists requirement traceability as KA Core topic 9, defined as
+        understanding which requirements are satisfied by a design; a KA Core illustrative
+        learning outcome asks students to identify which requirements are satisfied by a
+        provided software design.
+      context: "KA Core topic 9 and illustrative learning outcome 9 of the SE-Design unit."
+      method: "Verbatim topic and learning-outcome text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Requirement-to-design satisfaction tracing is named a KA Core competency."
+      limitations:
+        - The curriculum states the competency; it does not prescribe a tracing method or tool.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design places principles of secure design and coding in Non-core topic 12,
+        listing the principle of least privilege, the principle of fail-safe defaults and
+        the principle of psychological acceptability, and places evaluating design
+        tradeoffs in Non-core topic 13, giving efficiency vs reliability and security vs
+        usability as example tradeoffs.
+      context: "Non-core topics 12 and 13 of the SE-Design unit."
+      method: "Verbatim topic text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Secure-design principles and design-tradeoff evaluation are curriculum content, but outside the SE core."
+      limitations:
+        - Non-core status means these topics are optional depth in the CS2023 curriculum model.
+        - The secure-design principles are named without elaboration in the extracted text.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 SE-Design CS Core topic 3 lists programming in the large vs programming in
+        the small, and CS Core topic 4 lists code smells and other indications of code
+        quality, distinct from correctness.
+      context: "CS Core topics 3 and 4 of the SE-Design unit."
+      method: "Verbatim topic text from the 2026-11-06 full-text extraction of the official Body of Knowledge PDF."
+      result: "Scale-of-programming and code-quality-vs-correctness distinctions are CS Core content."
+      limitations:
+        - Topic titles only; no elaboration was extracted.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-OVERVIEW
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Software Engineering Overview describes Software Design as the
+        engineer-facing design of a software system's internal components, in contrast to
+        the user-facing functionality focus of Product Requirements, spanning concerns as
+        large as software architecture and choices as small as API design.
+      context: "Overview item 4 of the Software Engineering knowledge area, registry-verified locator."
+      method: "Registry-verified Overview locator (PDF page indices 174-176) inspected in the 2026-11-06 full-text extraction."
+      result: "The Software Design knowledge unit is scoped from architecture-level to API-level internal design."
+      limitations:
+        - Overview framing of the curriculum unit; not a professional definition of software design.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-DESIGN-KU
+      evidence_type: SYNTHESIS
+      statement: >-
+        Synthesis for anti-pattern formulation: because CS2023 SE-Design states that
+        consistent APIs are easier to learn and less error-prone and that API consistency is
+        both internal (between different portions of the API) and external (following common
+        API patterns), an API surface whose portions follow divergent conventions or that
+        ignores common external API patterns negates those stated benefits and is formulated
+        here as an inconsistent API surface anti-pattern.
+      context: "Lane-level synthesis derived only from CS2023 SE-Design KA Core topic 5a sub-topics."
+      method: "Inversion of the curriculum's stated consistency benefits into a counterproductive-structure formulation."
+      result: "An anti-pattern shape (inconsistent API surface) is derived without any external case evidence."
+      limitations:
+        - Synthesis of a curriculum teaching principle into an anti-pattern shape; CS2023 does not itself name or describe an anti-pattern.
+        - No real-world case evidence is admitted; see the architecture and design real-case coverage gap.
+        - "Inferred attribution: the anti-pattern's symptoms/causes/consequences are interpretations, not extracted source statements."
+      uncertainty:
+        - Whether reviewers accept deriving an anti-pattern record from a single curriculum principle is an open review question.
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-ARC-0011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Software Engineering Core Hours table allocates the Software Design
+        knowledge unit 1 CS Core hour and 4 + 2 (DM) KA Core hours.
+      context: "Core Hours table row for Software Design, registry-verified locator."
+      method: "Registry-verified Core Hours table locator (PDF page indices 176-177) inspected in the 2026-11-06 full-text extraction."
+      result: "Software Design carries a small CS Core allocation and the largest KA Core allocation among the SE units in the extracted table."
+      limitations:
+        - Curriculum design fact; core hours are not a measure of professional-domain importance.
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+  concepts:
+    - id: se:CON-ARC-SEPARATION-OF-CONCERNS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Separation of concerns
+      definition: >-
+        A system design concept taught in CS2023 SE-Design: a software system is divided so
+        that distinct parts address distinct concerns. The curriculum lists it among system
+        design principles (CS Core topic 1b) and expects students to adapt a flawed design
+        to better follow it.
+      concept_kind: ABSTRACTION
+      synonyms: []
+      scope_description: "CS2023 SE-Design curriculum scope; not asserted as professional consensus."
+      applicability: "Software design education context within the CS2023 curriculum model."
+      evidence_refs:
+        - se:EVD-ARC-0002
+      claim_refs: []
+    - id: se:CON-ARC-COUPLING-COHESION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Coupling and cohesion
+      definition: >-
+        A paired design-property topic named in CS2023 SE-Design CS Core topic 1d: coupling
+        concerns the interdependence between software components and cohesion concerns how
+        strongly the elements of one component belong together. The extracted curriculum
+        text lists the topic by name among system design principles without elaborating the
+        definitions, so the property gloss here is a conventional reading, not extracted
+        source text.
+      concept_kind: PROPERTY
+      synonyms: []
+      scope_description: "CS2023 SE-Design curriculum scope; name-level curriculum anchor with lane-provided property gloss."
+      applicability: "Software design education context within the CS2023 curriculum model."
+      evidence_refs:
+        - se:EVD-ARC-0002
+      claim_refs: []
+    - id: se:CON-ARC-DESIGN-ABSTRACTION-LEVELS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Design abstraction levels
+      definition: >-
+        The levels-of-abstraction structure of software design presented in CS2023 SE-Design
+        CS Core topic 1a, exemplified by architectural design versus detailed design. The SE
+        Overview anchors the same span from large design concerns such as software
+        architecture to small-scale design choices like API design. This is a curriculum
+        boundary concept; architecture description as an ISO/IEC/IEEE 42010 concept is not
+        represented and remains a coverage gap.
+      concept_kind: BOUNDARY_CONCEPT
+      synonyms: []
+      scope_description: "CS2023 SE-Design curriculum scope; distinguishes abstraction levels, not standardized architecture-description concepts."
+      applicability: "Use to keep architecture-level and detailed-design statements at distinct abstraction levels in curriculum-scoped records."
+      evidence_refs:
+        - se:EVD-ARC-0001
+        - se:EVD-ARC-0009
+      claim_refs:
+        - se:CLM-ARC-0001
+  knowledge_claims:
+    - id: se:CLM-ARC-0001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        Within the CS2023 SE-Design knowledge unit, architectural design and detailed design
+        are presented as distinct levels of abstraction in software design.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE-Design CS Core topic 1a curriculum scope."
+      applicability: "Supports keeping architecture-design and detailed-design statements at distinct abstraction levels in curriculum-scoped knowledge; not a normative definition."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - Example-level curriculum listing; boundary criteria between the levels are not given.
+        - Architecture description as a normative ISO 42010 concept is unavailable in this corpus and is not claimed.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0001
+        - se:EVD-ARC-0009
+      review_status: PENDING
+    - id: se:CLM-ARC-0002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 SE-Design enumerates four design paradigms: top-down functional
+        decomposition/layered design, data-oriented architecture, object-oriented analysis
+        and design, and event-driven design.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "CS2023 SE-Design CS Core topic 2a curriculum enumeration."
+      applicability: "Use as the curriculum's paradigm list; not a claim that these four exhaust professional design paradigms."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - Enumeration only; the extracted text does not elaborate each paradigm.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0003
+      review_status: PENDING
+    - id: se:CLM-ARC-0003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 SE-Design enumerates standard architectures: client-server and microservice
+        architectures including REST discussions, n-layer, pipes-and-filters, and Model View
+        Controller.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "CS2023 SE-Design CS Core topic 2b curriculum enumeration."
+      applicability: "Use as the curriculum's example set; not a claim that these exhaust standard architectures."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - The examples are introduced with 'e.g.' in the source, marking them as illustrative rather than exhaustive.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0004
+      review_status: PENDING
+    - id: se:CLM-ARC-0004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 SE-Design teaches that API contracts should document each operation's effect
+        on the system rather than generally its implementation, state preconditions,
+        postconditions and invariants, and report errors that are clear, predictable and
+        actionable, producing an error for input that does not match the contract.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Design KA Core topics 5c and 5e curriculum scope."
+      applicability: "Curriculum teaching guidance for API design; not professional consensus or a standard."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - Curriculum statement of expected practice; effectiveness in industry is not evidenced here.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0005
+      review_status: PENDING
+    - id: se:CLM-ARC-0005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 SE-Design includes requirement traceability, understood as identifying which
+        requirements are satisfied by a design, as a KA Core competency.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Design KA Core topic 9 curriculum scope."
+      applicability: "Curriculum competency statement; no tracing method or tool is prescribed."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - The curriculum names the competency without prescribing how tracing is performed.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0006
+      review_status: PENDING
+    - id: se:CLM-ARC-0006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        The CS2023 Core Hours table allocates the Software Design knowledge unit 1 CS Core
+        hour and 4 + 2 (DM) KA Core hours.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "CS2023 Software Engineering Core Hours table, registry-verified locator."
+      applicability: "Curriculum-weight fact; use for curriculum analysis, not professional importance ranking."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - Core hours are curriculum design facts for the 2023 edition, not a measure of topic importance.
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-ARC-0011
+      review_status: PENDING
+  principles:
+    - id: se:PRI-ARC-SEPARATION-OF-CONCERNS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Separation of concerns as a guiding design principle
+      statement: >-
+        A software design should be divided so that distinct parts address distinct
+        concerns, and a design that violates this should be adapted toward it.
+      rationale: >-
+        CS2023 SE-Design lists separation of concerns among system design principles (CS
+        Core topic 1b) and its CS Core illustrative learning outcome 3 expects students to
+        adapt a flawed system design to better follow principles such as separation of
+        concerns or information hiding.
+      scope_description: "CS2023 SE-Design curriculum scope; curriculum-taught guidance, not professional consensus."
+      applicability: "Software design education and curriculum-scoped design reasoning."
+      exceptions:
+        - "The curriculum does not state that separation of concerns always dominates other goals; design-tradeoff evaluation is a separate Non-core topic (13)."
+      limitations:
+        - Name-level curriculum anchor; the extracted text provides no detailed treatment of the principle.
+        - Not a universal prescription; SWEBOK professional-consensus status is unavailable under the source-identity hold.
+      evidence_refs:
+        - se:EVD-ARC-0002
+      claim_refs: []
+  practices:
+    - id: se:PRA-ARC-BOUNDARY-IDENTIFICATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Identifying component boundaries and dependencies
+      intent: >-
+        Identify the component boundaries and the dependency relationships among components
+        in an architectural design.
+      description: >-
+        Work from an architectural design description to enumerate components, mark the
+        boundaries between them, and identify which components depend on which. CS2023
+        SE-Design lists this as CS Core topic 2c and its CS Core learning outcome 4 expects
+        students to identify the dependencies among a set of software components in an
+        architectural design.
+      preconditions:
+        - "An architectural design description at a suitable abstraction level exists."
+        - "Components are identifiable as design-level entities (not yet implementation modules)."
+      steps:
+        - "Enumerate the components visible in the design description."
+        - "Mark the boundary of each component: what it owns and what lies outside it."
+        - "Identify dependencies among the components (learning outcome 4)."
+        - "Record the boundary and dependency decisions for review."
+      expected_outcomes:
+        - "A documented list of component boundaries and inter-component dependencies."
+        - "Dependencies are explicit enough to support later design-impact analysis."
+      risks:
+        - "Boundaries drawn without regard to concerns may couple unrelated responsibilities."
+        - "Dependencies inferred from implementation details rather than the architectural design may overstate coupling."
+      scope_description: "CS2023 SE-Design curriculum scope (CS Core topics 2c and learning outcome 4)."
+      applicability: "Architectural-design-level analysis in a curriculum or educational context."
+      evidence_refs:
+        - se:EVD-ARC-0004
+        - se:EVD-ARC-0002
+      claim_refs:
+        - se:CLM-ARC-0003
+    - id: se:PRA-ARC-API-CONTRACT-DOCUMENTATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Documenting API contracts and error conditions
+      intent: >-
+        Document each API operation's contract and error conditions so callers can use the
+        operation without knowing its implementation.
+      description: >-
+        For each API operation, describe its effect on the system rather than generally its
+        implementation; state preconditions, postconditions and invariants; keep error
+        reporting clear, predictable and actionable; produce an error for input that does
+        not match the contract; and manage without reporting only those errors that can be
+        reliably managed. CS2023 SE-Design KA Core topic 5 and learning outcome 5 anchor
+        this practice.
+      preconditions:
+        - "An API surface with identified operations exists."
+        - "Each operation's valid input domain can be characterized."
+      steps:
+        - "For each operation, write its effect-on-system description and avoid documenting internal implementation."
+        - "State preconditions, postconditions and invariants for the operation."
+        - "Define error reports to be clear, predictable and actionable."
+        - "Ensure input that does not match the contract produces an error; reliably manageable errors may be managed without reporting."
+      expected_outcomes:
+        - "Each operation carries a documented contract (effect, preconditions, postconditions, invariants) and error conditions."
+        - "Callers can distinguish contract-matching from contract-violating input."
+      risks:
+        - "Documenting implementation details locks callers to internals and hurts expandability."
+        - "Silently absorbing contract-violating input hides defects, contrary to the curriculum's error-reporting expectation."
+      scope_description: "CS2023 SE-Design curriculum scope (KA Core topic 5, learning outcome 5)."
+      applicability: "API design in a curriculum or educational context; not a professional standard."
+      evidence_refs:
+        - se:EVD-ARC-0005
+      claim_refs:
+        - se:CLM-ARC-0004
+  patterns:
+    - id: se:PAT-ARC-LAYERED-ARCHITECTURE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Layered architecture
+      problem: >-
+        A system must be organized so that responsibilities at different levels of
+        abstraction can be described and reasoned about separately.
+      context: >-
+        Software architecture design as framed by CS2023 SE-Design: top-down functional
+        decomposition/layered design is listed as a design paradigm (CS Core topic 2a.i)
+        and n-layer is listed among the standard architectures (CS Core topic 2b). The
+        curriculum anchors the pattern at the architecture abstraction level, distinct from
+        detailed design.
+      forces:
+        - "Separation of concerns across levels of abstraction (CS Core topic 1b)."
+        - "Component boundaries and dependencies must be identifiable (CS Core topic 2c)."
+      solution: >-
+        Organize the system as an ordered set of layers in which each layer addresses a
+        level of abstraction and depends on the layers below it, following the layered
+        design paradigm named by the curriculum.
+      consequences:
+        - "The curriculum lists layered design as one paradigm among four and n-layer as one standard architecture; it does not elaborate consequences, so none are asserted beyond that framing."
+      tradeoffs:
+        - "Design tradeoffs such as efficiency vs reliability are evaluated separately (Non-core topic 13); the curriculum attributes no specific tradeoffs to layered design."
+      scope_description: "CS2023 SE-Design curriculum scope; pattern shape assembled from curriculum topic names plus boundary-concept reasoning."
+      evidence_refs:
+        - se:EVD-ARC-0003
+        - se:EVD-ARC-0004
+      case_refs: []
+  anti_patterns:
+    - id: se:ANT-ARC-INCONSISTENT-API-SURFACE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Inconsistent API surface
+      symptoms:
+        - "Analogous operations in different portions of an API follow divergent conventions."
+        - "The API ignores common external API patterns that its users already know."
+        - "Callers must relearn conventions for each portion of the API and make avoidable mistakes."
+      causes:
+        - "API portions designed or evolved independently without a shared consistency review."
+        - "No external-pattern baseline was adopted when the API surface was defined."
+      consequences:
+        - "The benefits the curriculum attributes to consistency - being easier to learn and less error-prone - are forfeited."
+      remediation: >-
+        Apply API design consistency: align conventions across internal portions of the API
+        and follow common external API patterns, per CS2023 SE-Design KA Core topic 5a.
+      scope_description: "CS2023 SE-Design curriculum scope; anti-pattern shape is a synthesis of the curriculum's consistency principle, not a curriculum-named anti-pattern."
+      evidence_refs:
+        - se:EVD-ARC-0010
+      case_refs: []
+  decision_models:
+    - id: se:DM-ARC-DESIGN-TRADEOFF-EVALUATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      decision_question: >-
+        When two design goals conflict (for example efficiency vs reliability or security
+        vs usability), how should a design decision be evaluated and recorded?
+      options:
+        - "Prioritize the first quality goal of the conflicting pair."
+        - "Prioritize the second quality goal of the conflicting pair."
+        - "Adopt an intermediate design that partially satisfies both goals."
+      criteria:
+        - "Efficiency"
+        - "Reliability"
+        - "Security"
+        - "Usability"
+      constraints:
+        - "The example tradeoff pairs and quality goals are limited to those named in CS2023 SE-Design Non-core topic 13."
+        - "Design-tradeoff evaluation is Non-core curriculum content in CS2023."
+      procedure: >-
+        Identify the conflicting design goals; state each option's effect on the named
+        criteria; record the chosen tradeoff and its rationale; and record which
+        requirements remain satisfied by the chosen design, per the requirement-traceability
+        competency (KA Core topic 9).
+      tradeoffs:
+        - "The curriculum's example pairs are efficiency vs reliability and security vs usability; other pairs are outside the extracted scope."
+      scope_description: "CS2023 SE-Design curriculum scope (Non-core topic 13 with KA Core topic 9); option scaffolding is lane-level structure, not curriculum content."
+      evidence_refs:
+        - se:EVD-ARC-0007
+        - se:EVD-ARC-0006
+      claim_refs:
+        - se:CLM-ARC-0005
+  coverage_gaps:
+    - id: se:GAP-ARC-ISO42010-ARCH-DESCRIPTION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Architecture description concept unavailable under ISO metadata-only restriction
+      target_scope_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      gap_kind: SOURCE_GAP
+      description: >-
+        ISO/IEC/IEEE 42010:2022 (Software, systems and enterprise - architecture
+        description) is admitted to the corpus only as bibliographic metadata
+        (ACCESS_RESTRICTED / METADATA_ONLY under the ISO AI/ML-use notice). The normative
+        concept of an architecture description therefore cannot be cited, and the
+        three-way distinction between architecture description, architecture design and
+        detailed design is supported on the curriculum anchor alone: CS2023 SE-Design CS
+        Core 1a distinguishes architectural design from detailed design as abstraction
+        levels, while architecture description as a standardized artifact concept remains
+        unavailable.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: >-
+        No claim about architecture description as a standardized concept may be made or
+        inferred from the standard's title; the architecture-description layer of the
+        distinction stays unsourced.
+      resolution_notes:
+        - "A permitted human-access review procedure for the standard would be required before any clause-level claim."
+      evidence_refs: []
+    - id: se:GAP-ARC-SWEBOK-DESIGN-CONSENSUS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Professional architecture and design consensus unavailable under SWEBOK hold
+      target_scope_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      gap_kind: SOURCE_GAP
+      description: >-
+        SWEBOK Guide v4.0a is under source-identity hold (SEK-02R, #325 unmerged), so its
+        software design and software architecture knowledge areas cannot be cited as
+        verified content. This lane's design knowledge is therefore curriculum-scoped
+        (CS2023) only, and no curriculum statement may be promoted to professional
+        consensus.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Principles, practices and patterns in this lane carry curriculum-scope qualifiers;
+        a professional-consensus comparison layer is missing until the hold is released.
+      resolution_notes:
+        - "Revisit after SEK-02R #325 merges and SWEBOK locators become citable."
+      evidence_refs: []
+    - id: se:GAP-ARC-DESIGN-REAL-CASES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: No real architecture or design case evidence source admitted
+      target_scope_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      gap_kind: SOURCE_GAP
+      description: >-
+        No admitted source provides real architecture or design cases, incidents or
+        postmortems. This lane therefore creates no Case or Counterexample records; its
+        Pattern and AntiPattern records rest on curriculum evidence plus one declared
+        synthesis, not on observed engineering cases.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern consequences and anti-pattern symptoms remain unvalidated against real
+        occurrences; ILLUSTRATED_BY edges to real cases cannot be authored.
+      resolution_notes:
+        - "Identify and admit a rights-cleared case source (for example postmortems or published case studies) before claiming case-grounded validation."
+      evidence_refs: []
+  relationship_assertions:
+    - id: se:REL-ARC-0001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0001
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0001
+      qualifiers: []
+      context: "Claim-to-evidence support within the CS2023 SE-Design curriculum scope."
+      rationale: "The claim restates the extracted CS Core topic 1a text anchored at the heading-verified SE-Design locator."
+      evidence_refs: []
+    - id: se:REL-ARC-0002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0002
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0003
+      qualifiers: []
+      context: "Claim-to-evidence support within the CS2023 SE-Design curriculum scope."
+      rationale: "The paradigm enumeration claim restates the extracted CS Core topic 2a sub-list."
+      evidence_refs: []
+    - id: se:REL-ARC-0003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0003
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0004
+      qualifiers: []
+      context: "Claim-to-evidence support within the CS2023 SE-Design curriculum scope."
+      rationale: "The standard-architectures enumeration claim restates the extracted CS Core topic 2b example list."
+      evidence_refs: []
+    - id: se:REL-ARC-0004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0004
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0005
+      qualifiers: []
+      context: "Claim-to-evidence support within the CS2023 SE-Design curriculum scope."
+      rationale: "The API contract practice claim restates the extracted KA Core topic 5c and 5e sub-topics."
+      evidence_refs: []
+    - id: se:REL-ARC-0005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0005
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0006
+      qualifiers: []
+      context: "Claim-to-evidence support within the CS2023 SE-Design curriculum scope."
+      rationale: "The requirement-traceability claim restates the extracted KA Core topic 9 and learning outcome 9."
+      evidence_refs: []
+    - id: se:REL-ARC-0006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0006
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-ARC-0011
+      qualifiers: []
+      context: "Claim-to-evidence support for a registry-verified curriculum-weight fact."
+      rationale: "The core-hours claim restates the Software Design row of the registry-verified Core Hours table."
+      evidence_refs: []
+    - id: se:REL-ARC-0007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0001
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      qualifiers:
+        - "scope: CS2023 SE-Design knowledge unit curriculum scope only"
+        - "not a professional-domain completeness claim"
+      context: "The abstraction-levels definition claim applies within the SE-Design knowledge unit node."
+      rationale: "The claim is extracted from and scoped to the CS Core topic 1a text of this knowledge unit."
+      evidence_refs:
+        - se:EVD-ARC-0001
+        - se:EVD-ARC-0009
+    - id: se:REL-ARC-0008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-ARC-API-CONTRACT-DOCUMENTATION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-SOFTWARE-DESIGN
+      qualifiers:
+        - "scope: CS2023 SE-Design KA Core topic 5 API design principles"
+        - "curriculum-recommended practice, not professional consensus"
+      context: "The API contract documentation practice applies within the SE-Design knowledge unit node."
+      rationale: "The practice operationalizes KA Core topic 5 sub-topics 5c and 5e of this knowledge unit."
+      evidence_refs:
+        - se:EVD-ARC-0005
+    - id: se:REL-ARC-0009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRI-ARC-SEPARATION-OF-CONCERNS
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-ARC-0007
+      qualifiers:
+        - "the curriculum treats design-tradeoff evaluation as a separate Non-core topic, so the principle is not presented as always dominant"
+        - "scope: CS2023 SE-Design curriculum"
+      context: "The separation-of-concerns principle's applicability is qualified by the curriculum's tradeoff-evaluation topic."
+      rationale: >-
+        Non-core topic 13 (efficiency vs reliability, security vs usability) shows the
+        curriculum expects design goals to be weighed rather than any single principle to
+        dominate.
+      evidence_refs: []
+    - id: se:REL-ARC-0010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PAT-ARC-LAYERED-ARCHITECTURE
+      predicate: DEPENDS_ON
+      object_ref: se:CON-ARC-SEPARATION-OF-CONCERNS
+      qualifiers: []
+      context: "The layered architecture pattern depends on the separation-of-concerns concept within curriculum-scoped design reasoning."
+      rationale: >-
+        Layered design appears in the same CS Core topic family (2a) that lists separation
+        of concerns (1b) among system design principles; the dependency is a lane-level
+        structural interpretation, not a curriculum-stated dependency.
+      evidence_refs:
+        - se:EVD-ARC-0003
+        - se:EVD-ARC-0002
+    - id: se:REL-ARC-0011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-ARC-BOUNDARY-IDENTIFICATION
+      predicate: IMPLEMENTS
+      object_ref: se:PRI-ARC-SEPARATION-OF-CONCERNS
+      qualifiers:
+        - "operationalizes the principle by locating component boundaries and dependencies"
+        - "curriculum-scope implementation of a curriculum-taught principle"
+      context: "The boundary-identification practice implements the separation-of-concerns principle."
+      rationale: >-
+        Marking which concerns belong inside each component boundary is how the principle
+        is put to work at the architecture level; both records cite the same curriculum
+        topic family (CS Core topics 1b-1d and 2c).
+      evidence_refs:
+        - se:EVD-ARC-0004
+        - se:EVD-ARC-0002
+    - id: se:REL-ARC-0012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:ANT-ARC-INCONSISTENT-API-SURFACE
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-ARC-0010
+      qualifiers: []
+      context: "The inconsistent API surface anti-pattern is derived from the declared synthesis evidence."
+      rationale: >-
+        The anti-pattern's formulation inverts the curriculum's stated consistency benefits;
+        the derivation and its inferred-attribute limitations are recorded in the synthesis
+        evidence.
+      evidence_refs:
+        - se:EVD-ARC-0010
+    - id: se:REL-ARC-0013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-ARC-0004
+      predicate: RELATED_TO
+      object_ref: se:CLM-ARC-0005
+      qualifiers:
+        - "interpretive lane-level link: documented contracts describe system effects, which is the kind of description requirement traceability works from"
+        - "both claims are scoped to CS2023 SE-Design KA Core topics"
+      context: "API contract documentation and requirement traceability are related curriculum competencies."
+      rationale: >-
+        KA Core topic 5c has operations describe their effect on the system, and KA Core
+        topic 9 asks which requirements a design satisfies; effect descriptions are the
+        natural anchor for such tracing. The connection itself is lane-level interpretation.
+      evidence_refs:
+        - se:EVD-ARC-0005
+        - se:EVD-ARC-0006
