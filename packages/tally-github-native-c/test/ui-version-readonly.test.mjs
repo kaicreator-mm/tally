@@ -19,10 +19,17 @@ const native=(deps={},branchSha=sha,issueMap={})=>({
       getBranch:async()=>({data:{commit:{sha:branchSha}}}),
       getCommit:async()=>({data:{sha}}),
     },
-    issues:{get:async({issue_number})=>({data:issueMap[issue_number]??issue(issue_number)})},
+    issues:{
+      get:async({issue_number})=>({
+        data:issueMap[issue_number]??issue(issue_number)}),
+    },
   },
-  paginate:{iterator:async function*(_route,{issue_number}){
-    yield {data:deps[issue_number]??[]};
+  paginate:{iterator:async function*(route,params={}){
+    if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+      yield {data:deps[params.issue_number]??[]};
+      return;
+    }
+    throw new Error('UNEXPECTED_PAGINATION_ROUTE');
   }},
 });
 const sourceReader=({issueNumber,expectedSourceSha})=>({
@@ -109,10 +116,10 @@ test('non-Task, duplicated issue roster or missing native C claim facts are deni
     taskIssueNumbers:[1],workItemReader:sourceReader});
   assert.equal(r.connected,false);
   assert.equal((await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1,1],workItemReader:sourceReader})
+    ...args(native({},sha,{})),taskIssueNumbers:[1,1],workItemReader:sourceReader})
     ).connected,false);
   const fake=await readUiNativeVersionFromClient({
-    ...args(native()),taskIssueNumbers:[1],
+    ...args(native({},sha,{})),taskIssueNumbers:[1],
     workItemReader:()=>({...sourceReader({issueNumber:1,expectedSourceSha:sha}),
       authorized:true})});
   assert.equal(fake.connected,false);
@@ -156,6 +163,104 @@ test('dependency open/closed state drift with unchanged count is rejected',async
   assert.equal(r.connected,false);
   assert.equal(r.reason,'NATIVE_DEPENDENCY_COUNT_DRIFT');
 });
+
+// Scripted client: gets(number,call) is the call-th issues.get for that
+// selected frozen Task (call 0 = initial snapshot, call 1 = coherence recheck).
+const scriptedNative=(gets,deps={})=>{
+  const getCalls=new Map();
+  return {getCalls,
+    rest:{
+      repos:{
+        getBranch:async()=>({data:{commit:{sha}}}),
+        getCommit:async()=>({data:{sha}}),
+      },
+      issues:{
+        get:async({issue_number})=>{
+          const call=getCalls.get(issue_number)??0;
+          getCalls.set(issue_number,call+1);
+          return {data:gets(issue_number,call)};
+        },
+      },
+    },
+    paginate:{iterator:async function*(route,params={}){
+      if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+        yield {data:deps[params.issue_number]??[]};
+        return;
+      }
+      throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+    }},
+  };
+};
+
+test('Task Issue metadata mutated between the first GET and the nested WorkItem observation is denied',async()=>{
+  for(const changes of [
+    {title:'Task #1 renamed mid-observation'},
+    {updated_at:'2026-11-03T12:00:00Z'},
+    {labels:[{name:'type:task'},{name:'state:claimed'},{name:'priority:P1'}]},
+  ]){
+    let armed=false;
+    const mutatingReader=observed=>{
+      armed=true;
+      return sourceReader(observed);
+    };
+    const r=await readUiNativeVersionFromClient({
+      ...args(scriptedNative(
+        (n,call)=>armed&&call>0?issue(n,changes):issue(n))),
+      taskIssueNumbers:[1,2],workItemReader:mutatingReader});
+    assert.deepEqual(r,{connected:false,
+      reason:'NATIVE_TASK_ROSTER_DRIFT_DURING_OBSERVATION'});
+  }
+});
+
+test('unrelated repository Task Issues from another version do not contaminate the selected frozen roster',async()=>{
+  const c=native();
+  const otherVersionTask=issue(300,{labels:[
+    {name:'type:task'},{name:'state:ready'},{name:'priority:P1'},
+    {name:'version:v2.1.1'}
+  ]});
+  c.rest.issues.listForRepo=async()=>({data:[issue(1),issue(2),otherVersionTask]});
+  c.paginate.iterator=async function*(route,params={}){
+    if(route===c.rest.issues.listForRepo){
+      yield {data:[issue(1),issue(2),otherVersionTask]};
+      return;
+    }
+    if(route==='GET /repos/{owner}/{repo}/issues/{issue_number}/dependencies/blocked_by'){
+      yield {data:[]};
+      return;
+    }
+    throw new Error('UNEXPECTED_PAGINATION_ROUTE');
+  };
+  const r=await readUiNativeVersionFromClient({...args(c),
+    taskIssueNumbers:[1,2],workItemReader:sourceReader});
+  assert.equal(r.connected,true);
+  assert.deepEqual(r.tasks.map(task=>task.id),['1','2']);
+});
+
+test('a missing selected frozen Task Issue fails closed',async()=>{
+  const c=native();
+  const get=c.rest.issues.get;
+  c.rest.issues.get=async args=>args.issue_number===2
+    ?{data:undefined}:get(args);
+  const r=await readUiNativeVersionFromClient({...args(c),
+    taskIssueNumbers:[1,2],workItemReader:sourceReader});
+  assert.deepEqual(r,{connected:false,reason:'NATIVE_ISSUE_IDENTITY_UNVERIFIED'});
+});
+
+test('stable unchanged roster still returns connected with exact metadata',async()=>{
+  const {getCalls,...octo}=scriptedNative(n=>issue(n));
+  const r=await readUiNativeVersionFromClient({
+    ...args(octo),taskIssueNumbers:[1,2],workItemReader:sourceReader});
+  assert.equal(r.connected,true);
+  assert.equal(r.source.sourceSha,sha);
+  assert.deepEqual(r.tasks.map(t=>[t.id,t.title,t.updatedAt,t.issueState,
+    t.status,t.severity,t.claimState,t.dependencyState]),
+    [['1','Task #1','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR'],
+     ['2','Task #2','2026-11-01T00:00:00Z','open','open','P1','NOT_VERIFIED','CLEAR']]);
+  assert.equal(r.rosterCoverage,'UNVERIFIED');
+  // The coherence recheck re-read every selected frozen Task Issue.
+  assert.deepEqual([...getCalls.entries()].sort((a,b)=>a[0]-b[0]),[[1,2],[2,2]]);
+});
+
 
 const requirements=[{number:77,kind:'requirement',parent:null},
   {number:78,kind:'story',parent:77}];
