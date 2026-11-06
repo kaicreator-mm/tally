@@ -1849,7 +1849,7 @@
     "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
     "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created.",
     "Re-refreshed all 46 native Task Issue timestamps/states/labels: all 25 open Issues now match current native updatedAt/state/labels; the 21 closed Issues were unchanged since the prior snapshot.",
-    "Exact-body review additionally found write-set collisions: #273 includes four #264 E-only shared files; #274 includes #262's ui-experience-host.mjs; #275 includes #261's Task/Agent UI directories; #276's broad test/*.test.mjs overlaps several active Business task tests. Recorded explicit overlap groups. These Tasks remain PLANNED/non-dispatchable where applicable; narrow write sets before future Claims. Added #203→#276 and #210→#276 as PLANNED only.",
+    "Historical write-set collisions were reconciled in the current live Issue bodies: #273 no longer intersects #264's four E-owned shared paths; #274 no longer intersects #262's `ui-experience-host.mjs`; #275 no longer intersects #261's Task/Agent UI directories. The current exact 66-pair matrix confirms zero pairs for #273×#264, #274×#262 and #275×#261. Preserve the producer/consumer PLANNED edges (#273→#264, #274→#262, #275→#261); these are sequencing dependencies, not current write-set overlaps. The separate #276 broad test-glob hazard remains explicitly tracked and must be narrowed or serialized before future admission. #276 remains non-dispatchable; no native dependency or Claim is created by this correction.",
     "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub.",
     "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
     "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed.",
@@ -2186,7 +2186,7 @@
           "web/v2/journey-view.test.mjs",
           ".woodpecker/v2-alm-workspace.yaml"
         ],
-        "finding": "The five issue bodies repeat the same broad seven-file write set. #197/#198 are not disjoint as written; #199/#200 are Reviewer roles and must be read-only. PR #204/#205 each add only a separate CONCURRENT_A.md/CONCURRENT_B.md evidence file, not those seven implementation files."
+        "finding": "Only #196/#197/#198 are current writable members of this identical seven-path legacy set (three active pairwise overlaps). #199/#200 are Reviewer roles with no write set and remain read-only. PR #204/#205 are evidence-only candidates, not source implementation."
       },
       {
         "id": "LEGACY_INTEGRATION_SHARED_PATHS",
@@ -2264,43 +2264,6 @@
         "finding": "#276's current candidate set includes the two existing source modules and a broad test glob that overlaps #208/#209. #276 remains PLANNED/non-dispatchable, so there is no current concurrent writer; before any future Claim/JIT, narrow the glob to exact F-owned test files or serialize after #208/#209. Record both edges as PLANNED only."
       },
       {
-        "id": "REPLAN_E_SHARED_HOTSPOT_EXCLUSION",
-        "taskIssues": [
-          273,
-          264
-        ],
-        "paths": [
-          "web/v2/serve.mjs",
-          "web/v2/journey-server.mjs",
-          "apps/tally-web/src/app/App.tsx",
-          "apps/tally-web/src/adapters/host.ts"
-        ],
-        "finding": "#273 currently lists four E-exclusive shared files in its candidate write set. #264 is the sole integration writer. #273 must remove these paths before Claim/JIT; it should deliver feature-owned Replan source and let E mount it after completion."
-      },
-      {
-        "id": "EXPERIENCE_PUBLISHER_CONSUMER_SERIALIZATION",
-        "taskIssues": [
-          262,
-          274
-        ],
-        "paths": [
-          "web/v2/ui-experience-host.mjs"
-        ],
-        "finding": "#274 currently lists the C-owned consumer adapter already owned by #262. Keep #274 on the feedback producer/publisher and dedicated publisher Host adapter; #262 remains the sole writer of ui-experience-host.mjs and consumes the publisher after #274. Existing #274→#262 edge is PLANNED only."
-      },
-      {
-        "id": "ATTEMPT_READ_MODEL_UI_CONSUMER_SERIALIZATION",
-        "taskIssues": [
-          261,
-          275
-        ],
-        "paths": [
-          "apps/tally-web/src/features/tasks/**",
-          "apps/tally-web/src/features/agents/**"
-        ],
-        "finding": "#275 currently lists the B-owned Task/Agent UI directories already owned by #261. #275 should own the Business Attempt read model and selected Host adapter; #261 owns UI consumption. Existing #275→#261 edge is PLANNED only."
-      },
-      {
         "id": "F_DOMAIN_DATA_TEST_GLOB_SERIALIZATION",
         "taskIssues": [
           203,
@@ -2315,7 +2278,7 @@
         "paths": [
           "packages/tally-engineering-business/test/*.test.mjs"
         ],
-        "finding": "#276's broad test glob overlaps test files owned by active/pending Business Tasks #203/#208/#209/#210/#219/#273/#275. #276 is PLANNED/non-dispatchable; before Claim/JIT narrow to exact F-owned tests or serialize after all affected owners. Existing dependencies cover some, but #203/#210 edges are added as PLANNED."
+        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 66-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
       },
       {
         "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
