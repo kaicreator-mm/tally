@@ -1,0 +1,124 @@
+# SEK-06C Lane — Software Testing, Verification and Validation
+
+**Lane ID:** `SEK-06C-TESTING-VERIFICATION-LANE-0.1.0`
+**Status:** DRAFT_PENDING_HUMAN_REVIEW
+**Task:** #324 (parent), refs #321, #299
+**Base HEAD:** `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`
+**Created:** 2026-11-06
+
+## Purpose and scope
+
+This lane is the Software Testing, Verification and Validation deep vertical
+slice of the SEK-06 lane family. It is a lane collection file
+(`records.yaml`), not a graph root; SEK-08 single-writer integration assembles
+lanes plus registry-derived Source entities into the full graph.
+
+Two admitted evidence families:
+
+- **CS2023 (`se:SRC-CS2023`) — curriculum authority only.** The
+  `SE-Validation: Software Verification and Validation` knowledge unit
+  (CS Core topics 1-5, KA Core topics 6-9, Non-core topics 10-14) supplies the
+  V&V concept questions, testing objectives, test kinds, DAMP-vs-DRY test
+  style, test planning/coverage dimensions, test development techniques and
+  tooling, development-cycle V&V (pre/post-commit, defect tracking) and
+  domain-specific V&V topics. The `SE-Tools` unit supplies the curriculum
+  placement of testing tools.
+- **NIST SP 800-218 v1.1 (`se:SRC-NIST-SP-800-218-V1-1`) — secure-development
+  cross-cutting source only.** Page-level verified content for PW.7 (code
+  review/analysis), PW.8 (executable code testing) and the RV group
+  (RV.1/RV.2/RV.3), plus the registry-verified Section 1 risk-based adoption
+  guidance that qualifies every NIST-sourced record.
+
+Out of scope by design: SWEBOK v4.0a (hold, #325 not merged); ISO/IEC/IEEE
+29119-2 content (ACCESS_RESTRICTED/METADATA_ONLY); any real engineering case
+or incident content (no empirical source registered — see gaps).
+
+## Authority fit and limitations
+
+- CS2023 is a curriculum framework. Its records here claim curriculum content,
+  never professional-domain completeness, and never professional consensus.
+- NIST SSDF v1.1 is a recommendation framework. Risk, cost, feasibility and
+  applicability govern practice selection; it is not a checklist, and
+  practice/task/example ordering (including Table 1 order) implies no
+  implementation sequence or relative importance. No lane record may be read
+  as a universal mandate or as a prescribed order of work.
+- NIST notional implementation examples (for example the PW.8.2 regression
+  test example) are explicitly neither required nor exhaustive; they ground
+  candidate patterns but were **not** promoted into Case records or mandatory
+  practice claims.
+- Per parent issue #324: nothing in this lane equates executing tests with
+  establishing correctness, or validation with user acceptance. The two
+  conflations are named and rejected in `se:CON-TVV-VERIFICATION-VALIDATION`,
+  `se:CLM-TVV-0001` limitations, the coverage-theater anti-pattern causes, and
+  `EXPLANATIONS.md`.
+
+## Rights
+
+- CS2023: educational-material/program permission covers paraphrase in
+  educational-corpus context; this lane stores bibliographic metadata, exact
+  locators and concise original paraphrases only (short verbatim topic titles
+  are retained solely for locator anchoring). Other use requires specific
+  permission (ACM/IEEE-CS/AAAI contacts in the source dossier).
+- NIST SP 800-218 v1.1: US-government publication not subject to US copyright;
+  voluntary use; official citation appreciated
+  (Souppaya, Scarfone, Dodson, NIST SP 800-218, February 2022,
+  DOI 10.6028/NIST.SP.800-218). Concise paraphrase plus locator retained.
+
+## Record counts
+
+| Collection | Count | Highlights |
+|---|---|---|
+| domains | 1 | shared `se:DOMAIN-SOFTWARE-ENGINEERING` |
+| taxonomy_views | 2 | shared `se:VIEW-CS2023-SE`; new `se:VIEW-SSDF-SECURITY` |
+| taxonomy_nodes | 3 | `se:NODE-CS2023-SE-VALIDATION`, `se:NODE-CS2023-SE-TOOLS`, `se:NODE-SSDF-RV` |
+| source_locators | 9 | 3 shared + 2 CS2023 lane + 4 NIST page-level |
+| evidence_records | 15 | 14 DIRECT_SOURCE_PARAPHRASE + 1 marked SYNTHESIS (`se:EVD-TVV-0014`) |
+| concepts | 2 | V&V boundary concept; test coverage |
+| knowledge_claims | 7 | all `review_status: PENDING` |
+| principles | 1 | DAMP over DRY in test code |
+| practices | 2 | context-gated executable code testing; defect tracking with reproducibility |
+| patterns | 1 | regression safety net (candidate, no real case) |
+| anti_patterns | 1 | coverage theater (synthesis-derived) |
+| decision_models | 1 | pre-commit vs post-commit test placement |
+| coverage_gaps | 3 | ISO 29119-2 metadata-only; SWEBOK KA5 hold; no empirical cases |
+| relationship_assertions | 20 | 13 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 CROSS_CUTS |
+
+Lifecycle contract: all knowledge records `PROPOSED`/`PENDING_REVIEW`; all
+evidence `EXTRACTED_PENDING_REVIEW`, `synthetic: false`; no `ACCEPTED`
+records; locators `ACTIVE`/`LOCATOR_VERIFIED` per the shared-snippet
+convention. Shared records are byte-identical copies from
+`_tmp/tally-sek06-lanes/extract/shared-snippets.yaml` so SEK-08 can
+deduplicate by canonical ID.
+
+## Known gaps
+
+1. `se:GAP-TVV-ISO-29119-2-METADATA-ONLY` — no normative test-process standard
+   content is citable; curriculum-to-ISO alignment unverified.
+2. `se:GAP-TVV-SWEBOK-KA5-HOLD` — professional BOK reconciliation deferred
+   until #325 merges.
+3. `se:GAP-TVV-NO-EMPIRICAL-CASES` — no Case/Counterexample records; pattern
+   and anti-pattern records lack real-world case grounding.
+
+Also unpopulated: SSDF PO/PS groups (the security view is PARTIAL by design).
+
+## Reproduction
+
+```bash
+VENV=/c/xDev/kAiCreator/_tmp/tally-i305-builder-zcode/venv
+cd /c/xDev/kAiCreator/tally/tally-i324-zcode/docs/versions/v2.1.1/knowledge/model \
+  && $VENV/Scripts/python.exe validate_knowledge_graph.py --self-test | tail -1
+# expected: SELF_TESTS=66/66
+
+$VENV/Scripts/python.exe \
+  /c/xDev/kAiCreator/_tmp/tally-sek06-lanes/scripts/assemble_and_validate.py \
+  /c/xDev/kAiCreator/tally/tally-i324-zcode 06C \
+  /c/xDev/kAiCreator/tally/tally-i324-zcode/docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/records.yaml \
+  /c/xDev/kAiCreator/_tmp/tally-sek06-lanes/validation/06C
+# expected: COUNT_* PASS, GRAPH_VALIDATION=PASS, NO_ACCEPTED_RECORDS=PASS,
+#           LINKML_INSTANCE_VALIDATION=PASS, LANE_VALIDATION=PASS
+```
+
+Validation outputs land in `_tmp/tally-sek06-lanes/validation/06C` (outside
+the repo write set). Narrative interpretation lives in `EXPLANATIONS.md`;
+research method and anchor provenance live in
+`docs/versions/v2.1.1/methods/observations/SEK-06C.md`.

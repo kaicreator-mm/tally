@@ -1,0 +1,1263 @@
+# SEK-06C lane records — Software Testing, Verification and Validation.
+#
+# This file is a lane collection, not a graph root. SEK-08 single-writer
+# integration assembles lanes plus registry-derived Source entities into the
+# full graph. Shared records below (se:DOMAIN-SOFTWARE-ENGINEERING,
+# se:VIEW-CS2023-SE, se:LOC-CS2023-SE-OVERVIEW, se:LOC-CS2023-SE-KU-TABLE,
+# se:LOC-CS2023-BOK-TABLE) are copied byte-identically from
+# _tmp/tally-sek06-lanes/extract/shared-snippets.yaml for deduplication.
+#
+# Lifecycle contract: every knowledge record is PROPOSED/PENDING_REVIEW and
+# every evidence record is EXTRACTED_PENDING_REVIEW; nothing is ACCEPTED.
+
+lane_id: SEK-06C-TESTING-VERIFICATION-LANE-0.1.0
+title: Software Engineering testing, verification and validation lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-06"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: cf2dbc845bfc2dcbc110ed52e240e79953a4cba9
+parent_issue: "#324"
+scope_note: >-
+  Deep vertical slice over software testing, verification and validation.
+  Evidence base: CS2023 SE-Validation knowledge unit (curriculum authority for
+  the V&V topics; heading-anchored locator, page anchors only where the source
+  registry already verified them) and NIST SP 800-218 v1.1 PW.7/PW.8 and the
+  RV group (secure-development cross-cutting source; page-level verified
+  locators from the locally downloaded official PDF). SWEBOK v4.0a remains on
+  hold (#325 not merged). No record asserts that executing tests establishes
+  correctness or that validation equals acceptance.
+
+collections:
+
+  # ---------------------------------------------------------------- domains
+  domains:
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending SEK-02R
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - SWEBOK v4.0a locators and claims are not cited as verified until SEK-02R #325 merges.
+      evidence_refs: []
+
+  # --------------------------------------------------------- taxonomy_views
+  taxonomy_views:
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is deferred until SEK-02R source reconciliation merges.
+      evidence_refs: []
+    - id: se:VIEW-SSDF-SECURITY
+      record_version: "0.1.0"
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: NIST SSDF v1.1 secure development view
+      view_kind: SECURITY
+      purpose: >-
+        Represent the NIST SP 800-218 v1.1 Secure Software Development Framework
+        practice groups as a cross-cutting classification lens that intersects
+        software engineering lifecycle topics rather than forming a standalone
+        discipline taxonomy.
+      coverage_state: PARTIAL
+      limitations:
+        - Advisory framework, not a universal security taxonomy; risk, cost, feasibility and applicability govern practice selection.
+        - Practice, task and example ordering in the SSDF does not imply implementation sequence or relative importance.
+        - Only the RV group and practices PW.7/PW.8 are populated by this lane; the PO and PS groups remain unmapped.
+      evidence_refs: []
+
+  # ---------------------------------------------------------- taxonomy_nodes
+  taxonomy_nodes:
+    - id: se:NODE-CS2023-SE-VALIDATION
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: CS2023 SE-Validation Software Verification and Validation unit
+      definition: >-
+        The CS2023 Software Engineering knowledge unit "SE-Validation: Software
+        Verification and Validation", carrying 1 CS Core hour and 3 KA Core hours
+        and covering verification/validation concepts, testing objectives and test
+        kinds, test planning and coverage, test development, V&V in the development
+        cycle, domain-specific V&V challenges, and V&V tooling topics.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-TVV-0001
+        - se:EVD-TVV-0002
+    - id: se:NODE-CS2023-SE-TOOLS
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: CS2023 SE-Tools Tools and Environments unit
+      definition: >-
+        The CS2023 Software Engineering knowledge unit "SE-Tools: Tools and
+        Environments", which includes testing tools alongside software
+        configuration management/version control, release management and process
+        automation/continuous integration; the companion SE-Validation topics
+        treat test tooling as spanning code coverage, static analysis, fuzzing
+        and dynamic analysis.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-TVV-0013
+        - se:EVD-TVV-0007
+    - id: se:NODE-SSDF-RV
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: SSDF Respond to Vulnerabilities group
+      definition: >-
+        The "Respond to Vulnerabilities" (RV) practice group of NIST SP 800-218
+        v1.1, comprising three practices: RV.1 identify and confirm vulnerabilities
+        on an ongoing basis, RV.2 assess, prioritize and remediate vulnerabilities,
+        and RV.3 analyze vulnerabilities to identify their root causes.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-SSDF-SECURITY
+      evidence_refs:
+        - se:EVD-TVV-0011
+
+  # --------------------------------------------------------- source_locators
+  source_locators:
+    # -- shared registry-anchored locators (byte-identical across SEK-06 lanes)
+    - id: se:LOC-CS2023-SE-OVERVIEW
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge PDF page indices 174-176; Software Engineering (SE), Overview"
+      verified_content_summary: "SE curriculum framing: nine knowledge units; Product Requirements and Software Design unit purposes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table"
+      verified_content_summary: "Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-BOK-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page index 0; front-matter Knowledge Areas table"
+      verified_content_summary: "17 knowledge areas; Software Engineering is one area with nine knowledge units."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # -- lane-specific CS2023 locators
+    - id: se:LOC-CS2023-SE-VALIDATION-KU
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation' (CS Core topics 1-5, KA Core topics 6-9, Non-core topics 10-14); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "V&V concept questions, testing objectives, test kinds, DAMP vs DRY, test planning and coverage dimensions, test development techniques and tooling, V&V in the development cycle, domain-specific V&V and tooling topics with illustrative learning outcomes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-CS2023-SE-TOOLS
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge PDF page index 178 (one-based PDF page 179); SE-Tools: Tools and Environments"
+      verified_content_summary: "SE-Tools unit includes software configuration management/version control, release management, testing tools, and process automation/continuous integration."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # -- NIST SP 800-218 v1.1 page-level locators verified from the locally downloaded official PDF
+    - id: se:LOC-NIST-218-PW8
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 PDF page index 23 (one-based 24); printed page 15; Section 2, Table 1 practice PW.8 and tasks PW.8.1-PW.8.2"
+      verified_content_summary: "PW.8 test executable code to identify vulnerabilities; PW.8.1 decide whether executable code testing is needed and which types; PW.8.2 scope, design, perform and document testing with recorded, triaged issues; notional examples include regression tests for reported vulnerabilities and fuzz testing."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-NIST-218-PW7
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 PDF page index 22 (one-based 23); printed page 14; Section 2, Table 1 practice PW.7 and tasks PW.7.1-PW.7.2"
+      verified_content_summary: "PW.7 review and/or analyze human-readable code; PW.7.1 determine whether code review and/or code analysis should be used, with methods chosen based on the stage of the software; PW.7.2 perform per secure coding standards and record and triage discovered issues."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-NIST-218-RV
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 PDF page indices 24-26 (one-based 25-27); printed pages 16-18; Section 2, Table 1 practices RV.1-RV.3"
+      verified_content_summary: "RV group heading and practices: RV.1 ongoing identification and confirmation of vulnerabilities (RV.1.2 cross-references PW.7 and PW.8), RV.2 risk-based assessment, prioritization and remediation, RV.3 root-cause analysis of vulnerabilities."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    - id: se:LOC-NIST-218-RISK
+      record_version: "0.1.0"
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 PDF page index 11; printed page 3; Section 1"
+      verified_content_summary: "Registry-verified risk-based adoption guidance: risk, cost, feasibility and applicability should inform practice selection; practices are customizable and the framework is not a checklist."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+
+  # -------------------------------------------------------- evidence_records
+  evidence_records:
+    # CS2023 — registry-verified overview and core-hours anchors
+    - id: se:EVD-TVV-0001
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-OVERVIEW
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Software Engineering knowledge area comprises nine knowledge
+        units, one of which is Software Verification and Validation; the area
+        overview frames software engineering around the multi-person construction
+        of multi-version software that must keep working over its expected
+        lifespan.
+      context: "Registry-verified SE Overview framing for the curriculum area that contains the V&V unit."
+      method: "Registry dossier inspection of the official Body of Knowledge PDF SE Overview section."
+      limitations:
+        - "Curriculum framing, not a professional-domain completeness claim."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0002
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Core Hours table allocates 1 CS Core hour and 3 KA Core hours
+        to the Software Verification and Validation knowledge unit within the
+        Software Engineering area.
+      context: "Registry-verified Core Hours row for the V&V unit."
+      method: "Registry dossier inspection of the Core Hours table."
+      limitations:
+        - "Core hours measure curriculum emphasis, not discipline weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # CS2023 — SE-Validation KU topics (heading-anchored locator)
+    - id: se:EVD-TVV-0003
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS Core topic 1 of the SE-Validation unit distinguishes verification
+        ("Are we building the thing right?") from validation ("Did we build the
+        right thing?"); illustrative learning outcome 2 expects students to
+        distinguish between program validation and verification.
+      context: "The unit's foundational concept topic and its paired CS Core learning outcome."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "The two-question formulation is a curriculum teaching device; the source does not elaborate when each question is fully answered."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0004
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS Core topic 4 lists unit, integration, validation and system as test
+        kinds; illustrative learning outcome 4 separately asks students to
+        compare and contrast types and levels of testing named regression, unit,
+        integration, systems and acceptance, a list that differs from the
+        topic-4 kinds.
+      context: "Test-kind enumeration in the CS Core topics versus the broader comparison set in the learning outcomes."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "The source presents two non-identical lists without reconciling them; the difference is preserved, not resolved."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0005
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS Core topic 3 identifies five testing objectives: usability,
+        reliability, conformance to specification, performance and security.
+      context: "Testing objectives enumerated in the CS Core topics of the SE-Validation unit."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "A curriculum enumeration, not a claim that these five objectives exhaust all testing goals."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0006
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS Core topic 2 motivates testing with the question of whether a
+        component remains functional as the code evolves.
+      context: "The unit's stated rationale for why testing matters, tied to code evolution rather than one-shot correctness."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "The topic states the motivation as a question; it does not quantify defect-prevention effect."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0007
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        KA Core topic 6 presents test coverage as spanning test matrices, code
+        coverage (how much of the code is tested) and environment coverage (how
+        many hardware architectures, operating systems, browsers and similar
+        environments are tested); KA Core topic 7 covers opaque-box (previously
+        black-box) and transparent-box (previously white-box) testing techniques
+        and test tooling including code coverage tooling, static analysis and
+        fuzzing.
+      context: "Test planning and test development topics of the SE-Validation unit."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "Coverage dimensions are curriculum topics, not a measurement standard."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0008
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS Core topic 5 states a stylistic difference between tests and
+        production code, framed as DAMP versus DRY: more duplication is
+        warranted in test code.
+      context: "Test-code style topic in the CS Core of the SE-Validation unit."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "The source states the rule without elaborating rationale, exceptions or scope limits."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0009
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        KA Core topic 8 covers verification and validation in the development
+        cycle through code reviews, test automation including automation of
+        tooling, pre-commit and post-commit testing, tradeoffs between test
+        coverage and the throughput/latency of testing, and defect tracking and
+        prioritization including reproducibility of reported defects;
+        illustrative learning outcomes 14 and 15 ask students to explain the
+        roles, pros and cons of pre-commit versus post-commit testing and to
+        discuss the coverage versus throughput/latency tradeoff and its impact
+        on verification.
+      context: "Development-cycle embedding of V&V activities in the SE-Validation unit."
+      method: "Full-text extraction of the official Body of Knowledge PDF on 2026-11-06; heading-anchored topic text."
+      limitations:
+        - "The tradeoff is presented qualitatively; no quantitative thresholds are given."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # NIST SP 800-218 v1.1 — page-level verified anchors
+    - id: se:EVD-TVV-0010
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-NIST-218-PW8
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SSDF v1.1 task PW.8.1 directs determining whether executable code
+        testing should be performed to find vulnerabilities not identified by
+        previous reviews, analysis or testing and, if so, which types of testing
+        should be used; task PW.8.2 directs scoping the testing, designing the
+        tests, performing the testing and documenting the results, including
+        recording and triaging all discovered issues and recommended remediations
+        in the development team's workflow or issue tracking system.
+      context: "Secure-development practice PW.8 (test executable code) and its two tasks; executable code includes binaries, directly executed bytecode and source code."
+      method: "Page-level inspection of the locally downloaded official NIST PDF (SHA-256 recorded in SEK-06C observation); verbatim task text anchored at printed page 15."
+      result: >-
+        Notional implementation examples include choosing testing methods based
+        on the stage of the software, incorporating tests for previously
+        reported vulnerabilities into the project's test suite to ensure errors
+        are not reintroduced, and using fuzz testing tools to find issues with
+        input handling.
+      limitations:
+        - "Recommendation-framework content: practice selection is governed by risk, cost, feasibility and applicability."
+        - "Notional examples are explicitly neither required nor exhaustive."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0011
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-NIST-218-RV
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The Respond to Vulnerabilities (RV) group of NIST SSDF v1.1 comprises
+        three practices: RV.1 identify and confirm vulnerabilities on an ongoing
+        basis, with task RV.1.2 reviewing, analyzing and/or testing the
+        software's code to identify or confirm previously undetected
+        vulnerabilities and explicitly cross-referencing PW.7 and PW.8; RV.2
+        assess, prioritize and remediate vulnerabilities so that remediation
+        occurs in accordance with risk, with task RV.2.1 analyzing each
+        vulnerability to gather sufficient risk information to plan remediation
+        or another risk response; and RV.3 analyze vulnerabilities to identify
+        their root causes, with task RV.3.1 determining the root causes of each
+        vulnerability.
+      context: "RV group structure spanning ongoing identification, risk-based disposition and root-cause learning."
+      method: "Page-level inspection of the locally downloaded official NIST PDF (SHA-256 recorded in SEK-06C observation); practices anchored at printed pages 16-18."
+      limitations:
+        - "Framework structure of SP 800-218 v1.1 only; not a universal vulnerability-management taxonomy."
+        - "Practice order in the group does not imply implementation sequence."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0012
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-NIST-218-PW7
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SSDF v1.1 practice PW.7 addresses reviewing and/or analyzing
+        human-readable code to identify vulnerabilities before release; task
+        PW.7.1 determines whether code review (a person looks directly at the
+        code) and/or code analysis (tools find issues in code) should be used as
+        defined by the organization, and task PW.7.2 performs the chosen
+        review/analysis based on the organization's secure coding standards and
+        records and triages all discovered issues and recommended remediations
+        in the development team's workflow or issue tracking system.
+      context: "Companion static-side practice to PW.8; its task PW.7.1 carries a notional example of choosing code review and/or analysis methods based on the stage of the software."
+      method: "Page-level inspection of the locally downloaded official NIST PDF (SHA-256 recorded in SEK-06C observation); verbatim task text anchored at printed page 14."
+      limitations:
+        - "Recommendation-framework content; not a mandate for code review in every context."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0013
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-TOOLS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Tools knowledge unit includes testing tools alongside
+        software configuration management and version control, release
+        management, and process automation/continuous integration.
+      context: "Registry-verified fact about the Tools and Environments unit relevant to where testing tooling sits in the curriculum."
+      method: "Registry dossier inspection of the SE-Tools unit section."
+      limitations:
+        - "A curriculum observation; it does not establish that these topics exhaust configuration management or testing operations."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # Lane synthesis (feeds the AntiPattern record; explicitly not source text)
+    - id: se:EVD-TVV-0014
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-CS2023-SE-VALIDATION-KU
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis combining two admitted sources: CS2023 frames test
+        coverage as three dimensions (test matrices, code coverage, environment
+        coverage), lists distinct testing objectives including conformance to
+        specification, and teaches an explicit tradeoff between test coverage
+        and testing throughput/latency; NIST's notional regression-testing
+        example targets specific previously reported vulnerabilities rather than
+        aggregate coverage. On that combined basis, treating a code-coverage
+        percentage as the whole of test coverage, or reading a passing test
+        suite as proof of correctness or product validity, is unsupported by
+        either source.
+      context: "Derived anti-pattern basis for se:ANT-TVV-COVERAGE-THEATER; synthesis of CS2023 SE-Validation topics 3, 6b and 8d with NIST PW.8.2 Example 3."
+      method: "Author synthesis across the two admitted evidence families; no single source states the anti-pattern."
+      limitations:
+        - "Synthesis inference, not a claim printed in any source; flagged for reviewer scrutiny."
+      uncertainty:
+        - "Whether practitioners universally recognize this failure mode was not measured."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-TVV-0015
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      source_locator_ref: se:LOC-NIST-218-RISK
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SP 800-218 v1.1 Section 1 states that SSDF practice selection and
+        implementation effort should consider risk, cost, feasibility and
+        applicability, that practices are to be customized rather than applied
+        uniformly, and that the framework is not intended as a checklist.
+      context: "Registry-verified risk-based adoption guidance qualifying every NIST-sourced practice record in this lane."
+      method: "Registry dossier inspection of Section 1 (PDF page index 11; printed page 3)."
+      limitations:
+        - "The guidance requires organization- and use-case-specific judgment; it does not itself select practices."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  # ---------------------------------------------------------------- concepts
+  concepts:
+    - id: se:CON-TVV-VERIFICATION-VALIDATION
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Verification and validation distinction
+      definition: >-
+        A two-question boundary from the CS2023 SE-Validation unit:
+        verification asks whether the software is being built right, and
+        validation asks whether the right software was built. The two questions
+        target different failure modes (disagreement with a specification versus
+        unsuitability of what was specified) and are answered by different
+        kinds of evidence.
+      concept_kind: BOUNDARY_CONCEPT
+      synonyms:
+        - V&V
+        - verification versus validation
+      scope_description: >-
+        Curriculum boundary concept anchored in CS2023 CS Core topic 1 and
+        learning outcome 2. Two conflations are explicitly out of scope of this
+        concept: executing tests, even passing ones, is not treated as
+        establishing correctness; and validation is not equated with user
+        acceptance or sign-off — the curriculum's own test-kind list names
+        "validation" as a test kind while its learning-outcome list names
+        "acceptance" separately, so the two are not merged here.
+      applicability: "Use whenever testing, review or analysis records are classified, to keep conformance-checking separate from fitness-for-purpose."
+      evidence_refs:
+        - se:EVD-TVV-0003
+        - se:EVD-TVV-0004
+      claim_refs:
+        - se:CLM-TVV-0001
+    - id: se:CON-TVV-TEST-COVERAGE
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Test coverage
+      definition: >-
+        The extent to which a test suite exercises the subject software. CS2023
+        SE-Validation topics decompose it into test matrices, code coverage and
+        environment coverage rather than expressing it as a single percentage;
+        the same curriculum pairs coverage with testing throughput/latency as an
+        explicit engineering tradeoff.
+      concept_kind: MECHANISM
+      synonyms: []
+      scope_description: >-
+        Framing from CS2023 KA Core topics 6b and 8d. Code coverage is one
+        dimension of three, and rising coverage is not treated as a correctness
+        guarantee.
+      applicability: "Use when planning test suites or judging coverage claims; a coverage figure must identify which dimension it measures."
+      evidence_refs:
+        - se:EVD-TVV-0007
+        - se:EVD-TVV-0009
+      claim_refs:
+        - se:CLM-TVV-0006
+
+  # --------------------------------------------------------- knowledge_claims
+  knowledge_claims:
+    - id: se:CLM-TVV-0001
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023's SE-Validation unit defines verification and validation as two
+        distinct questions — verification asks whether the thing is being built
+        right, and validation asks whether the right thing was built — and its
+        learning outcomes expect students to distinguish program validation from
+        verification.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE-Validation knowledge unit, CS Core topic 1 and CS Core learning outcome 2."
+      applicability: "Use as the curriculum's canonical V&V distinction; not a professional-standard definition (SWEBOK hold, ISO 29119 metadata-only)."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The two-question formulation distinguishes conformance-checking from fitness-for-purpose; it does not imply that passing tests proves correctness or that validation equals acceptance."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0003
+      review_status: PENDING
+    - id: se:CLM-TVV-0002
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        Within CS2023's SE-Validation unit, the CS Core test-kinds topic
+        enumerates unit, integration, validation and system testing, while the
+        corresponding learning outcome additionally names regression and
+        acceptance in its comparison set, so the curriculum states its test-kind
+        taxonomy differently in the two places.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "CS2023 SE-Validation CS Core topic 4 versus CS Core illustrative learning outcome 4."
+      applicability: "Use when classifying test kinds by level; cite the specific list being used because the two lists differ."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The source does not reconcile the two lists; this claim preserves, rather than resolves, the difference."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0004
+      review_status: PENDING
+    - id: se:CLM-TVV-0003
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 lists five testing objectives in the SE-Validation unit:
+        usability, reliability, conformance to specification, performance and
+        security.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Validation CS Core topic 3 (curriculum authority only)."
+      applicability: "Use as a curriculum enumeration of why software is tested; not a claim of exhaustiveness across professional practice."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Curriculum enumeration; SWEBOK KA5 remains on hold and ISO 29119-2 content is inaccessible, so no cross-source objective list is asserted."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0005
+      review_status: PENDING
+    - id: se:CLM-TVV-0004
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        NIST SP 800-218 v1.1 recommends (task PW.8.1) first determining whether
+        executable code testing should be performed to find vulnerabilities not
+        identified by previous reviews, analysis or testing and, if so, which
+        testing types to use, and (task PW.8.2) then scoping, designing,
+        performing and documenting the testing while recording and triaging all
+        discovered issues and recommended remediations in the development team's
+        workflow or issue tracking system.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "NIST SP 800-218 v1.1, Section 2 practice PW.8 and tasks PW.8.1-PW.8.2 (secure-development cross-cutting source)."
+      applicability: >-
+        Applies as SSDF v1.1 recommendation content only: risk, cost,
+        feasibility and applicability govern whether and how it is adopted, and
+        the framework is not a checklist.
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Notional implementation examples (regression tests for reported vulnerabilities, fuzz testing) are explicitly neither required nor exhaustive."
+        - "Table 1 task ordering does not imply implementation sequence or relative importance."
+        - "Executing the tests is presented as finding vulnerabilities, not as proving the software correct."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0010
+      review_status: PENDING
+    - id: se:CLM-TVV-0005
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        NIST SP 800-218 v1.1 structures its Respond to Vulnerabilities group as
+        three practices: ongoing identification and confirmation of
+        vulnerabilities (RV.1, whose task RV.1.2 explicitly cross-references
+        PW.7 and PW.8), risk-based assessment, prioritization and remediation
+        (RV.2), and root-cause analysis of vulnerabilities (RV.3).
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "NIST SP 800-218 v1.1 Section 2, RV practice group."
+      applicability: "Describes this framework's grouping only; not a universal vulnerability-management taxonomy."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Group structure does not imply a mandatory identify-then-remediate-then-analyze workflow sequence."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0011
+      review_status: PENDING
+    - id: se:CLM-TVV-0006
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023's SE-Validation KA Core topics frame test coverage as three
+        dimensions: test matrices, code coverage and environment coverage.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Validation KA Core topic 6b (curriculum authority only)."
+      applicability: "Use when planning or auditing test coverage; code coverage alone represents one of the three dimensions."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Qualitative curriculum framing; no quantitative coverage targets are asserted."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0007
+      review_status: PENDING
+    - id: se:CLM-TVV-0007
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      statement: >-
+        CS2023 presents pre-commit and post-commit testing as alternatives with
+        distinct roles, pros and cons, and pairs them with an explicit tradeoff
+        between test coverage and the throughput/latency of testing.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Validation KA Core topics 8c/8d and illustrative learning outcomes 14/15 (curriculum authority only)."
+      applicability: "Use when deciding where tests run in a development workflow; the curriculum frames this as a tradeoff, not a fixed rule."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "No specific gate placement or thresholds are prescribed by the source."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-TVV-0009
+      review_status: PENDING
+
+  # -------------------------------------------------------------- principles
+  principles:
+    - id: se:PRI-TVV-DAMP-OVER-DRY
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: DAMP over DRY in test code
+      statement: >-
+        Test code warrants more duplication than production code: CS2023's
+        SE-Validation unit presents this as the stylistic difference between
+        DAMP and DRY for tests versus production code.
+      rationale: >-
+        The source states the rule as a stylistic difference without elaborating
+        a rationale. The working rationale offered for review is that locally
+        duplicated test material keeps individual tests readable and independent,
+        while abstraction introduced for production maintainability can obscure
+        what a test actually exercises.
+      scope_description: "Test-code style within the CS2023 SE-Validation curriculum context (CS Core topic 5)."
+      applicability: "Apply when writing or reviewing automated tests; it governs test code, not production code."
+      exceptions: []
+      limitations:
+        - "The curriculum states the rule without rationale, exceptions or scope limits; the rationale above is lane interpretation pending review."
+      evidence_refs:
+        - se:EVD-TVV-0008
+      claim_refs: []
+
+  # --------------------------------------------------------------- practices
+  practices:
+    - id: se:PRA-TVV-CONTEXT-GATED-CODE-TESTING
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Context-gated executable code testing
+      intent: >-
+        Decide deliberately whether executable code testing should be performed
+        and which types to use, then scope, design, execute and document that
+        testing with recorded, triaged findings.
+      description: >-
+        Operationalizes NIST SSDF v1.1 PW.8: task PW.8.1 gates the decision
+        (should executable code testing be performed to find vulnerabilities not
+        identified by previous reviews, analysis or testing, and which types),
+        and task PW.8.2 executes the decided testing end-to-end including
+        documentation and issue triage. The parallel PW.7.1 decision for
+        human-readable code review/analysis illustrates the same staged,
+        organization-defined choice.
+      preconditions:
+        - "The stage of the software and the results of previous reviews, analysis or testing are known (PW.8.1 frames the new testing against those findings)."
+        - "The organization has defined how such method choices are made (per PW.7.1's organization-defined determination for review versus analysis)."
+        - "A development workflow or issue tracking system exists for recording and triaging discovered issues."
+      steps:
+        - "Determine whether executable code testing should be performed, and which testing types, informed by the stage of the software (PW.8.1; notional example)."
+        - "Scope the testing (PW.8.2)."
+        - "Design the tests (PW.8.2)."
+        - "Perform the testing (PW.8.2)."
+        - "Document the results, recording and triaging all discovered issues and recommended remediations in the development team's workflow or issue tracking system (PW.8.2)."
+      expected_outcomes:
+        - "An explicit, recorded testing decision rather than testing by default."
+        - "A documented result set with triaged issues and recommended remediations."
+      risks:
+        - "Treating the tasks as a mandatory checklist or fixed sequence contradicts the framework's risk-based, non-checklist guidance."
+        - "Skipping the gating decision wastes testing effort already covered by prior reviews or analysis."
+      scope_description: "Secure-development context per NIST SP 800-218 v1.1 PW.8 (with PW.7.1 as the parallel review/analysis decision)."
+      applicability: "NIST SP 800-218 v1.1 recommendation context; adoption is governed by risk, cost, feasibility and applicability, not presumed universal."
+      evidence_refs:
+        - se:EVD-TVV-0010
+        - se:EVD-TVV-0012
+      claim_refs:
+        - se:CLM-TVV-0004
+    - id: se:PRA-TVV-DEFECT-TRACKING-REPRODUCIBILITY
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Defect tracking with reproducibility
+      intent: >-
+        Keep defects visible and prioritizable by recording them with
+        reproducibility information and triaging recommended remediations in the
+        team's workflow.
+      description: >-
+        Combines CS2023's SE-Validation KA Core topic 8e (defect tracking and
+        prioritization, including reproducibility of reported defects) with the
+        NIST SSDF record-and-triage tasks (PW.7.2, PW.8.2): every discovered
+        issue and its recommended remediation is recorded and triaged in the
+        development team's workflow or issue tracking system.
+      preconditions:
+        - "An issue tracking system or workflow integrated with development exists."
+        - "Defect reports capture enough information to attempt reproduction."
+      steps:
+        - "Record each discovered defect or vulnerability together with its recommended remediation in the team's issue tracking system or workflow."
+        - "Capture reproducibility information for reported defects to support prioritization and later fix verification."
+        - "Triage recorded issues to establish priority."
+      expected_outcomes:
+        - "Prioritized, reproducible defect records that can drive fix work and feed regression-test selection."
+      risks:
+        - "Unreproducible reports weaken prioritization and prevent verifying that a fix works."
+        - "Recording without triage accumulates an unactionable backlog."
+      scope_description: "Curriculum topic (CS2023 SE-Validation KA Core 8e) intersected with NIST SSDF record/triage tasks; secure-development and curriculum framing coexist."
+      applicability: "Applies wherever defects flow into a tracking workflow; the NIST tasks are recommendations, while the curriculum presents the topic as learning content."
+      evidence_refs:
+        - se:EVD-TVV-0009
+        - se:EVD-TVV-0010
+      claim_refs: []
+
+  # ---------------------------------------------------------------- patterns
+  patterns:
+    - id: se:PAT-TVV-REGRESSION-SAFETY-NET
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Regression safety net from reported defects
+      problem: >-
+        Defects that have been fixed can be silently reintroduced as the code
+        evolves, because the knowledge that a specific failure existed is
+        recorded in prose but is not executable.
+      context: >-
+        Evolving software where components must remain functional as the code
+        changes (CS2023 SE-Validation CS Core topic 2), with discovered
+        vulnerabilities and defects recorded and triaged in an issue tracking
+        system (NIST PW.8.2).
+      forces:
+        - "Evolution pressure versus functional stability: testing matters precisely because code keeps changing."
+        - "Issue records hold defect knowledge but cannot fail a build."
+        - "Testing effort is finite and, in the SSDF context, risk-governed."
+      solution: >-
+        Turn recorded defect knowledge into executable checks by incorporating
+        tests for previously reported vulnerabilities or defects into the
+        project's test suite, so that the same errors are not reintroduced
+        (grounded in NIST PW.8.2's notional Example 3, supported by the CS2023
+        evolution rationale for testing).
+      consequences:
+        - "Reintroduction of previously fixed defects is caught automatically by the suite."
+        - "The suite grows with every recorded defect, raising maintenance and runtime cost."
+        - "Effectiveness depends on reproducible defect records and on the tests actually encoding the original failure."
+      tradeoffs:
+        - "Growing suite runtime versus protection against reintroduction; sits inside CS2023's coverage versus throughput/latency tradeoff (KA Core topic 8d)."
+      scope_description: "Cross-source pattern record: NIST notional example plus CS2023 curriculum framing; the NIST example is explicitly neither required nor exhaustive, so this is a candidate pattern pending real-case evidence."
+      evidence_refs:
+        - se:EVD-TVV-0010
+        - se:EVD-TVV-0006
+      case_refs: []
+
+  # ------------------------------------------------------------ anti_patterns
+  anti_patterns:
+    - id: se:ANT-TVV-COVERAGE-THEATER
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: Coverage theater
+      symptoms:
+        - "A code-coverage percentage is pursued as the primary or sole testing goal."
+        - "Test matrices and environment coverage go unexamined while the coverage number rises."
+        - "A green suite is treated as proof of correctness or as completed validation."
+      causes:
+        - "Interpreting one coverage dimension (code coverage) as the whole of test coverage, contrary to the three-dimension framing."
+        - "Equating test execution with correctness, and validation with acceptance or sign-off."
+        - "Incentives anchored to coverage metrics rather than to testing objectives such as conformance to specification."
+      consequences:
+        - "Behavior and environments relevant to defects remain untested despite high coverage numbers."
+        - "False confidence: specification-conformance and fitness-for-purpose problems surface late."
+        - "Testing throughput is consumed by low-value tests that inflate the metric."
+      remediation: >-
+        Measure coverage across all three dimensions (test matrices, code
+        coverage, environment coverage); select test kinds by explicit testing
+        objectives (usability, reliability, conformance to specification,
+        performance, security); treat coverage versus throughput/latency as an
+        explicit tradeoff; and never read an executed, passing suite as a
+        correctness proof or as acceptance.
+      scope_description: "Lane-synthesized anti-pattern over CS2023 SE-Validation coverage/objective/tradeoff topics and NIST's defect-specific regression example; not a named concept in either source."
+      evidence_refs:
+        - se:EVD-TVV-0014
+      case_refs: []
+
+  # ---------------------------------------------------------- decision_models
+  decision_models:
+    - id: se:DM-TVV-PRE-POST-COMMIT-TESTING
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      decision_question: "Should a given automated test run pre-commit, post-commit, or should the suite split across both gates?"
+      options:
+        - "Run the full suite pre-commit as a blocking gate."
+        - "Run the full suite post-commit (for example in continuous integration)."
+        - "Split: fast, high-value checks pre-commit and broader suites post-commit."
+      criteria:
+        - "Test coverage achieved at each gate."
+        - "Throughput and latency of testing at each gate."
+        - "Change risk and blast radius of the affected component."
+        - "Feedback speed for developers."
+      constraints:
+        - "Available test automation and infrastructure."
+        - "Commit cadence and team workflow."
+      procedure: >-
+        Enumerate the suite's tests and their runtimes; classify tests by
+        coverage contribution and risk sensitivity; compare candidate gate
+        placements against the coverage versus throughput/latency tradeoff;
+        assign gates; revisit the assignment when suite runtime or the risk
+        profile changes.
+      tradeoffs:
+        - "Higher pre-commit coverage slows every change; lower pre-commit coverage delays defect discovery."
+        - "Post-commit breadth preserves commit throughput but postpones feedback."
+      scope_description: "Decision framing from CS2023 SE-Validation KA Core topics 8c/8d and illustrative learning outcomes 14/15 (curriculum authority only)."
+      evidence_refs:
+        - se:EVD-TVV-0009
+      claim_refs:
+        - se:CLM-TVV-0007
+
+  # ------------------------------------------------------------ coverage_gaps
+  coverage_gaps:
+    - id: se:GAP-TVV-ISO-29119-2-METADATA-ONLY
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: ISO/IEC/IEEE 29119-2 test-process content inaccessible
+      target_scope_ref: se:NODE-CS2023-SE-VALIDATION
+      gap_kind: SOURCE_GAP
+      description: >-
+        ISO/IEC/IEEE 29119-2:2021 (software testing — test processes) is
+        registered as ACCESS_RESTRICTED/METADATA_ONLY, so no normative
+        test-process terminology or clause content can be cited and the
+        curriculum V&V topics cannot be compared with the standard's test
+        process model.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: "Testing-lane records must not cite ISO 29119-2 clauses; alignment of curriculum test kinds or planning topics with a normative test-process standard remains unverified."
+      resolution_notes:
+        - "Requires a permitted human-access procedure before any clause-level extraction."
+      evidence_refs: []
+    - id: se:GAP-TVV-SWEBOK-KA5-HOLD
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: SWEBOK professional BOK reconciliation on hold
+      target_scope_ref: se:VIEW-CS2023-SE
+      gap_kind: TAXONOMY_GAP
+      description: >-
+        SWEBOK v4.0a is not yet an admitted source for this lane (SEK-02R #325
+        not merged), so the Software Engineering curriculum V&V unit cannot be
+        aligned with the SWEBOK software testing knowledge area and no
+        SWEBOK-based testing claims are made.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: "The lane reflects curriculum and secure-development views only; professional body-of-knowledge reconciliation for testing, verification and validation is deferred."
+      resolution_notes:
+        - "Revisit after SEK-02R #325 merges; do not cite SWEBOK KA5 as verified before then."
+      evidence_refs: []
+    - id: se:GAP-TVV-NO-EMPIRICAL-CASES
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      label: No empirical case evidence for V&V practices
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: ENTITY_GAP
+      description: >-
+        No empirical case or incident source (for example postmortems of testing
+        failures or vulnerability-response outcomes) is registered; both admitted
+        sources provide curricular and recommendation-framework content, so no
+        Case or Counterexample records were created and the lane's pattern and
+        anti-pattern records rest on source text plus explicitly marked synthesis.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: "Effectiveness of the regression-safety-net pattern and the coverage-theater anti-pattern is unverified by real engineering cases; NIST's notional examples are not real cases and were not promoted to Case records."
+      resolution_notes:
+        - "Register and review at least one empirical case source (RESEARCH_FRAMEWORK CASE_POSTMORTEM-type) before promoting lane patterns or anti-patterns."
+      evidence_refs: []
+
+  # ---------------------------------------------------- relationship_assertions
+  relationship_assertions:
+    # --- SUPPORTED_BY: canonical claim/record -> evidence traceability
+    - id: se:REL-TVV-0001
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0001
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0003
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the V&V two-question distinction."
+      rationale: "The claim restates evidence extracted from the SE-Validation CS Core topic 1 and learning outcome 2."
+      evidence_refs: []
+    - id: se:REL-TVV-0002
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0002
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0004
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the two non-identical test-kind lists."
+      rationale: "The claim's comparison of topic 4 and learning outcome 4 lists comes directly from the extracted unit text."
+      evidence_refs: []
+    - id: se:REL-TVV-0003
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0003
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0005
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the five testing objectives."
+      rationale: "The objectives enumeration is extracted from CS Core topic 3."
+      evidence_refs: []
+    - id: se:REL-TVV-0004
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0004
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0010
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the NIST PW.8 gated-testing recommendation."
+      rationale: "The claim restates PW.8.1 and PW.8.2 task text verified at printed page 15 of the official PDF."
+      evidence_refs: []
+    - id: se:REL-TVV-0005
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0005
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0011
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the RV group structure."
+      rationale: "The three-practice structure and the RV.1.2 cross-reference are extracted from the RV pages of the official PDF."
+      evidence_refs: []
+    - id: se:REL-TVV-0006
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0006
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0007
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the three coverage dimensions."
+      rationale: "The test-matrices/code-coverage/environment-coverage framing is extracted from KA Core topic 6b."
+      evidence_refs: []
+    - id: se:REL-TVV-0007
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0007
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0009
+      qualifiers: []
+      context: "Canonical claim-to-evidence trace for the pre/post-commit tradeoff claim."
+      rationale: "Topics 8c/8d and outcomes 14/15 are extracted in the development-cycle evidence."
+      evidence_refs: []
+    - id: se:REL-TVV-0008
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRI-TVV-DAMP-OVER-DRY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0008
+      qualifiers: []
+      context: "Canonical record-to-evidence trace for the DAMP-vs-DRY principle."
+      rationale: "The principle statement restates CS Core topic 5; the added rationale is flagged as lane interpretation in the record."
+      evidence_refs: []
+    - id: se:REL-TVV-0009
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CON-TVV-VERIFICATION-VALIDATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0003
+      qualifiers: []
+      context: "Canonical record-to-evidence trace for the V&V boundary concept."
+      rationale: "The concept's two questions are anchored in the extracted CS Core topic 1 text."
+      evidence_refs: []
+    - id: se:REL-TVV-0010
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CON-TVV-TEST-COVERAGE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0007
+      qualifiers: []
+      context: "Canonical record-to-evidence trace for the test-coverage concept."
+      rationale: "The three-dimension decomposition is anchored in KA Core topic 6b."
+      evidence_refs: []
+    - id: se:REL-TVV-0011
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:NODE-CS2023-SE-VALIDATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0001
+      qualifiers: []
+      context: "Canonical node-to-evidence trace for the curriculum V&V unit's existence in the SE area."
+      rationale: "The Overview evidence places Software Verification and Validation among the nine SE knowledge units."
+      evidence_refs: []
+    - id: se:REL-TVV-0012
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:NODE-CS2023-SE-TOOLS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0013
+      qualifiers: []
+      context: "Canonical node-to-evidence trace for the Tools and Environments unit."
+      rationale: "The SE-Tools evidence verifies the unit's inclusion of testing tools, version control and CI."
+      evidence_refs: []
+    - id: se:REL-TVV-0013
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:NODE-SSDF-RV
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-TVV-0011
+      qualifiers: []
+      context: "Canonical node-to-evidence trace for the SSDF RV practice group."
+      rationale: "The group's three practices are verified at printed pages 16-18 of the official PDF."
+      evidence_refs: []
+    # --- APPLIES_TO: scoped application within the curriculum V&V unit
+    - id: se:REL-TVV-0014
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0001
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-VALIDATION
+      qualifiers:
+        - "scope: CS2023 SE-Validation CS Core topic 1 within the curriculum view"
+        - "curriculum classification, not professional-domain completeness"
+      context: "The V&V definition claim applies within the curriculum unit that states it."
+      rationale: "Locating the claim inside its knowledge unit keeps curriculum scope separate from professional-BOK claims held on gap."
+      evidence_refs:
+        - se:EVD-TVV-0003
+    - id: se:REL-TVV-0015
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-TVV-DEFECT-TRACKING-REPRODUCIBILITY
+      predicate: APPLIES_TO
+      object_ref: se:NODE-CS2023-SE-VALIDATION
+      qualifiers:
+        - "practice intersects the unit's KA Core topic 8e (defect tracking and prioritization)"
+        - "NIST record/triage tasks enter as secure-development cross-cutting content, not as curriculum content"
+      context: "The defect-tracking practice spans a curriculum topic and SSDF tasks; it applies to the V&V unit's scope via topic 8e."
+      rationale: "Anchoring the practice to the unit records where its curriculum half lives while qualifiers keep the NIST half's distinct provenance visible."
+      evidence_refs:
+        - se:EVD-TVV-0009
+    # --- QUALIFIED_BY: applicability qualification for the NIST practice claim
+    - id: se:REL-TVV-0016
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:CLM-TVV-0004
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-TVV-0015
+      qualifiers:
+        - "risk, cost, feasibility and applicability govern practice selection"
+        - "SSDF is not a checklist and Table 1 ordering implies no implementation sequence"
+      context: "The PW.8 practice claim carries the framework's own risk-based adoption guidance as a binding qualification."
+      rationale: "Registry-verified Section 1 guidance limits the claim's scope to recommendation content whose adoption is context-sensitive."
+      evidence_refs: []
+    # --- DEPENDS_ON: pattern depends on the coverage concept
+    - id: se:REL-TVV-0017
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PAT-TVV-REGRESSION-SAFETY-NET
+      predicate: DEPENDS_ON
+      object_ref: se:CON-TVV-TEST-COVERAGE
+      qualifiers: []
+      context: "A regression suite grows the test suite, so the pattern presupposes the multi-dimension coverage concept and its throughput tradeoff."
+      rationale: "The pattern's tradeoff (suite growth versus protection) is expressed in terms of the test-coverage concept's dimensions and its coverage-versus-throughput pairing."
+      evidence_refs:
+        - se:EVD-TVV-0010
+        - se:EVD-TVV-0007
+    # --- IMPLEMENTS: defect-tracking practice operationalizes part of the PW.8 claim
+    - id: se:REL-TVV-0018
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:PRA-TVV-DEFECT-TRACKING-REPRODUCIBILITY
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-TVV-0004
+      qualifiers:
+        - "implements the record-and-triage portion of PW.8.2 (documenting results and triaging issues), not the PW.8.1 gating decision"
+      context: "The practice's recording and triage steps operationalize the documentation half of the PW.8 recommendation."
+      rationale: "Making the implements relation partial prevents reading the practice as fulfilling the whole gated-testing recommendation."
+      evidence_refs:
+        - se:EVD-TVV-0010
+        - se:EVD-TVV-0009
+    # --- DERIVED_FROM: anti-pattern derived from synthesis evidence
+    - id: se:REL-TVV-0019
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:ANT-TVV-COVERAGE-THEATER
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-TVV-0014
+      qualifiers: []
+      context: "The coverage-theater anti-pattern is derived from explicitly marked synthesis across two admitted sources, not from a single source statement."
+      rationale: "Recording the derivation keeps the synthesis inference auditable and separable from direct source paraphrase."
+      evidence_refs:
+        - se:EVD-TVV-0014
+    # --- CROSS_CUTS: SSDF RV group intersects the curriculum V&V unit
+    - id: se:REL-TVV-0020
+      record_version: "0.1.0"
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-06"
+      subject_ref: se:NODE-SSDF-RV
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-CS2023-SE-VALIDATION
+      qualifiers:
+        - "secure-development vulnerability response intersects the curriculum V&V unit's testing and defect-tracking topics"
+        - "views remain separate: SSDF recommendation framework versus CS2023 curriculum; no merge implied"
+        - "RV.1.2 explicitly cross-references PW.7/PW.8 testing practices, motivating the intersection"
+      context: "The SSDF RV group's ongoing code review/analysis/test task and record/triage flow cut across the curriculum unit that teaches testing and defect tracking."
+      rationale: "Cross-view intersection is recorded as a typed edge rather than by merging taxonomy nodes from different views."
+      evidence_refs:
+        - se:EVD-TVV-0011
+        - se:EVD-TVV-0009
