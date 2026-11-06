@@ -735,7 +735,7 @@ test('complete registry inventory discovers nested registries and detects a seco
     data.get(paths[0]).set(TARGET.casKey,{revision:4,value:strandedRow({
       phase:'TERMINAL_VERIFIED',recoveryAttempt:terminalMarker,
       terminalCommentId:6700000001,
-      terminalCommentRef:\`\${TARGET.issueRef}#issuecomment-6700000001\`,
+      terminalCommentRef:TARGET.issueRef+'#issuecomment-6700000001',
     })});
     const terminal=await inspectHostRegistryInventory(
       stores,dir,paths[0],paths.slice(0,3),'TERMINAL_VERIFIED');
