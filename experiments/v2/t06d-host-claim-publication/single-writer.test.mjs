@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createHostSingleWriterClaimController} from './single-writer.mjs';
+import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
 const sourceSha='a'.repeat(40);
 const req={owner:'kaicreator-mm',repo:'tally',issueNumber:125,
@@ -138,4 +139,83 @@ test('publisher ports must be Host-owned; invalid constructor does not create a 
     store:{get:()=>null,put:()=>{}},...ports(),
     writerAuthority:{mode:'INSECURE_MULTI_WRITER',exclusiveHostControl:true,writerId:'bad'}
   }),/TRUSTED_SINGLE_WRITER_HOST_PORTS_REQUIRED/);
+});
+
+const historical={phase:'PUBLISHED_VERIFIED',repository:TARGET.repository,issueRef:TARGET.issueRef,
+  sourceSha:TARGET.sourceSha,dispatchId:TARGET.dispatchId,protectedClaimKey:TARGET.protectedClaimKey,
+  generation:1,actorRole:'builder',operatorKind:'other',operatorId:'zcode:candidate-publication:1',
+  writerId:'tally-host:win32:candidate-publication:1',commentId:TARGET.claimCommentId,commentRef:TARGET.claimCommentRef};
+async function seedFixture(store,value=historical){
+  await store.put(TARGET.casKey,{...value,phase:'PENDING_GITHUB_PUBLISH'},{mustBeAbsent:true});
+  await store.put(TARGET.casKey,value,{mustMatchRevision:0});
+}
+function terminalPorts({preflight,readback,publish}={}){
+  const p=ports();let posts=0;
+  p.source.readTerminalizationPreflight=preflight??(async()=>({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',
+    complete:true,targetRevision:1,fenceId:'fence:one',evidence:'durable proof',occurredAt:new Date().toISOString()}));
+  p.source.readTerminalEvent=readback??(async()=>({status:'EXACT',complete:true,edited:false,commentId:900,
+    commentRef:TARGET.issueRef+'#issuecomment-900'}));
+  p.publisher.publishDispatchStateChange=async r=>{posts++;return publish?publish(r):
+    {commentId:900,commentRef:TARGET.issueRef+'#issuecomment-900'};};
+  return {...p,posts:()=>posts};
+}
+test('terminal transition uses public revision CAS, preserves Claim and survives reopen',async()=>{
+  await harness(async({store,reopen})=>{
+    await seedFixture(store);const p=terminalPorts();
+    const result=await controller(store,p).terminalizePublishedClaim();
+    assert.equal(result.claimTerminality,'VERIFIED');assert.equal(p.posts(),1);
+    for(const field of ['authorized','admitted','taskPass','releasePass'])assert.equal(result[field],false);
+    const reopened=await reopen(),row=await reopened.get(TARGET.casKey);
+    assert.equal(row.revision,3);assert.equal(row.value.phase,'TERMINAL_VERIFIED');
+    assert.equal(row.value.commentRef,TARGET.claimCommentRef);assert.equal(row.value.terminalCommentId,900);
+    assert.equal((await controller(reopened,p).terminalizePublishedClaim()).claimTerminality,'UNKNOWN');
+    assert.equal(p.posts(),1);
+  });
+});
+test('wrong identity, missing proof, lost ACK and unverified native readback remain fail closed',async()=>{
+  for(const change of [{sourceSha:'b'.repeat(40)},{dispatchId:'wrong'},
+    {protectedClaimKey:'wrong'},{generation:2},{commentId:1}])await harness(async({store})=>{
+      await seedFixture(store,{...historical,...change});const p=terminalPorts();
+      assert.equal((await controller(store,p).terminalizePublishedClaim()).claimTerminality,'UNKNOWN');
+      assert.equal(p.posts(),0);assert.equal((await store.get(TARGET.casKey)).revision,1);
+    });
+  for(const options of [{preflight:async()=>({complete:false})},
+    {publish:async()=>{throw Error('lost');}},
+    {readback:async()=>({status:'UNKNOWN'})}])await harness(async({store})=>{
+      await seedFixture(store);const p=terminalPorts(options),c=controller(store,p);
+      assert.equal((await c.terminalizePublishedClaim()).claimTerminality,'UNKNOWN');
+      const row=await store.get(TARGET.casKey);
+      assert.equal(row.value.phase,options.preflight?'PUBLISHED_VERIFIED':'PENDING_GITHUB_TERMINALIZATION');
+      await c.terminalizePublishedClaim();assert.ok(p.posts()<=1);
+    });
+});
+test('competing expected-revision reservations publish at most once',async()=>{
+  await harness(async({store})=>{
+    await seedFixture(store);const p=terminalPorts();
+    const results=await Promise.all([controller(store,p).terminalizePublishedClaim(),controller(store,p).terminalizePublishedClaim()]);
+    assert.equal(results.filter(x=>x.claimTerminality==='VERIFIED').length,1);assert.equal(p.posts(),1);
+  });
+});
+test('a changed fence or reservation before POST and changed revision before final CAS never verify',async()=>{
+  for(const kind of ['fence','beforePost','beforeFinal'])await harness(async({store})=>{
+    await seedFixture(store);let preflightCalls=0;const p=terminalPorts();
+    const originalPreflight=p.source.readTerminalizationPreflight;
+    p.source.readTerminalizationPreflight=async row=>{
+      const facts=await originalPreflight(row);preflightCalls++;
+      if(preflightCalls===2&&kind==='fence')return {...facts,fenceId:'other'};
+      if(preflightCalls===2&&kind==='beforePost'){
+        const current=await store.get(TARGET.casKey);
+        await store.put(TARGET.casKey,{...current.value,externalChange:true},{mustMatchRevision:current.revision});
+      }
+      return facts;
+    };
+    if(kind==='beforeFinal')p.source.readTerminalEvent=async()=>{
+      const current=await store.get(TARGET.casKey);
+      await store.put(TARGET.casKey,{...current.value,externalChange:true},{mustMatchRevision:current.revision});
+      return {status:'EXACT',complete:true,edited:false,commentId:900,commentRef:TARGET.issueRef+'#issuecomment-900'};
+    };
+    const result=await controller(store,p).terminalizePublishedClaim();
+    assert.equal(result.claimTerminality,'UNKNOWN');assert.equal(p.posts(),kind==='beforeFinal'?1:0);
+    assert.equal((await store.get(TARGET.casKey)).value.phase,'PENDING_GITHUB_TERMINALIZATION');
+  });
 });

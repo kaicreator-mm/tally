@@ -4,6 +4,7 @@ import {createHostBoundNativeGitHubClaimPublisher} from
   '../src/task-claim-github-publisher.mjs';
 import {readClaimEventCandidatesFromClient} from
   '../src/task-claim-events.mjs';
+import {TARGET} from '../src/task-dispatch-state-events.mjs';
 const sha='a'.repeat(40),owner='kaicreator-mm',repo='tally';
 const issueRef='https://github.com/kaicreator-mm/tally/issues/125';
 const apiIssue='https://api.github.com/repos/kaicreator-mm/tally/issues/125';
@@ -93,5 +94,34 @@ test('invalid GitHub identity/readback or lost ACK remain ambiguous; no internal
     await assert.rejects(()=>p.publishClaim(reservation),
       /NATIVE_GITHUB_CLAIM_PUBLICATION_AMBIGUOUS/);
     assert.equal(f.count(),1);
+  }
+});
+
+test('terminal publication is #203 scheduler DONE with Host identity and no blind retry',async()=>{
+  const terminal={...TARGET,phase:'PENDING_GITHUB_TERMINALIZATION',commentId:TARGET.claimCommentId,
+    commentRef:TARGET.claimCommentRef,terminalWriterId:authority.writerId,
+    terminalEvidence:'durable proof',terminalOccurredAt:'2026-11-06T00:00:00Z',
+    terminalReservationRevision:2,
+    operator_id:'forged',transport_actor:'forged'};
+  for(const lost of [false,true]){
+    let posted=0,current;
+    const api={rest:{issues:{async createComment(input){
+      posted++;assert.equal(input.issue_number,203);
+      assert.match(input.body,/actor_role: scheduler/);assert.match(input.body,/dispatch_state: DONE/);
+      assert.match(input.body,/operator_id: tally-host:exclusive/);
+      assert.match(input.body,/transport_actor: tally-host\[bot\]/);
+      assert.doesNotMatch(input.body,/forged/);
+      current={id:901,body:input.body,html_url:TARGET.issueRef+'#issuecomment-901',
+        issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/203',
+        user:{login:authority.githubWriterLogin},created_at:'now',updated_at:'now'};
+      if(lost)throw Error('lost');return {data:current};
+    },async getComment(){return {data:current};}}}};
+    const p=createHostBoundNativeGitHubClaimPublisher({octokit:api,owner,repo,writerAuthority:authority});
+    for(const change of [{sourceSha:'b'.repeat(40)},{generation:2},{commentId:2},{terminalWriterId:'attacker'}])
+      await assert.rejects(()=>p.publishDispatchStateChange({...terminal,...change}),/HOST_TERMINAL_RESERVATION_NOT_BOUND/);
+    assert.equal(posted,0);
+    if(lost)await assert.rejects(()=>p.publishDispatchStateChange(terminal),/AMBIGUOUS/);
+    else assert.equal((await p.publishDispatchStateChange(terminal)).commentId,901);
+    assert.equal(posted,1);
   }
 });

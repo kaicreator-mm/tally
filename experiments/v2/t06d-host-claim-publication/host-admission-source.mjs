@@ -10,6 +10,9 @@
 import {Octokit} from '@octokit/rest';
 import {readNativeHostClaimPreflightFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-preflight.mjs';
 import {createHostNativeGitHubClaimReadbackPortFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-readback-port.mjs';
+import {createHash} from 'node:crypto';
+import {TARGET,readDispatchStateEventsFromClient} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
+import {terminalEventForReservation} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
@@ -19,7 +22,8 @@ const ROLES=new Set(['builder','reviewer','validator']);
 const KINDS=new Set(['chatgpt-web','codex','claude-code','human',
   'github-actions','woodpecker','other']);
 const PREFIX='tally:v2:claim-admission:';
-const PHASES=new Set(['PENDING_GITHUB_PUBLISH','PUBLISHED_VERIFIED']);
+const PHASES=new Set(['PENDING_GITHUB_PUBLISH','PUBLISHED_VERIFIED',
+  'PENDING_GITHUB_TERMINALIZATION','TERMINAL_VERIFIED']);
 const CLAIM_KEY=new RegExp('^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*):'+
   '(builder|reviewer|validator):__default__$');
 const readbackFailure=()=>new Error('NATIVE_GITHUB_EXACT_CLAIM_READBACK_UNVERIFIED');
@@ -66,9 +70,18 @@ function validRegistryRow(row){
   const match=CLAIM_KEY.exec(value.protectedClaimKey??'');
   if(!match||value.repository!==match[1]||value.actorRole!==match[3]||
     value.issueRef!==`https://github.com/${match[1]}/issues/${match[2]}`)return false;
-  if(value.phase==='PUBLISHED_VERIFIED'&&
+  if(['PUBLISHED_VERIFIED','PENDING_GITHUB_TERMINALIZATION','TERMINAL_VERIFIED'].includes(value.phase)&&
     (!Number.isSafeInteger(value.commentId)||value.commentId<1||
      value.commentRef!==`${value.issueRef}#issuecomment-${value.commentId}`))return false;
+  if(value.phase==='TERMINAL_VERIFIED'&&
+    (!Number.isSafeInteger(value.terminalCommentId)||value.terminalCommentId<1||
+     value.terminalCommentRef!==`${value.issueRef}#issuecomment-${value.terminalCommentId}`||
+     value.protectedClaimKey!==TARGET.protectedClaimKey||value.sourceSha!==TARGET.sourceSha||
+     value.dispatchId!==TARGET.dispatchId||value.commentId!==TARGET.claimCommentId||
+     value.commentRef!==TARGET.claimCommentRef||typeof value.terminalEvidence!=='string'||!value.terminalEvidence||
+     value.actorRole!=='builder'||value.operatorKind!=='other'||value.operatorId!=='zcode:candidate-publication:1'||
+     value.writerId!=='tally-host:win32:candidate-publication:1'||value.terminalReservationRevision!==2||
+     !ID.test(value.terminalWriterId??'')||!Number.isFinite(Date.parse(value.terminalOccurredAt))))return false;
   return true;
 }
 
@@ -126,7 +139,8 @@ export function createHostAdmissionSourceFromClient({
     const registry=await registrySnapshot();
     if(registry.error)return denied(registry.error,request);
     const activeIncompatibleClaimCount=registry.rows.filter(row=>
-      row.protectedClaimKey!==request.protectedClaimKey).length;
+      row.phase!=='TERMINAL_VERIFIED'&&(row.protectedClaimKey!==request.protectedClaimKey||
+        row.phase==='PENDING_GITHUB_PUBLISH'||row.phase==='PENDING_GITHUB_TERMINALIZATION')).length;
     if(activeIncompatibleClaimCount>0)return Object.freeze({
       ...denied('INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',request),
       activeIncompatibleClaimCount
@@ -154,4 +168,88 @@ export function createGitHubHostAdmissionSource({token,...input}={}){
     throw new TypeError('TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED');
   const octokit=new Octokit({auth:token,request:{timeout:15000}});
   return createHostAdmissionSourceFromClient({octokit,...input});
+}
+
+/** Selected Host only: the proof port must hold its writer fence and measure
+ * every listed resource, including effects outside the local process tree.
+ * It is not a request parameter or a public B/Agent endpoint. */
+export function createHostTerminalizationSourceFromClient({octokit,admissionStore,writerAuthority,quiescence}={}){
+  if(!validWriter(writerAuthority,TARGET.repository)||
+    typeof admissionStore?.get!=='function'||typeof quiescence?.readFreshProof!=='function'||
+    typeof octokit?.rest?.pulls?.get!=='function'||typeof octokit?.rest?.repos?.getCombinedStatusForRef!=='function')
+    throw new TypeError('TRUSTED_TERMINAL_HOST_SOURCE_REQUIRED');
+  const authority=Object.freeze({...writerAuthority});
+  const claimReader=createHostNativeGitHubClaimReadbackPortFromClient({
+    octokit,owner:'kaicreator-mm',repo:'tally',writerLogin:'kaicreator-mm'});
+  const claim={...TARGET,actorRole:'builder',operatorKind:'other',operatorId:'zcode:candidate-publication:1'};
+  const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
+  const reference=x=>typeof x==='string'&&x.length>0&&x.length<=2048&&/^https:\/\//.test(x);
+  async function readTerminalizationPreflight(row){
+    const deny=()=>Object.freeze({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',complete:false});
+    try{
+      if(row?.revision!==1||row.value?.phase!=='PUBLISHED_VERIFIED')return deny();
+      const [admission,frozen,original,terminal,pr204,pr205]=await Promise.all([
+        admissionStore.get('tally:v2:claim-admission:471dc65c8c0ef32ac912306d962581d6db92f63af2e0bf88000d5a5370daa50d'),
+        admissionStore.get('tally:v2:task-writeset:319'),
+        claimReader.readPublishedClaim(claim,TARGET.claimCommentId),
+        readDispatchStateEventsFromClient({octokit,writerLogin:authority.githubWriterLogin}),
+        octokit.rest.pulls.get({owner:'kaicreator-mm',repo:'tally',pull_number:204}),
+        octokit.rest.pulls.get({owner:'kaicreator-mm',repo:'tally',pull_number:205})
+      ]);
+      if(admission?.revision!==1||admission.value?.phase!=='PUBLISHED_VERIFIED'||
+        admission.value?.commentId!==6668875091||
+        admission.value?.protectedClaimKey!=='kaicreator-mm/tally#319:builder:__default__'||
+        admission.value?.repository!==TARGET.repository||
+        admission.value?.issueRef!=='https://github.com/kaicreator-mm/tally/issues/319'||
+        admission.value?.sourceSha!=='7ebb1cdd0a79fc82cc938e35f852a80dd8e15332'||
+        admission.value?.actorRole!=='builder'||admission.value?.operatorKind!=='other'||
+        admission.value?.operatorId!=='zcode:i319:t06d-terminalization:1'||
+        admission.value?.writerId!=='tally-host:win32:t06d-terminalization:1'||
+        admission.value?.commentRef!=='https://github.com/kaicreator-mm/tally/issues/319#issuecomment-6668875091'||
+        admission.value?.generation!==1||admission.value?.dispatchId!=='dispatch:319:t06d-terminalization:20261106:1'||
+        frozen?.revision!==0||hash(frozen.value)!=='9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b'||
+        original?.complete!==true||original.edited!==false||terminal.status!=='ABSENT'||
+        [pr204,pr205].some((pr,i)=>pr?.data?.number!==204+i||pr.data.state!=='open'||pr.data.merged_at!==null||
+          !SHA.test(pr.data.head?.sha??'')))return deny();
+      const historicalPulls=await Promise.all([pr204,pr205].map(async pr=>{
+        const state=(await octokit.rest.repos.getCombinedStatusForRef({owner:'kaicreator-mm',repo:'tally',ref:pr.data.head.sha}))?.data;
+        if(state?.state!=='failure'||!Array.isArray(state.statuses))throw Error('PR_CI_STATUS_UNKNOWN');
+        const failures=state.statuses.filter(x=>x.state==='failure'&&typeof x.context==='string'&&reference(x.target_url))
+          .map(x=>({context:x.context,ref:x.target_url}));
+        if(!failures.length)throw Error('PR_CI_FAILURE_NOT_PROVEN');
+        return {number:pr.data.number,state:'open',merged:false,headSha:pr.data.head.sha,failures};
+      }));
+      const proof=await quiescence.readFreshProof(Object.freeze({...TARGET}));
+      const timestamp=Date.parse(proof?.observedAt),now=Date.now();
+      if(!Number.isFinite(timestamp)||timestamp>now||now-timestamp>30000||proof?.fenceHeld!==true||
+        !ID.test(proof.fenceId??'')||proof.dispatchId!==TARGET.dispatchId||
+        proof.sourceSha!==TARGET.sourceSha||proof.protectedClaimKey!==TARGET.protectedClaimKey||proof.generation!==1||
+        proof.activeWriterCount!==0||proof.activeAttemptCount!==0||proof.activeSubprocessCount!==0||
+        proof.inflightEffectCount!==0||proof.unresolvedResourceCount!==0||proof.writeSetReconciled!==true||
+        !['writer','attempt','subprocess','effect','resource','writeSet'].every(k=>reference(proof.evidenceRefs?.[k])))return deny();
+      const occurredAt=new Date().toISOString();
+      const evidence=JSON.stringify({
+        taskPackRef:frozen.value.taskPackRef,taskPackBlobSha:frozen.value.taskPackBlobSha,
+        claim319:{key:'kaicreator-mm/tally#319:builder:__default__',generation:1,
+          dispatchId:admission.value.dispatchId,commentId:admission.value.commentId,commentRef:admission.value.commentRef},
+        frozenWriteSet:{key:'tally:v2:task-writeset:319',revision:frozen.revision,digest:hash(frozen.value)},
+        targetClaim:{casKey:TARGET.casKey,revision:row.revision,commentId:TARGET.claimCommentId,commentRef:TARGET.claimCommentRef},
+        quiescence:proof,openHistoricalPulls:historicalPulls
+      });
+      return Object.freeze({sourceKind:'HOST_TERMINALIZATION_PREFLIGHT',complete:true,targetRevision:row.revision,
+        fenceId:proof.fenceId,evidence,occurredAt});
+    }catch{return deny();}
+  }
+  async function readTerminalEvent(reservation){
+    try{
+      const [terminal,original]=await Promise.all([
+        readDispatchStateEventsFromClient({octokit,writerLogin:authority.githubWriterLogin,
+          expectedEvent:terminalEventForReservation(reservation,authority)}),
+        claimReader.readPublishedClaim(claim,TARGET.claimCommentId)
+      ]);
+      return original?.complete===true&&original.edited===false?terminal:{status:'UNKNOWN'};
+    }
+    catch{return {status:'UNKNOWN'};}
+  }
+  return Object.freeze({readTerminalizationPreflight,readTerminalEvent});
 }

@@ -5,9 +5,10 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {stringify} from 'yaml';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
-import {createHostAdmissionSourceFromClient,createGitHubHostAdmissionSource} from './host-admission-source.mjs';
+import {createHostAdmissionSourceFromClient,createGitHubHostAdmissionSource,createHostTerminalizationSourceFromClient} from './host-admission-source.mjs';
 import {createHostBoundNativeGitHubClaimPublisher} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 import {createHostSingleWriterClaimController} from './single-writer.mjs';
+import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
 const owner='kaicreator-mm',repo='tally',repository=owner+'/'+repo;
 const issueNumber=166,sourceSha='a'.repeat(40);
@@ -191,6 +192,26 @@ test('active incompatible registry entry, read failure, malformed/conflicting ro
   const h=adapter({store:conflict}),x=await h.source.readAdmissionFacts(request);
   noPermit(x);assert.equal(x.reason,'HOST_RESERVATION_REGISTRY_CONFLICT');
   assert.equal(h.store.writes,0);
+  const sameKey=memoryStore({initial:[registryValue({protectedClaimKey:request.protectedClaimKey,
+    issueRef:request.issueRef,sourceSha:request.sourceSha,dispatchId:request.dispatchId})]});
+  noPermit(await adapter({store:sameKey}).source.readAdmissionFacts(request));
+});
+
+test('verified terminal rows are inactive; pending and malformed terminal rows fail closed',async()=>{
+  const original=registryValue({protectedClaimKey:TARGET.protectedClaimKey,issueRef:TARGET.issueRef,
+    sourceSha:TARGET.sourceSha,dispatchId:TARGET.dispatchId,commentId:TARGET.claimCommentId,commentRef:TARGET.claimCommentRef,
+    operatorKind:'other',operatorId:'zcode:candidate-publication:1',writerId:'tally-host:win32:candidate-publication:1'});
+  const terminal={...original,phase:'TERMINAL_VERIFIED',terminalCommentId:11,
+    terminalCommentRef:TARGET.issueRef+'#issuecomment-11',terminalWriterId:'tally-host:one',
+    terminalOccurredAt:'2026-11-06T00:00:00Z',terminalEvidence:'durable proof',terminalReservationRevision:2};
+  const good=adapter({store:memoryStore({initial:[terminal]})});
+  assert.equal((await good.source.readAdmissionFacts(request)).activeIncompatibleClaimCount,0);
+  for(const value of [{...original,phase:'PENDING_GITHUB_TERMINALIZATION'},
+    {...terminal,terminalCommentRef:'bad'}]){
+    const h=adapter({store:memoryStore({initial:[value]})});
+    noPermit(await h.source.readAdmissionFacts(request));
+    assert.equal(h.store.writes,0);
+  }
 });
 
 test('exact native published Claim readback validates Host reservation and returns no permit',async()=>{
@@ -272,4 +293,91 @@ test('Host factory rejects missing credential, untrusted writer and incomplete p
   assert.throws(()=>createHostAdmissionSourceFromClient({octokit:github().octokit,
     store:{get:async()=>null},owner,repo,writerAuthority,taskAuthority}),
     /TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED/);
+});
+
+test('terminal Host proof requires all fresh measurements, exact #319 freeze, original Claim and open PRs',async()=>{
+  const paths=['experiments/v2/t06d-host-claim-publication/single-writer.mjs',
+    'experiments/v2/t06d-host-claim-publication/single-writer.test.mjs',
+    'experiments/v2/t06d-host-claim-publication/host-admission-source.mjs',
+    'experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs',
+    'packages/tally-github-native-c/src/task-dispatch-state-events.mjs',
+    'packages/tally-github-native-c/test/task-dispatch-state-events.test.mjs',
+    'packages/tally-github-native-c/src/task-claim-github-publisher.mjs',
+    'packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs',
+    '.woodpecker/v2-t06d-terminalization.yaml'];
+  const frozen={phase:'FROZEN_DAG_WRITESET',repository,issueNumber:319,
+    sourceSha:'7ebb1cdd0a79fc82cc938e35f852a80dd8e15332',
+    writeSetSha256:'252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2',
+    document:'frozen exact write set for #319:\n'+paths.sort().join('\n'),pathCount:9,
+    writeSetDigestBasis:'sha256(JSON.stringify(paths.sort())) compact; tally.v2.allowed-write-set-normalization/1',
+    taskPackRef:'https://github.com/kaicreator-mm/tally/blob/5b9991648b60b6b2ba892549caaeb46d11d37b19/docs/implementation/v2/T06D_TERMINALIZATION_TASK_PACK_R1.json',
+    taskPackBlobSha:'10593bb79ee8e9834a6720d27335aad931de1dc3',packPRHeadSha:'5b9991648b60b6b2ba892549caaeb46d11d37b19',
+    ownerReceiptRef:'https://github.com/kaicreator-mm/tally/pull/320#issuecomment-6668349957',
+    reviewWitnessRef:'https://github.com/kaicreator-mm/tally/pull/320#issuecomment-6668373406',
+    protectedClaimKey:'kaicreator-mm/tally#319:builder:__default__',generation:1,
+    dispatchId:'dispatch:319:t06d-terminalization:20261106:1',claimCommentId:6668875091,
+    claimCommentRef:'https://github.com/kaicreator-mm/tally/issues/319#issuecomment-6668875091',
+    writerId:'tally-host:win32:t06d-terminalization:1',frozenAt:'2026-11-05T20:44:38.389Z'};
+  const c319={phase:'PUBLISHED_VERIFIED',commentId:6668875091,commentRef:frozen.claimCommentRef,
+    protectedClaimKey:frozen.protectedClaimKey,generation:1,dispatchId:frozen.dispatchId,repository,
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/319',sourceSha:frozen.sourceSha,
+    actorRole:'builder',operatorKind:'other',operatorId:'zcode:i319:t06d-terminalization:1',writerId:frozen.writerId};
+  const originalData={schema:'ai-dev/event-v2',event:'DISPATCH_CLAIMED',actor_role:'builder',operator_kind:'other',
+    operator_id:'zcode:candidate-publication:1',task:'#203',issue:'#203',sha:TARGET.sourceSha,
+    dispatch_id:TARGET.dispatchId,dispatch_state:'CLAIMED',protected_claim_key:TARGET.protectedClaimKey,admission_generation:1};
+  const original={id:TARGET.claimCommentId,html_url:TARGET.claimCommentRef,
+    issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/203',
+    body:bodyFor(originalData),user:{login:'kaicreator-mm'},created_at:date,updated_at:date};
+  const comments=[original];
+  const octokit={rest:{issues:{async get(){return {data:{id:2030,number:203,html_url:TARGET.issueRef,
+    state:'open',comments:comments.length,updated_at:date,body:`version/v2@${TARGET.sourceSha}`}};},async listComments(){},
+    async getComment({comment_id}){return {data:comments.find(c=>c.id===comment_id)};},
+    async createComment({body}){const created={id:6540484122,html_url:TARGET.issueRef+'#issuecomment-6540484122',
+      issue_url:original.issue_url,body,user:{login:'kaicreator-mm'},created_at:date,updated_at:date};
+      comments.push(created);return {data:created};}},
+    repos:{async getCommit(){return {data:{sha:TARGET.sourceSha}};},async getCombinedStatusForRef(){return {data:{state:'failure',statuses:[{state:'failure',context:'ci/woodpecker/test',target_url:'https://ci.example/test'}]}};}},
+    pulls:{async get({pull_number}){return {data:{number:pull_number,state:'open',merged_at:null,head:{sha:'a'.repeat(40)}}};}}},
+    paginate:{async *iterator(){yield {data:[...comments]};}}};
+  const proof={observedAt:new Date().toISOString(),fenceHeld:true,activeWriterCount:0,activeAttemptCount:0,
+    fenceId:'fence:one',dispatchId:TARGET.dispatchId,sourceSha:TARGET.sourceSha,
+    protectedClaimKey:TARGET.protectedClaimKey,generation:1,
+    activeSubprocessCount:0,inflightEffectCount:0,unresolvedResourceCount:0,writeSetReconciled:true,
+    evidenceRefs:Object.fromEntries(['writer','attempt','subprocess','effect','resource','writeSet'].map(k=>[k,'https://example.com/'+k]))};
+  let mutations=0;
+  const store={async get(key){return key.endsWith(':319')?{value:frozen,revision:0}:{value:c319,revision:1};},
+    async put(){mutations++;throw Error('unexpected mutation');}};
+  const auth={...writerAuthority,githubWriterLogin:'kaicreator-mm'};
+  const run=async changes=>createHostTerminalizationSourceFromClient({octokit,admissionStore:store,writerAuthority:auth,
+    quiescence:{async readFreshProof(){return {...proof,...changes};}}}).readTerminalizationPreflight({revision:1,value:{phase:'PUBLISHED_VERIFIED'}});
+  assert.equal((await run({})).complete,true);
+  for(const changes of [{activeWriterCount:1},{activeAttemptCount:1},{activeSubprocessCount:1},
+    {inflightEffectCount:1},{unresolvedResourceCount:1},{writeSetReconciled:false},
+    {fenceHeld:false},{dispatchId:'wrong'},{generation:2},{observedAt:'2020-01-01T00:00:00Z'},{evidenceRefs:{}}])
+    assert.equal((await run(changes)).complete,false,JSON.stringify(changes));
+  const getIssue=octokit.rest.issues.get;
+  octokit.rest.issues.get=async()=>({data:{...(await getIssue()).data,body:'stale source'}});
+  assert.equal((await run({})).complete,false);octokit.rest.issues.get=getIssue;
+  const getPull=octokit.rest.pulls.get;
+  octokit.rest.pulls.get=async p=>({data:{...(await getPull(p)).data,state:'closed'}});
+  assert.equal((await run({})).complete,false);octokit.rest.pulls.get=getPull;
+  frozen.pathCount=8;assert.equal((await run({})).complete,false);frozen.pathCount=9;
+  assert.equal(mutations,0);
+  const dir=await mkdtemp(join(tmpdir(),'tally-i319-composition-'));
+  const cas=await openSqliteCasStore({path:join(dir,'fixture.sqlite'),busyTimeoutMs:1000});
+  try{
+    const historical={phase:'PUBLISHED_VERIFIED',generation:1,protectedClaimKey:TARGET.protectedClaimKey,
+      repository,issueRef:TARGET.issueRef,sourceSha:TARGET.sourceSha,dispatchId:TARGET.dispatchId,
+      actorRole:'builder',operatorKind:'other',operatorId:'zcode:candidate-publication:1',
+      writerId:'tally-host:win32:candidate-publication:1',commentId:TARGET.claimCommentId,commentRef:TARGET.claimCommentRef};
+    await cas.put(TARGET.casKey,{...historical,phase:'PENDING_GITHUB_PUBLISH'},{mustBeAbsent:true});
+    await cas.put(TARGET.casKey,historical,{mustMatchRevision:0});
+    const terminalSource=createHostTerminalizationSourceFromClient({octokit,admissionStore:store,writerAuthority:auth,
+      quiescence:{async readFreshProof(){return {...proof,observedAt:new Date().toISOString()};}}});
+    const source={...terminalSource,readAdmissionFacts:async()=>{},readPublishedClaim:async()=>{}};
+    const publisher=createHostBoundNativeGitHubClaimPublisher({octokit,owner,repo,writerAuthority:auth});
+    const receipt=await createHostSingleWriterClaimController({store:cas,source,publisher,writerAuthority:auth}).terminalizePublishedClaim();
+    assert.equal(receipt.claimTerminality,'VERIFIED',JSON.stringify(receipt));
+    assert.equal((await cas.get(TARGET.casKey)).value.phase,'TERMINAL_VERIFIED');
+    assert.equal(comments.length,2);assert.equal(mutations,0);
+  }finally{await cas.close();await rm(dir,{recursive:true,force:true});}
 });
