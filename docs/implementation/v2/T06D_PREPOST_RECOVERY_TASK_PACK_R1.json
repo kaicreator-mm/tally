@@ -208,11 +208,35 @@
         "exact #319 PackBlob, accepted Claim and frozen write-set evidence",
         "fresh target-bound quiescence proof digest and all six safe evidence references",
         "Host fence ID, observedAt and event occurredAt",
-        "exact #331 PackBlob, Owner receipt, Claim identity and frozen write-set identity"
+        "exact #331 PackBlob, Owner receipt, Claim identity and frozen write-set identity",
+        "original terminalEvidence verbatim or its immutable content plus SHA256, and original terminalOccurredAt",
+        "deterministic recovery event evidence bytes and SHA256; event occurredAt is the fresh recoveryOccurredAt"
       ],
       "postMarkerRule": "After revision 3 is committed and exact readback succeeds, the single POST attempt is consumed. If the process crashes after marker creation, or the marker already exists and no exact terminal event is visible, never POST again.",
       "event": "Use the existing ADS v4.18 DISPATCH_STATE_CHANGED event with actor_role=scheduler and dispatch_state=DONE. Preserve the original #203 Claim and reservation evidence; bind the new recovery marker/proof in the event evidence and record its digest in the marker.",
-      "finalCas": "Only exactly one complete, exact, unedited native terminal event plus exact original Claim readback permits CAS mustMatchRevision=3 to TERMINAL_VERIFIED (revision 4), followed by exact public-API final row readback."
+      "finalCas": "Only exactly one complete, exact, unedited native terminal event plus exact original Claim readback permits CAS mustMatchRevision=3 to TERMINAL_VERIFIED (revision 4), followed by exact public-API final row readback. Preserve the original row terminalEvidence/terminalOccurredAt verbatim and retain the marker/eventEvidence digest in the final row.",
+      "prevalidateBeforeMarkerCAS": [
+        "Construct the deterministic recovery event evidence before writing the marker, embedding the original terminalEvidence verbatim plus the exact prior no-POST receipt hash, fresh quiescence proof, six evidence references, #331 Pack/Owner/Claim/FROZEN_DAG_WRITESET identities and unique attempt ID.",
+        "Construct a reservation clone for the event with terminalOccurredAt=marker.recoveryOccurredAt and terminalEvidence=marker.eventEvidence; keep terminalReservationRevision=2 and all original #203 Claim identity fields unchanged.",
+        "Call terminalEventForReservation(reservationClone, trustedExistingWriterAuthority) and enforce the 16,384-character evidence bound BEFORE the revision-2 -> revision-3 marker CAS. Invalid event payload means zero CAS writes and zero POSTs."
+      ],
+      "eventEvidenceEnvelope": {
+        "schema": "tally.t06d-prepost-recovery-event-evidence/v1",
+        "fields": [
+          "originalTerminalEvidence",
+          "originalTerminalOccurredAt",
+          "priorNoPostRunLogSha256",
+          "recoveryAttemptId",
+          "recoveryOccurredAt",
+          "hostFenceId",
+          "freshTargetBoundQuiescenceProof",
+          "exactExcludedReservationIdentity",
+          "sixDurableEvidenceRefs",
+          "task331PackBlobOwnerClaimAndFrozenWriteSetBindings"
+        ],
+        "persistedRowRule": "Keep the revision-2 reservation's original terminalEvidence and terminalOccurredAt unchanged in the CAS row; append the marker containing the deterministic eventEvidence and digest. Build the event-only reservation clone from that marker so the published event uses the fresh recoveryOccurredAt and combined evidence without erasing the original evidence.",
+        "restartRule": "The marker stores enough immutable eventEvidence bytes to reconstruct the exact expected event after restart; revision-3 processing is read-only only."
+      }
     },
     "postMarkerBehavior": [
       "Revision 2 with no marker: perform all preflight checks, acquire/hold fence, then CAS the single-use marker.",
