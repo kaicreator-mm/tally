@@ -90,16 +90,23 @@ modified.
 3. Every evidence `statement` is a concise original paraphrase of verbatim
    extracted content or of a registry-verified fact; nothing else was admitted.
 
-## Validation results (2026-11-06, Windows native, worktree HEAD = base HEAD)
+## Validation results (2026-11-06, Windows native, exact tip 2b8464a)
+
+Environment: Python 3.14.7; LinkML 1.12.1 / linkml-runtime 1.12.1 (shared
+SEK-06 venv). Validator compile check:
+`py_compile validate_knowledge_graph.py` — exit 0.
 
 Validator self-test:
 `SELF_TESTS=66/66` (exit 0).
 
 Lane assembly + validation
-(`assemble_and_validate.py <worktree> 06C <records.yaml> <outdir>`):
+(`assemble_and_validate.py <worktree> 06C <records.yaml> <outdir>`), rerun at
+the exact tip after the rights-gap correction — worktree HEAD
+`2b8464a348afd982d5c4a0a4793cb7b390cce906`, tree
+`21f0484e6a4fe1385b2270ed9356760bc9f0110c`, clean worktree:
 
 ```text
-LANE_RECORD_COUNTS={"anti_patterns":1,"concepts":2,"coverage_gaps":3,"decision_models":1,"domains":1,"evidence_records":15,"knowledge_claims":7,"patterns":1,"practices":2,"principles":1,"relationship_assertions":20,"source_locators":9,"taxonomy_nodes":3,"taxonomy_views":2}
+LANE_RECORD_COUNTS={"anti_patterns":1,"concepts":2,"coverage_gaps":4,"decision_models":1,"domains":1,"evidence_records":15,"knowledge_claims":7,"patterns":1,"practices":2,"principles":1,"relationship_assertions":20,"source_locators":9,"taxonomy_nodes":3,"taxonomy_views":2}
 COUNT_source_locators=9 MIN=3 PASS
 COUNT_evidence_records=15 MIN=3 PASS
 COUNT_knowledge_claims=7 MIN=4 PASS
@@ -109,7 +116,7 @@ COUNT_practices=2 MIN=2 PASS
 COUNT_patterns=1 MIN=1 PASS
 COUNT_anti_patterns=1 MIN=1 PASS
 COUNT_decision_models=1 MIN=1 PASS
-COUNT_coverage_gaps=3 MIN=1 PASS
+COUNT_coverage_gaps=4 MIN=1 PASS
 COUNT_relationship_assertions=20 MIN=10 PASS
 DERIVED_SOURCES=2 se:SRC-CS2023,se:SRC-NIST-SP-800-218-V1-1
 GRAPH_VALIDATION=PASS
@@ -121,8 +128,14 @@ RDF_JSONLD_EXPORT=NOT_CLAIMED_AT_LANE_LEVEL
 LANE_VALIDATION=PASS
 ```
 
-Full output stored at `_tmp/tally-sek06-lanes/validation/06C` (outside the
-repo write set). Machine validation is not human review: every record remains
+Exact-tip receipt directory: `_tmp/tally-sek06-lanes/validation/06C-bld2`
+(outside the repo write set). It supersedes the pre-correction receipt at
+`_tmp/tally-sek06-lanes/validation/06C` (which measured `coverage_gaps=3`
+before `se:GAP-CS2023-RIGHTS-CLEARANCE` was added); the old directory is
+retained as history only. A post-fix rerun after the documentation-only
+follow-up commit (README provenance note plus this observation update;
+`records.yaml` byte-identical to `2b8464a`) is recorded in the same receipt
+directory. Machine validation is not human review: every record remains
 PROPOSED/PENDING_REVIEW with evidence EXTRACTED_PENDING_REVIEW.
 
 ## Deviations and notes
@@ -163,4 +176,7 @@ registry's source-specific rights note. The revised lane treats the permission
 scope as unresolved for a general engineering knowledge graph and records a
 HIGH/OPEN REVIEW_GAP. The earlier lane-validation receipt predates this
 four-path correction and must not be used as validation evidence for the new
-HEAD; exact-tip native validation is required.
+HEAD; the required exact-tip native validation was performed on 2026-11-06 at
+HEAD `2b8464a348afd982d5c4a0a4793cb7b390cce906` and passed
+(`LANE_VALIDATION=PASS`, `coverage_gaps=4`; receipt
+`_tmp/tally-sek06-lanes/validation/06C-bld2`).

@@ -46,6 +46,13 @@ or incident content (no empirical source registered — see gaps).
   test example) are explicitly neither required nor exhaustive; they ground
   candidate patterns but were **not** promoted into Case records or mandatory
   practice claims.
+- CS2023 provenance limit: the official Body of Knowledge PDF could not be
+  downloaded as a binary during this lane's research, so **no binary SHA-256
+  was obtained for the CS2023 PDF**; the 2026-11-06 text extraction is
+  evidence of extracted content, not byte-level PDF evidence. Page anchors
+  are therefore restricted to registry-verified anchors, and the new KU-level
+  locator (`se:LOC-CS2023-SE-VALIDATION-KU`) is heading-anchored and asserts
+  no page number of its own (method and anchors in the SEK-06C observation).
 - Per parent issue #324: nothing in this lane equates executing tests with
   establishing correctness, or validation with user acceptance. The two
   conflations are named and rejected in `se:CON-TVV-VERIFICATION-VALIDATION`,
