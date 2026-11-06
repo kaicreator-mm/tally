@@ -83,9 +83,10 @@
       "closedTaskCount": 21,
       "latestReviewComment": 5791335743,
       "latestCandidateReview": "R13_BLOCK",
-      "r13ReviewComment": 5791410000,
       "r13Disposition": "P0=0/P1=3/P2=2; A_CANDIDATE_R13=BLOCK",
-      "note": "Historical R12 baseline only. R13 must refresh to 48 Tasks / 27 OPEN / 21 CLOSED and include #331 before #331 Claim/source admission."
+      "note": "Historical R12 baseline only. R13 must refresh to 48 Tasks / 27 OPEN / 21 CLOSED and include #331 before #331 Claim/source admission.",
+      "latestReviewNodeId": "PRR_kwDOUaqf_88AAAABWbKc-w",
+      "r12ReviewNodeId": "PRR_kwDOUaqf_88AAAABWTDFPw"
     }
   ],
   "targetReservation": {
@@ -322,5 +323,14 @@
     "Do not start #284 root Claim/source work or write native dependencies.",
     "No version-wide Freeze, version/v2/main write, merge, tag, release or deployment."
   ],
-  "note": "This Pack authorizes no source edit or external side effect by itself. It defines one narrowly scoped recovery for the exact #203 revision-2 pre-POST reservation and preserves all existing ADS, Claim/CAS, write-set, single-writer, independent review, CI and Host gates."
+  "note": "This Pack authorizes no source edit or external side effect by itself. It defines one narrowly scoped recovery for the exact #203 revision-2 pre-POST reservation and preserves all existing ADS, Claim/CAS, write-set, single-writer, independent review, CI and Host gates.",
+  "sourceJitBranch": {
+    "branch": "task/i331-t06d-prepost-recovery-impl",
+    "baseRef": "task/i319-t06d-terminalization-impl",
+    "baseSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
+    "baseTreeSha": "1532079c1e94c3142b1874327d9ae223dd8bc27d",
+    "createOnlyAfter": "PackBlob-bound Owner receipt, A/#260 R13 PASS, accepted #331 Host Claim and per-task FROZEN_DAG_WRITESET readback",
+    "sourceChangesAllowed": true,
+    "mustNotReusePackArtifactBranch": true
+  }
 }
