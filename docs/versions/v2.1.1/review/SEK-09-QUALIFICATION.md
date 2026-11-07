@@ -1,7 +1,9 @@
 # SEK-09 — Independent Qualification, Contradiction, Coverage & Completeness Gate
 
-**Outcome Task:** #351 (parent #299) · **Evidence lanes:** #352/#353/#354 · **Execution principle:** ADS #1359 Delivery-First  
-**Coordinator decision: REQUIRES_FURTHER_EVIDENCE; full G4/G5 qualification BLOCKED.**  
+**Outcome Task:** #351 (parent #299) · **Evidence lanes:** #352/#353/#354 · **Execution principle:** ADS #1359 Delivery-First
+
+**Coordinator decision: REQUIRES_FURTHER_EVIDENCE; full G4/G5 qualification BLOCKED.**
+
 **Core Task state: OPEN — no completion/acceptance claim.**
 
 ## Exact integration baseline and report provenance
