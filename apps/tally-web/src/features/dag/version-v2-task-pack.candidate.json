@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-06T14:08:23Z",
+  "observedAt": "2026-11-07T22:29:44.760Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -426,11 +426,11 @@
         "state:blocked"
       ],
       "createdAt": "2026-10-31T07:11:08Z",
-      "updatedAt": "2026-11-06T12:01:51Z",
+      "updatedAt": "2026-11-06T18:33:44Z",
       "closedAt": null,
-      "scopeDisposition": "PENDING_REVISION_2_PREPOST_RECOVERY_REQUIRED",
+      "scopeDisposition": "TARGET_TERMINALITY_VERIFIED_GLOBAL_HOST_ADMISSION_BLOCKED",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Host CAS claim-admission row for #203 is now revision 2 / PENDING_GITHUB_TERMINALIZATION (reservation by tally-host:win32:t06d-terminalization:1 at 2026-11-06T11:20:59.974Z); the terminal GitHub event is ABSENT and the prior terminalization operation issued 0 publisher invocations and 0 HTTP POSTs, stopping fail-closed before any POST. No legal completion path exists for the stranded revision under the reviewed implementation; recovery is separately tracked by planned Task #331. Do not infer terminality and do not attempt another POST. Issue labels now state:blocked; historical DISPATCH_CLAIMED observation (comment 6540484121, source 00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769) is preserved unchanged."
+      "dispositionNote": "Canonical target-specific terminality is read-only VERIFIED: public DomainHarness v0.10.3 CAS row revision 4 / TERMINAL_VERIFIED (value SHA256 d816a01f2a504a574e358dacd26d2f29e283620550d74d59ba5f78c033ec95c6), original unedited DISPATCH_CLAIMED comment 6540484121 and unique unedited DISPATCH_STATE_CHANGED/DONE terminal event 6691973736 (original reservation revision 2). R16 re-read the CAS row on a byte-identical copy with zero put calls and unchanged source DB digests. This terminates only the historical dispatch; it is not #203 Task Acceptance, Outcome Closure, source/CI/Release PASS or global Host admission. Issue remains OPEN/state:blocked. Historical #204/#205 CI failures and #331 historical/operational P1 deviations remain; global Host inventory/admission stays BLOCK/UNKNOWN. Never replay recovery, publisher, POST or CAS writes."
     },
     {
       "issueNumber": 207,
@@ -683,9 +683,9 @@
       "createdAt": "2026-11-04T00:27:42Z",
       "updatedAt": "2026-11-06T10:53:42Z",
       "closedAt": null,
-      "scopeDisposition": "PLANNED_E0_PRE_FREEZE_BOOTSTRAP_NO_CLAIM",
+      "scopeDisposition": "PLANNED_E0_R9_REFRESH_REQUIRED_NO_ROOT_CLAIM",
       "dispatchableByDisposition": false,
-      "dispositionNote": "E0 pre-freeze Bootstrap owns the selected K->Host Task Pack Freeze and native dependency write routes (14-path candidate write set; E0=CREATED_PLANNED, state:planned). Root admission, an immutable E0 Task Pack, independent review, exact Owner Approval and an accepted Host CAS Claim/JIT are all pending; #203 terminality proof is a predecessor gate. Non-dispatchable."
+      "dispositionNote": "E0 remains PLANNED/state:planned with NO_CLAIM_EVENT_EXPECTED and no root Claim or source authority. #203 target-specific terminality is now verified, but that satisfies only one predecessor observation; it does not prove global Host quiescence/admission or #331 Task Acceptance. After a stable A/#260 R16 candidate is independently Exact-SHA reviewed, E0 must refresh its own R9-or-later Pack from that exact input, complete independent Pack review and exact PackBlob-bound Owner receipt, then establish a separately reviewed lawful Host-wide admission/fail-closed isolation gate before any root Claim. The old R8 Pack/Owner receipt is stale. No native dependency write, Freeze, merge or release is authorized."
     },
     {
       "issueNumber": 312,
@@ -713,9 +713,9 @@
       "createdAt": "2026-11-05T18:54:59Z",
       "updatedAt": "2026-11-06T12:02:02Z",
       "closedAt": null,
-      "scopeDisposition": "CLAIMED_SOURCE_REVIEW_PASS_HOST_RECOVERY_PENDING",
+      "scopeDisposition": "SOURCE_REVIEW_PASS_SUCCESSOR_RECOVERY_OBSERVED_CLOSURE_UNVERIFIED",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Exact DISPATCH_CLAIMED comment 6668875091 (operator zcode:i319:t06d-terminalization:1, dispatch dispatch:319:t06d-terminalization:20261106:1, source 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, generation 1) observed; dedicated Host CAS Claim is PUBLISHED_VERIFIED revision 1 and per-task FROZEN_DAG_WRITESET revision 0 (nine-path digest 252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2). Implementation PR #330 has final independent SOURCE_REVIEW=PASS at HEAD 72ce3067213b75ffbc04762d866759c3af4324f8 / Tree 1532079c1e94c3142b1874327d9ae223dd8bc27d. The Host terminalization run then stopped fail-closed before any POST (see #319 comment 6683687251), leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION; Host recovery is still pending and is tracked by planned Task #331. Issue labels now state:blocked; keep the PLANNED-only serial chain #319 -> #331 -> #284. Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED; the observed comment event is not itself CAS acceptance. Non-dispatchable."
+      "dispositionNote": "Exact DISPATCH_CLAIMED comment 6668875091 remains observed; dedicated Host CAS Claim is PUBLISHED_VERIFIED revision 1 (full value SHA256 7fef4ce5f8bf1db7cc491d10aaf500c2d6dce8fc084ae2debac8ebefdeda02bf) and per-task FROZEN_DAG_WRITESET revision 0 (full value SHA256 9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b; nine-path digest 252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2). Implementation PR #330 review 5799002403 is SOURCE_REVIEW=PASS at HEAD 72ce3067213b75ffbc04762d866759c3af4324f8 / Tree 1532079c1e94c3142b1874327d9ae223dd8bc27d. Its original pre-POST stop is historical; the separate #331 successor later published the #203 terminal event and R16 verifies target CAS revision 4. #319 Issue remains OPEN/state:blocked and no #319 Task Closure is inferred from implementation review or the successor operation. Preserve historical deviations and the PLANNED-only #319 -> #331 -> #284 chain; aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
     },
     {
       "issueNumber": 331,
@@ -723,14 +723,14 @@
       "issueState": "open",
       "labels": [
         "type:task",
-        "state:planned"
+        "state:ready"
       ],
       "createdAt": "2026-11-06T12:00:56Z",
-      "updatedAt": "2026-11-06T14:08:17Z",
+      "updatedAt": "2026-11-06T23:48:42Z",
       "closedAt": null,
-      "scopeDisposition": "PLANNED_PREPOST_RECOVERY_NO_CLAIM",
+      "scopeDisposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt is OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00). Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
+      "dispositionNote": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
     }
   ],
   "edges": [
@@ -974,7 +974,7 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
-      "reason": "#331 pre-POST recovery of the stranded #203 revision-2 reservation must be admitted and completed before #319 terminalization is fully closed; PLANNED only, not a native dependency or admission."
+      "reason": "#331 separately consumed the one-shot #203 recovery and R16 verifies target-specific terminality; #331 Task Acceptance and #319 Task Closure remain unverified, with historical P1 deviations retained. PLANNED only, not a native dependency or admission."
     },
     {
       "from": 331,
@@ -982,7 +982,7 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
-      "reason": "#284 E0 freeze admission waits for the #331 recovery of the stranded #203 revision-2 reservation; replaces the former direct #319 -> #284 edge in the serial PLANNED chain; not a native dependency or admission."
+      "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
     }
   ],
   "claimSubjects": [
@@ -1599,16 +1599,16 @@
     },
     {
       "issueNumber": 331,
-      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "sourceSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i331:t06d-prepost-recovery:1",
+      "dispatchId": "dispatch:331:t06d-prepost-recovery:20261106:1",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#331:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6690955003,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/331#issuecomment-6690955003",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1826,7 +1826,7 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
-      "reason": "#331 pre-POST recovery of the stranded #203 revision-2 reservation must be admitted and completed before #319 terminalization is fully closed; PLANNED only, not a native dependency or admission."
+      "reason": "#331 separately consumed the one-shot #203 recovery and R16 verifies target-specific terminality; #331 Task Acceptance and #319 Task Closure remain unverified, with historical P1 deviations retained. PLANNED only, not a native dependency or admission."
     },
     {
       "from": 331,
@@ -1834,14 +1834,14 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
-      "reason": "#284 E0 freeze admission waits for the #331 recovery of the stranded #203 revision-2 reservation; replaces the former direct #319 -> #284 edge in the serial PLANNED chain; not a native dependency or admission."
+      "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
     }
   ],
   "notes": [
     "This refreshed 48-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
     "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
     "Twenty-eight PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 and the serial #319 → #331 → #284 chain as PLANNED.",
-    "The roster includes all 48 current label:type:task Issues (27 open / 21 closed). #319 is CLAIMED with source review PASS and Host recovery pending; #276 and #331 are PLANNED, have NO_CLAIM_EVENT_EXPECTED and are non-dispatchable.",
+    "The live roster contains all 48 current label:type:task Issues (27 OPEN / 21 CLOSED). #203 has target-specific terminality verified but remains OPEN/state:blocked with global Host admission BLOCK/UNKNOWN; #319 implementation PASS and successor recovery do not infer Task Closure; #331 has an observed Claim and scoped source-patch PASS but TASK_ACCEPTANCE=BLOCK and Issue OPEN/state:ready; #284 remains PLANNED with no root Claim. #276 remains PLANNED/non-dispatchable.",
     "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
@@ -1854,13 +1854,14 @@
     "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
     "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed.",
     "R8 additions #284 (E0 pre-freeze Bootstrap) and #312 (Product ReviewWitness successor to merged #210) are in the roster as state:planned with NO_CLAIM_EVENT_EXPECTED (zero ADS claim comments observed on either Issue); both are non-dispatchable.",
-    "Executable-status corrections from current native evidence: #203 CANONICALIZED_OVERLAP_BLOCKED with unproven historical-Claim terminality (non-dispatchable); #210 successor ownership transferred to #312 with no #210 mutation authorized; #219 on HOLD (state:planned) until #312 review/integration.",
+    "Current native/evidence dispositions: #203 target-specific dispatch terminality is VERIFIED at CAS revision 4 and terminal event 6691973736, but Task/Outcome Closure and global Host admission are not proven; #210 successor ownership remains transferred to #312 with no #210 mutation authorized; #219 remains on HOLD (state:planned) until #312 review/integration.",
     "New PLANNED edges #284 -> #312 and #312 -> #219 record R8 serial ownership only. No GitHub Native dependency (blocked_by) was written for them or any other pair; the 4 NATIVE edges remain #260-#263 -> #264.",
     "Previous 46-Task snapshot: 25 open Task bodies had 66 nonzero pairwise intersections (23 nonempty write sets; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices matched the paths_sha256-normalized blocks in Issues #312/#219/#284.",
     "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied.",
-    "Current full read: 48 Task bodies, all Claim comments and blocked_by lists; 40 observed self-reported Claims and 8 no-Claim rows. #260, #284, #331 and #319 updatedAt refreshed. #319 → #331 → #284 is PLANNED only. #203 CAS revision 2 remains PENDING_GITHUB_TERMINALIZATION with terminality NOT_PROVEN.",
-    "Current 27-open-Task write-set audit: 25 nonempty sets (24 prior plus new #331), 66 nonzero exact-path pairs recomputed from the full live pair matrix. The prior 67-pair note and its #212/#319 two-path overlap claim were false: #212's four paths and #319's nine paths are disjoint (digests e4ed0583… and 252cbcd0… preserved). #331's three proposed recovery paths overlap no open Task write set. No native dependency was invented for any pair.",
-    "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
+    "Current full read at 2026-11-07T22:29:44.760Z: all 48 Task bodies, complete Claim-comment pagination and blocked_by lists; 41 observed self-reported Claim comments and 7 no-Claim rows. #203 revision 4 / TERMINAL_VERIFIED and event 6691973736 are target-specific facts only. #331 Claim 6690955003 and exact three-path FSW are observed; R3 source patch PASS retains two historical/operational P1 deviations and TASK_ACCEPTANCE=BLOCK. #319 → #331 → #284 remains PLANNED only; #284 has no root Claim.",
+    "Current 27-open-Task write-set audit: 25 nonempty sets (#199/#200 read-only), 66 nonzero exact-path pairs recomputed from the full live pair matrix. The prior 67-pair note and #212/#319 two-path overlap claim were false; #331's exact three paths overlap no open Task write set. No native dependency was invented for any pair.",
+    "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED.",
+    "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2030,9 +2031,9 @@
       },
       {
         "issueNumber": 203,
-        "disposition": "PENDING_REVISION_2_PREPOST_RECOVERY_REQUIRED",
+        "disposition": "TARGET_TERMINALITY_VERIFIED_GLOBAL_HOST_ADMISSION_BLOCKED",
         "dispatchableByDisposition": false,
-        "note": "Host CAS claim-admission row for #203 is now revision 2 / PENDING_GITHUB_TERMINALIZATION (reservation by tally-host:win32:t06d-terminalization:1 at 2026-11-06T11:20:59.974Z); the terminal GitHub event is ABSENT and the prior terminalization operation issued 0 publisher invocations and 0 HTTP POSTs, stopping fail-closed before any POST. No legal completion path exists for the stranded revision under the reviewed implementation; recovery is separately tracked by planned Task #331. Do not infer terminality and do not attempt another POST. Issue labels now state:blocked; historical DISPATCH_CLAIMED observation (comment 6540484121, source 00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769) is preserved unchanged."
+        "note": "Canonical target-specific terminality is read-only VERIFIED: public DomainHarness v0.10.3 CAS row revision 4 / TERMINAL_VERIFIED (value SHA256 d816a01f2a504a574e358dacd26d2f29e283620550d74d59ba5f78c033ec95c6), original unedited DISPATCH_CLAIMED comment 6540484121 and unique unedited DISPATCH_STATE_CHANGED/DONE terminal event 6691973736 (original reservation revision 2). R16 re-read the CAS row on a byte-identical copy with zero put calls and unchanged source DB digests. This terminates only the historical dispatch; it is not #203 Task Acceptance, Outcome Closure, source/CI/Release PASS or global Host admission. Issue remains OPEN/state:blocked. Historical #204/#205 CI failures and #331 historical/operational P1 deviations remain; global Host inventory/admission stays BLOCK/UNKNOWN. Never replay recovery, publisher, POST or CAS writes."
       },
       {
         "issueNumber": 207,
@@ -2132,9 +2133,9 @@
       },
       {
         "issueNumber": 284,
-        "disposition": "PLANNED_E0_PRE_FREEZE_BOOTSTRAP_NO_CLAIM",
+        "disposition": "PLANNED_E0_R9_REFRESH_REQUIRED_NO_ROOT_CLAIM",
         "dispatchableByDisposition": false,
-        "note": "E0 pre-freeze Bootstrap owns the selected K->Host Task Pack Freeze and native dependency write routes (14-path candidate write set; E0=CREATED_PLANNED, state:planned). Root admission, an immutable E0 Task Pack, independent review, exact Owner Approval and an accepted Host CAS Claim/JIT are all pending; #203 terminality proof is a predecessor gate. Non-dispatchable."
+        "note": "E0 remains PLANNED/state:planned with NO_CLAIM_EVENT_EXPECTED and no root Claim or source authority. #203 target-specific terminality is now verified, but that satisfies only one predecessor observation; it does not prove global Host quiescence/admission or #331 Task Acceptance. After a stable A/#260 R16 candidate is independently Exact-SHA reviewed, E0 must refresh its own R9-or-later Pack from that exact input, complete independent Pack review and exact PackBlob-bound Owner receipt, then establish a separately reviewed lawful Host-wide admission/fail-closed isolation gate before any root Claim. The old R8 Pack/Owner receipt is stale. No native dependency write, Freeze, merge or release is authorized."
       },
       {
         "issueNumber": 312,
@@ -2144,15 +2145,15 @@
       },
       {
         "issueNumber": 319,
-        "disposition": "CLAIMED_SOURCE_REVIEW_PASS_HOST_RECOVERY_PENDING",
+        "disposition": "SOURCE_REVIEW_PASS_SUCCESSOR_RECOVERY_OBSERVED_CLOSURE_UNVERIFIED",
         "dispatchableByDisposition": false,
-        "note": "Exact DISPATCH_CLAIMED comment 6668875091 (operator zcode:i319:t06d-terminalization:1, dispatch dispatch:319:t06d-terminalization:20261106:1, source 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, generation 1) observed; dedicated Host CAS Claim is PUBLISHED_VERIFIED revision 1 and per-task FROZEN_DAG_WRITESET revision 0 (nine-path digest 252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2). Implementation PR #330 has final independent SOURCE_REVIEW=PASS at HEAD 72ce3067213b75ffbc04762d866759c3af4324f8 / Tree 1532079c1e94c3142b1874327d9ae223dd8bc27d. The Host terminalization run then stopped fail-closed before any POST (see #319 comment 6683687251), leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION; Host recovery is still pending and is tracked by planned Task #331. Issue labels now state:blocked; keep the PLANNED-only serial chain #319 -> #331 -> #284. Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED; the observed comment event is not itself CAS acceptance. Non-dispatchable."
+        "note": "Exact DISPATCH_CLAIMED comment 6668875091 remains observed; dedicated Host CAS Claim is PUBLISHED_VERIFIED revision 1 (full value SHA256 7fef4ce5f8bf1db7cc491d10aaf500c2d6dce8fc084ae2debac8ebefdeda02bf) and per-task FROZEN_DAG_WRITESET revision 0 (full value SHA256 9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b; nine-path digest 252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2). Implementation PR #330 review 5799002403 is SOURCE_REVIEW=PASS at HEAD 72ce3067213b75ffbc04762d866759c3af4324f8 / Tree 1532079c1e94c3142b1874327d9ae223dd8bc27d. Its original pre-POST stop is historical; the separate #331 successor later published the #203 terminal event and R16 verifies target CAS revision 4. #319 Issue remains OPEN/state:blocked and no #319 Task Closure is inferred from implementation review or the successor operation. Preserve historical deviations and the PLANNED-only #319 -> #331 -> #284 chain; aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
       },
       {
         "issueNumber": 331,
-        "disposition": "PLANNED_PREPOST_RECOVERY_NO_CLAIM",
+        "disposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
         "dispatchableByDisposition": false,
-        "note": "Recovery Task for the stranded #203 CAS revision 2 / PENDING_GITHUB_TERMINALIZATION reservation. No Claim exists (NO_CLAIM_EVENT_EXPECTED). Immutable Pack candidate: PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, Base 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; independent Pack review 5800344352 PACK_R1=PASS (P0=0/P1=0/P2=0/P3=0); exact Owner receipt is OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00). Proposed three-path write set digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a with zero overlap across all 27 OPEN Task bodies. Claim subject is kaicreator-mm/tally#331:builder:__default__. PLANNED serial chain #319 -> #331 -> #284 is PLANNED only; no native dependency exists."
+        "note": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
       }
     ]
   },
@@ -2327,11 +2328,11 @@
           "packages/tally-engineering-business/src/index.mjs",
           "packages/tally-engineering-business/test/business-policy.test.mjs"
         ],
-        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 is the R8 historical predecessor: its source/PRs are merged but its old Claim terminality is unproven, so before #284 root admission the single Host registry must prove no active #203 writer/Claim; UNKNOWN blocks. No edge is recorded; this is an admission gate, not a dispatch edge."
+        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. No edge is recorded; this is an admission gate, not a dispatch edge."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 27 open Task issue bodies at observedAt; path patterns are retained literally.",
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 27 open Task issue bodies at 2026-11-07T22:29:44.760Z; path patterns are retained literally.",
       "openTasksWithWriteSet": 25,
       "openTasksWithoutWriteSet": [
         199,
