@@ -15,7 +15,7 @@ This is a bounded sample, not a claim that every one of 106 claims has received 
 
 ## Sampling method
 
-Selected one representative KnowledgeClaim from each of the ten SEK-06/SEK-07 lanes, then followed the graph's `SUPPORTED_BY` edge to Evidence, SourceLocator and Source. Each selected claim exists in the exact WIP JSON-LD graph; each selected evidence node is a direct-source paraphrase; each selected locator and source resolves.
+Selected one representative KnowledgeClaim from each of the ten SEK-06/SEK-07 lanes, then followed the graph's `SUPPORTED_BY` edge to Evidence, SourceLocator and Source. Selection was purposive auditor judgment, not random sampling or a deterministic representative-ranking algorithm; the exact 40 IDs below are the frozen, reproducible audit sample. Reproduction means resolving these enumerated chains rather than attempting to regenerate an unspecified representative choice. Each selected claim exists in the exact WIP JSON-LD graph; each selected evidence node is a direct-source paraphrase; each selected locator and source resolves.
 
 | Lane | Claim | Evidence | Locator | Source |
 |---|---|---|---|---|
@@ -30,16 +30,17 @@ Selected one representative KnowledgeClaim from each of the ten SEK-06/SEK-07 la
 | 07F | `se:CLM-07F-SWEBOK-MAINT-DEFINITION` | `se:EVD-07F-SWEBOK-MAINT-DEFINITION` | `se:LOC-07F-SWEBOK-KA7-MAINT-DEF` | `se:SRC-SWEBOK-GUIDE-4-0A` |
 | 07G | `se:CLM-07G-SWEBOK-SEM-DEFINITION` | `se:EVD-07G-SWEBOK-SEM-INTRO` | `se:LOC-07G-SWEBOK-KA9-INTRO` | `se:SRC-SWEBOK-GUIDE-4-0A` |
 
-The sampled claims preserve their authority scope: the 06A/06B/06C and 07D/07E samples are explicitly curriculum-scoped CS2023 statements; the 07A/07B/07C/07F/07G samples are explicitly SWEBOK Guide claims, not universal prescriptions or regulatory definitions. The selected evidence is linked to exact source locators. CS2023 locators are heading/topic anchored to official PDF page indices; the registry explicitly says printed pages were not independently confirmed for these entries. SWEBOK locators include PDF page indices and printed page ranges.
+The sampled claims preserve their authority scope: the 06A/06B/06C and 07D/07E samples are explicitly curriculum-scoped CS2023 statements; the 07A/07B/07C/07F/07G samples are explicitly SWEBOK Guide claims, not universal prescriptions or regulatory definitions. The selected evidence is linked to exact source locators. CS2023 locators are heading/topic anchored to official PDF page indices; the SourceLocator records explicitly state that printed pages were not independently confirmed (printed-page correspondence: **UNKNOWN**), while the registry records the page-index/printed-page offset ambiguity. SWEBOK locators include PDF page indices and printed page ranges.
 
 ## Source and provenance observations
 
 - The graph projects three used sources: SWEBOK Guide v4.0a, CS2023 and NIST SP 800-218 v1.1.
 - Coverage report counts 137 Evidence records: 127 `DIRECT_SOURCE_PARAPHRASE` and 10 explicitly labelled `SYNTHESIS`.
-- All 137 evidence records are `EXTRACTED_PENDING_REVIEW`; every evidence record binds to one locator.
+- All 137 evidence records have `extraction_status: EXTRACTED_PENDING_REVIEW`; lifecycle state is 136 `PENDING_REVIEW` plus 1 `PROPOSED` (`se:EVD-07B-SYNTHESIS-BIG-BANG`). Every evidence record binds to one locator.
 - All 106/106 KnowledgeClaims have at least one `SUPPORTED_BY` edge (157 such edges total); support edges point to Evidence records.
 - The 10 sampled claim/evidence chains resolved through locator and source records. No dangling source/evidence chain was found in the sample.
 - The 10 sampled claims state applicability and limitations; examples include CS2023's curriculum-only scope, SWEBOK's non-prescriptive BOK scope, and the explicit note that the security-by-design statement is not an empirical effectiveness finding.
+- Claim atomicity was assessed for all ten samples: each states one principal proposition, with conditions, lifecycle stages or examples qualifying that proposition rather than introducing an independent unsupported claim. The 07E synthesis remains explicitly labelled as synthesis rather than direct-source evidence.
 - The CI alignment synthesis in 07E is explicitly identified as lane-level synthesis, distinguishes two source roles, and records that functional alignment does not establish equal authority or endorsement.
 
 ## Rights and authority boundary
@@ -55,7 +56,7 @@ The five ISO/IEC/IEEE sources and NIST SP 800-218A remain unused metadata-only r
 
 ### P2-01 — SWEBOK v4.0a release-date discrepancy remains unresolved
 
-The verified official PDF title page states Released August 2026, while the official IEEE landing page separately records a 25 September 2025 update identifying v4.0a. The Source Registry preserves both observations and marks the discrepancy open pending clarification. The exact PDF identity and ISBN are recorded; no DOI is invented. This is transparent and does not invalidate the sampled locators, but the bibliographic date should not be normalized to one value without authority resolution.
+The verified official PDF title page states Released August 2026, while the official IEEE landing page separately records a 25 September 2025 update identifying v4.0a. The Source Registry preserves both observations and marks the discrepancy open pending clarification; the authoritative release date is **UNKNOWN**. The exact PDF identity and ISBN are recorded; no DOI is invented. This is transparent and does not invalidate the sampled locators, but the bibliographic date should not be normalized to one value without authority resolution.
 
 ### P2-02 — Contradiction coverage is not exhaustive and the graph currently has no CONTRADICTED_BY assertions
 
@@ -66,4 +67,4 @@ The 10-lane sample found no direct contradiction within the selected claim/evide
 - **Current experimental corpus:** sampled provenance and rights boundaries are coherent; PASS_WITH_LIMITATIONS.
 - **Production/commercial reuse of CS2023-derived material:** BLOCK until specific permission is established for the intended use.
 - **Human acceptance:** not assessed here; no ReviewDecision or ACCEPTED record was created.
-- **Uncertainty:** this lane reviewed one representative claim per subdomain; it did not exhaustively re-open every source PDF locator or semantically review all 106 claims.
+- **Uncertainty:** this lane reviewed one representative claim per subdomain; it did not exhaustively re-open every source PDF locator or semantically review all 106 claims. Live external revalidation of the SWEBOK PDF, IEEE landing page and other publisher pages was **NOT_RUN**; their current external state is **UNKNOWN** beyond the recorded registry evidence.
