@@ -1,0 +1,1778 @@
+lane_id: SEK-07D-RELIABILITY-PERFORMANCE-LANE-0.1.0
+title: Software Engineering reliability, resilience and performance lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#337"
+scope_note: >-
+  Reliability, resilience and performance vertical-slice lane (SEK-07D) grounded
+  in the CS2023 Software Engineering knowledge unit "SE-Reliability: Software
+  Reliability" (heading-anchored, verbatim topic extraction of 2026-11-07) plus
+  directly reinspected SWEBOK Guide v4.0a sections: KA6 Software Engineering
+  Operations sections 1.6, 2.3, 2.4, 2.5 and 4.3 (operations-side availability,
+  capacity, failover and evidence-based monitoring) and KA12 Software Quality
+  sections 1.4 and 2.3.1 (failure-risk-reduction engineering and reliability
+  measurement), read from the official hash-verified PDF binary on 2026-11-07.
+  KA12 model-level quality definitions are deliberately not cited (SEK-07A owns
+  the quality-model level); this lane cites only engineering sections. All
+  knowledge records remain PROPOSED or PENDING_REVIEW; none is ACCEPTED. Source
+  entities are not stored in this lane file; the validation harness derives
+  shared Source records from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: '2026-11-06'
+      label: Software Engineering
+      definition: A bounded engineering discipline concerned with the multi-person, multi-version construction
+        and evolution of software, represented here through curriculum, secure-development and related classification
+        views pending professional-BOK reconciliation.
+      scope_inclusions:
+      - curriculum knowledge-unit classification for software engineering
+      - secure-development cross-cutting guidance
+      scope_exclusions:
+      - the entirety of computer science
+      - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+      - No single source is treated as a complete ontology of the discipline.
+      - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: '2026-11-06'
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: Represent the Software Engineering knowledge units of the CS2023 curriculum knowledge model
+        as one classification lens, independent of professional body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+      - Curriculum classification is not professional-domain completeness.
+      - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice
+        taxonomy.
+      - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in
+        the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane view: operational reliability and performance lens ---
+    - id: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Operational reliability, resilience and performance concerns view
+      view_kind: OPERATIONS
+      purpose: >-
+        Classify software reliability, availability, fault tolerance, failure
+        handling, resilience, capacity/performance engineering and
+        measurement-based feedback as operational concerns of an engineered
+        software service, kept as a separate lens from curriculum units and from
+        quality-model hierarchies.
+      coverage_state: PARTIAL
+      limitations:
+        - The view covers only what the lane's inspected CS2023 and SWEBOK sections support; it is not a complete operations or performance-engineering taxonomy.
+        - Quality-model-level characteristic definitions are outside this view (SEK-07A owns the model level); this view classifies operational concerns, not model characteristics.
+        - Security-operations content is boundary-kept to SEK-07C and CI/CD delivery mechanics to SEK-07E; this view does not absorb them.
+      evidence_refs:
+        - se:EVD-07D-CS2023-SE-RELIABILITY-KU
+        - se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+
+  taxonomy_nodes:
+    - id: se:NODE-07D-CS2023-SE-RELIABILITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SE-Reliability: Software Reliability"
+      definition: >-
+        The Software Reliability knowledge unit of the CS2023 Software Engineering
+        area: a KA Core unit (2 KA Core hours, no CS Core hours) whose core topics
+        cover the reliability concept, reliability requirements, defects and
+        reliability, software versus system reliability, the defect injection and
+        removal cycle, and the error-budget versus error-free comparison, with
+        non-core topics on reliability models, fault tolerance, reliability
+        engineering practices, failure domains and measurement-based analysis.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-07D-CS2023-SE-RELIABILITY-KU
+        - se:EVD-07D-CS2023-RELIABILITY-CORE-HOURS
+    - id: se:NODE-07D-RELIABILITY-RESILIENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Reliability, availability, fault tolerance and resilience
+      definition: >-
+        The operational concern cluster covering failure behavior of software in
+        service: reliability as a measured property, availability against service
+        commitments, fault tolerance and failure-handling mechanisms, and
+        resilience through recovery preparedness.
+      node_kind: QUALITY_ATTRIBUTE
+      view_ref: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      evidence_refs:
+        - se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+        - se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+    - id: se:NODE-07D-PERFORMANCE-CAPACITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Performance, capacity and resource efficiency
+      definition: >-
+        The operational concern cluster covering capacity and performance
+        engineering: planning performance and load handling early, translating
+        workload forecasts into capacity requirements, and managing resource
+        utilization against agreed demand.
+      node_kind: QUALITY_ATTRIBUTE
+      view_ref: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+        - se:EVD-07D-SWEBOK-CAPACITY-MGMT
+    - id: se:NODE-07D-OBSERVABILITY-FEEDBACK
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Measurement and telemetry as the operational feedback mechanism
+      definition: >-
+        The operational concern of obtaining evidence about system quality and
+        operational health — telemetry, monitoring and alerting, dashboards,
+        reliability measurement and key performance indicators — so that
+        operational decisions rest on observed data rather than assumption.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      evidence_refs:
+        - se:EVD-07D-CS2023-MEASUREMENT-TELEMETRY
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+
+  source_locators:
+    # --- shared SourceLocator: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: '2026-11-06'
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table
+      verified_content_summary: Nine SE knowledge units with CS Core and KA Core hours; Software Verification
+        and Validation carries 1 CS Core and 3 KA Core hours.
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: '2026-11-06'
+    # --- lane CS2023 locator: heading-anchored, no invented page numbers ---
+    - id: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Reliability: Software Reliability' (KA Core topics 1-6, Non-core topics 7-11, Illustrative Learning Outcomes 1-3); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "KA Core topics: reliability concept (probability of failure or mean time between failures; faults as cause of failures); identifying reliability requirements for different kinds of software; failures caused by defects and minimum-defect goal (inject fewer, remove more); software reliability vs system reliability and failure behavior; defect injection and removal cycle; error budget vs error-free approaches. Non-core topics: reliability models; fault tolerance techniques and models with contextual differences; reliability engineering practices; dependent and independent failure domains; measurement-based analysis (telemetry, monitoring and alerting, dashboards, release qualification metrics)."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- SWEBOK v4.0a locators (2026-11-07 direct reinspection; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are
+    #     0-based, printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-07D-SWEBOK-KA6-PERF-REL-LB
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 1.6 Performance, Reliability and Load Balancing; PDF page index 155; printed page 6-6"
+      verified_content_summary: "Operations engineers plan performance, reliability and load balancing early in projects to meet project requirements; trend toward infrastructure/operations services that adjust dynamically to demand; DevOps lets operations anticipate needs early and expose infrastructure services for developers to use and test during development."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA6-AVAILABILITY-SLA
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 2.3 Software Availability, Continuity, and Service Levels; PDF page index 157; printed page 6-8"
+      verified_content_summary: "Availability and continuity managed against customer commitments; defined as nonfunctional requirements early; availability measured and recorded, unplanned nonavailability investigated; service reports give indicators against service-level targets; service-level management monitors agreed service level including workload, performance and availability trends; SLAs clarify operations obligations."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA6-CAPACITY
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 2.4 Software Capacity Management; PDF page index 157; printed page 6-8"
+      verified_content_summary: "Capacity at all times for current and future agreed demand; business predictions and workload estimates translated into documented requirements; predictable reaction to workload variation; component and resource-utilization data captured and analyzed; capacity plan (at least annually) with actual performance, expected requirements and costed options against SLA targets."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA6-DR-FAILOVER
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 2.5 Software Backup, Disaster Recovery, and Failover; PDF page indices 157-158; printed pages 6-8 to 6-9"
+      verified_content_summary: "Backups plus restoration equipment/staff quickly available after major failure; recovery need shapes backup method, restore-point frequency, storage and retention; preparedness and regular testing of backup, disaster recovery and failover rehearsed as production changes; failure is inevitable; automated failover daemons reduce recovery time drastically; applications should include failure-handling logic planned during development."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA6-MONITOR
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 4.3 Monitor, Measure, Track, and Review; PDF page index 160; printed page 6-11"
+      verified_content_summary: "Operations monitor capacity, continuity and availability; hope should not be a strategy; engineers should be informed about system quality and operational health with evidence — real-time KPIs including production monitoring and product telemetry, actionable V&V results before and after release, end-user activity and resource use, impact analysis results, operational dependencies, unapproved configuration changes, and security and resilience performance capability."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA12-DEPENDABILITY
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 12 Software Quality, section 1.4 Software Dependability and Integrity Levels (including 1.4.1 Dependability and 1.4.2 Integrity Levels of Software); PDF page indices 249-250; printed pages 12-5 to 12-6"
+      verified_content_summary: "Safety-critical context; three complementary techniques for reducing failure risk — avoidance, detection and removal, and damage limitation — impacting functional requirements, performance requirements and development processes; increasing risk implies more rigorous SQA/review; assurance case as claims, arguments and supporting evidence/assumptions; integrity levels as risk management."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07D-SWEBOK-KA12-QUALITY-MEASUREMENT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 12 Software Quality, section 2.3.1 Software Quality Measurement; PDF page indices 252-253; printed pages 12-8 to 12-9"
+      verified_content_summary: "Quality measurements support decision-making; three widely used measurements: error density, defect density and failure rate (mean time to failure); reliability models built from failure data collected during testing or in service estimate probability of future failures and assist decisions about when to stop testing."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    # --- CS2023 SE-Reliability evidence (heading-anchored KU locator) ---
+    - id: se:EVD-07D-CS2023-SE-RELIABILITY-KU
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Reliability knowledge unit comprises six KA Core topics
+        (the reliability concept; identifying reliability requirements for
+        different kinds of software; defects as the cause of failures and the
+        minimum-defect goal; software reliability versus system reliability and
+        failure behavior; the defect injection and removal cycle; and comparing
+        the error-budget approach with the error-free approach) and five
+        Non-core topics (software reliability models; fault tolerance techniques
+        and models; software reliability engineering practices; dependent and
+        independent failure domains; measurement-based analysis of software
+        reliability). Its KA Core illustrative learning outcomes include
+        determining the level of reliability a system requires, explaining the
+        problems in achieving very high reliability, and understanding
+        fault-minimization approaches applicable at each lifecycle stage.
+      context: "SE knowledge unit 'SE-Reliability: Software Reliability'; curriculum topic structure, KA Core topics 1-6 and Non-core topics 7-11."
+      method: "Read the SE-Reliability unit topic list in the official Body of Knowledge full text obtained via a text-extraction service on 2026-11-07; heading-anchored KU locator inside the registry-verified SE section page span."
+      result: "The unit's topic inventory and learning outcomes were confirmed for the taxonomy-node definition and for scoping which topics are core versus elective."
+      limitations:
+        - "Curriculum topic inventory; not a professional reliability-engineering syllabus."
+      uncertainty:
+        - "The KU subsection's printed page number was not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023's first core reliability topic defines the concept of reliability
+        as the probability of failure or the mean time between failures, and
+        treats faults as the cause of failures.
+      context: "SE-Reliability: Software Reliability, KA Core topic 1."
+      method: "Read the SE-Reliability topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "The dual quantification (probability of failure; mean time between failures) and the fault-to-failure causal framing were confirmed."
+      limitations:
+        - "The topic names the two quantifications without elaborating measurement procedure; procedural detail is not in this anchor."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 teaches that software failures are caused by defects (bugs), so
+        for high reliability the goal is to have minimum defects: by injecting
+        fewer defects in the first place — through better training, education
+        and planning — and by removing most of the injected defects, through
+        testing, code review and similar approaches. A paired core topic covers
+        the defect injection and removal cycle and different approaches for
+        defect removal.
+      context: "SE-Reliability: Software Reliability, KA Core topics 3 and 5."
+      method: "Read the SE-Reliability topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "The two-lever minimum-defect framing (inject fewer; remove more) and the injection/removal cycle topic were confirmed."
+      limitations:
+        - "The topic names example levers (training, education, planning; testing, code review) without ranking their effectiveness."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-ERROR-BUDGET
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023's sixth core reliability topic asks students to compare the
+        "error budget" approach to reliability with the "error-free" approach
+        and to identify domains where each is relevant.
+      context: "SE-Reliability: Software Reliability, KA Core topic 6."
+      method: "Read the SE-Reliability topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "The error-budget/error-free comparison is confirmed as core curriculum content, phrased as a comparison-and-domain-mapping exercise rather than a verdict that one approach wins."
+      limitations:
+        - "The curriculum poses the comparison; it does not itself enumerate which domains suit which approach."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 lists software fault tolerance techniques and models as a
+        Non-core topic and makes their contextual differences explicit through
+        two contrasting examples: crashing a flight-critical system is strongly
+        avoided, while crashing a data-processing system before corrupt data is
+        written to storage is highly valuable. The same unit also lists (also
+        Non-core) identifying dependent and independent failure domains and
+        their impact on system reliability.
+      context: "SE-Reliability: Software Reliability, Non-core topics 8 (with 8a) and 10."
+      method: "Read the SE-Reliability non-core topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "The consequence-driven contrast in tolerated failure responses and the failure-domain topic were confirmed as elective curriculum content."
+      limitations:
+        - "Both topics are Non-core (elective) in the CS2023 curriculum model; the examples are illustrative, not a taxonomy of fault-tolerance strategies."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-MEASUREMENT-TELEMETRY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 lists, as a Non-core topic, measurement-based analysis of
+        software reliability, exemplified by telemetry, monitoring and
+        alerting, dashboards, and release qualification metrics.
+      context: "SE-Reliability: Software Reliability, Non-core topic 11."
+      method: "Read the SE-Reliability non-core topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "The measurement-based analysis topic and its four named instrument families were confirmed as elective curriculum content."
+      limitations:
+        - "The topic names instrument families without prescribing metrics definitions or alerting thresholds."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-SYSTEM-RELIABILITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-CS2023-SE-RELIABILITY-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        CS2023 gives distinct core topics to identifying reliability
+        requirements for different kinds of software and to software
+        reliability, system reliability and failure behavior, keeping the
+        software-level and system-level reliability discussion separate from
+        the generic reliability concept.
+      context: "SE-Reliability: Software Reliability, KA Core topics 2 and 4."
+      method: "Read the SE-Reliability topic list in the extracted full text on 2026-11-07; heading-anchored KU locator."
+      result: "Reliability-requirement identification per software kind and the software-versus-system reliability distinction were confirmed as separate core topics."
+      limitations:
+        - "The topics exist as titles only; the curriculum extract carries no elaboration of how system-level failure behavior is analyzed."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-CS2023-RELIABILITY-CORE-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE Core Hours table allocates the Software Reliability
+        knowledge unit 0 CS Core hours and 2 KA Core hours.
+      context: "SE Core Hours table row for Software Reliability within the nine-unit SE area."
+      method: "Read the Software Engineering Core Hours table in the extracted full text on 2026-11-07; registry-verified PDF page indices 176-177."
+      result: "Software Reliability is confirmed as a KA Core unit with no separate CS Core allocation."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- SWEBOK v4.0a KA6 evidence (2026-11-07 direct reinspection) ---
+    - id: se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-PERF-REL-LB
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 1.6 states that software operations engineers
+        plan for performance, reliability and load balancing early in software
+        projects so that project requirements are met, cross-referencing the
+        Software Requirements KA for those requirements. It observes a current
+        trend of designing and using infrastructure/operations services that
+        adjust the infrastructure dynamically (for example for scalability)
+        according to demand, and notes that DevOps practices enable operations
+        engineers to anticipate these needs early and to provide infrastructure
+        services that software engineers can use and test during the
+        development stages of a project.
+      context: "SWEBOK Guide v4.0a Chapter 6 section 1.6, printed page 6-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07; text extracted at the verified page index and paraphrased originally."
+      result: "The plan-early framing, the demand-driven infrastructure trend and the early-testing opportunity were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The section is a short topic statement; it does not prescribe a capacity or load-testing procedure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-AVAILABILITY-SLA
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.3 presents service availability and
+        continuity as managed properties: they must be managed so customer
+        commitments are met; they are defined as nonfunctional requirements
+        early in a project (the section points to the Software Quality KA);
+        operations engineers plan, design, implement and test the proper
+        infrastructure; software availability is measured and recorded;
+        unplanned nonavailability is investigated and acted on; and service
+        reports produce availability and continuity indicators against
+        service-level targets. The service-level management process monitors
+        the agreed level of service, including workload characteristics,
+        performance and availability trend information and customer
+        satisfaction, and defining, agreeing and documenting service-level
+        agreements (SLAs) helps clarify the full range of operations service
+        obligations.
+      context: "SWEBOK Guide v4.0a Chapter 6 section 2.3, printed page 6-8."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The manage-measure-investigate loop and the SLA clarification role were confirmed for the availability claim and the SLA-anchored pattern."
+      limitations:
+        - "The section describes generally accepted operations activities, not a mandated availability-management process for every service."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-CAPACITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.4, relaying ISO/IEC/IEEE 20000-1, describes
+        software capacity management as ensuring the software product has the
+        capacity, at all times, to meet current and future agreed-upon demands
+        created by the customer's business needs: current and expected business
+        requirements should be understood and translated into specific,
+        documented requirements; the reaction to workload or environment
+        variations should be predictable; and data on current and previous
+        components and on resource utilization at an appropriate level should
+        be captured and analyzed to support the process. Capacity management is
+        called the focal point for all performance and capacity issues, should
+        support development of new and changed services by sizing and modeling
+        them, and produces a capacity plan (at a suitable frequency, at least
+        annually) documenting actual infrastructure performance and expected
+        requirements, with costed options and recommended solutions for
+        achieving the agreed service-level targets in the SLA.
+      context: "SWEBOK Guide v4.0a Chapter 6 section 2.4, printed page 6-8."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The forecast-translate-analyze-plan loop, the annual capacity plan and the costed-options framing were confirmed for the capacity claim and decision model."
+      limitations:
+        - "The section relays an ISO/IEC/IEEE 20000-1 need; the underlying standard's normative text is not itself admitted (registry ISO sources are metadata-only)."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-DR-FAILOVER
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.5 states that after a major service failure
+        or disaster, backups of data, documents and software plus any equipment
+        or staff necessary for service restoration should be quickly available;
+        that the need for successful recovery should influence the choice of
+        backup and recovery methods (full or incremental), how frequently
+        restore points are established, where they are stored and how long
+        they are retained; and that preparedness and regular testing of
+        backup, disaster recovery and failover should be constantly rehearsed
+        as the production environment changes (testing disaster recovery
+        requires stopping the service, identifying the checkpoint state and
+        triggering the failover process). It further states that software
+        engineers should understand that failure is inevitable, that automated
+        failover daemons can reduce recovery time drastically, and that to
+        achieve this software applications should include failure-handling
+        logic, which must be planned during development.
+      context: "SWEBOK Guide v4.0a Chapter 6 section 2.5, printed pages 6-8 to 6-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The failure-is-inevitable stance, the planned-during-development failure-handling logic and the rehearsal requirement were confirmed for the plan-for-failure principle and the failover practice."
+      limitations:
+        - "The section names approaches (automated failover daemons, full/incremental backups) without comparative reliability data."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-MONITOR
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 4.3 states that software engineering
+        operations activities monitor capacity, continuity and availability,
+        and that in a DevOps mindset hope should not be a strategy: engineers
+        should instead be informed about system quality and operational health
+        with evidence, in the form of key performance indicators available to
+        stakeholders in real time. The named evidence sources are production
+        system monitoring and product telemetry; actionable verification and
+        validation results before and after release to production; end-user
+        activity and resource use; impact analysis results; inter- and
+        intra-related dependencies required for system operation; configuration
+        changes unrelated to approved deployment tasks; and security and
+        resilience performance capability.
+      context: "SWEBOK Guide v4.0a Chapter 6 section 4.3, printed page 6-11."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The evidence-over-hope norm and the real-time KPI inventory were confirmed for the observability claim, principle and practice."
+      limitations:
+        - "The KPI list is illustrative of what evidence should inform operations; the section does not define each indicator's computation."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- SWEBOK v4.0a KA12 evidence (2026-11-07 direct reinspection) ---
+    - id: se:EVD-07D-SWEBOK-RISK-REDUCTION-TRIO
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA12-DEPENDABILITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA12 section 1.4, in the context of safety-critical and
+        software-intensive systems, names three complementary techniques for
+        reducing failure risk — avoidance, detection and removal, and damage
+        limitation — and states that these techniques impact software
+        functional requirements, performance requirements and development
+        processes. It adds that increasing risk implies increasing software
+        quality assurance and more rigorous review techniques, and describes
+        the assurance case as a reasoned, auditable artifact supporting the
+        contention that claims are satisfied, containing claims about
+        properties, arguments that logically link the evidence and assumptions
+        to the claims, and a body of evidence and assumptions supporting the
+        arguments.
+      context: "SWEBOK Guide v4.0a Chapter 12 section 1.4 (including 1.4.1/1.4.2 context), printed pages 12-5 to 12-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The three failure-risk-reduction technique families, their impact on requirements and process, and the assurance-case structure were confirmed."
+      limitations:
+        - "The dependability characteristic enumeration and integrity-level scheme details border the quality-model level owned by SEK-07A; this evidence admits only the engineering techniques and assurance-case structure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07D-SWEBOK-RELIABILITY-MEASURES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA12-QUALITY-MEASUREMENT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA12 section 2.3.1 states that software quality
+        measurements support decision-making and names three widely used
+        software quality measurements: error density (number of errors per unit
+        size of documents or software), defect density (number of defects found
+        divided by the size of the software) and failure rate (mean time to
+        failure). It further states that reliability models are built from
+        failure data collected during software testing or from software in
+        service, and can therefore be used to estimate the probability of
+        future failures and to assist in decisions about when to stop testing.
+      context: "SWEBOK Guide v4.0a Chapter 12 section 2.3.1, printed pages 12-8 to 12-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The three named measurements and the failure-data-to-reliability-model chain were confirmed for the reliability measurement claim and the reliability concept."
+      limitations:
+        - "The section names the measurements and their informal definitions only; formal measurement theory is out of anchor scope."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- lane synthesis evidence (clearly marked, PROPOSED-basis inference) ---
+    - id: se:EVD-07D-SYNTHESIS-HOPE-BASED-OPS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07D-SWEBOK-KA6-MONITOR
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07D): SWEBOK KA6 section 4.3 explicitly rejects
+        operating on hope ("hope should not be a strategy") and demands
+        real-time evidence about quality and operational health, while CS2023's
+        SE-Reliability unit lists measurement-based analysis (telemetry,
+        monitoring and alerting, dashboards, release qualification metrics) as
+        its reliability-analysis topic. On that combined reading, running an
+        operated software service without a measurement/telemetry feedback
+        loop leaves its reliability, capacity and availability unobserved, so
+        deviations are discovered by stakeholders rather than by evidence.
+      context: "Cross-source inference combining SWEBOK Guide v4.0a KA6 section 4.3 with CS2023 SE-Reliability Non-core topic 11; this is not a sentence that appears in either source."
+      method: "Lane-level comparison of one verified SWEBOK normative statement with one verified CS2023 topic statement."
+      result: "Provides the inference trail motivating the se:ANT-07D-HOPE-BASED-OPERATIONS record."
+      limitations:
+        - "Synthesis inference, not a direct source statement."
+        - "No empirical case evidence in this lane supports the severity of the anti-pattern's consequences."
+      uncertainty:
+        - "Whether real teams operating without telemetry always incur the listed consequences is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07D-SOFTWARE-RELIABILITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software Reliability (failure-quantified)
+      definition: >-
+        The reliability of software characterized quantitatively: CS2023's
+        reliability topic frames it as the probability of failure or the mean
+        time between failures, with faults as the cause of failures; SWEBOK
+        v4.0a's quality-measurement section names failure rate (mean time to
+        failure) among the widely used quality measurements.
+      concept_kind: QUALITY_ATTRIBUTE
+      synonyms:
+        - failure rate
+      scope_description: "Anchored to the CS2023 SE-Reliability topic 1 quantifications and SWEBOK KA12 2.3.1 measurement names; not asserted as a complete professional definition of reliability."
+      evidence_refs:
+        - se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+        - se:EVD-07D-SWEBOK-RELIABILITY-MEASURES
+    - id: se:CON-07D-ERROR-BUDGET
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Error budget (reliability approach)
+      definition: >-
+        One of the two reliability approaches CS2023 asks students to compare:
+        the "error budget" approach to reliability, contrasted in the
+        curriculum with the "error-free" approach, with the relevance of each
+        to be identified per domain.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "Defined only as far as the CS2023 SE-Reliability KA Core topic 6 sentence goes; the curriculum names the two approaches without defining budget mechanics."
+      evidence_refs:
+        - se:EVD-07D-CS2023-ERROR-BUDGET
+    - id: se:CON-07D-FAULT-TOLERANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Fault tolerance (context-dependent response)
+      definition: >-
+        The capability of software to keep operating acceptably in the presence
+        of faults, realized through fault tolerance techniques and models;
+        CS2023 teaches that the tolerated response is context-dependent (a
+        crash may be strongly avoided in a flight-critical system yet highly
+        valuable in a data-processing system before corrupt data is written),
+        and SWEBOK v4.0a requires failure-handling logic to be planned during
+        development for automated failover to work.
+      concept_kind: MECHANISM
+      synonyms: []
+      scope_description: "CS2023 Non-core topic 8 (with 8a) plus SWEBOK KA6 section 2.5 scope; not a survey of fault-tolerance technique families."
+      evidence_refs:
+        - se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+    - id: se:CON-07D-SERVICE-LEVEL-AGREEMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Service-Level Agreement (SLA)
+      definition: >-
+        The agreed, documented statement of the level of service an operations
+        provider owes its customers; per SWEBOK v4.0a KA6 it is the instrument
+        that clarifies the full range of operations service obligations, while
+        the service-level management process monitors the agreed level of
+        service including workload characteristics, performance and
+        availability trend information.
+      concept_kind: TERM
+      synonyms:
+        - SLA
+      scope_description: "Defined at SWEBOK Guide v4.0a KA6 section 2.3 fidelity (operations-services context); other communities may define SLA variants this anchor does not cover."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+
+  knowledge_claims:
+    - id: se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        In the CS2023 curriculum, the concept of reliability is characterized
+        as the probability of failure or the mean time between failures, with
+        faults treated as the cause of failures.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 SE knowledge unit SE-Reliability: Software Reliability, KA Core topic 1; a curriculum-scope characterization, not a professional-standard definition."
+      applicability: "Interpreting reliability discussions within the CS2023 curriculum model; aligns with SWEBOK's failure-rate measurement name but neither source is treated as definitive."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The topic names two quantifications without measurement procedure; this claim does not import one."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+      review_status: PENDING
+    - id: se:CLM-07D-HIGH-RELIABILITY-DEFECT-MINIMIZATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum teaches that because software failures are caused
+        by defects, high reliability pursues a minimum of defects through two
+        levers — injecting fewer defects (better training, education and
+        planning) and removing most injected defects (testing, code review and
+        similar) — and devotes a separate core topic to the defect injection
+        and removal cycle.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Reliability KA Core topics 3 and 5; a curriculum teaching expectation, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 reliability curriculum; usable by practitioners only as curriculum guidance."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum names example levers without comparing their effectiveness."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+      review_status: PENDING
+    - id: se:CLM-07D-ERROR-BUDGET-COMPARISON
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum treats the choice between the "error budget"
+        approach to reliability and the "error-free" approach as core
+        reliability knowledge, framing it as a comparison in which the domains
+        where each approach is relevant must be identified.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Reliability KA Core topic 6; curriculum-scope comparative topic, not a verdict that either approach is universally superior."
+      applicability: "Reliability strategy discussions that accept curriculum framing; the curriculum itself does not enumerate the domains."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The topic poses the comparison and domain mapping; no domain mapping is carried by the anchor."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-ERROR-BUDGET
+      review_status: PENDING
+    - id: se:CLM-07D-FAULT-TOLERANCE-CONTEXT-DEPENDENCE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum teaches that fault tolerance is context-dependent
+        — its illustrative contrast is that crashing a flight-critical system
+        is strongly avoided while crashing a data-processing system before
+        corrupt data is written to storage is highly valuable — and lists this
+        under Non-core (elective) fault tolerance techniques and models.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Reliability Non-core topic 8 (with subtopic 8a); elective curriculum scope with illustrative, not exhaustive, examples."
+      applicability: "Choosing failure-response strategies where consequence classes differ; the examples are the curriculum's illustrations, not a strategy taxonomy."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Non-core status means the curriculum does not require coverage in every CS program."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+      review_status: PENDING
+    - id: se:CLM-07D-MEASUREMENT-BASED-RELIABILITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum lists measurement-based analysis of software
+        reliability — exemplified by telemetry, monitoring and alerting,
+        dashboards and release qualification metrics — as its topic for
+        analyzing reliability from operational data (Non-core, elective).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Reliability Non-core topic 11; elective curriculum scope."
+      applicability: "Curriculum-grounded framing of operational reliability analysis; the topic names instrument families, not metric definitions."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Non-core status limits how far the curriculum itself pushes measurement-based practice."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-MEASUREMENT-TELEMETRY
+      review_status: PENDING
+    - id: se:CLM-07D-SOFTWARE-VS-SYSTEM-RELIABILITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum keeps software reliability, system reliability
+        and failure behavior as a distinct core topic from the reliability
+        concept itself, and separately makes identifying reliability
+        requirements for different kinds of software a core topic; on that
+        structure, software-level reliability and system-level reliability are
+        curriculum-distinct concerns and reliability requirements are not
+        one-size-fits-all.
+      claim_kind: DOMAIN_BOUNDARY
+      scope_description: "CS2023 SE-Reliability KA Core topics 2 and 4; the distinction is curriculum structure, and this claim does not exceed it."
+      applicability: "Distinguishing reliability scopes when reading CS2023-grounded records; the extract carries no elaboration of system-level failure analysis."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Topic titles only; the anchor carries no analysis method for system reliability."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-CS2023-SYSTEM-RELIABILITY
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-PLAN-EARLY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA6 presents performance, reliability and load
+        balancing as concerns that operations engineers plan for early in
+        software projects so that project requirements are met, and observes
+        that demand-adjusting infrastructure services plus DevOps practice let
+        those needs be anticipated early and the supporting services be used
+        and tested during development.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 6 section 1.6 (printed page 6-6); a description of generally accepted operations knowledge, not a mandated procedure."
+      applicability: "Professional-BOK characterization of early performance/reliability planning; counterpart anchor for the lane's capacity and performance records."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Short topic statement; no load-balancing or sizing procedure is prescribed."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-AVAILABILITY-MANAGED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA6 frames service availability and continuity as
+        managed obligations: defined early as nonfunctional requirements,
+        supported by planned, designed, implemented and tested infrastructure,
+        measured and recorded, with unplanned nonavailability investigated and
+        acted on, and reported as indicators against service-level targets,
+        with SLAs documenting the agreed obligations.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 6 section 2.3 (printed page 6-8); generally accepted operations content, not a claim every service must instantiate every element."
+      applicability: "Operations-side availability management; complements the curriculum's reliability concept with the managed-availability loop."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Describes generally accepted activities; no availability-target values are prescribed."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-CAPACITY-FORECASTING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA6, relaying ISO/IEC/IEEE 20000-1, frames software
+        capacity management as ensuring capacity at all times for current and
+        future agreed demand: translating business predictions and workload
+        estimates into documented requirements, keeping the reaction to
+        workload or environment variation predictable, capturing and analyzing
+        component and resource-utilization data, and producing (at least
+        annually) a capacity plan with actual performance, expected
+        requirements and costed options for meeting SLA service-level targets.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 6 section 2.4 (printed page 6-8); the Guide relays an ISO/IEC/IEEE 20000-1 need whose own normative text is not admitted."
+      applicability: "Capacity and performance engineering for operated services; the annual-plan and costed-options framing applies where service-level targets exist."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Rooted in ISO/IEC/IEEE 20000-1 as relayed by SWEBOK; the ISO standard itself remains registry metadata-only."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-FAILURE-INEVITABLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA6 states that software engineers should understand
+        that failure is inevitable; that automated failover daemons can reduce
+        recovery time drastically but require applications to include
+        failure-handling logic planned during development; and that
+        preparedness and regular testing of backup, disaster recovery and
+        failover must be rehearsed as the production environment changes.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 6 section 2.5 (printed pages 6-8 to 6-9); generally accepted operations content for continuity preparedness."
+      applicability: "Resilience engineering for services where recovery time matters; the claim scopes to what the section states and adds no quantitative recovery targets."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section does not rank backup/failover approaches; 'drastically' is the Guide's qualitative wording."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-EVIDENCE-NOT-HOPE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA6 holds, as an operations-control norm, that hope
+        should not be a strategy: engineers should be informed about system
+        quality and operational health with evidence — key performance
+        indicators available to stakeholders in real time, exemplified by
+        production monitoring and product telemetry, actionable V&V results
+        before and after release, end-user activity and resource use, impact
+        analysis results, operational dependencies, unapproved configuration
+        changes, and security and resilience performance capability.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 6 section 4.3 (printed page 6-11); a DevOps-mindset norm stated by the Guide, scoped to software engineering operations control."
+      applicability: "Operational decision-making about capacity, continuity and availability; the KPI list is the Guide's illustration of admissible evidence."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The norm is stated for operations control; it does not define how each KPI is computed."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-RISK-REDUCTION-TRIO
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA12 names three complementary techniques for
+        reducing software failure risk — avoidance, detection and removal, and
+        damage limitation — and states that they impact software functional
+        requirements, performance requirements and development processes, with
+        increasing risk implying more rigorous quality assurance and review,
+        and assurance cases structuring claims, arguments and supporting
+        evidence.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 12 section 1.4 (printed pages 12-5 to 12-6); engineering-technique content only — the quality-model level is owned by SEK-07A and is not claimed here."
+      applicability: "Reliability and dependability engineering where failure consequences justify systematic risk reduction; the claim does not prescribe integrity-level schemes."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Anchored in a safety-critical/dependability context; extension to ordinary services is applicability judgment, not the source's assertion."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-RISK-REDUCTION-TRIO
+      review_status: PENDING
+    - id: se:CLM-07D-SWEBOK-RELIABILITY-MEASURES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA12 names error density, defect density and failure
+        rate (mean time to failure) as three widely used software quality
+        measurements, and states that reliability models built from failure
+        data collected during testing or in service can estimate the
+        probability of future failures and assist decisions about when to stop
+        testing.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 12 section 2.3.1 (printed pages 12-8 to 12-9); informal measurement characterizations as printed in the Guide."
+      applicability: "Measurement grounding for reliability records; connects the curriculum's mean-time-between-failures framing to named professional measurements."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Informal definitions only; the Guide's treatment of measurement error and model assumptions is not carried by this anchor."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-RELIABILITY-MEASURES
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07D-PLAN-FOR-FAILURE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Expect failure and engineer the response during development
+      statement: >-
+        Failure of an operated software service should be treated as inevitable,
+        and the failure response — failure-handling logic in the application,
+        automated failover, and rehearsed backup/disaster-recovery procedures —
+        should be planned during development rather than improvised after an
+        outage, with the tolerated response matched to the failure's
+        consequences in the specific domain.
+      rationale: >-
+        SWEBOK Guide v4.0a KA6 section 2.5 states that failure is inevitable,
+        that automated failover daemons can drastically reduce recovery time,
+        that applications should include failure-handling logic which must be
+        planned during development, and that preparedness must be constantly
+        rehearsed as production changes; CS2023's fault-tolerance topic adds
+        that the tolerated response is context-dependent (crash avoidance in
+        flight-critical systems versus crash-before-corruption in
+        data-processing systems).
+      scope_description: "Derived within SWEBOK KA6 section 2.5 professional-BOK scope plus the CS2023 SE-Reliability Non-core topic 8 contrast; not asserted as a universal engineering law."
+      applicability: "Long-lived operated software services where recovery time and failure consequences matter."
+      exceptions:
+        - "Throwaway or single-shot artifacts that are explicitly not expected to survive failure."
+      limitations:
+        - "No empirical case evidence in this lane measures how much rehearsed failover reduces recovery time; the Guide's 'drastically' is qualitative."
+        - "The CS2023 anchor for context-dependence is a Non-core (elective) topic."
+    - id: se:PRI-07D-EVIDENCE-OVER-HOPE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Operate on measured evidence, not assumption
+      statement: >-
+        Operational decisions about a software service's reliability, capacity,
+        continuity and availability should be driven by observed evidence —
+        telemetry, monitoring and alerting, dashboards and release
+        qualification measurements available to stakeholders in real time —
+        rather than by assumption or hope.
+      rationale: >-
+        SWEBOK Guide v4.0a KA6 section 4.3 states that in a DevOps mindset hope
+        should not be a strategy and that engineers should be informed about
+        system quality and operational health with real-time KPI evidence;
+        CS2023's SE-Reliability unit lists measurement-based analysis
+        (telemetry, monitoring and alerting, dashboards, release qualification
+        metrics) as its reliability-analysis topic.
+      scope_description: "Combines a SWEBOK KA6 operations-control norm with a CS2023 elective topic; professional-guidance and curriculum framings are kept distinct in the underlying evidence."
+      applicability: "Operated services with stakeholders who consume operational health information."
+      exceptions:
+        - "Pre-operational artifacts with no runtime observation surface."
+      limitations:
+        - "The CS2023 anchor is Non-core (elective); the SWEBOK norm is stated for a DevOps mindset, which the Guide itself presents as an approach rather than a universal requirement."
+
+  practices:
+    - id: se:PRA-07D-DEFECT-INJECTION-REMOVAL
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Two-lever defect minimization (inject fewer, remove more)
+      intent: >-
+        Raise software reliability by minimizing the defects that cause
+        failures, working both levers the curriculum names: preventing defect
+        injection and removing injected defects.
+      description: >-
+        Pursue high reliability through a minimum-defect goal: reduce defect
+        injection through better training, education and planning, and remove
+        most injected defects through testing, code review and comparable
+        removal approaches, treating injection and removal as a cycle rather
+        than a one-time phase, as presented in the CS2023 SE-Reliability unit.
+      preconditions:
+        - "A development process in which both prevention activities (training, education, planning) and removal activities (testing, code review) can be resourced."
+      steps:
+        - "Identify the defect classes historically injected by the team and the lifecycle stages where they enter."
+        - "Apply injection-prevention measures (training, education, planning) targeted at those classes and stages."
+        - "Apply removal measures (testing, code review and similar approaches) sized to catch the remaining injected defects."
+        - "Track the injection/removal cycle over releases so prevention reduces what removal must catch."
+      expected_outcomes:
+        - "A declining share of injected defects surviving to operation."
+        - "Recorded linkage between prevention/removal activities and observed defect classes."
+      risks:
+        - "Prevention without removal leaves early-injected defects in place; removal without prevention keeps the cycle expensive."
+        - "Removal effort can exceed the reliability actually required (see the error-budget comparison for requirement-setting)."
+      scope_description: "Operationalizes CS2023 SE-Reliability KA Core topics 3 and 5 at curriculum fidelity; the example levers are the curriculum's, not an exhaustive program."
+      applicability: "Development contexts pursuing high reliability through defect minimization; the curriculum does not rank the levers."
+      evidence_refs:
+        - se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+      claim_refs:
+        - se:CLM-07D-HIGH-RELIABILITY-DEFECT-MINIMIZATION
+    - id: se:PRA-07D-CAPACITY-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Forecast-driven capacity planning with costed options
+      intent: >-
+        Ensure the service has capacity, at all times, to meet current and
+        future agreed demand, and make capacity reactions predictable.
+      description: >-
+        Translate business predictions and workload estimates into specific
+        documented capacity requirements; capture and analyze data on current
+        and previous components and on resource utilization; size and model
+        new and changed services; and produce a recurring capacity plan (SWEBOK
+        relays at least annually) documenting actual infrastructure
+        performance, expected requirements and costed options for achieving
+        the service-level targets in the SLA.
+      preconditions:
+        - "Agreed service-level targets (SLA) against which capacity options are judged."
+        - "Access to workload/business forecasts and to component and resource-utilization data."
+      steps:
+        - "Understand current and expected business requirements for the service in terms of what the business must deliver."
+        - "Translate business predictions and workload estimates into specific, documented requirements."
+        - "Capture and analyze component and resource-utilization data at an appropriate level."
+        - "Size and model new and changed services against the data."
+        - "Produce the capacity plan with actual performance, expected requirements and costed options; recommend the option that meets the agreed targets."
+      expected_outcomes:
+        - "A documented, periodically refreshed capacity plan tied to SLA targets."
+        - "Predictable reaction to workload or environment variation."
+      risks:
+        - "Forecasts can be wrong; a plan without utilization data drifts into guesswork."
+        - "Costed options can favor short-term savings over the agreed targets."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA6 section 2.4 (relaying ISO/IEC/IEEE 20000-1) at professional-BOK fidelity; the ISO standard's own text is not admitted."
+      applicability: "Operated services with agreed service-level targets and observable workload."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      claim_refs:
+        - se:CLM-07D-SWEBOK-CAPACITY-FORECASTING
+    - id: se:PRA-07D-RELIABILITY-TELEMETRY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Measurement-based reliability telemetry loop
+      intent: >-
+        Give engineers and stakeholders real-time evidence about system quality
+        and operational health so reliability, capacity, continuity and
+        availability decisions rest on observation.
+      description: >-
+        Instrument the service with the measurement families the anchors name
+        — telemetry, monitoring and alerting, dashboards, and release
+        qualification measurements — and surface the resulting indicators to
+        stakeholders in real time, so that unplanned nonavailability and
+        capacity/availability trends are investigated from data rather than
+        discovered by customers.
+      preconditions:
+        - "An operating service with an observable runtime surface."
+        - "Stakeholders defined to receive the indicators."
+      steps:
+        - "Select the instrument families (telemetry, monitoring/alerting, dashboards, release qualification metrics) and what each must reveal."
+        - "Instrument production monitoring and product telemetry as the primary evidence source."
+        - "Define alerting on the indicators that signify degrading reliability, capacity, continuity or availability."
+        - "Review capacity, continuity and availability indicators against service-level targets; investigate unplanned deviations."
+        - "Feed observed failure and utilization data back into capacity planning and reliability measurement."
+      expected_outcomes:
+        - "Real-time indicator coverage of the operational-health dimensions the anchors name."
+        - "Investigations triggered by measured deviations instead of stakeholder reports."
+      risks:
+        - "Indicator volume without curation becomes noise that hides real deviations."
+        - "Telemetry gaps leave the very dimensions being claimed as observed actually unobserved."
+      scope_description: "Operationalizes CS2023 SE-Reliability Non-core topic 11 together with SWEBOK KA6 sections 4.3 and 2.3; curriculum-elective and professional-norm bases are recorded separately in the underlying evidence."
+      applicability: "Operated services whose reliability and capacity must be steered by evidence."
+      evidence_refs:
+        - se:EVD-07D-CS2023-MEASUREMENT-TELEMETRY
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+      claim_refs:
+        - se:CLM-07D-MEASUREMENT-BASED-RELIABILITY
+        - se:CLM-07D-SWEBOK-EVIDENCE-NOT-HOPE
+    - id: se:PRA-07D-FAILOVER-REHEARSAL
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Rehearsed failover and recovery preparedness
+      intent: >-
+        Reduce recovery time after inevitable failures by preparing, automating
+        and repeatedly testing the failover and recovery path.
+      description: >-
+        Plan failure-handling logic during development so automated failover
+        can operate; choose backup and recovery methods (full or incremental),
+        restore-point frequency, storage location and retention under the
+        influence of the need for successful recovery; and constantly rehearse
+        backup, disaster-recovery and failover testing as the production
+        environment changes, including the disruptive test path of stopping
+        the service, identifying the checkpoint state and triggering failover.
+      preconditions:
+        - "Failure-handling logic designed into the application during development."
+        - "A production environment in which a disruptive failover test can be scheduled."
+      steps:
+        - "Design the failure-handling logic and automated failover path with the application."
+        - "Decide backup/recovery methods, restore-point frequency, storage and retention from the recovery requirement."
+        - "Schedule rehearsals triggered by production changes (SWEBOK's constant-rehearsal framing)."
+        - "Run the disruptive test: stop the service, identify the checkpoint state, trigger failover, verify recovery."
+        - "Record outcomes and repair the recovery path where the rehearsal fails."
+      expected_outcomes:
+        - "A failover and recovery path whose behavior is known from rehearsal, not assumption."
+        - "Reduced recovery time through automation of the failover step."
+      risks:
+        - "Disruptive rehearsal itself causes the outage it is meant to prevent if scheduled badly."
+        - "Unrehearsed recovery paths silently rot as production drifts from the documented environment."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA6 section 2.5 at professional-BOK fidelity."
+      applicability: "Services with recovery-time concerns; the disruptive test path applies where stopping the service is acceptable."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+      claim_refs:
+        - se:CLM-07D-SWEBOK-FAILURE-INEVITABLE
+
+  patterns:
+    - id: se:PAT-07D-CONTEXT-DEPENDENT-FAULT-RESPONSE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Consequence-matched failure response
+      problem: >-
+        A software system needs a failure response, but the right response
+        differs by what the failure costs in that domain: the same crash that
+        is unacceptable in one context is the safest available action in
+        another.
+      context: >-
+        A service whose failures have domain-specific consequences — the
+        CS2023 curriculum's contrasting cases are a flight-critical system,
+        where crashing is strongly avoided, and a data-processing system, where
+        crashing before corrupt data reaches storage is highly valuable — being
+        designed with SWEBOK's requirement that failure-handling logic be
+        planned during development.
+      forces:
+        - "Consequences of continued operation versus consequences of stopping differ per domain."
+        - "Automated failover presupposes failure-handling logic built into the application."
+        - "The failure response must be chosen before the failure occurs, during development."
+      solution: >-
+        Classify the service's failure modes by consequence (corruption risk,
+        safety risk, availability loss), then select and build the matched
+        response for each class — fail-safe stop where corruption or safety
+        dominates, failover-continued operation where availability dominates —
+        implementing the chosen responses as planned failure-handling logic so
+        automated failover daemons can execute them.
+      consequences:
+        - "The failure response matches what each failure actually costs, rather than a uniform policy."
+        - "Failover automation has deterministic logic to execute because the response was designed in."
+      tradeoffs:
+        - "Consequence classification takes design effort up front; a uniform response is cheaper to build but misfits at least one consequence class."
+      scope_description: "Pattern shaped from CS2023 SE-Reliability Non-core topic 8a's contextual contrast plus SWEBOK KA6 section 2.5's planned failure-handling logic; the two consequence cases are the curriculum's illustrations."
+      evidence_refs:
+        - se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+    - id: se:PAT-07D-SLA-ANCHORED-AVAILABILITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SLA-anchored availability management loop
+      problem: >-
+        A operated service must meet customer availability commitments, but
+        availability is invisible unless it is defined early, measured, and
+        compared against an agreed target.
+      context: >-
+        A software service with customers and agreed commitments, entering a
+        project where SWEBOK KA6 expects availability and continuity to be
+        defined as nonfunctional requirements early, with infrastructure
+        planned, designed, implemented and tested for them.
+      forces:
+        - "Availability commitments exist (customer expectations) but are ambiguous until documented in an SLA."
+        - "Unplanned nonavailability is only actionable if it is detected and investigated."
+        - "Stakeholders need indicators they can read against the agreed targets."
+      solution: >-
+        Define availability and continuity early as nonfunctional requirements;
+        agree and document the SLA that clarifies the full range of operations
+        obligations; build the supporting infrastructure; then run the loop —
+        measure and record availability, investigate unplanned nonavailability
+        and act, monitor workload/performance/availability trends via the
+        service-level management process, and report availability and
+        continuity indicators against the service-level targets.
+      consequences:
+        - "Availability becomes a managed, evidenced property with a defined target and an investigation path."
+        - "The SLA turns diffuse customer expectations into checkable operations obligations."
+      tradeoffs:
+        - "SLA definition and indicator reporting add coordination overhead; without them, availability disputes have no shared reference."
+      scope_description: "SWEBOK Guide v4.0a KA6 section 2.3 fidelity; a professional-BOK pattern for operated services, not a universal mandate."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+
+  anti_patterns:
+    - id: se:ANT-07D-HOPE-BASED-OPERATIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Hope-based operations (no measurement feedback loop)
+      symptoms:
+        - "Operational decisions about reliability, capacity or availability are made from assumption or schedule pressure rather than observed indicators."
+        - "Unplanned nonavailability, capacity exhaustion or degrading reliability is discovered by stakeholders rather than by monitoring or alerting."
+        - "No real-time evidence surface (telemetry, dashboards, release qualification measurements) exists for the service's operational health."
+      causes:
+        - "Treating measurement instrumentation as optional overhead rather than as the feedback mechanism for reliability."
+        - "Confusing absence of reported problems with absence of problems."
+        - "No owner for the monitoring/alerting/telemetry loop the curriculum and Guide both name."
+      consequences:
+        - "Deviations are detected late, after they have already affected users."
+        - "Capacity and availability claims cannot be evidenced against service-level targets, inviting disputes."
+        - "Reliability work loses its data foundation: failure data never accumulates, so reliability measurement and stop-testing decisions have nothing to draw on."
+      remediation: >-
+        Build the measurement feedback loop the anchors name — production
+        monitoring and product telemetry, monitoring and alerting, dashboards
+        and release qualification metrics — surface real-time indicators to
+        stakeholders, and route operational decisions through that evidence,
+        per SWEBOK KA6 section 4.3's norm that hope should not be a strategy.
+      scope_description: "Lane-level characterization grounded in SWEBOK KA6 section 4.3's evidence-over-hope norm combined with CS2023 SE-Reliability Non-core topic 11; the counterproductive framing is a SEK-07D synthesis inference (see se:EVD-07D-SYNTHESIS-HOPE-BASED-OPS), not a statement made by either source."
+      evidence_refs:
+        - se:EVD-07D-SYNTHESIS-HOPE-BASED-OPS
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+
+  decision_models:
+    - id: se:DEC-07D-ERROR-BUDGET-OR-ERROR-FREE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "Which reliability approach — error budget or error-free — fits a given software domain, and how much defect-minimization effort should follow from that choice?"
+      options:
+        - "Error budget approach: tolerate a quantified amount of unreliability and govern against the budget."
+        - "Error-free approach: pursue minimum defects without a tolerated-error allowance."
+        - "A domain-partitioned combination, where different service classes follow different approaches."
+      criteria:
+        - "Consequence class of failure in the domain (the fault-tolerance context contrast: crash-avoided versus crash-valuable)."
+        - "Whether a quantified reliability target (probability of failure / mean time between failures) is definable for the service."
+        - "Cost of the defect-minimization levers (training/education/planning for injection; testing/code review for removal)."
+      constraints:
+        - "The CS2023 curriculum requires the comparison and domain mapping to be made explicitly, not a default to one approach (KA Core topic 6)."
+        - "High reliability is pursued by minimizing defects — inject fewer, remove more — wherever the error-free side is chosen."
+      procedure: >-
+        Classify the domain's failure consequences; determine whether failures
+        can be quantified against a budget or must be driven toward zero; map
+        the domain to the approach whose assumption about tolerable failure
+        matches that classification, following the comparison the CS2023
+        topic prescribes; then size the two defect-minimization levers
+        accordingly.
+      tradeoffs:
+        - "An error budget makes residual unreliability explicit and governable but requires quantified targets; an error-free stance avoids budgeting failure but concentrates cost in defect minimization."
+      scope_description: "Structured around CS2023 SE-Reliability KA Core topic 6 (comparison framing) with topics 3/5 (defect-minimization levers) and Non-core topic 8a (consequence context); curriculum-scope decision aid."
+      evidence_refs:
+        - se:EVD-07D-CS2023-ERROR-BUDGET
+        - se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+        - se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+      claim_refs:
+        - se:CLM-07D-ERROR-BUDGET-COMPARISON
+        - se:CLM-07D-HIGH-RELIABILITY-DEFECT-MINIMIZATION
+    - id: se:DEC-07D-CAPACITY-INVESTMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "When and how should capacity be added or reshaped so the service keeps meeting agreed service-level targets?"
+      options:
+        - "Add capacity ahead of forecast demand."
+        - "Ride current capacity and accept the SLA risk."
+        - "Reshape demand or architecture (sizing and modeling of new/changed services) instead of adding raw capacity."
+      criteria:
+        - "Current and forecast workload against the agreed service-level targets in the SLA."
+        - "Observed resource-utilization data at an appropriate level."
+        - "Costed options for meeting the business requirements (the capacity plan's own currency)."
+      constraints:
+        - "Capacity must exist at all times for current and future agreed demand; reaction to workload variation must be predictable."
+        - "The capacity plan is produced at a suitable frequency (at least annually per the SWEBOK-relayed requirement) and must document costed options."
+      procedure: >-
+        Assemble utilization data and workload forecasts; size and model the
+        candidate changes; build the costed options against the SLA targets;
+        recommend the option that achieves the agreed targets at acceptable
+        cost, and record the decision in the recurring capacity plan.
+      tradeoffs:
+        - "Early capacity addition costs money before demand materializes; late addition risks SLA breach when variation arrives."
+      scope_description: "SWEBOK Guide v4.0a KA6 section 2.4 fidelity (relaying ISO/IEC/IEEE 20000-1); professional-BOK decision aid for services with SLA targets."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      claim_refs:
+        - se:CLM-07D-SWEBOK-CAPACITY-FORECASTING
+
+  coverage_gaps:
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: '2026-11-06'
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: The registered CS2023 permission scope expressly covers educational materials and programs
+        and requires specific permission for other uses. Tally's general software-engineering knowledge graph
+        is not presumed to qualify as an educational material or program; no rights clearance for broader
+        use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: The lane must not claim that CS2023-derived records are cleared for public redistribution or
+        commercial product embedding until the rights scope is confirmed.
+      resolution_notes:
+      - Obtain a documented rights determination or specific permission before public redistribution or commercial
+        product embedding; otherwise replace the source or remove the affected records from those uses.
+      evidence_refs: []
+    - id: se:GAP-07D-NO-REAL-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real reliability or performance case evidence
+      target_scope_ref: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      gap_kind: SOURCE_GAP
+      description: >-
+        Neither CS2023 nor the inspected SWEBOK sections contain real
+        reliability/resilience/performance case material usable as Case or
+        Counterexample evidence (no incident report, postmortem or case study
+        is registered for this scope). The lane therefore contains no Case or
+        Counterexample records; its pattern and anti-pattern records rest on
+        inspected source text plus one lane-marked synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern records lack real-world illustration; the
+        anti-pattern's counterproductive characterization remains a synthesis
+        inference, and the failover pattern's effectiveness claims stay
+        qualitative ("drastically" is the Guide's wording, unmeasured here).
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public incident postmortems or capacity-planning case studies) before promoting these records toward acceptance."
+    - id: se:GAP-07D-CS2023-ADJACENT-TOPICS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: CS2023 SF-Reliability and PDC-Evaluation topics not verified
+      target_scope_ref: se:NODE-07D-CS2023-SE-RELIABILITY
+      gap_kind: LOCATOR_GAP
+      description: >-
+        The full CS2023 Body of Knowledge also carries SF-Reliability (System
+        Fundamentals) and PDC-Evaluation topics adjacent to this lane's scope,
+        but they are not present in the prepared SEK-07 extraction, and the
+        lane did not re-fetch them: direct binary download from csed.acm.org
+        fails from this network and the Internet Archive snapshot is
+        rate-limited (429), so no verified locator exists for them. The lane
+        records the gap instead of citing unverified topics.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        System-fundamentals reliability and parallel/distributed evaluation
+        perspectives are absent from this lane; any future record citing them
+        requires a fresh verified extraction first.
+      resolution_notes:
+        - "Re-fetch and verify those knowledge-unit topics via a text-extraction service (recording the method) before admitting locators, evidence or claims for them."
+    - id: se:GAP-07D-SWEBOK-UNINSPECTED-SECTIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK coverage limited to inspected KA6/KA12 sections
+      target_scope_ref: se:VIEW-07D-RELIABILITY-PERFORMANCE
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane directly reinspected SWEBOK v4.0a KA6 sections 1.6, 2.3, 2.4,
+        2.5 and 4.3 and KA12 sections 1.4 and 2.3.1 only. Other
+        reliability/performance-relevant SWEBOK content — KA6 incident and
+        problem prevention (5.1), operational risk management (5.2), monitoring
+        and telemetry tools (6.4), release/rollback engineering (3.2/3.3), and
+        KA12 sections beyond the two cited — was not reinspected for this lane,
+        and no SWEBOK-derived record has passed human review.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        SWEBOK-derived records here are content-verified paraphrases of the
+        inspected sections only; the lane is not a professional-consensus
+        reliability reference, and uninspected sections may contain material
+        that would qualify or extend these records.
+      resolution_notes:
+        - "Reinspect the remaining relevant sections under the same locator-verified chain when needed; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
+
+  relationship_assertions:
+    # --- canonical claim-to-evidence traces ---
+    - id: se:REL-07D-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+      context: "Canonical claim-to-evidence trace for the reliability concept claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability KA Core topic 1, which is exactly the curriculum basis of the probability-of-failure / mean-time-between-failures characterization."
+    - id: se:REL-07D-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-HIGH-RELIABILITY-DEFECT-MINIMIZATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+      context: "Canonical claim-to-evidence trace for the defect-minimization claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability KA Core topics 3 and 5, which carry the inject-fewer/remove-more framing and the injection/removal cycle."
+    - id: se:REL-07D-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-ERROR-BUDGET-COMPARISON
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-ERROR-BUDGET
+      context: "Canonical claim-to-evidence trace for the error-budget comparison claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability KA Core topic 6, the sole curriculum basis for the error-budget versus error-free comparison."
+    - id: se:REL-07D-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-FAULT-TOLERANCE-CONTEXT-DEPENDENCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+      context: "Canonical claim-to-evidence trace for the fault-tolerance context-dependence claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability Non-core topic 8 (with 8a), which carries the flight-critical versus data-processing contrast."
+    - id: se:REL-07D-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-MEASUREMENT-BASED-RELIABILITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-MEASUREMENT-TELEMETRY
+      context: "Canonical claim-to-evidence trace for the measurement-based reliability claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability Non-core topic 11, which names telemetry, monitoring/alerting, dashboards and release qualification metrics."
+    - id: se:REL-07D-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SOFTWARE-VS-SYSTEM-RELIABILITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-SYSTEM-RELIABILITY
+      context: "Canonical claim-to-evidence trace for the software-versus-system reliability boundary claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Reliability KA Core topics 2 and 4, which keep reliability-requirement identification and system-level reliability as distinct core topics."
+    - id: se:REL-07D-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-PLAN-EARLY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+      context: "Canonical claim-to-evidence trace for the SWEBOK plan-early claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA6 section 1.6 at its verified locator (PDF page index 155; printed 6-6), which states the plan-early framing and the demand-adjustment trend."
+    - id: se:REL-07D-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-AVAILABILITY-MANAGED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+      context: "Canonical claim-to-evidence trace for the SWEBOK availability-management claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA6 section 2.3 at its verified locator (PDF page index 157; printed 6-8), which carries the define-measure-investigate-report loop and the SLA role."
+    - id: se:REL-07D-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-CAPACITY-FORECASTING
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      context: "Canonical claim-to-evidence trace for the SWEBOK capacity-management claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA6 section 2.4 at its verified locator (PDF page index 157; printed 6-8), which carries the forecast-translate-analyze-plan loop."
+    - id: se:REL-07D-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-FAILURE-INEVITABLE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+      context: "Canonical claim-to-evidence trace for the SWEBOK failure-inevitable/failover claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA6 section 2.5 at its verified locator (PDF page indices 157-158; printed 6-8 to 6-9), which states the inevitability stance and the planned failure-handling logic."
+    - id: se:REL-07D-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-EVIDENCE-NOT-HOPE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+      context: "Canonical claim-to-evidence trace for the SWEBOK evidence-over-hope norm."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA6 section 4.3 at its verified locator (PDF page index 160; printed 6-11), which states the norm and the real-time KPI inventory."
+    - id: se:REL-07D-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-RISK-REDUCTION-TRIO
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-RISK-REDUCTION-TRIO
+      context: "Canonical claim-to-evidence trace for the SWEBOK failure-risk-reduction claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA12 section 1.4 at its verified locator (PDF page indices 249-250; printed 12-5 to 12-6), which names the three techniques and their impact surfaces."
+    - id: se:REL-07D-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-SWEBOK-RELIABILITY-MEASURES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-RELIABILITY-MEASURES
+      context: "Canonical claim-to-evidence trace for the SWEBOK reliability-measurements claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a KA12 section 2.3.1 at its verified locator (PDF page indices 252-253; printed 12-8 to 12-9), which names the three measurements and the failure-data model chain."
+    # --- structural edges ---
+    - id: se:REL-07D-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07D-CS2023-SE-RELIABILITY
+      qualifiers:
+        - "Applies to the CS2023 SE-Reliability: Software Reliability knowledge unit scope only (KA Core topic 1)."
+        - "Curriculum-authority scope; not a professional body-of-knowledge applicability claim."
+      context: "Locating the reliability concept claim within the curriculum knowledge unit it describes."
+      rationale: "The claim is a topic-level characterization of this specific CS2023 knowledge unit, so its applicability is bounded by that unit's taxonomy node."
+      evidence_refs:
+        - se:EVD-07D-CS2023-RELIABILITY-CONCEPT
+    - id: se:REL-07D-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07D-DEFECT-INJECTION-REMOVAL
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07D-HIGH-RELIABILITY-DEFECT-MINIMIZATION
+      qualifiers:
+        - "Operationalization is at CS2023 curriculum fidelity (the named example levers)."
+        - "The practice adds procedural detail (defect-class tracking, cycle review) beyond the curriculum sentence."
+      context: "The practice operationalizes the curriculum claim about the two defect-minimization levers."
+      rationale: "The claim states what the curriculum teaches about injecting fewer and removing more defects; the practice turns that statement into an actionable cycle with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07D-CS2023-DEFECT-INJECTION-REMOVAL
+    - id: se:REL-07D-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07D-CAPACITY-PLANNING
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07D-SWEBOK-CAPACITY-FORECASTING
+      qualifiers:
+        - "Operationalization is at SWEBOK KA6 section 2.4 fidelity (relaying ISO/IEC/IEEE 20000-1)."
+        - "Step ordering is the lane's; the section states the loop elements, not their order."
+      context: "The practice operationalizes the SWEBOK capacity-management claim."
+      rationale: "The claim captures the forecast-translate-analyze-plan loop the Guide relays; the practice sequences that loop into an executable procedure tied to SLA targets."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-CAPACITY-MGMT
+    - id: se:REL-07D-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07D-RELIABILITY-TELEMETRY
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07D-SWEBOK-EVIDENCE-NOT-HOPE
+      qualifiers:
+        - "Operationalizes the SWEBOK norm with the CS2023 topic-11 instrument families as the concrete telemetry surface."
+        - "Curriculum-elective and professional-norm provenance are kept distinct in the practice's scope note."
+      context: "The practice operationalizes the evidence-over-hope norm as an instrumented feedback loop."
+      rationale: "The claim states the norm that operational health must be evidenced in real time; the practice names the instruments and steps that produce such evidence."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+    - id: se:REL-07D-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07D-FAILOVER-REHEARSAL
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07D-FAULT-TOLERANCE
+      context: "Structural dependency between the failover-rehearsal practice and the fault-tolerance concept."
+      rationale: "The rehearsal practice executes the failure-handling logic that the fault-tolerance concept defines as planned-during-development, so it presumes that concept's definition in this lane."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+    - id: se:REL-07D-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07D-PLAN-FOR-FAILURE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+      context: "Canonical principle-to-evidence trace for the plan-for-failure principle's primary anchor."
+      rationale: "The SWEBOK section 2.5 statement that failure is inevitable and failure-handling logic must be planned during development is the principle's professional-BOK basis; the CS2023 context contrast enters through the QUALIFIED_BY-style scope note rather than a second edge."
+    - id: se:REL-07D-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07D-EVIDENCE-OVER-HOPE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+      context: "Canonical principle-to-evidence trace for the evidence-over-hope principle's primary anchor."
+      rationale: "The SWEBOK section 4.3 norm that hope should not be a strategy and health must be evidenced in real time is the principle's primary basis; the CS2023 measurement topic is carried by the practice-level evidence instead."
+    - id: se:REL-07D-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07D-HOPE-BASED-OPERATIONS
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07D-SYNTHESIS-HOPE-BASED-OPS
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a sentence in either source; it is derived from the lane synthesis combining the SWEBOK evidence-over-hope norm with the CS2023 measurement-based analysis topic, and this edge records that derivation."
+      evidence_refs:
+        - se:EVD-07D-SYNTHESIS-HOPE-BASED-OPS
+    - id: se:REL-07D-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07D-CONTEXT-DEPENDENT-FAULT-RESPONSE
+      predicate: RELATED_TO
+      object_ref: se:CON-07D-FAULT-TOLERANCE
+      qualifiers:
+        - "The pattern operationalizes consequence-matched response selection; the concept defines the fault-tolerance capability being matched."
+        - "Relation is complementary, not equivalence: the pattern could select a crash response the concept's techniques must then implement."
+      context: "Relating the failure-response pattern to the fault-tolerance concept it draws on."
+      rationale: "Both the CS2023 context-contrast anchor and the SWEBOK planned failure-handling anchor feed the pattern and the concept alike; linking them records the shared basis without collapsing pattern into concept."
+      evidence_refs:
+        - se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+    - id: se:REL-07D-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07D-RELIABILITY-RESILIENCE
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-07D-PERFORMANCE-CAPACITY
+      qualifiers:
+        - "SWEBOK KA6 section 1.6 treats performance, reliability and load balancing as one early-planning concern cluster, so the two nodes genuinely intersect."
+        - "Cross-cutting relation inside the lane's operational view; not a containment or specialization claim."
+      context: "Recording that reliability/resilience and performance/capacity intersect rather than partition."
+      rationale: "The inspected SWEBOK section plans performance and reliability together and ties demand-adjusting infrastructure to both, which justifies an explicit cross-cutting edge instead of a clean hierarchy — the multiple-views requirement of the pilot."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-PERF-RELIABILITY-EARLY
+    - id: se:REL-07D-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07D-ERROR-BUDGET
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07D-CS2023-FAULT-TOLERANCE-CONTEXT
+      qualifiers:
+        - "The curriculum requires the error-budget/error-free choice to be mapped to domains; the fault-tolerance context contrast is the lane's recorded exemplar of such domain mapping."
+        - "Qualification only: the contrast evidence bounds where an error-budget stance is tenable, it does not define budget mechanics."
+      context: "Qualifying the scope in which the error-budget concept is applicable."
+      rationale: "An error budget presupposes tolerable failure; the CS2023 contrast (crash-avoided in flight-critical vs crash-valuable in data processing) shows the curriculum itself treats failure tolerance as domain-relative, which bounds the concept's applicability."
+    - id: se:REL-07D-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07D-RELIABILITY-TELEMETRY
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07D-OBSERVABILITY-FEEDBACK
+      qualifiers:
+        - "The practice is the operational expression of the observability-feedback concern node."
+        - "Applicability requires an operating service with an observable runtime surface."
+      context: "Locating the telemetry practice within the concern node it implements."
+      rationale: "The observability node exists to classify measurement-as-feedback concerns; the practice is the lane's actionable form of exactly that concern, so its declared applicability is that node's scope."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-MONITOR-EVIDENCE
+    - id: se:REL-07D-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07D-PLAN-FOR-FAILURE
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07D-RELIABILITY-RESILIENCE
+      qualifiers:
+        - "The principle governs the reliability/resilience concern cluster of the lane's operational view."
+        - "Professional-BOK plus curriculum-elective basis; strength beyond that scope is untested in this lane."
+      context: "Locating the plan-for-failure principle within the concern cluster it governs."
+      rationale: "The principle's evidence anchors (failure inevitability, planned failure handling, context-dependent response) all belong to the reliability/resilience cluster, so the edge records that applicability boundary."
+      evidence_refs:
+        - se:EVD-07D-SWEBOK-FAILOVER-INEVITABLE
+    - id: se:REL-07D-027
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07D-SLA-ANCHORED-AVAILABILITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-AVAILABILITY-SLA
+      context: "Canonical pattern-to-evidence trace for the SLA-anchored availability pattern."
+      rationale: "The pattern's define-SLA, measure, investigate and report loop is structured directly from the elements SWEBOK KA6 section 2.3 enumerates, so the same evidence anchors it."
+    - id: se:REL-07D-028
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07D-ERROR-BUDGET-OR-ERROR-FREE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-CS2023-ERROR-BUDGET
+      context: "Canonical decision-model-to-evidence trace for the reliability-approach decision model."
+      rationale: "The decision model's core options and the compare-and-map-domains constraint come from the CS2023 topic 6 comparison the evidence record paraphrases."
+    - id: se:REL-07D-029
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07D-CAPACITY-INVESTMENT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07D-SWEBOK-CAPACITY-MGMT
+      context: "Canonical decision-model-to-evidence trace for the capacity-investment decision model."
+      rationale: "The decision model's criteria (utilization data, workload forecasts, costed options against SLA targets) are structured from the elements SWEBOK KA6 section 2.4 enumerates."
+    - id: se:REL-07D-030
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07D-CS2023-SE-RELIABILITY
+      predicate: RELATED_TO
+      object_ref: se:NODE-07D-RELIABILITY-RESILIENCE
+      qualifiers:
+        - "Cross-view relation between the curriculum lens and the lane's operational lens; the two views are deliberately not merged."
+        - "Relation records topical overlap only; no containment, equivalence or specialization is asserted."
+      context: "Relating the curriculum reliability unit to the lane's operational reliability concern cluster without merging views."
+      rationale: "The pilot requires multiple taxonomic views to coexist with explicit cross-view relations; this edge is the typed link showing where curriculum content and operational concerns intersect in this lane."
+      evidence_refs:
+        - se:EVD-07D-CS2023-SE-RELIABILITY-KU
