@@ -232,7 +232,7 @@
     ],
     "requiredForVersionTaskPackFreeze": [
       "The version-wide writeSetAudit must be PASS and its digest must match the independently reviewed and Owner-approved current A candidate blob.",
-      "All 25 open Task Issues and 46 total Task snapshots must be current; #264 exact 11-path scope is included, and all closed Task history remains bound.",
+      "All 27 open Task Issues and 48 total Task snapshots must be current; #264 exact 11-path scope is included, and all closed Task history remains bound.",
       "All overlapping dispatchable write sets must be serialized by current native blocked_by edges or made disjoint by a newly approved exact scope; planned/prose-only edges do not serialize.",
       "Refresh the 48-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
@@ -1493,7 +1493,8 @@
     "Snapshot source A R16 observedAt precedes subsequent #260 Builder receipt timestamp; accept as-of audit only, require fresh Host admission readback.",
     "No early merge, Freeze, tag, Release or deployment.",
     "R9 self-adversarial fix: the complete PLANNED critical-path chain includes #319→#331→#284 followed by #284→#312→#219→#273→#276→#264. Official GitHub dependency readback verifies #319/#331 have no native blocked_by edges.",
-    "The A R16 writeSetAudit embeds historical explanatory R8 overlap-group labels; those are immutable source-candidate metadata and not a claim that R8 governance is current. Authoritative current 48-Task DAG/counts and live Claim observations are the exact R16 candidate reference."
+    "The A R16 writeSetAudit embeds historical explanatory R8 overlap-group labels; those are immutable source-candidate metadata and not a claim that R8 governance is current. Authoritative current 48-Task DAG/counts and live Claim observations are the exact R16 candidate reference.",
+    "R9 exact-SHA repair: e0ScopeAudit.integrationBase.parents records the actual Git commit parent of A R16 (`00c25eebbccdee3bfb1f93152a2c35e01e110a33`), not the R16 HEAD itself. The top-level integrationBase.mergeParents is the planned integration input (A R16), not a Git commit parent. Version freeze requires all 48 Task snapshots (27 OPEN/21 CLOSED), not the superseded 46."
   ],
   "e0ScopeAudit": {
     "schema": "tally.e0.bootstrap-scope-audit/v1",
@@ -1511,7 +1512,7 @@
       "sha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
       "treeSha": "7fdf61ad3ea8e3f45584afd18a4afb699a17ee69",
       "parents": [
-        "acd91e34d963e39762c14b4e1f2e5cb2403c5e92"
+        "00c25eebbccdee3bfb1f93152a2c35e01e110a33"
       ],
       "containsSourceFrom": [
         "#260 R16"
@@ -1840,7 +1841,7 @@
     },
     "dispatchable": false,
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestSha256 and including digestAlgorithm)",
-    "digestSha256": "3272aab3bc1f9ca1e9a17c1e1cfcc459f43c652ed557ec1f54b7c2b7a979d162",
+    "digestSha256": "0fe95f64e03e88633f138a87f24aed5a6ebf87c2379eff223e2fe9372e722d72",
     "upstream319": {
       "issueNumber": 319,
       "state": "open",
@@ -1990,7 +1991,7 @@
     "Zero E0 tracked source edits before accepted root Claim and frozen write-set readback; 14 paths post-Claim only.",
     "No native dependency mutation, version freeze, merge, release or deployment from this draft."
   ],
-  "e0ScopeAuditDigest": "3272aab3bc1f9ca1e9a17c1e1cfcc459f43c652ed557ec1f54b7c2b7a979d162",
+  "e0ScopeAuditDigest": "0fe95f64e03e88633f138a87f24aed5a6ebf87c2379eff223e2fe9372e722d72",
   "versionAuditBinding": {
     "schema": "tally.e0.version-audit-binding/v1",
     "candidatePackBlobSha": "ffdef55b45b9b9fbe0cc998208cb44fe39e59868",
