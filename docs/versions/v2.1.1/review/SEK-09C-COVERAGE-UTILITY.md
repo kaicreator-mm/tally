@@ -30,6 +30,16 @@ The corpus contains ten lane bundles across the v2.1.1 taxonomy and eleven disti
 
 Lane totals include shared records; the merged graph deduplicates to 783 lane-owned + 6 shared + 3 derived Source records = 792 records.
 
+### Cross-cutting relations, balance and source diversity
+
+The ten lane bundles address all ten #299 taxonomy-hypothesis areas at least partially; this establishes lane allocation breadth, not complete coverage within any area. Eleven TaxonomyViews provide multiple source- and topic-specific lenses across those ten lane perspectives.
+
+The graph contains 6 `CROSS_CUTS`, 11 `QUALIFIED_BY` and 11 `RELATED_TO` RelationshipAssertions. These make intersections and qualifications explicit without treating them as containment or inverse-edge inference. Their limited counts are not evidence that all cross-cutting relationships have been discovered; the 29 OPEN gaps and PARTIAL views remain authoritative limitations.
+
+Coverage depth is uneven: 07E has the largest lane totals (99 records, 39 assertions), while 06A has the smallest (59 records, 17 assertions). These relative counts identify where review and expansion may be needed, but do not prove absolute overrepresentation in 07E or sufficiency in any other lane. No lane is represented as complete.
+
+Source diversity is narrow. The three projected sources comprise a curriculum source (CS2023), a professional-BOK guide (SWEBOK) and an advisory framework (NIST SP 800-218); there is no projected empirical-study source. `se:GAP-07E-NO-EMPIRICS` explicitly records the missing empirical evidence class, while `se:GAP-07G-NO-PM-STANDARD-SOURCE` records reliance on secondary characterization where primary standards are unavailable. Source count therefore must not be read as evidence-class or authority diversity.
+
 ### Explicit gap inventory
 
 The SEK-08 coverage report records 29 first-class OPEN CoverageGap records:
@@ -62,7 +72,7 @@ The human handbook provides a clear navigation model:
 5. SourceLocator
 6. Source and rights handling
 
-The JSON-LD and Turtle expose record references as IRIs. The handbook explains the ten taxonomy perspectives, directed typed relationships, source/evidence lifecycle and limitations. This is structurally reviewable.
+The JSON-LD and Turtle expose record references as IRIs. The handbook explains eleven taxonomy views across ten lane perspectives, directed typed relationships, source/evidence lifecycle and limitations. This is structurally reviewable.
 
 However:
 - 566 knowledge-class records remain 404 PENDING_REVIEW + 162 PROPOSED.
@@ -75,7 +85,7 @@ Therefore G4 is **REVIEWABILITY=PARTIAL / HUMAN_REVIEW=NOT_MEASURED**, not PASS.
 
 ## Representative practical-utility probes
 
-These are bounded qualitative probes against the exact corpus graph, not a controlled benchmark or a claim of model superiority.
+These are bounded qualitative probes against the exact corpus graph, not a controlled benchmark or a claim of model superiority. For all three cases, expected-answer criteria were **not pre-registered**; expected content and omissions were assessed qualitatively after inspection, and no omission rate was measured.
 
 | Question | Corpus-grounded answer path | Utility / limitation |
 |---|---|---|
@@ -102,7 +112,7 @@ No human ReviewDecision exists, human review effort is unmeasured, and the pract
 | G0 scope/taxonomy | PARTIAL — explicit boundary, 11 partial views, 29 OPEN gaps |
 | G1 sources | PARTIAL — 3 used sources, authority/rights limitations explicit |
 | G2 knowledge | PARTIAL — claims/evidence traceability exists; no Case/Counterexample records |
-| G3 graph | PASS — refer to SEK-09A exact-tree conformance report |
+| G3 graph | PASS in specialist lane #352 / PR #355; this remains a separate open integration dependency and its report is not embedded at this HEAD |
 | G4 human review | NOT_MEASURED |
 | G5 practical utility | PARTIAL / NOT_MEASURED |
 
