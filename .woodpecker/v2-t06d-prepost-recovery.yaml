@@ -1,0 +1,43 @@
+# Node 24 source validation for the bounded #331 T06d pre-POST recovery.
+when:
+  - event: [pull_request, push, manual]
+    branch: [task/i331-t06d-prepost-recovery-impl]
+    path:
+      include:
+        - 'experiments/v2/t06d-prepost-recovery/**'
+        - '.woodpecker/v2-t06d-prepost-recovery.yaml'
+labels:
+  backend: local
+steps:
+  - name: syntax-first
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "HEAD=$(git rev-parse HEAD) PIPELINE_COMMIT=${CI_COMMIT_SHA:-unknown}"'
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      - 'for f in experiments/v2/t06d-prepost-recovery/*.mjs; do node --check "$f"; done'
+      - git diff --check
+  - name: focused-prepost-recovery-tests
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'work="${TMPDIR:-/tmp}/tally-i331-${CI_PIPELINE_NUMBER:?}"; mkdir -p "$work"'
+      - |
+        NODE_USE_ENV_PROXY=1 node --input-type=module -e '
+        import {createHash} from "node:crypto";
+        import {writeFileSync} from "node:fs";
+        import {join} from "node:path";
+        const expected={contracts:"7001da2745f1b2876c21a2f29962af699e4a28da92bee7e48571eeb26a7badf3",microkernel:"a52a64386ccd3544cba46feb8161dfd06751ccd24307083e905c9198de20750a","host-node":"999a1784895b0af213db9cf2487ce3f4540861dbdcc4e014a2f8c0911b10fd76"};
+        for(const [name,digest] of Object.entries(expected)){
+          const url="https://github.com/kaicreator-mm/domain-harness/releases/download/v0.10.3/kaicreator-domain-harness-"+name+"-0.10.3.tgz";
+          const response=await fetch(url,{signal:AbortSignal.timeout(30000)});
+          if(!response.ok)throw Error("DOWNLOAD_FAILED "+name+" "+response.status);
+          const bytes=Buffer.from(await response.arrayBuffer());
+          if(createHash("sha256").update(bytes).digest("hex")!==digest)throw Error("DIGEST_MISMATCH "+name);
+          writeFileSync(join(process.argv[1],name+".tgz"),bytes);
+          console.log("VERIFIED",name,digest);
+        }' "$work"
+      - npm install --prefix packages/tally-github-native-c --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - 'npm install --prefix experiments/v2/t06d-prepost-recovery --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com @octokit/rest@22.0.1 yaml@2.8.1 ajv@8.17.1 canonicalize@5.1.0 better-sqlite3@12.11.1 "$work/contracts.tgz" "$work/microkernel.tgz" "$work/host-node.tgz"'
+      - node --test experiments/v2/t06d-prepost-recovery/*.test.mjs
+      - node --test packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs packages/tally-github-native-c/test/task-dispatch-state-events.test.mjs
