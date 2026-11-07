@@ -22,7 +22,12 @@
 
 ## Independent structural checks
 
-The exact WIP graph files and pinned catalog were fetched at the baseline above and inspected.
+The exact WIP graph files and pinned catalog were fetched at the baseline above and inspected. The combined independent review used the following read-only methods, all with exit code 0 unless explicitly marked NOT_RUN below:
+
+- `git rev-parse HEAD HEAD^{tree} HEAD^ HEAD^^{tree}` and `git diff --name-status 902126199c3ec18665873f5b6a6afe59854369ad dbfc72cd717a3ee2c8af79e7ee9b4aba951f4c83` for exact identity and write-set checks.
+- Python 3.14.7 with rdflib 7.6.0 and JSON/YAML parsers for node, reference, endpoint, predicate, qualifier, duplicate-signature, namespace and serialization-equivalence checks.
+- `python validate_knowledge_graph.py --catalog ENTITY_CATALOG.yaml --rules RELATIONSHIP_CATALOG.yaml --self-test` from `knowledge/model/`: `SELF_TESTS=66/66`.
+- `sha256sum -c manifest.sha256` from `knowledge/generated/`: both graph files OK.
 
 | Check | Observed |
 |---|---:|
@@ -35,25 +40,30 @@ The exact WIP graph files and pinned catalog were fetched at the baseline above 
 | Reference / typed-edge targets checked | 1,515 |
 | Malformed reference values | 0 |
 | Dangling reference targets | 0 |
+| Assertion endpoint/class-conformance violations | 0 |
+| Required-qualifier assertions carrying qualifiers | 78/78 |
+| Missing or unexpected required qualifiers | 0 |
+| Duplicate subject/predicate/object signatures | 0 |
+| Declared namespaces | rdf, xsd, se; consistent across serializations |
 
-All 271 Turtle predicate slots are prefixed IRI terms, not quoted literals. All 271 JSON-LD predicate slots use `@id` objects. The ten distinct values used by the graph are members of the pinned Relationship Catalog's `meaning` IRIs. All 1,515 `*_ref`, `*_refs` and typed relationship targets inspected resolve to one of the 793 graph node IDs; no malformed target representation or dangling target was found.
+All 271 Turtle predicate slots are prefixed IRI terms, not quoted literals. All 271 JSON-LD predicate slots use `@id` objects. The ten distinct values used by the graph are members of the pinned Relationship Catalog's `meaning` IRIs. All 1,515 `*_ref`, `*_refs` and typed relationship targets inspected resolve to one of the 793 graph node IDs; no malformed target representation or dangling target was found. Catalog subject/object classes and required qualifiers were checked for all 271 assertions.
 
 The 793 graph nodes are consistent with 792 record resources plus one graph root. The catalog declares additional predicates that are not used by this corpus; unused catalog entries are not treated as graph defects.
 
 ## Exact-tree validation evidence
 
-The WIP tree is byte-identical to the SEK-08 R2 tree. Under ADS #1359 §21, unchanged-tree PASS evidence is reused rather than needlessly rerun under a different merge-commit SHA.
+The WIP tree is byte-identical to the SEK-08 R2 tree. Under ADS #1359 §21, unchanged-tree PASS evidence is reused only for checks not independently rerun; the review executions above are distinguished below.
 
 R2 Builder receipt #6698638901 binds these checks to the exact tree above:
 
-- Deterministic materialization: five assemblies across three lane orders produced one unique output/digest tuple; regeneration from the committed tree was byte-identical.
-- RDF/JSON-LD/internal canonical equivalence: 9,461 = 9,461 = 9,461 triples; N-Triples digest payload parsed back as valid N-Triples.
-- Repository graph validator: `GRAPH_VALIDATION=PASS`.
-- Validator self-tests: `SELF_TESTS=66/66`.
-- Manifest: `sha256sum -c manifest.sha256` reported both graph files OK.
-- LinkML/linkml-runtime 1.12.1 JSON-Schema validation: `LINKML_ERRORS=0`.
+- Deterministic materialization: five assemblies across three lane orders produced one unique output/digest tuple; regeneration from the committed tree was byte-identical. **Reused R2 evidence; NOT_RUN in this lane.**
+- RDF/JSON-LD/internal canonical equivalence: **independently rechecked** with rdflib; both serializations produced 9,461 triples with identical triple sets, and the sorted N-Triples SHA-256 digest prefix `d924e78f371dfe8c` was reproduced.
+- Repository graph validator: `GRAPH_VALIDATION=PASS`. **Reused R2 evidence; NOT_RUN in this lane.**
+- Validator self-tests: **independently rerun**, `SELF_TESTS=66/66`, exit 0.
+- Manifest: **independently rerun**, `sha256sum -c manifest.sha256` reported both graph files OK, exit 0.
+- LinkML/linkml-runtime 1.12.1 JSON-Schema validation: `LINKML_ERRORS=0`. **Reused R2 evidence; NOT_RUN in this lane.**
 
-The manifest entries read from WIP match the R2 receipt. These local commands were not rerun by this read-only audit because the underlying tree is unchanged. Their provenance is explicitly the R2 Builder receipt, not a new local execution by this lane.
+The manifest entries read from WIP match the R2 receipt. Deterministic regeneration, the full repository validator and LinkML execution retain their original R2 Builder provenance; no NOT_RUN item is represented as a new execution by this lane.
 
 ## Limitations
 
@@ -68,3 +78,5 @@ The manifest entries read from WIP match the R2 receipt. These local commands we
 - SEK-08 R2 independent final review: PR #350 review #5808758478.
 - WIP merge: PR #350 / merge commit `902126199c3ec18665873f5b6a6afe59854369ad`.
 - Pinned Relationship Catalog blob at this tree: `a0f088d11878b27b600e604f2cc8d792a85cca9d`.
+- Inspected `graph.ttl` blob: `1c0aee238901b1d02ac00ab19e0235a01ba0dfd8`.
+- Inspected `graph.jsonld` blob: `2d4498dfa5f90bcf57cc81e9c155fb9ede31bf00`.
