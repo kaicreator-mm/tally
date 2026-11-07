@@ -1,8 +1,11 @@
 # SEK-09D — Human Knowledge Review Packet (preparation only)
 
-**Work item:** #360 · **Core gate:** #351 SEK-09 / #299 G4 · **Execution:** ADS #1359 Delivery-First  
-**Pinned source:** `wip/v2.1.1-knowledge` HEAD `9cbf7983c5b47c146bd934f39e10517c3a828b66`, TREE `fe8f5e106f349bb0c814696fcd231732f7568250`; original corpus TREE `a7b972fea96b9f12bbb8066fe6c88c13beb5f8d9`.  
-**Status: PACKET_READY / HUMAN_REVIEW=NOT_CONDUCTED / HUMAN_REVIEW_BURDEN=NOT_MEASURED / G4=BLOCK FOR FULL QUALIFICATION.**  
+**Work item:** #360 · **Core gate:** #351 SEK-09 / #299 G4 · **Execution:** ADS #1359 Delivery-First
+
+**Pinned source:** `wip/v2.1.1-knowledge` HEAD `9cbf7983c5b47c146bd934f39e10517c3a828b66`, TREE `fe8f5e106f349bb0c814696fcd231732f7568250`; original corpus TREE `a7b972fea96b9f12bbb8066fe6c88c13beb5f8d9`.
+
+**Status: PACKET_READY / HUMAN_REVIEW=NOT_CONDUCTED / HUMAN_REVIEW_BURDEN=NOT_MEASURED / G4=BLOCK FOR FULL QUALIFICATION.**
+
 **Evidence source:** SEK-09B source/evidence specialist report #353 and merged PR #356; ids below inherit its purposive sample, not an independently random selection.
 
 ## 1. Purpose, hard boundaries and source controls
