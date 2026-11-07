@@ -1,0 +1,1730 @@
+lane_id: SEK-07A-FOUNDATIONS-PROCESSES-LANE-0.1.0
+title: Foundations, Engineering Processes, Lifecycle and Quality Models lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#334"
+scope_note: >-
+  Foundations-processes vertical-slice lane (SEK-07A) grounded in directly
+  reinspected sections of the SWEBOK Guide v4.0a: KA10 Software Engineering
+  Process (sections 1-3: process fundamentals, life cycles and life cycle
+  models, management/adaptation, process assessment), KA11 Software Engineering
+  Models and Methods (introduction, modeling sections 1 and 3, at model level),
+  KA12 Software Quality (introduction and fundamentals sections 1.1-1.4 at
+  quality-model level), and KA18 Engineering Foundations (sections 1-3). The
+  lane keeps lifecycle, process and quality as distinct taxonomy views related
+  by explicit cross-cutting edges; no process model is treated as universally
+  mandatory. ISO/IEC/IEEE 12207/15288 and ISO/IEC 25010 remain metadata-only
+  registry sources; no normative ISO content is cited. CS2023 carries no
+  knowledge unit for this scope, so no CS2023 content records are admitted.
+  All knowledge records remain PROPOSED or PENDING_REVIEW; none is ACCEPTED.
+  Source entities are not stored in this lane file; the validation harness
+  derives them from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: '2026-11-06'
+      label: Software Engineering
+      definition: A bounded engineering discipline concerned with the multi-person, multi-version construction
+        and evolution of software, represented here through curriculum, secure-development and related classification
+        views pending professional-BOK reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R
+      evidence_refs: []
+
+  taxonomy_views:
+    - id: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA10 process and life cycle lens
+      view_kind: PROCESS
+      purpose: >-
+        Represent the process and life cycle content of SWEBOK Guide v4.0a KA10
+        Software Engineering Process — process fundamentals, life cycle
+        definitions and process categories, life cycle models and paradigms,
+        life cycle adaptation, and process assessment — as one classification
+        lens, separate from the quality lens and the engineering-foundations
+        lens.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the KA10 sections this lane directly reinspected (sections 1-3 at their verified locators).
+        - SWEBOK is a guide to generally accepted knowledge, not a uniform prescription; ISO normative lifecycle content is not admitted in this corpus.
+        - Delivery mechanics (CI/CD tooling detail) and planning/estimation/risk governance belong to other SEK-07 lanes (07E, 07G).
+      evidence_refs:
+        - se:EVD-07A-KA10-PROCESS-DEFINITION
+    - id: se:VIEW-07A-SWEBOK-QUALITY-MODELS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA12 quality-model lens
+      view_kind: QUALITY
+      purpose: >-
+        Represent the model-level quality content of SWEBOK Guide v4.0a KA12
+        Software Quality — the overloaded quality concept (product
+        characteristics, product quality, process quality), the
+        quality-versus-quality-requirements boundary, and model-level quality
+        compositions such as dependability — as a classification lens distinct
+        from the process/lifecycle lens.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the inspected KA12 introduction and sections 1.1-1.4 at their verified locators; quality assurance and V&V process detail belongs to other coverage.
+        - Reliability and performance engineering detail is deliberately excluded (SEK-07 lane 07D); only model-level quality compositions are claimed.
+        - ISO/IEC 25010 normative quality-model characteristics are not admitted (ACCESS_RESTRICTED registry source).
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:VIEW-07A-SWEBOK-ENGINEERING-FOUNDATIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA18 engineering-foundations lens
+      view_kind: DISCIPLINE
+      purpose: >-
+        Represent the engineering-foundations content of SWEBOK Guide v4.0a
+        KA18 that grounds software engineering's process and modeling thinking —
+        the iterative engineering process, design as a wicked problem, and
+        abstraction levels with alternate abstractions — as a foundations lens
+        for this lane, separate from the process and quality lenses.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the inspected KA18 sections 1-3; KA16 Computing Foundations and KA17 Mathematical Foundations are not covered (see se:GAP-07A-FOUNDATIONS-BREADTH).
+        - Foundations content is admitted only where it directly supports this lane's process/lifecycle/quality-model scope.
+      evidence_refs:
+        - se:EVD-07A-KA18-ENG-PROCESS
+
+  taxonomy_nodes:
+    - id: se:NODE-07A-KA10-SWE-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA10 Software Engineering Process"
+      definition: >-
+        The SWEBOK Guide v4.0a knowledge area covering software engineering
+        process fundamentals, life cycles and life cycle models, process
+        management and life cycle adaptation, and software process assessment
+        and improvement; the Guide positions it as closely related to several
+        other KAs, naming Software Engineering Management, Software Engineering
+        Models and Methods, Software Quality, Software Architecture and
+        Software Testing.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      evidence_refs:
+        - se:EVD-07A-KA10-PROCESS-DEFINITION
+    - id: se:NODE-07A-LIFECYCLE-MODELS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "Development life cycle models and paradigms (SWEBOK KA10 sections 2.3-2.5)"
+      definition: >-
+        The KA10 topic grouping development life cycle models (waterfall,
+        V-model, incremental, spiral and Agile, among others) and their
+        paradigms (predictive, iterative, evolutionary, incremental,
+        continuous), in which a specific life cycle is created in conformance
+        with a selected life cycle model.
+      node_kind: SUBDOMAIN
+      view_ref: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+    - id: se:NODE-07A-PROCESS-ASSESSMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "Software process assessment and improvement (SWEBOK KA10 section 3)"
+      definition: >-
+        The KA10 topic grouping software process assessment and improvement
+        approaches: the Shewhart-Deming PDCA paradigm, the Goal Question Metric
+        approach, framework-based methods (CMM, CMMI and the ISO/IEC 33000
+        series) and Agile-life-cycle retrospectives.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      evidence_refs:
+        - se:EVD-07A-KA10-ASSESSMENT
+    - id: se:NODE-07A-KA12-SOFTWARE-QUALITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA12 Software Quality"
+      definition: >-
+        The SWEBOK Guide v4.0a knowledge area covering software quality
+        fundamentals (quality concepts, engineering culture and ethics, value
+        and costs of quality, standards/models/certifications, dependability
+        and integrity levels), the software quality management and assurance
+        processes, and quality tools; represented in this lane only at the
+        model level.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07A-SWEBOK-QUALITY-MODELS
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:NODE-07A-QUALITY-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "Software quality requirements (the -ilities)"
+      definition: >-
+        The KA12 category of software quality requirements: attributes of, or
+        constraints on, functional requirements — commonly shorthand'd as "the
+        -ilities" — distinguished from software quality itself and expected to
+        be defined by the software requirements together with the measurement
+        methods and acceptance criteria for assessing quality.
+      node_kind: QUALITY_ATTRIBUTE
+      view_ref: se:VIEW-07A-SWEBOK-QUALITY-MODELS
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:NODE-07A-KA18-FOUNDATIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA18 Engineering Foundations"
+      definition: >-
+        The SWEBOK Guide v4.0a foundation knowledge area covering the
+        engineering process, engineering design, abstraction and encapsulation,
+        empirical methods and experimental techniques, and statistical
+        analysis, presented as pertinent to all engineering disciplines
+        including software engineering.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07A-SWEBOK-ENGINEERING-FOUNDATIONS
+      evidence_refs:
+        - se:EVD-07A-KA18-ENG-PROCESS
+
+  source_locators:
+    # --- SWEBOK v4.0a locators (official PDF SHA-256
+    #     0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are
+    #     0-based, printed pages use the Guide's chapter folios, e.g. 10-1) ---
+    - id: se:LOC-07A-SWEBOK-KA10-FUNDAMENTALS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 10 Software Engineering Process, section 1 Software Engineering Process Fundamentals (1.1 Introduction, 1.2 Software Engineering Process Definition); PDF page indices 220-222; printed pages 10-1 to 10-3"
+      verified_content_summary: "Engineering-process framing (interrelated activities transforming inputs into outputs while consuming resources); process definitions with inputs, activities and outputs; no ideal process exists — processes must be selected, adapted and applied per project and organizational context; process management supported by empirical measurement."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA10-LIFECYCLE-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 10 Software Engineering Process, section 2.1 Life Cycle Definition, Process Categories, and Terminology and section 2.2 Rationale for Life Cycles; PDF page indices 222-224; printed pages 10-3 to 10-4"
+      verified_content_summary: "Life cycle definition (evolution from conception through retirement); software system life cycle spanning ideation to retirement incl. production, operation, evolution, acquisition, supply; four process categories (technical; technical management; organizational project-enabling; agreement); interrelated life cycle processes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA10-LIFECYCLE-MODELS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 10 Software Engineering Process, section 2.3 The Concepts of Process Models and Life Cycle Models, section 2.4 Some Paradigms for Development Life Cycle Models and section 2.5 Development Life Cycle Models and Their Engineering Dimension; PDF page indices 224-226; printed pages 10-5 to 10-7"
+      verified_content_summary: "Life cycle created in conformance with a selected life cycle model (SLCM); named models waterfall, V-model, incremental, spiral, Agile; paradigms predictive, iterative, evolutionary, incremental, continuous; waterfall predictive and document-driven, spiral evolutionary and risk-driven; Agile open-to-change claims and named misconceptions about Agile."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA10-MANAGEMENT-ADAPTATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 10 Software Engineering Process, section 2.6 The Management of SLCPs, section 2.7 Software Engineering Process Management, section 2.8 Software Life Cycle Adaptation and section 2.9 Practical Considerations; PDF page indices 226-228; printed pages 10-7 to 10-9"
+      verified_content_summary: "Six general life cycle stages (concept, development, production, utilization, support, retirement) not presumed sequential; process management definition and levels; life cycle adaptation steps with documented decisions and rationale; estimations and measurements essential; large processes without deliverables increase uncertainty."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA10-ASSESSMENT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 10 Software Engineering Process, section 3 Software Process Assessment and Improvement (3.1 Overview, 3.2 Goal Question Metric, 3.3 Framework-Based Methods, 3.4 Process Assessment and Improvement in Agile); PDF page indices 228-229; printed pages 10-9 to 10-10"
+      verified_content_summary: "PDCA paradigm as empirical-evidence basis for decisions; GQM (measurable goals, change, evaluate effect); framework-based methods with process reference and assessment models (CMM, CMMI, ISO/IEC 33000 series/SPICE); Agile retrospectives as a continuous learning loop."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA11-MODELING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 11 Software Engineering Models and Methods, Introduction and section 1 Modeling (1.1 Modeling Principles, 1.2 Properties and Expression of Models); PDF page indices 232-234; printed pages 11-1 to 11-3"
+      verified_content_summary: "Models and methods impose structure on software engineering (systematic, repeatable); scope from a single life cycle phase to the complete life cycle regardless of the type of life cycle process model; three modeling principles (model the essentials; provide perspective; enable effective communications); completeness, consistency, correctness as model properties; model as an aggregation of abstractions."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA11-ANALYSIS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 11 Software Engineering Models and Methods, section 3 Analysis of Models (3.1 Analyzing for Completeness, 3.2 Consistency, 3.3 Correctness, 3.4 Traceability, 3.5 Interaction); PDF page indices 236-238; printed pages 11-5 to 11-7"
+      verified_content_summary: "Model analysis techniques: completeness, consistency, correctness (syntactic and semantic), traceability (work-product dependency mapping; improves work-product management and process quality; enables change-impact analysis) and interaction (incl. simulation)."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA12-QUALITY-CONCEPTS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 12 Software Quality, Introduction and section 1 Software Quality Fundamentals (including 1.1 Software Engineering Culture and Ethics, 1.2 Value and Costs of Quality); PDF page indices 245-248; printed pages 12-1 to 12-4"
+      verified_content_summary: "Quality term overload (product characteristics; product quality; process quality); surveyed definitions sharing a conformance-to-requirements premise; software quality requirements distinguished from software quality; error/defect/failure terminology; quality planned early and assessed at life cycle milestones; SQA adapted to different life cycles; CoSQ conformance and nonconformance categories."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA12-DEPENDABILITY
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 12 Software Quality, section 1.4 Software Dependability and Integrity Levels including 1.4.1 Dependability and 1.4.2 Integrity Levels of Software; PDF page indices 249-250; printed pages 12-5 to 12-6"
+      verified_content_summary: "Dependability regrouping availability, reliability, maintainability and supportability, safety and security; integrity levels as a risk-management method based on project-unique characteristics; assurance cases as reasoned, auditable artifacts of claims, arguments and evidence."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA18-ENG-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 18 Engineering Foundations, Introduction and section 1 The Engineering Process; PDF page indices 366-367; printed pages 18-1 to 18-2"
+      verified_content_summary: "IEEE engineering definition (systematic, disciplined, quantifiable approach); software engineering based on skills and knowledge common to all engineering disciplines; the engineering process necessarily iterative across six steps (understand the real problem via root cause analysis; define selection criteria; identify all technically feasible solutions; evaluate; select; monitor performance)."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07A-SWEBOK-KA18-DESIGN-ABSTRACTION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 18 Engineering Foundations, section 2 Engineering Design (including 2.2 Design as a Problem-Solving Activity) and section 3 Abstraction and Encapsulation (including 3.4 Alternate Abstractions); PDF page indices 367-369; printed pages 18-2 to 18-4"
+      verified_content_summary: "Design affects life cycle costs; software design guided by features and quality attributes; design problems as wicked problems (define by solving); many feasible solutions, best-meeting-needs-economically focus; abstraction levels and hierarchies; encapsulation; alternate abstractions complementary rather than hierarchical, synchronization difficult."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    - id: se:EVD-07A-KA10-PROCESS-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA10 frames an engineering process as a set of
+        interrelated activities that transform one or more inputs into outputs
+        while consuming resources, and defines a process description as
+        covering required inputs, transforming activities and the generated
+        outputs; the output of one process can be an input to another process,
+        and processes may include controls (directives, constraints) and
+        enabling mechanisms (tools, technologies, workforce, infrastructure).
+        The KA states that no ideal process, or set of processes, exists —
+        software processes must be selected, adapted and applied as
+        appropriate for each project and each organizational context — and
+        that software engineering process management should be supported by
+        empirical measurement.
+      context: "SWEBOK Guide v4.0a Chapter 10 sections 1.1-1.2, printed pages 10-1 to 10-3; process fundamentals before the life cycle sections."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07 at PDF page indices 220-222; text extracted with pypdf and paraphrased originally."
+      result: "The process-definition family, the no-ideal-process statement and the empirical-measurement requirement were confirmed for the lane's process-scope claims."
+      limitations:
+        - "The Guide's definitions are surveyed generally accepted knowledge; the section does not prescribe which process any project must use."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA10-LIFECYCLE-STRUCTURE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-LIFECYCLE-DEFINITION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA10 defines a life cycle as the evolution of a system,
+        product, service, project or other human-made entity from conception
+        through retirement, and presents the life cycle of a software system
+        as comprising all processes, activities and tasks from the ideation of
+        the system to its retirement, including production, operation and
+        evolution, as well as acquisition and supply when needed. Section 2.1
+        enumerates four process categories: technical processes; technical
+        management processes; organizational project-enabling processes; and
+        agreement processes. Section 2.2 adds that life cycle processes are
+        interrelated — each process's inputs and outputs may depend on other
+        processes — and that the specification of life cycles is a powerful
+        tool for implementing an engineering approach to the creation,
+        operation and retirement of software systems.
+      context: "SWEBOK Guide v4.0a Chapter 10 sections 2.1-2.2, printed pages 10-3 to 10-4; life cycle definition, process categories and rationale."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 222-224; original paraphrase."
+      result: "The life cycle definition, the four-category process taxonomy and the interrelated-processes rationale were confirmed."
+      limitations:
+        - "The category enumeration follows the reference the Guide cites (ISO/IEC/IEEE 12207:2017); the normative standard text itself was not admitted in this corpus."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA10-LIFECYCLE-MODELS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-LIFECYCLE-MODELS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA10 sections 2.3-2.5 distinguish a life cycle from a
+        life cycle model: a project-specific sequence of activities is created
+        by mapping the activities of a standard onto a selected software life
+        cycle model (SLCM), so a life cycle is created in conformance with the
+        model. Examples of well-known life cycle models named for product
+        development are the waterfall model, the V-model, the incremental
+        model, the spiral model and the Agile model. The sections characterize
+        paradigms: predictive life cycles (scope, time and cost determined
+        early; requirements treated as a closed set), iterative life cycles
+        (scope generally determined early while time and cost estimates are
+        routinely modified as understanding increases), evolutionary life
+        cycles (requirements introduced in successive steps), incremental life
+        cycles (deliverable produced through iterations that successively add
+        functionality within a predetermined time frame) and continuous
+        development (frequent releases through automated tools). Waterfall is
+        described as predictive and document-driven with a strict phase order;
+        the spiral model as evolutionary and risk-driven; and Agile as claiming
+        openness to change, with the Guide naming several misconceptions —
+        that Agile is a method in itself, that it is faster because no
+        documents are produced, and that it has a limited or unstructured set
+        of methods and practices.
+      context: "SWEBOK Guide v4.0a Chapter 10 sections 2.3-2.5, printed pages 10-5 to 10-7; life cycle model concepts, paradigms and named model families."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 224-226; original paraphrase."
+      result: "The model-versus-life-cycle distinction, the named model families, the paradigm definitions and the Agile misconceptions were confirmed."
+      limitations:
+        - "The Guide surveys generally accepted model families; it does not rank their effectiveness, and its topic citations are not comprehensive."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA10-STAGES-ADAPTATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-MANAGEMENT-ADAPTATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA10 section 2.6 lists six general stages of a software
+        system's life cycle — concept, development, production, utilization,
+        support and retirement — and states they are not supposed to be
+        sequential: the specification of the life cycle includes the
+        transitions between stages, and specific life cycles have their own
+        stages, meaningful to the project's stakeholders, that fit into the
+        general ones. Section 2.8 presents software life cycle adaptation as
+        identifying the relevant characteristics of the software system and
+        the stakeholders' needs, selecting appropriate standards or documents
+        internal to the organization, selecting a development strategy/life
+        cycle model, stages and processes, and documenting the decisions and
+        rationale; the adaptation does not require keeping the provided names
+        or including all of the processes. Section 2.9 records practical
+        considerations: estimations and measurements are essential, wrong or
+        uncertain estimations in the context of a life cycle will lead to
+        failure, and working with large processes without producing
+        deliverables along the way increases uncertainty; discussions of
+        predictive versus Agile life cycles should be supported by realistic
+        process and product estimations and measurements.
+      context: "SWEBOK Guide v4.0a Chapter 10 sections 2.6-2.9, printed pages 10-7 to 10-9; stage model, process management levels, adaptation and practical considerations."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 226-228; original paraphrase."
+      result: "The six-stage model with non-sequential transitions, the adaptation activity with documented rationale, and the estimation/measurement lessons were confirmed."
+      limitations:
+        - "The stages and adaptation steps are presented as generally accepted guidance, not as a mandated tailoring procedure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA10-ASSESSMENT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-ASSESSMENT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA10 section 3 presents software process assessment and
+        improvement approaches grounded in empirical evidence: the classic
+        Shewhart-Deming plan-do-check-act (PDCA) paradigm, already discussed
+        and applied in the 1950s, described as an opportunity to meet the
+        widely recognized need for empirical evidence to make decisions such
+        as choosing, assessing or improving a process; the Goal Question
+        Metric (GQM) approach, based on Basili's Quality Improvement
+        Paradigm, which sets goals that can be measured, changes something and
+        evaluates the effect of the change; framework-based methods that use a
+        process reference model and a process assessment model — the Guide
+        names CMM, CMMI and the ISO/IEC 33000 series (also known as SPICE); and,
+        for Agile life cycles, iteration retrospectives that analyze what went
+        well and what did not, understand why, and set improvement actions,
+        forming a continuous learning loop.
+      context: "SWEBOK Guide v4.0a Chapter 10 section 3 (3.1-3.4), printed pages 10-9 to 10-10; process assessment and improvement approaches."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 228-229; original paraphrase."
+      result: "The PDCA, GQM, framework-based and retrospective approaches and their shared empirical-evidence framing were confirmed."
+      limitations:
+        - "The section surveys the approaches; it does not compare their effectiveness empirically within the Guide."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA11-MODELING-PRINCIPLES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA11-MODELING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The SWEBOK v4.0a KA11 introduction states that software engineering
+        models and methods impose structure on software engineering to make it
+        systematic, repeatable and ultimately more success-oriented: models
+        provide an approach to problem-solving, a notation and procedures for
+        model construction and analysis, while methods provide an approach to
+        the systematic specification, design, construction, testing and
+        verification of the end-item software and associated work products.
+        Models and methods vary widely in scope — from addressing a single
+        software life cycle phase to covering the complete software life
+        cycle — and the KA focuses on those that encompass multiple phases
+        regardless of the type of life cycle process model, such as iterative
+        and Agile ones. Section 1.1 gives three general modeling principles:
+        model the essentials (abstract away nonessential information to keep
+        models manageable and useful); provide perspective (views such as
+        structural, behavioral, temporal or organizational, each with its own
+        notation, vocabulary, methods and tools); and enable effective
+        communications. Section 1.2 defines completeness, consistency and
+        correctness as properties of models within the chosen notation and
+        tooling, and describes a model as an abstraction or simplification of
+        a system comprising an aggregation of abstractions that together
+        describe only the selected aspects, perspectives or views needed to
+        make informed decisions.
+      context: "SWEBOK Guide v4.0a Chapter 11 introduction and sections 1.1-1.2, printed pages 11-1 to 11-3; the modeling foundation for the lane's model-level records."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 232-234; original paraphrase."
+      result: "The structure-imposing purpose, the scope range, the three modeling principles and the model-property definitions were confirmed."
+      limitations:
+        - "The KA's scope statement is a characterization of the knowledge area, not evidence that any particular modeling method is effective."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA11-MODEL-ANALYSIS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA11-ANALYSIS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA11 section 3 presents the analysis techniques used so
+        that constructed models are complete, consistent and correct enough to
+        serve their intended purpose for stakeholders: analyzing for
+        completeness (the degree to which all specified requirements have been
+        implemented and verified, checked with tooling, state-space
+        reachability or review); for consistency (the model contains no
+        conflicting requirements, assertions, constraints, functions or
+        component descriptions); for correctness (syntactic correctness in the
+        modeling language and semantic correctness of what is represented);
+        for traceability (mapping and controlling the dependency relationships
+        among work products; the Guide states use of traceability typically
+        improves the management of software work products and software process
+        quality and enables change-impact analysis); and for interaction
+        (examining communications or control-flow relations among model parts,
+        including via simulation).
+      context: "SWEBOK Guide v4.0a Chapter 11 section 3 (3.1-3.5), printed pages 11-5 to 11-7; model analysis techniques."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 236-238; original paraphrase."
+      result: "The five analysis techniques and the stated benefits of traceability were confirmed."
+      limitations:
+        - "The techniques are named with brief characterizations; the Guide does not prescribe which technique applies to which modeling language."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA12-QUALITY-OVERLOAD
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA12-QUALITY-CONCEPTS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The SWEBOK v4.0a KA12 introduction states the term software quality is
+        overloaded: it may refer to the desirable characteristics of software
+        products, to the extent to which a particular software product has
+        those characteristics (software product quality), or to the processes,
+        tools and techniques used to achieve those characteristics (software
+        process quality). The KA surveys definitions — Phil Crosby's
+        conformance to requirements, Watts Humphrey's fitness for use, IBM's
+        market-driven quality, and definitions under which quality is the
+        capability of a software product to satisfy stated and implied needs
+        under specified conditions, or the degree to which a software product
+        meets established requirements while depending on how accurately those
+        requirements represent stakeholder needs, wants and expectations —
+        noting both share the premise of conformance to requirements. The KA
+        distinguishes software quality from software quality requirements
+        ("the -ilities"): quality requirements are attributes of, or
+        constraints on, functional requirements. Software process quality is
+        observable in process characteristics such as efficiency,
+        effectiveness, usability and learnability, and defects in the process
+        will likely show up as defects in the resulting software product.
+        Section 1 adds that software requirements are expected to define the
+        required software quality attributes and influence the measurement
+        methods and acceptance criteria for assessing quality, that software
+        quality should be planned early and assessed at many milestones during
+        the software life cycle, that software quality assurance activities
+        must be adapted to accommodate different life cycles such as Agile
+        software development, and it defines error, defect (fault) and failure
+        as distinct terms per the cited standards; the value-and-costs topic
+        frames cost of software quality as conformance cost (appraisal plus
+        prevention) and nonconformance cost.
+      context: "SWEBOK Guide v4.0a Chapter 12 introduction and section 1 (incl. 1.1-1.2), printed pages 12-1 to 12-4; quality concepts at model level."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 245-248; original paraphrase."
+      result: "The three-way term overload, the surveyed definition family, the quality-versus-quality-requirements boundary, the process-quality characteristics and the life-cycle-linked quality planning statements were confirmed."
+      limitations:
+        - "The definitions are attributed to their authors/organizations within the Guide; recording them is not an endorsement of any single definition."
+        - "Model-level scope only: quality assurance and V&V process detail is out of this lane's scope."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA12-DEPENDABILITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA12-DEPENDABILITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA12 section 1.4 presents software dependability and
+        integrity levels: system and software dependability regroups several
+        related quality characteristics — availability, reliability,
+        maintainability and supportability, safety, and security — as the main
+        quality requirement, aside from basic functionality, where system
+        failure may have severe consequences. An integrity level is defined as
+        a value representing project-unique characteristics (for example
+        complexity, criticality, risk, safety level, security level, desired
+        performance and reliability) that define the importance of the system,
+        software or hardware to the user, and defining integrity levels is
+        presented as a method of risk management. An assurance case is
+        described as a reasoned, auditable artifact created to support the
+        contention that its claims are satisfied, containing claims about
+        properties, arguments that logically link the evidence and assumptions
+        to the claims, and a body of evidence and assumptions.
+      context: "SWEBOK Guide v4.0a Chapter 12 section 1.4 (incl. 1.4.1-1.4.2), printed pages 12-5 to 12-6; model-level composition of quality characteristics."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 249-250; original paraphrase."
+      result: "The dependability composition, the integrity-level definition and the assurance-case structure were confirmed."
+      limitations:
+        - "Model-level claim only; the engineering of individual characteristics (reliability, performance) is out of this lane's scope (SEK-07 lane 07D)."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA18-ENG-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA18-ENG-PROCESS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA18 opens with the IEEE definition of engineering as
+        the application of a systematic, disciplined, quantifiable approach to
+        structures, machines, products, systems or processes, and states that
+        as the theory and practice of software engineering mature, it is
+        increasingly apparent the discipline is based on skills and knowledge
+        common to all engineering disciplines. Section 1 summarizes the
+        engineering process, common to all engineering disciplines, as
+        necessarily iterative — knowledge gained at any point may be relevant
+        to earlier steps, triggering iteration — across the steps: understand
+        the real problem (using root cause analysis techniques to discover the
+        underlying problem needing a solution, because the problem that needs
+        to be solved is not always the problem engineers are asked to solve);
+        define the selection criteria; identify all reasonable, technically
+        feasible solutions (the best solution is rarely the first that comes
+        to mind); evaluate each solution against the selection criteria;
+        select the preferred option; and monitor the performance of the
+        selected solution, because the process necessarily depends on
+        estimates and those estimates can be wrong.
+      context: "SWEBOK Guide v4.0a Chapter 18 introduction and section 1, printed pages 18-1 to 18-2; engineering foundations for the lane's process and systems-thinking scope."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 366-367; original paraphrase."
+      result: "The IEEE engineering definition, the common-foundations statement and the six-step iterative engineering process were confirmed."
+      limitations:
+        - "The section is an explicit high-level summary; the KA refers the fuller discussion to the Software Engineering Economics KA."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-KA18-DESIGN-ABSTRACTION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA18-DESIGN-ABSTRACTION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA18 sections 2-3 present engineering design and
+        abstraction foundations: a product's design will affect or even
+        determine its life cycle costs, and software design is guided by the
+        features to be implemented and the quality attributes to be achieved;
+        in engineering, most problems have many solutions and the focus is
+        finding a feasible solution that best meets the needs presented,
+        economically; and design problems are generally considered wicked
+        problems — per the KA's account, the term coined by Horst Rittel, with
+        the McConnell-explained paradox that a wicked problem can be defined
+        only by solving it, or solving part of it, so it must be solved once
+        to define it clearly and solved again to create a solution that works.
+        Abstraction is described as an indispensable problem-solving technique
+        — the process and result of generalization that reduces information to
+        focus on the big picture; engineers work at levels of abstraction
+        connected through encapsulated interfaces, levels may be organized
+        into hierarchies, and multiple alternate abstractions of the same
+        problem (for example a class diagram, a state chart and a sequence
+        diagram at the same level) complement rather than supersede one
+        another, though keeping alternate abstractions in sync is sometimes
+        difficult.
+      context: "SWEBOK Guide v4.0a Chapter 18 sections 2-3 (incl. 2.2 and 3.4), printed pages 18-2 to 18-4; design-as-wicked-problem and alternate-abstraction foundations."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 367-369; original paraphrase."
+      result: "The life-cycle-cost effect of design, the quality-attribute guidance for design, the wicked-problem characterization and the alternate-abstraction concept were confirmed."
+      limitations:
+        - "The KA notes engineering design's scope is generally viewed as broader than software design; the lane uses these foundations only for its process/modeling scope."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07A-SYNTHESIS-UNIVERSAL-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07A-SWEBOK-KA10-FUNDAMENTALS
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07A): combining KA10's statement that no ideal
+        process or set of processes exists (processes must be selected,
+        adapted and applied per project and organizational context), KA10's
+        presentation of multiple model families and paradigms (predictive,
+        iterative, evolutionary, incremental; waterfall through Agile) with
+        named misconceptions about Agile, and KA10's practical-consideration
+        lesson that lifecycle discussions should be supported by realistic
+        estimations and measurements, mandating one life cycle model
+        universally contradicts the inspected sections themselves: model fit
+        is presented as contextual and adaptation as a required, documented
+        activity. This is not a sentence that appears in SWEBOK.
+      context: "Cross-section inference combining verified KA10 statements (sections 1.1, 2.3-2.5 and 2.9); lane-marked synthesis supporting the anti-pattern record."
+      method: "Lane-level combination of three verified evidence records from the same knowledge area (se:EVD-07A-KA10-PROCESS-DEFINITION, se:EVD-07A-KA10-LIFECYCLE-MODELS, se:EVD-07A-KA10-STAGES-ADAPTATION)."
+      result: "Provides the inference trail motivating se:ANT-07A-UNIVERSAL-LIFECYCLE-MANDATE."
+      limitations:
+        - "Synthesis inference, not a direct SWEBOK statement."
+        - "No empirical case evidence in this lane tests the anti-pattern's consequences."
+      uncertainty:
+        - "Whether real organizations that mandate a single model always incur the listed consequences is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07A-SOFTWARE-LIFE-CYCLE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software life cycle (SWEBOK KA10 sense)
+      definition: >-
+        The evolution of a software system from conception through retirement;
+        in SWEBOK KA10's presentation, the life cycle of a software system
+        comprises all processes, activities and tasks from the ideation of the
+        system to its retirement, including production, operation and
+        evolution, as well as acquisition and supply when needed, considering
+        both the business and the technical needs of stakeholders.
+      concept_kind: TERM
+      synonyms:
+        - software development life cycle
+      scope_description: "Defined at SWEBOK Guide v4.0a KA10 section 2.1 fidelity for this lane; aligned with the Guide's cited general definitions, not with any normative ISO clause."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-STRUCTURE
+    - id: se:CON-07A-SLCM
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software life cycle model (SLCM)
+      definition: >-
+        A model with which a specific software life cycle is created in
+        conformance: a project-specific sequence of activities is produced by
+        mapping the activities of a standard onto the selected model. SWEBOK
+        KA10 names waterfall, V-model, incremental, spiral and Agile as
+        well-known examples and keeps the model concept distinct from the life
+        cycle itself.
+      concept_kind: TERM
+      scope_description: "SWEBOK Guide v4.0a KA10 sections 2.3-2.5 fidelity; used as the Guide defines it, not as any single method brand."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+    - id: se:CON-07A-SOFTWARE-QUALITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software quality (SWEBOK KA12 overloaded sense)
+      definition: >-
+        An overloaded term spanning, per SWEBOK KA12, the desirable
+        characteristics of software products, software product quality (the
+        extent a particular product has those characteristics), and software
+        process quality (the processes, tools and techniques used to achieve
+        those characteristics); the definitions the KA surveys share a
+        conformance-to-requirements premise.
+      concept_kind: TERM
+      scope_description: "SWEBOK Guide v4.0a KA12 introduction fidelity; explicitly a multi-sense term, not a single normative definition."
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:CON-07A-QUALITY-REQUIREMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software quality requirement (the -ilities)
+      definition: >-
+        An attribute of, or a constraint on, functional requirements — the
+        "-ilities" shorthand — distinguished in SWEBOK KA12 from software
+        quality itself; software requirements are expected to define the
+        required quality attributes and to influence the measurement methods
+        and acceptance criteria for assessing quality.
+      concept_kind: QUALITY_ATTRIBUTE
+      scope_description: "SWEBOK Guide v4.0a KA12 fidelity for model-level use; engineering detail of specific attributes stays out of this lane."
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:CON-07A-ABSTRACTION-LEVELS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Levels of abstraction and alternate abstractions
+      definition: >-
+        Per SWEBOK KA18, abstraction reduces information about a concept,
+        problem or observable phenomenon to focus on the big picture; work
+        proceeds at levels of abstraction connected through encapsulated
+        interfaces, the levels may be organized in hierarchies, and multiple
+        alternate abstractions of the same problem (for example a class
+        diagram, a state chart and a sequence diagram) complement rather than
+        supersede one another.
+      concept_kind: ABSTRACTION
+      scope_description: "SWEBOK Guide v4.0a KA18 sections 3.1-3.4 fidelity, applied here to software engineering modeling."
+      evidence_refs:
+        - se:EVD-07A-KA18-DESIGN-ABSTRACTION
+    - id: se:CON-07A-WICKED-PROBLEM
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Wicked problem (engineering design sense)
+      definition: >-
+        A problem that can be defined only by solving it, or solving part of
+        it: per the account in SWEBOK KA18 (term attributed to Horst Rittel,
+        paradox explained via McConnell), a wicked problem must be solved once
+        to define it clearly and solved again to create a solution that works;
+        design problems are generally considered wicked problems.
+      concept_kind: TERM
+      scope_description: "SWEBOK Guide v4.0a KA18 section 2.2 fidelity; used for engineering-design foundations, not as a general epistemology claim."
+      evidence_refs:
+        - se:EVD-07A-KA18-DESIGN-ABSTRACTION
+
+  knowledge_claims:
+    - id: se:CLM-07A-NO-UNIVERSAL-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA10 states that no ideal process, or set of
+        processes, exists: software processes must be selected, adapted and
+        applied as appropriate for each project and each organizational
+        context, and software engineering process management should be
+        supported by empirical measurement.
+      claim_kind: LIMITATION
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 sections 1.1-1.2 (printed pages 10-1 to 10-3); generally accepted professional-BOK knowledge, not a uniform prescription."
+      applicability: "Bounds every life cycle model adoption and tailoring discussion in this lane; usable by practitioners as the professional-BOK position against universal process mandates."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Reports the Guide's position; it is not an empirical finding about process outcomes."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-LIFECYCLE-CATEGORIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA10 organizes software life cycle processes into
+        four categories — technical processes; technical management processes;
+        organizational project-enabling processes; and agreement processes —
+        and frames a software system's life cycle as comprising all processes,
+        activities and tasks from ideation to retirement, including
+        production, operation and evolution, as well as acquisition and supply
+        when needed.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 sections 2.1-2.2 (printed pages 10-3 to 10-4); the Guide's process-category taxonomy as presented."
+      applicability: "Reference mapping for classifying software engineering processes within the lifecycle lens; not a claim of exhaustive coverage."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The category enumeration follows the reference the Guide cites (ISO/IEC/IEEE 12207:2017); the normative text itself was not admitted in this corpus (see se:GAP-07A-ISO-NORMATIVE-LIFECYCLE)."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-LIFECYCLE-VS-MODEL
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        In SWEBOK Guide v4.0a KA10, a software life cycle model (SLCM) and a
+        life cycle are distinct: a project-specific sequence of activities is
+        created by mapping the activities of a standard onto a selected SLCM,
+        so a life cycle is created in conformance with the life cycle model;
+        named model families include waterfall, V-model, incremental, spiral
+        and Agile, characterized by paradigms such as predictive, iterative,
+        evolutionary and incremental.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 sections 2.3-2.5 (printed pages 10-5 to 10-7); professional-BOK definitions and paradigm characterizations."
+      applicability: "Terminology mapping for lifecycle-model discussions grounded in this lane; other sources may use the terms differently."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The model and paradigm characterizations are the Guide's survey of generally accepted knowledge, not a comparative effectiveness ranking."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-STAGES-NOT-SEQUENTIAL
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA10's six general life cycle stages — concept,
+        development, production, utilization, support and retirement — are
+        explicitly not presumed to be sequential: the specification of the
+        life cycle for a software system includes the transitions between the
+        stages, and specific life cycles have specific stages, meaningful to
+        the project's stakeholders, that fit into the general stages.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 section 2.6 (printed pages 10-7 to 10-8); the Guide's general stage model."
+      applicability: "Interpreting lifecycle-stage descriptions within the KA10 lens; guards against reading a stage list as a mandated sequence."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The stage list is a general framework; specific life cycles redefine stages within it."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-ADAPTATION-DOCUMENTED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA10 presents software life cycle adaptation as
+        identifying the relevant characteristics of the software system and
+        the stakeholders' needs, selecting appropriate standards or
+        organization-internal documents, selecting a development strategy/life
+        cycle model, stages and processes, and documenting the decisions and
+        rationale; the adaptation does not require keeping the provided names
+        or including all of the processes.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 section 2.8 (printed page 10-8); generally accepted adaptation activities, not a mandated tailoring procedure."
+      applicability: "Projects and organizations defining a project life cycle in conformance with a selected model."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Describes generally accepted adaptation activities; it does not prescribe a mandatory procedure or evaluation criteria for the tailoring."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-ASSESSMENT-EMPIRICAL
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA10 presents software process assessment and
+        improvement approaches — the Shewhart-Deming PDCA paradigm, the Goal
+        Question Metric approach, framework-based methods (CMM, CMMI, the
+        ISO/IEC 33000 series) and Agile retrospectives — as resting on the
+        need for empirical evidence to make decisions such as choosing,
+        assessing or improving a process.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 10 section 3 (printed pages 10-9 to 10-10); a survey of generally accepted assessment approaches."
+      applicability: "Teams assessing or improving software engineering processes, including in Agile life cycles."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section surveys the approaches without comparing their effectiveness empirically within the Guide."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-QUALITY-TERM-OVERLOAD
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA12 states the term software quality is
+        overloaded — it may refer to the desirable characteristics of software
+        products, to software product quality (the extent a particular product
+        has those characteristics), or to software process quality (the
+        processes, tools and techniques used to achieve those characteristics)
+        — and surveys definitions (conformance to requirements; fitness for
+        use; capability to satisfy stated and implied needs) that share a
+        conformance-to-requirements premise while emphasizing that quality
+        depends on how accurately established requirements represent
+        stakeholder needs, wants and expectations.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 12 introduction and section 1 (printed pages 12-1 to 12-4); the KA's own terminology analysis."
+      applicability: "Interpreting quality discussions grounded in this lane; other frameworks (including quality-model standards not admitted here) may define quality differently."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definitions are attributed to their authors/organizations within the Guide; the claim is not an endorsement of any single definition."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-QUALITY-VS-QUALITY-REQS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA12 distinguishes software quality from software
+        quality requirements: quality requirements ("the -ilities") are
+        attributes of, or constraints on, functional requirements, while
+        software quality is used in the broad sense of meeting all
+        requirements; software requirements are expected to define the
+        required software quality attributes and influence the measurement
+        methods and acceptance criteria for assessing how the software and its
+        work products achieve desired quality levels.
+      claim_kind: DOMAIN_BOUNDARY
+      scope_description: "SWEBOK Guide v4.0a Chapter 12 introduction and section 1 (printed pages 12-1 to 12-4); terminology boundary as drawn in this KA."
+      applicability: "Boundary-keeping between quality-model records and requirement-level records; normative quality-model standard content is not admitted in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The boundary is drawn for this KA's presentation; quality-model standards (e.g., the SQuaRE series) may draw it differently, and their content is out of scope here."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-DEPENDABILITY-COMPOSITE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA12 presents system and software dependability as
+        regrouping several related quality characteristics — availability,
+        reliability, maintainability and supportability, safety, and security
+        — and presents software integrity levels as a risk-management method
+        based on project-unique characteristics such as complexity,
+        criticality, risk, safety level, security level, desired performance
+        and reliability.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a Chapter 12 section 1.4 incl. 1.4.1-1.4.2 (printed pages 12-5 to 12-6); model-level composition of quality characteristics."
+      applicability: "Model-level classification of dependability within the quality lens; the engineering of individual characteristics is out of this lane's scope."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Model-level claim only; reliability and performance engineering detail belongs to SEK-07 lane 07D."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-MODELS-STRUCTURE-SE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA11 states that software engineering models and
+        methods impose structure on software engineering to make it
+        systematic, repeatable and ultimately more success-oriented — models
+        provide an approach to problem-solving, a notation and procedures for
+        model construction and analysis, while methods provide an approach to
+        the systematic specification, design, construction, testing and
+        verification of software — and that models and methods vary widely in
+        scope, from addressing a single software life cycle phase to covering
+        the complete life cycle, with the KA focusing on those encompassing
+        multiple phases regardless of the type of life cycle process model.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 11 introduction (printed page 11-1); the KA's own scope characterization."
+      applicability: "Framing how models and methods relate to lifecycle phases within this lane's views; not evidence that any specific method is effective."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "A scope characterization of the knowledge area, not a comparative or empirical claim."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07A-ENG-PROCESS-ITERATIVE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA18 defines engineering, per IEEE, as the
+        application of a systematic, disciplined, quantifiable approach to
+        structures, machines, products, systems or processes, states that
+        software engineering is based on skills and knowledge common to all
+        engineering disciplines, and presents the engineering process as
+        necessarily iterative — knowledge gained at any point may be relevant
+        to earlier steps, triggering iteration — across the steps of
+        understanding the real problem, defining selection criteria,
+        identifying all reasonable technically feasible solutions, evaluating
+        them against the criteria, selecting the preferred option, and
+        monitoring the performance of the selected solution because estimates
+        can be wrong.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 18 introduction and section 1 (printed pages 18-1 to 18-2); engineering-foundations characterization."
+      applicability: "Grounds software engineering process thinking in shared engineering foundations; usable where a foundations anchor for process iteration is needed."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The engineering-process summary is explicitly high-level; the fuller treatment lives in the Software Engineering Economics KA."
+      uncertainty: []
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07A-TAILOR-DONT-ADOPT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Select and adapt the life cycle; never adopt a model as a mandate
+      statement: >-
+        A software life cycle model should be selected and adapted to the
+        differential characteristics of the software system, its stakeholders
+        and the organization — with the adaptation decisions and their
+        rationale documented — rather than any single model being adopted as a
+        universal mandate.
+      rationale: >-
+        SWEBOK KA10 states that no ideal process or set of processes exists
+        and that processes must be selected, adapted and applied as
+        appropriate for each project and organizational context; it presents
+        life cycle adaptation as an explicit activity (identify
+        characteristics, select standards/strategy/model/stages/processes,
+        document decisions and rationale) that does not require keeping
+        standard names or including all processes; and its practical
+        considerations add that lifecycle discussions should be supported by
+        realistic estimations and measurements.
+      scope_description: "Derived within SWEBOK Guide v4.0a KA10 inspected sections (1.1, 2.8, 2.9); professional-BOK generally accepted knowledge, not a universal engineering law."
+      applicability: "Teams and organizations choosing or tailoring software life cycle models."
+      exceptions:
+        - "Contractual or regulatory contexts that prescribe a specific process standard may constrain the adaptation space (recorded here as an exception without admitting the normative text)."
+      limitations:
+        - "The principle's strength beyond the Guide's presentation is untested in this lane (no empirical case evidence cited)."
+      evidence_refs:
+        - se:EVD-07A-KA10-PROCESS-DEFINITION
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+      claim_refs:
+        - se:CLM-07A-NO-UNIVERSAL-PROCESS
+        - se:CLM-07A-ADAPTATION-DOCUMENTED
+    - id: se:PRI-07A-KEEP-VIEWS-DISTINCT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Keep lifecycle, process and quality lenses distinct but explicitly related
+      statement: >-
+        Lifecycle models, engineering processes and quality models classify
+        the same engineering effort from different perspectives; they should
+        be kept as distinct views connected by explicit cross-cutting
+        relations rather than merged into one universal hierarchy.
+      rationale: >-
+        The inspected SWEBOK KAs keep the lenses apart while relating them:
+        KA10 carries the process/lifecycle lens, KA12 discusses quality as a
+        basic concept appearing across many knowledge areas and distinguishes
+        product quality from process quality, and KA11 states models and
+        methods span multiple life cycle phases regardless of the type of life
+        cycle process model. A single merged tree would erase distinctions the
+        sources themselves make.
+      scope_description: "SEK-07A lane structuring principle (lane-level synthesis grounded in the inspected section scopes of KA10, KA11 and KA12); it governs how this lane's taxonomy views are modeled."
+      applicability: "Knowledge organization of SE process/lifecycle/quality content; usable as a modeling discipline for multi-view engineering taxonomies."
+      exceptions: []
+      limitations:
+        - "A lane-level structuring rationale, not a source sentence; it inherits the coverage limits of the inspected sections."
+      evidence_refs:
+        - se:EVD-07A-KA11-MODELING-PRINCIPLES
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+      claim_refs:
+        - se:CLM-07A-MODELS-STRUCTURE-SE
+
+  practices:
+    - id: se:PRA-07A-LIFECYCLE-ADAPTATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Life cycle tailoring with documented rationale
+      intent: >-
+        Fit the project life cycle to the software system and organization
+        instead of adopting a model wholesale, and leave an auditable record
+        of the fit decisions.
+      description: >-
+        Following SWEBOK KA10's adaptation topic: identify the differential
+        characteristics of the software system and the stakeholders' needs,
+        select the appropriate standards or organization-internal documents,
+        select a development strategy/life cycle model, stages and processes,
+        and document the decisions and rationale; the adaptation need not keep
+        the standard names or include every process.
+      preconditions:
+        - "Knowledge of the product characteristics (e.g., stakeholders' needs, product size or complexity) and of the organizational context."
+        - "Access to candidate standards or internal process documents."
+      steps:
+        - "Identify the relevant characteristics of the software system and its stakeholders."
+        - "Select the appropriate standards or organization-internal documents."
+        - "Select the development strategy and life cycle model, the stages and the processes."
+        - "Record the adaptation decisions and their rationale; drop or rename elements deliberately rather than silently."
+        - "Support the tailored life cycle with metrics/measure definitions that yield realistic process and product estimations and measurements."
+      expected_outcomes:
+        - "A project life cycle in conformance with a selected model, adapted to the system's characteristics, with documented rationale."
+        - "Measurement definitions able to report process and product status during execution."
+      risks:
+        - "Wrong or uncertain estimations in the context of the life cycle will lead to failure (KA10 practical considerations)."
+        - "Working with large processes without producing deliverables along the way increases uncertainty."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA10 sections 2.8-2.9 at professional-BOK fidelity."
+      applicability: "Any project defining or tailoring a software life cycle; normative constraints may bound the tailoring space."
+      evidence_refs:
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+      claim_refs:
+        - se:CLM-07A-ADAPTATION-DOCUMENTED
+    - id: se:PRA-07A-GQM-ASSESSMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Goal-question-metric style process assessment
+      intent: >-
+        Ground process-assessment and improvement decisions in empirical
+        evidence rather than opinion.
+      description: >-
+        Following SWEBOK KA10 section 3: set goals that can be measured,
+        change something, and then evaluate the effect of the change — an
+        improvement has occurred when the evaluation is positive;
+        framework-based assessments (process reference model plus process
+        assessment model) and Agile retrospectives instantiate the same
+        empirical loop.
+      preconditions:
+        - "A running process whose goals can be stated measurably."
+        - "Willingness to introduce a change and re-measure."
+      steps:
+        - "State the improvement goal in measurable terms."
+        - "Define the questions and metrics that will indicate whether the goal is met."
+        - "Introduce the planned change."
+        - "Evaluate the effect using the defined metrics; retain the change as an improvement only when the evaluation is positive."
+      expected_outcomes:
+        - "Process decisions (choosing, assessing, improving) supported by empirical evidence."
+      risks:
+        - "Unrealistic or imprecise measurement definitions undermine the evaluation."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA10 section 3 (3.1-3.4) at professional-BOK fidelity."
+      applicability: "Teams assessing or improving software engineering processes, including retrospective-driven improvement in Agile life cycles."
+      evidence_refs:
+        - se:EVD-07A-KA10-ASSESSMENT
+      claim_refs:
+        - se:CLM-07A-ASSESSMENT-EMPIRICAL
+    - id: se:PRA-07A-MULTI-VIEW-MODELING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Multi-perspective modeling with synchronized views
+      intent: >-
+        Keep different engineering concerns visible in their own views
+        instead of overloading a single model.
+      description: >-
+        Following SWEBOK KA11's modeling principles (model the essentials;
+        provide perspective; enable effective communications) and KA18's
+        alternate abstractions: for each concern choose a view with its own
+        notation and vocabulary, abstract away nonessential information, and
+        keep the resulting alternate abstractions complementary and
+        synchronized.
+      preconditions:
+        - "Identified stakeholders and a decision about which aspects or features pose the questions driving the modeling effort."
+        - "A chosen modeling notation per view."
+      steps:
+        - "Determine which aspects or features pose the questions that motivate the model."
+        - "Choose the views (e.g., structural, behavioral) appropriate to those concerns."
+        - "Model only the essentials in each view, abstracting nonessential information."
+        - "Record the assumptions each view makes about its context so reuse can validate them."
+        - "Keep alternate abstractions consistent; review synchronization whenever any view changes."
+      expected_outcomes:
+        - "A set of complementary views whose union describes exactly the selected aspects needed to make the motivating decisions."
+      risks:
+        - "A single model can give the illusion of complete understanding (KA11 cautions models are abstractions with missing information)."
+        - "Keeping alternate abstractions in sync is sometimes difficult (KA18)."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA11 sections 1.1-1.2 plus KA18 sections 2-3 (alternate abstractions) at inspected-section fidelity."
+      applicability: "Modeling software at any life cycle phase; the practice is independent of which life cycle model the project uses."
+      evidence_refs:
+        - se:EVD-07A-KA11-MODELING-PRINCIPLES
+        - se:EVD-07A-KA18-DESIGN-ABSTRACTION
+      claim_refs:
+        - se:CLM-07A-MODELS-STRUCTURE-SE
+
+  patterns:
+    - id: se:PAT-07A-INCREMENTAL-DELIVERY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Incremental delivery within an iterative life cycle
+      problem: >-
+        Long-running large processes without intermediate deliverables
+        increase uncertainty, and product understanding grows while the
+        project runs, so a single late delivery compounds estimation error and
+        feedback latency.
+      context: >-
+        A software product whose requirements understanding increases as the
+        team works, developed under a life cycle that permits repeated
+        cycles; SWEBOK KA10 presents incremental and iterative life cycles and
+        continuous development as established paradigms for exactly this
+        situation.
+      forces:
+        - "Early stakeholder feedback versus iteration coordination overhead."
+        - "Predictive scope stability versus changing understanding."
+        - "Per-iteration deliverable completeness versus overall completeness only after the final iteration."
+      solution: >-
+        Structure the life cycle as a series of iterations that successively
+        add functionality within agreed time frames (an incremental life
+        cycle, per the Guide's paradigm definitions), keeping metrics and
+        measure definitions realistic so process and product estimations track
+        status; in Agile-family models the same structure appears as small
+        incremental deliveries with requirements open to change.
+      consequences:
+        - "Earlier stakeholder feedback and reduced uncertainty compared with working long stretches without deliverables."
+        - "The deliverable contains the necessary and sufficient capability to be considered complete only after the final iteration (per the Guide's incremental definition)."
+      tradeoffs:
+        - "Incremental development requires requirements definition, design, implementation and testing to occur in an overlapping, iterative manner rather than a strict sequence; integration discipline grows with iteration count."
+      scope_description: "Grounded in SWEBOK Guide v4.0a KA10 sections 2.4, 2.5 and 2.9 (paradigm definitions and the no-deliverables lesson); one paradigm among several the Guide presents, not a universal prescription."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+
+  anti_patterns:
+    - id: se:ANT-07A-UNIVERSAL-LIFECYCLE-MANDATE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Universal life cycle mandate
+      symptoms:
+        - "One life cycle model (predictive or Agile) is mandated for all projects regardless of system characteristics or organizational context."
+        - "Life cycle adoption decisions exist without documented adaptation rationale."
+        - "Model-choice debates (e.g., waterfall versus Agile) proceed without realistic estimations or measurements."
+      causes:
+        - "Treating any process model as universally mandatory rather than as a paradigm to conform to and tailor."
+        - "Misconceptions about the chosen model (that Agile is a method in itself; that Agile is faster because no documents are needed; that Agile has a limited or unstructured practice set)."
+        - "Skipping the adaptation activity: no identification of characteristics, no deliberate selection of model/stages/processes, no documented rationale."
+      consequences:
+        - "Process-to-project mismatch: a model's assumptions (e.g., closed requirement sets in predictive cycles) collide with the project's actual change profile."
+        - "Wrong or uncertain estimations within the mismatched life cycle lead to failure, per the Guide's practical considerations."
+        - "Long stretches without deliverables when large mandated processes produce nothing interim, increasing uncertainty."
+      remediation: >-
+        Select and adapt the life cycle per SWEBOK KA10: identify the
+        system's differential characteristics and stakeholder needs, choose
+        and tailor the model, stages and processes, document the decisions and
+        rationale, and support the result with realistic estimations and
+        measurements; treat model-family debates as empirical questions
+        requiring measurement, not identity debates.
+      scope_description: "Lane-level characterization grounded in SWEBOK Guide v4.0a KA10 sections 1.1, 2.3-2.5 and 2.9; the counterproductive nature of a universal mandate is a SEK-07A synthesis inference (see se:EVD-07A-SYNTHESIS-UNIVERSAL-LIFECYCLE), not a statement made by the Guide."
+      evidence_refs:
+        - se:EVD-07A-SYNTHESIS-UNIVERSAL-LIFECYCLE
+
+  decision_models:
+    - id: se:DM-07A-LIFECYCLE-MODEL-SELECTION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "Which development life cycle model should a software project conform to, and how should it be tailored?"
+      options:
+        - "A predictive model (e.g., waterfall or V-model)"
+        - "An incremental or iterative model"
+        - "An evolutionary, risk-driven model (e.g., spiral)"
+        - "An Agile model"
+        - "A hybrid: a selected model deliberately tailored to the system's stages and processes"
+      criteria:
+        - "Requirements stability (closed set versus open to change)."
+        - "Need for early risk reduction (risk-driven versus document- or code-driven)."
+        - "Ability to deliver usable increments within agreed time frames."
+        - "Stakeholder communication cadence and trust."
+        - "Product size and complexity; organizational context."
+      constraints:
+        - "No ideal process exists: the choice must fit the project and organizational context (SWEBOK KA10 section 1)."
+        - "Adaptation does not require keeping the standard names or including all processes; decisions and rationale must be documented (KA10 section 2.8)."
+        - "The tailored life cycle needs metrics/measure definitions yielding realistic estimations and measurements (KA10 section 2.9)."
+      procedure: >-
+        Identify the differential characteristics of the software system and
+        its stakeholders; assess requirements stability and expected change
+        (predictive life cycles assume a closed requirement set;
+        Agile-family models claim openness to change); evaluate the candidate
+        models against the criteria, using the Guide's paradigm
+        characterizations (predictive, iterative, evolutionary, incremental)
+        as comparison axes; select and tailor the stages and processes; record
+        the selection and adaptation rationale; monitor with realistic
+        estimations and measurements and revisit the choice if measurement
+        accuracy proves uncertain.
+      tradeoffs:
+        - "Predictive models fix scope, time and cost early but resist change; incremental and Agile models absorb change but shift effort into iteration coordination and integration; the spiral model adds risk-analysis overhead."
+      scope_description: "Structured from SWEBOK Guide v4.0a KA10 sections 1.1 and 2.3-2.9; a professional-BOK decision aid, not a normative selection procedure."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+        - se:EVD-07A-KA10-PROCESS-DEFINITION
+      claim_refs:
+        - se:CLM-07A-LIFECYCLE-VS-MODEL
+        - se:CLM-07A-NO-UNIVERSAL-PROCESS
+
+  coverage_gaps:
+    - id: se:GAP-07A-ISO-NORMATIVE-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Normative lifecycle and quality-model standard content not admitted
+      target_scope_ref: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      gap_kind: SOURCE_GAP
+      description: >-
+        The registry lists ISO/IEC/IEEE 12207:2026, ISO/IEC/IEEE 15288:2023
+        and ISO/IEC 25010:2023 as ACCESS_RESTRICTED metadata-only sources; no
+        normative text, clause or characteristic list may be ingested,
+        summarized or cited. This lane's lifecycle and quality-model content
+        therefore comes exclusively from directly inspected SWEBOK v4.0a
+        sections; SWEBOK's own attribution of the process categories to
+        ISO/IEC/IEEE 12207:2017 is reported as the Guide's citation, not as
+        verified normative content.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        No record in this lane claims ISO normative terminology or the 25010
+        quality-model characteristics; cross-checking SWEBOK's lifecycle and
+        quality summaries against the normative standards remains impossible
+        until a permitted human-access review exists.
+      resolution_notes:
+        - "Obtain a permitted human review procedure for the standards (or a future open edition) before any normative claim; until then keep the ISO sources bibliographic-only."
+      evidence_refs: []
+    - id: se:GAP-07A-CS2023-CURRICULUM-SCOPE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No CS2023 curriculum unit covers process, lifecycle or quality models
+      target_scope_ref: se:VIEW-07A-SWEBOK-PROCESS-LIFECYCLE
+      gap_kind: COVERAGE_GAP
+      description: >-
+        The registry-verified CS2023 Software Engineering knowledge-unit list
+        (nine units: Teamwork; Tools and Environments; Product Requirements;
+        Software Design; Software Construction; Software Verification and
+        Validation; Refactoring and Code Evolution; Software Reliability;
+        Formal Methods) contains no unit for engineering processes, lifecycle
+        models or quality models, so this lane has no curriculum-side anchor
+        for its scope and admits no CS2023-derived records.
+      severity: LOW
+      coverage_status: OPEN
+      impact: >-
+        Curriculum-versus-professional-BOK comparison for process, lifecycle
+        and quality-model scope is not possible from this lane; the lane's
+        records rest on the professional-BOK source only.
+      resolution_notes:
+        - "If a curriculum comparator for this scope is needed, identify and register a curriculum source that actually covers it; do not stretch CS2023 units beyond their verified scope."
+      evidence_refs: []
+    - id: se:GAP-07A-NO-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real process or quality-model case evidence
+      target_scope_ref: se:NODE-07A-KA10-SWE-PROCESS
+      gap_kind: SOURCE_GAP
+      description: >-
+        No case-class source (incident report, postmortem or case study about
+        lifecycle adoption, process tailoring or quality-model use) is
+        registered for this scope; the lane therefore contains no Case or
+        Counterexample records, and its pattern and anti-pattern records rest
+        on SWEBOK text plus one lane-marked synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern consequences lack real-world illustration;
+        the anti-pattern's counterproductive characterization remains a
+        synthesis inference rather than an observed outcome.
+      resolution_notes:
+        - "Register and verify at least one case-class source before promoting these records toward acceptance."
+      evidence_refs: []
+    - id: se:GAP-07A-FOUNDATIONS-BREADTH
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Foundations coverage limited to inspected KA18 sections
+      target_scope_ref: se:VIEW-07A-SWEBOK-ENGINEERING-FOUNDATIONS
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane inspected SWEBOK KA18 sections 1-3 (the engineering
+        process; engineering design including wicked problems; abstraction and
+        encapsulation including alternate abstractions) and read sections 4-5
+        (empirical methods, statistical analysis) without admitting them as
+        locators; KA16 Computing Foundations and KA17 Mathematical Foundations
+        were not inspected at all, so the foundations view carries only the
+        engineering-foundations slice relevant to process, lifecycle and
+        quality-model scope.
+      severity: LOW
+      coverage_status: OPEN
+      impact: >-
+        Systems-thinking and foundations records are bounded to what KA18's
+        inspected sections state; computing and mathematical foundations for
+        this scope stay uncovered.
+      resolution_notes:
+        - "Admit KA18 sections 4-5 evidence, and inspect KA16/KA17, if foundations depth becomes a lane requirement."
+      evidence_refs: []
+    # --- shared CoverageGap: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: '2026-11-06'
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: The registered CS2023 permission scope expressly covers educational materials and programs
+        and requires specific permission for other uses. Tally's general software-engineering knowledge graph
+        is not presumed to qualify as an educational material or program; no rights clearance for broader
+        use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: The lane must not claim that CS2023-derived records are cleared for public redistribution or
+        commercial product embedding until the rights scope is confirmed.
+      resolution_notes:
+        - Obtain a documented rights determination or specific permission before public redistribution or commercial
+          product embedding; otherwise replace the source or remove the affected records from those uses.
+      evidence_refs: []
+
+  relationship_assertions:
+    # --- canonical claim-to-evidence traces (one SUPPORTED_BY per claim) ---
+    - id: se:REL-07A-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-NO-UNIVERSAL-PROCESS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-PROCESS-DEFINITION
+      context: "Canonical claim-to-evidence trace for the no-ideal-process claim."
+      rationale: "The evidence record paraphrases SWEBOK KA10 sections 1.1-1.2 at the verified locator (PDF page indices 220-222; printed 10-1 to 10-3), which is the sole basis of the claim."
+    - id: se:REL-07A-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-LIFECYCLE-CATEGORIES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-LIFECYCLE-STRUCTURE
+      context: "Canonical claim-to-evidence trace for the process-category taxonomy claim."
+      rationale: "The evidence record paraphrases SWEBOK KA10 sections 2.1-2.2 at the verified locator (PDF page indices 222-224; printed 10-3 to 10-4), which enumerate the four categories and the life cycle definition."
+    - id: se:REL-07A-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-LIFECYCLE-VS-MODEL
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-LIFECYCLE-MODELS
+      context: "Canonical claim-to-evidence trace for the model-versus-life-cycle definition claim."
+      rationale: "The evidence record paraphrases SWEBOK KA10 sections 2.3-2.5 at the verified locator (PDF page indices 224-226; printed 10-5 to 10-7), which state the conformance mapping and the named model families and paradigms."
+    - id: se:REL-07A-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-STAGES-NOT-SEQUENTIAL
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-STAGES-ADAPTATION
+      context: "Canonical claim-to-evidence trace for the non-sequential stages claim."
+      rationale: "The evidence record paraphrases SWEBOK KA10 section 2.6 within its verified locator (PDF page indices 226-228; printed 10-7 to 10-9), which lists the six stages and states they are not supposed to be sequential."
+    - id: se:REL-07A-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-ADAPTATION-DOCUMENTED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-STAGES-ADAPTATION
+      context: "Canonical claim-to-evidence trace for the documented-adaptation claim."
+      rationale: "The same evidence record carries SWEBOK KA10 section 2.8, which presents the adaptation activity including documenting decisions and rationale."
+    - id: se:REL-07A-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-ASSESSMENT-EMPIRICAL
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-ASSESSMENT
+      context: "Canonical claim-to-evidence trace for the empirical-assessment claim."
+      rationale: "The evidence record paraphrases SWEBOK KA10 section 3 at the verified locator (PDF page indices 228-229; printed 10-9 to 10-10), which presents PDCA, GQM, framework-based methods and retrospectives under the empirical-evidence framing."
+    - id: se:REL-07A-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-QUALITY-TERM-OVERLOAD
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA12-QUALITY-OVERLOAD
+      context: "Canonical claim-to-evidence trace for the quality-term-overload claim."
+      rationale: "The evidence record paraphrases the SWEBOK KA12 introduction and section 1 at the verified locator (PDF page indices 245-248; printed 12-1 to 12-4), which is the sole basis of the claim."
+    - id: se:REL-07A-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-QUALITY-VS-QUALITY-REQS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA12-QUALITY-OVERLOAD
+      context: "Canonical claim-to-evidence trace for the quality-versus-quality-requirements boundary claim."
+      rationale: "The same evidence record carries the KA12 statements distinguishing quality requirements (attributes of or constraints on functional requirements) from software quality, and linking requirements to quality attributes, measurement methods and acceptance criteria."
+    - id: se:REL-07A-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-DEPENDABILITY-COMPOSITE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA12-DEPENDABILITY
+      context: "Canonical claim-to-evidence trace for the dependability-composition claim."
+      rationale: "The evidence record paraphrases SWEBOK KA12 section 1.4 at the verified locator (PDF page indices 249-250; printed 12-5 to 12-6), which regroups the named characteristics under dependability and defines integrity levels."
+    - id: se:REL-07A-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-MODELS-STRUCTURE-SE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA11-MODELING-PRINCIPLES
+      context: "Canonical claim-to-evidence trace for the models-and-methods structure claim."
+      rationale: "The evidence record paraphrases the SWEBOK KA11 introduction at the verified locator (PDF page indices 232-234; printed 11-1 to 11-3), which states the structure-imposing purpose and the scope range of models and methods."
+    - id: se:REL-07A-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-ENG-PROCESS-ITERATIVE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA18-ENG-PROCESS
+      context: "Canonical claim-to-evidence trace for the iterative engineering-process claim."
+      rationale: "The evidence record paraphrases the SWEBOK KA18 introduction and section 1 at the verified locator (PDF page indices 366-367; printed 18-1 to 18-2), which is the sole basis of the claim."
+    # --- principle-to-evidence traces ---
+    - id: se:REL-07A-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07A-TAILOR-DONT-ADOPT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA10-PROCESS-DEFINITION
+      context: "Canonical principle-to-evidence trace for the tailor-don't-adopt principle's primary anchor."
+      rationale: "The no-ideal-process statement in this evidence record is the professional-BOK basis of the principle; the adaptation-procedure detail is carried by se:EVD-07A-KA10-STAGES-ADAPTATION, which the principle also cites in its evidence_refs."
+    - id: se:REL-07A-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07A-KEEP-VIEWS-DISTINCT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07A-KA12-QUALITY-OVERLOAD
+      context: "Canonical principle-to-evidence trace for the keep-views-distinct principle."
+      rationale: "The KA12 quality-overload evidence shows quality discussed across many knowledge areas with product and process senses kept apart, which is the strongest inspected motivation for keeping the quality lens a separate view; the KA11 models-scope evidence is cited in the principle's evidence_refs as the second anchor."
+    # --- scope-bearing edges ---
+    - id: se:REL-07A-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-NO-UNIVERSAL-PROCESS
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07A-KA10-SWE-PROCESS
+      qualifiers:
+        - "Applies within the SWEBOK KA10 Software Engineering Process knowledge-area scope only."
+        - "Professional-BOK content claim, not a universal engineering law."
+      context: "Locating the no-ideal-process claim within the knowledge area that states it."
+      rationale: "The claim is a characterization of the KA10 presentation, so its applicability is bounded by that knowledge area's taxonomy node."
+      evidence_refs:
+        - se:EVD-07A-KA10-PROCESS-DEFINITION
+    - id: se:REL-07A-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07A-LIFECYCLE-ADAPTATION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07A-KA10-SWE-PROCESS
+      qualifiers:
+        - "Practice is operationalized from SWEBOK KA10 sections 2.8-2.9 at professional-BOK fidelity."
+        - "Normative constraints (contracts, regulations) may bound the tailoring space; the lane admits no normative text."
+      context: "Locating the life cycle tailoring practice within the knowledge area it operationalizes."
+      rationale: "The practice's steps derive directly from KA10's adaptation and practical-considerations topics, so its declared applicability is that knowledge area's scope."
+      evidence_refs:
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+    - id: se:REL-07A-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07A-LIFECYCLE-ADAPTATION
+      predicate: IMPLEMENTS
+      object_ref: se:PRI-07A-TAILOR-DONT-ADOPT
+      qualifiers:
+        - "Operationalization at SWEBOK KA10 sections 2.8-2.9 fidelity."
+        - "The practice adds procedural detail (measurement-support step, deliberate drop/rename) beyond the source sentences."
+      context: "The practice operationalizes the tailor-don't-adopt principle."
+      rationale: "The principle states that models must be selected, adapted and documented rather than mandated; the practice turns that statement into preconditions, steps, outcomes and risks."
+      evidence_refs:
+        - se:EVD-07A-KA10-STAGES-ADAPTATION
+    - id: se:REL-07A-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07A-LIFECYCLE-MODEL-SELECTION
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07A-SLCM
+      context: "Structural dependency between the lifecycle-model decision model and the SLCM concept."
+      rationale: "The decision model's options and procedure presuppose the software-life-cycle-model concept (a life cycle is created in conformance with a selected model) defined in this lane."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+    - id: se:REL-07A-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07A-UNIVERSAL-LIFECYCLE-MANDATE
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07A-SYNTHESIS-UNIVERSAL-LIFECYCLE
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a SWEBOK sentence; it is derived from the lane synthesis combining three verified KA10 statements, and the edge records that derivation."
+      evidence_refs:
+        - se:EVD-07A-SYNTHESIS-UNIVERSAL-LIFECYCLE
+    - id: se:REL-07A-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07A-QUALITY-REQUIREMENTS
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-07A-KA10-SWE-PROCESS
+      qualifiers:
+        - "Cross-view relation, not containment: quality requirements are nodes of the quality lens, yet the inspected KA12 text links them to lifecycle practice (quality planned early and assessed at life cycle milestones; SQA adapted to different life cycles)."
+        - "The edge keeps the two lenses distinct while recording their intersection."
+      context: "Relating the quality lens to the process/lifecycle lens across views."
+      rationale: "SWEBOK KA12 explicitly ties quality planning and assurance to the software life cycle, so the quality-requirements node crosses the process view without being absorbed into it."
+      evidence_refs:
+        - se:EVD-07A-KA12-QUALITY-OVERLOAD
+    - id: se:REL-07A-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07A-INCREMENTAL-DELIVERY
+      predicate: RELATED_TO
+      object_ref: se:CON-07A-SLCM
+      qualifiers:
+        - "The pattern instantiates the incremental/iterative paradigm family within whichever SLCM a project selects."
+        - "Boundary-keeping relation: the pattern does not prescribe which model to choose; that choice is the decision model's question."
+      context: "Relating the incremental-delivery pattern to the life cycle model concept it presupposes."
+      rationale: "The pattern's solution is defined in terms of the Guide's incremental paradigm, which is a characterization of life cycle models; linking it to the SLCM concept keeps the dependency visible."
+      evidence_refs:
+        - se:EVD-07A-KA10-LIFECYCLE-MODELS
+    - id: se:REL-07A-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07A-MULTI-VIEW-MODELING
+      predicate: IMPLEMENTS
+      object_ref: se:PRI-07A-KEEP-VIEWS-DISTINCT
+      qualifiers:
+        - "Operationalization at the fidelity of SWEBOK KA11 sections 1.1-1.2 and KA18 sections 2-3."
+        - "The practice applies the principle to modeling work specifically; the principle itself governs taxonomy structure more broadly."
+      context: "The multi-view modeling practice operationalizes the keep-views-distinct principle."
+      rationale: "The principle demands distinct-but-related views; the practice supplies the concrete mechanism — per-view notation, essentials-only abstraction, assumption recording, synchronization review."
+      evidence_refs:
+        - se:EVD-07A-KA11-MODELING-PRINCIPLES
+    - id: se:REL-07A-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07A-MULTI-VIEW-MODELING
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07A-ABSTRACTION-LEVELS
+      context: "Structural dependency between the multi-view modeling practice and the abstraction-levels concept."
+      rationale: "The practice's views correspond to the alternate abstractions of the abstraction-levels concept (complementary perspectives at a level), so it presumes that concept as defined in this lane."
+      evidence_refs:
+        - se:EVD-07A-KA18-DESIGN-ABSTRACTION
+    - id: se:REL-07A-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07A-SOFTWARE-QUALITY
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07A-KA12-QUALITY-OVERLOAD
+      qualifiers:
+        - "The term is multi-sense: product characteristics, product quality, process quality."
+        - "Definitions vary by author/organization (Crosby, Humphrey, IBM, standards-cited definitions); no single definition is endorsed."
+        - "Qualification is bounded to the inspected KA12 introduction and section 1."
+      context: "Qualifying the scope and applicability of the software-quality concept."
+      rationale: "The evidence record documents the overload and the surveyed definition family, which together limit how far the concept can be treated as a single agreed definition."
+    - id: se:REL-07A-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-ASSESSMENT-EMPIRICAL
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07A-PROCESS-ASSESSMENT
+      qualifiers:
+        - "Bounded to the process-assessment-and-improvement topic group as presented in inspected KA10 section 3."
+        - "The claim covers the surveyed approaches' shared empirical framing, not their comparative effectiveness."
+      context: "Locating the empirical-assessment claim within the practice group it describes."
+      rationale: "The claim characterizes exactly the approaches grouped under the assessment node, so the edge binds the claim to that node's scope."
+      evidence_refs:
+        - se:EVD-07A-KA10-ASSESSMENT
+    - id: se:REL-07A-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07A-DEPENDABILITY-COMPOSITE
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07A-KA12-SOFTWARE-QUALITY
+      qualifiers:
+        - "Model-level composition claim within the KA12 quality lens only."
+        - "Engineering detail of the individual characteristics (reliability, performance) is out of this lane's scope (SEK-07 lane 07D)."
+      context: "Locating the dependability-composition claim within the knowledge area that states it."
+      rationale: "The claim is a model-level characterization of KA12's dependability topic, so its applicability is bounded by the KA12 node's scope."
+      evidence_refs:
+        - se:EVD-07A-KA12-DEPENDABILITY

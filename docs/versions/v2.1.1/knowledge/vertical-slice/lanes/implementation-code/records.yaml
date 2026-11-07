@@ -1,0 +1,1497 @@
+lane_id: SEK-07B-IMPLEMENTATION-CODE-LANE-0.1.0
+title: Software Construction and Implementation lane records (SEK-07B)
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#335"
+scope_note: >-
+  Implementation / code engineering vertical-slice lane (SEK-07B) grounded in
+  direct reinspection of SWEBOK Guide v4.0a KA4 Software Construction
+  (Introduction and section 1; subsections 3.3, 3.6, 3.7, 4.1, 4.4, 4.5) from
+  the registry-hash-verified official PDF, plus the CS2023 knowledge units
+  SE-Construction: Software Construction, SDF-Practices: Software Development
+  Practices, the SE-Tools analysis-tooling topic, and the SE-Design code-smell
+  topic from the SEK-06 verified anchors pack. Scope covers code structure and
+  coding practices, construction quality techniques, integration strategy at
+  code level, API design and use, assertions/contracts/defensive programming,
+  error and exception handling, static/dynamic analysis at code level, and
+  code-level maintainability. It excludes secure-coding content detail (07C),
+  CI/CD delivery mechanics (07E), reliability/performance engineering depth
+  (07D), refactoring/technical-debt lifecycle depth (07F) and general
+  architecture design (SEK-06). All knowledge records remain PROPOSED or
+  PENDING_REVIEW; none is ACCEPTED. Source entities are not stored in this
+  lane file; the validation harness derives them from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    # (note recorded in methods/observations/SEK-07B.md: the second boundary note below ends
+    #  mid-sentence in the shared snippet file itself; copied byte-identically per the copy-verbatim rule)
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version construction
+        and evolution of software, represented here through curriculum, secure-development and related classification
+        views pending professional-BOK reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - "SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R"
+      evidence_refs: []
+
+  subdomains:
+    - id: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software Construction (implementation and code engineering)
+      definition: >-
+        The software engineering subdomain concerned with the detailed creation
+        and maintenance of software through coding and closely associated
+        verification activities (unit testing, integration testing, debugging),
+        as characterized by SWEBOK Guide v4.0a KA4, whose boundaries with design
+        and testing vary with the life cycle processes used.
+      domain_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      boundary_notes:
+        - Boundary against design and testing is life-cycle dependent per SWEBOK KA4; this subdomain node is an anchor for professional-BOK-scoped applicability, not a claim of universal process decomposition.
+        - Secure-coding content detail (SWEBOK KA13 / SEC-Coding) belongs to lane SEK-07C; this lane records only construction-side placements of defensive/secure coding topics.
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum knowledge model
+        as one classification lens, independent of professional body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice
+          taxonomy.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in
+          the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane-local view: narrow SDF-Practices lens (only this unit, not the whole SDF area) ---
+    - id: se:VIEW-07B-CS2023-SDF
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: CS2023 Software Development Fundamentals curriculum units (SDF-Practices scope)
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the SDF-Practices knowledge unit of the CS2023 Software
+        Development Fundamentals area as a curriculum lens for the basic
+        implementation practices it prescribes, kept separate from the SE
+        curriculum view because CS2023 places the unit in the SDF area.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the SDF-Practices unit cited by this lane, not the whole SDF knowledge area.
+        - Curriculum classification is not professional-domain completeness; the unit's basic-practice level is designed for early curriculum exposure, not professional taxonomy.
+      evidence_refs: []
+
+  taxonomy_nodes:
+    - id: se:NODE-07B-CS2023-SE-CONSTRUCTION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SE-Construction: Software Construction"
+      definition: >-
+        The Software Construction knowledge unit of the CS2023 Software
+        Engineering area: practical small-scale testing and documentation as CS
+        Core, with coding style, coding best practices, debugging, logging and
+        use of external libraries and frameworks as KA Core, and larger-scale
+        testing, work sequencing, security problems, autogenerated
+        documentation, development context and release/DevOps topics as
+        Non-core.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-07B-CS2023-CORE-HOURS
+    - id: se:NODE-07B-CS2023-SDF-PRACTICES
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SDF-Practices: Software Development Practices"
+      definition: >-
+        The Software Development Practices knowledge unit of the CS2023
+        Software Development Fundamentals area, prescribing basic testing with
+        test case design, use of a general-purpose IDE with its debugger,
+        programming style that improves readability, and specifying module
+        functionality in natural language at CS Core level.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-07B-CS2023-SDF
+      evidence_refs:
+        - se:EVD-07B-CS2023-SDF-PRACTICES
+
+  source_locators:
+    # --- shared SourceLocator: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table
+      verified_content_summary: Nine SE knowledge units with CS Core and KA Core hours; Software Verification
+        and Validation carries 1 CS Core and 3 KA Core hours.
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- SWEBOK v4.0a KA4 locators (2026-11-07 direct reinspection of the official PDF;
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are 0-based,
+    #     printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 4 Software Construction, Introduction and section 1 Software Construction Fundamentals, including 1.1 Minimizing Complexity, 1.2 Anticipating and Embracing Change, 1.3 Constructing for Verification, 1.4 Reusing Assets and 1.5 Applying Standards in Construction; PDF page indices 98-101; printed pages 4-1 to 4-4"
+      verified_content_summary: "KA definition (detailed creation and maintenance of software through coding, verification, unit testing, integration testing and debugging), KA linkage to Design/Testing/CM/Quality/Management/Computing Foundations, and the five fundamentals: minimizing complexity (working-memory rationale; cyclomatic complexity; simple readable code over clever code), anticipating change, constructing for verification (four named technique families), reusing assets and applying standards."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-SWEBOK-KA4-CODING-QUALITY
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 4 Software Construction, section 3 Practical Considerations, subsections 3.3 Coding and 3.6 Construction Quality; PDF page indices 104-106; printed pages 4-7 to 4-9"
+      verified_content_summary: "Coding-activity considerations (understandable source code and naming/layout, control structures, anticipated and exceptional error handling, code-level security breach prevention, resource exclusion discipline, source organization, code documentation, code tuning) and the primary construction-quality techniques (unit/integration testing, test-first development, assertions and defensive programming, debugging, inspections, technical reviews, static analysis) with their code-adjacent focus."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-SWEBOK-KA4-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 4 Software Construction, section 3.7 Integration; PDF page indices 106-107; printed pages 4-9 to 4-10"
+      verified_content_summary: "Integration as a key construction activity; planning concerns (sequence, hardware, scaffolding, pre-integration testing degree, interim-version test points); phased (big bang) vs incremental integration with the named advantage list for incremental (easier error location, improved progress monitoring, earlier product delivery, improved customer relations) and the stubs/drivers/mocks scaffolding requirement; continuous integration as widely adopted practice."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-SWEBOK-KA4-TECHNOLOGIES
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 4 Software Construction, section 4 Construction Technologies, subsections 4.1 API Design and Use, 4.4 Assertions/Design by Contract/Defensive Programming and 4.5 Error Handling/Exception Handling and Fault Tolerance; PDF page indices 107-108; printed pages 4-10 to 4-11"
+      verified_content_summary: "API definition (exported signatures plus semantic statements), six API design goals with the outlasts-implementations rationale and OpenAPI/API-first practice; assertions as executable predicates compiled in at development and out later, design by contract (preconditions/postconditions per routine), defensive programming against invalid inputs; error/exception handling policies and fault tolerance strategies."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- CS2023 heading-anchored KU locators (no invented page numbers; page anchors
+    #     only where the registry already verified them) ---
+    - id: se:LOC-07B-CS2023-SE-CONSTRUCTION-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Construction: Software Construction' (CS Core topics 1-2, KA Core topics 3-7, Non-core topics 8-14, and KA Core Illustrative Learning Outcomes 3-5, 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed, unit falls inside the registry-verified SE section span (SE Overview PDF page indices 174-176)"
+      verified_content_summary: "CS Core: practical small-scale testing (unit testing; test-driven development with its psychological rationale) and documentation (interface documentation with contracts/pre-post conditions/invariants; implementation documentation focused on tricky and non-obvious code). KA Core: coding style (style guides, commenting, naming); best practices for coding (defensive, secure, exception handling for robustness); debugging; logging; use of libraries and frameworks. Non-core: larger-scale testing, work sequencing, security problems, autogenerated documentation, green-field vs existing code base, release management, DevOps."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-CS2023-SDF-PRACTICES-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Development Fundamentals (SDF), knowledge unit 'SDF-Practices: Software Development Practices' (CS Core topics 1-4 and CS Core Illustrative Learning Outcomes 1, 2 and 4); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed"
+      verified_content_summary: "CS Core topics: basic testing including test case design; use of a general-purpose IDE including its debugger; programming style that improves readability; specifying functionality of a module in a natural language. Outcomes: develop module tests with varied test-design strategies; explain limitations of testing; apply basic style guidelines (comments, indentation, proper naming) to aid readability."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-CS2023-SE-TOOLS-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Tools: Tools and Environments', KA Core topic 3 'Testing tools including static and dynamic analysis tools' with its SDF-Practices and SEC-Coding cross-references, and KA Core Illustrative Learning Outcome 4; heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; page anchor per registry: the SE-Tools unit spans PDF page index 178"
+      verified_content_summary: "KA Core topic 3 names testing tools including static and dynamic analysis tools; Illustrative Learning Outcome 4 asks students to describe how available static and dynamic test tools can be integrated into the software development environment."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07B-CS2023-SE-DESIGN-CODE-SMELLS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Design: Software Design', CS Core topic 4 'Code smells and other indications of code quality, distinct from correctness' including its SEC-Engineering cross-reference; heading and topic text verified by the SEK-06 verified anchors pack full-text extraction of the official PDF (2026-11-06), re-read by this lane on 2026-11-07; printed page not independently confirmed"
+      verified_content_summary: "SE-Design CS Core topic 4 lists code smells and other indications of code quality as a topic explicitly distinct from correctness, with a See-also cross-reference to SEC-Engineering; the topic line names the category without enumerating specific smells."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    # --- SWEBOK v4.0a KA4 evidence (2026-11-07 direct reinspection) ---
+    - id: se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 defines software construction as the detailed creation
+        and maintenance of software through coding, verification, unit testing,
+        integration testing and debugging; states the KA is linked to all other
+        KAs but most strongly to Software Design (much design work is performed
+        during construction) and Software Testing (engineers unit-test and
+        integration-test throughout construction); and notes that boundaries
+        among design, construction and testing, if any, vary depending on the
+        software life cycle processes used in a project.
+      context: "SWEBOK Guide v4.0a Chapter 4 Introduction, printed page 4-1."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511, 411 pages) on 2026-11-07; text extracted at the verified page indices and paraphrased originally."
+      result: "The KA definition, its strongest KA linkages and the life-cycle-dependent boundary statement were confirmed for the subdomain anchor and the relatedness edge."
+      limitations:
+        - "The Introduction describes linkages between knowledge areas, not measured coupling between activities."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-MINIMIZE-COMPLEXITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 1.1 presents minimizing complexity as one of
+        the key goals of software construction, grounded in all people having
+        limited ability to hold complex structures and information in working
+        memory especially over long periods; states the need applies to
+        essentially every aspect of construction and is particularly critical
+        to testing; gives cyclomatic complexity as an example static-analysis
+        measure of how difficult code is to test and understand (tool developed
+        by Thomas J. McCabe, Sr. in 1976, counting linearly independent paths
+        through source code, with ideally at least that number of test cases);
+        and states reduced complexity is achieved by creating simple and
+        readable code rather than clever code, using standards, modular design
+        and other specific techniques, with construction-focused quality
+        techniques also supporting it.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 1.1 Minimizing Complexity, printed page 4-2."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The working-memory rationale, the everywhere-and-testing scope claim, the cyclomatic-complexity example with its test-case corollary and the simple-over-clever rule were confirmed."
+      limitations:
+        - "The Guide asserts the working-memory rationale and the technique supports; it cites no empirical study for them in the inspected text."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-CONSTRUCT-FOR-VERIFICATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 1.3 defines constructing for verification as
+        building software in such a way that faults can be readily found by the
+        software engineers writing the software as well as by testers and users
+        during independent testing and operational activities, and names four
+        supporting technique families: following coding standards to support
+        code reviews and unit testing, organizing code to support automated
+        testing, restricting the use of complex or difficult-to-understand
+        language structures, and recording software behaviors with logs.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 1.3 Constructing for Verification, printed page 4-4."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The definition and the four named technique families were confirmed for the practice record."
+      limitations:
+        - "The section names the technique families without prescribing thresholds or tooling."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-CODING-CONSIDERATIONS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-CODING-QUALITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 3.3 lists the considerations applying to the
+        coding activity: techniques for creating understandable source code
+        including naming conventions and source code layout; use of classes,
+        enumerated types, variables, named constants and similar entities; use
+        of control structures; handling of error conditions both anticipated
+        and exceptional (for example input of bad data); prevention of
+        code-level security breaches (for example buffer overflows or array
+        index bounds); resource use through exclusion mechanisms and discipline
+        in accessing serially reusable resources including threads and database
+        locks; source code organization into statements, routines, classes,
+        packages or other structures; code documentation; and code tuning.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 3.3 Coding, printed page 4-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The enumerated coding-consideration list was confirmed as the professional-BOK scope of the coding activity."
+      limitations:
+        - "The list is an enumeration of considerations, not a comparative ranking or a mandated procedure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-QUALITY-TECHNIQUES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-CODING-QUALITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 3.6 states that faults introduced during
+        construction can cause serious quality problems including security
+        vulnerabilities, and lists the primary techniques used to ensure the
+        quality of code as it is constructed: unit testing and integration
+        testing, test-first development, use of assertions and defensive
+        programming, debugging, inspections, technical reviews including
+        security-oriented reviews, and static analysis. It adds that the
+        technique selection depends on the software constructed and on the
+        skill set of the software engineers, and that construction quality
+        activities are differentiated from other quality activities by their
+        focus on artifacts closely related to code, such as detailed design,
+        rather than requirements, high-level designs or plans.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 3.6 Construction Quality, printed pages 4-8 to 4-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The primary-technique enumeration, the selection dependency and the code-adjacent focus were confirmed."
+      limitations:
+        - "The section enumerates generally accepted techniques; it does not compare their effectiveness."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-INTEGRATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 3.7 describes integrating individually
+        constructed routines, classes, components and subsystems into a single
+        system as a key construction activity, with concerns including planning
+        the integration sequence, identifying needed hardware, creating
+        scaffolding for interim versions, and determining the degree of
+        pre-integration testing. It presents phased integration (also called
+        big bang integration) as delaying integration of component parts until
+        all parts intended for release in a version are complete, and
+        incremental integration as writing and testing the program in small
+        pieces and combining the pieces one at a time; incremental integration
+        is thought to offer many advantages over phased integration (easier
+        error location, improved progress monitoring, earlier product delivery,
+        improved customer relations) but usually needs additional test
+        infrastructure including stubs, drivers and mock objects. It closes by
+        noting continuous integration has been widely adopted in practice: a
+        team integrates its work frequently, leading to multiple integrations
+        per day, usually automated by a pipeline that builds and tests each
+        integration.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 3.7 Integration, printed pages 4-9 to 4-10."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The integration-concern list, the phased/incremental contrast with its hedged advantage list, the scaffolding requirement and the CI characterization were confirmed."
+      limitations:
+        - "The advantage list is presented as 'thought to offer', not as a measured empirical result."
+        - "CI delivery-pipeline mechanics beyond the construction-side characterization belong to lane SEK-07E scope."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-API-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-TECHNOLOGIES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 4.1 defines an API as a set of signatures
+        exported and available to users of a library or framework, states that
+        besides signatures an API should always include statements about the
+        program's effects and/or behaviors (its semantics), and lists the
+        design goals that an API be easy to learn and memorize, lead to
+        readable code, be difficult to misuse, be easy to extend, be complete,
+        and maintain backward compatibility; because APIs usually outlast their
+        implementations for a widely used library or framework, an API should
+        be straightforward and stable. It describes API use as selecting,
+        learning, testing, integrating and possibly extending APIs, notes the
+        OpenAPI standard for HTTP APIs with code generation, and reports the
+        API-first approach of designing and building an application's APIs
+        first, usually with an API description language establishing a contract
+        for expected behavior.
+      context: "SWEBOK Guide v4.0a Chapter 4 section 4.1 API Design and Use, printed page 4-10."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The signature-plus-semantics definition, the six design goals, the outlasts-implementations rationale and the API-first characterization were confirmed."
+      limitations:
+        - "The design goals are stated as guidance without effectiveness evidence in the inspected text."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-SWEBOK-DBC-ERROR
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-TECHNOLOGIES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA4 section 4.4 defines an assertion as an executable
+        predicate placed in a program that performs runtime checks, notes
+        assertions are especially useful in high-reliability programs for
+        flushing out mismatched interface assumptions and errors introduced by
+        modifications, and that they are typically compiled into the code at
+        development time and later compiled out so they do not degrade
+        performance. It defines design by contract as a development approach
+        in which preconditions and postconditions are included for each routine
+        so that each routine or class forms a contract with the rest of the
+        program, precisely specifying the routine's semantics; design by
+        contract is said to be thought to improve the quality of software
+        construction. Defensive programming means protecting a routine from
+        being broken by invalid inputs, commonly by checking input parameter
+        values and deciding how to handle bad inputs, with assertions often
+        used for the checks. Section 4.5 adds that how errors are handled
+        affects correctness, robustness and other nonfunctional attributes, and
+        lists exception-handling policy principles such as including in the
+        exception message all information that led to the exception, avoiding
+        empty catch blocks, knowing the exceptions library code throws,
+        possibly building a centralized exception reporter, and standardizing
+        the program's use of exceptions.
+      context: "SWEBOK Guide v4.0a Chapter 4 sections 4.4 and 4.5, printed pages 4-10 to 4-11."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The assertion, design-by-contract and defensive-programming definitions and the exception-policy principles were confirmed, with the Guide's own hedge on the quality effect preserved."
+      limitations:
+        - "The quality improvement of design by contract is hedged in the source ('is thought to improve') and is not an empirical finding in the inspected text."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- CS2023 evidence (2026-11-07 heading-anchored extraction) ---
+    - id: se:EVD-07B-CS2023-CONSTRUCTION-KU
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-CS2023-SE-CONSTRUCTION-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Construction unit places practical small-scale testing
+        (CS Core: unit testing; test-driven development, motivated as
+        psychologically valuable because a test-first approach gives students
+        the intellectual satisfaction of spotting problem cases a priori
+        instead of the implement-first instinct of avoiding trying to crash
+        their new creation) and documentation (CS Core: interface
+        documentation describing interface requirements, potentially including
+        formal or informal contracts, pre and post conditions and invariants;
+        implementation documentation focused on tricky and non-obvious code,
+        explicitly not restating common or obvious operations, clarifying
+        dataflow and computation, and refactoring toward self-explanatory code
+        where possible) at CS Core level. KA Core topics are coding style
+        (style guides, commenting, naming), "best practices" for coding
+        (defensive coding practices; secure coding practices and principles;
+        using exception handling mechanisms for robustness and fault
+        tolerance), debugging, logging, and use of libraries and frameworks
+        developed by others. Learning outcomes ask students to describe
+        techniques, coding idioms and mechanisms for achieving reliability,
+        efficiency and robustness, to write robust code using exception
+        handling, to compare and contrast integration strategies including
+        top-down, bottom-up and sandwich integration, and to describe
+        analyzing and implementing changes to a project's own and to a large
+        existing code base.
+      context: "CS2023 SE-Construction: Software Construction, CS Core topics 1-2, KA Core topics 3-7, KA Core Illustrative Learning Outcomes 3-5 and 7-9."
+      method: "Read the SE-Construction topic and outcome lists in the 2026-11-07 full-text extraction of the official Body of Knowledge PDF; heading-anchored KU locator."
+      result: "The CS Core testing/documentation topics with the TDD rationale, the KA Core practice topics and the named learning outcomes were confirmed for curriculum-scope records."
+      limitations:
+        - "Curriculum topic placement, not professional-consensus endorsement; secure-coding content detail belongs to SEC-Coding (lane SEK-07C scope)."
+        - "Non-core topics (larger-scale testing, work sequencing, security problems, autogenerated documentation, green-field vs existing code base, release management, DevOps) are elective and not admitted as lane records beyond the locator summary."
+      uncertainty:
+        - "The KU subsection's printed page number was not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-CS2023-CORE-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE Core Hours table allocates the Software Construction
+        knowledge unit 1 CS Core hour plus 3 hours delivered jointly with the
+        SDF area (shown as 1 + 3 (SDF)) and 3 KA Core hours plus 1 joint hour
+        with SDF (shown as 3 + 1 (SDF)); Software Construction is thus one of
+        the SE units whose curriculum hours are jointly delivered with the
+        Software Development Fundamentals area.
+      context: "SE Core Hours table row for Software Construction within the nine-unit SE area."
+      method: "Read the Software Engineering Core Hours table in the 2026-11-07 full-text extraction of the official PDF; registry-verified PDF page indices 176-177."
+      result: "The Software Construction hour allocation and its SDF joint delivery were confirmed for the taxonomy node anchor."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-CS2023-SDF-PRACTICES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-CS2023-SDF-PRACTICES-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SDF-Practices unit prescribes at CS Core level: basic
+        testing including test case design; use of a general-purpose IDE
+        including its debugger; programming style that improves readability;
+        and specifying the functionality of a module in a natural language. Its
+        learning outcomes ask students to develop tests for modules applying a
+        variety of test-design strategies, to explain some limitations of
+        testing programs, and to apply basic programming style guidelines such
+        as comments, indentation and proper naming of variables to aid
+        readability.
+      context: "CS2023 SDF-Practices: Software Development Practices, CS Core topics 1-4 and outcomes 1, 2 and 4."
+      method: "Read the SDF-Practices topic and outcome lists in the 2026-11-07 full-text extraction of the official PDF; heading-anchored KU locator."
+      result: "The four basic-practice topics and the readability-oriented outcomes were confirmed for the SDF curriculum lens."
+      limitations:
+        - "Basic-practice curriculum level designed for early exposure; not a professional practice standard."
+      uncertainty:
+        - "The KU subsection's printed page number was not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-CS2023-SE-TOOLS-ANALYSIS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-CS2023-SE-TOOLS-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Tools unit names "Testing tools including static and
+        dynamic analysis tools" as a KA Core topic with See-also
+        cross-references to SDF-Practices and SEC-Coding, and its KA Core
+        learning outcome 4 asks students to describe how available static and
+        dynamic test tools can be integrated into the software development
+        environment.
+      context: "CS2023 SE-Tools: Tools and Environments, KA Core topic 3 and Illustrative Learning Outcome 4."
+      method: "Read the SE-Tools topic list and outcomes in the 2026-11-07 full-text extraction of the official PDF; heading-anchored locator consistent with the registry SE-Tools page anchor (PDF page index 178)."
+      result: "The analysis-tooling topic and the tool-integration outcome were confirmed for the curriculum-side analysis-integration records."
+      limitations:
+        - "The curriculum names the tool classes and the integration outcome without prescribing specific tools."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07B-CS2023-CODE-SMELLS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-CS2023-SE-DESIGN-CODE-SMELLS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Design unit includes "Code smells and other indications
+        of code quality, distinct from correctness" as a CS Core topic with a
+        See-also cross-reference to SEC-Engineering; the topic line names the
+        category and its distinctness from correctness without enumerating
+        specific smells.
+      context: "CS2023 SE-Design: Software Design, CS Core topic 4, from the SEK-06 verified anchors pack."
+      method: "Read the SE-Design topic list in the SEK-06 verified anchors extraction of the official PDF (extracted 2026-11-06; re-read by this lane on 2026-11-07); heading-anchored locator."
+      result: "The code-smell topic placement, its quality-versus-correctness boundary and the SEC-Engineering cross-reference were confirmed."
+      limitations:
+        - "The curriculum names the category only; definitions and catalogues of specific code smells are outside the cited anchor."
+      uncertainty:
+        - "The SE-Design KU subsection's printed page number was not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- lane synthesis (explicitly marked, PROPOSED) ---
+    - id: se:EVD-07B-SYNTHESIS-BIG-BANG
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07B-SWEBOK-KA4-INTEGRATION
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07B): reading SWEBOK 3.7's description of phased
+        integration (deferring integration of component parts until all parts
+        intended for release in a version are complete, "also called big bang
+        integration") against its named advantages of incremental integration
+        (easier error location, improved progress monitoring, earlier product
+        delivery, improved customer relations) yields a failure
+        characterization of big bang integration: faults and interface
+        mismatches surface together in one late event, error location is
+        harder, progress between code-complete and integrated is less
+        observable, and feedback to developers and customers arrives later.
+        The Guide presents the comparison but does not itself label big bang
+        integration an anti-pattern; this inversion is a lane inference, not a
+        sentence that appears in the Guide.
+      context: "Inference inverting SWEBOK Guide v4.0a Chapter 4 section 3.7's stated incremental-integration advantage list onto its phased-integration description; anchored to the same verified locator."
+      method: "Lane-level inversion of one verified section's own contrast; no additional source consulted."
+      result: "Provides the inference trail motivating the se:ANT-07B-BIG-BANG-INTEGRATION record."
+      limitations:
+        - "Synthesis inference, not a statement made by SWEBOK."
+        - "No empirical case evidence in this lane supports the severity of the characterized failure modes."
+      uncertainty:
+        - "Whether real teams using phased integration always incur the characterized failure modes is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07B-CYCLOMATIC-COMPLEXITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Cyclomatic complexity (SWEBOK KA4 sense)
+      definition: >-
+        A static-analysis measure of how difficult code is to test and
+        understand, computed as the number of linearly independent paths
+        through a program's source code; SWEBOK KA4 1.1 attributes the tool to
+        Thomas J. McCabe, Sr. (1976) and notes that ideally there should be at
+        least that number of test cases.
+      concept_kind: METRIC
+      scope_description: "Defined at SWEBOK Guide v4.0a KA4 section 1.1 fidelity; the Guide names the measure and its test-case corollary without prescribing thresholds."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-MINIMIZE-COMPLEXITY
+    - id: se:CON-07B-DESIGN-BY-CONTRACT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Design by contract
+      definition: >-
+        A development approach in which preconditions and postconditions are
+        included for each routine, so that each routine or class forms a
+        contract with the rest of the program that precisely specifies the
+        routine's semantics; SWEBOK KA4 4.4 states it is thought to improve the
+        quality of software construction.
+      concept_kind: MECHANISM
+      synonyms:
+        - contract programming
+      scope_description: "SWEBOK Guide v4.0a KA4 section 4.4 fidelity; the quality-effect claim is hedged in the source and stays hedged here."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-DBC-ERROR
+    - id: se:CON-07B-DEFENSIVE-PROGRAMMING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Defensive programming
+      definition: >-
+        Protecting a routine from being broken by invalid inputs, commonly by
+        checking the values of input parameters and deciding how to handle bad
+        inputs, with assertions often used for the checks (SWEBOK KA4 4.4);
+        CS2023 lists defensive coding practices among the "best practices" for
+        coding in SE-Construction (KA Core topic 4a).
+      concept_kind: MECHANISM
+      scope_description: "Definition grounded at SWEBOK KA4 4.4 fidelity, with the CS2023 curriculum placement recorded as a corroborating placement, not a definition source."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-DBC-ERROR
+        - se:EVD-07B-CS2023-CONSTRUCTION-KU
+    - id: se:CON-07B-CODE-SMELL
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Code smell (CS2023 curriculum category)
+      definition: >-
+        In the CS2023 SE-Design curriculum classification, an indication of
+        code quality explicitly distinct from correctness; the curriculum names
+        the category (with a cross-reference to SEC-Engineering) without
+        enumerating specific smells.
+      concept_kind: TERM
+      scope_description: "CS2023 SE-Design CS Core topic 4 fidelity; a curriculum category name, not a professional definition or a smell catalogue."
+      evidence_refs:
+        - se:EVD-07B-CS2023-CODE-SMELLS
+
+  knowledge_claims:
+    # --- SWEBOK v4.0a KA4 claims (2026-11-07 direct reinspection) ---
+    - id: se:CLM-07B-SWEBOK-CONSTRUCTION-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA4 defines software construction as the detailed
+        creation and maintenance of software through coding, verification,
+        unit testing, integration testing and debugging; states that much
+        design work is performed during construction; and states that
+        boundaries among design, construction and testing, if any, vary
+        depending on the software life cycle processes used.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 4 Introduction (printed page 4-1); generally accepted KA content, not a universal process prescription."
+      applicability: "Professional-BOK characterization of the construction activity; anchors this lane's subdomain node and its boundaries."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definition deliberately leaves the design/construction/testing boundary life-cycle dependent; it does not fix one process decomposition."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-SWEBOK-MINIMIZE-COMPLEXITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA4 presents minimizing complexity as one of the
+        key goals of software construction, grounded in limited human working
+        memory, applying to essentially every aspect of construction and
+        particularly critical to testing; reduced complexity is achieved by
+        creating simple and readable code rather than clever code, supported by
+        standards, modular design and other specific techniques.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 4 section 1.1 (printed page 4-2); a description of generally accepted construction fundamentals, not an empirical effect claim."
+      applicability: "Construction of code that people other than a single author must read, test and change."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The working-memory rationale and technique supports are asserted by the Guide without cited studies in the inspected text."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-SWEBOK-QUALITY-TECHNIQUES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA4 lists unit and integration testing, test-first
+        development, assertions and defensive programming, debugging,
+        inspections, technical reviews including security-oriented reviews, and
+        static analysis as the primary techniques used to ensure construction
+        quality, with the selection depending on the software constructed and
+        the engineers' skill set, and construction quality activities focused
+        on code-adjacent artifacts such as detailed design rather than
+        requirements, high-level designs or plans.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 4 section 3.6 (printed pages 4-8 to 4-9); an enumeration of generally accepted techniques, not a comparative effectiveness claim."
+      applicability: "Professional-BOK scoping of code-level quality work; individual technique depth (for example testing detail) lives in other KAs and lanes."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The enumeration does not rank the techniques or assert that any subset is necessary."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-SWEBOK-INTEGRATION-APPROACHES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA4 describes phased integration (also called big
+        bang integration) as delaying integration of component parts until all
+        parts intended for release in a version are complete, presents
+        incremental integration (small pieces written, tested and combined one
+        at a time, usually needing stubs, drivers and mock objects) as thought
+        to offer many advantages over it, and notes continuous integration,
+        with multiple integrations per day automated by a build-and-test
+        pipeline, has been widely adopted in practice.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 4 section 3.7 (printed pages 4-9 to 4-10); the advantage list is hedged ('thought to offer') and is not an empirical result."
+      applicability: "Choosing and characterizing code-level integration strategy; CI delivery-pipeline mechanics beyond this characterization belong to SEK-07E."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The advantages of incremental integration are presented as believed, not measured, in the cited section."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-SWEBOK-API-DESIGN-GOALS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA4 states that an API should always include
+        statements about the program's effects and behaviors (its semantics)
+        besides its signatures, and that API design should make the API easy
+        to learn and memorize, lead to readable code, be difficult to misuse,
+        be easy to extend, be complete and maintain backward compatibility;
+        because APIs usually outlast their implementations, they should be
+        straightforward and stable.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 4 section 4.1 (printed page 4-10); guide-level design guidance for library/framework APIs, not a certified standard requirement."
+      applicability: "Designing and evaluating program/library APIs at code level; not a claim about architectural service boundaries (SEK-06B scope)."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The goals are stated as guidance; the inspected text cites no effectiveness evidence for them."
+      uncertainty: []
+      review_status: PENDING
+    # --- CS2023 claims (curriculum scope) ---
+    - id: se:CLM-07B-CS2023-CODING-STYLE-BEST-PRACTICES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SE-Construction unit makes coding style (style guides,
+        commenting, naming) a KA Core topic and pairs it with "best practices"
+        for coding, naming defensive coding practices, secure coding practices
+        and principles, and use of exception handling mechanisms for robustness
+        and fault tolerance; its outcomes ask students to describe
+        implementation techniques for reliability, efficiency and robustness
+        and to write robust code using exception handling.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Construction KA Core topics 3-4 with Illustrative Learning Outcomes 3-4; curriculum teaching scope, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 construction curriculum; the secure-coding subtopic's content detail belongs to SEC-Coding and lane SEK-07C."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum names the practice categories without ranking them or defining the practices' content."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-CS2023-TEST-FIRST-PSYCHOLOGICAL
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SE-Construction unit presents test-driven development as
+        particularly valuable for students psychologically: identifying
+        challenging inputs for an API (edge cases, corner cases) a priori is
+        easier to engage with constructively under a test-first approach,
+        whereas after implementing, the instinct is often to avoid trying to
+        crash the new creation, and test-first gives the satisfaction of
+        spotting problem cases and watching more tests pass.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Construction CS Core topic 1b; a pedagogical rationale stated by the curriculum for students, not an industrial effectiveness claim."
+      applicability: "Curriculum design and teaching of introductory construction; the pedagogical rationale is about student motivation, not about defect-density effects."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The rationale is pedagogical; no empirical TDD-effectiveness evidence is cited or claimed."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-CS2023-TOOLS-ANALYSIS-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SE-Tools unit names testing tools including static and
+        dynamic analysis tools as a KA Core topic, and its learning outcome 4
+        asks students to describe how available static and dynamic test tools
+        can be integrated into the software development environment.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Tools KA Core topic 3 with Illustrative Learning Outcome 4; curriculum expectation about tooling literacy, not a tool-selection standard."
+      applicability: "Curriculum-side grounding for embedding analysis tooling in the development environment."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum prescribes no specific tools or integration mechanism."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07B-CS2023-CODE-SMELLS-BOUNDARY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        Within the CS2023 SE-Design unit, code smells and other indications of
+        code quality are classified as a CS Core topic explicitly distinct from
+        correctness, with a cross-reference to SEC-Engineering.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "CS2023 SE-Design CS Core topic 4; a curriculum classification statement about where code-quality indications sit, not a definition of any specific smell."
+      applicability: "Interpreting code-quality discussions within the CS2023 curriculum model; general architecture design remains SEK-06B scope."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The topic line names the category only; it neither defines nor enumerates code smells."
+      uncertainty: []
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07B-MINIMIZE-COMPLEXITY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Minimize complexity; prefer simple, readable code
+      statement: >-
+        Software construction should minimize complexity, favoring simple and
+        readable code over clever code, because people's limited working-memory
+        capacity constrains the complex structures they can hold, and reduced
+        complexity benefits essentially every construction activity, testing in
+        particular.
+      rationale: >-
+        SWEBOK Guide v4.0a KA4 section 1.1 grounds the goal in limited human
+        working memory (especially over long periods), states the need applies
+        to essentially every aspect of software construction and is
+        particularly critical to testing, and names standards, modular design
+        and construction-focused quality techniques as the supports through
+        which reduced complexity is achieved.
+      scope_description: "Professional-BOK scope (SWEBOK Guide v4.0a KA4 section 1.1, printed page 4-2); a guide to generally accepted knowledge, not an empirical effect claim."
+      applicability: "Construction of code intended to be read, tested and changed by people other than a single author."
+      exceptions: []
+      limitations:
+        - "The Guide states no exceptions to this goal in the inspected text; nothing in this lane may be read as licensing unnecessary complexity."
+        - "Strength of the principle beyond the Guide's assertion (for example measured maintainability effects) is untested in this lane; no empirical evidence is cited."
+
+  practices:
+    - id: se:PRA-07B-CONSTRUCT-FOR-VERIFICATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Construct for verification
+      intent: >-
+        Build code so that faults can be readily found by the engineers
+        writing it and by testers and users during independent testing and
+        operational activities.
+      description: >-
+        Apply the four technique families SWEBOK KA4 1.3 names for
+        constructing for verification: follow coding standards that support
+        code reviews and unit testing; organize code so it supports automated
+        testing; restrict the use of complex or difficult-to-understand
+        language structures; and record software behaviors with logs.
+      preconditions:
+        - "A coding standard is adopted or adaptable to review and unit-testing needs."
+        - "Automated testing is available or planned for the constructed units."
+        - "A logging facility is available whose output can be inspected during testing and operations."
+      steps:
+        - "Align the coding standard with what code reviews and unit tests need to consume (naming, structure, size)."
+        - "Organize the code into units and seams that automated tests can exercise in isolation."
+        - "Constrain the use of complex or difficult-to-understand language constructs to cases where they are justified and documented."
+        - "Record software behaviors with logs at a level usable for fault finding during testing and operations."
+      expected_outcomes:
+        - "Faults findable by the code's authors during construction as well as by independent testers and users."
+      risks:
+        - "Standards and structure work add upfront effort that may be misallocated on trivial code."
+        - "Logging adds noise and runtime cost if levels are not chosen deliberately."
+        - "Restricting language constructs can exclude justified advanced uses if applied without review."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA4 section 1.3 (printed page 4-4) at professional-BOK fidelity; the Guide names the technique families without thresholds."
+      applicability: "Construction work whose output will be reviewed, unit-tested or operated by others."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-CONSTRUCT-FOR-VERIFICATION
+      claim_refs: []
+    - id: se:PRA-07B-INTERFACE-DOCUMENTATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Contract-style interface documentation
+      intent: >-
+        Make a module's interface expectations explicit enough that consumers
+        and reviewers can check use against stated behavior.
+      description: >-
+        For each constructed module interface, document the interface
+        requirements, potentially including formal or informal contracts, pre
+        and post conditions and invariants, following the CS2023
+        SE-Construction documentation topic; keep implementation documentation
+        focused on tricky and non-obvious code, clarifying dataflow and
+        computation, and prefer refactoring toward self-explanatory code over
+        comments that restate obvious operations.
+      preconditions:
+        - "A module interface whose behavior can be stated as expectations on inputs, outputs and state."
+        - "An agreed notation for contracts, pre/post conditions and invariants (formal or informal)."
+      steps:
+        - "Enumerate the interface's operations with their inputs, outputs and observable effects."
+        - "State contracts, pre and post conditions and invariants for those operations where applicable."
+        - "Review implementation comments against the non-obvious-only rule, deleting restatements of common operations."
+        - "Where a tricky piece can be refactored to be self-explanatory, refactor before documenting it."
+      expected_outcomes:
+        - "Interface expectations inspectable by consumers and reviewers independently of the implementation."
+        - "Implementation documentation concentrated on genuinely tricky and non-obvious code."
+      risks:
+        - "Contracts drift from the implementation when either changes without the other."
+        - "Full formal contracts may exceed the value on small or stable interfaces."
+      scope_description: "Operationalizes CS2023 SE-Construction CS Core topic 2 (subtopics 2a and 2b) at curriculum fidelity; a teaching-scope practice, not a professional documentation standard."
+      applicability: "Constructed modules whose interfaces are consumed by other developers or reviewers."
+      evidence_refs:
+        - se:EVD-07B-CS2023-CONSTRUCTION-KU
+      claim_refs: []
+    - id: se:PRA-07B-STATIC-ANALYSIS-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Integrate static and dynamic analysis into the development environment
+      intent: >-
+        Surface code-level faults and code-quality indications early by making
+        analysis tooling part of the environment where code is written and
+        built.
+      description: >-
+        Select static and dynamic analysis tools appropriate to the language
+        and platform, wire them into the editor/IDE and build workflow, and
+        triage their findings in the team's review process; CS2023 SE-Tools
+        frames the curriculum expectation as describing how such tools can be
+        integrated into the software development environment, and SWEBOK KA4
+        3.6 lists static analysis among the primary construction-quality
+        techniques.
+      preconditions:
+        - "Analysis tooling available for the project's language(s) and platform(s)."
+        - "A place in the developer workflow (editor, build, or both) where tool output is actually seen."
+      steps:
+        - "Select static and dynamic analysis tools matching the language, platform and risk profile."
+        - "Integrate the tools into the development environment so findings appear where code is written or built."
+        - "Triage findings with the review workflow, distinguishing blocking from advisory results."
+      expected_outcomes:
+        - "Code-level faults and quality indications visible during construction rather than after release."
+      risks:
+        - "High false-positive rates can erode trust and bury important findings."
+        - "Tool sprawl adds maintenance cost without process ownership."
+      scope_description: "Operationalizes the CS2023 SE-Tools tool-integration expectation with SWEBOK KA4 3.6's static-analysis placement as the professional-BOK counterpart; selection and triage detail is lane-added procedure, not source text."
+      applicability: "Teams constructing code in languages with usable analysis tooling."
+      evidence_refs:
+        - se:EVD-07B-CS2023-SE-TOOLS-ANALYSIS
+        - se:EVD-07B-SWEBOK-QUALITY-TECHNIQUES
+      claim_refs:
+        - se:CLM-07B-CS2023-TOOLS-ANALYSIS-INTEGRATION
+
+  patterns:
+    - id: se:PAT-07B-INCREMENTAL-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Incremental integration
+      problem: >-
+        Individually constructed routines, classes, components and subsystems
+        must be combined into a single system while keeping errors locatable
+        and progress visible during construction.
+      context: >-
+        A construction effort in which parts are built and tested separately
+        and the team can choose the integration sequence and interim
+        scaffolding, as described in SWEBOK Guide v4.0a KA4 section 3.7.
+      forces:
+        - "Error-location ease versus scaffolding effort."
+        - "Progress monitoring versus integration ceremony."
+        - "Early usable feedback versus degree of pre-integration testing."
+      solution: >-
+        Write and test the program in small pieces and combine the pieces one
+        at a time, building and integrating a unit (for example a class or
+        component) at a time, supported by additional test infrastructure such
+        as stubs, drivers and mock objects, so the construction process
+        provides early feedback to developers and customers.
+      consequences:
+        - "The advantages SWEBOK names for incremental integration: easier error location, improved progress monitoring, earlier product delivery and improved customer relations."
+        - "Additional test infrastructure (stubs, drivers, mocks) must be built and maintained."
+      tradeoffs:
+        - "Scaffolding and interim-version testing cost is traded against late-event risk concentration."
+      scope_description: "Grounded in SWEBOK Guide v4.0a KA4 section 3.7 at professional-BOK fidelity; the advantage list is hedged in the source ('thought to offer')."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-INTEGRATION
+    - id: se:PAT-07B-DESIGN-BY-CONTRACT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Design by contract at routine level
+      problem: >-
+        Routine-level semantics left implicit allow mismatched interface
+        assumptions between callers and callees that surface late, and errors
+        that creep in when code is modified go unnoticed at the boundary.
+      context: >-
+        Construction of routines and modules whose interface expectations can
+        be stated precisely, in an environment where runtime checks can be
+        compiled in during development and compiled out afterwards, as
+        described in SWEBOK Guide v4.0a KA4 section 4.4.
+      forces:
+        - "Precision of stated semantics versus contract authoring effort."
+        - "Runtime checking cost versus earlier fault exposure."
+      solution: >-
+        Include preconditions and postconditions for each routine so each
+        routine or class forms a contract with the rest of the program that
+        precisely specifies its semantics; implement the checks as assertions
+        that are compiled into the code at development time and compiled out
+        later so they do not degrade performance.
+      consequences:
+        - "Clarified routine behavior and faster flushing out of mismatched interface assumptions and modification-introduced errors (stated for assertions in SWEBOK 4.4)."
+        - "SWEBOK hedges that design by contract is thought to improve the quality of software construction."
+      tradeoffs:
+        - "Contract authoring and maintenance effort; production runs without the development-time checks once assertions are compiled out."
+      scope_description: "Grounded in SWEBOK Guide v4.0a KA4 section 4.4 at professional-BOK fidelity; the quality-effect claim remains hedged as in the source."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-DBC-ERROR
+
+  anti_patterns:
+    - id: se:ANT-07B-BIG-BANG-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Big bang (phased) integration as the default strategy
+      symptoms:
+        - "Faults and interface mismatches surface together in one late integration event instead of progressively."
+        - "Error location is difficult because all parts land at once."
+        - "Progress between code-complete and integrated is hard to observe."
+        - "Feedback to developers and customers arrives late."
+      causes:
+        - "Treating integration as a terminal milestone rather than an ongoing construction activity."
+        - "Deferring integration of component parts until all parts intended for release in a version are complete (SWEBOK's definition of phased integration)."
+        - "No interim scaffolding (stubs, drivers, mock objects) or interim-version test points are planned."
+      consequences:
+        - "Harder fault isolation across simultaneously integrated parts."
+        - "Late discovery of integration defects, when structural decisions are already fixed."
+        - "Delayed product delivery and customer feedback relative to incremental integration (the contrasts SWEBOK names as incremental's advantages)."
+      remediation: >-
+        Integrate incrementally: write and test small pieces, combine them one
+        at a time with stubs, drivers and mock objects, and determine points
+        at which interim versions are tested; or adopt continuous integration
+        with an automated pipeline that builds and tests each integration, as
+        described in SWEBOK Guide v4.0a KA4 section 3.7.
+      scope_description: "Lane-level characterization (SEK-07B): the symptom/causes/consequences framing is a synthesis inversion of SWEBOK 3.7's stated advantages of incremental over phased integration (see se:EVD-07B-SYNTHESIS-BIG-BANG); the Guide names phased/big bang integration and the advantage list but does not itself label it an anti-pattern."
+      evidence_refs:
+        - se:EVD-07B-SYNTHESIS-BIG-BANG
+
+  decision_models:
+    - id: se:DM-07B-INTEGRATION-STRATEGY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "Which integration approach should a construction team use to combine individually constructed components into a system?"
+      options:
+        - "Phased (big bang) integration: defer integration until all parts intended for release are complete."
+        - "Incremental integration: write and test small pieces, combine one at a time (CS2023 additionally names top-down, bottom-up and sandwich variants for comparison)."
+        - "Continuous integration: frequent integrations per day, automated by a build-and-test pipeline."
+      criteria:
+        - "Error locatability when an integration fails."
+        - "Progress monitoring and feedback timeliness during construction."
+        - "Earliness of product delivery and customer feedback."
+        - "Availability and cost of test scaffolding (stubs, drivers, mock objects) and automation."
+      constraints:
+        - "Incremental integration usually requires additional test infrastructure (SWEBOK 3.7)."
+        - "Continuous integration requires an automated build-and-test pipeline (SWEBOK 3.7)."
+      procedure: >-
+        Inventory the components and their testability; assess what
+        scaffolding and automation exist or can be built; compare the
+        candidate approaches against the criteria for the project context
+        using SWEBOK 3.7's contrast axes and CS2023's compare-and-contrast
+        exercise (top-down, bottom-up, sandwich); then record the chosen
+        strategy together with its scaffolding and interim-version test
+        points.
+      tradeoffs:
+        - "Phased integration needs no interim scaffolding but concentrates risk in one late event; incremental and continuous integration distribute risk and feedback but require infrastructure."
+      scope_description: "Structured from SWEBOK Guide v4.0a KA4 section 3.7 and the CS2023 SE-Construction learning outcome 7 naming top-down/bottom-up/sandwich; a decision aid, not a mandate of one strategy."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-INTEGRATION
+        - se:EVD-07B-CS2023-CONSTRUCTION-KU
+      claim_refs:
+        - se:CLM-07B-SWEBOK-INTEGRATION-APPROACHES
+
+  coverage_gaps:
+    - id: se:GAP-07B-SWEBOK-KA4-BREADTH
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA4 coverage limited to directly inspected sections
+      target_scope_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane directly reinspected, from the hash-verified official PDF,
+        SWEBOK Guide v4.0a KA4's Introduction and section 1 (1.1-1.5) plus
+        subsections 3.3, 3.6, 3.7, 4.1, 4.4 and 4.5. Other KA4 topics —
+        including section 2 Managing Construction (life cycle models,
+        planning, measurement, dependencies), 3.1-3.2 (construction design and
+        languages), 3.4-3.5 (construction testing and reuse), 3.8
+        (cross-platform), 4.2-4.3 and 4.6-4.17 (remaining technologies) and
+        section 5 (construction tools) — were read for chapter navigation but
+        are not admitted as locators, evidence or claims in this lane, and no
+        SWEBOK-derived record has passed human review.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        SWEBOK-derived records in this lane are content-verified paraphrases
+        of the inspected subsections only; the lane is not a
+        professional-consensus construction reference, and uninspected KA4
+        topics stay uncovered.
+      resolution_notes:
+        - "Reinspect additional KA4 sections and admit their records under the same locator-verified chain when needed; human ReviewDecision is required before any record advances toward acceptance."
+    - id: se:GAP-07B-REAL-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real construction case evidence
+      target_scope_ref: se:NODE-07B-CS2023-SE-CONSTRUCTION
+      gap_kind: SOURCE_GAP
+      description: >-
+        Neither SWEBOK KA4 nor the CS2023 units cited here contain real
+        construction case material (incident reports, postmortems or case
+        studies) usable as Case or Counterexample evidence, and no case-class
+        source is registered for this scope; the lane therefore contains no
+        Case or Counterexample records, and its pattern and anti-pattern
+        records rest on BOK/curriculum text plus one lane-marked synthesis
+        evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern records lack real-world illustration; the
+        anti-pattern's counterproductive characterization remains a synthesis
+        inference rather than an observed outcome.
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public postmortems or construction-related case studies) before promoting these records toward acceptance."
+    # --- shared CoverageGap: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: The registered CS2023 permission scope expressly covers educational materials and programs
+        and requires specific permission for other uses. Tally's general software-engineering knowledge graph
+        is not presumed to qualify as an educational material or program; no rights clearance for broader
+        use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: The lane must not claim that CS2023-derived records are cleared for public redistribution or
+        commercial product embedding until the rights scope is confirmed.
+      resolution_notes:
+      - Obtain a documented rights determination or specific permission before public redistribution or commercial
+        product embedding; otherwise replace the source or remove the affected records from those uses.
+      evidence_refs: []
+
+  relationship_assertions:
+    # --- canonical claim-to-evidence traces ---
+    - id: se:REL-07B-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-SWEBOK-CONSTRUCTION-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION
+      context: "Canonical claim-to-evidence trace for the SWEBOK KA4 construction-definition claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 4 Introduction at its verified locator (PDF page index 98; printed 4-1), which is the sole basis of the claim."
+    - id: se:REL-07B-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-SWEBOK-MINIMIZE-COMPLEXITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-MINIMIZE-COMPLEXITY
+      context: "Canonical claim-to-evidence trace for the minimize-complexity claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 4 section 1.1 at its verified locator (printed page 4-2), which carries the working-memory rationale, the scope statement and the simple-over-clever rule."
+    - id: se:REL-07B-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-SWEBOK-QUALITY-TECHNIQUES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-QUALITY-TECHNIQUES
+      context: "Canonical claim-to-evidence trace for the construction-quality techniques claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 4 section 3.6 at its verified locator (printed pages 4-8 to 4-9), which carries the primary-technique enumeration and the code-adjacent focus."
+    - id: se:REL-07B-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-SWEBOK-INTEGRATION-APPROACHES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-INTEGRATION
+      context: "Canonical claim-to-evidence trace for the integration-approaches claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 4 section 3.7 at its verified locator (printed pages 4-9 to 4-10), which carries the phased/incremental/CI characterization with its hedge."
+    - id: se:REL-07B-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-SWEBOK-API-DESIGN-GOALS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-API-DESIGN
+      context: "Canonical claim-to-evidence trace for the API design-goals claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 4 section 4.1 at its verified locator (printed page 4-10), which states the semantics requirement and the six design goals."
+    - id: se:REL-07B-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-CS2023-CODING-STYLE-BEST-PRACTICES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-CONSTRUCTION-KU
+      context: "Canonical claim-to-evidence trace for the coding-style/best-practices curriculum claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Construction KA Core topics 3-4 with outcomes 3-4 at the heading-anchored KU locator, which is the curriculum basis of the claim."
+    - id: se:REL-07B-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-CS2023-TEST-FIRST-PSYCHOLOGICAL
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-CONSTRUCTION-KU
+      context: "Canonical claim-to-evidence trace for the test-first pedagogical-rationale claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Construction CS Core topic 1b at the same heading-anchored KU locator, which carries the psychological rationale verbatim-adjacent."
+    - id: se:REL-07B-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-CS2023-TOOLS-ANALYSIS-INTEGRATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-SE-TOOLS-ANALYSIS
+      context: "Canonical claim-to-evidence trace for the analysis-tooling integration claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Tools KA Core topic 3 with outcome 4 at the heading-anchored locator, which names the tool classes and the integration expectation."
+    - id: se:REL-07B-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07B-CS2023-CODE-SMELLS-BOUNDARY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-CODE-SMELLS
+      context: "Canonical claim-to-evidence trace for the code-smell classification claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Design CS Core topic 4 at its heading-anchored locator, which states the quality-versus-correctness distinction and the SEC-Engineering cross-reference."
+    # --- principle, practice, pattern, anti-pattern, decision-model provenance and scope ---
+    - id: se:REL-07B-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07B-MINIMIZE-COMPLEXITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-MINIMIZE-COMPLEXITY
+      context: "Canonical claim-to-evidence trace for the minimize-complexity principle's primary anchor."
+      rationale: "The principle's statement and rationale restate section 1.1's working-memory grounding, scope and supports, which the evidence record carries at its verified locator."
+    - id: se:REL-07B-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07B-MINIMIZE-COMPLEXITY
+      predicate: APPLIES_TO
+      object_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      qualifiers:
+        - "Professional-BOK scope: the principle restates SWEBOK Guide v4.0a KA4 section 1.1 guidance."
+        - "Guide-to-generally-accepted-knowledge authority; not an empirical effect claim."
+      context: "Locating the minimize-complexity principle within the construction subdomain it governs."
+      rationale: "SWEBOK presents minimizing complexity as a key goal of the software construction activity, whose scope this lane's subdomain node carries."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-MINIMIZE-COMPLEXITY
+    - id: se:REL-07B-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07B-CONSTRUCT-FOR-VERIFICATION
+      predicate: APPLIES_TO
+      object_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      qualifiers:
+        - "Practice operationalizes SWEBOK KA4 section 1.3's four technique families at professional-BOK fidelity."
+        - "The Guide names the families without thresholds; step detail beyond the four families is lane-added procedure."
+      context: "Locating the construct-for-verification practice within the construction subdomain."
+      rationale: "Constructing for verification is one of SWEBOK's five construction fundamentals, so its applicability is the construction subdomain this lane models."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-CONSTRUCT-FOR-VERIFICATION
+    - id: se:REL-07B-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07B-INTERFACE-DOCUMENTATION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07B-CS2023-SE-CONSTRUCTION
+      qualifiers:
+        - "Curriculum-authority scope: operationalizes CS2023 SE-Construction CS Core topic 2 at curriculum fidelity."
+        - "Not a professional documentation standard; the SWEBOK-side counterpart is the API semantics statement in KA4 4.1, kept separate."
+      context: "Locating the interface-documentation practice within the curriculum unit it operationalizes."
+      rationale: "The practice's contract/precondition/postcondition content derives directly from the SE-Construction documentation topic, so its declared applicability is that unit's node."
+      evidence_refs:
+        - se:EVD-07B-CS2023-CONSTRUCTION-KU
+    - id: se:REL-07B-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07B-STATIC-ANALYSIS-INTEGRATION
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07B-CS2023-TOOLS-ANALYSIS-INTEGRATION
+      qualifiers:
+        - "Operationalization at curriculum fidelity: the claim states the expectation, the practice adds tool-selection and triage procedure."
+        - "Professional-BOK corroboration via SWEBOK KA4 3.6's static-analysis placement is cited on the practice's evidence list, not inside this claim."
+      context: "The practice operationalizes the curriculum claim about integrating analysis tooling into the development environment."
+      rationale: "The claim reports what CS2023 expects students to describe; the practice turns that expectation into an actionable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07B-CS2023-SE-TOOLS-ANALYSIS
+    - id: se:REL-07B-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07B-INCREMENTAL-INTEGRATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-INTEGRATION
+      context: "Canonical provenance trace for the incremental-integration pattern."
+      rationale: "The pattern's solution and consequences restate section 3.7's incremental-integration description and advantage list, which the evidence record carries at its verified locator."
+    - id: se:REL-07B-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07B-INCREMENTAL-INTEGRATION
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07B-SWEBOK-INTEGRATION
+      qualifiers:
+        - "The advantage list is presented by SWEBOK as 'thought to offer', not as a measured result."
+        - "Pattern strength is bounded accordingly: consequences are believed advantages, not empirical outcomes."
+      context: "Qualifying how strongly the incremental-integration pattern's consequences are supported within the cited section."
+      rationale: "The same evidence that supports the pattern also carries the Guide's hedge; recording the qualification on a separate edge keeps the hedge visible without weakening the provenance trace."
+    - id: se:REL-07B-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07B-DESIGN-BY-CONTRACT
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07B-DESIGN-BY-CONTRACT
+      context: "Structural dependency between the design-by-contract pattern and the concept it presumes."
+      rationale: "The pattern's solution is stated in terms of the routine-contract mechanism the concept defines; using the pattern without the concept's definition would be uninterpretable."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-DBC-ERROR
+    - id: se:REL-07B-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07B-BIG-BANG-INTEGRATION
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07B-SYNTHESIS-BIG-BANG
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a SWEBOK sentence; it is derived from the lane synthesis inverting section 3.7's advantage list, and the edge records that derivation as a first-class, rejectable assertion."
+      evidence_refs:
+        - se:EVD-07B-SYNTHESIS-BIG-BANG
+    - id: se:REL-07B-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07B-INTEGRATION-STRATEGY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-SWEBOK-INTEGRATION
+      context: "Primary provenance trace for the integration-strategy decision model."
+      rationale: "The decision model's options, criteria and constraints are structured directly from section 3.7's phased/incremental/CI characterization, which the evidence record carries at its verified locator."
+    - id: se:REL-07B-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07B-INTEGRATION-STRATEGY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-CONSTRUCTION-KU
+      context: "Secondary provenance trace for the decision model's variant options."
+      rationale: "The top-down/bottom-up/sandwich option variants come from the CS2023 SE-Construction learning outcome 7, carried by the KU evidence record."
+    # --- taxonomy structure and cross-lens relations ---
+    - id: se:REL-07B-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07B-CS2023-SE-CONSTRUCTION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-CORE-HOURS
+      context: "Node identity anchored to the shared Core Hours table locator."
+      rationale: "The registry-verified Core Hours table row confirms Software Construction as one of the nine SE knowledge units with its hour allocation, anchoring the node inside the shared CS2023 SE view."
+    - id: se:REL-07B-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07B-CS2023-SDF-PRACTICES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07B-CS2023-SDF-PRACTICES
+      context: "Node identity anchored to the SDF-Practices KU evidence."
+      rationale: "The heading-anchored evidence record confirms the unit's topic list inside the SDF area, anchoring the node inside this lane's narrow SDF curriculum view."
+    - id: se:REL-07B-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07B-CS2023-SE-CONSTRUCTION
+      predicate: RELATED_TO
+      object_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      qualifiers:
+        - "Cross-lens mapping between a curriculum knowledge unit and a professional-BOK subdomain; not an equivalence or containment claim."
+        - "SWEBOK states design/construction/testing boundaries vary by life cycle, so the mapping is intentionally loose."
+      context: "Relating the CS2023 curriculum unit to the professional construction subdomain without merging the lenses."
+      rationale: "Both records describe software construction, but under different authorities (curriculum classification versus professional BOK); a qualified RELATED_TO keeps the two taxonomies separate for SEK-08 while recording their correspondence."
+      evidence_refs:
+        - se:EVD-07B-CS2023-CORE-HOURS
+        - se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION
+    - id: se:REL-07B-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      predicate: BOUNDED_BY
+      object_ref: se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION
+      qualifiers:
+        - "Subdomain boundary follows SWEBOK KA4's own characterization: coding, verification, unit testing, integration testing, debugging, with life-cycle-dependent boundaries against design and testing."
+        - "The Guide does not define tally subdomains; this edge only bounds the node by the inspected evidence."
+      context: "Bounding the construction subdomain node by the evidence that characterizes it."
+      rationale: "The Introduction's definition and boundary statement are the entire inspected basis for the subdomain's scope, so the node's boundary is explicitly tied to that evidence."
+    - id: se:REL-07B-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07B-CODE-SMELL
+      predicate: APPLIES_TO
+      object_ref: se:SUB-07B-SOFTWARE-CONSTRUCTION
+      qualifiers:
+        - "Curriculum-classification lens: the concept records CS2023's category placement, not a professional definition."
+        - "The concept applies to code-level quality concerns inside construction; smell catalogues and remediation depth are outside this lane's anchors."
+      context: "Locating the code-smell category within the construction subdomain's code-level quality scope."
+      rationale: "CS2023 places code-quality indications in the SE-Design unit while the lane reads them as code-level construction concerns; the edge scopes the concept's applicability to the construction subdomain without reclassifying the curriculum node."
+      evidence_refs:
+        - se:EVD-07B-CS2023-CODE-SMELLS
+    - id: se:REL-07B-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07B-DESIGN-BY-CONTRACT
+      predicate: RELATED_TO
+      object_ref: se:PRA-07B-INTERFACE-DOCUMENTATION
+      qualifiers:
+        - "Cross-source bridge: SWEBOK-side routine-contract construction approach versus CS2023-side interface-documentation curriculum practice."
+        - "Relation is lens-bridging (professional BOK to curriculum), not identity; each record keeps its own authority scope."
+      context: "Relating the professional design-by-contract pattern to the curriculum interface-documentation practice that teaches the same contract vocabulary."
+      rationale: "Both records use contracts, preconditions and postconditions at interface level; linking them records the correspondence SEK-08 will need without collapsing the curriculum and BOK lenses."
+      evidence_refs:
+        - se:EVD-07B-SWEBOK-DBC-ERROR
