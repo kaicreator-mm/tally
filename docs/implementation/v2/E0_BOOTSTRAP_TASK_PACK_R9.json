@@ -219,7 +219,7 @@
       "Exact repository Owner approval binding PackBlob SHA, A source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, versionAuditBinding.digestSha256 (which binds the exact A candidate PackBlob, roster/Claim/edge/dependency readbacks, complete writeSetAudit and scope dispositions) and e0ScopeAudit.digestSha256.",
       "The version-wide writeSetAudit status and digest must be bound exactly; its current non-PASS state is permitted only as an explicit fail-closed snapshot and never permits version-wide freeze or ordinary Task dispatch.",
       "E0 scope overlap/serial-handoff audit must bind #203→#284→#312→#219→#273→#276→#264, all exact shared paths and the current native dependency readbacks.",
-      "Integration base must contain current A/#260 R9 source only; no #219 or #312 implementation diff may be imported."
+      "Integration base must contain current A/#260 R16 source only; no #219 or #312 implementation diff may be imported."
     ],
     "requiredForOneTimeRootAdmission": [
       "Only after exact bootstrap PackBlob review PASS and exact Owner approval, invoke the existing Host-only T06d reserveAndPublish route; there is no tracked pre-Claim mount and no source file is edited.",
@@ -234,7 +234,7 @@
       "The version-wide writeSetAudit must be PASS and its digest must match the independently reviewed and Owner-approved current A candidate blob.",
       "All 25 open Task Issues and 46 total Task snapshots must be current; #264 exact 11-path scope is included, and all closed Task history remains bound.",
       "All overlapping dispatchable write sets must be serialized by current native blocked_by edges or made disjoint by a newly approved exact scope; planned/prose-only edges do not serialize.",
-      "Refresh the 46-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
+      "Refresh the 48-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
@@ -1491,7 +1491,9 @@
     "R9 E0 is zero pre-Claim source paths; after approved immutable R9 blob and real Host Claim/FSW, only original 14 source paths allowed.",
     "E0 next successors are #312,#219,#273,#276,#264 (E1), distinct writers in that order; #319→#331→#284 is PLANNED, not NATIVE.",
     "Snapshot source A R16 observedAt precedes subsequent #260 Builder receipt timestamp; accept as-of audit only, require fresh Host admission readback.",
-    "No early merge, Freeze, tag, Release or deployment."
+    "No early merge, Freeze, tag, Release or deployment.",
+    "R9 self-adversarial fix: the complete PLANNED critical-path chain includes #319→#331→#284 followed by #284→#312→#219→#273→#276→#264. Official GitHub dependency readback verifies #319/#331 have no native blocked_by edges.",
+    "The A R16 writeSetAudit embeds historical explanatory R8 overlap-group labels; those are immutable source-candidate metadata and not a claim that R8 governance is current. Authoritative current 48-Task DAG/counts and live Claim observations are the exact R16 candidate reference."
   ],
   "e0ScopeAudit": {
     "schema": "tally.e0.bootstrap-scope-audit/v1",
@@ -1803,6 +1805,14 @@
       ],
       "proposedSerialEdges": [
         {
+          "blockedIssue": 331,
+          "blockedBy": 319
+        },
+        {
+          "blockedIssue": 284,
+          "blockedBy": 331
+        },
+        {
           "blockedIssue": 312,
           "blockedBy": 284
         },
@@ -1823,14 +1833,14 @@
           "blockedBy": 276
         }
       ],
-      "status": "PLANNED_NOT_NATIVE",
+      "status": "PLANNED_NOT_NATIVE_7_SERIAL_EDGES",
       "semantics": "Only official GitHub blocked_by readback establishes NATIVE. Current proposed edges remain PLANNED; no native dependency mutation is included in this Pack.",
       "issue319": [],
       "issue331": []
     },
     "dispatchable": false,
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestSha256 and including digestAlgorithm)",
-    "digestSha256": "7c6f67efc4883f1c9f512b45a5e3cefe5c8612e103618dff1b0ab9f5e728cae4",
+    "digestSha256": "3272aab3bc1f9ca1e9a17c1e1cfcc459f43c652ed557ec1f54b7c2b7a979d162",
     "upstream319": {
       "issueNumber": 319,
       "state": "open",
@@ -1980,7 +1990,7 @@
     "Zero E0 tracked source edits before accepted root Claim and frozen write-set readback; 14 paths post-Claim only.",
     "No native dependency mutation, version freeze, merge, release or deployment from this draft."
   ],
-  "e0ScopeAuditDigest": "7c6f67efc4883f1c9f512b45a5e3cefe5c8612e103618dff1b0ab9f5e728cae4",
+  "e0ScopeAuditDigest": "3272aab3bc1f9ca1e9a17c1e1cfcc459f43c652ed557ec1f54b7c2b7a979d162",
   "versionAuditBinding": {
     "schema": "tally.e0.version-audit-binding/v1",
     "candidatePackBlobSha": "ffdef55b45b9b9fbe0cc998208cb44fe39e59868",
