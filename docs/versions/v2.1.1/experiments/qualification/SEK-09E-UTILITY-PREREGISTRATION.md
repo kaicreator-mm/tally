@@ -1,7 +1,9 @@
 # SEK-09E — Pre-Registered Corpus Utility Experiment
 
-**Work item:** #361 · **Core gate:** #351 SEK-09 / #299 G5 · **Execution:** ADS #1359 Delivery-First  
-**Pinned corpus at registration:** `wip/v2.1.1-knowledge` HEAD `9cbf7983c5b47c146bd934f39e10517c3a828b66`, TREE `fe8f5e106f349bb0c814696fcd231732f7568250`; underlying corpus TREE `a7b972fea96b9f12bbb8066fe6c88c13beb5f8d9`.  
+**Work item:** #361 · **Core gate:** #351 SEK-09 / #299 G5 · **Execution:** ADS #1359 Delivery-First
+
+**Pinned corpus at registration:** `wip/v2.1.1-knowledge` HEAD `9cbf7983c5b47c146bd934f39e10517c3a828b66`, TREE `fe8f5e106f349bb0c814696fcd231732f7568250`; underlying corpus TREE `a7b972fea96b9f12bbb8066fe6c88c13beb5f8d9`.
+
 **Status: PREREGISTERED_DESIGN / EXPERIMENT=NOT_RUN / HUMAN_OR_INDEPENDENT_SCORING=NOT_RUN / G5=NOT_MEASURED.**
 
 ## 1. Hypothesis, leakage controls and scope
