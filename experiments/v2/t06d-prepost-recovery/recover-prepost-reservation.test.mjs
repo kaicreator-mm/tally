@@ -158,7 +158,11 @@ function lineageRows(overrides = {}) {
   };
   return {
     claim319: {revision:i319.claimRevision,value:{
-      phase:i319.claimPhase,commentId:i319.claimCommentId,writerId:i319.terminalWriterId??RECOVERY_IDENTITY.terminalWriterId}},
+      phase:i319.claimPhase,generation:1,protectedClaimKey:i319.protectedClaimKey,
+      repository:i319.repository,issueRef:i319.issueRef,sourceSha:i319.sourceSha,
+      dispatchId:i319.dispatchId,actorRole:i319.actorRole,operatorKind:i319.operatorKind,
+      operatorId:i319.operatorId,writerId:i319.writerId,
+      commentId:i319.claimCommentId,commentRef:i319.claimCommentRef}},
     frozen319:{revision:i319.frozenWriteSetRevision,value:frozen319Value},
     claim331:{revision:i331.claimRevision,value:{
       phase:i331.claimPhase,repository:'kaicreator-mm/tally',issueNumber:331,sourceSha:i331.sourceSha,
@@ -169,6 +173,14 @@ function lineageRows(overrides = {}) {
     ...overrides,
   };
 }
+// Positive fixture: exact 13-field live #319 Claim CAS revision 1, in the
+// original serialized key order and bound to DISPATCH_CLAIMED #6668875091.
+assert.deepEqual(Object.keys(lineageRows().claim319.value),[
+  'phase','generation','protectedClaimKey','repository','issueRef','sourceSha',
+  'dispatchId','actorRole','operatorKind','operatorId','writerId','commentId','commentRef',
+]);
+assert.equal(createHash('sha256').update(JSON.stringify(lineageRows().claim319.value)).digest('hex'),
+  RECOVERY_IDENTITY.task319.claimValueSha256);
 function ports(overrides = {}) {
   const counts = {publishes: 0, proofCalls: 0};
   const claimReader = {async readPublishedClaim() { return {
@@ -993,6 +1005,62 @@ test('revision-4 read-only verification rejects marker/envelope tampering agains
   });
 });
 
+test('revision-4 read-only verification rejects every #319 Claim field drift with zero side effects', async () => {
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
+      terminalWriterId:undefined,terminalEvidence:undefined,terminalOccurredAt:undefined,
+      terminalReservationRevision:undefined}),{mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const initialPorts=ports();
+    const recovered=await createPrePostRecoveryController({store,...initialPorts,writerAuthority})
+      .recoverPrePostReservation();
+    assert.equal(recovered.status,'RECORDED');
+    const final=await store.get(TARGET.casKey);
+    assert.equal(final.revision,4);
+    const base=lineageRows();
+    const mutations=[];
+    for(const field of Object.keys(base.claim319.value)){
+      mutations.push([`changed ${field}`,rows=>{
+        rows.claim319.value[field]=['commentId','generation'].includes(field)?999:'tampered';
+      }]);
+      mutations.push([`missing ${field}`,rows=>{delete rows.claim319.value[field];}]);
+    }
+    mutations.push(['extra Claim key',rows=>{rows.claim319.value.unexpected='not-allowed';}]);
+    mutations.push(['reordered Claim keys',rows=>{
+      rows.claim319.value=Object.fromEntries(Object.entries(rows.claim319.value).reverse());
+    }]);
+    mutations.push(['null Claim value',rows=>{rows.claim319.value=null;}]);
+    mutations.push(['array Claim value',rows=>{rows.claim319.value=[];}]);
+    for(const [label,mutate] of mutations){
+      const badRows=structuredClone(base);mutate(badRows);
+      const value=structuredClone(final.value);
+      let casWrites=0,publisherInvocations=0,httpPosts=0;
+      const readonlyStore={
+        async get(){return {revision:4,value};},
+        async put(){casWrites++;throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');},
+      };
+      const readPorts=ports({rows:()=>badRows});readPorts.terminalEvents.present=true;
+      const publisher={async publishDispatchStateChange(){
+        publisherInvocations++;httpPosts++;throw new Error('PUBLISH_FORBIDDEN');
+      }};
+      const result=await createPrePostRecoveryController({store:readonlyStore,...readPorts,
+        publisher,writerAuthority}).verifyTerminalReservationReadOnly();
+      assert.equal(result.status,'UNKNOWN',label);
+      assert.equal(result.reason,'READ_ONLY_TERMINAL_OR_LINEAGE_VERIFICATION_FAILED',label);
+      assert.equal(result.casWrites,0,label);
+      assert.equal(result.publisherInvocationCount,0,label);
+      assert.equal(result.httpPostCount,0,label);
+      assert.equal(casWrites,0,label);
+      assert.equal(publisherInvocations,0,label);
+      assert.equal(httpPosts,0,label);
+      assert.equal(readPorts.counts.publishes,0,label);
+      const unchanged=await readonlyStore.get();
+      assert.equal(unchanged.revision,4,label);
+      assert.deepEqual(unchanged.value,final.value,label);
+    }
+  });
+});
+
 test('revision-3 reconciliation and revision-4 recovery entry share full marker and live-lineage verification', async () => {
   await harness(async ({store})=>{
     await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
@@ -1036,6 +1104,22 @@ test('revision-3 reconciliation and revision-4 recovery entry share full marker 
     assert.equal(writes,0);
     assert.equal(driftPorts.counts.publishes,0);
 
+    // Revision 3 uses the same complete #319 Claim/event binding: a field not
+    // present in the old partial fixture must still block finalization.
+    const bad319Rows=lineageRows();
+    bad319Rows.claim319.value.operatorId='tampered-operator';
+    const drift319Store={async get(){return {revision:3,value:revision3Value};},
+      async put(){writes++;throw new Error('WRITE_FORBIDDEN_IN_TEST');}};
+    const drift319Ports=ports({rows:()=>bad319Rows});drift319Ports.terminalEvents.present=true;
+    const drift319Result=await createPrePostRecoveryController({
+      store:drift319Store,...drift319Ports,writerAuthority}).recoverPrePostReservation();
+    assert.equal(drift319Result.status,'UNKNOWN');
+    assert.equal(drift319Result.reason,'CONSUMED_MARKER_EVIDENCE_NOT_EXACT');
+    assert.equal(drift319Result.publisherInvocationCount,0);
+    assert.equal(drift319Result.httpPostCount,0);
+    assert.equal(writes,0);
+    assert.equal(drift319Ports.counts.publishes,0);
+
     // Revision-4 entry through the general recovery API delegates to the
     // same full verifier; it must not accept an extra marker field.
     const badFinal=structuredClone(final.value);
@@ -1066,7 +1150,8 @@ test('revision-4 verification is read-only and reports the historical review-ord
     const receipt=await verifier.verifyTerminalReservationReadOnly();
     assert.equal(receipt.status,'ALREADY_VERIFIED');assert.equal(receipt.publisherInvocationCount,0);
     assert.equal(receipt.httpPostCount,0);assert.equal(receipt.casWrites,0);
+    assert.equal(receipt.claim319ValueSha256,RECOVERY_IDENTITY.task319.claimValueSha256);
+    assert.match(receipt.task319ConsumedMarkerLimitation,/ORIGINAL_MARKER_HAS_NO_CLAIM_VALUE_SHA256/);
     assert.equal(receipt.historicalReviewOrderDeviation.status,'NOT_RETROACTIVELY_REMEDIABLE');
   });
 });
-

@@ -57,6 +57,8 @@ const ENVELOPE_KEYS = ['schema','originalTerminalEvidence','originalTerminalOccu
   'sixDurableEvidenceRefs','task331PackBlobOwnerClaimAndFrozenWriteSetBindings'];
 const TARGET_RESERVATION_KEYS = ['casKey','revision','phase','terminalWriterId',
   'protectedClaimKey','sourceSha','dispatchId','generation'];
+const CLAIM_319_KEYS = ['phase','generation','protectedClaimKey','repository','issueRef',
+  'sourceSha','dispatchId','actorRole','operatorKind','operatorId','writerId','commentId','commentRef'];
 const M319_KEYS = ['claimCasKey','claimRevision','claimCommentId',
   'frozenWriteSetKey','frozenWriteSetDigest','packBlobSha'];
 const M331_KEYS = ['packBlobSha','packPRHeadSha','ownerReceiptComment',
@@ -116,6 +118,18 @@ export const RECOVERY_IDENTITY = Object.freeze({
     claimRevision: 1,
     claimPhase: 'PUBLISHED_VERIFIED',
     claimCommentId: 6668875091,
+    claimCommentRef: 'https://github.com/kaicreator-mm/tally/issues/319#issuecomment-6668875091',
+    // Complete live CAS row and immutable DISPATCH_CLAIMED event #6668875091.
+    claimValueSha256: '7fef4ce5f8bf1db7cc491d10aaf500c2d6dce8fc084ae2debac8ebefdeda02bf',
+    repository: 'kaicreator-mm/tally',
+    issueRef: 'https://github.com/kaicreator-mm/tally/issues/319',
+    sourceSha: '7ebb1cdd0a79fc82cc938e35f852a80dd8e15332',
+    dispatchId: 'dispatch:319:t06d-terminalization:20261106:1',
+    protectedClaimKey: 'kaicreator-mm/tally#319:builder:__default__',
+    actorRole: 'builder',
+    operatorKind: 'other',
+    operatorId: 'zcode:i319:t06d-terminalization:1',
+    writerId: 'tally-host:win32:t06d-terminalization:1',
     frozenWriteSetKey: 'tally:v2:task-writeset:319',
     frozenWriteSetRevision: 0,
     frozenWriteSetDigest: '9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b',
@@ -341,7 +355,7 @@ export function createPrePostRecoveryController({
     // ref values; any other key set stays denied.
     const OWNER_AMENDMENT_REF='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689612741';
     const BUILDER_ACTIVATION_REF='https://github.com/kaicreator-mm/tally/pull/332#issuecomment-6689637743';
-    const keysExact=JSON.stringify(keys)===JSON.stringify(wanted)||
+    const frozenKeysExact=JSON.stringify(keys)===JSON.stringify(wanted)||
       (JSON.stringify(keys)===JSON.stringify([...wanted,'ownerAmendmentRef'].sort())&&
        frozen?.ownerAmendmentRef===OWNER_AMENDMENT_REF)||
       (JSON.stringify(keys)===JSON.stringify(
@@ -363,7 +377,7 @@ export function createPrePostRecoveryController({
       claim?.writerId===i331.writerId&&claim?.commentId===i331.claimCommentId&&
       claim?.commentRef===i331.claimCommentRef&&claim?.dispatchId===i331.dispatchId&&
       claim?.protectedClaimKey===i331.protectedClaimKey&&claim?.generation===1;
-    const frozenExact=keysExact&&frozen?.phase==='FROZEN_DAG_WRITESET'&&
+    const frozenExact=frozenKeysExact&&frozen?.phase==='FROZEN_DAG_WRITESET'&&
       frozen?.repository==='kaicreator-mm/tally'&&frozen?.issueNumber===331&&
       frozen?.sourceSha===i331.sourceSha&&frozen?.writeSetSha256===i331.writeSetSha256&&
       frozen?.document===i331.writeSetDocument&&frozen?.pathCount===i331.pathCount&&
@@ -375,14 +389,27 @@ export function createPrePostRecoveryController({
       frozen?.claimCommentRef===i331.claimCommentRef&&frozen?.writerId===i331.writerId&&
       Number.isFinite(frozenAt)&&new Date(frozenAt).toISOString()===frozen.frozenAt&&
       frozenAt>=Date.parse(i331.ownerApprovedAt);
-    const baseExact=claim319?.revision===i319.claimRevision&&claim319?.value?.phase===i319.claimPhase&&
-      claim319?.value?.commentId===i319.claimCommentId&&
-      claim319?.value?.writerId===RECOVERY_IDENTITY.terminalWriterId&&
+    const claim319Value=claim319?.value;
+    const claim319Digest=claim319Value&&sha256hex(JSON.stringify(claim319Value));
+    // The exact live revision-1 row is bound both field-by-field to immutable
+    // DISPATCH_CLAIMED #6668875091 / Task #319 identity and as a complete
+    // serialized value. This rejects changed, missing, extra and reordered
+    // fields instead of trusting the partial fixture's three-field subset.
+    const claim319Exact=claim319?.revision===i319.claimRevision&&
+      keysExact(claim319Value,CLAIM_319_KEYS)&&claim319Digest===i319.claimValueSha256&&
+      claim319Value.phase===i319.claimPhase&&claim319Value.generation===1&&
+      claim319Value.protectedClaimKey===i319.protectedClaimKey&&
+      claim319Value.repository===i319.repository&&claim319Value.issueRef===i319.issueRef&&
+      claim319Value.sourceSha===i319.sourceSha&&claim319Value.dispatchId===i319.dispatchId&&
+      claim319Value.actorRole===i319.actorRole&&claim319Value.operatorKind===i319.operatorKind&&
+      claim319Value.operatorId===i319.operatorId&&claim319Value.writerId===i319.writerId&&
+      claim319Value.commentId===i319.claimCommentId&&claim319Value.commentRef===i319.claimCommentRef;
+    const baseExact=claim319Exact&&
       frozen319?.revision===i319.frozenWriteSetRevision&&frozen319Digest===i319.frozenWriteSetDigest&&
       frozen319?.value?.taskPackBlobSha===i319.packBlobSha;
     if(!baseExact||!claimExact||!frozenExact||claim331?.revision!==i331.claimRevision||
       frozen331?.revision!==i331.frozenWriteSetRevision)return null;
-    return {claim331ValueSha256:sha256hex(JSON.stringify(claim)),
+    return {claim319ValueSha256:claim319Digest,claim331ValueSha256:sha256hex(JSON.stringify(claim)),
       frozen331ValueSha256:sha256hex(JSON.stringify(frozen)),frozen319ValueSha256:frozen319Digest};
   }
 
@@ -452,7 +479,12 @@ export function createPrePostRecoveryController({
       !keysExact(m319,M319_KEYS)||!keysExact(m331,M331_KEYS)||
       !keysExact(mc,M331_CLAIM_KEYS)||!keysExact(mf,M331_FSW_KEYS)||
       // marker #319 evidence <-> exact #319 identity and the live 319 rows.
+      // The already-consumed marker predates full-row Claim binding and has
+      // no Claim value digest to revalidate retroactively. lineageExact()
+      // supplies the complete live Claim/event binding; do not manufacture a
+      // new marker field or rewrite the historical event evidence.
       m319.claimCasKey!==t319.claimCasKey||
+      m319.claimRevision!==t319.claimRevision||
       m319.claimRevision!==rows.claim319.revision||
       m319.claimCommentId!==t319.claimCommentId||
       m319.frozenWriteSetKey!==t319.frozenWriteSetKey||
@@ -803,8 +835,10 @@ export function createPrePostRecoveryController({
     return Object.freeze({
       status:'ALREADY_VERIFIED',reason:'TERMINAL_VERIFIED_READ_ONLY',
       claimTerminality:'VERIFIED',terminalCommentRef,
+      claim319ValueSha256:lineageBindings.claim319ValueSha256,
       claim331ValueSha256:lineageBindings.claim331ValueSha256,
       frozen331ValueSha256:lineageBindings.frozen331ValueSha256,
+      task319ConsumedMarkerLimitation:'ORIGINAL_MARKER_HAS_NO_CLAIM_VALUE_SHA256; LIVE_FULL_ROW_AND_IMMUTABLE_EVENT_REVALIDATED',
       recoveryAttemptId:recoveryAttempt.recoveryAttemptId,
       publisherInvocationCount:0,httpPostCount:0,casWrites:0,
       historicalReviewOrderDeviation:{status:'NOT_RETROACTIVELY_REMEDIABLE',
