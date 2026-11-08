@@ -1,6 +1,6 @@
 {
   "schema": "tally/host-platform-task-pack/v1",
-  "packRevision": 2,
+  "packRevision": 3,
   "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_CONSOLIDATED_REPAIR",
   "repository": "kaicreator-mm/tally",
   "issueNumber": 370,
@@ -8,8 +8,8 @@
   "reviewHistory": {
     "initialHead": "41a054167e77a6321b880589ba5af59c159eea1d",
     "initialPackBlob": "8e9bb18a73e93a580e3f5c2788abc9b005b561ce",
-    "initialVerdict": "BLOCK_P0_0_P1_5_P2_1",
-    "repairBatch": "R2_SINGLE_CONSOLIDATED_PACK_REPAIR_NO_IMPLEMENTATION_OR_CLAIM"
+    "initialVerdict": "R1_BLOCK_P0_0_P1_5_P2_1; R2_BLOCK_P0_0_P1_3_P2_2",
+    "repairBatch": "R3_SINGLE_CONSOLIDATED_PACK_REPAIR_NO_IMPLEMENTATION_OR_CLAIM"
   },
   "coreOutcomeDag": {
     "createTask": false,
@@ -74,14 +74,15 @@
       "kind": "UNTRACKED_ONE_SHOT_HOST_CONFIGURATION_REVIEWED_BEFORE_EXECUTION",
       "evidencePath": "_tmp/tally-i370-host-fence/bootstrap-driver.mjs",
       "requiredReceipt": "Independent driver review binds exact driver SHA256, imported module SHA256 values, Node24, writer login and zero additional privileged imports.",
-      "composition": "The driver only opens the fresh registry, constructs strict existing admission source/publisher/controller, calls reserveAndPublish once for #370, closes/reopens the store for exact readback, then creates and rereads the #370 FSW while the durable published Claim remains present. It never imports candidate/Project/Maintenance/Release/Agent writers and never retries reserveAndPublish.",
-      "credentialBoundary": "The controller obtains the GitHub token with gh auth token and injects it only into the one reviewed child process environment. No token file, ambient second-process credential, Agent/UI token or candidate writer is used. The child verifies /user login kaicreator-mm before admission; no other operation receives the token."
+      "composition": "The controller creates the canonical parent directory with inheritance disabled and explicit ACLs: current Owner SID read/execute only, CodexSandboxOnline SID and SYSTEM full control. The reviewed driver then runs inside the existing Codex restricted-token sandbox as NILAR\\CodexSandboxOnline (SID S-1-5-21-2839165489-1832998833-1574237796-1004), creates the registry beneath that parent and applies the same restricted ACL. It only opens the fresh registry, constructs strict existing admission source/publisher/controller, calls reserveAndPublish once for #370, closes/reopens for exact readback, then creates/rereads the #370 FSW and performs a final native/CAS readback. It never imports candidate/Project/Maintenance/Release/Agent writers and never retries reserveAndPublish.",
+      "credentialBoundary": "The controller obtains the GitHub token with gh auth token and injects it only into the reviewed CodexSandboxOnline process environment. The registry and its high-water anchor are not readable/writable by the ordinary Owner SID, and the parent denies that SID delete-child. No token file, ambient sandbox credential, Agent/UI token or candidate writer is used. The child verifies /user login kaicreator-mm before admission. Other processes cannot obtain the selected Host's registry/fence port through the filesystem; any outside GitHub comment is not a selected-Host Claim and causes subsequent native uniqueness/currentness readback to fail rather than being accepted.",
+      "liveOrderingAuthority": "The current Owner Delivery-First v2 instruction explicitly requires implementation inside a legal Claim/write-set and orders #284 Root Claim only after the real Host Gate. Together with #6718120247's separate minimal Host-platform Claim requirement, this authorizes only the #370 bootstrap Claim after Pack/driver/Owner review. The earlier no-live-Claim sentence is enforced for all fake-transport tests and does not authorize any #284 effect."
     },
     "resourceExclusion": [
       "A newly created canonical registry must be empty through public list() before admission; the strict existing source has no resourceConflictPort and therefore rejects every foreign live Claim. The #370 protected key is unique and its mustBeAbsent CAS physically admits at most one competing reservation.",
       "Native preflight must prove zero existing #370 Claim events. Final C readback requires exactly one unedited matching protected-key event, so a competing Claim comment invalidates acceptance rather than being ignored.",
       "Only the #370 Claim CAS key, #370 native comment and #370 FSW key are in this bootstrap effect set. No candidate branch/PR, Project V2, Maintenance Issue, Release, #203 or #284 effect is imported or invoked.",
-      "The durable #370 published Claim remains present during create-only FSW put/readback. The driver has no second writer lane and exits immediately after readback. Any error before POST leaves no Claim; any ambiguous/post effect remains pending and forbids a second attempt.",
+      "The durable #370 published Claim remains present during create-only FSW put/readback. The driver has no second writer lane and exits immediately after a final native/CAS readback. Any error before the CAS reservation leaves no Claim row; any error after reservation but before POST may leave PENDING_GITHUB_PUBLISH and is reported exactly, with no accepted native Claim, reset or second POST. Any ambiguous/post effect likewise remains pending and forbids a second attempt.",
       "This isolation is deliberately narrow: it proves the one initial #370 bootstrap can be serialized by existing protected-key CAS and native uniqueness on a fresh registry. It does not prove disjoint Task concurrency and is never cited as the new shared physical fence."
     ]
   },
@@ -144,13 +145,14 @@
   ],
   "physicalDesign": {
     "authority": "ONE_SHARED_SQLITE_CAS_FENCE_REGISTRY_DOCUMENT consulted by every current-source T06d/Native-C privileged Claim writer. The selected Host composition alone receives the registry mutation port and GitHub write transport; B/K/UI/Agent/request callers receive neither.",
-    "productionComposition": "A one-shot Host process constructs the shared store and resource fence first, then constructs admission source and Native C publisher with that same fence. The Native C factory rejects an absent/mismatched fence. The current-source controller cannot publish without acquisition, and all repository callers including host-admission-source.test.mjs are migrated. Historical byte copies are not production entry points and are never rerun.",
-    "credentialAndTransportBoundary": "Only the selected primary Host child receives the GitHub token and real Octokit. A second physical process receives no token/fence and cannot construct the selected Publisher. Direct API use outside this reviewed selected-Host composition is not a lawful writer or witness; a competing protected-key comment makes native uniqueness/readback fail. This boundary does not claim to constrain an Owner manually using GitHub outside ADS, but such an effect cannot be promoted into Host admission.",
+    "productionComposition": "Every current-source one-shot Host process runs as CodexSandboxOnline under the existing Codex restricted-token sandbox. It constructs the shared store and resource fence first, then constructs admission source and Native C publisher with that same fence. The canonical parent/registry/anchor ACL grants that SID and SYSTEM full control and the ordinary Owner SID read/execute without delete-child; the registry files themselves grant no ordinary-Owner write. Native C rejects an absent/mismatched fence, the controller cannot publish without acquisition, and all repository callers including host-admission-source.test.mjs are migrated. Historical byte copies run under another principal cannot open the canonical registry and are never production entry points.",
+    "credentialAndTransportBoundary": "Only the CodexSandboxOnline Host child receives the GitHub token, real Octokit, registry mutation port and fence owner nonce. The ordinary Owner SID has no registry write or delete-child permission and no selected fence port. A second physical process under that SID without a valid lease is denied before POST; a differently privileged process cannot construct a valid accepted Claim through the canonical registry. Forged JavaScript ports are never connected to the production credential; the only real Octokit is constructed inside the restricted process after factory validation. Any outside direct GitHub effect is outside ADS authority and invalidates subsequent native uniqueness/currentness readback instead of becoming an accepted Host Claim.",
     "atomicity": "The complete active-lease registry is one CAS document with a Host-configured registryId. Acquisition re-reads and validates the whole document, compares all exclusive resources and atomically adds one lease using mustBeAbsent for first initialization or mustMatchRevision thereafter. At most 16 CAS retries are allowed; exhaustion returns HOST_RESOURCE_FENCE_CONTENTION_EXHAUSTED with zero Claim effect.",
     "continuousPossession": "The random owner nonce remains only in the owning Host process; CAS stores its SHA256 only. Every privileged stage re-reads the shared registry and validates registryId, fenceId, stable fenceRevision, nonce hash and exact binding. Leases never expire and no other writer can release without the nonce. The controller never releases during an in-flight effect, so protocol-compliant competitors cannot remove/reacquire between the final check and POST. A wrong-nonce release, overlapping acquisition or fabricated replacement denies.",
     "stableIdentity": "fenceId and fenceRevision are assigned once at acquisition and never change when unrelated leases update the containing CAS row. The CAS row revision is a separate optimistic-concurrency value and is never serialized as the stable fenceRevision. fenceRevision equals the monotonically increasing registry generation at acquisition.",
     "lifetime": "Definite pre-effect denial may release the still-owned lease. Successful publication and ambiguous/pending states retain it for Task ownership. Restarted processes do not receive the old nonce and cannot assert, release or reacquire the same resource set; recovery remains blocked pending native/CAS reconciliation. No automatic takeover or reset.",
     "registryRecreation": "A null registry document is accepted only for the explicitly configured first initialization. Later null, changed registryId, generation regression, malformed document or deleted/recreated state is UNKNOWN and denies, never an empty-registry permit. The registry document itself is never deleted.",
+    "rollbackAnchor": "An independent append-only hash-chain anchor lives outside the SQLite file in the same ACL-restricted canonical parent. It records registryId, monotonically increasing generation, stable fenceId/fenceRevision, full post-mutation registry-document SHA256, previous anchor hash and writer SID. After every successful registry CAS the Host appends and fsyncs the matching anchor record before any external effect. CAS succeeded but anchor append/fsync failed leaves an UNKNOWN mismatch and no effect. Startup/mutation requires the complete valid chain, current document generation/hash exactly equal to the anchor high-water and matching registryId. A same-ID registry rollback, null/recreated registry, anchor truncation/replacement, generation regression or non-anchor CAS mutation denies. The ordinary Owner SID cannot modify the anchor; an administrator restoring both files is outside the selected Host boundary and cannot produce a valid current Owner/Host receipt.",
     "publisherFence": "Native C asserts the matching held lease immediately before and after each external POST. Omitting the port or using a mismatched/stale/lost lease prevents the POST or preserves pending evidence without retry. Fault injection at the transport boundary verifies the post-check/no-release invariant and uncertain-effect handling.",
     "resourceCompatibility": "The PR #371 readHeldFence implementation derives compatibility from current durable foreign leases and their exact frozen resource objects, never from caller booleans or projected Claim fields. A foreign active Claim without a matching valid lease is incompatible. Snapshot drift retries only by re-running complete admission while still holding the lease; it never weakens conflict checks.",
     "frozenResources": [
@@ -164,7 +166,7 @@
     "bytes": "UTF-8 JSON.stringify of a recursive canonical value: plain object keys sorted by code unit; arrays retain semantic order except exclusive resource strings, which are sorted by code unit; undefined/functions/symbols/non-finite numbers/non-plain objects are rejected.",
     "digest": "frozenResourceSetSha256 = SHA256(canonicalBytes({schema, repository, issueRef, protectedClaimKey, generation, sourceSha, dispatchId, taskPackRef, taskPackBlobSha, reviewRef, ownerApprovalRef, writeSetSha256, exclusiveResources})). Recomputing the object must reproduce the port digest.",
     "bindingVersusConflict": "repository/issue/source/dispatch/Pack/review/Owner/write-set digest fields bind identity. Only normalized exclusiveResources participate in conflict comparison; metadata equality is still mandatory for possession.",
-    "file": "Git repo-relative UTF-8 paths only: forward slashes, no empty/dot/dot-dot/backslash/drive/absolute/trailing-slash/NUL. Git paths compare case-sensitively. Exact match or path-segment ancestor overlap conflicts.",
+    "file": "Git repo-relative UTF-8 paths only: forward slashes, no empty/dot/dot-dot/backslash/drive/absolute/trailing-slash/NUL. Original Git spelling remains binding metadata. Conflict comparison uses the selected filesystem semantics: on the required Windows Host, paths are case-folded before exact/path-segment-ancestor comparison, so two Git paths differing only by case conflict and can never be declared disjoint; on case-sensitive Hosts the original case-sensitive comparison applies. Alias or unknown case/filesystem behavior denies.",
     "cas": "Exact validated CAS key string; only exact equality conflicts.",
     "githubIssueComment": "Canonical repository plus numeric Issue; the same Issue comment destination conflicts, different Issues are disjoint.",
     "gitRef": "Validated full refs/* name using code-unit comparison; exact or path-component ancestor ref conflicts.",
@@ -289,8 +291,8 @@
       "acceptance": "Fault injection at every asserted stage fails closed; pre-POST loss yields zero POST and post-POST loss preserves pending evidence without another POST. A second process cannot release/reacquire with a wrong nonce."
     },
     {
-      "risk": "Restart, deleted/recreated registry or stale Owner/source evidence",
-      "acceptance": "Restarted owner, null/recreated/changed-registryId/generation-regressed/malformed registry, wrong nonce and modified source/Writer/Pack/resource digest are rejected with no empty-registry fallback."
+      "risk": "Restart, deleted/recreated/rolled-back registry or stale Owner/source evidence",
+      "acceptance": "Restarted owner, null/recreated/changed-registryId/generation-regressed/malformed registry, same-ID rollback with intact anchor, anchor truncation/replacement/hash mismatch, wrong nonce and modified source/Writer/Pack/resource digest are rejected with no empty-registry fallback. CAS-success/anchor-failure leaves UNKNOWN and zero external effect."
     },
     {
       "risk": "Same protected key re-entry and duplicate native event",
@@ -313,8 +315,8 @@
       "acceptance": "Lease and pending reservation are retained, exact native readback is required before final CAS and blind retry remains forbidden."
     },
     {
-      "risk": "Path alias/ancestor bypass and metadata-only overlocking",
-      "acceptance": "Canonical file/worktree/ref normalization tests exact/ancestor/alias cases; source/Pack/review/Owner metadata binds identity without serializing unrelated Tasks."
+      "risk": "Windows path case/alias/ancestor bypass and metadata-only overlocking",
+      "acceptance": "Canonical file/worktree/ref normalization tests exact/ancestor/alias and case-only Git path collisions on the selected Windows filesystem; source/Pack/review/Owner metadata binds identity without serializing unrelated Tasks."
     },
     {
       "risk": "Secret or private evidence leakage",
@@ -332,7 +334,7 @@
       "Native Windows Node24, real shared SQLite CAS, two independently opened store clients/processes and contentious overlap/disjoint/ancestor/alias cases.",
       "Continuous lease proof across reserve -> isolated native publish -> exact readback -> final CAS, including stable fence id/revision and frozen resource digest readback.",
       "Lost lease, wrong-nonce release, restart, registry recreation/malformation, competing writer, same key, overlapping write set, disjoint concurrent Tasks, stale/fake Owner/source evidence and retry exhaustion all covered.",
-      "Second-process credential negative has no GitHub token/fence and produces zero POST; the sole real token is injected only into the reviewed bootstrap/Host child. No live test Claim/POST and no #203 POST.",
+      "Second-process credential/ACL negatives prove the ordinary Owner SID cannot write/delete the canonical registry or anchor and cannot construct a selected Publisher with a forged fence; CodexSandboxOnline processes without a valid lease also produce zero POST. No live test Claim/POST and no #203 POST.",
       "The sole real #370 bootstrap Claim follows Pack+driver review, Owner receipt and native preflight; it is read back before FSW/source work and is not counted as physical-fence proof."
     ],
     "final": [
@@ -343,7 +345,7 @@
     ]
   },
   "currentState": {
-    "packReview": "R1_BLOCK_R2_REVIEW_REQUIRED",
+    "packReview": "R1_R2_BLOCK_R3_REVIEW_REQUIRED",
     "driverReview": "NOT_PRESENT",
     "ownerPackReceipt": "NOT_PRESENT",
     "claim": "NOT_PRESENT",
