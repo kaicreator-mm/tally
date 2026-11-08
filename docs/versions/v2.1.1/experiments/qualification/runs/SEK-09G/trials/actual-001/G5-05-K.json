@@ -1,0 +1,22 @@
+{
+  "qid": "G5-05",
+  "arm": "K",
+  "status": "SUCCESS",
+  "request_sha256": "30d24838d9fa271c0eb2fab7dc21777bbc486cee16859d8f62563d5fcb8ffae6",
+  "retrieval_sha256": "489a9bad14255faf7905ef8ea903a8a730770b39d3dc3fc919625cd570cf9bd7",
+  "started_utc": "2026-11-08T08:34:11.932Z",
+  "answer": "The CS2023 Software Reliability unit defines reliability as the probability of failure or the mean time between failures, with faults treated as the cause of failures. However, it does not specify a measurement procedure for these reliability quantities. The claim does not prove that a measurement procedure is provided, only that the reliability concept is defined. The evidence shows that the topic names the two quantifications (probability of failure and mean time between failures) without elaborating on the measurement procedure.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "2be6f15311dc2f0ac8e10966622b2e3833ebdf3d96297c60fdb37704644c6962",
+  "provider_usage": {
+    "completion_tokens": 97,
+    "prompt_tokens": 465,
+    "total_tokens": 562,
+    "prompt_tokens_details": {
+      "cached_tokens": 57
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 17890,
+  "finished_utc": "2026-11-08T08:34:29.825Z"
+}

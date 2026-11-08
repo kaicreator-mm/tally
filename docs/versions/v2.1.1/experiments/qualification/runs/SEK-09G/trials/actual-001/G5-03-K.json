@@ -1,0 +1,22 @@
+{
+  "qid": "G5-03",
+  "arm": "K",
+  "status": "SUCCESS",
+  "request_sha256": "33e6b6dbbed071b6f4213198d35f0d5ef62c01befcab42dfa3a69bdf1c84f238",
+  "retrieval_sha256": "81c5526e6642cfc35c3d77798a8c434e29b5c736ca04e2805a5efcdeba963d2f",
+  "started_utc": "2026-11-08T08:30:36.347Z",
+  "answer": "The CS2023 SE-Validation unit distinguishes verification from validation as two distinct questions: verification asks whether the thing is being built right, and validation asks whether the right thing was built. The unit's learning outcomes expect students to distinguish program validation from verification. However, the evidence does not prove that passing tests proves correctness or that validation equals acceptance. The two-question formulation is a curriculum teaching device and does not fully elaborate when each question is fully answered.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "8bb94d5dfed5fe7e586c50712abf9ea028f75f6ad92fb5757354fd9b1ad9aaf3",
+  "provider_usage": {
+    "completion_tokens": 94,
+    "prompt_tokens": 473,
+    "total_tokens": 567,
+    "prompt_tokens_details": {
+      "cached_tokens": 38
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 14394,
+  "finished_utc": "2026-11-08T08:30:50.744Z"
+}

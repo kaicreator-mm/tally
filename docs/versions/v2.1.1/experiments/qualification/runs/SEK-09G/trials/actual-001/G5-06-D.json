@@ -1,0 +1,22 @@
+{
+  "qid": "G5-06",
+  "arm": "D",
+  "status": "SUCCESS",
+  "request_sha256": "c657fc2d065677901a10a2555a6efedbbce33be3f189a744be5c99e4ee6d1b66",
+  "retrieval_sha256": null,
+  "started_utc": "2026-11-08T08:32:26.208Z",
+  "answer": "SWEBOK v4.0a defines maintenance as activities performed after the software delivery, such as bug fixes, updates, and enhancements. However, the scope of maintenance is not explicitly expanded to include activities during the development phase, such as refactoring or improving design.\n\nRegarding the ISO 14764 text, it was cited but not inspected directly in this assessment. The ISO 14764 text provides guidelines for software maintenance, but its specific relevance to SWEBOK v4.0a maintenance definitions was not examined here.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "9caea3df5a874029baec4836d2db5ff790da4b36ce30d2aa6aec817c135b004a",
+  "provider_usage": {
+    "completion_tokens": 112,
+    "prompt_tokens": 75,
+    "total_tokens": 187,
+    "prompt_tokens_details": {
+      "cached_tokens": 38
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 13678,
+  "finished_utc": "2026-11-08T08:32:39.889Z"
+}

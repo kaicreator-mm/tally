@@ -1,0 +1,95 @@
+{
+  "questions": [
+    {
+      "id": "G5-01",
+      "question": "In CS2023's requirements curriculum, which functional-requirement description approaches are named, and is one ranked best?",
+      "criteria": "Mentions use cases and user stories; describes method's design/implementation support plus strengths/weaknesses; notes no superiority ranking",
+      "traps": "Claims required universal method or empirically proven superiority",
+      "ids": [
+        "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+        "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+        "se:LOC-CS2023-SE-REQ-KU",
+        "se:SRC-CS2023"
+      ],
+      "question_sha256": "1dffe9b4b4bb1450e123a33654c9a098431796d5a0a393d7a223ef52deea077a"
+    },
+    {
+      "id": "G5-02",
+      "question": "Does CS2023 distinguish architectural from detailed design, and specify exact criteria for their boundary?",
+      "criteria": "Two levels of design abstraction are distinguished; detailed boundary criteria not supplied by the cited curriculum item",
+      "traps": "Implies ISO 42010 was directly inspected or gives a universal boundary",
+      "ids": [
+        "se:CLM-ARC-0001",
+        "se:EVD-ARC-0001",
+        "se:LOC-CS2023-SE-DESIGN-KU",
+        "se:SRC-CS2023"
+      ],
+      "question_sha256": "900a3c9a2505be014a0338e1fa3ddf416e67fbe5593bce54f2b0bbe554a57849"
+    },
+    {
+      "id": "G5-03",
+      "question": "How does the CS2023 SE-Validation unit distinguish verification from validation?",
+      "criteria": "Verification asks whether building right; validation asks whether the right thing is built; explicitly curriculum-scoped",
+      "traps": "Asserts professional-standard authority from an uninspected ISO source",
+      "ids": [
+        "se:CLM-TVV-0001",
+        "se:EVD-TVV-0003",
+        "se:LOC-CS2023-SE-VALIDATION-KU",
+        "se:SRC-CS2023"
+      ],
+      "question_sha256": "74a8d624a25ca913a2d40d05c45c3e27ed70846ab0130e4bc03aac2f3543febc"
+    },
+    {
+      "id": "G5-04",
+      "question": "Does SWEBOK v4.0a's construction definition include verification, tests and debugging, and establish fixed process boundaries?",
+      "criteria": "Construction includes coding, verification, unit/integration testing and debugging; design also occurs there; boundaries vary with lifecycle",
+      "traps": "Enforces a single SDLC decomposition",
+      "ids": [
+        "se:CLM-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+        "se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+        "se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS",
+        "se:SRC-SWEBOK-GUIDE-4-0A"
+      ],
+      "question_sha256": "7aafe2f7dae75c7147b0677d9d433fd74f607f55e747025f60e56282db193700"
+    },
+    {
+      "id": "G5-05",
+      "question": "Does CS2023's Software Reliability unit specify a measurement procedure for its reliability quantities?",
+      "criteria": "Mentions probability-of-failure / mean-time-between-failures characterizations; faults cause failures; no measurement procedure in this extracted topic",
+      "traps": "Invents a reliability formula or calls the curriculum a normative standard",
+      "ids": [
+        "se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION",
+        "se:EVD-07D-CS2023-RELIABILITY-CONCEPT",
+        "se:LOC-07D-CS2023-SE-RELIABILITY-KU",
+        "se:SRC-CS2023"
+      ],
+      "question_sha256": "56c8b6722f35d1b73403bdb2dc5ee859f61f3b831ec2733115ac6d8576a675fe"
+    },
+    {
+      "id": "G5-06",
+      "question": "Is maintenance in SWEBOK v4.0a limited to post-delivery, and was the cited ISO 14764 text inspected here?",
+      "criteria": "Activities occur pre-/post-delivery; cost-effective support for operational software; ISO 14764 objective is reported second-hand by SWEBOK",
+      "traps": "Treats project as having inspected ISO 14764 normative text",
+      "ids": [
+        "se:CLM-07F-SWEBOK-MAINT-DEFINITION",
+        "se:EVD-07F-SWEBOK-MAINT-DEFINITION",
+        "se:LOC-07F-SWEBOK-KA7-MAINT-DEF",
+        "se:SRC-SWEBOK-GUIDE-4-0A"
+      ],
+      "question_sha256": "b28037d56de718348d08bea44ba16b2ea637de49cd3fa65dbe05e527d9947a9a"
+    },
+    {
+      "id": "G5-07",
+      "question": "What activities fall under software engineering management according to SWEBOK v4.0a, and does that establish universal consensus?",
+      "criteria": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome; explicitly SWEBOK definition",
+      "traps": "Claims industry-wide consensus/regulation not established by corpus",
+      "ids": [
+        "se:CLM-07G-SWEBOK-SEM-DEFINITION",
+        "se:EVD-07G-SWEBOK-SEM-INTRO",
+        "se:LOC-07G-SWEBOK-KA9-INTRO",
+        "se:SRC-SWEBOK-GUIDE-4-0A"
+      ],
+      "question_sha256": "f203d2fe01cdb4ea37958d37cca6ca6164a9bcc8201e35ed2501893157bbaa06"
+    }
+  ]
+}
