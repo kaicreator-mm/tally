@@ -72,7 +72,7 @@ function github({blocked=false,ready=true,type='type:task',issueState='open',
   }};
   return {octokit,state};
 }
-function memoryStore({initial=[],getError=false,listError=false,drift=false}={}){
+function memoryStore({initial=[],getError=false,listError=false,listErrorOnCall=0,drift=false}={}){
   const rows=new Map();let revision=0,writes=0,listCalls=0;
   for(const value of initial){
     const key='tally:v2:claim-admission:test-'+rows.size;
@@ -81,7 +81,7 @@ function memoryStore({initial=[],getError=false,listError=false,drift=false}={})
   return {rows,get writes(){return writes;},
     async list(prefix){
       listCalls++;
-      if(listError)throw Error('REGISTRY_PRIVATE_ERROR');
+      if(listError||listCalls===listErrorOnCall)throw Error('REGISTRY_PRIVATE_ERROR');
       if(drift&&listCalls===2)return [...rows.keys()].filter(key=>key.startsWith(prefix)).concat(prefix+'new');
       return [...rows.keys()].filter(key=>key.startsWith(prefix)).sort();
     },
@@ -97,10 +97,10 @@ function memoryStore({initial=[],getError=false,listError=false,drift=false}={})
     }
   };
 }
-function adapter({githubOptions={},store=memoryStore()}={}){
+function adapter({githubOptions={},store=memoryStore(),resourceConflictPort}={}){
   const gh=github(githubOptions);
   const source=createHostAdmissionSourceFromClient({octokit:gh.octokit,store,
-    owner,repo,writerAuthority,taskAuthority});
+    owner,repo,writerAuthority,taskAuthority,resourceConflictPort});
   return {source,gh,store};
 }
 function registryValue(changes={}){
@@ -211,6 +211,118 @@ test('verified terminal rows are inactive; pending and malformed terminal rows f
     const h=adapter({store:memoryStore({initial:[value]})});
     noPermit(await h.source.readAdmissionFacts(request));
     assert.equal(h.store.writes,0);
+  }
+});
+
+// Opt-in proof has no production meaning without a Host-controlled durable
+// lease held through CAS reservation, GitHub publication/readback and final CAS.
+function scopedProofPort(changes={},onRead=()=>{}){
+  return {
+    sourceKind:'TRUSTED_HOST_RESOURCE_FENCE_PORT',repository,
+    writerId:writerAuthority.writerId,frozenResourceSetSha256:'a'.repeat(64),
+    async readHeldFence(ctx){
+      onRead(ctx);
+      return {
+        sourceKind:'TRUSTED_HOST_RESOURCE_FENCE_READBACK',
+        complete:true,fenceHeld:true,fenceScope:'EXACT_FROZEN_RESOURCE_SET',
+        heldThrough:'CAS_PUBLISH_READBACK',
+        repository,writerId:writerAuthority.writerId,
+        protectedClaimKey:request.protectedClaimKey,sourceSha,
+        foreignClaimsSha256:ctx.foreignClaimsSha256,
+        foreignClaimCount:ctx.foreignClaimCount,
+        incompatibleResourceCount:0,
+        frozenResourceSetSha256:'a'.repeat(64),
+        fenceId:'fence:scoped:one',fenceRevision:0,
+        observedAt:new Date().toISOString(),
+        ...changes
+      };
+    }
+  };
+}
+
+test('disjoint foreign Task can pass source preflight only with exact trusted held-resource witness',async()=>{
+  let seen=null;
+  const port=scopedProofPort({},ctx=>{seen=ctx;});
+  const h=adapter({store:memoryStore({initial:[registryValue()]}),resourceConflictPort:port});
+  const x=await h.source.readAdmissionFacts(request);
+  assert.equal(x.sourceKind,'NATIVE_GITHUB_CURRENT_ADMISSION');
+  assert.equal(x.complete,true);assert.equal(x.activeIncompatibleClaimCount,0);
+  assert.equal(x.authorized,false);assert.equal(x.admitted,false);
+  assert.equal(seen.foreignClaimCount,1);
+  assert.match(seen.foreignClaimsSha256,/^[a-f0-9]{64}$/);
+  assert.equal(seen.foreignClaims[0].protectedClaimKey,
+    'kaicreator-mm/tally#167:builder:__default__');
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
+test('foreign Claim remains incompatible if proof is missing, stale, forged, incomplete, or source-foreign',async()=>{
+  const mutations=[
+    {complete:false},{fenceHeld:false},{fenceScope:'GLOBAL_ASSUME_FREE'},
+    {heldThrough:'PREFLIGHT_ONLY'},{repository:'other/repo'},
+    {writerId:'other-host'},{protectedClaimKey:'wrong:key'},
+    {sourceSha:'b'.repeat(40)},{foreignClaimsSha256:'0'.repeat(64)},
+    {foreignClaimCount:0},{incompatibleResourceCount:1},
+    {frozenResourceSetSha256:'unqualified'},
+    {frozenResourceSetSha256:'b'.repeat(64)},
+    {fenceId:'bad fence'},{fenceRevision:-1},
+    {observedAt:new Date(Date.now()-60000).toISOString()},
+    {observedAt:new Date(Date.now()+60000).toISOString()}
+  ];
+  for(const mutation of mutations){
+    const h=adapter({store:memoryStore({initial:[registryValue()]}),
+      resourceConflictPort:scopedProofPort(mutation)});
+    const x=await h.source.readAdmissionFacts(request);
+    noPermit(x);assert.equal(x.reason,'INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS');
+    assert.equal(x.activeIncompatibleClaimCount,1);
+    assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+  }
+  const throwing={...scopedProofPort(),async readHeldFence(){throw Error('SECRET_HOST_TOKEN');}};
+  const h=adapter({store:memoryStore({initial:[registryValue()]}),resourceConflictPort:throwing});
+  const x=await h.source.readAdmissionFacts(request);
+  noPermit(x);assert.equal(JSON.stringify(x).includes('SECRET_HOST_TOKEN'),false);
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
+test('concurrent Host registry mutation after witness read blocks even a matching fence proof',async()=>{
+  const store=memoryStore({initial:[registryValue()]});
+  const port=scopedProofPort({},()=>{
+    const [key,row]=[...store.rows.entries()][0];
+    store.rows.set(key,{revision:row.revision+1,
+      value:{...row.value,dispatchId:'dispatch:167:changed'}});
+  });
+  const h=adapter({store,resourceConflictPort:port});
+  const x=await h.source.readAdmissionFacts(request);
+  noPermit(x);assert.equal(x.reason,'HOST_RESERVATION_REGISTRY_DRIFT');
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+  const uh=adapter({store:memoryStore({initial:[registryValue()],listErrorOnCall:3}),
+    resourceConflictPort:scopedProofPort()});
+  const unavailable=await uh.source.readAdmissionFacts(request);
+  noPermit(unavailable);assert.equal(unavailable.reason,'HOST_RESERVATION_REGISTRY_UNAVAILABLE');
+  assert.equal(uh.store.writes,0);assert.equal(uh.gh.state.posts,0);
+});
+
+test('same protected-key Claim cannot be excused by a disjoint-resource witness',async()=>{
+  let called=false;
+  const own=registryValue({protectedClaimKey:request.protectedClaimKey,
+    issueRef:request.issueRef,sourceSha,dispatchId:request.dispatchId});
+  const h=adapter({store:memoryStore({initial:[own]}),
+    resourceConflictPort:scopedProofPort({},()=>{called=true;})});
+  const x=await h.source.readAdmissionFacts(request);
+  noPermit(x);assert.equal(x.reason,'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION');
+  assert.equal(x.activeIncompatibleClaimCount,1);
+  assert.equal(called,false);assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
+test('caller claim request cannot supply resource-fence authority and malformed Host port refuses',async()=>{
+  const h=adapter({store:memoryStore({initial:[registryValue()]})});
+  const x=await h.source.readAdmissionFacts({...request,
+    resourceConflictPort:scopedProofPort(),resourceFenceHeld:true});
+  noPermit(x);assert.equal(x.activeIncompatibleClaimCount,1);
+  for(const port of [null,{...scopedProofPort(),repository:'evil/repo'},
+    {...scopedProofPort(),writerId:'evil'},
+    {...scopedProofPort(),frozenResourceSetSha256:'bad'},
+    {...scopedProofPort(),readHeldFence:null}]){
+    assert.throws(()=>adapter({resourceConflictPort:port}),/TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED/);
   }
 });
 
