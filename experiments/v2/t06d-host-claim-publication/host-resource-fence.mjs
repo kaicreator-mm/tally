@@ -48,15 +48,20 @@ const HEX64 = /^[a-f0-9]{64}$/;
 const REQUEST_ID = /^[a-f0-9]{32}$/;
 const KEY = /^[A-Za-z0-9][A-Za-z0-9:._/-]{0,255}$/;
 const PHASE = /^(PENDING_GITHUB_PUBLISH|PUBLISHED_VERIFIED|PENDING_GITHUB_TERMINALIZATION|TERMINAL_VERIFIED)$/;
-const CLAIM_PHASES = new Set(['PENDING_GITHUB_PUBLISH', 'PUBLISHED_VERIFIED',
-  'PENDING_GITHUB_TERMINALIZATION', 'TERMINAL_VERIFIED']);
 const OPERATOR_KINDS = new Set(['chatgpt-web', 'codex', 'claude-code', 'human',
   'github-actions', 'woodpecker', 'other']);
-const CLAIM_FIELDS = new Set(['phase', 'generation', 'protectedClaimKey',
+const CLAIM_BASE_FIELDS = new Set(['phase', 'generation', 'protectedClaimKey',
   'repository', 'issueRef', 'sourceSha', 'dispatchId', 'actorRole',
-  'operatorKind', 'operatorId', 'writerId', 'commentId', 'commentRef',
-  'terminalCommentId', 'terminalCommentRef', 'terminalEvidence',
-  'terminalWriterId', 'terminalOccurredAt', 'terminalReservationRevision']);
+  'operatorKind', 'operatorId', 'writerId']);
+const CLAIM_PHASE_FIELDS = new Map([
+  ['PENDING_GITHUB_PUBLISH', CLAIM_BASE_FIELDS],
+  ['PUBLISHED_VERIFIED', new Set([...CLAIM_BASE_FIELDS, 'commentId', 'commentRef'])],
+  ['PENDING_GITHUB_TERMINALIZATION', new Set([...CLAIM_BASE_FIELDS, 'commentId',
+    'commentRef', 'terminalReservationRevision'])],
+  ['TERMINAL_VERIFIED', new Set([...CLAIM_BASE_FIELDS, 'commentId', 'commentRef',
+    'terminalCommentId', 'terminalCommentRef', 'terminalEvidence',
+    'terminalWriterId', 'terminalOccurredAt', 'terminalReservationRevision'])]
+]);
 const FSW_FIELDS = new Set(['phase', 'repository', 'issueNumber', 'sourceSha',
   'writeSetSha256', 'document', 'pathCount', 'writeSetDigestBasis',
   'taskPackRef', 'taskPackBlobSha', 'packPRHeadSha', 'packTree', 'packRevision',
@@ -723,8 +728,14 @@ function assertAllowedValueFields(value, allowed, code) {
 function validateClaimReservation(value, lease) {
   const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
   if (!plainObject(value)) fail(code, 'CLAIM_VALUE');
-  assertAllowedValueFields(value, CLAIM_FIELDS, code);
-  if (!CLAIM_PHASES.has(value.phase)) fail(code, 'CLAIM_PHASE');
+  const phaseFields = CLAIM_PHASE_FIELDS.get(value.phase);
+  if (!phaseFields) fail(code, 'CLAIM_PHASE');
+  assertAllowedValueFields(value, phaseFields, code);
+  for (const field of CLAIM_BASE_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      fail(code, 'CLAIM_MISSING:' + field);
+    }
+  }
   if (value.generation !== lease.resourceSet.generation) fail(code, 'CLAIM_GENERATION');
   if (value.protectedClaimKey !== lease.protectedClaimKey) fail(code, 'CLAIM_KEY');
   if (value.repository !== lease.resourceSet.repository) fail(code, 'CLAIM_REPOSITORY');
@@ -736,7 +747,7 @@ function validateClaimReservation(value, lease) {
   if (!OPERATOR_KINDS.has(value.operatorKind)) fail(code, 'CLAIM_OPERATOR_KIND');
   requireString(value.operatorId, ID, code, 'CLAIM_OPERATOR_ID');
   if (value.writerId !== lease.writerId) fail(code, 'CLAIM_WRITER');
-  if (value.phase !== 'PENDING_GITHUB_PUBLISH' || value.commentId !== undefined) {
+  if (value.phase !== 'PENDING_GITHUB_PUBLISH') {
     if (!Number.isSafeInteger(value.commentId) || value.commentId < 1) {
       fail(code, 'CLAIM_COMMENT_ID');
     }
@@ -750,7 +761,8 @@ function validateClaimReservation(value, lease) {
         `${value.issueRef}#issuecomment-${value.terminalCommentId}`) {
       fail(code, 'CLAIM_TERMINAL_COMMENT');
     }
-    if (typeof value.terminalEvidence !== 'string' || value.terminalEvidence.length === 0) {
+    if (typeof value.terminalEvidence !== 'string' ||
+      value.terminalEvidence.length === 0 || value.terminalEvidence.length > 4096) {
       fail(code, 'CLAIM_TERMINAL_EVIDENCE');
     }
     requireString(value.terminalWriterId, ID, code, 'CLAIM_TERMINAL_WRITER');
@@ -774,7 +786,7 @@ function validateClaimReservation(value, lease) {
  * It must bind the exact Task identity, the held resource set and the Pack
  * references, and it is create-only.
  */
-function validateFswDocument(value, lease) {
+function validateFswDocument(value, lease, claimRow) {
   const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
   if (!plainObject(value)) fail(code, 'FSW_VALUE');
   assertAllowedValueFields(value, FSW_FIELDS, code);
@@ -833,6 +845,16 @@ function validateFswDocument(value, lease) {
   if (typeof value.frozenAt !== 'string' || !Number.isFinite(Date.parse(value.frozenAt))) {
     fail(code, 'FSW_FROZEN_AT');
   }
+  if (!claimRow || !plainObject(claimRow.value)) fail(code, 'FSW_CLAIM_NOT_PUBLISHED');
+  const claim = claimRow.value;
+  if (!['PUBLISHED_VERIFIED', 'PENDING_GITHUB_TERMINALIZATION', 'TERMINAL_VERIFIED']
+    .includes(claim.phase)) fail(code, 'FSW_CLAIM_NOT_PUBLISHED');
+  if (claim.protectedClaimKey !== lease.protectedClaimKey ||
+    claim.sourceSha !== lease.sourceSha ||
+    claim.dispatchId !== lease.dispatchId ||
+    claim.writerId !== lease.writerId) fail(code, 'FSW_CLAIM_IDENTITY');
+  if (claim.commentId !== value.claimCommentId ||
+    claim.commentRef !== value.claimCommentRef) fail(code, 'FSW_CLAIM_COMMENT_BINDING');
 }
 
 /**
@@ -840,7 +862,7 @@ function validateFswDocument(value, lease) {
  * the Claim CAS row derived from its protected Claim key and the create-only
  * FSW row derived from its Issue. Any other covered CAS string denies.
  */
-function validateCoveredWrite(key, value, lease, conditions) {
+function validateCoveredWrite(key, value, lease, conditions, claimRow) {
   const parts = claimKeyParts(lease.protectedClaimKey);
   const claimCasKey = `tally:v2:claim-admission:${sha256Hex(lease.protectedClaimKey)}`;
   const fswKey = `tally:v2:task-writeset:${parts.issueNumber}`;
@@ -849,7 +871,7 @@ function validateCoveredWrite(key, value, lease, conditions) {
     return 'CLAIM_CAS';
   }
   if (key === fswKey) {
-    validateFswDocument(value, lease);
+    validateFswDocument(value, lease, claimRow);
     if (conditions.mustBeAbsent !== true) {
       fail('HOST_RESOURCE_FENCE_VALUE_INVALID', 'FSW_CREATE_ONLY');
     }
@@ -1040,6 +1062,12 @@ class HostResourceFenceAuthority {
         fail('HOST_RESOURCE_FENCE_STORE_UNAVAILABLE', String(error?.code ?? 'PUT_FAILED'));
       }
       const snapshot = await readStoreSnapshot(this.#store);
+      const registryRow = snapshot.rows.find(row => row.key === this.#registryKey);
+      if (snapshot.rows.length !== 1 || !registryRow || registryRow.revision !== 0 ||
+        canonicalJson(registryRow.value) !== canonicalJson(document)) {
+        this.#failed = true;
+        fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'GENESIS_NON_ANCHOR_MUTATION');
+      }
       const record = {
         registryId: this.#registryId,
         generation: 0,
@@ -1077,7 +1105,11 @@ class HostResourceFenceAuthority {
         if (!(error instanceof HostResourceFenceError)) throw error;
         if (String(error.code).startsWith('HOST_RESOURCE_FENCE_ANCHOR_') ||
           error.code === 'HOST_RESOURCE_FENCE_AUTHORITY_FAILED' ||
-          error.code === 'HOST_RESOURCE_FENCE_AUTHORITY_NOT_INITIALIZED') {
+          error.code === 'HOST_RESOURCE_FENCE_AUTHORITY_NOT_INITIALIZED' ||
+          error.code === 'HOST_RESOURCE_FENCE_STORE_UNAVAILABLE' ||
+          error.code === 'HOST_RESOURCE_FENCE_REGISTRY_MALFORMED' ||
+          error.code === 'HOST_RESOURCE_FENCE_REGISTRY_RECREATED' ||
+          error.code === 'HOST_RESOURCE_FENCE_REGISTRY_DRIFT') {
           throw error;
         }
         denial = error;
@@ -1492,7 +1524,18 @@ class HostResourceFenceAuthority {
       if (!covered) fail('HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
       const conditions = parseConditions(request.value.conditions);
       if (request.operation === 'PUT') {
-        validateCoveredWrite(request.value.key, request.value.value, lease, conditions);
+        let claimRow = null;
+        if (request.value.key === fswKey) {
+          try {
+            claimRow = await this.#store.get(claimCasKey);
+          } catch (error) {
+            fail('HOST_RESOURCE_FENCE_STORE_UNAVAILABLE', String(error?.code ?? 'GET_FAILED'));
+          }
+          if (!claimRow) {
+            fail('HOST_RESOURCE_FENCE_VALUE_INVALID', 'FSW_CLAIM_NOT_PUBLISHED');
+          }
+        }
+        validateCoveredWrite(request.value.key, request.value.value, lease, conditions, claimRow);
       } else if (request.value.key === fswKey) {
         fail('HOST_RESOURCE_FENCE_KEY_RESERVED');
       } else if (request.value.key !== claimCasKey) {
@@ -1713,7 +1756,7 @@ class HostResourceFencePort {
   #protectedClaimKey;
   #sourceSha;
   #frozenResourceSetSha256;
-  #expectedHead;
+  #expectedHeadProvider;
 
   constructor(options) {
     const code = 'HOST_RESOURCE_FENCE_PORT_CONFIG';
@@ -1734,14 +1777,8 @@ class HostResourceFencePort {
       code, 'PROTECTED_CLAIM_KEY');
     requireString(options.sourceSha, HEX40, code, 'SOURCE_SHA');
     requireString(options.frozenResourceSetSha256, HEX64, code, 'FROZEN_RESOURCE_SET_SHA256');
-    exactKeys(options.expectedHead, ['hash', 'generation'], code);
-    requireString(options.expectedHead.hash, HEX64, code, 'EXPECTED_HEAD_HASH');
-    if (!Number.isSafeInteger(options.expectedHead.generation) ||
-      options.expectedHead.generation < 0) fail(code, 'EXPECTED_HEAD_GENERATION');
-    this.#expectedHead = Object.freeze({
-      hash: options.expectedHead.hash,
-      generation: options.expectedHead.generation
-    });
+    if (typeof options.expectedHead !== 'function') fail(code, 'EXPECTED_HEAD_PROVIDER');
+    this.#expectedHeadProvider = options.expectedHead;
     this.#store = store;
     this.#registryId = options.registryId;
     this.#registryKey = options.registryKey ?? hostResourceFenceRegistryKey(options.registryId);
@@ -1768,8 +1805,16 @@ class HostResourceFencePort {
       authorityPublicKey: this.#authorityPublicKey,
       writerSid: this.#writerSid
     });
-    if (chain.headHash !== this.#expectedHead.hash ||
-      chain.head.generation !== this.#expectedHead.generation) {
+    const expectedHead = this.#expectedHeadProvider();
+    exactKeys(expectedHead, ['hash', 'generation'], 'HOST_RESOURCE_FENCE_PORT_CONTEXT');
+    requireString(expectedHead.hash, HEX64, 'HOST_RESOURCE_FENCE_PORT_CONTEXT',
+      'EXPECTED_HEAD_HASH');
+    if (!Number.isSafeInteger(expectedHead.generation) ||
+      expectedHead.generation < 0) {
+      fail('HOST_RESOURCE_FENCE_PORT_CONTEXT', 'EXPECTED_HEAD_GENERATION');
+    }
+    if (chain.headHash !== expectedHead.hash ||
+      chain.head.generation !== expectedHead.generation) {
       fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'EXPECTED_HEAD');
     }
     const snapshot = await readStoreSnapshot(this.#store);
