@@ -832,6 +832,14 @@ export function createPrePostRecoveryController({
     if(!originalShape||!observed||!claimOk||!lineageBindings||!markerEvidenceOk||
       terminalCommentId!==observed.commentId||terminalCommentRef!==observed.commentRef)
       return unknown('READ_ONLY_TERMINAL_OR_LINEAGE_VERIFICATION_FAILED',{casWrites:0});
+    // Target-only verification has no global writer fence. Recheck that the
+    // immutable CAS row did not change while native event and FSW were read.
+    let after;
+    try{after=await store.get(TARGET.casKey);}
+    catch{return unknown('READ_ONLY_TARGET_REREAD_UNAVAILABLE',{casWrites:0});}
+    if(after?.revision!==row.revision||
+      JSON.stringify(after.value)!==JSON.stringify(value))
+      return unknown('READ_ONLY_TARGET_DRIFT',{casWrites:0});
     return Object.freeze({
       status:'ALREADY_VERIFIED',reason:'TERMINAL_VERIFIED_READ_ONLY',
       claimTerminality:'VERIFIED',terminalCommentRef,
