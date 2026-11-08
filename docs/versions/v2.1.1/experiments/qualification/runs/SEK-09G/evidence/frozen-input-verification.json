@@ -1,0 +1,177 @@
+{
+  "sha_checks": {
+    "pinned_commit_tree": {
+      "expected": "fe8f5e106f349bb0c814696fcd231732f7568250",
+      "actual": "fe8f5e106f349bb0c814696fcd231732f7568250",
+      "ok": true
+    },
+    "current_head": {
+      "expected": "55ab06a8a09b8aa850e1c75743d66420d8c57b56",
+      "actual": "55ab06a8a09b8aa850e1c75743d66420d8c57b56",
+      "ok": true
+    },
+    "current_tree": {
+      "expected": "c20283b53d724fe9caccc01e5a1a831593850332",
+      "actual": "c20283b53d724fe9caccc01e5a1a831593850332",
+      "ok": true
+    },
+    "prereg_blob_at_head": {
+      "blob": "5498f830ab7e832e97c9b6a879bf1c1d6d8fddcd",
+      "path": "docs/versions/v2.1.1/experiments/qualification/SEK-09E-UTILITY-PREREGISTRATION.md",
+      "ok": true
+    },
+    "underlying_corpus_tree": {
+      "expected": "a7b972fea96b9f12bbb8066fe6c88c13beb5f8d9",
+      "found_in_commits": [
+        "902126199c3ec18665873f5b6a6afe59854369ad",
+        "74370f10d7cc294dec0275d835082feb28803e79"
+      ],
+      "ok": true
+    }
+  },
+  "chains": {
+    "G5-01": {
+      "claim": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+      "evidence": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+      "locator": "se:LOC-CS2023-SE-REQ-KU",
+      "source": "se:SRC-CS2023",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-02": {
+      "claim": "se:CLM-ARC-0001",
+      "evidence": "se:EVD-ARC-0001",
+      "locator": "se:LOC-CS2023-SE-DESIGN-KU",
+      "source": "se:SRC-CS2023",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-03": {
+      "claim": "se:CLM-TVV-0001",
+      "evidence": "se:EVD-TVV-0003",
+      "locator": "se:LOC-CS2023-SE-VALIDATION-KU",
+      "source": "se:SRC-CS2023",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-04": {
+      "claim": "se:CLM-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+      "evidence": "se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+      "locator": "se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS",
+      "source": "se:SRC-SWEBOK-GUIDE-4-0A",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-05": {
+      "claim": "se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION",
+      "evidence": "se:EVD-07D-CS2023-RELIABILITY-CONCEPT",
+      "locator": "se:LOC-07D-CS2023-SE-RELIABILITY-KU",
+      "source": "se:SRC-CS2023",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-06": {
+      "claim": "se:CLM-07F-SWEBOK-MAINT-DEFINITION",
+      "evidence": "se:EVD-07F-SWEBOK-MAINT-DEFINITION",
+      "locator": "se:LOC-07F-SWEBOK-KA7-MAINT-DEF",
+      "source": "se:SRC-SWEBOK-GUIDE-4-0A",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    },
+    "G5-07": {
+      "claim": "se:CLM-07G-SWEBOK-SEM-DEFINITION",
+      "evidence": "se:EVD-07G-SWEBOK-SEM-INTRO",
+      "locator": "se:LOC-07G-SWEBOK-KA9-INTRO",
+      "source": "se:SRC-SWEBOK-GUIDE-4-0A",
+      "checks": {
+        "claim_found": true,
+        "evidence_found": true,
+        "locator_found": true,
+        "evidence_locator_ref_matches": true,
+        "claim_supported_by_evidence_rel": true,
+        "locator_source_ref_matches": true,
+        "source_in_registry": true
+      },
+      "ok": true
+    }
+  },
+  "questions": {
+    "G5-01": {
+      "question_sha256": "1dffe9b4b4bb1450e123a33654c9a098431796d5a0a393d7a223ef52deea077a",
+      "question": "In CS2023's requirements curriculum, which functional-requirement description approaches are named, and is one ranked best?"
+    },
+    "G5-02": {
+      "question_sha256": "900a3c9a2505be014a0338e1fa3ddf416e67fbe5593bce54f2b0bbe554a57849",
+      "question": "Does CS2023 distinguish architectural from detailed design, and specify exact criteria for their boundary?"
+    },
+    "G5-03": {
+      "question_sha256": "74a8d624a25ca913a2d40d05c45c3e27ed70846ab0130e4bc03aac2f3543febc",
+      "question": "How does the CS2023 SE-Validation unit distinguish verification from validation?"
+    },
+    "G5-04": {
+      "question_sha256": "7aafe2f7dae75c7147b0677d9d433fd74f607f55e747025f60e56282db193700",
+      "question": "Does SWEBOK v4.0a's construction definition include verification, tests and debugging, and establish fixed process boundaries?"
+    },
+    "G5-05": {
+      "question_sha256": "56c8b6722f35d1b73403bdb2dc5ee859f61f3b831ec2733115ac6d8576a675fe",
+      "question": "Does CS2023's Software Reliability unit specify a measurement procedure for its reliability quantities?"
+    },
+    "G5-06": {
+      "question_sha256": "b28037d56de718348d08bea44ba16b2ea637de49cd3fa65dbe05e527d9947a9a",
+      "question": "Is maintenance in SWEBOK v4.0a limited to post-delivery, and was the cited ISO 14764 text inspected here?"
+    },
+    "G5-07": {
+      "question_sha256": "f203d2fe01cdb4ea37958d37cca6ca6164a9bcc8201e35ed2501893157bbaa06",
+      "question": "What activities fall under software engineering management according to SWEBOK v4.0a, and does that establish universal consensus?"
+    }
+  },
+  "ok": true
+}
