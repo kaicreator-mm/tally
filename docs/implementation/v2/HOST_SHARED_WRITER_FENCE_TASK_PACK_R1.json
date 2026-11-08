@@ -1,7 +1,7 @@
 {
   "schema": "tally/host-platform-task-pack/v1",
-  "packRevision": 14,
-  "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_LIBRARY_SCOPE_TWO_NEW_FILES_SECURITY_TEXT_PRESERVED",
+  "packRevision": 15,
+  "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_LIBRARY_SCOPE_TWO_NEW_FILES_SINGLE_HOST_BOOTSTRAP",
   "repository": "kaicreator-mm/tally",
   "issueNumber": 370,
   "concern": "PHYSICAL_SHARED_HOST_ADMISSION_FENCE",
@@ -13,13 +13,14 @@
     "r11": "Independent BLOCK P0=0/P1=3/P2=2 on a54ed21: R10 findings all RESOLVED, but retained R8 text still contradicted the two-file scope in the #319 gate, the initial-driver disposition and the acceptance lists.",
     "r12": "Independent BLOCK P0=0/P1=3/P2=1 on 03a3c93: bootstrap matrix fixed, but currentState still gated the Claim on the five-path handoff, three bootstrap-effect risks were still labelled LIBRARY, preClaim/physicalHostGate still named R11/R8 reviews, and the PR body miscounted the receipt fields.",
     "r13": "Independent BLOCK P0=0/P1=2/P2=1 on d7ba60d: scope gate resolved, but operative receipt fields and several sentences still named R12/R8 reviews, one LIBRARY risk still owned post-POST anchor failure, and the final-CAS bootstrap risk mentioned a lease that the bootstrap does not have.",
-    "r14": "This revision makes every operative review reference and receipt field name revision 14, splits library anchor verification from bootstrap post-POST anchor failure, and removes the non-existent bootstrap lease wording. Historical entries stay historical."
+    "r14": "Independent review of R14: P0=0/P1=0/P2=0, all five prior findings resolved; the only UNKNOWN was the reviewer-side inability to read the live #319 registry.",
+    "r15": "Owner approved replacing the bespoke two-principal bootstrap (custom Go launcher, Job Object, signed Authority protocol, guard, probe script) with the already-reviewed single-process T06d/C composition. R15 changes only the bootstrap mechanism and its receipt fields; the two admitted paths, the security requirements and the deferrals are unchanged."
   },
   "coreOutcomeDag": {
     "createTask": false,
     "changeDenominator": true,
     "membership": "EXISTING_370_SUPPORTING_HOST_TASK_NOW_COUNTED_IN_V2_CANONICAL_TYPE_TASK_ROSTER",
-    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R14 Pack and driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization. Issue #370 still publishes the earlier eight-path normalized set marked CANONICALIZED_OVERLAP_BLOCKED (five paths conflict with the accepted historical #319 FSW); Pack R14 admits only two new disjoint files, and the Issue scope must be reconciled before any ready/Claim action. A fresh #370 registry is not historical #319 writer cessation.",
+    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R14 Pack and driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization. Issue #370 still publishes the earlier eight-path normalized set marked CANONICALIZED_OVERLAP_BLOCKED (five paths conflict with the accepted historical #319 FSW); Pack R15 admits only two new disjoint files, and the Issue scope must be reconciled before any ready/Claim action. A fresh #370 registry is not historical #319 writer cessation.",
     "sourceScopeNarrowedForThisRevision": true,
     "countedRosterUnchangedInThisRevision": true,
     "deferralReason": "The five #319-overlapping paths need a lawful #319 terminal/serial handoff or a cross-principal exclusion that cannot itself be built without writing those paths. The two admitted new files avoid that deadlock and deliver the missing authority component as a reviewed library."
@@ -54,10 +55,10 @@
     "trackedImplementationPaths": [],
     "governanceOnlyPath": "docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json",
     "required": [
-      "Independent exact R14 Pack HEAD/tree/blob review of this two-file library scope, confirming that every earlier bootstrap security clause is preserved in substance and that the #319 intersection is empty.",
+      "Independent exact R15 Pack HEAD/tree/blob review of this two-file library scope, confirming that every earlier bootstrap security clause is preserved in substance and that the #319 intersection is empty.",
       "Generate the temporary two-principal bootstrap authority/client/launcher drivers from the exact composition below, record every byte SHA256 and obtain an independent read-only driver review before any live effect. These drivers are untracked evidence/configuration, not hidden implementation paths.",
       "Before any real #370 Claim, run disposable-store/fake-transport negatives for complete request-value and CAS-condition tampering, creation-time same-SID handle acquisition, unbound client keys, replay and forged responses; every negative must produce zero CAS/POST.",
-      "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after the R14 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
+      "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after the R15 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
       "One-time isolated bootstrap Claim and create-only FROZEN_DAG_WRITESET through the exact existing T06d/C source and public DomainHarness SQLite CAS API, followed by native/CAS readback.",
       "After the bootstrap Claim/FSW, implement the shared fence library in the two admitted new files only. The bootstrap result is BOOTSTRAP_CLAIM_ACCEPTED, not PHYSICAL_SHARED_HOST_FENCE=PASS; controller/publisher wiring stays deferred.",
       "The accepted one-shot Claim and create-only FROZEN_DAG_WRITESET must bind exactly these two new paths and digest b9ac6da49a118d445a7ae5908b8f81fb547ddb2249929d22256f3cc790f2c03c. Any wider write set, any edit to an existing path, or any #319 path denies.",
@@ -72,34 +73,29 @@
     ]
   },
   "bootstrapIsolation": {
-    "scope": "ONE_TIME_ISSUE_370_ADMISSION_ONLY_EQUIVALENT_ISOLATION_NOT_A_GLOBAL_FENCE",
+    "scope": "ONE_TIME_ISSUE_370_ADMISSION_SINGLE_SELECTED_HOST_PROCESS",
     "exactExistingModules": [
-      "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs at the Pack HEAD without resourceConflictPort",
-      "experiments/v2/t06d-host-claim-publication/single-writer.mjs at the Pack HEAD",
+      "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs at the reviewed HEAD without resourceConflictPort",
+      "experiments/v2/t06d-host-claim-publication/single-writer.mjs at the reviewed HEAD",
       "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
       "packages/tally-github-native-c/src/task-claim-host-readback-port.mjs",
-      "packages/tally-github-native-c/src/task-claim-github-publisher.mjs at the Pack HEAD",
-      "@kaicreator/domain-harness-host-node openSqliteCasStore public API"
+      "packages/tally-github-native-c/src/task-claim-github-publisher.mjs at the reviewed HEAD",
+      "@kaicreator/domain-harness-host-node openSqliteCasStore public API, dist bytes pinned by SHA-256"
     ],
     "driver": {
-      "kind": "UNTRACKED_TWO_PRINCIPAL_HOST_CONFIGURATION_REVIEWED_BEFORE_EXECUTION",
+      "kind": "UNTRACKED_SINGLE_PROCESS_HOST_DRIVER",
       "evidencePaths": [
-        "_tmp/tally-i370-host-fence/host-create.go",
-        "_tmp/tally-i370-host-fence/host-create.exe",
-        "_tmp/tally-i370-host-fence/host-process-guard.mjs",
-        "_tmp/tally-i370-host-fence/bootstrap-authority.mjs",
         "_tmp/tally-i370-host-fence/bootstrap-driver.mjs",
-        "_tmp/tally-i370-host-fence/launch-bootstrap.mjs"
+        "_tmp/tally-i370-host-fence/bootstrap-launch.mjs"
       ],
-      "requiredReceipt": "Independent driver review binds every driver SHA256, imported module SHA256 values, Authority response public key, Node24, both writer SIDs and zero additional privileged imports.",
-      "composition": "The Controller generates an Authority signing keypair and per-Task authorized Online client keypairs. The reviewed host-create.go launcher uses CreateProcess with an OWNER RIGHTS SID (S-1-3-4) access-denied ACE covering STANDARD_RIGHTS_ALL and an explicit stdin/stdout/stderr handle list from process creation, so a same-SID sibling cannot acquire usable process handles before or after secret delivery. No post-start DACL change is relied upon. host-process-guard.mjs only proves readiness and receives secrets over the parent's stdin pipe, never environment files or command arguments. Authority and client public keys are Owner/FSW-bound by exact Task. Every request is RSA-SHA256 signed over canonical bytes of the complete protocol/version, recipient, request ID, operation, full value, CAS condition/expected revision and lease/capability identity; every response covers the complete result, revision and high-water identity. Offline creates and owns the canonical parent, empty SQLite registry and signed anchor and serves only the explicit bootstrap operations below. Production maintains an authorized-client registry: #370, future #284 and synthetic disjoint test Tasks use distinct per-Task keys with no shared private key, while unbound sibling keys remain denied. Temporary bytes are used once for #370 and retained only as read-only historical evidence; durable Authority/client behavior is implemented in host-resource-fence.mjs/test and consumed by single-writer.mjs/task-claim-github-publisher.mjs, never by silently retaining temporary code as production.",
-      "credentialBoundary": "Each selected process is created by host-create.go with an OWNER RIGHTS SID access-denied ACE and only three explicitly inherited stdio handles. An adversarial same-SID sibling racing from creation through secret delivery must fail to obtain VM read, VM write/operation, WRITE_DAC or duplicate handles. Only after those negatives does the parent pipe secrets: CodexSandboxOnline receives the GitHub token, real Octokit and its per-Task client private key, or CodexSandboxOffline receives the Authority private key. Public keys are Owner/FSW-bound by exact Task. Complete canonical request bytes are client-signed and complete result/revision/high-water bytes are Authority-signed. Ordinary Owner and Online have no protected-object write/WRITE_DAC/delete-child. Request files are add-only for Online and unreadable by other Online processes; production nonces encrypt to the authorized per-Task client public key. Same-SID siblings lack usable process handles and all relevant private keys, so key substitution, replay, forged response, process-memory access or file tamper cannot produce an accepted Host Claim. Before any live effect, inspect the actual Windows user-profile and GitHub credential surfaces visible to a same-SID unselected sibling and to historical drivers (including gh CLI/Git helpers, credential manager, process environment, files and inherited handles). Prove by read-only or disposable fake-transport adversarial tests that they cannot obtain or independently exercise a GitHub write credential accepted for the protected Issue, cannot use a non-fenced Octokit/HTTP writer and cannot recover a client private key. Clear inherited credential/config surfaces at launch; bind the selected token to the protected Online process only. If any alternative write-capable credential or unselected writer remains, this bootstrap is NOT_ISOLATED and must not post.",
-      "liveOrderingAuthority": "The Owner Delivery-First v2 instruction requires implementation inside a legal Claim/write set, and the Owner selected the two-file disjoint increment. The real bootstrap effect occurs only after the R14 Pack review, the exact driver review, the exact Owner receipt and the pre-Claim negatives; all deterministic tests use disposable stores and no GitHub transport. Nothing here authorizes any #284 effect.",
+      "requiredReceipt": "Independent driver review binds the exact bytes of the two artifacts, the pinned DH dist digests, Node24 and both writer identities used by the selected composition.",
+      "composition": "One selected Host process runs inside the Codex restricted-token Online sandbox with network access only for the GitHub API. It opens the ACL-protected registry directory with the public DomainHarness sqlite CAS store and uses the already-reviewed modules unchanged: createHostAdmissionSourceFromClient, createHostSingleWriterClaimController and createHostBoundNativeGitHubClaimPublisher. It performs exactly one reserveAndPublish for issue #370, then one create-only FSW write bound to the two-path digest, then re-reads the Claim row and the native comment. No custom Authority, signed request protocol, Go launcher, Job Object, guard process or probe script is used.",
+      "credentialBoundary": "Before any effect the driver inspects known alternative GitHub credential surfaces (process environment names, gh config presence, git credential helper configuration, ~/.git-credentials presence, SSH agent sockets) and records a redacted report; it aborts if a usable write credential outside the selected process is found. The GitHub token is supplied only through the selected process environment by the launcher, is never written to disk, and is scrubbed from all captured output. The registry directory grants write only to the selected sandbox principal; the ordinary Owner is read-only.",
       "physicalPrincipalProbes": [
         "CodexSandboxOnline probe exit 0: nilar\\codexsandboxonline / S-1-5-21-2839165489-1832998833-1574237796-1004.",
-        "CodexSandboxOffline probe exit 0: nilar\\codexsandboxoffline / S-1-5-21-2839165489-1832998833-1574237796-1003.",
-        "CreateProcess OWNER RIGHTS SID denied-ACE probe: sibling OpenProcess VM_READ=0 and WRITE_DAC=0; full native launcher with explicit stdio handle list and disposable stdin secret completed with CHILD_EXIT=0. These are probe results, not Claim or physical-fence PASS."
-      ]
+        "Registry directory effective access by Get-Acl: SYSTEM FullControl, Administrators FullControl, Owner ReadAndExecute, selected sandbox principal FullControl."
+      ],
+      "liveOrderingAuthority": "The Owner Delivery-First v2 instruction requires implementation inside a legal Claim/write set and approved the two-file disjoint increment plus this simplified bootstrap. The real effect occurs only after the R15 Pack review, the driver byte review, the exact Owner receipt and the pre-Claim negatives."
     },
     "resourceExclusion": [
       "The newly created canonical #370 registry must be empty via public list() before bootstrap, and the pinned T06d source without resourceConflictPort therefore refuses every foreign live Claim inside this registry.",
@@ -109,17 +105,18 @@
       "This isolation is deliberately narrow: it proves the one initial #370 bootstrap can be serialized by existing protected-key CAS and native uniqueness on a fresh registry. It does not prove disjoint Task concurrency and is never cited as the new shared physical fence."
     ],
     "bootstrapCapability": {
-      "kind": "AUTHORIZED_CLIENT_SIGNATURE_ONLY_NO_POSTCLAIM_LEASE_NONCE",
-      "reason": "The new lease implementation does not exist before bootstrap. The Owner-bound authorized client private key is the one-time bootstrap capability; no unimplemented fence nonce is required and no additional CAS key is invented.",
+      "kind": "ONE_SHOT_RESERVE_PUBLISH_ON_PINNED_T06D_SOURCE",
       "orderedOperations": [
-        "get/list: signed read-only preflight and fresh-registry absence checks.",
-        "put #370 Claim with mustBeAbsent and phase PENDING_GITHUB_PUBLISH, only after existing native preflight.",
-        "put the same #370 Claim with mustMatchRevision=0 and phase PUBLISHED_VERIFIED, only after exact native POST/readback.",
-        "put tally:v2:task-writeset:370 with mustBeAbsent, only after the published Claim readback and exact Pack/FSW binding.",
-        "signed Claim/FSW readback and final native readback; temporary driver shutdown and read-only evidence retention."
+        "Credential-surface inspection and redacted report; abort on any usable alternative write credential.",
+        "Native preflight through the reviewed admission source on the OPEN/type:task/state:ready Issue with zero prior Claim events.",
+        "Reserve the fresh single-key registry with mustBeAbsent and phase PENDING_GITHUB_PUBLISH.",
+        "One native DISPATCH_CLAIMED POST through the reviewed publisher, then exact comment readback through the reviewed readback port.",
+        "Final CAS to PUBLISHED_VERIFIED with mustMatchRevision, then re-read the row.",
+        "Create-only FSW write bound to the two-path digest, then re-read it.",
+        "Emit a receipt containing the native comment reference, the Claim revision and the FSW revision."
       ],
-      "failureStates": "Before pending reservation there is no Claim row. After pending reservation any failure preserves exact pending/published state and signed high-water; no second POST, reset, substitute client, new key or automatic Authority restart is allowed.",
-      "productionHandoff": "Post-bootstrap operations require the reviewed host-resource-fence.mjs implementation, a real acquired lease nonce and the same authorized client/Authority protocol. Temporary bootstrap bytes never become the production implementation."
+      "failureStates": "Before the reservation there is no Claim row. After the reservation any failure preserves the pending or published state; no second POST, no reset and no key substitution.",
+      "productionHandoff": "The shared fence library remains the durable mechanism; later wiring needs a separate admitted scope and a real acquired lease."
     }
   },
   "writeSetCount": 2,
@@ -151,7 +148,7 @@
   ],
   "physicalDesign": {
     "authority": "ONE_SHARED_SQLITE_CAS_FENCE_REGISTRY_DOCUMENT consulted by every current-source T06d/Native-C privileged Claim writer. The selected Host composition alone receives the registry mutation port and GitHub write transport; B/K/UI/Agent/request callers receive neither.",
-    "productionComposition": "A long-lived one-shot-per-operation CodexSandboxOffline Authority owns all registry and anchor mutation. CodexSandboxOnline transport/controller processes open only read facades and submit signed-protocol requests to that Authority. Native C rejects an absent/mismatched fence, the controller cannot publish without acquisition, and all repository callers including host-admission-source.test.mjs are migrated. The Offline-created protected objects grant no write/WRITE_DAC/delete-child to the ordinary Owner or Online SID; historical byte copies cannot open them for mutation and are never production entry points.",
+    "productionComposition": "LIBRARY/SINGLE-PROCESS NOTE: the two-principal Authority/client split described in this section belongs to the two admitted library files and to any future wiring revision. The one-time #370 bootstrap does not use it: the bootstrap runs the reviewed T06d/C modules in one selected Host process, as stated in bootstrapIsolation.driver.composition.",
     "credentialAndTransportBoundary": "Selected processes are created with an OWNER RIGHTS SID access-denied ACE and explicit stdio handle list, then pass creation-race same-SID OpenProcess/handle negatives before receiving secrets through stdin. Only then does the selected Online process receive the GitHub token, real Octokit and its per-Task client private key, or the selected Offline Authority receive its private key. The authorized-client registry binds a distinct public key to each exact Task (#370, future #284 and synthetic test Tasks), enabling independently authorized concurrent contenders without shared private keys. Complete canonical request bytes (value, condition, expected revision, lease identity, recipient, operation and request ID) are client-signed; complete result/revision/high-water bytes are Authority-signed. Same-SID siblings lack usable process handles and all relevant private keys and cannot produce a valid accepted Claim; direct file tamper causes signed high-water verification to fail. Process-memory isolation does not by itself remove ambient authenticated GitHub access: the physical gate MUST test same-SID stale/unselected drivers against gh/Git credential helpers, Windows Credential Manager, inherited environment, profile files and handles, and verify they cannot POST directly with any other existing write token. Use a disposable transport for negative tests and NO live test POST. If a second actual writer can acquire a write-capable credential outside the selected guarded process, fail closed; token custody and all privileged transport entrances must be reconciled before accepting a shared-Host PASS.",
     "atomicity": "The complete active-lease registry is one CAS document with a Host-configured registryId, mutated only by Offline Authority. Acquisition re-reads and validates the whole document, compares all exclusive resources and atomically adds one lease using mustBeAbsent for first initialization or mustMatchRevision thereafter. Claim/FSW store facades forward put conditions plus the current lease nonce; Authority validates key/phase/resource binding before executing them. At most 16 CAS retries are allowed; exhaustion returns HOST_RESOURCE_FENCE_CONTENTION_EXHAUSTED with zero Claim effect.",
     "continuousPossession": "The random owner nonce is decrypted and retained only in the authorized per-Task Online process; CAS stores its SHA256 only. Every privileged stage sends canonical bytes covering protocol/version, recipient, fresh request ID, operation, expected identity, complete value and CAS condition/expected revision, signed by that Task's authorized client. Offline Authority re-reads registry/anchor, validates the authorized-client registry entry, registryId, fenceId, stable fenceRevision, nonce hash and exact binding, then signs the complete result/revision/high-water response. Leases never expire and no other writer can release without the nonce. The controller never releases during an in-flight effect, so protocol-compliant competitors cannot remove/reacquire between the final check and POST. Wrong-nonce release, overlapping acquisition, client-key substitution, request-value/condition tamper, replay, forged response or fabricated replacement denies.",
@@ -183,7 +180,7 @@
     {
       "entrance": "Initial #370 bootstrap driver",
       "effect": "One #370 Claim CAS/native event and FSW",
-      "credentialAndStore": "Offline Authority owns the registry and signing key; Online alone holds the GitHub token, Octokit and its client key; test-only paths never receive a token.",
+      "credentialAndStore": "The single selected Host process holds the GitHub token and opens the ACL-protected registry; the ordinary Owner is read-only on that directory.",
       "destination": "#370 protected key, #370 comment and #370 FSW only",
       "disposition": "BOUNDED_BOOTSTRAP_EFFECT_ONLY: one #370 Claim CAS reservation, exactly one native DISPATCH_CLAIMED POST with exact readback, and one create-only FSW bound to the two-path digest; gated by R14 review, driver review, Owner receipt and the pre-Claim negatives."
     },
@@ -370,8 +367,8 @@
     ],
     "physicalHostGate": [
       "Tests run natively on Windows Node 24.",
-      "The recorded creation-time process isolation, protected-directory ACL readback, handle-denial probes and Job Object lifecycle measurement remain the Host evidence for the bootstrap driver; they are not restated as fence enforcement.",
-      "The single real #370 Claim/FSW is a separate one-shot step after the R14 review and the exact Owner receipt; no test performs it."
+      "Host evidence for the bootstrap driver is the protected-directory effective-access readback plus the credential-surface report; the superseded handle-denial and Job Object measurements are historical only.",
+      "The single real #370 Claim/FSW is a separate one-shot step after the R15 review and the exact Owner receipt; no test performs it."
     ],
     "futureIntegrationGates": [
       "Wiring single-writer.mjs and task-claim-github-publisher.mjs to assert a held lease around reserve, native POST, readback and final CAS.",
@@ -385,7 +382,7 @@
     ]
   },
   "currentState": {
-    "packReview": "R14_REVIEW_REQUIRED",
+    "packReview": "R14_REVIEWED_R15_REVIEW_REQUIRED",
     "driverReview": "NOT_PRESENT",
     "ownerPackReceipt": "NOT_PRESENT",
     "claim": "NOT_PRESENT",
@@ -397,12 +394,13 @@
     "mergeReleaseDeploy": "NO",
     "historical319WriterOverlap": "DEFERRED_TO_WIRING_REVISION: the five #319 paths are not admitted by this revision, so no overlapping authority is created here. Any later revision that writes them must first prove a lawful terminal/serial handoff or an independently reviewed cross-principal exclusion.",
     "wiring": "DEFERRED_AND_BLOCKED_BY_319",
-    "twoFilePathGate": "SATISFIED_BY_SCOPE_NON_OVERLAP_PENDING_R14_REVIEW",
-    "fivePathHandoff": "DEFERRED_TO_WIRING_REVISION"
+    "twoFilePathGate": "SATISFIED_BY_SCOPE_NON_OVERLAP",
+    "fivePathHandoff": "DEFERRED_TO_WIRING_REVISION",
+    "driverMechanism": "SINGLE_SELECTED_HOST_PROCESS_T06D_C"
   },
   "scopeAmendment": {
     "schema": "tally/host-fence-scope-amendment/v1",
-    "revision": 14,
+    "revision": 15,
     "approvedBy": "OWNER",
     "approvalKind": "ORDINARY_PROJECT_INSTRUCTION_IN_CURRENT_TALLY_V2_CONVERSATION",
     "approvalStatement": "Option B: approve the two-file disjoint scope so the shared lease library and port land and are tested first; #284 is not unblocked by this increment.",
@@ -444,22 +442,19 @@
       "packHead",
       "packTree",
       "packBlobSha",
-      "packRevision=14",
+      "packRevision=15",
       "admittedPathsSha256",
-      "authorityPublicKeySha256",
-      "clientPublicKeySha256",
-      "hostCreateSourceSha256",
-      "hostCreateSha256",
-      "guardSha256",
-      "authoritySha256",
       "driverSha256",
       "launcherSha256",
-      "r14IndependentReviewRef",
+      "dhDistPinsSha256",
+      "credentialSurfaceReportSha256",
+      "r15IndependentReviewRef",
+      "driverReviewRef",
       "claimDigestScope=TWO_PATHS_ONLY",
       "physicalFence=NOT_PROVEN",
       "root284=NOT_ADMITTED"
     ],
-    "reviewIdentity": "The governing review for this revision is the independent exact-SHA review of packRevision 14. Earlier R8-R13 reviews and receipts are historical and do not authorize this scope."
+    "reviewIdentity": "The governing review for this revision is the independent exact-SHA review of packRevision 15. Earlier R8-R14 reviews and receipts are historical and do not authorize this scope."
   },
   "libraryScope": {
     "importsAddedToExistingFiles": false,
