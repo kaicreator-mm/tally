@@ -1,3 +1,32 @@
+# SEK-09 — Final pilot-method observations and failed qualification outcome
+
+**Core:** #351 · **Evidence source:** WIP `fdfae02701efc62020384fc469afe071aa7665b8`, #367/PR #375, #368/PR #374 and the original independent #352–354 specialist reports.
+
+## Observed results, not plans
+
+- **Deliverable reality:** 10 domain lanes generated a 806-record semantic graph with 9,653 RDF triples, 106 unresolved review-pending claims and 2 real source-backed incident Cases. The deterministic exporter, LinkML 1.12.1 and negative validators were verified; structural correctness did not settle domain truth.
+- **Control experiment actually executed:** 14 localhost Qwen2.5-3B calls completed, two matched arms for 7 preregistered questions. Independent automated blind scoring recorded mean correctness **0.857 vs 1.857**, scope **1.571 vs 2.000**, traceability **1 vs 1**, unsupported claims **9 vs 0** for direct vs corpus-grounded. G5-04's omission worsened with grounding despite greater correctness; no reviewer-effort observation. No superiority claim/generalization.
+- **Real process friction:** the first local execution machine lacked an inference server and recorded 0 attempted calls. A small free llama.cpp + local Qwen model ultimately produced actual trials; one same Writer owned Node24 runner repair, native execution and frozen evidence. It avoided ping-pong across Web/local.
+- **Review distinction:** blind model scoring was carried out by a separate automated grader; it does not count as human G4. Owner-directed single-Writer final Exact-SHA for PR #375 (242 checks and manifest verification) is not falsely described as independent final review.
+- **Experimental failure is information:** human record-level navigation/revision never occurred; 29 OPEN CoverageGaps, 11 PARTIAL TaxonomyViews, rights uncertainty, 0 Counterexample and 0 ReviewDecision remain. These defeat full qualification even though the graph and 7x2 benchmark are executable.
+
+## Concrete method decision for SEK-10 retrospective
+
+1. Preserve **three different thresholds**: build/schema **PASS**, observed localized model utility **evidence-with-limitations**, and knowledge-corpus acceptance **BLOCKED_NOT_QUALIFIED**. Do not convert one to another through terminology.
+2. Next pilot needs a *small real-human-review budget* at scope freeze, not another document-only reviewer-readiness task; sample 10 records and record actual findings/effort, with fail-closed UNKNOWN on inaccessible sources.
+3. Test both positive and negative examples with explicit counterexample-to-claim links; do not mislabel independent postmortems as contradictions to a claim that was never made.
+4. Separate source identity, edition and rights eligibility from schema/provenance structural compliance; publishing a graph does not resolve publication-date conflicts or copyright reuse.
+5. For utility comparisons, preserve raw frozen prompts/responses, blind key, scorer identity and raw hashes, predefine success thresholds and use independent/multiple graders or human sample audit where possible. A single 7×2 run cannot justify generalized superiority.
+6. **Version-level closure criterion:** because #299 accepts unsuccessful experiments, finish this pilot with an explicit negative qualification rather than fake G4 PASS or accumulate endless readiness PRs. SEK-10 may document the tested failed method after #351 is formally closed; no immediate DomainForge or Domain Package adoption.
+
+**Captured actual timing/cost:** 14 real generation calls, 6,069 recorded tokens, no paid API. Human review time, manual authoring effort, throughput/cost across all lanes remain **NOT_MEASURED**. Unknown measurements cannot be inferred from commit counts or task durations.
+
+**Method decision:** `EXPERIMENT_COMPLETED_WITH_LIMITATIONS`; `CORPUS_ACCEPTANCE=NO`; `G4=NOT_CONDUCTED`; `G5=OBSERVED_NO_GENERAL_PASS`; recommendation `DO_NOT_PROMOTE` until new explicit human/source reviews.
+
+---
+
+## Historical early qualification-method observations (earlier WIP; superseded for current evidence only)
+
 # SEK-09 — Delivery-First qualification-method observation
 
 **Task:** #351 · **Source of truth:** three exact-SHA final specialist review reports integrated under `wip/v2.1.1-knowledge` · **Decision:** REQUIRES_FURTHER_EVIDENCE (not Task PASS).

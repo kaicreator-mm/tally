@@ -1,3 +1,44 @@
+# SEK-09 — Final qualification disposition (pilot evidence, not corpus approval)
+
+**Core Issue:** #351 · **Experiment parent:** #299 · **ADS:** #1359 Delivery-First
+
+**Final experimental qualification decision: `BLOCKED_NOT_QUALIFIED`** for full corpus acceptance. This is a **completed negative/limited qualification assessment**, not a successful knowledge acceptance, not a G4 waiver, and not a claim that the domain graph is complete. The acceptance result is suitable for a **failed/limited-method retrospective** (SEK-10) after formal coordinator closure; future remediation may occur under separately versioned scope.
+
+**Latest binding before this coordinator update:** `wip/v2.1.1-knowledge` HEAD `fdfae02701efc62020384fc469afe071aa7665b8`. Corpus graph input and G5 run hashes are preserved below. Do not reissue reviews as though they inspected later data.
+
+## 2026-11-08 final evidence reassessment
+
+| Gate | Evidence at latest WIP | Final scoped disposition |
+| --- | --- | --- |
+| G0 taxonomy/coverage | Ten domain lanes and 11 taxonomy views; **11 PARTIAL**, **29 OPEN CoverageGaps** | **PARTIAL**, completeness not demonstrated |
+| G1 authority/rights | Original source/locator links plus 3 new first-party incident Sources; SWEBOK publication-date/version inconsistency, CS2023 reuse/rights limits and temporal source drift remain | **PARTIAL / unresolved** |
+| G2 substantive knowledge | **806 records**, **2 real PENDING_REVIEW incident Case**, 106 original PENDING KnowledgeClaims preserved; **0 Counterexample** and **0 ReviewDecision** | **PARTIAL**, illustrative cases not proof of contradiction completeness or accepted truth |
+| G3 graph export | #368 / PR #374 independently verified **9,653 equivalent RDF triples**, LinkML 1.12.1, 66 self-tests, 9 negative fixtures, deterministic manifest | **PASS structural/reproducibility only** |
+| G4 human review | Fixed 10-lane audit packet #360/PR #362 exists; **no recorded real human verdict, measured review effort or acceptance** | **NOT_CONDUCTED / BLOCK for human-readability-in-practice** |
+| G5 practical utility | #367 / PR #375 delivered actual 7×2 controlled **local Qwen2.5-3B** trial, 14/14 real responses, independent *automated* blind grader, frozen raw artifacts and 242 Builder checks | **OBSERVED_WITH_LIMITATIONS**, no automatic PASS, insufficient for universal superiority |
+
+### G5 actual experiment (supersedes the original NOT_RUN snapshot)
+
+Experiment baseline is **intentionally pinned** to the earlier corpus blob `2d4498dfa5f90bcf57cc81e9c155fb9ede31bf00` at preregistered commit `9cbf7983c5b47c146bd934f39e10517c3a828b66`; it is **not** a rerun against the new 806-record graph. PR #375 exact reviewed *Builder-owned* head `2ae1d435b967312ee546f2f34d06d5b753703056`, merged WIP `fdfae02701efc62020384fc469afe071aa7665b8`; no independent source/Exact-SHA reviewer was asserted for that final head, by explicit Owner-directed single-Writer exception.
+
+Frozen paired-comparison blob `0b8fe416925847928e54b00c621a48c85be94965`: seven questions (G5-01..07), fourteen real answers, automated blind grader `INDEPENDENT_MODEL_GRADER` (Kimi; **not** a human), raw SHA256 request/response records. Observed **0–2** rubric means: correctness D **0.8571** versus K **1.8571**; scope D **1.5714** versus K **2.0000**; traceability D **1.0000** versus K **1.0000**. Unsupported-assertion *counts in this sample*: D **9**, K **0**. Average per-question omission rates D **0.4762** vs K **0.1667**. For **G5-04**, knowledge assistance worsened omission rate despite higher correctness score; this is retained as a countervailing observation, not hidden.
+
+Neither review-time cost nor real human utility was measured. One small local model, one pass per question, one automated grader, no predeclared pass threshold, no repeated seeds/multi-model robustness and no random population sampling; therefore **no statistically generalizable superiority, clinical-style significance, or full G5 PASS**. Exact source/retrieval and model response records in `experiments/qualification/runs/SEK-09G/trials/actual-001/`.
+
+### Formal disposition and retained blockers
+
+1. **No accepted Software Engineering corpus:** 106 original Claims remain pending; two incident Cases are review-pending. Do not convert them to ACCEPTED or mint a human ReviewDecision.
+2. **G4 was not conducted.** G5 automated grader, code review and graph schema validations cannot substitute for actual human source/record assessment. Evidence is explicitly missing and the project has not demonstrated full G4.
+3. **G0–G2 are incomplete by design and evidence.** Preserve 29 gaps, 11 partial views, rights/source issues and absent counterexamples. No promise that an encyclopedic corpus was produced.
+4. **Terminal negative/limited experiment outcome:** because #299 explicitly permits an unsuccessful experiment as a legitimate result, record `SEK-09_REVIEW_EXECUTED=YES`, `KNOWLEDGE_ASSET_QUALIFIED=NO`, `TERMINAL_VERDICT=BLOCKED_NOT_QUALIFIED`. This is not a waiver or a PASS; it ends the technical qualification review with an honest fail and enables SEK-10 to document why the pilot did not reach acceptance **once #351 is formally closed**.
+5. A future human-review or source-rights/counterexample remediation may be separately scoped; no automatic carry-over acceptance to DomainForge and no main merge, freeze, tag, release or deployment.
+
+**Reviewer boundary:** three #352/#353/#354 specialist reports had independent reviews on their original, earlier graph; #368 had independent exact-head verification of graph integration. #367 real model blind scoring was distinct from answer generation, but PR #375 final Exact-SHA verification was **single Writer**, not independent. This coordinator makes a separate *synthesis* of recorded evidence and does not claim a fresh human review.
+
+---
+
+## Historical initial SEK-09 qualification snapshot (earlier WIP; superseded for current gate status only)
+
 # SEK-09 — Independent Qualification, Contradiction, Coverage & Completeness Gate
 
 **Outcome Task:** #351 (parent #299) · **Evidence lanes:** #352/#353/#354 · **Execution principle:** ADS #1359 Delivery-First
