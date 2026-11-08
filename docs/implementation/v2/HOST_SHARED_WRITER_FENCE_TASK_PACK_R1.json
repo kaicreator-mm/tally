@@ -1,6 +1,6 @@
 {
   "schema": "tally/host-platform-task-pack/v1",
-  "packRevision": 12,
+  "packRevision": 13,
   "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_LIBRARY_SCOPE_TWO_NEW_FILES_R8_SECURITY_TEXT_PRESERVED",
   "repository": "kaicreator-mm/tally",
   "issueNumber": 370,
@@ -11,7 +11,8 @@
     "r9": "Independent BLOCK P0=0/P1=3/P2=1 on fb3693b: incomplete narrowing.",
     "r10": "Independent BLOCK P0=0/P1=4/P2=1 on 0f15c32: rewriting dropped R8 security requirements.",
     "r11": "Independent BLOCK P0=0/P1=3/P2=2 on a54ed21: R10 findings all RESOLVED, but retained R8 text still contradicted the two-file scope in the #319 gate, the initial-driver disposition and the acceptance lists.",
-    "r12": "This revision reconciles those three contradictions throughout the Pack and names the exact receipt fields for revision 12. No security clause is relaxed."
+    "r12": "Independent BLOCK P0=0/P1=3/P2=1 on 03a3c93: bootstrap matrix fixed, but currentState still gated the Claim on the five-path handoff, three bootstrap-effect risks were still labelled LIBRARY, preClaim/physicalHostGate still named R11/R8 reviews, and the PR body miscounted the receipt fields.",
+    "r13": "This revision fixes exactly those four items and changes nothing else."
   },
   "coreOutcomeDag": {
     "createTask": false,
@@ -52,10 +53,10 @@
     "trackedImplementationPaths": [],
     "governanceOnlyPath": "docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json",
     "required": [
-      "Independent exact R11 Pack HEAD/tree/blob review of this two-file library scope, confirming that every R8 bootstrap security clause is preserved verbatim and that the #319 intersection is empty.",
+      "Independent exact R13 Pack HEAD/tree/blob review of this two-file library scope, confirming that every earlier bootstrap security clause is preserved in substance and that the #319 intersection is empty.",
       "Generate the temporary two-principal bootstrap authority/client/launcher drivers from the exact composition below, record every byte SHA256 and obtain an independent read-only driver review before any live effect. These drivers are untracked evidence/configuration, not hidden implementation paths.",
       "Before any real #370 Claim, run disposable-store/fake-transport negatives for complete request-value and CAS-condition tampering, creation-time same-SID handle acquisition, unbound client keys, replay and forged responses; every negative must produce zero CAS/POST.",
-      "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after new R8 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
+      "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after the R13 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
       "One-time isolated bootstrap Claim and create-only FROZEN_DAG_WRITESET through the exact existing T06d/C source and public DomainHarness SQLite CAS API, followed by native/CAS readback.",
       "After the bootstrap Claim/FSW, implement the shared fence library in the two admitted new files only. The bootstrap result is BOOTSTRAP_CLAIM_ACCEPTED, not PHYSICAL_SHARED_HOST_FENCE=PASS; controller/publisher wiring stays deferred.",
       "The accepted one-shot Claim and create-only FROZEN_DAG_WRITESET must bind exactly these two new paths and digest b9ac6da49a118d445a7ae5908b8f81fb547ddb2249929d22256f3cc790f2c03c. Any wider write set, any edit to an existing path, or any #319 path denies.",
@@ -312,8 +313,8 @@
     },
     {
       "risk": "Same protected key re-entry and duplicate native event",
-      "acceptance": "Existing reconciliation and native uniqueness remain; no second POST, generation fabrication or overwrite of pending/published rows.",
-      "scope": "LIBRARY"
+      "acceptance": "One-shot bootstrap only: exact native uniqueness readback, no second POST, no generation fabrication and no overwrite of pending or published rows. Enforced by the reviewed bootstrap driver, not by the library.",
+      "scope": "BOOTSTRAP_EFFECT"
     },
     {
       "risk": "Registry drift/malformed or partial rows",
@@ -332,8 +333,8 @@
     },
     {
       "risk": "Ambiguous ACK and final CAS uncertainty",
-      "acceptance": "Lease and pending reservation are retained, exact native readback is required before final CAS and blind retry remains forbidden.",
-      "scope": "LIBRARY"
+      "acceptance": "One-shot bootstrap only: the pending reservation and lease are retained, exact native readback precedes the final CAS, and blind retry is forbidden. Enforced by the reviewed bootstrap driver.",
+      "scope": "BOOTSTRAP_EFFECT"
     },
     {
       "risk": "Windows path case/alias/ancestor bypass and metadata-only overlocking",
@@ -364,7 +365,7 @@
     "physicalHostGate": [
       "Tests run natively on Windows Node 24.",
       "The recorded creation-time process isolation, protected-directory ACL readback, handle-denial probes and Job Object lifecycle measurement remain the Host evidence for the bootstrap driver; they are not restated as fence enforcement.",
-      "The single real #370 Claim/FSW is a separate one-shot step after R11 review and the exact Owner receipt; no test performs it."
+      "The single real #370 Claim/FSW is a separate one-shot step after the R13 review and the exact Owner receipt; no test performs it."
     ],
     "futureIntegrationGates": [
       "Wiring single-writer.mjs and task-claim-github-publisher.mjs to assert a held lease around reserve, native POST, readback and final CAS.",
@@ -378,7 +379,7 @@
     ]
   },
   "currentState": {
-    "packReview": "R11_BLOCK_R12_REVIEW_REQUIRED",
+    "packReview": "R12_BLOCK_R13_REVIEW_REQUIRED",
     "driverReview": "NOT_PRESENT",
     "ownerPackReceipt": "NOT_PRESENT",
     "claim": "NOT_PRESENT",
@@ -388,14 +389,14 @@
     "agentExecution": "NOT_ADMITTED",
     "root284": "NOT_ADMITTED",
     "mergeReleaseDeploy": "NO",
-    "historical319WriterOverlap": "FIVE_PATHS_NONTERMINAL_FSW_BLOCK_BEFORE_370_READY_CLAIM_FSW_AND_SOURCE_UNTIL_LAWFUL_HANDOFF_OR_PHYSICAL_MUTUAL_EXCLUSION",
+    "historical319WriterOverlap": "DEFERRED_TO_WIRING_REVISION: the five #319 paths are not admitted by this revision, so no overlapping authority is created here. Any later revision that writes them must first prove a lawful terminal/serial handoff or an independently reviewed cross-principal exclusion.",
     "wiring": "DEFERRED_AND_BLOCKED_BY_319",
     "twoFilePathGate": "SATISFIED_BY_SCOPE_NON_OVERLAP_PENDING_R12_REVIEW",
     "fivePathHandoff": "DEFERRED_TO_WIRING_REVISION"
   },
   "scopeAmendment": {
     "schema": "tally/host-fence-scope-amendment/v1",
-    "revision": 12,
+    "revision": 13,
     "approvedBy": "OWNER",
     "approvalKind": "ORDINARY_PROJECT_INSTRUCTION_IN_CURRENT_TALLY_V2_CONVERSATION",
     "approvalStatement": "Option B: approve the two-file disjoint scope so the shared lease library and port land and are tested first; #284 is not unblocked by this increment.",
@@ -452,7 +453,7 @@
       "physicalFence=NOT_PROVEN",
       "root284=NOT_ADMITTED"
     ],
-    "reviewIdentity": "The governing review for this revision is the independent exact-SHA review of packRevision 12. Earlier R8/R9/R10/R11 reviews and receipts are historical and do not authorize this scope."
+    "reviewIdentity": "The governing review for this revision is the independent exact-SHA review of packRevision 13. Earlier R8-R12 reviews and receipts are historical and do not authorize this scope."
   },
   "libraryScope": {
     "importsAddedToExistingFiles": false,
