@@ -191,7 +191,7 @@
         "directApiMutationAuthorizedByThisPack": false
       }
     ],
-    "related PlannedEdge": {
+    "relatedPlannedEdge": {
       "from": 274,
       "to": 276,
       "source": "A R16 candidate",
