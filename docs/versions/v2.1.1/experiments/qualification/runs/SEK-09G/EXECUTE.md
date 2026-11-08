@@ -28,3 +28,18 @@ Windows-native Node **>=24** and Git; no WSL or npm dependencies.
 Previous actual local attempt #369 found no Ollama/LM Studio/llama.cpp provider, no cached models, and did not use a paid DeepSeek key. The assistant execution container also has no reachable model-download network or pretrained model; only a mock HTTP self-test was executed locally during runner development. **No actual 14-call result or scoring exists yet**, so no empirical G5 result or corpus advantage is claimed. The two new real Case nodes are already integrated under #368/PR #374, but this benchmark intentionally stays pinned to the **older, preregistered** corpus graph for no-leakage comparisons.
 
 On found execution defects the SAME local Builder repairs this exact runner/results write set, reruns Node >=24 checks and actual calls as needed, then hands a final HEAD to an independent verifier. No `LOCAL_VALIDATION`-only dispatch and no change to corpus, model, prereg, main or DomainForge.
+
+
+## Independent blinded scoring (only after 14 actual SUCCESS answers)
+
+This is an executable and fail-closed scoring workflow, not a request for validation-only handoff. The model-run Writer owns all run repairs and evidence; an actually distinct grader fills the blind packet **without receiving the arm key**.
+
+1. Verify scoring validator's own mock test: `node docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/score-paired-trial.mjs --self-test`. This creates **no empirical G5 grade**.
+2. After the real `actual-001` run has exactly 14 SUCCESS responses, create the blank scoring template:
+   `node docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/score-paired-trial.mjs --make-template --run-dir docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/trials/actual-001 --out docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/trials/actual-001/grader-blank.json`
+3. Supply the independent grader **only** the frozen `blind-TO-INDEPENDENT-SCORER.json` and `grader-blank.json`, plus the preregistered source/criteria. Never supply `blind-key-WITHHOLD-FROM-SCORER.json` before grading. The grader must record actual identity/type/UTC, `independent_from_builder=true` only if truthful, complete all scores and each `criteria_marks` outcome from the original semicolon-delimited frozen criteria, and document any unsupported answer spans with source checks. If effort is not measured, leave it `null`.
+4. Store their **actually completed** output as `grader-completed.json`, then validate original request/response bytes, frozen blind answers, grading fields and unblind before producing any paired comparison:
+   `node docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/score-paired-trial.mjs --run-dir docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/trials/actual-001 --scored-json docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/trials/actual-001/grader-completed.json --out docs/versions/v2.1.1/experiments/qualification/runs/SEK-09G/trials/actual-001/paired-comparison.json`
+5. The validator rejects missing/fabricated/null grades, duplicate or swapped IDs, mismatched raw SHA256, changed prereg criteria, unsupported unsupported-assertion annotations and incomplete responses. Results are exploratory descriptive measurements; **no automatic G5 gate PASS**, no statistical superiority and no fake G4 human review.
+
+The runner now persists `G5-NN-{D,K}-request.json` and `G5-NN-{D,K}-provider-response.json` as exact hashed original bytes, logs real model `usage` when exposed, and refuses redirects even from localhost. The score verifier's seed/mapping is separate from the material given to the independent grader.
