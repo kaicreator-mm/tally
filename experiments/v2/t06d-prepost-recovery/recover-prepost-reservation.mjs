@@ -1140,6 +1140,51 @@ export function inspectHostProcessInventory(table,selfPid,hostRoot) {
     processTableSha256:sha256hex(JSON.stringify(rows)),activeWriterCount:roots.length,
     activeSubprocessCount:active.size-roots.length,unknownWriterCount};
 }
+/**
+ * Read-only revision-4 verifier: open ONLY the three exact selected lineage
+ * registries. It does not assert anything about global Host quiescence.
+ * Reject symlinks at every component of the selected paths (including their
+ * parents) so narrowing the scan cannot conceal a redirection of authority.
+ * An unrelated symlink or Node process is NOT evidence against a completed,
+ * immutable historical event and must not stop a target-only readback.
+ */
+export async function openExactTargetReadonlyRegistryStores(root, requiredPaths) {
+  if (!Array.isArray(requiredPaths) || requiredPaths.length!==3 ||
+    requiredPaths.some(x=>typeof x!=='string'||!x))
+    throw new Error('READ_ONLY_REGISTRY_SELECTION_INVALID');
+  const rootPath=resolve(root);
+  const rootStat=lstatSync(rootPath);
+  if(!rootStat.isDirectory()||rootStat.isSymbolicLink())
+    throw new Error('READ_ONLY_REGISTRY_ROOT_UNTRUSTED');
+  const keys=requiredPaths.map(normalizedPath);
+  if(new Set(keys).size!==3)throw new Error('READ_ONLY_REGISTRY_SELECTION_DUPLICATE');
+  const stores=new Map();
+  try{
+    for(const selected of requiredPaths){
+      const absolute=resolve(selected),rel=relative(rootPath,absolute);
+      const parts=rel.split(/[\\/]+/);
+      if(!rel||parts.some(p=>!p||p==='.'||p==='..')||
+        /^[A-Za-z]:/.test(rel)||rel.startsWith('\\\\')||
+        normalizedPath(resolve(rootPath,...parts))!==normalizedPath(absolute))
+        throw new Error('READ_ONLY_REGISTRY_OUTSIDE_HOST_ROOT');
+      let current=rootPath;
+      for(let i=0;i<parts.length;i++){
+        current=resolve(current,parts[i]);
+        const stat=lstatSync(current);
+        if(stat.isSymbolicLink()||(i===parts.length-1
+          ? !stat.isFile():!stat.isDirectory()))
+          throw new Error('READ_ONLY_REGISTRY_PATH_UNTRUSTED');
+      }
+      stores.set(normalizedPath(absolute),
+        openReadOnlySqliteCasStore({path:absolute,busyTimeoutMs:1000}));
+    }
+    return stores;
+  }catch(error){
+    for(const store of stores.values()){try{await store.close();}catch{}}
+    throw error;
+  }
+}
+
 async function runSelectedHostCli() {
   const log=o=>console.log(typeof o==='string'?o:JSON.stringify(o));
   const proxyOf=v=>{if(!v)return 'absent';try{const u=new URL(v);return 'present('+u.hostname+':'+(u.port||u.protocol.replace(':',''))+')';}catch{return 'present(unparsed)';}};
@@ -1173,17 +1218,13 @@ async function runSelectedHostCli() {
       JSON.stringify(changed)===JSON.stringify([...THREE_PATHS].sort())&&
       digest===RECOVERY_IDENTITY.task331.writeSetSha256;
   }
-  let fence=null;
-  const registryStores=new Map();
+  let registryStores=new Map();
   try{
-    fence=acquireExclusiveHostFence(FENCE_PATH);
-    const registryPaths=discoverHostRegistryPaths(HOST_TMP_ROOT);
-    for(const required of [REG203,REG319,REG331])
-      if(!registryPaths.some(p=>normalizedPath(p)===normalizedPath(required)))throw new Error('REQUIRED_HOST_REGISTRY_MISSING');
-    for(const path of registryPaths){
-      const store=openReadOnlySqliteCasStore({path,busyTimeoutMs:1000});
-      registryStores.set(normalizedPath(path),store);
-    }
+    // No global fence or full temporary-directory census in a read-only
+    // terminal fact check: neither is a prerequisite for exact historical
+    // CAS/native event/Claim+FSW readback. This must never authorize #284.
+    registryStores=await openExactTargetReadonlyRegistryStores(
+      HOST_TMP_ROOT,[REG203,REG319,REG331]);
     const store203=registryStores.get(normalizedPath(REG203));
     const store319=registryStores.get(normalizedPath(REG319));
     const store331=registryStores.get(normalizedPath(REG331));
@@ -1203,90 +1244,39 @@ async function runSelectedHostCli() {
       if(parsed?.casWriteBlocked!==true||parsed?.retry!==false)return null;
       return {sha256:sha256hex(bytes.toString('utf8')),parsed};
     }};
-    const processInventory=inspectHostProcessInventory(cliProcessTable(),process.pid,repoRoot);
-    const registryInventory=await inspectHostRegistryInventory(
-      registryStores,HOST_TMP_ROOT,REG203,[REG203,REG319,REG331],'TERMINAL_VERIFIED');
-    const historicalCiEvidence=await readHistoricalCiEvidenceFromClient(octokit);
-    if(!fence.isHeld()||registryInventory.registryCount<3||
-      registryInventory.targetReservationCount!==1||registryInventory.targetExactCount!==1||
-      registryInventory.unresolvedRecordCount!==0||
-      processInventory.activeWriterCount!==0||processInventory.activeSubprocessCount!==0||
-      processInventory.unknownWriterCount!==0||!historicalCiEvidence)
-      throw new Error('READ_ONLY_HOST_INVENTORY_NOT_QUIESCENT');
-    log({step:'READ_ONLY_HOST_INVENTORY',fenceHeld:fence.isHeld(),
-      registryCount:registryInventory.registryCount,
-      targetReservationCount:registryInventory.targetReservationCount,
-      targetExactCount:registryInventory.targetExactCount,
-      unresolvedRecordCount:registryInventory.unresolvedRecordCount,
-      processCount:processInventory.processCount,
-      activeWriterCount:processInventory.activeWriterCount,
-      activeSubprocessCount:processInventory.activeSubprocessCount,
-      unknownWriterCount:processInventory.unknownWriterCount,
-      historicalCiVerified:true,registryPathsSha256:registryInventory.registryPathsSha256,
-      processTableSha256:processInventory.processTableSha256});
+    log({step:'READ_ONLY_TARGET_SCOPE',registryCount:registryStores.size,
+      targetIssue:203,source:'EXACT_CAS_NATIVE_EVENT_AND_CLAIM_FSW',
+      globalHostAdmission:'NOT_PROVEN',fenceAcquired:false,
+      processInventory:'NOT_RUN',otherRegistries:'NOT_ENUMERATED',
+      historicalCi:'VALIDATED_FROM_IMMUTABLE_MARKER_ONLY'});
     const lineage={
       readClaim319:()=>store319.get(RECOVERY_IDENTITY.task319.claimCasKey),
       readFrozen319:()=>store319.get(RECOVERY_IDENTITY.task319.frozenWriteSetKey),
       readClaim331:()=>store331.get(RECOVERY_IDENTITY.task331.claimCasKey),
       readFrozen331:()=>store331.get(RECOVERY_IDENTITY.task331.frozenWriteSetKey),
     };
-    let proofCalls=0;
+    // The revision-4 verifier cannot request a fresh quiescence proof:
+    // that would be required only for a NEW one-shot external write, which
+    // this CLI never performs. Any accidental call must stop fail-closed.
     const quiescence={async readFreshProof(){
-      proofCalls++;
-      const processInventory=inspectHostProcessInventory(cliProcessTable(),process.pid,repoRoot);
-      const registryInventory=await inspectHostRegistryInventory(
-        registryStores,HOST_TMP_ROOT,REG203,[REG203,REG319,REG331]);
-      const historicalCiEvidence=await readHistoricalCiEvidenceFromClient(octokit);
-      const excluded=registryInventory.targetReservation;
-      const proof={
-        observedAt:new Date().toISOString(),
-        fenceHeld:fence.isHeld()&&processInventory.activeWriterCount===0&&
-          processInventory.activeSubprocessCount===0&&registryInventory.unresolvedRecordCount===0&&
-          registryInventory.targetReservationCount===1&&registryInventory.targetExactCount===1&&
-          historicalCiEvidence!==null,
-        fenceId:fence.fenceId,fenceOwnerPid:fence.ownerPid,
-        dispatchId:TARGET.dispatchId,sourceSha:TARGET.sourceSha,
-        protectedClaimKey:TARGET.protectedClaimKey,generation:1,
-        activeWriterCount:processInventory.activeWriterCount,
-        activeAttemptCount:registryInventory.pendingRecordCount,
-        activeSubprocessCount:processInventory.activeSubprocessCount,
-        inflightEffectCount:registryInventory.pendingRecordCount+
-          processInventory.activeWriterCount+processInventory.activeSubprocessCount,
-        unresolvedResourceCount:registryInventory.unknownRecordCount+
-          processInventory.unknownWriterCount+(historicalCiEvidence?0:1),
-        writeSetReconciled:writeSetReconciled(),
-        registryInventory:{registryCount:registryInventory.registryCount,
-          registryPathsSha256:registryInventory.registryPathsSha256,
-          targetReservationCount:registryInventory.targetReservationCount,
-          targetExactCount:registryInventory.targetExactCount,
-          unresolvedRecordCount:registryInventory.unresolvedRecordCount},
-        processInventory,historicalCiEvidence,
-        evidenceRefs:RECOVERY_SIX_REFS,excludedReservation:excluded,
-        excludedReservationCount:excluded===null?0:1,
-      };
-      log({step:'QUIESCENCE_PROOF',call:proofCalls,fenceId:proof.fenceId,fenceHeld:proof.fenceHeld,
-        registryCount:registryInventory.registryCount,targetReservationCount:registryInventory.targetReservationCount,
-        pendingRecordCount:registryInventory.pendingRecordCount,unknownRecordCount:registryInventory.unknownRecordCount,
-        activeWriterCount:proof.activeWriterCount,activeSubprocessCount:proof.activeSubprocessCount,
-        unknownWriterCount:processInventory.unknownWriterCount,historicalCiVerified:historicalCiEvidence!==null,
-        writeSetReconciled:proof.writeSetReconciled,observedAt:proof.observedAt});
-      return proof;
+      throw new Error('READ_ONLY_QUIESCENCE_NOT_APPLICABLE');
     }};
     const targetBefore=await store203.get(TARGET.casKey);
     log({step:'READ_ONLY_MODE',targetRevision:targetBefore?.revision??null,targetPhase:targetBefore?.value?.phase??null,
-      publisherEnabled:false,casWritesEnabled:false,fenceId:fence.fenceId});
+      publisherEnabled:false,casWritesEnabled:false,fenceId:null,
+      globalHostAdmission:'NOT_PROVEN'});
     if(!writeSetReconciled())throw new Error('EXACT_LOCAL_HEAD_TREE_OR_WRITESET_MISMATCH');
     const controller=createPrePostRecoveryController({store:store203,claimReader,terminalReader,
       priorRunLog,lineage,quiescence,publisher,writerAuthority});
     const result=await controller.verifyTerminalReservationReadOnly();
-    log({step:'READ_ONLY_VERIFICATION_RESULT',result});
+    log({step:'READ_ONLY_VERIFICATION_RESULT',result,
+      verificationScope:'TARGET_TERMINAL_REVISION_4_ONLY',
+      globalHostAdmission:'NOT_PROVEN',rootClaim284:'NOT_ADMITTED'});
     process.exitCode=result?.status==='ALREADY_VERIFIED'&&result.publisherInvocationCount===0&&
       result.httpPostCount===0&&result.casWrites===0?0:4;
   }catch(error){
     log({step:'HOST_VERIFY_ABORT',reason:String(error?.message??error)});process.exitCode=4;
   }finally{
-    if(fence){try{fence.release();}catch(error){
-      log({step:'HOST_FENCE_RELEASE_FAILED',reason:String(error?.message??error)});process.exitCode=5;}}
     for(const store of registryStores.values()){try{await store.close();}catch{process.exitCode=5;}}
   }
 }
