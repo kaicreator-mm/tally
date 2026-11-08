@@ -196,6 +196,10 @@ export function createHostAdmissionSourceFromClient({
     });
     if(foreign.length>0&&resourceConflictPort){
       const foreignClaimsSha256=foreignClaimDigest(foreign);
+      // The witness must bind the exact before/after Host registry snapshot,
+      // not a stale list captured before another writer published a Claim.
+      const registrySnapshotSha256=createHash('sha256')
+        .update(JSON.stringify(registry.rows)).digest('hex');
       let proof=null;
       try{
         proof=await resourceConflictPort.readHeldFence(Object.freeze({
@@ -212,8 +216,14 @@ export function createHostAdmissionSourceFromClient({
       }catch{proof=null;}
       if(validResourceFenceProof(proof,{repository,writerId:writerAuthority.writerId,
         protectedClaimKey:request.protectedClaimKey,sourceSha:request.sourceSha,
-        foreignClaimCount:foreign.length,foreignClaimsSha256}))
+        foreignClaimCount:foreign.length,foreignClaimsSha256})){
+        const after=await registrySnapshot();
+        const afterSha=after.error?null:createHash('sha256')
+          .update(JSON.stringify(after.rows)).digest('hex');
+        if(afterSha!==registrySnapshotSha256)
+          return denied('HOST_RESERVATION_REGISTRY_DRIFT',request);
         activeIncompatibleClaimCount=0;
+      }
     }
     if(activeIncompatibleClaimCount>0)return Object.freeze({
       ...denied('INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',request),
