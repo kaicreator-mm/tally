@@ -15,7 +15,7 @@
     "createTask": false,
     "changeDenominator": true,
     "membership": "EXISTING_370_SUPPORTING_HOST_TASK_NOW_COUNTED_IN_V2_CANONICAL_TYPE_TASK_ROSTER",
-    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R8 Pack+driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization."
+    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R8 Pack+driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization. Canonical Issue #370 now has the same eight-path normalized set, status CANONICALIZED_OVERLAP_BLOCKED; five paths conflict with accepted historical #319 FSW. A fresh #370 Registry is not historical #319 writer cessation."
   },
   "authorityIntake": {
     "issueComment": 6718120247,
@@ -52,6 +52,7 @@
       "Before any real #370 Claim, run disposable-store/fake-transport negatives for complete request-value and CAS-condition tampering, creation-time same-SID handle acquisition, unbound client keys, replay and forged responses; every negative must produce zero CAS/POST.",
       "Exact Owner Pack receipt bound to Pack HEAD/tree/blob, all bootstrap-driver SHA256 values, Authority response-public-key, implementation base and eight-path digest; the existing Delivery-First continuation is ordinary project authorization and no redundant chat token is requested.",
       "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after new R8 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
+      "Fresh readback of original #319 accepted Claim, its nine-path FROZEN_DAG_WRITESET and five concrete overlapping source paths with #370; before any #370 source write, independently prove a lawful #319 terminal/serial writer handoff or genuinely enforceable exclusion spanning both original and new writer authorities. #319 Issue remains OPEN/state:blocked and its Task Closure is NOT_VERIFIED. No mere process census/new empty #370 registry may override this conflict.",
       "One-time isolated bootstrap Claim and create-only FROZEN_DAG_WRITESET through the exact existing T06d/C source and public DomainHarness SQLite CAS API, followed by native/CAS readback.",
       "After the bootstrap Claim/FSW, implement the real shared fence in the eight admitted paths. The bootstrap result is BOOTSTRAP_CLAIM_ACCEPTED, not PHYSICAL_SHARED_HOST_FENCE=PASS."
     ],
@@ -92,7 +93,7 @@
       ]
     },
     "resourceExclusion": [
-      "A newly created canonical registry must be empty through public list() before admission; the strict existing source has no resourceConflictPort and therefore rejects every foreign live Claim. The #370 protected key is unique and its mustBeAbsent CAS physically admits at most one competing reservation.",
+      "The newly created canonical #370 registry must be empty via public list() before bootstrap; the strict pinned T06d source without resourceConflictPort rejects foreign live rows IN THAT REGISTRY. Separately, historical #319 has an accepted PUBLISHED_VERIFIED Claim/FSW on five overlapping paths in a distinct store: emptiness of #370 registry is NOT proof against #319 and cannot authorize concurrent source editing. First obtain independent evidence of lawfully terminated/serially transferred #319 Writer or a physical exclusion gate that spans both authorities and prevents any #319 resumption, fail closed otherwise.",
       "Native preflight must prove zero existing #370 Claim events. Final C readback requires exactly one unedited matching protected-key event, so a competing Claim comment invalidates acceptance rather than being ignored.",
       "Only the #370 Claim CAS key, #370 native comment and #370 FSW key are in this bootstrap effect set. No candidate branch/PR, Project V2, Maintenance Issue, Release, #203 or #284 effect is imported or invoked.",
       "The durable #370 published Claim remains present during create-only FSW put/readback, and both Claim and FSW mutations are executed by the same Offline Authority with signed high-water responses. The Online driver has no second writer lane and exits after a final signed native/CAS readback. Any error before the CAS reservation leaves no Claim row; any error after reservation but before POST may leave PENDING_GITHUB_PUBLISH and is reported exactly, with no accepted native Claim, reset or second POST. Any ambiguous/post effect likewise remains pending and forbids a second attempt.",
@@ -297,6 +298,13 @@
       "credentialAndStore": "Must use the same canonical registry/fence after physical PASS and its own root Gate",
       "destination": "#284 Claim/FSW and exact R9 native edges/freeze",
       "disposition": "FUTURE_CONSUMER_ONLY: E0 fourteen paths are disjoint from this eight-path set; remains NOT_ADMITTED under this Pack"
+    },
+    {
+      "entrance": "Historical #319 accepted T06d source Writer",
+      "effect": "Accepted native Claim and frozen nine-path Task source authority; original Task Closure unverified",
+      "credentialAndStore": "Historical distinct #319 accepted Host Claim/FSW; not in new empty #370 registry",
+      "destination": "Five same exact source paths in #370 proposed eight-path write set",
+      "disposition": "HISTORICAL_OVERLAP_BLOCK: lawful #319 terminal/serial handoff or independently proven physical mutual exclusion spanning both writers is required BEFORE #370 source mutation. This does not imply #319 had an active process or prove a concurrent write occurred."
     }
   ],
   "preflightRiskAnalysis": [
@@ -347,6 +355,10 @@
     {
       "risk": "Secret or private evidence leakage",
       "acceptance": "Only owner-nonce hash and allowlisted public identities enter CAS; raw nonce, token, private prompt and transport bodies are not logged."
+    },
+    {
+      "risk": "Nonterminal historical #319 Claim/FSW overlaps #370 on five original source paths, while #370 fresh registry cannot see the old writer.",
+      "acceptance": "Read authoritative #319 CAS Claim/FSW/native event and ensure legal terminal/handoff or an independently reviewed enforceable mutual exclusion covering both actual writer principals and all five paths before #370 source edits; #319 source review PASS/absent visible process is not Task Closure or exclusivity. On UNKNOWN, no implementation source edit or #284 root Claim."
     }
   ],
   "acceptance": {
@@ -361,7 +373,8 @@
       "Continuous lease proof across reserve -> isolated native publish -> exact readback -> final CAS, including stable fence id/revision and frozen resource digest readback.",
       "Lost lease, wrong-nonce release, restart, registry recreation/malformation, competing writer, same key, overlapping write set, disjoint concurrent Tasks, stale/fake Owner/source evidence and retry exhaustion all covered.",
       "Before secrets are injected, an adversarial same-SID sibling racing from process creation must fail VM read, VM write/operation, WRITE_DAC and handle duplication against both selected processes; inherited-handle use is limited to the three explicit stdio handles. Two independently authorized per-Task clients then contend through the real composition: overlapping acquisition admits one and disjoint Tasks both progress without sharing a private key. Full request-value/condition tamper, unbound client keys, replay, forged response and nonce decryption negatives all deny before effects. No live test Claim/POST and no #203 POST.",
-      "The sole real #370 bootstrap Claim follows Pack+driver review, Owner receipt and native preflight; it is read back before FSW/source work and is not counted as physical-fence proof."
+      "The sole real #370 bootstrap Claim follows Pack+driver review, Owner receipt and native preflight; it is read back before FSW/source work and is not counted as physical-fence proof.",
+      "Historical #319 CAS/FSW and five-path overlap must be included in the real same-resource fence or a lawful terminal writer handoff. A new empty #370 registry alone fails this test; no selected source edit until that predecessor authority is resolved."
     ],
     "final": [
       "Full affected local gates and final Exact-SHA Woodpecker after candidate convergence; unchanged PR #371/#373 old-SHA CI is not rerun.",
@@ -380,6 +393,7 @@
     "physicalFence": "NOT_PROVEN",
     "agentExecution": "NOT_ADMITTED",
     "root284": "NOT_ADMITTED",
-    "mergeReleaseDeploy": "NO"
+    "mergeReleaseDeploy": "NO",
+    "historical319WriterOverlap": "FIVE_PATHS_NONTERMINAL_FSW_BLOCK_UNTIL_LAWFUL_SERIAL_HANDOFF_OR_CROSS_WRITER_EXCLUSION"
   }
 }
