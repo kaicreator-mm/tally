@@ -16,9 +16,11 @@ function compare(runDir,filledPath,outPath){
   const questions=load(path.join(runDir,'frozen-questions.json')).questions;
   const blind=load(path.join(runDir,'blind-TO-INDEPENDENT-SCORER.json'));
   const key=load(path.join(runDir,'blind-key-WITHHOLD-FROM-SCORER.json')).mapping;
+  const sourceContext=load(path.join(runDir,'source-context-TO-INDEPENDENT-SCORER.json'));
   const graded=load(filledPath);
   ensure(blind.status==='NOT_SCORED','Blind original was altered');
-  ensure(questions.length===7 && blind.items.length===14 && key.length===14,'Frozen input count mismatch');
+  ensure(sourceContext.status==='FROZEN_PINNED_SOURCE_CONTEXT','Pinned source context was altered');
+  ensure(questions.length===7 && blind.items.length===14 && key.length===14 && sourceContext.items.length===7,'Frozen input count mismatch');
   ensure(typeof graded.reviewer_ref==='string' && graded.reviewer_ref.trim() && graded.independent_from_builder===true,'Independent grader attestation required');
   ensure(['HUMAN_REVIEWER','INDEPENDENT_MODEL_GRADER'].includes(graded.reviewer_kind),'Reviewer kind must distinguish human from automated');
   ensure(typeof graded.evaluated_at_utc==='string' && !Number.isNaN(Date.parse(graded.evaluated_at_utc)),'Genuine scoring UTC time required');
@@ -30,14 +32,19 @@ function compare(runDir,filledPath,outPath){
   const trials=new Map(run.trials.map(x=>[x.qid+'-'+x.arm,x]));
   ensure(trials.size===14 && run.trials.every(t=>t.status==='SUCCESS'),'Duplicate or failed trial');
   const qmap=new Map(questions.map(x=>[x.id,x]));
-  ensure(qmap.size===7 && [...qmap.keys()].every((q,i)=>q==='G5-0'+(i+1)),'Changed question IDs');
+  const contextById=new Map(sourceContext.items.map(x=>[x.qid,x]));
+  ensure(qmap.size===7 && contextById.size===7 && [...qmap.keys()].every((q,i)=>q==='G5-0'+(i+1)),'Changed question IDs');
   const paired=[];
   for(const [bid,blindEntry] of blindById){
     const rating=byId.get(bid),mapping=mapById.get(bid);
     ensure(rating && mapping,'Unrated or unmapped blind ID: '+bid);
     ensure(mapping.arm==='D'||mapping.arm==='K','Invalid arm');
-    const qid=bid.slice(0,5),t=trials.get(qid+'-'+mapping.arm),q=qmap.get(qid);
-    ensure(q && t && t.qid===qid,'Wrong mapping to trial: '+bid);
+    const qid=bid.slice(0,5),t=trials.get(qid+'-'+mapping.arm),q=qmap.get(qid),context=contextById.get(qid);
+    ensure(q && context && t && t.qid===qid,'Wrong mapping to trial: '+bid);
+    ensure(context.question===q.question && context.criteria===q.criteria && context.hard_exclusions===q.traps,
+           'Pinned grader source context mismatch: '+bid);
+    ensure(mapping.arm==='K'?sha(JSON.stringify(context.retrieval))===t.retrieval_sha256:t.retrieval_sha256===null,
+           'Retrieval digest/source context mismatch: '+bid);
     ensure(blindEntry.question===q.question && blindEntry.criteria===q.criteria &&
            blindEntry.answer===t.answer && blindEntry.hard_exclusions===q.traps,'Blind evidence was altered');
     const req=fs.readFileSync(path.join(runDir,qid+'-'+mapping.arm+'-request.json'));
@@ -124,13 +131,13 @@ if(args.includes('--make-template')){
 }else if(args.includes('--self-test')){
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'sek09g-score-')),runDir=path.join(temp,'run');
   fs.mkdirSync(runDir);
-  const qs=Array.from({length:7},(_,i)=>({id:'G5-0'+(i+1),question:'q'+i,criteria:'one; two',traps:'no fabrications'}));
+  const qs=Array.from({length:7},(_,i)=>({id:'G5-0'+(i+1),question:'q'+i,criteria:'one; two',traps:'no fabrications',retrieval:{claim:{statement:'source '+i}}}));
   const trials=[],blind=[],mapping=[],ratings=[];
   for(const q of qs){for(const arm of ['D','K']){
     const answer=q.id+arm+' mock',req='{"model":"MOCK"}',res=JSON.stringify({choices:[{message:{content:answer}}]});
     fs.writeFileSync(path.join(runDir,q.id+'-'+arm+'-request.json'),req);
     fs.writeFileSync(path.join(runDir,q.id+'-'+arm+'-provider-response.json'),res);
-    trials.push({qid:q.id,arm,status:'SUCCESS',answer,request_sha256:sha(req),response_sha256:sha(res)});
+    trials.push({qid:q.id,arm,status:'SUCCESS',answer,request_sha256:sha(req),response_sha256:sha(res),retrieval_sha256:arm==='K'?sha(JSON.stringify(q.retrieval)):null});
     const bid=q.id+'-'+(arm==='D'?1:2);
     blind.push({blind_id:bid,question:q.question,criteria:q.criteria,hard_exclusions:q.traps,answer});
     mapping.push({blind_id:bid,arm});
@@ -142,6 +149,7 @@ if(args.includes('--make-template')){
   dump('frozen-questions.json',{questions:qs});
   dump('blind-TO-INDEPENDENT-SCORER.json',{status:'NOT_SCORED',items:blind});
   dump('blind-key-WITHHOLD-FROM-SCORER.json',{mapping});
+  dump('source-context-TO-INDEPENDENT-SCORER.json',{status:'FROZEN_PINNED_SOURCE_CONTEXT',items:qs.map(q=>({qid:q.id,question:q.question,criteria:q.criteria,hard_exclusions:q.traps,retrieval:q.retrieval}))});
   const scored=path.join(temp,'scored.json');fs.writeFileSync(scored,JSON.stringify({reviewer_ref:'MOCK_TEST_ONLY',independent_from_builder:true,reviewer_kind:'INDEPENDENT_MODEL_GRADER',evaluated_at_utc:new Date().toISOString(),ratings}));
   const out=path.join(temp,'comparison.json'),result=compare(runDir,scored,out);
   ensure(result.pairs.length===7 && result.summary.paired_responses===14,'Self-test failed');

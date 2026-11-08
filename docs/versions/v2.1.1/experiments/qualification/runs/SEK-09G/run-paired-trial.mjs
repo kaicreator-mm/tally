@@ -78,6 +78,7 @@ async function run(qs,meta,options){
   for(const q of qs){const pair=state.trials.filter(e=>e.qid===q.id);if(pair.length!==2)throw Error('Broken pair');blindSeed=(Math.imul(blindSeed,1664525)+1013904223)>>>0;if(blindSeed%2)pair.reverse();for(let i=0;i<2;i++){const e=pair[i],bid=q.id+'-'+(i+1);blind.push({blind_id:bid,question:q.question,answer:e.answer,criteria:q.criteria,hard_exclusions:q.traps,reviewer_ref:null,correctness_0_2:null,scope_0_2:null,traceability_0_2:null,unsupported_claims:null,omission_count:null,observed_effort_seconds:null});key.push({blind_id:bid,arm:e.arm});}}
   save(path.join(options.out,'blind-TO-INDEPENDENT-SCORER.json'),{status:'NOT_SCORED',items:blind});
   save(path.join(options.out,'blind-key-WITHHOLD-FROM-SCORER.json'),{mapping:key});
+  save(path.join(options.out,'source-context-TO-INDEPENDENT-SCORER.json'),{status:'FROZEN_PINNED_SOURCE_CONTEXT',items:qs.map(q=>({qid:q.id,question:q.question,criteria:q.criteria,hard_exclusions:q.traps,retrieval:q.retrieval}))});
   console.log('REAL_ANSWERS=14 INDEPENDENT_SCORING=NOT_RUN G5=NOT_YET_QUALIFIED');return true;
 }
 async function test(){
@@ -87,7 +88,9 @@ async function test(){
     const out=path.join(tmp,'out'),ok=await run(qs,{mock_only:true},{endpoint:'http://127.0.0.1:'+server.address().port+'/v1/chat/completions',model:'MOCK_ONLY',out,timeout:3000});
     const st=JSON.parse(fs.readFileSync(path.join(out,'trial-manifest.json')));
     const blind=JSON.parse(fs.readFileSync(path.join(out,'blind-TO-INDEPENDENT-SCORER.json')));
+    const context=JSON.parse(fs.readFileSync(path.join(out,'source-context-TO-INDEPENDENT-SCORER.json')));
     if(!ok||count!==14||st.trials.length!==14||blind.items.length!==14||blind.items.some(x=>x.correctness_0_2!==null))throw Error('SELF_TEST_FAIL');
+    if(context.items.length!==7||context.items.some((x,i)=>x.qid!=='G5-0'+(i+1)||!x.retrieval||JSON.stringify(x).includes('"arm"')))throw Error('SOURCE_CONTEXT_FAIL');
     const messages=requests.map(r=>r.messages[1].content);
     if(messages.filter(s=>s.includes('Use these exact pinned knowledge graph excerpts')).length!==7||messages.filter(s=>!s.includes('Use these exact pinned knowledge graph excerpts')).length!==7||messages.some(s=>s.includes('hard_exclusions')||s.includes('criteria:')))throw Error('ARM_ISOLATION_OR_CRITERIA_LEAK');
     fs.rmSync(tmp,{recursive:true,force:true});console.log('SELF_TEST=PASS MOCK_ONLY REAL_MODEL_CALLS=0');
