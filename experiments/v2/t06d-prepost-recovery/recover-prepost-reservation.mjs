@@ -417,8 +417,8 @@ export function createPrePostRecoveryController({
   /** Revalidate the immutable marker/event envelope against the final row and
    *  the current public Claim/FSW readbacks. A matching event comment alone
    *  is insufficient if its persisted marker no longer binds the original
-   *  reservation evidence and exact admission lineage. Historical CI is
-   *  checked structurally here; its original freshness window is not replayed.
+   *  reservation evidence and exact admission lineage. This target-only
+   *  verifier does not replay historical CI or its original freshness window.
    *  Every object is bound to the exact observed key set of the one marker
    *  that exists (written by the executed 25f9dcd builder): the marker
    *  carries no markerVersion and the envelope nests the #319 evidence
