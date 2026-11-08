@@ -4,12 +4,12 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-07T22:29:44.760Z",
+  "observedAt": "2026-11-08T11:18:44.930Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 48,
-    "claimCommentPages": 48
+    "taskIssueCount": 50,
+    "claimCommentPages": 50
   },
   "taskIssues": [
     {
@@ -501,7 +501,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T11:41:50Z",
-      "updatedAt": "2026-11-04T06:23:54Z",
+      "updatedAt": "2026-11-08T07:05:35Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_INTEGRATED_BY_PR215_CLOSURE_UNVERIFIED",
       "dispatchableByDisposition": false,
@@ -516,7 +516,7 @@
         "state:ready"
       ],
       "createdAt": "2026-10-31T12:06:28Z",
-      "updatedAt": "2026-11-04T06:24:00Z",
+      "updatedAt": "2026-11-08T07:05:39Z",
       "closedAt": null,
       "scopeDisposition": "SOURCE_INTEGRATED_BY_PR217_CLOSURE_UNVERIFIED",
       "dispatchableByDisposition": false,
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-06T13:44:50Z",
+      "updatedAt": "2026-11-08T11:05:18Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -606,7 +606,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-05T06:32:21Z",
+      "updatedAt": "2026-11-08T07:36:41Z",
       "closedAt": null,
       "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
       "dispatchableByDisposition": false,
@@ -636,7 +636,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T03:10:06Z",
-      "updatedAt": "2026-11-04T06:26:23Z",
+      "updatedAt": "2026-11-08T10:10:14Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
       "dispatchableByDisposition": false,
@@ -681,7 +681,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-04T00:27:42Z",
-      "updatedAt": "2026-11-06T10:53:42Z",
+      "updatedAt": "2026-11-08T06:15:37Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_E0_R9_REFRESH_REQUIRED_NO_ROOT_CLAIM",
       "dispatchableByDisposition": false,
@@ -731,6 +731,36 @@
       "scopeDisposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
       "dispatchableByDisposition": false,
       "dispositionNote": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
+    },
+    {
+      "issueNumber": 370,
+      "title": "[v2][T06d P1] Shared Registry overbroad Claim incompatibility — require exact durable resource-fence proof for disjoint Tasks",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-08T00:35:27Z",
+      "updatedAt": "2026-11-08T11:01:53Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_HOST_FENCE_R8_PACK_REVIEW_REQUIRED_NO_OWNER_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Formal planned supporting Host-fence Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Exact normalized eight-path R8 candidate digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27. Five paths overlap #319's accepted historical nine-path FSW; #319 remains OPEN/state:blocked with no inferred Task Closure, and a fresh empty #370 registry is not evidence that #319 terminated. Governance Pack PR #376 HEAD d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / PackBlob f81fa0775a979623e4e4c41ebbff1726683d96e3 is INDEPENDENT_R8=REQUIRED with Owner=NONE; prior R7 review 5817590966 was BLOCK for native task-classification and Issue comment 6720594384 records the correction. No native Claim, FSW, native dependency or source edit exists. Inclusion is a roster/denominator accounting correction only: never promote to state:ready or treat this row as Task Acceptance, closure, #284 admission or source permission."
+    },
+    {
+      "issueNumber": 377,
+      "title": "[v2][P1 Defect] GitHub native read retry can replay POST when input is Request",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-08T08:06:48Z",
+      "updatedAt": "2026-11-08T10:10:55Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_REVIEWED_PACK_OWNER_APPROVED_SOURCE_ADMISSION_BLOCKED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Formal planned successor-defect Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Immutable Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / Tree 2dd3d3fad0ffa5afb4e99eee94ada266afdcd882 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc; independent Pack review 5817226448 PASS (P0=0/P1=0/P2=2) and exact PackBlob Owner receipt 6719378711 OWNER_APPROVED. Exact two normalized paths digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac; both are historical OPEN #211-owned, already-integrated paths, so no concurrent writer or historical Claim/FSW/merged-PR reuse is allowed. No native Claim or FSW exists; source admission remains BLOCK until A/#260 R17 independent Exact-SHA PASS, current metadata/dependency/overlap revalidation, a genuine selected-Host shared-writer fence, fresh #377 Claim and per-task FROZEN_DAG_WRITESET, and a separate JIT branch. No #370/#284 Host competition, #203 POST, native dependency write, freeze, merge, tag, release or deployment."
     }
   ],
   "edges": [
@@ -983,6 +1013,22 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
+    },
+    {
+      "from": 211,
+      "to": 377,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/377",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "#377 replaces only the native read-retry derivation/guard; its exact two paths are historical #211-owned and already integrated in version/v2. #211 original Claim is historical PUBLISHED_VERIFIED but its original FROZEN_DAG_WRITESET is absent, and #211 remains OPEN/non-dispatchable. No concurrent writer or reuse of the historical Claim/FSW/merged PRs is permitted; PLANNED serialization annotation only, not a native dependency, Claim, JIT or source permission."
+    },
+    {
+      "from": 319,
+      "to": 370,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/370",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
+      "reason": "#370 exact R8 eight-path candidate overlaps #319 accepted historical nine-path FSW on five paths. #319 remains OPEN/state:blocked with no inferred Task Closure and its original Claim/FSW cannot be reused. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before #370 source work; a fresh empty #370 registry is not evidence that #319 terminated. PLANNED only, not a native dependency."
     }
   ],
   "claimSubjects": [
@@ -1609,6 +1655,32 @@
       "commentId": 6690955003,
       "commentRef": "https://github.com/kaicreator-mm/tally/issues/331#issuecomment-6690955003",
       "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 370,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#370:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 377,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#377:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1835,13 +1907,29 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
+    },
+    {
+      "from": 211,
+      "to": 377,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/377",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "#377 replaces only the native read-retry derivation/guard; its exact two paths are historical #211-owned and already integrated in version/v2. #211 original Claim is historical PUBLISHED_VERIFIED but its original FROZEN_DAG_WRITESET is absent, and #211 remains OPEN/non-dispatchable. No concurrent writer or reuse of the historical Claim/FSW/merged PRs is permitted; PLANNED serialization annotation only, not a native dependency, Claim, JIT or source permission."
+    },
+    {
+      "from": 319,
+      "to": 370,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/370",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
+      "reason": "#370 exact R8 eight-path candidate overlaps #319 accepted historical nine-path FSW on five paths. #319 remains OPEN/state:blocked with no inferred Task Closure and its original Claim/FSW cannot be reused. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before #370 source work; a fresh empty #370 registry is not evidence that #319 terminated. PLANNED only, not a native dependency."
     }
   ],
   "notes": [
-    "This refreshed 48-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "This refreshed 50-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
     "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
-    "Twenty-eight PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212 and the serial #319 → #331 → #284 chain as PLANNED.",
-    "The live roster contains all 48 current label:type:task Issues (27 OPEN / 21 CLOSED). #203 has target-specific terminality verified but remains OPEN/state:blocked with global Host admission BLOCK/UNKNOWN; #319 implementation PASS and successor recovery do not infer Task Closure; #331 has an observed Claim and scoped source-patch PASS but TASK_ACCEPTANCE=BLOCK and Issue OPEN/state:ready; #284 remains PLANNED with no root Claim. #276 remains PLANNED/non-dispatchable.",
+    "Thirty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212, the serial #319 → #331 → #284 chain, and the overlap-serialization edges #211 → #377 and #319 → #370 as PLANNED.",
+    "The live roster contains all 50 current label:type:task Issues (29 OPEN / 21 CLOSED). #203 has target-specific terminality verified but remains OPEN/state:blocked with global Host admission BLOCK/UNKNOWN; #319 implementation PASS and successor recovery do not infer Task Closure; #331 has an observed Claim and scoped source-patch PASS but TASK_ACCEPTANCE=BLOCK and Issue OPEN/state:ready; #284 remains PLANNED with no root Claim; #370 and #377 are PLANNED rows with no Claim/FSW. The 50-Task denominator (21 CLOSED + 29 OPEN) is a roster accounting correction, not Task acceptance or Outcome Closure.",
     "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
     "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
     "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
@@ -1858,10 +1946,11 @@
     "New PLANNED edges #284 -> #312 and #312 -> #219 record R8 serial ownership only. No GitHub Native dependency (blocked_by) was written for them or any other pair; the 4 NATIVE edges remain #260-#263 -> #264.",
     "Previous 46-Task snapshot: 25 open Task bodies had 66 nonzero pairwise intersections (23 nonempty write sets; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices matched the paths_sha256-normalized blocks in Issues #312/#219/#284.",
     "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied.",
-    "Current full read at 2026-11-07T22:29:44.760Z: all 48 Task bodies, complete Claim-comment pagination and blocked_by lists; 41 observed self-reported Claim comments and 7 no-Claim rows. #203 revision 4 / TERMINAL_VERIFIED and event 6691973736 are target-specific facts only. #331 Claim 6690955003 and exact three-path FSW are observed; R3 source patch PASS retains two historical/operational P1 deviations and TASK_ACCEPTANCE=BLOCK. #319 → #331 → #284 remains PLANNED only; #284 has no root Claim.",
-    "Current 27-open-Task write-set audit: 25 nonempty sets (#199/#200 read-only), 66 nonzero exact-path pairs recomputed from the full live pair matrix. The prior 67-pair note and #212/#319 two-path overlap claim were false; #331's exact three paths overlap no open Task write set. No native dependency was invented for any pair.",
+    "Current full read at 2026-11-08T11:18:44.930Z: all 50 Task bodies, complete Claim-comment pagination and blocked_by lists; 41 observed self-reported Claim comments and 9 no-Claim rows. #203 revision 4 / TERMINAL_VERIFIED and event 6691973736 are target-specific facts only. #331 Claim 6690955003 and exact three-path FSW are observed; R3 source patch PASS retains two historical/operational P1 deviations and TASK_ACCEPTANCE=BLOCK. #319 → #331 → #284 remains PLANNED only; #284 has no root Claim. #370 and #377 have no native Claim, FSW or dependency edge.",
+    "Current 29-open-Task write-set audit: 27 nonempty sets (#199/#200 read-only), 68 nonzero exact-path pairs recomputed from the full live pair matrix; new pairs are #211x#377=2 and #319x#370=5. The prior 67-pair note and #212/#319 two-path overlap claim remain false; #331's exact three paths overlap no open Task write set. No native dependency was invented for any pair.",
     "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED.",
-    "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved."
+    "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved.",
+    "R17 combined refresh: #377 (defect Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc, independent Pack review 5817226448 PASS, Owner receipt 6719378711, exact two-path digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac) and #370 (exact R8 eight-path digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27; Governance Pack PR #376 HEAD d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / PackBlob f81fa0775a979623e4e4c41ebbff1726683d96e3 with INDEPENDENT_R8=REQUIRED and Owner=NONE; prior R7 review 5817590966 BLOCK for native task-classification, corrected by Issue comment 6720594384) were added in one pass under the existing A Claim/FSW/Writer. Both remain type:task/state:planned with no Claim, FSW, native dependency or source permission; neither was promoted to state:ready. core Outcome Closure remains NOT_VERIFIED: 21 closed Issues of 50 do not establish verified Outcome Closure (21/50 measurement preserved)."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2154,6 +2243,18 @@
         "disposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
         "dispatchableByDisposition": false,
         "note": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
+      },
+      {
+        "issueNumber": 370,
+        "disposition": "PLANNED_HOST_FENCE_R8_PACK_REVIEW_REQUIRED_NO_OWNER_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "Formal planned supporting Host-fence Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Exact normalized eight-path R8 candidate digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27. Five paths overlap #319's accepted historical nine-path FSW; #319 remains OPEN/state:blocked with no inferred Task Closure, and a fresh empty #370 registry is not evidence that #319 terminated. Governance Pack PR #376 HEAD d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / PackBlob f81fa0775a979623e4e4c41ebbff1726683d96e3 is INDEPENDENT_R8=REQUIRED with Owner=NONE; prior R7 review 5817590966 was BLOCK for native task-classification and Issue comment 6720594384 records the correction. No native Claim, FSW, native dependency or source edit exists. Inclusion is a roster/denominator accounting correction only: never promote to state:ready or treat this row as Task Acceptance, closure, #284 admission or source permission."
+      },
+      {
+        "issueNumber": 377,
+        "disposition": "PLANNED_REVIEWED_PACK_OWNER_APPROVED_SOURCE_ADMISSION_BLOCKED",
+        "dispatchableByDisposition": false,
+        "note": "Formal planned successor-defect Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Immutable Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / Tree 2dd3d3fad0ffa5afb4e99eee94ada266afdcd882 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc; independent Pack review 5817226448 PASS (P0=0/P1=0/P2=2) and exact PackBlob Owner receipt 6719378711 OWNER_APPROVED. Exact two normalized paths digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac; both are historical OPEN #211-owned, already-integrated paths, so no concurrent writer or historical Claim/FSW/merged-PR reuse is allowed. No native Claim or FSW exists; source admission remains BLOCK until A/#260 R17 independent Exact-SHA PASS, current metadata/dependency/overlap revalidation, a genuine selected-Host shared-writer fence, fresh #377 Claim and per-task FROZEN_DAG_WRITESET, and a separate JIT branch. No #370/#284 Host competition, #203 POST, native dependency write, freeze, merge, tag, release or deployment."
       }
     ]
   },
@@ -2279,7 +2380,7 @@
         "paths": [
           "packages/tally-engineering-business/test/*.test.mjs"
         ],
-        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 66-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
+        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 68-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
       },
       {
         "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
@@ -2328,17 +2429,44 @@
           "packages/tally-engineering-business/src/index.mjs",
           "packages/tally-engineering-business/test/business-policy.test.mjs"
         ],
-        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. No edge is recorded; this is an admission gate, not a dispatch edge."
+        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. The #370 R8 supporting Host-fence candidate is not admitted (INDEPENDENT_R8=REQUIRED, Owner=NONE) and does not satisfy or bypass this gate. No edge is recorded; this is an admission gate, not a dispatch edge."
+      },
+      {
+        "id": "R17_377_NATIVE_READ_RETRY_211_SERIALIZATION",
+        "taskIssues": [
+          211,
+          377
+        ],
+        "paths": [
+          "packages/tally-github-native-c/src/read-retry.mjs",
+          "packages/tally-github-native-c/test/read-retry.test.mjs"
+        ],
+        "finding": "#377 exact two-path candidate (#211x#377=2) replaces only the native read-retry method derivation/guard in files historically owned by #211 and already integrated in version/v2. #211 remains OPEN with an observed historical Claim but its original FROZEN_DAG_WRITESET is absent; no concurrent writer, historical Claim/FSW reuse or merged-PR mutation is permitted. Recorded as PLANNED edge #211 -> #377 only; no native dependency or source permission."
+      },
+      {
+        "id": "R8_370_HOST_FENCE_319_SERIALIZATION",
+        "taskIssues": [
+          319,
+          370
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#370 exact R8 eight-path candidate shares five paths with #319 accepted historical nine-path FSW (#319x#370=5). #319 remains OPEN/state:blocked with no inferred Task Closure; its Claim/FSW cannot be reused or treated as terminated by a fresh empty #370 registry. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before any #370 source work. Recorded as PLANNED edge #319 -> #370 only; no native dependency, Owner receipt or source permission."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 27 open Task issue bodies at 2026-11-07T22:29:44.760Z; path patterns are retained literally.",
-      "openTasksWithWriteSet": 25,
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 29 open Task issue bodies at 2026-11-08T11:18:44.930Z; path patterns are retained literally.",
+      "openTasksWithWriteSet": 27,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 66,
+      "nonzeroPairs": 68,
       "pairs": [
         {
           "tasks": [
@@ -3010,6 +3138,17 @@
         },
         {
           "tasks": [
+            211,
+            377
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-github-native-c/src/read-retry.mjs",
+            "packages/tally-github-native-c/test/read-retry.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
             219,
             264
           ],
@@ -3170,6 +3309,20 @@
             "packages/tally-engineering-business/test/business-policy.test.mjs",
             "web/v2/journey-server.mjs"
           ]
+        },
+        {
+          "tasks": [
+            319,
+            370
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
         }
       ]
     },
@@ -3298,6 +3451,16 @@
         "issueNumber": 331,
         "pathCount": 3,
         "pathsSha256": "625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a"
+      },
+      {
+        "issueNumber": 370,
+        "pathCount": 8,
+        "pathsSha256": "9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27"
+      },
+      {
+        "issueNumber": 377,
+        "pathCount": 2,
+        "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac"
       }
     ]
   }
