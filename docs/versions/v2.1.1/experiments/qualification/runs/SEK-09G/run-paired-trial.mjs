@@ -55,14 +55,17 @@ async function run(qs,meta,options){
     const reqRaw=JSON.stringify(req);
     const e={qid:q.id,arm,status:'IN_PROGRESS',request_sha256:hash(reqRaw),retrieval_sha256:arm==='K'?hash(JSON.stringify(q.retrieval)):null,started_utc:iso()};
     state.trials.push(e);save(path.join(options.out,'trial-manifest.json'),state);
+    // Persist exact bytes under the same ID as the manifest hash, not a re-serialized proxy.
+    fs.writeFileSync(path.join(options.out,q.id+'-'+arm+'-request.json'),reqRaw);
     try{
       const started=performance.now();
-      const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:reqRaw,signal:AbortSignal.timeout(options.timeout)});
+      const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:reqRaw,redirect:'error',signal:AbortSignal.timeout(options.timeout)});
       if(!response.ok)throw Error('HTTP_'+response.status);
       const raw=await response.text();
       const res=JSON.parse(raw),answer=res.choices?.[0]?.message?.content;
       if(typeof answer!=='string'||!answer.trim())throw Error('EMPTY_ANSWER');
-      Object.assign(e,{status:'SUCCESS',answer,model_returned:res.model??'MODEL_VERSION_UNKNOWN',response_sha256:hash(raw),elapsed_ms:Math.round(performance.now()-started),finished_utc:iso()});
+      fs.writeFileSync(path.join(options.out,q.id+'-'+arm+'-provider-response.json'),raw);
+      Object.assign(e,{status:'SUCCESS',answer,model_returned:res.model??'MODEL_VERSION_UNKNOWN',response_sha256:hash(raw),provider_usage:res.usage??null,system_fingerprint:res.system_fingerprint??null,elapsed_ms:Math.round(performance.now()-started),finished_utc:iso()});
       save(path.join(options.out,q.id+'-'+arm+'.json'),e);
       console.log(q.id,arm,'SUCCESS');
     }catch(error){Object.assign(e,{status:'FAILED',error:String(error).slice(0,300),failed_utc:iso()});state.status='INCOMPLETE_PROVIDER_FAILURE';save(path.join(options.out,'trial-manifest.json'),state);console.log(q.id,arm,'FAILED',e.error);return false;}
