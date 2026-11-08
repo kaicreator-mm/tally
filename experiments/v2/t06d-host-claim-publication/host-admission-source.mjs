@@ -102,7 +102,8 @@ function foreignClaimDigest(rows){
   const fields=rows.map(row=>({
     protectedClaimKey:row.protectedClaimKey,phase:row.phase,
     sourceSha:row.sourceSha,dispatchId:row.dispatchId,writerId:row.writerId
-  })).sort((a,b)=>a.protectedClaimKey.localeCompare(b.protectedClaimKey));
+  })).sort((a,b)=>a.protectedClaimKey<b.protectedClaimKey?-1:
+    a.protectedClaimKey>b.protectedClaimKey?1:0);
   return createHash('sha256').update(JSON.stringify(fields)).digest('hex');
 }
 function validResourceFenceProof(proof,expected){
@@ -120,6 +121,7 @@ function validResourceFenceProof(proof,expected){
     proof.foreignClaimCount===expected.foreignClaimCount&&
     proof.incompatibleResourceCount===0&&
     HEX64.test(proof.frozenResourceSetSha256??'')&&
+    proof.frozenResourceSetSha256===expected.frozenResourceSetSha256&&
     ID.test(proof.fenceId??'')&&
     Number.isSafeInteger(proof.fenceRevision)&&proof.fenceRevision>=0&&
     Number.isFinite(observed)&&observed<=Date.now()&&
@@ -142,6 +144,7 @@ export function createHostAdmissionSourceFromClient({
       resourceConflictPort?.sourceKind!=='TRUSTED_HOST_RESOURCE_FENCE_PORT'||
       resourceConflictPort?.repository!==repository||
       resourceConflictPort?.writerId!==writerAuthority.writerId||
+      !HEX64.test(resourceConflictPort?.frozenResourceSetSha256??'')||
       typeof resourceConflictPort?.readHeldFence!=='function')))
     throw new TypeError('TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED');
   const readback=createHostNativeGitHubClaimReadbackPortFromClient({
@@ -216,9 +219,11 @@ export function createHostAdmissionSourceFromClient({
       }catch{proof=null;}
       if(validResourceFenceProof(proof,{repository,writerId:writerAuthority.writerId,
         protectedClaimKey:request.protectedClaimKey,sourceSha:request.sourceSha,
+        frozenResourceSetSha256:resourceConflictPort.frozenResourceSetSha256,
         foreignClaimCount:foreign.length,foreignClaimsSha256})){
         const after=await registrySnapshot();
-        const afterSha=after.error?null:createHash('sha256')
+        if(after.error)return denied(after.error,request);
+        const afterSha=createHash('sha256')
           .update(JSON.stringify(after.rows)).digest('hex');
         if(afterSha!==registrySnapshotSha256)
           return denied('HOST_RESERVATION_REGISTRY_DRIFT',request);

@@ -72,7 +72,7 @@ function github({blocked=false,ready=true,type='type:task',issueState='open',
   }};
   return {octokit,state};
 }
-function memoryStore({initial=[],getError=false,listError=false,drift=false}={}){
+function memoryStore({initial=[],getError=false,listError=false,listErrorOnCall=0,drift=false}={}){
   const rows=new Map();let revision=0,writes=0,listCalls=0;
   for(const value of initial){
     const key='tally:v2:claim-admission:test-'+rows.size;
@@ -81,7 +81,7 @@ function memoryStore({initial=[],getError=false,listError=false,drift=false}={})
   return {rows,get writes(){return writes;},
     async list(prefix){
       listCalls++;
-      if(listError)throw Error('REGISTRY_PRIVATE_ERROR');
+      if(listError||listCalls===listErrorOnCall)throw Error('REGISTRY_PRIVATE_ERROR');
       if(drift&&listCalls===2)return [...rows.keys()].filter(key=>key.startsWith(prefix)).concat(prefix+'new');
       return [...rows.keys()].filter(key=>key.startsWith(prefix)).sort();
     },
@@ -219,7 +219,7 @@ test('verified terminal rows are inactive; pending and malformed terminal rows f
 function scopedProofPort(changes={},onRead=()=>{}){
   return {
     sourceKind:'TRUSTED_HOST_RESOURCE_FENCE_PORT',repository,
-    writerId:writerAuthority.writerId,
+    writerId:writerAuthority.writerId,frozenResourceSetSha256:'a'.repeat(64),
     async readHeldFence(ctx){
       onRead(ctx);
       return {
@@ -263,6 +263,7 @@ test('foreign Claim remains incompatible if proof is missing, stale, forged, inc
     {sourceSha:'b'.repeat(40)},{foreignClaimsSha256:'0'.repeat(64)},
     {foreignClaimCount:0},{incompatibleResourceCount:1},
     {frozenResourceSetSha256:'unqualified'},
+    {frozenResourceSetSha256:'b'.repeat(64)},
     {fenceId:'bad fence'},{fenceRevision:-1},
     {observedAt:new Date(Date.now()-60000).toISOString()},
     {observedAt:new Date(Date.now()+60000).toISOString()}
@@ -293,6 +294,11 @@ test('concurrent Host registry mutation after witness read blocks even a matchin
   const x=await h.source.readAdmissionFacts(request);
   noPermit(x);assert.equal(x.reason,'HOST_RESERVATION_REGISTRY_DRIFT');
   assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+  const uh=adapter({store:memoryStore({initial:[registryValue()],listErrorOnCall:3}),
+    resourceConflictPort:scopedProofPort()});
+  const unavailable=await uh.source.readAdmissionFacts(request);
+  noPermit(unavailable);assert.equal(unavailable.reason,'HOST_RESERVATION_REGISTRY_UNAVAILABLE');
+  assert.equal(uh.store.writes,0);assert.equal(uh.gh.state.posts,0);
 });
 
 test('same protected-key Claim cannot be excused by a disjoint-resource witness',async()=>{
@@ -314,6 +320,7 @@ test('caller claim request cannot supply resource-fence authority and malformed 
   noPermit(x);assert.equal(x.activeIncompatibleClaimCount,1);
   for(const port of [null,{...scopedProofPort(),repository:'evil/repo'},
     {...scopedProofPort(),writerId:'evil'},
+    {...scopedProofPort(),frozenResourceSetSha256:'bad'},
     {...scopedProofPort(),readHeldFence:null}]){
     assert.throws(()=>adapter({resourceConflictPort:port}),/TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED/);
   }
