@@ -1,0 +1,493 @@
+{
+  "schema": "tally/task-pack-candidate/v1",
+  "packId": "issue-274-experience-use-feedback-r1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "observedAt": "2026-11-08T08:24:00Z",
+  "repository": "kaicreator-mm/tally",
+  "task": {
+    "issue": 274,
+    "parentIssue": 259,
+    "productIntakeIssue": 265,
+    "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
+    "versionId": "version/v2",
+    "priority": "P0",
+    "role": "LOCAL_BUILDER",
+    "ownerAssignmentComment": "https://github.com/kaicreator-mm/tally/issues/274#issuecomment-6719087426",
+    "deliveryMode": "ONE_CONTINUOUS_BUILDER_WITH_INDEPENDENT_EXACT_SHA_REVIEW",
+    "issueStateAtObservation": "OPEN",
+    "workflowLabelAtObservation": "state:planned"
+  },
+  "sourceBasis": {
+    "versionBranch": {
+      "ref": "refs/heads/version/v2",
+      "sha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "tree": "4c3529b612f0e5a80de8f7508cd7d178e8069980",
+      "githubRefReadbackAtObservation": "MATCH",
+      "jitBasePolicy": "RE_READ_EXACT_BRANCH_AND_COMMIT_AT_ADMISSION"
+    },
+    "versionTaskPack": {
+      "pr": 279,
+      "head": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
+      "tree": "7fdf61ad3ea8e3f45584afd18a4afb699a17ee69",
+      "packBlob": "ffdef55b45b9b9fbe0cc998208cb44fe39e59868",
+      "independentReview": "https://github.com/kaicreator-mm/tally/pull/279#pullrequestreview-5815491112",
+      "taskCount": 48,
+      "closedTaskCount": 21,
+      "status": "AS_OF_CANDIDATE_NOT_FROZEN"
+    },
+    "consumerContract": {
+      "issue": 262,
+      "pr": 281,
+      "head": "4f64a8f183609343a5fb457e3089256e1b872e92",
+      "tree": "44782ecc7e26cf5f96ce361692797759454580bb",
+      "independentReview": "https://github.com/kaicreator-mm/tally/pull/281#pullrequestreview-5775536135",
+      "note": "Reuse the reviewed provenance/decision/next-Task-usage seam as a contract reference only; do not copy its source into this Pack branch or modify #262."
+    },
+    "governancePackDiff": {
+      "base": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "allowedPaths": [
+        "docs/implementation/v2/EXPERIENCE_USE_FEEDBACK_TASK_PACK_R1.json"
+      ],
+      "executableSourceChanges": 0,
+      "futureSourcePathsChangedByThisPack": 0
+    }
+  },
+  "adsContract": {
+    "standardVersion": "4.18.0",
+    "standardRepository": "kaicreator-mm/ai-development-standard",
+    "standardSha": "2c395c55569fe2edf3f4135f12d3d069e526d0b7",
+    "schemaPath": "schemas/github/v4.16/report.schema.json",
+    "schemaGitBlob": "7478313cc006162432649d734e59c5cd77db5106",
+    "schemaId": "https://kaicreator-mm.github.io/ai-development-standard/schemas/github/v4.16/report.schema.json",
+    "envelopeSchema": "ads/github/v5",
+    "envelopeKind": "report",
+    "adsProfile": "ads/github/v5:report",
+    "reportKind": "EXPERIENCE_USE_FEEDBACK",
+    "existingValidator": "packages/tally-ads-v5-validator/src/validate.mjs",
+    "existingReader": "packages/tally-github-native-c/src/read-only.mjs",
+    "existingProjection": "packages/tally-github-c/src/report-projection.mjs",
+    "existingCorrectionReconciliation": "packages/tally-github-c/src/correction-reconciliation.mjs",
+    "normativeReferences": [
+      "https://github.com/kaicreator-mm/ai-development-standard/issues/1198",
+      "https://github.com/kaicreator-mm/ai-development-standard/issues/1205",
+      "https://github.com/kaicreator-mm/tally/issues/265"
+    ],
+    "requiredFeedbackKeys": [
+      "actor",
+      "ads_subject_sha",
+      "epistemic",
+      "experience_ref",
+      "limits",
+      "observed_at",
+      "phase",
+      "procedure_revision",
+      "publication",
+      "publisher_namespace",
+      "publisher_source_sha",
+      "report_id",
+      "report_kind",
+      "revision",
+      "source_refs",
+      "subject",
+      "supersedes",
+      "verifier_refs"
+    ],
+    "schemaRulesToPreserve": [
+      "The envelope and every nested object remain additionalProperties=false.",
+      "subject.ads_profile is exactly ads/github/v5:report and feedback source_status is PINNED with an exact 40-hex source_sha.",
+      "revision 1 has supersedes=null; every later revision has an exact object supersedes reference.",
+      "INDEPENDENTLY_CHECKED requires epistemic=OBSERVED and at least one unique verifier reference; every other phase has verifier_refs=[].",
+      "publication.classification is exactly PUBLISHABLE and projection_digest is an exact SHA-256 digest.",
+      "Schema shape validation never substitutes for native repository, identity, permission, currentness or readback verification."
+    ]
+  },
+  "writeSetAudit": {
+    "digestAlgorithm": "SHA256(JSON.stringify(writeSetAudit without digestSha256))",
+    "pathDigestAlgorithm": "SHA256(JSON.stringify(sortedUniqueExactPaths))",
+    "allowedWriteSet": [
+      "packages/tally-github-c/src/experience-use-feedback.mjs",
+      "packages/tally-github-c/test/experience-use-feedback.test.mjs",
+      "packages/tally-github-native-c/src/experience-use-feedback-publisher.mjs",
+      "packages/tally-github-native-c/test/experience-use-feedback-publisher.test.mjs",
+      "web/v2/ui-feedback-publisher-host.mjs",
+      "web/v2/ui-feedback-publisher-host.test.mjs"
+    ],
+    "pathCount": 6,
+    "pathsSha256": "f92b61a438644a1c72a9babb2bd91fa9f0e279dbf253bf63319091245e3fe23a",
+    "normalizationSchema": "tally.v2.allowed-write-set-normalization/1",
+    "normalizationStatusAtObservation": "CANONICALIZED_NOT_ADMITTED",
+    "dispatchableAtObservation": false,
+    "comparisons": [
+      {
+        "issue": 262,
+        "pathCount": 5,
+        "pathsSha256": "69fbd9da1b7b3533a3926ddbe9d2f47d5af6bc7c1dc6787379aa9fb84de0e0c1",
+        "overlap": []
+      },
+      {
+        "issue": 276,
+        "pathCount": 42,
+        "pathsSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4",
+        "overlap": []
+      }
+    ],
+    "historicalCollisionDisposition": "Comment 6605792900 concerned the removed pre-normalization web/v2/ui-experience-host.mjs path; that path is absent from the authoritative six-path set.",
+    "explicitlyNotOwned": [
+      "web/v2/ui-experience-host.mjs",
+      "web/v2/ui-experience-host.test.mjs",
+      "web/v2/serve.mjs",
+      "web/v2/journey-server.mjs",
+      "apps/tally-web/src/app/App.tsx",
+      "apps/tally-web/src/adapters/host.ts",
+      "package root exports",
+      "ADS schema or validator",
+      "task-meta private API, database, Manifest or Trace",
+      "DomainHarness core"
+    ],
+    "amendmentRule": "Any additional path requires a separate non-overlapping write-set amendment and fresh exact-Pack/Owner/Claim/FSW binding.",
+    "digestSha256": "1862b8e7810381e34e4bcd70b6afaf4e9a55ba8159392078ae6bcbfa870bcb60"
+  },
+  "issueObservations": [
+    {
+      "issue": 274,
+      "updatedAt": "2026-11-08T08:08:07Z",
+      "bodySha256": "9f66d4e5c126f1cc2606bb98a8dfe75c2af8294356cf2c6a0cd52f38b659fb7b"
+    },
+    {
+      "issue": 262,
+      "updatedAt": "2026-11-04T20:36:40Z",
+      "bodySha256": "bfd10d8bc07efeffcc8edf64022369c9e33e6d20e393f1f12c965e935f4e13f3"
+    },
+    {
+      "issue": 276,
+      "updatedAt": "2026-11-05T06:34:31Z",
+      "bodySha256": "a1edd3abeb6878e79ff690804b42aecc206c469a6629f4ac317ca415a23abaa5"
+    },
+    {
+      "issue": 265,
+      "updatedAt": "2026-11-03T03:12:04Z",
+      "bodySha256": "ce43450c89b5a1d35d3dc687423a9af8422789268d832233624365c5f53e422d"
+    },
+    {
+      "issue": 370,
+      "updatedAt": "2026-11-08T06:15:05Z",
+      "bodySha256": "692d799c40a1623d2edef763a131040d9e23cba5553a983744c39d891afc4647"
+    }
+  ],
+  "nativeDAG": {
+    "requiredEdges": [
+      {
+        "from": 274,
+        "to": 262,
+        "kindAtObservation": "PLANNED",
+        "requiredNativeMeaning": "Issue #262 blocked_by Issue #274",
+        "reason": "The C consumer integrates the feedback publisher only after its producer/publisher contract is complete.",
+        "nativeReadbackAtObservation": {
+          "issue274BlockedBy": [],
+          "issue274Blocking": [],
+          "issue262BlockedBy": []
+        },
+        "materializationRule": "The selected authorized Controller/K/Host/GitHub-C path must materialize and independently read back the exact native edge before Freeze; this JSON and a textual reference are not an edge.",
+        "directApiMutationAuthorizedByThisPack": false
+      }
+    ],
+    "related PlannedEdge": {
+      "from": 274,
+      "to": 276,
+      "source": "A R16 candidate",
+      "nativeStatusAtObservation": "NOT_MATERIALIZED"
+    }
+  },
+  "admissionGate": {
+    "sourceMutationAuthorizedByThisPack": false,
+    "requiredExternalEvidenceInOrder": [
+      "Independent Exact-SHA review of this immutable Pack HEAD, TREE, BASE and Pack Git blob.",
+      "Task-specific Owner GitHub receipt bound to that exact reviewed Pack blob and the current Delivery-First Owner conversation.",
+      "Fresh native Issue preflight: open type:task/state:ready, CLEAR dependencies, exact current source SHA and qualified absence of an existing #274 Claim.",
+      "Fresh selected-Host resource-conflict/exclusivity proof covering every privileged writer for the complete reserve→GitHub-publish→readback→final-CAS interval; no competition with the #370 Host Writer.",
+      "One accepted native ADS DISPATCH_CLAIMED event for #274, builder role, exact JIT source, protected key and generation, followed by public DomainHarness CAS acceptance.",
+      "FROZEN_DAG_WRITESET readback bound to the same #274 Claim, Pack blob, exact six paths and native dependencies.",
+      "One Writer/JIT branch based on the then-current authorized exact source; re-read all mutable observations before any source edit."
+    ],
+    "nativeAdsEventReadbackAtObservation": {
+      "dispatchClaimedComments": 0,
+      "frozenDagWriteSetComments": 0,
+      "acceptedCasClaim": null,
+      "frozenWriteSet": null
+    },
+    "hostFenceObservation": {
+      "issue": 370,
+      "activePackPr": 376,
+      "activePackHead": "2c7c9b82038a33aea8971f22bcd61882dde6f9f6",
+      "activePackTree": "6155b04d8bc2a0d86727b655485372999efb4936",
+      "activePackBlob": "e8591dcaf5a49f6ab11c6e3b0b4cd138182d9d3f",
+      "physicalSharedHostFence": "NOT_PROVEN",
+      "sourceImplementation": "NOT_STARTED",
+      "bootstrapClaim": "NOT_STARTED",
+      "contractPr371Disposition": "SOURCE_CONTRACT_PASS_IS_NOT_PHYSICAL_WRITER_ADMISSION",
+      "rule": "Do not occupy, reassign or bypass the active #370 Host Writer; an empty registry, mock witness or caller boolean is not a fence."
+    },
+    "blockDisposition": "If any required proof is absent, publish ADMISSION_BLOCK with the exact missing evidence and stop before all six source paths and all real feedback publication."
+  },
+  "fileContracts": [
+    {
+      "path": "packages/tally-github-c/src/experience-use-feedback.mjs",
+      "kind": "PURE_PRODUCER",
+      "responsibilities": [
+        "Accept only bounded Tally-owned source-qualified DTOs for experience identity, Procedure revision, Task/Attempt/Review, exact source SHA, human decision, actual use and optional independently verified outcome.",
+        "Project exactly the pinned ADS feedback envelope; reuse validateAdsV5Report and compute deterministic canonical digests without inventing Tally-specific public fields.",
+        "Bind producer build SHA separately from Task/Attempt source SHA and preserve exact report identity/revision/supersedes semantics.",
+        "Return typed refusals with authorized=false, taskPass=false and releasePass=false; perform no I/O, GitHub write, activation or outcome inference."
+      ]
+    },
+    {
+      "path": "packages/tally-github-c/test/experience-use-feedback.test.mjs",
+      "kind": "PRODUCER_TEST",
+      "responsibilities": [
+        "Positive presented/applied/rejected/independently checked fixtures with exact schema-blob validation and deterministic replay.",
+        "Every source, decision, schema, privacy, UNKNOWN, revision and supersession negative in sourceEvidenceFailClosedMatrix."
+      ]
+    },
+    {
+      "path": "packages/tally-github-native-c/src/experience-use-feedback-publisher.mjs",
+      "kind": "SELECTED_GITHUB_C_PUBLISHER",
+      "responsibilities": [
+        "Expose only a Host-bound selected-C port with trusted writer authority and authenticated Octokit; no browser, Agent or request-supplied grant.",
+        "Serialize the already validated ADS envelope, publish to the exact repository/Issue subject, re-read the exact native comment and independently validate repository, report identity, source SHA, schema/profile, digest, writer, currentness and complete pagination.",
+        "Reconcile lost or invalid ACK before any retry; exact duplicate replay returns the existing verified native object, same-identity divergence refuses, and no unbounded second post or new queue exists.",
+        "Support revisioned supersession and existing ADS correction reconciliation without treating transport ACK, schema validity or HTTP 2xx as publication PASS."
+      ]
+    },
+    {
+      "path": "packages/tally-github-native-c/test/experience-use-feedback-publisher.test.mjs",
+      "kind": "PUBLISHER_TEST",
+      "responsibilities": [
+        "Positive exact native readback and idempotent replay; lost ACK found/missing/ambiguous branches.",
+        "403/429/5xx, wrong repository/writer, stale source, partial pagination, duplicate identity, correction conflict and supersession negatives with bounded/no-post assertions."
+      ]
+    },
+    {
+      "path": "web/v2/ui-feedback-publisher-host.mjs",
+      "kind": "SELECTED_HOST_UI_ADAPTER",
+      "responsibilities": [
+        "Validate bounded UI requests and connect only to the existing selected Host feedback-publication port; UI never constructs ADS wire YAML and never supplies writer authority.",
+        "Re-read selected Host/source state before dispatch and return exact published/refused/unknown reconciliation state with measuredBenefit=UNKNOWN where no independent outcome exists.",
+        "Do not mount runtime routes, edit #262, call task-meta, activate artifacts or infer adoption/quality uplift."
+      ]
+    },
+    {
+      "path": "web/v2/ui-feedback-publisher-host.test.mjs",
+      "kind": "HOST_ADAPTER_TEST",
+      "responsibilities": [
+        "Scope/staleness/request allowlist and receipt validation, disconnected/UNKNOWN degradation and no-forged-authority tests.",
+        "Prove no automatic Rule/Skill/Procedure/Workflow/Domain-Package activation and no private fields in the Host request."
+      ]
+    }
+  ],
+  "producerSemantics": {
+    "phaseMapping": [
+      {
+        "phase": "PRESENTED",
+        "meaning": "A reviewed experience was presented; this alone is not acceptance, application or effect."
+      },
+      {
+        "phase": "ACCEPTED",
+        "meaning": "A current qualified human adoption decision exists; this alone is not actual application."
+      },
+      {
+        "phase": "APPLIED",
+        "meaning": "Selected-Host evidence proves explicit use in the bound Task/Attempt; this alone is not a successful outcome."
+      },
+      {
+        "phase": "SKIPPED",
+        "meaning": "A current qualified human reject/non-use decision exists with its review/source references; it is not a failure metric."
+      },
+      {
+        "phase": "INDEPENDENTLY_CHECKED",
+        "meaning": "A later independent verifier checked the exact experience/source identity; verifier_refs is nonempty and epistemic=OBSERVED."
+      },
+      {
+        "phase": "OBSERVED_EFFECT",
+        "meaning": "Only a bounded observed effect supported by source_refs is represented; missing or self-reported effect remains UNKNOWN and is never promoted to measured uplift."
+      }
+    ],
+    "identityAndReplay": [
+      "Stable report identity binds repository, publisher namespace, experience_ref, procedure_revision, Task/Attempt, phase and revision; deterministic serialization and projection_digest make byte-equivalent replay detectable.",
+      "A correction of the same logical report uses the same report_id, increments revision by one and carries the exact immediately preceding revision, data_digest and comment_ref in supersedes.",
+      "A distinct later phase does not erase an earlier still-true phase; conflicting duplicate identity/digest/source/currentness is CONFLICT, never last-write-wins."
+    ],
+    "privacyAllowlist": [
+      "Public repository/Issue/PR/comment/commit/check/review references and bounded public identities only.",
+      "No secrets, tokens, cookies, private task-meta fields, private prompts, hidden tests, raw traces, Chain-of-Thought, unrestricted free text or private Manifest content.",
+      "Any unknown DTO key or non-allowlisted nested value fails closed before serialization or logging."
+    ]
+  },
+  "sourceEvidenceFailClosedMatrix": [
+    {
+      "case": "INVALID_SCHEMA_OR_PROFILE",
+      "requiredDisposition": "REFUSE_BEFORE_POST",
+      "reason": "Wrong envelope, report kind, ADS profile, schema blob or any additional/missing required key."
+    },
+    {
+      "case": "MISSING_OR_UNREVIEWED_EXPERIENCE",
+      "requiredDisposition": "REFUSE_BEFORE_POST",
+      "reason": "No Tally-owned human-reviewed evidence and exact experience/Procedure identity."
+    },
+    {
+      "case": "MISSING_EXPIRED_OR_STALE_HUMAN_DECISION",
+      "requiredDisposition": "REFUSE_BEFORE_POST",
+      "reason": "Decision is absent, expired, superseded, stale-revision or lacks qualified reviewer/source evidence."
+    },
+    {
+      "case": "PRESENTED_OR_ACCEPTED_WITHOUT_USE",
+      "requiredDisposition": "NO_APPLICATION_OR_EFFECT_CLAIM",
+      "reason": "Never map presentation/adoption alone to APPLIED, OBSERVED_EFFECT or uplift."
+    },
+    {
+      "case": "APPLIED_WITHOUT_INDEPENDENT_OUTCOME",
+      "requiredDisposition": "UNKNOWN_OUTCOME",
+      "reason": "Application remains distinct from success; no zero, PASS, quality gain or cost is invented."
+    },
+    {
+      "case": "SELF_REPORTED_OR_UNREVIEWED_OUTCOME",
+      "requiredDisposition": "REFUSE_INDEPENDENT_OUTCOME_CLAIM",
+      "reason": "INDEPENDENTLY_CHECKED requires exact independent verifier_refs and OBSERVED evidence; self-report cannot be upgraded."
+    },
+    {
+      "case": "MISSING_TASK_ATTEMPT_REVIEW_OR_SOURCE_SHA",
+      "requiredDisposition": "REFUSE_BEFORE_POST",
+      "reason": "Exact source-qualified Task/Attempt/Review and 40-hex identity are mandatory."
+    },
+    {
+      "case": "STALE_OR_CONFLICTING_SOURCE",
+      "requiredDisposition": "STALE_OR_CONFLICT_NO_POST",
+      "reason": "Current source differs, moves during publication, or two observations conflict."
+    },
+    {
+      "case": "FOREIGN_REPOSITORY_OR_WRONG_SUBJECT",
+      "requiredDisposition": "REFUSE_BEFORE_POST",
+      "reason": "Repository, Issue, report subject, publisher repository or writer does not exactly match trusted Host scope."
+    },
+    {
+      "case": "PRIVATE_FIELD_SECRET_TRACE_OR_COT",
+      "requiredDisposition": "REFUSE_AND_REDACT_LOGS",
+      "reason": "Privacy allowlist rejects the complete payload before transport; error output does not echo sensitive input."
+    },
+    {
+      "case": "MISSING_CLAIM_PERMISSION_OR_FROZEN_WRITESET",
+      "requiredDisposition": "NOT_ADMITTED_NO_POST",
+      "reason": "No accepted exact Claim/CAS/FSW, Host resource fence, selected-K permit or effective GitHub permission."
+    },
+    {
+      "case": "GITHUB_403",
+      "requiredDisposition": "ACCESS_DENIED_NO_UNPRIVILEGED_FALLBACK",
+      "reason": "Do not report PASS or retry through another identity/publisher."
+    },
+    {
+      "case": "GITHUB_429_OR_5XX",
+      "requiredDisposition": "UNKNOWN_THEN_BOUNDED_RECONCILIATION",
+      "reason": "Provider failure is not failure of the reported experience and not publication success; reconcile before bounded replay."
+    },
+    {
+      "case": "LOST_OR_INVALID_ACK_EXACT_OBJECT_FOUND",
+      "requiredDisposition": "RETURN_EXISTING_PUBLISHED_VERIFIED_NO_SECOND_POST",
+      "reason": "Complete native readback proves exactly one matching repository/identity/digest/source/writer/current object."
+    },
+    {
+      "case": "LOST_ACK_NO_OBJECT_FOUND",
+      "requiredDisposition": "ONE_BOUNDED_SAME_IDENTITY_REPLAY_THROUGH_SELECTED_C",
+      "reason": "Only after complete current readback proves absence; any ambiguity stops without a new post."
+    },
+    {
+      "case": "LOST_ACK_AMBIGUOUS_OR_MULTIPLE_MATCHES",
+      "requiredDisposition": "RECONCILIATION_REQUIRED_NO_POST",
+      "reason": "Never guess which native object is authoritative."
+    },
+    {
+      "case": "EXACT_DUPLICATE_REPLAY",
+      "requiredDisposition": "IDEMPOTENT_EXISTING_READBACK",
+      "reason": "Return the already verified object without an additional publication."
+    },
+    {
+      "case": "DUPLICATE_IDENTITY_WITH_DIFFERENT_CONTENT",
+      "requiredDisposition": "DUPLICATE_REFUSED_NO_POST",
+      "reason": "Same report identity/revision with different digest/source/repository/writer is a conflict."
+    },
+    {
+      "case": "CORRECTION_OR_SUPERSESSION_CONFLICT",
+      "requiredDisposition": "CONFLICT_NO_POST",
+      "reason": "Nonlinear revision, wrong supersedes target/digest/comment or conflicting correction is refused and reconciled."
+    },
+    {
+      "case": "READBACK_MISMATCH_OR_INCOMPLETE_PAGINATION",
+      "requiredDisposition": "NOT_PUBLICATION_PASS",
+      "reason": "ACK/schema validity cannot replace exact native object, currentness and complete readback."
+    },
+    {
+      "case": "MISSING_TELEMETRY_OR_TASKMETA",
+      "requiredDisposition": "UNKNOWN_NOT_BLOCKING_ORDINARY_TASK_OR_RELEASE",
+      "reason": "No private ingress, no fabricated zero/PASS and no new dependency for ordinary Task/Release."
+    },
+    {
+      "case": "AUTOMATIC_ACTIVATION_OR_AUTHORITY_REQUEST",
+      "requiredDisposition": "FORBIDDEN_EFFECT",
+      "reason": "No automatic Rule/Skill/Procedure/Workflow/Domain-Package activation and no Task/Review/Release PASS from feedback."
+    }
+  ],
+  "verificationPlan": {
+    "preSourceGate": "This Pack permits only JSON parse/digest/diff review. No source test or real publication is claimed before admission.",
+    "node24First": [
+      "Record node -v and require >=24.",
+      "Run node --check on every new/changed MJS file before test execution.",
+      "Verify the exact six-path diff and no whitespace/error artifacts."
+    ],
+    "scopedTests": [
+      "node --test packages/tally-github-c/test/experience-use-feedback.test.mjs",
+      "node --test packages/tally-github-native-c/test/experience-use-feedback-publisher.test.mjs",
+      "node --test web/v2/ui-feedback-publisher-host.test.mjs",
+      "Run directly adjacent existing ADS validator, report-projection, correction-reconciliation and read-only suites."
+    ],
+    "buildAndLocalGate": [
+      "Run the repository build/typecheck applicable to the exact source base.",
+      "Run tools/task-check.sh in the clean task worktree and preserve real exit codes.",
+      "Builder repairs all in-scope defects directly and reruns affected checks on each new exact HEAD."
+    ],
+    "realNativeAcceptanceAfterSeparateAuthorization": [
+      "Use a dedicated authorized GitHub test subject and selected Host/C writer only after admission and publication scope are explicit.",
+      "Publish one exact ADS v5 feedback object and independently re-read repository, identity, source SHA, schema/profile, currentness and complete native readback.",
+      "Exercise lost ACK and deterministic idempotent replay without unbounded comments; verify correction/supersession and duplicate refusal.",
+      "Permit task-meta v0.4 only as an independent public-GitHub observer; Tally never calls private task-meta API/storage.",
+      "Keep actual publication evidence separate from unit fixtures and never turn feedback into Task/Review/Release PASS."
+    ],
+    "finalExactSha": [
+      "Post HEAD/TREE/BASE/PackBlob/Claim/FSW, native feedback ref/readback and every test exit on Issue #274 and the source PR.",
+      "Run existing Woodpecker once for the final source SHA; do not duplicate an already passing run.",
+      "Obtain independent final Exact-SHA review; any reviewer repair requires a new independent SHA witness.",
+      "No main/tag/Release/deploy or E/#264 mount is authorized by this Pack."
+    ]
+  },
+  "requiredCompletionEvidence": [
+    "Exact source HEAD/TREE/BASE and immutable reviewed Pack blob.",
+    "Accepted native Claim, public DomainHarness CAS acceptance and exact FROZEN_DAG_WRITESET.",
+    "Materialized and independently read back #262 blocked_by #274 native dependency before Freeze.",
+    "Producer build SHA, ADS standard/schema/profile pin, Task/Attempt/Review and exact source SHA.",
+    "Native feedback repository/Issue/comment identity and independent exact readback.",
+    "Node24 syntax-first, scoped/adjacent tests, build/task-check and final Woodpecker exits.",
+    "Independent final Exact-SHA review and precise residual UNKNOWN/BLOCK evidence."
+  ],
+  "nonGoals": [
+    "No second feedback schema, publisher, queue, scheduler, Claim path or private task-meta channel.",
+    "No modification of #262/#264, #370, shared UI mounts, package root exports, ADS schema, DomainHarness core or ordinary Task/Release authority.",
+    "No real feedback publication during governance-Pack creation or independent Pack review.",
+    "No automatic adoption, artifact activation, measured quality uplift, cost inference, main/tag/Release or deployment."
+  ],
+  "currentDisposition": {
+    "pack": "GOVERNANCE_ONLY_CANDIDATE_PENDING_INDEPENDENT_REVIEW_AND_OWNER_RECEIPT",
+    "sourceAdmission": "NOT_ADMITTED",
+    "sourceImplementation": "NOT_STARTED",
+    "realPublication": "NOT_RUN",
+    "nativeDependency274Blocks262": "PLANNED_NOT_MATERIALIZED",
+    "taskPass": false,
+    "releasePass": false
+  }
+}
