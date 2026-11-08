@@ -66,12 +66,13 @@ async function run(qs,meta,options){
       save(path.join(options.out,q.id+'-'+arm+'.json'),e);
       console.log(q.id,arm,'SUCCESS');
     }catch(error){Object.assign(e,{status:'FAILED',error:String(error).slice(0,300),failed_utc:iso()});state.status='INCOMPLETE_PROVIDER_FAILURE';save(path.join(options.out,'trial-manifest.json'),state);console.log(q.id,arm,'FAILED',e.error);return false;}
-    save(path.join(options.out,'trial-manifest.json',),state);
+    save(path.join(options.out,'trial-manifest.json'),state);
   }
   if(state.trials.length!==14||state.trials.some(e=>e.status!=='SUCCESS'))throw Error('NOT_ALL_14_CALLS');
   state.status='ANSWERS_FROZEN_SCORING_NOT_RUN';state.finished_utc=iso();save(path.join(options.out,'trial-manifest.json'),state);
   const blind=[],key=[];
-  for(const q of qs){const pair=state.trials.filter(e=>e.qid===q.id);if(pair.length!==2)throw Error('Broken pair');if(Number(q.id.slice(-2))%2)pair.reverse();for(let i=0;i<2;i++){const e=pair[i],bid=q.id+'-'+(i+1);blind.push({blind_id:bid,question:q.question,answer:e.answer,criteria:q.criteria,hard_exclusions:q.traps,reviewer_ref:null,correctness_0_2:null,scope_0_2:null,traceability_0_2:null,unsupported_claims:null,omission_count:null,observed_effort_seconds:null});key.push({blind_id:bid,arm:e.arm});}}
+  let blindSeed=72831;
+  for(const q of qs){const pair=state.trials.filter(e=>e.qid===q.id);if(pair.length!==2)throw Error('Broken pair');blindSeed=(Math.imul(blindSeed,1664525)+1013904223)>>>0;if(blindSeed%2)pair.reverse();for(let i=0;i<2;i++){const e=pair[i],bid=q.id+'-'+(i+1);blind.push({blind_id:bid,question:q.question,answer:e.answer,criteria:q.criteria,hard_exclusions:q.traps,reviewer_ref:null,correctness_0_2:null,scope_0_2:null,traceability_0_2:null,unsupported_claims:null,omission_count:null,observed_effort_seconds:null});key.push({blind_id:bid,arm:e.arm});}}
   save(path.join(options.out,'blind-TO-INDEPENDENT-SCORER.json'),{status:'NOT_SCORED',items:blind});
   save(path.join(options.out,'blind-key-WITHHOLD-FROM-SCORER.json'),{mapping:key});
   console.log('REAL_ANSWERS=14 INDEPENDENT_SCORING=NOT_RUN G5=NOT_YET_QUALIFIED');return true;
