@@ -282,6 +282,19 @@ test('foreign Claim remains incompatible if proof is missing, stale, forged, inc
   assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
 });
 
+test('concurrent Host registry mutation after witness read blocks even a matching fence proof',async()=>{
+  const store=memoryStore({initial:[registryValue()]});
+  const port=scopedProofPort({},()=>{
+    const [key,row]=[...store.rows.entries()][0];
+    store.rows.set(key,{revision:row.revision+1,
+      value:{...row.value,dispatchId:'dispatch:167:changed'}});
+  });
+  const h=adapter({store,resourceConflictPort:port});
+  const x=await h.source.readAdmissionFacts(request);
+  noPermit(x);assert.equal(x.reason,'HOST_RESERVATION_REGISTRY_DRIFT');
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
 test('same protected-key Claim cannot be excused by a disjoint-resource witness',async()=>{
   let called=false;
   const own=registryValue({protectedClaimKey:request.protectedClaimKey,
