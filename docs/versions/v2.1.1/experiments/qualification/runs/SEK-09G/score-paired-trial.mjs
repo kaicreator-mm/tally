@@ -104,7 +104,24 @@ function compare(runDir,filledPath,outPath){
 }
 const args=process.argv.slice(2);
 const read=(name)=>{const i=args.indexOf(name);return i<0?null:args[i+1];};
-if(args.includes('--self-test')){
+if(args.includes('--make-template')){
+  const runDir=read('--run-dir'),out=read('--out');
+  if(!runDir||!out)throw Error('Usage: --make-template --run-dir PATH --out PATH');
+  ensure(!fs.existsSync(out),'Refuse to overwrite an existing score file');
+  const state=load(path.join(runDir,'trial-manifest.json'));
+  ensure(state.status==='ANSWERS_FROZEN_SCORING_NOT_RUN' && state.trials.length===14 &&
+         state.trials.every(t=>t.status==='SUCCESS'),'Cannot create scoring template without 14 real frozen answers');
+  const blind=load(path.join(runDir,'blind-TO-INDEPENDENT-SCORER.json'));
+  ensure(blind.items.length===14,'Missing blind packet');
+  const template={reviewer_ref:null,reviewer_kind:null,independent_from_builder:null,
+    evaluated_at_utc:null,ratings:blind.items.map(item=>({
+      blind_id:item.blind_id,correctness_0_2:null,scope_0_2:null,traceability_0_2:null,
+      criteria_marks:item.criteria.split(';').map(s=>({criterion:s.trim(),outcome:null})),
+      unsupported_assertions:[],observed_effort_seconds:null
+    }))};
+  fs.writeFileSync(out,JSON.stringify(template,null,2)+'\n');
+  console.log('BLIND_SCORING_TEMPLATE_CREATED=14 RATINGS_COMPLETED=0');
+}else if(args.includes('--self-test')){
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'sek09g-score-')),runDir=path.join(temp,'run');
   fs.mkdirSync(runDir);
   const qs=Array.from({length:7},(_,i)=>({id:'G5-0'+(i+1),question:'q'+i,criteria:'one; two',traps:'no fabrications'}));
