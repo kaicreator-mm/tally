@@ -12,7 +12,7 @@ import {mkdtemp, rm} from 'node:fs/promises';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {createHash, generateKeyPairSync, randomBytes} from 'node:crypto';
+import {createHash, generateKeyPairSync, randomBytes, sign} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {
   HOST_RESOURCE_FENCE_SCHEMA,
@@ -35,6 +35,7 @@ const AUTHORITY_KEY = generateKeyPairSync('rsa', {modulusLength: 2048});
 const CLIENT_KEY_A = generateKeyPairSync('rsa', {modulusLength: 2048});
 const CLIENT_KEY_B = generateKeyPairSync('rsa', {modulusLength: 2048});
 const CLIENT_KEY_X = generateKeyPairSync('rsa', {modulusLength: 2048});
+const FORGED_KEY = generateKeyPairSync('rsa', {modulusLength: 2048});
 const ADMITTED_FILES = [
   'experiments/v2/t06d-host-claim-publication/host-resource-fence.mjs',
   'experiments/v2/t06d-host-claim-publication/host-resource-fence.test.mjs'
@@ -192,6 +193,61 @@ function projectionFor(lease) {
   };
 }
 
+function claimValue(identity, overrides = {}) {
+  return {
+    phase: 'PENDING_GITHUB_PUBLISH',
+    generation: identity.generation,
+    protectedClaimKey: identity.protectedClaimKey,
+    repository: identity.repository,
+    issueRef: identity.issueRef,
+    sourceSha: identity.sourceSha,
+    dispatchId: identity.dispatchId,
+    actorRole: 'builder',
+    operatorKind: 'other',
+    operatorId: 'zcode:i370:test:1',
+    writerId: 'writer-a',
+    ...overrides
+  };
+}
+
+function fswValue(identity, built, writerId, claimCommentId = 123, overrides = {}) {
+  const match = /issues\/([1-9][0-9]*)$/.exec(identity.issueRef);
+  const issueNumber = Number(match[1]);
+  const filePaths = built.exclusiveResources
+    .filter(resource => resource.startsWith('file:'))
+    .map(resource => resource.slice('file:'.length));
+  return {
+    phase: 'FROZEN_DAG_WRITESET',
+    repository: identity.repository,
+    issueNumber,
+    sourceSha: identity.sourceSha,
+    writeSetSha256: identity.writeSetSha256,
+    document: `frozen exact write set for #${issueNumber}:\n${filePaths.join('\n')}`,
+    pathCount: filePaths.length,
+    writeSetDigestBasis: 'sha256(JSON.stringify(paths.sort())) compact; tally.v2.allowed-write-set-normalization/1',
+    taskPackRef: identity.taskPackRef,
+    taskPackBlobSha: identity.taskPackBlobSha,
+    packPRHeadSha: identity.sourceSha,
+    packTree: 'c'.repeat(40),
+    packRevision: 25,
+    ownerReceiptRef: identity.ownerApprovalRef,
+    reviewWitnessRef: identity.reviewRef,
+    driverReviewRef: 'https://github.com/kaicreator-mm/tally/pull/376#pullrequestreview-5819951791',
+    protectedClaimKey: identity.protectedClaimKey,
+    generation: identity.generation,
+    dispatchId: identity.dispatchId,
+    claimCommentId,
+    claimCommentRef: `${identity.issueRef}#issuecomment-${claimCommentId}`,
+    writerId,
+    schema: 'tally/host-resource-set/v1',
+    exclusiveResources: built.exclusiveResources,
+    frozenResourceSet: built.resourceSet,
+    frozenResourceSetSha256: built.frozenResourceSetSha256,
+    frozenAt: new Date().toISOString(),
+    ...overrides
+  };
+}
+
 function projectionDigest(projections) {
   const fields = projections.map(row => ({
     protectedClaimKey: row.protectedClaimKey,
@@ -256,7 +312,9 @@ test('file resources conflict on exact, segment ancestor and Windows case only',
   assert.equal(hostResourcesConflict(exact,
     canonicalizeHostResource('file:other/experiments/a.mjs')), false);
   for (const invalid of ['file:', 'file:../x', 'file:/abs', 'file:C:/x',
-    'file:a\\b', 'file:a/./b', 'file:a//b', 'file:a/', 'file:ünicode']) {
+    'file:a\\b', 'file:a/./b', 'file:a//b', 'file:a/', 'file:ünicode',
+    'file:dir/item.', 'file:dir/item ', 'file:dir/CON', 'file:dir/con.txt',
+    'file:a:b', 'file:a<b']) {
     assert.throws(() => canonicalizeHostResource(invalid),
       error => error.code === 'HOST_RESOURCE_ENCODING_INVALID', invalid);
   }
@@ -411,6 +469,13 @@ test('signed acquire/assert/release stores only the nonce hash', async t => {
   assert.equal(readFileSync(anchorPath, 'utf8').includes(ownerNonce), false);
   assert.equal(registryText.includes('PRIVATE KEY'), false);
   assert.equal(JSON.stringify(await client.assert()).includes(acquired.fenceId), true);
+  assert.equal(JSON.stringify(client.requestLog).includes(ownerNonce), false);
+  const hashReuseClient = clientFor({
+    authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
+    clientNonce: sha256(ownerNonce), sequenceStart: 2
+  });
+  await assert.rejects(hashReuseClient.assert(acquired.fenceId),
+    error => error.code === 'HOST_RESOURCE_FENCE_NONCE_MISMATCH');
   const otherNonceClient = clientFor({
     authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
     clientNonce: nonce(), sequenceStart: 2
@@ -434,9 +499,10 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
   const entryA = authorizedEntry(identityA, builtA, CLIENT_KEY_A, 'writer-a');
   const entryB = authorizedEntry(identityB, builtB, CLIENT_KEY_B, 'writer-b');
   const {store, authority} = await openHarness(t, {clients: [entryA, entryB]});
+  const nonceA = nonce();
   const clientA = clientFor({
     authority, identity: identityA, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
-    clientNonce: nonce()
+    clientNonce: nonceA
   });
   const clientB = clientFor({
     authority, identity: identityB, keyPair: CLIENT_KEY_B, writerId: 'writer-b',
@@ -448,20 +514,42 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
   assert.equal(acquiredB.fenceRevision, 2);
   assert.equal((await clientA.assert()).fenceRevision, 1);
   const claimCasKey = `tally:v2:claim-admission:${sha256(identityA.protectedClaimKey)}`;
-  const first = await clientA.put(claimCasKey,
-    {phase: 'PENDING_GITHUB_PUBLISH', generation: 1}, {mustBeAbsent: true});
+  const pending = claimValue(identityA);
+  const published = claimValue(identityA, {
+    phase: 'PUBLISHED_VERIFIED', commentId: 123,
+    commentRef: `${identityA.issueRef}#issuecomment-123`
+  });
+  const first = await clientA.put(claimCasKey, pending, {mustBeAbsent: true});
   assert.equal(first.revision, 0);
-  const second = await clientA.put(claimCasKey,
-    {phase: 'PUBLISHED_VERIFIED', generation: 1}, {mustMatchRevision: 0});
+  await assert.rejects(clientA.put(claimCasKey,
+    {...published, protectedClaimKey: identityB.protectedClaimKey},
+    {mustMatchRevision: 0}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
+  await assert.rejects(clientA.put(claimCasKey,
+    {...published, secret: 'must not enter CAS'}, {mustMatchRevision: 0}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
+  const second = await clientA.put(claimCasKey, published, {mustMatchRevision: 0});
   assert.equal(second.revision, 1);
+  const fswKey = 'tally:v2:task-writeset:370';
+  const fsw = fswValue(identityA, builtA, 'writer-a');
+  const fswPut = await clientA.put(fswKey, fsw, {mustBeAbsent: true});
+  assert.equal(fswPut.revision, 0);
+  await assert.rejects(clientA.put(fswKey,
+    {...fsw, frozenResourceSetSha256: '0'.repeat(64)}, {mustMatchRevision: 0}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
+  await assert.rejects(clientA.remove(fswKey, {mustMatchRevision: 0}),
+    error => error.code === 'HOST_RESOURCE_FENCE_KEY_RESERVED');
   await assert.rejects(clientA.put('tally:v2:not-covered:1', {x: 1}, {mustBeAbsent: true}),
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
   const removed = await clientA.remove(claimCasKey, {mustMatchRevision: 1});
   assert.equal(removed.revision, null);
   assert.equal(await store.get(claimCasKey), null);
+  assert.notEqual(await store.get(fswKey), null);
   const registry = await store.get(authority.registryKey);
   assert.equal(registry.value.generation, 2);
-  assert.equal(JSON.stringify(registry.value).includes('PENDING_GITHUB_PUBLISH'), false);
+  const requestLogText = JSON.stringify(clientA.requestLog);
+  assert.equal(requestLogText.includes(nonceA), false);
+  assert.equal(requestLogText.includes('PENDING_GITHUB_PUBLISH'), false);
 });
 
 test('two concurrent acquisitions of overlapping resources admit exactly one lease', async t => {
@@ -666,7 +754,8 @@ test('resourceConflictPort proves a held lease and exposes incompatible claims',
     repository: REPO, writerId: 'writer-a',
     protectedClaimKey: identityA.protectedClaimKey,
     sourceSha: identityA.sourceSha,
-    frozenResourceSetSha256: builtA.frozenResourceSetSha256
+    frozenResourceSetSha256: builtA.frozenResourceSetSha256,
+    expectedHead: authority.anchorHead
   });
   assert.equal(port.sourceKind, 'TRUSTED_HOST_RESOURCE_FENCE_PORT');
   assert.equal(port.repository, REPO);
@@ -728,6 +817,22 @@ test('resourceConflictPort proves a held lease and exposes incompatible claims',
     sourceSha: identityA.sourceSha,
     foreignClaimCount: 1, foreignClaimsSha256: digest,
     foreignClaims: [projection]
+  }), error => error.code === 'HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH');
+  const freshPort = createHostResourceFencePort({
+    store, registryId: authority.registryId, anchorPath,
+    authorityPublicKeyPem: authority.publicKeyPem, writerSid: WRITER_SID,
+    repository: REPO, writerId: 'writer-a',
+    protectedClaimKey: identityA.protectedClaimKey,
+    sourceSha: identityA.sourceSha,
+    frozenResourceSetSha256: builtA.frozenResourceSetSha256,
+    expectedHead: authority.anchorHead
+  });
+  await assert.rejects(freshPort.readHeldFence({
+    repository: REPO, writerId: 'writer-a',
+    protectedClaimKey: identityA.protectedClaimKey,
+    sourceSha: identityA.sourceSha,
+    foreignClaimCount: 1, foreignClaimsSha256: digest,
+    foreignClaims: [projection]
   }), error => error.code === 'HOST_RESOURCE_FENCE_NOT_HELD');
 });
 
@@ -763,4 +868,115 @@ test('registry validator rejects overlapping leases and duplicate fence ids', ()
   assert.throws(() => validateHostResourceFenceRegistryDocument(duplicate),
     error => error.code === 'HOST_RESOURCE_FENCE_REGISTRY_MALFORMED' &&
       error.details.includes('DUPLICATE_FENCE_ID'));
+});
+
+test('distinct authorized Task keys cannot share a public key', () => {
+  const identityA = makeIdentity();
+  const builtA = buildFrozenResourceSet(identityA);
+  const identityB = makeIdentity({issueNumber: 371, files: ['experiments/v2/b-only.mjs']});
+  const builtB = buildFrozenResourceSet(identityB);
+  const entryA = authorizedEntry(identityA, builtA, CLIENT_KEY_A, 'writer-a');
+  const entryB = authorizedEntry(identityB, builtB, CLIENT_KEY_A, 'writer-b');
+  const fakeStore = {
+    get: async () => null,
+    put: async () => ({revision: 0}),
+    remove: async () => undefined,
+    list: async () => []
+  };
+  assert.throws(() => createHostResourceFenceAuthority({
+    store: fakeStore, registryId: 'fence-registry-test-1',
+    anchorPath: 'C:/tmp/nonexistent-fence-anchor.ndjson', writerSid: WRITER_SID,
+    authorityPrivateKey: AUTHORITY_KEY.privateKey, authorizedClients: [entryA, entryB]
+  }), error => error.code === 'HOST_RESOURCE_FENCE_AUTHORITY_CONFIG' &&
+    error.details.includes('DUPLICATE_CLIENT_PUBLIC_KEY'));
+});
+
+test('a forged Authority response is rejected by the client', async t => {
+  const identity = makeIdentity();
+  const built = buildFrozenResourceSet(identity);
+  const entry = authorizedEntry(identity, built, CLIENT_KEY_A, 'writer-a');
+  const {authority} = await openHarness(t, {clients: [entry]});
+  const client = clientFor({
+    authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
+    clientNonce: nonce(),
+    send: async request => {
+      const genuine = await authority.handle(request);
+      const forged = {...genuine, result: {fenceId: 'fence-forged'}};
+      delete forged.signature;
+      forged.signature = sign('sha256', Buffer.from(canonicalJson(forged), 'utf8'),
+        FORGED_KEY.privateKey).toString('base64');
+      return forged;
+    }
+  });
+  await assert.rejects(client.observe(),
+    error => error.code === 'HOST_RESOURCE_FENCE_RESPONSE_SIGNATURE_INVALID');
+});
+
+test('signed PUT value/condition substitution denies', async t => {
+  const identity = makeIdentity();
+  const built = buildFrozenResourceSet(identity);
+  const entry = authorizedEntry(identity, built, CLIENT_KEY_A, 'writer-a');
+  const {authority} = await openHarness(t, {clients: [entry]});
+  let tampered = false;
+  const client = clientFor({
+    authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
+    clientNonce: nonce(),
+    send: async request => {
+      if (!tampered && request.operation === 'PUT') {
+        tampered = true;
+        const copy = deepCopy(request);
+        copy.value.conditions = {mustMatchRevision: 0};
+        return authority.handle(copy);
+      }
+      return authority.handle(request);
+    }
+  });
+  await client.acquire();
+  const claimCasKey = `tally:v2:claim-admission:${sha256(identity.protectedClaimKey)}`;
+  await assert.rejects(client.put(claimCasKey, claimValue(identity), {mustBeAbsent: true}),
+    error => error.code === 'HOST_RESOURCE_FENCE_REQUEST_SIGNATURE_INVALID');
+});
+
+test('a foreign store mutation after CAS is never signed into the anchor', async t => {
+  const identity = makeIdentity();
+  const built = buildFrozenResourceSet(identity);
+  const entry = authorizedEntry(identity, built, CLIENT_KEY_A, 'writer-a');
+  const dir = await mkdtemp(join(tmpdir(), 'tally-host-fence-race-'));
+  const realStore = await openSqliteCasStore({path: join(dir, 'fence.sqlite'), busyTimeoutMs: 1000});
+  let armed = false;
+  let injected = false;
+  const store = {
+    get: (...args) => realStore.get(...args),
+    list: (...args) => realStore.list(...args),
+    remove: (...args) => realStore.remove(...args),
+    close: (...args) => realStore.close(...args),
+    put: async (key, value, conditions) => {
+      const result = await realStore.put(key, value, conditions);
+      if (armed && !injected && key.startsWith('tally:v2:host-resource-fence:')) {
+        injected = true;
+        await realStore.put('tally:v2:foreign:race', {injected: true}, {mustBeAbsent: true});
+      }
+      return result;
+    }
+  };
+  t.after(async () => {
+    try { await realStore.close(); } catch { /* closed */ }
+    await rm(dir, {recursive: true, force: true});
+  });
+  const authority = createHostResourceFenceAuthority({
+    store, registryId: 'fence-registry-test-1', anchorPath: join(dir, 'anchor.ndjson'),
+    writerSid: WRITER_SID, authorityPrivateKey: AUTHORITY_KEY.privateKey,
+    authorizedClients: [entry]
+  });
+  await authority.initialize();
+  armed = true;
+  const client = clientFor({
+    authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
+    clientNonce: nonce()
+  });
+  await assert.rejects(client.acquire(),
+    error => error.code === 'HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH' &&
+      error.details.includes('NON_ANCHOR_MUTATION'));
+  await assert.rejects(client.observe(),
+    error => error.code === 'HOST_RESOURCE_FENCE_AUTHORITY_FAILED');
 });

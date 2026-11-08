@@ -48,6 +48,24 @@ const HEX64 = /^[a-f0-9]{64}$/;
 const REQUEST_ID = /^[a-f0-9]{32}$/;
 const KEY = /^[A-Za-z0-9][A-Za-z0-9:._/-]{0,255}$/;
 const PHASE = /^(PENDING_GITHUB_PUBLISH|PUBLISHED_VERIFIED|PENDING_GITHUB_TERMINALIZATION|TERMINAL_VERIFIED)$/;
+const CLAIM_PHASES = new Set(['PENDING_GITHUB_PUBLISH', 'PUBLISHED_VERIFIED',
+  'PENDING_GITHUB_TERMINALIZATION', 'TERMINAL_VERIFIED']);
+const OPERATOR_KINDS = new Set(['chatgpt-web', 'codex', 'claude-code', 'human',
+  'github-actions', 'woodpecker', 'other']);
+const CLAIM_FIELDS = new Set(['phase', 'generation', 'protectedClaimKey',
+  'repository', 'issueRef', 'sourceSha', 'dispatchId', 'actorRole',
+  'operatorKind', 'operatorId', 'writerId', 'commentId', 'commentRef',
+  'terminalCommentId', 'terminalCommentRef', 'terminalEvidence',
+  'terminalWriterId', 'terminalOccurredAt', 'terminalReservationRevision']);
+const FSW_FIELDS = new Set(['phase', 'repository', 'issueNumber', 'sourceSha',
+  'writeSetSha256', 'document', 'pathCount', 'writeSetDigestBasis',
+  'taskPackRef', 'taskPackBlobSha', 'packPRHeadSha', 'packTree', 'packRevision',
+  'ownerReceiptRef', 'reviewWitnessRef', 'driverReviewRef', 'protectedClaimKey',
+  'generation', 'dispatchId', 'claimCommentId', 'claimCommentRef', 'writerId',
+  'schema', 'exclusiveResources', 'frozenResourceSet',
+  'frozenResourceSetSha256', 'frozenAt']);
+const FSW_DIGEST_BASIS =
+  'sha256(JSON.stringify(paths.sort())) compact; tally.v2.allowed-write-set-normalization/1';
 const SID = /^S-[0-9]+-[0-9]+(?:-[0-9]+)*$/;
 const WINDOWS_DRIVE = /^[A-Za-z]:/;
 const CONTROL = /[\u0000-\u001f\u007f]/;
@@ -173,9 +191,19 @@ function validateFileBody(body, code) {
   if (WINDOWS_DRIVE.test(body)) fail(code, 'FILE_DRIVE');
   if (body.endsWith('/')) fail(code, 'FILE_TRAILING_SLASH');
   if (body.includes('//')) fail(code, 'FILE_EMPTY_SEGMENT');
+  if (body.includes(':')) fail(code, 'FILE_WINDOWS_COLON');
+  if (/[<>"|?*]/.test(body)) fail(code, 'FILE_WINDOWS_FORBIDDEN');
   if (NON_ASCII.test(body)) fail(code, 'FILE_CASE_FOLD_UNKNOWN');
   for (const segment of body.split('/')) {
     if (segment === '' || segment === '.' || segment === '..') fail(code, 'FILE_SEGMENT');
+    // The selected Windows Host strips trailing dots/spaces and resolves device
+    // names, so these lexical forms are ambiguous aliases and deny. OS short
+    // names, symlinks and junctions are outside this Git-path resource contract;
+    // the separate gitWorktree rule (not admitted here) must resolve them.
+    if (segment.endsWith('.') || segment.endsWith(' ')) fail(code, 'FILE_WINDOWS_TRAILING');
+    if (/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$/i.test(segment)) {
+      fail(code, 'FILE_WINDOWS_DEVICE');
+    }
   }
   return body;
 }
@@ -670,6 +698,166 @@ function validateForeignClaimProjection(row) {
   return foreignClaimFields(row);
 }
 
+function claimKeyParts(claimKey) {
+  const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
+  const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)#([1-9][0-9]*):(builder|reviewer|validator):([A-Za-z0-9_.-]{1,64})$/
+    .exec(claimKey ?? '');
+  if (!match) fail(code, 'CLAIM_KEY');
+  return Object.freeze({
+    owner: match[1], repo: match[2], issueNumber: Number(match[3]),
+    role: match[4], group: match[5]
+  });
+}
+
+function assertAllowedValueFields(value, allowed, code) {
+  for (const field of Object.keys(value)) {
+    if (!allowed.has(field)) fail(code, 'UNEXPECTED_FIELD:' + field);
+  }
+}
+
+/**
+ * The frozen Claim reservation/transition document accepted under the held
+ * lease's own claim CAS key. Only the public T06d row fields are admitted and
+ * the row must bind the same Task identity and phase/comment shape.
+ */
+function validateClaimReservation(value, lease) {
+  const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
+  if (!plainObject(value)) fail(code, 'CLAIM_VALUE');
+  assertAllowedValueFields(value, CLAIM_FIELDS, code);
+  if (!CLAIM_PHASES.has(value.phase)) fail(code, 'CLAIM_PHASE');
+  if (value.generation !== lease.resourceSet.generation) fail(code, 'CLAIM_GENERATION');
+  if (value.protectedClaimKey !== lease.protectedClaimKey) fail(code, 'CLAIM_KEY');
+  if (value.repository !== lease.resourceSet.repository) fail(code, 'CLAIM_REPOSITORY');
+  if (value.issueRef !== lease.resourceSet.issueRef) fail(code, 'CLAIM_ISSUE');
+  if (value.sourceSha !== lease.sourceSha) fail(code, 'CLAIM_SOURCE');
+  if (value.dispatchId !== lease.dispatchId) fail(code, 'CLAIM_DISPATCH');
+  const parts = claimKeyParts(lease.protectedClaimKey);
+  if (value.actorRole !== parts.role) fail(code, 'CLAIM_ROLE');
+  if (!OPERATOR_KINDS.has(value.operatorKind)) fail(code, 'CLAIM_OPERATOR_KIND');
+  requireString(value.operatorId, ID, code, 'CLAIM_OPERATOR_ID');
+  if (value.writerId !== lease.writerId) fail(code, 'CLAIM_WRITER');
+  if (value.phase !== 'PENDING_GITHUB_PUBLISH' || value.commentId !== undefined) {
+    if (!Number.isSafeInteger(value.commentId) || value.commentId < 1) {
+      fail(code, 'CLAIM_COMMENT_ID');
+    }
+    if (value.commentRef !== `${value.issueRef}#issuecomment-${value.commentId}`) {
+      fail(code, 'CLAIM_COMMENT_REF');
+    }
+  }
+  if (value.phase === 'TERMINAL_VERIFIED') {
+    if (!Number.isSafeInteger(value.terminalCommentId) || value.terminalCommentId < 1 ||
+      value.terminalCommentRef !==
+        `${value.issueRef}#issuecomment-${value.terminalCommentId}`) {
+      fail(code, 'CLAIM_TERMINAL_COMMENT');
+    }
+    if (typeof value.terminalEvidence !== 'string' || value.terminalEvidence.length === 0) {
+      fail(code, 'CLAIM_TERMINAL_EVIDENCE');
+    }
+    requireString(value.terminalWriterId, ID, code, 'CLAIM_TERMINAL_WRITER');
+    if (typeof value.terminalOccurredAt !== 'string' ||
+      !Number.isFinite(Date.parse(value.terminalOccurredAt))) {
+      fail(code, 'CLAIM_TERMINAL_TIME');
+    }
+    if (!Number.isSafeInteger(value.terminalReservationRevision) ||
+      value.terminalReservationRevision <= 0) {
+      fail(code, 'CLAIM_TERMINAL_REVISION');
+    }
+  } else if (value.terminalReservationRevision !== undefined &&
+    (!Number.isSafeInteger(value.terminalReservationRevision) ||
+      value.terminalReservationRevision <= 0)) {
+    fail(code, 'CLAIM_TERMINAL_REVISION');
+  }
+}
+
+/**
+ * The frozen write-set document accepted under the held lease's own FSW key.
+ * It must bind the exact Task identity, the held resource set and the Pack
+ * references, and it is create-only.
+ */
+function validateFswDocument(value, lease) {
+  const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
+  if (!plainObject(value)) fail(code, 'FSW_VALUE');
+  assertAllowedValueFields(value, FSW_FIELDS, code);
+  const parts = claimKeyParts(lease.protectedClaimKey);
+  if (value.phase !== 'FROZEN_DAG_WRITESET') fail(code, 'FSW_PHASE');
+  if (value.repository !== lease.resourceSet.repository ||
+    value.issueNumber !== parts.issueNumber) fail(code, 'FSW_TASK');
+  if (value.sourceSha !== lease.sourceSha) fail(code, 'FSW_SOURCE');
+  if (value.writeSetSha256 !== lease.resourceSet.writeSetSha256) {
+    fail(code, 'FSW_WRITE_SET');
+  }
+  const filePaths = lease.resourceSet.exclusiveResources
+    .filter(resource => resource.startsWith('file:'))
+    .map(resource => resource.slice('file:'.length));
+  const document = `frozen exact write set for #${parts.issueNumber}:\n${filePaths.join('\n')}`;
+  if (value.document !== document) fail(code, 'FSW_DOCUMENT');
+  if (value.pathCount !== filePaths.length) fail(code, 'FSW_PATH_COUNT');
+  if (value.writeSetDigestBasis !== FSW_DIGEST_BASIS) fail(code, 'FSW_DIGEST_BASIS');
+  if (value.taskPackRef !== lease.resourceSet.taskPackRef ||
+    value.taskPackBlobSha !== lease.resourceSet.taskPackBlobSha) {
+    fail(code, 'FSW_PACK');
+  }
+  if (value.packPRHeadSha !== lease.sourceSha) fail(code, 'FSW_PACK_HEAD');
+  requireString(value.packTree, HEX40, code, 'FSW_PACK_TREE');
+  if (!Number.isSafeInteger(value.packRevision) || value.packRevision <= 0) {
+    fail(code, 'FSW_PACK_REVISION');
+  }
+  if (value.ownerReceiptRef !== lease.resourceSet.ownerApprovalRef ||
+    value.reviewWitnessRef !== lease.resourceSet.reviewRef) {
+    fail(code, 'FSW_RECEIPT_REFS');
+  }
+  const escaped = lease.resourceSet.repository.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const driverReview = new RegExp(
+    `^https://github\\.com/${escaped}/pull/[1-9][0-9]*#pullrequestreview-[1-9][0-9]*$`
+  );
+  if (typeof value.driverReviewRef !== 'string' || !driverReview.test(value.driverReviewRef)) {
+    fail(code, 'FSW_DRIVER_REVIEW');
+  }
+  if (value.protectedClaimKey !== lease.protectedClaimKey ||
+    value.generation !== lease.resourceSet.generation ||
+    value.dispatchId !== lease.dispatchId ||
+    value.writerId !== lease.writerId) fail(code, 'FSW_IDENTITY');
+  if (!Number.isSafeInteger(value.claimCommentId) || value.claimCommentId < 1 ||
+    value.claimCommentRef !==
+      `${lease.resourceSet.issueRef}#issuecomment-${value.claimCommentId}`) {
+    fail(code, 'FSW_CLAIM_COMMENT');
+  }
+  if (value.schema !== HOST_RESOURCE_FENCE_SCHEMA) fail(code, 'FSW_SCHEMA');
+  if (canonicalJson(value.exclusiveResources) !==
+    canonicalJson(lease.resourceSet.exclusiveResources)) fail(code, 'FSW_RESOURCES');
+  if (canonicalJson(value.frozenResourceSet) !==
+    canonicalJson(lease.resourceSet)) fail(code, 'FSW_FROZEN_RESOURCE_SET');
+  if (value.frozenResourceSetSha256 !== lease.frozenResourceSetSha256) {
+    fail(code, 'FSW_FROZEN_DIGEST');
+  }
+  if (typeof value.frozenAt !== 'string' || !Number.isFinite(Date.parse(value.frozenAt))) {
+    fail(code, 'FSW_FROZEN_AT');
+  }
+}
+
+/**
+ * Only the held lease's own two reserved CAS destinations are writable:
+ * the Claim CAS row derived from its protected Claim key and the create-only
+ * FSW row derived from its Issue. Any other covered CAS string denies.
+ */
+function validateCoveredWrite(key, value, lease, conditions) {
+  const parts = claimKeyParts(lease.protectedClaimKey);
+  const claimCasKey = `tally:v2:claim-admission:${sha256Hex(lease.protectedClaimKey)}`;
+  const fswKey = `tally:v2:task-writeset:${parts.issueNumber}`;
+  if (key === claimCasKey) {
+    validateClaimReservation(value, lease);
+    return 'CLAIM_CAS';
+  }
+  if (key === fswKey) {
+    validateFswDocument(value, lease);
+    if (conditions.mustBeAbsent !== true) {
+      fail('HOST_RESOURCE_FENCE_VALUE_INVALID', 'FSW_CREATE_ONLY');
+    }
+    return 'FSW';
+  }
+  fail('HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
+}
+
 function validateNonce(nonce) {
   return requireString(nonce, HEX64, 'HOST_RESOURCE_FENCE_NONCE_INVALID', 'NONCE');
 }
@@ -767,6 +955,7 @@ class HostResourceFenceAuthority {
       fail(code, 'AUTHORIZED_CLIENTS');
     }
     const clients = new Map();
+    const publicKeys = new Set();
     for (const entry of options.authorizedClients) {
       if (!plainObject(entry)) fail(code, 'CLIENT_ENTRY');
       exactKeys(entry, ['repository', 'protectedClaimKey', 'writerId', 'sourceSha',
@@ -780,10 +969,11 @@ class HostResourceFenceAuthority {
       requireString(entry.dispatchId, ID, code, 'DISPATCH_ID');
       requireString(entry.frozenResourceSetSha256, HEX64, code, 'FROZEN_RESOURCE_SET_SHA256');
       if (clients.has(entry.protectedClaimKey)) fail(code, 'DUPLICATE_CLIENT');
-      clients.set(entry.protectedClaimKey, Object.freeze({
-        ...entry,
-        publicKey: parsePublicKeyPem(entry.publicKeyPem)
-      }));
+      const publicKey = parsePublicKeyPem(entry.publicKeyPem);
+      const fingerprint = publicKey.export({type: 'spki', format: 'der'}).toString('base64');
+      if (publicKeys.has(fingerprint)) fail(code, 'DUPLICATE_CLIENT_PUBLIC_KEY');
+      publicKeys.add(fingerprint);
+      clients.set(entry.protectedClaimKey, Object.freeze({...entry, publicKey}));
     }
     this.#store = store;
     this.#registryId = options.registryId;
@@ -808,6 +998,11 @@ class HostResourceFenceAuthority {
   get writerSid() { return this.#writerSid; }
   get publicKeyPem() { return this.#publicKeyPem; }
   get initialized() { return this.#state === 'READY'; }
+  get anchorHead() {
+    if (!this.#expectedHead) fail('HOST_RESOURCE_FENCE_AUTHORITY_NOT_INITIALIZED');
+    return Object.freeze({hash: this.#expectedHead.hash,
+      generation: this.#expectedHead.generation});
+  }
 
   #enqueue(task) {
     const run = this.#tail.then(task, task);
@@ -999,6 +1194,34 @@ class HostResourceFenceAuthority {
     return {chain, snapshot, registry};
   }
 
+  #verifySnapshotDelta(before, after, expected) {
+    const beforeMap = new Map(before.rows.map(row => [row.key, row]));
+    const afterMap = new Map(after.rows.map(row => [row.key, row]));
+    for (const key of new Set([...beforeMap.keys(), ...afterMap.keys()])) {
+      if (key === expected.allowedKey) continue;
+      const prior = beforeMap.get(key);
+      const next = afterMap.get(key);
+      if (!prior || !next || prior.revision !== next.revision ||
+        canonicalJson(prior.value) !== canonicalJson(next.value)) {
+        this.#failed = true;
+        fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'NON_ANCHOR_MUTATION');
+      }
+    }
+    if (expected.removed) {
+      if (afterMap.has(expected.allowedKey)) {
+        this.#failed = true;
+        fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'TARGET_NOT_REMOVED');
+      }
+      return;
+    }
+    const target = afterMap.get(expected.allowedKey);
+    if (!target || target.revision !== expected.expectedRevision ||
+      canonicalJson(target.value) !== canonicalJson(expected.expectedValue)) {
+      this.#failed = true;
+      fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'TARGET_MISMATCH');
+    }
+  }
+
   async #appendAnchor(generation, snapshot) {
     const record = {
       registryId: this.#registryId,
@@ -1036,8 +1259,9 @@ class HostResourceFenceAuthority {
     return lease;
   }
 
-  #checkHeld(lease, nonceHash) {
-    if (lease.nonceHash !== nonceHash) fail('HOST_RESOURCE_FENCE_NONCE_MISMATCH');
+  #checkHeld(lease, nonce) {
+    requireString(nonce, HEX64, 'HOST_RESOURCE_FENCE_NONCE_INVALID', 'NONCE');
+    if (sha256Hex(nonce) !== lease.nonceHash) fail('HOST_RESOURCE_FENCE_NONCE_MISMATCH');
   }
 
   async #mutateRegistry(buildNext) {
@@ -1052,6 +1276,7 @@ class HostResourceFenceAuthority {
           document: built.document,
           revision: result.revision,
           attempts: attempt,
+          beforeSnapshot: integrity.snapshot,
           meta: built.meta ?? null
         };
       } catch (error) {
@@ -1084,9 +1309,9 @@ class HostResourceFenceAuthority {
   }
 
   async #dispatch(request) {
+    const integrity = await this.#assertIntegrity();
     this.#validateRequest(request);
     const entry = this.#authorize(request);
-    const integrity = await this.#assertIntegrity();
     const {registry} = integrity;
     const document = registry.document;
 
@@ -1160,6 +1385,11 @@ class HostResourceFenceAuthority {
       });
       const lease = mutation.document.leases.find(entryLease => entryLease.fenceId === fenceId);
       const snapshot = await readStoreSnapshot(this.#store);
+      this.#verifySnapshotDelta(mutation.beforeSnapshot, snapshot, {
+        allowedKey: this.#registryKey,
+        expectedValue: mutation.document,
+        expectedRevision: mutation.revision
+      });
       const anchorHash = await this.#appendAnchor(mutation.document.generation, snapshot);
       return this.#success(request, entry, {
         registryRevision: mutation.revision,
@@ -1176,9 +1406,10 @@ class HostResourceFenceAuthority {
     }
 
     if (request.operation === 'ASSERT') {
-      exactKeys(request.value, ['fenceId'], 'HOST_RESOURCE_FENCE_REQUEST_INVALID');
+      exactKeys(request.value, ['fenceId', 'nonce'], 'HOST_RESOURCE_FENCE_REQUEST_INVALID');
       requireString(request.value.fenceId, ID, 'HOST_RESOURCE_FENCE_REQUEST_INVALID', 'FENCE_ID');
       const lease = this.#findLease(document, request.value.fenceId);
+      this.#checkHeld(lease, request.value.nonce);
       if (lease.frozenResourceSetSha256 !== entry.frozenResourceSetSha256) {
         fail('HOST_RESOURCE_FENCE_NOT_HELD');
       }
@@ -1197,13 +1428,12 @@ class HostResourceFenceAuthority {
     }
 
     if (request.operation === 'RELEASE') {
-      exactKeys(request.value, ['fenceId', 'nonceHash'], 'HOST_RESOURCE_FENCE_REQUEST_INVALID');
+      exactKeys(request.value, ['fenceId', 'nonce'], 'HOST_RESOURCE_FENCE_REQUEST_INVALID');
       requireString(request.value.fenceId, ID, 'HOST_RESOURCE_FENCE_REQUEST_INVALID', 'FENCE_ID');
-      requireString(request.value.nonceHash, HEX64, 'HOST_RESOURCE_FENCE_NONCE_INVALID', 'NONCE_HASH');
       let releasedLease = null;
       const mutation = await this.#mutateRegistry(current => {
         const lease = this.#findLease(current, request.value.fenceId);
-        this.#checkHeld(lease, request.value.nonceHash);
+        this.#checkHeld(lease, request.value.nonce);
         if (lease.frozenResourceSetSha256 !== entry.frozenResourceSetSha256 ||
           lease.protectedClaimKey !== entry.protectedClaimKey) {
           fail('HOST_RESOURCE_FENCE_NOT_HELD');
@@ -1219,6 +1449,11 @@ class HostResourceFenceAuthority {
         return {document};
       });
       const snapshot = await readStoreSnapshot(this.#store);
+      this.#verifySnapshotDelta(mutation.beforeSnapshot, snapshot, {
+        allowedKey: this.#registryKey,
+        expectedValue: mutation.document,
+        expectedRevision: mutation.revision
+      });
       const anchorHash = await this.#appendAnchor(mutation.document.generation, snapshot);
       return this.#success(request, entry, {
         registryRevision: mutation.revision,
@@ -1236,24 +1471,33 @@ class HostResourceFenceAuthority {
 
     if (request.operation === 'PUT' || request.operation === 'REMOVE') {
       const valueKeys = request.operation === 'PUT' ?
-        ['fenceId', 'nonceHash', 'key', 'value', 'conditions'] :
-        ['fenceId', 'nonceHash', 'key', 'conditions'];
+        ['fenceId', 'nonce', 'key', 'value', 'conditions'] :
+        ['fenceId', 'nonce', 'key', 'conditions'];
       exactKeys(request.value, valueKeys, 'HOST_RESOURCE_FENCE_REQUEST_INVALID');
       requireString(request.value.fenceId, ID, 'HOST_RESOURCE_FENCE_REQUEST_INVALID', 'FENCE_ID');
-      requireString(request.value.nonceHash, HEX64, 'HOST_RESOURCE_FENCE_NONCE_INVALID', 'NONCE_HASH');
       requireString(request.value.key, KEY, 'HOST_RESOURCE_FENCE_REQUEST_INVALID', 'KEY');
       if (request.value.key === this.#registryKey) {
         fail('HOST_RESOURCE_FENCE_KEY_RESERVED');
       }
       const lease = this.#findLease(document, request.value.fenceId);
-      this.#checkHeld(lease, request.value.nonceHash);
+      this.#checkHeld(lease, request.value.nonce);
       if (lease.frozenResourceSetSha256 !== entry.frozenResourceSetSha256 ||
         lease.protectedClaimKey !== entry.protectedClaimKey) {
         fail('HOST_RESOURCE_FENCE_NOT_HELD');
       }
+      const parts = claimKeyParts(lease.protectedClaimKey);
+      const claimCasKey = `tally:v2:claim-admission:${sha256Hex(lease.protectedClaimKey)}`;
+      const fswKey = `tally:v2:task-writeset:${parts.issueNumber}`;
       const covered = lease.resourceSet.exclusiveResources.includes(`cas:${request.value.key}`);
       if (!covered) fail('HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
       const conditions = parseConditions(request.value.conditions);
+      if (request.operation === 'PUT') {
+        validateCoveredWrite(request.value.key, request.value.value, lease, conditions);
+      } else if (request.value.key === fswKey) {
+        fail('HOST_RESOURCE_FENCE_KEY_RESERVED');
+      } else if (request.value.key !== claimCasKey) {
+        fail('HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
+      }
       let revisionForResult;
       try {
         if (request.operation === 'PUT') {
@@ -1270,6 +1514,11 @@ class HostResourceFenceAuthority {
         fail('HOST_RESOURCE_FENCE_STORE_UNAVAILABLE', String(error?.code ?? 'WRITE_FAILED'));
       }
       const snapshot = await readStoreSnapshot(this.#store);
+      this.#verifySnapshotDelta(integrity.snapshot, snapshot,
+        request.operation === 'PUT' ?
+          {allowedKey: request.value.key, expectedValue: request.value.value,
+            expectedRevision: revisionForResult} :
+          {allowedKey: request.value.key, removed: true});
       const anchorHash = await this.#appendAnchor(document.generation, snapshot);
       return this.#success(request, entry, {
         registryRevision: registry.revision,
@@ -1310,6 +1559,7 @@ class HostResourceFenceClient {
   #writerId;
   #identity;
   #built;
+  #nonce;
   #nonceHash;
   #sequence;
   #fenceId = null;
@@ -1331,7 +1581,8 @@ class HostResourceFenceClient {
     this.#registryId = options.registryId;
     this.#writerId = options.writerId;
     this.#identity = this.#built.resourceSet;
-    this.#nonceHash = nonceHashOf(options.nonce);
+    this.#nonce = validateNonce(options.nonce);
+    this.#nonceHash = nonceHashOf(this.#nonce);
     this.#sequence = Number.isSafeInteger(options.sequenceStart) ? options.sequenceStart : 0;
     if (this.#sequence < 0) fail(code, 'SEQUENCE_START');
   }
@@ -1358,7 +1609,9 @@ class HostResourceFenceClient {
       value
     };
     request.signature = signCanonical(this.#privateKey, requestUnsigned(request));
-    this.#requestLog.push(Object.freeze({...request}));
+    this.#requestLog.push(Object.freeze({
+      operation, requestId: request.requestId, sequence: request.sequence
+    }));
     const response = await this.#send(request);
     if (!plainObject(response)) fail('HOST_RESOURCE_FENCE_RESPONSE_INVALID');
     if (!verifyCanonical(this.#authorityPublicKey, responseUnsigned(response), response.signature)) {
@@ -1398,13 +1651,14 @@ class HostResourceFenceClient {
 
   async assert(fenceId = this.#fenceId) {
     if (!ID.test(fenceId ?? '')) fail('HOST_RESOURCE_FENCE_NOT_HELD');
-    const response = await this.#call('ASSERT', {fenceId}, null);
+    const response = await this.#call('ASSERT', {fenceId, nonce: this.#nonce}, null);
     return response.result;
   }
 
   async release(fenceId = this.#fenceId) {
     if (!ID.test(fenceId ?? '')) fail('HOST_RESOURCE_FENCE_NOT_HELD');
-    const response = await this.#call('RELEASE', {fenceId, nonceHash: this.#nonceHash}, null);
+    const response = await this.#call('RELEASE',
+      {fenceId, nonce: this.#nonce}, null);
     if (fenceId === this.#fenceId) {
       this.#fenceId = null;
       this.#fenceRevision = null;
@@ -1416,7 +1670,7 @@ class HostResourceFenceClient {
     if (!this.#fenceId) fail('HOST_RESOURCE_FENCE_NOT_HELD');
     const response = await this.#call('PUT', {
       fenceId: this.#fenceId,
-      nonceHash: this.#nonceHash,
+      nonce: this.#nonce,
       key,
       value,
       conditions
@@ -1428,7 +1682,7 @@ class HostResourceFenceClient {
     if (!this.#fenceId) fail('HOST_RESOURCE_FENCE_NOT_HELD');
     const response = await this.#call('REMOVE', {
       fenceId: this.#fenceId,
-      nonceHash: this.#nonceHash,
+      nonce: this.#nonce,
       key,
       conditions
     }, null);
@@ -1459,6 +1713,7 @@ class HostResourceFencePort {
   #protectedClaimKey;
   #sourceSha;
   #frozenResourceSetSha256;
+  #expectedHead;
 
   constructor(options) {
     const code = 'HOST_RESOURCE_FENCE_PORT_CONFIG';
@@ -1479,6 +1734,14 @@ class HostResourceFencePort {
       code, 'PROTECTED_CLAIM_KEY');
     requireString(options.sourceSha, HEX40, code, 'SOURCE_SHA');
     requireString(options.frozenResourceSetSha256, HEX64, code, 'FROZEN_RESOURCE_SET_SHA256');
+    exactKeys(options.expectedHead, ['hash', 'generation'], code);
+    requireString(options.expectedHead.hash, HEX64, code, 'EXPECTED_HEAD_HASH');
+    if (!Number.isSafeInteger(options.expectedHead.generation) ||
+      options.expectedHead.generation < 0) fail(code, 'EXPECTED_HEAD_GENERATION');
+    this.#expectedHead = Object.freeze({
+      hash: options.expectedHead.hash,
+      generation: options.expectedHead.generation
+    });
     this.#store = store;
     this.#registryId = options.registryId;
     this.#registryKey = options.registryKey ?? hostResourceFenceRegistryKey(options.registryId);
@@ -1505,6 +1768,10 @@ class HostResourceFencePort {
       authorityPublicKey: this.#authorityPublicKey,
       writerSid: this.#writerSid
     });
+    if (chain.headHash !== this.#expectedHead.hash ||
+      chain.head.generation !== this.#expectedHead.generation) {
+      fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'EXPECTED_HEAD');
+    }
     const snapshot = await readStoreSnapshot(this.#store);
     if (snapshot.sha256 !== chain.head.snapshotSha256) {
       fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'SNAPSHOT');
