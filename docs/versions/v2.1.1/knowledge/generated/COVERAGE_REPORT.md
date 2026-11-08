@@ -1,6 +1,7 @@
-# SEK-08 Coverage Report — integrated knowledge graph
+# SEK-08/SEK-09H Coverage Report — integrated knowledge graph
 
-**Task:** #349 (SEK-08) · **Build date (fixed):** `2026-11-07` ·
+**Task:** #349 (SEK-08) · **SEK-09H rebuild:** #368 (SEK-09F real-case integration) ·
+**Build date (fixed):** `2026-11-07` (constant reused by SEK-09H) ·
 **Status:** EXPERIMENTAL / HUMAN_REVIEW_PENDING.
 
 This report distinguishes what the integrated graph covers, what it explicitly does not,
@@ -19,29 +20,34 @@ claims neither 100% completeness nor any measured review efficiency.
 | SEK-07A | Foundations, Processes, Lifecycle & Quality | 88 | 11 | 12 | 11 | 25 |
 | SEK-07B | Implementation & Code (construction) | 79 | 9 | 14 | 9 | 26 |
 | SEK-07C | Security Engineering (NIST SSDF) | 85 | 9 | 14 | 10 | 30 |
-| SEK-07D | Reliability & Performance | 94 | 13 | 16 | 9 | 30 |
+| SEK-07D | Reliability & Performance | 105 | 13 | 21 | 13 | 30 |
 | SEK-07E | Build & Delivery | 99 | 16 | 12 | 10 | 39 |
 | SEK-07F | Maintenance & Evolution | 90 | 9 | 13 | 12 | 33 |
 | SEK-07G | Planning, Risk & Quality (software engineering management) | 89 | 12 | 11 | 10 | 32 |
 
-(Lane counts include the shared records each lane carries; the merged graph deduplicates
-them: 783 lane-owned + 6 shared + 3 derived sources = 792 records.)
+(SEK-07D additionally carries the two SEK-09F real incident cases and their evidence;
+see "Merged-graph totals" below. Lane counts include the shared records each lane
+carries; the merged graph deduplicates them: 794 lane-owned + 6 shared + 6 derived
+sources = 806 records.)
 
 ### Merged-graph totals
 
-- **Identity:** 789 lane records (783 owned + 6 shared, zero collisions, zero cross-lane
-  couplings — re-verified mechanically at this build) + 3 derived `Source` records.
+- **Identity:** 800 lane records (794 owned + 6 shared, zero collisions, zero cross-lane
+  couplings — re-verified mechanically at this build) + 6 derived `Source` records.
 - **By collection:** 1 Domain, 1 Subdomain, 11 taxonomy views, 34 taxonomy nodes,
-  3 sources, 86 source locators, 137 evidence records, 106 knowledge claims, 38 concepts,
+  6 sources, 90 source locators, 142 evidence records, 106 knowledge claims, 38 concepts,
   14 principles, 28 practices, 12 patterns, 10 anti-patterns, 11 decision models,
-  0 cases/counterexamples, 0 review decisions, 29 coverage gaps, 271 relationship
-  assertions.
-- **Evidence provenance:** all 137 evidence records bind to exactly one locator; all 86
-  locator `(source_ref, locator)` keys unique; three registered sources used
-  (SWEBOK Guide v4.0a, CS2023, NIST SP 800-218 v1.1). Evidence types: 127
+  2 cases (both `PENDING_REVIEW`, `synthetic: false`, `POSTMORTEM`), 0 counterexamples,
+  0 review decisions, 29 coverage gaps, 271 relationship assertions.
+- **Evidence provenance:** all 142 evidence records bind to exactly one locator; all 90
+  locator `(source_ref, locator)` keys unique; six registered sources used
+  (SWEBOK Guide v4.0a, CS2023, NIST SP 800-218 v1.1, plus the three SEK-09F first-party
+  publisher incident sources — Cloudflare 2025-06-12 outage, Cloudflare 2025-08-08 KV
+  redesign, GitHub 2018-10-21 postmortem). Evidence types: 132
   `DIRECT_SOURCE_PARAPHRASE`, 10 `SYNTHESIS` (lane-level synthesis inferences, all
   grounded in cited source evidence and explicitly labelled as synthesis in their
-  statements/scope).
+  statements/scope). The 5 SEK-09F evidence records are publisher self-reports with the
+  source-revision-unpinned caveat carried in their uncertainty fields.
 - **Claim support:** 106/106 knowledge claims carry ≥1 `SUPPORTED_BY` edge (157 such
   edges total; every object is an Evidence record).
 - **Relationships (271 assertions, 10 catalog predicates):** SUPPORTED_BY 157,
@@ -72,9 +78,17 @@ them: 783 lane-owned + 6 shared + 3 derived sources = 792 records.)
   CoverageGap records enumerate what was intentionally left uninspected (e.g. KA13's
   uninspected sections, KA12 quality sections, KA18 foundations breadth, KA4 breadth).
   No view claims domain completeness.
-- **No cases/counterexamples** — the corpus contains no real engineering cases yet
-  (0 Case, 0 Counterexample records); practice/pattern records therefore rest on source
-  evidence only.
+- **Cases present but unreviewed; no counterexamples** — two real incident cases
+  (`se:CASE-09F-CF-KV-DEPENDENCY`, `se:CASE-09F-GH-DB-FAILOVER`) were integrated from
+  the independently reviewed SEK-09F intake (#365 / PR #366) as `PENDING_REVIEW`,
+  non-synthetic evidence-backed records, but no human has reviewed them, they are not
+  bound to any practice/pattern via `case_refs`, and they do not adjudicate any claim.
+  `Counterexample` remains absent by design: neither case challenges a specific qualified
+  claim, so no `counterexample_to_refs` edge is asserted. The historical lane gap
+  `se:GAP-07D-NO-REAL-CASE-EVIDENCE` stays OPEN — the cases answer it only pending
+  human review, and pattern records still carry no `case_refs`. G2 case coverage remains
+  PARTIAL: two postmortems from a shared-dependency and a failover/replication-divergence
+  scope do not constitute valid counterexample coverage or breadth.
 - **Six registry sources unused** (metadata-only): five ISO/IEC/IEEE standards
   (12207:2026, 15288:2023, 25010:2023, 42010:2022, 29119-2:2021) and NIST SP
   800-218A — deliberately not projected; ISO remains bibliographic-record-only per the
@@ -128,6 +142,11 @@ fixture stays in the tree byte-identical and is documented here and in `README.m
   permission."
 - **NIST SP 800-218 v1.1** — "Prefer original paraphrase, citation and locator; do not
   copy substantial text."
+- **Cloudflare and GitHub first-party blog sources (SEK-09H registered)** —
+  "Bibliographic references and short original paraphrases only; publisher retains
+  copyright; do not copy substantial incident text or redistribute page content."
+  The HTML revisions are not content-hash pinned; treat current-page revisions as
+  mutable and re-verify before quoting.
 - **ISO/IEC/IEEE standards** — not used by the corpus; bibliographic record only, no
   normative text, clause extracts or generated summaries; any deeper review requires a
   permitted human-access procedure.
@@ -136,9 +155,10 @@ fixture stays in the tree byte-identical and is documented here and in `README.m
 
 ## Unmeasured human-review burden
 
-`HUMAN_REVIEW_BURDEN=NOT_MEASURED`. No human review was performed or timed in SEK-08.
-566 knowledge-class records (404 PENDING_REVIEW + 162 PROPOSED), 137 evidence records
-(136 PENDING_REVIEW + 1 PROPOSED, all `EXTRACTED_PENDING_REVIEW`) and 106 claims
+`HUMAN_REVIEW_BURDEN=NOT_MEASURED`. No human review was performed or timed in SEK-08 or
+SEK-09H.
+568 knowledge-class records (406 PENDING_REVIEW + 162 PROPOSED), 142 evidence records
+(141 PENDING_REVIEW + 1 PROPOSED, all `EXTRACTED_PENDING_REVIEW`) and 106 claims
 (review_status PENDING) await human verification of source, locator, interpretation,
 applicability and rights. This report makes no claim about review efficiency or the
 rate of eventual acceptance; mechanical duplicate/label scans are not a substitute for

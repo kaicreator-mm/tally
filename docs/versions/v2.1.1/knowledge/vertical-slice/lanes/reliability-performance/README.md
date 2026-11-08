@@ -34,9 +34,19 @@ Scope boundary:
   sections (failure-risk-reduction techniques; quality measurement) are
   admitted; model-level quality definitions belong to SEK-07A. Security
   operations stay with SEK-07C and CI/CD delivery mechanics with SEK-07E.
-- **No invented real cases.** Neither source carries real reliability case
-  material, so this lane contains no Case or Counterexample records; the
-  missing case evidence is recorded as `se:GAP-07D-NO-REAL-CASE-EVIDENCE`.
+- **No invented real cases; two reviewed real cases merged by SEK-09H.** Neither
+  curriculum source carries real reliability case material. Two real incident cases
+  reviewed under SEK-09F (#365 / PR #366) — the Cloudflare 2025-06-12 Workers KV
+  shared-dependency outage (with the 2025-08-08 KV redesign follow-up) and the GitHub
+  2018-10-21 MySQL failover/replication-divergence postmortem — were merged into this
+  lane's canonical records by SEK-09H (#368) as `se:CASE-09F-CF-KV-DEPENDENCY` and
+  `se:CASE-09F-GH-DB-FAILOVER`. Both are `PENDING_REVIEW`, `synthetic: false`,
+  `case_kind: POSTMORTEM`, each backed by 2-3 `PENDING_REVIEW` evidence records bound
+  to first-party publisher sources registered in `authority/SOURCE_REGISTRY.yaml`.
+  Neither case is a Counterexample: no contrary observation targets a specific
+  qualified claim, so no `counterexample_to_refs` edge exists. The historical
+  missing-case-evidence gap `se:GAP-07D-NO-REAL-CASE-EVIDENCE` remains OPEN pending
+  human review of the merged cases.
 - All knowledge records are `PROPOSED` or `PENDING_REVIEW`; no record is
   `ACCEPTED`. Evidence records are `EXTRACTED_PENDING_REVIEW`, `synthetic:
   false`. Knowledge claims are `review_status: PENDING`.
@@ -97,8 +107,8 @@ across lanes for SEK-08 deduplication).
 | domains | 1 | shared `se:DOMAIN-SOFTWARE-ENGINEERING` (verbatim shared snippet) |
 | taxonomy_views | 2 | shared `se:VIEW-CS2023-SE` + lane `se:VIEW-07D-RELIABILITY-PERFORMANCE` (OPERATIONS) |
 | taxonomy_nodes | 4 | CS2023 SE-Reliability unit (KNOWLEDGE_UNIT) + reliability/resilience, performance/capacity (QUALITY_ATTRIBUTE) + observability feedback (CONCERN) |
-| source_locators | 9 | 1 shared verbatim (`se:LOC-CS2023-SE-KU-TABLE`) + 1 CS2023 heading-anchored KU locator + 7 SWEBOK (5 KA6 + 2 KA12; PDF-page-index + printed-folio verified) |
-| evidence_records | 16 | 8 CS2023 `DIRECT_SOURCE_PARAPHRASE` + 7 SWEBOK `DIRECT_SOURCE_PARAPHRASE` + 1 lane `SYNTHESIS` |
+| source_locators | 13 | 1 shared verbatim (`se:LOC-CS2023-SE-KU-TABLE`) + 1 CS2023 heading-anchored KU locator + 7 SWEBOK (5 KA6 + 2 KA12; PDF-page-index + printed-folio verified) + 4 SEK-09F web-section locators (2 Cloudflare outage, 1 Cloudflare redesign, 1 GitHub postmortem) |
+| evidence_records | 21 | 8 CS2023 `DIRECT_SOURCE_PARAPHRASE` + 7 SWEBOK `DIRECT_SOURCE_PARAPHRASE` + 1 lane `SYNTHESIS` + 5 SEK-09F first-party incident `DIRECT_SOURCE_PARAPHRASE` (all `PENDING_REVIEW`, `synthetic: false`) |
 | concepts | 4 | software reliability (QUALITY_ATTRIBUTE), error budget (TERM), fault tolerance (MECHANISM), SLA (TERM) |
 | knowledge_claims | 13 | 6 CS2023 (2 DEFINITION, 3 PRACTICE_CLAIM, 1 DOMAIN_BOUNDARY) + 7 SWEBOK (2 DEFINITION, 4 PRACTICE_CLAIM, 1 NORMATIVE_CLAIM) |
 | principles | 2 | plan for failure; evidence over hope |
@@ -106,22 +116,29 @@ across lanes for SEK-08 deduplication).
 | patterns | 2 | consequence-matched failure response; SLA-anchored availability |
 | anti_patterns | 1 | hope-based operations (derived from lane synthesis) |
 | decision_models | 2 | error budget vs error-free; capacity investment |
-| coverage_gaps | 4 | real-case gap; CS2023 SF/PDC adjacent-topics gap; SWEBOK uninspected-sections gap; shared CS2023 rights-clearance gap (HIGH/OPEN) |
+| cases | 2 | SEK-09F real incident postmortems (Cloudflare 2025 KV shared dependency; GitHub 2018 failover/replication divergence); both `PENDING_REVIEW`, `synthetic: false`, evidence-backed; merged by SEK-09H (#368) |
+| coverage_gaps | 4 | real-case gap (remains OPEN — merged cases are PENDING_REVIEW and not yet bound to pattern `case_refs`); CS2023 SF/PDC adjacent-topics gap; SWEBOK uninspected-sections gap; shared CS2023 rights-clearance gap (HIGH/OPEN) |
 | relationship_assertions | 30 | 13 SUPPORTED_BY claim traces + 3 principle/pattern/DM SUPPORTED_BY + 3 APPLIES_TO + 3 IMPLEMENTS + 1 DEPENDS_ON + 1 DERIVED_FROM + 1 RELATED_TO + 1 CROSS_CUTS + 1 QUALIFIED_BY + 1 cross-view RELATED_TO + 2 claim-node/pattern traces |
 
+The 105 lane records = 101 lane-owned + 4 shared (domain, curriculum view, Core-Hours
+locator, rights gap).
+
 Shared records (domain, curriculum view, Core-Hours locator, rights gap) are
-copied verbatim from the lane-shared snippet pack so SEK-08 integration can
+copied verbatim from the lane-shared snippet pack so SEK-08/SEK-09H integration can
 deduplicate them by canonical ID across the SEK-07 lanes. Source entities are
 **not** stored in this file; the validation harness derives them from
-`authority/SOURCE_REGISTRY.yaml`.
+`authority/SOURCE_REGISTRY.yaml` (for this lane after SEK-09H: CS2023, SWEBOK
+Guide v4.0a and the three SEK-09F first-party sources its locators cite).
 
 ## Known gaps
 
-1. **Real-case gap.** No case-class source (incident report, postmortem,
-   capacity case study) is registered for this scope; pattern and anti-pattern
-   records have no real-world illustration, and the anti-pattern's
-   counterproductive nature is a lane synthesis inference
-   (`se:GAP-07D-NO-REAL-CASE-EVIDENCE`, MEDIUM/OPEN).
+1. **Real-case gap (partially addressed, still OPEN).** Two SEK-09F real incident
+   cases were merged by SEK-09H (#368) and are registered against this lane's scope,
+   but they are `PENDING_REVIEW`, not yet bound to any pattern/practice `case_refs`,
+   and no case-class source beyond the two publisher postmortems exists for this
+   scope; pattern and anti-pattern records therefore still have no reviewed real-world
+   illustration, and the anti-pattern's counterproductive nature remains a lane
+   synthesis inference (`se:GAP-07D-NO-REAL-CASE-EVIDENCE`, MEDIUM/OPEN).
 2. **CS2023 adjacent-topics gap.** SF-Reliability and PDC-Evaluation topics
    exist in the full CS2023 BOK but are absent from the prepared extraction,
    and the lane could not re-fetch them (direct download fails; archive
@@ -160,8 +177,12 @@ $VENV/Scripts/python.exe /c/xDev/kAiCreator/_tmp/tally-sek07-lanes/scripts/assem
 
 Expected key lines: every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`,
 `NO_ACCEPTED_RECORDS=PASS`, `LINKML_INSTANCE_VALIDATION=PASS`,
-`LANE_VALIDATION=PASS`, `DERIVED_SOURCES=2` (`se:SRC-CS2023`,
-`se:SRC-SWEBOK-GUIDE-4-0A`); 94 lane records, 30 relationship assertions.
+`LANE_VALIDATION=PASS`, `DERIVED_SOURCES=5` (`se:SRC-CS2023`,
+`se:SRC-SWEBOK-GUIDE-4-0A`, `se:SRC-09F-CF-OUTAGE-2025`,
+`se:SRC-09F-CF-KV-REDESIGN-2025`, `se:SRC-09F-GH-POSTMORTEM-2018`); 105 lane
+records, 30 relationship assertions, 2 cases. (Expected values after the SEK-09H
+merge; the SEK-09H graph-level rebuild and its gates are recorded in
+`docs/versions/v2.1.1/methods/observations/SEK-09H.md`.)
 
 ## Review entry point
 
