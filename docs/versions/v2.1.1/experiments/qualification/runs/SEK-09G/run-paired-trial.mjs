@@ -81,13 +81,15 @@ async function run(qs,meta,options){
   console.log('REAL_ANSWERS=14 INDEPENDENT_SCORING=NOT_RUN G5=NOT_YET_QUALIFIED');return true;
 }
 async function test(){
-  let count=0;const server=http.createServer(async(req,res)=>{for await(const _ of req){}count++;res.setHeader('content-type','application/json');res.end(JSON.stringify({model:'MOCK_TEST_ONLY',choices:[{message:{content:'MOCK_RESPONSE_'+count}}]}));});
+  let count=0;const requests=[];const server=http.createServer(async(req,res)=>{const parts=[];for await(const chunk of req){parts.push(chunk)}requests.push(JSON.parse(Buffer.concat(parts).toString('utf8')));count++;res.setHeader('content-type','application/json');res.end(JSON.stringify({model:'MOCK_TEST_ONLY',choices:[{message:{content:'MOCK_RESPONSE_'+count}}]}));});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   try{const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'sek09g-'));const qs=Array.from({length:7},(_,i)=>({id:'G5-0'+(i+1),question:'TEST_ONLY_'+i,criteria:'test',traps:'test',retrieval:{claim:{statement:'mock'}}}));
     const out=path.join(tmp,'out'),ok=await run(qs,{mock_only:true},{endpoint:'http://127.0.0.1:'+server.address().port+'/v1/chat/completions',model:'MOCK_ONLY',out,timeout:3000});
     const st=JSON.parse(fs.readFileSync(path.join(out,'trial-manifest.json')));
     const blind=JSON.parse(fs.readFileSync(path.join(out,'blind-TO-INDEPENDENT-SCORER.json')));
     if(!ok||count!==14||st.trials.length!==14||blind.items.length!==14||blind.items.some(x=>x.correctness_0_2!==null))throw Error('SELF_TEST_FAIL');
+    const messages=requests.map(r=>r.messages[1].content);
+    if(messages.filter(s=>s.includes('Use these exact pinned knowledge graph excerpts')).length!==7||messages.filter(s=>!s.includes('Use these exact pinned knowledge graph excerpts')).length!==7||messages.some(s=>s.includes('hard_exclusions')||s.includes('criteria:')))throw Error('ARM_ISOLATION_OR_CRITERIA_LEAK');
     fs.rmSync(tmp,{recursive:true,force:true});console.log('SELF_TEST=PASS MOCK_ONLY REAL_MODEL_CALLS=0');
   }finally{server.close();}
 }

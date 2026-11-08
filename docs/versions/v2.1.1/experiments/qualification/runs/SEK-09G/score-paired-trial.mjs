@@ -90,7 +90,7 @@ function compare(runDir,filledPath,outPath){
             scope_mean:avg(paired.filter(x=>x.arm==='K'),'scope'),
             traceability_mean:avg(paired.filter(x=>x.arm==='K'),'traceability'),
             unsupported_total:paired.filter(x=>x.arm==='K').reduce((s,x)=>s+x.unsupported,0)},
-    observed_effort:'NOT_MEASURED_UNLESS_ACTUAL_SECONDS_RECORDED',
+    observed_effort:paired.every(x=>x.observed_effort_seconds!==null)?{status:'MEASURED',direct_mean_seconds:avg(paired.filter(x=>x.arm==='D'),'observed_effort_seconds'),corpus_mean_seconds:avg(paired.filter(x=>x.arm==='K'),'observed_effort_seconds')}:{status:'PARTIAL_OR_NOT_MEASURED',measured_records:paired.filter(x=>x.observed_effort_seconds!==null).length,total_records:14},
     superiority:'NOT_CLAIMED_EXPLORATORY_NO_PRECOMMITTED_PASS_THRESHOLD',
     G4:'NOT_MEASURED_BY_THIS_EXPERIMENT',
     G5:'EMPIRICAL_RESULTS_REQUIRE_SEPARATE_GATE_REVIEW'};
