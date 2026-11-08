@@ -1,10 +1,12 @@
-# Software Engineering Knowledge Graph — Human Handbook (v2.1.1 SEK-08)
+# Software Engineering Knowledge Graph — Human Handbook (v2.1.1 SEK-08, SEK-09H rebuild)
 
-**Task:** #349 · **Build date (fixed):** `2026-11-07` ·
+**Task:** #349 · **SEK-09H rebuild:** #368 (SEK-09F real-case integration) ·
+**Build date (fixed):** `2026-11-07` (constant reused) ·
 **Status:** EXPERIMENTAL / HUMAN_REVIEW_PENDING.
 
 This handbook is the human entry point to the integrated knowledge graph materialized by
-SEK-08 from the ten independently reviewed SEK-06/SEK-07 lane bundles. It explains what
+SEK-08 from the ten independently reviewed SEK-06/SEK-07 lane bundles and rebuilt by
+SEK-09H with the two reviewed SEK-09F real incident cases. It explains what
 the graph is, how to navigate it, how every claim traces to a source, what it does not
 cover, what rights constrain it, how review states work, and how to rebuild it
 byte-for-byte. Machine-facing details live in `generated/README.md`; coverage accounting
@@ -44,21 +46,24 @@ Records live in typed collections (counts at this build):
 |---|---|---|
 | Domain / Subdomain | 1 / 1 | The bounded discipline and its one specialization |
 | TaxonomyView / TaxonomyNode | 11 / 34 | Classification lenses and their nodes |
-| Source / SourceLocator | 3 / 86 | Bibliographic authorities and exact inspected locations |
-| Evidence | 137 | Source-grounded observations (127 paraphrase, 10 labelled synthesis) |
+| Source / SourceLocator | 6 / 90 | Bibliographic authorities and exact inspected locations |
+| Evidence | 142 | Source-grounded observations (132 paraphrase, 10 labelled synthesis) |
 | KnowledgeClaim | 106 | Atomic, scoped, reviewable statements |
 | Concept / Principle / Practice | 38 / 14 / 28 | Terms, guiding propositions, actionable activities |
 | Pattern / AntiPattern / DecisionModel | 12 / 10 / 11 | Recurring structures, counterproductive approaches, decision aids |
+| Case | 2 | Real incident postmortems (both PENDING_REVIEW; SEK-09H) |
 | CoverageGap | 29 | First-class missing/weak/out-of-scope items |
 | RelationshipAssertion | 271 | Directed typed edges |
-| Case / Counterexample / ReviewDecision | 0 / 0 / 0 | Intentionally empty — see §6 |
+| Counterexample / ReviewDecision | 0 / 0 | Intentionally empty — see §6 |
 
 **Navigation.** Record ids are self-describing CURIEs (`se:` prefix):
 `se:LOC-*` locators, `se:EVD-*` evidence, `se:CLM-*` claims, `se:PRA-*` practices,
 `se:PAT-*`/`se:ANT-*` patterns/anti-patterns, `se:PRI-*` principles, `se:CON-*`
-concepts, `se:DM-*` decision models, `se:GAP-*` coverage gaps, `se:REL-*` or
+concepts, `se:DM-*` decision models, `se:GAP-*` coverage gaps, `se:CASE-*` cases,
+`se:REL-*` or
 `se:REL-…` assertions, `se:NODE-*`/`se:VIEW-*` taxonomy. Ids embed the owning lane
-(`se:PRA-07C-*` → SEK-07C security lane). The RDF projection (`generated/graph.ttl`,
+(`se:PRA-07C-*` → SEK-07C security lane; `se:EVD-09F-*`/`se:CASE-09F-*` → the SEK-09F
+reviewed intake merged into the reliability-performance lane by SEK-09H). The RDF projection (`generated/graph.ttl`,
 `generated/graph.jsonld`) exposes every record as a resource with `se:<slot>`
 predicates; reference slots are IRIs, so any RDF tool can walk the graph.
 
@@ -85,16 +90,22 @@ Every knowledge assertion traces through one chain, stored once (no duplicated s
 facts downstream):
 
 1. **Source** (`se:SRC-*`, derived from `authority/SOURCE_REGISTRY.yaml`): bibliographic
-   identity, authority fit/limitations, rights handling, verification state. Three
-   sources are used: SWEBOK Guide v4.0a, CS2023, NIST SP 800-218 v1.1.
+   identity, authority fit/limitations, rights handling, verification state. Six
+   sources are used: SWEBOK Guide v4.0a, CS2023, NIST SP 800-218 v1.1, plus the three
+   SEK-09H-registered first-party publisher incident sources (Cloudflare 2025-06-12
+   outage, Cloudflare 2025-08-08 KV redesign, GitHub 2018-10-21 postmortem — the last
+   three carry the source-revision-unpinned caveat: HTML revisions are mutable and no
+   response SHA-256 is pinned).
 2. **SourceLocator** (`se:LOC-*`): one exact inspected location (PDF page index/printed
-   page/section/table) within exactly one source; `(source_ref, locator)` is unique
-   across the graph (86 locators).
+   page/section/table, or named web-page section) within exactly one source;
+   `(source_ref, locator)` is unique across the graph (90 locators).
 3. **Evidence** (`se:EVD-*`): a concise source-grounded paraphrase (or an explicitly
-   labelled synthesis inference) bound to exactly one locator; all 137 are
+   labelled synthesis inference) bound to exactly one locator; all 142 are
    `EXTRACTED_PENDING_REVIEW`.
 4. **KnowledgeClaim / practice / principle / …**: knowledge records cite evidence via
    `SUPPORTED_BY` edges; all 106/106 claims have ≥1 supporting evidence record.
+   Real incident **Cases** (`se:CASE-*`, SEK-09H) cite evidence via `evidence_refs`;
+   they are PENDING_REVIEW and are not yet bound to any practice/pattern `case_refs`.
 
 `se:LOC-*` locator texts state the exact position (e.g. "Body of Knowledge PDF page
 indices 174-176; Software Engineering (SE), Overview"), so a reviewer can re-open the
@@ -127,8 +138,8 @@ rationale, qualifiers, lifecycle) and as the direct triple
 
 ## 6. Applicability, limitations and coverage gaps
 
-- **Nothing is accepted.** All 566 knowledge-class records are PROPOSED (162) or
-  PENDING_REVIEW (404); all 106 claims are `review_status: PENDING`; there are zero
+- **Nothing is accepted.** All 568 knowledge-class records are PROPOSED (162) or
+  PENDING_REVIEW (406); all 106 claims are `review_status: PENDING`; there are zero
   ReviewDecisions and zero ACCEPTED records. Treat every statement as "claimed, pending
   human verification", never as settled knowledge.
 - **Applicability is explicit per record** (`applicability`, `scope_description`,
@@ -138,7 +149,11 @@ rationale, qualifiers, lifecycle) and as the direct triple
   sections, absent case/incident material, ISO standards that are metadata-only, NIST
   800-218A abstract-only admission, CS2023 adjacent topics, rights clearance for any
   use beyond the CS2023 educational permission. See `generated/COVERAGE_REPORT.md`.
-- **No cases or counterexamples yet**: practices/patterns rest on source evidence only.
+- **No counterexamples yet; cases are unreviewed**: two real incident cases exist
+  (`se:CASE-09F-CF-KV-DEPENDENCY`, `se:CASE-09F-GH-DB-FAILOVER`, both PENDING_REVIEW),
+  integrated by SEK-09H from the reviewed SEK-09F intake; practices/patterns still rest
+  on source evidence only and carry no `case_refs`. No record is a Counterexample: no
+  contrary observation targets a specific qualified claim, so none was invented.
 - **Known historical defect, preserved deliberately**: the shared Domain
   `boundary_notes[1]` truncation in the ten lane files (repaired in the projection
   only), and the four legacy locator-ID overlaps documented in the deterministic
@@ -159,6 +174,10 @@ into the projection (`se:rights_handling` on each `se:SRC-*`):
   stay explicit (tracked as the HIGH-severity `se:GAP-CS2023-RIGHTS-CLEARANCE` gap).
 - **NIST SP 800-218 v1.1** — prefer original paraphrase, citation and locator; do not
   copy substantial text.
+- **Cloudflare / GitHub first-party incident posts (SEK-09H)** — bibliographic
+  references and short original paraphrases only; publisher retains copyright; do not
+  copy substantial incident text or redistribute page content; the linked HTML revisions
+  are mutable and unpinned.
 - **ISO/IEC/IEEE standards (unused)** — bibliographic record only; AI-tool use
   restrictions; no normative text, clause extracts or generated summaries.
 
@@ -170,39 +189,42 @@ PENDING`. Acceptance is exclusively a human act: a `ReviewDecision` (ACCEPT / RE
 REQUEST_CHANGES / DEFER) bound to the exact record revision and SHA-256 content digest
 created by a qualified human reviewer after checking source, locator, interpretation,
 applicability and rights. This build creates no ReviewDecisions and asserts no
-acceptance. SEK-08's own human-review burden is unmeasured (`NOT_MEASURED`).
+acceptance. SEK-08's and SEK-09H's own human-review burden is unmeasured (`NOT_MEASURED`).
 
 ## 9. Reproducible build
 
 The projection rebuilds byte-identically. Requirements: the ten lane bundles verbatim
-on the integration tree (WIP base `7a70211b…` + ten reviewed lane tips), the pinned
+(SEK-09H additionally requires its registry + reliability-lane canonical merge) on the
+integration tree (base WIP `1ad69d6b…` at the SEK-09H rebuild), the pinned
 model/catalog/registry, and the pinned environment (Windows-native Python 3.14.7,
 linkml 1.12.1 / linkml-runtime 1.12.1, PyYAML 6.0.3, rdflib 7.6.0, jsonschema 4.26.0).
 
 Steps: (1) assemble the merged graph from `vertical-slice/lanes/*/records.yaml`
-(shared records must be parsed-identical); (2) derive the three Source records from the
+(shared records must be parsed-identical); (2) derive the six Source records from the
 registry; (3) apply the projection-only boundary-notes normalization; (4) serialize the
 sorted canonical triple set to `generated/graph.ttl` + `generated/graph.jsonld` and
 write `generated/manifest.sha256` (fixed build date; no timestamps leak into bytes).
 At this tree: five assemblies in three lane orders produced identical bytes and
-identical canonical digest `d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9`;
-Turtle and JSON-LD parse back triple-for-triple equivalent (9,461 triples each); the
+identical canonical digest `060fa255a2af69edcee0580d6ef960cdf3ca2bac117d570003c339d2dd94aa79`;
+Turtle and JSON-LD parse back triple-for-triple equivalent (9,653 triples each); the
 repository validator passes the merged graph; LinkML 1.12.1 JSON-Schema validation
 reports 0 errors; validator self-tests pass 66/66. Exact commands and exit codes:
-`../methods/observations/SEK-08.md`.
+`../methods/observations/SEK-08.md` and `../methods/observations/SEK-09H.md`.
 
 ## 10. Where things live
 
 ```
 docs/versions/v2.1.1/
-├── authority/SOURCE_REGISTRY.yaml      # source rights/verification (read-only input)
+├── authority/SOURCE_REGISTRY.yaml      # source rights/verification (SEK-09H extended: +3 sources)
 ├── knowledge/
-│   ├── HANDBOOK.md                     # this handbook (SEK-08 output)
-│   ├── generated/                      # SEK-08 outputs: graph.ttl, graph.jsonld,
+│   ├── HANDBOOK.md                     # this handbook (SEK-08 output, SEK-09H updated)
+│   ├── generated/                      # graph.ttl, graph.jsonld,
 │   │                                   #   manifest.sha256, README.md, COVERAGE_REPORT.md
+│   ├── case-intake/                    # SEK-09F intake sidecar (source of the merged cases; not canonical input)
 │   ├── model/                          # pinned model 0.3.0, catalogs, validator
 │   └── vertical-slice/
 │       ├── KNOWLEDGE_RECORDS.yaml      # legacy SEK-03/SEK-05 fixture (excluded, untouched)
-│       └── lanes/<ten lanes>/          # immutable reviewed inputs (do not edit)
-└── methods/observations/SEK-08.md      # method observation + builder receipt
+│       └── lanes/<ten lanes>/          # reviewed inputs; reliability-performance also carries the SEK-09F cases
+└── methods/observations/SEK-08.md      # SEK-08 method observation + builder receipt
+└── methods/observations/SEK-09H.md     # SEK-09H method observation + builder receipt
 ```

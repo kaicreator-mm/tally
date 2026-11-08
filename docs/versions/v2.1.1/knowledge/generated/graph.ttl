@@ -1,6 +1,7 @@
-# SEK-08 canonical knowledge-graph projection (Turtle).
+# SEK-08/SEK-09H canonical knowledge-graph projection (Turtle).
+# SEK-09H (#368) rebuild: adds 3 derived SEK-09F sources, 4 locators, 5 evidence, 2 PENDING_REVIEW cases.
 # Deterministic: sorted subjects/predicates/objects; fixed build date 2026-11-07.
-# Source of truth: ten reviewed SEK-06/SEK-07 lane bundles + pinned model 0.3.0.
+# Source of truth: ten reviewed SEK-06/SEK-07 lane bundles + SEK-09F case records + pinned model 0.3.0.
 
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -135,6 +136,34 @@ se:ANT-TVV-COVERAGE-THEATER a se:AntiPattern ;
      se:remediation "Measure coverage across all three dimensions (test matrices, code coverage, environment coverage); select test kinds by explicit testing objectives (usability, reliability, conformance to specification, performance, security); treat coverage versus throughput/latency as an explicit tradeoff; and never read an executed, passing suite as a correctness proof or as acceptance." ;
      se:scope_description "Lane-synthesized anti-pattern over CS2023 SE-Validation coverage/objective/tradeoff topics and NIST's defect-specific regression example; not a named concept in either source." ;
      se:symptoms "A code-coverage percentage is pursued as the primary or sole testing goal.", "A green suite is treated as proof of correctness or as completed validation.", "Test matrices and environment coverage go unexamined while the coverage number rises." .
+
+se:CASE-09F-CF-KV-DEPENDENCY a se:Case ;
+     se:case_kind "POSTMORTEM" ;
+     se:context "Cloudflare Workers KV served as a shared storage dependency for several production services, with some infrastructure backed by a single third-party provider." ;
+     se:created_on "2026-11-08" ;
+     se:evidence_refs se:EVD-09F-CF-REDESIGN, se:EVD-09F-CF-REMEDIATION, se:EVD-09F-CF-SHARED-DEPENDENCY ;
+     se:intervention "Investigated alternative storage and dependent-service degradation/recovery; published plans for provider redundancy, failover safeguards and controlled cache restoration." ;
+     se:label "Cloudflare 2025 Workers KV shared dependency availability incident" ;
+     se:lessons "Model end-to-end critical dependencies rather than inferring availability from distributed front ends alone.", "Treat measured resilience and recovery claims as distinct from a postmortem's planned future changes." ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:outcome "Cloudflare reported 2 hours 28 minutes of impact and no data loss; subsequent architecture changes were described but their long-term empirical benefit is not measured in this intake." ;
+     se:problem "The third-party storage disruption degraded KV and propagated outages to dependent products; geographic reach of service access did not eliminate shared backing dependency risk." ;
+     se:record_version "0.1.0" ;
+     se:synthetic "false"^^xsd:boolean .
+
+se:CASE-09F-GH-DB-FAILOVER a se:Case ;
+     se:case_kind "POSTMORTEM" ;
+     se:context "A network partition affected GitHub.com's East/West MySQL replication and orchestration during October 21-22, 2018." ;
+     se:created_on "2026-11-08" ;
+     se:evidence_refs se:EVD-09F-GH-RECOVERY, se:EVD-09F-GH-REPLICATION ;
+     se:intervention "Responders paused some dependent processing, prioritized data integrity and rebuilt/recovered database replication before restoring normal topology." ;
+     se:label "GitHub 2018 database replication divergence after failover" ;
+     se:lessons "Document safety and availability tradeoffs in a particular architecture without generalizing to all database systems.", "Leader/failover completion and cross-site state convergence are distinct facts." ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:outcome "The first-party report records a prolonged recovery with site degradation and backlog handling; exact recovery tradeoffs are bound to the original incident report." ;
+     se:problem "After failover the two sites had divergent writes, making immediate fail-back unsafe and causing degraded metadata availability." ;
+     se:record_version "0.1.0" ;
+     se:synthetic "false"^^xsd:boolean .
 
 se:CLM-07A-ADAPTATION-DOCUMENTED a se:KnowledgeClaim ;
      se:SUPPORTED_BY se:EVD-07A-KA10-STAGES-ADAPTATION ;
@@ -3371,6 +3400,81 @@ se:EVD-07G-SYNTHESIS-POINT-ESTIMATE a se:Evidence ;
      se:synthetic "false"^^xsd:boolean ;
      se:uncertainty "Whether real teams that commit to point estimates always incur the listed consequences is untested in this lane." .
 
+se:EVD-09F-CF-REDESIGN a se:Evidence ;
+     se:context "Public publisher-authored incident account, source-reported and externally accessible on 2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+     se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:limitations "Postmortem and redesign claims are first-party engineering judgments, not controlled field experiments" ;
+     se:method "Targeted direct read of the publisher's public incident page and source section; bounded original paraphrase, no raw-HTML content hash captured" ;
+     se:record_version "0.1.0" ;
+     se:result "The follow-up supports a design-tradeoff interpretation, not a general guarantee that a new design prevents all outages." ;
+     se:source_locator_ref se:LOC-09F-CF-REDESIGN ;
+     se:statement "A later Cloudflare engineering post explained that simplifying Workers KV onto one storage provider had been accepted as a temporary tradeoff before the incident exposed that dependency's risk." ;
+     se:synthetic "false"^^xsd:boolean ;
+     se:uncertainty "The published HTML revision and causal investigation were not independently frozen or audited" .
+
+se:EVD-09F-CF-REMEDIATION a se:Evidence ;
+     se:context "Public publisher-authored incident account, source-reported and externally accessible on 2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+     se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:limitations "Some mitigation items were described as work in progress at publication" ;
+     se:method "Targeted direct read of the publisher's public incident page and source section; bounded original paraphrase, no raw-HTML content hash captured" ;
+     se:record_version "0.1.0" ;
+     se:result "Response and planned resilience work were described, but these steps do not establish measured future reliability improvement." ;
+     se:source_locator_ref se:LOC-09F-CF-INCIDENT-TIMELINE ;
+     se:statement "The response included investigating alternative data stores, adjusting dependent services and controlling recovery; Cloudflare described plans to eliminate single-provider dependencies and support gradual namespace restoration." ;
+     se:synthetic "false"^^xsd:boolean ;
+     se:uncertainty "The published HTML revision and causal investigation were not independently frozen or audited" .
+
+se:EVD-09F-CF-SHARED-DEPENDENCY a se:Evidence ;
+     se:context "Public publisher-authored incident account, source-reported and externally accessible on 2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+     se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:limitations "Scope is the affected Cloudflare services and date, not all globally replicated architectures" ;
+     se:method "Targeted direct read of the publisher's public incident page and source section; bounded original paraphrase, no raw-HTML content hash captured" ;
+     se:record_version "0.1.0" ;
+     se:result "Cloudflare attributed broad impact to a shared dependency and reported an incident lasting 2 hours 28 minutes without data loss." ;
+     se:source_locator_ref se:LOC-09F-CF-INCIDENT-OVERVIEW ;
+     se:statement "Cloudflare reported that a third-party-backed Workers KV storage infrastructure failure disrupted multiple critical products that used Workers KV for configuration, authentication or asset delivery." ;
+     se:synthetic "false"^^xsd:boolean ;
+     se:uncertainty "The published HTML revision and causal investigation were not independently frozen or audited" .
+
+se:EVD-09F-GH-RECOVERY a se:Evidence ;
+     se:context "Public publisher-authored incident account, source-reported and externally accessible on 2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+     se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:limitations "Operational choices are source-reported; no independent validation of incident duration or loss claims" ;
+     se:method "Targeted direct read of the publisher's public incident page and source section; bounded original paraphrase, no raw-HTML content hash captured" ;
+     se:record_version "0.1.0" ;
+     se:result "The recovery tradeoff illustrates that failover automation alone did not guarantee safe immediate convergence." ;
+     se:source_locator_ref se:LOC-09F-GH-REPLICATION ;
+     se:statement "GitHub described pausing selected processing, rebuilding replication and using fail-forward recovery to prioritize data integrity at the expense of service availability and recovery speed." ;
+     se:synthetic "false"^^xsd:boolean ;
+     se:uncertainty "The published HTML revision and causal investigation were not independently frozen or audited" .
+
+se:EVD-09F-GH-REPLICATION a se:Evidence ;
+     se:context "Public publisher-authored incident account, source-reported and externally accessible on 2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:evidence_type "DIRECT_SOURCE_PARAPHRASE" ;
+     se:extraction_status "EXTRACTED_PENDING_REVIEW" ;
+     se:lifecycle_status "PENDING_REVIEW" ;
+     se:limitations "Applies to the reported GitHub MySQL topology and time, not every failover protocol" ;
+     se:method "Targeted direct read of the publisher's public incident page and source section; bounded original paraphrase, no raw-HTML content hash captured" ;
+     se:record_version "0.1.0" ;
+     se:result "The incident shows an operated, topology-specific failover/replication-divergence event." ;
+     se:source_locator_ref se:LOC-09F-GH-REPLICATION ;
+     se:statement "GitHub reported that an October 2018 network partition and automated failover left separate MySQL regions containing writes absent from the other, so immediate fail-back risked inconsistencies." ;
+     se:synthetic "false"^^xsd:boolean ;
+     se:uncertainty "The published HTML revision and causal investigation were not independently frozen or audited" .
+
 se:EVD-ARC-0001 a se:Evidence ;
      se:context "CS Core topic 1a of the SE-Design knowledge unit, heading-anchored extraction." ;
      se:created_on "2026-11-06" ;
@@ -5099,6 +5203,50 @@ se:LOC-07G-SWEBOK-KA9-RISK-QUALITY a se:SourceLocator ;
      se:source_ref se:SRC-SWEBOK-GUIDE-4-0A ;
      se:verification_state "LOCATOR_VERIFIED" ;
      se:verified_content_summary "Risk vs. uncertainty distinction; identify/analyze/prioritize/mitigate cycle with risk register and periodic revisits; quality requirements identified quantitatively and qualitatively with per-requirement acceptance thresholds and planned SQA/V&V/review/audit procedures; planning magnitude driven partly by the risk of not planning." .
+
+se:LOC-09F-CF-INCIDENT-OVERVIEW a se:SourceLocator ;
+     se:accessed_on "2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:locator "Summary and impact opening paragraphs; incident date 2025-06-12" ;
+     se:locator_type "SECTION" ;
+     se:record_version "0.1.0" ;
+     se:source_ref se:SRC-09F-CF-OUTAGE-2025 ;
+     se:verification_state "LOCATOR_VERIFIED" ;
+     se:verified_content_summary "Workers KV availability depended on third-party backing infrastructure; multiple Cloudflare products were affected; Cloudflare reported 2h28m impact and no data loss" .
+
+se:LOC-09F-CF-INCIDENT-TIMELINE a se:SourceLocator ;
+     se:accessed_on "2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:locator "Incident timeline and impact; remediation and follow-up steps" ;
+     se:locator_type "SECTION" ;
+     se:record_version "0.1.0" ;
+     se:source_ref se:SRC-09F-CF-OUTAGE-2025 ;
+     se:verification_state "LOCATOR_VERIFIED" ;
+     se:verified_content_summary "Timeline documents incident coordination, cache recovery and availability responses, and follow-up plans for redundancy and controlled recovery" .
+
+se:LOC-09F-CF-REDESIGN a se:SourceLocator ;
+     se:accessed_on "2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:locator "Opening postmortem recap and sections describing former provider dependency and revised storage architecture" ;
+     se:locator_type "SECTION" ;
+     se:record_version "0.1.0" ;
+     se:source_ref se:SRC-09F-CF-KV-REDESIGN-2025 ;
+     se:verification_state "LOCATOR_VERIFIED" ;
+     se:verified_content_summary "First-party engineering follow-up describes a prior single-provider tradeoff and revised design to reduce its failure impact" .
+
+se:LOC-09F-GH-REPLICATION a se:SourceLocator ;
+     se:accessed_on "2026-11-08" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:locator "Incident timeline: 2018 October 21 22:52 UTC through 2018 October 22 16:24 UTC" ;
+     se:locator_type "SECTION" ;
+     se:record_version "0.1.0" ;
+     se:source_ref se:SRC-09F-GH-POSTMORTEM-2018 ;
+     se:verification_state "LOCATOR_VERIFIED" ;
+     se:verified_content_summary "Failover redirected writes after network partition; replica state diverged across sites; engineers prioritized consistency, failing forward and reestablishing replication" .
 
 se:LOC-CS2023-BOK-TABLE a se:SourceLocator ;
      se:accessed_on "2026-11-06" ;
@@ -9427,6 +9575,54 @@ se:REL-TVV-0023 a se:RelationshipAssertion ;
      se:rationale "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 5 section 3 (intro, 3.1-3.3) at its verified locator (PDF page indices 125-128; printed 5-10 to 5-13), which states the black-box/white-box/experience-based classification." ;
      se:record_version "0.1.0" ;
      se:subject_ref se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES .
+
+se:SRC-09F-CF-KV-REDESIGN-2025 a se:Source ;
+     se:authority_fit "Firsthand organization-authored report of its own service incident or remediation decisions" ;
+     se:authority_limitations "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned", "First-party self-report, not an independently audited causal or cross-vendor generalization" ;
+     se:authors "Alex Robinson", "Tyson Trautmann" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:official_url "https://blog.cloudflare.com/rearchitecting-workers-kv-for-redundancy/" ;
+     se:organization "Cloudflare" ;
+     se:publication_date "2025-08-08" ;
+     se:record_version "0.1.0" ;
+     se:rights_handling "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content" ;
+     se:source_class "EMPIRICAL_CASE" ;
+     se:source_roles "PRIMARY" ;
+     se:title "Redesigning Workers KV for increased availability and faster performance" ;
+     se:verification_state "CONTENT_PARTIAL_VERIFIED" .
+
+se:SRC-09F-CF-OUTAGE-2025 a se:Source ;
+     se:authority_fit "Firsthand organization-authored report of its own service incident or remediation decisions" ;
+     se:authority_limitations "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned", "First-party self-report, not an independently audited causal or cross-vendor generalization" ;
+     se:authors "CJ Desai", "Jeremy Hartman" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:official_url "https://blog.cloudflare.com/cloudflare-service-outage-june-12-2025/" ;
+     se:organization "Cloudflare" ;
+     se:publication_date "2025-06-12" ;
+     se:record_version "0.1.0" ;
+     se:rights_handling "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content" ;
+     se:source_class "EMPIRICAL_CASE" ;
+     se:source_roles "PRIMARY" ;
+     se:title "Cloudflare service outage June 12, 2025" ;
+     se:verification_state "CONTENT_PARTIAL_VERIFIED" .
+
+se:SRC-09F-GH-POSTMORTEM-2018 a se:Source ;
+     se:authority_fit "Firsthand organization-authored report of its own service incident or remediation decisions" ;
+     se:authority_limitations "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned", "First-party self-report, not an independently audited causal or cross-vendor generalization", "Historical and specific to GitHub's reported MySQL topology of 2018" ;
+     se:authors "Jason Warner" ;
+     se:created_on "2026-11-08" ;
+     se:lifecycle_status "ACTIVE" ;
+     se:official_url "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/" ;
+     se:organization "GitHub" ;
+     se:publication_date "2018-10-30" ;
+     se:record_version "0.1.0" ;
+     se:rights_handling "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content" ;
+     se:source_class "EMPIRICAL_CASE" ;
+     se:source_roles "PRIMARY" ;
+     se:title "October 21 post-incident analysis" ;
+     se:verification_state "CONTENT_PARTIAL_VERIFIED" .
 
 se:SRC-CS2023 a se:Source ;
      se:authority_fit "Boundary comparison between Software Engineering education and wider CS curriculum", "Curriculum knowledge-area and knowledge-unit classification" ;

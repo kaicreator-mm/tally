@@ -1,28 +1,53 @@
-# SEK-08 generated graph — deterministic RDF projection
+# SEK-08/SEK-09H generated graph — deterministic RDF projection
 
-**Task:** #349 (SEK-08 cross-domain integration; coordinator lineage: SEK-06 #321 closed, SEK-07 #333 independently verified)
-**Build date (fixed reproducibility constant):** `2026-11-07`
+**Task:** #349 (SEK-08 cross-domain integration; coordinator lineage: SEK-06 #321 closed, SEK-07 #333 independently verified); **SEK-09H rebuild:** #368 (integration of the reviewed SEK-09F incident cases, #365 / PR #366)
+**Build date (fixed reproducibility constant):** `2026-11-07` (unchanged from SEK-08; the SEK-09H rebuild reuses the constant so repeat builds stay byte-comparable)
 **Status:** EXPERIMENTAL / HUMAN_REVIEW_PENDING — nothing here is ACCEPTED corpus knowledge.
 
 This directory holds the machine-generated, byte-deterministic RDF projection of the
 integrated Software Engineering knowledge graph. Canonical inputs are the ten reviewed
-SEK-06/SEK-07 lane bundles (40 source paths, verbatim, never edited in this task), the
-pinned knowledge model 0.3.0 (`../model/`), the relationship catalog, and
-`../../authority/SOURCE_REGISTRY.yaml`. This is an experimental corpus integration, not a
-production ontology adoption, not a Domain Package and not DomainForge promotion.
+SEK-06/SEK-07 lane bundles (40 source paths; the reliability-performance lane also
+carries the SEK-09F incident-case records added by SEK-09H), the pinned knowledge model
+0.3.0 (`../model/`), the relationship catalog, and
+`../../authority/SOURCE_REGISTRY.yaml` (extended by SEK-09H with the three SEK-09F
+publisher sources). This is an experimental corpus integration, not a production
+ontology adoption, not a Domain Package and not DomainForge promotion.
 
 ## Files
 
 | File | Content |
 |---|---|
-| `graph.ttl` | Turtle serialization of the canonical projection (9,461 triples) |
+| `graph.ttl` | Turtle serialization of the canonical projection (9,653 triples) |
 | `graph.jsonld` | JSON-LD serialization of the same triple set |
 | `manifest.sha256` | SHA-256 of the two graph files + canonical graph digest; verify with `sha256sum -c manifest.sha256` |
 | `README.md` | This file: projection semantics, derivations and reconciliation decisions |
 | `COVERAGE_REPORT.md` | Covered areas, explicit gaps, excluded legacy material, rights, unmeasured review burden |
 
 Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection):
-`d924e78f371dfe8c2975f0c1387d14b8a6ed47d6d40cb7310ff6025e478d71d9`.
+`060fa255a2af69edcee0580d6ef960cdf3ca2bac117d570003c339d2dd94aa79`.
+
+## SEK-09H change summary (vs the SEK-08 projection)
+
+Baseline for this rebuild: WIP `1ad69d6b6fb945f5924ac7eee6fda798b843782a` (TREE
+`7b460a92991faa8832f536a61823cffcd5101286`), which already contains the SEK-09F
+case-intake sidecar (merged via PR #366). SEK-09H merged the reviewed intake into the
+canonical inputs and rebuilt the projection:
+
+- `../../authority/SOURCE_REGISTRY.yaml`: +3 first-party publisher sources
+  (`SE-SRC-09F-CF-OUTAGE-2025`, `SE-SRC-09F-CF-KV-REDESIGN-2025`,
+  `SE-SRC-09F-GH-POSTMORTEM-2018`), each with rights handling, authority
+  fit/limitations, verification state and the unpinned-HTML-revision caveat carried
+  verbatim from the SEK-09F review.
+- `../vertical-slice/lanes/reliability-performance/records.yaml`: +4 SourceLocator,
+  +5 Evidence, +2 Case records, copied verbatim from the independently reviewed
+  SEK-09F intake. Both cases stay `PENDING_REVIEW`, `synthetic: false`,
+  `case_kind: POSTMORTEM`; all five evidence records stay `PENDING_REVIEW`,
+  `EXTRACTED_PENDING_REVIEW`, `synthetic: false`.
+- No Counterexample, ReviewDecision or ACCEPTED record was created; the 106 knowledge
+  claims are byte-identical to the baseline; the 29 CoverageGap records are untouched.
+- Triple-level proof vs baseline: 0 baseline triples removed; all 178 added JSON-LD
+  property assertions (plus 14 new `rdf:type` triples = 192 new triples) sit only on
+  the 14 new record subjects.
 
 ## Projection semantics
 
@@ -41,16 +66,19 @@ Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection
 - **Graph root.** One `se:KnowledgeGraph` resource (`se:GRAPH-V2.1.1-SEK08`) binds
   `se:graph_version` (`0.1.0`), `se:generated_on` (the fixed build date above) and
   `se:domain_ref`.
-- **Identity.** 783 lane-owned records + 6 shared records (parsed-identical in every
-  carrying lane) + 3 derived Source records = 792 record resources; zero collisions,
+- **Identity.** 794 lane-owned records + 6 shared records (parsed-identical in every
+  carrying lane) + 6 derived Source records = 806 record resources; zero collisions,
   zero dangling references (checked mechanically over the exported triples).
 
 ## Derived Source records
 
-Lane files intentionally do not store `Source` records. The projection derives the three
+Lane files intentionally do not store `Source` records. The projection derives the six
 referenced sources from `SOURCE_REGISTRY.yaml` (`se:SRC-SWEBOK-GUIDE-4-0A`,
-`se:SRC-CS2023`, `se:SRC-NIST-SP-800-218-V1-1`; the six unused registry entries,
-including all ISO records, are **not** projected — ISO remains metadata-only):
+`se:SRC-CS2023`, `se:SRC-NIST-SP-800-218-V1-1`, plus the three SEK-09H-registered
+first-party incident sources `se:SRC-09F-CF-OUTAGE-2025`,
+`se:SRC-09F-CF-KV-REDESIGN-2025`, `se:SRC-09F-GH-POSTMORTEM-2018`; the six unused
+registry entries, including all ISO records, are **not** projected — ISO remains
+metadata-only):
 
 - `id` = `se:` + registry `source_id` minus the `SE-` legacy prefix;
 - `record_version` `0.1.0`, `lifecycle_status` `ACTIVE`,
@@ -111,11 +139,10 @@ Nothing in that file was modified, silently omitted or silently coerced.
 
 Windows-native, pinned: Python 3.14.7, `linkml==1.12.1`, `linkml-runtime==1.12.1`,
 PyYAML 6.0.3, rdflib 7.6.0, jsonschema 4.26.0. From a tree that contains the ten lane
-bundles (integration tree = WIP base `7a70211b…` + ten lane tips; final tree also
-carries this directory):
+bundles plus the SEK-09H canonical merge (base = WIP `1ad69d6b…`):
 
 1. Assemble the merged graph from the ten `lanes/*/records.yaml` (unique-key YAML
-   load; shared records must be parsed-identical) and derive the three Source records.
+   load; shared records must be parsed-identical) and derive the six Source records.
 2. Apply the projection-only boundary-notes normalization.
 3. Serialize the canonical triple set (sorted subjects/predicates/objects; the only
    date is the fixed build constant) to `graph.ttl` + `graph.jsonld`;
@@ -125,9 +152,10 @@ Determinism evidence at this tree: five independent assemblies (canonical lane o
 reversed order, rotated order, plus a fresh repeat) produced byte-identical
 `graph.ttl`/`graph.jsonld` and identical canonical digest. Turtle and JSON-LD exports
 were parsed back with rdflib 7.6.0 and verified triple-for-triple equivalent to the
-internal canonical set (9,461 = 9,461 = 9,461), with every reference slot resolving to a
+internal canonical set (9,653 = 9,653 = 9,653), with every reference slot resolving to a
 URIRef, no dangling record references, and relationship endpoints/predicates/qualifiers
 conforming to `../model/RELATIONSHIP_CATALOG.yaml`.
 
 Full commands, exit codes and the builder receipt are recorded in
-`../../methods/observations/SEK-08.md`.
+`../../methods/observations/SEK-08.md` (SEK-08) and
+`../../methods/observations/SEK-09H.md` (SEK-09H rebuild).

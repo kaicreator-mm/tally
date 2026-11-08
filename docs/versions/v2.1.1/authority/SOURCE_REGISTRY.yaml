@@ -381,6 +381,106 @@ sources:
       notice: "Use official NIST citation; verify any third-party components or specific reuse restrictions before reproducing source material."
       handling: "Metadata and concise original paraphrase only until detailed source review."
     notes: "NIST states this profile augments SSDF 1.1 with AI-model-specific practices and should be used in conjunction with SP 800-218."
+  - source_id: SE-SRC-09F-CF-OUTAGE-2025
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored account of Cloudflare's own 2025-06-12 service incident; used only for incident facts the publisher directly reports."
+    title: "Cloudflare service outage June 12, 2025"
+    authors:
+      - "Jeremy Hartman"
+      - "CJ Desai"
+    organization: "Cloudflare"
+    publication_date: "2025-06-12"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://blog.cloudflare.com/cloudflare-service-outage-june-12-2025/"
+    relevant_areas:
+      - "Service availability incident (shared third-party storage dependency)"
+      - "Workers KV and dependent product availability"
+      - "Incident response and remediation planning"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+    verified_locators:
+      - "Official Cloudflare blog incident page: summary/impact opening paragraphs and incident timeline/remediation sections (read on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read during SEK-09F intake and independently re-verified on 2026-11-08; live cloudflare.com was unreachable from the reviewer host, so a 2026-10 archived snapshot of the same official URL was used. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; two of the four integrated locators and two of the five integrated evidence records cite this source. First-party incident assertions (2h28m impact, no data loss, third-party backing provider) are publisher-reported, not independently adjudicated."
+  - source_id: SE-SRC-09F-CF-KV-REDESIGN-2025
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored engineering follow-up on Cloudflare's own Workers KV architecture after the 2025-06-12 incident; used only for design-tradeoff facts the publisher directly states."
+    title: "Redesigning Workers KV for increased availability and faster performance"
+    authors:
+      - "Alex Robinson"
+      - "Tyson Trautmann"
+    organization: "Cloudflare"
+    publication_date: "2025-08-08"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://blog.cloudflare.com/rearchitecting-workers-kv-for-redundancy/"
+    relevant_areas:
+      - "Workers KV architectural redesign (provider redundancy)"
+      - "Post-incident engineering tradeoff account"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+    verified_locators:
+      - "Official Cloudflare blog post: opening postmortem recap and former single-provider dependency / revised storage architecture sections (read on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read during SEK-09F intake and independently re-verified on 2026-11-08; live cloudflare.com was unreachable from the reviewer host, so a 2026-10 archived snapshot of the same official URL was used. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; one locator and one evidence record cite this source. Redesign claims are first-party engineering judgments, not controlled field experiments."
+  - source_id: SE-SRC-09F-GH-POSTMORTEM-2018
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored post-incident analysis of GitHub's own 2018-10-21 database failover event; used only for incident facts the publisher directly reports."
+    title: "October 21 post-incident analysis"
+    authors:
+      - "Jason Warner"
+    organization: "GitHub"
+    publication_date: "2018-10-30"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/"
+    relevant_areas:
+      - "Database failover and replication divergence incident"
+      - "Consistency-over-availability recovery tradeoff"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+      - "Historical and specific to GitHub's reported MySQL topology of 2018"
+    verified_locators:
+      - "Official GitHub blog post-incident analysis: incident timeline 2018-10-21 22:52 UTC through 2018-10-22 16:24 UTC (read live on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read live during SEK-09F intake and independently re-verified live on 2026-11-08. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; one locator and two evidence records cite this source. Incident facts (network partition, divergent writes, fail-forward recovery) are publisher-reported."
 source_id_aliases:
   - alias_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
     canonical_source_id: SE-SRC-SWEBOK-GUIDE-4-0A
