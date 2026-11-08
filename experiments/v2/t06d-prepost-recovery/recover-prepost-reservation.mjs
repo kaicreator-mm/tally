@@ -1210,8 +1210,6 @@ async function runSelectedHostCli() {
   const REG203=resolve(HOST_TMP_ROOT,'tally-alm-claims/registry-203.sqlite');
   const REG319=resolve(HOST_TMP_ROOT,'i319-claim/run-20261106T043955/registry-319.sqlite');
   const REG331=resolve(HOST_TMP_ROOT,'tally-alm-claims/registry-331.sqlite');
-  const PRIOR_RUNLOG=resolve(HOST_TMP_ROOT,'i319-terminalization/run.log');
-  const FENCE_PATH=resolve(HOST_TMP_ROOT,'tally-alm-claims/t06d-prepost-recovery.lock');
   const repoRoot=resolve(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1')),'../../..');
   const git=args=>execSync('git '+args,{cwd:repoRoot,encoding:'utf8',timeout:20000,windowsHide:true});
   const writerAuthority=Object.freeze({mode:'SINGLE_WRITER_ADMISSION',exclusiveHostControl:true,
@@ -1246,11 +1244,11 @@ async function runSelectedHostCli() {
       readExactEvent:clone=>readDispatchStateEventsFromClient({octokit,writerLogin:'kaicreator-mm',
         expectedEvent:terminalEventForReservation(clone,writerAuthority)}),
     };
+    // The original no-POST run log is already bound into the immutable
+    // revision-4 marker; reopening a historical physical log is not required
+    // to verify a completed event. Any attempt to enter the write path stops.
     const priorRunLog={async read(){
-      let bytes;try{bytes=readFileSync(PRIOR_RUNLOG);}catch{return null;}
-      const parsed=parsePriorRunLog(bytes.toString('utf8'));
-      if(parsed?.casWriteBlocked!==true||parsed?.retry!==false)return null;
-      return {sha256:sha256hex(bytes.toString('utf8')),parsed};
+      throw new Error('READ_ONLY_PRIOR_RUNLOG_NOT_APPLICABLE');
     }};
     log({step:'READ_ONLY_TARGET_SCOPE',registryCount:registryStores.size,
       targetIssue:203,source:'EXACT_CAS_NATIVE_EVENT_AND_CLAIM_FSW',
