@@ -1,0 +1,258 @@
+{
+  "schema": "tally/host-platform-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY",
+  "repository": "kaicreator-mm/tally",
+  "issueNumber": 370,
+  "concern": "PHYSICAL_SHARED_HOST_ADMISSION_FENCE",
+  "coreOutcomeDag": {
+    "createTask": false,
+    "changeDenominator": false,
+    "membership": "SUPPORTING_HOST_PLATFORM_REPAIR_ONLY",
+    "reason": "Consolidate the existing #370 physical Host repair concern; do not create another core Outcome DAG Task."
+  },
+  "authorityIntake": {
+    "issueComment": 6718120247,
+    "deliveryFirst": "ADS #1359 sections 21 and 23",
+    "sourceContract": {
+      "pr": 371,
+      "headSha": "d1d7c9ff8843c89513c3bfbc7158cbf7818b7230",
+      "treeSha": "d3729854e4cf9ac72cc731fb10a1cf6307cbc3ee",
+      "independentReview": 5815968156,
+      "woodpeckerPipeline": 509,
+      "reuse": "REUSE_EXACT_SOURCE_AND_CI_NO_REPEAT"
+    },
+    "targetHistory": {
+      "pr": 373,
+      "headSha": "41339feac9a668e77b53104be68a554da264bf66",
+      "independentReview": 5815949642,
+      "woodpeckerPipeline": 508,
+      "reuse": "READ_ONLY_TARGET_FACT_ONLY_NOT_WRITER_ADMISSION"
+    },
+    "currentPhysicalBoundary": "NOT_PROVEN"
+  },
+  "implementationBase": {
+    "headSha": "d1d7c9ff8843c89513c3bfbc7158cbf7818b7230",
+    "treeSha": "d3729854e4cf9ac72cc731fb10a1cf6307cbc3ee",
+    "claimSourceBinding": "The accepted Claim source SHA is the exact independently reviewed and Owner-approved HEAD containing this governance Pack; a placeholder or self-referential Pack hash is never an accepted Claim input."
+  },
+  "preClaim": {
+    "trackedSourcePaths": [],
+    "governanceOnlyPath": "docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json",
+    "required": [
+      "Independent exact Pack HEAD/tree/blob review covering the consumer matrix, seven-path scope, risk analysis and acceptance tests.",
+      "Exact Owner Pack receipt bound to Pack HEAD/tree/blob, implementation base and seven-path digest; the existing Delivery-First continuation is the ordinary project authorization and no redundant chat token is requested.",
+      "Issue #370 current open/type:task/state:ready native preflight with no prior DISPATCH_CLAIMED event and no native blockers.",
+      "One fresh shared Host admission registry, created by the trusted one-shot Host driver through the public DomainHarness SQLite CAS API; never a per-Task empty isolation claim and never direct SQLite seeding.",
+      "One accepted #370 Host CAS Claim, native unedited event readback, and one create-only FROZEN_DAG_WRITESET record bound to the exact Pack/source/review/Owner/resource identities."
+    ],
+    "forbidden": [
+      "No implementation edit to any of the seven post-Claim paths before accepted Claim and FSW readback.",
+      "No #284 root Claim, E0 source edit, native dependency write or version Freeze under this Pack.",
+      "No #203 POST, historical registry reset, CAS seed, write-set expansion, merge, tag, release or deployment."
+    ]
+  },
+  "writeSetCount": 7,
+  "writeSetSha256": "fc33e7b604b3cbad442510da8553ed039f0ea4cc43993695c0b03d3138063959",
+  "writeSetSerialization": "SHA256(JSON.stringify(lexicographicallySortedExactPathArray))",
+  "allowedWriteSet": [
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-resource-fence.mjs",
+      "operation": "ADD",
+      "purpose": "Shared atomic durable resource lease and the reviewed TRUSTED_HOST_RESOURCE_FENCE_PORT implementation."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-resource-fence.test.mjs",
+      "operation": "ADD",
+      "purpose": "Real temporary SQLite concurrency, loss, restart, identity and disjoint-resource acceptance tests."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+      "operation": "MODIFY",
+      "purpose": "Acquire and continuously verify the shared lease across reserve, publish, exact readback and final CAS."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+      "operation": "MODIFY",
+      "purpose": "Controller lifecycle, fail-closed and no-blind-retry regression coverage."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+      "operation": "MODIFY",
+      "purpose": "Require a matching held Host fence immediately before and after every native Claim/terminal POST; legacy direct construction fails closed."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-composition.test.mjs",
+      "operation": "MODIFY",
+      "purpose": "Compose the real public Host/C controller/publisher path with the shared fence."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+      "operation": "MODIFY",
+      "purpose": "Publisher fence-loss, stale identity and zero-POST negative coverage."
+    }
+  ],
+  "readOnlyBindings": [
+    "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs at PR #371 final d1d7c9ff8843c89513c3bfbc7158cbf7818b7230",
+    "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs at PR #371 final d1d7c9ff8843c89513c3bfbc7158cbf7818b7230",
+    "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+    "packages/tally-github-native-c/src/task-claim-host-readback-port.mjs",
+    "experiments/v2/selected-business-build/local-codex-host.mjs",
+    "experiments/v2/selected-business-build/claim-admission-shim.mjs",
+    "docs/implementation/v2/E0_BOOTSTRAP_TASK_PACK_R9.json at d6dbb8b674c913a1ff2e1d61bd039a17323a8790"
+  ],
+  "physicalDesign": {
+    "authority": "ONE_SHARED_SQLITE_CAS_FENCE_REGISTRY_DOCUMENT consulted by every T06d/Native-C privileged Claim writer; a per-Task registry or process singleton is not a substitute.",
+    "atomicity": "The complete active-lease registry is one CAS document. Acquisition compares the full frozen resource sets and atomically adds a lease with mustBeAbsent/mustMatchRevision; bounded CAS retry preserves disjoint concurrent acquisitions and rejects overlap.",
+    "identity": "Each lease binds repository, protectedClaimKey, issueRef, writerId, sourceSha, dispatchId, generation=1, exact frozen resource object and digest, fenceId, global fence revision and a random owner-nonce hash.",
+    "continuousPossession": "The nonce remains only in the Host process. Every privileged stage re-reads the shared registry and validates the same lease and resource identity before use. Other disjoint lease updates do not invalidate possession.",
+    "lifetime": "A lease has no time-based automatic takeover. Definite pre-effect denial may release the still-owned lease; successful publication and ambiguous/pending states retain it for Task ownership. Restart, stale nonce, fake Owner evidence and unknown registry state fail closed.",
+    "publisherFence": "Native C receives only the Host-owned fence port. It must assert the matching held lease before and after each external POST. Omitting the port or using a mismatched/stale/lost lease prevents the POST or preserves the pending reservation without retry.",
+    "resourceCompatibility": "The PR #371 readHeldFence implementation derives compatibility from current durable foreign leases and their exact frozen resource objects, never from caller booleans or projected claim fields. A foreign active Claim without a matching valid lease is incompatible.",
+    "frozenResources": [
+      "Each exact source path in allowedWriteSet, represented as path:<repo-relative-path>.",
+      "The protected Claim key and its CAS reservation key.",
+      "The create-only tally:v2:task-writeset:370 CAS key.",
+      "The native GitHub Issue #370 comment effect.",
+      "The exact source SHA, Pack blob, review and Owner receipt identities bound in the frozen resource object."
+    ],
+    "noGlobalLock": "Disjoint Tasks may hold leases concurrently. Only real path/CAS/native-effect overlap or unknown authority serializes."
+  },
+  "writerConsumerMatrix": [
+    {
+      "entrance": "T06d createHostSingleWriterClaimController.reserveAndPublish",
+      "effect": "Claim CAS reservation, native DISPATCH_CLAIMED POST, readback and final CAS",
+      "currentGap": "Only protected-key CAS is atomic; exclusiveHostControl is a boolean and no cross-resource lease exists.",
+      "disposition": "MODIFY_IN_SCOPE: acquire and continuously assert the shared fence; preserve pending state on ambiguous effects."
+    },
+    {
+      "entrance": "Native C createHostBoundNativeGitHubClaimPublisher.publishClaim/publishDispatchStateChange",
+      "effect": "External GitHub comment POST and transport readback",
+      "currentGap": "The factory can be invoked directly with Octokit and a configuration boolean.",
+      "disposition": "MODIFY_IN_SCOPE: no matching currently held fence means zero POST; no retry after ambiguous acknowledgement."
+    },
+    {
+      "entrance": "PR #371 createHostAdmissionSourceFromClient resourceConflictPort",
+      "effect": "Read-only compatibility witness and registry drift check",
+      "currentGap": "Contract and tests pass but no physical port was deployed.",
+      "disposition": "BIND_READ_ONLY: new host-resource-fence.mjs implements the exact reviewed port without changing its two final files."
+    },
+    {
+      "entrance": "I259 transient one-shot Host driver and future Host configuration",
+      "effect": "Selected trusted Host ports, CAS and native GitHub credentials",
+      "currentGap": "Historical per-Issue stores and custom admission source do not form a common writer authority; no persistent Host process exists.",
+      "disposition": "CONFIGURATION_HANDOFF: one shared registry and one fence per Task; old driver remains historical and is not rerun. Future E0 uses the same registry/fence."
+    },
+    {
+      "entrance": "Selected B/K/Host Claim observation and FROZEN_DAG_WRITESET",
+      "effect": "Accepted-Claim observation, exact write-set CAS and selected-K admission",
+      "currentGap": "Claim observation alone does not prove physical writer exclusion.",
+      "disposition": "BIND_EXISTING_PUBLIC_API: FSW creation/readback occurs while the same lease is held; no second Claim scheduler or direct CAS seed."
+    },
+    {
+      "entrance": "Agent execution createLocalCodexHost.runAttempt",
+      "effect": "Disposable worktree, candidate path, subprocess and candidate Git ref",
+      "currentGap": "Separate Host store grants cover worktree/candidate path; remote GitHub write and credentials are OS-denied to Builder.",
+      "disposition": "PROVEN_EQUIVALENT_ISOLATION_FOR_EXISTING_AGENT_EFFECTS: retain atomic worktree/candidate grants and denied remote writes; no GitHub Claim credential or publisher port enters Agent environment. No path change in this Pack."
+    },
+    {
+      "entrance": "Web/B/UI and Native GitHub read-only C",
+      "effect": "Native reads and sealed K intents only",
+      "currentGap": "No direct GitHub writer credential or public resource-fence injection is permitted.",
+      "disposition": "NO_PRIVILEGED_WRITER: read-only paths remain unchanged; sealed effects must reach the fenced Host/C writer."
+    },
+    {
+      "entrance": "#203/#373 target-only verifier",
+      "effect": "Historical revision-4 terminal fact readback",
+      "currentGap": "None for its read-only target scope; it is not a writer fence.",
+      "disposition": "REUSE_READ_ONLY_EVIDENCE: zero POST and zero CAS writes; never replay #203."
+    },
+    {
+      "entrance": "#284 R9 root and later E0 native dependency/freeze effects",
+      "effect": "Root Claim, FSW and later selected Business/K/Host effects",
+      "currentGap": "Blocked until this physical fence is proven.",
+      "disposition": "FUTURE_CONSUMER_ONLY: reuse the same shared registry/fence; E0 fourteen paths are disjoint from this seven-path set. E0 still requires its own root Gate and may not start under this Pack."
+    },
+    {
+      "entrance": "Task branch/worktree source publication",
+      "effect": "Draft branch commit/push only",
+      "currentGap": "Git publication is not a Task Claim or K permit.",
+      "disposition": "ISOLATED_SINGLE_WRITER: one task worktree/branch, exact path diff and non-forced fast-forward push; no shared branch, merge or version ref mutation."
+    }
+  ],
+  "preflightRiskAnalysis": [
+    {
+      "risk": "Check/use race between registry snapshot and external publication",
+      "acceptance": "Two real Host processes contend on one temporary SQLite registry; overlapping acquisition admits exactly one and produces zero losing POST."
+    },
+    {
+      "risk": "Partial acquisition of a multi-resource write set",
+      "acceptance": "Whole-registry CAS makes acquisition atomic; injected conflict leaves no partial lease and no Claim reservation."
+    },
+    {
+      "risk": "Unnecessary global serialization",
+      "acceptance": "Two disjoint Tasks acquire and hold leases concurrently and both complete isolated fake-transport publish/readback/final-CAS flows."
+    },
+    {
+      "risk": "Lost lease after reservation or before/after POST",
+      "acceptance": "Fault injection at every asserted stage fails closed; pre-POST loss yields zero POST and post-POST loss preserves pending evidence without another POST."
+    },
+    {
+      "risk": "Process restart or stale Owner/source evidence",
+      "acceptance": "Restarted owner, wrong nonce, modified source/Writer/Pack/resource digest and forged foreign lease are rejected; no automatic takeover."
+    },
+    {
+      "risk": "Same protected key re-entry and duplicate native event",
+      "acceptance": "Existing reconciliation behavior remains; no second POST, no generation fabrication and no overwrite of pending/published rows."
+    },
+    {
+      "risk": "Registry drift/malformed or partial rows",
+      "acceptance": "PR #371 double snapshot remains active; malformed lease/Claim/store errors deny with no effect."
+    },
+    {
+      "risk": "Publisher bypass outside the T06d controller",
+      "acceptance": "Direct Native C publisher without a fence, with mismatched fence or after lease loss fails before POST; all repository callers are updated in the seven-path scope."
+    },
+    {
+      "risk": "Ambient credentials or UI/Agent injection",
+      "acceptance": "Constructor/port identity is Host-only; caller request fields cannot supply a lease; existing Agent remote-write denial and UI no-credential boundaries remain unchanged."
+    },
+    {
+      "risk": "Ambiguous ACK and final CAS uncertainty",
+      "acceptance": "Lease and pending reservation are retained, exact native readback is required before any final CAS, and blind retry remains forbidden."
+    },
+    {
+      "risk": "Secret or private evidence leakage",
+      "acceptance": "Only owner-nonce hash and allowlisted public identities enter CAS; raw nonce, token, private prompt and transport bodies are not logged."
+    }
+  ],
+  "acceptance": {
+    "deterministicFirst": [
+      "node --check on every changed/new module before tests.",
+      "Real public DomainHarness openSqliteCasStore with disposable temporary SQLite and isolated fake GitHub transport; no live Claim/POST in tests.",
+      "Focused new fence tests plus existing single-writer, host-admission-source, publisher and composition tests.",
+      "Exact seven-path diff and git diff --check; PR #371 two files remain byte-identical to d1d7c9ff8843c89513c3bfbc7158cbf7818b7230."
+    ],
+    "physicalHostGate": [
+      "Native Windows Node24, real shared SQLite CAS, two independently opened store clients and contentious overlap/disjoint cases.",
+      "Continuous lease proof across reserve -> isolated native publish -> exact readback -> final CAS, including fence id/revision and frozen resource digest readback.",
+      "Lost lease, restart, competing writer, same key, overlapping write set, disjoint concurrent Tasks and stale/fake Owner/source evidence all covered.",
+      "Zero live test Claim/POST and zero #203 POST; the sole real #370 Claim occurs only after Pack review/Owner/native preflight and is read back before FSW/source work."
+    ],
+    "final": [
+      "Full affected local gates and final Exact-SHA Woodpecker after candidate convergence; unchanged PR #371/#373 CI is reused, not rerun.",
+      "Independent final Exact-SHA source review with P0/P1/P2 and explicit PHYSICAL_SHARED_HOST_FENCE result.",
+      "Only after physical PASS, re-read #284 R9 live gates and run its root preflight against the same shared registry/fence.",
+      "No merge, release, deployment or denominator promotion."
+    ]
+  },
+  "currentState": {
+    "packReview": "NOT_PRESENT",
+    "ownerPackReceipt": "NOT_PRESENT",
+    "claim": "NOT_PRESENT",
+    "frozenWriteSet": "NOT_PRESENT",
+    "sourceImplementation": "NOT_STARTED",
+    "physicalFence": "NOT_PROVEN",
+    "root284": "NOT_ADMITTED",
+    "mergeReleaseDeploy": "NO"
+  }
+}
