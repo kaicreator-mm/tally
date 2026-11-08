@@ -834,6 +834,15 @@ function validateClaimTransition(currentRow, nextValue, conditions, fswRow) {
     if (current.commentId !== nextValue.commentId ||
       current.commentRef !== nextValue.commentRef) fail(code, 'CLAIM_COMMENT_IMMUTABLE');
   }
+  if (current.phase === 'PENDING_GITHUB_TERMINALIZATION' &&
+    nextValue.phase === 'TERMINAL_VERIFIED') {
+    for (const field of ['terminalWriterId', 'terminalEvidence',
+      'terminalOccurredAt', 'terminalReservationRevision']) {
+      if (current[field] !== nextValue[field]) {
+        fail(code, 'CLAIM_TERMINAL_IMMUTABLE:' + field);
+      }
+    }
+  }
   if (fswRow && plainObject(fswRow.value) &&
     (fswRow.value.claimCommentId !== nextValue.commentId ||
       fswRow.value.claimCommentRef !== nextValue.commentRef)) {
@@ -1149,6 +1158,22 @@ class HostResourceFenceAuthority {
         registryRevision: 0, registryGeneration: 0,
         anchorHash: chain.headHash, snapshotSha256: snapshot.sha256
       });
+    });
+  }
+
+  async withReadLock(task) {
+    if (typeof task !== 'function') {
+      fail('HOST_RESOURCE_FENCE_AUTHORITY_CONFIG', 'READ_LOCK_TASK');
+    }
+    return this.#enqueue(async () => {
+      if (this.#failed) {
+        throw new HostResourceFenceError('HOST_RESOURCE_FENCE_AUTHORITY_FAILED');
+      }
+      if (this.#state !== 'READY') {
+        throw new HostResourceFenceError('HOST_RESOURCE_FENCE_AUTHORITY_NOT_INITIALIZED');
+      }
+      await this.#assertIntegrity();
+      return task();
     });
   }
 
@@ -1825,6 +1850,7 @@ class HostResourceFencePort {
   #sourceSha;
   #frozenResourceSetSha256;
   #expectedHeadProvider;
+  #withReadLock;
 
   constructor(options) {
     const code = 'HOST_RESOURCE_FENCE_PORT_CONFIG';
@@ -1847,6 +1873,8 @@ class HostResourceFencePort {
     requireString(options.frozenResourceSetSha256, HEX64, code, 'FROZEN_RESOURCE_SET_SHA256');
     if (typeof options.expectedHead !== 'function') fail(code, 'EXPECTED_HEAD_PROVIDER');
     this.#expectedHeadProvider = options.expectedHead;
+    if (typeof options.withReadLock !== 'function') fail(code, 'WITH_READ_LOCK');
+    this.#withReadLock = options.withReadLock;
     this.#store = store;
     this.#registryId = options.registryId;
     this.#registryKey = options.registryKey ?? hostResourceFenceRegistryKey(options.registryId);
@@ -1910,6 +1938,10 @@ class HostResourceFencePort {
   }
 
   async readHeldFence(context) {
+    return this.#withReadLock(() => this.#readHeldFenceLocked(context));
+  }
+
+  async #readHeldFenceLocked(context) {
     const code = 'HOST_RESOURCE_FENCE_PORT_CONTEXT';
     exactKeys(context, ['repository', 'writerId', 'protectedClaimKey', 'sourceSha',
       'foreignClaimCount', 'foreignClaimsSha256', 'foreignClaims'], code);

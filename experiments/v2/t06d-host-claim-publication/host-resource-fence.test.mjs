@@ -568,6 +568,17 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
   const terminalized = await clientA.put(claimCasKey, terminalizing,
     {mustMatchRevision: 1});
   assert.equal(terminalized.revision, 2);
+  const terminalVerified = {...terminalizing, phase: 'TERMINAL_VERIFIED',
+    terminalCommentId: 456,
+    terminalCommentRef: `${identityA.issueRef}#issuecomment-456`};
+  await assert.rejects(clientA.put(claimCasKey,
+    {...terminalVerified, terminalEvidence: 'changed terminal evidence'},
+    {mustMatchRevision: 2}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID' &&
+    error.details.some(detail => String(detail).startsWith('CLAIM_TERMINAL_IMMUTABLE')));
+  const terminalConfirmed = await clientA.put(claimCasKey, terminalVerified,
+    {mustMatchRevision: 2});
+  assert.equal(terminalConfirmed.revision, 3);
   await assert.rejects(clientA.put(fswKey,
     {...fsw, frozenResourceSetSha256: '0'.repeat(64)}, {mustMatchRevision: 0}),
   error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
@@ -575,7 +586,7 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_RESERVED');
   await assert.rejects(clientA.put('tally:v2:not-covered:1', {x: 1}, {mustBeAbsent: true}),
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
-  await assert.rejects(clientA.remove(claimCasKey, {mustMatchRevision: 2}),
+  await assert.rejects(clientA.remove(claimCasKey, {mustMatchRevision: 3}),
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_RESERVED');
   assert.notEqual(await store.get(claimCasKey), null);
   assert.notEqual(await store.get(fswKey), null);
@@ -789,7 +800,8 @@ test('resourceConflictPort proves a held lease and exposes incompatible claims',
     protectedClaimKey: identityA.protectedClaimKey,
     sourceSha: identityA.sourceSha,
     frozenResourceSetSha256: builtA.frozenResourceSetSha256,
-    expectedHead: () => authority.anchorHead
+    expectedHead: () => authority.anchorHead,
+    withReadLock: task => authority.withReadLock(task)
   });
   assert.equal(port.sourceKind, 'TRUSTED_HOST_RESOURCE_FENCE_PORT');
   assert.equal(port.repository, REPO);
@@ -1113,7 +1125,8 @@ test('a jointly restored old anchor/store cannot satisfy the live Authority head
     repository: REPO, writerId: 'writer-a',
     protectedClaimKey: identity.protectedClaimKey, sourceSha: identity.sourceSha,
     frozenResourceSetSha256: built.frozenResourceSetSha256,
-    expectedHead: () => authority.anchorHead
+    expectedHead: () => authority.anchorHead,
+    withReadLock: task => authority.withReadLock(task)
   });
   await assert.rejects(port.readHeldFence({
     repository: REPO, writerId: 'writer-a',
@@ -1124,7 +1137,7 @@ test('a jointly restored old anchor/store cannot satisfy the live Authority head
     error.details.includes('EXPECTED_HEAD'));
 });
 
-test('port read denies when a release advances the head during the read', async t => {
+test('port reads are serialized with Authority mutations', async t => {
   const identity = makeIdentity();
   const built = buildFrozenResourceSet(identity);
   const entry = authorizedEntry(identity, built, CLIENT_KEY_A, 'writer-a');
@@ -1134,35 +1147,34 @@ test('port read denies when a release advances the head during the read', async 
     clientNonce: nonce()
   });
   await client.acquire();
-  let registryGets = 0;
-  let released = false;
-  const portStore = {
-    get: async key => {
-      const result = await store.get(key);
-      if (key === authority.registryKey) {
-        registryGets++;
-        if (registryGets === 2 && !released) {
-          released = true;
-          await client.release();
-        }
-      }
-      return result;
-    },
-    list: (...args) => store.list(...args)
-  };
+  let releaseDone = false;
   const port = createHostResourceFencePort({
-    store: portStore, registryId: authority.registryId, anchorPath,
+    store, registryId: authority.registryId, anchorPath,
     authorityPublicKeyPem: authority.publicKeyPem, writerSid: WRITER_SID,
     repository: REPO, writerId: 'writer-a',
     protectedClaimKey: identity.protectedClaimKey, sourceSha: identity.sourceSha,
     frozenResourceSetSha256: built.frozenResourceSetSha256,
-    expectedHead: () => authority.anchorHead
+    expectedHead: () => authority.anchorHead,
+    withReadLock: task => authority.withReadLock(async () => {
+      const result = await task();
+      assert.equal(releaseDone, false);
+      return result;
+    })
   });
-  await assert.rejects(port.readHeldFence({
+  const context = {
     repository: REPO, writerId: 'writer-a',
     protectedClaimKey: identity.protectedClaimKey, sourceSha: identity.sourceSha,
     foreignClaimCount: 0, foreignClaimsSha256: projectionDigest([]),
     foreignClaims: []
-  }), error => error.code === 'HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH' &&
-    error.details.includes('READ_ADVANCED'));
+  };
+  const readPromise = port.readHeldFence(context);
+  await new Promise(resolve => setImmediate(resolve));
+  const releasePromise = client.release().then(() => { releaseDone = true; });
+  const [readResult, releaseResult] = await Promise.allSettled([readPromise, releasePromise]);
+  assert.equal(readResult.status, 'fulfilled');
+  assert.equal(readResult.value.fenceHeld, true);
+  assert.equal(releaseResult.status, 'fulfilled');
+  assert.equal(releaseDone, true);
+  await assert.rejects(port.readHeldFence(context),
+    error => error.code === 'HOST_RESOURCE_FENCE_NOT_HELD');
 });
