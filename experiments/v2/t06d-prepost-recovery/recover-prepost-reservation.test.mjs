@@ -1212,6 +1212,35 @@ test('revision-3 reconciliation and revision-4 recovery entry share full marker 
   });
 });
 
+test('target-only revision-4 verifier denies a target CAS change after native/lineage readback',async()=>{
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
+      terminalWriterId:undefined,terminalEvidence:undefined,
+      terminalOccurredAt:undefined,terminalReservationRevision:undefined}),
+      {mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const p=ports();
+    assert.equal((await createPrePostRecoveryController({store,...p,writerAuthority})
+      .recoverPrePostReservation()).status,'RECORDED');
+    let reads=0,writes=0;
+    const drifting={async get(key){
+      const value=await store.get(key);
+      return ++reads===2?{...value,revision:value.revision+1}:value;
+    },async put(){writes++;throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');}};
+    const readPorts=ports();readPorts.terminalEvents.present=true;
+    readPorts.quiescence={async readFreshProof(){throw new Error('NO_GLOBAL_FENCE');}};
+    readPorts.publisher={async publishDispatchStateChange(){throw new Error('NO_POST');}};
+    const x=await createPrePostRecoveryController({
+      store:drifting,...readPorts,writerAuthority}).verifyTerminalReservationReadOnly();
+    assert.equal(x.status,'UNKNOWN');
+    assert.equal(x.reason,'READ_ONLY_TARGET_DRIFT');
+    assert.equal(x.casWrites,0);
+    assert.equal(writes,0);
+    assert.equal(readPorts.counts.publishes,0);
+    assert.equal(reads,2);
+  });
+});
+
 test('revision-4 verification is read-only and reports the historical review-order deviation', async () => {
   await harness(async ({store})=>{
     await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
@@ -1222,6 +1251,9 @@ test('revision-4 verification is read-only and reports the historical review-ord
     assert.equal(first.status,'RECORDED');
     const readonlyStore={async get(key){return store.get(key);},async put(){throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');}};
     const readPorts=ports();readPorts.terminalEvents.present=true;
+    // Target-only recheck is independent of process/global quiescence. It must
+    // not request a fresh Host-wide fence for an immutable read-only event.
+    readPorts.quiescence={async readFreshProof(){throw new Error('UNRELATED_HOST_PROCESS_ACTIVE');}};
     const verifier=createPrePostRecoveryController({store:readonlyStore,...readPorts,
       publisher:{async publishDispatchStateChange(){throw new Error('PUBLISH_FORBIDDEN');}},writerAuthority});
     const receipt=await verifier.verifyTerminalReservationReadOnly();
