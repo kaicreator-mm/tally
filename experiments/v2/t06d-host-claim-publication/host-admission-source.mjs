@@ -8,7 +8,6 @@
  * writer identity through a request, comment, B port, Agent or UI endpoint.
  */
 import {Octokit} from '@octokit/rest';
-import {createHash} from 'node:crypto';
 import {readNativeHostClaimPreflightFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-preflight.mjs';
 import {createHostNativeGitHubClaimReadbackPortFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-readback-port.mjs';
 import {createHash} from 'node:crypto';
