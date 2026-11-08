@@ -8,6 +8,7 @@
  * writer identity through a request, comment, B port, Agent or UI endpoint.
  */
 import {Octokit} from '@octokit/rest';
+import {createHash} from 'node:crypto';
 import {readNativeHostClaimPreflightFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-preflight.mjs';
 import {createHostNativeGitHubClaimReadbackPortFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-readback-port.mjs';
 import {createHash} from 'node:crypto';
@@ -22,6 +23,8 @@ const ROLES=new Set(['builder','reviewer','validator']);
 const KINDS=new Set(['chatgpt-web','codex','claude-code','human',
   'github-actions','woodpecker','other']);
 const PREFIX='tally:v2:claim-admission:';
+const HEX64=/^[a-f0-9]{64}$/;
+const RESOURCE_FENCE_AGE_MS=15000;
 const PHASES=new Set(['PENDING_GITHUB_PUBLISH','PUBLISHED_VERIFIED',
   'PENDING_GITHUB_TERMINALIZATION','TERMINAL_VERIFIED']);
 const CLAIM_KEY=new RegExp('^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)#([1-9][0-9]*):'+
@@ -87,9 +90,46 @@ function validRegistryRow(row){
   return true;
 }
 
+/**
+ * The default shared-registry policy refuses ALL live foreign Claim keys.
+ * An opt-in Host-controlled resource fence can make an exact subset compatible.
+ * This is a read-only preflight witness, not a lease acquisition or a K permit:
+ * the selected Host MUST hold the same durable, cross-writer resource lease
+ * across reserveAndPublish (CAS reservation, GitHub POST/readback and final CAS).
+ * Merely passing a boolean from a Task, UI, GitHub comment or Agent is invalid.
+ * Legacy writers without the common resource-fence protocol remain incompatible.
+ */
+function foreignClaimDigest(rows){
+  const fields=rows.map(row=>({
+    protectedClaimKey:row.protectedClaimKey,phase:row.phase,
+    sourceSha:row.sourceSha,dispatchId:row.dispatchId,writerId:row.writerId
+  })).sort((a,b)=>a.protectedClaimKey.localeCompare(b.protectedClaimKey));
+  return createHash('sha256').update(JSON.stringify(fields)).digest('hex');
+}
+function validResourceFenceProof(proof,expected){
+  if(!proof||typeof proof!=='object'||Array.isArray(proof))return false;
+  const observed=Date.parse(proof.observedAt);
+  return proof.sourceKind==='TRUSTED_HOST_RESOURCE_FENCE_READBACK'&&
+    proof.complete===true&&proof.fenceHeld===true&&
+    proof.fenceScope==='EXACT_FROZEN_RESOURCE_SET'&&
+    proof.heldThrough==='CAS_PUBLISH_READBACK'&&
+    proof.repository===expected.repository&&
+    proof.writerId===expected.writerId&&
+    proof.protectedClaimKey===expected.protectedClaimKey&&
+    proof.sourceSha===expected.sourceSha&&
+    proof.foreignClaimsSha256===expected.foreignClaimsSha256&&
+    proof.foreignClaimCount===expected.foreignClaimCount&&
+    proof.incompatibleResourceCount===0&&
+    HEX64.test(proof.frozenResourceSetSha256??'')&&
+    ID.test(proof.fenceId??'')&&
+    Number.isSafeInteger(proof.fenceRevision)&&proof.fenceRevision>=0&&
+    Number.isFinite(observed)&&observed<=Date.now()&&
+    Date.now()-observed<=RESOURCE_FENCE_AGE_MS;
+}
+
 /** Test/selected-Host seam. All authority comes from Host-owned configuration. */
 export function createHostAdmissionSourceFromClient({
-  octokit,store,owner,repo,writerAuthority,taskAuthority
+  octokit,store,owner,repo,writerAuthority,taskAuthority,resourceConflictPort
 }={}){
   const repository=NAME.test(owner??'')&&NAME.test(repo??'')?`${owner}/${repo}`:'';
   if(!repository||!validWriter(writerAuthority,repository)||
@@ -98,7 +138,12 @@ export function createHostAdmissionSourceFromClient({
     typeof octokit?.rest?.issues?.listComments!=='function'||
     typeof octokit?.rest?.repos?.getCommit!=='function'||
     typeof octokit?.paginate?.iterator!=='function'||
-    typeof store?.get!=='function'||typeof store?.list!=='function')
+    typeof store?.get!=='function'||typeof store?.list!=='function'||
+    (resourceConflictPort!==undefined&&(
+      resourceConflictPort?.sourceKind!=='TRUSTED_HOST_RESOURCE_FENCE_PORT'||
+      resourceConflictPort?.repository!==repository||
+      resourceConflictPort?.writerId!==writerAuthority.writerId||
+      typeof resourceConflictPort?.readHeldFence!=='function')))
     throw new TypeError('TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED');
   const readback=createHostNativeGitHubClaimReadbackPortFromClient({
     octokit,owner,repo,writerLogin:writerAuthority.githubWriterLogin
@@ -140,9 +185,37 @@ export function createHostAdmissionSourceFromClient({
       return denied(observed.reason??'NATIVE_GITHUB_SOURCE_INCOMPLETE_OR_STALE',request);
     const registry=await registrySnapshot();
     if(registry.error)return denied(registry.error,request);
-    const activeIncompatibleClaimCount=registry.rows.filter(row=>
-      row.phase!=='TERMINAL_VERIFIED'&&(row.protectedClaimKey!==request.protectedClaimKey||
-        row.phase==='PENDING_GITHUB_PUBLISH'||row.phase==='PENDING_GITHUB_TERMINALIZATION')).length;
+    // An existing active reservation for the SAME protected key can never be
+    // excused by a disjoint-resource witness; the CAS controller must reconcile.
+    const active=registry.rows.filter(row=>row.phase!=='TERMINAL_VERIFIED');
+    const own=active.filter(row=>row.protectedClaimKey===request.protectedClaimKey);
+    const foreign=active.filter(row=>row.protectedClaimKey!==request.protectedClaimKey);
+    let activeIncompatibleClaimCount=own.length+foreign.length;
+    if(own.length>0)return Object.freeze({
+      ...denied('EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION',request),
+      activeIncompatibleClaimCount
+    });
+    if(foreign.length>0&&resourceConflictPort){
+      const foreignClaimsSha256=foreignClaimDigest(foreign);
+      let proof=null;
+      try{
+        proof=await resourceConflictPort.readHeldFence(Object.freeze({
+          repository,writerId:writerAuthority.writerId,
+          protectedClaimKey:request.protectedClaimKey,sourceSha:request.sourceSha,
+          foreignClaimCount:foreign.length,foreignClaimsSha256,
+          // A copy: the port must obtain real resource/FSW and lease authority
+          // from the trusted Host, NOT infer non-overlap from these projections.
+          foreignClaims:Object.freeze(foreign.map(row=>Object.freeze({
+            protectedClaimKey:row.protectedClaimKey,phase:row.phase,
+            sourceSha:row.sourceSha,dispatchId:row.dispatchId,writerId:row.writerId
+          })))
+        }));
+      }catch{proof=null;}
+      if(validResourceFenceProof(proof,{repository,writerId:writerAuthority.writerId,
+        protectedClaimKey:request.protectedClaimKey,sourceSha:request.sourceSha,
+        foreignClaimCount:foreign.length,foreignClaimsSha256}))
+        activeIncompatibleClaimCount=0;
+    }
     if(activeIncompatibleClaimCount>0)return Object.freeze({
       ...denied('INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',request),
       activeIncompatibleClaimCount
