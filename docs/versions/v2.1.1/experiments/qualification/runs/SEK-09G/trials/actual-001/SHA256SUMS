@@ -43,6 +43,8 @@ cc12f467a7908dcffdcaf88661ce8e12ecc1b9d2d2b2cbcca01275128b4d90ee *./G5-07-K-prov
 38ae933bcd18d17dca2f60d67fa5ce7941d5234b5e9402b3499e8fa24aee5b8a *./README.md
 da7b7b430f23458a50e93164f688a6daf5225f63a70770b1c4e3a763c8493def *./blind-TO-INDEPENDENT-SCORER.json
 b133d9a1c213b55bf73d3752d3821218077c4b4add3cda1af8971bc17abaf045 *./blind-key-WITHHOLD-FROM-SCORER.json
+706874399406654468721f170830720bf90b1d821fd6a2d79ef5ce0e4df493e6 *./evidence/builder-mechanical-audit.json
+168686be86f8af055ce3eaba3e941388c3c4ebc2ac43e7245382a4a79b4b5b34 *./evidence/builder-mechanical-audit.md
 b30a1ed87a2c08df28e0eb22a4c001bb0cb6ac76af7bd7b29daeb776d215301a *./evidence/grader-receipt.md
 470c50c0d5e70129a4636f52116d7c5fcf52723e9b0b1106510111a7bffef402 *./evidence/llama-server.log
 38fcf1f9e3b1ce571c75ead712f8095c34ca72da3c57e68e296487ab5d4721b5 *./evidence/native-validation.md

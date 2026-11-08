@@ -1,0 +1,988 @@
+{
+  "role": "BUILDER_SELF_CHECK_NOT_INDEPENDENT_REVIEW",
+  "node": "v24.21.0",
+  "checks_total": 242,
+  "checks_passed": 242,
+  "checks_failed": 0,
+  "failures": [],
+  "answers_unique": 14,
+  "tokens": 6069,
+  "fingerprint": [
+    "b12199-372dc5ca1"
+  ],
+  "file_sha256": {
+    "manifest": "dbfc43f02a889244aa5590c7db38672994dedbfbefbd44094c0b492a6bac8d8e",
+    "grader": "9b0680bb3b1991ebe81e21e5dd9e860614cb0e22ae1f03e7cef8b1398b4bfb9b",
+    "comparison": "5fb559b78c159c889267687e37b5ee1731d611bec8274696603a88d7821e0bbe"
+  },
+  "checks": [
+    {
+      "check": "manifest status",
+      "pass": true
+    },
+    {
+      "check": "14 success",
+      "pass": true
+    },
+    {
+      "check": "7D/7K",
+      "pass": true
+    },
+    {
+      "check": "model consistent",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-07",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-07",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-07",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-07-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-03",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-03",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-03-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-04",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-04",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-04",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-04-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-04",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-04",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-04-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-01",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-01",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-01-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-07",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-07",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-07-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-02",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-02",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-02-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-06",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-06",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-06",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-06-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-06",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-06",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-06-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-03",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-03",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-03",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-03-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-01",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-01",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-01",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-01-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-05",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-05",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-05",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-05-D",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "K retrieval G5-05",
+      "pass": true
+    },
+    {
+      "check": "K retrieval sha G5-05",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-05-K",
+      "pass": true
+    },
+    {
+      "check": "request sha G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "response sha G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "raw answer G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "nonempty G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "prompt exact G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "D no retrieval G5-02",
+      "pass": true
+    },
+    {
+      "check": "D retrieval hash null G5-02",
+      "pass": true
+    },
+    {
+      "check": "D no K prefix G5-02",
+      "pass": true
+    },
+    {
+      "check": "criteria/trap leak G5-02-D",
+      "pass": true
+    },
+    {
+      "check": "14 distinct answers (got 14)",
+      "pass": true
+    },
+    {
+      "check": "grader 14 ratings",
+      "pass": true
+    },
+    {
+      "check": "grader identity",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-01-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-01-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-02-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-02-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-03-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-03-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-04-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-04-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-05-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-05-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-06-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-06-2",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "unsupported span G5-07-1",
+      "pass": true
+    },
+    {
+      "check": "grader missing G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "score correctness_0_2 G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "score scope_0_2 G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "score traceability_0_2 G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "criteria order G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "outcome G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "effort null G5-07-2",
+      "pass": true
+    },
+    {
+      "check": "pc scoring sha",
+      "pass": true
+    },
+    {
+      "check": "pc manifest sha",
+      "pass": true
+    },
+    {
+      "check": "pc status",
+      "pass": true
+    },
+    {
+      "check": "no superiority",
+      "pass": true
+    },
+    {
+      "check": "G4 not measured",
+      "pass": true
+    },
+    {
+      "check": "G5 not auto-pass",
+      "pass": true
+    },
+    {
+      "check": "7 pairs",
+      "pass": true
+    },
+    {
+      "check": "finish stop 14",
+      "pass": true
+    },
+    {
+      "check": "one fingerprint",
+      "pass": true
+    }
+  ]
+}
