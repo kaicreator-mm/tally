@@ -17,15 +17,22 @@ ACCEPTED; G2 stays PARTIAL; G4 human review and G5 model scoring remain NOT_MEAS
 1. `authority/SOURCE_REGISTRY.yaml`: +3 first-party publisher sources
    (`SE-SRC-09F-CF-OUTAGE-2025`, `SE-SRC-09F-CF-KV-REDESIGN-2025`,
    `SE-SRC-09F-GH-POSTMORTEM-2018`), `source_class: EMPIRICAL_CASE`, `source_role:
-   PRIMARY`, with rights handling, authority fit/limitations, verification
-   (`state: CONTENT_PARTIAL_VERIFIED`, `accessed_on: 2026-11-08`) and the
-   unpinned-HTML-revision caveat carried verbatim from the SEK-09F review. Registry
-   grows 9 → 12 entries; the six unused entries stay unprojected.
+   PRIMARY`. The registry preserves **all** limitations stated by the reviewed intake
+   (first-party self-report, not an independently audited causal or cross-vendor
+   generalization; unpinned mutable HTML revision) and **explicitly adds one
+   conservative limitation** on the GitHub source — "Historical and specific to
+   GitHub's reported MySQL topology of 2018" — which restates the
+   `historical/MySQL-topology-specific` scope description already present in the #365
+   SOURCE-REVIEW. It is a documented addition, not a verbatim copy of the intake's
+   authority fields. Verification state `CONTENT_PARTIAL_VERIFIED`,
+   `accessed_on: 2026-11-08`. Registry grows 9 → 12 entries; the six unused entries
+   stay unprojected.
 2. `knowledge/vertical-slice/lanes/reliability-performance/records.yaml`: +4
-   SourceLocator, +5 Evidence, +2 Case records copied verbatim (parsed values
-   identical) from the reviewed `case-intake/SEK-09F-INCIDENT-CASES.yaml`, added under
-   marked SEK-09F comments. Both cases: `PENDING_REVIEW`, `synthetic: false`,
-   `case_kind: POSTMORTEM`; all five evidence: `PENDING_REVIEW`,
+   SourceLocator, +5 Evidence, +2 Case records whose parsed values are
+   field-for-field identical to the reviewed `case-intake/SEK-09F-INCIDENT-CASES.yaml`
+   (11 records; a mechanical field-by-field comparison is part of the gate suite,
+   §H below), added under marked SEK-09F comments. Both cases: `PENDING_REVIEW`,
+   `synthetic: false`, `case_kind: POSTMORTEM`; all five evidence: `PENDING_REVIEW`,
    `EXTRACTED_PENDING_REVIEW`, `synthetic: false`. Lane total 94 → 105 records.
 3. **Deliberately not done:** no Counterexample (neither case challenges a specific
    qualified claim), no ReviewDecision, no ACCEPTED, no `case_refs` back-patching onto
@@ -48,10 +55,10 @@ across SEK-08 → SEK-09H; the only dates in the projection remain fixed constan
 
 - **Records:** 794 lane-owned + 6 shared + 6 derived sources = **806** (was 792).
 - **Triples:** 9,653 (was 9,461; +192). Canonical digest (sorted N-Triples SHA-256):
-  `060fa255a2af69edcee0580d6ef960cdf3ca2bac117d570003c339d2dd94aa79`.
+  `2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8`.
 - Exports @ this tree (relative to `docs/versions/v2.1.1/knowledge/`):
-  - `generated/graph.ttl` sha256 `3d143897811ccf64dc0d0534f7720b66dcdb64f1b0fa0eb2dd90294cf13362d8`
-  - `generated/graph.jsonld` sha256 `0db0e256c4fa2cbac8ec4592df333693b40c9e4fe3a6508792c7bfe82e17ae69`
+  - `generated/graph.ttl` sha256 `f98323118bc3f5212a3c2f2350557286cb18d0f794c26a78101b210dac6e589b`
+  - `generated/graph.jsonld` sha256 `e8b9003b1b4c27ce78496a62392a6a2afc7031500f368c1bd90ed737ee6f1f95`
   - verify with `sha256sum -c generated/manifest.sha256`
 - Counts: 106 claims (unchanged, all `review_status: PENDING`), 271 relationship
   assertions (unchanged), 29 coverage gaps (unchanged, all OPEN), 568 knowledge-class
@@ -94,9 +101,38 @@ isolated venv `C:\xDev\kAiCreator\_tmp\tally-i368-k3\venv`)
   class (Evidence) + materializer counterexample refusal; duplicate source identifier;
   unknown `evidence_type` enum (LinkML Draft7). Each injected defect was refused.
   EXIT=0.
+- **I. Intake field-by-field comparison:** all 11 merged SEK-09F records (4 locators,
+  5 evidence, 2 cases) compared field-by-field against the reviewed
+  `case-intake/SEK-09F-INCIDENT-CASES.yaml` → `checked=11 mismatches=0` (exact parsed
+  value equality, including unicode punctuation). EXIT=0.
 - **Source-blobs:** the ten lane files (nine untouched byte-identical), schema,
   catalogs, validator, legacy fixture, case-intake sidecar and experiments paths are
   unchanged vs baseline (`git diff --name-only` restricted to those paths = empty).
+
+## Same-Writer repair R1 (independent Verifier findings, repaired in the original write set)
+
+The independent Final Verifier returned data **PASS** with two receipt/consistency
+findings; both were repaired by the same Writer inside the original bounded write set
+(the intake sidecar was not touched):
+
+1. **En-dash fidelity.** The lane copy of `se:CASE-09F-GH-DB-FAILOVER.context` had
+   `October 21-22` (hyphen-minus) where the reviewed intake has `October 21–22`
+   (U+2013 EN DASH). Restored to the exact intake character; gate I now proves all 11
+   merged records field-for-field parsed-identical to the intake.
+2. **"Verbatim" overstatement.** The GitHub registry source intentionally adds one
+   conservative limitation beyond the intake's authority fields ("Historical and
+   specific to GitHub's reported MySQL topology of 2018", restating the
+   `historical/MySQL-topology-specific` scope already in the #365 SOURCE-REVIEW).
+   Prose in this file and `generated/README.md` now states this precisely: the 11 lane
+   records are field-for-field identical to the intake; the registry preserves all
+   intake limitations and explicitly adds that one limitation (a documented addition,
+   not a verbatim copy).
+
+The graph was regenerated deterministically after repair 1 (one literal changed);
+new canonical digest `2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8`,
+`graph.ttl` sha256 `f98323118bc3f5212a3c2f2350557286cb18d0f794c26a78101b210dac6e589b`,
+`graph.jsonld` sha256 `e8b9003b1b4c27ce78496a62392a6a2afc7031500f368c1bd90ed737ee6f1f95`.
+All gates A–I were re-run at the repaired tree with the results above.
 
 ## Boundary and next steps
 

@@ -24,7 +24,7 @@ ontology adoption, not a Domain Package and not DomainForge promotion.
 | `COVERAGE_REPORT.md` | Covered areas, explicit gaps, excluded legacy material, rights, unmeasured review burden |
 
 Canonical graph digest (SHA-256 over the sorted N-Triples form of the projection):
-`060fa255a2af69edcee0580d6ef960cdf3ca2bac117d570003c339d2dd94aa79`.
+`2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8`.
 
 ## SEK-09H change summary (vs the SEK-08 projection)
 
@@ -35,12 +35,18 @@ canonical inputs and rebuilt the projection:
 
 - `../../authority/SOURCE_REGISTRY.yaml`: +3 first-party publisher sources
   (`SE-SRC-09F-CF-OUTAGE-2025`, `SE-SRC-09F-CF-KV-REDESIGN-2025`,
-  `SE-SRC-09F-GH-POSTMORTEM-2018`), each with rights handling, authority
-  fit/limitations, verification state and the unpinned-HTML-revision caveat carried
-  verbatim from the SEK-09F review.
+  `SE-SRC-09F-GH-POSTMORTEM-2018`). The registry preserves every limitation carried by
+  the reviewed intake (first-party self-report, no independently audited causal
+  generalization, unpinned mutable HTML revision) and adds one explicit conservative
+  limitation on the GitHub source — "Historical and specific to GitHub's reported
+  MySQL topology of 2018" — which restates the `historical/MySQL-topology-specific`
+  scope already recorded in the #365 SOURCE-REVIEW. It is an addition, not a
+  verbatim copy of the intake's authority fields.
 - `../vertical-slice/lanes/reliability-performance/records.yaml`: +4 SourceLocator,
-  +5 Evidence, +2 Case records, copied verbatim from the independently reviewed
-  SEK-09F intake. Both cases stay `PENDING_REVIEW`, `synthetic: false`,
+  +5 Evidence, +2 Case records whose parsed values are field-for-field identical to
+  the independently reviewed SEK-09F intake (11 records; mechanical field-level
+  comparison re-run after repair, see `../../methods/observations/SEK-09H.md`).
+  Both cases stay `PENDING_REVIEW`, `synthetic: false`,
   `case_kind: POSTMORTEM`; all five evidence records stay `PENDING_REVIEW`,
   `EXTRACTED_PENDING_REVIEW`, `synthetic: false`.
 - No Counterexample, ReviewDecision or ACCEPTED record was created; the 106 knowledge

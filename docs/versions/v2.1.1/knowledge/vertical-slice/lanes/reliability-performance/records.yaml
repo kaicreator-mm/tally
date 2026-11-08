@@ -1510,7 +1510,7 @@ collections:
       created_on: "2026-11-08"
       label: GitHub 2018 database replication divergence after failover
       case_kind: POSTMORTEM
-      context: "A network partition affected GitHub.com's East/West MySQL replication and orchestration during October 21-22, 2018."
+      context: "A network partition affected GitHub.com's East/West MySQL replication and orchestration during October 21–22, 2018."
       problem: "After failover the two sites had divergent writes, making immediate fail-back unsafe and causing degraded metadata availability."
       intervention: "Responders paused some dependent processing, prioritized data integrity and rebuilt/recovered database replication before restoring normal topology."
       outcome: "The first-party report records a prolonged recovery with site degradation and backlog handling; exact recovery tradeoffs are bound to the original incident report."

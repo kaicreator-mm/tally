@@ -205,7 +205,7 @@ registry; (3) apply the projection-only boundary-notes normalization; (4) serial
 sorted canonical triple set to `generated/graph.ttl` + `generated/graph.jsonld` and
 write `generated/manifest.sha256` (fixed build date; no timestamps leak into bytes).
 At this tree: five assemblies in three lane orders produced identical bytes and
-identical canonical digest `060fa255a2af69edcee0580d6ef960cdf3ca2bac117d570003c339d2dd94aa79`;
+identical canonical digest `2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8`;
 Turtle and JSON-LD parse back triple-for-triple equivalent (9,653 triples each); the
 repository validator passes the merged graph; LinkML 1.12.1 JSON-Schema validation
 reports 0 errors; validator self-tests pass 66/66. Exact commands and exit codes:

@@ -360,7 +360,7 @@
       "@id": "se:CASE-09F-GH-DB-FAILOVER",
       "@type": "se:Case",
       "se:case_kind": "POSTMORTEM",
-      "se:context": "A network partition affected GitHub.com's East/West MySQL replication and orchestration during October 21-22, 2018.",
+      "se:context": "A network partition affected GitHub.com's East/West MySQL replication and orchestration during October 21–22, 2018.",
       "se:created_on": "2026-11-08",
       "se:evidence_refs": [
         {
