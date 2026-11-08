@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, rm, writeFile, mkdir, readFile, readdir} from 'node:fs/promises';
+import {mkdtemp, rm, writeFile, mkdir, readFile, readdir, symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, dirname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY,
   acquireExclusiveHostFence, discoverHostRegistryPaths, inspectHostRegistryInventory,
-  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient, openReadOnlySqliteCasStore}
+  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient, openReadOnlySqliteCasStore,
+  openExactTargetReadonlyRegistryStores}
   from './recover-prepost-reservation.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
@@ -716,6 +717,82 @@ test('read-only Host CAS opener requires an existing DB and rejects every write'
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('target-only terminal verification opens exactly three read-only CAS files without a Host-wide scan',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'tally-i331-targetonly-'));
+  const paths=[
+    join(root,'a','registry-203.sqlite'),
+    join(root,'b','deep','registry-319.sqlite'),
+    join(root,'c','registry-331.sqlite'),
+  ];
+  const key='tally:v2:readonly-target-only-fixture';
+  let opened=null;
+  try{
+    for(const p of paths){
+      await mkdir(dirname(p),{recursive:true});
+      const w=await openSqliteCasStore({path:p,busyTimeoutMs:1000});
+      await w.put(key,{phase:'PUBLISHED_VERIFIED',issueRef:'#331'},{mustBeAbsent:true});
+      await w.close();
+    }
+    // These unrelated entries were fatal under the old recursive inventory.
+    // They are never enumerated by an exact target-only verifier.
+    await mkdir(join(root,'unrelated'),{recursive:true});
+    await writeFile(join(root,'unrelated','registry-999.sqlite'),'unrelated');
+    const before=await Promise.all(paths.map(p=>readFile(p)));
+    opened=await openExactTargetReadonlyRegistryStores(root,paths);
+    assert.equal(opened.size,3);
+    for(const p of paths){
+      const store=[...opened.entries()].find(([x])=>
+        x.replace(/\\/g,'/').toLowerCase()===p.replace(/\\/g,'/').toLowerCase())?.[1];
+      assert.ok(store,'selected exact CAS path must be present');
+      assert.equal((await store.get(key)).value.phase,'PUBLISHED_VERIFIED');
+      await assert.rejects(store.put(key,{phase:'DONE'},{mustMatchRevision:0}));
+    }
+    for(const store of opened.values())await store.close();
+    opened=null;
+    const after=await Promise.all(paths.map(p=>readFile(p)));
+    assert.deepEqual(after,before,'read-only target check must not modify the DB');
+  }finally{
+    if(opened)for(const store of opened.values()){try{await store.close();}catch{}}
+    await rm(root,{recursive:true,force:true});
+  }
+});
+
+test('target-only registry selection rejects outside paths, duplicates, missing files, and selected symlinks',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'tally-i331-readonly-selection-'));
+  const outside=await mkdtemp(join(tmpdir(),'tally-i331-readonly-outside-'));
+  const paths=[join(root,'a','registry-203.sqlite'),
+    join(root,'b','registry-319.sqlite'),join(root,'c','registry-331.sqlite')];
+  try{
+    for(const path of paths){
+      await mkdir(dirname(path),{recursive:true});
+      const store=await openSqliteCasStore({path,busyTimeoutMs:1000});
+      await store.close();
+    }
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[paths[0],paths[0],paths[2]]),
+      /READ_ONLY_REGISTRY_SELECTION_DUPLICATE/);
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[...paths.slice(0,2),join(outside,'registry-331.sqlite')]),
+      /READ_ONLY_REGISTRY_OUTSIDE_HOST_ROOT/);
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[...paths.slice(0,2),join(root,'missing.sqlite')]));
+    const alias=join(root,'alias.sqlite');
+    try{
+      await symlink(paths[2],alias,'file');
+      await assert.rejects(openExactTargetReadonlyRegistryStores(root,[paths[0],paths[1],alias]),
+        /READ_ONLY_REGISTRY_PATH_UNTRUSTED/);
+    }catch(error){
+      if(!['EPERM','EACCES','ENOSYS'].includes(error?.code))throw error;
+      t.diagnostic('symlink privilege unavailable; exact realpath and missing paths still fail closed');
+    }
+    // Unrelated tree entries do not affect exact selection.
+    await writeFile(join(root,'stray.sqlite'),'not a CAS store');
+    const got=await openExactTargetReadonlyRegistryStores(root,paths);
+    assert.equal(got.size,3);
+    for(const store of got.values())await store.close();
+  }finally{
+    await rm(root,{recursive:true,force:true});
+    await rm(outside,{recursive:true,force:true});
+  }
+});
+
 test('complete registry inventory discovers nested registries and detects a second pending Task', async () => {
   const dir=await mkdtemp(join(tmpdir(),'tally-i331-inventory-'));
   try{
@@ -1135,6 +1212,35 @@ test('revision-3 reconciliation and revision-4 recovery entry share full marker 
   });
 });
 
+test('target-only revision-4 verifier denies a target CAS change after native/lineage readback',async()=>{
+  await harness(async ({store})=>{
+    await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',
+      terminalWriterId:undefined,terminalEvidence:undefined,
+      terminalOccurredAt:undefined,terminalReservationRevision:undefined}),
+      {mustMatchRevision:0});
+    await store.put(TARGET.casKey,strandedRow(),{mustMatchRevision:1});
+    const p=ports();
+    assert.equal((await createPrePostRecoveryController({store,...p,writerAuthority})
+      .recoverPrePostReservation()).status,'RECORDED');
+    let reads=0,writes=0;
+    const drifting={async get(key){
+      const value=await store.get(key);
+      return ++reads===2?{...value,revision:value.revision+1}:value;
+    },async put(){writes++;throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');}};
+    const readPorts=ports();readPorts.terminalEvents.present=true;
+    readPorts.quiescence={async readFreshProof(){throw new Error('NO_GLOBAL_FENCE');}};
+    readPorts.publisher={async publishDispatchStateChange(){throw new Error('NO_POST');}};
+    const x=await createPrePostRecoveryController({
+      store:drifting,...readPorts,writerAuthority}).verifyTerminalReservationReadOnly();
+    assert.equal(x.status,'UNKNOWN');
+    assert.equal(x.reason,'READ_ONLY_TARGET_DRIFT');
+    assert.equal(x.casWrites,0);
+    assert.equal(writes,0);
+    assert.equal(readPorts.counts.publishes,0);
+    assert.equal(reads,2);
+  });
+});
+
 test('revision-4 verification is read-only and reports the historical review-order deviation', async () => {
   await harness(async ({store})=>{
     await store.put(TARGET.casKey,strandedRow({phase:'PUBLISHED_VERIFIED',terminalWriterId:undefined,
@@ -1145,6 +1251,9 @@ test('revision-4 verification is read-only and reports the historical review-ord
     assert.equal(first.status,'RECORDED');
     const readonlyStore={async get(key){return store.get(key);},async put(){throw new Error('READ_ONLY_CAS_WRITE_FORBIDDEN');}};
     const readPorts=ports();readPorts.terminalEvents.present=true;
+    // Target-only recheck is independent of process/global quiescence. It must
+    // not request a fresh Host-wide fence for an immutable read-only event.
+    readPorts.quiescence={async readFreshProof(){throw new Error('UNRELATED_HOST_PROCESS_ACTIVE');}};
     const verifier=createPrePostRecoveryController({store:readonlyStore,...readPorts,
       publisher:{async publishDispatchStateChange(){throw new Error('PUBLISH_FORBIDDEN');}},writerAuthority});
     const receipt=await verifier.verifyTerminalReservationReadOnly();
