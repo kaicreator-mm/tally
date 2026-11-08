@@ -1,7 +1,7 @@
 {
   "schema": "tally/host-platform-task-pack/v1",
-  "packRevision": 8,
-  "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_CONSOLIDATED_REPAIR",
+  "packRevision": 9,
+  "status": "CANDIDATE_NOT_FROZEN_GOVERNANCE_ONLY_SCOPE_NARROWED_TO_TWO_DISJOINT_NEW_FILES",
   "repository": "kaicreator-mm/tally",
   "issueNumber": 370,
   "concern": "PHYSICAL_SHARED_HOST_ADMISSION_FENCE",
@@ -9,13 +9,19 @@
     "initialHead": "41a054167e77a6321b880589ba5af59c159eea1d",
     "initialPackBlob": "8e9bb18a73e93a580e3f5c2788abc9b005b561ce",
     "initialVerdict": "R1_BLOCK_P0_0_P1_5_P2_1; R2_BLOCK_P0_0_P1_3_P2_2; R3_BLOCK_P0_0_P1_2_P2_0; R4_BLOCK_P0_0_P1_2_P2_2; R5_BLOCK_P0_0_P1_3_P2_0; R6_BLOCK_P0_0_P1_2_P2_1; R7_BLOCK_P0_0_P1_1_P2_1",
-    "repairBatch": "R8_EXACT_NATIVE_TASK_LABEL_AND_INDEPENDENT_R8_OVERLAP_CREDENTIAL_ANCHOR_REPAIR"
+    "repairBatch": "R8_EXACT_NATIVE_TASK_LABEL_AND_INDEPENDENT_R8_OVERLAP_CREDENTIAL_ANCHOR_REPAIR",
+    "r1r7": "Independent BLOCK x6 (P1 counts 5,3,2,2,3,2) preserved as historical records.",
+    "r8": "Independent exact-SHA review PASS P0=0/P1=0/P2=0 on 58abb60f0b2061b5124ea66a3e212210bf843de8; it states implementation, physical fence, Claim/FSW and CI are NOT_RUN and that the #319 overlap remains a blocking precondition for the eight-path scope.",
+    "r9": "Owner-approved scope narrowing to two brand-new files that are absent from the #319 nine-path FSW and from PR #371; no existing source path is admitted in this revision."
   },
   "coreOutcomeDag": {
     "createTask": false,
     "changeDenominator": true,
     "membership": "EXISTING_370_SUPPORTING_HOST_TASK_NOW_COUNTED_IN_V2_CANONICAL_TYPE_TASK_ROSTER",
-    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R8 Pack+driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization. Canonical Issue #370 now has the same eight-path normalized set, status CANONICALIZED_OVERLAP_BLOCKED; five paths conflict with accepted historical #319 FSW. A fresh #370 Registry is not historical #319 writer cessation."
+    "reason": "Existing #370 bug Issue is now a real supporting Host-platform type:task with state:planned, not a new Issue. Native preflight demands type:task/state:ready; do not change to ready until independent R8 Pack+driver review and exact Owner receipt pass. Latest label:type:task search returns 50 (49 other Tasks + #370); if no status changes, 21 CLOSED / 29 OPEN. A/#260 existing Claim/Writer must refresh once from live Task bodies, not stale R16 48 or obsolete #377-only 49. High-impact governance decision: #370 Issue comment #6720594384; prior no-denominator assumption is superseded. No CAS/Claim/FSW/source or native dependency write occurs from label normalization. Canonical Issue #370 now has the same eight-path normalized set, status CANONICALIZED_OVERLAP_BLOCKED; five paths conflict with accepted historical #319 FSW. A fresh #370 Registry is not historical #319 writer cessation.",
+    "sourceScopeNarrowedForThisRevision": true,
+    "countedRosterUnchanged": true,
+    "deferralReason": "The five overlapping paths require #319 terminality (ADS #1360 absent) or a proven cross-principal exclusion that cannot itself be built without writing those paths. The two admitted new files carry no overlap and no #371 change, so they can proceed lawfully."
   },
   "authorityIntake": {
     "issueComment": 6718120247,
@@ -47,19 +53,20 @@
     "trackedImplementationPaths": [],
     "governanceOnlyPath": "docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json",
     "required": [
-      "Independent exact R8 Pack HEAD/tree/blob review covering lawful #370 type:task/state:planned normalization, next required state:ready native preflight, existing A/#260 canonical 50-Task refresh, bootstrap security, eight-path scope, resource rules and acceptance tests.",
+      "Independent exact R9 Pack HEAD/tree/blob review of this narrowed two-file scope, including the empty #319 intersection proof and the explicit deferral of wiring.",
       "Generate the temporary two-principal bootstrap authority/client/launcher drivers from the exact composition below, record every byte SHA256 and obtain an independent read-only driver review before any live effect. These drivers are untracked evidence/configuration, not hidden implementation paths.",
       "Before any real #370 Claim, run disposable-store/fake-transport negatives for complete request-value and CAS-condition tampering, creation-time same-SID handle acquisition, unbound client keys, replay and forged responses; every negative must produce zero CAS/POST.",
       "Exact Owner Pack receipt bound to Pack HEAD/tree/blob, all bootstrap-driver SHA256 values, Authority response-public-key, implementation base and eight-path digest; the existing Delivery-First continuation is ordinary project authorization and no redundant chat token is requested.",
-      "Current #370 Issue is OPEN/type:task/state:planned (read back after governance correction); #370 must reach state:ready ONLY after new R8 independent Pack review, exact PackBlob+driver Owner receipt and physical/bootstrap isolation proofs. At execution, native T06d must freshly observe OPEN/type:task/state:ready, zero native blockers and zero prior DISPATCH_CLAIMED; no label/comment alone grants CAS Claim.",
-      "BEFORE any real #370 bootstrap Claim, CAS reservation, native DISPATCH_CLAIMED or create-only FROZEN_DAG_WRITESET, freshly read the original #319 accepted Claim, its nine-path FSW and the five exact overlapping source paths. Independently prove lawful #319 terminal/serial writer handoff or genuinely enforceable physical cross-writer exclusion spanning BOTH original/new privileged principals and all five paths, with no possible #319 resumption during #370 admission and subsequent source work. A nonterminal #319 Claim/FSW plus an admitted #370 FSW would grant concurrent overlapping write authority even if no source diff has yet been observed. #319 remains OPEN/state:blocked with Task Closure NOT_VERIFIED; absent proof, keep #370 planned and fail closed with zero #370 CAS/POST/FSW and zero source edits. Empty #370 registry, a process census or an old review PASS is insufficient.",
-      "One-time isolated bootstrap Claim and create-only FROZEN_DAG_WRITESET through the exact existing T06d/C source and public DomainHarness SQLite CAS API, followed by native/CAS readback.",
-      "After the bootstrap Claim/FSW, implement the real shared fence in the eight admitted paths. The bootstrap result is BOOTSTRAP_CLAIM_ACCEPTED, not PHYSICAL_SHARED_HOST_FENCE=PASS."
+      "Current #370 Issue is OPEN/type:task/state:planned; promote to state:ready ONLY after the R9 review, the exact Owner scope receipt and the driver/isolation negatives. Native T06d must freshly observe OPEN/type:task/state:ready, zero blockers and zero prior DISPATCH_CLAIMED at execution.",
+      "The accepted one-shot Claim and create-only FROZEN_DAG_WRITESET MUST bind exactly these two new paths and the digest b9ac6da49a118d445a7ae5908b8f81fb547ddb2249929d22256f3cc790f2c03c. Any wider write set, any edit to an existing path, or any reuse of an #319 path denies.",
+      "#319 gate for THIS scope: not a terminality requirement, but a hard non-overlap requirement. Before the Claim, re-read tally:v2:task-writeset:319 and tally:v2:claim-admission:471dc65c8c0ef32ac912306d962581d6db92f63af2e0bf88000d5a5370daa50d and prove the two admitted paths are absent; if either path appears, or if any admitted file exists on the #319 branch, fail closed with zero effects.",
+      "Wiring the fence into single-writer.mjs / task-claim-github-publisher.mjs remains NOT_ADMITTED and blocked until #319 is lawfully terminal or excluded; PHYSICAL_SHARED_HOST_FENCE and #284 stay NOT_PROVEN/NOT_ADMITTED regardless of this increment."
     ],
     "forbidden": [
-      "No implementation edit to any of the eight post-Claim paths before accepted Claim and FSW readback.",
-      "No live Claim/POST in deterministic or contentious tests; no #284 root Claim/E0 source/dependency/freeze under this Pack.",
-      "No #203 POST, old-driver rerun, historical registry reset, CAS seed, write-set expansion, merge, tag, release or deployment."
+      "No edit to any existing path, including the five #319-overlapping paths, the composition test and either PR #371 file.",
+      "No live Claim/POST in deterministic tests; no #284 root Claim/E0 source/dependency/freeze under this Pack.",
+      "No #203 POST, old-driver rerun, historical registry reset, CAS seed, write-set expansion, merge, tag, release or deployment.",
+      "No agent execution, candidate/Project/Maintenance/Release effect."
     ]
   },
   "bootstrapIsolation": {
@@ -113,49 +120,19 @@
       "productionHandoff": "Post-bootstrap operations require the reviewed host-resource-fence.mjs implementation, a real acquired lease nonce and the same authorized client/Authority protocol. Temporary bootstrap bytes never become the production implementation."
     }
   },
-  "writeSetCount": 8,
-  "writeSetSha256": "9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27",
+  "writeSetCount": 2,
+  "writeSetSha256": "b9ac6da49a118d445a7ae5908b8f81fb547ddb2249929d22256f3cc790f2c03c",
   "writeSetSerialization": "SHA256(JSON.stringify(lexicographicallySortedExactPathArray))",
   "allowedWriteSet": [
     {
-      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
-      "operation": "MODIFY",
-      "purpose": "Repair the two existing direct Publisher/controller consumers to supply a real held fence; retain PR #371 production source byte-identical and add no test-only bypass."
-    },
-    {
       "path": "experiments/v2/t06d-host-claim-publication/host-resource-fence.mjs",
       "operation": "ADD",
-      "purpose": "Shared atomic durable resource lease and the reviewed TRUSTED_HOST_RESOURCE_FENCE_PORT implementation."
+      "purpose": "Durable shared Host writer resource fence: canonical resources and Windows case-fold conflicts, whole-registry CAS lease acquire/assert/release, signed anchor with in-memory expected head and restart refusal, per-Task authorized signed client protocol, PR #371 resourceConflictPort implementation."
     },
     {
       "path": "experiments/v2/t06d-host-claim-publication/host-resource-fence.test.mjs",
       "operation": "ADD",
-      "purpose": "Real temporary SQLite concurrency, loss, restart, registry recreation, identity and disjoint-resource acceptance tests."
-    },
-    {
-      "path": "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
-      "operation": "MODIFY",
-      "purpose": "Acquire and continuously verify the shared lease across reserve, publish, exact readback and final CAS."
-    },
-    {
-      "path": "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
-      "operation": "MODIFY",
-      "purpose": "Controller lifecycle, fail-closed and no-blind-retry regression coverage."
-    },
-    {
-      "path": "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
-      "operation": "MODIFY",
-      "purpose": "Require a matching held Host fence immediately before and after every native Claim/terminal POST; legacy direct construction fails closed."
-    },
-    {
-      "path": "packages/tally-github-native-c/test/task-claim-composition.test.mjs",
-      "operation": "MODIFY",
-      "purpose": "Compose the real public Host/C controller/publisher path with the shared fence."
-    },
-    {
-      "path": "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
-      "operation": "MODIFY",
-      "purpose": "Publisher missing/forged/mismatched/lost fence and zero-POST negative coverage."
+      "purpose": "Deterministic tests over disposable real DH SQLite CAS and disposable RSA keys: overlap/same-key/disjoint, case-only and ancestor conflicts, lost lease, restart/rollback, client-key substitution, tamper, replay and forged responses, contention exhaustion."
     }
   ],
   "readOnlyBindings": [
@@ -363,28 +340,23 @@
   ],
   "acceptance": {
     "deterministicFirst": [
-      "node --check on every changed/new module before tests.",
-      "Real public DomainHarness openSqliteCasStore with disposable temporary SQLite and isolated fake GitHub transport; no live test Claim/POST.",
-      "Focused new fence tests plus existing single-writer, repaired host-admission-source, publisher and composition tests.",
-      "Exact eight-path diff and git diff --check; PR #371 production host-admission-source.mjs remains byte-identical to d1d7c9ff8843c89513c3bfbc7158cbf7818b7230. Its old CI is ancestor evidence only and is not reused for the new HEAD."
+      "node --check on both new modules before tests.",
+      "Real public DomainHarness openSqliteCasStore with disposable temporary SQLite and disposable RSA keys; no live Claim/POST and no GitHub transport.",
+      "Focused file tests only for the two new paths; existing repository tests are not modified by this increment.",
+      "Exact two-path diff and git diff --check; both PR #371 files and all #319 paths byte-identical."
     ],
     "physicalHostGate": [
-      "Native Windows Node24, real shared SQLite CAS, two independently opened store clients/processes and contentious overlap/disjoint/ancestor/alias cases.",
-      "Continuous lease proof across reserve -> isolated native publish -> exact readback -> final CAS, including stable fence id/revision and frozen resource digest readback.",
-      "Lost lease, wrong-nonce release, restart, registry recreation/malformation, competing writer, same key, overlapping write set, disjoint concurrent Tasks, stale/fake Owner/source evidence and retry exhaustion all covered.",
-      "Before secrets are injected, an adversarial same-SID sibling racing from process creation must fail VM read, VM write/operation, WRITE_DAC and handle duplication against both selected processes; inherited-handle use is limited to the three explicit stdio handles. Two independently authorized per-Task clients then contend through the real composition: overlapping acquisition admits one and disjoint Tasks both progress without sharing a private key. Full request-value/condition tamper, unbound client keys, replay, forged response and nonce decryption negatives all deny before effects. No live test Claim/POST and no #203 POST. Also prove the same-SID unselected sibling/historical client cannot recover an ambient GitHub write token from actual local profile/config/credential-manager/handle surfaces or issue a direct unauthorized POST outside the selected publisher; test mutation attempts against only disposable fake transport.",
-      "The sole real #370 bootstrap Claim follows Pack+driver review, Owner receipt and native preflight; it is read back before FSW/source work and is not counted as physical-fence proof.",
-      "Historical #319 accepted Claim/FSW and the five-path overlap MUST be incorporated into a verified cross-principal fence or lawfully terminal/serially handed off BEFORE #370 ready/Claim/FSW, not just before source editing. A new empty #370 registry or same-SID process-absence probe alone fails; no selected source edit or #284 root Claim until the predecessor authority is resolved."
+      "Deterministic tests must run natively on Windows Node 24.",
+      "The already-recorded creation-time process isolation, ACL isolation and handle-denial evidence remains the Host evidence for the bootstrap driver; it is NOT re-described as fence enforcement.",
+      "No live #370 Claim/POST occurs in tests; the single real Claim/FSW is a separate one-shot step after review and Owner receipt."
     ],
     "final": [
-      "Full affected local gates and final Exact-SHA Woodpecker after candidate convergence; unchanged PR #371/#373 old-SHA CI is not rerun.",
-      "Independent final Exact-SHA source review with P0/P1/P2 and explicit PHYSICAL_SHARED_HOST_FENCE result.",
-      "Only after physical PASS, re-read #284 R9 live gates and run its root preflight against the same canonical registry/fence.",
-      "No Agent launch, candidate/Project/Maintenance/Release effect, merge, release, deployment or false Task Closure promotion. Correct canonical roster accounting (50 as-of current native Task label search) is governance metadata, not verified delivery."
+      "Independent exact-SHA review of the implementation commit.",
+      "Wiring, physical fence PASS and #284 remain deferred and blocked; no merge, release or deployment."
     ]
   },
   "currentState": {
-    "packReview": "R8_INITIAL_BLOCK_P0_0_P1_3_P2_1_REVIEWER_GOVERNANCE_REPAIR_PENDING_FRESH_INDEPENDENT_FINAL",
+    "packReview": "R9_REVIEW_REQUIRED",
     "driverReview": "NOT_PRESENT",
     "ownerPackReceipt": "NOT_PRESENT",
     "claim": "NOT_PRESENT_370_PLANNED_ONLY",
@@ -394,6 +366,45 @@
     "agentExecution": "NOT_ADMITTED",
     "root284": "NOT_ADMITTED",
     "mergeReleaseDeploy": "NO",
-    "historical319WriterOverlap": "FIVE_PATHS_NONTERMINAL_FSW_BLOCK_BEFORE_370_READY_CLAIM_FSW_AND_SOURCE_UNTIL_LAWFUL_HANDOFF_OR_PHYSICAL_MUTUAL_EXCLUSION"
+    "historical319WriterOverlap": "FIVE_PATHS_NONTERMINAL_FSW_BLOCK_BEFORE_370_READY_CLAIM_FSW_AND_SOURCE_UNTIL_LAWFUL_HANDOFF_OR_PHYSICAL_MUTUAL_EXCLUSION",
+    "wiring": "DEFERRED_AND_BLOCKED_BY_319"
+  },
+  "scopeAmendment": {
+    "schema": "tally/host-fence-scope-amendment/v1",
+    "revision": 9,
+    "approvedBy": "OWNER",
+    "approvalKind": "ORDINARY_PROJECT_INSTRUCTION_IN_CURRENT_TALLY_V2_CONVERSATION",
+    "approvalStatement": "Option B: approve the two-file disjoint scope so the shared lease library and port land and are tested first; #284 is not unblocked by this increment.",
+    "admittedPaths": [
+      "experiments/v2/t06d-host-claim-publication/host-resource-fence.mjs",
+      "experiments/v2/t06d-host-claim-publication/host-resource-fence.test.mjs"
+    ],
+    "admittedPathCount": 2,
+    "admittedPathsSha256": "b9ac6da49a118d445a7ae5908b8f81fb547ddb2249929d22256f3cc790f2c03c",
+    "nonOverlapProof": {
+      "against": "tally:v2:task-writeset:319 revision 0, nine paths read back from the #319 registry",
+      "intersection": "EMPTY",
+      "note": "Neither admitted path appears in the #319 document, and neither is one of the two PR #371 files."
+    },
+    "deferredNonAdmittedPaths": [
+      "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+      "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+      "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+      "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+      "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+      "packages/tally-github-native-c/test/task-claim-composition.test.mjs"
+    ],
+    "deferredReason": "Touching these paths would create concurrent overlapping write authority with the nonterminal #319 Claim/FSW, or cannot be satisfied without the publisher/controller wiring.",
+    "whatThisIncrementProves": [
+      "A reviewed shared lease authority with whole-registry CAS, signed anchor, in-memory expected head and restart refusal.",
+      "Authorized per-Task client keys with full-message signatures and signed responses.",
+      "The PR #371 resourceConflictPort proof shape over real durable leases.",
+      "Deterministic tests over disposable real SQLite CAS and disposable signing keys."
+    ],
+    "whatThisIncrementDoesNotProve": [
+      "Enforcement at the publisher/controller call sites (no wiring is admitted here).",
+      "PHYSICAL_SHARED_HOST_FENCE=PASS.",
+      "Any #284 root admission, dependency write, freeze, release or deployment."
+    ]
   }
 }
