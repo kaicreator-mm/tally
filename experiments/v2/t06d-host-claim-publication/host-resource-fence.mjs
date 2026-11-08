@@ -57,7 +57,8 @@ const CLAIM_PHASE_FIELDS = new Map([
   ['PENDING_GITHUB_PUBLISH', CLAIM_BASE_FIELDS],
   ['PUBLISHED_VERIFIED', new Set([...CLAIM_BASE_FIELDS, 'commentId', 'commentRef'])],
   ['PENDING_GITHUB_TERMINALIZATION', new Set([...CLAIM_BASE_FIELDS, 'commentId',
-    'commentRef', 'terminalReservationRevision'])],
+    'commentRef', 'terminalReservationRevision', 'terminalWriterId',
+    'terminalEvidence', 'terminalOccurredAt'])],
   ['TERMINAL_VERIFIED', new Set([...CLAIM_BASE_FIELDS, 'commentId', 'commentRef',
     'terminalCommentId', 'terminalCommentRef', 'terminalEvidence',
     'terminalWriterId', 'terminalOccurredAt', 'terminalReservationRevision'])]
@@ -762,7 +763,7 @@ function validateClaimReservation(value, lease) {
       fail(code, 'CLAIM_TERMINAL_COMMENT');
     }
     if (typeof value.terminalEvidence !== 'string' ||
-      value.terminalEvidence.length === 0 || value.terminalEvidence.length > 4096) {
+      value.terminalEvidence.length === 0) {
       fail(code, 'CLAIM_TERMINAL_EVIDENCE');
     }
     requireString(value.terminalWriterId, ID, code, 'CLAIM_TERMINAL_WRITER');
@@ -774,10 +775,69 @@ function validateClaimReservation(value, lease) {
       value.terminalReservationRevision <= 0) {
       fail(code, 'CLAIM_TERMINAL_REVISION');
     }
-  } else if (value.terminalReservationRevision !== undefined &&
-    (!Number.isSafeInteger(value.terminalReservationRevision) ||
-      value.terminalReservationRevision <= 0)) {
-    fail(code, 'CLAIM_TERMINAL_REVISION');
+  } else {
+    if (value.terminalWriterId !== undefined) {
+      requireString(value.terminalWriterId, ID, code, 'CLAIM_TERMINAL_WRITER');
+    }
+    if (value.terminalEvidence !== undefined &&
+      (typeof value.terminalEvidence !== 'string' || value.terminalEvidence.length === 0)) {
+      fail(code, 'CLAIM_TERMINAL_EVIDENCE');
+    }
+    if (value.terminalOccurredAt !== undefined &&
+      (typeof value.terminalOccurredAt !== 'string' ||
+        !Number.isFinite(Date.parse(value.terminalOccurredAt)))) {
+      fail(code, 'CLAIM_TERMINAL_TIME');
+    }
+    if (value.terminalReservationRevision !== undefined &&
+      (!Number.isSafeInteger(value.terminalReservationRevision) ||
+        value.terminalReservationRevision <= 0)) {
+      fail(code, 'CLAIM_TERMINAL_REVISION');
+    }
+  }
+}
+
+const CLAIM_TRANSITIONS = new Map([
+  ['PENDING_GITHUB_PUBLISH', new Set(['PUBLISHED_VERIFIED'])],
+  ['PUBLISHED_VERIFIED', new Set(['PENDING_GITHUB_TERMINALIZATION'])],
+  ['PENDING_GITHUB_TERMINALIZATION', new Set(['TERMINAL_VERIFIED'])],
+  ['TERMINAL_VERIFIED', new Set()]
+]);
+const CLAIM_IMMUTABLE_FIELDS = Object.freeze(['generation', 'protectedClaimKey',
+  'repository', 'issueRef', 'sourceSha', 'dispatchId', 'actorRole',
+  'operatorKind', 'operatorId', 'writerId']);
+
+/**
+ * A Claim CAS row is a forward-only state machine. The first row is a
+ * PENDING_GITHUB_PUBLISH reservation; later rows must take the exact next
+ * phase, keep every identity field, and never change or drop the published
+ * comment. If an FSW already exists, the next row must keep the FSW's claim
+ * comment binding.
+ */
+function validateClaimTransition(currentRow, nextValue, conditions, fswRow) {
+  const code = 'HOST_RESOURCE_FENCE_VALUE_INVALID';
+  if (!currentRow) {
+    if (conditions.mustBeAbsent !== true) fail(code, 'CLAIM_INITIAL_CONDITION');
+    if (nextValue.phase !== 'PENDING_GITHUB_PUBLISH') fail(code, 'CLAIM_INITIAL_PHASE');
+    return;
+  }
+  if (!plainObject(currentRow.value)) fail(code, 'CLAIM_CURRENT_ROW');
+  const current = currentRow.value;
+  if (conditions.mustMatchRevision !== currentRow.revision) {
+    fail(code, 'CLAIM_REVISION_CONDITION');
+  }
+  const allowed = CLAIM_TRANSITIONS.get(current.phase);
+  if (!allowed || !allowed.has(nextValue.phase)) fail(code, 'CLAIM_TRANSITION');
+  for (const field of CLAIM_IMMUTABLE_FIELDS) {
+    if (current[field] !== nextValue[field]) fail(code, 'CLAIM_IMMUTABLE:' + field);
+  }
+  if (current.commentId !== undefined) {
+    if (current.commentId !== nextValue.commentId ||
+      current.commentRef !== nextValue.commentRef) fail(code, 'CLAIM_COMMENT_IMMUTABLE');
+  }
+  if (fswRow && plainObject(fswRow.value) &&
+    (fswRow.value.claimCommentId !== nextValue.commentId ||
+      fswRow.value.claimCommentRef !== nextValue.commentRef)) {
+    fail(code, 'CLAIM_FSW_BINDING');
   }
 }
 
@@ -1525,21 +1585,29 @@ class HostResourceFenceAuthority {
       const conditions = parseConditions(request.value.conditions);
       if (request.operation === 'PUT') {
         let claimRow = null;
-        if (request.value.key === fswKey) {
-          try {
+        let currentClaimRow = null;
+        let fswRow = null;
+        try {
+          if (request.value.key === fswKey) {
             claimRow = await this.#store.get(claimCasKey);
-          } catch (error) {
-            fail('HOST_RESOURCE_FENCE_STORE_UNAVAILABLE', String(error?.code ?? 'GET_FAILED'));
+            if (!claimRow) {
+              fail('HOST_RESOURCE_FENCE_VALUE_INVALID', 'FSW_CLAIM_NOT_PUBLISHED');
+            }
           }
-          if (!claimRow) {
-            fail('HOST_RESOURCE_FENCE_VALUE_INVALID', 'FSW_CLAIM_NOT_PUBLISHED');
+          if (request.value.key === claimCasKey) {
+            currentClaimRow = await this.#store.get(claimCasKey);
+            fswRow = await this.#store.get(fswKey);
           }
+        } catch (error) {
+          if (error instanceof HostResourceFenceError) throw error;
+          fail('HOST_RESOURCE_FENCE_STORE_UNAVAILABLE', String(error?.code ?? 'GET_FAILED'));
         }
         validateCoveredWrite(request.value.key, request.value.value, lease, conditions, claimRow);
-      } else if (request.value.key === fswKey) {
+        if (request.value.key === claimCasKey) {
+          validateClaimTransition(currentClaimRow, request.value.value, conditions, fswRow);
+        }
+      } else {
         fail('HOST_RESOURCE_FENCE_KEY_RESERVED');
-      } else if (request.value.key !== claimCasKey) {
-        fail('HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
       }
       let revisionForResult;
       try {
@@ -1838,7 +1906,7 @@ class HostResourceFencePort {
       canonicalJson(row.value) !== canonicalJson(document)) {
       fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'REGISTRY_ROW');
     }
-    return {document, chain};
+    return {document, chain, expectedHead};
   }
 
   async readHeldFence(context) {
@@ -1885,6 +1953,18 @@ class HostResourceFencePort {
         }
       }
       if (conflict) incompatibleResourceCount++;
+    }
+    const finalChain = readAnchorChain(this.#anchorPath, {
+      registryId: this.#registryId,
+      authorityPublicKey: this.#authorityPublicKey,
+      writerSid: this.#writerSid
+    });
+    const finalExpected = this.#expectedHeadProvider();
+    if (finalChain.headHash !== state.chain.headHash ||
+      finalChain.head.generation !== state.chain.head.generation ||
+      finalExpected?.hash !== state.expectedHead.hash ||
+      finalExpected?.generation !== state.expectedHead.generation) {
+      fail('HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH', 'READ_ADVANCED');
     }
     return Object.freeze({
       sourceKind: HOST_RESOURCE_FENCE_READBACK_SOURCE_KIND,

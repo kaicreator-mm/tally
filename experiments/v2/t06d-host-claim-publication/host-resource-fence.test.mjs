@@ -540,13 +540,34 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
   assert.equal(second.revision, 1);
   const fswKey = 'tally:v2:task-writeset:370';
   const fsw = fswValue(identityA, builtA, 'writer-a');
-  const fswPut = await clientA.put(fswKey, fsw, {mustBeAbsent: true});
-  assert.equal(fswPut.revision, 0);
   await assert.rejects(clientA.put(fswKey,
     {...fsw, claimCommentId: 124,
       claimCommentRef: `${identityA.issueRef}#issuecomment-124`},
-    {mustMatchRevision: 0}),
-  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
+    {mustBeAbsent: true}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID' &&
+    error.details.includes('FSW_CLAIM_COMMENT_BINDING'));
+  assert.equal(await store.get(fswKey), null);
+  const fswPut = await clientA.put(fswKey, fsw, {mustBeAbsent: true});
+  assert.equal(fswPut.revision, 0);
+  const terminalizing = claimValue(identityA, {
+    phase: 'PENDING_GITHUB_TERMINALIZATION',
+    commentId: 123, commentRef: `${identityA.issueRef}#issuecomment-123`,
+    terminalReservationRevision: 2, terminalWriterId: 'writer-a',
+    terminalEvidence: 'terminal evidence for the composition test',
+    terminalOccurredAt: new Date().toISOString()
+  });
+  await assert.rejects(clientA.put(claimCasKey,
+    {...terminalizing, commentId: 124,
+      commentRef: `${identityA.issueRef}#issuecomment-124`},
+    {mustMatchRevision: 1}),
+  error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID' &&
+    error.details.includes('CLAIM_COMMENT_IMMUTABLE'));
+  await assert.rejects(clientA.put(claimCasKey, published, {mustMatchRevision: 1}),
+    error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID' &&
+      error.details.includes('CLAIM_TRANSITION'));
+  const terminalized = await clientA.put(claimCasKey, terminalizing,
+    {mustMatchRevision: 1});
+  assert.equal(terminalized.revision, 2);
   await assert.rejects(clientA.put(fswKey,
     {...fsw, frozenResourceSetSha256: '0'.repeat(64)}, {mustMatchRevision: 0}),
   error => error.code === 'HOST_RESOURCE_FENCE_VALUE_INVALID');
@@ -554,9 +575,9 @@ test('stable fenceRevision, Claim/FSW puts under the lease and key coverage', as
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_RESERVED');
   await assert.rejects(clientA.put('tally:v2:not-covered:1', {x: 1}, {mustBeAbsent: true}),
     error => error.code === 'HOST_RESOURCE_FENCE_KEY_NOT_COVERED');
-  const removed = await clientA.remove(claimCasKey, {mustMatchRevision: 1});
-  assert.equal(removed.revision, null);
-  assert.equal(await store.get(claimCasKey), null);
+  await assert.rejects(clientA.remove(claimCasKey, {mustMatchRevision: 2}),
+    error => error.code === 'HOST_RESOURCE_FENCE_KEY_RESERVED');
+  assert.notEqual(await store.get(claimCasKey), null);
   assert.notEqual(await store.get(fswKey), null);
   const registry = await store.get(authority.registryKey);
   assert.equal(registry.value.generation, 2);
@@ -1101,4 +1122,47 @@ test('a jointly restored old anchor/store cannot satisfy the live Authority head
     foreignClaims: []
   }), error => error.code === 'HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH' &&
     error.details.includes('EXPECTED_HEAD'));
+});
+
+test('port read denies when a release advances the head during the read', async t => {
+  const identity = makeIdentity();
+  const built = buildFrozenResourceSet(identity);
+  const entry = authorizedEntry(identity, built, CLIENT_KEY_A, 'writer-a');
+  const {store, anchorPath, authority} = await openHarness(t, {clients: [entry]});
+  const client = clientFor({
+    authority, identity, keyPair: CLIENT_KEY_A, writerId: 'writer-a',
+    clientNonce: nonce()
+  });
+  await client.acquire();
+  let registryGets = 0;
+  let released = false;
+  const portStore = {
+    get: async key => {
+      const result = await store.get(key);
+      if (key === authority.registryKey) {
+        registryGets++;
+        if (registryGets === 2 && !released) {
+          released = true;
+          await client.release();
+        }
+      }
+      return result;
+    },
+    list: (...args) => store.list(...args)
+  };
+  const port = createHostResourceFencePort({
+    store: portStore, registryId: authority.registryId, anchorPath,
+    authorityPublicKeyPem: authority.publicKeyPem, writerSid: WRITER_SID,
+    repository: REPO, writerId: 'writer-a',
+    protectedClaimKey: identity.protectedClaimKey, sourceSha: identity.sourceSha,
+    frozenResourceSetSha256: built.frozenResourceSetSha256,
+    expectedHead: () => authority.anchorHead
+  });
+  await assert.rejects(port.readHeldFence({
+    repository: REPO, writerId: 'writer-a',
+    protectedClaimKey: identity.protectedClaimKey, sourceSha: identity.sourceSha,
+    foreignClaimCount: 0, foreignClaimsSha256: projectionDigest([]),
+    foreignClaims: []
+  }), error => error.code === 'HOST_RESOURCE_FENCE_ANCHOR_HEAD_MISMATCH' &&
+    error.details.includes('READ_ADVANCED'));
 });
