@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp, rm, writeFile, mkdir, readFile, readdir} from 'node:fs/promises';
+import {mkdtemp, rm, writeFile, mkdir, readFile, readdir, symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join, dirname} from 'node:path';
 import {createHash} from 'node:crypto';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createPrePostRecoveryController, parsePriorRunLog, RECOVERY_IDENTITY,
   acquireExclusiveHostFence, discoverHostRegistryPaths, inspectHostRegistryInventory,
-  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient, openReadOnlySqliteCasStore}
+  inspectHostProcessInventory, readHistoricalCiEvidenceFromClient, openReadOnlySqliteCasStore,
+  openExactTargetReadonlyRegistryStores}
   from './recover-prepost-reservation.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
@@ -714,6 +715,82 @@ test('read-only Host CAS opener requires an existing DB and rejects every write'
     await readonly.close();
     assert.deepEqual(await readFile(path),before);
   }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('target-only terminal verification opens exactly three read-only CAS files without a Host-wide scan',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'tally-i331-targetonly-'));
+  const paths=[
+    join(root,'a','registry-203.sqlite'),
+    join(root,'b','deep','registry-319.sqlite'),
+    join(root,'c','registry-331.sqlite'),
+  ];
+  const key='tally:v2:readonly-target-only-fixture';
+  let opened=null;
+  try{
+    for(const p of paths){
+      await mkdir(dirname(p),{recursive:true});
+      const w=await openSqliteCasStore({path:p,busyTimeoutMs:1000});
+      await w.put(key,{phase:'PUBLISHED_VERIFIED',issueRef:'#331'},{mustBeAbsent:true});
+      await w.close();
+    }
+    // These unrelated entries were fatal under the old recursive inventory.
+    // They are never enumerated by an exact target-only verifier.
+    await mkdir(join(root,'unrelated'),{recursive:true});
+    await writeFile(join(root,'unrelated','registry-999.sqlite'),'unrelated');
+    const before=await Promise.all(paths.map(p=>readFile(p)));
+    opened=await openExactTargetReadonlyRegistryStores(root,paths);
+    assert.equal(opened.size,3);
+    for(const p of paths){
+      const store=[...opened.entries()].find(([x])=>
+        x.replace(/\\/g,'/').toLowerCase()===p.replace(/\\/g,'/').toLowerCase())?.[1];
+      assert.ok(store,'selected exact CAS path must be present');
+      assert.equal((await store.get(key)).value.phase,'PUBLISHED_VERIFIED');
+      await assert.rejects(store.put(key,{phase:'DONE'},{mustMatchRevision:0}));
+    }
+    for(const store of opened.values())await store.close();
+    opened=null;
+    const after=await Promise.all(paths.map(p=>readFile(p)));
+    assert.deepEqual(after,before,'read-only target check must not modify the DB');
+  }finally{
+    if(opened)for(const store of opened.values()){try{await store.close();}catch{}}
+    await rm(root,{recursive:true,force:true});
+  }
+});
+
+test('target-only registry selection rejects outside paths, duplicates, missing files, and selected symlinks',async t=>{
+  const root=await mkdtemp(join(tmpdir(),'tally-i331-readonly-selection-'));
+  const outside=await mkdtemp(join(tmpdir(),'tally-i331-readonly-outside-'));
+  const paths=[join(root,'a','registry-203.sqlite'),
+    join(root,'b','registry-319.sqlite'),join(root,'c','registry-331.sqlite')];
+  try{
+    for(const path of paths){
+      await mkdir(dirname(path),{recursive:true});
+      const store=await openSqliteCasStore({path,busyTimeoutMs:1000});
+      await store.close();
+    }
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[paths[0],paths[0],paths[2]]),
+      /READ_ONLY_REGISTRY_SELECTION_DUPLICATE/);
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[...paths.slice(0,2),join(outside,'registry-331.sqlite')]),
+      /READ_ONLY_REGISTRY_OUTSIDE_HOST_ROOT/);
+    await assert.rejects(openExactTargetReadonlyRegistryStores(root,[...paths.slice(0,2),join(root,'missing.sqlite')]));
+    const alias=join(root,'alias.sqlite');
+    try{
+      await symlink(paths[2],alias,'file');
+      await assert.rejects(openExactTargetReadonlyRegistryStores(root,[paths[0],paths[1],alias]),
+        /READ_ONLY_REGISTRY_PATH_UNTRUSTED/);
+    }catch(error){
+      if(!['EPERM','EACCES','ENOSYS'].includes(error?.code))throw error;
+      t.diagnostic('symlink privilege unavailable; exact realpath and missing paths still fail closed');
+    }
+    // Unrelated tree entries do not affect exact selection.
+    await writeFile(join(root,'stray.sqlite'),'not a CAS store');
+    const got=await openExactTargetReadonlyRegistryStores(root,paths);
+    assert.equal(got.size,3);
+    for(const store of got.values())await store.close();
+  }finally{
+    await rm(root,{recursive:true,force:true});
+    await rm(outside,{recursive:true,force:true});
+  }
 });
 
 test('complete registry inventory discovers nested registries and detects a second pending Task', async () => {
