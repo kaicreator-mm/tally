@@ -4,12 +4,12 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-09T01:30:00Z",
+  "observedAt": "2026-11-09T01:34:07.707Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
-    "taskIssueCount": 50,
-    "claimCommentPages": 50
+    "taskIssueCount": 51,
+    "claimCommentPages": 51
   },
   "taskIssues": [
     {
@@ -711,7 +711,7 @@
         "state:blocked"
       ],
       "createdAt": "2026-11-05T18:54:59Z",
-      "updatedAt": "2026-11-09T01:30:00Z",
+      "updatedAt": "2026-11-09T00:46:48Z",
       "closedAt": null,
       "scopeDisposition": "TERMINAL_DISPOSITION_VERIFIED",
       "dispatchableByDisposition": false,
@@ -741,7 +741,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-08T00:35:27Z",
-      "updatedAt": "2026-11-09T01:30:00Z",
+      "updatedAt": "2026-11-09T00:57:43Z",
       "closedAt": null,
       "scopeDisposition": "TERMINAL_DISPOSITION_VERIFIED_CI_QUALIFIED",
       "dispatchableByDisposition": false,
@@ -764,14 +764,14 @@
     },
     {
       "issueNumber": 383,
-      "title": "[v2][P0 gap] Wire shared Host resource fence into real Claim publisher/controller after #319 serial handoff",
+      "title": "[v2][P0 gap][PLANNING ONLY] Wire shared Host resource fence into real Claim publisher/controller after #319 serial handoff",
       "issueState": "open",
       "labels": [
         "type:task",
         "state:ready"
       ],
-      "createdAt": "2026-11-08T23:20:11Z",
-      "updatedAt": "2026-11-09T01:30:00Z",
+      "createdAt": "2026-11-08T23:30:33Z",
+      "updatedAt": "2026-11-09T01:25:56Z",
       "closedAt": null,
       "scopeDisposition": "SUCCESSOR_R3_ADMITTED_CANDIDATE",
       "dispatchableByDisposition": false,
@@ -1717,6 +1717,19 @@
       "commentId": null,
       "commentRef": null,
       "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 383,
+      "sourceSha": "d8d80ed9f6ff2dffad616353d27b20f95a2ee1ff",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i383:fence-wiring:1",
+      "dispatchId": "fence-wiring:383:61a2e3c1-6365-4ded-802b-d02caa373c04",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#383:builder:__default__",
+      "commentId": 6730033866,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/383#issuecomment-6730033866",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     }
   ],
   "claimAcceptance": "NOT_VERIFIED",
@@ -1987,7 +2000,8 @@
     "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED.",
     "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved.",
     "R17 combined refresh: #377 (defect Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc, independent Pack review 5817226448 PASS, Owner receipt 6719378711, exact two-path digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac) and #370 (exact R8 eight-path digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27; Governance Pack PR #376 HEAD 58abb60f0b2061b5124ea66a3e212210bf843de8 / Tree 3932120992d124d25e3987dc7b8d80f954fc655d / PackBlob f1de3aaeb8f85b86a721d2dc806335392efc032a after the original R8 review 5817672588 BLOCK at d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / f81fa0775a979623e4e4c41ebbff1726683d96e3 with P0=0/P1=3/P2=1; fresh independent final review REQUIRED and Owner=NONE; R7 review 5817590966 BLOCK for native task-classification corrected by Issue comment 6720594384) were added in one pass under the existing A Claim/FSW/Writer. Both remain type:task/state:planned with no Claim, FSW, native dependency or source permission; neither was promoted to state:ready. core Outcome Closure remains NOT_VERIFIED: 21 closed Issues of 50 do not establish verified Outcome Closure (21/50 measurement preserved).",
-    "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations."
+    "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations.",
+    "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69)."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2494,16 +2508,31 @@
           "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
         ],
         "finding": "#370 exact R8 eight-path candidate shares five paths with #319 accepted historical nine-path FSW (#319x#370=5). #319 remains OPEN/state:blocked with no inferred Task Closure; its Claim/FSW cannot be reused or treated as terminated by a fresh empty #370 registry. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before any #370 source work. Recorded as PLANNED edge #319 -> #370 only; no native dependency, Owner receipt or source permission."
+      },
+      {
+        "id": "R3_383_SUCCESSOR_OVER_TERMINAL_319_FSW",
+        "taskIssues": [
+          319,
+          383
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 29 open Task issue bodies at 2026-11-08T11:29:14.019Z; path patterns are retained literally.",
-      "openTasksWithWriteSet": 27,
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z; path patterns are retained literally.",
+      "openTasksWithWriteSet": 28,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 68,
+      "nonzeroPairs": 69,
       "pairs": [
         {
           "tasks": [
@@ -3360,6 +3389,20 @@
             "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
             "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
           ]
+        },
+        {
+          "tasks": [
+            319,
+            383
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
         }
       ]
     },
@@ -3498,6 +3541,11 @@
         "issueNumber": 377,
         "pathCount": 2,
         "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac"
+      },
+      {
+        "issueNumber": 383,
+        "pathCount": 6,
+        "pathsSha256": "41538b7fc0142bc0d78be08a1432de734b55106f79ed9635b37fbc2ff607d4ff"
       }
     ]
   }
