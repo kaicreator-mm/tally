@@ -2001,7 +2001,8 @@
     "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved.",
     "R17 combined refresh: #377 (defect Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc, independent Pack review 5817226448 PASS, Owner receipt 6719378711, exact two-path digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac) and #370 (exact R8 eight-path digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27; Governance Pack PR #376 HEAD 58abb60f0b2061b5124ea66a3e212210bf843de8 / Tree 3932120992d124d25e3987dc7b8d80f954fc655d / PackBlob f1de3aaeb8f85b86a721d2dc806335392efc032a after the original R8 review 5817672588 BLOCK at d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / f81fa0775a979623e4e4c41ebbff1726683d96e3 with P0=0/P1=3/P2=1; fresh independent final review REQUIRED and Owner=NONE; R7 review 5817590966 BLOCK for native task-classification corrected by Issue comment 6720594384) were added in one pass under the existing A Claim/FSW/Writer. Both remain type:task/state:planned with no Claim, FSW, native dependency or source permission; neither was promoted to state:ready. core Outcome Closure remains NOT_VERIFIED: 21 closed Issues of 50 do not establish verified Outcome Closure (21/50 measurement preserved).",
     "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations.",
-    "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69)."
+    "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69).",
+    "R18 repair 2 (2026-11-09): independent re-review confirmed the machine-checked invariants fixed (real freeze writer accepts) but found the writeSetAudit pair matrix missed 370x383=6 under the audit's own snapshot semantics (#370 R8 eight-path historical candidate is a superset of the #383 six-path set). Added the 370x383 pair, nonzeroPairs 69->70, and stated the snapshot semantics explicitly in the method and overlap-group finding."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2522,17 +2523,17 @@
           "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
           "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
         ],
-        "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW."
+        "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW. #383x#370=6 under the snapshot base: the historical #370 R8 eight-path candidate (superseded by the admitted R19 two-path library scope, which shares zero paths with #383) was a superset of the entire #383 write set; its serialization is resolved by the verified #370 terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352) and the #383 Claim/FSW on a dedicated registry."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z; path patterns are retained literally.",
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z (snapshot semantics: each open task is compared against its allowed_write_set as present in its issue body at that base snapshot — #370 counts as its historical R8 eight-path candidate set, under which #383x#370=6, i.e. the R8 set is a superset of the #383 six-path set; #319 counts as its nine-path FSW, #383x#319=5); path patterns are retained literally.",
       "openTasksWithWriteSet": 28,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 69,
+      "nonzeroPairs": 70,
       "pairs": [
         {
           "tasks": [
@@ -3402,6 +3403,21 @@
             "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
             "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
             "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            370,
+            383
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+            "packages/tally-github-native-c/test/task-claim-composition.test.mjs"
           ]
         }
       ]
