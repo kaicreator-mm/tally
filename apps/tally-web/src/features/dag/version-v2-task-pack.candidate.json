@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-09T19:15:37.427Z",
+  "observedAt": "2026-11-09T19:31:44.566Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-09T17:35:30Z",
+      "updatedAt": "2026-11-09T19:29:49Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -1771,7 +1771,8 @@
     "R20.3 (2026-11-10): post-batch refresh. Batch 02 complete: all seven edges materialized NATIVE_EDGE_VERIFIED (274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284). Newly verified native edges recorded in edges[] and removed from plannedEdges (27->20; 17 NATIVE / 20 PLANNED of 37): 274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
     "R20.4 (2026-11-10): post-batch refresh. Batch 03 complete: all five edges materialized NATIVE_EDGE_VERIFIED (275->261, 208->264, 273->276, 331->284, 370->383). Newly verified native edges recorded in edges[] and removed from plannedEdges (20->15; 22 NATIVE / 15 PLANNED of 37): 275->261, 208->264, 273->276, 331->284, 370->383. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
     "R20.5 (2026-11-10): post-batch refresh. Batch 04 complete: all four edges materialized NATIVE_EDGE_VERIFIED (203->261, 210->264, 219->276, 319->370). Newly verified native edges recorded in edges[] and removed from plannedEdges (15->11; 26 NATIVE / 11 PLANNED of 37): 203->261, 210->264, 219->276, 319->370. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
-    "R21 (2026-11-10): post-batch refresh. FINAL: all 33 planned edges materialized NATIVE_EDGE_VERIFIED — batches 01-04 (22 edges) plus the merged final serial group of 11 (219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276) under the R20.5 batching-optimization receipt. The Pack is now fully native: 51 Tasks, 37 NATIVE edges, 0 PLANNED. This is the freeze-ready candidate. Newly verified native edges recorded in edges[] and removed from plannedEdges (11->0; 37 NATIVE / 0 PLANNED of 37): 219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed."
+    "R21 (2026-11-10): post-batch refresh. FINAL: all 33 planned edges materialized NATIVE_EDGE_VERIFIED — batches 01-04 (22 edges) plus the merged final serial group of 11 (219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276) under the R20.5 batching-optimization receipt. The Pack is now fully native: 51 Tasks, 37 NATIVE edges, 0 PLANNED. This is the freeze-ready candidate. Newly verified native edges recorded in edges[] and removed from plannedEdges (11->0; 37 NATIVE / 0 PLANNED of 37): 219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R21.1 (2026-11-10): post-batch refresh. Freeze-current micro-refresh: the freeze-port roster readback requires all 51 live updatedAt values to equal the pack snapshot exactly; the first freeze attempt correctly failed closed (NATIVE_TASK_ROSTER_READBACK_FAILED, zero writes) because witness comments posted on #260 bumped its updatedAt after R21. This refresh re-reads all 51 live values; witness anchors move to non-roster issue #259 for the retried freeze. Newly verified native edges recorded in edges[] and removed from plannedEdges (0->0; 37 NATIVE / 0 PLANNED of 37): . All 51 live Task issues re-read; drift corrected: #260 updatedAt 2026-11-09T17:35:30Z->2026-11-09T19:29:49Z. No other field, claim or audit data changed."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
