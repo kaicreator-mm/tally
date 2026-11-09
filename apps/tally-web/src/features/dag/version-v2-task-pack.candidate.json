@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-09T01:34:07.707Z",
+  "observedAt": "2026-11-09T13:15:21.353Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -1972,6 +1972,27 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/370",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
       "reason": "#370 exact R8 eight-path candidate overlaps #319 accepted historical nine-path FSW on five paths. #319 remains OPEN/state:blocked with no inferred Task Closure and its original Claim/FSW cannot be reused. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before #370 source work; a fresh empty #370 registry is not evidence that #319 terminated. PLANNED only, not a native dependency."
+    },
+    {
+      "from": 319,
+      "to": 383,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/383",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319"
+    },
+    {
+      "from": 370,
+      "to": 383,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/383",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/370"
+    },
+    {
+      "from": 383,
+      "to": 284,
+      "kind": "PLANNED",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/383"
     }
   ],
   "notes": [
@@ -2002,7 +2023,8 @@
     "R17 combined refresh: #377 (defect Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc, independent Pack review 5817226448 PASS, Owner receipt 6719378711, exact two-path digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac) and #370 (exact R8 eight-path digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27; Governance Pack PR #376 HEAD 58abb60f0b2061b5124ea66a3e212210bf843de8 / Tree 3932120992d124d25e3987dc7b8d80f954fc655d / PackBlob f1de3aaeb8f85b86a721d2dc806335392efc032a after the original R8 review 5817672588 BLOCK at d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / f81fa0775a979623e4e4c41ebbff1726683d96e3 with P0=0/P1=3/P2=1; fresh independent final review REQUIRED and Owner=NONE; R7 review 5817590966 BLOCK for native task-classification corrected by Issue comment 6720594384) were added in one pass under the existing A Claim/FSW/Writer. Both remain type:task/state:planned with no Claim, FSW, native dependency or source permission; neither was promoted to state:ready. core Outcome Closure remains NOT_VERIFIED: 21 closed Issues of 50 do not establish verified Outcome Closure (21/50 measurement preserved).",
     "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations.",
     "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69).",
-    "R18 repair 2 (2026-11-09): independent re-review confirmed the machine-checked invariants fixed (real freeze writer accepts) but found the writeSetAudit pair matrix missed 370x383=6 under the audit's own snapshot semantics (#370 R8 eight-path historical candidate is a superset of the #383 six-path set). Added the 370x383 pair, nonzeroPairs 69->70, and stated the snapshot semantics explicitly in the method and overlap-group finding."
+    "R18 repair 2 (2026-11-09): independent re-review confirmed the machine-checked invariants fixed (real freeze writer accepts) but found the writeSetAudit pair matrix missed 370x383=6 under the audit's own snapshot semantics (#370 R8 eight-path historical candidate is a superset of the #383 six-path set). Added the 370x383 pair, nonzeroPairs 69->70, and stated the snapshot semantics explicitly in the method and overlap-group finding.",
+    "R19 (2026-11-09): closes the two A-side P3 gaps recorded in the E0 R10/R11 reviews — adds the missing #383 scopeDispositions row and projects the three R18-added PLANNED edges (319->383, 370->383, 383->284) into plannedEdges (30->33, now a complete projection of the 33 PLANNED edges in edges[]). Also pins the #383 disposition facts (Claim 6730033866, implementation ab4976c5 review PASS, CI #514, PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645). No taskIssues/edges/claimSubjects rows changed; writeSetAudit unchanged (its 70-pair matrix and snapshot semantics are already correct)."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2307,6 +2329,12 @@
         "disposition": "PLANNED_REVIEWED_PACK_OWNER_APPROVED_SOURCE_ADMISSION_BLOCKED",
         "dispatchableByDisposition": false,
         "note": "Formal planned successor-defect Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Immutable Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / Tree 2dd3d3fad0ffa5afb4e99eee94ada266afdcd882 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc; independent Pack review 5817226448 PASS (P0=0/P1=0/P2=2) and exact PackBlob Owner receipt 6719378711 OWNER_APPROVED. Exact two normalized paths digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac; both are historical OPEN #211-owned, already-integrated paths, so no concurrent writer or historical Claim/FSW/merged-PR reuse is allowed. No native Claim or FSW exists; source admission remains BLOCK until A/#260 R17 independent Exact-SHA PASS, current metadata/dependency/overlap revalidation, a genuine selected-Host shared-writer fence, fresh #377 Claim and per-task FROZEN_DAG_WRITESET, and a separate JIT branch. No #370/#284 Host competition, #203 POST, native dependency write, freeze, merge, tag, release or deployment."
+      },
+      {
+        "issueNumber": 383,
+        "disposition": "R3_ADMITTED_CLAIMED_IMPLEMENTATION_REVIEW_PASS_PHYSICAL_GATE_PASS",
+        "dispatchableByDisposition": false,
+        "note": "Successor fence-wiring task: Pack R3 SOUND (6729936160), Owner receipt 6729962910, recorded Claim 6730033866 (dispatch fence-wiring:383:61a2e3c1…, dedicated registry), implementation HEAD ab4976c5 independent review PASS + CI #514 SUCCESS 81/81, PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 (gate receipt 6730634645). Closed as a delivered increment pending #264 integration join; not counted as verified Outcome Closure."
       }
     ]
   },
