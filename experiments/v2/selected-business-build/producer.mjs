@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -97,7 +97,8 @@ const modules = [
       'intent:admitClaimedTask','intent:runLocalCodexAttempt','intent:joinReviewedCandidates',
       'intent:publishReviewedCandidate','intent:freezeProductIntake',
       'intent:admitProjectIntake','intent:publishMaintenanceIssue',
-      'intent:recordTaskLearningOutcome','intent:deliverQualifiedRelease']}),
+      'intent:recordTaskLearningOutcome','intent:deliverQualifiedRelease',
+      'intent:addNativeTaskDependency','intent:freezeVersionTaskDag']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -125,7 +126,9 @@ const modules = [
         'intent:admitProjectIntake']:[]),
       ...(process.env.T219_MAINTENANCE==='1'?['intent:publishMaintenanceIssue',
         'intent:recordTaskLearningOutcome']:[]),
-      ...(process.env.T222_RELEASE_DELIVERY==='1'?['intent:deliverQualifiedRelease']:[])]}),
+      ...(process.env.T222_RELEASE_DELIVERY==='1'?['intent:deliverQualifiedRelease']:[]),
+      ...(process.env.T284_VERSION_TASK_DAG==='1'?
+        ['intent:addNativeTaskDependency','intent:freezeVersionTaskDag']:[])]}),
     capabilityId:'tally-local-codex',
     handlers:[{operationId:'tally.runLocalCodexAttempt',handler:'runLocalCodexAttempt'},
       ...(process.env.T06N_CONCURRENT==='1'?
@@ -139,7 +142,10 @@ const modules = [
         [{operationId:'tally.publishMaintenanceIssue',handler:'publishMaintenanceIssue'},
           {operationId:'tally.recordTaskLearningOutcome',handler:'recordTaskLearningOutcome'}]:[]),
       ...(process.env.T222_RELEASE_DELIVERY==='1'?
-        [{operationId:'tally.deliverQualifiedRelease',handler:'hostReleaseDelivery'}]:[])],
+        [{operationId:'tally.deliverQualifiedRelease',handler:'hostReleaseDelivery'}]:[]),
+      ...(process.env.T284_VERSION_TASK_DAG==='1'?
+        [{operationId:'tally.addNativeTaskDependency',handler:'addNativeTaskDependency'},
+          {operationId:'tally.freezeVersionTaskDag',handler:'freezeVersionTaskDag'}]:[])],
     externalEffect:true,
     externalImports:{node:[],npm:['@kaicreator/tally-local-codex-host-bundle'],
       native:['better-sqlite3']}}]:[]),
@@ -169,7 +175,12 @@ const routes=[
         capabilityId:'tally-local-codex',handlerId:'recordTaskLearningOutcome'}]:[]),
     ...(process.env.T222_RELEASE_DELIVERY==='1'?
       [{intentId:'deliverQualifiedRelease',operationId:'tally.deliverQualifiedRelease',
-        capabilityId:'tally-local-codex',handlerId:'hostReleaseDelivery'}]:[])]:[]),
+        capabilityId:'tally-local-codex',handlerId:'hostReleaseDelivery'}]:[]),
+    ...(process.env.T284_VERSION_TASK_DAG==='1'?
+      [{intentId:'addNativeTaskDependency',operationId:'tally.addNativeTaskDependency',
+        capabilityId:'tally-local-codex',handlerId:'addNativeTaskDependency'},
+        {intentId:'freezeVersionTaskDag',operationId:'tally.freezeVersionTaskDag',
+          capabilityId:'tally-local-codex',handlerId:'freezeVersionTaskDag'}]:[])]:[]),
 ];
 const options={appId:'app:tally-v2-readiness',audience:'tally-engineering',
   buildId:'tally-v2-t02b-source-proof',targetProfile:V10_TARGET_PROFILE,
@@ -187,7 +198,8 @@ const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
   (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0)+
   (localCodexBytes&&process.env.T219_MAINTENANCE==='1'?2:0)+
-  (localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'?1:0);
+  (localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'?1:0)+
+  (localCodexBytes&&process.env.T284_VERSION_TASK_DAG==='1'?2:0);
 assert.equal(built.routes.length,selectedRouteCount);
 if(claimBytes){
   assert.equal(built.routes[1].intentId,'admitClaimedTask');
@@ -242,6 +254,18 @@ if(localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'){
   assert.equal(built.routes.some(x=>x.intentId==='deliverQualifiedRelease'),false,
     'T222 release delivery route is selected only when T222_RELEASE_DELIVERY=1');
 }
+if(localCodexBytes&&process.env.T284_VERSION_TASK_DAG==='1'){
+  for(const [intent,handler] of [['addNativeTaskDependency','addNativeTaskDependency'],
+    ['freezeVersionTaskDag','freezeVersionTaskDag']]){
+    const route=built.routes.find(x=>x.intentId===intent);
+    assert.equal(route.capabilityId,'tally-local-codex',intent);
+    assert.equal(route.handlerId,handler,intent);
+  }
+}else{
+  assert.equal(built.routes.some(x=>x.intentId==='addNativeTaskDependency')||
+    built.routes.some(x=>x.intentId==='freezeVersionTaskDag'),false,
+    'E0 version Task DAG routes are selected only when T284_VERSION_TASK_DAG=1');
+}
 assert.equal(built.modules.find(x=>x.role==='business').moduleSha256,sha256Hex(bBytes));
 assert.ok(built.subjectDigest);
 if(process.env.T02B_SEALED_APP_OUTPUT) {
@@ -279,6 +303,10 @@ for(const [caseName,mutate,code] of [
    ...(process.env.T222_RELEASE_DELIVERY==='1'?[
     ['release-delivery-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='deliverQualifiedRelease'?{...r,handlerId:'unselectedReleaseHandler'}:r)}), 'V10_ROUTE_INVALID'],
    ]:[]),
+   ...(process.env.T284_VERSION_TASK_DAG==='1'?[
+    ['e0-dependency-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='addNativeTaskDependency'?{...r,handlerId:'unselectedDependencyHandler'}:r)}), 'V10_ROUTE_INVALID'],
+    ['e0-dag-freeze-wrong-route-handler',opts=>({...opts,routes:opts.routes.map(r=>r.intentId==='freezeVersionTaskDag'?{...r,handlerId:'unselectedDagFreezeHandler'}:r)}), 'V10_ROUTE_INVALID'],
+   ]:[]),
   ]:[]),
 ]){
   assert.throws(()=>buildV10App(mutate(options)),e=>e instanceof V10BuildError && e.code===code,caseName);
@@ -297,6 +325,7 @@ console.log(JSON.stringify({
   projectIntakeRoutes:process.env.T210_PROJECT_INTAKE==='1'?'SELECTED':'NOT_SELECTED',
   maintenanceRoutes:process.env.T219_MAINTENANCE==='1'?'SELECTED':'NOT_SELECTED',
   releaseDeliveryRoute:process.env.T222_RELEASE_DELIVERY==='1'?'SELECTED':'NOT_SELECTED',
+  versionTaskDagRoutes:process.env.T284_VERSION_TASK_DAG==='1'?'SELECTED':'NOT_SELECTED',
   githubEffect:'NOT_RUN',taskPass:false,releasePass:false
 },null,2));
 console.log('T02B_PUBLIC_BUILD_SELECTED_B=PASS');

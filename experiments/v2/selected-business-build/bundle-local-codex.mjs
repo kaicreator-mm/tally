@@ -16,6 +16,8 @@ const intakeReadModel=resolve(tally,'packages/tally-github-c/src/project-intake.
 const maintenanceHostModule=resolve(tally,'experiments/v2/maintenance/host-maintenance.mjs');
 const maintenanceEffects=resolve(tally,'packages/tally-github-c/src/maintenance-effects.mjs');
 const releaseHostModule=resolve(tally,'experiments/v2/release/host-release.mjs');
+const versionTaskDagHostModule=resolve(tally,
+  'experiments/v2/selected-business-build/version-task-dag-host.mjs');
 const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
@@ -38,6 +40,7 @@ import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
   readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
+import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
 import {createHash} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
@@ -501,10 +504,55 @@ export async function hostReleaseDelivery(input){
   }catch{
     return {state:'NOT_ADMITTED',reason:'HOST_QUALIFICATION_READ_UNKNOWN',
       issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
-      operation:input.operation,claimGeneration:1,claimAccepted:true,
-      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
-      githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+      operation:input.operation,claimGeneration:1,claimAccepted:true,admitted:false,
+      authorized:false,agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',
+      releasePublished:false,taskPass:false,releasePass:false};
   }
+}
+// E0 #284 — version Task DAG write provider binding. All authority stays
+// Host-owned: env-pinned exact version SHA, the dedicated #284 registry, the
+// exclusive writer identity and the write-scoped token are read from Host env
+// at call time and never enter sealed bytes or caller input. The root Claim
+// publication is Host-process-only and is not reachable here.
+function versionTaskDagHostFor(){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_WRITE_TOKEN??env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const hostOctokit=new Octokit({auth:token,request:{timeout:15000}});
+  return createVersionTaskDagHost({env,octokit:hostOctokit,
+    openStore:openSqliteCasStore});
+}
+// Replay lane only (same convention as runLocalCodexAttempt): a replay
+// consumer still crosses the full sealed boundary and the Business projection,
+// but observes only bounded already-present / already-frozen facts. No native
+// GitHub write and no CAS mutation can ever run in this mode.
+function versionTaskDagReplayObservation(operation,input){
+  if(operation==='addNativeTaskDependency')
+    return {status:'NATIVE_EDGE_PRESENT',
+      reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      blockedIssueNumber:input.blockedIssueNumber,
+      blockedByIssueNumber:input.blockedByIssueNumber,dependencyId:1,
+      native:true,githubEffect:'NOT_RUN',writePerformed:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false};
+  return {status:'REPLAY',reason:'IDENTICAL_FREEZE_REPLAY',
+    repository:'kaicreator-mm/tally',versionId:'version/v2',
+    taskPackRef:input.taskPackRef,taskPackBlobSha:input.taskPackBlobSha,
+    blobSha:input.taskPackBlobSha,frozenAt:new Date().toISOString(),
+    taskCount:3,edgeCount:1,writeSetRecordCount:3,githubEffect:'NOT_RUN',
+    dependencyWritesAfterFreeze:'REFUSED',
+    authorized:false,admitted:false,taskPass:false,releasePass:false};
+}
+export async function addNativeTaskDependency(input){
+  if(process.env.TALLY_LOCAL_REPLAY==='1')
+    return versionTaskDagReplayObservation('addNativeTaskDependency',input??{});
+  return versionTaskDagHostFor().addNativeTaskDependency(input);
+}
+export async function freezeVersionTaskDag(input){
+  if(process.env.TALLY_LOCAL_REPLAY==='1')
+    return versionTaskDagReplayObservation('freezeVersionTaskDag',input??{});
+  return versionTaskDagHostFor().freezeVersionTaskDag(input);
 }
 `;
 const result=await build({

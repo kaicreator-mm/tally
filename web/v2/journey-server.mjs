@@ -189,6 +189,10 @@ const INTAKE_ACTIONS=['submit-goal','select-evidence','confirm-inspect','draft-p
 const MAINTENANCE_ACTIONS=['report-defect','review-candidate','load-learning',
   'record-learning','publish-maintenance-issue'];
 const RELEASE_ACTIONS=['merge','tag','publish'];
+// E0 #284: the two Host-mounted privileged version Task DAG operations. The
+// root Claim publication is deliberately NOT an action: it stays a
+// Host-process-only T06d operation with no HTTP surface at all.
+const VERSION_TASK_DAG_ACTIONS=['add-native-dependency','freeze'];
 const RELEASE_SEAM_STATUSES=new Set(['DENIED','UNKNOWN','NOT_RUN','OBSERVED',
   'RECONCILIATION_REQUIRED','GITHUB_EFFECT_UNKNOWN','STALE']);
 /** J07c: a seam result may only carry fail-closed observation shapes; any
@@ -199,6 +203,40 @@ function verifyReleaseSeamResult(result){
     result.releasePass!==false||result.authorized===true||
     result.taskPass===true||result.releasePublished===true)return null;
   return result;
+}
+const VERSION_TASK_DAG_SEAM_STATUSES=new Set(['NATIVE_EDGE_VERIFIED',
+  'NATIVE_EDGE_PRESENT','BLOCKED','UNKNOWN','FROZEN','REPLAY']);
+/** E0 #284: a version Task DAG seam result may only carry the exact selected
+ * Host observation statuses with every authority flag false; any forged or
+ * malformed shape degrades to DENIED here with zero effects. */
+function verifyVersionTaskDagSeamResult(result){
+  if(!result||typeof result!=='object'||Array.isArray(result)||
+    !VERSION_TASK_DAG_SEAM_STATUSES.has(result.status)||
+    result.authorized!==false||result.admitted!==false||
+    result.taskPass!==false||result.releasePass!==false)return null;
+  return result;
+}
+/** E0 #284: strict body allowlist for the two privileged operations. */
+function sanitizeVersionTaskDagArgs(args){
+  if(args===undefined)return {};
+  if(!args||typeof args!=='object'||Array.isArray(args))return null;
+  const out={},known=Object.keys(args);
+  if(known.some(key=>!['taskPackRef','taskPackBlobSha','blockedIssueNumber',
+      'blockedByIssueNumber'].includes(key)))return null;
+  if(args.taskPackRef!==undefined){
+    if(typeof args.taskPackRef!=='string'||
+       !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\/[^\s]+$/.test(args.taskPackRef))
+      return null;
+    out.taskPackRef=args.taskPackRef;}
+  if(args.taskPackBlobSha!==undefined){
+    if(typeof args.taskPackBlobSha!=='string'||!/^[a-f0-9]{40}$/.test(args.taskPackBlobSha))
+      return null;
+    out.taskPackBlobSha=args.taskPackBlobSha;}
+  for(const key of ['blockedIssueNumber','blockedByIssueNumber'])
+    if(args[key]!==undefined){
+      if(!Number.isSafeInteger(args[key])||args[key]<1)return null;
+      out[key]=args[key];}
+  return out;
 }
 const boundedString=value=>typeof value==='string'&&value.length>0&&value.length<=256;
 function sanitizeMaintenanceArgs(args){
@@ -297,7 +335,8 @@ async function staticAppResponse(relative){
 }
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
-  releaseHost,releaseSealedDispatch,v2ReadModelHost,v2GuidedFormHost}={}){
+  releaseHost,releaseSealedDispatch,v2ReadModelHost,v2GuidedFormHost,
+  versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
       {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
@@ -449,6 +488,59 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         const result=payload.kind==='start'?await controller.start(payload.sourceSha):
           await controller.reviewRepair(payload.sourceSha);
         return send(result.status==='PASS'?200:502,'application/json',json(result));
+      }
+      // ---- E0 #284: Host-mounted privileged version Task DAG operations ----
+      // Same-origin + action key + exact source SHA + strict body allowlist;
+      // absent a sealed selected-Host seam every request DENIES with zero
+      // effects. The root Claim path is NOT routable here (Host-process-only).
+      if(req.method==='POST'&&url.pathname==='/api/v2/version-task-dag/actions'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+          req.headers.origin!==origin)
+          return send(403,'application/json',json({status:'DENIED',
+            reason:'CSRF_OR_ORIGIN'}));
+        const payload=JSON.parse(await body(req,8192));
+        if(payload.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({status:'STALE_SOURCE',
+            reason:'SOURCE_SHA_MISMATCH'}));
+        if(!VERSION_TASK_DAG_ACTIONS.includes(payload.kind))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'UNKNOWN_ACTION'}));
+        if(typeof payload.args!=='object'||payload.args===null||
+           Array.isArray(payload.args))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'ARGS_INVALID'}));
+        const args=sanitizeVersionTaskDagArgs(payload.args);
+        if(args===null||(payload.kind==='add-native-dependency'&&(
+            args.taskPackRef===undefined||args.taskPackBlobSha===undefined||
+            args.blockedIssueNumber===undefined||
+            args.blockedByIssueNumber===undefined))||
+          (payload.kind==='freeze'&&(args.taskPackRef===undefined||
+            args.taskPackBlobSha===undefined||
+            Object.keys(args).some(key=>['blockedIssueNumber',
+              'blockedByIssueNumber'].includes(key)))))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'ARGS_INVALID'}));
+        if(typeof versionTaskDagSealedDispatch!=='function'){
+          const deniedResult={status:'DENIED',reason:'HOST_SEAM_NOT_CONNECTED',
+            githubEffect:'NOT_RUN',authorized:false,admitted:false,
+            taskPass:false,releasePass:false};
+          return send(200,'application/json',json(deniedResult));
+        }
+        let observed;
+        try{
+          observed=await versionTaskDagSealedDispatch({
+            operation:payload.kind==='add-native-dependency'?
+              'addNativeTaskDependency':'freezeVersionTaskDag',
+            sourceSha:payload.sourceSha,input:{...args}});
+        }catch{
+          const failed={status:'DENIED',reason:'SEAM_ERROR',githubEffect:'NOT_RUN',
+            authorized:false,admitted:false,taskPass:false,releasePass:false};
+          return send(200,'application/json',json(failed));
+        }
+        const verified=verifyVersionTaskDagSeamResult(observed)??
+          {status:'DENIED',reason:'SEAM_SHAPE_INVALID',githubEffect:'NOT_RUN',
+            authorized:false,admitted:false,taskPass:false,releasePass:false};
+        return send(200,'application/json',json(verified));
       }
       // ---- UI-E #232: v2 shell read models + feature gate -----------------
       // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or

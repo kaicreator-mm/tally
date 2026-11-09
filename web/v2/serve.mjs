@@ -97,6 +97,30 @@ export function readUiHostEnvironment(env){
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
   const settings=readUiHostEnvironment(env);
+  // E0 #284: optional Host-mounted privileged seam for the two version Task
+  // DAG operations (official blocked_by dependency write + immutable DAG
+  // freeze). The browser/Agent dispatch boundary above stays READ-ONLY: this
+  // seam only exists when the trusted Host process supplies its own env pins
+  // (write-scoped token, dedicated registry, exclusive writer identity); it
+  // never derives authority from a request. The root Claim publication is NOT
+  // mountable here — it remains a Host-process-only T06d operation.
+  let versionTaskDagSealedDispatch;
+  if(env.TALLY_V2_VERSION_TASK_DAG==='host-mounted'){
+    const token=env.TALLY_GITHUB_WRITE_TOKEN??settings.token;
+    if(typeof token!=='string'||token.length<8)
+      throw new TypeError('VERSION_TASK_DAG_HOST_TOKEN_REQUIRED');
+    const {Octokit}=await import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js');
+    const {openSqliteCasStore}=await import(
+      '@kaicreator/domain-harness-host-node');
+    const {createVersionTaskDagHost}=await import(
+      '../experiments/v2/selected-business-build/version-task-dag-host.mjs');
+    const host=createVersionTaskDagHost({env,octokit:new Octokit({auth:token,
+      request:{timeout:15000}}),openStore:openSqliteCasStore});
+    versionTaskDagSealedDispatch=async({operation,input})=>
+      operation==='addNativeTaskDependency'?
+        host.addNativeTaskDependency(input):host.freezeVersionTaskDag(input);
+  }
   const nativeC=createUiNativeSource({token:settings.token,
     owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
@@ -136,7 +160,10 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   const server=createAlmServer(config,{
     run:async()=>({status:'FAIL',reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',
       exitCode:1,result:null}),
-    v2ReadModelHost
+    v2ReadModelHost,
+    // E0 seam: undefined unless the trusted Host explicitly mounted it above;
+    // every other route keeps the exact read-only semantics.
+    ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{})
   });
   const address=await server.listen();
   return {address,close:()=>server.close()};
