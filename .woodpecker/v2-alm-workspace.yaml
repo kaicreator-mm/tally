@@ -20,6 +20,11 @@ when:
     branch: [task/tally-i92-k3]
   - event: [pull_request, push, manual]
     branch: [task/tally-i219-k3]
+  # CI eligibility replay branch for the #284 E0 implementation
+  # (amendment pattern of #370 6729584628): runs this profile over the
+  # unchanged E0 HEAD with a CI-only commit that modifies only this file.
+  - event: [pull_request, push, manual]
+    branch: [task/i284-e0-bootstrap-r10-20261109-ci]
 
 labels:
   backend: local
@@ -69,9 +74,10 @@ steps:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
       - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com yaml@2.8.1
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
-      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs packages/tally-github-native-c/test/version-task-dag-write-port.test.mjs experiments/v2/selected-business-build/version-task-dag-host.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
