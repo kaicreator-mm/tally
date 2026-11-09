@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-09T18:38:40.482Z",
+  "observedAt": "2026-11-09T18:47:28.097Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -834,7 +834,7 @@
     {
       "from": 274,
       "to": 262,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
       "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
@@ -866,7 +866,7 @@
     {
       "from": 273,
       "to": 264,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
       "reason": "Final installed J01-J08 integration waits for governed Replan."
@@ -922,7 +922,7 @@
     {
       "from": 261,
       "to": 276,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
       "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
@@ -1009,14 +1009,14 @@
     {
       "from": 312,
       "to": 219,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
     },
     {
       "from": 319,
       "to": 331,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
       "reason": "#331 separately consumed the one-shot #203 recovery and R16 verifies target-specific terminality; #331 Task Acceptance and #319 Task Closure remain unverified, with historical P1 deviations retained. PLANNED only, not a native dependency or admission."
@@ -1032,7 +1032,7 @@
     {
       "from": 211,
       "to": 377,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/377",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
       "reason": "#377 replaces only the native read-retry derivation/guard; its exact two paths are historical #211-owned and already integrated in version/v2. #211 original Claim is historical PUBLISHED_VERIFIED but its original FROZEN_DAG_WRITESET is absent, and #211 remains OPEN/non-dispatchable. No concurrent writer or reuse of the historical Claim/FSW/merged PRs is permitted; PLANNED serialization annotation only, not a native dependency, Claim, JIT or source permission."
@@ -1062,7 +1062,7 @@
     {
       "from": 383,
       "to": 284,
-      "kind": "PLANNED",
+      "kind": "NATIVE",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/383"
     }
@@ -1752,28 +1752,12 @@
       "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
     },
     {
-      "from": 274,
-      "to": 262,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
-      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
-    },
-    {
       "from": 219,
       "to": 273,
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
       "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
-    },
-    {
-      "from": 273,
-      "to": 264,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
-      "reason": "Final installed J01-J08 integration waits for governed Replan."
     },
     {
       "from": 207,
@@ -1822,14 +1806,6 @@
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
       "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
-    },
-    {
-      "from": 261,
-      "to": 276,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
-      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
     },
     {
       "from": 262,
@@ -1896,35 +1872,12 @@
       "reason": "#276's broad Business test glob and central Business files overlap #210's Project/Product/L2 intake write set; keep #276 non-dispatchable until #210 completes or F narrows the exact write set."
     },
     {
-      "from": 312,
-      "to": 219,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
-    },
-    {
-      "from": 319,
-      "to": 331,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/331",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
-      "reason": "#331 separately consumed the one-shot #203 recovery and R16 verifies target-specific terminality; #331 Task Acceptance and #319 Task Closure remain unverified, with historical P1 deviations retained. PLANNED only, not a native dependency or admission."
-    },
-    {
       "from": 331,
       "to": 284,
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
       "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
-    },
-    {
-      "from": 211,
-      "to": 377,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/377",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
-      "reason": "#377 replaces only the native read-retry derivation/guard; its exact two paths are historical #211-owned and already integrated in version/v2. #211 original Claim is historical PUBLISHED_VERIFIED but its original FROZEN_DAG_WRITESET is absent, and #211 remains OPEN/non-dispatchable. No concurrent writer or reuse of the historical Claim/FSW/merged PRs is permitted; PLANNED serialization annotation only, not a native dependency, Claim, JIT or source permission."
     },
     {
       "from": 319,
@@ -1940,13 +1893,6 @@
       "kind": "PLANNED",
       "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/383",
       "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/370"
-    },
-    {
-      "from": 383,
-      "to": 284,
-      "kind": "PLANNED",
-      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
-      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/383"
     }
   ],
   "notes": [
@@ -1981,7 +1927,8 @@
     "R19 (2026-11-09): closes the two A-side P3 gaps recorded in the E0 R10/R11 reviews — adds the missing #383 scopeDispositions row and projects the three R18-added PLANNED edges (319->383, 370->383, 383->284) into plannedEdges (30->33, now a complete projection of the 33 PLANNED edges in edges[]). Also pins the #383 disposition facts (Claim 6730033866, implementation ab4976c5 review PASS, CI #514, PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645). No taskIssues/edges/claimSubjects rows changed; writeSetAudit unchanged (its 70-pair matrix and snapshot semantics are already correct).",
     "R20 (2026-11-10): one-pass snapshot refresh required before any E0 native dependency write. Live re-read of all 51 Task issues (roster 51/51, 30 open / 21 closed after #284 label state:planned->state:ready), all 13 distinct planned-edge target blocked_by lists (only #264 holds native blockers [260,261,262,263]; none of the 33 PLANNED edges has materialized) and all open-task write-set digests (unchanged, including #383 R3 six-path set under the documented snapshot semantics). Five stale endpoints corrected: #260/#264/#276/#383 timestamps plus material drift — #284 records its factual one-and-only root Claim 6739370032 (misbound subject fields disclosed at 6739442600, corrected via FSW rev1 and Pack R11 deviation; Owner receipts 6739335815/R10, 6739635285/R11; implementation 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f independent review PASS + Woodpecker CI #520 SUCCESS at 6741313032), #383 taskIssues row synced to the R19 scopeDispositions fact (implementation review PASS + CI #514 SUCCESS + PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645), #264 gains the final P0/82-Vector Traceability Contract anchor 6728777830, and #276 records the F1a/F1b+F2 stage split from concurrency audit 6728802295. Denominator 51, edges 37 (4 NATIVE / 33 PLANNED), claimSubjects 51 (43 observed / 8 no-claim) all unchanged in count; writeSetAudit overlap matrix and digests verified still live-accurate, so no recompute was required. 12 vertex-disjoint native-edge batches per #284 comment 6746943816 are the execution plan for the admitted E0 Host Writer; this revision enables their ISSUE_STALE_VS_PACK preflight.",
     "R20.1 (2026-11-10): mid-batch-01 fail-closed recovery refresh. Edges 211->212 and 219->262 materialized NATIVE_EDGE_VERIFIED via the admitted E0 Host Writer (official blocked_by POST + exact readback; events at _tmp/i284-e0-native/events.ndjson) and are now recorded NATIVE in edges[] and removed from plannedEdges (33->31). Edge 261->273 was refused ISSUE_STALE_VS_PACK before any POST because parallel Web-Builder governance comment 6747395740 (PR #386 Pack R1 preparation, zero source writes, explicitly non-interrupting) landed on #273 seconds after the R20 snapshot; this refresh re-read all 51 live Task issues and corrected #275 updatedAt 2026-11-04T06:26:29Z->2026-11-09T17:54:09Z; #274 updatedAt 2026-11-08T10:10:14Z->2026-11-09T17:52:51Z; #273 updatedAt 2026-11-04T06:26:16Z->2026-11-09T17:54:16Z. No other field, edge, claim or audit data changed. Remaining batch-01 edges 261->273, 276->264, 284->312, 319->383 resume under a fresh review/receipt bound to this blob.",
-    "R20.2 (2026-11-10): post-batch refresh. Batch 01 complete: all six edges materialized NATIVE_EDGE_VERIFIED by the admitted E0 Host Writer (211->212, 219->262 under R20; 261->273, 276->264, 284->312, 319->383 under R20.1 after the ISSUE_STALE_VS_PACK fail-close). Newly verified native edges recorded in edges[] and removed from plannedEdges (31->27; 10 NATIVE / 27 PLANNED of 37): 261->273, 276->264, 284->312, 319->383. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed."
+    "R20.2 (2026-11-10): post-batch refresh. Batch 01 complete: all six edges materialized NATIVE_EDGE_VERIFIED by the admitted E0 Host Writer (211->212, 219->262 under R20; 261->273, 276->264, 284->312, 319->383 under R20.1 after the ISSUE_STALE_VS_PACK fail-close). Newly verified native edges recorded in edges[] and removed from plannedEdges (31->27; 10 NATIVE / 27 PLANNED of 37): 261->273, 276->264, 284->312, 319->383. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R20.3 (2026-11-10): post-batch refresh. Batch 02 complete: all seven edges materialized NATIVE_EDGE_VERIFIED (274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284). Newly verified native edges recorded in edges[] and removed from plannedEdges (27->20; 17 NATIVE / 20 PLANNED of 37): 274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
