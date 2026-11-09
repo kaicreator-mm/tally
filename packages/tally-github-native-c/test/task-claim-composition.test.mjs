@@ -9,6 +9,10 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {mkdtemp,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {createHash,generateKeyPairSync,randomBytes} from 'node:crypto';
 import {readNativeHostClaimPreflightFromClient} from
   '../src/task-claim-host-preflight.mjs';
 import {createHostBoundNativeGitHubClaimPublisher} from
@@ -17,6 +21,10 @@ import {createHostNativeGitHubClaimReadbackPortFromClient} from
   '../src/task-claim-host-readback-port.mjs';
 import {createHostSingleWriterClaimController} from
   '../../../experiments/v2/t06d-host-claim-publication/single-writer.mjs';
+import {HOST_RESOURCE_FENCE_SCHEMA,buildFrozenResourceSet,computeDispatchId,
+  createHostResourceFenceAuthority,createHostResourceFenceClient,
+  createHostResourceFencePort} from
+  '../../../experiments/v2/t06d-host-claim-publication/host-resource-fence.mjs';
 
 const owner='kaicreator-mm',repo='tally',issueNumber=125,sourceSha='a'.repeat(40);
 const writerAuthority=Object.freeze({
@@ -82,9 +90,10 @@ function github({blocked=false,ready=true,lostAck=false,edited=false}={}){
   return {octokit,state};
 }
 function store(){
-  const rows=new Map();let rev=0;
+  const rows=new Map();
   return {
     rows,
+    async list(prefix=''){return [...rows.keys()].filter(key=>key.startsWith(prefix)).sort();},
     async get(key){return rows.get(key)??null;},
     async put(key,value,{mustBeAbsent,mustMatchRevision}={}){
       const previous=rows.get(key);
@@ -92,14 +101,77 @@ function store(){
       if(mustMatchRevision!==undefined&&
          previous?.revision!==mustMatchRevision)
         throw Error('CAS_STALE_REVISION');
-      const revision=++rev;
+      const revision=previous?previous.revision+1:0;
       rows.set(key,{value:structuredClone(value),revision});
       return {revision};
+    },
+    async remove(key,{mustBeAbsent,mustMatchRevision}={}){
+      const previous=rows.get(key);
+      if(mustBeAbsent&&!previous)throw Error('CAS_MISSING');
+      if(mustMatchRevision!==undefined&&
+         previous?.revision!==mustMatchRevision)
+        throw Error('CAS_STALE_REVISION');
+      rows.delete(key);
     }
   };
 }
-function controller(opts={}){
-  const {octokit,state}=github(opts),db=store();
+// Minimal REAL shared-Host fence fixture (mirrors the t06d library tests):
+// disposable store surrogate, disposable RSA keys, authority, per-Task
+// client and port bound to this composition's #125 Task identity.
+const FENCE_WRITER_SID='S-1-5-21-2839165489-1832998833-1574237796-1004';
+const FENCE_AUTHORITY_KEY=generateKeyPairSync('rsa',{modulusLength:2048});
+const FENCE_CLIENT_KEY=generateKeyPairSync('rsa',{modulusLength:2048});
+let fenceSeq=0;
+async function openFence(){
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06k-fence-'));
+  const seq=++fenceSeq;
+  const fenceStore=store();
+  const anchorPath=join(dir,`anchor-${seq}.ndjson`);
+  const repository=owner+'/'+repo;
+  const protectedClaimKey=`${repository}#${issueNumber}:builder:__default__`;
+  const issueRef='https://github.com/'+repository+'/issues/'+issueNumber;
+  const reviewRef=`https://github.com/${repository}/pull/376#pullrequestreview-1000000001`;
+  const ownerApprovalRef=`https://github.com/${repository}/issues/${issueNumber}#issuecomment-1000000002`;
+  const files=['packages/tally-github-native-c/test/task-claim-composition.test.mjs'];
+  const writeSetSha256=createHash('sha256')
+    .update(JSON.stringify([...files].sort())).digest('hex');
+  const identity={schema:HOST_RESOURCE_FENCE_SCHEMA,repository,issueRef,
+    protectedClaimKey,generation:1,sourceSha,
+    dispatchId:computeDispatchId({repository,issueNumber,sourceSha,
+      taskPackBlobSha:'b'.repeat(40),reviewRef,ownerApprovalRef,writeSetSha256}),
+    taskPackRef:`https://github.com/${repository}/blob/${sourceSha}/`+
+      'docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json',
+    taskPackBlobSha:'b'.repeat(40),reviewRef,ownerApprovalRef,writeSetSha256,
+    exclusiveResources:[
+      `claim-key:${protectedClaimKey}`,
+      `cas:tally:v2:claim-admission:${createHash('sha256').update(protectedClaimKey).digest('hex')}`,
+      `cas:tally:v2:task-writeset:${issueNumber}`,
+      `github-issue-comment:${repository}#${issueNumber}`,
+      ...files.map(file=>`file:${file}`)
+    ]};
+  const built=buildFrozenResourceSet(identity);
+  const authority=createHostResourceFenceAuthority({store:fenceStore,
+    registryId:'fence-registry-t06k-wiring-1',anchorPath,writerSid:FENCE_WRITER_SID,
+    authorityPrivateKey:FENCE_AUTHORITY_KEY.privateKey,
+    authorizedClients:[{repository,protectedClaimKey,
+      writerId:writerAuthority.writerId,sourceSha,dispatchId:identity.dispatchId,
+      frozenResourceSetSha256:built.frozenResourceSetSha256,
+      publicKeyPem:FENCE_CLIENT_KEY.publicKey.export({type:'spki',format:'pem'})}]});
+  await authority.initialize();
+  const client=createHostResourceFenceClient({
+    privateKey:FENCE_CLIENT_KEY.privateKey,authorityPublicKeyPem:authority.publicKeyPem,
+    registryId:authority.registryId,writerId:writerAuthority.writerId,identity,
+    nonce:randomBytes(32).toString('hex'),send:handle=>authority.handle(handle)});
+  const port=createHostResourceFencePort({store:fenceStore,
+    registryId:authority.registryId,anchorPath,
+    authorityPublicKeyPem:authority.publicKeyPem,writerSid:FENCE_WRITER_SID,
+    repository,writerId:writerAuthority.writerId,protectedClaimKey,sourceSha,
+    frozenResourceSetSha256:built.frozenResourceSetSha256,
+    expectedHead:()=>authority.anchorHead,withReadLock:task=>authority.withReadLock(task)});
+  return {dir,client,port};
+}
+async function controller(opts={}){
+  const {octokit,state}=github(opts),db=store(),fence=await openFence();
   const sourceReadback=createHostNativeGitHubClaimReadbackPortFromClient({
     octokit,owner,repo,writerLogin:'tally-host[bot]'
   });
@@ -123,78 +195,94 @@ function controller(opts={}){
     readPublishedClaim:sourceReadback.readPublishedClaim
   };
   const publisher=createHostBoundNativeGitHubClaimPublisher({
-    octokit,owner,repo,writerAuthority
+    octokit,owner,repo,writerAuthority,fencePort:fence.port
   });
-  return {
-    state,db,source,publisher,
-    runner:createHostSingleWriterClaimController({
-      store:db,source,publisher,writerAuthority
-    })
-  };
+  const runner=createHostSingleWriterClaimController({
+    store:db,source,publisher,writerAuthority,fenceClient:fence.client
+  });
+  return {state,db,source,publisher,fence,runner,
+    async cleanup(){await rm(fence.dir,{recursive:true,force:true});}};
 }
 test('real C modules compose through existing Host CAS contract; source-only receipt',async()=>{
-  const h=controller();
-  const res=await h.runner.reserveAndPublish(request);
-  assert.equal(res.status,'RECORDED');
-  assert.equal(res.reason,'SERIALIZED_GITHUB_PUBLISH_AND_READBACK_CONFIRMED');
-  assert.equal(res.claimPublication,'VERIFIED_PENDING_KERNEL_ADMISSION');
-  for(const field of ['authorized','admitted','taskPass','releasePass'])
-    assert.equal(res[field],false);
-  assert.equal(h.state.posts,1);
-  assert.ok(h.state.detailGets>=2);
-  assert.equal(h.db.rows.size,1);
-  const row=[...h.db.rows.values()][0].value;
-  assert.equal(row.phase,'PUBLISHED_VERIFIED');
-  assert.equal(row.commentId,901);
-  assert.equal(row.sourceSha,sourceSha);
-  assert.equal(row.protectedClaimKey,
-    'kaicreator-mm/tally#125:builder:__default__');
-  assert.equal((await h.runner.reserveAndPublish(request)).reason,
-    'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION');
-  assert.equal(h.state.posts,1);
+  const h=await controller();
+  try{
+    const res=await h.runner.reserveAndPublish(request);
+    assert.equal(res.status,'RECORDED');
+    assert.equal(res.reason,'SERIALIZED_GITHUB_PUBLISH_AND_READBACK_CONFIRMED');
+    assert.equal(res.claimPublication,'VERIFIED_PENDING_KERNEL_ADMISSION');
+    for(const field of ['authorized','admitted','taskPass','releasePass'])
+      assert.equal(res[field],false);
+    assert.equal(h.state.posts,1);
+    assert.ok(h.state.detailGets>=2);
+    assert.equal(h.db.rows.size,1);
+    const row=[...h.db.rows.values()][0].value;
+    assert.equal(row.phase,'PUBLISHED_VERIFIED');
+    assert.equal(row.commentId,901);
+    assert.equal(row.sourceSha,sourceSha);
+    assert.equal(row.protectedClaimKey,
+      'kaicreator-mm/tally#125:builder:__default__');
+    // The POST went through the real port readback and the lease was
+    // durably released after the final CAS.
+    assert.equal((await h.fence.client.observe()).leases.length,0);
+    assert.equal((await h.runner.reserveAndPublish(request)).reason,
+      'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION');
+    assert.equal(h.state.posts,1);
+  }finally{await h.cleanup();}
 });
 test('simultaneous incompatible builders cannot post two canonical claims',async()=>{
-  const h=controller();
-  const [a,b]=await Promise.all([
-    h.runner.reserveAndPublish(request),
-    h.runner.reserveAndPublish({...request,
-      operatorId:'codex:builder2',dispatchId:'dispatch:125:other'})
-  ]);
-  assert.equal([a,b].filter(x=>x.status==='RECORDED').length,1);
-  assert.equal(h.state.posts,1);
-  assert.equal(h.db.rows.size,1);
+  const h=await controller();
+  try{
+    const [a,b]=await Promise.all([
+      h.runner.reserveAndPublish(request),
+      h.runner.reserveAndPublish({...request,
+        operatorId:'codex:builder2',dispatchId:'dispatch:125:other'})
+    ]);
+    assert.equal([a,b].filter(x=>x.status==='RECORDED').length,1);
+    assert.ok([a.reason,b.reason].some(r=>
+      ['CONCURRENT_CLAIM_RESERVATION_LOST','INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',
+        'FENCE_OPERATION_FAILED'].includes(r)));
+    assert.equal(h.state.posts,1);
+    assert.equal(h.db.rows.size,1);
+  }finally{await h.cleanup();}
 });
 test('unready Issue and live native blocked_by deny before CAS or POST',async()=>{
   for(const opts of [{blocked:true},{ready:false}]){
-    const h=controller(opts);
-    const receipt=await h.runner.reserveAndPublish(request);
-    assert.equal(receipt.status,'BLOCKED');
-    assert.equal(receipt.reason,'SOURCE_OR_CLAIM_AUTHORITY_UNQUALIFIED');
-    assert.equal(h.state.posts,0);
-    assert.equal(h.db.rows.size,0);
+    const h=await controller(opts);
+    try{
+      const receipt=await h.runner.reserveAndPublish(request);
+      assert.equal(receipt.status,'BLOCKED');
+      assert.equal(receipt.reason,'SOURCE_OR_CLAIM_AUTHORITY_UNQUALIFIED');
+      assert.equal(h.state.posts,0);
+      assert.equal(h.db.rows.size,0);
+      assert.equal((await h.fence.client.observe()).leases.length,0);
+    }finally{await h.cleanup();}
   }
 });
 test('lost ACK preserves PENDING reservation, blocks same-dispatch retry',async()=>{
-  const h=controller({lostAck:true});
-  const receipt=await h.runner.reserveAndPublish(request);
-  assert.equal(receipt.reason,'GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
-  assert.equal(h.state.posts,1);
-  assert.equal(h.db.rows.size,1);
-  assert.equal([...h.db.rows.values()][0].value.phase,
-    'PENDING_GITHUB_PUBLISH');
-  const retry=await h.runner.reserveAndPublish(request);
-  assert.equal(retry.reason,'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION');
-  assert.equal(h.state.posts,1);
-  assert.equal(JSON.stringify(receipt).includes('SECRET_TRANSPORT_ACK_LOST'),false);
+  const h=await controller({lostAck:true});
+  try{
+    const receipt=await h.runner.reserveAndPublish(request);
+    assert.equal(receipt.reason,'GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
+    assert.equal(h.state.posts,1);
+    assert.equal(h.db.rows.size,1);
+    assert.equal([...h.db.rows.values()][0].value.phase,
+      'PENDING_GITHUB_PUBLISH');
+    const retry=await h.runner.reserveAndPublish(request);
+    assert.equal(retry.reason,'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION');
+    assert.equal(h.state.posts,1);
+    assert.equal(JSON.stringify(receipt).includes('SECRET_TRANSPORT_ACK_LOST'),false);
+  }finally{await h.cleanup();}
 });
 test('tampered exact numeric readback cannot produce accepted Host receipt',async()=>{
-  const h=controller({edited:true});
-  const x=await h.runner.reserveAndPublish(request);
-  assert.equal(x.status,'BLOCKED');
-  assert.equal(x.reason,'GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
-  assert.equal(h.db.rows.size,1);
-  assert.equal([...h.db.rows.values()][0].value.phase,
-    'PENDING_GITHUB_PUBLISH');
-  assert.equal(h.state.posts,1);
-  assert.equal(x.admitted,false);
+  const h=await controller({edited:true});
+  try{
+    const x=await h.runner.reserveAndPublish(request);
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
+    assert.equal(h.db.rows.size,1);
+    assert.equal([...h.db.rows.values()][0].value.phase,
+      'PENDING_GITHUB_PUBLISH');
+    assert.equal(h.state.posts,1);
+    assert.equal(x.admitted,false);
+  }finally{await h.cleanup();}
 });

@@ -3,11 +3,15 @@ import assert from 'node:assert/strict';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {createHash,generateKeyPairSync,randomBytes} from 'node:crypto';
 import {stringify} from 'yaml';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createHostAdmissionSourceFromClient,createGitHubHostAdmissionSource,createHostTerminalizationSourceFromClient} from './host-admission-source.mjs';
 import {createHostBoundNativeGitHubClaimPublisher} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
 import {createHostSingleWriterClaimController} from './single-writer.mjs';
+import {HOST_RESOURCE_FENCE_SCHEMA,buildFrozenResourceSet,computeDispatchId,
+  createHostResourceFenceAuthority,createHostResourceFenceClient,
+  createHostResourceFencePort} from './host-resource-fence.mjs';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 
 const owner='kaicreator-mm',repo='tally',repository=owner+'/'+repo;
@@ -94,8 +98,89 @@ function memoryStore({initial=[],getError=false,listError=false,listErrorOnCall=
         throw Error('CAS_STALE');
       const next=++revision;rows.set(key,{value:structuredClone(value),revision:next});
       return {revision:next};
+    },
+    async remove(key,{mustBeAbsent,mustMatchRevision}={}){
+      const previous=rows.get(key);
+      if(mustBeAbsent&&!previous)throw Error('CAS_MISSING');
+      if(mustMatchRevision!==undefined&&previous?.revision!==mustMatchRevision)
+        throw Error('CAS_STALE');
+      rows.delete(key);
     }
   };
+}
+// Minimal REAL fence fixture for the fence-less composition sites below:
+// disposable store surrogate, disposable RSA keys, one authority, one
+// authorized per-Task client bound to the #166 Task identity, one port.
+const FENCE_WRITER_SID='S-1-5-21-2839165489-1832998833-1574237796-1004';
+const FENCE_AUTHORITY_KEY=generateKeyPairSync('rsa',{modulusLength:2048});
+const FENCE_CLIENT_KEY=generateKeyPairSync('rsa',{modulusLength:2048});
+let fenceSeq=0;
+async function openFence(){
+  const dir=await mkdtemp(join(tmpdir(),'tally-t06j-fence-'));
+  const seq=++fenceSeq;
+  // Disposable empty CasDocumentStore surrogate with the public per-key
+  // 0-based revision semantics the fence authority genesis check requires.
+  const rows=new Map();
+  const store={
+    async list(prefix=''){return [...rows.keys()].filter(key=>key.startsWith(prefix)).sort();},
+    async get(key){return rows.get(key)??null;},
+    async put(key,value,{mustBeAbsent,mustMatchRevision}={}){
+      const previous=rows.get(key);
+      if(mustBeAbsent&&previous)throw Error('CAS_COLLISION');
+      if(mustMatchRevision!==undefined&&previous?.revision!==mustMatchRevision)
+        throw Error('CAS_STALE');
+      const revision=previous?previous.revision+1:0;
+      rows.set(key,{value:structuredClone(value),revision});
+      return {revision};
+    },
+    async remove(key,{mustBeAbsent,mustMatchRevision}={}){
+      const previous=rows.get(key);
+      if(mustBeAbsent&&!previous)throw Error('CAS_MISSING');
+      if(mustMatchRevision!==undefined&&previous?.revision!==mustMatchRevision)
+        throw Error('CAS_STALE');
+      rows.delete(key);
+    }
+  };
+  const anchorPath=join(dir,`anchor-${seq}.ndjson`);
+  const protectedClaimKey=request.protectedClaimKey;
+  const reviewRef=`https://github.com/${repository}/pull/376#pullrequestreview-1000000001`;
+  const ownerApprovalRef=`https://github.com/${repository}/issues/${issueNumber}#issuecomment-1000000002`;
+  const files=['experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs'];
+  const writeSetSha256=createHash('sha256')
+    .update(JSON.stringify([...files].sort())).digest('hex');
+  const identity={schema:HOST_RESOURCE_FENCE_SCHEMA,repository,issueRef,
+    protectedClaimKey,generation:1,sourceSha,
+    dispatchId:computeDispatchId({repository,issueNumber,sourceSha,
+      taskPackBlobSha:'b'.repeat(40),reviewRef,ownerApprovalRef,writeSetSha256}),
+    taskPackRef:`https://github.com/${repository}/blob/${sourceSha}/`+
+      'docs/implementation/v2/HOST_SHARED_WRITER_FENCE_TASK_PACK_R1.json',
+    taskPackBlobSha:'b'.repeat(40),reviewRef,ownerApprovalRef,writeSetSha256,
+    exclusiveResources:[
+      `claim-key:${protectedClaimKey}`,
+      `cas:tally:v2:claim-admission:${createHash('sha256').update(protectedClaimKey).digest('hex')}`,
+      `cas:tally:v2:task-writeset:${issueNumber}`,
+      `github-issue-comment:${repository}#${issueNumber}`,
+      ...files.map(file=>`file:${file}`)
+    ]};
+  const built=buildFrozenResourceSet(identity);
+  const authority=createHostResourceFenceAuthority({store,
+    registryId:'fence-registry-t06j-wiring-1',anchorPath,writerSid:FENCE_WRITER_SID,
+    authorityPrivateKey:FENCE_AUTHORITY_KEY.privateKey,
+    authorizedClients:[{repository,protectedClaimKey,
+      writerId:writerAuthority.writerId,sourceSha,dispatchId:identity.dispatchId,
+      frozenResourceSetSha256:built.frozenResourceSetSha256,
+      publicKeyPem:FENCE_CLIENT_KEY.publicKey.export({type:'spki',format:'pem'})}]});
+  await authority.initialize();
+  const client=createHostResourceFenceClient({
+    privateKey:FENCE_CLIENT_KEY.privateKey,authorityPublicKeyPem:authority.publicKeyPem,
+    registryId:authority.registryId,writerId:writerAuthority.writerId,identity,
+    nonce:randomBytes(32).toString('hex'),send:handle=>authority.handle(handle)});
+  const port=createHostResourceFencePort({store,registryId:authority.registryId,
+    anchorPath,authorityPublicKeyPem:authority.publicKeyPem,writerSid:FENCE_WRITER_SID,
+    repository,writerId:writerAuthority.writerId,protectedClaimKey,sourceSha,
+    frozenResourceSetSha256:built.frozenResourceSetSha256,
+    expectedHead:()=>authority.anchorHead,withReadLock:task=>authority.withReadLock(task)});
+  return {dir,store,anchorPath,authority,client,port};
 }
 function adapter({githubOptions={},store=memoryStore(),resourceConflictPort}={}){
   const gh=github(githubOptions);
@@ -356,28 +441,40 @@ test('edited/substituted/foreign comment, duplicate event and generation drift r
   assert.equal(h.store.writes,0);
 });
 
-test('existing controller composes with real adapter/publisher; denials create no reservation or POST',async()=>{
-  const h=adapter();
-  const publisher=createHostBoundNativeGitHubClaimPublisher({octokit:h.gh.octokit,
-    owner,repo,writerAuthority});
-  const controller=createHostSingleWriterClaimController({store:h.store,source:h.source,
-    publisher,writerAuthority});
-  const receipt=await controller.reserveAndPublish({owner,repo,issueNumber,sourceSha,
-    actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
-    operatorId:taskAuthority.operatorId,expectedGeneration:0});
-  assert.equal(receipt.status,'RECORDED');assert.equal(h.gh.state.posts,1);
-  assert.equal(h.store.rows.size,1);
-  assert.equal([...h.store.rows.values()][0].value.phase,'PUBLISHED_VERIFIED');
-  assert.equal(receipt.admitted,false);assert.equal(receipt.authorized,false);
-  const blocked=adapter({githubOptions:{blocked:true}});
-  const deniedController=createHostSingleWriterClaimController({store:blocked.store,
-    source:blocked.source,publisher:createHostBoundNativeGitHubClaimPublisher({
-      octokit:blocked.gh.octokit,owner,repo,writerAuthority}),writerAuthority});
-  const denial=await deniedController.reserveAndPublish({owner,repo,issueNumber,sourceSha,
-    actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
-    operatorId:taskAuthority.operatorId,expectedGeneration:0});
-  assert.equal(denial.status,'BLOCKED');assert.equal(blocked.store.writes,0);
-  assert.equal(blocked.gh.state.posts,0);
+test('existing controller composes with real adapter/publisher under a real held fence; denials create no reservation or POST',async()=>{
+  const fence=await openFence();
+  const blockedFence=await openFence();
+  try{
+    const h=adapter();
+    const publisher=createHostBoundNativeGitHubClaimPublisher({octokit:h.gh.octokit,
+      owner,repo,writerAuthority,fencePort:fence.port});
+    const controller=createHostSingleWriterClaimController({store:h.store,source:h.source,
+      publisher,writerAuthority,fenceClient:fence.client});
+    const receipt=await controller.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+      actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
+      operatorId:taskAuthority.operatorId,expectedGeneration:0});
+    assert.equal(receipt.status,'RECORDED');assert.equal(h.gh.state.posts,1);
+    assert.equal(h.store.rows.size,1);
+    assert.equal([...h.store.rows.values()][0].value.phase,'PUBLISHED_VERIFIED');
+    assert.equal(receipt.admitted,false);assert.equal(receipt.authorized,false);
+    // The real publisher POSTed through the real port readback, and the
+    // controller durably released the lease after the final CAS.
+    assert.equal((await fence.client.observe()).leases.length,0);
+    const blocked=adapter({githubOptions:{blocked:true}});
+    const deniedController=createHostSingleWriterClaimController({store:blocked.store,
+      source:blocked.source,publisher:createHostBoundNativeGitHubClaimPublisher({
+        octokit:blocked.gh.octokit,owner,repo,writerAuthority,
+        fencePort:blockedFence.port}),writerAuthority,fenceClient:blockedFence.client});
+    const denial=await deniedController.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+      actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
+      operatorId:taskAuthority.operatorId,expectedGeneration:0});
+    assert.equal(denial.status,'BLOCKED');assert.equal(blocked.store.writes,0);
+    assert.equal(blocked.gh.state.posts,0);
+    assert.equal((await blockedFence.client.observe()).leases.length,0);
+  }finally{
+    await rm(fence.dir,{recursive:true,force:true});
+    await rm(blockedFence.dir,{recursive:true,force:true});
+  }
 });
 
 test('real public DH SQLite CAS registry: positive and incompatible reads add no writes',async()=>{
@@ -508,6 +605,7 @@ test('terminal Host proof requires all fresh measurements, exact #319 freeze, or
   assert.equal(mutations,0);
   const dir=await mkdtemp(join(tmpdir(),'tally-i319-composition-'));
   const cas=await openSqliteCasStore({path:join(dir,'fixture.sqlite'),busyTimeoutMs:1000});
+  const wiringFence=await openFence();
   try{
     const historical={phase:'PUBLISHED_VERIFIED',generation:1,protectedClaimKey:TARGET.protectedClaimKey,
       repository,issueRef:TARGET.issueRef,sourceSha:TARGET.sourceSha,dispatchId:TARGET.dispatchId,
@@ -518,10 +616,16 @@ test('terminal Host proof requires all fresh measurements, exact #319 freeze, or
     const terminalSource=createHostTerminalizationSourceFromClient({octokit,admissionStore:store,writerAuthority:auth,
       quiescence:{async readFreshProof(){return {...proof,observedAt:new Date().toISOString()};}}});
     const source={...terminalSource,readAdmissionFacts:async()=>{},readPublishedClaim:async()=>{}};
-    const publisher=createHostBoundNativeGitHubClaimPublisher({octokit,owner,repo,writerAuthority:auth});
-    const receipt=await createHostSingleWriterClaimController({store:cas,source,publisher,writerAuthority:auth}).terminalizePublishedClaim();
+    // publishDispatchStateChange stays ungated by the fence, but the Host
+    // port must still be present at construction.
+    const publisher=createHostBoundNativeGitHubClaimPublisher({octokit,owner,repo,
+      writerAuthority:auth,fencePort:wiringFence.port});
+    const receipt=await createHostSingleWriterClaimController({store:cas,source,publisher,
+      writerAuthority:auth,fenceClient:wiringFence.client}).terminalizePublishedClaim();
     assert.equal(receipt.claimTerminality,'VERIFIED',JSON.stringify(receipt));
     assert.equal((await cas.get(TARGET.casKey)).value.phase,'TERMINAL_VERIFIED');
     assert.equal(comments.length,2);assert.equal(mutations,0);
-  }finally{await cas.close();await rm(dir,{recursive:true,force:true});}
+  }finally{await cas.close();
+    await rm(dir,{recursive:true,force:true});
+    await rm(wiringFence.dir,{recursive:true,force:true});}
 });
