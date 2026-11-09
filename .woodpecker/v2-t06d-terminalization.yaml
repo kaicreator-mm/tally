@@ -1,4 +1,10 @@
 # Node 24 source validation for the bounded #319 implementation.
+# CI-profile amendment (branch eligibility only): the dedicated replay branch
+# `task/tally-i370-host-fence-k3-ci` exists only so Woodpecker can run this
+# exact profile over the unchanged #370 library source HEAD `d8d80ed9f6ff2dff
+# ad616353d27b20f95a2ee1ff` (PR #376 head) without retargeting PR #376 or
+# merging any historical path. The single commit on that branch modifies ONLY
+# this file; no other source difference is introduced.
 when:
   - event: [pull_request, push, manual]
     branch: [version/v2, task/i319-t06d-terminalization-impl]
@@ -10,6 +16,8 @@ when:
         - 'packages/tally-github-native-c/src/task-claim-github-publisher.mjs'
         - 'packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs'
         - '.woodpecker/v2-t06d-terminalization.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i370-host-fence-k3-ci]
 labels:
   backend: local
 steps:
