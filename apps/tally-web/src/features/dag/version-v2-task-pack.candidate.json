@@ -1,0 +1,3344 @@
+{
+  "schema": "tally/version-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+  "observedAt": "2026-11-09T19:31:44.566Z",
+  "source": {
+    "kind": "GITHUB_NATIVE_ISSUES",
+    "query": "state=all&labels=type:task",
+    "taskIssueCount": 51,
+    "claimCommentPages": 51
+  },
+  "taskIssues": [
+    {
+      "issueNumber": 62,
+      "title": "Tally v2 integration: one real ADS Task through DomainHarness B/S/K/C + task-meta observation",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-19T16:21:36Z",
+      "updatedAt": "2026-10-31T03:38:17Z",
+      "closedAt": "2026-10-31T03:38:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed historical integration proof; closure remains independently evidence-qualified."
+    },
+    {
+      "issueNumber": 92,
+      "title": "[v2 W-F][P0 Product UX] Tally 端到端软件开发单一入口：J01–J08 可操作 UI、恢复与真实发布验收",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-25T21:02:14Z",
+      "updatedAt": "2026-10-31T03:43:17Z",
+      "closedAt": "2026-10-31T03:43:17Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
+    },
+    {
+      "issueNumber": 137,
+      "title": "[v2][P1 Product Intake] 任务当前状态的可信只读投影：native DAG、Claim、执行、证据分层和阻塞原因",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:21:37Z",
+      "updatedAt": "2026-10-30T18:46:03Z",
+      "closedAt": "2026-10-30T18:46:03Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-model intake."
+    },
+    {
+      "issueNumber": 139,
+      "title": "[v2][P1 Product Intake] 多版本真实工程证据图谱：Product/L2 → Task/Issue/PR → Review/CI → Release/后继缺陷",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:41:34Z",
+      "updatedAt": "2026-10-30T21:48:38Z",
+      "closedAt": "2026-10-30T21:48:38Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed lineage intake."
+    },
+    {
+      "issueNumber": 140,
+      "title": "[v2][P1 Product Intake] 开发流程根因与瓶颈诊断：真实 DAG、Review/Repair、验证等待及 Agent 协作成本",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:42:29Z",
+      "updatedAt": "2026-10-30T22:16:18Z",
+      "closedAt": "2026-10-30T22:16:18Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed diagnosis intake."
+    },
+    {
+      "issueNumber": 141,
+      "title": "[v2][P1 Product Intake] 跨版本经验驱动的新版本规划：需求拆分、Task DAG 并行、Agent 分工与验证策略建议",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:43:20Z",
+      "updatedAt": "2026-10-30T22:51:29Z",
+      "closedAt": "2026-10-30T22:51:29Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed advisory next-version planning intake; does not prove governed Replan activation."
+    },
+    {
+      "issueNumber": 142,
+      "title": "[v2][P1 Product Intake] Issue ≠ Task：Concern/Checkpoint 工作单元身份、并发 Claim 冲突与进度分母",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:23Z",
+      "updatedAt": "2026-10-30T23:23:52Z",
+      "closedAt": "2026-10-30T23:23:52Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed WorkItem identity intake."
+    },
+    {
+      "issueNumber": 143,
+      "title": "[v2][P1 Product Intake] 真实跨版本 Issue Casebook 与 as-of 回放：可量化验证 Tally 的诊断和下一版规划",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:25Z",
+      "updatedAt": "2026-10-31T00:03:26Z",
+      "closedAt": "2026-10-31T00:03:26Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Casebook intake; does not prove complete next-Task learning loop."
+    },
+    {
+      "issueNumber": 144,
+      "title": "[v2][P2 Product Intake] 跨项目工程反馈工单闭环：下游缺口归属、去重、跨版本采纳和效果回读",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T18:52:27Z",
+      "updatedAt": "2026-10-31T00:36:14Z",
+      "closedAt": "2026-10-31T00:36:13Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed cross-project feedback intake."
+    },
+    {
+      "issueNumber": 145,
+      "title": "[v2][P0 Product Intake] Version Journey Driver：从用户目标到发布的持续下一步、并行推进与人机交接",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T19:18:41Z",
+      "updatedAt": "2026-10-30T19:14:40Z",
+      "closedAt": "2026-10-30T19:14:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Version Journey Driver intake."
+    },
+    {
+      "issueNumber": 146,
+      "title": "[v2][P1 Product Intake] 用户能力验收账本：冻结需求→真实选中执行→跨版本保留与可用性证明",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T19:18:43Z",
+      "updatedAt": "2026-10-30T20:53:28Z",
+      "closedAt": "2026-10-30T20:53:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL_P1",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
+    },
+    {
+      "issueNumber": 148,
+      "title": "[v2 DH0103-contract] Guided Project intake: schema-pinned deterministic next step, advisory without authority",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-27T21:00:52Z",
+      "updatedAt": "2026-10-31T01:12:41Z",
+      "closedAt": "2026-10-31T01:12:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
+    },
+    {
+      "issueNumber": 166,
+      "title": "T06j: privileged Host admission source adapter for T06d single-writer controller",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-29T12:29:10Z",
+      "updatedAt": "2026-10-29T22:49:56Z",
+      "closedAt": "2026-10-29T22:49:56Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed Host admission source adapter task."
+    },
+    {
+      "issueNumber": 169,
+      "title": "T06l: accepted Claim verifier and DomainHarness K execution admission",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-29T23:34:19Z",
+      "updatedAt": "2026-10-30T07:20:55Z",
+      "closedAt": "2026-10-30T07:20:55Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed accepted Claim verifier task."
+    },
+    {
+      "issueNumber": 172,
+      "title": "T06m: real Local Codex execution through selected DomainHarness K/Host",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T08:06:27Z",
+      "updatedAt": "2026-10-30T15:58:27Z",
+      "closedAt": "2026-10-30T15:58:27Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
+    },
+    {
+      "issueNumber": 173,
+      "title": "CI(v2): make self-hosted Woodpecker the sole validation carrier",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T08:09:16Z",
+      "updatedAt": "2026-10-30T15:28:11Z",
+      "closedAt": "2026-10-30T15:28:11Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Self-hosted Woodpecker validation carrier task."
+    },
+    {
+      "issueNumber": 176,
+      "title": "T06n: concurrent independent Builders with Reviewer Join and Repair",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T15:59:21Z",
+      "updatedAt": "2026-10-30T18:09:43Z",
+      "closedAt": "2026-10-30T18:07:28Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
+    },
+    {
+      "issueNumber": 177,
+      "title": "T06n Builder A: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:04Z",
+      "updatedAt": "2026-10-30T18:09:50Z",
+      "closedAt": "2026-10-30T18:07:32Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder A evidence."
+    },
+    {
+      "issueNumber": 178,
+      "title": "T06n Builder B: disjoint real Codex candidate",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:05Z",
+      "updatedAt": "2026-10-30T18:09:59Z",
+      "closedAt": "2026-10-30T18:07:36Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Builder B evidence."
+    },
+    {
+      "issueNumber": 179,
+      "title": "T06n Reviewer: independent Join and Repair review",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T16:02:07Z",
+      "updatedAt": "2026-10-30T18:10:06Z",
+      "closedAt": "2026-10-30T18:07:40Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Historical Reviewer/Repair evidence."
+    },
+    {
+      "issueNumber": 184,
+      "title": "CI(v2): validate read-only ALM workspace sources",
+      "issueState": "closed",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-30T19:29:27Z",
+      "updatedAt": "2026-10-30T19:48:41Z",
+      "closedAt": "2026-10-30T19:48:41Z",
+      "scopeDisposition": "CLOSED_HISTORICAL",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Closed read-only workspace CI task."
+    },
+    {
+      "issueNumber": 196,
+      "title": "[v2][P0] J04–J06 write-capable ALM workspace：真实 Local Codex、Reviewer/Repair 与读回",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T03:43:19Z",
+      "updatedAt": "2026-11-04T06:22:39Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
+    },
+    {
+      "issueNumber": 197,
+      "title": "[v2][P0] J05 Builder A：真实 disjoint Local Codex candidate",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:35:59Z",
+      "updatedAt": "2026-11-04T06:22:46Z",
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+    },
+    {
+      "issueNumber": 198,
+      "title": "[v2][P0] J05 Builder B：真实 disjoint Local Codex candidate 与 Repair",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:36:01Z",
+      "updatedAt": "2026-11-04T06:22:51Z",
+      "closedAt": null,
+      "scopeDisposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+    },
+    {
+      "issueNumber": 199,
+      "title": "[v2][P0] J05 Reviewer：独立 Join、Repair 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T04:36:03Z",
+      "updatedAt": "2026-11-04T06:22:57Z",
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
+    },
+    {
+      "issueNumber": 200,
+      "title": "[v2][P0] J05 Reviewer：独立 Reviewer Claim、Join 与 re-Join",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T05:43:13Z",
+      "updatedAt": "2026-11-04T06:23:05Z",
+      "closedAt": null,
+      "scopeDisposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Reviewer Claim/Join evidence only; no source write authority."
+    },
+    {
+      "issueNumber": 202,
+      "title": "[v2] J04–J06 ALM dynamic binding integration correction",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T06:53:36Z",
+      "updatedAt": "2026-11-04T06:23:11Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
+    },
+    {
+      "issueNumber": 203,
+      "title": "[v2] Publish reviewed candidates as exact-SHA pull requests",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:blocked"
+      ],
+      "createdAt": "2026-10-31T07:11:08Z",
+      "updatedAt": "2026-11-06T18:33:44Z",
+      "closedAt": null,
+      "scopeDisposition": "TARGET_TERMINALITY_VERIFIED_GLOBAL_HOST_ADMISSION_BLOCKED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Canonical target-specific terminality is read-only VERIFIED: public DomainHarness v0.10.3 CAS row revision 4 / TERMINAL_VERIFIED (value SHA256 d816a01f2a504a574e358dacd26d2f29e283620550d74d59ba5f78c033ec95c6), original unedited DISPATCH_CLAIMED comment 6540484121 and unique unedited DISPATCH_STATE_CHANGED/DONE terminal event 6691973736 (original reservation revision 2). R16 re-read the CAS row on a byte-identical copy with zero put calls and unchanged source DB digests. This terminates only the historical dispatch; it is not #203 Task Acceptance, Outcome Closure, source/CI/Release PASS or global Host admission. Issue remains OPEN/state:blocked. Historical #204/#205 CI failures and #331 historical/operational P1 deviations remain; global Host inventory/admission stays BLOCK/UNKNOWN. Never replay recovery, publisher, POST or CAS writes."
+    },
+    {
+      "issueNumber": 207,
+      "title": "[v2][P0][J06] Real-browser ALM journey acceptance and truthful CI/Host readback",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:16Z",
+      "updatedAt": "2026-11-04T06:23:24Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
+    },
+    {
+      "issueNumber": 208,
+      "title": "[v2][P0][J07] Exact-SHA Release Qualification, version closure and authorized delivery",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:18Z",
+      "updatedAt": "2026-11-04T06:23:31Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
+    },
+    {
+      "issueNumber": 209,
+      "title": "[v2][P0][J08] Defect intake, next-version planning and measured Task Learning replay",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T10:36:20Z",
+      "updatedAt": "2026-11-04T06:23:41Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
+    },
+    {
+      "issueNumber": 210,
+      "title": "[v2][P0][J01–J03] Wire guided project intake, Product/L2 freeze and native Task DAG into ALM workspace",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-10-31T10:38:10Z",
+      "updatedAt": "2026-11-05T05:52:40Z",
+      "closedAt": null,
+      "scopeDisposition": "SUCCESSOR_TRANSFERRED_TO_312_NO_NEW_MUTATION",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #218 merged the #210 Product Intake source and consumed its generation-1 Claim (immutable historical evidence). The Product ReviewWitness implementation is now solely owned by successor #312 under new protected key kaicreator-mm/tally#312:builder:__default__. No source mutation is authorized under #210."
+    },
+    {
+      "issueNumber": 211,
+      "title": "[v2] Bounded recovery for native GitHub read failures",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T11:41:50Z",
+      "updatedAt": "2026-11-08T07:05:35Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR215_CLOSURE_UNVERIFIED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #215 merged as e4fb5b175fa837a2b5874ae328fe3f34eac9665a; exact PR-head Woodpecker statuses all SUCCESS (pipeline #203, four workflows); the merge commit is an ancestor of version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332. Source-integrated but Issue remains OPEN and Task Closure/Claim acceptance is NOT_VERIFIED; PR merge alone is not Outcome Closure. Non-dispatchable."
+    },
+    {
+      "issueNumber": 212,
+      "title": "[v2] Complete native WorkItem and Claim-event read recovery",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-10-31T12:06:28Z",
+      "updatedAt": "2026-11-08T07:05:39Z",
+      "closedAt": null,
+      "scopeDisposition": "SOURCE_INTEGRATED_BY_PR217_CLOSURE_UNVERIFIED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "PR #217 merged as 4232881c64cdaefe4539a5071da150c1d7c8e320, descending from PR #215 (2 ahead / 0 behind); exact PR-head Woodpecker statuses all SUCCESS (pipeline #213, four workflows); both merge commits are ancestors of version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332. Serial integration after #211 is proven by merge ancestry, not by a native blocked_by edge; the #211->#212 PLANNED-only history is preserved. Issue remains OPEN and Closure is NOT_VERIFIED. Its exact four-path write set (digest e4ed0583ea4666c7b09e951fef818e2711f372fafe1552b4b6345977a127c88d) is disjoint from #319's nine paths; the earlier two-path overlap claim was false. Non-dispatchable."
+    },
+    {
+      "issueNumber": 219,
+      "title": "[v2] Governed maintenance, next version and measured Task Learning",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-10-31T15:00:38Z",
+      "updatedAt": "2026-11-05T06:35:23Z",
+      "closedAt": null,
+      "scopeDisposition": "MAINTENANCE_HOLD_UNTIL_312_INTEGRATED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Native label is now state:planned with CANONICALIZED_OVERLAP_BLOCKED (50 overlap intersections). R8 serial ownership is #284 -> #312 -> #219; #219 shares eight paths with #312 and must refresh/rebase its source base after #312 exact review/integration before any shared-path write. Existing #219 PR/Claim/history is preserved unchanged."
+    },
+    {
+      "issueNumber": 260,
+      "title": "[v2][Closeout A][P0] Canonical per-version Task DAG, native dependencies & accepted Claim readback",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:39Z",
+      "updatedAt": "2026-11-09T19:29:49Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
+    },
+    {
+      "issueNumber": 261,
+      "title": "[v2][Closeout B][P0] Reuse selected B/K/Host for real UI-guided development and Agent/Review actions",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:40Z",
+      "updatedAt": "2026-11-04T20:37:53Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_UI_ACTIONS",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
+    },
+    {
+      "issueNumber": 262,
+      "title": "[v2][Closeout C][P0] Real ADS/task-meta, audit and controlled experience feedback to next Task",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:43Z",
+      "updatedAt": "2026-11-04T20:36:40Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_EXPERIENCE_LEARNING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
+    },
+    {
+      "issueNumber": 263,
+      "title": "[v2][Closeout D][P0] Human-oriented actionable ALM UI incl. approvals, QA, Release, deployment, settings",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-01T20:03:45Z",
+      "updatedAt": "2026-11-04T18:48:53Z",
+      "closedAt": null,
+      "scopeDisposition": "ACTIVE_HUMAN_ALM_UI",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
+    },
+    {
+      "issueNumber": 264,
+      "title": "[v2][Closeout E][P0] Single final PR #258 composition, differential verification and installed J01-J08",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-01T20:03:47Z",
+      "updatedAt": "2026-11-08T23:38:43Z",
+      "closedAt": null,
+      "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass. The Final installed Product P0/Vector Traceability Contract (24 P0 / 82 Vector complete index, SOURCE_ONLY) at #264 comment 6728777830 is the acceptance ledger for incremental J01-J08 verification."
+    },
+    {
+      "issueNumber": 273,
+      "title": "[v2][P0][F30] Governed Replan with immutable history and accepted-work preservation",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:09:59Z",
+      "updatedAt": "2026-11-09T17:54:16Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_REPLAN_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 274,
+      "title": "[v2][P0][F12/F31/F39] ADS v5 Experience Use Feedback Producer and Publisher",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:10:06Z",
+      "updatedAt": "2026-11-09T17:52:51Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 275,
+      "title": "[v2][P0][F38/F39] Source-backed Task Attempt and telemetry read model",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T03:10:13Z",
+      "updatedAt": "2026-11-09T17:54:09Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+    },
+    {
+      "issueNumber": 276,
+      "title": "[v2][P0][Domain Package] Extract Engineering Domain Knowledge and bounded Workflows into Tally B",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-03T05:32:14Z",
+      "updatedAt": "2026-11-08T23:41:04Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "F Domain Data/Workflow task. The 2026-11-09 delivery-first concurrency audit (#276 comment 6728802295) splits execution into F1a/F1b (authoring-only Domain Data/glossary/Schema/Rule/Workflow JSON + private readiness helper + four experiments/v2/selected-business-build compiler/consumer files; disjoint from #284 and other Business writers; must not touch src/index.mjs, src/attempts.mjs, producer.mjs or shared Business policy tests) and F2 (one src/index.mjs injection seam + moduleSource/producer call-site, serial only after #284/#219/#273/#275). CURRENT_42_PATH_SCOPE=NOT_ADMITTED; F1_STAGE_CLAIM=NOT_PRESENT; F2_STAGE_CLAIM=NOT_PRESENT. F1 still requires a fresh #260 Task Pack/allowed-write-set review plus a new accepted #276 Claim before any source exists. Keep non-dispatchable."
+    },
+    {
+      "issueNumber": 284,
+      "title": "[v2][Closeout E0][P0] Pre-freeze Bootstrap — selected K→Host Task Pack Freeze + native dependency writes",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-04T00:27:42Z",
+      "updatedAt": "2026-11-09T17:34:26Z",
+      "closedAt": null,
+      "scopeDisposition": "E0_ROOT_CLAIMED_IMPL_DELIVERED_NATIVE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "E0 root Claim recorded (native DISPATCH_CLAIMED comment 6739370032; subject-field misbinding disclosed at 6739442600 and corrected via FSW rev1 + Pack R11 deviation record; Owner PackBlob receipts 6739335815/R10 and 6739635285/R11 accept the factual root Claim and authorize implementation). Implementation delivered at 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f with independent Exact-SHA review PASS and Woodpecker CI #520 SUCCESS (receipt 6741313032). E0 Host Writer admitted for serial read-before/write/read-after native dependency materialization in 12 vertex-disjoint batches (#284 comment 6746943816); no native dependency POST or version Freeze has been performed yet. Live label state:planned -> state:ready."
+    },
+    {
+      "issueNumber": 312,
+      "title": "[v2][P0][Product ReviewWitness] New-Claim successor to completed #210 — exact draft, independent review and trusted freeze",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-05T04:00:25Z",
+      "updatedAt": "2026-11-05T17:01:51Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
+    },
+    {
+      "issueNumber": 319,
+      "title": "[v2][P0][T06d Successor] Append-only terminal disposition for accepted Claims",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:blocked"
+      ],
+      "createdAt": "2026-11-05T18:54:59Z",
+      "updatedAt": "2026-11-09T00:46:48Z",
+      "closedAt": null,
+      "scopeDisposition": "TERMINAL_DISPOSITION_VERIFIED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Claim rev3 TERMINAL_VERIFIED; native DONE event 6729569819 (ADS v4.18 DISPATCH_STATE_CHANGED); authorization 6729565837 / execution 6729576560; #203 external effect resolved rev4; issue intentionally left OPEN (DONE != Issue closure)."
+    },
+    {
+      "issueNumber": 331,
+      "title": "[v2][P0][T06d Recovery] Recover pre-POST stranded #203 terminal reservation",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-06T12:00:56Z",
+      "updatedAt": "2026-11-06T23:48:42Z",
+      "closedAt": null,
+      "scopeDisposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
+    },
+    {
+      "issueNumber": 370,
+      "title": "[v2][T06d P1] Shared Registry overbroad Claim incompatibility — require exact durable resource-fence proof for disjoint Tasks",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-08T00:35:27Z",
+      "updatedAt": "2026-11-09T00:57:43Z",
+      "closedAt": null,
+      "scopeDisposition": "TERMINAL_DISPOSITION_VERIFIED_CI_QUALIFIED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Two-path library review PASS 5820130542; CI pipeline #513 SUCCESS on replay branch 342fd977 (CI-profile amendment 6729584628, receipt 6729645189); Claim rev3 TERMINAL_VERIFIED; native DONE event 6729695352 (authorization 6729691843 / execution 6729702959); library-only, PHYSICAL_SHARED_HOST_FENCE=NOT_PROVEN."
+    },
+    {
+      "issueNumber": 377,
+      "title": "[v2][P1 Defect] GitHub native read retry can replay POST when input is Request",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:planned"
+      ],
+      "createdAt": "2026-11-08T08:06:48Z",
+      "updatedAt": "2026-11-08T10:10:55Z",
+      "closedAt": null,
+      "scopeDisposition": "PLANNED_REVIEWED_PACK_OWNER_APPROVED_SOURCE_ADMISSION_BLOCKED",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Formal planned successor-defect Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Immutable Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / Tree 2dd3d3fad0ffa5afb4e99eee94ada266afdcd882 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc; independent Pack review 5817226448 PASS (P0=0/P1=0/P2=2) and exact PackBlob Owner receipt 6719378711 OWNER_APPROVED. Exact two normalized paths digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac; both are historical OPEN #211-owned, already-integrated paths, so no concurrent writer or historical Claim/FSW/merged-PR reuse is allowed. No native Claim or FSW exists; source admission remains BLOCK until A/#260 R17 independent Exact-SHA PASS, current metadata/dependency/overlap revalidation, a genuine selected-Host shared-writer fence, fresh #377 Claim and per-task FROZEN_DAG_WRITESET, and a separate JIT branch. No #370/#284 Host competition, #203 POST, native dependency write, freeze, merge, tag, release or deployment."
+    },
+    {
+      "issueNumber": 383,
+      "title": "[v2][P0 gap][PLANNING ONLY] Wire shared Host resource fence into real Claim publisher/controller after #319 serial handoff",
+      "issueState": "open",
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "createdAt": "2026-11-08T23:30:33Z",
+      "updatedAt": "2026-11-09T02:15:52Z",
+      "closedAt": null,
+      "scopeDisposition": "R3_ADMITTED_CLAIMED_IMPLEMENTATION_REVIEW_PASS_PHYSICAL_GATE_PASS",
+      "dispatchableByDisposition": false,
+      "dispositionNote": "Successor fence-wiring task: Pack R3 SOUND (6729936160), Owner receipt 6729962910 binds write-set digest 41538b7f (6 paths), recorded Claim 6730033866 on the dedicated fence-owned registry; implementation HEAD ab4976c5 independent review PASS + CI #514 SUCCESS 81/81 (receipt 6730565550); PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 on the real two-Builder gate (6730626623/6730634645), clearing E0/#284 root admission. Delivered increment pending #264 integration join; do not dispatch further #383 code or physical-validation repairs."
+    }
+  ],
+  "edges": [
+    {
+      "from": 260,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260"
+    },
+    {
+      "from": 261,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261"
+    },
+    {
+      "from": 262,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262"
+    },
+    {
+      "from": 263,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/263"
+    },
+    {
+      "from": 211,
+      "to": 212,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/212",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "Existing declared dependency; native blocked_by is absent. Preserve as PLANNED and non-executable."
+    },
+    {
+      "from": 275,
+      "to": 261,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "New Task Attempt/telemetry reader must be available before B consumes the read model."
+    },
+    {
+      "from": 203,
+      "to": 261,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "Real candidate publication/readback is a prerequisite for B's UI candidate-PR journey."
+    },
+    {
+      "from": 274,
+      "to": 262,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "ADS v5 feedback Producer/Publisher is a prerequisite for C's experience-use feedback."
+    },
+    {
+      "from": 219,
+      "to": 262,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Maintenance/learning source and REJECT-vs-ADOPT semantics are a prerequisite for C."
+    },
+    {
+      "from": 219,
+      "to": 273,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "Replan consumes current next-version/maintenance source; central Business writer is serialized after #219."
+    },
+    {
+      "from": 261,
+      "to": 273,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "Replan uses the selected B/K/Host action bridge delivered by B."
+    },
+    {
+      "from": 273,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "Final installed J01-J08 integration waits for governed Replan."
+    },
+    {
+      "from": 207,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/207",
+      "reason": "Final integration waits for real J06 browser journey acceptance."
+    },
+    {
+      "from": 208,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "Final integration waits for exact-SHA J07 Release Qualification evidence."
+    },
+    {
+      "from": 209,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "Final integration waits for J08 defect/next-version/learning acceptance."
+    },
+    {
+      "from": 210,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "Final integration waits for J01-J03 Project/Product/L2/DAG user journeys."
+    },
+    {
+      "from": 260,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/260",
+      "reason": "#276 waits for canonical Task DAG/Task Pack refresh and A-lane freeze evidence; this edge is still PLANNED until native readback."
+    },
+    {
+      "from": 219,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "reason": "#276 waits for #219 maintenance/learning and shared Business/Producer writer to complete; exact-source review remains required."
+    },
+    {
+      "from": 261,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/261",
+      "reason": "#276 aligns with the selected B/K/Host action bridge; do not race the B-owned contract."
+    },
+    {
+      "from": 262,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "reason": "#276 aligns with the Experience/Casebook consumer and evidence-use contract; do not race C-owned semantics."
+    },
+    {
+      "from": 273,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/273",
+      "reason": "#276 consumes the governed PlanRevision/Replan vocabulary and must wait for #273's final contract/source."
+    },
+    {
+      "from": 274,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/274",
+      "reason": "#276 aligns with the exact ADS v5 ExperienceUseFeedback producer/publisher contract."
+    },
+    {
+      "from": 275,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/275",
+      "reason": "#276 uses the canonical TaskAttempt/AttemptEvent read model only after #275 owns and completes its initial source."
+    },
+    {
+      "from": 276,
+      "to": 264,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/264",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "reason": "Final integration #264 waits for F Domain Data/Workflow implementation, exact selected-BUILD evidence and independent review."
+    },
+    {
+      "from": 208,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/208",
+      "reason": "#276's current candidate includes #208-owned release-readiness source/test; keep #276 non-dispatchable until #208 completes or F narrows its exact write set."
+    },
+    {
+      "from": 209,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/209",
+      "reason": "#276's current candidate includes #209-owned maintenance-intake source/test; keep #276 non-dispatchable until #209 completes or F narrows its exact write set."
+    },
+    {
+      "from": 203,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/203",
+      "reason": "#276's broad Business test glob overlaps #203's business-policy test and selected publication source; keep #276 non-dispatchable until #203 completes or F narrows the exact write set."
+    },
+    {
+      "from": 210,
+      "to": 276,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/276",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/210",
+      "reason": "#276's broad Business test glob and central Business files overlap #210's Project/Product/L2 intake write set; keep #276 non-dispatchable until #210 completes or F narrows the exact write set."
+    },
+    {
+      "from": 284,
+      "to": 312,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/312",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/284"
+    },
+    {
+      "from": 312,
+      "to": 219,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/219",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/312"
+    },
+    {
+      "from": 319,
+      "to": 331,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/331",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
+      "reason": "#331 separately consumed the one-shot #203 recovery and R16 verifies target-specific terminality; #331 Task Acceptance and #319 Task Closure remain unverified, with historical P1 deviations retained. PLANNED only, not a native dependency or admission."
+    },
+    {
+      "from": 331,
+      "to": 284,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/331",
+      "reason": "#284 E0 waits for stable independently reviewed A/#260 R16 input, its own fresh R9-or-later Pack/review/Owner receipt and lawful Host-wide admission/fail-closed isolation. #203 target terminality alone does not admit E0; PLANNED only, not a native dependency."
+    },
+    {
+      "from": 211,
+      "to": 377,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/377",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/211",
+      "reason": "#377 replaces only the native read-retry derivation/guard; its exact two paths are historical #211-owned and already integrated in version/v2. #211 original Claim is historical PUBLISHED_VERIFIED but its original FROZEN_DAG_WRITESET is absent, and #211 remains OPEN/non-dispatchable. No concurrent writer or reuse of the historical Claim/FSW/merged PRs is permitted; PLANNED serialization annotation only, not a native dependency, Claim, JIT or source permission."
+    },
+    {
+      "from": 319,
+      "to": 370,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/370",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319",
+      "reason": "#370 exact R8 eight-path candidate overlaps #319 accepted historical nine-path FSW on five paths. #319 remains OPEN/state:blocked with no inferred Task Closure and its original Claim/FSW cannot be reused. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before #370 source work; a fresh empty #370 registry is not evidence that #319 terminated. PLANNED only, not a native dependency."
+    },
+    {
+      "from": 319,
+      "to": 383,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/383",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/319"
+    },
+    {
+      "from": 370,
+      "to": 383,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/383",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/370"
+    },
+    {
+      "from": 383,
+      "to": 284,
+      "kind": "NATIVE",
+      "evidenceRef": "https://github.com/kaicreator-mm/tally/issues/284",
+      "dependencyRef": "https://github.com/kaicreator-mm/tally/issues/383"
+    }
+  ],
+  "claimSubjects": [
+    {
+      "issueNumber": 62,
+      "sourceSha": "1c81a19aa7b102474e80b3b83690664cae0fe910",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i62:observation:1",
+      "dispatchId": "dispatch:62:observation:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#62:builder:__default__",
+      "commentId": 6537176701,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/62#issuecomment-6537176701",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 92,
+      "sourceSha": "ec9820c3a67e387d5ca51f736be0d6f316f36c12",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i92:workspace:1",
+      "dispatchId": "dispatch:92:workspace:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#92:builder:__default__",
+      "commentId": 6531524495,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/92#issuecomment-6531524495",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 137,
+      "sourceSha": "0bd4da9b38622148d65b81ab62946bbf80baaa64",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i137:snapshot:1",
+      "dispatchId": "dispatch:137:snapshot:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#137:builder:__default__",
+      "commentId": 6530174695,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/137#issuecomment-6530174695",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 139,
+      "sourceSha": "35c010fa429cec10f3031294c94e82c084516736",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i139:lineage:1",
+      "dispatchId": "dispatch:139:lineage:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#139:builder:__default__",
+      "commentId": 6533424893,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/139#issuecomment-6533424893",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 140,
+      "sourceSha": "469ce288cda19f0412f88c466ea0fa89a0d342dd",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i140:diagnosis:1",
+      "dispatchId": "dispatch:140:diagnosis:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#140:builder:__default__",
+      "commentId": 6534257043,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/140#issuecomment-6534257043",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 141,
+      "sourceSha": "870e0ac6159f68deb9d9cdea32bace45dd25533c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i141:planning:1",
+      "dispatchId": "dispatch:141:planning:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#141:builder:__default__",
+      "commentId": 6534697474,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/141#issuecomment-6534697474",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 142,
+      "sourceSha": "b2c7105f774db8aad190670db504bcb7f2607407",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i142:workunits:1",
+      "dispatchId": "dispatch:142:workunits:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#142:builder:__default__",
+      "commentId": 6535215977,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/142#issuecomment-6535215977",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 143,
+      "sourceSha": "8fca68161f7888d28eb439dcf9ae4c6271a17b6b",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i143:casebook:1",
+      "dispatchId": "dispatch:143:casebook:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#143:builder:__default__",
+      "commentId": 6535668951,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/143#issuecomment-6535668951",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 144,
+      "sourceSha": "fa62aade360bac74bda2577be8d516da1c5a0f45",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i144:feedback:1",
+      "dispatchId": "dispatch:144:feedback:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#144:builder:__default__",
+      "commentId": 6536266523,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/144#issuecomment-6536266523",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 145,
+      "sourceSha": "4467bfd166f881cca88317eb34381217c9fc0d6f",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i145:journey:1",
+      "dispatchId": "dispatch:145:journey:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#145:builder:__default__",
+      "commentId": 6530904740,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/145#issuecomment-6530904740",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 146,
+      "sourceSha": "fc083826788c7e1b19f0b5e33fac95deebecf82e",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i146:acceptance:1",
+      "dispatchId": "dispatch:146:acceptance:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#146:builder:__default__",
+      "commentId": 6532157396,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/146#issuecomment-6532157396",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 148,
+      "sourceSha": "2502d3a782eac609623a9d481b2da56975b52aba",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i148:guided:1",
+      "dispatchId": "dispatch:148:guided:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#148:builder:__default__",
+      "commentId": 6536630259,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/148#issuecomment-6536630259",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 166,
+      "sourceSha": "7823e18e4b9f4d4df9a2c9065de1b1fed6421264",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:t166:bootstrap:1",
+      "dispatchId": "dispatch:166:t06j:bootstrap:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#166:builder:__default__",
+      "commentId": 6507893767,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/166#issuecomment-6507893767",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 169,
+      "sourceSha": "3293aace8a07c2a4f79a75c6539245980f77e2b4",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:t125:kernel:1",
+      "dispatchId": "dispatch:169:t06l:kernel:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#169:builder:__default__",
+      "commentId": 6511046226,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/169#issuecomment-6511046226",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 172,
+      "sourceSha": "2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i172:local:1",
+      "dispatchId": "dispatch:172:t06m:local:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#172:builder:__default__",
+      "commentId": 6523851380,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/172#issuecomment-6523851380",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 173,
+      "sourceSha": "2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i173:ci:1",
+      "dispatchId": "dispatch:173:ci:woodpecker:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#173:builder:__default__",
+      "commentId": 6523858948,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/173#issuecomment-6523858948",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 176,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i176:impl:1",
+      "dispatchId": "dispatch:176:t06n:impl:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#176:builder:__default__",
+      "commentId": 6527320123,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/176#issuecomment-6527320123",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 177,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "codex:t06n:builder-a:1",
+      "dispatchId": "dispatch:177:t06n:builder-a:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#177:builder:__default__",
+      "commentId": 6527324131,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/177#issuecomment-6527324131",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 178,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "codex:t06n:builder-b:1",
+      "dispatchId": "dispatch:178:t06n:builder-b:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#178:builder:__default__",
+      "commentId": 6527327548,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/178#issuecomment-6527327548",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 179,
+      "sourceSha": "ca09511d49488785c9ae8ff436c5db98f31b6714",
+      "actorRole": "reviewer",
+      "operatorKind": "other",
+      "operatorId": "zcode:t06n:reviewer:1",
+      "dispatchId": "dispatch:179:t06n:reviewer:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#179:reviewer:__default__",
+      "commentId": 6527331202,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/179#issuecomment-6527331202",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 184,
+      "sourceSha": "ec9820c3a67e387d5ca51f736be0d6f316f36c12",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i184:workspace-ci:1",
+      "dispatchId": "dispatch:184:workspace-ci:20261030:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#184:builder:__default__",
+      "commentId": 6531830250,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/184#issuecomment-6531830250",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 196,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i92:alm-write:1",
+      "dispatchId": "dispatch:92:alm-write:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#196:builder:__default__",
+      "commentId": 6538568600,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/196#issuecomment-6538568600",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 197,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:builder-a:1",
+      "dispatchId": "dispatch:197:alm:builder-a:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#197:builder:__default__",
+      "commentId": 6539092449,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/197#issuecomment-6539092449",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 198,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:builder-b:1",
+      "dispatchId": "dispatch:198:alm:builder-b:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#198:builder:__default__",
+      "commentId": 6539094169,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/198#issuecomment-6539094169",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 199,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:reviewer:1",
+      "dispatchId": "dispatch:199:alm:reviewer:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#199:builder:__default__",
+      "commentId": 6539095808,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/199#issuecomment-6539095808",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 200,
+      "sourceSha": "d6b32929b481006de4e848eb772fe7dd96c2547c",
+      "actorRole": "reviewer",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:reviewer:1",
+      "dispatchId": "dispatch:200:alm:reviewer:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#200:reviewer:__default__",
+      "commentId": 6539702548,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/200#issuecomment-6539702548",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 202,
+      "sourceSha": "b490ceca33af7ed1190333436751d72d8a6176cc",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:alm:integration:1",
+      "dispatchId": "dispatch:202:alm:integration:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#202:builder:__default__",
+      "commentId": 6540308558,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/202#issuecomment-6540308558",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 203,
+      "sourceSha": "00c03e1f0c2f66c6ae6df1ead0ed1ce5d9914769",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:candidate-publication:1",
+      "dispatchId": "dispatch:203:candidate-publication:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#203:builder:__default__",
+      "commentId": 6540484121,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6540484121",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 207,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i207:builder:1",
+      "dispatchId": "dispatch:207:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#207:builder:__default__",
+      "commentId": 6542838856,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/207#issuecomment-6542838856",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 208,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i208:builder:1",
+      "dispatchId": "dispatch:208:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#208:builder:__default__",
+      "commentId": 6542840133,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/208#issuecomment-6542840133",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 209,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i209:builder:1",
+      "dispatchId": "dispatch:209:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#209:builder:__default__",
+      "commentId": 6542841346,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/209#issuecomment-6542841346",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 210,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i210:builder:1",
+      "dispatchId": "dispatch:210:v2:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#210:builder:__default__",
+      "commentId": 6542842623,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/210#issuecomment-6542842623",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 211,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i211:builder:1",
+      "dispatchId": "dispatch:211:native-read-retry:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#211:builder:__default__",
+      "commentId": 6542911259,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/211#issuecomment-6542911259",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 212,
+      "sourceSha": "5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i212:builder:1",
+      "dispatchId": "dispatch:212:native-read-coverage:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#212:builder:__default__",
+      "commentId": 6543151097,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/212#issuecomment-6543151097",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 219,
+      "sourceSha": "ad3123e7646428ec3b13fac5b6f510b683a133c8",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i219:builder:1",
+      "dispatchId": "dispatch:219:maintenance:20261031:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#219:builder:__default__",
+      "commentId": 6545079271,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6545079271",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 260,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:260:closeout-a:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#260:builder:__default__",
+      "commentId": 6568304709,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/260#issuecomment-6568304709",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 261,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:261:closeout-b:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#261:builder:__default__",
+      "commentId": 6568306219,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/261#issuecomment-6568306219",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 262,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:262:closeout-c:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#262:builder:__default__",
+      "commentId": 6568307808,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/262#issuecomment-6568307808",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 263,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i259:closeout:1",
+      "dispatchId": "dispatch:263:closeout-d:host:20261102:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#263:builder:__default__",
+      "commentId": 6568309546,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/263#issuecomment-6568309546",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 264,
+      "sourceSha": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#264:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 273,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#273:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 274,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#274:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 275,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#275:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 276,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#276:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 284,
+      "sourceSha": "d8d80ed9f6ff2dffad616353d27b20f95a2ee1ff",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i284:fence-wiring:1",
+      "dispatchId": "e0-bootstrap:284:58093e4f-0115-4bbc-a983-d61abc5f687a",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#284:builder:__default__",
+      "commentId": 6739370032,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/284#issuecomment-6739370032",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 312,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#312:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 319,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i319:t06d-terminalization:1",
+      "dispatchId": "dispatch:319:t06d-terminalization:20261106:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#319:builder:__default__",
+      "commentId": 6668875091,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/319#issuecomment-6668875091",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 331,
+      "sourceSha": "72ce3067213b75ffbc04762d866759c3af4324f8",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i331:t06d-prepost-recovery:1",
+      "dispatchId": "dispatch:331:t06d-prepost-recovery:20261106:1",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#331:builder:__default__",
+      "commentId": 6690955003,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/331#issuecomment-6690955003",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    },
+    {
+      "issueNumber": 370,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#370:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 377,
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "unassigned:tally-v2",
+      "dispatchId": null,
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#377:builder:__default__",
+      "commentId": null,
+      "commentRef": null,
+      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+    },
+    {
+      "issueNumber": 383,
+      "sourceSha": "d8d80ed9f6ff2dffad616353d27b20f95a2ee1ff",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i383:fence-wiring:1",
+      "dispatchId": "fence-wiring:383:61a2e3c1-6365-4ded-802b-d02caa373c04",
+      "generation": 1,
+      "protectedClaimKey": "kaicreator-mm/tally#383:builder:__default__",
+      "commentId": 6730033866,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/383#issuecomment-6730033866",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
+    }
+  ],
+  "claimAcceptance": "NOT_VERIFIED",
+  "closureEvidence": "NOT_VERIFIED",
+  "plannedEdges": [],
+  "notes": [
+    "This refreshed 50-Task pack is CANDIDATE_NOT_FROZEN and requires independent exact-body/write-set review.",
+    "Four native edges remain verified from current GitHub readback: #260-#263 → #264.",
+    "Thirty PLANNED edges are non-executable until materialized through the selected Controller→K→Host/GitHub C path and read back; preserve #211 → #212, the serial #319 → #331 → #284 chain, and the overlap-serialization edges #211 → #377 and #319 → #370 as PLANNED.",
+    "The live roster contains all 50 current label:type:task Issues (29 OPEN / 21 CLOSED). #203 has target-specific terminality verified but remains OPEN/state:blocked with global Host admission BLOCK/UNKNOWN; #319 implementation PASS and successor recovery do not infer Task Closure; #331 has an observed Claim and scoped source-patch PASS but TASK_ACCEPTANCE=BLOCK and Issue OPEN/state:ready; #284 remains PLANNED with no root Claim; #370 and #377 are PLANNED rows with no Claim/FSW. The 50-Task denominator (21 CLOSED + 29 OPEN) is a roster accounting correction, not Task acceptance or Outcome Closure.",
+    "The #276 proposed BUILD inclusion amendment remains subject to independent review and fresh Owner approval; it is not source admission.",
+    "scopeDispositions and writeSetAudit are candidate audit metadata, not source/Claim authorization.",
+    "No Task execution, K admission, Agent dispatch, freeze, merge, version/main mutation, tag or Release is implied.",
+    "Task #219 PR #278 exact HEAD 417517ed58ed078e9541ce118c968c8d30dc9e2a passed native Windows Node24 syntax-first/local suites; independent exact-SHA review remains pending, so Task #219 remains open and this does not establish closure or E integration.",
+    "Refreshed after the #219 Host repair and #260 candidate review comments; timestamps/states re-read from all 44 current type:task Issues. #219 remains open pending exact-HEAD Windows validation and distinct independent review; #260 remains open and the Task Pack remains unfrozen.",
+    "Exact-body write-set audit found #276 candidate overlap with #208 release-readiness and #209 maintenance-intake, including the broad `packages/tally-engineering-business/test/*.test.mjs` glob. Added #208→#276 and #209→#276 as PLANNED only and recorded the overlap. #276 remains non-dispatchable until its glob is narrowed or upstream owners complete; no native dependency or Claim was created.",
+    "Re-refreshed all 46 native Task Issue timestamps/states/labels: all 25 open Issues now match current native updatedAt/state/labels; the 21 closed Issues were unchanged since the prior snapshot.",
+    "Historical write-set collisions were reconciled in the current live Issue bodies: #273 no longer intersects #264's four E-owned shared paths; #274 no longer intersects #262's `ui-experience-host.mjs`; #275 no longer intersects #261's Task/Agent UI directories. The current exact 66-pair matrix confirms zero pairs for #273×#264, #274×#262 and #275×#261. Preserve the producer/consumer PLANNED edges (#273→#264, #274→#262, #275→#261); these are sequencing dependencies, not current write-set overlaps. The separate #276 broad test-glob hazard remains explicitly tracked and must be narrowed or serialized before future admission. #276 remains non-dispatchable; no native dependency or Claim is created by this correction.",
+    "Refreshed native Task Issue timestamps/states after the exact-write-set collision audit comments; all 44 rows are re-read from GitHub.",
+    "Refreshed the four native Task Issue updatedAt fields after exact-HEAD source-audit and bounded-repair comments on #219/#261/#262/#263. Roster remains 44/44; no Claim, edge, write-set, approval or freeze state was changed.",
+    "Refreshed native updatedAt fields after the exact-HEAD correction receipts for #260/#261/#262/#263. This snapshot is a candidate only; no claims, dependencies, freeze, approval or authority changed.",
+    "R8 additions #284 (E0 pre-freeze Bootstrap) and #312 (Product ReviewWitness successor to merged #210) are in the roster as state:planned with NO_CLAIM_EVENT_EXPECTED (zero ADS claim comments observed on either Issue); both are non-dispatchable.",
+    "Current native/evidence dispositions: #203 target-specific dispatch terminality is VERIFIED at CAS revision 4 and terminal event 6691973736, but Task/Outcome Closure and global Host admission are not proven; #210 successor ownership remains transferred to #312 with no #210 mutation authorized; #219 remains on HOLD (state:planned) until #312 review/integration.",
+    "New PLANNED edges #284 -> #312 and #312 -> #219 record R8 serial ownership only. No GitHub Native dependency (blocked_by) was written for them or any other pair; the 4 NATIVE edges remain #260-#263 -> #264.",
+    "Previous 46-Task snapshot: 25 open Task bodies had 66 nonzero pairwise intersections (23 nonempty write sets; #199/#200 are read-only Reviewer roles); #284/#312 overlap matrices matched the paths_sha256-normalized blocks in Issues #312/#219/#284.",
+    "This candidate remains CANDIDATE_NOT_FROZEN: no Freeze, Claim, CAS, native dependency mutation, merge, version/v2 or main write, tag, release or deployment is implied.",
+    "Current full read at 2026-11-08T11:29:14.019Z: all 50 Task bodies, complete Claim-comment pagination and blocked_by lists; 41 observed self-reported Claim comments and 9 no-Claim rows. #203 revision 4 / TERMINAL_VERIFIED and event 6691973736 are target-specific facts only. #331 Claim 6690955003 and exact three-path FSW are observed; R3 source patch PASS retains two historical/operational P1 deviations and TASK_ACCEPTANCE=BLOCK. #319 → #331 → #284 remains PLANNED only; #284 has no root Claim. #370 and #377 have no native Claim, FSW or dependency edge.",
+    "Current 29-open-Task write-set audit: 27 nonempty sets (#199/#200 read-only), 68 nonzero exact-path pairs recomputed from the full live pair matrix; new pairs are #211x#377=2 and #319x#370=5. The prior 67-pair note and #212/#319 two-path overlap claim remain false; #331's exact three paths overlap no open Task write set. No native dependency was invented for any pair.",
+    "R13 refresh: #331 added as the 48th Task (PLANNED_PREPOST_RECOVERY_NO_CLAIM; Pack PR #332 HEAD 9fd9b1b798f756c708813b6ac8f2c3e92d72039a, Tree 276b8da208c71cbfce5696fe27f1ae5605600d9e, PackBlob 1f0ded0ba46f279d70855e5c00f51d333593a7ca; Pack review 5800344352 PACK_R1=PASS; Owner receipt OWNER_APPROVED via PR #332 comment #6685952738 (approved_at 2026-11-06T21:28:12+08:00)). #211/#212 set to source-integrated / Closure-unverified from exact merge ancestry (#215 merged e4fb5b1…; #217 merged 4232881… descending from #215; both ancestors of version/v2@7ebb1cdd…; PR-head Woodpecker pipelines #203/#213 all SUCCESS). #319 observation replaced by the exact DISPATCH_CLAIMED 6668875091 with PR #330 SOURCE_REVIEW=PASS at 72ce3067… / Tree 1532079…; the Host terminalization stopped fail-closed with zero POSTs, leaving #203 at CAS revision 2 / PENDING_GITHUB_TERMINALIZATION (terminal event ABSENT). Aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED.",
+    "R16 target/admission distinction: real public DomainHarness v0.10.3 readback verifies #203 CAS revision 4 TERMINAL_VERIFIED and terminal event 6691973736, #319 Claim/FSW and #331 Claim/FSW without CAS writes and with unchanged source DB digests. PR #348 review 5815168261 accepts only the scoped source patch with historical deviations; it does not establish #331 Task Acceptance or global Host quiescence. #203/#319 remain OPEN/state:blocked, #331 remains OPEN/state:ready, #284 remains PLANNED/no root Claim. E0 must wait for independent A R16 review and then refresh its own Pack; no historical P1 is represented as resolved.",
+    "R17 combined refresh: #377 (defect Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc, independent Pack review 5817226448 PASS, Owner receipt 6719378711, exact two-path digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac) and #370 (exact R8 eight-path digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27; Governance Pack PR #376 HEAD 58abb60f0b2061b5124ea66a3e212210bf843de8 / Tree 3932120992d124d25e3987dc7b8d80f954fc655d / PackBlob f1de3aaeb8f85b86a721d2dc806335392efc032a after the original R8 review 5817672588 BLOCK at d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / f81fa0775a979623e4e4c41ebbff1726683d96e3 with P0=0/P1=3/P2=1; fresh independent final review REQUIRED and Owner=NONE; R7 review 5817590966 BLOCK for native task-classification corrected by Issue comment 6720594384) were added in one pass under the existing A Claim/FSW/Writer. Both remain type:task/state:planned with no Claim, FSW, native dependency or source permission; neither was promoted to state:ready. core Outcome Closure remains NOT_VERIFIED: 21 closed Issues of 50 do not establish verified Outcome Closure (21/50 measurement preserved).",
+    "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations.",
+    "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69).",
+    "R18 repair 2 (2026-11-09): independent re-review confirmed the machine-checked invariants fixed (real freeze writer accepts) but found the writeSetAudit pair matrix missed 370x383=6 under the audit's own snapshot semantics (#370 R8 eight-path historical candidate is a superset of the #383 six-path set). Added the 370x383 pair, nonzeroPairs 69->70, and stated the snapshot semantics explicitly in the method and overlap-group finding.",
+    "R19 (2026-11-09): closes the two A-side P3 gaps recorded in the E0 R10/R11 reviews — adds the missing #383 scopeDispositions row and projects the three R18-added PLANNED edges (319->383, 370->383, 383->284) into plannedEdges (30->33, now a complete projection of the 33 PLANNED edges in edges[]). Also pins the #383 disposition facts (Claim 6730033866, implementation ab4976c5 review PASS, CI #514, PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645). No taskIssues/edges/claimSubjects rows changed; writeSetAudit unchanged (its 70-pair matrix and snapshot semantics are already correct).",
+    "R20 (2026-11-10): one-pass snapshot refresh required before any E0 native dependency write. Live re-read of all 51 Task issues (roster 51/51, 30 open / 21 closed after #284 label state:planned->state:ready), all 13 distinct planned-edge target blocked_by lists (only #264 holds native blockers [260,261,262,263]; none of the 33 PLANNED edges has materialized) and all open-task write-set digests (unchanged, including #383 R3 six-path set under the documented snapshot semantics). Five stale endpoints corrected: #260/#264/#276/#383 timestamps plus material drift — #284 records its factual one-and-only root Claim 6739370032 (misbound subject fields disclosed at 6739442600, corrected via FSW rev1 and Pack R11 deviation; Owner receipts 6739335815/R10, 6739635285/R11; implementation 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f independent review PASS + Woodpecker CI #520 SUCCESS at 6741313032), #383 taskIssues row synced to the R19 scopeDispositions fact (implementation review PASS + CI #514 SUCCESS + PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645), #264 gains the final P0/82-Vector Traceability Contract anchor 6728777830, and #276 records the F1a/F1b+F2 stage split from concurrency audit 6728802295. Denominator 51, edges 37 (4 NATIVE / 33 PLANNED), claimSubjects 51 (43 observed / 8 no-claim) all unchanged in count; writeSetAudit overlap matrix and digests verified still live-accurate, so no recompute was required. 12 vertex-disjoint native-edge batches per #284 comment 6746943816 are the execution plan for the admitted E0 Host Writer; this revision enables their ISSUE_STALE_VS_PACK preflight.",
+    "R20.1 (2026-11-10): mid-batch-01 fail-closed recovery refresh. Edges 211->212 and 219->262 materialized NATIVE_EDGE_VERIFIED via the admitted E0 Host Writer (official blocked_by POST + exact readback; events at _tmp/i284-e0-native/events.ndjson) and are now recorded NATIVE in edges[] and removed from plannedEdges (33->31). Edge 261->273 was refused ISSUE_STALE_VS_PACK before any POST because parallel Web-Builder governance comment 6747395740 (PR #386 Pack R1 preparation, zero source writes, explicitly non-interrupting) landed on #273 seconds after the R20 snapshot; this refresh re-read all 51 live Task issues and corrected #275 updatedAt 2026-11-04T06:26:29Z->2026-11-09T17:54:09Z; #274 updatedAt 2026-11-08T10:10:14Z->2026-11-09T17:52:51Z; #273 updatedAt 2026-11-04T06:26:16Z->2026-11-09T17:54:16Z. No other field, edge, claim or audit data changed. Remaining batch-01 edges 261->273, 276->264, 284->312, 319->383 resume under a fresh review/receipt bound to this blob.",
+    "R20.2 (2026-11-10): post-batch refresh. Batch 01 complete: all six edges materialized NATIVE_EDGE_VERIFIED by the admitted E0 Host Writer (211->212, 219->262 under R20; 261->273, 276->264, 284->312, 319->383 under R20.1 after the ISSUE_STALE_VS_PACK fail-close). Newly verified native edges recorded in edges[] and removed from plannedEdges (31->27; 10 NATIVE / 27 PLANNED of 37): 261->273, 276->264, 284->312, 319->383. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R20.3 (2026-11-10): post-batch refresh. Batch 02 complete: all seven edges materialized NATIVE_EDGE_VERIFIED (274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284). Newly verified native edges recorded in edges[] and removed from plannedEdges (27->20; 17 NATIVE / 20 PLANNED of 37): 274->262, 273->264, 261->276, 312->219, 319->331, 211->377, 383->284. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R20.4 (2026-11-10): post-batch refresh. Batch 03 complete: all five edges materialized NATIVE_EDGE_VERIFIED (275->261, 208->264, 273->276, 331->284, 370->383). Newly verified native edges recorded in edges[] and removed from plannedEdges (20->15; 22 NATIVE / 15 PLANNED of 37): 275->261, 208->264, 273->276, 331->284, 370->383. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R20.5 (2026-11-10): post-batch refresh. Batch 04 complete: all four edges materialized NATIVE_EDGE_VERIFIED (203->261, 210->264, 219->276, 319->370). Newly verified native edges recorded in edges[] and removed from plannedEdges (15->11; 26 NATIVE / 11 PLANNED of 37): 203->261, 210->264, 219->276, 319->370. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R21 (2026-11-10): post-batch refresh. FINAL: all 33 planned edges materialized NATIVE_EDGE_VERIFIED — batches 01-04 (22 edges) plus the merged final serial group of 11 (219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276) under the R20.5 batching-optimization receipt. The Pack is now fully native: 51 Tasks, 37 NATIVE edges, 0 PLANNED. This is the freeze-ready candidate. Newly verified native edges recorded in edges[] and removed from plannedEdges (11->0; 37 NATIVE / 0 PLANNED of 37): 219->273, 209->264, 262->276, 207->264, 210->276, 208->276, 274->276, 203->276, 209->276, 275->276, 260->276. All 51 live Task issues re-read; drift corrected: none. No other field, claim or audit data changed.",
+    "R21.1 (2026-11-10): post-batch refresh. Freeze-current micro-refresh: the freeze-port roster readback requires all 51 live updatedAt values to equal the pack snapshot exactly; the first freeze attempt correctly failed closed (NATIVE_TASK_ROSTER_READBACK_FAILED, zero writes) because witness comments posted on #260 bumped its updatedAt after R21. This refresh re-reads all 51 live values; witness anchors move to non-roster issue #259 for the retried freeze. Newly verified native edges recorded in edges[] and removed from plannedEdges (0->0; 37 NATIVE / 0 PLANNED of 37): . All 51 live Task issues re-read; drift corrected: #260 updatedAt 2026-11-09T17:35:30Z->2026-11-09T19:29:49Z. No other field, claim or audit data changed."
+  ],
+  "scopeDispositions": {
+    "schema": "tally/version-task-scope-dispositions/v1",
+    "status": "REVIEW_REQUIRED",
+    "items": [
+      {
+        "issueNumber": 62,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed historical integration proof; closure remains independently evidence-qualified."
+      },
+      {
+        "issueNumber": 92,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Product UX intake; do not infer final installed J01-J08 acceptance."
+      },
+      {
+        "issueNumber": 137,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-model intake."
+      },
+      {
+        "issueNumber": 139,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed lineage intake."
+      },
+      {
+        "issueNumber": 140,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed diagnosis intake."
+      },
+      {
+        "issueNumber": 141,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed advisory next-version planning intake; does not prove governed Replan activation."
+      },
+      {
+        "issueNumber": 142,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed WorkItem identity intake."
+      },
+      {
+        "issueNumber": 143,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Casebook intake; does not prove complete next-Task learning loop."
+      },
+      {
+        "issueNumber": 144,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed cross-project feedback intake."
+      },
+      {
+        "issueNumber": 145,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Version Journey Driver intake."
+      },
+      {
+        "issueNumber": 146,
+        "disposition": "CLOSED_HISTORICAL_P1",
+        "dispatchableByDisposition": false,
+        "note": "Closed P1 acceptance ledger intake; current acceptance.mjs still maps only seven vectors."
+      },
+      {
+        "issueNumber": 148,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Guided StepSpec is advisory; selected Host submit remains a v2 closeout obligation."
+      },
+      {
+        "issueNumber": 166,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed Host admission source adapter task."
+      },
+      {
+        "issueNumber": 169,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed accepted Claim verifier task."
+      },
+      {
+        "issueNumber": 172,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Real Local Codex selected K/Host evidence; reuse only where source/environment unchanged."
+      },
+      {
+        "issueNumber": 173,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Self-hosted Woodpecker validation carrier task."
+      },
+      {
+        "issueNumber": 176,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical concurrent Builder/Reviewer/Repair evidence; final v2 installed journey still needs requalification."
+      },
+      {
+        "issueNumber": 177,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder A evidence."
+      },
+      {
+        "issueNumber": 178,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Builder B evidence."
+      },
+      {
+        "issueNumber": 179,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Historical Reviewer/Repair evidence."
+      },
+      {
+        "issueNumber": 184,
+        "disposition": "CLOSED_HISTORICAL",
+        "dispatchableByDisposition": false,
+        "note": "Closed read-only workspace CI task."
+      },
+      {
+        "issueNumber": 196,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_J06_PENDING",
+        "dispatchableByDisposition": false,
+        "note": "PR #201 merged the J04/J05 source baseline; do not dispatch the copied broad write set. J06 browser proof remains #207/#264."
+      },
+      {
+        "issueNumber": 197,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR204_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #204 adds only CONCURRENT_A.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 198,
+        "disposition": "CANDIDATE_EVIDENCE_ONLY_PR205_OPEN",
+        "dispatchableByDisposition": false,
+        "note": "PR #205 adds only CONCURRENT_B.md; it is not an admitted implementation writer and its issue body repeats #196 broad write set."
+      },
+      {
+        "issueNumber": 199,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer must be read-only; copied Builder write-set text grants no source authority."
+      },
+      {
+        "issueNumber": 200,
+        "disposition": "REVIEW_ROLE_EVIDENCE_ONLY_READ_ONLY",
+        "dispatchableByDisposition": false,
+        "note": "Reviewer Claim/Join evidence only; no source write authority."
+      },
+      {
+        "issueNumber": 202,
+        "disposition": "SOURCE_INTEGRATED_BY_PR201_NON_DISPATCHABLE",
+        "dispatchableByDisposition": false,
+        "note": "Integration correction baseline is PR #201 head; shared paths now belong to the single E integrator."
+      },
+      {
+        "issueNumber": 203,
+        "disposition": "TARGET_TERMINALITY_VERIFIED_GLOBAL_HOST_ADMISSION_BLOCKED",
+        "dispatchableByDisposition": false,
+        "note": "Canonical target-specific terminality is read-only VERIFIED: public DomainHarness v0.10.3 CAS row revision 4 / TERMINAL_VERIFIED (value SHA256 d816a01f2a504a574e358dacd26d2f29e283620550d74d59ba5f78c033ec95c6), original unedited DISPATCH_CLAIMED comment 6540484121 and unique unedited DISPATCH_STATE_CHANGED/DONE terminal event 6691973736 (original reservation revision 2). R16 re-read the CAS row on a byte-identical copy with zero put calls and unchanged source DB digests. This terminates only the historical dispatch; it is not #203 Task Acceptance, Outcome Closure, source/CI/Release PASS or global Host admission. Issue remains OPEN/state:blocked. Historical #204/#205 CI failures and #331 historical/operational P1 deviations remain; global Host inventory/admission stays BLOCK/UNKNOWN. Never replay recovery, publisher, POST or CAS writes."
+      },
+      {
+        "issueNumber": 207,
+        "disposition": "SOURCE_PRESENT_J06_BROWSER_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Browser journey sources exist; real browser actions and current Host/CI readback remain required in #264."
+      },
+      {
+        "issueNumber": 208,
+        "disposition": "SOURCE_PRESENT_J07_RQ_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Release-readiness sources exist; exact-SHA RQ/authority/target readback remains required in #264."
+      },
+      {
+        "issueNumber": 209,
+        "disposition": "SOURCE_PRESENT_J08A_ACCEPTANCE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Maintenance-intake projection exists; real defect/next-version and measured learning are completed by #219/#262/#273."
+      },
+      {
+        "issueNumber": 210,
+        "disposition": "SUCCESSOR_TRANSFERRED_TO_312_NO_NEW_MUTATION",
+        "dispatchableByDisposition": false,
+        "note": "PR #218 merged the #210 Product Intake source and consumed its generation-1 Claim (immutable historical evidence). The Product ReviewWitness implementation is now solely owned by successor #312 under new protected key kaicreator-mm/tally#312:builder:__default__. No source mutation is authorized under #210."
+      },
+      {
+        "issueNumber": 211,
+        "disposition": "SOURCE_INTEGRATED_BY_PR215_CLOSURE_UNVERIFIED",
+        "dispatchableByDisposition": false,
+        "note": "PR #215 merged as e4fb5b175fa837a2b5874ae328fe3f34eac9665a; exact PR-head Woodpecker statuses all SUCCESS (pipeline #203, four workflows); the merge commit is an ancestor of version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332. Source-integrated but Issue remains OPEN and Task Closure/Claim acceptance is NOT_VERIFIED; PR merge alone is not Outcome Closure. Non-dispatchable."
+      },
+      {
+        "issueNumber": 212,
+        "disposition": "SOURCE_INTEGRATED_BY_PR217_CLOSURE_UNVERIFIED",
+        "dispatchableByDisposition": false,
+        "note": "PR #217 merged as 4232881c64cdaefe4539a5071da150c1d7c8e320, descending from PR #215 (2 ahead / 0 behind); exact PR-head Woodpecker statuses all SUCCESS (pipeline #213, four workflows); both merge commits are ancestors of version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332. Serial integration after #211 is proven by merge ancestry, not by a native blocked_by edge; the #211->#212 PLANNED-only history is preserved. Issue remains OPEN and Closure is NOT_VERIFIED. Its exact four-path write set (digest e4ed0583ea4666c7b09e951fef818e2711f372fafe1552b4b6345977a127c88d) is disjoint from #319's nine paths; the earlier two-path overlap claim was false. Non-dispatchable."
+      },
+      {
+        "issueNumber": 219,
+        "disposition": "MAINTENANCE_HOLD_UNTIL_312_INTEGRATED",
+        "dispatchableByDisposition": false,
+        "note": "Native label is now state:planned with CANONICALIZED_OVERLAP_BLOCKED (50 overlap intersections). R8 serial ownership is #284 -> #312 -> #219; #219 shares eight paths with #312 and must refresh/rebase its source base after #312 exact review/integration before any shared-path write. Existing #219 PR/Claim/history is preserved unchanged."
+      },
+      {
+        "issueNumber": 260,
+        "disposition": "ACTIVE_VERSION_DAG_FREEZE",
+        "dispatchableByDisposition": true,
+        "note": "A owns canonical roster/dependency/Claim readback and immutable Task Pack candidate."
+      },
+      {
+        "issueNumber": 261,
+        "disposition": "ACTIVE_UI_ACTIONS",
+        "dispatchableByDisposition": true,
+        "note": "B owns selected B/K/Host guided forms, Agent/Review/Repair actions and consumes #203/#275."
+      },
+      {
+        "issueNumber": 262,
+        "disposition": "ACTIVE_EXPERIENCE_LEARNING",
+        "dispatchableByDisposition": true,
+        "note": "C owns ADS/task-meta read, audit, controlled experience and next-Task usage; consumes #219/#274."
+      },
+      {
+        "issueNumber": 263,
+        "disposition": "ACTIVE_HUMAN_ALM_UI",
+        "dispatchableByDisposition": true,
+        "note": "D owns actionable approvals, QA, Release, deployment and Settings surfaces."
+      },
+      {
+        "issueNumber": 264,
+        "disposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
+        "dispatchableByDisposition": false,
+        "note": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass. The Final installed Product P0/Vector Traceability Contract (24 P0 / 82 Vector complete index, SOURCE_ONLY) at #264 comment 6728777830 is the acceptance ledger for incremental J01-J08 verification."
+      },
+      {
+        "issueNumber": 273,
+        "disposition": "PLANNED_REPLAN_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Replan task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 274,
+        "disposition": "PLANNED_ADS_FEEDBACK_PUBLISHER_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 ADS v5 feedback publisher task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 275,
+        "disposition": "PLANNED_ATTEMPT_TELEMETRY_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New v2 P0 Task Attempt/telemetry read-model task; no accepted Claim/JIT branch yet."
+      },
+      {
+        "issueNumber": 276,
+        "disposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "F Domain Data/Workflow task. The 2026-11-09 delivery-first concurrency audit (#276 comment 6728802295) splits execution into F1a/F1b (authoring-only Domain Data/glossary/Schema/Rule/Workflow JSON + private readiness helper + four experiments/v2/selected-business-build compiler/consumer files; disjoint from #284 and other Business writers; must not touch src/index.mjs, src/attempts.mjs, producer.mjs or shared Business policy tests) and F2 (one src/index.mjs injection seam + moduleSource/producer call-site, serial only after #284/#219/#273/#275). CURRENT_42_PATH_SCOPE=NOT_ADMITTED; F1_STAGE_CLAIM=NOT_PRESENT; F2_STAGE_CLAIM=NOT_PRESENT. F1 still requires a fresh #260 Task Pack/allowed-write-set review plus a new accepted #276 Claim before any source exists. Keep non-dispatchable."
+      },
+      {
+        "issueNumber": 284,
+        "disposition": "E0_ROOT_CLAIMED_IMPL_DELIVERED_NATIVE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Root Claim 6739370032 recorded (misbinding corrected via FSW rev1 + R11 deviation 6739442600; Owner receipts 6739335815/R10, 6739635285/R11). Implementation 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f independent review PASS + CI #520 SUCCESS (6741313032). Host Writer admitted; 12-batch native-edge plan at #284 comment 6746943816; native POST/Freeze still pending. state:ready."
+      },
+      {
+        "issueNumber": 312,
+        "disposition": "PLANNED_PRODUCT_REVIEWWITNESS_SUCCESSOR_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "New-Claim successor to merged #210 (protected key kaicreator-mm/tally#312:builder:__default__, 16-path candidate write set, CANDIDATE_NOT_ADMITTED, dispatchable=false). 24 unresolved candidate overlap intersections remain SERIALIZATION_REQUIRED; admission needs this refreshed current Task Pack, a trusted root admission route and the new accepted Claim. Non-dispatchable."
+      },
+      {
+        "issueNumber": 319,
+        "disposition": "SOURCE_REVIEW_PASS_SUCCESSOR_RECOVERY_OBSERVED_CLOSURE_UNVERIFIED",
+        "dispatchableByDisposition": false,
+        "note": "Exact DISPATCH_CLAIMED comment 6668875091 remains observed; dedicated Host CAS Claim is PUBLISHED_VERIFIED revision 1 (full value SHA256 7fef4ce5f8bf1db7cc491d10aaf500c2d6dce8fc084ae2debac8ebefdeda02bf) and per-task FROZEN_DAG_WRITESET revision 0 (full value SHA256 9f6a949a889d1a705116e2f4d8cc91f1577539ef8d1606b41bd65f9592cf0b5b; nine-path digest 252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2). Implementation PR #330 review 5799002403 is SOURCE_REVIEW=PASS at HEAD 72ce3067213b75ffbc04762d866759c3af4324f8 / Tree 1532079c1e94c3142b1874327d9ae223dd8bc27d. Its original pre-POST stop is historical; the separate #331 successor later published the #203 terminal event and R16 verifies target CAS revision 4. #319 Issue remains OPEN/state:blocked and no #319 Task Closure is inferred from implementation review or the successor operation. Preserve historical deviations and the PLANNED-only #319 -> #331 -> #284 chain; aggregate claimAcceptance/closureEvidence remain NOT_VERIFIED."
+      },
+      {
+        "issueNumber": 331,
+        "disposition": "CLAIMED_SOURCE_PATCH_PASS_TASK_ACCEPTANCE_BLOCK",
+        "dispatchableByDisposition": false,
+        "note": "Native DISPATCH_CLAIMED comment 6690955003 exists and is unedited: operator zcode:i331:t06d-prepost-recovery:1, dispatch dispatch:331:t06d-prepost-recovery:20261106:1, source 72ce3067213b75ffbc04762d866759c3af4324f8, generation 1. Builder read-only CAS readback verifies Claim revision 1 PUBLISHED_VERIFIED (value SHA256 5ddd4991bdd067cb774cd2c968f5a88f4f273779ba5690cc941b3d99748d1fd1) and per-task FROZEN_DAG_WRITESET revision 0, exact three paths, digest 625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a (value SHA256 8aa1b4d73e11657545b037ec19e87c3d04c687873fb2fa105b4b039c34c25e66). PR #348 R3 review 5815168261 at HEAD 05a995b9d14e57fe4b8c33eb538217e13e65a535 / Tree 2e9c7a1fcae3ebb1bb4ee12444c8d23d7f71f187 / Base 72ce3067213b75ffbc04762d866759c3af4324f8 reports SOURCE_REVIEW=PASS_SCOPED_WITH_HISTORICAL_DEVIATIONS, P1-03 fix verified, Node24 32/32 + Native C/Host 7/7 and Woodpecker #499 SUCCESS. TASK_ACCEPTANCE=BLOCK: the missing shared Host-wide admission fence and pre-POST independent-review ordering deviation are retained, not resolved; global Host inventory is BLOCK/UNKNOWN. Issue remains OPEN and native label is state:ready. #203 target terminality is verified but no Task Closure, #284 admission, native dependency, Freeze or merge follows."
+      },
+      {
+        "issueNumber": 370,
+        "disposition": "PLANNED_HOST_FENCE_R8_PACK_REVIEW_REQUIRED_NO_OWNER_NO_CLAIM",
+        "dispatchableByDisposition": false,
+        "note": "Formal planned supporting Host-fence Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Exact normalized eight-path R8 candidate digest 9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27. Five paths overlap #319's accepted historical nine-path FSW; #319 remains OPEN/state:blocked with no inferred Task Closure, and a fresh empty #370 registry is not evidence that #319 terminated. Governance Pack PR #376 is now HEAD 58abb60f0b2061b5124ea66a3e212210bf843de8 / Tree 3932120992d124d25e3987dc7b8d80f954fc655d / PackBlob f1de3aaeb8f85b86a721d2dc806335392efc032a (R8 repair; eight-path digest unchanged, implementation paths changed 0). The original R8 independent review 5817672588 was BLOCK at HEAD d783951cc6bf3c7ebfacc32bea4fb6e44d913954 / PackBlob f81fa0775a979623e4e4c41ebbff1726683d96e3 (P0=0/P1=3/P2=1); the repaired HEAD has no fresh independent final review or Owner PackBlob receipt yet (FRESH_INDEPENDENT_FINAL_EXACT_SHA=REQUIRED, PACK_R8_FINAL=BLOCK_PENDING_INDEPENDENT_FINAL, Owner=NONE). The R7 review 5817590966 was BLOCK for native task-classification and Issue comment 6720594384 records the correction. No native Claim, FSW, native dependency or source edit exists. Inclusion is a roster/denominator accounting correction only: never promote to state:ready or treat this row as Task Acceptance, closure, #284 admission or source permission."
+      },
+      {
+        "issueNumber": 377,
+        "disposition": "PLANNED_REVIEWED_PACK_OWNER_APPROVED_SOURCE_ADMISSION_BLOCKED",
+        "dispatchableByDisposition": false,
+        "note": "Formal planned successor-defect Task; current native labels are type:task/state:planned, so it is not claimable or dispatchable. Immutable Pack PR #378 HEAD 5d10a83a0495a71309ec58a02bd377f84fd7ff84 / Tree 2dd3d3fad0ffa5afb4e99eee94ada266afdcd882 / PackBlob f1778a9f4c097e0431666a4d7489e70f548cfbcc; independent Pack review 5817226448 PASS (P0=0/P1=0/P2=2) and exact PackBlob Owner receipt 6719378711 OWNER_APPROVED. Exact two normalized paths digest 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac; both are historical OPEN #211-owned, already-integrated paths, so no concurrent writer or historical Claim/FSW/merged-PR reuse is allowed. No native Claim or FSW exists; source admission remains BLOCK until A/#260 R17 independent Exact-SHA PASS, current metadata/dependency/overlap revalidation, a genuine selected-Host shared-writer fence, fresh #377 Claim and per-task FROZEN_DAG_WRITESET, and a separate JIT branch. No #370/#284 Host competition, #203 POST, native dependency write, freeze, merge, tag, release or deployment."
+      },
+      {
+        "issueNumber": 383,
+        "disposition": "R3_ADMITTED_CLAIMED_IMPLEMENTATION_REVIEW_PASS_PHYSICAL_GATE_PASS",
+        "dispatchableByDisposition": false,
+        "note": "Successor fence-wiring task: Pack R3 SOUND (6729936160), Owner receipt 6729962910, recorded Claim 6730033866 (dispatch fence-wiring:383:61a2e3c1…, dedicated registry), implementation HEAD ab4976c5 independent review PASS + CI #514 SUCCESS 81/81, PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 (gate receipt 6730634645). Closed as a delivered increment pending #264 integration join; not counted as verified Outcome Closure."
+      }
+    ]
+  },
+  "writeSetAudit": {
+    "schema": "tally/version-task-write-set-audit/v1",
+    "status": "INDEPENDENT_EXACT_BODY_REVIEW_REQUIRED",
+    "requiredBeforeFreeze": [
+      "Read each open Task's current exact allowed_write_set from its current issue body and bind the observed updatedAt.",
+      "Hash the normalized allowed_write_set path list for every open Task; preserve the hash in the independent review report.",
+      "No two dispatchable tasks may own overlapping write paths unless a real native dependency serializes them.",
+      "Reviewer/Verifier tasks are read-only; copied Builder write-set text never grants reviewer write authority.",
+      "Closed, source-integrated, candidate-evidence-only, superseded and planned tasks remain visible but non-dispatchable until separately re-admitted.",
+      "Reconcile every overlap with a serial native edge or explicit non-dispatchable disposition; do not close Issues silently."
+    ],
+    "overlapGroups": [
+      {
+        "id": "LEGACY_J04_J06_IDENTICAL_BROAD_WRITE_SET",
+        "taskIssues": [
+          196,
+          197,
+          198,
+          199,
+          200
+        ],
+        "paths": [
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-controller.test.mjs",
+          "web/v2/journey-view.mjs",
+          "web/v2/journey-view.html",
+          "web/v2/journey-view.test.mjs",
+          ".woodpecker/v2-alm-workspace.yaml"
+        ],
+        "finding": "Only #196/#197/#198 are current writable members of this identical seven-path legacy set (three active pairwise overlaps). #199/#200 are Reviewer roles with no write set and remain read-only. PR #204/#205 are evidence-only candidates, not source implementation."
+      },
+      {
+        "id": "LEGACY_INTEGRATION_SHARED_PATHS",
+        "taskIssues": [
+          196,
+          197,
+          198,
+          202,
+          207,
+          210,
+          219,
+          264,
+          284,
+          312
+        ],
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-controller.mjs",
+          "web/v2/journey-view.html",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "These tasks reference overlapping legacy shared paths. PR #201 is merged; #264 must remain the single writer for current shared UI integration. #284 (web/v2/journey-server.mjs, web/v2/serve.mjs) and #312 (.woodpecker/v2-alm-workspace.yaml, web/v2/journey-server.mjs, web/v2/journey-view.html) now also intersect this legacy set and stay PLANNED/non-dispatchable. Old issue dispositions and exact path ownership require independent review."
+      },
+      {
+        "id": "CENTRAL_BUSINESS_ENTRYPOINT_SERIALIZATION",
+        "taskIssues": [
+          203,
+          210,
+          219,
+          273,
+          276,
+          284,
+          312
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs"
+        ],
+        "finding": "Central Business entrypoint/build paths overlap across historical publication/maintenance tasks and governed Replan. #276 also overlaps #219 on the selected BUILD Producer and #219/#273 on the Business entrypoint/policy tests. R8 adds #284 (E0 Bootstrap) and #312 (Product successor), whose candidate sets each include all five central paths plus web/v2/journey-server.mjs. Serial ownership is #284 -> #312 -> #219 -> #273/#276 -> #264; every group member is currently non-dispatchable and no pair may run concurrently until serialized by native edges read back through E0."
+      },
+      {
+        "id": "ATTEMPT_MODEL_SERIALIZATION",
+        "taskIssues": [
+          275,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/attempts.mjs",
+          "packages/tally-engineering-business/test/attempts.test.mjs"
+        ],
+        "finding": "#275 owns initial Attempt read-model source; #276 may reconcile the canonical TaskAttempt model only after #275 completes and the source contract is reviewed."
+      },
+      {
+        "id": "F_DOMAIN_DATA_EXISTING_MODULE_SERIALIZATION",
+        "taskIssues": [
+          208,
+          209,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/src/release-readiness.mjs",
+          "packages/tally-engineering-business/test/release-readiness.test.mjs",
+          "packages/tally-engineering-business/src/maintenance-intake.mjs",
+          "packages/tally-engineering-business/test/maintenance-intake.test.mjs",
+          "packages/tally-engineering-business/test/*.test.mjs"
+        ],
+        "finding": "#276's current candidate set includes the two existing source modules and a broad test glob that overlaps #208/#209. #276 remains PLANNED/non-dispatchable, so there is no current concurrent writer; before any future Claim/JIT, narrow the glob to exact F-owned test files or serialize after #208/#209. Record both edges as PLANNED only."
+      },
+      {
+        "id": "F_DOMAIN_DATA_TEST_GLOB_SERIALIZATION",
+        "taskIssues": [
+          203,
+          208,
+          209,
+          210,
+          219,
+          273,
+          275,
+          276
+        ],
+        "paths": [
+          "packages/tally-engineering-business/test/*.test.mjs"
+        ],
+        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 68-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
+      },
+      {
+        "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
+        "taskIssues": [
+          284,
+          312
+        ],
+        "paths": [
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "web/v2/journey-server.mjs"
+        ],
+        "finding": "E0 Bootstrap #284 and Product successor #312 share six candidate paths (#284x#312=6). R8 declares #284 -> #312 serial ownership; both are state:planned with no Claim event. Recorded as a PLANNED edge only; no native dependency was created."
+      },
+      {
+        "id": "R8_PRODUCT_312_MAINTENANCE_219_SERIALIZATION",
+        "taskIssues": [
+          219,
+          312
+        ],
+        "paths": [
+          ".woodpecker/v2-alm-workspace.yaml",
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs",
+          "web/v2/journey-server.mjs",
+          "web/v2/journey-view.html"
+        ],
+        "finding": "#219 Maintenance shares eight paths with #312 (#219x#312=8). #219 is HOLD/state:planned until #312 exact source review/integration and must refresh/rebase its base before any shared-path write. Recorded as a PLANNED edge only (#312 -> #219); the native blocked_by remains absent."
+      },
+      {
+        "id": "E0_284_PREDECESSOR_203_GATE",
+        "taskIssues": [
+          203,
+          284
+        ],
+        "paths": [
+          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+          "experiments/v2/selected-business-build/local-codex-shim.mjs",
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. The #370 R8 supporting Host-fence candidate is not admitted (INDEPENDENT_R8=REQUIRED, Owner=NONE) and does not satisfy or bypass this gate. No edge is recorded; this is an admission gate, not a dispatch edge."
+      },
+      {
+        "id": "R17_377_NATIVE_READ_RETRY_211_SERIALIZATION",
+        "taskIssues": [
+          211,
+          377
+        ],
+        "paths": [
+          "packages/tally-github-native-c/src/read-retry.mjs",
+          "packages/tally-github-native-c/test/read-retry.test.mjs"
+        ],
+        "finding": "#377 exact two-path candidate (#211x#377=2) replaces only the native read-retry method derivation/guard in files historically owned by #211 and already integrated in version/v2. #211 remains OPEN with an observed historical Claim but its original FROZEN_DAG_WRITESET is absent; no concurrent writer, historical Claim/FSW reuse or merged-PR mutation is permitted. Recorded as PLANNED edge #211 -> #377 only; no native dependency or source permission."
+      },
+      {
+        "id": "R8_370_HOST_FENCE_319_SERIALIZATION",
+        "taskIssues": [
+          319,
+          370
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#370 exact R8 eight-path candidate shares five paths with #319 accepted historical nine-path FSW (#319x#370=5). #319 remains OPEN/state:blocked with no inferred Task Closure; its Claim/FSW cannot be reused or treated as terminated by a fresh empty #370 registry. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before any #370 source work. Recorded as PLANNED edge #319 -> #370 only; no native dependency, Owner receipt or source permission."
+      },
+      {
+        "id": "R3_383_SUCCESSOR_OVER_TERMINAL_319_FSW",
+        "taskIssues": [
+          319,
+          383
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW. #383x#370=6 under the snapshot base: the historical #370 R8 eight-path candidate (superseded by the admitted R19 two-path library scope, which shares zero paths with #383) was a superset of the entire #383 write set; its serialization is resolved by the verified #370 terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352) and the #383 Claim/FSW on a dedicated registry."
+      }
+    ],
+    "recomputedOpenTaskOverlaps": {
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z (snapshot semantics: each open task is compared against its allowed_write_set as present in its issue body at that base snapshot — #370 counts as its historical R8 eight-path candidate set, under which #383x#370=6, i.e. the R8 set is a superset of the #383 six-path set; #319 counts as its nine-path FSW, #383x#319=5); path patterns are retained literally.",
+      "openTasksWithWriteSet": 28,
+      "openTasksWithoutWriteSet": [
+        199,
+        200
+      ],
+      "nonzeroPairs": 70,
+      "pairs": [
+        {
+          "tasks": [
+            196,
+            197
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            198
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            196,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            198
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            197,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            202
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html",
+            "web/v2/journey-view.mjs",
+            "web/v2/journey-view.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            210
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            219
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            198,
+            312
+          ],
+          "sharedPathCount": 3,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            203
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-host.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            207
+          ],
+          "sharedPathCount": 4,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-controller.mjs",
+            "web/v2/journey-controller.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            210
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            219
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/consumer-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            202,
+            312
+          ],
+          "sharedPathCount": 7,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            210
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            219
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            284
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            203,
+            312
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            210
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            219
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            207,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            208,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/release-readiness.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            209,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/maintenance-intake.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            219
+          ],
+          "sharedPathCount": 8,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            210,
+            312
+          ],
+          "sharedPathCount": 16,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/project-intake/host-project.mjs",
+            "experiments/v2/project-intake/host-project.test.mjs",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "packages/tally-github-c/src/project-intake.mjs",
+            "packages/tally-github-c/test/project-intake.test.mjs",
+            "web/v2/intake-controller.mjs",
+            "web/v2/intake-controller.test.mjs",
+            "web/v2/intake-view.mjs",
+            "web/v2/intake-view.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            211,
+            377
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-github-native-c/src/read-retry.mjs",
+            "packages/tally-github-native-c/test/read-retry.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            264
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            273
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            284
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            219,
+            312
+          ],
+          "sharedPathCount": 8,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs",
+            "web/v2/journey-view.html"
+          ]
+        },
+        {
+          "tasks": [
+            264,
+            284
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "web/v2/journey-server.mjs",
+            "web/v2/serve.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            264,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            ".woodpecker/v2-alm-workspace.yaml",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            284
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            273,
+            312
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            275,
+            276
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/attempts.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            276,
+            284
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            276,
+            312
+          ],
+          "sharedPathCount": 1,
+          "paths": [
+            "packages/tally-engineering-business/src/index.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            284,
+            312
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+            "experiments/v2/selected-business-build/local-codex-shim.mjs",
+            "experiments/v2/selected-business-build/producer.mjs",
+            "packages/tally-engineering-business/src/index.mjs",
+            "packages/tally-engineering-business/test/business-policy.test.mjs",
+            "web/v2/journey-server.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            319,
+            370
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            319,
+            383
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            370,
+            383
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+            "packages/tally-github-native-c/test/task-claim-composition.test.mjs"
+          ]
+        }
+      ]
+    },
+    "openTaskWriteSetDigests": [
+      {
+        "issueNumber": 196,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 197,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 198,
+        "pathCount": 7,
+        "pathsSha256": "32a22f7c02f2e7b86371c71376b3dabb7ecfad338f8e98f7e3df341d68676b3a"
+      },
+      {
+        "issueNumber": 202,
+        "pathCount": 15,
+        "pathsSha256": "d3597449101e0498917c1c30b8d43723d6ef0563496fb170636b3450e8b2fb35"
+      },
+      {
+        "issueNumber": 203,
+        "pathCount": 13,
+        "pathsSha256": "fdd47e0e9616dccd6e87261cad6bf0d19ea8dad36082ffb14ac3e784089bab48"
+      },
+      {
+        "issueNumber": 207,
+        "pathCount": 6,
+        "pathsSha256": "915df93f7a67acf88f6d24385c63dbe68e650dd3fd5755c1759bd7e70b55dbe8"
+      },
+      {
+        "issueNumber": 208,
+        "pathCount": 2,
+        "pathsSha256": "04361df43ed23b38fab742b44db031dae475483b0aa94c2093abd5e9ecc05f5f"
+      },
+      {
+        "issueNumber": 209,
+        "pathCount": 2,
+        "pathsSha256": "960fa225747d0ab39c10de8b8357cd47ffccba08a3968f89345a33d96d64652e"
+      },
+      {
+        "issueNumber": 210,
+        "pathCount": 16,
+        "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
+      },
+      {
+        "issueNumber": 211,
+        "pathCount": 6,
+        "pathsSha256": "e192b78f9bf12395b99ac8beb2e2f8b2e8e5fe24ca97713ea76a6816bde6ef66"
+      },
+      {
+        "issueNumber": 212,
+        "pathCount": 4,
+        "pathsSha256": "e4ed0583ea4666c7b09e951fef818e2711f372fafe1552b4b6345977a127c88d"
+      },
+      {
+        "issueNumber": 219,
+        "pathCount": 14,
+        "pathsSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797"
+      },
+      {
+        "issueNumber": 260,
+        "pathCount": 11,
+        "pathsSha256": "14538d19c835fc7298423fb55d0fbd61bf39f14c528cc6a8faaa8f1daed85c49"
+      },
+      {
+        "issueNumber": 261,
+        "pathCount": 15,
+        "pathsSha256": "71f199a056b0d83ea562ccd619af2ef79cd72917ababe28f4dfc448df4f19836"
+      },
+      {
+        "issueNumber": 262,
+        "pathCount": 5,
+        "pathsSha256": "69fbd9da1b7b3533a3926ddbe9d2f47d5af6bc7c1dc6787379aa9fb84de0e0c1"
+      },
+      {
+        "issueNumber": 263,
+        "pathCount": 4,
+        "pathsSha256": "cbeafd89071129e863add55d98a6f0afa17aa5af308de30d9bc920513f93262b"
+      },
+      {
+        "issueNumber": 264,
+        "pathCount": 11,
+        "pathsSha256": "a2ef95f245aebfcb64f259be8192e50cbbae0cb1a4d995d640a5c33ade2c81d0"
+      },
+      {
+        "issueNumber": 273,
+        "pathCount": 9,
+        "pathsSha256": "845cb2618eebab4f56aa38bd6c0176b2e6b3499d4a01db18150d02f9915d85dd"
+      },
+      {
+        "issueNumber": 274,
+        "pathCount": 6,
+        "pathsSha256": "f92b61a438644a1c72a9babb2bd91fa9f0e279dbf253bf63319091245e3fe23a"
+      },
+      {
+        "issueNumber": 275,
+        "pathCount": 5,
+        "pathsSha256": "015cb08892b9cf5215dc82c1877248a11650b220b7ab3f3f6c1e20c8a2e88a72"
+      },
+      {
+        "issueNumber": 276,
+        "pathCount": 42,
+        "pathsSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4"
+      },
+      {
+        "issueNumber": 284,
+        "pathCount": 14,
+        "pathsSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8"
+      },
+      {
+        "issueNumber": 312,
+        "pathCount": 16,
+        "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
+      },
+      {
+        "issueNumber": 319,
+        "pathCount": 9,
+        "pathsSha256": "252cbcd0e2526200938eef95a64f8cef4a357cc3ca6ec7ec7664112f2e9b17a2"
+      },
+      {
+        "issueNumber": 331,
+        "pathCount": 3,
+        "pathsSha256": "625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a"
+      },
+      {
+        "issueNumber": 370,
+        "pathCount": 8,
+        "pathsSha256": "9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27"
+      },
+      {
+        "issueNumber": 377,
+        "pathCount": 2,
+        "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac"
+      },
+      {
+        "issueNumber": 383,
+        "pathCount": 6,
+        "pathsSha256": "41538b7fc0142bc0d78be08a1432de734b55106f79ed9635b37fbc2ff607d4ff"
+      }
+    ]
+  }
+}
