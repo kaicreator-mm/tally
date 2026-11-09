@@ -23,6 +23,8 @@ export interface RendererHost{
   submitStep(payload:ReturnType<typeof buildSubmitPayload>):
     Promise<{ok:true;nextStep:FormStep|null}|{ok:false;reason:string}>;
   saveDraft(raw:string):void;loadDraft():string|null;clearDraft():void;
+  /** Previous issued step requires a Host-governed transition, not cancel. */
+  goBack?:()=>Promise<{ok:true;step:FormStep}|{ok:false;reason:string}>;
   locale:'zh'|'en';strings:FormStrings;
 }
 const errorCodes:Record<string,keyof FormStrings>={
@@ -60,9 +62,9 @@ export function DynamicForm({initialStep,host,onDone}:
     if(restored)setAnswers(restored);
   },[issued,host]);
   useEffect(()=>{
-    if(!step||Object.keys(answers).length===0)return;
+    if(!step||Object.keys(answers).length===0||phase==='paused')return;
     host.saveDraft(serializeDraft({step,answers,errors,status:'editing'}));
-  },[answers,step,errors,host]);
+  },[answers,step,errors,host,phase]);
   if(!issued){
     return <div role="alert" style={{color:'var(--danger)',padding:'var(--s4)'}}>
       FORM_STEP_UNVERIFIED — 服务端下发的步骤未通过结构校验,已拒绝渲染。
@@ -99,22 +101,33 @@ export function DynamicForm({initialStep,host,onDone}:
       <FieldView key={field.id} field={field} value={answers[field.id]}
         errorText={errors[field.id]
           ?host.strings[errorCodes[errors[field.id]]??'typeInvalid']:null}
-        disabled={Boolean(field.disabledReason)||phase==='submitting'}
+        disabled={Boolean(field.disabledReason)||phase!=='editing'}
         host={host}
         onChange={value=>setValue(field.id,value)}/>))}
     {phase==='server_error'&&serverReason?
       <div role="alert" style={{color:'var(--danger)',marginTop:'var(--s3)'}}>{serverReason}</div>:null}
     <div style={{display:'flex',gap:'var(--s2)',marginTop:'var(--s5)',flexWrap:'wrap'}}>
-      {has('back')?<button type="button" onClick={()=>onDone('cancelled')}
-        disabled={phase==='submitting'}>{host.strings.back}</button>:null}
-      {has('pause')?<button type="button" onClick={()=>setPhase('paused')}
-        disabled={phase==='submitting'}>{host.strings.pause}</button>:null}
+      {has('back')?<button type="button"
+        disabled={phase!=='editing'||!host.goBack}
+        title={!host.goBack?'HOST_BACK_TRANSITION_NOT_CONNECTED':undefined}
+        onClick={async()=>{
+          if(!host.goBack)return;
+          setPhase('submitting');
+          const result=await host.goBack();
+          if(!result.ok){setServerReason(result.reason);setPhase('server_error');return;}
+          const issuedPrevious=validateStepSpec(result.step);
+          if(!issuedPrevious){setServerReason('BACK_STEP_UNVERIFIED');
+            setPhase('server_error');return;}
+          setStep(issuedPrevious);setAnswers({});setErrors({});setPhase('editing');
+        }}>{host.strings.back}</button>:null}
+      {has('pause')&&phase==='editing'?<button type="button"
+        onClick={()=>setPhase('paused')}>{host.strings.pause}</button>:null}
       {phase==='paused'&&has('resume')?
         <button type="button" onClick={()=>setPhase('editing')}>{host.strings.resume}</button>:null}
       {has('cancel')?<button type="button"
         onClick={()=>{host.clearDraft();onDone('cancelled');}}
         disabled={phase==='submitting'}>{host.strings.cancel}</button>:null}
-      <button type="submit" disabled={phase==='submitting'||phase==='paused'}>
+      <button type="submit" disabled={phase!=='editing'||!has('next')}>
         {phase==='submitting'?host.strings.submitting:host.strings.next}
       </button>
     </div>

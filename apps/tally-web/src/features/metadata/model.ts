@@ -15,7 +15,7 @@ export interface AttemptMeta{
 export interface ReportMeta{
   reportId:string;taskId:string;attemptId:string|null;
   kind:'ads-v5-summary'|'ads-v5-correction'|'feedback';
-  subjectSha:string;observedAt:string;evidenceRef:string;
+  subjectSha:string;observedAt:string|null;evidenceRef:string;
   /** ADS reports are self-reported until independently reviewed. */
   independentlyReviewed:boolean;
 }
@@ -36,6 +36,11 @@ export interface LineageMeta{
 }
 export interface VersionMetadata{
   versionId:string;
+  reportCoverage?:'PARTIAL'|'UNKNOWN';
+  telemetryCoverage?:'UNKNOWN'|'VERIFIED';
+  lineageCoverage?:'UNKNOWN'|'VERIFIED';
+  learningCoverage?:'UNKNOWN'|'VERIFIED';
+  rosterCoverage?:'UNVERIFIED'|'VERIFIED_COMPLETE';
   attempts:readonly AttemptMeta[];
   reports:readonly ReportMeta[];
   lineage:readonly LineageMeta[];
@@ -78,7 +83,7 @@ export interface ReportRow{
   reportId:string;taskId:string;kind:ReportMeta['kind'];
   reviewed:'REVIEWED'|'SELF_REPORTED';
   staleAgainst:(subjectSha:string)=>boolean;
-  observedAt:string;evidenceRef:string;
+  observedAt:string|null;evidenceRef:string;
 }
 export function reportRows(version:VersionMetadata):ReportRow[]{
   return version.reports.map(report=>({
@@ -90,7 +95,8 @@ export function reportRows(version:VersionMetadata):ReportRow[]{
 }
 /** Distinguish a missing report from a present one; ADS v5 absent is a gap. */
 export function missingReports(version:VersionMetadata,
-  expectedTaskIds:readonly string[]):string[]{
+  expectedTaskIds:readonly string[]|null):string[]|null{
+  if(expectedTaskIds===null)return null;
   const withReports=new Set(version.reports.map(report=>report.taskId));
   return expectedTaskIds.filter(taskId=>!withReports.has(taskId));
 }
@@ -106,11 +112,13 @@ export function casebookLinks(versions:readonly VersionMetadata[],
   return links;
 }
 /** Deep-link helpers both ways: task ↔ metadata. */
-export function taskDeepLink(taskId:string,versionId:string){
-  return `#/development/tasks?projectId&versionId=${encodeURIComponent(versionId)}`
+export function taskDeepLink(taskId:string,projectId:string,versionId:string){
+  return `#/development/tasks?projectId=${encodeURIComponent(projectId)}`
+    +`&versionId=${encodeURIComponent(versionId)}`
     +`&taskId=${encodeURIComponent(taskId)}`;
 }
-export function metadataDeepLink(taskId:string,versionId:string){
-  return `#/governance/metadata?versionId=${encodeURIComponent(versionId)}`
+export function metadataDeepLink(taskId:string,projectId:string,versionId:string){
+  return `#/governance/metadata?projectId=${encodeURIComponent(projectId)}`
+    +`&versionId=${encodeURIComponent(versionId)}`
     +`&taskId=${encodeURIComponent(taskId)}`;
 }

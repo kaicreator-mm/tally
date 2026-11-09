@@ -3,16 +3,16 @@
  * source of truth) — this module only filters/groups/sorts what the Host
  * issued; it never mutates task state.
  */
-export type TaskStatus='open'|'in_progress'|'review'|'blocked'|'done'|'failed';
+export type TaskStatus='open'|'in_progress'|'review'|'blocked'|'done'|'failed'|'unknown';
 export const TASK_STATUSES:readonly TaskStatus[]=Object.freeze(
-  ['open','in_progress','review','blocked','done','failed']);
+  ['open','in_progress','review','blocked','done','failed','unknown']);
 export interface TaskRecord{
   /** Native work-unit id from the projection (e.g. issue number as string). */
   id:string;
   versionId:string;
   title:string;
   status:TaskStatus;
-  severity:'P0'|'P1'|'P2';
+  severity:'P0'|'P1'|'P2'|'UNKNOWN';
   /** Native blocked_by task ids (source-qualified only). */
   blockedBy:readonly string[];
   agentId:string|null;
@@ -29,7 +29,7 @@ export interface TaskRecord{
 export interface TaskFilters{
   text:string;
   status:TaskStatus|null;
-  severity:'P0'|'P1'|'P2'|null;
+  severity:'P0'|'P1'|'P2'|'UNKNOWN'|null;
   agentId:string|null;
   onlyBlocked:boolean;
 }
@@ -56,9 +56,9 @@ export function filterTasks(tasks:readonly TaskRecord[],filters:TaskFilters,
   });
 }
 export type SortKey='severity'|'status'|'updated'|'id';
-const severityRank={'P0':0,'P1':1,'P2':2} as const;
+const severityRank={'P0':0,'P1':1,'P2':2,'UNKNOWN':3} as const;
 const statusRank:Record<TaskStatus,number>={blocked:0,in_progress:1,review:2,
-  open:3,failed:4,done:5};
+  open:3,failed:4,done:5,unknown:6};
 export function sortTasks(tasks:readonly TaskRecord[],key:SortKey,
   direction:'asc'|'desc'='asc'):TaskRecord[]{
   const factor=direction==='asc'?1:-1;
@@ -119,4 +119,5 @@ export const STATUS_LABEL:Record<TaskStatus,{zh:string;en:string}>={
   open:{zh:'待处理',en:'Open'},in_progress:{zh:'进行中',en:'In progress'},
   review:{zh:'评审中',en:'Review'},blocked:{zh:'已阻塞',en:'Blocked'},
   done:{zh:'已完成',en:'Done'},failed:{zh:'失败',en:'Failed'},
+  unknown:{zh:'状态未知',en:'Unknown'},
 };
