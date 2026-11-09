@@ -1,0 +1,241 @@
+{
+  "schema": "tally/task-pack-candidate/v1",
+  "packId": "issue-275-source-backed-task-attempt-read-model-r1",
+  "packRevision": 1,
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "issueNumber": 275,
+  "parentIssue": 259,
+  "scope": "GOVERNANCE_ONLY_NO_SOURCE_ADMISSION",
+  "task": {
+    "title": "Source-backed Task Attempt and telemetry read model",
+    "priority": "P0",
+    "workItemType": "type:task",
+    "observedWorkflowState": "state:planned",
+    "issueUpdatedAt": "2026-11-04T06:26:29Z",
+    "primaryOwner": "ONE_BUILDER_SINGLE_WRITER",
+    "upstreamConsumers": [
+      261,
+      264
+    ],
+    "planningDependency": {
+      "from": 275,
+      "to": 261,
+      "kind": "PLANNED_ONLY_UNTIL_OFFICIAL_GITHUB_READBACK"
+    }
+  },
+  "authority": {
+    "versionSourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "domainHarness": "v0.10.3",
+    "domainHarnessSourceSha": "061376f4a023070f215f9feffad5c24d96d503cb",
+    "gitHubTaskIssue": "https://github.com/kaicreator-mm/tally/issues/275",
+    "sourceClarification": "https://github.com/kaicreator-mm/tally/issues/275#issuecomment-6618554072",
+    "productVectors": [
+      "V18",
+      "V19",
+      "V43",
+      "V59",
+      "V60",
+      "V70",
+      "V79",
+      "V80",
+      "V81"
+    ]
+  },
+  "writeSet": {
+    "normalizationSchema": "tally.v2.allowed-write-set-normalization/1",
+    "paths": [
+      "packages/tally-engineering-business/src/attempts.mjs",
+      "packages/tally-engineering-business/test/attempts.test.mjs",
+      "web/v2/ui-attempt-host-http.test.mjs",
+      "web/v2/ui-attempt-host.mjs",
+      "web/v2/ui-attempt-host.test.mjs"
+    ],
+    "exactPathCount": 5,
+    "pathsSha256": "015cb08892b9cf5215dc82c1877248a11650b220b7ab3f3f6c1e20c8a2e88a72",
+    "overlap": [
+      {
+        "issue": 276,
+        "paths": [
+          "packages/tally-engineering-business/src/attempts.mjs"
+        ],
+        "disposition": "SERIAL_AFTER_275_OR_REDUCE_276_SCOPE"
+      }
+    ],
+    "explicitlyExcluded": [
+      "packages/tally-engineering-business/src/index.mjs",
+      "apps/tally-web/src/features/tasks/**",
+      "apps/tally-web/src/features/agents/**",
+      "apps/tally-web/src/app/**",
+      "web/v2/serve.mjs",
+      "web/v2/journey-server.mjs",
+      ".woodpecker/**",
+      "packages/tally-github-native-c/**",
+      "DomainHarness internals",
+      "task-meta private data"
+    ],
+    "frozen": false,
+    "sourceMutationAuthorized": false
+  },
+  "publicApiReality": {
+    "runtimeObservationFamilies": [
+      "INSTANCE_OPENED",
+      "MESSAGE_ACCEPTED",
+      "TURN_COMMITTED",
+      "TURN_RECOVERY_REQUIRED",
+      "RECOVERY_COMMITTED",
+      "INSTANCE_TERMINALIZED"
+    ],
+    "runtimeObservationLimitations": [
+      "No EFFECT_SETTLED event",
+      "No process command terminal outcome or exit code",
+      "No raw payload/candidate SHA/token cost in public observation envelopes"
+    ],
+    "publicRuntimeRead": "readObservations(stream): bounded cursor/epoch/high-watermark with RETENTION_TRUNCATED/STORAGE_GAP/CURSOR_INVALID",
+    "publicJournal": "HarnessExecutionJournalStore.read(slot) is point lookup; no list/scan",
+    "publicEffectJournal": "NodeSqliteAdmissionEffectJournal.getEffect(effectId) is point lookup; no public list",
+    "trustedAttemptEnumeration": "MUST_BE_PROVIDED_BY_ACTUAL_SELECTED_HOST_OR_EXPLICITLY_BLOCKED; NEVER_PRIVATE_SQLITE_SCAN"
+  },
+  "implementationContract": [
+    "Use the existing selected K/Host public observation reader to reconstruct lifecycle with exact WorkflowAddress, immutable package identity, epoch, contiguous sequence and high-watermark.",
+    "Host supplies a bounded authoritative Task→Attempt identity roster/index and point read for attempt-specific source SHA, Agent, environment/worktree/target, outcome, candidate/ref and restart lineage; no invented private fallback.",
+    "Separate observed runtime lifecycle, selected Host execution receipt, native GitHub ADS report, independent review/CI/hidden/full/RQ proof and optional task-meta metrics into distinct typed evidence classes.",
+    "Source monotonicity: exact repository/version/Task/Attempt/source SHA, event identity and correction/supersession; no silent overwrite or false reuse after restart.",
+    "Project read-only Business projection through five owned paths; no UI/serve/main mount, package root ABI expansion, new K/second database, or claim publisher.",
+    "UNKNOWN and PARTIAL propagate loss of public observations, incomplete cursor, unavailable reports/telemetry, unavailable Host roster and incoherent evidence. Core Task/Release never blocked solely on missing task-meta.",
+    "Final #261 B consumer connects the existing Task/Agent UI in its own write set; #264 alone mounts the shared installed Host/API and verifies J01-J08 and V evidence. This Pack is not proof of that integration."
+  ],
+  "tests": {
+    "positive": [
+      "Stable Task/Attempt roster maps to independent Host/public-K observations with correct package/epoch/source identity and bounded cursor.",
+      "Interrupted Agent Attempt followed by restart preserves both original and recovered history with exact event linkage.",
+      "Native ADS correction/revision readback and independent reviewer/CI prove observed outcome separately from Agent status.",
+      "Missing optional telemetry produces metric UNKNOWN/NOT_COMPARABLE with positive coverage denominator while main Task read path remains available."
+    ],
+    "negative": [
+      {
+        "id": "N01",
+        "name": "WRONG_REPO",
+        "expected": "Repo mismatch denies and never leaks foreign Task data"
+      },
+      {
+        "id": "N02",
+        "name": "WRONG_VERSION_OR_TASK",
+        "expected": "Version/Task/Attempt identity mismatch returns UNKNOWN or BLOCKED"
+      },
+      {
+        "id": "N03",
+        "name": "SOURCE_DRIFT",
+        "expected": "Stale selected SHA, package, epoch or commit cannot be accepted as current"
+      },
+      {
+        "id": "N04",
+        "name": "DUP_ATTEMPT_ID",
+        "expected": "Duplicate or contradictory Attempt facts do not overwrite append-only history"
+      },
+      {
+        "id": "N05",
+        "name": "MALFORMED_EVENT",
+        "expected": "Malformed/out-of-order event yields incomplete UNKNOWN with provenance"
+      },
+      {
+        "id": "N06",
+        "name": "MISSING_RUNTIME_ADDRESS",
+        "expected": "Unknown WorkflowAddress/package/epoch must not be treated as zero attempts"
+      },
+      {
+        "id": "N07",
+        "name": "OBSERVATION_GAP",
+        "expected": "Public observation retention/storage/cursor gap maps to INCOMPLETE/UNKNOWN"
+      },
+      {
+        "id": "N08",
+        "name": "OBSERVATION_NOT_TERMINAL",
+        "expected": "TURN_COMMITTED is not proof of real Agent exit or independently verified PASS"
+      },
+      {
+        "id": "N09",
+        "name": "NO_PUBLIC_INDEX",
+        "expected": "If Host has only point lookup and no bounded trusted Attempt enumeration, fail closed, do not scan private SQLite"
+      },
+      {
+        "id": "N10",
+        "name": "NO_EFFECT_SETTLED",
+        "expected": "RuntimeObservation v1 does not expose EFFECT_SETTLED or process-command outcome; deny invented candidate SHA/exit code"
+      },
+      {
+        "id": "N11",
+        "name": "ADS_REPORT_MISSING",
+        "expected": "Missing ADS v5/task-meta report remains UNKNOWN; Task execution is not blocked"
+      },
+      {
+        "id": "N12",
+        "name": "METRICS_ABSENT",
+        "expected": "Null timing/token/cost not mapped to 0; coverage denominator explicit"
+      },
+      {
+        "id": "N13",
+        "name": "METRICS_NOT_COMPARABLE",
+        "expected": "Different measured scopes never become a false uplift/comparison"
+      },
+      {
+        "id": "N14",
+        "name": "SELF_REPORTED_PASS",
+        "expected": "Agent self-report never upgrades independent review/CI/Hidden/RQ to PASS"
+      },
+      {
+        "id": "N15",
+        "name": "SENSITIVE_PAYLOAD",
+        "expected": "Credential/private report/raw Trace/hidden fixtures stripped; no private task-meta query"
+      },
+      {
+        "id": "N16",
+        "name": "RESTART_RECOVERY",
+        "expected": "Interruption, restart and recovery preserve distinct immutable attempts"
+      },
+      {
+        "id": "N17",
+        "name": "HTTP_MUTATION",
+        "expected": "Read-only adapter refuses POST, Claim, dispatch or GitHub write; no side effects"
+      },
+      {
+        "id": "N18",
+        "name": "MIXED_REVISION",
+        "expected": "K/Host event and ADS report source identities differ: conflict or partial, never silently join"
+      }
+    ],
+    "negativeCount": 18,
+    "validation": [
+      "Node >=24 syntax-first for changed .mjs",
+      "node --test only owned five-file focused suites",
+      "affected selected public K/Host and existing ADS C read path tests",
+      "git diff --check and exact base→HEAD path audit",
+      "applicable Woodpecker job once source is admitted; no GitHub Actions",
+      "independent final Exact-SHA review with P0/P1/P2 and qualified physical readback"
+    ]
+  },
+  "admission": {
+    "governanceOnly": true,
+    "currentState": "NOT_ADMITTED",
+    "requiredBeforeSource": [
+      "Fresh native A/#260 DAG and actual #275→#261 blocked_by readback (not textual planned edge).",
+      "Independent review of this immutable Pack with exact HEAD/TREE/BASE/BLOB, negative matrix and true one-path #276 overlap.",
+      "Task-specific Owner PackBlob-bound GitHub receipt, using existing conversational Delivery-First authority.",
+      "Native #275 open type:task state:ready, full dependency/Source/role freshness and no conflicting actual Claim/FSW.",
+      "Real selected Host resource-fence + source-qualified per-Task accepted Claim and exact five-path FROZEN_DAG_WRITESET readback.",
+      "One unique JIT source branch/Writer and exact selected Host Attempt roster contract; no raw SQLite scan if missing."
+    ],
+    "taskAcceptance": [
+      "Exact owner/source paths and required negative cases PASS",
+      "One installed public-K/Host Attempt readback with real Task/Attempt identity and replay/restart evidence",
+      "Current source-verified read-only Host path and independent Exact-SHA review",
+      "Woodpecker source CI PASS where eligible",
+      "B/#261 and E/#264 consumer joins remain separately owned and NOT inferred"
+    ]
+  },
+  "immutability": {
+    "never": "No source edits, Claim/CAS, FSW, GitHub native dependency, freeze, main/Release/tag/deployment from governance Pack.",
+    "atAdmit": "Re-read actual Issue/branch/Host source; refresh fields only on a new independently reviewed Pack revision. Historical as-of values must not be misrepresented as current."
+  }
+}
