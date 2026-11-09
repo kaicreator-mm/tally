@@ -13,9 +13,14 @@
 import {createHash} from 'node:crypto';
 import {TARGET} from '../../../packages/tally-github-native-c/src/task-dispatch-state-events.mjs';
 import {terminalEventForReservation} from '../../../packages/tally-github-native-c/src/task-claim-github-publisher.mjs';
+import {HostResourceFenceError} from './host-resource-fence.mjs';
 
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const SHA=/^[0-9a-f]{40}$/;
+// The admission source's registry-drift denial (T06j); retried inside the
+// same held lease before any CAS write or POST is considered.
+const REGISTRY_DRIFT_REASON='HOST_RESERVATION_REGISTRY_DRIFT';
+const REGISTRY_DRIFT_RETRIES=3;
 const ROLES=new Set(['builder','reviewer','validator']);
 const REF=/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9][0-9]*$/;
 const ADR=/^#[1-9][0-9]*@[1-9][0-9]*$/;
@@ -75,65 +80,120 @@ function validReadback(o,i){
  * suitable for multiple hosts without one shared CAS store + sole publisher.
  * Test adapters may simulate source and publisher; they cannot certify a
  * production serialized writer or actual GitHub accepted Claim.
+ *
+ * fenceClient is the Host-injected exclusive-resource lease client
+ * (HostResourceFenceClient from ./host-resource-fence.mjs). reserveAndPublish
+ * acquires that lease BEFORE reading admission facts and releases it after
+ * the final CAS or on every deny path; callers can never supply it.
  */
-export function createHostSingleWriterClaimController({store,source,publisher,writerAuthority}={}){
+export function createHostSingleWriterClaimController({store,source,publisher,writerAuthority,fenceClient}={}){
   if(!store||typeof store.get!=='function'||typeof store.put!=='function'||
     !source||typeof source.readAdmissionFacts!=='function'||
     typeof source.readPublishedClaim!=='function'||
     !publisher||typeof publisher.publishClaim!=='function'||
     writerAuthority?.mode!=='SINGLE_WRITER_ADMISSION'||
     writerAuthority?.exclusiveHostControl!==true||
-    !allowed(writerAuthority?.writerId))
+    !allowed(writerAuthority?.writerId)||
+    !fenceClient||typeof fenceClient.acquire!=='function'||
+    typeof fenceClient.release!=='function')
     throw new TypeError('TRUSTED_SINGLE_WRITER_HOST_PORTS_REQUIRED');
   async function reserveAndPublish(request){
     let i;
     try{i=safeRequest(request);}catch{return deny('INVALID_CLAIM_REQUEST');}
     if(!i)return deny('INVALID_CLAIM_REQUEST');
     const key=keyOf(i.repository,i.issueNumber,i.actorRole);
+    // The physical shared-Host lease spans the admission read, the physical
+    // CAS reservation, the GitHub POST/readback and the final CAS. A deny()
+    // below is a terminal outcome; the finally releases the lease before the
+    // receipt is returned.
+    let held=false;
+    let receipt;
+    let releaseFailed=false;
     try{
-      const existing=await store.get(key);
-      // Ambiguous/crashed publication and old claims MUST NOT be overwritten.
-      // Same-dispatch resumption requires a separate durable reconciliation.
-      if(existing)return deny(existing.value?.dispatchId===i.dispatchId?
-        'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION':'INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS');
-      const facts=await source.readAdmissionFacts(i);
-      if(!validPreflight(facts,i))return deny('SOURCE_OR_CLAIM_AUTHORITY_UNQUALIFIED');
-      const reservation={phase:'PENDING_GITHUB_PUBLISH',generation:i.generation,
-        protectedClaimKey:i.protectedClaimKey,repository:i.repository,
-        issueRef:i.issueRef,sourceSha:i.sourceSha,dispatchId:i.dispatchId,
-        actorRole:i.actorRole,operatorKind:i.operatorKind,
-        operatorId:i.operatorId,writerId:writerAuthority.writerId};
-      // Exactly ONE physical CAS succeeds for a protected key, even if two
-      // requests simultaneously passed their preceding native source read.
-      let rev;
-      try{({revision:rev}=await store.put(key,reservation,{mustBeAbsent:true}));}
-      catch{return deny('CONCURRENT_CLAIM_RESERVATION_LOST');}
-      // Always preserve reservation if GitHub publication ACK is lost.
-      // Never automatically retry an uncertain publish.
-      let ack;
-      try{ack=await publisher.publishClaim(Object.freeze({...i,writerId:writerAuthority.writerId}));}
-      catch{return deny('GITHUB_CLAIM_PUBLICATION_AMBIGUOUS',{reservationKey:key});}
-      const id=ack?.commentId;
-      if(!Number.isSafeInteger(id)||id<1)
-        return deny('GITHUB_CLAIM_PUBLICATION_AMBIGUOUS',{reservationKey:key});
-      let observed;
-      try{observed=await source.readPublishedClaim(i,id);}
-      catch{return deny('GITHUB_CLAIM_READBACK_UNAVAILABLE',{reservationKey:key});}
-      if(!validReadback(observed,i)||observed.commentId!==id)
-        return deny('GITHUB_CLAIM_READBACK_NOT_VERIFIED',{reservationKey:key});
-      // A durable accepted publication record is **not** Task execution.
-      const result={...reservation,phase:'PUBLISHED_VERIFIED',
-        commentId:id,commentRef:observed.commentRef};
-      try{await store.put(key,result,{mustMatchRevision:rev});}
-      catch{return deny('CLAIM_PERSISTENCE_AMBIGUOUS',{reservationKey:key});}
-      return Object.freeze({
-        status:'RECORDED',reason:'SERIALIZED_GITHUB_PUBLISH_AND_READBACK_CONFIRMED',
-        claimPublication:'VERIFIED_PENDING_KERNEL_ADMISSION',
-        nativeCommentRef:observed.commentRef,protectedClaimKey:i.protectedClaimKey,
-        generation:i.generation,authorized:false,admitted:false,
-        taskPass:false,releasePass:false
-      });
-    }catch{return deny('ADMISSION_STORE_OR_SOURCE_UNAVAILABLE');}
+      try{
+        await fenceClient.acquire();
+        held=true;
+      }catch(error){
+        if(error instanceof HostResourceFenceError)
+          return deny('FENCE_OPERATION_FAILED',{fenceCode:error.code});
+        throw error;
+      }
+      receipt=await admittedUnderLease(i,key);
+    }catch(error){
+      if(error instanceof HostResourceFenceError)
+        receipt=deny('FENCE_OPERATION_FAILED',{fenceCode:error.code});
+      else receipt=deny('ADMISSION_STORE_OR_SOURCE_UNAVAILABLE');
+    }finally{
+      if(held){
+        try{await fenceClient.release();}
+        catch{releaseFailed=true;}
+      }
+    }
+    // A failed release after a RECORDED outcome must not fabricate a deny:
+    // the publication IS durable; the lease state is reported separately.
+    if(releaseFailed&&receipt.status==='RECORDED')
+      return Object.freeze({...receipt,fenceReleased:false,
+        fenceReleaseFailure:'FENCE_RELEASE_FAILED'});
+    return receipt;
+  }
+  async function admittedUnderLease(i,key){
+    const existing=await store.get(key);
+    // Ambiguous/crashed publication and old claims MUST NOT be overwritten.
+    // Same-dispatch resumption requires a separate durable reconciliation.
+    if(existing)return deny(existing.value?.dispatchId===i.dispatchId?
+      'EXISTING_CLAIM_NEEDS_NATIVE_RECONCILIATION':'INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS');
+    // Registry drift between the source's double reads is retried inside
+    // this SAME held lease: no CAS write and no POST happen on a retry,
+    // and exhaustion denies without ever touching the reservation.
+    let facts=null;
+    for(let attempt=0;attempt<=REGISTRY_DRIFT_RETRIES;attempt++){
+      facts=await source.readAdmissionFacts(i);
+      if(validPreflight(facts,i))break;
+      if(facts?.reason!==REGISTRY_DRIFT_REASON)
+        return deny('SOURCE_OR_CLAIM_AUTHORITY_UNQUALIFIED');
+    }
+    if(!validPreflight(facts,i))
+      return deny('ADMISSION_REGISTRY_DRIFT_EXHAUSTED');
+    const reservation={phase:'PENDING_GITHUB_PUBLISH',generation:i.generation,
+      protectedClaimKey:i.protectedClaimKey,repository:i.repository,
+      issueRef:i.issueRef,sourceSha:i.sourceSha,dispatchId:i.dispatchId,
+      actorRole:i.actorRole,operatorKind:i.operatorKind,
+      operatorId:i.operatorId,writerId:writerAuthority.writerId};
+    // Exactly ONE physical CAS succeeds for a protected key, even if two
+    // requests simultaneously passed their preceding native source read.
+    let rev;
+    try{({revision:rev}=await store.put(key,reservation,{mustBeAbsent:true}));}
+    catch{return deny('CONCURRENT_CLAIM_RESERVATION_LOST');}
+    // Always preserve reservation if GitHub publication ACK is lost.
+    // Never automatically retry an uncertain publish.
+    let ack;
+    try{ack=await publisher.publishClaim(Object.freeze({...i,writerId:writerAuthority.writerId}));}
+    catch(error){
+      if(error instanceof HostResourceFenceError)
+        return deny('FENCE_OPERATION_FAILED',
+          {reservationKey:key,fenceCode:error.code});
+      return deny('GITHUB_CLAIM_PUBLICATION_AMBIGUOUS',{reservationKey:key});
+    }
+    const id=ack?.commentId;
+    if(!Number.isSafeInteger(id)||id<1)
+      return deny('GITHUB_CLAIM_PUBLICATION_AMBIGUOUS',{reservationKey:key});
+    let observed;
+    try{observed=await source.readPublishedClaim(i,id);}
+    catch{return deny('GITHUB_CLAIM_READBACK_UNAVAILABLE',{reservationKey:key});}
+    if(!validReadback(observed,i)||observed.commentId!==id)
+      return deny('GITHUB_CLAIM_READBACK_NOT_VERIFIED',{reservationKey:key});
+    // A durable accepted publication record is **not** Task execution.
+    const result={...reservation,phase:'PUBLISHED_VERIFIED',
+      commentId:id,commentRef:observed.commentRef};
+    try{await store.put(key,result,{mustMatchRevision:rev});}
+    catch{return deny('CLAIM_PERSISTENCE_AMBIGUOUS',{reservationKey:key});}
+    return Object.freeze({
+      status:'RECORDED',reason:'SERIALIZED_GITHUB_PUBLISH_AND_READBACK_CONFIRMED',
+      claimPublication:'VERIFIED_PENDING_KERNEL_ADMISSION',
+      nativeCommentRef:observed.commentRef,protectedClaimKey:i.protectedClaimKey,
+      generation:i.generation,authorized:false,admitted:false,
+      taskPass:false,releasePass:false
+    });
   }
   async function terminalizePublishedClaim(request){
     const unknown=reason=>Object.freeze({status:'UNKNOWN',reason,claimTerminality:'UNKNOWN',

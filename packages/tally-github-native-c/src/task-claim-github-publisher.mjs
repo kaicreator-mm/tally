@@ -15,6 +15,7 @@ import {TARGET} from './task-dispatch-state-events.mjs';
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const GH_LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
 const SHA=/^[a-f0-9]{40}$/;
+const HEX64=/^[a-f0-9]{64}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const ROLES=new Set(['builder','reviewer','validator']);
 const KINDS=new Set(['chatgpt-web','codex','claude-code','human','github-actions',
@@ -23,6 +24,15 @@ const marker='<!-- ads:github -->';
 const hash=x=>createHash('sha256').update(x,'utf8').digest('hex');
 const forbidden=()=>new Error('HOST_EXCLUSIVE_GITHUB_PUBLISHER_REQUIRED');
 const ambiguous=()=>new Error('NATIVE_GITHUB_CLAIM_PUBLICATION_AMBIGUOUS');
+// The Host resource fence this transport is bound to. The publisher is a
+// package and cannot import the experiments-side library, so the port shape
+// and the returned readback proof are validated inline here.
+const FENCE_PORT_SOURCE_KIND='TRUSTED_HOST_RESOURCE_FENCE_PORT';
+const FENCE_READBACK_SOURCE_KIND='TRUSTED_HOST_RESOURCE_FENCE_READBACK';
+const FENCE_PROOF_MAX_AGE_MS=15000;
+// readHeldFence recomputes the foreign-claim digest from its projections;
+// for the explicit empty projection it is exactly sha256(JSON.stringify([])).
+const EMPTY_FOREIGN_CLAIMS_SHA256=hash(JSON.stringify([]));
 
 /** Values here are selected by the Host, never by an Agent or HTTP caller. */
 export function terminalEventForReservation(reservation,writerAuthority){
@@ -83,10 +93,12 @@ function readbackValid(c,id,issueUrl,apiIssueUrl,login,body){
 }
 
 /** The writerIdentity object is trusted only as Host-controlled configuration;
- * data from an API request cannot constitute this authority.
+ * data from an API request cannot constitute this authority. The fencePort
+ * is likewise Host-injected: it must be the trusted shared-Host resource
+ * fence port for exactly this repository, writer and frozen resource set.
  */
 export function createHostBoundNativeGitHubClaimPublisher({
-  octokit,owner,repo,writerAuthority
+  octokit,owner,repo,writerAuthority,fencePort
 }={}){
   if(!NAME.test(owner??'')||!NAME.test(repo??'')||
      writerAuthority?.mode!=='SINGLE_WRITER_ADMISSION'||
@@ -95,12 +107,55 @@ export function createHostBoundNativeGitHubClaimPublisher({
      !ID.test(writerAuthority?.writerId??'')||
      !GH_LOGIN.test(writerAuthority?.githubWriterLogin??'')||
      typeof octokit?.rest?.issues?.createComment!=='function'||
-     typeof octokit?.rest?.issues?.getComment!=='function')
+     typeof octokit?.rest?.issues?.getComment!=='function'||
+     fencePort?.sourceKind!==FENCE_PORT_SOURCE_KIND||
+     fencePort?.repository!==owner+'/'+repo||
+     fencePort?.writerId!==writerAuthority?.writerId||
+     !HEX64.test(fencePort?.frozenResourceSetSha256??'')||
+     typeof fencePort?.readHeldFence!=='function')
     throw forbidden();
   const writerId=writerAuthority.writerId;
   const login=writerAuthority.githubWriterLogin;
   const terminalAuthority=Object.freeze({mode:'SINGLE_WRITER_ADMISSION',exclusiveHostControl:true,
     repository:owner+'/'+repo,writerId,githubWriterLogin:login});
+  function heldFenceProofValid(proof,i){
+    const observed=typeof proof?.observedAt==='string'?
+      Date.parse(proof.observedAt):NaN;
+    return proof?.sourceKind===FENCE_READBACK_SOURCE_KIND&&
+      proof?.complete===true&&proof?.fenceHeld===true&&
+      proof?.repository===fencePort.repository&&
+      proof?.writerId===fencePort.writerId&&
+      proof?.protectedClaimKey===i.protectedClaimKey&&
+      proof?.sourceSha===i.sourceSha&&
+      HEX64.test(proof?.frozenResourceSetSha256??'')&&
+      proof?.frozenResourceSetSha256===fencePort.frozenResourceSetSha256&&
+      Number.isFinite(observed)&&observed<=Date.now()&&
+      Date.now()-observed<=FENCE_PROOF_MAX_AGE_MS;
+  }
+  async function assertHeldFenceBeforePost(i){
+    // The context is derived from THIS request with explicit empty foreign
+    // projections; only the Host-injected port can answer it, and it binds
+    // the answer to its own fixed identity and the durable lease registry.
+    // A caller-supplied witness of any shape can never pass this gate.
+    let proof=null;
+    try{
+      proof=await fencePort.readHeldFence(Object.freeze({
+        repository:owner+'/'+repo,writerId,
+        protectedClaimKey:i.protectedClaimKey,sourceSha:i.sourceSha,
+        foreignClaimCount:0,foreignClaims:Object.freeze([]),
+        foreignClaimsSha256:EMPTY_FOREIGN_CLAIMS_SHA256
+      }));
+    }catch(error){
+      // The trusted fence library reports typed failures by code (for
+      // example HOST_RESOURCE_FENCE_NOT_HELD); those are preserved so the
+      // serialized writer can deny with a distinct fence reason. Anything
+      // else from an unqualified port is a forbidden-wiring failure.
+      if(error instanceof Error&&typeof error.code==='string'&&
+         error.code.startsWith('HOST_RESOURCE_FENCE_'))throw error;
+      throw forbidden();
+    }
+    if(!heldFenceProofValid(proof,i))throw forbidden();
+  }
   async function publishClaim(request){
     const i=requireReservation(request,owner,repo,writerId);
     const issueUrl=i.issueRef;
@@ -108,7 +163,10 @@ export function createHostBoundNativeGitHubClaimPublisher({
       '/issues/'+i.issueNumber;
     const body=renderEvent(i);
     // Calling this method is permitted ONLY after a real selected Host CAS
-    // reservation. The method has no retry and no unprivileged auth fallback.
+    // reservation AND a currently held exclusive-resource lease, proven by
+    // the Host-injected fence port immediately before the POST. The method
+    // has no retry and no unprivileged auth fallback.
+    await assertHeldFenceBeforePost(i);
     let response;
     try{
       response=await octokit.rest.issues.createComment({
