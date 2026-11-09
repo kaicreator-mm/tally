@@ -10,6 +10,8 @@ when:
         - 'packages/tally-github-native-c/src/task-claim-github-publisher.mjs'
         - 'packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs'
         - '.woodpecker/v2-t06d-terminalization.yaml'
+  - event: [pull_request, push, manual]
+    branch: [task/tally-i383-fence-wiring-ci]
 labels:
   backend: local
 steps:
