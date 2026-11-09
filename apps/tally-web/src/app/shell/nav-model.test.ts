@@ -34,3 +34,14 @@ test('route lookup and group membership',()=>{
   assert.equal(groupKeyOf(item!),'development');
   assert.equal(findItemByRoute({group:'nope',view:'nope',query:{}}),null);
 });
+
+test('version-bound lifecycle pages never open without a selected version',()=>{
+  const keys=['requirements','product','l2-dag','maintenance','metadata'];
+  for(const key of keys){
+    const item=NAV_GROUPS.flatMap(g=>g.items).find(i=>i.key===key)!;
+    assert.equal(navAvailability(item,{projectId:'owner/repo',versionId:null}).available,
+      false,key);
+    assert.equal(navAvailability(item,{projectId:'owner/repo',versionId:'version/v2'})
+      .available,true,key);
+  }
+});

@@ -1,0 +1,86 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createUiV2ReadModelHost} from './ui-native-host.mjs';
+const repo='org/tally',versionId='version/v2';
+const source={repository:repo,sourceSha:'a'.repeat(40),
+  currentness:'CURRENT',readback:'VERIFIED'};
+const catalog={connected:true,source,projects:[{id:repo,title:'Tally'}],
+  versionsByProject:{[repo]:[{id:versionId,projectId:repo,label:'v2'}]}};
+const version={connected:true,source,versionId,tasks:[{
+  id:'1',versionId,title:'Task',status:'open',severity:'UNKNOWN',
+  blockedBy:[],claimState:'NOT_VERIFIED'}],
+  dag:{connected:true,source,versionId,asOf:{sourceSha:source.sourceSha,
+    frozenAt:null},nodes:[{taskId:'1',versionId}],edges:[]}};
+const nativeC={catalog:async()=>catalog,version:async()=>version};
+test('selected native C composes project/version catalog without guessed tasks',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,nativeC});
+  assert.deepEqual(await host.catalog(),catalog);
+});
+test('real C task facts and native DAG evidence carry the exact source',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,nativeC});
+  const scope={projectId:repo,versionId};
+  assert.deepEqual((await host.tasks(scope)).tasks,version.tasks);
+  assert.equal((await host.tasks(scope)).rosterCoverage,'UNVERIFIED');
+  assert.deepEqual(await host.dag(scope),version.dag);
+});
+test('foreign project/version request fails closed before any native read',async()=>{
+  let calls=0;
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{catalog:async()=>catalog,version:async()=>{calls++;return version;}}});
+  assert.equal((await host.tasks({projectId:'evil/repo',versionId})).connected,false);
+  assert.equal((await host.dag({projectId:repo,versionId:'version/v3'})).connected,false);
+  assert.equal(calls,0);
+});
+test('no verified Task roster cannot produce an empty successful list',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{catalog:async()=>catalog,
+      version:async()=>({connected:false,reason:'ROSTER_UNAVAILABLE'})}});
+  assert.deepEqual(await host.tasks({projectId:repo,versionId}),
+    {connected:false,reason:'ROSTER_UNAVAILABLE'});
+});
+test('untrusted GitHub C observation never becomes Host-connected',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{catalog:async()=>({...catalog,source:{...source,repository:'evil/repo'}}),
+      version:async()=>({...version,source:{...source,repository:'evil/repo'}})}});
+  assert.equal((await host.catalog()).connected,false);
+  assert.equal((await host.tasks({projectId:repo,versionId})).connected,false);
+});
+
+test('Requirement Host read preserves declared-but-unverified hierarchy and no freeze',async()=>{
+  const qualified={connected:true,source,versionId,
+    structureCoverage:'HOST_DECLARED_UNVERIFIED',freezeCoverage:'UNKNOWN',
+    nodes:[{id:'77',kind:'requirement',title:'Real GitHub title',
+      parent:null,productRevision:null,acceptanceRefs:[],
+      l2Decision:null,freezeState:'UNKNOWN',updatedAt:'2026-11-02T00:00:00Z'}]};
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,requirements:async()=>qualified}});
+  assert.deepEqual(await host.requirements({projectId:repo,versionId}),qualified);
+  assert.equal((await host.requirements({projectId:repo,
+    versionId:'version/v3'})).connected,false);
+});
+test('unconfigured or forged native requirement freeze cannot become Host fact',async()=>{
+  const host=createUiV2ReadModelHost({repository:repo,versionId,nativeC});
+  assert.equal((await host.requirements({projectId:repo,versionId})).connected,false);
+  const forged=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,requirements:async()=>({
+      connected:true,source,versionId,structureCoverage:'VERIFIED_COMPLETE',
+      freezeCoverage:'FROZEN',nodes:[]})}});
+  assert.equal((await forged.requirements({projectId:repo,versionId})).connected,false);
+});
+
+test('reported CI evidence cannot assert independent Hidden or installed acceptance',async()=>{
+  const qa={connected:true,source,versionId,
+    ciCoverage:'REPORTED_ONLY',independentCoverage:'UNKNOWN',records:[{
+      layer:'fullRegression',provenance:'REPORTED',outcome:'PASS',
+      witness:'github-native-c-status-reported',
+      evidenceRef:'https://ci.kaicreator.com/repos/12/pipeline/369/2',
+      subjectSha:source.sourceSha,observedAt:'2026-11-02T00:00:00Z'}]};
+  const host=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,qa:async()=>qa}});
+  assert.deepEqual(await host.qa({projectId:repo,versionId}),qa);
+  assert.equal((await host.qa({projectId:repo,versionId:'version/v3'})).connected,false);
+  const forged=createUiV2ReadModelHost({repository:repo,versionId,
+    nativeC:{...nativeC,qa:async()=>({...qa,records:[{
+      ...qa.records[0],layer:'hiddenValidation',provenance:'INDEPENDENT'}]})}});
+  assert.equal((await forged.qa({projectId:repo,versionId})).connected,false);
+});

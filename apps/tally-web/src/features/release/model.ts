@@ -12,9 +12,13 @@ export interface ReleasePermit{
   state:'GRANTED'|'DENIED'|'UNKNOWN';
   sourceSha:string|null;
   grantedAt:string|null;
+  /** Issued by selected Host only after current source readback. */
+  currentness?:'CURRENT'|'STALE'|'UNKNOWN';
 }
 export interface ReleaseReadiness{
   versionId:string;
+  /** Exact version source pinned by the trusted Host. Absent => no actions. */
+  currentSourceSha?:string|null;
   gates:readonly ReleaseGate[];
   /** Host-issued fresh permits (source-qualified); null = not connected. */
   permits:readonly ReleasePermit[]|null;
@@ -58,12 +62,18 @@ export function actionDisplay(readiness:ReleaseReadiness,
   const blockers=releaseBlockers(readiness);
   const permit=(readiness.permits??[])
     .find(entry=>entry.operation===operation);
-  if(permit&&permit.state==='GRANTED')
-    return {operation,enabled:true,reason:null};
-  if(!permit)
-    return {operation,enabled:false,
-      reason:blockers[0]?`${blockers[0].code}: ${blockers[0].detail}`
-        :'HOST_PERMIT_MISSING: 无 Host 许可'};
-  return {operation,enabled:false,
-    reason:`HOST_PERMIT_${permit.state}: 许可未生效`};
+  // A GRANTED-looking flag alone is not a source-qualified release permit.
+  // Never enable if RQ, Owner grant or any independent gate is incomplete.
+  if(blockers.length>0||readiness.gates.length===0)
+    return {operation,enabled:false,reason:blockers[0]
+      ?`${blockers[0].code}: ${blockers[0].detail}`:'RELEASE_GATES_UNVERIFIED'};
+  if(!permit||permit.state!=='GRANTED')
+    return {operation,enabled:false,reason:permit
+      ?`HOST_PERMIT_${permit.state}: 许可未生效`:'HOST_PERMIT_MISSING'};
+  const source=readiness.currentSourceSha;
+  if(typeof source!=='string'||!/^[0-9a-f]{40}$/.test(source)||
+     permit.sourceSha!==source||permit.currentness!=='CURRENT'||
+     typeof permit.grantedAt!=='string'||Number.isNaN(Date.parse(permit.grantedAt)))
+    return {operation,enabled:false,reason:'HOST_PERMIT_STALE_OR_UNVERIFIED'};
+  return {operation,enabled:true,reason:null};
 }

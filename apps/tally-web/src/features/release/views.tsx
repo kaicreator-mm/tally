@@ -35,14 +35,16 @@ export function ReleaseView({readiness,onAction,connected=true,locale='zh'}:
         flexWrap:'wrap'}}>
         {(['merge','tag','publish'] as const).map((operation,index)=>{
           const display=actionDisplay(readiness,operation);
+          // No Host dispatch callback = no real effect; never enable a no-op.
+          const wired=display.enabled&&typeof onAction==='function';
           return <div key={operation} style={{display:'grid',gap:4}}>
-            <Button variant={display.enabled?'primary':'secondary'}
-              disabled={!display.enabled}
-              onClick={display.enabled?()=>onAction?.(operation):undefined}>
+            <Button variant={wired?'primary':'secondary'}
+              disabled={!wired}
+              onClick={wired?()=>onAction?.(operation):undefined}>
               {zh?OP_LABEL[index].zh:OP_LABEL[index].en}
             </Button>
-            {display.reason?<span style={{color:'var(--warn)',fontSize:12,
-              maxWidth:220}}>{display.reason}</span>
+            {display.reason||!wired?<span style={{color:'var(--warn)',fontSize:12,
+              maxWidth:220}}>{display.reason??'HOST_ACTION_NOT_CONNECTED'}</span>
               :<span style={{color:'var(--text-faint)',fontSize:12}}>
                   {zh?'已获新鲜 Host 许可':'fresh Host permit'}</span>}
           </div>;})}
