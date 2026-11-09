@@ -1602,7 +1602,8 @@
     "The A R16 writeSetAudit embeds historical explanatory R8 overlap-group labels; those are immutable source-candidate metadata and not a claim that R8 governance is current. Authoritative current 48-Task DAG/counts and live Claim observations are the exact R16 candidate reference.",
     "R9 exact-SHA repair: e0ScopeAudit.integrationBase.parents records the actual Git commit parent of A R16 (`00c25eebbccdee3bfb1f93152a2c35e01e110a33`), not the R16 HEAD itself. The top-level integrationBase.mergeParents is the planned integration input (A R16), not a Git commit parent. Version freeze requires all 48 Task snapshots (27 OPEN/21 CLOSED), not the superseded 46.",
     "R10 (2026-11-09): refreshed binding from A R16/48-Task to A R18 HEAD 10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20/51-Task candidate (blob d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d, 37 edges 4 NATIVE/33 PLANNED; #264 native blocked_by [260,261,262,263] re-verified unchanged). Predecessor chain complete: #203 rev4 TERMINAL_VERIFIED (unchanged since R9); #319 and #370 lawfully terminalized (rev3 TERMINAL_VERIFIED, DONE events 6729569819/6729695352, #370 CI pipeline #513 SUCCESS); #383 successor fence-wiring delivered (implementation ab4976c5 review PASS, CI #514 81/81, PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 per gate receipt 6730634645). #284 promoted to state:ready at 2026-11-09T11:08:47Z after the physical gate removed the last admission blocker (per #284 comment 6718124977 re-read instruction). E0 write set unchanged (14 paths, digest 36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8). Next: one lawful E0 root Claim on the T06d Host controller, then the 14-path implementation. R10 supersedes R9 for admission; R9 remains the immutable historical record bound to Owner receipt 6714832785.",
-    "R10 repair (2026-11-09): after independent review BLOCK — recomputed both audit digests with the pinned JS-compact algorithm (python default separators produced mismatched digests); embedded the ACTUAL A R18 candidate writeSetAudit (30 open, 28 digests, 70 pairs) instead of the R16-era snapshot; refreshed scopeDispositionReference to the live candidate (50 rows / 7 dispatchable / 43 non-dispatchable) and claimObservationCounts (42/9); repinned rootAdmissionPlan base fields and preClaimBootstrapMount to the R18 base SHA; corrected the remaining R9/R16 references in operative gate/precondition/binding texts; refreshed the three stale upstream updatedAt snapshots. Known A-side P3 recorded, not fixed here: the R18 candidate itself lacks #383 rows in scopeDispositions and its plannedEdges projection misses the three R18-added edges (candidate annotation-only; belongs to the next A material revision)."
+    "R10 repair (2026-11-09): after independent review BLOCK — recomputed both audit digests with the pinned JS-compact algorithm (python default separators produced mismatched digests); embedded the ACTUAL A R18 candidate writeSetAudit (30 open, 28 digests, 70 pairs) instead of the R16-era snapshot; refreshed scopeDispositionReference to the live candidate (50 rows / 7 dispatchable / 43 non-dispatchable) and claimObservationCounts (42/9); repinned rootAdmissionPlan base fields and preClaimBootstrapMount to the R18 base SHA; corrected the remaining R9/R16 references in operative gate/precondition/binding texts; refreshed the three stale upstream updatedAt snapshots. Known A-side P3 recorded, not fixed here: the R18 candidate itself lacks #383 rows in scopeDispositions and its plannedEdges projection misses the three R18-added edges (candidate annotation-only; belongs to the next A material revision).",
+    "R10 repair 2 (2026-11-09): re-review found the prior repair silently unpushed (now actually pushed; branch tip verified via API) and scopeDispositionReference malformed — the candidate stores dispositions under scopeDispositions.items, which the first repair read at the wrong path. Rebuilt from items (50 / [207,208,209,260,261,262,263] / 43) in both copies and recomputed the binding digest over the final content."
   ],
   "e0ScopeAudit": {
     "schema": "tally.e0.bootstrap-scope-audit/v1",
@@ -2100,11 +2101,20 @@
       "observedSelfReported": 42,
       "noClaimEventExpected": 9
     },
-    "versionAuditDigest": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e"
+    "versionAuditDigest": "5bb5f5dbd242c03cb4316db9abb6f778a98bda2a9dde9495c563eb181c435a7b"
   },
   "scopeDispositionReference": {
-    "dispatchableIssueNumbers": [],
-    "nonDispatchableCount": null
+    "count": 50,
+    "dispatchableIssueNumbers": [
+      207,
+      208,
+      209,
+      260,
+      261,
+      262,
+      263
+    ],
+    "nonDispatchableCount": 43
   },
   "preconditions": [
     "Fresh independent Exact-SHA review of immutable R10 Contents Blob, bound to this A R18 SHA/tree and both independent scope audit digests.",
@@ -3404,17 +3414,26 @@
       ]
     },
     "scopeDispositionReference": {
-      "dispatchableIssueNumbers": [],
-      "nonDispatchableCount": null
+      "count": 50,
+      "dispatchableIssueNumbers": [
+        207,
+        208,
+        209,
+        260,
+        261,
+        262,
+        263
+      ],
+      "nonDispatchableCount": 43
     },
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(core in insertion order; excluding digestAlgorithm and digestSha256)",
-    "digestSha256": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e",
+    "digestSha256": "5bb5f5dbd242c03cb4316db9abb6f778a98bda2a9dde9495c563eb181c435a7b",
     "claimObservationCounts": {
       "observedSelfReported": 42,
       "noClaimEventExpected": 9
     }
   },
-  "versionAuditDigest": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e",
+  "versionAuditDigest": "5bb5f5dbd242c03cb4316db9abb6f778a98bda2a9dde9495c563eb181c435a7b",
   "claimBindingRules": {
     "schema": "tally.e0.claim-pack-binding/v1",
     "packBlobShaSource": "GitHub Contents API exact blob SHA for docs/implementation/v2/E0_BOOTSTRAP_TASK_PACK_R10.json at reviewed R10 HEAD",
