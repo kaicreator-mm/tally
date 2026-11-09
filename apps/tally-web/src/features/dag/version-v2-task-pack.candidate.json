@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
-  "observedAt": "2026-11-09T13:15:21.353Z",
+  "observedAt": "2026-11-09T17:54:33.161Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -546,7 +546,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:39Z",
-      "updatedAt": "2026-11-08T11:05:18Z",
+      "updatedAt": "2026-11-09T17:35:30Z",
       "closedAt": null,
       "scopeDisposition": "ACTIVE_VERSION_DAG_FREEZE",
       "dispatchableByDisposition": true,
@@ -606,11 +606,11 @@
         "state:planned"
       ],
       "createdAt": "2026-11-01T20:03:47Z",
-      "updatedAt": "2026-11-08T07:36:41Z",
+      "updatedAt": "2026-11-08T23:38:43Z",
       "closedAt": null,
       "scopeDisposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
       "dispatchableByDisposition": false,
-      "dispositionNote": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+      "dispositionNote": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass. The Final installed Product P0/Vector Traceability Contract (24 P0 / 82 Vector complete index, SOURCE_ONLY) at #264 comment 6728777830 is the acceptance ledger for incremental J01-J08 verification."
     },
     {
       "issueNumber": 273,
@@ -666,11 +666,11 @@
         "state:planned"
       ],
       "createdAt": "2026-11-03T05:32:14Z",
-      "updatedAt": "2026-11-05T06:34:31Z",
+      "updatedAt": "2026-11-08T23:41:04Z",
       "closedAt": null,
       "scopeDisposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
       "dispatchableByDisposition": false,
-      "dispositionNote": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+      "dispositionNote": "F Domain Data/Workflow task. The 2026-11-09 delivery-first concurrency audit (#276 comment 6728802295) splits execution into F1a/F1b (authoring-only Domain Data/glossary/Schema/Rule/Workflow JSON + private readiness helper + four experiments/v2/selected-business-build compiler/consumer files; disjoint from #284 and other Business writers; must not touch src/index.mjs, src/attempts.mjs, producer.mjs or shared Business policy tests) and F2 (one src/index.mjs injection seam + moduleSource/producer call-site, serial only after #284/#219/#273/#275). CURRENT_42_PATH_SCOPE=NOT_ADMITTED; F1_STAGE_CLAIM=NOT_PRESENT; F2_STAGE_CLAIM=NOT_PRESENT. F1 still requires a fresh #260 Task Pack/allowed-write-set review plus a new accepted #276 Claim before any source exists. Keep non-dispatchable."
     },
     {
       "issueNumber": 284,
@@ -678,14 +678,14 @@
       "issueState": "open",
       "labels": [
         "type:task",
-        "state:planned"
+        "state:ready"
       ],
       "createdAt": "2026-11-04T00:27:42Z",
-      "updatedAt": "2026-11-08T06:15:37Z",
+      "updatedAt": "2026-11-09T17:34:26Z",
       "closedAt": null,
-      "scopeDisposition": "PLANNED_E0_R9_REFRESH_REQUIRED_NO_ROOT_CLAIM",
-      "dispatchableByDisposition": false,
-      "dispositionNote": "E0 remains PLANNED/state:planned with NO_CLAIM_EVENT_EXPECTED and no root Claim or source authority. #203 target-specific terminality is now verified, but that satisfies only one predecessor observation; it does not prove global Host quiescence/admission or #331 Task Acceptance. After a stable A/#260 R16 candidate is independently Exact-SHA reviewed, E0 must refresh its own R9-or-later Pack from that exact input, complete independent Pack review and exact PackBlob-bound Owner receipt, then establish a separately reviewed lawful Host-wide admission/fail-closed isolation gate before any root Claim. The old R8 Pack/Owner receipt is stale. No native dependency write, Freeze, merge or release is authorized."
+      "scopeDisposition": "E0_ROOT_CLAIMED_IMPL_DELIVERED_NATIVE_PENDING",
+      "dispatchableByDisposition": true,
+      "dispositionNote": "E0 root Claim recorded (native DISPATCH_CLAIMED comment 6739370032; subject-field misbinding disclosed at 6739442600 and corrected via FSW rev1 + Pack R11 deviation record; Owner PackBlob receipts 6739335815/R10 and 6739635285/R11 accept the factual root Claim and authorize implementation). Implementation delivered at 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f with independent Exact-SHA review PASS and Woodpecker CI #520 SUCCESS (receipt 6741313032). E0 Host Writer admitted for serial read-before/write/read-after native dependency materialization in 12 vertex-disjoint batches (#284 comment 6746943816); no native dependency POST or version Freeze has been performed yet. Live label state:planned -> state:ready."
     },
     {
       "issueNumber": 312,
@@ -771,11 +771,11 @@
         "state:ready"
       ],
       "createdAt": "2026-11-08T23:30:33Z",
-      "updatedAt": "2026-11-09T01:25:56Z",
+      "updatedAt": "2026-11-09T02:15:52Z",
       "closedAt": null,
-      "scopeDisposition": "SUCCESSOR_R3_ADMITTED_CANDIDATE",
+      "scopeDisposition": "R3_ADMITTED_CLAIMED_IMPLEMENTATION_REVIEW_PASS_PHYSICAL_GATE_PASS",
       "dispatchableByDisposition": false,
-      "dispositionNote": "Pack R3 (comment 6729936160) SOUND after three independent review rounds; Owner receipt 6729962910 binds write-set digest 41538b7f (6 paths, 5 overlap #319 FSW resolved by #319 terminal disposition rev3 TERMINAL_VERIFIED DONE 6729569819). #370 CI #513 SUCCESS + rev3 TERMINAL_VERIFIED DONE 6729695352. Implementation gated on successor Claim/FSW on its dedicated fence-owned registry; PHYSICAL_SHARED_HOST_FENCE=NOT_PROVEN until the real two-Builder gate passes; #284 stays NOT_ADMITTED until then."
+      "dispositionNote": "Successor fence-wiring task: Pack R3 SOUND (6729936160), Owner receipt 6729962910 binds write-set digest 41538b7f (6 paths), recorded Claim 6730033866 on the dedicated fence-owned registry; implementation HEAD ab4976c5 independent review PASS + CI #514 SUCCESS 81/81 (receipt 6730565550); PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 on the real two-Builder gate (6730626623/6730634645), clearing E0/#284 root admission. Delivered increment pending #264 integration join; do not dispatch further #383 code or physical-validation repairs."
     }
   ],
   "edges": [
@@ -1642,16 +1642,16 @@
     },
     {
       "issueNumber": 284,
-      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "sourceSha": "d8d80ed9f6ff2dffad616353d27b20f95a2ee1ff",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i284:fence-wiring:1",
+      "dispatchId": "e0-bootstrap:284:58093e4f-0115-4bbc-a983-d61abc5f687a",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#284:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6739370032,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/284#issuecomment-6739370032",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     },
     {
       "issueNumber": 312,
@@ -2024,7 +2024,8 @@
     "R18 material revision (2026-11-09): qualifies successor #383 as exactly one native Task per #260 comment 6728697849 after R3 Pack SOUND (three review rounds) + Owner receipt 6729962910; pins #319/#370 terminal dispositions (rev3 TERMINAL_VERIFIED each, DONE events 6729569819/6729695352, #370 CI #513 SUCCESS); adds planned edges 319->383, 370->383, 383->284 (native materialization only via E0 lawful writer); denominator 50->51. No other row changed; rows not refreshed remain at their R17 observations.",
     "R18 repair (2026-11-09): after independent review BLOCK — restored denominator lockstep (source.taskIssueCount/claimCommentPages 50->51, claimSubjects 50->51 with the recorded #383 subject comment 6730033866), corrected the #383 row to the exact live title/createdAt, replaced the synthetic updatedAt values with live ones, machine-precision observedAt, and extended writeSetAudit with the #383 digest row, the R3-over-terminal-#319 overlap group and the new 319x383 nonzero pair (68->69).",
     "R18 repair 2 (2026-11-09): independent re-review confirmed the machine-checked invariants fixed (real freeze writer accepts) but found the writeSetAudit pair matrix missed 370x383=6 under the audit's own snapshot semantics (#370 R8 eight-path historical candidate is a superset of the #383 six-path set). Added the 370x383 pair, nonzeroPairs 69->70, and stated the snapshot semantics explicitly in the method and overlap-group finding.",
-    "R19 (2026-11-09): closes the two A-side P3 gaps recorded in the E0 R10/R11 reviews — adds the missing #383 scopeDispositions row and projects the three R18-added PLANNED edges (319->383, 370->383, 383->284) into plannedEdges (30->33, now a complete projection of the 33 PLANNED edges in edges[]). Also pins the #383 disposition facts (Claim 6730033866, implementation ab4976c5 review PASS, CI #514, PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645). No taskIssues/edges/claimSubjects rows changed; writeSetAudit unchanged (its 70-pair matrix and snapshot semantics are already correct)."
+    "R19 (2026-11-09): closes the two A-side P3 gaps recorded in the E0 R10/R11 reviews — adds the missing #383 scopeDispositions row and projects the three R18-added PLANNED edges (319->383, 370->383, 383->284) into plannedEdges (30->33, now a complete projection of the 33 PLANNED edges in edges[]). Also pins the #383 disposition facts (Claim 6730033866, implementation ab4976c5 review PASS, CI #514, PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645). No taskIssues/edges/claimSubjects rows changed; writeSetAudit unchanged (its 70-pair matrix and snapshot semantics are already correct).",
+    "R20 (2026-11-10): one-pass snapshot refresh required before any E0 native dependency write. Live re-read of all 51 Task issues (roster 51/51, 30 open / 21 closed after #284 label state:planned->state:ready), all 13 distinct planned-edge target blocked_by lists (only #264 holds native blockers [260,261,262,263]; none of the 33 PLANNED edges has materialized) and all open-task write-set digests (unchanged, including #383 R3 six-path set under the documented snapshot semantics). Five stale endpoints corrected: #260/#264/#276/#383 timestamps plus material drift — #284 records its factual one-and-only root Claim 6739370032 (misbound subject fields disclosed at 6739442600, corrected via FSW rev1 and Pack R11 deviation; Owner receipts 6739335815/R10, 6739635285/R11; implementation 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f independent review PASS + Woodpecker CI #520 SUCCESS at 6741313032), #383 taskIssues row synced to the R19 scopeDispositions fact (implementation review PASS + CI #514 SUCCESS + PHYSICAL_SHARED_HOST_FENCE=PASS gate 6730634645), #264 gains the final P0/82-Vector Traceability Contract anchor 6728777830, and #276 records the F1a/F1b+F2 stage split from concurrency audit 6728802295. Denominator 51, edges 37 (4 NATIVE / 33 PLANNED), claimSubjects 51 (43 observed / 8 no-claim) all unchanged in count; writeSetAudit overlap matrix and digests verified still live-accurate, so no recompute was required. 12 vertex-disjoint native-edge batches per #284 comment 6746943816 are the execution plan for the admitted E0 Host Writer; this revision enables their ISSUE_STALE_VS_PACK preflight."
   ],
   "scopeDispositions": {
     "schema": "tally/version-task-scope-dispositions/v1",
@@ -2268,7 +2269,7 @@
         "issueNumber": 264,
         "disposition": "FINAL_INTEGRATION_BLOCKED_ON_DEPENDENCIES",
         "dispatchableByDisposition": false,
-        "note": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass."
+        "note": "E is the sole shared-file integrator and final installed J01-J08/RQ gate; do not dispatch before native dependencies pass. The Final installed Product P0/Vector Traceability Contract (24 P0 / 82 Vector complete index, SOURCE_ONLY) at #264 comment 6728777830 is the acceptance ledger for incremental J01-J08 verification."
       },
       {
         "issueNumber": 273,
@@ -2292,13 +2293,13 @@
         "issueNumber": 276,
         "disposition": "PLANNED_DOMAIN_DATA_WORKFLOW_NO_CLAIM",
         "dispatchableByDisposition": false,
-        "note": "New F Domain Data/Workflow task. Selected-BUILD amendment is proposed but not independently reviewed/approved; no accepted Claim/JIT branch. Keep non-dispatchable."
+        "note": "F Domain Data/Workflow task. The 2026-11-09 delivery-first concurrency audit (#276 comment 6728802295) splits execution into F1a/F1b (authoring-only Domain Data/glossary/Schema/Rule/Workflow JSON + private readiness helper + four experiments/v2/selected-business-build compiler/consumer files; disjoint from #284 and other Business writers; must not touch src/index.mjs, src/attempts.mjs, producer.mjs or shared Business policy tests) and F2 (one src/index.mjs injection seam + moduleSource/producer call-site, serial only after #284/#219/#273/#275). CURRENT_42_PATH_SCOPE=NOT_ADMITTED; F1_STAGE_CLAIM=NOT_PRESENT; F2_STAGE_CLAIM=NOT_PRESENT. F1 still requires a fresh #260 Task Pack/allowed-write-set review plus a new accepted #276 Claim before any source exists. Keep non-dispatchable."
       },
       {
         "issueNumber": 284,
-        "disposition": "PLANNED_E0_R9_REFRESH_REQUIRED_NO_ROOT_CLAIM",
-        "dispatchableByDisposition": false,
-        "note": "E0 remains PLANNED/state:planned with NO_CLAIM_EVENT_EXPECTED and no root Claim or source authority. #203 target-specific terminality is now verified, but that satisfies only one predecessor observation; it does not prove global Host quiescence/admission or #331 Task Acceptance. After a stable A/#260 R16 candidate is independently Exact-SHA reviewed, E0 must refresh its own R9-or-later Pack from that exact input, complete independent Pack review and exact PackBlob-bound Owner receipt, then establish a separately reviewed lawful Host-wide admission/fail-closed isolation gate before any root Claim. The old R8 Pack/Owner receipt is stale. No native dependency write, Freeze, merge or release is authorized."
+        "disposition": "E0_ROOT_CLAIMED_IMPL_DELIVERED_NATIVE_PENDING",
+        "dispatchableByDisposition": true,
+        "note": "Root Claim 6739370032 recorded (misbinding corrected via FSW rev1 + R11 deviation 6739442600; Owner receipts 6739335815/R10, 6739635285/R11). Implementation 9928a37fd93abfe6e5219a817f5636d1c3fa5b4f independent review PASS + CI #520 SUCCESS (6741313032). Host Writer admitted; 12-batch native-edge plan at #284 comment 6746943816; native POST/Freeze still pending. state:ready."
       },
       {
         "issueNumber": 312,
