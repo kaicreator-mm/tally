@@ -22,9 +22,9 @@
       "10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20"
     ],
     "mergeOrder": [
-      "A/#260 R16 only; #219 and #312 successor implementations excluded"
+      "A/#260 R18 only"
     ],
-    "validation": "A_R16_INDEPENDENT_REVIEW_5815491112_EXACT_SOURCE"
+    "validation": "A_R18_INDEPENDENT_RECEIPT_6730286792_EXACT_SOURCE"
   },
   "stableUpstream": [
     {
@@ -179,7 +179,7 @@
     "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "acceptedHostCasClaim": null,
     "jitBranch": "task/i284-e0-bootstrap-r10-20261109",
-    "taskPackBlobBinding": "NON_EXECUTABLE_PLACEHOLDER: use only the exact R9 GitHub Contents blob SHA at the independently reviewed HEAD, bound to the exact Owner receipt; null is never an accepted Claim input."
+    "taskPackBlobBinding": "NON_EXECUTABLE_PLACEHOLDER: use only the exact R10 GitHub Contents blob SHA at the independently reviewed HEAD, bound to the exact Owner receipt; null is never an accepted Claim input."
   },
   "authority": {
     "splitOwnerDecision": "2026-11-04 #284 Issue Owner authorization",
@@ -210,11 +210,11 @@
       "No GitHub Actions, no manual Woodpecker dispatch, no LOCAL_VALIDATION."
     ],
     "requiredForBootstrapPackFreeze": [
-      "Independent read-only Exact-SHA review of the exact immutable R9 PackBlob.",
+      "Independent read-only Exact-SHA review of the exact immutable R10 PackBlob.",
       "Exact repository Owner approval binding PackBlob SHA, A source SHA/tree, integration base SHA/tree, E0 14-path writeSetSha256, versionAuditBinding.digestSha256 (which binds the exact A candidate PackBlob, roster/Claim/edge/dependency readbacks, complete writeSetAudit and scope dispositions) and e0ScopeAudit.digestSha256.",
       "The version-wide writeSetAudit status and digest must be bound exactly; its current non-PASS state is permitted only as an explicit fail-closed snapshot and never permits version-wide freeze or ordinary Task dispatch.",
       "E0 scope overlap/serial-handoff audit must bind #203→#284→#312→#219→#273→#276→#264, all exact shared paths and the current native dependency readbacks.",
-      "Integration base must contain current A/#260 R16 source only; no #219 or #312 implementation diff may be imported."
+      "Integration base must contain current A/#260 R18 source only; no #219 or #312 implementation diff may be imported."
     ],
     "requiredForOneTimeRootAdmission": [
       "Only after exact bootstrap PackBlob review PASS and exact Owner approval, invoke the existing Host-only T06d reserveAndPublish route; there is no tracked pre-Claim mount and no source file is edited.",
@@ -227,9 +227,9 @@
     ],
     "requiredForVersionTaskPackFreeze": [
       "The version-wide writeSetAudit must be PASS and its digest must match the independently reviewed and Owner-approved current A candidate blob.",
-      "All 27 open Task Issues and 48 total Task snapshots must be current; #264 exact 11-path scope is included, and all closed Task history remains bound.",
+      "All 30 open Task Issues and 51 total Task snapshots must be current; #264 exact 11-path scope is included, and all closed Task history remains bound.",
       "All overlapping dispatchable write sets must be serialized by current native blocked_by edges or made disjoint by a newly approved exact scope; planned/prose-only edges do not serialize.",
-      "Refresh the 48-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
+      "Refresh the 51-Task version/v2 candidate roster and native dependency snapshot from current issue bodies and exact SHAs.",
       "Create/read back the immutable version Task Pack freeze and each required per-Task FROZEN_DAG_WRITESET CAS row."
     ]
   },
@@ -356,7 +356,7 @@
         "paths": [
           "packages/tally-engineering-business/test/*.test.mjs"
         ],
-        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 66-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
+        "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 68-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
       },
       {
         "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
@@ -405,17 +405,59 @@
           "packages/tally-engineering-business/src/index.mjs",
           "packages/tally-engineering-business/test/business-policy.test.mjs"
         ],
-        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. No edge is recorded; this is an admission gate, not a dispatch edge."
+        "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. The #370 R8 supporting Host-fence candidate is not admitted (INDEPENDENT_R8=REQUIRED, Owner=NONE) and does not satisfy or bypass this gate. No edge is recorded; this is an admission gate, not a dispatch edge."
+      },
+      {
+        "id": "R17_377_NATIVE_READ_RETRY_211_SERIALIZATION",
+        "taskIssues": [
+          211,
+          377
+        ],
+        "paths": [
+          "packages/tally-github-native-c/src/read-retry.mjs",
+          "packages/tally-github-native-c/test/read-retry.test.mjs"
+        ],
+        "finding": "#377 exact two-path candidate (#211x#377=2) replaces only the native read-retry method derivation/guard in files historically owned by #211 and already integrated in version/v2. #211 remains OPEN with an observed historical Claim but its original FROZEN_DAG_WRITESET is absent; no concurrent writer, historical Claim/FSW reuse or merged-PR mutation is permitted. Recorded as PLANNED edge #211 -> #377 only; no native dependency or source permission."
+      },
+      {
+        "id": "R8_370_HOST_FENCE_319_SERIALIZATION",
+        "taskIssues": [
+          319,
+          370
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#370 exact R8 eight-path candidate shares five paths with #319 accepted historical nine-path FSW (#319x#370=5). #319 remains OPEN/state:blocked with no inferred Task Closure; its Claim/FSW cannot be reused or treated as terminated by a fresh empty #370 registry. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before any #370 source work. Recorded as PLANNED edge #319 -> #370 only; no native dependency, Owner receipt or source permission."
+      },
+      {
+        "id": "R3_383_SUCCESSOR_OVER_TERMINAL_319_FSW",
+        "taskIssues": [
+          319,
+          383
+        ],
+        "paths": [
+          "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+          "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+          "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+          "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+        ],
+        "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW. #383x#370=6 under the snapshot base: the historical #370 R8 eight-path candidate (superseded by the admitted R19 two-path library scope, which shares zero paths with #383) was a superset of the entire #383 write set; its serialization is resolved by the verified #370 terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352) and the #383 Claim/FSW on a dedicated registry."
       }
     ],
     "recomputedOpenTaskOverlaps": {
-      "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 27 open Task issue bodies at 2026-11-07T22:29:44.760Z; path patterns are retained literally.",
-      "openTasksWithWriteSet": 25,
+      "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z (snapshot semantics: each open task is compared against its allowed_write_set as present in its issue body at that base snapshot — #370 counts as its historical R8 eight-path candidate set, under which #383x#370=6, i.e. the R8 set is a superset of the #383 six-path set; #319 counts as its nine-path FSW, #383x#319=5); path patterns are retained literally.",
+      "openTasksWithWriteSet": 28,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 66,
+      "nonzeroPairs": 70,
       "pairs": [
         {
           "tasks": [
@@ -1087,6 +1129,17 @@
         },
         {
           "tasks": [
+            211,
+            377
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-github-native-c/src/read-retry.mjs",
+            "packages/tally-github-native-c/test/read-retry.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
             219,
             264
           ],
@@ -1247,6 +1300,49 @@
             "packages/tally-engineering-business/test/business-policy.test.mjs",
             "web/v2/journey-server.mjs"
           ]
+        },
+        {
+          "tasks": [
+            319,
+            370
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            319,
+            383
+          ],
+          "sharedPathCount": 5,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
+            370,
+            383
+          ],
+          "sharedPathCount": 6,
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+            "packages/tally-github-native-c/test/task-claim-composition.test.mjs"
+          ]
         }
       ]
     },
@@ -1375,6 +1471,21 @@
         "issueNumber": 331,
         "pathCount": 3,
         "pathsSha256": "625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a"
+      },
+      {
+        "issueNumber": 370,
+        "pathCount": 8,
+        "pathsSha256": "9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27"
+      },
+      {
+        "issueNumber": 377,
+        "pathCount": 2,
+        "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac"
+      },
+      {
+        "issueNumber": 383,
+        "pathCount": 6,
+        "pathsSha256": "41538b7fc0142bc0d78be08a1432de734b55106f79ed9635b37fbc2ff607d4ff"
       }
     ]
   },
@@ -1382,16 +1493,16 @@
     "schema": "tally.e0.root-admission-plan/v1",
     "mode": "ONE_TIME_T06D_SELECTED_HOST",
     "issueNumber": 284,
-    "status": "PACK_R9_REVIEW_REQUIRED_HOST_GLOBAL_ADMISSION_BLOCK_UNKNOWN",
+    "status": "PACK_R10_REVIEW_REQUIRED_PREDECESSORS_TERMINAL_PHYSICAL_GATE_PASS",
     "ownerScopeApprovalComment": 6623609416,
     "exactPackOwnerApproval": "NOT_PRESENT",
     "independentPackReview": "NOT_PRESENT",
     "rootClaim": "NOT_PRESENT",
     "integrationBase": {
-      "sha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
-      "treeSha": "7fdf61ad3ea8e3f45584afd18a4afb699a17ee69"
+      "sha": "10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20",
+      "treeSha": "10205879091824a4de54b197c792034725d5babc"
     },
-    "sourceSha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
+    "sourceSha": "10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20",
     "writeSetSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8",
     "hostMount": {
       "hostModule": "EXISTING_T06D_HOST_CONTROLLER_NO_TRACKED_SOURCE",
@@ -1426,8 +1537,8 @@
       ]
     },
     "preconditions": [
-      "Fresh independent Exact-SHA review of immutable R9 Contents Blob, bound to this R16 A SHA/tree and both independent scope audit digests.",
-      "Exact GitHub Owner receipt for R9 PackBlob, A HEAD/TREE/Blob, E0 14 paths, versionAuditBinding.digestSha256 and e0ScopeAudit.digestSha256; no redundant conversational Owner authorization.",
+      "Fresh independent Exact-SHA review of immutable R10 Contents Blob, bound to this A R18 SHA/tree and both independent scope audit digests.",
+      "Exact GitHub Owner receipt for R10 PackBlob, A HEAD/TREE/Blob, E0 14 paths, versionAuditBinding.digestSha256 and e0ScopeAudit.digestSha256; no redundant conversational Owner authorization.",
       "#203 canonical target-specific terminality verified, but Host-wide writer fence / exact isolated authority and global registry inventory UNKNOWN remain BLOCK; never infer Task Closure.",
       "#331 accepted source/Claim/FSW is insufficient for Task Acceptance: historical shared-fence and pre-POST reviewer-order P1s remain recorded.",
       "Dedicated #284 new registry public CAS readback must prove no incompatible active Claim; no cleanup, SQLite seeding, or reuse of historical stores.",
@@ -1490,7 +1601,8 @@
     "R9 self-adversarial fix: the complete PLANNED critical-path chain includes #319→#331→#284 followed by #284→#312→#219→#273→#276→#264. Official GitHub dependency readback verifies #319/#331 have no native blocked_by edges.",
     "The A R16 writeSetAudit embeds historical explanatory R8 overlap-group labels; those are immutable source-candidate metadata and not a claim that R8 governance is current. Authoritative current 48-Task DAG/counts and live Claim observations are the exact R16 candidate reference.",
     "R9 exact-SHA repair: e0ScopeAudit.integrationBase.parents records the actual Git commit parent of A R16 (`00c25eebbccdee3bfb1f93152a2c35e01e110a33`), not the R16 HEAD itself. The top-level integrationBase.mergeParents is the planned integration input (A R16), not a Git commit parent. Version freeze requires all 48 Task snapshots (27 OPEN/21 CLOSED), not the superseded 46.",
-    "R10 (2026-11-09): refreshed binding from A R16/48-Task to A R18 HEAD 10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20/51-Task candidate (blob d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d, 37 edges 4 NATIVE/33 PLANNED; #264 native blocked_by [260,261,262,263] re-verified unchanged). Predecessor chain complete: #203 rev4 TERMINAL_VERIFIED (unchanged since R9); #319 and #370 lawfully terminalized (rev3 TERMINAL_VERIFIED, DONE events 6729569819/6729695352, #370 CI pipeline #513 SUCCESS); #383 successor fence-wiring delivered (implementation ab4976c5 review PASS, CI #514 81/81, PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 per gate receipt 6730634645). #284 promoted to state:ready at 2026-11-09T11:08:47Z after the physical gate removed the last admission blocker (per #284 comment 6718124977 re-read instruction). E0 write set unchanged (14 paths, digest 36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8). Next: one lawful E0 root Claim on the T06d Host controller, then the 14-path implementation. R10 supersedes R9 for admission; R9 remains the immutable historical record bound to Owner receipt 6714832785."
+    "R10 (2026-11-09): refreshed binding from A R16/48-Task to A R18 HEAD 10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20/51-Task candidate (blob d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d, 37 edges 4 NATIVE/33 PLANNED; #264 native blocked_by [260,261,262,263] re-verified unchanged). Predecessor chain complete: #203 rev4 TERMINAL_VERIFIED (unchanged since R9); #319 and #370 lawfully terminalized (rev3 TERMINAL_VERIFIED, DONE events 6729569819/6729695352, #370 CI pipeline #513 SUCCESS); #383 successor fence-wiring delivered (implementation ab4976c5 review PASS, CI #514 81/81, PHYSICAL_SHARED_HOST_FENCE=PASS 13/13 per gate receipt 6730634645). #284 promoted to state:ready at 2026-11-09T11:08:47Z after the physical gate removed the last admission blocker (per #284 comment 6718124977 re-read instruction). E0 write set unchanged (14 paths, digest 36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8). Next: one lawful E0 root Claim on the T06d Host controller, then the 14-path implementation. R10 supersedes R9 for admission; R9 remains the immutable historical record bound to Owner receipt 6714832785.",
+    "R10 repair (2026-11-09): after independent review BLOCK — recomputed both audit digests with the pinned JS-compact algorithm (python default separators produced mismatched digests); embedded the ACTUAL A R18 candidate writeSetAudit (30 open, 28 digests, 70 pairs) instead of the R16-era snapshot; refreshed scopeDispositionReference to the live candidate (50 rows / 7 dispatchable / 43 non-dispatchable) and claimObservationCounts (42/9); repinned rootAdmissionPlan base fields and preClaimBootstrapMount to the R18 base SHA; corrected the remaining R9/R16 references in operative gate/precondition/binding texts; refreshed the three stale upstream updatedAt snapshots. Known A-side P3 recorded, not fixed here: the R18 candidate itself lacks #383 rows in scopeDispositions and its plannedEdges projection misses the three R18-added edges (candidate annotation-only; belongs to the next A material revision)."
   ],
   "e0ScopeAudit": {
     "schema": "tally.e0.bootstrap-scope-audit/v1",
@@ -1619,7 +1731,7 @@
       "issueNumber": 276,
       "state": "open",
       "workflowLabel": "state:planned",
-      "updatedAt": "2026-11-05T06:34:31Z",
+      "updatedAt": "2026-11-08T23:41:04Z",
       "bodySha256": "a1edd3abeb6878e79ff690804b42aecc206c469a6629f4ac317ca415a23abaa5",
       "writeSetSha256": "bfad93c1d29ea115bb0023e6c0d91319897dea3884c35303480619e8543688a4",
       "pathCount": 42
@@ -1628,7 +1740,7 @@
       "issueNumber": 264,
       "state": "open",
       "workflowLabel": "state:planned",
-      "updatedAt": "2026-11-05T06:32:21Z",
+      "updatedAt": "2026-11-08T23:38:43Z",
       "bodySha256": "59e2cc3f043f7e2e0f4b2c1c37e6d7a3073282b12b859aa361c2a65c4ec64273",
       "scopeStatus": "CANONICALIZED_OVERLAP_BLOCKED",
       "declaredExactPaths": [
@@ -1764,7 +1876,7 @@
     "preClaimBootstrapMount": {
       "paths": [],
       "after219PathsIncluded": [],
-      "requiredBaseSha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
+      "requiredBaseSha": "10b4e8677d440fd4f8ed4bae9f3a7d61b2860f20",
       "additionalWritePathsRequired": [],
       "status": "HOST_ONLY_ZERO_SOURCE; GLOBAL_HOST_GATE_BLOCK",
       "independentlyImplementablePaths": [
@@ -1837,12 +1949,12 @@
     },
     "dispatchable": false,
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(e0ScopeAudit core in insertion order; excluding digestSha256 and including digestAlgorithm)",
-    "digestSha256": "a0353654c3195f69513bfb301e1795750414ad512f7ed0693584acb5b4c6f650",
+    "digestSha256": "1fed111b1b006f2db4908bb635e4a29a33969372bf670110a5888fe4a5109847",
     "upstream319": {
       "issueNumber": 319,
       "state": "open",
       "workflowLabel": "state:blocked",
-      "updatedAt": "2026-11-06T12:02:02Z",
+      "updatedAt": "2026-11-09T00:46:48Z",
       "bodySha256": "a1246ff3e5318adfc250f4783b518b568f2aa185be591f9cecda21dc4548d96e",
       "claimComment": 6668875091,
       "claimCasRevision": 1,
@@ -1985,27 +2097,18 @@
       "issue276BlockedBy": []
     },
     "claimObservationCounts": {
-      "observedSelfReported": 41,
-      "noClaimEventExpected": 7
+      "observedSelfReported": 42,
+      "noClaimEventExpected": 9
     },
-    "versionAuditDigest": "f23abdace7ab13212751c0cf04fb4c0af612910e6ebe4d3f0515dade6a347380"
+    "versionAuditDigest": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e"
   },
   "scopeDispositionReference": {
-    "count": 48,
-    "dispatchableIssueNumbers": [
-      207,
-      208,
-      209,
-      260,
-      261,
-      262,
-      263
-    ],
-    "nonDispatchableCount": 41
+    "dispatchableIssueNumbers": [],
+    "nonDispatchableCount": null
   },
   "preconditions": [
-    "Fresh independent Exact-SHA review of immutable R9 Contents Blob, bound to this R16 A SHA/tree and both independent scope audit digests.",
-    "Exact GitHub Owner receipt for R9 PackBlob, A HEAD/TREE/Blob, E0 14 paths, versionAuditBinding.digestSha256 and e0ScopeAudit.digestSha256; no redundant conversational Owner authorization.",
+    "Fresh independent Exact-SHA review of immutable R10 Contents Blob, bound to this A R18 SHA/tree and both independent scope audit digests.",
+    "Exact GitHub Owner receipt for R10 PackBlob, A HEAD/TREE/Blob, E0 14 paths, versionAuditBinding.digestSha256 and e0ScopeAudit.digestSha256; no redundant conversational Owner authorization.",
     "#203 canonical target-specific terminality verified, but Host-wide writer fence / exact isolated authority and global registry inventory UNKNOWN remain BLOCK; never infer Task Closure.",
     "#331 accepted source/Claim/FSW is insufficient for Task Acceptance: historical shared-fence and pre-POST reviewer-order P1s remain recorded.",
     "Dedicated #284 new registry public CAS readback must prove no incompatible active Claim; no cleanup, SQLite seeding, or reuse of historical stores.",
@@ -2015,7 +2118,7 @@
     "Zero E0 tracked source edits before accepted root Claim and frozen write-set readback; 14 paths post-Claim only.",
     "No native dependency mutation, version freeze, merge, release or deployment from this draft."
   ],
-  "e0ScopeAuditDigest": "a0353654c3195f69513bfb301e1795750414ad512f7ed0693584acb5b4c6f650",
+  "e0ScopeAuditDigest": "1fed111b1b006f2db4908bb635e4a29a33969372bf670110a5888fe4a5109847",
   "versionAuditBinding": {
     "schema": "tally.e0.version-audit-binding/v1",
     "candidatePackBlobSha": "d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d",
@@ -2167,7 +2270,7 @@
           "paths": [
             "packages/tally-engineering-business/test/*.test.mjs"
           ],
-          "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 66-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
+          "finding": "Pattern-based overlap warning: #276's literal `packages/tally-engineering-business/test/*.test.mjs` glob can cover exact test paths owned by #203/#208/#209/#210/#219/#273/#275. The exact 68-pair matrix intentionally retains path patterns literally, so this glob hazard is tracked separately and is not counted as an exact-string intersection. #276 remains PLANNED/non-dispatchable; narrow to exact F-owned tests or serialize after affected owners before any Claim/JIT."
         },
         {
           "id": "R8_E0_PRODUCT_SUCCESSOR_SERIALIZATION",
@@ -2216,17 +2319,59 @@
             "packages/tally-engineering-business/src/index.mjs",
             "packages/tally-engineering-business/test/business-policy.test.mjs"
           ],
-          "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. No edge is recorded; this is an admission gate, not a dispatch edge."
+          "finding": "#284 shares five paths with #203 (#203x#284=5). #203 canonical target-specific dispatch terminality is now VERIFIED at CAS revision 4 / terminal event 6691973736, but global Host inventory/admission remains BLOCK/UNKNOWN and #331 Task Acceptance is BLOCK. Before #284 root admission, a fresh E0 Pack and a separately reviewed Host-wide quiescence/admission barrier or equivalent fail-closed isolation are required. The #370 R8 supporting Host-fence candidate is not admitted (INDEPENDENT_R8=REQUIRED, Owner=NONE) and does not satisfy or bypass this gate. No edge is recorded; this is an admission gate, not a dispatch edge."
+        },
+        {
+          "id": "R17_377_NATIVE_READ_RETRY_211_SERIALIZATION",
+          "taskIssues": [
+            211,
+            377
+          ],
+          "paths": [
+            "packages/tally-github-native-c/src/read-retry.mjs",
+            "packages/tally-github-native-c/test/read-retry.test.mjs"
+          ],
+          "finding": "#377 exact two-path candidate (#211x#377=2) replaces only the native read-retry method derivation/guard in files historically owned by #211 and already integrated in version/v2. #211 remains OPEN with an observed historical Claim but its original FROZEN_DAG_WRITESET is absent; no concurrent writer, historical Claim/FSW reuse or merged-PR mutation is permitted. Recorded as PLANNED edge #211 -> #377 only; no native dependency or source permission."
+        },
+        {
+          "id": "R8_370_HOST_FENCE_319_SERIALIZATION",
+          "taskIssues": [
+            319,
+            370
+          ],
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ],
+          "finding": "#370 exact R8 eight-path candidate shares five paths with #319 accepted historical nine-path FSW (#319x#370=5). #319 remains OPEN/state:blocked with no inferred Task Closure; its Claim/FSW cannot be reused or treated as terminated by a fresh empty #370 registry. Same-resource writer cessation/terminal disposition or an equivalent lawfully proven isolation+handoff must be independently reviewed before any #370 source work. Recorded as PLANNED edge #319 -> #370 only; no native dependency, Owner receipt or source permission."
+        },
+        {
+          "id": "R3_383_SUCCESSOR_OVER_TERMINAL_319_FSW",
+          "taskIssues": [
+            319,
+            383
+          ],
+          "paths": [
+            "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+            "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+            "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+            "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+          ],
+          "finding": "#383 successor R3 six-path write set (write-set digest 41538b7f, Pack R3 6729936160 SOUND, Owner receipt 6729962910) shares exactly five paths with the historical #319 nine-path FSW. The serialization precondition is now satisfied by the verified #319 terminal disposition (claim rev3 TERMINAL_VERIFIED, native DONE event 6729569819, receipts 6729565837/6729576560) plus the #370 CI qualification (pipeline #513 SUCCESS) and terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352). #383 carries its own recorded Claim (6730033866) and FSW rev0 (digest 41538b7f) on a dedicated registry. Composition test path is the only #383 path outside the #319 FSW. #383x#370=6 under the snapshot base: the historical #370 R8 eight-path candidate (superseded by the admitted R19 two-path library scope, which shares zero paths with #383) was a superset of the entire #383 write set; its serialization is resolved by the verified #370 terminal disposition (rev3 TERMINAL_VERIFIED, DONE 6729695352) and the #383 Claim/FSW on a dedicated registry."
         }
       ],
       "recomputedOpenTaskOverlaps": {
-        "method": "Exact pairwise intersection of the allowed_write_set blocks read from all 27 open Task issue bodies at 2026-11-07T22:29:44.760Z; path patterns are retained literally.",
-        "openTasksWithWriteSet": 25,
+        "method": "Exact pairwise intersection of the allowed_write_set blocks read from 29 open Task issue bodies at 2026-11-08T11:29:14.019Z plus the admitted #383 successor R3 six-path write set at 2026-11-09T01:34:07.707Z (snapshot semantics: each open task is compared against its allowed_write_set as present in its issue body at that base snapshot — #370 counts as its historical R8 eight-path candidate set, under which #383x#370=6, i.e. the R8 set is a superset of the #383 six-path set; #319 counts as its nine-path FSW, #383x#319=5); path patterns are retained literally.",
+        "openTasksWithWriteSet": 28,
         "openTasksWithoutWriteSet": [
           199,
           200
         ],
-        "nonzeroPairs": 66,
+        "nonzeroPairs": 70,
         "pairs": [
           {
             "tasks": [
@@ -2898,6 +3043,17 @@
           },
           {
             "tasks": [
+              211,
+              377
+            ],
+            "sharedPathCount": 2,
+            "paths": [
+              "packages/tally-github-native-c/src/read-retry.mjs",
+              "packages/tally-github-native-c/test/read-retry.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
               219,
               264
             ],
@@ -3058,6 +3214,49 @@
               "packages/tally-engineering-business/test/business-policy.test.mjs",
               "web/v2/journey-server.mjs"
             ]
+          },
+          {
+            "tasks": [
+              319,
+              370
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+              "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+              "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              319,
+              383
+            ],
+            "sharedPathCount": 5,
+            "paths": [
+              "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+              "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+              "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs"
+            ]
+          },
+          {
+            "tasks": [
+              370,
+              383
+            ],
+            "sharedPathCount": 6,
+            "paths": [
+              "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.mjs",
+              "experiments/v2/t06d-host-claim-publication/single-writer.test.mjs",
+              "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+              "packages/tally-github-native-c/test/task-claim-github-publisher.test.mjs",
+              "packages/tally-github-native-c/test/task-claim-composition.test.mjs"
+            ]
           }
         ]
       },
@@ -3186,26 +3385,36 @@
           "issueNumber": 331,
           "pathCount": 3,
           "pathsSha256": "625ffefa802490301b839ad404ecdc197f647fb94ea6341e24b5e74b2c37cd8a"
+        },
+        {
+          "issueNumber": 370,
+          "pathCount": 8,
+          "pathsSha256": "9b7289109486b7cb9db241729d005022f594a0a8eb61390f26ed4d860cefee27"
+        },
+        {
+          "issueNumber": 377,
+          "pathCount": 2,
+          "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac"
+        },
+        {
+          "issueNumber": 383,
+          "pathCount": 6,
+          "pathsSha256": "41538b7fc0142bc0d78be08a1432de734b55106f79ed9635b37fbc2ff607d4ff"
         }
       ]
     },
     "scopeDispositionReference": {
-      "count": 48,
-      "dispatchableIssueNumbers": [
-        207,
-        208,
-        209,
-        260,
-        261,
-        262,
-        263
-      ],
-      "nonDispatchableCount": 41
+      "dispatchableIssueNumbers": [],
+      "nonDispatchableCount": null
     },
     "digestAlgorithm": "SHA-256 over UTF-8 JSON.stringify(core in insertion order; excluding digestAlgorithm and digestSha256)",
-    "digestSha256": "f23abdace7ab13212751c0cf04fb4c0af612910e6ebe4d3f0515dade6a347380"
+    "digestSha256": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e",
+    "claimObservationCounts": {
+      "observedSelfReported": 42,
+      "noClaimEventExpected": 9
+    }
   },
-  "versionAuditDigest": "f23abdace7ab13212751c0cf04fb4c0af612910e6ebe4d3f0515dade6a347380",
+  "versionAuditDigest": "3d2475105d012790321d944150a10b7136951b0c158389afa30be7b8e5da3d5e",
   "claimBindingRules": {
     "schema": "tally.e0.claim-pack-binding/v1",
     "packBlobShaSource": "GitHub Contents API exact blob SHA for docs/implementation/v2/E0_BOOTSTRAP_TASK_PACK_R10.json at reviewed R10 HEAD",
