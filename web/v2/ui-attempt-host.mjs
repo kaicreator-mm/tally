@@ -59,6 +59,7 @@ export async function readTaskAttemptHistoryFromHost({
     }
     const rows=[],visited=new Set();
     let afterCursor=null,status='UNKNOWN',highWatermark=null,last=0;
+    let maxPreviouslyObservedWatermark=0;
     try {
       for(let page=0;page<16;page++){
         // DomainHarness v0.10.3 public RuntimeObservation v1 page shape:
@@ -69,7 +70,13 @@ export async function readTaskAttemptHistoryFromHost({
            !Number.isSafeInteger(data.highWatermark)||data.highWatermark<0){
           status='UNKNOWN';break;
         }
+        // A durable stream high-watermark must never regress across pages.
+        // Regressions can otherwise falsely turn a truncated read into COMPLETE.
+        if(data.highWatermark<maxPreviouslyObservedWatermark){
+          status='UNKNOWN';break;
+        }
         highWatermark=data.highWatermark;
+        maxPreviouslyObservedWatermark=highWatermark;
         if(data.gap!==undefined){
           if(!plain(data.gap)||!['RETENTION_TRUNCATED','STORAGE_GAP',
             'CURSOR_INVALID'].includes(data.gap.kind)||
