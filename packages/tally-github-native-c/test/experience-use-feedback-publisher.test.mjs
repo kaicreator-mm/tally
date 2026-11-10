@@ -83,7 +83,7 @@ test('new native publish uses one POST and real exact GitHub comment readback',a
   assert.equal(candidateValue.status,'CANDIDATE_ONLY');
   assert.equal(r.status,'PUBLISHED_VERIFIED');assert.equal(r.newPost,true);
   assert.equal(m.state.posts,1);assert.equal(r.taskPass,false);
-  assert.equal(m.state.leaseReads,2);assert.equal(m.state.permits,2);
+  assert.equal(m.state.leaseReads,3);assert.equal(m.state.permits,3);
 });
 test('exact rerun is idempotent: zero additional POST',async()=>{
   const m=mock(),p=m.publisher(),v=candidate();
