@@ -15,6 +15,9 @@ const ROLES=new Set(['builder','reviewer','validator']);
 const OUTCOMES=new Set(['COMPLETED','FAILED','CANCELLED','INTERRUPTED']);
 const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
 const iso=v=>typeof v==='string'&&Number.isFinite(Date.parse(v));
+const nativeRefFor=(ref,repo,issue)=>typeof ref==='string'&&
+  ref.startsWith('https://github.com/'+repo+'/issues/'+issue+'#issuecomment-')&&
+  /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9][0-9]*#issuecomment-[1-9][0-9]*$/.test(ref);
 const limits=Object.freeze({authorized:false,admitted:false,taskPass:false,releasePass:false});
 const invalid=(reason,status='UNKNOWN')=>Object.freeze({status,reason,
   attempts:Object.freeze([]),coverage:Object.freeze({attemptCount:null,
@@ -55,7 +58,8 @@ function runtimeFor(attempt,page) {
       (page.cursorComplete!==true||!Number.isSafeInteger(page.highWatermark)||
        page.highWatermark!==last))
     return null;
-  const current=page.status==='COMPLETE';
+  // An empty public stream is not evidence an Attempt ever executed.
+  const current=page.status==='COMPLETE'&&page.observations.length>0;
   return {status:current?'OBSERVED':'INCOMPLETE',
     reason:current?'PUBLIC_RUNTIME_OBSERVATION':'PUBLIC_RUNTIME_'+page.status,
     eventCount:page.observations.length,lastSequence:last||null,
@@ -66,7 +70,7 @@ function hostOutcomeFor(attempt) {
   const r=attempt.receipt;
   if(!plain(r)||r.status!=='VERIFIED'||r.attemptId!==attempt.attemptId||
     r.sourceSha!==attempt.sourceSha||!OUTCOMES.has(r.outcome)||!iso(r.observedAt)||
-    typeof r.ref!=='string'||!r.ref.startsWith('https://github.com/'))
+    !nativeRefFor(r.ref,attempt.repository,attempt.taskIssueNumber))
     return null;
   return {status:'HOST_OBSERVED',outcome:r.outcome,ref:r.ref};
 }
@@ -78,7 +82,7 @@ function adsFor(attempt,reports,identity){
     if(!plain(r)||r.status!=='CURRENT_OBSERVED'||!matched(r,identity)||
        !ID.test(r.reportId??'')||!Number.isSafeInteger(r.revision)||
        r.revision<1||ids.has(r.reportId+':'+r.revision)||
-       typeof r.nativeRef!=='string'||!r.nativeRef.startsWith('https://github.com/'))
+       !nativeRefFor(r.nativeRef,identity.repository,identity.taskIssueNumber))
       return null;
     ids.add(r.reportId+':'+r.revision);
   }
