@@ -9,7 +9,7 @@ function make(phase='PRESENTED',overrides={}) {
     decision:phase==='ACCEPTED'?'APPROVE':phase==='SKIPPED'?'REJECT':null,
     independent:['INDEPENDENTLY_CHECKED','OBSERVED_EFFECT'].includes(phase)};
   const base={repository:repo,issueNumber:issue,taskRef:'#274',attemptRef:'attempt:1',
-    sourceSha:sha,publisherSourceSha:publisherSha,adsRevision:'c'.repeat(40),
+    sourceSha:sha,publisherSourceSha:publisherSha,adsRevision:'2c395c55569fe2edf3f4135f12d3d069e526d0b7',
     publisherNamespace:'tally-experience-feedback',revision:1,
     experienceRef:issueRef,procedureRevision:'procedure-v1',phase,
     epistemic:['INDEPENDENTLY_CHECKED','OBSERVED_EFFECT'].includes(phase)?
@@ -107,4 +107,10 @@ test('schema candidate does not grant K or Task authority',()=>{
   assert.equal(v.status,'CANDIDATE_ONLY');
   assert.equal(v.authorized,false);assert.equal(v.admitted,false);
   assert.equal(v.taskPass,false);
+});
+
+test('wrong ADS revision is not source-qualified',()=>{
+  assert.equal(projectExperienceUseFeedback(make('PRESENTED',{
+    adsRevision:'c'.repeat(40)
+  })).reason,'FEEDBACK_SOURCE_IDENTITY_INVALID');
 });
