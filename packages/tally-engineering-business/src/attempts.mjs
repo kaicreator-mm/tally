@@ -27,12 +27,41 @@ function matched(row,identity){
   return row.repository===identity.repository&&row.versionId===identity.versionId&&
     row.taskIssueNumber===identity.taskIssueNumber&&row.sourceSha===identity.sourceSha;
 }
+function validStream(stream) {
+  const t=stream?.target,p=stream?.package;
+  return plain(stream)&&plain(t)&&plain(p)&&
+    typeof t.workflowId==='string'&&t.workflowId.length>0&&t.workflowId.length<=256&&
+    typeof t.instanceKey==='string'&&t.instanceKey.length>0&&t.instanceKey.length<=256&&
+    typeof p.packageId==='string'&&p.packageId.length>0&&p.packageId.length<=256&&
+    typeof p.contentDigest==='string'&&p.contentDigest.length>0&&p.contentDigest.length<=256&&
+    typeof p.domainId==='string'&&p.domainId.length>0&&p.domainId.length<=256&&
+    typeof p.version==='string'&&p.version.length>0&&p.version.length<=128&&
+    typeof p.formatVersion==='string'&&p.formatVersion.length>0&&p.formatVersion.length<=128&&
+    Number.isSafeInteger(p.runtimeContractMajor)&&p.runtimeContractMajor>=0&&
+    Number.isSafeInteger(p.executionEngineMajor)&&p.executionEngineMajor>=0&&
+    Array.isArray(p.requiredCapabilities)&&p.requiredCapabilities.length<=100&&
+    p.requiredCapabilities.every(x=>typeof x==='string'&&x.length>0&&x.length<=128)&&
+    typeof stream.epochId==='string'&&stream.epochId.length>0&&stream.epochId.length<=128;
+}
+function sameStream(a,b) {
+  if(!validStream(a)||!validStream(b))return false;
+  const pa=a.package,pb=b.package;
+  return a.target.workflowId===b.target.workflowId&&
+    a.target.instanceKey===b.target.instanceKey&&
+    a.epochId===b.epochId&&
+    pa.domainId===pb.domainId&&pa.version===pb.version&&
+    pa.packageId===pb.packageId&&pa.contentDigest===pb.contentDigest&&
+    pa.formatVersion===pb.formatVersion&&
+    pa.runtimeContractMajor===pb.runtimeContractMajor&&
+    pa.executionEngineMajor===pb.executionEngineMajor&&
+    JSON.stringify(pa.requiredCapabilities)===JSON.stringify(pb.requiredCapabilities)&&
+    (a.runtimeBindingRef??null)===(b.runtimeBindingRef??null)&&
+    (a.runtimeActivationRef??null)===(b.runtimeActivationRef??null);
+}
 function validAttempt(row,identity) {
   return plain(row)&&ID.test(row.attemptId??'')&&ROLES.has(row.role)&&
     matched(row,identity)&&ID.test(row.writerId??'')&&
-    typeof row.workflowAddress==='string'&&row.workflowAddress.length>0&&
-    row.workflowAddress.length<=512&&ID.test(row.packageId??'')&&
-    Number.isSafeInteger(row.epoch)&&row.epoch>=0&&
+    validStream(row.runtimeStream)&&
     typeof row.environment==='string'&&row.environment.length>0&&
     row.environment.length<=128&&typeof row.worktree==='string'&&
     row.worktree.length>0&&row.worktree.length<=2048;
@@ -40,30 +69,31 @@ function validAttempt(row,identity) {
 function runtimeFor(attempt,page) {
   if(!plain(page))return {status:'UNKNOWN',reason:'OBSERVATION_UNAVAILABLE',
     eventCount:0,lastSequence:null,runtimeTerminal:false};
-  if(page.attemptId!==attempt.attemptId||!['COMPLETE','RETENTION_TRUNCATED',
-    'STORAGE_GAP','CURSOR_INVALID','UNKNOWN'].includes(page.status)||
+  if(page.attemptId!==attempt.attemptId||
+    !['COMPLETE','RETENTION_TRUNCATED','STORAGE_GAP','CURSOR_INVALID','UNKNOWN'].includes(page.status)||
     !Array.isArray(page.observations)||page.observations.length>1000)
     return null;
   let last=0,terminal=false;
+  const ids=new Set();
   for(const o of page.observations){
-    if(!plain(o)||o.attemptId!==attempt.attemptId||
-      o.workflowAddress!==attempt.workflowAddress||
-      o.packageId!==attempt.packageId||o.epoch!==attempt.epoch||
-      !EVENTS.has(o.eventType)||!iso(o.observedAt)||
-      !Number.isSafeInteger(o.sequence)||o.sequence!==last+1)return null;
+    if(!plain(o)||!sameStream(o.stream,attempt.runtimeStream)||
+      !EVENTS.has(o.kind)||!iso(o.observedAt)||
+      typeof o.observationId!=='string'||!o.observationId||
+      ids.has(o.observationId)||!Number.isSafeInteger(o.sequence)||
+      o.sequence!==last+1)return null;
+    ids.add(o.observationId);
     last=o.sequence;
-    if(o.eventType==='INSTANCE_TERMINALIZED')terminal=true;
+    if(o.kind==='INSTANCE_TERMINALIZED')terminal=true;
   }
   if(page.status==='COMPLETE'&&
-      (page.cursorComplete!==true||!Number.isSafeInteger(page.highWatermark)||
-       page.highWatermark!==last))
-    return null;
-  // An empty public stream is not evidence an Attempt ever executed.
-  const current=page.status==='COMPLETE'&&page.observations.length>0;
+    (page.cursorComplete!==true||!Number.isSafeInteger(page.highWatermark)||
+      page.highWatermark!==last))return null;
+  // Exact public RuntimeObservation v1 can be a proven empty stream,
+  // but that is not proof an Attempt ran or a Task finished.
+  const current=page.status==='COMPLETE'&&last>0;
   return {status:current?'OBSERVED':'INCOMPLETE',
     reason:current?'PUBLIC_RUNTIME_OBSERVATION':'PUBLIC_RUNTIME_'+page.status,
-    eventCount:page.observations.length,lastSequence:last||null,
-    runtimeTerminal:current&&terminal};
+    eventCount:last,lastSequence:last||null,runtimeTerminal:current&&terminal};
 }
 function hostOutcomeFor(attempt) {
   if(attempt.receipt==null)return {status:'UNKNOWN',outcome:null,ref:null};
@@ -120,8 +150,9 @@ export function projectTaskAttempts(input={}) {
     if(!runtime||!hostOutcome||!ads)return invalid('CONFLICTING_ATTEMPT_EVIDENCE');
     attempts.push(Object.freeze({attemptId:a.attemptId,role:a.role,
       sourceSha:a.sourceSha,environment:a.environment,
-      workflowAddress:a.workflowAddress,packageId:a.packageId,
-      epoch:a.epoch,writerId:a.writerId,
+      workflowAddress:Object.freeze({...a.runtimeStream.target}),
+      packageId:a.runtimeStream.package.packageId,
+      epochId:a.runtimeStream.epochId,writerId:a.writerId,
       // Worktree/paths/secrets are deliberately not returned to the UI.
       runtime:Object.freeze(runtime),hostOutcome:Object.freeze(hostOutcome),
       ads:Object.freeze(ads),metrics:'UNKNOWN',independentPass:'NOT_PROVEN'}));
