@@ -22,7 +22,7 @@ function candidate(phase='PRESENTED',extra={}) {
   return projectExperienceUseFeedback(input);
 }
 function mock(options={}) {
-  const comments=[],state={posts:0,leaseReads:0,permits:0};
+  const comments=[],state={posts:0,leaseReads:0,permits:0,evidenceReads:0};
   const clock='2026-11-10T00:00:00Z';
   const octokit={rest:{issues:{
     get:async()=>({data:{number:274,repository_url:'https://api.github.com/repos/'+repo}}),
@@ -58,6 +58,18 @@ function mock(options={}) {
       state.permits++;
       return {status:options.permit===false?'BLOCKED':'AUTHORIZED',
         repository:repo,issueNumber:274,sourceSha:sha};
+    },
+    readFeedbackEvidence:async(input)=>{
+      state.evidenceReads++;
+      return {status:options.evidence===false?'UNKNOWN':'VERIFIED',
+        sourceKind:'HOST_VERIFIED_FEEDBACK_EVIDENCE',repository:repo,
+        issueNumber:274,sourceSha:sha,reportId:input.reportId,
+        revision:input.revision,phase:input.phase,
+        experienceRef:input.experienceRef,procedureRevision:input.procedureRevision,
+        evidenceRef:input.evidenceRef,dataDigest:input.expectedDataDigest,
+        humanDecision:input.phase==='ACCEPTED'?'APPROVE':
+          input.phase==='SKIPPED'?'REJECT':null,
+        independentVerified:true};
     }};
   return {octokit,writerAuthority,comments,state,publisher:()=> 
     createHostBoundExperienceFeedbackPublisher({octokit,
@@ -130,4 +142,16 @@ test('revision two requires actual native preceding revision and digest',async()
   const r=await p.publishFeedback({issueNumber:274,candidate:second});
   assert.equal(r.status,'PUBLISHED_VERIFIED');
   assert.equal(m.state.posts,2);
+});
+
+test('unverified Host feedback review/phase witness blocks before GitHub POST',async()=>{
+  const m=mock({evidence:false});
+  const r=await m.publisher().publishFeedback({issueNumber:274,candidate:candidate()});
+  assert.equal(r.status,'BLOCKED');
+  assert.equal(m.state.posts,0);
+  assert.equal(m.state.evidenceReads,1);
+});
+test('publisher construction refuses absent trusted feedback evidence reader',()=>{
+  const m=mock();delete m.writerAuthority.readFeedbackEvidence;
+  assert.throws(()=>m.publisher(),/HOST_BOUND_FEEDBACK_PUBLISHER_REQUIRED/);
 });
