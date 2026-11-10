@@ -13,15 +13,19 @@ const stream={
     requiredCapabilities:[]},
   epochId:'1'
 };
+const observationId=(stream,sequence)=>JSON.stringify({
+  contentDigest:stream.package.contentDigest,epochId:stream.epochId,
+  instanceKey:stream.target.instanceKey,packageId:stream.package.packageId,
+  workflowId:stream.target.workflowId})+'#observation:'+sequence;
 const a={...identity,attemptId:'attempt-1',role:'builder',writerId:'host:1',
   runtimeStream:stream,environment:'windows-host',worktree:'C:/secret/worktree',
   receipt:{status:'VERIFIED',attemptId:'attempt-1',sourceSha:sha,
     outcome:'COMPLETED',observedAt:'2026-11-10T00:00:00Z',ref}};
 const obs={attemptId:'attempt-1',status:'COMPLETE',cursorComplete:true,
   highWatermark:2,observations:[
-    {stream,kind:'INSTANCE_OPENED',observationId:'obs-1',
+    {stream,kind:'INSTANCE_OPENED',observationId:observationId(stream,1),
       sequence:1,observedAt:'2026-11-10T00:00:00Z'},
-    {stream,kind:'INSTANCE_TERMINALIZED',observationId:'obs-2',
+    {stream,kind:'INSTANCE_TERMINALIZED',observationId:observationId(stream,2),
       sequence:2,observedAt:'2026-11-10T00:01:00Z'}]};
 const make=(o={})=>({...identity,roster:{...identity,status:'VERIFIED',
   complete:true,attempts:[a]},observationPages:[obs],adsReports:[],...o});
@@ -120,7 +124,14 @@ test('public RuntimeObservation v1 kind and deterministic record identity are re
   assert.equal(projectTaskAttempts(make({observationPages:[wrong]})).reason,
     'CONFLICTING_ATTEMPT_EVIDENCE');
   const duplicate=structuredClone(obs);
-  duplicate.observations[1].observationId='obs-1';
+  duplicate.observations[1].observationId=observationId(stream,1);
   assert.equal(projectTaskAttempts(make({observationPages:[duplicate]})).reason,
+    'CONFLICTING_ATTEMPT_EVIDENCE');
+});
+
+test('public DH record must carry exact deterministic observationId, not merely nonempty',()=>{
+  const forged=structuredClone(obs);
+  forged.observations[1].observationId='forged-nonempty';
+  assert.equal(projectTaskAttempts(make({observationPages:[forged]})).reason,
     'CONFLICTING_ATTEMPT_EVIDENCE');
 });
