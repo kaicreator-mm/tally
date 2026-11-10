@@ -4,10 +4,11 @@
  */
 import {createHash} from 'node:crypto';
 import canonicalize from 'canonicalize';
-import {stringify,parseDocument} from 'yaml';
+import {stringify,parseDocument,visit,isAlias} from 'yaml';
 import {validateAdsV5Report} from '../../tally-ads-v5-validator/src/validate.mjs';
 const SHA=/^[a-f0-9]{40}$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
+const GH_LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/;
 const marker='<!-- ads:github -->';
 const fence=String.fromCharCode(96).repeat(3);
@@ -33,6 +34,10 @@ function parse(text) {
     const d=parseDocument(lines.slice(2,end).join('\n'),
       {uniqueKeys:true,merge:false,maxAliasCount:0,strict:true});
     if(d.errors.length||d.warnings.length)return null;
+    visit(d,{Node(_key,node){
+      if(isAlias(node)||node.anchor!==undefined||node.tag!==undefined)
+        throw new Error('NATIVE_YAML_ALIAS_ANCHOR_TAG_DENIED');
+    }});
     return d.toJS({maxAliasCount:0});
   }catch{return null;}
 }
@@ -89,7 +94,7 @@ export function createHostBoundExperienceFeedbackPublisher({
      writerAuthority.exclusiveHostControl!==true||
      writerAuthority.repository!==owner+'/'+repo||
      !ID.test(writerAuthority.writerId??'')||
-     !NAME.test(writerAuthority.githubWriterLogin??'')||
+     !GH_LOGIN.test(writerAuthority.githubWriterLogin??'')||
      !NAME.test(writerAuthority.publisherNamespace??'')||
      !SHA.test(writerAuthority.sourceSha??'')||
      !SHA.test(writerAuthority.publisherSourceSha??'')||
@@ -139,6 +144,8 @@ export function createHostBoundExperienceFeedbackPublisher({
          writerAuthority.publisherNamespace,writerAuthority.publisherSourceSha))
       return fail('FEEDBACK_CANDIDATE_OR_SCHEMA_INVALID');
     const data=candidate.envelope.data,body=render(candidate.envelope);
+    if(data.actor?.transport_actor!==login)
+      return fail('FEEDBACK_NATIVE_ACTOR_MISMATCH');
     if(body.length>32768)return fail('FEEDBACK_BODY_TOO_LARGE');
     try{
       if(!await qualified(issueNumber,data))return fail('HOST_FENCE_OR_KERNEL_PERMIT_UNVERIFIED');
@@ -168,16 +175,21 @@ export function createHostBoundExperienceFeedbackPublisher({
         const after=await scan(octokit,owner,repo,issueNumber,login,data);
         if(!after)return fail('FEEDBACK_ACK_AMBIGUOUS','UNKNOWN');
         const found=after.matches.filter(m=>m.comment.body===body);
-        if(after.matches.length===1&&found.length===1)
+        if(after.matches.length===1&&found.length===1){
+          if(!await qualified(issueNumber,data))
+            return fail('FEEDBACK_POST_LEASE_OR_PERMIT_LOST','UNKNOWN');
           return Object.freeze({status:'PUBLISHED_VERIFIED',
             reason:'LOST_ACK_RECOVERED_BY_READBACK',publicationRef:found[0].comment.html_url,
             newPost:false,readback:'VERIFIED',...noAuthority});
+        }
         return fail('FEEDBACK_ACK_AMBIGUOUS','UNKNOWN');
       }
       const comment=(await octokit.rest.issues.getComment({
         owner,repo,comment_id:ack?.id}))?.data;
       if(!validNative(comment,repository,issueNumber,login,body)||comment.id!==ack?.id)
         return fail('FEEDBACK_POST_READBACK_MISMATCH','UNKNOWN');
+      if(!await qualified(issueNumber,data))
+        return fail('FEEDBACK_POST_LEASE_OR_PERMIT_LOST','UNKNOWN');
       return Object.freeze({status:'PUBLISHED_VERIFIED',
         reason:'NATIVE_COMMENT_READBACK_VERIFIED',publicationRef:comment.html_url,
         newPost:true,readback:'VERIFIED',...noAuthority});
