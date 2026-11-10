@@ -7,7 +7,7 @@ const sha='a'.repeat(40),pubSha='b'.repeat(40),repo='kaicreator-mm/tally';
 const ref='https://github.com/'+repo+'/issues/274#issuecomment-1234';
 function candidate(phase='PRESENTED',extra={}) {
   const input={repository:repo,issueNumber:274,taskRef:'#274',attemptRef:'attempt:1',
-    sourceSha:sha,publisherSourceSha:pubSha,adsRevision:'c'.repeat(40),
+    sourceSha:sha,publisherSourceSha:pubSha,adsRevision:'2c395c55569fe2edf3f4135f12d3d069e526d0b7',
     publisherNamespace:'tally-feedback',revision:1,
     experienceRef:'https://github.com/'+repo+'/issues/274',
     procedureRevision:'procedure-v1',phase,epistemic:'OBSERVED',
