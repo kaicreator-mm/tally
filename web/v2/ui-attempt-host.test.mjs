@@ -93,3 +93,22 @@ test('native-looking but legacy status/observations page is rejected',async()=>{
   assert.equal(r.status,'PARTIAL');
   assert.equal(r.attempts[0].runtime.status,'INCOMPLETE');
 });
+
+test('a regressing public highWatermark cannot turn truncated history into complete evidence',async()=>{
+  let reads=0;
+  const p={...port,readObservations:async()=>{
+    reads++;
+    if(reads===1)return {records:[event],highWatermark:3,nextCursor:'cursor-1'};
+    // A stale/incorrect provider now reports 2 as the final watermark,
+    // even though the previous durable page proved at least 3.
+    return {records:[{...event,kind:'INSTANCE_TERMINALIZED',
+      sequence:2,observationId:observationId(stream,2)}],
+      highWatermark:2,nextCursor:'cursor-2'};
+  }};
+  const r=await readTaskAttemptHistoryFromHost({selectedHost:p,...id});
+  assert.equal(reads,2);
+  assert.equal(r.status,'PARTIAL');
+  assert.equal(r.attempts[0].runtime.status,'INCOMPLETE');
+  assert.equal(r.attempts[0].runtime.runtimeTerminal,false);
+  assert.equal(r.taskPass,false);
+});
