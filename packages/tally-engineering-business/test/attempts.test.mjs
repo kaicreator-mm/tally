@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {projectTaskAttempts} from '../src/attempts.mjs';
 const sha='a'.repeat(40);
-const ref='https://github.com/kaicreator-mm/tally/issues/275';
+const ref='https://github.com/kaicreator-mm/tally/issues/275#issuecomment-1234';
 const identity={repository:'kaicreator-mm/tally',versionId:'version/v2',
   taskIssueNumber:275,sourceSha:sha};
 const a={...identity,attemptId:'attempt-1',role:'builder',writerId:'host:1',
@@ -76,4 +76,23 @@ test('unexpected observation for a foreign attempt is refused',()=>{
   const extraneous={...obs,attemptId:'foreign-attempt'};
   assert.equal(projectTaskAttempts(make({observationPages:[extraneous]})).reason,
     'FOREIGN_ATTEMPT_OBSERVATION');
+});
+
+test('empty complete runtime stream is still an incomplete Attempt observation',()=>{
+  const empty={...obs,observations:[],highWatermark:0};
+  const r=projectTaskAttempts(make({observationPages:[empty]}));
+  assert.equal(r.status,'PARTIAL');
+  assert.equal(r.attempts[0].runtime.runtimeTerminal,false);
+  assert.equal(r.attempts[0].runtime.status,'INCOMPLETE');
+});
+test('foreign native receipt and report refs cannot qualify Task identity',()=>{
+  const forged={...a,receipt:{...a.receipt,
+    ref:'https://github.com/foreign/repo/issues/275#issuecomment-1234'}};
+  assert.equal(projectTaskAttempts(make({roster:{...identity,status:'VERIFIED',
+    complete:true,attempts:[forged]}})).reason,'CONFLICTING_ATTEMPT_EVIDENCE');
+  const report={...identity,attemptId:'attempt-1',status:'CURRENT_OBSERVED',
+    reportId:'r-1',revision:1,
+    nativeRef:'https://github.com/foreign/repo/issues/275#issuecomment-2345'};
+  assert.equal(projectTaskAttempts(make({adsReports:[report]})).reason,
+    'CONFLICTING_ATTEMPT_EVIDENCE');
 });
