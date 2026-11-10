@@ -8,13 +8,14 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
   'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
   'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
   'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
-  'effect:tally-qualified-release-delivery']);
+  'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
+  'effect:tally-version-task-dag-freeze']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -117,6 +118,27 @@ const releaseInputFrom=Object.freeze({
   tagName:{source:'event',path:['payload','tagName']},
   commitSha:{source:'event',path:['payload','commitSha']},
   commitTree:{source:'event',path:['payload','commitTree']},
+});
+// E0 #284: one exact pre-freeze native blocked_by edge in the exact reviewed
+// Owner-approved candidate PackBlob. Both endpoints ride as payload scalars;
+// the Business layer never infers an edge from prose, labels or YAML.
+const dependencyInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  taskPackRef:{source:'event',path:['payload','taskPackRef']},
+  taskPackBlobSha:{source:'event',path:['payload','taskPackBlobSha']},
+  blockedIssueNumber:{source:'event',path:['payload','blockedIssueNumber']},
+  blockedByIssueNumber:{source:'event',path:['payload','blockedByIssueNumber']},
+});
+// E0 #284: the immutable version Task Pack freeze request binds the exact
+// PackBlob identity only; witnesses and the roster stay Host-owned.
+const dagFreezeInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  taskPackRef:{source:'event',path:['payload','taskPackRef']},
+  taskPackBlobSha:{source:'event',path:['payload','taskPackBlobSha']},
 });
 const decisionSchema={isValid(value){
   return !!value&&typeof value==='object'&&!Array.isArray(value)&&
@@ -287,12 +309,42 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[releaseTransition]},finalState],
   };
+  // E0 #284: pre-freeze native dependency write. Physical idempotency lives in
+  // the selected C read-before/write/read-after; the K effect stays
+  // non-idempotent so a lost-ack reconciliation can always run again.
+  const dependencyTransition={
+    transitionKey:'add-native-task-dependency',
+    trigger:{kind:'event',eventType:'TALLY_NATIVE_TASK_DEPENDENCY_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-native-task-dependency-write',inputFrom:dependencyInputFrom
+    }]
+  };
+  const dependencyWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[dependencyTransition]},finalState],
+  };
+  // E0 #284: immutable version Task DAG freeze. One freeze per exact PackBlob
+  // identity; the Host CAS create replays an identical frozen record.
+  const dagFreezeTransition={
+    transitionKey:'freeze-version-task-dag',
+    trigger:{kind:'event',eventType:'TALLY_VERSION_TASK_DAG_FREEZE_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-version-task-dag-freeze',inputFrom:dagFreezeInputFrom,
+      idempotencyKeyFrom:{template:'dagfreeze:{issueNumber}:{sourceSha}:{taskPackBlobSha}'}
+    }]
+  };
+  const dagFreezeWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[dagFreezeTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition]},
         finalState,
       ],
     },
@@ -350,6 +402,17 @@ export function getPolicy(){
         operation:'operation',pullNumber:'pullNumber',headSha:'headSha',headTree:'headTree',
         targetSha:'targetSha',targetTree:'targetTree',tagName:'tagName',
         commitSha:'commitSha',commitTree:'commitTree'},
+    },'rule:tally-native-task-dependency':{
+      ruleId:'rule:tally-native-task-dependency',
+      eventType:'TALLY_NATIVE_TASK_DEPENDENCY_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        taskPackRef:'taskPackRef',taskPackBlobSha:'taskPackBlobSha',
+        blockedIssueNumber:'blockedIssueNumber',blockedByIssueNumber:'blockedByIssueNumber'},
+    },'rule:tally-version-task-dag-freeze':{
+      ruleId:'rule:tally-version-task-dag-freeze',
+      eventType:'TALLY_VERSION_TASK_DAG_FREEZE_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        taskPackRef:'taskPackRef',taskPackBlobSha:'taskPackBlobSha'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -433,6 +496,26 @@ export function getPolicy(){
         // reservation and canonical GitHub readback. A merged or tagged
         // readback still never becomes Release PASS through this intent.
         roles:['requester','planner','builder','reviewer'],definition:releaseWorkflow,
+      },
+      addNativeTaskDependency:{
+        trigger:{kind:'event',eventType:'TALLY_NATIVE_TASK_DEPENDENCY_REQUESTED'},
+        ruleId:'rule:tally-native-task-dependency',
+        // E0 #284: write authority is ONLY the selected sealed C observation of
+        // the official GitHub blocked_by endpoint against the exact reviewed
+        // Owner-approved candidate PackBlob; the caller role gates only who
+        // may REQUEST the write. Pre-freeze only: after the final freeze the
+        // C port itself refuses every dependency write.
+        roles:['requester','planner','builder','reviewer'],definition:dependencyWorkflow,
+      },
+      freezeVersionTaskDag:{
+        trigger:{kind:'event',eventType:'TALLY_VERSION_TASK_DAG_FREEZE_REQUESTED'},
+        ruleId:'rule:tally-version-task-dag-freeze',
+        // E0 #284: freeze authority is ONLY the sealed Host observation chain:
+        // all required candidate edges NATIVE, immutable final PackBlob SHA,
+        // full native roster equality, independent review, exact Owner
+        // approval and create-only Host CAS readback. A frozen record never
+        // grants Task PASS or caller authority.
+        roles:['requester','planner','builder','reviewer'],definition:dagFreezeWorkflow,
       },
     },
     effectBindings:{
@@ -669,6 +752,53 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectQualifiedReleaseDelivery({input,observation,effectId});
+        },
+      },
+      'effect:tally-native-task-dependency-write':{
+        // E0 #284: the sealed selected-C native dependency observation. The
+        // official blocked_by readback is the only NATIVE evidence; physical
+        // idempotency lives in the C read-before/write/read-after, so the K
+        // effect stays non-idempotent for lost-ack reconciliation.
+        semantics:'non-idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.addNativeTaskDependency'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessNativeTaskDependencyWrite(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.addNativeTaskDependency',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,taskPackRef:input.taskPackRef,
+              taskPackBlobSha:input.taskPackBlobSha,
+              blockedIssueNumber:input.blockedIssueNumber,
+              blockedByIssueNumber:input.blockedByIssueNumber,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectNativeTaskDependencyWrite({input,observation,effectId});
+        },
+      },
+      'effect:tally-version-task-dag-freeze':{
+        // E0 #284: the sealed Host version Task DAG freeze observation. The
+        // Host CAS create replays an identical frozen record; a divergent or
+        // partial write never yields a positive freeze here.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.freezeVersionTaskDag'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessVersionTaskDagFreeze(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.freezeVersionTaskDag',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,taskPackRef:input.taskPackRef,
+              taskPackBlobSha:input.taskPackBlobSha,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectVersionTaskDagFreeze({input,observation,effectId});
         },
       },
     },
@@ -1642,4 +1772,177 @@ export function projectQualifiedReleaseDelivery({input,observation,effectId}={})
         canTag:false,canRelease:false,next:o.next});
     return releaseDenied('UNVERIFIED_QUALIFIED_RELEASE_DELIVERY',effectId);
   }catch{return releaseDenied('UNTRUSTED_QUALIFIED_RELEASE_DELIVERY',effectId);}
+}
+
+/**
+ * E0 #284 — advisory input screening for one pre-freeze native blocked_by
+ * dependency write. Repo/controller allowlist is exact (kaicreator-mm/tally#284);
+ * the immutable candidate PackBlob identity is pinned by ref+SHA and both edge
+ * endpoints must be distinct positive integers. No input shape is write
+ * evidence: authority stays with the sealed selected-C observation only.
+ */
+const E0_ISSUE=284;
+const PACK_BLOB_REF=/^https:\/\/github\.com\/kaicreator-mm\/tally\/blob\/[a-f0-9]{40}\/[^\s]+$/;
+export function assessNativeTaskDependencyWrite(input){
+  const unqualified=Object.freeze({state:'UNQUALIFIED_INPUT',
+    reason:'MISSING_SOURCE_IDENTITY',admitted:false,authorized:false,
+    taskPass:false,releasePass:false});
+  if(!input||typeof input!=='object'||Array.isArray(input))return unqualified;
+  const {issueRef,issueNumber,sourceSha,taskPackRef,taskPackBlobSha,
+    blockedIssueNumber,blockedByIssueNumber}=input;
+  if(issueRef!=='https://github.com/kaicreator-mm/tally/issues/'+E0_ISSUE||
+    issueNumber!==E0_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !PACK_BLOB_REF.test(taskPackRef??'')||!SOURCE_SHA.test(taskPackBlobSha??'')||
+    !Number.isSafeInteger(blockedIssueNumber)||blockedIssueNumber<1||
+    !Number.isSafeInteger(blockedByIssueNumber)||blockedByIssueNumber<1||
+    blockedIssueNumber===blockedByIssueNumber)return unqualified;
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_NATIVE_DEPENDENCY_WRITE',
+    issueRef,issueNumber,sourceSha,taskPackRef,taskPackBlobSha,
+    blockedIssueNumber,blockedByIssueNumber,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+
+const DEPENDENCY_BLOCK_REASONS=new Set(['EDGE_INPUT_INVALID',
+  'VERSION_DAG_ALREADY_FROZEN','TASK_PACK_IDENTITY_INVALID',
+  'TASK_PACK_READBACK_FAILED','TASK_PACK_CONTENT_INVALID','EDGE_ISSUE_NOT_IN_PACK',
+  'EDGE_NOT_IN_CANDIDATE_PACK','EDGE_ALREADY_NATIVE_IN_PACK','EDGE_CYCLE',
+  'ISSUE_READBACK_FAILED','ISSUE_STALE_VS_PACK','GITHUB_UNAUTHENTICATED',
+  'GITHUB_ACCESS_DENIED','GITHUB_RESOURCE_NOT_FOUND','GITHUB_VALIDATION_FAILED',
+  'GITHUB_DEPENDENCY_READ_FAILED']);
+const DEPENDENCY_UNKNOWN_REASONS=new Set(['NATIVE_WRITE_ACK_LOST',
+  'NATIVE_READBACK_MISMATCH','NATIVE_DEPENDENCY_WRITE_FAILED']);
+const dependencyDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,
+  reason,effectId,repository:null,versionId:null,githubEffect:'NOT_RUN',
+  admitted:false,authorized:false,native:false,taskPass:false,releasePass:false});
+/**
+ * E0 #284 — Business projection of the sealed selected-C dependency-write
+ * observation. Positive output verifies only that the official GitHub
+ * blocked_by edge reads back exactly; it never authorizes the caller, passes
+ * the Task or releases. A lost acknowledgment stays WRITE_UNKNOWN and
+ * reconciles by native readback, never a blind retry.
+ */
+export function projectNativeTaskDependencyWrite({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||
+      o.repository!=='kaicreator-mm/tally'||o.versionId!=='version/v2'||
+      o.authorized!==false||o.admitted!==false||
+      o.taskPass!==false||o.releasePass!==false)
+      return dependencyDenied('UNVERIFIED_NATIVE_DEPENDENCY_WRITE',effectId);
+    if(o.status==='BLOCKED'&&DEPENDENCY_BLOCK_REASONS.has(o.reason)&&
+      o.githubEffect==='NOT_RUN'&&o.native===false)
+      return dependencyDenied(o.reason,effectId);
+    if(o.status==='UNKNOWN'&&DEPENDENCY_UNKNOWN_REASONS.has(o.reason)&&
+      o.githubEffect==='UNKNOWN'&&o.reconciliationRequired===true&&
+      o.retryPolicy==='READ_BACK_BEFORE_RETRY_NO_BLIND_POST')
+      return Object.freeze({state:'WRITE_UNKNOWN',reason:o.reason,effectId,
+        repository:o.repository,versionId:o.versionId,githubEffect:'UNKNOWN',
+        reconciliationRequired:true,retryPolicy:'READ_BACK_BEFORE_RETRY_NO_BLIND_POST',
+        blockedIssueNumber:o.blockedIssueNumber??null,
+        blockedByIssueNumber:o.blockedByIssueNumber??null,
+        admitted:false,authorized:false,native:false,taskPass:false,releasePass:false});
+    if(o.status==='NATIVE_EDGE_PRESENT'&&
+      o.reason==='NATIVE_EDGE_ALREADY_PRESENT_READBACK'&&
+      o.blockedIssueNumber===input?.blockedIssueNumber&&
+      o.blockedByIssueNumber===input?.blockedByIssueNumber&&
+      o.native===true&&o.githubEffect==='NOT_RUN'&&o.writePerformed===false&&
+      Number.isSafeInteger(o.dependencyId)&&o.dependencyId>0)
+      return Object.freeze({state:'NATIVE_DEPENDENCY_PRESENT',reason:o.reason,
+        effectId,repository:o.repository,versionId:o.versionId,
+        githubEffect:'NOT_RUN',writePerformed:false,dependencyId:o.dependencyId,
+        admitted:false,authorized:false,native:true,taskPass:false,releasePass:false});
+    if(o.status==='NATIVE_EDGE_VERIFIED'&&
+      o.reason==='OFFICIAL_GITHUB_BLOCKED_BY_READBACK_VERIFIED'&&
+      o.blockedIssueNumber===input?.blockedIssueNumber&&
+      o.blockedByIssueNumber===input?.blockedByIssueNumber&&
+      o.native===true&&o.githubEffect==='PERFORMED_VERIFIED'&&
+      o.writePerformed===true&&
+      Number.isSafeInteger(o.dependencyId)&&o.dependencyId>0)
+      return Object.freeze({state:'NATIVE_DEPENDENCY_VERIFIED',reason:o.reason,
+        effectId,repository:o.repository,versionId:o.versionId,
+        githubEffect:'PERFORMED_VERIFIED',writePerformed:true,
+        blockedIssueNumber:o.blockedIssueNumber,
+        blockedByIssueNumber:o.blockedByIssueNumber,dependencyId:o.dependencyId,
+        admitted:false,authorized:false,native:true,taskPass:false,releasePass:false});
+    return dependencyDenied('UNVERIFIED_NATIVE_DEPENDENCY_WRITE',effectId);
+  }catch{return dependencyDenied('UNTRUSTED_NATIVE_DEPENDENCY_WRITE',effectId);}
+}
+
+/**
+ * E0 #284 — advisory input screening for the immutable version Task DAG
+ * freeze request. The exact PackBlob ref+SHA is the only frozen identity the
+ * caller may name; review, Owner approval and the native roster stay sealed
+ * Host observations.
+ */
+export function assessVersionTaskDagFreeze(input){
+  const unqualified=Object.freeze({state:'UNQUALIFIED_INPUT',
+    reason:'MISSING_SOURCE_IDENTITY',admitted:false,authorized:false,
+    frozen:false,taskPass:false,releasePass:false});
+  if(!input||typeof input!=='object'||Array.isArray(input))return unqualified;
+  const {issueRef,issueNumber,sourceSha,taskPackRef,taskPackBlobSha}=input;
+  if(issueRef!=='https://github.com/kaicreator-mm/tally/issues/'+E0_ISSUE||
+    issueNumber!==E0_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !PACK_BLOB_REF.test(taskPackRef??'')||!SOURCE_SHA.test(taskPackBlobSha??''))
+    return unqualified;
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_VERSION_TASK_DAG_FREEZE',
+    issueRef,issueNumber,sourceSha,taskPackRef,taskPackBlobSha,
+    admitted:false,authorized:false,frozen:false,taskPass:false,releasePass:false});
+}
+
+const FREEZE_BLOCK_REASONS=new Set([...DEPENDENCY_BLOCK_REASONS,
+  'PLANNED_EDGES_REMAIN','FREEZE_WRITESET_CONFIG_INVALID','FREEZE_WRITESET_CONFLICT',
+  'NATIVE_TASK_ROSTER_READBACK_FAILED','NATIVE_TASK_ROSTER_CHANGED_BEFORE_FREEZE',
+  'INDEPENDENT_REVIEW_REQUIRED','OWNER_APPROVAL_REQUIRED','FREEZE_TIMESTAMP_INVALID',
+  'DIVERGENT_FREEZE_EXISTS']);
+const FREEZE_UNKNOWN_REASONS=new Set([...DEPENDENCY_UNKNOWN_REASONS,
+  'FREEZE_WRITESET_PARTIAL_UNKNOWN','VERSION_DAG_FREEZE_FAILED','FREEZE_READBACK_MISMATCH']);
+const freezeDagDenied=(reason,effectId,state='NOT_FROZEN')=>Object.freeze({state,
+  reason,effectId,repository:null,versionId:null,githubEffect:'NOT_RUN',
+  admitted:false,authorized:false,frozen:false,taskPass:false,releasePass:false});
+/**
+ * E0 #284 — Business projection of the sealed Host version Task DAG freeze
+ * observation. Positive output verifies only THIS K intent's frozen record
+ * (create-only CAS readback plus every per-Task write-set record); it never
+ * authorizes the caller, passes the Task or releases, and any UNKNOWN stays
+ * reconciliation-required without a dependency write after the freeze.
+ */
+export function projectVersionTaskDagFreeze({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||
+      o.repository!=='kaicreator-mm/tally'||o.versionId!=='version/v2'||
+      o.taskPackBlobSha!==input?.taskPackBlobSha||
+      o.authorized!==false||o.admitted!==false||
+      o.taskPass!==false||o.releasePass!==false)
+      return freezeDagDenied('UNVERIFIED_VERSION_TASK_DAG_FREEZE',effectId);
+    if(o.status==='BLOCKED'&&FREEZE_BLOCK_REASONS.has(o.reason)&&
+      o.githubEffect==='NOT_RUN')
+      return freezeDagDenied(o.reason,effectId);
+    if(o.status==='UNKNOWN'&&FREEZE_UNKNOWN_REASONS.has(o.reason)&&
+      o.githubEffect==='UNKNOWN'&&o.reconciliationRequired===true)
+      return Object.freeze({state:'FREEZE_UNKNOWN',reason:o.reason,effectId,
+        repository:o.repository,versionId:o.versionId,githubEffect:'UNKNOWN',
+        reconciliationRequired:true,frozen:false,
+        admitted:false,authorized:false,taskPass:false,releasePass:false});
+    if((o.status==='FROZEN'||o.status==='REPLAY')&&
+      (o.status==='FROZEN'?o.reason==='FROZEN_VERSION_TASK_DAG_CAS_READBACK_VERIFIED':
+        o.reason==='IDENTICAL_FREEZE_REPLAY')&&
+      o.githubEffect==='NOT_RUN'&&typeof o.frozenAt==='string'&&
+      Number.isFinite(Date.parse(o.frozenAt))&&
+      Number.isSafeInteger(o.taskCount)&&o.taskCount>0&&
+      Number.isSafeInteger(o.edgeCount)&&o.edgeCount>=0&&
+      o.writeSetRecordCount===o.taskCount&&
+      o.dependencyWritesAfterFreeze==='REFUSED')
+      return Object.freeze({state:o.status==='FROZEN'?
+          'VERSION_DAG_FROZEN':'VERSION_DAG_FREEZE_REPLAY',
+        reason:o.reason,effectId,repository:o.repository,versionId:o.versionId,
+        taskPackRef:o.taskPackRef,taskPackBlobSha:o.taskPackBlobSha,
+        blobSha:o.blobSha,frozenAt:o.frozenAt,taskCount:o.taskCount,
+        edgeCount:o.edgeCount,writeSetRecordCount:o.writeSetRecordCount,
+        githubEffect:'NOT_RUN',dependencyWritesAfterFreeze:'REFUSED',frozen:true,
+        admitted:false,authorized:false,taskPass:false,releasePass:false});
+    return freezeDagDenied('UNVERIFIED_VERSION_TASK_DAG_FREEZE',effectId);
+  }catch{return freezeDagDenied('UNTRUSTED_VERSION_TASK_DAG_FREEZE',effectId);}
 }
