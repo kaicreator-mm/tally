@@ -135,3 +135,27 @@ test('public DH record must carry exact deterministic observationId, not merely 
   assert.equal(projectTaskAttempts(make({observationPages:[forged]})).reason,
     'CONFLICTING_ATTEMPT_EVIDENCE');
 });
+
+test('invalid public instance lifecycle order cannot qualify terminal evidence',()=>{
+  const normal=structuredClone(obs);
+  const invalidSequences=[
+    // Terminal without an opening event.
+    [{...normal.observations[0],kind:'INSTANCE_TERMINALIZED'},
+      {...normal.observations[1],kind:'TURN_COMMITTED'}],
+    // No INSTANCE_OPENED, although the terminal record is present.
+    [{...normal.observations[0],kind:'MESSAGE_ACCEPTED'},
+      normal.observations[1]],
+    // Reopening the same instance in the very same durable stream.
+    [normal.observations[0],
+      {...normal.observations[1],kind:'INSTANCE_OPENED'}],
+    // A terminal record followed by another ordinary event.
+    [normal.observations[0],normal.observations[1],
+      {...normal.observations[1],sequence:3,kind:'TURN_COMMITTED',
+        observationId:observationId(stream,3)}]
+  ];
+  for(const observations of invalidSequences){
+    const bad={...normal,observations,highWatermark:observations.length};
+    assert.equal(projectTaskAttempts(make({observationPages:[bad]})).reason,
+      'CONFLICTING_ATTEMPT_EVIDENCE');
+  }
+});

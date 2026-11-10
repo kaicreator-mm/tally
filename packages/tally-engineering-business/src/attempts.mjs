@@ -94,6 +94,11 @@ function runtimeFor(attempt,page) {
       ids.has(o.observationId)||!Number.isSafeInteger(o.sequence)||
       o.sequence!==last+1||
       o.observationId!==expectedObservationId(attempt.runtimeStream,o.sequence))return null;
+    // One instance opens once, then terminalizes at most once and last.
+    // A forged terminal-before-open or post-terminal record is not current
+    // lifecycle evidence even if its sequence and observation ID are valid.
+    if((last===0&&o.kind!=='INSTANCE_OPENED')||
+       (last>0&&(o.kind==='INSTANCE_OPENED'||terminal)))return null;
     ids.add(o.observationId);
     last=o.sequence;
     if(o.kind==='INSTANCE_TERMINALIZED')terminal=true;
