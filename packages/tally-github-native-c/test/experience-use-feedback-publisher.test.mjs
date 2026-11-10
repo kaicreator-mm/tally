@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import canonicalize from 'canonicalize';
+import {validateAdsV5Report} from '../../tally-ads-v5-validator/src/validate.mjs';
 import {createHostBoundExperienceFeedbackPublisher} from '../src/experience-use-feedback-publisher.mjs';
 import {projectExperienceUseFeedback,feedbackReportId}
   from '../../tally-github-c/src/experience-use-feedback.mjs';
@@ -191,4 +194,31 @@ test('lost ACK with post-readback fence loss remains UNKNOWN without duplicate P
   assert.equal(m.state.posts,1);
   assert.equal(r.status,'UNKNOWN');
   assert.equal(r.reason,'FEEDBACK_POST_LEASE_OR_PERMIT_LOST');
+});
+
+test('real pinned ADS v4.18 Ajv schema and RFC8785 digest accept all six phase envelopes',()=>{
+  for(const phase of ['PRESENTED','ACCEPTED','APPLIED','SKIPPED',
+    'INDEPENDENTLY_CHECKED','OBSERVED_EFFECT']){
+    const options={};
+    if(phase==='ACCEPTED'||phase==='SKIPPED'){
+      options.phaseEvidence={kind:phase,ref,independent:false,
+        decision:phase==='ACCEPTED'?'APPROVE':'REJECT'};
+    }
+    if(phase==='INDEPENDENTLY_CHECKED'){
+      options.epistemic='OBSERVED';
+      options.verifierRefs:['https://github.com/'+repo+'/issues/274#issuecomment-900'];
+      options.phaseEvidence={kind:phase,ref,independent:true,decision:null};
+    }
+    if(phase==='OBSERVED_EFFECT'){
+      options.epistemic='OBSERVED';
+      options.phaseEvidence={kind:phase,ref,independent:true,decision:null};
+    }
+    const report=candidate(phase,options);
+    assert.equal(report.status,'CANDIDATE_ONLY',phase+': '+report.reason);
+    const check=validateAdsV5Report(report.envelope);
+    assert.equal(check.valid,true,phase+': '+JSON.stringify(check.violations));
+    const nativeDigest=createHash('sha256')
+      .update(canonicalize(report.envelope.data)).digest('hex');
+    assert.equal(report.dataDigest,nativeDigest);
+  }
 });
