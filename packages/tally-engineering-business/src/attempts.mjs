@@ -66,6 +66,18 @@ function validAttempt(row,identity) {
     row.environment.length<=128&&typeof row.worktree==='string'&&
     row.worktree.length>0&&row.worktree.length<=2048;
 }
+// DomainHarness v0.10.3 read-semantics.ts runtimeObservationStreamKey +
+// runtimeObservationId: canonical JSON of five exact stream key scalars.
+function expectedObservationId(stream,sequence){
+  const key=JSON.stringify({
+    contentDigest:stream.package.contentDigest,
+    epochId:stream.epochId,
+    instanceKey:stream.target.instanceKey,
+    packageId:stream.package.packageId,
+    workflowId:stream.target.workflowId
+  });
+  return key+'#observation:'+sequence;
+}
 function runtimeFor(attempt,page) {
   if(!plain(page))return {status:'UNKNOWN',reason:'OBSERVATION_UNAVAILABLE',
     eventCount:0,lastSequence:null,runtimeTerminal:false};
@@ -80,7 +92,8 @@ function runtimeFor(attempt,page) {
       !EVENTS.has(o.kind)||!iso(o.observedAt)||
       typeof o.observationId!=='string'||!o.observationId||
       ids.has(o.observationId)||!Number.isSafeInteger(o.sequence)||
-      o.sequence!==last+1)return null;
+      o.sequence!==last+1||
+      o.observationId!==expectedObservationId(attempt.runtimeStream,o.sequence))return null;
     ids.add(o.observationId);
     last=o.sequence;
     if(o.kind==='INSTANCE_TERMINALIZED')terminal=true;
