@@ -206,7 +206,7 @@ test('real pinned ADS v4.18 Ajv schema and RFC8785 digest accept all six phase e
     }
     if(phase==='INDEPENDENTLY_CHECKED'){
       options.epistemic='OBSERVED';
-      options.verifierRefs:['https://github.com/'+repo+'/issues/274#issuecomment-900'];
+      options.verifierRefs=['https://github.com/'+repo+'/issues/274#issuecomment-900'];
       options.phaseEvidence={kind:phase,ref,independent:true,decision:null};
     }
     if(phase==='OBSERVED_EFFECT'){
