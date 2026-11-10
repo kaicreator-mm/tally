@@ -7,6 +7,8 @@
 import {createHash} from 'node:crypto';
 const SHA=/^[a-f0-9]{40}$/;
 const DIGEST=/^[a-f0-9]{64}$/;
+// v2 is pinned to ADS v4.18; a schema-shaped foreign revision is not source-qualified.
+const ADS_REVISION='2c395c55569fe2edf3f4135f12d3d069e526d0b7';
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const ISO=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
@@ -62,7 +64,7 @@ export function projectExperienceUseFeedback(dto) {
     clearanceRef,supersedes,sourceWitness,taskRef,attemptRef,reportId}=dto;
   if(!REPO.test(repository??'')||!Number.isSafeInteger(issueNumber)||issueNumber<1||
      !SHA.test(sourceSha??'')||!SHA.test(publisherSourceSha??'')||
-     !SHA.test(adsRevision??'')||!string(publisherNamespace,128)||
+     adsRevision!==ADS_REVISION||!string(publisherNamespace,128)||
      !Number.isSafeInteger(revision)||revision<1||!nativeRef(experienceRef)||
      !ID.test(procedureRevision??'')||!string(taskRef)||!string(attemptRef)||
      !PHASE.has(phase)||!EPISTEMIC.has(epistemic)||!iso(observedAt)||
