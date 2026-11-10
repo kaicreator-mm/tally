@@ -205,6 +205,32 @@ export function createVersionTaskDagWritePort({
         e.to===blockedIssueNumber);
       if(matches.length!==1)return blocked('EDGE_NOT_IN_CANDIDATE_PACK');
       if(matches[0].kind==='NATIVE')return blocked('EDGE_ALREADY_NATIVE_IN_PACK');
+      // Gate 4b — native dependency POST requires the SAME exact reviewed
+      // and Owner-approved candidate PackBlob as the eventual DAG freeze.
+      // Constructor-only injection of the readers is not authorization.
+      const witnessScope={taskPackRef,taskPackBlobSha,versionId,
+        sourceSha:expectedVersionSha};
+      const [review,approval]=await Promise.all([
+        reviewWitnessReader(witnessScope),ownerApprovalReader(witnessScope)
+      ]);
+      if(review?.status!=='INDEPENDENTLY_VERIFIED'||
+         review.taskPackBlobSha!==taskPackBlobSha||
+         review.sourceSha!==expectedVersionSha||
+         review.reviewedHeadSha!==expectedVersionSha||
+         !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
+         review.reviewer===review.author||
+         typeof review.reviewRef!=='string'||
+         !review.reviewRef.startsWith('https://github.com/'+repository+'/')||
+         !Number.isFinite(Date.parse(review.verifiedAt??'')))
+        return blocked('INDEPENDENT_REVIEW_REQUIRED');
+      if(approval?.status!=='OWNER_APPROVED'||
+         approval.taskPackBlobSha!==taskPackBlobSha||
+         approval.sourceSha!==expectedVersionSha||
+         approval.owner!==owner||
+         typeof approval.approvalRef!=='string'||
+         !approval.approvalRef.startsWith('https://github.com/'+repository+'/')||
+         !Number.isFinite(Date.parse(approval.approvedAt??'')))
+        return blocked('OWNER_APPROVAL_REQUIRED');
       // Gate 5 — cycle refusal over the candidate graph (the proposed edge is
       // part of that graph; any cycle containing it refuses here).
       if(!acyclicWith(pack.edges,blockedByIssueNumber,blockedIssueNumber)||

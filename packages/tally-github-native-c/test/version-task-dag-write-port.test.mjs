@@ -189,6 +189,48 @@ test('candidate membership, proposed-edge match and duplicate refusal never POST
   assert.equal(outOfPack.posts.length+absentEdge.posts.length+nativePack.posts.length,0);
 });
 
+test('native dependency edge POST requires exact reviewed PackBlob and Owner approval',async()=>{
+  const rejected=[
+    ['absent independent review',()=>({status:'NOT_VERIFIED'}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['wrong reviewed PackBlob',()=>({...review(),taskPackBlobSha:'f'.repeat(40)}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['stale reviewed source',()=>({...review(),sourceSha:'f'.repeat(40)}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['reviewer equals author',()=>({...review(),reviewer:'web-builder'}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['wrong reviewed head',()=>({...review(),reviewedHeadSha:'f'.repeat(40)}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['foreign review ref',()=>({...review(),reviewRef:'https://github.com/evil/tally/pull/1'}),approval,'INDEPENDENT_REVIEW_REQUIRED'],
+    ['absent Owner approval',review,()=>({status:'NOT_VERIFIED'}),'OWNER_APPROVAL_REQUIRED'],
+    ['wrong approved PackBlob',review,()=>({...approval(),taskPackBlobSha:'f'.repeat(40)}),'OWNER_APPROVAL_REQUIRED'],
+    ['wrong Owner identity',review,()=>({...approval(),owner:'not-the-owner'}),'OWNER_APPROVAL_REQUIRED'],
+    ['stale Owner source',review,()=>({...approval(),sourceSha:'f'.repeat(40)}),'OWNER_APPROVAL_REQUIRED'],
+    ['foreign Owner ref',review,()=>({...approval(),approvalRef:'https://github.com/evil/tally/issues/1'}),'OWNER_APPROVAL_REQUIRED'],
+  ];
+  for(const [name,readReview,readApproval,reason] of rejected){
+    const gh=fakeOctokit();
+    const store=memoryStore(),pack=candidatePack();
+    const port=createVersionTaskDagWritePort({repository,versionId,
+      expectedVersionSha:versionSha,store,
+      taskPackReader:async()=>({status:'VERIFIED',blobSha:packBlobSha,
+        content:JSON.stringify(pack)}),
+      reviewWitnessReader:async scope=>{
+        assert.equal(scope.taskPackBlobSha,packBlobSha,name);
+        assert.equal(scope.sourceSha,versionSha,name);
+        return readReview();
+      },
+      ownerApprovalReader:async scope=>{
+        assert.equal(scope.taskPackBlobSha,packBlobSha,name);
+        return readApproval();
+      },
+      nativeRosterReader:async()=>nativeProjection({pack}),
+      octokit:gh.octokit,owner,repo,writerAuthority,
+      writeSetDocumentByIssue:writeSetDocs(pack)});
+    const result=await port.addNativeTaskDependency(edgeInput);
+    assert.equal(result.status,'BLOCKED',name);
+    assert.equal(result.reason,reason,name);
+    assert.equal(result.githubEffect,'NOT_RUN',name);
+    assert.equal(gh.posts.length,0,'no native edge write: '+name);
+    assert.deepEqual(store.puts(),[],'no CAS write: '+name);
+  }
+});
+
 test('cycle refusal: cyclic candidate never reaches the official endpoint',async()=>{
   const cyclic=candidatePack({edges:[
     {from:284,to:312,kind:'PLANNED',evidenceRef:issueUrl(312),dependencyRef:issueUrl(284)},
