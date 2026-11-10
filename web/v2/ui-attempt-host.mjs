@@ -22,7 +22,7 @@ const identityValid=i=>REPO.test(i.repository??'')&&i.versionId==='version/v2'&&
 /**
  * The trusted selected Host port contract is explicit:
  *   readTaskAttemptRoster({repository,versionId,taskIssueNumber,sourceSha,limit})
- *   readRuntimeObservations({workflowAddress,packageId,epoch,cursor,limit})
+ *   readObservations({stream:RuntimeObservationStreamRef,afterCursor?,limit})
  *   [optional] readAdsTaskReports({repository,versionId,taskIssueNumber,sourceSha,limit})
  * Each returns already-public bounded evidence. Caller-provided Host-shaped
  * objects do not constitute a selected Host; only the server composition
@@ -44,39 +44,57 @@ export async function readTaskAttemptHistoryFromHost({
     return unknown('HOST_ATTEMPT_ROSTER_UNQUALIFIED');
   const observations=[];
   for(const attempt of roster.attempts){
+    const stream=attempt?.runtimeStream;
     if(!plain(attempt)||!ID.test(attempt.attemptId??'')||
-      typeof attempt.workflowAddress!=='string'||attempt.workflowAddress.length>512||
-      !ID.test(attempt.packageId??'')||
-      !Number.isSafeInteger(attempt.epoch)||attempt.epoch<0)
-      return unknown('INVALID_HOST_ATTEMPT_ADDRESS');
-    if(typeof selectedHost.readRuntimeObservations!=='function') {
+      !plain(stream)||!plain(stream.target)||!plain(stream.package)||
+      typeof stream.target.workflowId!=='string'||!stream.target.workflowId||
+      typeof stream.target.instanceKey!=='string'||!stream.target.instanceKey||
+      typeof stream.package.packageId!=='string'||!stream.package.packageId||
+      typeof stream.package.contentDigest!=='string'||!stream.package.contentDigest||
+      typeof stream.epochId!=='string'||!stream.epochId)
+      return unknown('INVALID_HOST_RUNTIME_STREAM');
+    if(typeof selectedHost.readObservations!=='function'){
       observations.push({attemptId:attempt.attemptId,status:'UNKNOWN',observations:[]});
       continue;
     }
-    const rows=[];
-    const visited=new Set();
-    let cursor=null,status='UNKNOWN',highWatermark=null;
+    const rows=[],visited=new Set();
+    let afterCursor=null,status='UNKNOWN',highWatermark=null,last=0;
     try {
       for(let page=0;page<16;page++){
-        const data=await selectedHost.readRuntimeObservations({
-          workflowAddress:attempt.workflowAddress,packageId:attempt.packageId,
-          epoch:attempt.epoch,cursor,limit:100});
-        if(!plain(data)||!Array.isArray(data.observations)||
-          data.observations.length>100 ||
-          !['COMPLETE','RETENTION_TRUNCATED','STORAGE_GAP','CURSOR_INVALID','UNKNOWN'].includes(data.status)){
+        // DomainHarness v0.10.3 public RuntimeObservation v1 page shape:
+        // {records,nextCursor?,highWatermark,gap?}; no status/observations.
+        const data=await selectedHost.readObservations({
+          stream,...(afterCursor===null?{}:{afterCursor}),limit:100});
+        if(!plain(data)||!Array.isArray(data.records)||data.records.length>100||
+           !Number.isSafeInteger(data.highWatermark)||data.highWatermark<0){
           status='UNKNOWN';break;
         }
-        rows.push(...data.observations);
-        if(rows.length>1000){status='UNKNOWN';break;}
-        if(data.status!=='COMPLETE'){status=data.status;break;}
-        if(data.nextCursor==null){
-          status='COMPLETE';highWatermark=data.highWatermark;break;
+        highWatermark=data.highWatermark;
+        if(data.gap!==undefined){
+          if(!plain(data.gap)||!['RETENTION_TRUNCATED','STORAGE_GAP',
+            'CURSOR_INVALID'].includes(data.gap.kind)||
+            data.gap.highWatermark!==highWatermark||data.records.length>0){
+            status='UNKNOWN';break;
+          }
+          status=data.gap.kind;break;
         }
-        if(typeof data.nextCursor!=='string'||!data.nextCursor||
-          data.nextCursor.length>512||visited.has(data.nextCursor)){
+        if(data.records.length===0){
+          status=highWatermark===last?'COMPLETE':'STORAGE_GAP';break;
+        }
+        if(data.records[0]?.sequence!==last+1||
+          data.records.some((o,i)=>!plain(o)||o.sequence!==last+i+1)){
+          status='STORAGE_GAP';break;
+        }
+        rows.push(...data.records);
+        last+=data.records.length;
+        if(rows.length>1000){status='UNKNOWN';break;}
+        if(last===highWatermark){status='COMPLETE';break;}
+        if(last>highWatermark){status='UNKNOWN';break;}
+        const next=data.nextCursor;
+        if(typeof next!=='string'||!next||next.length>1024||visited.has(next)){
           status='CURSOR_INVALID';break;
         }
-        visited.add(data.nextCursor);cursor=data.nextCursor;
+        visited.add(next);afterCursor=next;
       }
     }catch{status='UNKNOWN';}
     observations.push({attemptId:attempt.attemptId,status,observations:rows,
