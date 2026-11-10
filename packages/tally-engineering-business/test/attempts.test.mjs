@@ -5,18 +5,23 @@ const sha='a'.repeat(40);
 const ref='https://github.com/kaicreator-mm/tally/issues/275#issuecomment-1234';
 const identity={repository:'kaicreator-mm/tally',versionId:'version/v2',
   taskIssueNumber:275,sourceSha:sha};
+const stream={
+  target:{workflowId:'tally-attempt',instanceKey:'attempt-1'},
+  package:{domainId:'tally',version:'2.0.0',
+    packageId:'tally-b',contentDigest:'d'.repeat(64),
+    formatVersion:'1',runtimeContractMajor:1,executionEngineMajor:1,
+    requiredCapabilities:[]},
+  epochId:'1'
+};
 const a={...identity,attemptId:'attempt-1',role:'builder',writerId:'host:1',
-  workflowAddress:'workflow/v2/attempt-1',packageId:'tally-b',epoch:1,
-  environment:'windows-host',worktree:'C:/secret/worktree',receipt:{
-    status:'VERIFIED',attemptId:'attempt-1',sourceSha:sha,
+  runtimeStream:stream,environment:'windows-host',worktree:'C:/secret/worktree',
+  receipt:{status:'VERIFIED',attemptId:'attempt-1',sourceSha:sha,
     outcome:'COMPLETED',observedAt:'2026-11-10T00:00:00Z',ref}};
 const obs={attemptId:'attempt-1',status:'COMPLETE',cursorComplete:true,
   highWatermark:2,observations:[
-    {attemptId:'attempt-1',workflowAddress:a.workflowAddress,
-      packageId:a.packageId,epoch:1,eventType:'INSTANCE_OPENED',
+    {stream,kind:'INSTANCE_OPENED',observationId:'obs-1',
       sequence:1,observedAt:'2026-11-10T00:00:00Z'},
-    {attemptId:'attempt-1',workflowAddress:a.workflowAddress,
-      packageId:a.packageId,epoch:1,eventType:'INSTANCE_TERMINALIZED',
+    {stream,kind:'INSTANCE_TERMINALIZED',observationId:'obs-2',
       sequence:2,observedAt:'2026-11-10T00:01:00Z'}]};
 const make=(o={})=>({...identity,roster:{...identity,status:'VERIFIED',
   complete:true,attempts:[a]},observationPages:[obs],adsReports:[],...o});
@@ -94,5 +99,28 @@ test('foreign native receipt and report refs cannot qualify Task identity',()=>{
     reportId:'r-1',revision:1,
     nativeRef:'https://github.com/foreign/repo/issues/275#issuecomment-2345'};
   assert.equal(projectTaskAttempts(make({adsReports:[report]})).reason,
+    'CONFLICTING_ATTEMPT_EVIDENCE');
+});
+
+test('foreign stream epoch, content digest and workflow target are rejected',()=>{
+  for(const mismatched of [
+    {...stream,epochId:'2'},
+    {...stream,package:{...stream.package,contentDigest:'f'.repeat(64)}},
+    {...stream,target:{...stream.target,instanceKey:'foreign'}}
+  ]){
+    const bad=structuredClone(obs);
+    bad.observations[1].stream=mismatched;
+    assert.equal(projectTaskAttempts(make({observationPages:[bad]})).reason,
+      'CONFLICTING_ATTEMPT_EVIDENCE');
+  }
+});
+test('public RuntimeObservation v1 kind and deterministic record identity are required',()=>{
+  const wrong=structuredClone(obs);
+  wrong.observations[1].kind='EFFECT_SETTLED';
+  assert.equal(projectTaskAttempts(make({observationPages:[wrong]})).reason,
+    'CONFLICTING_ATTEMPT_EVIDENCE');
+  const duplicate=structuredClone(obs);
+  duplicate.observations[1].observationId='obs-1';
+  assert.equal(projectTaskAttempts(make({observationPages:[duplicate]})).reason,
     'CONFLICTING_ATTEMPT_EVIDENCE');
 });
