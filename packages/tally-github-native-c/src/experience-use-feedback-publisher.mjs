@@ -95,6 +95,7 @@ export function createHostBoundExperienceFeedbackPublisher({
      !SHA.test(writerAuthority.publisherSourceSha??'')||
      typeof writerAuthority.readHeldFence!=='function'||
      typeof writerAuthority.readKernelPermit!=='function'||
+     typeof writerAuthority.readFeedbackEvidence!=='function'||
      typeof octokit?.rest?.issues?.get!=='function'||
      typeof octokit.rest.issues.listComments!=='function'||
      typeof octokit.rest.issues.createComment!=='function'||
@@ -102,16 +103,35 @@ export function createHostBoundExperienceFeedbackPublisher({
      typeof octokit?.paginate?.iterator!=='function')
     throw new TypeError('HOST_BOUND_FEEDBACK_PUBLISHER_REQUIRED');
   const repository=owner+'/'+repo,login=writerAuthority.githubWriterLogin;
-  async function qualified(number) {
-    const [lease,permit]=await Promise.all([
+  async function qualified(number,data) {
+    const [lease,permit,evidence]=await Promise.all([
       writerAuthority.readHeldFence({repository,issueNumber:number,writerId:writerAuthority.writerId}),
-      writerAuthority.readKernelPermit({repository,issueNumber:number,sourceSha:writerAuthority.sourceSha})]);
+      writerAuthority.readKernelPermit({repository,issueNumber:number,sourceSha:writerAuthority.sourceSha}),
+      writerAuthority.readFeedbackEvidence({repository,issueNumber:number,
+        sourceSha:writerAuthority.sourceSha,reportId:data.report_id,
+        revision:data.revision,phase:data.phase,
+        experienceRef:data.experience_ref,procedureRevision:data.procedure_revision,
+        evidenceRef:data.subject.currentness.source_refs[0],
+        expectedDataDigest:hash(data)})]);
     return plain(lease)&&lease.sourceKind==='TRUSTED_HOST_RESOURCE_FENCE_READBACK'&&
       lease.complete===true&&lease.fenceHeld===true&&
       lease.repository===repository&&lease.writerId===writerAuthority.writerId&&
       lease.heldThrough==='CAS_PUBLISH_READBACK'&&
       plain(permit)&&permit.status==='AUTHORIZED'&&permit.repository===repository&&
-      permit.issueNumber===number&&permit.sourceSha===writerAuthority.sourceSha;
+      permit.issueNumber===number&&permit.sourceSha===writerAuthority.sourceSha&&
+      plain(evidence)&&evidence.status==='VERIFIED'&&
+      evidence.sourceKind==='HOST_VERIFIED_FEEDBACK_EVIDENCE'&&
+      evidence.repository===repository&&evidence.issueNumber===number&&
+      evidence.sourceSha===writerAuthority.sourceSha&&
+      evidence.reportId===data.report_id&&evidence.revision===data.revision&&
+      evidence.phase===data.phase&&evidence.experienceRef===data.experience_ref&&
+      evidence.procedureRevision===data.procedure_revision&&
+      evidence.evidenceRef===data.subject.currentness.source_refs[0]&&
+      evidence.dataDigest===hash(data)&&
+      (data.phase!=='ACCEPTED'||evidence.humanDecision==='APPROVE')&&
+      (data.phase!=='SKIPPED'||evidence.humanDecision==='REJECT')&&
+      (!['OBSERVED_EFFECT','INDEPENDENTLY_CHECKED'].includes(data.phase)||
+        evidence.independentVerified===true);
   }
   async function publishFeedback({issueNumber,candidate}={}) {
     if(!Number.isSafeInteger(issueNumber)||issueNumber<1||
@@ -121,7 +141,7 @@ export function createHostBoundExperienceFeedbackPublisher({
     const data=candidate.envelope.data,body=render(candidate.envelope);
     if(body.length>32768)return fail('FEEDBACK_BODY_TOO_LARGE');
     try{
-      if(!await qualified(issueNumber))return fail('HOST_FENCE_OR_KERNEL_PERMIT_UNVERIFIED');
+      if(!await qualified(issueNumber,data))return fail('HOST_FENCE_OR_KERNEL_PERMIT_UNVERIFIED');
       const issue=(await octokit.rest.issues.get({owner,repo,issue_number:issueNumber}))?.data;
       if(issue?.number!==issueNumber||issue.pull_request!==undefined||
          issue.repository_url!=='https://api.github.com/repos/'+repository)
@@ -141,7 +161,7 @@ export function createHostBoundExperienceFeedbackPublisher({
            data.supersedes.data_digest!==hash(prev[0].envelope.data))
           return fail('FEEDBACK_SUPERSESSION_UNVERIFIED');
       }
-      if(!await qualified(issueNumber))return fail('HOST_FENCE_OR_KERNEL_PERMIT_MOVED');
+      if(!await qualified(issueNumber,data))return fail('HOST_FENCE_OR_KERNEL_PERMIT_MOVED');
       let ack;
       try{ack=(await octokit.rest.issues.createComment({owner,repo,issue_number:issueNumber,body}))?.data;}
       catch{
