@@ -33,7 +33,7 @@ function mock(options={}) {
       const id=100+state.posts;
       const c={id,body,html_url:'https://github.com/'+repo+
         '/issues/274#issuecomment-'+id,issue_url:'https://api.github.com/repos/'+repo+
-        '/issues/274',user:{login:'kaicreator-mm'},
+        '/issues/274',user:{login:options.login??'kaicreator-mm'},
         created_at:clock,updated_at:clock};
       comments.push(c);
       if(options.lostAck)throw Error('LOST_ACK');
@@ -46,12 +46,14 @@ function mock(options={}) {
   }}};
   const writerAuthority={mode:'SINGLE_WRITER_ADMISSION',
     exclusiveHostControl:true,repository:repo,writerId:'host:1',
-    githubWriterLogin:'kaicreator-mm',publisherNamespace:'tally-feedback',
+    githubWriterLogin:options.login??'kaicreator-mm',publisherNamespace:'tally-feedback',
     sourceSha:sha,publisherSourceSha:pubSha,
     readHeldFence:async()=>{
       state.leaseReads++;
       return {sourceKind:'TRUSTED_HOST_RESOURCE_FENCE_READBACK',
-        complete:true,fenceHeld:options.lease!==false,
+        complete:true,fenceHeld:options.lease!==false&&
+          !(Number.isSafeInteger(options.failLeaseAfter)&&
+            state.leaseReads>options.failLeaseAfter),
         heldThrough:'CAS_PUBLISH_READBACK',repository:repo,writerId:'host:1'};
     },
     readKernelPermit:async()=>{
@@ -154,4 +156,39 @@ test('unverified Host feedback review/phase witness blocks before GitHub POST',a
 test('publisher construction refuses absent trusted feedback evidence reader',()=>{
   const m=mock();delete m.writerAuthority.readFeedbackEvidence;
   assert.throws(()=>m.publisher(),/HOST_BOUND_FEEDBACK_PUBLISHER_REQUIRED/);
+});
+
+test('valid GitHub App bot writer login is accepted with exact matching transport actor',async()=>{
+  const m=mock({login:'myapp[bot]'});
+  const original=candidate('PRESENTED',{
+    actor:{role:'builder',operator_kind:'other',operator_id:'host:1',
+      session_ref:ref,transport_actor:'myapp[bot]'}
+  });
+  const r=await m.publisher().publishFeedback({issueNumber:274,candidate:original});
+  assert.equal(r.status,'PUBLISHED_VERIFIED');assert.equal(m.state.posts,1);
+});
+test('mismatched transport actor is rejected before any GitHub POST',async()=>{
+  const m=mock();
+  const forged=candidate('PRESENTED',{
+    actor:{role:'builder',operator_kind:'other',operator_id:'host:1',
+      session_ref:ref,transport_actor:'wrong-native-actor'}
+  });
+  const r=await m.publisher().publishFeedback({issueNumber:274,candidate:forged});
+  assert.equal(r.reason,'FEEDBACK_NATIVE_ACTOR_MISMATCH');
+  assert.equal(m.state.posts,0);
+});
+test('losing the held fence after successful native readback never reports publication PASS',async()=>{
+  const m=mock({failLeaseAfter:2});
+  const r=await m.publisher().publishFeedback({issueNumber:274,candidate:candidate()});
+  assert.equal(m.state.posts,1);
+  assert.equal(r.status,'UNKNOWN');
+  assert.equal(r.reason,'FEEDBACK_POST_LEASE_OR_PERMIT_LOST');
+  assert.equal(r.taskPass,false);
+});
+test('lost ACK with post-readback fence loss remains UNKNOWN without duplicate POST',async()=>{
+  const m=mock({lostAck:true,failLeaseAfter:2});
+  const r=await m.publisher().publishFeedback({issueNumber:274,candidate:candidate()});
+  assert.equal(m.state.posts,1);
+  assert.equal(r.status,'UNKNOWN');
+  assert.equal(r.reason,'FEEDBACK_POST_LEASE_OR_PERMIT_LOST');
 });
