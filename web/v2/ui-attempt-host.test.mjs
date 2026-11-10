@@ -8,9 +8,13 @@ const stream={target:{workflowId:'tally-attempt',instanceKey:'attempt-1'},
     contentDigest:'d'.repeat(64),formatVersion:'1',
     runtimeContractMajor:1,executionEngineMajor:1,requiredCapabilities:[]},
   epochId:'1'};
+const observationId=(stream,sequence)=>JSON.stringify({
+  contentDigest:stream.package.contentDigest,epochId:stream.epochId,
+  instanceKey:stream.target.instanceKey,packageId:stream.package.packageId,
+  workflowId:stream.target.workflowId})+'#observation:'+sequence;
 const a={...id,attemptId:'attempt-1',role:'builder',writerId:'host:1',
   runtimeStream:stream,environment:'windows-host',worktree:'C:/private/worktree'};
-const event={stream,kind:'INSTANCE_OPENED',observationId:'obs-1',sequence:1,
+const event={stream,kind:'INSTANCE_OPENED',observationId:observationId(stream,1),sequence:1,
   observedAt:'2026-11-10T00:00:00Z'};
 const port={readTaskAttemptRoster:async()=>({...id,status:'VERIFIED',
   complete:true,attempts:[a]}),
@@ -64,7 +68,7 @@ test('DH public pull cursor paginates with afterCursor and exact stream, not inf
     if(req.afterCursor===undefined)
       return {records:[event],nextCursor:'opaque-1',highWatermark:2};
     if(req.afterCursor==='opaque-1')
-      return {records:[{...event,sequence:2,observationId:'obs-2',
+      return {records:[{...event,sequence:2,observationId:observationId(stream,2),
         kind:'INSTANCE_TERMINALIZED'}],highWatermark:2,nextCursor:'opaque-2'};
     throw new Error('unexpected cursor');
   }};
