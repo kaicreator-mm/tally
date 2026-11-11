@@ -80,7 +80,7 @@ No Zcode provider implementation was found in the current Tally source path. The
 5. The driver15 investigation also found that setting `TALLY_CODEX_HOME` in the process environment does not reach `defaultAlmConfig`; the controller accepts an explicit `codexHome` argument. The out-of-repository driver correction is not a product fix. Pass the per-attempt scratch home explicitly through the existing #207 write set (`web/v2/journey-controller.mjs`) and add a regression test before the final attempt.
 6. The full Host→Sandbox→Codex production chain remains NOT_PROVEN until the elevated setup and explicit `codexHome` wiring both pass. If the bounded elevated route fails, do not silently switch to MXC or weaken identity rules; substitute Zcode only if an already-existing qualified Zcode path is available. Do not build a second provider adapter for v2.
 
-## 6. Historical unsuccessful dispositions — #331 / #211 / #212, never PASS
+## 6. Historical unsuccessful dispositions — #331 / #211 / #212 / #203 / #210, never PASS
 
 The #331 historical recovery Task has two non-retroactive P1 findings: no globally atomic shared Host fence at the time of the one-shot effect, and no durable independent exact-source review witness before that effect. The independent historical review remains BLOCK.
 
@@ -89,7 +89,7 @@ The actual #203 terminal event and CAS rev4 `TERMINAL_VERIFIED` have already bee
 The same truthful unsuccessful disposition is applied to #211/#212: their source PRs #215/#217 are already merged and exact-head CI evidence is preserved, but the historical Task FSW/Outcome evidence cannot be retroactively reconstructed. They are closed not_planned, not PASS. The fresh successor #377 owns the Request-input POST retry defect with its own exact two-path repair and fresh verification.
 
 Per the explicit Owner instruction:
-- #331, #211 and #212 are recorded as CLOSED_NOT_PLANNED / unsuccessful, not successful Task completion.
+- #331, #211, #212, #203 and #210 are recorded as CLOSED_NOT_PLANNED / unsuccessful, not successful Task completion. The last two are S1-C Owner-directed historical dispositions, with original evidence retained.
 - `TASK_OUTCOME_ACCEPTANCE=NOT_ACCEPTED`, `TASK_PASS=NO`, `RELEASE_PASS=NO`; #331's two historical P1 findings and independent BLOCK verdict remain; #211/#212 source and CI evidence remain without a retroactive Task PASS.
 - #284 may consume only #203 terminality and #383 physical-fence evidence, never #331 Task PASS. #377 may consume only the fresh successor scope and its own verification, never #211/#212 historical Claims/FSWs.
 - Never replay #203, write its CAS again, rewrite its event, backdate review, seed a fake FSW or fabricate a successful closeout.
@@ -101,8 +101,8 @@ The historical R21.1 PackBlob `48298a5861cf7ad65c3bda915530d7be68dd1aa6` was obs
 
 Fresh live GitHub API readback on 2026-11-12:
 - 51 `type:task` Issues total.
-- 29 closed / 22 open after #331/#211/#212 were closed `not_planned`.
-- Of the 29 closed, 26 are other historical closed Issue states (their Task Outcome acceptance is not uniformly verified). #331/#211/#212 are unsuccessful `CLOSED_NOT_PLANNED` and must never count as Task PASS.
+- 31 closed / 20 open after the further S1-C unsuccessful #203/#210 dispositions. The five CLOSED_NOT_PLANNED Tasks are #331/#211/#212/#203/#210.
+- Of the 31 closed, 26 are other historical closed Issue states (their Task Outcome acceptance is not uniformly verified). Five are unsuccessful `CLOSED_NOT_PLANNED` and must never count as Task PASS.
 - 13/51 entries had state/updatedAt drift from the R21.1 snapshot, including five legitimate open→closed transitions before #331.
 - All 37 candidate edges were checked against live GitHub `blocked_by` endpoints and matched. The R21.1 notes claiming only four native edges and thirty planned edges are stale.
 
@@ -120,15 +120,15 @@ Required successor Pack:
 - #196 / #207: integrated J04–J06 workspace and the one real Builder browser/Host journey.
 - #200: minimum independent Reviewer Claim/Join identity for the single Builder path.
 - #197 / #198: separate Builder A/B candidate Tasks deferred to v2.1; #199 advanced Reviewer re-Join deferred to v2.1.
-- #202 / #203: dynamic binding correction and exact reviewed candidate publication.
+- #202 / #203: retain historical dynamic binding/candidate-publication evidence; #203 is CLOSED_NOT_PLANNED, and actual remaining installed publication obligation belongs to #207/#264.
 - #207 / #208: real browser/Host evidence and exact-SHA Release Qualification.
 - #209: minimal defect intake and next-version planning; defer measured-learning replay.
-- #210 / #260 / #284 / #312: guided Product/L2/DAG, current Task Pack, selected K→Host freeze and Product ReviewWitness.
+- #210 / #260 / #284 / #312: #210's original source is merged but its Task Outcome is CLOSED_NOT_PLANNED; #312 owns the missing Product ReviewWitness. #260/#284 own current DAG/selected K→Host Freeze.
 - #211 / #212 / #377: native read recovery and the Request-input POST retry safety defect.
 - #219 / #262: minimal maintenance and source/audit readback; defer measured experience feedback.
 - #261 / #263 / #264: one-Agent UI actions, minimal actionable ALM and final installed integration.
 - #273 / #276: bounded replan and minimum true Domain Package Engineering B workflows.
-- #331: CLOSED_NOT_PLANNED historical deviation, excluded from success.
+- #331/#203/#210/#211/#212: CLOSED_NOT_PLANNED historical deviations or superseded Task Outcomes, all excluded from success.
 - Reuse completed #274/#275/#319/#370/#383 evidence; do not rerun or reimplement their completed scope.
 
 ### Deferred v2.1
@@ -178,3 +178,8 @@ The latest [#207 exact differential receipt](https://github.com/kaicreator-mm/ta
 ### Fresh P1 successor implementation
 
 [PR #394](https://github.com/kaicreator-mm/tally/pull/394) contains the exact two-path #377 repair candidate at HEAD `963295ef3c4c18b275a559046d6771f0681dd733`. It fixes Request-input method detection and adds POST/PATCH single-attempt, GET/HEAD retry and explicit method-override tests. Woodpecker pipeline #618 was pending at the latest readback; no PASS is claimed until exact-SHA statuses complete.
+
+
+### S1-C historical Task Outcome disposition addendum (2026-11-12)
+
+#203 was closed unsuccessful with original native terminal event and CAS rev4 preserved ([receipt](https://github.com/kaicreator-mm/tally/issues/203#issuecomment-6803483312)); the older #204/#205 PRs remain unmerged and no #203 Task PASS is asserted. #210 was closed unsuccessful with original source #218 and CAS/FSW preserved ([receipt](https://github.com/kaicreator-mm/tally/issues/210#issuecomment-6803484452)); the remaining trusted Product ReviewWitness obligation remains with #312. Both changes remove native open-Issue predecessor blockers but do not themselves admit downstream Claims, establish Host Pack Freeze or certify Core MVP acceptance.
