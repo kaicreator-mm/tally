@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
+import { serializeJsonld } from './rdf-min.mjs';
 export const original = fileURLToPath(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld', import.meta.url));
 export const overlay = fileURLToPath(new URL('../source/C1_OWNER_REVISION_R13.json', import.meta.url));
 export const preview = fileURLToPath(new URL('../generated/c1-candidate.graph.jsonld', import.meta.url));
@@ -62,7 +63,9 @@ export function materialize() {
   const bytes = readFileSync(original);
   const hash = createHash('sha1').update('blob ' + bytes.length + '\0').update(bytes).digest('hex');
   assert.equal(hash, expectedBlob, 'frozen original Git Blob changed');
-  return JSON.stringify(build(JSON.parse(bytes.toString('utf8')), JSON.parse(readFileSync(overlay, 'utf8'))), null, 2) + '\n';
+  // canonical serialization (sorted keys and slot lists) — makes the overlay
+  // product byte-identical with the canonical lane-integrated export
+  return serializeJsonld(build(JSON.parse(bytes.toString('utf8')), JSON.parse(readFileSync(overlay, 'utf8')))['@graph']);
 }
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (process.argv.includes('--check')) {

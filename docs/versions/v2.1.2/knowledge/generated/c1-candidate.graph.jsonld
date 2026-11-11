@@ -364,13 +364,13 @@
       "se:created_on": "2026-11-08",
       "se:evidence_refs": [
         {
-          "@id": "se:EVD-09F-GH-REPLICATION"
+          "@id": "se:EVD-09F-GH-BACKLOG"
         },
         {
           "@id": "se:EVD-09F-GH-RECOVERY"
         },
         {
-          "@id": "se:EVD-09F-GH-BACKLOG"
+          "@id": "se:EVD-09F-GH-REPLICATION"
         }
       ],
       "se:intervention": "Responders paused some dependent processing, prioritized data integrity and rebuilt/recovered database replication before restoring normal topology.",
@@ -3421,9 +3421,9 @@
       },
       "se:lifecycle_status": "PROPOSED",
       "se:options": [
+        "A documented combination of use cases, user stories, or other context-appropriate structured methods",
         "Use cases",
-        "User stories",
-        "A documented combination of use cases, user stories, or other context-appropriate structured methods"
+        "User stories"
       ],
       "se:procedure": "Compare candidate methods for their support of design and implementation and their specific strengths and weaknesses; choose at least one method, optionally using different methods for different requirements, and record the rationale. This is a curriculum-scoped decision aid, not a universal professional mandate.",
       "se:record_version": "0.1.1",
@@ -5272,21 +5272,21 @@
     {
       "@id": "se:EVD-09F-GH-BACKLOG",
       "@type": "se:Evidence",
+      "se:context": "GitHub October 21-22 2018 MySQL replication/failover incident only.",
       "se:created_on": "2026-11-12",
-      "se:record_version": "0.1.1",
+      "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
+      "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
       "se:lifecycle_status": "PENDING_REVIEW",
+      "se:limitations": "First-party self-report, no independent operational audit, no universal failure/failover guarantee.",
+      "se:method": "Publisher authored postmortem timeline source, bounded section read; raw HTML bytes not captured.",
+      "se:record_version": "0.1.1",
+      "se:result": "Reported later backlog processing and green status, not guaranteed delivery of all attempted events.",
       "se:source_locator_ref": {
         "@id": "se:LOC-09F-GH-BACKLOG"
       },
-      "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
       "se:statement": "GitHub first-party report separates 16:24 UTC database topology recovery from 23:03 UTC completion of then-pending webhook and Pages build backlogs; approximately 200,000 TTL-expired webhook payloads were dropped.",
-      "se:context": "GitHub October 21-22 2018 MySQL replication/failover incident only.",
-      "se:method": "Publisher authored postmortem timeline source, bounded section read; raw HTML bytes not captured.",
-      "se:result": "Reported later backlog processing and green status, not guaranteed delivery of all attempted events.",
-      "se:limitations": "First-party self-report, no independent operational audit, no universal failure/failover guarantee.",
-      "se:uncertainty": "The publisher HTML raw-byte SHA256 and independent causal/loss audit remain UNKNOWN.",
-      "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
-      "se:synthetic": false
+      "se:synthetic": false,
+      "se:uncertainty": "The publisher HTML raw-byte SHA256 and independent causal/loss audit remain UNKNOWN."
     },
     {
       "@id": "se:EVD-09F-GH-RECOVERY",
@@ -7692,17 +7692,17 @@
     {
       "@id": "se:LOC-09F-GH-BACKLOG",
       "@type": "se:SourceLocator",
+      "se:accessed_on": "2026-11-12",
       "se:created_on": "2026-11-12",
-      "se:record_version": "0.1.1",
       "se:lifecycle_status": "ACTIVE",
+      "se:locator": "First-party GitHub Oct 21 2018 post-incident analysis: 2018-10-22 16:24 to 23:03 UTC timeline, including 16:45 backlog status and dropped TTL-expired webhook payloads.",
+      "se:locator_type": "SECTION",
+      "se:record_version": "0.1.1",
       "se:source_ref": {
         "@id": "se:SRC-09F-GH-POSTMORTEM-2018"
       },
-      "se:locator_type": "SECTION",
-      "se:locator": "First-party GitHub Oct 21 2018 post-incident analysis: 2018-10-22 16:24 to 23:03 UTC timeline, including 16:45 backlog status and dropped TTL-expired webhook payloads.",
-      "se:verified_content_summary": "At 16:24 UTC replication/topology was restored while backlog remained; approximately 200,000 TTL-expired webhook payloads were dropped; by 23:03 UTC pending webhooks and Pages builds were processed and status green.",
       "se:verification_state": "LOCATOR_VERIFIED",
-      "se:accessed_on": "2026-11-12"
+      "se:verified_content_summary": "At 16:24 UTC replication/topology was restored while backlog remained; approximately 200,000 TTL-expired webhook payloads were dropped; by 23:03 UTC pending webhooks and Pages builds were processed and status green."
     },
     {
       "@id": "se:LOC-09F-GH-REPLICATION",
