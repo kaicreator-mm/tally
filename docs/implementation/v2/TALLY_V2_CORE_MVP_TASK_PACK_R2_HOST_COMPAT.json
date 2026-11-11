@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "6e13ada541f58aed2f813c63ccd8db862b29ea7b",
-  "observedAt": "2026-11-11T20:43:14.391Z",
+  "observedAt": "2026-11-11T22:04:04.696Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -114,7 +114,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-04T00:27:42Z",
-      "updatedAt": "2026-11-11T20:31:17Z",
+      "updatedAt": "2026-11-11T21:48:16Z",
       "closedAt": null,
       "scopeDisposition": "CORE_V2",
       "dispatchableByDisposition": true,
@@ -3248,8 +3248,8 @@
     "Fresh open-Task write-set audit excludes now-closed #203/#210: 18 open write-set Tasks, 2 open read-only Reviewer Tasks, 47 exact path-overlap pairs (formerly 65); conflicts remain governance blockers before parallel dispatch.",
     "S1-C receipts 6803483312 and 6803484452 preserve #203 native terminality and #210 original Claim/FSW evidence while recording non-successful not_planned closure; downstream #207/#264 and #312 retain real obligations.",
     "R2 host-compatible source is a NEW isolated immutable Git blob on a docs-only review branch. version/v2 remains pinned to 6e13ada541f58aed2f813c63ccd8db862b29ea7b; do not merge R2 docs before the real Host Freeze that binds this exact source SHA.",
-    "R2 changes only version-task-pack schema/qualified source and live Issue timestamps, preserving all historical claimSubjects source SHA, 51 Task IDs, 37 exact Native edges, the four scope-disposition categories and 47 open-write-set overlap pairs. No Claim/Task PASS asserted.",
-    "R2 51-task official GET re-read: #377 2026-11-11T17:02:57Z→2026-11-11T19:41:10Z; #284 2026-11-11T16:35:26Z→2026-11-11T20:31:17Z; #264 2026-11-11T09:41:50Z→2026-11-11T19:36:34Z; #260 2026-11-11T09:41:48Z→2026-11-11T19:38:17Z; #207 2026-11-11T16:18:53Z→2026-11-11T20:32:05Z. For freeze perform one final equality/readback; any new Task updateAt drift must block, never rewrite an already-reviewed PackBlob.",
-    "R2 exact Host Freeze still requires independent SOURCE-FIRST review + pure JSON INDEPENDENTLY_VERIFIED witness, independent Owner APPROVED witness, and all 51 exact frozen-write-set documents; old-source FROZEN CAS rows cannot be reused or overwritten. No physical Freeze or Task outcome asserted."
+    "R3 original Writer repair for independent final review #396/5865768451: #284.updatedAt moved after review comment 6807833964; official current native 51-task roster reconciled under exact base source 6e13ada541f58aed2f813c63ccd8db862b29ea7b; updatedAt changes [{\"n\":284,\"old\":\"2026-11-11T20:31:17Z\",\"current\":\"2026-11-11T21:48:16Z\"}]. All 37/37 dependency edges officially re-read, 13 targets; historical claim subjects untouched.",
+    "R3 remains a NONFINAL pre-integration, CANDIDATE_NOT_FROZEN source snapshot. Does not issue an independent ReviewWitness, OwnerWitness, CAS Freeze, FSW, Task or Release PASS. Any Task updatedAt drift after R3 will cause the final Host currentness gate to BLOCK; do not edit this Git blob after review.",
+    "R3 #390 E0 single-writer P1 concurrency + P2 cross-policy repairs are in separate PR; no Host Freeze or version source transition is authorized by this docs-only snapshot."
   ]
 }
