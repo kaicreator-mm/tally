@@ -109,6 +109,9 @@ function createWitnessReaderFromClient({octokit,issueNumber,commentId,login,kind
  *   TALLY_VERSION_DAG_REVIEW_ISSUE/_COMMENT_ID
  *   TALLY_VERSION_DAG_APPROVAL_ISSUE/_COMMENT_ID
  *   TALLY_VERSION_DAG_WRITESET_DOCUMENTS_JSON  per-issue {writeSetSha256,document}
+ *   TALLY_VERSION_DAG_FREEZE_POLICY  ALL_TASKS (legacy) or VERSION_ONLY
+ * VERSION_ONLY is a Host-only explicit Core MVP structural Freeze; no Task FSW
+ * is minted and later Task admission independently requires its own Claim/FSW.
  * The octokit client and openStore factory are injected (never env strings).
  */
 export function createVersionTaskDagHost({env=process.env,octokit,openStore}){
@@ -131,6 +134,11 @@ export function createVersionTaskDagHost({env=process.env,octokit,openStore}){
     issueNumber:Number(env.TALLY_VERSION_DAG_APPROVAL_ISSUE),
     commentId:Number(env.TALLY_VERSION_DAG_APPROVAL_COMMENT_ID),
     login:String(env.TALLY_VERSION_DAG_APPROVAL_LOGIN??OWNER),kind:'approval'});
+  const freezeWriteSetPolicy=env.TALLY_VERSION_DAG_FREEZE_POLICY??'ALL_TASKS';
+  if(!['ALL_TASKS','VERSION_ONLY'].includes(freezeWriteSetPolicy)||
+     (freezeWriteSetPolicy==='VERSION_ONLY'&&
+      env.TALLY_VERSION_DAG_WRITESET_DOCUMENTS_JSON!==undefined))
+    throw new TypeError('INVALID_VERSION_TASK_DAG_FREEZE_POLICY');
   let writeSetDocumentByIssue=null;
   if(env.TALLY_VERSION_DAG_WRITESET_DOCUMENTS_JSON!==undefined){
     try{writeSetDocumentByIssue=JSON.parse(env.TALLY_VERSION_DAG_WRITESET_DOCUMENTS_JSON);}
@@ -155,7 +163,8 @@ export function createVersionTaskDagHost({env=process.env,octokit,openStore}){
         versionId:VERSION_ID,expectedVersionSha,store,taskPackReader,
         reviewWitnessReader,ownerApprovalReader,nativeRosterReader,
         octokit,owner:OWNER,repo:REPO,writerAuthority,
-        writeSetDocumentByIssue:writeSetDocumentByIssue??{}});
+        writeSetDocumentByIssue:writeSetDocumentByIssue??{},
+        freezeWriteSetPolicy});
       return await run(port);
     }catch{
       return denied('VERSION_TASK_DAG_HOST_UNAVAILABLE');

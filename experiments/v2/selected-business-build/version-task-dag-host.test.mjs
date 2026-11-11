@@ -222,6 +222,32 @@ test('host refuses edited witness comments and pack identity drift',async()=>{
   assert.equal(foreign.reason,'TASK_PACK_CONTENT_INVALID');
 });
 
+test('Host VERSION_ONLY mode admits structural CAS but no historical FSW backfill',async()=>{
+  const transports=fakeTransports({pack:candidatePack([nativeEdge]),
+    blockedBy:nativeBlockers});
+  const store=memoryStore();
+  const env={...env0,TALLY_VERSION_DAG_FREEZE_POLICY:'VERSION_ONLY',
+    TALLY_VERSION_DAG_WRITESET_DOCUMENTS_JSON:undefined};
+  const host=createVersionTaskDagHost({env,octokit:transports.octokit,
+    openStore:async()=>store});
+  const result=await host.freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha,freezeWriteSetPolicy:'ALL_TASKS'});
+  assert.equal(result.status,'FROZEN');
+  assert.equal(result.writeSetRecordCount,0);
+  assert.equal(result.writeSetMaterialization,'DEFERRED_TO_PER_TASK_CLAIM_FSW');
+  assert.equal(result.taskPass,false);
+  assert.equal(store.rows.size,1,'no Task FSW CAS record may be backfilled');
+  assert.equal(transports.calls.posts,0,'freeze performs no GitHub POST');
+  assert.throws(()=>createVersionTaskDagHost({env:{...env0,
+    TALLY_VERSION_DAG_FREEZE_POLICY:'VERSION_ONLY'},
+    octokit:transports.octokit,openStore:async()=>memoryStore()}),
+    /INVALID_VERSION_TASK_DAG_FREEZE_POLICY/);
+  assert.throws(()=>createVersionTaskDagHost({env:{...env0,
+    TALLY_VERSION_DAG_FREEZE_POLICY:'BYPASS'},
+    octokit:transports.octokit,openStore:async()=>memoryStore()}),
+    /INVALID_VERSION_TASK_DAG_FREEZE_POLICY/);
+});
+
 test('host configuration is trusted-env-only and closes the store per call',async()=>{
   const transports=fakeTransports();
   assert.throws(()=>createVersionTaskDagHost({env:{},octokit:transports.octokit,

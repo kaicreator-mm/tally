@@ -27,6 +27,7 @@ const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
 const DIGEST=/^[0-9a-f]{64}$/;
+const FREEZE_POLICIES=new Set(['ALL_TASKS','VERSION_ONLY']);
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const canonical=x=>Array.isArray(x)?x.map(canonical):
   plain(x)?Object.fromEntries(Object.keys(x).sort().map(k=>[k,canonical(x[k])])):x;
@@ -141,7 +142,8 @@ async function readBlockedBy(octokit,owner,repo,issueNumber){
 export function createVersionTaskDagWritePort({
   repository,versionId,expectedVersionSha,store,taskPackReader,
   reviewWitnessReader,ownerApprovalReader,nativeRosterReader,
-  octokit,owner,repo,writerAuthority,writeSetDocumentByIssue,now
+  octokit,owner,repo,writerAuthority,writeSetDocumentByIssue,
+  freezeWriteSetPolicy='ALL_TASKS',now
 }={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(expectedVersionSha??'')||!NAME.test(owner??'')||
@@ -157,6 +159,7 @@ export function createVersionTaskDagWritePort({
      writerAuthority?.mode!=='SINGLE_WRITER_ADMISSION'||
      writerAuthority?.exclusiveHostControl!==true||
      writerAuthority?.repository!==repository||
+     !FREEZE_POLICIES.has(freezeWriteSetPolicy)||
      !ID.test(writerAuthority?.writerId??'')||
      !LOGIN.test(writerAuthority?.githubWriterLogin??''))
     throw new TypeError('TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED');
@@ -313,6 +316,28 @@ export function createVersionTaskDagWritePort({
       if(pack.edges.some(e=>e.kind==='PLANNED'))
         return blocked('PLANNED_EDGES_REMAIN',{plannedEdgeCount:
           pack.edges.filter(e=>e.kind==='PLANNED').length});
+      // Owner-directed Core MVP successor policy. Structural DAG Freeze is
+      // NOT a blanket per-Task FSW admission: closed historical/not_planned
+      // Tasks must never receive invented frozen write-set rows. The mode is
+      // trusted Host construction only (never supplied by HTTP/request).
+      // Future Task write authority still requires its own accepted Claim/FSW.
+      if(freezeWriteSetPolicy==='VERSION_ONLY'){
+        const frozen=await freezeWriter.freezeVersionTaskDag({taskPackRef,taskPackBlobSha});
+        if(frozen?.status==='BLOCKED'||frozen?.status==='UNKNOWN')
+          return Object.freeze({...frozen,repository,versionId,
+            githubEffect:'NOT_RUN',...flags()});
+        if(frozen?.status!=='FROZEN'&&frozen?.status!=='REPLAY')
+          return unknown('VERSION_DAG_FREEZE_FAILED');
+        return Object.freeze({status:frozen.status,
+          reason:frozen.status==='FROZEN'?
+            'FROZEN_VERSION_TASK_DAG_CAS_READBACK_VERIFIED':'IDENTICAL_FREEZE_REPLAY',
+          repository,versionId,taskPackRef,taskPackBlobSha,blobSha:taskPackBlobSha,
+          frozenAt:frozen.frozenAt,taskCount:pack.taskIssues.length,
+          edgeCount:pack.edges.length,writeSetRecordCount:0,
+          writeSetMaterialization:'DEFERRED_TO_PER_TASK_CLAIM_FSW',
+          taskDispatchAuthorized:false,githubEffect:'NOT_RUN',
+          dependencyWritesAfterFreeze:'REFUSED',...flags()});
+      }
       // Host-configured frozen write-set digest documents: one per Task Issue,
       // validated in full BEFORE the first CAS write (no partial acceptance).
       const documents=writeSetDocumentByIssue??{};

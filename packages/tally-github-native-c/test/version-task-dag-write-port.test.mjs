@@ -113,7 +113,7 @@ function fakeOctokit({issues,blockedBy={},postResult}={}){
   return {octokit,posts:state.posts};
 }
 function dependencyFixture({pack=candidatePack(),issues,blockedBy,postResult,
-  store=memoryStore()}={}){
+  store=memoryStore(),freezeWriteSetPolicy='ALL_TASKS',writeSetDocumentByIssue}={}){
   const gh=fakeOctokit({issues,blockedBy,postResult});
   const content=JSON.stringify(pack);
   const taskPackReader=async({expectedBlobSha})=>({status:'VERIFIED',
@@ -124,8 +124,8 @@ function dependencyFixture({pack=candidatePack(),issues,blockedBy,postResult,
     ownerApprovalReader:async()=>approval(),
     nativeRosterReader:async()=>nativeProjection({pack}),
     octokit:gh.octokit,owner,repo,writerAuthority,
-    writeSetDocumentByIssue:writeSetDocs(pack),
-    now:()=>'2026-11-09T13:00:00.000Z'});
+    writeSetDocumentByIssue:writeSetDocumentByIssue??writeSetDocs(pack),
+    freezeWriteSetPolicy,now:()=>'2026-11-09T13:00:00.000Z'});
   return {port,store,posts:gh.posts};
 }
 const edgeInput={taskPackRef,taskPackBlobSha:packBlobSha,
@@ -146,6 +146,9 @@ test('port construction refuses untrusted bindings before any write',()=>{
     /TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED/);
   assert.throws(()=>createVersionTaskDagWritePort({...base,
     nativeRosterReader:null}),
+    /TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED/);
+  assert.throws(()=>createVersionTaskDagWritePort({...base,
+    freezeWriteSetPolicy:'BYPASS_ALL_GATES'}),
     /TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED/);
 });
 
@@ -472,6 +475,35 @@ test('freeze materializes exact frozen write-set digest records with readback',a
     assert.ok(row.value.document.includes('#'+n));
     assert.equal(row.value.frozenAt,'2026-11-09T13:00:00.000Z');
   }
+});
+
+test('Host-only VERSION_ONLY freezes structure without backfilling historical Task FSW',async()=>{
+  const legacy={schema:'historical/frozen-writeset',phase:'FROZEN_DAG_WRITESET',
+    sourceSha:'0'.repeat(40),document:'historical, never rewrite'};
+  const store=memoryStore([['tally:v2:task-writeset:284',legacy]]);
+  const pack=frozenPack();
+  pack.taskIssues[0].issueState='closed';
+  const f=dependencyFixture({pack,store,
+    freezeWriteSetPolicy:'VERSION_ONLY',writeSetDocumentByIssue:{}});
+  const first=await f.port.freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha,freezeWriteSetPolicy:'ALL_TASKS'});
+  assert.equal(first.status,'FROZEN');
+  assert.equal(first.taskCount,3);
+  assert.equal(first.writeSetRecordCount,0);
+  assert.equal(first.writeSetMaterialization,'DEFERRED_TO_PER_TASK_CLAIM_FSW');
+  assert.equal(first.taskDispatchAuthorized,false);
+  assert.equal(first.authorized,false);assert.equal(first.admitted,false);
+  assert.equal(first.taskPass,false);assert.equal(first.releasePass,false);
+  assert.equal(store.puts().length,1,'only create one version DAG CAS row');
+  assert.deepEqual((await store.get('tally:v2:task-writeset:284')).value,legacy,
+    'historical Task FSW row remains byte-exact and unrevised');
+  assert.equal(await store.get('tally:v2:task-writeset:312'),null);
+  assert.equal(await store.get('tally:v2:task-writeset:219'),null);
+  const again=await f.port.freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha});
+  assert.equal(again.status,'REPLAY');
+  assert.equal(again.writeSetRecordCount,0);
+  assert.equal(store.puts().length,1,'no replay CAS writes');
 });
 
 test('duplicate identical freeze replays; divergent freeze and row conflict block',async()=>{
