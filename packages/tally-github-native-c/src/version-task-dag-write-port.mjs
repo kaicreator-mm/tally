@@ -17,7 +17,7 @@
  * text or flag is ever write evidence. The T06d root Claim publication is a
  * Host-process-only operation and is deliberately absent from this port.
  */
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {createHostVersionTaskDagFreezeWriter} from './closeout-roster.mjs';
 
 const SHA=/^[a-f0-9]{40}$/;
@@ -168,12 +168,64 @@ export function createVersionTaskDagWritePort({
     repository,versionId,expectedVersionSha,store,taskPackReader,
     nativeRosterReader,reviewWitnessReader,ownerApprovalReader,now});
   const versionDagKey='tally:v2:version-task-dag:'+hash(repository+'#'+versionId);
+  // One durable, version-scoped CAS effect fence shared by native POST and
+  // immutable DAG Freeze. All trusted Hosts must use the SAME CAS registry.
+  // A crash / lost native ACK leaves HELD, never an implicit lock expiry.
+  const effectFenceKey='tally:v2:version-dag-effect-fence:'+
+    hash(repository+'#'+versionId);
   const writeSetKey=n=>'tally:v2:task-writeset:'+n;
   const blocked=(reason,more={})=>Object.freeze({status:'BLOCKED',reason,
     repository,versionId,githubEffect:'NOT_RUN',native:false,...flags(),...more});
   const unknown=(reason,more={})=>Object.freeze({status:'UNKNOWN',reason,
     repository,versionId,githubEffect:'UNKNOWN',native:false,
     reconciliationRequired:true,...flags(),...more});
+
+  async function withVersionEffectFence(operation,work){
+    let reservedRevision=null;
+    try{
+      const existing=await store.get(effectFenceKey);
+      if(existing){
+        const v=existing.value;
+        if(v?.schema!=='tally/version-dag-effect-fence/v1'||
+           v.repository!==repository||v.versionId!==versionId||
+           v.sourceSha!==expectedVersionSha||v.phase!=='RELEASED'||
+           !Number.isSafeInteger(existing.revision))
+          return blocked('VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
+      }
+      const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
+        repository,versionId,sourceSha:expectedVersionSha,
+        writerId:writerAuthority.writerId,operation,nonce:randomUUID()};
+      const reservation=await store.put(effectFenceKey,held,
+        existing?{mustMatchRevision:existing.revision}:{mustBeAbsent:true});
+      if(!Number.isSafeInteger(reservation?.revision))
+        return unknown('VERSION_EFFECT_FENCE_RESERVATION_UNKNOWN');
+      reservedRevision=reservation.revision;
+      const proof=await store.get(effectFenceKey);
+      if(proof?.revision!==reservedRevision||!same(proof.value,held))
+        return unknown('VERSION_EFFECT_FENCE_RESERVATION_UNVERIFIED');
+      let outcome;
+      try{outcome=await work();}
+      catch{return unknown('VERSION_EFFECT_FENCE_OPERATION_UNKNOWN');}
+      // A GitHub write with a missing ACK, or partial CAS Freeze, is an
+      // unresolved effect: keep HELD across restarts, block all later writes.
+      if(!outcome||outcome.status==='UNKNOWN')
+        return outcome??unknown('VERSION_EFFECT_FENCE_OPERATION_UNKNOWN');
+      const released={...held,phase:'RELEASED',closedStatus:outcome.status};
+      const confirmation=await store.put(effectFenceKey,released,
+        {mustMatchRevision:reservedRevision});
+      const final=await store.get(effectFenceKey);
+      if(!Number.isSafeInteger(confirmation?.revision)||
+         final?.revision!==confirmation.revision||!same(final.value,released))
+        return unknown('VERSION_EFFECT_FENCE_RELEASE_UNKNOWN');
+      return outcome;
+    }catch{
+      // An ambiguous CAS outcome is never reissued, reseeded or expired by
+      // this port; the next caller must reconcile the shared physical row.
+      return reservedRevision===null?
+        blocked('VERSION_EFFECT_FENCE_UNAVAILABLE_OR_CONFLICT'):
+        unknown('VERSION_EFFECT_FENCE_FINALIZATION_UNKNOWN');
+    }
+  }
 
   /** Pre-freeze only: official blocked_by write for ONE edge explicitly
    * present as PLANNED in the exact reviewed candidate PackBlob. */
@@ -256,7 +308,23 @@ export function createVersionTaskDagWritePort({
          snapBlocker.updatedAt!==blockerIssue.updatedAt||
          snapBlocker.issueState!==blockerIssue.state)
         return blocked('ISSUE_STALE_VS_PACK');
-      // Gate 7 — idempotent read-before; an exact native edge never re-POSTs.
+      // Gate 7 — acquire the SAME durable CAS exclusion as final Freeze.
+      // The earlier read-only gates can run concurrently, but after acquiring
+      // the fence we recheck finality and both native identities before POST.
+      return await withVersionEffectFence('NATIVE_DEPENDENCY_WRITE',async()=>{
+        if(await store.get(versionDagKey))
+          return blocked('VERSION_DAG_ALREADY_FROZEN');
+        const [latestBlocked,latestBlocker]=await Promise.all([
+          readIssueIdentity(octokit,owner,repo,blockedIssueNumber),
+          readIssueIdentity(octokit,owner,repo,blockedByIssueNumber)]);
+        if(!latestBlocked||!latestBlocker)
+          return blocked('ISSUE_READBACK_FAILED');
+        if(latestBlocked.updatedAt!==snapBlocked.updatedAt||
+           latestBlocked.state!==snapBlocked.issueState||
+           latestBlocker.updatedAt!==snapBlocker.updatedAt||
+           latestBlocker.state!==snapBlocker.issueState)
+          return blocked('ISSUE_STALE_VS_PACK');
+      // Gate 8 — idempotent read-before under the durable effect fence.
       let before;
       try{before=await readBlockedBy(octokit,owner,repo,blockedIssueNumber);}
       catch(e){return blocked(providerReason(e)??'GITHUB_DEPENDENCY_READ_FAILED');}
@@ -290,6 +358,7 @@ export function createVersionTaskDagWritePort({
         reason:'OFFICIAL_GITHUB_BLOCKED_BY_READBACK_VERIFIED',repository,versionId,
         blockedIssueNumber,blockedByIssueNumber,dependencyId:edge.id,
         native:true,githubEffect:'PERFORMED_VERIFIED',writePerformed:true,...flags()});
+      });
     }catch(e){
       return unknown(providerReason(e)??'NATIVE_DEPENDENCY_WRITE_FAILED');
     }
@@ -322,11 +391,15 @@ export function createVersionTaskDagWritePort({
       // trusted Host construction only (never supplied by HTTP/request).
       // Future Task write authority still requires its own accepted Claim/FSW.
       if(freezeWriteSetPolicy==='VERSION_ONLY'){
+        return await withVersionEffectFence('FREEZE_VERSION_DAG',async()=>{
         const frozen=await freezeWriter.freezeVersionTaskDag({taskPackRef,taskPackBlobSha});
         if(frozen?.status==='BLOCKED'||frozen?.status==='UNKNOWN')
           return Object.freeze({...frozen,repository,versionId,
             githubEffect:'NOT_RUN',...flags()});
-        if(frozen?.status!=='FROZEN'&&frozen?.status!=='REPLAY')
+        if(frozen?.status==='REPLAY')
+          return blocked('VERSION_ONLY_REPLAY_FSW_MODE_UNVERIFIED',
+            {persistedFswPresence:'UNKNOWN',createdInInvocation:0});
+        if(frozen?.status!=='FROZEN')
           return unknown('VERSION_DAG_FREEZE_FAILED');
         return Object.freeze({status:frozen.status,
           reason:frozen.status==='FROZEN'?
@@ -337,6 +410,7 @@ export function createVersionTaskDagWritePort({
           writeSetMaterialization:'DEFERRED_TO_PER_TASK_CLAIM_FSW',
           taskDispatchAuthorized:false,githubEffect:'NOT_RUN',
           dependencyWritesAfterFreeze:'REFUSED',...flags()});
+        });
       }
       // Host-configured frozen write-set digest documents: one per Task Issue,
       // validated in full BEFORE the first CAS write (no partial acceptance).
@@ -367,7 +441,8 @@ export function createVersionTaskDagWritePort({
           return blocked('FREEZE_WRITESET_CONFLICT',
             {conflictIssueNumber:row.issueNumber});
       }
-      // Delegate the immutable freeze to the A-owned writer, read-only.
+      // Serialize the immutable CAS with ALL in-flight native dependency POSTs.
+      return await withVersionEffectFence('FREEZE_VERSION_DAG',async()=>{
       const frozen=await freezeWriter.freezeVersionTaskDag({taskPackRef,taskPackBlobSha});
       if(frozen?.status==='BLOCKED'||frozen?.status==='UNKNOWN')
         return Object.freeze({...frozen,repository,versionId,
@@ -408,6 +483,7 @@ export function createVersionTaskDagWritePort({
         taskCount:pack.taskIssues.length,edgeCount:pack.edges.length,
         writeSetRecordCount:rows.length,githubEffect:'NOT_RUN',
         dependencyWritesAfterFreeze:'REFUSED',...flags()});
+      });
     }catch(e){
       return unknown(providerReason(e)??'VERSION_DAG_FREEZE_FAILED');
     }

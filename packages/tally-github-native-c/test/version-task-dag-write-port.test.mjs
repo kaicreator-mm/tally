@@ -27,11 +27,15 @@ function memoryStore(initial){
   const puts=[];
   return {
     async get(key){const row=rows.get(key);return row?structuredClone(row):null;},
-    async put(key,value,{mustBeAbsent}={}){
-      if(mustBeAbsent&&rows.has(key))throw new Error('CAS_EXISTS');
-      rows.set(key,{revision:1,value:structuredClone(value)});
+    async put(key,value,{mustBeAbsent,mustMatchRevision}={}){
+      const existing=rows.get(key);
+      if(mustBeAbsent&&existing)throw new Error('CAS_EXISTS');
+      if(mustMatchRevision!==undefined&&existing?.revision!==mustMatchRevision)
+        throw new Error('CAS_REVISION_CONFLICT');
+      const revision=(existing?.revision??0)+1;
+      rows.set(key,{revision,value:structuredClone(value)});
       puts.push(key);
-      return {revision:1};
+      return {revision};
     },
     puts:()=>[...puts],
     rows
@@ -334,13 +338,20 @@ test('lost-ack stays UNKNOWN and reconciles by readback, never a blind POST',asy
   assert.equal(lost.reconciliationRequired,true);
   assert.equal(lost.retryPolicy,'READ_BACK_BEFORE_RETRY_NO_BLIND_POST');
   assert.equal(f.posts.length,1);
-  // The edge actually landed: reconciliation read finds it, no second POST.
-  f.store;// the registry is untouched by the write path
-  const reconciled=dependencyFixture({pack:candidatePack(),blockedBy:{312:[
+  // The lost ACK leaves a durable HELD gate, so an unreviewed retry on the
+  // SAME CAS registry cannot POST, even if the native edge can now be read.
+  const reconciled=dependencyFixture({pack:candidatePack(),store:f.store,
+    blockedBy:{312:[
     {id:284000,number:284,state:'open',html_url:issueUrl(284)}]}});
   const second=await reconciled.port.addNativeTaskDependency(edgeInput);
-  assert.equal(second.status,'NATIVE_EDGE_PRESENT');
+  assert.equal(second.status,'BLOCKED');
+  assert.equal(second.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
   assert.equal(reconciled.posts.length,0);
+  const whileUnknown=dependencyFixture({pack:frozenPack(),store:f.store});
+  const stop=await whileUnknown.port.freezeVersionTaskDag({
+    taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(stop.status,'BLOCKED');
+  assert.equal(stop.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
 });
 
 test('readback mismatch after a successful POST stays UNKNOWN',async()=>{
@@ -494,16 +505,116 @@ test('Host-only VERSION_ONLY freezes structure without backfilling historical Ta
   assert.equal(first.taskDispatchAuthorized,false);
   assert.equal(first.authorized,false);assert.equal(first.admitted,false);
   assert.equal(first.taskPass,false);assert.equal(first.releasePass,false);
-  assert.equal(store.puts().length,1,'only create one version DAG CAS row');
+  assert.deepEqual(store.puts().filter(k=>k.startsWith('tally:v2:version-task-dag:')).length,
+    1,'only create one version DAG CAS row; fence CAS is separate');
   assert.deepEqual((await store.get('tally:v2:task-writeset:284')).value,legacy,
     'historical Task FSW row remains byte-exact and unrevised');
   assert.equal(await store.get('tally:v2:task-writeset:312'),null);
   assert.equal(await store.get('tally:v2:task-writeset:219'),null);
   const again=await f.port.freezeVersionTaskDag({taskPackRef,
     taskPackBlobSha:packBlobSha});
-  assert.equal(again.status,'REPLAY');
-  assert.equal(again.writeSetRecordCount,0);
-  assert.equal(store.puts().length,1,'no replay CAS writes');
+  assert.equal(again.status,'BLOCKED');
+  assert.equal(again.reason,'VERSION_ONLY_REPLAY_FSW_MODE_UNVERIFIED');
+  assert.equal(again.persistedFswPresence,'UNKNOWN');
+  assert.equal(store.puts().filter(k=>k.startsWith('tally:v2:version-task-dag:')).length,
+    1,'no duplicate DAG CAS writes');
+});
+
+test('cross-policy VERSION_ONLY cannot falsely replay legacy ALL_TASKS FSW',async()=>{
+  const store=memoryStore();
+  const old=dependencyFixture({pack:frozenPack(),store});
+  const initial=await old.port.freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha});
+  assert.equal(initial.status,'FROZEN');
+  for(const n of [284,312,219])
+    assert.ok(await store.get('tally:v2:task-writeset:'+n));
+  const next=dependencyFixture({pack:frozenPack(),store,
+    freezeWriteSetPolicy:'VERSION_ONLY',writeSetDocumentByIssue:{}});
+  const cross=await next.port.freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha});
+  assert.equal(cross.status,'BLOCKED');
+  assert.equal(cross.reason,'VERSION_ONLY_REPLAY_FSW_MODE_UNVERIFIED');
+  assert.equal(cross.persistedFswPresence,'UNKNOWN');
+  for(const n of [284,312,219])
+    assert.ok(await store.get('tally:v2:task-writeset:'+n),
+      'immutable legacy FSW still exists');
+});
+
+test('dual approved packs: a stale Native POST cannot cross a final CAS Freeze',async()=>{
+  const oldPack=candidatePack();
+  const finalPack=candidatePack({edges:[]});
+  const finalBlob='e'.repeat(40);
+  const finalRef='https://github.com/'+repository+'/blob/'+
+    'c'.repeat(40)+'/docs/implementation/v2/final.json';
+  const store=memoryStore();
+  const gh=fakeOctokit({blockedBy:{312:[]}});
+  let resumeOld,signalOld;
+  const oldHeld=new Promise(resolve=>{resumeOld=resolve;});
+  const oldReachedReview=new Promise(resolve=>{signalOld=resolve;});
+  const reader=async({taskPackRef:ref,expectedBlobSha})=>({
+    status:'VERIFIED',blobSha:expectedBlobSha,
+    content:JSON.stringify(ref===finalRef?finalPack:oldPack)});
+  const witnesses=async({taskPackBlobSha:sha})=>({
+    ...review(),taskPackBlobSha:sha,
+    reviewedHeadSha:versionSha,sourceSha:versionSha});
+  const ownerWitness=async({taskPackBlobSha:sha})=>({
+    ...approval(),taskPackBlobSha:sha,sourceSha:versionSha});
+  const makePort=blockReview=>createVersionTaskDagWritePort({
+    repository,versionId,expectedVersionSha:versionSha,store,
+    taskPackReader:reader,
+    reviewWitnessReader:async scope=>{
+      if(blockReview){signalOld();await oldHeld;}
+      return witnesses(scope);
+    },
+    ownerApprovalReader:ownerWitness,
+    nativeRosterReader:async()=>nativeProjection({pack:finalPack}),
+    octokit:gh.octokit,owner,repo,writerAuthority,
+    writeSetDocumentByIssue:{},freezeWriteSetPolicy:'VERSION_ONLY'});
+  const oldPort=makePort(true),finalPort=makePort(false);
+  const pendingOld=oldPort.addNativeTaskDependency(edgeInput);
+  await oldReachedReview;
+  const final=await finalPort.freezeVersionTaskDag({
+    taskPackRef:finalRef,taskPackBlobSha:finalBlob});
+  assert.equal(final.status,'FROZEN');
+  resumeOld();
+  const old=await pendingOld;
+  assert.equal(old.status,'BLOCKED');
+  assert.equal(old.reason,'VERSION_DAG_ALREADY_FROZEN');
+  assert.equal(gh.posts.length,0,'no native POST after a committed final Freeze');
+  assert.equal((await readVersionTaskDagFreezeState({store,repository,versionId})).status,'FROZEN');
+});
+
+test('shared physical effect fence: outstanding native POST blocks concurrent Freeze',async()=>{
+  const store=memoryStore();
+  let finishPost,enteredPost;
+  const postWait=new Promise(resolve=>{finishPost=resolve;});
+  const seen=new Promise(resolve=>{enteredPost=resolve;});
+  const gh=fakeOctokit({blockedBy:{312:[]}});
+  const originalPost=gh.octokit.request;
+  gh.octokit.request=async(...args)=>{
+    enteredPost();
+    await postWait;
+    return originalPost(...args);
+  };
+  const port=pack=>createVersionTaskDagWritePort({
+    repository,versionId,expectedVersionSha:versionSha,store,
+    taskPackReader:async({expectedBlobSha})=>({status:'VERIFIED',
+      blobSha:expectedBlobSha,content:JSON.stringify(pack)}),
+    reviewWitnessReader:async()=>review(),ownerApprovalReader:async()=>approval(),
+    nativeRosterReader:async()=>nativeProjection({pack}),
+    octokit:gh.octokit,owner,repo,writerAuthority,
+    writeSetDocumentByIssue:{},freezeWriteSetPolicy:'VERSION_ONLY'});
+  const first=port(candidatePack()).addNativeTaskDependency(edgeInput);
+  await seen;
+  const stop=await port(frozenPack()).freezeVersionTaskDag({taskPackRef,
+    taskPackBlobSha:packBlobSha});
+  assert.equal(stop.status,'BLOCKED');
+  assert.equal(stop.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
+  assert.equal((await readVersionTaskDagFreezeState({store,repository,versionId})).status,
+    'NOT_FROZEN','no CAS Freeze while native POST is pending');
+  finishPost();
+  assert.equal((await first).status,'NATIVE_EDGE_VERIFIED');
+  assert.equal(gh.posts.length,1);
 });
 
 test('duplicate identical freeze replays; divergent freeze and row conflict block',async()=>{
@@ -514,7 +625,9 @@ test('duplicate identical freeze replays; divergent freeze and row conflict bloc
   assert.equal(replay.status,'REPLAY');
   assert.equal(replay.reason,'IDENTICAL_FREEZE_REPLAY');
   assert.equal(replay.writeSetRecordCount,3);
-  assert.equal(f.store.puts().length,4,'no duplicate CAS rows on replay');
+  assert.equal(f.store.puts().filter(k=>
+    !k.startsWith('tally:v2:version-dag-effect-fence:')).length,
+    4,'no duplicate DAG or Task FSW CAS on replay');
   // A pre-existing divergent version-dag row (foreign freeze) blocks.
   const divergentStore=memoryStore();
   const divergentPack=frozenPack();

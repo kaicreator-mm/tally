@@ -49,10 +49,14 @@ function memoryStore(){
   const rows=new Map();
   const store={
     async get(key){const row=rows.get(key);return row?structuredClone(row):null;},
-    async put(key,value,{mustBeAbsent}={}){
-      if(mustBeAbsent&&rows.has(key))throw new Error('CAS_EXISTS');
-      rows.set(key,{revision:1,value:structuredClone(value)});
-      return {revision:1};
+    async put(key,value,{mustBeAbsent,mustMatchRevision}={}){
+      const before=rows.get(key);
+      if(mustBeAbsent&&before)throw new Error('CAS_EXISTS');
+      if(mustMatchRevision!==undefined&&before?.revision!==mustMatchRevision)
+        throw new Error('CAS_REVISION_CONFLICT');
+      const revision=(before?.revision??0)+1;
+      rows.set(key,{revision,value:structuredClone(value)});
+      return {revision};
     },
     async close(){store.closed=true;},
     closed:false,rows};
@@ -236,7 +240,11 @@ test('Host VERSION_ONLY mode admits structural CAS but no historical FSW backfil
   assert.equal(result.writeSetRecordCount,0);
   assert.equal(result.writeSetMaterialization,'DEFERRED_TO_PER_TASK_CLAIM_FSW');
   assert.equal(result.taskPass,false);
-  assert.equal(store.rows.size,1,'no Task FSW CAS record may be backfilled');
+  assert.equal([...store.rows.keys()].filter(k=>
+    k.startsWith('tally:v2:version-task-dag:')).length,1);
+  assert.equal([...store.rows.keys()].filter(k=>
+    k.startsWith('tally:v2:task-writeset:')).length,0,
+    'no Task FSW CAS record may be backfilled');
   assert.equal(transports.calls.posts,0,'freeze performs no GitHub POST');
   assert.throws(()=>createVersionTaskDagHost({env:{...env0,
     TALLY_VERSION_DAG_FREEZE_POLICY:'VERSION_ONLY'},
