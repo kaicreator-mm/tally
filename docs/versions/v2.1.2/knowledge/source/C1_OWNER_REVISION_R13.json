@@ -1,0 +1,124 @@
+{
+  "schema": "tally.dke.c1-owner-authorized-overlay/1",
+  "version": "v2.1.2-candidate",
+  "owner": {
+    "login": "kaicreator-mm",
+    "userId": 274507369,
+    "decision": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6808543942",
+    "OD05": "NARROW_CLAIM",
+    "GH2018": "ACCEPT_PATCH"
+  },
+  "original": {
+    "commit": "3e94685ca57a4b7258988826697af1c1c3a6b3c8",
+    "branchBase": "706a3ec33c2ba7ba3b60116471139113edb7a6cb",
+    "graph": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
+    "graphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961"
+  },
+  "originalsPreserved": true,
+  "changes": {
+    "se:GRAPH-V2.1.1-SEK08": {
+      "@id": "se:GRAPH-V2.1.2-C1-OWNER-R13",
+      "se:graph_version": "0.1.1",
+      "se:generated_on": "2026-11-12"
+    },
+    "se:DM-REQ-FUNCTIONAL-DOC-METHOD": {
+      "se:constraints": [
+        "At least one method of documenting and structuring functional requirements is used (CS2023 SE-Requirements topic 1a).",
+        "Record the selection rationale and scope for each chosen method or combination. CS2023 does not mandate using one uniform method throughout a requirement set."
+      ],
+      "se:options": [
+        "Use cases",
+        "User stories",
+        "A documented combination of use cases, user stories, or other context-appropriate structured methods"
+      ],
+      "se:procedure": "Compare candidate methods for their support of design and implementation and their specific strengths and weaknesses; choose at least one method, optionally using different methods for different requirements, and record the rationale. This is a curriculum-scoped decision aid, not a universal professional mandate.",
+      "se:scope_description": "CS2023 SE-Requirements: Product Requirements KA Core 1a-1c; teaching scope only; no universal uniformity requirement or superior method inferred.",
+      "se:record_version": "0.1.1",
+      "se:lifecycle_status": "PROPOSED"
+    },
+    "se:PAT-REQ-USER-STORY-SPECIFICATION": {
+      "se:solution": "When appropriate, use a short user story to document a functional requirement and preserve traceability. Other requirements may use use cases or another structured method; document the context-specific method choice without imposing global uniformity.",
+      "se:consequences": [
+        "A stakeholder-readable and traceable requirement set may combine different context-appropriate methods.",
+        "The selected method supports design and implementation to varying degrees; no one method is universally preferred by the curriculum."
+      ],
+      "se:scope_description": "CS2023 SE-Requirements KA Core topic 1 education scope; user stories are examples, not a requirement for one uniform format across a full requirement set.",
+      "se:record_version": "0.1.1",
+      "se:lifecycle_status": "PROPOSED"
+    },
+    "se:CASE-09F-GH-DB-FAILOVER": {
+      "se:outcome": "GitHub reported database topology restoration at 16:24 UTC on 2018-10-22, followed by separate recovery of pending webhook/Pages backlogs by 23:03 UTC and green site status. Approximately 200,000 expired webhook payloads were dropped; completion of pending work does not imply lossless delivery. First-party incident report only, PENDING_REVIEW.",
+      "se:evidence_refs": [
+        {
+          "@id": "se:EVD-09F-GH-REPLICATION"
+        },
+        {
+          "@id": "se:EVD-09F-GH-RECOVERY"
+        },
+        {
+          "@id": "se:EVD-09F-GH-BACKLOG"
+        }
+      ],
+      "se:record_version": "0.1.1",
+      "se:lifecycle_status": "PENDING_REVIEW"
+    }
+  },
+  "additions": [
+    {
+      "@id": "se:LOC-09F-GH-BACKLOG",
+      "@type": "se:SourceLocator",
+      "se:created_on": "2026-11-12",
+      "se:record_version": "0.1.1",
+      "se:lifecycle_status": "ACTIVE",
+      "se:source_ref": {
+        "@id": "se:SRC-09F-GH-POSTMORTEM-2018"
+      },
+      "se:locator_type": "SECTION",
+      "se:locator": "First-party GitHub Oct 21 2018 post-incident analysis: 2018-10-22 16:24 to 23:03 UTC timeline, including 16:45 backlog status and dropped TTL-expired webhook payloads.",
+      "se:verified_content_summary": "At 16:24 UTC replication/topology was restored while backlog remained; approximately 200,000 TTL-expired webhook payloads were dropped; by 23:03 UTC pending webhooks and Pages builds were processed and status green.",
+      "se:verification_state": "LOCATOR_VERIFIED",
+      "se:accessed_on": "2026-11-12"
+    },
+    {
+      "@id": "se:EVD-09F-GH-BACKLOG",
+      "@type": "se:Evidence",
+      "se:created_on": "2026-11-12",
+      "se:record_version": "0.1.1",
+      "se:lifecycle_status": "PENDING_REVIEW",
+      "se:source_locator_ref": {
+        "@id": "se:LOC-09F-GH-BACKLOG"
+      },
+      "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
+      "se:statement": "GitHub first-party report separates 16:24 UTC database topology recovery from 23:03 UTC completion of then-pending webhook and Pages build backlogs; approximately 200,000 TTL-expired webhook payloads were dropped.",
+      "se:context": "GitHub October 21-22 2018 MySQL replication/failover incident only.",
+      "se:method": "Publisher authored postmortem timeline source, bounded section read; raw HTML bytes not captured.",
+      "se:result": "Reported later backlog processing and green status, not guaranteed delivery of all attempted events.",
+      "se:limitations": "First-party self-report, no independent operational audit, no universal failure/failover guarantee.",
+      "se:uncertainty": "The publisher HTML raw-byte SHA256 and independent causal/loss audit remain UNKNOWN.",
+      "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
+      "se:synthetic": false
+    }
+  ],
+  "boundaries": {
+    "OD05": {
+      "positive": "At least one method, including mixed documented use cases and user stories, with rationale",
+      "negative": "Reject universal single-method uniformity enforcement",
+      "unknown": "No method superiority or profession-wide universal rule"
+    },
+    "GH2018": {
+      "positive": "Topology restored 16:24; pending backlog processed by 23:03",
+      "negative": "16:24 != backlog complete; 23:03 != zero-loss delivery; ~200k expired payloads dropped",
+      "unknown": "Publisher raw HTML SHA256 not pinned; no independent audit"
+    }
+  },
+  "qualification": {
+    "sourceOwner": "2/2 CONFIRMED",
+    "oracle": "NOT_ATTESTED",
+    "sap": "0/6",
+    "root": "UNKNOWN",
+    "dkeR8": "0/53",
+    "disCore002": "PARTIAL",
+    "disCore005": "PARTIAL",
+    "disCore016": "PARTIAL"
+  }
+}
