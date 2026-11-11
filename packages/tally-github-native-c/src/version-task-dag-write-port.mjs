@@ -385,6 +385,34 @@ export function createVersionTaskDagWritePort({
       if(pack.edges.some(e=>e.kind==='PLANNED'))
         return blocked('PLANNED_EDGES_REMAIN',{plannedEdgeCount:
           pack.edges.filter(e=>e.kind==='PLANNED').length});
+      // Admission preflight is read-only: invalid/missing exact witnesses
+      // must produce ZERO CAS writes, including zero effect-fence reservations.
+      // The A-owned freeze writer repeats both checks inside the shared CAS
+      // exclusion immediately before its create-only immutable DAG write.
+      const witnessScope={taskPackRef,taskPackBlobSha,versionId,
+        sourceSha:expectedVersionSha};
+      let review,approval;
+      try{
+        [review,approval]=await Promise.all([
+          reviewWitnessReader(witnessScope),ownerApprovalReader(witnessScope)]);
+      }catch{return blocked('INDEPENDENT_REVIEW_OR_OWNER_READ_FAILED');}
+      if(review?.status!=='INDEPENDENTLY_VERIFIED'||
+         review.taskPackBlobSha!==taskPackBlobSha||
+         review.sourceSha!==expectedVersionSha||
+         review.reviewedHeadSha!==expectedVersionSha||
+         !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
+         review.reviewer===review.author||
+         typeof review.reviewRef!=='string'||
+         !review.reviewRef.startsWith('https://github.com/'+repository+'/')||
+         !Number.isFinite(Date.parse(review.verifiedAt??'')))
+        return blocked('INDEPENDENT_REVIEW_REQUIRED');
+      if(approval?.status!=='OWNER_APPROVED'||
+         approval.taskPackBlobSha!==taskPackBlobSha||
+         approval.sourceSha!==expectedVersionSha||approval.owner!==owner||
+         typeof approval.approvalRef!=='string'||
+         !approval.approvalRef.startsWith('https://github.com/'+repository+'/')||
+         !Number.isFinite(Date.parse(approval.approvedAt??'')))
+        return blocked('OWNER_APPROVAL_REQUIRED');
       // Owner-directed Core MVP successor policy. Structural DAG Freeze is
       // NOT a blanket per-Task FSW admission: closed historical/not_planned
       // Tasks must never receive invented frozen write-set rows. The mode is
