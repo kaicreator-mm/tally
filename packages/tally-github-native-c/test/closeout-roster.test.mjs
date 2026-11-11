@@ -218,27 +218,50 @@ test('frozen DAG reader refuses a changed durable revision during read',async()=
   assert.equal((await reader.readFrozenDag()).reason,'FROZEN_DAG_CHANGED_DURING_READ');
 });
 
-test('frozen DAG reader denies a native Task Issue mutated after the freeze',async()=>{
+test('post-freeze Task progress never invalidates immutable DAG structure',async()=>{
   const h=freezeHarness();
   await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
-  const deny=async roster=>{
-    const result=await dagReader(h,{nativeRosterReader:async()=>roster})
+  const progressed=validPack();
+  progressed.taskIssues[0].issueState='open'; // after freeze a Task may reopen
+  progressed.taskIssues[0].updatedAt='2026-11-03T16:04:56Z';
+  progressed.taskIssues[1].updatedAt='2026-11-04T10:00:00Z'; // comment-only update
+  const reader=dagReader(h,{nativeRosterReader:async()=>nativeProjection({pack:progressed})});
+  const result=await reader.readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(result.connected,true);
+  assert.deepEqual(result.frozen.taskIssues,[211,212,260,264]);
+  assert.deepEqual(result.frozen.edges,validPack().edges);
+  assert.equal(result.frozenAt,'2026-11-02T12:00:00.000Z');
+});
+
+test('post-freeze structural tampering and invalid live status still fail closed',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  for(const mutant of [
+    Object.assign(validPack(),{taskIssues:validPack().taskIssues.map((t,i)=>
+      i===1?{...t,title:'Task 212 renamed'}:t)}),
+    Object.assign(validPack(),{taskIssues:validPack().taskIssues.map((t,i)=>
+      i===1?{...t,issueState:'PASS'}:t)}),
+    Object.assign(validPack(),{taskIssues:validPack().taskIssues.map((t,i)=>
+      i===1?{...t,updatedAt:'invalid-timestamp'}:t)}),
+  ]){
+    const result=await dagReader(h,{nativeRosterReader:async()=>
+      nativeProjection({pack:mutant})})
       .readFrozenDag({repository,versionId,sourceSha:versionSha});
     assert.equal(result.connected,false);
-    return result.reason;
-  };
-  const staleUpdated=validPack();
-  staleUpdated.taskIssues[0].updatedAt='2026-11-03T16:04:56Z';
-  assert.equal(await deny(nativeProjection({pack:staleUpdated})),
-    'FROZEN_DAG_NATIVE_ROSTER_STALE');
-  const staleTitle=validPack();
-  staleTitle.taskIssues[1].title='Task 212 renamed';
-  assert.equal(await deny(nativeProjection({pack:staleTitle})),
-    'FROZEN_DAG_NATIVE_ROSTER_STALE');
-  const staleState=validPack();
-  staleState.taskIssues[0].issueState='open';
-  assert.equal(await deny(nativeProjection({pack:staleState})),
-    'FROZEN_DAG_NATIVE_ROSTER_STALE');
+    assert.equal(result.reason,'FROZEN_DAG_NATIVE_ROSTER_STALE');
+  }
+});
+
+test('pre-freeze Task status or updatedAt drift refuses CAS freeze',async()=>{
+  for(const field of ['issueState','updatedAt']){
+    const pack=validPack(),mutant=validPack();
+    mutant.taskIssues[0][field]=field==='issueState'?'open':'2026-11-03T16:04:56Z';
+    const h=freezeHarness({pack,nativeRosterReader:async()=>nativeProjection({pack:mutant})});
+    const result=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+    assert.equal(result.status,'BLOCKED');
+    assert.equal(result.reason,'NATIVE_TASK_ROSTER_READBACK_FAILED');
+    assert.equal(h.store.count(),0);
+  }
 });
 
 test('frozen DAG reader denies a native roster with a missing, extra or unqualified Task set',async()=>{

@@ -358,7 +358,14 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
   return [...ids].every(walk);
 }
 
-function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha){
+function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha,
+  {requireSnapshotEquality=true}={}){
+  // Freeze admission is strict: it binds the exact live Task status/time to
+  // the reviewed candidate. After freeze, those fields are *execution progress*
+  // (Issues close/reopen and receive comments) and must never invalidate the
+  // immutable Task identities, titles, native dependency edges or PackBlob.
+  // Admission/allowed-write-set authority remains in the separate immutable
+  // Host CAS/FSW records, not this read-only structural projection.
   const source=native?.source,dagSource=native?.dag?.source;
   if(native?.connected!==true||native.versionId!==versionId||
      source?.repository!==repository||source?.sourceSha!==versionSha||
@@ -376,7 +383,12 @@ function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha){
     const n=Number(task?.id),candidate=expected.get(n);
     if(!Number.isSafeInteger(n)||!candidate||observed.has(n)||
        task.versionId!==versionId||task.title!==candidate.title||
-       task.issueState!==candidate.issueState||task.updatedAt!==candidate.updatedAt)
+       !['open','closed'].includes(task.issueState)||
+       typeof task.updatedAt!=='string'||
+       !Number.isFinite(Date.parse(task.updatedAt))||
+       (requireSnapshotEquality&&
+         (task.issueState!==candidate.issueState||
+          task.updatedAt!==candidate.updatedAt)))
       return false;
     observed.add(n);
   }
@@ -567,8 +579,10 @@ export function createHostVersionTaskDagReader({
          !same(pack.taskIssues.map(x=>x.issueNumber),doc.frozen.taskIssues)||
          !same(pack.edges,doc.frozen.edges)||!same(pack.claimSubjects,doc.frozen.claimSubjects))
         return denied('FROZEN_DAG_CONTENT_MISMATCH');
-      // Freshness is re-proven on every read, not only at freeze time: the
-      // live native roster must still equal the exact frozen Task Pack.
+      // Re-read immutable structural scope on every projection. Live Issue
+      // status/updatedAt is allowed to advance after freeze, never pre-freeze;
+      // immutable PackBlob, Task identity/title, native edges, CAS revision and
+      // exact witnesses remain independently revalidated.
       const native=await nativeRosterReader({repository,versionId,
         sourceSha:expectedVersionSha,taskIssueNumbers:doc.frozen.taskIssues});
       if(native?.connected!==true||native.versionId!==versionId||
@@ -577,7 +591,8 @@ export function createHostVersionTaskDagReader({
          native.source?.currentness!=='CURRENT'||
          native.source?.readback!=='VERIFIED')
         return denied('FROZEN_DAG_NATIVE_ROSTER_UNQUALIFIED');
-      if(!nativeRosterMatchesPack(native,pack,repository,versionId,expectedVersionSha))
+      if(!nativeRosterMatchesPack(native,pack,repository,versionId,
+          expectedVersionSha,{requireSnapshotEquality:false}))
         return denied('FROZEN_DAG_NATIVE_ROSTER_STALE');
       const [review,approval]=await Promise.all([
         reviewWitnessReader({taskPackRef:doc.taskPackRef,taskPackBlobSha:doc.blobSha,
