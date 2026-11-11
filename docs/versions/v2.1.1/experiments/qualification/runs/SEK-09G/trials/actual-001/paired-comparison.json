@@ -1,0 +1,300 @@
+{
+  "status": "ACTUAL_BLIND_GRADING_VERIFIED_NO_AUTO_PASS",
+  "reviewer_ref": "kimi-executor independent blind grading agent (no arm-key access)",
+  "reviewer_kind": "INDEPENDENT_MODEL_GRADER",
+  "evaluated_at_utc": "2026-11-08T08:39:46Z",
+  "scoring_file_sha256": "9b0680bb3b1991ebe81e21e5dd9e860614cb0e22ae1f03e7cef8b1398b4bfb9b",
+  "run_manifest_sha256": "dbfc43f02a889244aa5590c7db38672994dedbfbefbd44094c0b492a6bac8d8e",
+  "summary": {
+    "paired_questions": 7,
+    "paired_responses": 14,
+    "direct": {
+      "correctness_mean": 0.8571428571428571,
+      "scope_mean": 1.5714285714285714,
+      "traceability_mean": 1,
+      "unsupported_total": 9
+    },
+    "corpus": {
+      "correctness_mean": 1.8571428571428572,
+      "scope_mean": 2,
+      "traceability_mean": 1,
+      "unsupported_total": 0
+    },
+    "observed_effort": {
+      "status": "PARTIAL_OR_NOT_MEASURED",
+      "measured_records": 0,
+      "total_records": 14
+    },
+    "superiority": "NOT_CLAIMED_EXPLORATORY_NO_PRECOMMITTED_PASS_THRESHOLD",
+    "G4": "NOT_MEASURED_BY_THIS_EXPERIMENT",
+    "G5": "EMPIRICAL_RESULTS_REQUIRE_SEPARATE_GATE_REVIEW"
+  },
+  "pairs": [
+    {
+      "qid": "G5-01",
+      "D": {
+        "qid": "G5-01",
+        "arm": "D",
+        "blind_id": "G5-01-2",
+        "correctness": 1,
+        "scope": 1,
+        "traceability": 1,
+        "unsupported": 2,
+        "met": 2,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.3333333333333333,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-01",
+        "arm": "K",
+        "blind_id": "G5-01-1",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 3,
+        "omitted": 0,
+        "unverifiable": 0,
+        "omission_rate": 0,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 1,
+        "scope_K_minus_D": 1,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -2,
+        "omission_rate_K_minus_D": -0.3333333333333333
+      }
+    },
+    {
+      "qid": "G5-02",
+      "D": {
+        "qid": "G5-02",
+        "arm": "D",
+        "blind_id": "G5-02-1",
+        "correctness": 0,
+        "scope": 1,
+        "traceability": 1,
+        "unsupported": 1,
+        "met": 1,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.5,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-02",
+        "arm": "K",
+        "blind_id": "G5-02-2",
+        "correctness": 1,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 1,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.5,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 1,
+        "scope_K_minus_D": 1,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -1,
+        "omission_rate_K_minus_D": 0
+      }
+    },
+    {
+      "qid": "G5-03",
+      "D": {
+        "qid": "G5-03",
+        "arm": "D",
+        "blind_id": "G5-03-2",
+        "correctness": 2,
+        "scope": 1,
+        "traceability": 1,
+        "unsupported": 1,
+        "met": 2,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.3333333333333333,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-03",
+        "arm": "K",
+        "blind_id": "G5-03-1",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 3,
+        "omitted": 0,
+        "unverifiable": 0,
+        "omission_rate": 0,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 0,
+        "scope_K_minus_D": 1,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -1,
+        "omission_rate_K_minus_D": -0.3333333333333333
+      }
+    },
+    {
+      "qid": "G5-04",
+      "D": {
+        "qid": "G5-04",
+        "arm": "D",
+        "blind_id": "G5-04-2",
+        "correctness": 0,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 1,
+        "met": 2,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.3333333333333333,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-04",
+        "arm": "K",
+        "blind_id": "G5-04-1",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 1,
+        "omitted": 2,
+        "unverifiable": 0,
+        "omission_rate": 0.6666666666666666,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 2,
+        "scope_K_minus_D": 0,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -1,
+        "omission_rate_K_minus_D": 0.3333333333333333
+      }
+    },
+    {
+      "qid": "G5-05",
+      "D": {
+        "qid": "G5-05",
+        "arm": "D",
+        "blind_id": "G5-05-1",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 1,
+        "met": 1,
+        "omitted": 2,
+        "unverifiable": 0,
+        "omission_rate": 0.6666666666666666,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-05",
+        "arm": "K",
+        "blind_id": "G5-05-2",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 3,
+        "omitted": 0,
+        "unverifiable": 0,
+        "omission_rate": 0,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 0,
+        "scope_K_minus_D": 0,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -1,
+        "omission_rate_K_minus_D": -0.6666666666666666
+      }
+    },
+    {
+      "qid": "G5-06",
+      "D": {
+        "qid": "G5-06",
+        "arm": "D",
+        "blind_id": "G5-06-2",
+        "correctness": 0,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 1,
+        "met": 1,
+        "omitted": 2,
+        "unverifiable": 0,
+        "omission_rate": 0.6666666666666666,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-06",
+        "arm": "K",
+        "blind_id": "G5-06-1",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 3,
+        "omitted": 0,
+        "unverifiable": 0,
+        "omission_rate": 0,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 2,
+        "scope_K_minus_D": 0,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -1,
+        "omission_rate_K_minus_D": -0.6666666666666666
+      }
+    },
+    {
+      "qid": "G5-07",
+      "D": {
+        "qid": "G5-07",
+        "arm": "D",
+        "blind_id": "G5-07-1",
+        "correctness": 1,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 2,
+        "met": 1,
+        "omitted": 1,
+        "unverifiable": 0,
+        "omission_rate": 0.5,
+        "observed_effort_seconds": null
+      },
+      "K": {
+        "qid": "G5-07",
+        "arm": "K",
+        "blind_id": "G5-07-2",
+        "correctness": 2,
+        "scope": 2,
+        "traceability": 1,
+        "unsupported": 0,
+        "met": 2,
+        "omitted": 0,
+        "unverifiable": 0,
+        "omission_rate": 0,
+        "observed_effort_seconds": null
+      },
+      "delta": {
+        "correctness_K_minus_D": 1,
+        "scope_K_minus_D": 0,
+        "traceability_K_minus_D": 0,
+        "unsupported_K_minus_D": -2,
+        "omission_rate_K_minus_D": -0.5
+      }
+    }
+  ]
+}

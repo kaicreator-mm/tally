@@ -1,0 +1,6 @@
+id: se:SE-EVD-0001
+evidence_type: DIRECT_SOURCE_PARAPHRASE
+source_locator_ref: se:SE-LOC-SWEBOK-KA-TABLE
+paraphrase: "SWEBOK v4.0a lists 18 Knowledge Areas and classifies the first 15 as Software Engineering KAs and the last three as foundation KAs."
+context: "The claim describes the Guide's own taxonomy, not an independently exhaustive classification of the discipline."
+extraction_status: EXTRACTED_PENDING_REVIEW

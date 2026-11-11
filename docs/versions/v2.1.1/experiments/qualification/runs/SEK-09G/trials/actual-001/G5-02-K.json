@@ -1,0 +1,22 @@
+{
+  "qid": "G5-02",
+  "arm": "K",
+  "status": "SUCCESS",
+  "request_sha256": "0b4d374bd4645d68e3ac45e794a94601dde6b62d37bd814d1aa2b23bbdca32b1",
+  "retrieval_sha256": "111593b66154b550cb44f2ef0785a14b4a99bf2fd8218f319c329dad57bd447d",
+  "started_utc": "2026-11-08T08:32:07.126Z",
+  "answer": "The CS2023 curriculum does not explicitly distinguish architectural design from detailed design, nor does it specify exact criteria for their boundary. The curriculum only lists these as examples of levels of abstraction in software design, but does not define the levels or their boundary criteria. The evidence shows that while CS2023 includes architectural and detailed design as examples of levels of abstraction, it does not provide a normative distinction or boundary criteria between them. Additionally, the evidence indicates that the curriculum scope is not a normative distinction from ISO/IEC/IEEE 42010, which remains metadata-only.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "e7a7b48179f61c0e1a1632369dae30e63e3ede34190b9dd6dcce4cd26d21c77f",
+  "provider_usage": {
+    "completion_tokens": 124,
+    "prompt_tokens": 461,
+    "total_tokens": 585,
+    "prompt_tokens_details": {
+      "cached_tokens": 38
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 19074,
+  "finished_utc": "2026-11-08T08:32:26.205Z"
+}
