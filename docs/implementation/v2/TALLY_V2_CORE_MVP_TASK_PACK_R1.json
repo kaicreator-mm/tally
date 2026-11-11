@@ -70,7 +70,8 @@
       "updatedAt": "2026-11-11T16:42:25Z",
       "closedAt": "2026-11-11T16:36:17Z",
       "scopeDisposition": "CLOSED_NOT_PLANNED",
-      "dispatchableByDisposition": false
+      "dispatchableByDisposition": false,
+      "dispositionNote": "CLOSED_NOT_PLANNED: owner-accepted historical deviation (non-retroactive, #392); the two historical P1 findings and their BLOCK verdict are preserved; #203 TERMINAL_VERIFIED and #383 physical-fence facts remain the only consumable evidence; no retroactive or new Task PASS. Receipt #6801469575."
     },
     {
       "issueNumber": 319,
@@ -1854,7 +1855,8 @@
       {
         "issueNumber": 331,
         "disposition": "CLOSED_NOT_PLANNED",
-        "dispatchableByDisposition": false
+        "dispatchableByDisposition": false,
+        "note": "CLOSED_NOT_PLANNED: owner-accepted historical deviation (non-retroactive, #392); the two historical P1 findings and their BLOCK verdict are preserved; #203 TERMINAL_VERIFIED and #383 physical-fence facts remain the only consumable evidence; no retroactive or new Task PASS. Receipt #6801469575."
       },
       {
         "issueNumber": 319,
