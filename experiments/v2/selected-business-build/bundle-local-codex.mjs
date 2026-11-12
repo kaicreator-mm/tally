@@ -356,6 +356,105 @@ export async function freezeProductIntake(input){
     author:input?.author,reviewer:input?.reviewer,frozenAt:input?.frozenAt,
     caseRefDigest:input?.caseRefDigest});
 }
+// #312 selected Host-only Product ReviewWitness. The final Freeze uses the
+// SAME durable version/v2 CAS effect fence as E0's native DAG POST/Freeze.
+// Incomplete/ambiguous effects keep HELD; a new instance cannot bypass them.
+const product312FenceKey='tally:v2:version-dag-effect-fence:'+
+  createHash('sha256').update(OWNER+'/'+REPO+'#version/v2').digest('hex');
+const product312Unknown=reason=>({state:'UNKNOWN',reason,issueNumber:312,
+  frozen:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
+const product312SafeNoEffectReasons=new Set([
+  'PRODUCT_REVIEW_WITNESS_UNVERIFIED','PRODUCT_REVIEW_SOURCE_MOVED',
+  'PRODUCT_REVIEW_FREEZE_CONFLICT']);
+const product312Same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+async function withProduct312VersionFence({sourceSha,operation},run){
+  const env=process.env;
+  if(env.TALLY_LOCAL_REPLAY==='1'||sourceSha!==env.TALLY_V2_VERSION_SHA||
+    sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||
+    typeof env.TALLY_VERSION_DAG_REGISTRY_PATH!=='string'||
+    !env.TALLY_VERSION_DAG_REGISTRY_PATH||
+    typeof env.TALLY_VERSION_DAG_WRITER_ID!=='string'||
+    !env.TALLY_VERSION_DAG_WRITER_ID)
+    return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+  let db,reservedRevision=null;
+  try{
+    db=await openSqliteCasStore({path:env.TALLY_VERSION_DAG_REGISTRY_PATH,
+      busyTimeoutMs:1000});
+    const before=await db.get(product312FenceKey);
+    if(before){
+      const v=before.value;
+      if(!Number.isSafeInteger(before.revision)||before.revision<1||
+        v?.schema!=='tally/version-dag-effect-fence/v1'||
+        v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
+        v.sourceSha!==sourceSha||v.phase!=='RELEASED')
+        return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+    }
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
+      repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
+      writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
+    const reservation=await db.put(product312FenceKey,held,
+      before?{mustMatchRevision:before.revision}:{mustBeAbsent:true});
+    if(!Number.isSafeInteger(reservation?.revision)||reservation.revision<1)
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    reservedRevision=reservation.revision;
+    const proof=await db.get(product312FenceKey);
+    if(proof?.revision!==reservedRevision||!product312Same(proof.value,held))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    let result;
+    try{result=await run();}catch{
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    }
+    // A refusal proven to predate all CAS writes may release the fence.
+    // A write ACK loss or ambiguous state MUST keep it HELD for reconciliation.
+    if(result?.state!=='FROZEN_COMPLETE'&&
+      !(result?.state==='UNKNOWN'&&
+        product312SafeNoEffectReasons.has(result.reason)))
+      return result??product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    const released={...held,phase:'RELEASED',
+      closedStatus:result.state==='FROZEN_COMPLETE'?'FROZEN':result.reason};
+    const ack=await db.put(product312FenceKey,released,
+      {mustMatchRevision:reservedRevision});
+    const final=await db.get(product312FenceKey);
+    if(!Number.isSafeInteger(ack?.revision)||
+      final?.revision!==ack.revision||
+      !product312Same(final.value,released))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    return result;
+  }catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+  finally{if(db)await db.close().catch(()=>{});}
+}
+function product312HostFor(){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  return createProductReviewHost312({env,octokit,openStore:openSqliteCasStore,
+    verifyAcceptedClaim:(issue,role)=>verifyAcceptedClaim(env,issue,role),
+    verifyFrozenWriteSet:(issue,sourceSha)=>verifyFrozenWriteSet(env,issue,sourceSha),
+    readCurrentVersion:async()=>{
+      try{
+        const branch=await octokit.rest.repos.getBranch({
+          owner:OWNER,repo:REPO,branch:'version/v2'});
+        return {ok:true,sha:branch?.data?.commit?.sha};
+      }catch{return {ok:false,sha:null};}
+    },
+    withVersionFence:withProduct312VersionFence});
+}
+export async function persistProductDraft312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_DRAFT_INPUT_INVALID');
+  try{return await product312HostFor().persistDraft(input);}
+  catch{return product312Unknown('PRODUCT_DRAFT_CAS_UNKNOWN');}
+}
+export async function freezeProductReview312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_REVIEW_FREEZE_INPUT_INVALID');
+  try{return await product312HostFor().freezeReviewedDraft(input);}
+  catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+}
 // T219 — the authorized native Issue effect lives behind the Host module;
 // these bindings are transports only. The write-scoped token never enters
 // sealed bytes and is read from Host env at call time. The frozen candidate
