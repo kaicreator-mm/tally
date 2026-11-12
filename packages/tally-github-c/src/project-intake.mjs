@@ -145,3 +145,91 @@ export async function readProjectIntakeFromClient({octokit,owner,repo,
       observedAt:new Date().toISOString(),sources:observedSources,projects});
   }catch(e){return unknown(errorReason(e));}
 }
+
+
+/**
+ * #312 source-bound Product ReviewWitness reader. Only an official GitHub
+ * Issue comment can supply evidence; accepted role Claims come from Host.
+ * Caller-authored JSON, same-process Review and edited comments fail closed.
+ */
+const RW_SHA=/^[a-f0-9]{40}$/,RW_DIGEST=/^[a-f0-9]{64}$/;
+const RW_KEYS=['schema','status','repository','issueNumber','reviewRef','draftRef',
+  'productDigest','sourceSha','taskPackBlobSha','writeSetSha256',
+  'reviewedHead','reviewedTree','reviewedBase','builderClaimRef',
+  'reviewerClaimRef','reviewerOperatorId','reviewerWriterId','p0','p1','p2'];
+const rwUnknown=reason=>Object.freeze({status:'UNKNOWN',reason,
+  independentlyVerified:false,sourceQualified:false,reviewRef:null,
+  authorized:false,taskPass:false,releasePass:false});
+const rwText=x=>typeof x==='string'&&x.length>0&&x.length<=256;
+const rwClaim=(c,role,e)=>c?.accepted===true&&c.issueNumber===312&&
+  c.role===role&&c.sourceSha===e.sourceSha&&
+  c.taskPackBlobSha===e.taskPackBlobSha&&c.writeSetSha256===e.writeSetSha256&&
+  rwText(c.claimRef)&&rwText(c.operatorId)&&rwText(c.writerId)&&
+  rwText(c.transportActor);
+const rwExpected=e=>e?.issueNumber===312&&RW_SHA.test(e.sourceSha??'')&&
+  RW_SHA.test(e.taskPackBlobSha??'')&&RW_DIGEST.test(e.writeSetSha256??'')&&
+  RW_DIGEST.test(e.productDigest??'')&&RW_SHA.test(e.reviewedHead??'')&&
+  RW_SHA.test(e.reviewedTree??'')&&RW_SHA.test(e.reviewedBase??'')&&
+  e.draftRef==='draft:sha256:'+e.productDigest;
+/**
+ * Host must independently enforce persisted draft, current version ref and
+ * shared CAS fencing before any FROZEN_PRODUCT_INTAKE write.
+ */
+export async function readProductReviewWitnessFromClient({
+  octokit,owner='kaicreator-mm',repo='tally',commentId,expected,
+  builderClaim,reviewerClaim
+}={}){
+  if(owner!=='kaicreator-mm'||repo!=='tally'||!rwExpected(expected)||
+    !Number.isSafeInteger(commentId)||commentId<=0||
+    typeof octokit?.rest?.issues?.getComment!=='function')
+    return rwUnknown('PRODUCT_REVIEW_INPUT_INVALID');
+  if(!rwClaim(builderClaim,'builder',expected)||
+    !rwClaim(reviewerClaim,'reviewer',expected))
+    return rwUnknown('PRODUCT_REVIEW_CLAIM_UNVERIFIED');
+  if(builderClaim.operatorId===reviewerClaim.operatorId||
+    builderClaim.writerId===reviewerClaim.writerId)
+    return rwUnknown('PRODUCT_REVIEW_SAME_PROCESS');
+  let comment;
+  try{
+    comment=(await octokit.rest.issues.getComment({
+      owner,repo,comment_id:commentId}))?.data;
+  }catch(error){return rwUnknown(errorReason(error));}
+  const ref='https://github.com/'+owner+'/'+repo+'/issues/312#issuecomment-'+commentId;
+  if(comment?.id!==commentId||comment.html_url!==ref||
+    comment.user?.login!==reviewerClaim.transportActor||
+    !ISO(comment.created_at)||comment.created_at!==comment.updated_at||
+    typeof comment.body!=='string'||comment.body.length>8192)
+    return rwUnknown('PRODUCT_REVIEW_COMMENT_UNVERIFIED');
+  let body;
+  try{
+    body=JSON.parse(comment.body);
+    if(!body||typeof body!=='object'||Array.isArray(body)||
+      JSON.stringify(body)!==comment.body.trim())
+      return rwUnknown('PRODUCT_REVIEW_JSON_NONCANONICAL');
+  }catch{return rwUnknown('PRODUCT_REVIEW_JSON_NONCANONICAL');}
+  if(Object.keys(body).length!==RW_KEYS.length||
+    RW_KEYS.some(k=>!Object.hasOwn(body,k)))
+    return rwUnknown('PRODUCT_REVIEW_SCHEMA_INVALID');
+  if(body.schema!=='tally.v2.product-review-witness/1'||
+    body.status!=='INDEPENDENTLY_VERIFIED'||body.repository!==owner+'/'+repo||
+    body.issueNumber!==312||body.reviewRef!==ref||
+    body.builderClaimRef!==builderClaim.claimRef||
+    body.reviewerClaimRef!==reviewerClaim.claimRef||
+    body.reviewerOperatorId!==reviewerClaim.operatorId||
+    body.reviewerWriterId!==reviewerClaim.writerId||
+    ['draftRef','productDigest','sourceSha','taskPackBlobSha','writeSetSha256',
+      'reviewedHead','reviewedTree','reviewedBase'].some(k=>body[k]!==expected[k]))
+    return rwUnknown('PRODUCT_REVIEW_WITNESS_MISMATCH');
+  if(body.p0!==0||body.p1!==0||!Number.isSafeInteger(body.p2)||
+    body.p2<0||body.p2>32)
+    return rwUnknown('PRODUCT_REVIEW_FINDINGS_BLOCKED');
+  return Object.freeze({status:'INDEPENDENTLY_VERIFIED',
+    reason:'EXACT_GITHUB_REVIEW_WITNESS_VERIFIED',independentlyVerified:true,
+    sourceQualified:true,reviewRef:ref,draftRef:body.draftRef,
+    productDigest:body.productDigest,sourceSha:body.sourceSha,
+    taskPackBlobSha:body.taskPackBlobSha,writeSetSha256:body.writeSetSha256,
+    reviewedHead:body.reviewedHead,reviewedTree:body.reviewedTree,
+    reviewedBase:body.reviewedBase,reviewerOperatorId:reviewerClaim.operatorId,
+    reviewerWriterId:reviewerClaim.writerId,reviewerLogin:comment.user.login,
+    p0:0,p1:0,p2:body.p2,authorized:false,taskPass:false,releasePass:false});
+}
