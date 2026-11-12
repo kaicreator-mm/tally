@@ -259,7 +259,7 @@ test('static page and rendered intake view keep the no-JSON and accessibility co
 // ---- #312 positive Product ReviewWitness wiring: Business → single K seam →
 // GitHub C witness reader → Host CAS (persist draft, fenced freeze). ----
 const pack312='b'.repeat(40),set312='c'.repeat(64),head312='d'.repeat(40),
-  tree312='e'.repeat(40),base312='f'.repeat(40),commentId312=12345;
+  tree312='e'.repeat(40),base312=sourceSha,commentId312=12345;
 const reviewRef312='https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345';
 const claim312=role=>({accepted:true,issueNumber:312,role,sourceSha,
   taskPackBlobSha:pack312,writeSetSha256:set312,claimRef:'claim:312:'+role,
@@ -273,7 +273,16 @@ const memoryStore=()=>{const map=new Map();return {
 /** Real GitHub C witness reader over a stub transport whose comment lazily
  * binds whatever digest the Host persisted for the reviewed draft. */
 const witnessReader312=comment=>request=>readProductReviewWitnessFromClient({
-  octokit:{rest:{issues:{getComment:async()=>({data:comment()})}}},...request});
+  octokit:{rest:{
+    issues:{getComment:async()=>({data:comment()})},
+    pulls:{get:async()=>({data:{number:401,state:'open',merged:false,
+      head:{sha:head312,repo:{full_name:'kaicreator-mm/tally'}},
+      base:{sha:base312,ref:'version/v2',
+        repo:{full_name:'kaicreator-mm/tally'}}}})},
+    repos:{
+      getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{
+        sha:ref===head312?tree312:'b'.repeat(40)}}}}),
+      getBranch:async()=>({data:{commit:{sha:sourceSha}}})}}},...request});
 const host312=(comment,{store,readCurrentVersion}={})=>createProductReviewHost312({
   openStore:async()=>store??memoryStore(),
   verifyAcceptedClaim:async(issue,role)=>({ok:true,claim:claim312(role)}),
@@ -285,10 +294,11 @@ const host312=(comment,{store,readCurrentVersion}={})=>createProductReviewHost31
   env:{TALLY_CLAIM_SOURCE_SHA:sourceSha,
     TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture-312.sqlite'}});
 const canonicalWitness312=()=>({id:commentId312,html_url:reviewRef312,
+  issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
   user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
   updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify({
-    schema:'tally.v2.product-review-witness/1',status:'INDEPENDENTLY_VERIFIED',
-    repository:'kaicreator-mm/tally',issueNumber:312,reviewRef:reviewRef312,
+    schema:'tally.v2.product-review-witness/2',status:'INDEPENDENTLY_VERIFIED',
+    repository:'kaicreator-mm/tally',issueNumber:312,reviewedPullNumber:401,
     draftRef:'draft:sha256:'+bound312Digest,productDigest:bound312Digest,
     sourceSha,taskPackBlobSha:pack312,writeSetSha256:set312,
     reviewedHead:head312,reviewedTree:tree312,reviewedBase:base312,
