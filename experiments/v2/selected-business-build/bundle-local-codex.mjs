@@ -215,8 +215,10 @@ async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
     }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
     finally{if(db)await db.close();}
     const value=row?.value;
+    // The kernel CAS INSERT starts revision at 0 and the E0 FSW row is
+    // create-only, so its steady-state revision is 0 — floor at 0, not 1.
     if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
-      (!Number.isSafeInteger(row?.revision)||row.revision<1)||
+      (!Number.isSafeInteger(row?.revision)||row.revision<0)||
       value.schema!=='tally/version-task-writeset/v1'||
       value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
       value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
