@@ -30,6 +30,97 @@ try{
 assertProvider(readFileSync(providerPath));
 console.log('T06M_PROVIDER_INTEGRITY_BEFORE_K_LOAD=PASS');
 
+// E0 #284 replay lane: real public DomainHarness K send/Effect over the
+// sealed selected C for the two pre-freeze version Task DAG intents. The
+// provider replay lane observes only bounded already-present / already-frozen
+// facts: no native GitHub write and no Claim-registry mutation can run here,
+// and the root Claim path is not reachable from a consumer at all.
+if(process.env.T284_REPLAY==='1'){
+  const packRef=process.env.T284_TASK_PACK_REF;
+  const packSha=process.env.T284_TASK_PACK_BLOB_SHA;
+  const sourceSha=process.env.T284_CLAIM_SOURCE_SHA;
+  assert.match(packRef??'',
+    /^https:\/\/github\.com\/kaicreator-mm\/tally\/blob\/[a-f0-9]{40}\/[^\s]+$/);
+  assert.match(packSha??'',/^[a-f0-9]{40}$/);
+  assert.match(sourceSha??'',/^[0-9a-f]{40}$/);
+  assert.ok(sealed.routes.some(r=>r.intentId==='addNativeTaskDependency')&&
+    sealed.routes.some(r=>r.intentId==='freezeVersionTaskDag'),
+    'E0 version Task DAG routes required in the sealed BUILD');
+  assert.equal(sealed.modules.filter(x=>x.role==='kernel-primary').length,1);
+  const tmp=await mkdtemp(join(tmpdir(),'tally-t284-replay-'));
+  const db=join(tmp,'kernel.sqlite');
+  const deployment={deployedAppId:'deploy:tally-v2-t284',tenantId:'tenant:tally-v2',
+    appId:sealed.appId};
+  const authority={principal:{source:'host-authenticated',tenantId:deployment.tenantId},
+    authorize:(identity,target)=>identity?.tenantId===target.tenantId&&
+      target.businessPackageId==='business-tally-task-readiness@v2.0.0'};
+  const condition=c=>c?.kind==='create'?{mustBeAbsent:true}:
+    c?.kind==='cas'&&Number.isSafeInteger(c.revision)?{mustMatchRevision:c.revision}:
+    (()=>{throw Error('INVALID_K_CONDITION');})();
+  const options=sqlite=>({store:{get:key=>sqlite.get(key),
+      put:(key,v,c)=>sqlite.put(key,v,condition(c)),
+      remove:(key,c)=>sqlite.remove(key,condition(c))},
+    deploymentIdentity:deployment,deploymentRoot:process.cwd(),
+    tenantId:deployment.tenantId,queryAuthority:authority,
+    now:()=>Date.UTC(2026,10,9)});
+  const issueRef='https://github.com/kaicreator-mm/tally/issues/284';
+  const baseInput={issueRef,issueNumber:284,sourceSha,taskPackRef:packRef,
+    taskPackBlobSha:packSha};
+  const messages={
+    addNativeTaskDependency:{intentType:'addNativeTaskDependency',
+      instanceKey:'version-task-dag-284',messageId:'message-t284-dep-1',
+      input:{...baseInput,blockedIssueNumber:312,blockedByIssueNumber:284}},
+    freezeVersionTaskDag:{intentType:'freezeVersionTaskDag',
+      instanceKey:'version-task-dag-284',messageId:'message-t284-freeze-1',
+      input:{...baseInput}},
+  };
+  let sqlite=null,facade=null;
+  try{
+    sqlite=await openSqliteCasStore({path:db,busyTimeoutMs:1000});
+    facade=await load(sealed,options(sqlite));
+    const depReceipt=await facade.send(messages.addNativeTaskDependency);
+    assert.equal(depReceipt.status,'admitted',JSON.stringify(depReceipt).slice(0,1200));
+    assert.equal(depReceipt.admitted.effects.length,1);
+    const depEffect=depReceipt.admitted.effects[0].output;
+    assert.equal(depEffect.state,'NATIVE_DEPENDENCY_PRESENT',
+      JSON.stringify(depEffect));
+    assert.equal(depEffect.native,true);
+    assert.equal(depEffect.githubEffect,'NOT_RUN');
+    assert.equal(depEffect.writePerformed,false);
+    assert.equal(depEffect.authorized,false);assert.equal(depEffect.taskPass,false);
+    assert.equal(depEffect.releasePass,false);
+    const freezeReceipt=await facade.send(messages.freezeVersionTaskDag);
+    assert.equal(freezeReceipt.status,'admitted');
+    const freezeEffect=freezeReceipt.admitted.effects[0].output;
+    assert.equal(freezeEffect.state,'VERSION_DAG_FREEZE_REPLAY',
+      JSON.stringify(freezeEffect));
+    assert.equal(freezeEffect.frozen,true);
+    assert.equal(freezeEffect.githubEffect,'NOT_RUN');
+    assert.equal(freezeEffect.dependencyWritesAfterFreeze,'REFUSED');
+    assert.equal(freezeEffect.writeSetRecordCount,freezeEffect.taskCount);
+    assert.equal(freezeEffect.authorized,false);
+    assert.equal(freezeEffect.taskPass,false);assert.equal(freezeEffect.releasePass,false);
+    // The K-level freeze idempotency key replays the same admitted effect.
+    const replayed=await facade.send(messages.freezeVersionTaskDag);
+    assert.equal(replayed.status,'admitted');
+    assert.equal(replayed.idempotentReplay,true);
+    const records=await sqlite.list('');
+    for(const key of records){
+      const row=await sqlite.get(key);const text=JSON.stringify(row);
+      assert.ok(!text.includes('ghp_'),'no credential may enter K documents');
+    }
+    console.log(JSON.stringify({lane:'t284-replay',via:'real-sealed-k-b-c',
+      dependencyEffect:depEffect.state,freezeEffect:freezeEffect.state,
+      idempotentReplay:replayed.idempotentReplay,docCount:records.length,
+      taskPass:false,releasePass:false}));
+    console.log('T284_VERSION_TASK_DAG_K_EFFECT_REPLAY=PASS');
+    process.exit(0);
+  }finally{
+    if(facade)facade.stop();if(sqlite)await sqlite.close();
+    await rm(tmp,{recursive:true,force:true});
+  }
+}
+
 const replay=process.env.TALLY_LOCAL_REPLAY==='1';
 const token=process.env.TALLY_GITHUB_READ_TOKEN;
 const sourceSha=process.env.TALLY_CLAIM_SOURCE_SHA;

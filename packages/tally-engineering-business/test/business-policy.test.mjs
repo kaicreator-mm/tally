@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
+  assessNativeTaskDependencyWrite,projectNativeTaskDependencyWrite,
+  assessVersionTaskDagFreeze,projectVersionTaskDagFreeze,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
   assessCandidatePublication,projectCandidatePublication,assessProductIntakeFreeze,
@@ -26,22 +28,24 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
-    'effect:tally-qualified-release-delivery']);
+    'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
+    'effect:tally-version-task-dag-freeze']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
-    'effect:tally-qualified-release-delivery']);
+    'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
+    'effect:tally-version-task-dag-freeze']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -99,7 +103,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,10);
+  assert.equal(Object.keys(p.effectBindings).length,12);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
   // T210 intake intents: freeze is an idempotent Host CAS write, admission is
@@ -125,7 +129,9 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
     'admit-project-intake':'rule:tally-project-intake-admission',
     'publish-maintenance-issue':'rule:tally-maintenance-issue-publication',
     'record-task-learning-outcome':'rule:tally-task-learning-outcome',
-    'deliver-qualified-release':'rule:tally-qualified-release-delivery'};
+    'deliver-qualified-release':'rule:tally-qualified-release-delivery',
+    'add-native-task-dependency':'rule:tally-native-task-dependency',
+    'freeze-version-task-dag':'rule:tally-version-task-dag-freeze'};
   assert.deepEqual(Object.keys(ruleByTransition).sort(),
     p.workflowDefinition.states[0].transitions.map(t=>t.transitionKey).sort());
   for(const transition of p.workflowDefinition.states[0].transitions){
@@ -1128,4 +1134,155 @@ test('#222 release intent binding carries its own single-transition definition',
     'non-idempotent');
   assert.deepEqual(p.effectBindings['effect:tally-qualified-release-delivery'].resource,
     {key:'tally-local-codex',operation:'tally.deliverQualifiedRelease'});
+});
+
+// ---- E0 #284: pre-freeze native dependency write and version DAG freeze ----
+const E0_REF='https://github.com/kaicreator-mm/tally/issues/284';
+const E0_PACK_REF='https://github.com/kaicreator-mm/tally/blob/'+
+  'b3ad8ae7833028999a9c27cac7042037bca6d961'+
+  '/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json';
+const E0_PACK_SHA='d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d';
+const depInput={issueRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,
+  blockedIssueNumber:312,blockedByIssueNumber:284};
+const freezeInput={issueRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA};
+const depPositive={status:'NATIVE_EDGE_VERIFIED',
+  reason:'OFFICIAL_GITHUB_BLOCKED_BY_READBACK_VERIFIED',
+  repository:'kaicreator-mm/tally',versionId:'version/v2',
+  blockedIssueNumber:312,blockedByIssueNumber:284,dependencyId:284000,
+  native:true,githubEffect:'PERFORMED_VERIFIED',writePerformed:true,
+  authorized:false,admitted:false,taskPass:false,releasePass:false};
+const freezePositive={status:'FROZEN',
+  reason:'FROZEN_VERSION_TASK_DAG_CAS_READBACK_VERIFIED',
+  repository:'kaicreator-mm/tally',versionId:'version/v2',
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,blobSha:E0_PACK_SHA,
+  frozenAt:'2026-11-09T13:00:00.000Z',taskCount:3,edgeCount:1,
+  writeSetRecordCount:3,githubEffect:'NOT_RUN',
+  dependencyWritesAfterFreeze:'REFUSED',
+  authorized:false,admitted:false,taskPass:false,releasePass:false};
+test('E0 dependency advisory pins exact controller identity and refuses malformed edges',()=>{
+  assert.equal(assessNativeTaskDependencyWrite(depInput).state,'OBSERVED_INPUT_ONLY');
+  for(const bad of [null,{},'x',
+    {...depInput,issueRef:'https://github.com/kaicreator-mm/tally/issues/219'},
+    {...depInput,issueNumber:219},
+    {...depInput,sourceSha:'short'},
+    {...depInput,taskPackRef:'https://github.com/kaicreator-mm/tally/blob/main/x.json'},
+    {...depInput,taskPackBlobSha:'deadbeef'},
+    {...depInput,blockedIssueNumber:0},
+    {...depInput,blockedByIssueNumber:'284'},
+    {...depInput,blockedIssueNumber:284},
+  ])
+    assert.equal(assessNativeTaskDependencyWrite(bad).state,'UNQUALIFIED_INPUT');
+});
+test('E0 dependency projection verifies only exact native readback shapes',()=>{
+  const p=projectNativeTaskDependencyWrite({input:depInput,
+    observation:depPositive,effectId:'e0-1'});
+  assert.equal(p.state,'NATIVE_DEPENDENCY_VERIFIED');
+  assert.equal(p.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(p.native,true);assert.equal(p.admitted,false);
+  assert.equal(p.taskPass,false);assert.equal(p.releasePass,false);
+  const replay=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-2',
+    observation:{status:'NATIVE_EDGE_PRESENT',
+      reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      blockedIssueNumber:312,blockedByIssueNumber:284,dependencyId:284000,
+      native:true,githubEffect:'NOT_RUN',writePerformed:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(replay.state,'NATIVE_DEPENDENCY_PRESENT');
+  assert.equal(replay.writePerformed,false);
+  const lost=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-3',
+    observation:{status:'UNKNOWN',reason:'NATIVE_WRITE_ACK_LOST',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      githubEffect:'UNKNOWN',reconciliationRequired:true,
+      retryPolicy:'READ_BACK_BEFORE_RETRY_NO_BLIND_POST',
+      blockedIssueNumber:312,blockedByIssueNumber:284,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(lost.state,'WRITE_UNKNOWN');
+  assert.equal(lost.retryPolicy,'READ_BACK_BEFORE_RETRY_NO_BLIND_POST');
+  const blocked=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-4',
+    observation:{status:'BLOCKED',reason:'VERSION_DAG_ALREADY_FROZEN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      githubEffect:'NOT_RUN',native:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(blocked.state,'NOT_ADMITTED');
+  assert.equal(blocked.reason,'VERSION_DAG_ALREADY_FROZEN');
+  for(const garbage of [null,{},{...depPositive,status:'FORGED'},
+    {...depPositive,blockedIssueNumber:219},
+    {...depPositive,repository:'evil/org'},
+    {...depPositive,taskPass:true}])
+    assert.equal(projectNativeTaskDependencyWrite({input:depInput,
+      observation:garbage,effectId:'e0-x'}).state,'NOT_ADMITTED');
+});
+test('E0 freeze advisory and projection stay fail-closed',()=>{
+  assert.equal(assessVersionTaskDagFreeze(freezeInput).state,'OBSERVED_INPUT_ONLY');
+  assert.equal(assessVersionTaskDagFreeze(null).state,'UNQUALIFIED_INPUT');
+  assert.equal(assessVersionTaskDagFreeze(
+    {...freezeInput,taskPackBlobSha:'zzz'}).state,'UNQUALIFIED_INPUT');
+  const p=projectVersionTaskDagFreeze({input:freezeInput,
+    observation:freezePositive,effectId:'e0-5'});
+  assert.equal(p.state,'VERSION_DAG_FROZEN');
+  assert.equal(p.frozen,true);assert.equal(p.taskPass,false);
+  assert.equal(p.dependencyWritesAfterFreeze,'REFUSED');
+  assert.equal(p.writeSetRecordCount,p.taskCount);
+  const replay=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-6',
+    observation:{...freezePositive,status:'REPLAY',
+      reason:'IDENTICAL_FREEZE_REPLAY'}});
+  assert.equal(replay.state,'VERSION_DAG_FREEZE_REPLAY');
+  const planned=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-7',
+    observation:{status:'BLOCKED',reason:'PLANNED_EDGES_REMAIN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      taskPackBlobSha:E0_PACK_SHA,githubEffect:'NOT_RUN',authorized:false,
+      admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(planned.state,'NOT_FROZEN');
+  assert.equal(planned.reason,'PLANNED_EDGES_REMAIN');
+  const partial=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-8',
+    observation:{status:'UNKNOWN',reason:'FREEZE_WRITESET_PARTIAL_UNKNOWN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      taskPackBlobSha:E0_PACK_SHA,githubEffect:'UNKNOWN',
+      reconciliationRequired:true,authorized:false,admitted:false,
+      taskPass:false,releasePass:false}});
+  assert.equal(partial.state,'FREEZE_UNKNOWN');
+  assert.equal(partial.reconciliationRequired,true);
+  for(const garbage of [null,{},{...freezePositive,status:'FORGED'},
+    {...freezePositive,taskPackBlobSha:'0'.repeat(40)},
+    {...freezePositive,writeSetRecordCount:2},
+    {...freezePositive,dependencyWritesAfterFreeze:'ALLOWED'}])
+    assert.equal(projectVersionTaskDagFreeze({input:freezeInput,
+      observation:garbage,effectId:'e0-x'}).state,'NOT_FROZEN');
+});
+test('E0 effects dispatch through the selected C seam only',async()=>{
+  const p=getPolicy();
+  const dependency=p.effectBindings['effect:tally-native-task-dependency-write'];
+  assert.equal(dependency.semantics,'non-idempotent');
+  assert.deepEqual(dependency.resource,
+    {key:'tally-local-codex',operation:'tally.addNativeTaskDependency'});
+  assert.deepEqual(dependency.external,{permitTtlMs:3600000,await:'terminal'});
+  const freeze=p.effectBindings['effect:tally-version-task-dag-freeze'];
+  assert.equal(freeze.semantics,'idempotent');
+  assert.deepEqual(freeze.resource,
+    {key:'tally-local-codex',operation:'tally.freezeVersionTaskDag'});
+  let calls=[];
+  const makeResources=observation=>({call:async(key,op,arg)=>{
+    calls.push({key,op,arg});return {phase:'terminal',outcome:{ok:true,output:observation}};
+  }});
+  const depResult=await dependency.handler({input:depInput,effectId:'e0-9',
+    resources:makeResources(depPositive)});
+  assert.equal(depResult.state,'NATIVE_DEPENDENCY_VERIFIED');
+  assert.deepEqual(calls,[{key:'tally-local-codex',op:'tally.addNativeTaskDependency',
+    arg:{sourceRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+      taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,
+      blockedIssueNumber:312,blockedByIssueNumber:284,effectId:'e0-9'}}]);
+  calls=[];
+  const freezeResult=await freeze.handler({input:freezeInput,effectId:'e0-10',
+    resources:makeResources(freezePositive)});
+  assert.equal(freezeResult.state,'VERSION_DAG_FROZEN');
+  assert.equal(calls[0].op,'tally.freezeVersionTaskDag');
+  // Unqualified input never reaches the sealed seam.
+  calls=[];
+  const refused=await dependency.handler({input:{...depInput,blockedIssueNumber:284},
+    effectId:'e0-11',resources:makeResources(depPositive)});
+  assert.equal(refused.state,'UNQUALIFIED_INPUT');assert.equal(calls.length,0);
+  await assert.rejects(dependency.handler({input:depInput,effectId:'e0-12',
+    resources:null}),/SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
 });

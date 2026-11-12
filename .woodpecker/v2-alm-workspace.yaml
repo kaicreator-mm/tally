@@ -69,6 +69,11 @@ steps:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
       - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      # E0/#284: the served Host-mount regression loads the real E0 DAG host
+      # module, whose chain needs native-c's own deps (yaml et al.) — same
+      # resolution pattern this profile already uses for business/ajv and the
+      # native-node24 profile uses for native-c.
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs

@@ -1,4 +1,4 @@
-/** T06m/T06n/T210/T219/J222 sealed Local Codex C boundary. Provider output is never Task evidence. */
+/** T06m/T06n/T210/T219/J222/E0-#284 sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
   publishReviewedCandidate as nativePublishReviewedCandidate,
@@ -6,7 +6,9 @@ import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   freezeProductIntake as nativeFreezeProductIntake,
   publishMaintenanceIssue as nativePublishMaintenanceIssue,
   recordTaskLearningOutcome as nativeRecordTaskLearningOutcome,
-  hostReleaseDelivery as nativeHostReleaseDelivery}
+  hostReleaseDelivery as nativeHostReleaseDelivery,
+  addNativeTaskDependency as nativeAddNativeTaskDependency,
+  freezeVersionTaskDag as nativeFreezeVersionTaskDag}
   from '@kaicreator/tally-local-codex-host-bundle';
 
 export const NATIVE_PROVIDER_SHA256='__PROVIDER_SHA256__';
@@ -14,7 +16,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -545,5 +547,114 @@ export async function hostReleaseDelivery(input){
   }
   return Object.freeze({phase:'terminal',
     externalRef:`tally:${RELEASE_ISSUE}:${input?.operation??'invalid'}:${input?.headSha??input?.commitSha??'invalid'}:release`,
+    outcome:{ok:true,output}});
+}
+
+// E0 #284 — sealed pre-freeze version Task DAG write boundary. Only the exact
+// bounded selected-C observation shapes cross: the official GitHub blocked_by
+// readback for ONE proposed PLANNED candidate edge, and the A-owned closeout
+// freeze record after all required edges are NATIVE. Identity (#284 + the
+// immutable PackBlob ref/SHA) is re-verified here so provider garbage, a
+// caller-supplied PASS flag or a post-freeze dependency write can never cross.
+const E0_ISSUE=284;
+const E0_PACK_REF=/^https:\/\/github\.com\/kaicreator-mm\/tally\/blob\/[a-f0-9]{40}\/[^\s]+$/;
+const E0_DEPENDENCY_REASONS=new Set(['EDGE_INPUT_INVALID',
+  'VERSION_DAG_ALREADY_FROZEN','TASK_PACK_IDENTITY_INVALID',
+  'TASK_PACK_READBACK_FAILED','TASK_PACK_CONTENT_INVALID','EDGE_ISSUE_NOT_IN_PACK',
+  'EDGE_NOT_IN_CANDIDATE_PACK','EDGE_ALREADY_NATIVE_IN_PACK','EDGE_CYCLE',
+  'ISSUE_READBACK_FAILED','ISSUE_STALE_VS_PACK','GITHUB_UNAUTHENTICATED',
+  'GITHUB_ACCESS_DENIED','GITHUB_RESOURCE_NOT_FOUND','GITHUB_VALIDATION_FAILED',
+  'GITHUB_DEPENDENCY_READ_FAILED','NATIVE_WRITE_ACK_LOST','NATIVE_READBACK_MISMATCH',
+  'NATIVE_DEPENDENCY_WRITE_FAILED']);
+const E0_FREEZE_REASONS=new Set([...E0_DEPENDENCY_REASONS,'PLANNED_EDGES_REMAIN',
+  'FREEZE_WRITESET_CONFIG_INVALID','FREEZE_WRITESET_CONFLICT',
+  'NATIVE_TASK_ROSTER_READBACK_FAILED','NATIVE_TASK_ROSTER_CHANGED_BEFORE_FREEZE',
+  'INDEPENDENT_REVIEW_REQUIRED','OWNER_APPROVAL_REQUIRED','FREEZE_TIMESTAMP_INVALID',
+  'DIVERGENT_FREEZE_EXISTS','FREEZE_WRITESET_PARTIAL_UNKNOWN',
+  'VERSION_DAG_FREEZE_FAILED','FREEZE_READBACK_MISMATCH']);
+const dependencyBase=(input,reason)=>({status:'BLOCKED',reason,
+  repository:OWNER+'/'+REPO,versionId:'version/v2',githubEffect:'NOT_RUN',
+  native:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
+const e0Identity=input=>!!input&&typeof input==='object'&&!Array.isArray(input)&&
+  input.issueNumber===E0_ISSUE&&input.sourceRef===issueRefFor(E0_ISSUE)&&
+  SHA.test(input.sourceSha??'')&&E0_PACK_REF.test(input.taskPackRef??'')&&
+  SHA.test(input.taskPackBlobSha??'');
+const validDependencyOutput=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||
+     o.repository!==OWNER+'/'+REPO||o.versionId!=='version/v2'||
+     o.githubEffect===undefined||o.authorized!==false||o.admitted!==false||
+     o.taskPass!==false||o.releasePass!==false)return false;
+  if(o.status==='BLOCKED')return o.githubEffect==='NOT_RUN'&&o.native===false&&
+    E0_DEPENDENCY_REASONS.has(o.reason);
+  if(o.status==='UNKNOWN')return o.githubEffect==='UNKNOWN'&&
+    o.reconciliationRequired===true&&
+    o.retryPolicy==='READ_BACK_BEFORE_RETRY_NO_BLIND_POST'&&
+    E0_DEPENDENCY_REASONS.has(o.reason)&&
+    o.blockedIssueNumber===input.blockedIssueNumber&&
+    o.blockedByIssueNumber===input.blockedByIssueNumber;
+  if(o.status==='NATIVE_EDGE_PRESENT')return o.reason===
+      'NATIVE_EDGE_ALREADY_PRESENT_READBACK'&&o.native===true&&
+    o.githubEffect==='NOT_RUN'&&o.writePerformed===false&&
+    Number.isSafeInteger(o.dependencyId)&&o.dependencyId>0&&
+    o.blockedIssueNumber===input.blockedIssueNumber&&
+    o.blockedByIssueNumber===input.blockedByIssueNumber;
+  if(o.status==='NATIVE_EDGE_VERIFIED')return o.reason===
+      'OFFICIAL_GITHUB_BLOCKED_BY_READBACK_VERIFIED'&&o.native===true&&
+    o.githubEffect==='PERFORMED_VERIFIED'&&o.writePerformed===true&&
+    Number.isSafeInteger(o.dependencyId)&&o.dependencyId>0&&
+    o.blockedIssueNumber===input.blockedIssueNumber&&
+    o.blockedByIssueNumber===input.blockedByIssueNumber;
+  return false;
+};
+export async function addNativeTaskDependency(input){
+  let output;
+  if(!e0Identity(input)||!Number.isSafeInteger(input.blockedIssueNumber)||
+     input.blockedIssueNumber<1||!Number.isSafeInteger(input.blockedByIssueNumber)||
+     input.blockedByIssueNumber<1||input.blockedIssueNumber===input.blockedByIssueNumber)
+    output=dependencyBase(input,'EDGE_INPUT_INVALID');
+  else{
+    let observed;
+    try{observed=await nativeAddNativeTaskDependency(input);}catch{observed=null;}
+    output=validDependencyOutput(input,observed)?observed:
+      dependencyBase(input,'LOCAL_AGENT_PROVIDER_THREW');
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${E0_ISSUE}:${input?.taskPackBlobSha??'invalid'}:`+
+      `${input?.blockedByIssueNumber??'x'}-blocks-${input?.blockedIssueNumber??'x'}:dependency`,
+    outcome:{ok:true,output}});
+}
+const dagFreezeBase=(input,reason)=>({status:'BLOCKED',reason,
+  repository:OWNER+'/'+REPO,versionId:'version/v2',githubEffect:'NOT_RUN',
+  authorized:false,admitted:false,taskPass:false,releasePass:false});
+const validDagFreezeOutput=(input,o)=>{
+  if(!o||typeof o!=='object'||Array.isArray(o)||
+     o.repository!==OWNER+'/'+REPO||o.versionId!=='version/v2'||
+     o.taskPackBlobSha!==input.taskPackBlobSha||o.githubEffect!=='NOT_RUN'||
+     o.authorized!==false||o.admitted!==false||o.taskPass!==false||
+     o.releasePass!==false)return false;
+  if(o.status==='BLOCKED')return E0_FREEZE_REASONS.has(o.reason);
+  if(o.status==='UNKNOWN')return o.reconciliationRequired===true&&
+    E0_FREEZE_REASONS.has(o.reason);
+  if(o.status==='FROZEN'||o.status==='REPLAY')
+    return (o.status==='FROZEN'?o.reason==='FROZEN_VERSION_TASK_DAG_CAS_READBACK_VERIFIED':
+        o.reason==='IDENTICAL_FREEZE_REPLAY')&&
+      typeof o.frozenAt==='string'&&Number.isFinite(Date.parse(o.frozenAt))&&
+      Number.isSafeInteger(o.taskCount)&&o.taskCount>0&&
+      Number.isSafeInteger(o.edgeCount)&&o.edgeCount>=0&&
+      o.writeSetRecordCount===o.taskCount&&
+      o.dependencyWritesAfterFreeze==='REFUSED';
+  return false;
+};
+export async function freezeVersionTaskDag(input){
+  let output;
+  if(!e0Identity(input))output=dagFreezeBase(input,'TASK_PACK_IDENTITY_INVALID');
+  else{
+    let observed;
+    try{observed=await nativeFreezeVersionTaskDag(input);}catch{observed=null;}
+    output=validDagFreezeOutput(input,observed)?observed:
+      dagFreezeBase(input,'LOCAL_AGENT_PROVIDER_THREW');
+  }
+  return Object.freeze({phase:'terminal',
+    externalRef:`tally:${E0_ISSUE}:${input?.taskPackBlobSha??'invalid'}:dagfreeze`,
     outcome:{ok:true,output}});
 }
