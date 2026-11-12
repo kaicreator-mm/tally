@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
@@ -98,7 +98,8 @@ const modules = [
       'intent:publishReviewedCandidate','intent:freezeProductIntake',
       'intent:admitProjectIntake','intent:publishMaintenanceIssue',
       'intent:recordTaskLearningOutcome','intent:deliverQualifiedRelease',
-      'intent:addNativeTaskDependency','intent:freezeVersionTaskDag']}),
+      'intent:addNativeTaskDependency','intent:freezeVersionTaskDag',
+      'intent:persistProductDraft312','intent:freezeProductReview312']}),
   {...selected({packageId:'capability-tally-source-observation@v2.0.0',
     role:'capability',abiVersion:'v08-capability-abi/1',endpoint:'capability-endpoint',
     bytes:cBytes,provides:['capability:tally-readiness/1']}),
@@ -124,6 +125,8 @@ const modules = [
       ...(process.env.T06P_PUBLISH==='1'?['intent:publishReviewedCandidate']:[]),
       ...(process.env.T210_PROJECT_INTAKE==='1'?['intent:freezeProductIntake',
         'intent:admitProjectIntake']:[]),
+      ...(process.env.T312_PRODUCT_REVIEW==='1'?[
+        'intent:persistProductDraft312','intent:freezeProductReview312']:[]),
       ...(process.env.T219_MAINTENANCE==='1'?['intent:publishMaintenanceIssue',
         'intent:recordTaskLearningOutcome']:[]),
       ...(process.env.T222_RELEASE_DELIVERY==='1'?['intent:deliverQualifiedRelease']:[]),
@@ -138,6 +141,9 @@ const modules = [
       ...(process.env.T210_PROJECT_INTAKE==='1'?
         [{operationId:'tally.freezeProductIntake',handler:'freezeProductIntake'},
           {operationId:'tally.hostProjectIntake',handler:'hostProjectIntake'}]:[]),
+      ...(process.env.T312_PRODUCT_REVIEW==='1'?
+        [{operationId:'tally.persistProductDraft312',handler:'persistProductDraft312'},
+          {operationId:'tally.freezeProductReview312',handler:'freezeProductReview312'}]:[]),
       ...(process.env.T219_MAINTENANCE==='1'?
         [{operationId:'tally.publishMaintenanceIssue',handler:'publishMaintenanceIssue'},
           {operationId:'tally.recordTaskLearningOutcome',handler:'recordTaskLearningOutcome'}]:[]),
@@ -168,6 +174,11 @@ const routes=[
         capabilityId:'tally-local-codex',handlerId:'freezeProductIntake'},
         {intentId:'admitProjectIntake',operationId:'tally.hostProjectIntake',
           capabilityId:'tally-local-codex',handlerId:'hostProjectIntake'}]:[]),
+    ...(process.env.T312_PRODUCT_REVIEW==='1'?
+      [{intentId:'persistProductDraft312',operationId:'tally.persistProductDraft312',
+        capabilityId:'tally-local-codex',handlerId:'persistProductDraft312'},
+        {intentId:'freezeProductReview312',operationId:'tally.freezeProductReview312',
+          capabilityId:'tally-local-codex',handlerId:'freezeProductReview312'}]:[]),
     ...(process.env.T219_MAINTENANCE==='1'?
       [{intentId:'publishMaintenanceIssue',operationId:'tally.publishMaintenanceIssue',
         capabilityId:'tally-local-codex',handlerId:'publishMaintenanceIssue'},
@@ -197,6 +208,7 @@ const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06N_CONCURRENT==='1'?1:0)+
   (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
   (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0)+
+  (localCodexBytes&&process.env.T312_PRODUCT_REVIEW==='1'?2:0)+
   (localCodexBytes&&process.env.T219_MAINTENANCE==='1'?2:0)+
   (localCodexBytes&&process.env.T222_RELEASE_DELIVERY==='1'?1:0)+
   (localCodexBytes&&process.env.T284_VERSION_TASK_DAG==='1'?2:0);
@@ -233,6 +245,22 @@ if(localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'){
 }else{
   assert.equal(built.routes.some(x=>x.intentId==='admitProjectIntake'),false,
     'T210 intake routes are selected only when T210_PROJECT_INTAKE=1');
+}
+if(localCodexBytes&&process.env.T312_PRODUCT_REVIEW==='1'){
+  for(const operation of ['persistProductDraft312','freezeProductReview312']){
+    const route=built.routes.find(x=>x.intentId===operation);
+    assert.equal(route?.operationId,'tally.'+operation);
+    assert.equal(route.capabilityId,'tally-local-codex');
+    assert.equal(route.handlerId,operation);
+    const capability=built.modules.find(x=>
+      x.packageId==='capability-tally-local-codex@v1.0.0');
+    assert.equal(capability?.handlers?.some(x=>
+      x.operationId==='tally.'+operation&&x.handler===operation),true);
+  }
+}else{
+  assert.equal(built.routes.some(x=>['persistProductDraft312',
+    'freezeProductReview312'].includes(x.intentId)),false,
+    'No #312 privileged selected K route without explicit Host enablement');
 }
 if(localCodexBytes&&process.env.T219_MAINTENANCE==='1'){
   for(const [intent,handler] of [['publishMaintenanceIssue','publishMaintenanceIssue'],

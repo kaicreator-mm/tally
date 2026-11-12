@@ -8,14 +8,15 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
   'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
   'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
   'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
   'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
-  'effect:tally-version-task-dag-freeze']);
+  'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
+  'effect:tally-product-review-witness-freeze']);
 const SOURCE_SHA=/^[0-9a-f]{40}$/;
 const ISSUE_REF=/^https:\/\/github\.com\/[^/\s]+\/[^/\s]+\/issues\/[1-9][0-9]*$/;
 const isStr=x=>typeof x==='string'&&x.length>0&&x.length<=512;
@@ -81,6 +82,25 @@ const intakeInputFrom=Object.freeze({
   sourceSha:{source:'event',path:['payload','sourceSha']},
   productDigest:{source:'event',path:['payload','productDigest']},
   projectTitle:{source:'event',path:['payload','projectTitle']},
+});
+// #312 Product ReviewWitness successor: the issue/repo identity is hard-bound
+// by the policy (never caller-supplied); the draft content and the exact Task
+// Pack/write-set coordinates ride always-present so a stale or cross-issue
+// request can never borrow this lane.
+const draftPersistInputFrom=Object.freeze({
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  taskPackBlobSha:{source:'event',path:['payload','taskPackBlobSha']},
+  writeSetSha256:{source:'event',path:['payload','writeSetSha256']},
+  draft:{source:'event',path:['payload','draft']},
+});
+const witnessFreezeInputFrom=Object.freeze({
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  taskPackBlobSha:{source:'event',path:['payload','taskPackBlobSha']},
+  writeSetSha256:{source:'event',path:['payload','writeSetSha256']},
+  reviewCommentId:{source:'event',path:['payload','reviewCommentId']},
+  reviewedHead:{source:'event',path:['payload','reviewedHead']},
+  reviewedTree:{source:'event',path:['payload','reviewedTree']},
+  reviewedBase:{source:'event',path:['payload','reviewedBase']},
 });
 const maintenanceInputFrom=Object.freeze({
   issueRef:{source:'event',path:['payload','issueRef']},
@@ -339,12 +359,45 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[dagFreezeTransition]},finalState],
   };
+  // #312 Product ReviewWitness successor: source-bound immutable draft first.
+  // The Host alone derives the canonical {draft,sourceSha} digest; a caller
+  // digest is never proof of persistence.
+  const draftPersistTransition={
+    transitionKey:'persist-product-draft-312',
+    trigger:{kind:'event',eventType:'TALLY_PRODUCT_REVIEW_DRAFT_PERSIST_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-product-review-draft-persist',inputFrom:draftPersistInputFrom,
+      idempotencyKeyFrom:{template:'draft312:{sourceSha}:{taskPackBlobSha}'}
+    }]
+  };
+  const draftPersistWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[draftPersistTransition]},finalState],
+  };
+  // #312: the witnessed Freeze. Authority is ONLY the Host observation chain
+  // (accepted builder + independent reviewer-role Claims, exact Task Pack and
+  // frozen write-set, persisted draft, canonical unedited GitHub witness
+  // comment re-read under a shared physical CAS fence).
+  const witnessFreezeTransition={
+    transitionKey:'freeze-product-review-312',
+    trigger:{kind:'event',eventType:'TALLY_PRODUCT_REVIEW_WITNESS_FREEZE_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-product-review-witness-freeze',inputFrom:witnessFreezeInputFrom,
+      idempotencyKeyFrom:{template:'witnessfreeze312:{sourceSha}:{reviewCommentId}'}
+    }]
+  };
+  const witnessFreezeWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[witnessFreezeTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition,draftPersistTransition,witnessFreezeTransition]},
         finalState,
       ],
     },
@@ -413,6 +466,17 @@ export function getPolicy(){
       eventType:'TALLY_VERSION_TASK_DAG_FREEZE_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         taskPackRef:'taskPackRef',taskPackBlobSha:'taskPackBlobSha'},
+    },'rule:tally-product-review-draft-persist':{
+      ruleId:'rule:tally-product-review-draft-persist',
+      eventType:'TALLY_PRODUCT_REVIEW_DRAFT_PERSIST_REQUESTED',
+      payloadFromInput:{sourceSha:'sourceSha',taskPackBlobSha:'taskPackBlobSha',
+        writeSetSha256:'writeSetSha256',draft:'draft'},
+    },'rule:tally-product-review-witness-freeze':{
+      ruleId:'rule:tally-product-review-witness-freeze',
+      eventType:'TALLY_PRODUCT_REVIEW_WITNESS_FREEZE_REQUESTED',
+      payloadFromInput:{sourceSha:'sourceSha',taskPackBlobSha:'taskPackBlobSha',
+        writeSetSha256:'writeSetSha256',reviewCommentId:'reviewCommentId',
+        reviewedHead:'reviewedHead',reviewedTree:'reviewedTree',reviewedBase:'reviewedBase'},
     }},
     intentBindings:{
       inspectTaskReadiness:{
@@ -516,6 +580,24 @@ export function getPolicy(){
         // approval and create-only Host CAS readback. A frozen record never
         // grants Task PASS or caller authority.
         roles:['requester','planner','builder','reviewer'],definition:dagFreezeWorkflow,
+      },
+      persistProductDraft312:{
+        trigger:{kind:'event',eventType:'TALLY_PRODUCT_REVIEW_DRAFT_PERSIST_REQUESTED'},
+        ruleId:'rule:tally-product-review-draft-persist',
+        // #312: the #210 successor's immutable Product draft reaches trusted
+        // Host storage only through this sealed intent; the Host recomputes
+        // the digest and every caller role can only REQUEST persistence.
+        roles:['requester','planner','builder','reviewer'],definition:draftPersistWorkflow,
+      },
+      freezeProductReview312:{
+        trigger:{kind:'event',eventType:'TALLY_PRODUCT_REVIEW_WITNESS_FREEZE_REQUESTED'},
+        ruleId:'rule:tally-product-review-witness-freeze',
+        // #312: freeze authority is ONLY the Host observation chain — accepted
+        // builder Claim plus an independent accepted reviewer-role Claim on
+        // the exact Task Pack/write-set, the persisted immutable draft and
+        // the canonical unedited GitHub witness comment re-read under the
+        // shared physical CAS fence. A typed reviewer label is never evidence.
+        roles:['requester','planner','builder','reviewer'],definition:witnessFreezeWorkflow,
       },
     },
     effectBindings:{
@@ -799,6 +881,54 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectVersionTaskDagFreeze({input,observation,effectId});
+        },
+      },
+      'effect:tally-product-review-draft-persist':{
+        // #312: the sealed Host immutable-draft persistence observation. The
+        // Host alone derives the digest over canonical {draft,sourceSha}; the
+        // K effect is idempotent because the Host CAS create replays an
+        // identical draft record and refuses a divergent one.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.persistProductDraft312'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessProductReviewDraftPersist(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.persistProductDraft312',
+            {sourceRef:REVIEW312_REF,issueNumber:REVIEW312_ISSUE,
+              sourceSha:input.sourceSha,taskPackBlobSha:input.taskPackBlobSha,
+              writeSetSha256:input.writeSetSha256,draft:input.draft,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectProductReviewDraftPersist({input,observation,effectId});
+        },
+      },
+      'effect:tally-product-review-witness-freeze':{
+        // #312: the sealed Host witnessed-freeze observation. The Host
+        // re-reads the canonical GitHub witness inside the shared CAS fence
+        // and reads back the freeze; a lost ACK stays UNKNOWN here.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.freezeProductReview312'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessProductReviewWitnessFreeze(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.freezeProductReview312',
+            {sourceRef:REVIEW312_REF,issueNumber:REVIEW312_ISSUE,
+              sourceSha:input.sourceSha,taskPackBlobSha:input.taskPackBlobSha,
+              writeSetSha256:input.writeSetSha256,
+              reviewCommentId:input.reviewCommentId,
+              reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+              reviewedBase:input.reviewedBase,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectProductReviewWitnessFreeze({input,observation,effectId});
         },
       },
     },
@@ -1465,6 +1595,133 @@ export function projectProjectIntakeAdmission({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return intakeDenied('UNVERIFIED_PROJECT_INTAKE_OBSERVATION',effectId);
   }catch{return intakeDenied('UNTRUSTED_PROJECT_INTAKE_OBSERVATION',effectId);}
+}
+
+
+/**
+ * #312 Product ReviewWitness successor — advisory input screening for the
+ * immutable-draft persistence intent. The issue/repo identity is hard-bound
+ * here (kaicreator-mm/tally#312, never caller-supplied); a caller-supplied
+ * digest is never accepted, and the draft shape itself is Host-validated
+ * after the sealed dispatch, not trusted here.
+ */
+const REVIEW312_ISSUE=312;
+const REVIEW312_REF='https://github.com/kaicreator-mm/tally/issues/312';
+export function assessProductReviewDraftPersist(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    issueNumber:REVIEW312_ISSUE,frozen:false,authorized:false,admitted:false,
+    taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {sourceSha,taskPackBlobSha,writeSetSha256,draft}=input;
+  if(!SOURCE_SHA.test(sourceSha??'')||!SOURCE_SHA.test(taskPackBlobSha??'')||
+    !PRODUCT_DIGEST.test(writeSetSha256??'')||
+    !draft||typeof draft!=='object'||Array.isArray(draft))
+    return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_PRODUCT_DRAFT_PERSISTENCE',
+    issueRef:REVIEW312_REF,issueNumber:REVIEW312_ISSUE,sourceSha,
+    taskPackBlobSha,writeSetSha256,frozen:false,authorized:false,admitted:false,
+    taskPass:false,releasePass:false});
+}
+const DRAFT_PERSIST_REASONS=new Set(['PRODUCT_REVIEW_HOST_UNAVAILABLE',
+  'PRODUCT_DRAFT_INPUT_INVALID','PRODUCT_DRAFT_SOURCE_OR_CLAIM_STALE',
+  'PRODUCT_DRAFT_ALREADY_EXISTS','PRODUCT_DRAFT_READBACK_UNVERIFIED',
+  'PRODUCT_DRAFT_CAS_UNKNOWN']);
+const draftPersistDenied=(reason,effectId)=>Object.freeze({state:'UNKNOWN',reason,
+  effectId,issueNumber:REVIEW312_ISSUE,frozen:false,authorized:false,
+  admitted:false,taskPass:false,releasePass:false});
+/**
+ * Positive output records only the Host-persisted draft identity (Host-derived
+ * digest, draftRef bound to it); it never authorizes, freezes or passes.
+ */
+export function projectProductReviewDraftPersist({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueNumber!==REVIEW312_ISSUE||
+      o.sourceSha!==input?.sourceSha||
+      o.taskPackBlobSha!==input?.taskPackBlobSha||
+      o.writeSetSha256!==input?.writeSetSha256||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false)
+      return draftPersistDenied('UNVERIFIED_PRODUCT_DRAFT_PERSISTENCE',effectId);
+    if(o.state==='UNKNOWN'&&DRAFT_PERSIST_REASONS.has(o.reason))
+      return draftPersistDenied(o.reason,effectId);
+    if(o.state==='DRAFT_PENDING_REVIEW'&&
+      PRODUCT_DIGEST.test(o.productDigest??'')&&
+      o.draftRef==='draft:sha256:'+o.productDigest)
+      return Object.freeze({state:o.state,reason:o.reason??'HOST_DRAFT_PERSISTED_AND_READ_BACK',
+        effectId,issueNumber:REVIEW312_ISSUE,sourceSha:o.sourceSha,
+        taskPackBlobSha:o.taskPackBlobSha,writeSetSha256:o.writeSetSha256,
+        productDigest:o.productDigest,draftRef:o.draftRef,frozen:false,
+        authorized:false,admitted:false,taskPass:false,releasePass:false});
+    return draftPersistDenied('UNVERIFIED_PRODUCT_DRAFT_PERSISTENCE',effectId);
+  }catch{return draftPersistDenied('UNTRUSTED_PRODUCT_DRAFT_PERSISTENCE',effectId);}
+}
+
+/**
+ * #312 — advisory input screening for the witnessed-freeze intent. Only the
+ * exact GitHub #312 review-comment coordinates and reviewed source identity
+ * qualify; they are pointers the Host re-verifies (unedited canonical comment,
+ * accepted builder + independent reviewer Claims), never authority here.
+ */
+export function assessProductReviewWitnessFreeze(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    issueNumber:REVIEW312_ISSUE,frozen:false,authorized:false,admitted:false,
+    taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {sourceSha,taskPackBlobSha,writeSetSha256,reviewCommentId,
+    reviewedHead,reviewedTree,reviewedBase}=input;
+  if(!SOURCE_SHA.test(sourceSha??'')||!SOURCE_SHA.test(taskPackBlobSha??'')||
+    !PRODUCT_DIGEST.test(writeSetSha256??'')||
+    !Number.isSafeInteger(reviewCommentId)||reviewCommentId<1||
+    !SOURCE_SHA.test(reviewedHead??'')||!SOURCE_SHA.test(reviewedTree??'')||
+    !SOURCE_SHA.test(reviewedBase??''))
+    return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_REVIEW_WITNESS_FREEZE',
+    issueRef:REVIEW312_REF,issueNumber:REVIEW312_ISSUE,sourceSha,
+    taskPackBlobSha,writeSetSha256,reviewCommentId,reviewedHead,reviewedTree,
+    reviewedBase,frozen:false,authorized:false,admitted:false,
+    taskPass:false,releasePass:false});
+}
+const WITNESS_FREEZE_REASONS=new Set(['PRODUCT_REVIEW_HOST_UNAVAILABLE',
+  'PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED','PRODUCT_REVIEW_FREEZE_INPUT_INVALID',
+  'PRODUCT_REVIEW_PROCESS_OR_CLAIM_UNVERIFIED','PRODUCT_DRAFT_NOT_PERSISTED_OR_STALE',
+  'PRODUCT_DRAFT_SOURCE_OR_CLAIM_STALE','PRODUCT_REVIEW_WITNESS_UNVERIFIED',
+  'PRODUCT_REVIEW_SOURCE_MOVED','PRODUCT_REVIEW_FREEZE_CONFLICT',
+  'PRODUCT_REVIEW_FREEZE_READBACK_UNVERIFIED','PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN']);
+const witnessFreezeDenied=(reason,effectId)=>Object.freeze({state:'UNKNOWN',reason,
+  effectId,issueNumber:REVIEW312_ISSUE,frozen:false,authorized:false,
+  admitted:false,taskPass:false,releasePass:false});
+/**
+ * Positive output records only THIS K intent's Host-freeze receipt bound to
+ * the exact source, Task Pack, write-set and canonical #312 review comment;
+ * it never authorizes the caller, passes the Task or releases.
+ */
+export function projectProductReviewWitnessFreeze({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueNumber!==REVIEW312_ISSUE||
+      o.sourceSha!==input?.sourceSha||
+      o.taskPackBlobSha!==input?.taskPackBlobSha||
+      o.writeSetSha256!==input?.writeSetSha256||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false)
+      return witnessFreezeDenied('UNVERIFIED_PRODUCT_REVIEW_FREEZE',effectId);
+    if(o.state==='UNKNOWN'&&WITNESS_FREEZE_REASONS.has(o.reason))
+      return witnessFreezeDenied(o.reason,effectId);
+    if(o.state==='FROZEN_COMPLETE'&&o.frozen===true&&
+      PRODUCT_DIGEST.test(o.productDigest??'')&&
+      o.draftRef==='draft:sha256:'+o.productDigest&&
+      o.receiptRef==='receipt:sha256:'+o.productDigest&&
+      /^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/.test(o.reviewRef??''))
+      return Object.freeze({state:o.state,
+        reason:o.reason??'SOURCE_BOUND_HOST_CAS_READBACK_VERIFIED',effectId,
+        issueNumber:REVIEW312_ISSUE,sourceSha:o.sourceSha,
+        taskPackBlobSha:o.taskPackBlobSha,writeSetSha256:o.writeSetSha256,
+        productDigest:o.productDigest,draftRef:o.draftRef,reviewRef:o.reviewRef,
+        receiptRef:o.receiptRef,frozen:true,authorized:false,admitted:false,
+        taskPass:false,releasePass:false});
+    return witnessFreezeDenied('UNVERIFIED_PRODUCT_REVIEW_FREEZE',effectId);
+  }catch{return witnessFreezeDenied('UNTRUSTED_PRODUCT_REVIEW_FREEZE',effectId);}
 }
 
 /**

@@ -2,7 +2,7 @@
 const escape=value=>String(value??'').replace(/[&<>"']/g,ch=>({
   '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const sha=value=>/^[0-9a-f]{40}$/.test(value??'')?value.slice(0,12):'UNKNOWN';
-const url=value=>/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(?:issues|pull)\/[1-9][0-9]*$/.test(value??'')?value:'#';
+const url=value=>/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/(?:issues|pull)\/[1-9][0-9]*(?:#issuecomment-[1-9][0-9]*)?$/.test(value??'')?value:'#';
 const cls=value=>String(value??'UNKNOWN').toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const badge=value=>`<span class="pill ${cls(value)}">${escape(value)}</span>`;
 const NOT_RUN='NOT_RUN';
@@ -83,19 +83,33 @@ function reviewPanel(snapshot,mode){
   const {draft,review,frozen}=snapshot;
   const write=mode==='write';
   return `<section aria-labelledby="intake-review"><div class="section-head">
-    <h2 id="intake-review">Independent review → freeze</h2>
+    <h2 id="intake-review">Review proposal → Host-qualified freeze</h2>
     <span class="quiet">A model's or author's proposal never becomes an accepted Freeze; a stale or malformed Review blocks.</span></div>
     <ol class="review-steps">
       <li>Draft: ${draft?badge('CANDIDATE'):badge('ABSENT')}</li>
-      <li>Independent review: ${review?badge('REVIEWED')+` <small>by <code>${escape(review.reviewer)}</code> · digest ${review.current?'current':'STALE'}</small>`:badge(snapshot.reviewBlock?.state??NOT_RUN)+` <small>${escape(snapshot.reviewBlock?.reason??'reviewer identity required')}</small>`}</li>
-      <li>Freeze: ${frozen?badge('FROZEN')+` <small><code>${escape(frozen.receiptRef.slice(0,26))}…</code></small>`:badge(NOT_RUN)+` <small>requires a current independent review</small>`}</li>
+      <li>Review proposal: ${review?badge(review.state??'NOT_VERIFIED')+` <small>by <code>${escape(review.reviewer)}</code> · digest ${review.current?'current':'STALE'}</small>`:badge(snapshot.reviewBlock?.state??NOT_RUN)+` <small>${escape(snapshot.reviewBlock?.reason??'reviewer identity required')}</small>`}</li>
+      <li>Freeze: ${frozen?badge('FROZEN')+` <small><code>${escape(frozen.receiptRef.slice(0,26))}…</code>${frozen.reviewRef?` · witness <a href="${url(frozen.reviewRef)}" target="_blank" rel="noreferrer">#312 comment</a>`:''}</small>`:badge(NOT_RUN)+` <small>requires a current independent review</small>`}</li>
     </ol>
     ${frozen?`<p class="quiet">${escape(frozen.authority)}</p>`:''}
     ${write?`<form class="intake-form" aria-label="Review and freeze">
-      <div class="field"><label for="review-reviewer">Reviewer identity (must differ from the author)</label>
+      <div class="field"><label for="review-reviewer">Reviewer label (not a verified Reviewer Claim)</label>
         <input id="review-reviewer" name="reviewer" type="text" maxlength="128" required></div>
-      <button type="button" data-action="review-draft">Record independent review</button>
-      <button type="button" data-action="freeze-draft">Freeze reviewed draft</button>
+      <button type="button" data-action="review-draft">Propose review for Host verification</button>
+      <fieldset class="field"><legend>#312 ReviewWitness coordinates (from the independent review artifact; every binding is re-verified by the selected K/Host)</legend>
+        <div class="field"><label for="freeze-comment">Review comment id</label>
+          <input id="freeze-comment" name="reviewCommentId" type="number" min="1" inputmode="numeric"></div>
+        <div class="field"><label for="freeze-pack">Task Pack blob SHA-1</label>
+          <input id="freeze-pack" name="taskPackBlobSha" type="text" maxlength="40" pattern="[0-9a-f]{40}"></div>
+        <div class="field"><label for="freeze-set">Frozen write-set SHA-256</label>
+          <input id="freeze-set" name="writeSetSha256" type="text" maxlength="64" pattern="[0-9a-f]{64}"></div>
+        <div class="field"><label for="freeze-head">Reviewed HEAD SHA-1</label>
+          <input id="freeze-head" name="reviewedHead" type="text" maxlength="40" pattern="[0-9a-f]{40}"></div>
+        <div class="field"><label for="freeze-tree">Reviewed tree SHA-1</label>
+          <input id="freeze-tree" name="reviewedTree" type="text" maxlength="40" pattern="[0-9a-f]{40}"></div>
+        <div class="field"><label for="freeze-base">Reviewed base SHA-1</label>
+          <input id="freeze-base" name="reviewedBase" type="text" maxlength="40" pattern="[0-9a-f]{40}"></div>
+      </fieldset>
+      <button type="button" data-action="freeze-draft">Freeze reviewed draft through Host ReviewWitness</button>
     </form>`:''}</section>`;
 }
 function intakePanel(snapshot,mode){

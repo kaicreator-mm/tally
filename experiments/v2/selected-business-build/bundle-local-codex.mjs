@@ -34,14 +34,14 @@ import {createLocalCodexHost} from ${JSON.stringify(host)};
 import {Octokit} from ${JSON.stringify(octokit)};
 import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
-import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} from ${JSON.stringify(intakeHostModule)};
-import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
+import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake, createProductReviewHost312} from ${JSON.stringify(intakeHostModule)};
+import {readProjectIntakeFromClient,readProductReviewWitnessFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
   readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
 // issue keys; every claim/config value comes from issue-keyed Host env, never
@@ -59,6 +59,7 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
+  312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
   222:{actorRole:'builder'}
 };
@@ -69,8 +70,9 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // Host claim configuration: #172 keeps the legacy TALLY_CLAIM_* names; the
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
-function claimEnv(env,issueNumber){
-  const p=issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
+function claimEnv(env,issueNumber,actorRole='builder'){
+  const p=issueNumber===312?'TALLY_TASK_CLAIM_312_'+actorRole.toUpperCase()+'_':
+    issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
@@ -109,8 +111,8 @@ function validClaimRow(row,claim,issueNumber,actorRole,env){
 // native publication witness. Shared by Builder attempts and Reviewer Join.
 async function verifyAcceptedClaim(env,issueNumber,actorRole){
   const binding=TASK_BINDINGS[issueNumber];
-  const claim=claimEnv(env,issueNumber);
-  if(binding?.actorRole!==actorRole||!SHA.test(claim.sourceSha??'')||
+  const claim=claimEnv(env,issueNumber,actorRole);
+  if((binding?.actorRole!==actorRole&&!(issueNumber===312&&actorRole==='reviewer'))||!SHA.test(claim.sourceSha??'')||
     !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
     !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
     !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
@@ -125,6 +127,18 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
   if(!row)return {ok:false,reason:'CLAIM_REGISTRY_RECORD_NOT_FOUND'};
   if(row.value?.phase!=='PUBLISHED_VERIFIED')return {ok:false,reason:'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED'};
   if(!validClaimRow(row,claim,issueNumber,actorRole,env))return {ok:false,reason:'CLAIM_REGISTRY_RESERVATION_MISMATCH'};
+  if(issueNumber===312){
+    // Two distinct accepted role Claims must be tied to the exact reviewed
+    // Pack and FSW, not just reuse a same-source historical Claim. If the
+    // native CAS record has no Pack binding, refuse rather than invent it.
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const writeSet=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(pack??'')||!/^[0-9a-f]{64}$/.test(writeSet??'')||
+      claim.registryPath!==env.TALLY_TASK_CLAIM_312_REGISTRY_PATH||
+      row.value.taskPackBlobSha!==pack||
+      row.value.writeSetSha256!==writeSet)
+      return {ok:false,reason:'PRODUCT_REVIEW_ROLE_CLAIM_PACK_UNVERIFIED'};
+  }
   const token=env.TALLY_GITHUB_READ_TOKEN;
   if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
   try{
@@ -144,6 +158,12 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       witness.generation!==1||witness.transportActor!==claim.writerLogin)
       return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};
   }catch{return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};}
+  if(issueNumber===312)return {ok:true,claim:{accepted:true,issueNumber:312,
+    role:actorRole,sourceSha:claim.sourceSha,
+    taskPackBlobSha:env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA,
+    writeSetSha256:env.TALLY_TASK_CLAIM_312_WRITESET_SHA256,
+    claimRef:row.value.commentRef,operatorId:claim.operatorId,
+    writerId:claim.writerId,transportActor:claim.writerLogin}};
   return {ok:true,claim};
 }
 async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
@@ -159,7 +179,54 @@ async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
     return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};
   return {ok:true,pair};
 }
+const p312FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"]);
+const p312VersionDagKey='tally:v2:version-task-dag:'+
+  createHash('sha256').update('kaicreator-mm/tally#version/v2').digest('hex');
+function p312FsDocumentMatches(document,digest){
+  if(typeof document!=='string'||!document.length||document.length>65536)return false;
+  let entries;
+  try{
+    const decoded=JSON.parse(document);
+    entries=Array.isArray(decoded)?decoded:decoded?.allowed_write_set;
+  }catch{
+    entries=document.split(String.fromCharCode(10)).map(path=>
+      path.endsWith(String.fromCharCode(13))?path.slice(0,-1):path);
+  }
+  if(!Array.isArray(entries)||entries.length!==p312FsPaths.length||
+    !entries.every(path=>typeof path==='string'&&path.length>0))return false;
+  const normalized=[...new Set(entries)].sort();
+  return normalized.length===p312FsPaths.length&&
+    normalized.every((path,index)=>path===p312FsPaths[index])&&
+    createHash('sha256').update(JSON.stringify(normalized)).digest('hex')===digest;
+}
 async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
+  if(issueNumber===312){
+    const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(sourceSha??'')||!SHA.test(pack??'')||
+      !/^[a-f0-9]{64}$/.test(digest??'')||
+      typeof registryPath!=='string'||!registryPath)
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    let db,row;
+    try{
+      db=await openSqliteCasStore({path:registryPath,busyTimeoutMs:1000});
+      row=await db.get(writeSetKeyFor(312));
+    }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
+    finally{if(db)await db.close();}
+    const value=row?.value;
+    // The kernel CAS INSERT starts revision at 0 and the E0 FSW row is
+    // create-only, so its steady-state revision is 0 — floor at 0, not 1.
+    if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
+      (!Number.isSafeInteger(row?.revision)||row.revision<0)||
+      value.schema!=='tally/version-task-writeset/v1'||
+      value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
+      value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
+      value.writeSetSha256!==digest||
+      !p312FsDocumentMatches(value.document,digest))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
+  }
   const claim=claimEnv(env,issueNumber);
   const candidateRelativePath=TASK_BINDINGS[issueNumber].candidateRelativePath;
   if(!claim.writeSetSha256||typeof claim.registryPath!=='string'||!claim.registryPath)
@@ -324,6 +391,111 @@ export async function freezeProductIntake(input){
     sourceSha:input?.sourceSha,productDigest:input?.productDigest,
     author:input?.author,reviewer:input?.reviewer,frozenAt:input?.frozenAt,
     caseRefDigest:input?.caseRefDigest});
+}
+// #312 selected Host-only Product ReviewWitness. The final Freeze uses the
+// SAME durable version/v2 CAS effect fence as E0's native DAG POST/Freeze.
+// The fence row uses the immutable E0 schema 'tally/version-dag-effect-fence/v1'
+// (packages/tally-github-native-c/src/version-task-dag-write-port.mjs): one key,
+// one schema, both lanes. Incomplete/ambiguous effects keep HELD; a new
+// instance cannot bypass them, and no lane ever expires or reseeds a HELD row.
+const product312FenceKey='tally:v2:version-dag-effect-fence:'+
+  createHash('sha256').update(OWNER+'/'+REPO+'#version/v2').digest('hex');
+const product312Unknown=reason=>({state:'UNKNOWN',reason,issueNumber:312,
+  frozen:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
+const product312SafeNoEffectReasons=new Set([
+  'PRODUCT_REVIEW_WITNESS_UNVERIFIED','PRODUCT_REVIEW_SOURCE_MOVED',
+  'PRODUCT_REVIEW_FREEZE_CONFLICT']);
+const product312Same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+async function withProduct312VersionFence({sourceSha,operation},run){
+  const env=process.env;
+  if(env.TALLY_LOCAL_REPLAY==='1'||sourceSha!==env.TALLY_V2_VERSION_SHA||
+    sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||
+    typeof env.TALLY_VERSION_DAG_REGISTRY_PATH!=='string'||
+    !env.TALLY_VERSION_DAG_REGISTRY_PATH||
+    typeof env.TALLY_VERSION_DAG_WRITER_ID!=='string'||
+    !env.TALLY_VERSION_DAG_WRITER_ID)
+    return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+  let db,reservedRevision=null;
+  try{
+    db=await openSqliteCasStore({path:env.TALLY_VERSION_DAG_REGISTRY_PATH,
+      busyTimeoutMs:1000});
+    const before=await db.get(product312FenceKey);
+    if(before){
+      const v=before.value;
+      // The physical host-node CAS create returns revision 0; a fresh HELD
+      // or RELEASED row legitimately lives at revision 0 (E0 write-port
+      // precedent), so only a non-integer revision is invalid here.
+      if(!Number.isSafeInteger(before.revision)||
+        v?.schema!=='tally/version-dag-effect-fence/v1'||
+        v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
+        v.sourceSha!==sourceSha||v.phase!=='RELEASED')
+        return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+    }
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
+      repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
+      writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
+    const reservation=await db.put(product312FenceKey,held,
+      before?{mustMatchRevision:before.revision}:{mustBeAbsent:true});
+    if(!Number.isSafeInteger(reservation?.revision))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    reservedRevision=reservation.revision;
+    const proof=await db.get(product312FenceKey);
+    if(proof?.revision!==reservedRevision||!product312Same(proof.value,held))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    let result;
+    try{result=await run();}catch{
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    }
+    // A refusal proven to predate all CAS writes may release the fence.
+    // A write ACK loss or ambiguous state MUST keep it HELD for reconciliation.
+    if(result?.state!=='FROZEN_COMPLETE'&&
+      !(result?.state==='UNKNOWN'&&
+        product312SafeNoEffectReasons.has(result.reason)))
+      return result??product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    const released={...held,phase:'RELEASED',
+      closedStatus:result.state==='FROZEN_COMPLETE'?'FROZEN':result.reason};
+    const ack=await db.put(product312FenceKey,released,
+      {mustMatchRevision:reservedRevision});
+    const final=await db.get(product312FenceKey);
+    if(!Number.isSafeInteger(ack?.revision)||
+      final?.revision!==ack.revision||
+      !product312Same(final.value,released))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    return result;
+  }catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+  finally{if(db)await db.close().catch(()=>{});}
+}
+function product312HostFor(){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  return createProductReviewHost312({env,octokit,openStore:openSqliteCasStore,
+    verifyAcceptedClaim:(issue,role)=>verifyAcceptedClaim(env,issue,role),
+    verifyFrozenWriteSet:(issue,sourceSha)=>verifyFrozenWriteSet(env,issue,sourceSha),
+    readCurrentVersion:async()=>{
+      try{
+        const branch=await octokit.rest.repos.getBranch({
+          owner:OWNER,repo:REPO,branch:'version/v2'});
+        return {ok:true,sha:branch?.data?.commit?.sha};
+      }catch{return {ok:false,sha:null};}
+    },
+    withVersionFence:withProduct312VersionFence});
+}
+export async function persistProductDraft312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_DRAFT_INPUT_INVALID');
+  try{return await product312HostFor().persistDraft(input);}
+  catch{return product312Unknown('PRODUCT_DRAFT_CAS_UNKNOWN');}
+}
+export async function freezeProductReview312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_REVIEW_FREEZE_INPUT_INVALID');
+  try{return await product312HostFor().freezeReviewedDraft(input);}
+  catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
 }
 // T219 — the authorized native Issue effect lives behind the Host module;
 // these bindings are transports only. The write-scoped token never enters
