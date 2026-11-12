@@ -1543,9 +1543,13 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
     const editedReg=jsonLine(driver(editDir,['readreg']).stdout,'T312_DRIVER_REG=');
     assert.equal(editedReg.frozenPhase,null);
 
-    // D2 source drift: live version/v2 moved away from the claimed source.
-    // The witness is bound first so its preflight passes and the refusal is
-    // attributed to the moved branch, not the missing witness.
+    // D2 source drift: live version/v2 moved away from the claimed source
+    // before the freeze attempt. Under the v2 C witness contract (R11
+    // P1-R10-02 repair) the C reader itself performs the final live-branch
+    // currentness read, so a drifted branch fails the witness PREFLIGHT and
+    // the Host bounds the refusal as WITNESS_UNVERIFIED. The Host-level
+    // PRODUCT_REVIEW_SOURCE_MOVED remains for post-preflight races (covered
+    // by the in-process Host tests); it is not reachable pre-freeze here.
     const driftDir=mkCase('drift',caseInput());
     assert.equal(driver(driftDir,['seed']).status,0,'seed drift');
     assert.equal(driver(driftDir,['persist','bind-witness']).status,0,'persist drift');
@@ -1557,7 +1561,10 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
     }
     const drifted=jsonLine(driver(driftDir,['freeze']).stdout,'T312_DRIVER_FREEZE=');
     assert.equal(drifted.state,'UNKNOWN');
-    assert.equal(drifted.reason,'PRODUCT_REVIEW_SOURCE_MOVED');
+    assert.equal(drifted.reason,'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+    const driftFence=jsonLine(driver(driftDir,['readfence']).stdout,
+      'T312_DRIVER_FENCE=');
+    assert.equal(driftFence,null,'the drift refusal predates the fence');
     const driftReg=jsonLine(driver(driftDir,['readreg']).stdout,'T312_DRIVER_REG=');
     assert.equal(driftReg.frozenPhase,null);
 
@@ -1702,7 +1709,8 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
       dh:T312_DH_SHA,sourceSha,routes:'SELECTED_T312',provider:'FIXTURE_TRANSPORT_REAL_HOST_C',
       realProviderBlocked:'FROZEN_ABSENT_UNKNOWN',positive:'FROZEN_COMPLETE',
       idempotentResend:true,crossProcessHeldFence:true,editedWitness:'UNVERIFIED',
-      sourceDrift:'SOURCE_MOVED',ackLoss:'HELD_RETRY_REFUSED',noPackBinding:'UNVERIFIED',
+      sourceDrift:'WITNESS_UNVERIFIED_C_LIVE_BRANCH_CURRENTNESS',
+      ackLoss:'HELD_RETRY_REFUSED',noPackBinding:'UNVERIFIED',
       staleFsw:'REFUSED',
       e0SharedFence:{schema:'tally/version-dag-effect-fence/v1',
         e0ReleasedThen312Frozen:'F1_PASS',frozen312ReleasedThenE0:'F2_PASS',
