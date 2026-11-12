@@ -72,6 +72,13 @@ test('write mode exposes only typed forms with accessible labels, never raw JSON
   assert.match(html,/no raw JSON/);
   assert.match(html,/data-action="submit-goal"|data-action="confirm-inspect"/);
   assert.match(html,/data-action="admit-project-intake"/);
+  // #312: the freeze form carries only the exact ReviewWitness coordinates;
+  // every one is re-verified Host-side, none is authority in the browser.
+  assert.match(html,/data-action="freeze-draft"/);
+  for(const name of ['reviewCommentId','taskPackBlobSha','writeSetSha256',
+    'reviewedHead','reviewedTree','reviewedBase'])
+    assert.match(html,new RegExp(`name="${name}"`),name);
+  assert.match(html,/re-verified by the selected K\/Host/);
 });
 
 test('draft and unverified review proposal stay separate from Host Freeze',()=>{
@@ -81,13 +88,17 @@ test('draft and unverified review proposal stay separate from Host Freeze',()=>{
   assert.match(html,/NOT_RUN/);
   const frozen=reviewed(base());
   frozen.frozen={state:'FROZEN',digest:'a'.repeat(64),
-    receiptRef:`receipt:sha256:${'a'.repeat(64)}`,reviewer:'reviewer:ada',
+    receiptRef:`receipt:sha256:${'a'.repeat(64)}`,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+    reviewer:'reviewer:ada',
     author:'workbench:operator',frozenAt:'2026-10-31T09:07:00.000Z',sourceSha,
     provenance:['157'],authority:'HOST_RECEIPT_VERIFIED'};
   const frozenHtml=renderIntakeWorkspace(frozen,{mode:'read'});
   assert.match(frozenHtml,/FROZEN/);
   assert.match(frozenHtml,/receipt:sha256:aaaa/);
   assert.match(frozenHtml,/HOST_RECEIPT_VERIFIED/);
+  assert.match(frozenHtml,/issues\/312#issuecomment-12345/);
+  assert.match(frozenHtml,/#312 comment/);
 });
 
 test('stale review and blocked state are shown instead of silently passing',()=>{

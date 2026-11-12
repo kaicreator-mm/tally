@@ -121,7 +121,7 @@ test('invalid requests refuse without any client call',async()=>{
 });
 
 
-import {readProductReviewWitnessFromClient} from './project-intake.mjs';
+import {readProductReviewWitnessFromClient} from '../src/project-intake.mjs';
 const witness312Sha='a'.repeat(40),witness312Blob='b'.repeat(40);
 const witness312Digest='c'.repeat(64),witness312Set='d'.repeat(64);
 const witness312Expected={

@@ -57,6 +57,12 @@ const INTAKE_CLIENT=String.raw`function collectIntakeArgs(){
   if(value('l2Decision'))args.l2Decision=value('l2Decision');
   if(value('reviewer'))args.reviewer=value('reviewer');
   if(value('projectTitle'))args.projectTitle=value('projectTitle');
+  // #312 Product ReviewWitness coordinates (freeze-draft only): forwarded
+  // verbatim; the sealed K/Host re-verifies every binding.
+  const commentId=Number(value('reviewCommentId'));
+  if(Number.isSafeInteger(commentId)&&commentId>0)args.reviewCommentId=commentId;
+  for(const name of ['taskPackBlobSha','writeSetSha256','reviewedHead','reviewedTree','reviewedBase'])
+    if(value(name))args[name]=value(name).trim();
   return args;
 }
 export async function startIntakeClient(renderIntakeWorkspace){
@@ -280,7 +286,9 @@ function sanitizeIntakeArgs(args){
   if(args===undefined)return {};
   if(!args||typeof args!=='object'||Array.isArray(args))return null;
   const out={},known=Object.keys(args);
-  if(known.some(key=>!['goal','refs','nonGoals','l2Decision','reviewer','projectTitle'].includes(key)))
+  if(known.some(key=>!['goal','refs','nonGoals','l2Decision','reviewer','projectTitle',
+      'reviewCommentId','taskPackBlobSha','writeSetSha256',
+      'reviewedHead','reviewedTree','reviewedBase'].includes(key)))
     return null;
   if(args.goal!==undefined){if(!boundedString(args.goal)||args.goal.length>256)return null;out.goal=args.goal;}
   if(args.refs!==undefined){
@@ -294,6 +302,20 @@ function sanitizeIntakeArgs(args){
   if(args.l2Decision!==undefined){if(!boundedString(args.l2Decision))return null;out.l2Decision=args.l2Decision;}
   if(args.reviewer!==undefined){if(!boundedString(args.reviewer)||args.reviewer.length>128)return null;out.reviewer=args.reviewer;}
   if(args.projectTitle!==undefined){if(!boundedString(args.projectTitle)||args.projectTitle.length>120)return null;out.projectTitle=args.projectTitle;}
+  // #312 Product ReviewWitness coordinates: exact-shape facts of the real
+  // independent review artifact. Every value is re-verified Host-side against
+  // accepted Claims and the canonical GitHub comment; this allowlist only
+  // bounds the transport shape (no authority is granted here).
+  if(args.reviewCommentId!==undefined){
+    if(!Number.isSafeInteger(args.reviewCommentId)||args.reviewCommentId<1)return null;
+    out.reviewCommentId=args.reviewCommentId;}
+  for(const key of ['taskPackBlobSha','reviewedHead','reviewedTree','reviewedBase'])
+    if(args[key]!==undefined){
+      if(typeof args[key]!=='string'||!/^[a-f0-9]{40}$/.test(args[key]))return null;
+      out[key]=args[key];}
+  if(args.writeSetSha256!==undefined){
+    if(typeof args.writeSetSha256!=='string'||!/^[a-f0-9]{64}$/.test(args.writeSetSha256))return null;
+    out.writeSetSha256=args.writeSetSha256;}
   return out;
 }
 function actionDefinitions(sourceSha){return [
