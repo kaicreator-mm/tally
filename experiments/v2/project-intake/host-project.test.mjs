@@ -625,3 +625,33 @@ test('#312 Host rejects a falsely positive C status with missing coordinate bind
   assert.equal(denied.reason,'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
   assert.equal(await bad.store.get(PRODUCT312_FREEZE_KEY+p312Source),null);
 });
+
+
+test('#312 second witness read inside shared fence catches comment edit with zero Freeze CAS',async()=>{
+  let reads=0;
+  const {provider,store,calls}=p312Make({
+    readReviewWitness:async({expected,reviewerClaim})=>{
+      reads++;
+      if(reads===2)return {status:'UNKNOWN',reason:'GITHUB_COMMENT_EDITED'};
+      return {status:'INDEPENDENTLY_VERIFIED',independentlyVerified:true,
+        sourceQualified:true,authorized:false,taskPass:false,releasePass:false,
+        sourceSha:expected.sourceSha,productDigest:expected.productDigest,
+        draftRef:expected.draftRef,taskPackBlobSha:expected.taskPackBlobSha,
+        writeSetSha256:expected.writeSetSha256,
+        reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+        reviewedBase:expected.reviewedBase,
+        reviewerOperatorId:reviewerClaim.operatorId,
+        reviewerWriterId:reviewerClaim.writerId,
+        p0:0,p1:0,p2:0,
+        reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345'};
+    }
+  });
+  await provider.persistDraft(p312Input);
+  const frozen=await provider.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(reads,2);
+  assert.ok(calls.includes('fence'));
+  assert.equal(frozen.state,'UNKNOWN');
+  assert.equal(frozen.reason,'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+  assert.equal(frozen.taskPass,false);
+  assert.equal(await store.get(PRODUCT312_FREEZE_KEY+p312Source),null);
+});
