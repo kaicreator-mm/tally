@@ -235,6 +235,9 @@ export async function readProductReviewWitnessFromClient({
   // a comparison came from the caller/comment. Resolve actual GitHub PR,
   // HEAD tree, base commit, then the live version branch in that order.
   let prInfo,headCommit,baseCommit,liveBranch;
+  // Returned SourceQualification metadata must be visible AFTER the
+  // guarded GitHub read block; block-scoped const inside try is not.
+  let mergedSource=false;
   try{
     prInfo=(await octokit.rest.pulls.get({
       owner,repo,pull_number:body.reviewedPullNumber}))?.data;
@@ -245,7 +248,7 @@ export async function readProductReviewWitnessFromClient({
     // two-parent source commit with current-branch ancestry. Never infer
     // qualification from a CLOSED/unmerged, squashed or rebased PR.
     const openCandidate=prInfo?.state==='open'&&prInfo.merged!==true;
-    const mergedSource=prInfo?.state==='closed'&&prInfo.merged===true&&
+    mergedSource=prInfo?.state==='closed'&&prInfo.merged===true&&
       ISO(prInfo.merged_at)&&RW_SHA.test(prInfo.merge_commit_sha??'');
     if(prInfo?.number!==body.reviewedPullNumber||
       (!openCandidate&&!mergedSource)||
