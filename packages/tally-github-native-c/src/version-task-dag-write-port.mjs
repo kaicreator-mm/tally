@@ -154,6 +154,7 @@ export function createVersionTaskDagWritePort({
      typeof ownerApprovalReader!=='function'||
      typeof nativeRosterReader!=='function'||
      typeof octokit?.rest?.issues?.get!=='function'||
+     typeof octokit?.rest?.repos?.getBranch!=='function'||
      typeof octokit?.paginate?.iterator!=='function'||
      typeof octokit?.request!=='function'||
      writerAuthority?.mode!=='SINGLE_WRITER_ADMISSION'||
@@ -179,6 +180,47 @@ export function createVersionTaskDagWritePort({
   const unknown=(reason,more={})=>Object.freeze({status:'UNKNOWN',reason,
     repository,versionId,githubEffect:'UNKNOWN',native:false,
     reconciliationRequired:true,...flags(),...more});
+
+  // A selected Host's configured source SHA is not proof the live branch
+  // still names it. Re-check the official ref while the CAS fence is HELD
+  // immediately before Native POST, not only when the candidate was authored.
+  async function currentBranchReason(){
+    try{
+      const response=await octokit.rest.repos.getBranch({
+        owner,repo,branch:versionId});
+      return response?.data?.commit?.sha===expectedVersionSha?null:
+        'VERSION_BRANCH_NOT_PINNED';
+    }catch(e){return providerReason(e)??'VERSION_BRANCH_READ_FAILED';}
+  }
+  // Every effect must carry fresh independent and Owner witnesses. Their
+  // first read is a zero-CAS preflight, the second is a last-moment
+  // authorization check under the durable fence before the GitHub POST.
+  async function witnessReason(scope){
+    let review,approval;
+    try{
+      [review,approval]=await Promise.all([
+        reviewWitnessReader(scope),ownerApprovalReader(scope)]);
+    }catch{return 'INDEPENDENT_REVIEW_OR_OWNER_READ_FAILED';}
+    if(review?.status!=='INDEPENDENTLY_VERIFIED'||
+       review.taskPackBlobSha!==scope.taskPackBlobSha||
+       review.sourceSha!==expectedVersionSha||
+       review.reviewedHeadSha!==expectedVersionSha||
+       !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
+       review.reviewer===review.author||
+       typeof review.reviewRef!=='string'||
+       !review.reviewRef.startsWith('https://github.com/'+repository+'/')||
+       !Number.isFinite(Date.parse(review.verifiedAt??'')))
+      return 'INDEPENDENT_REVIEW_REQUIRED';
+    if(approval?.status!=='OWNER_APPROVED'||
+       approval.taskPackBlobSha!==scope.taskPackBlobSha||
+       approval.sourceSha!==expectedVersionSha||
+       approval.owner!==owner||
+       typeof approval.approvalRef!=='string'||
+       !approval.approvalRef.startsWith('https://github.com/'+repository+'/')||
+       !Number.isFinite(Date.parse(approval.approvedAt??'')))
+      return 'OWNER_APPROVAL_REQUIRED';
+    return null;
+  }
 
   async function withVersionEffectFence(operation,work){
     let reservedRevision=null;
@@ -265,27 +307,8 @@ export function createVersionTaskDagWritePort({
       // Constructor-only injection of the readers is not authorization.
       const witnessScope={taskPackRef,taskPackBlobSha,versionId,
         sourceSha:expectedVersionSha};
-      const [review,approval]=await Promise.all([
-        reviewWitnessReader(witnessScope),ownerApprovalReader(witnessScope)
-      ]);
-      if(review?.status!=='INDEPENDENTLY_VERIFIED'||
-         review.taskPackBlobSha!==taskPackBlobSha||
-         review.sourceSha!==expectedVersionSha||
-         review.reviewedHeadSha!==expectedVersionSha||
-         !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
-         review.reviewer===review.author||
-         typeof review.reviewRef!=='string'||
-         !review.reviewRef.startsWith('https://github.com/'+repository+'/')||
-         !Number.isFinite(Date.parse(review.verifiedAt??'')))
-        return blocked('INDEPENDENT_REVIEW_REQUIRED');
-      if(approval?.status!=='OWNER_APPROVED'||
-         approval.taskPackBlobSha!==taskPackBlobSha||
-         approval.sourceSha!==expectedVersionSha||
-         approval.owner!==owner||
-         typeof approval.approvalRef!=='string'||
-         !approval.approvalRef.startsWith('https://github.com/'+repository+'/')||
-         !Number.isFinite(Date.parse(approval.approvedAt??'')))
-        return blocked('OWNER_APPROVAL_REQUIRED');
+      const initialWitnessReason=await witnessReason(witnessScope);
+      if(initialWitnessReason)return blocked(initialWitnessReason);
       // Gate 5 — cycle refusal over the candidate graph (the proposed edge is
       // part of that graph; any cycle containing it refuses here).
       if(!acyclicWith(pack.edges,blockedByIssueNumber,blockedIssueNumber)||
@@ -334,6 +357,13 @@ export function createVersionTaskDagWritePort({
         reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',repository,versionId,
         blockedIssueNumber,blockedByIssueNumber,dependencyId:present.id,
         native:true,githubEffect:'NOT_RUN',writePerformed:false,...flags()});
+      // Gate 9 — last-moment current branch and exact unedited witness
+      // readback under the same durable fence as final DAG Freeze. A previous
+      // source SHA or an edited/deleted Review or Owner comment cannot POST.
+      const currentness=await currentBranchReason();
+      if(currentness)return blocked(currentness);
+      const refreshedWitnessReason=await witnessReason(witnessScope);
+      if(refreshedWitnessReason)return blocked(refreshedWitnessReason);
       // Write — official blocked_by endpoint, blocker bound by live issue id.
       try{
         await octokit.request(
@@ -391,28 +421,8 @@ export function createVersionTaskDagWritePort({
       // exclusion immediately before its create-only immutable DAG write.
       const witnessScope={taskPackRef,taskPackBlobSha,versionId,
         sourceSha:expectedVersionSha};
-      let review,approval;
-      try{
-        [review,approval]=await Promise.all([
-          reviewWitnessReader(witnessScope),ownerApprovalReader(witnessScope)]);
-      }catch{return blocked('INDEPENDENT_REVIEW_OR_OWNER_READ_FAILED');}
-      if(review?.status!=='INDEPENDENTLY_VERIFIED'||
-         review.taskPackBlobSha!==taskPackBlobSha||
-         review.sourceSha!==expectedVersionSha||
-         review.reviewedHeadSha!==expectedVersionSha||
-         !ID.test(review.reviewer??'')||!ID.test(review.author??'')||
-         review.reviewer===review.author||
-         typeof review.reviewRef!=='string'||
-         !review.reviewRef.startsWith('https://github.com/'+repository+'/')||
-         !Number.isFinite(Date.parse(review.verifiedAt??'')))
-        return blocked('INDEPENDENT_REVIEW_REQUIRED');
-      if(approval?.status!=='OWNER_APPROVED'||
-         approval.taskPackBlobSha!==taskPackBlobSha||
-         approval.sourceSha!==expectedVersionSha||approval.owner!==owner||
-         typeof approval.approvalRef!=='string'||
-         !approval.approvalRef.startsWith('https://github.com/'+repository+'/')||
-         !Number.isFinite(Date.parse(approval.approvedAt??'')))
-        return blocked('OWNER_APPROVAL_REQUIRED');
+      const freezeWitnessReason=await witnessReason(witnessScope);
+      if(freezeWitnessReason)return blocked(freezeWitnessReason);
       // Owner-directed Core MVP successor policy. Structural DAG Freeze is
       // NOT a blanket per-Task FSW admission: closed historical/not_planned
       // Tasks must never receive invented frozen write-set rows. The mode is

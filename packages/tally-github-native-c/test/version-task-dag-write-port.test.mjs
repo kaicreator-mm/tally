@@ -81,14 +81,15 @@ function nativeProjection({pack}){
         from:String(e.from),to:String(e.to),dependencyRef:issueUrl(e.from)}))}};
 }
 /** Fake official GitHub issue-dependencies client with call accounting. */
-function fakeOctokit({issues,blockedBy={},postResult}={}){
+function fakeOctokit({issues,blockedBy={},postResult,branchSha=versionSha}={}){
   const state={posts:[]};
   const defaults=Object.fromEntries([284,312,219].map(n=>[n,{
     number:n,id:n*1000,state:'open',updated_at:'2026-11-09T11:00:00Z',
     repository_url:'https://api.github.com/repos/'+owner+'/'+repo}]));
   const live=issues??{};
   const octokit={
-    rest:{issues:{get:async({issue_number})=>{
+    rest:{repos:{getBranch:async()=>({data:{commit:{sha:branchSha}}})},
+      issues:{get:async({issue_number})=>{
       const issue=live[issue_number]??defaults[issue_number];
       if(!issue||issue instanceof Error)throw issue;
       if(issue&&issue.throw)throw issue.throw;
@@ -117,15 +118,17 @@ function fakeOctokit({issues,blockedBy={},postResult}={}){
   return {octokit,posts:state.posts};
 }
 function dependencyFixture({pack=candidatePack(),issues,blockedBy,postResult,
-  store=memoryStore(),freezeWriteSetPolicy='ALL_TASKS',writeSetDocumentByIssue}={}){
-  const gh=fakeOctokit({issues,blockedBy,postResult});
+  store=memoryStore(),freezeWriteSetPolicy='ALL_TASKS',writeSetDocumentByIssue,
+  branchSha=versionSha,readReview=async()=>review(),
+  readOwner=async()=>approval()}={}){
+  const gh=fakeOctokit({issues,blockedBy,postResult,branchSha});
   const content=JSON.stringify(pack);
   const taskPackReader=async({expectedBlobSha})=>({status:'VERIFIED',
     blobSha:expectedBlobSha,content});
   const port=createVersionTaskDagWritePort({repository,versionId,
     expectedVersionSha:versionSha,store,taskPackReader,
-    reviewWitnessReader:async()=>review(),
-    ownerApprovalReader:async()=>approval(),
+    reviewWitnessReader:readReview,
+    ownerApprovalReader:readOwner,
     nativeRosterReader:async()=>nativeProjection({pack}),
     octokit:gh.octokit,owner,repo,writerAuthority,
     writeSetDocumentByIssue:writeSetDocumentByIssue??writeSetDocs(pack),
@@ -235,6 +238,53 @@ test('native dependency edge POST requires exact reviewed PackBlob and Owner app
     assert.equal(result.githubEffect,'NOT_RUN',name);
     assert.equal(gh.posts.length,0,'no native edge write: '+name);
     assert.deepEqual(store.puts(),[],'no CAS write: '+name);
+  }
+});
+
+test('Native POST refuses changed live version HEAD even with unchanged Task timestamps',async()=>{
+  const drift=dependencyFixture({branchSha:'f'.repeat(40)});
+  const r=await drift.port.addNativeTaskDependency(edgeInput);
+  assert.equal(r.status,'BLOCKED');
+  assert.equal(r.reason,'VERSION_BRANCH_NOT_PINNED');
+  assert.equal(r.githubEffect,'NOT_RUN');
+  assert.equal(drift.posts.length,0,'stale source must never POST');
+
+  // A missing official branch capability is a Host misconfiguration, not
+  // permission to trust its own expectedVersionSha.
+  const gh=fakeOctokit();
+  const portArgs={repository,versionId,expectedVersionSha:versionSha,
+    store:memoryStore(),taskPackReader:async()=>({}),
+    reviewWitnessReader:async()=>review(),
+    ownerApprovalReader:async()=>approval(),
+    nativeRosterReader:async()=>({}),octokit:gh.octokit,
+    owner,repo,writerAuthority};
+  delete gh.octokit.rest.repos.getBranch;
+  assert.throws(()=>createVersionTaskDagWritePort(portArgs),
+    /TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED/);
+});
+
+test('Native POST refuses reviewer/Owner revoked after initial authorization',async()=>{
+  for(const who of ['reviewer','owner']){
+    let reviewReads=0,ownerReads=0;
+    const f=dependencyFixture({
+      readReview:async()=>{
+        reviewReads++;
+        return who==='reviewer'&&reviewReads>=2?
+          {...review(),status:'EDITED'}:review();
+      },
+      readOwner:async()=>{
+        ownerReads++;
+        return who==='owner'&&ownerReads>=2?
+          {...approval(),status:'NOT_VERIFIED'}:approval();
+      }});
+    const r=await f.port.addNativeTaskDependency(edgeInput);
+    assert.equal(r.status,'BLOCKED',who);
+    assert.equal(r.reason,who==='reviewer'?
+      'INDEPENDENT_REVIEW_REQUIRED':'OWNER_APPROVAL_REQUIRED',who);
+    assert.equal(r.githubEffect,'NOT_RUN',who);
+    assert.equal(f.posts.length,0,who+' revoked witness cannot POST');
+    assert.equal(reviewReads,2,'read independent witness before and after CAS fence');
+    assert.equal(ownerReads,2,'read Owner witness before and after CAS fence');
   }
 });
 
