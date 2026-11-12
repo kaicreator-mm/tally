@@ -173,8 +173,12 @@ const product312Unknown=(reason,extra={})=>Object.freeze({state:'UNKNOWN',reason
 const product312Canonical=v=>Array.isArray(v)?v.map(product312Canonical):
   v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[
     k,product312Canonical(v[k])])):v;
+// Data-only plain-object gate. The selected K kernel projects nested effect
+// payload values as canonical data-only clones (null prototype), so both
+// Object.prototype and null-prototype shapes are accepted here; arrays,
+// null, primitives and class instances still refuse.
 const product312Plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&
-  Object.getPrototypeOf(v)===Object.prototype;
+  (Object.getPrototypeOf(v)===Object.prototype||Object.getPrototypeOf(v)===null);
 const product312Draft=v=>product312Plain(v)&&
   Object.keys(v).sort().join(',')==='l2,product,provenance'&&
   product312Plain(v.product)&&product312Plain(v.l2)&&

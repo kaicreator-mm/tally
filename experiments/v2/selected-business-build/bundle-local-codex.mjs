@@ -395,18 +395,21 @@ async function withProduct312VersionFence({sourceSha,operation},run){
     const before=await db.get(product312FenceKey);
     if(before){
       const v=before.value;
-      if(!Number.isSafeInteger(before.revision)||before.revision<1||
-        v?.schema!=='tally/version-dag-effect-fence/v1'||
+      // The physical host-node CAS create returns revision 0; a fresh HELD
+      // or RELEASED row legitimately lives at revision 0 (E0 write-port
+      // precedent), so only a non-integer revision is invalid here.
+      if(!Number.isSafeInteger(before.revision)||
+        v?.schema!=='tally/v2/version-dag-effect-fence/v1'||
         v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
         v.sourceSha!==sourceSha||v.phase!=='RELEASED')
         return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
     }
-    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
+    const held={schema:'tally/v2/version-dag-effect-fence/v1',phase:'HELD',
       repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
       writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
     const reservation=await db.put(product312FenceKey,held,
       before?{mustMatchRevision:before.revision}:{mustBeAbsent:true});
-    if(!Number.isSafeInteger(reservation?.revision)||reservation.revision<1)
+    if(!Number.isSafeInteger(reservation?.revision))
       return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
     reservedRevision=reservation.revision;
     const proof=await db.get(product312FenceKey);
