@@ -83,18 +83,18 @@ function reviewPanel(snapshot,mode){
   const {draft,review,frozen}=snapshot;
   const write=mode==='write';
   return `<section aria-labelledby="intake-review"><div class="section-head">
-    <h2 id="intake-review">Independent review → freeze</h2>
+    <h2 id="intake-review">Review proposal → Host-qualified freeze</h2>
     <span class="quiet">A model's or author's proposal never becomes an accepted Freeze; a stale or malformed Review blocks.</span></div>
     <ol class="review-steps">
       <li>Draft: ${draft?badge('CANDIDATE'):badge('ABSENT')}</li>
-      <li>Independent review: ${review?badge('REVIEWED')+` <small>by <code>${escape(review.reviewer)}</code> · digest ${review.current?'current':'STALE'}</small>`:badge(snapshot.reviewBlock?.state??NOT_RUN)+` <small>${escape(snapshot.reviewBlock?.reason??'reviewer identity required')}</small>`}</li>
+      <li>Review proposal: ${review?badge(review.state??'NOT_VERIFIED')+` <small>by <code>${escape(review.reviewer)}</code> · digest ${review.current?'current':'STALE'}</small>`:badge(snapshot.reviewBlock?.state??NOT_RUN)+` <small>${escape(snapshot.reviewBlock?.reason??'reviewer identity required')}</small>`}</li>
       <li>Freeze: ${frozen?badge('FROZEN')+` <small><code>${escape(frozen.receiptRef.slice(0,26))}…</code></small>`:badge(NOT_RUN)+` <small>requires a current independent review</small>`}</li>
     </ol>
     ${frozen?`<p class="quiet">${escape(frozen.authority)}</p>`:''}
     ${write?`<form class="intake-form" aria-label="Review and freeze">
-      <div class="field"><label for="review-reviewer">Reviewer identity (must differ from the author)</label>
+      <div class="field"><label for="review-reviewer">Reviewer label (not a verified Reviewer Claim)</label>
         <input id="review-reviewer" name="reviewer" type="text" maxlength="128" required></div>
-      <button type="button" data-action="review-draft">Record independent review</button>
+      <button type="button" data-action="review-draft">Propose review for Host verification</button>
       <button type="button" data-action="freeze-draft">Freeze reviewed draft</button>
     </form>`:''}</section>`;
 }

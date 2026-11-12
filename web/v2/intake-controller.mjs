@@ -207,9 +207,9 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
         return record('review-draft',blocked('REVIEW_NOT_INDEPENDENT'));
       state.reviewBlock=null;
       state.review={reviewer,at:new Date().toISOString(),digest:state.draft.digest,
-        sourceSha:currentSha(),state:'REVIEWED'};
+        sourceSha:currentSha(),state:'REVIEW_PROPOSED_UNVERIFIED'};
       return record('review-draft',{status:'OK',reviewer,digest:state.review.digest,
-        independence:'REVIEWER_DIFFERS_FROM_AUTHOR'});
+        independence:'NOT_VERIFIED_REQUIRES_ACCEPTED_REVIEWER_CLAIM_AND_GITHUB_WITNESS'});
     },
     async 'freeze-draft'(sourceSha){
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
@@ -220,17 +220,16 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
         return record('freeze-draft',blocked('REVIEW_SOURCE_STALE'));
       if(state.decision?.status!=='STEP'||state.decision.step?.stepId!=='summary')
         return record('freeze-draft',blocked('GUIDED_SUMMARY_NOT_READY'));
-      const receiptRef=`receipt:sha256:${state.draft.digest}`;
-      state.previousOutcome=guidedOutcome('summary','EFFECT_RECEIPT',state.evidenceRefs,
-        {receiptRef});
-      recomputeDecision();
-      state.frozen={state:'FROZEN',digest:state.draft.digest,receiptRef,
-        reviewer:state.review.reviewer,author:state.draft.author,
-        frozenAt:new Date().toISOString(),sourceSha:currentSha(),
-        provenance:[...state.evidenceRefs],
-        authority:'WORKBENCH_INDEPENDENT_REVIEW; native GitHub freeze authority stays Host-owned (NOT_RUN)'};
-      return record('freeze-draft',{status:'OK',receiptRef,reviewer:state.review.reviewer,
-        githubEffect:'NOT_RUN'});
+      // #312 Product ReviewWitness: typed reviewer labels are proposals,
+      // never an accepted Reviewer Claim, GitHub witness or Host CAS receipt.
+      // A trusted K/Host freeze must validate the persisted draft and exact
+      // source-bound independent witness before returning any FROZEN/DONE.
+      state.reviewBlock={state:'NOT_VERIFIED',
+        reason:'HOST_PRODUCT_REVIEW_WITNESS_REQUIRED'};
+      state.frozen=null;
+      return record('freeze-draft',{status:'BLOCKED',
+        reason:'HOST_PRODUCT_REVIEW_WITNESS_REQUIRED',
+        githubEffect:'NOT_RUN',frozen:false});
     },
     async 'admit-project-intake'(sourceSha,{projectTitle}={}){
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
@@ -293,7 +292,7 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
       draft:state.draft?{state:'CANDIDATE',author:state.draft.author,at:state.draft.at,
         digest:state.draft.digest,product:state.draft.product,l2:state.draft.l2,
         provenance:state.draft.provenance,note:'User/model drafted content; never an accepted freeze'}:null,
-      review:state.review?{state:'REVIEWED',reviewer:state.review.reviewer,
+      review:state.review?{state:state.review.state,reviewer:state.review.reviewer,
         at:state.review.at,digest:state.review.digest,
         current:state.review.digest===state.draft?.digest}:null,
         ...(state.reviewBlock?{reviewBlock:state.reviewBlock}:{}),
