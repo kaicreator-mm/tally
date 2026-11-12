@@ -297,9 +297,23 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
           expected,builderClaim:builder,reviewerClaim:reviewer});
         if(witness?.status!=='INDEPENDENTLY_VERIFIED'||
           witness.independentlyVerified!==true||
+          witness.sourceQualified!==true||
+          witness.authorized!==false||witness.taskPass!==false||
+          witness.releasePass!==false||
           witness.sourceSha!==input.sourceSha||
           witness.productDigest!==draft.productDigest||
-          witness.draftRef!==draft.draftRef)
+          witness.draftRef!==draft.draftRef||
+          witness.taskPackBlobSha!==input.taskPackBlobSha||
+          witness.writeSetSha256!==input.writeSetSha256||
+          witness.reviewedHead!==input.reviewedHead||
+          witness.reviewedTree!==input.reviewedTree||
+          witness.reviewedBase!==input.reviewedBase||
+          witness.reviewerOperatorId!==reviewer.operatorId||
+          witness.reviewerWriterId!==reviewer.writerId||
+          typeof witness.reviewRef!=='string'||
+          !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/.test(witness.reviewRef)||
+          witness.p0!==0||witness.p1!==0||
+          !Number.isSafeInteger(witness.p2)||witness.p2<0||witness.p2>32)
           return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
         if(!await current(input.sourceSha))
           return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
