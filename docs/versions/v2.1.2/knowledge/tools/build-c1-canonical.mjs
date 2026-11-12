@@ -33,6 +33,8 @@ import {
   FROZEN_DIGEST, assertV211Baseline, assertC1Candidate, parseTtl,
   triplesEqualSet, canonicalDigest, nodesToTriples,
 } from './project-c1.mjs';
+import { materialize } from './materialize-c1.mjs';
+
 
 function fail(msg) {
   console.error('FAIL: ' + msg);
@@ -85,10 +87,17 @@ function run() {
   const manifest = buildManifest(cand.digest, cand.ttl, cand.jsonld);
 
   if (doWrite) {
+    // R4 is a two-path convergence requirement, not an already-current
+    // preview assumption. Regenerate the independent Owner overlay preview
+    // before any write, then publish all four byte-identical artifacts.
+    const preview = materialize();
+    assert.equal(preview, cand.jsonld,
+      'Owner-overlay preview must equal canonical source-lane export before --write');
     writeFileSync(REPO_ROOT + PATHS.outGraphJsonld, cand.jsonld);
     writeFileSync(REPO_ROOT + PATHS.outGraphTtl, cand.ttl);
     writeFileSync(REPO_ROOT + PATHS.outManifest, manifest);
-    console.log('WROTE generated/graph.jsonld, generated/graph.ttl, generated/manifest.sha256');
+    writeFileSync(REPO_ROOT + PATHS.outPreview, preview);
+    console.log('WROTE generated/graph.jsonld, generated/graph.ttl, generated/manifest.sha256, generated/c1-candidate.graph.jsonld');
     return;
   }
 

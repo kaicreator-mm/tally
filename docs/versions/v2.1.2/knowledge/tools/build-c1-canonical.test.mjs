@@ -18,7 +18,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, copyFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import {
   buildGraph, loadInputs, PATHS, REPO_ROOT, PINS, FROZEN_DIGEST,
@@ -247,4 +250,57 @@ test('negative: injected TTL/JSON-LD inequivalence is detected', () => {
   assert.notEqual(canonicalDigest(mutated), cand.digest);
   const parsed = parseTtl(cand.ttl);
   assert.notEqual(canonicalDigest(parsed), canonicalDigest(mutated));
+});
+
+test('regression: --write repairs stale or missing Owner preview in an isolated native checkout', () => {
+  // Do not mutate the real repository's immutable source or committed exports.
+  const tempRoot = mkdtempSync(join(tmpdir(), 'tally-c1-canonical-write-'));
+  const toolPrefix = 'docs/versions/v2.1.2/knowledge/tools/';
+  const sourcePaths = [
+    ...Object.keys(PINS.lanes).map(PATHS.lanes),
+    PATHS.registry, PATHS.catalog,
+    PATHS.frozenGraphJsonld, PATHS.frozenGraphTtl, PATHS.overlay,
+    PATHS.outGraphJsonld, PATHS.outGraphTtl, PATHS.outManifest, PATHS.outPreview,
+    ...['build-c1-canonical.mjs', 'project-c1.mjs', 'materialize-c1.mjs',
+         'yaml-min.mjs', 'rdf-min.mjs'].map(name => toolPrefix + name),
+  ];
+  const run = mode => spawnSync(process.execPath,
+    [join(tempRoot, toolPrefix + 'build-c1-canonical.mjs'), mode],
+    {cwd: tempRoot, encoding: 'utf8', timeout: 120000});
+  try {
+    for (const rel of sourcePaths) {
+      const destination = join(tempRoot, rel);
+      mkdirSync(dirname(destination), {recursive: true});
+      copyFileSync(REPO_ROOT + rel, destination);
+    }
+    const previewPath = join(tempRoot, PATHS.outPreview);
+    const candidatePath = join(tempRoot, PATHS.outGraphJsonld);
+    const frozenPath = join(tempRoot, PATHS.frozenGraphJsonld);
+    const frozenBefore = readFileSync(frozenPath);
+    const canonicalBefore = readFileSync(candidatePath);
+
+    writeFileSync(previewPath, '{"@graph":[]}\n');
+    const red = run('--check');
+    assert.notEqual(red.status, 0, 'stale preview must fail --check');
+    const greenWrite = run('--write');
+    assert.equal(greenWrite.status, 0, greenWrite.stderr || greenWrite.stdout);
+    assert.deepEqual(readFileSync(previewPath), readFileSync(candidatePath),
+      '--write must regenerate a byte-identical preview');
+    assert.deepEqual(readFileSync(candidatePath), canonicalBefore);
+    const greenCheck = run('--check');
+    assert.equal(greenCheck.status, 0, greenCheck.stderr || greenCheck.stdout);
+
+    rmSync(previewPath);
+    const missingRed = run('--check');
+    assert.notEqual(missingRed.status, 0, 'missing preview must fail --check');
+    const missingGreen = run('--write');
+    assert.equal(missingGreen.status, 0, missingGreen.stderr || missingGreen.stdout);
+    assert.deepEqual(readFileSync(previewPath), readFileSync(candidatePath));
+    const finalCheck = run('--check');
+    assert.equal(finalCheck.status, 0, finalCheck.stderr || finalCheck.stdout);
+    assert.deepEqual(readFileSync(frozenPath), frozenBefore,
+      'frozen v2.1.1 source must remain unchanged');
+  } finally {
+    rmSync(tempRoot, {recursive: true, force: true});
+  }
 });
