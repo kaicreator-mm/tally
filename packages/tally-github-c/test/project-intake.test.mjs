@@ -302,3 +302,93 @@ test('#312 GitHub PR/commit/tree/base/branch API truth outranks matching body an
   assert.equal(v1.status,'UNKNOWN');
   assert.equal(v1.reason,'PRODUCT_REVIEW_WITNESS_MISMATCH');
 });
+
+
+// #392 source-only sequencing: a legally reviewed PR is merged BEFORE the
+// new current 51/37 Pack, accepted #312 Claims and true Host Freeze. Therefore
+// an original unedited Reviewer Witness must be able to attest an immutable
+// merged source via official GitHub merge parents/current ancestry, not just
+// a still-open PR. No caller-controlled stale SHA or synthetic Claim accepted.
+const merged312Sha='6'.repeat(40),later312Sha='9'.repeat(40);
+async function merged312Read({
+  sourceSha=merged312Sha,mergeSha=merged312Sha,
+  mergeParents=[witness312Sha,witness312Expected.reviewedHead],
+  mergeTree='7'.repeat(40),mergedAt='2026-11-13T01:00:00Z',
+  state='closed',merged=true,compareStatus='ahead',
+  behindBy=0,aheadBy=1,mergeBaseSha=mergeSha,withCompare=true,
+  branchSha=sourceSha,prOverride={},commitDenied=false
+}={}){
+  const expected={...witness312Expected,sourceSha};
+  const builderClaim={...witness312Builder,sourceSha};
+  const reviewerClaim={...witness312Reviewer,sourceSha};
+  const comment={...witness312Comment,body:JSON.stringify({
+    ...witness312Body,sourceSha})};
+  const pr={...witness312Pr,state,merged,merged_at:mergedAt,
+    merge_commit_sha:mergeSha,...prOverride};
+  const mergeCommit={sha:mergeSha,commit:{tree:{sha:mergeTree}},
+    parents:mergeParents.map(sha=>({sha}))};
+  const compareData={status:compareStatus,behind_by:behindBy,
+    ahead_by:aheadBy,merge_base_commit:{sha:mergeBaseSha}};
+  const repos={
+    getCommit:async({ref})=>{
+      if(commitDenied)throw {status:403};
+      return {data:ref===witness312Expected.reviewedHead?witness312Head:
+        ref===witness312Sha?witness312Base:mergeCommit};},
+    getBranch:async()=>({data:{commit:{sha:branchSha}}})};
+  if(withCompare)repos.compareCommits=async({base,head})=>{
+    assert.equal(base,mergeSha);assert.equal(head,sourceSha);
+    return {data:compareData};};
+  return readProductReviewWitnessFromClient({octokit:{rest:{
+    issues:{getComment:async()=>({data:comment})},
+    pulls:{get:async()=>({data:pr})},repos}},
+    expected,commentId:12345,builderClaim,reviewerClaim});
+}
+
+test('#312 real-style merged source provenance: 2-parent git merge qualifies current review, never release',async()=>{
+  const got=await merged312Read();
+  assert.equal(got.status,'INDEPENDENTLY_VERIFIED');
+  assert.equal(got.sourceProvenance,'MERGED_PR_ANCESTRY');
+  assert.equal(got.mergeCommitSha,merged312Sha);
+  assert.equal(got.sourceSha,merged312Sha);
+  assert.equal(got.reviewedBase,witness312Sha);
+  assert.equal(got.reviewedHead,witness312Expected.reviewedHead);
+  assert.equal(got.taskPass,false);assert.equal(got.releasePass,false);
+  const later=await merged312Read({sourceSha:later312Sha});
+  assert.equal(later.status,'INDEPENDENTLY_VERIFIED');
+  assert.equal(later.sourceProvenance,'MERGED_PR_ANCESTRY');
+  assert.equal(later.sourceSha,later312Sha);
+});
+
+test('#312 wrong merge provenance, squash/rebase and stale branch cannot qualify current Host',async()=>{
+  const cases=[
+    [{mergeParents:[witness312Expected.reviewedHead,witness312Sha]},
+      'PRODUCT_REVIEW_GIT_MERGE_PROVENANCE_MISMATCH'],
+    [{mergeParents:[witness312Sha]},
+      'PRODUCT_REVIEW_GIT_MERGE_PROVENANCE_MISMATCH'],
+    [{mergeParents:[witness312Sha,'8'.repeat(40)]},
+      'PRODUCT_REVIEW_GIT_MERGE_PROVENANCE_MISMATCH'],
+    [{mergeTree:'bad'},'PRODUCT_REVIEW_GIT_MERGE_PROVENANCE_MISMATCH'],
+    [{mergeSha:'bad'},'PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED'],
+    [{mergedAt:null},'PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED'],
+    [{state:'closed',merged:false},'PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED'],
+    [{prOverride:{base:{...witness312Pr.base,
+      repo:{full_name:'evil/fork'}}}},'PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED'],
+    [{sourceSha:later312Sha,compareStatus:'diverged'},
+      'PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED'],
+    [{sourceSha:later312Sha,behindBy:1},
+      'PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED'],
+    [{sourceSha:later312Sha,mergeBaseSha:'8'.repeat(40)},
+      'PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED'],
+    [{sourceSha:later312Sha,withCompare:false},
+      'PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED'],
+    [{sourceSha:later312Sha,branchSha:'8'.repeat(40)},
+      'PRODUCT_REVIEW_VERSION_SOURCE_MOVED'],
+    [{commitDenied:true},'GITHUB_ACCESS_DENIED'],
+  ];
+  for(const [options,reason] of cases){
+    const got=await merged312Read(options);
+    assert.equal(got.status,'UNKNOWN',JSON.stringify(options));
+    assert.equal(got.reason,reason,JSON.stringify(options));
+    assert.equal(got.taskPass,false);
+  }
+});
