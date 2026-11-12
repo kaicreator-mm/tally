@@ -264,6 +264,8 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
           return Object.freeze({state:'DRAFT_PENDING_REVIEW',
             reason:'HOST_DRAFT_PERSISTED_AND_READ_BACK',draftRef,
             productDigest:digest,sourceSha:input.sourceSha,
+            taskPackBlobSha:input.taskPackBlobSha,
+            writeSetSha256:input.writeSetSha256,
             issueNumber:312,authorized:false,admitted:false,
             taskPass:false,releasePass:false});
         });
