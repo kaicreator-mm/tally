@@ -407,7 +407,8 @@ test('lost-ack stays UNKNOWN and reconciles by readback, never a blind POST',asy
 test('readback mismatch after a successful POST stays UNKNOWN',async()=>{
   let reads=0;
   const pack=candidatePack();
-  const gh={rest:{issues:{get:async({issue_number})=>({data:{
+  const gh={rest:{repos:{getBranch:async()=>({data:{commit:{sha:versionSha}}})},
+    issues:{get:async({issue_number})=>({data:{
     number:issue_number,id:issue_number*1000,state:'open',
     updated_at:'2026-11-09T11:00:00Z',
     repository_url:'https://api.github.com/repos/'+owner+'/'+repo}})}},
