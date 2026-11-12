@@ -4,6 +4,8 @@ import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   publishReviewedCandidate as nativePublishReviewedCandidate,
   hostProjectIntake as nativeHostProjectIntake,
   freezeProductIntake as nativeFreezeProductIntake,
+  persistProductDraft312 as nativePersistProductDraft312,
+  freezeProductReview312 as nativeFreezeProductReview312,
   publishMaintenanceIssue as nativePublishMaintenanceIssue,
   recordTaskLearningOutcome as nativeRecordTaskLearningOutcome,
   hostReleaseDelivery as nativeHostReleaseDelivery,
@@ -16,7 +18,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -296,6 +298,71 @@ export async function freezeProductIntake(input){
   return Object.freeze({phase:'terminal',
     externalRef:`tally:${INTAKE_ISSUE}:${input?.productDigest??'invalid'}:freeze`,
     outcome:{ok:true,output}});
+}
+
+// #312 sealed Product ReviewWitness C boundary: never return fabricated
+// Host-backed draft, independent review, Task or Release status. The selected
+// Host validates accepted roles, real GitHub comment and shared CAS fence.
+const PRODUCT312_ISSUE=312,PRODUCT312_REF=issueRefFor(PRODUCT312_ISSUE);
+const PRODUCT312_DIGEST=/^[a-f0-9]{64}$/;
+const PRODUCT312_REVIEW=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/;
+const product312Unknown=(input,reason)=>({
+  state:'UNKNOWN',reason,issueNumber:PRODUCT312_ISSUE,
+  sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  taskPackBlobSha:SHA.test(input?.taskPackBlobSha??'')?
+    input.taskPackBlobSha:null,
+  writeSetSha256:PRODUCT312_DIGEST.test(input?.writeSetSha256??'')?
+    input.writeSetSha256:null,
+  frozen:false,authorized:false,admitted:false,
+  taskPass:false,releasePass:false});
+const product312BaseValid=(input,o)=>o&&typeof o==='object'&&
+  !Array.isArray(o)&&o.issueNumber===312&&o.sourceSha===input.sourceSha&&
+  o.taskPackBlobSha===input.taskPackBlobSha&&
+  o.writeSetSha256===input.writeSetSha256&&o.authorized===false&&
+  o.admitted===false&&o.taskPass===false&&o.releasePass===false;
+const product312Envelope=(input,output,action)=>Object.freeze({
+  phase:'terminal',
+  externalRef:'tally:312:'+String(input?.sourceSha??'invalid')+':'+action,
+  outcome:{ok:true,output:Object.freeze(output)}});
+export async function persistProductDraft312(input){
+  const valid=input&&input.issueNumber===312&&input.sourceRef===PRODUCT312_REF&&
+    SHA.test(input.sourceSha??'')&&SHA.test(input.taskPackBlobSha??'')&&
+    PRODUCT312_DIGEST.test(input.writeSetSha256??'')&&
+    input.draft&&typeof input.draft==='object'&&!Array.isArray(input.draft);
+  if(!valid)return product312Envelope(input,
+    product312Unknown(input,'PRODUCT_DRAFT_INPUT_INVALID'),'draft');
+  let observed;
+  try{observed=await nativePersistProductDraft312(input);}catch{observed=null;}
+  if(product312BaseValid(input,observed)&&
+    observed.state==='DRAFT_PENDING_REVIEW'&&
+    observed.reason==='HOST_DRAFT_PERSISTED_AND_READ_BACK'&&
+    PRODUCT312_DIGEST.test(observed.productDigest??'')&&
+    observed.draftRef==='draft:sha256:'+observed.productDigest)
+    return product312Envelope(input,observed,'draft');
+  return product312Envelope(input,
+    product312Unknown(input,'PRODUCT_DRAFT_CAS_UNKNOWN'),'draft');
+}
+export async function freezeProductReview312(input){
+  const valid=input&&input.issueNumber===312&&input.sourceRef===PRODUCT312_REF&&
+    SHA.test(input.sourceSha??'')&&SHA.test(input.taskPackBlobSha??'')&&
+    PRODUCT312_DIGEST.test(input.writeSetSha256??'')&&
+    Number.isSafeInteger(input.reviewCommentId)&&input.reviewCommentId>0&&
+    SHA.test(input.reviewedHead??'')&&SHA.test(input.reviewedTree??'')&&
+    SHA.test(input.reviewedBase??'');
+  if(!valid)return product312Envelope(input,
+    product312Unknown(input,'PRODUCT_REVIEW_FREEZE_INPUT_INVALID'),'freeze');
+  let observed;
+  try{observed=await nativeFreezeProductReview312(input);}catch{observed=null;}
+  if(product312BaseValid(input,observed)&&
+    observed.state==='FROZEN_COMPLETE'&&observed.frozen===true&&
+    observed.reason==='SOURCE_BOUND_HOST_CAS_READBACK_VERIFIED'&&
+    PRODUCT312_DIGEST.test(observed.productDigest??'')&&
+    observed.draftRef==='draft:sha256:'+observed.productDigest&&
+    observed.receiptRef==='receipt:sha256:'+observed.productDigest&&
+    PRODUCT312_REVIEW.test(observed.reviewRef??''))
+    return product312Envelope(input,observed,'freeze');
+  return product312Envelope(input,
+    product312Unknown(input,'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'),'freeze');
 }
 
 // T219 — J08b authorized native Issue publication boundary. Only the exact
