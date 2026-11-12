@@ -153,10 +153,13 @@ export async function readProjectIntakeFromClient({octokit,owner,repo,
  * Caller-authored JSON, same-process Review and edited comments fail closed.
  */
 const RW_SHA=/^[a-f0-9]{40}$/,RW_DIGEST=/^[a-f0-9]{64}$/;
-const RW_KEYS=['schema','status','repository','issueNumber','reviewRef','draftRef',
+// v2 payload is immutable and publishable: the server-assigned reviewRef
+// exists only AFTER POST, therefore MUST be derived from trusted GET metadata.
+const RW_KEYS=['schema','status','repository','issueNumber','draftRef',
   'productDigest','sourceSha','taskPackBlobSha','writeSetSha256',
-  'reviewedHead','reviewedTree','reviewedBase','builderClaimRef',
-  'reviewerClaimRef','reviewerOperatorId','reviewerWriterId','p0','p1','p2'];
+  'reviewedPullNumber','reviewedHead','reviewedTree','reviewedBase',
+  'builderClaimRef','reviewerClaimRef','reviewerOperatorId',
+  'reviewerWriterId','p0','p1','p2'];
 const rwUnknown=reason=>Object.freeze({status:'UNKNOWN',reason,
   independentlyVerified:false,sourceQualified:false,reviewRef:null,
   authorized:false,taskPass:false,releasePass:false});
@@ -181,7 +184,10 @@ export async function readProductReviewWitnessFromClient({
 }={}){
   if(owner!=='kaicreator-mm'||repo!=='tally'||!rwExpected(expected)||
     !Number.isSafeInteger(commentId)||commentId<=0||
-    typeof octokit?.rest?.issues?.getComment!=='function')
+    typeof octokit?.rest?.issues?.getComment!=='function'||
+    typeof octokit?.rest?.pulls?.get!=='function'||
+    typeof octokit?.rest?.repos?.getCommit!=='function'||
+    typeof octokit?.rest?.repos?.getBranch!=='function')
     return rwUnknown('PRODUCT_REVIEW_INPUT_INVALID');
   if(!rwClaim(builderClaim,'builder',expected)||
     !rwClaim(reviewerClaim,'reviewer',expected))
@@ -196,6 +202,7 @@ export async function readProductReviewWitnessFromClient({
   }catch(error){return rwUnknown(errorReason(error));}
   const ref='https://github.com/'+owner+'/'+repo+'/issues/312#issuecomment-'+commentId;
   if(comment?.id!==commentId||comment.html_url!==ref||
+    comment.issue_url!=='https://api.github.com/repos/'+owner+'/'+repo+'/issues/312'||
     comment.user?.login!==reviewerClaim.transportActor||
     !ISO(comment.created_at)||comment.created_at!==comment.updated_at||
     typeof comment.body!=='string'||comment.body.length>8192)
@@ -210,9 +217,10 @@ export async function readProductReviewWitnessFromClient({
   if(Object.keys(body).length!==RW_KEYS.length||
     RW_KEYS.some(k=>!Object.hasOwn(body,k)))
     return rwUnknown('PRODUCT_REVIEW_SCHEMA_INVALID');
-  if(body.schema!=='tally.v2.product-review-witness/1'||
+  if(body.schema!=='tally.v2.product-review-witness/2'||
     body.status!=='INDEPENDENTLY_VERIFIED'||body.repository!==owner+'/'+repo||
-    body.issueNumber!==312||body.reviewRef!==ref||
+    body.issueNumber!==312||
+    !Number.isSafeInteger(body.reviewedPullNumber)||body.reviewedPullNumber<=0||
     body.builderClaimRef!==builderClaim.claimRef||
     body.reviewerClaimRef!==reviewerClaim.claimRef||
     body.reviewerOperatorId!==reviewerClaim.operatorId||
@@ -223,9 +231,41 @@ export async function readProductReviewWitnessFromClient({
   if(body.p0!==0||body.p1!==0||!Number.isSafeInteger(body.p2)||
     body.p2<0||body.p2>32)
     return rwUnknown('PRODUCT_REVIEW_FINDINGS_BLOCKED');
+  // Reviewer coordinates are NEVER trusted merely because both sides of
+  // a comparison came from the caller/comment. Resolve actual GitHub PR,
+  // HEAD tree, base commit, then the live version branch in that order.
+  let prInfo,headCommit,baseCommit,liveBranch;
+  try{
+    prInfo=(await octokit.rest.pulls.get({
+      owner,repo,pull_number:body.reviewedPullNumber}))?.data;
+    if(prInfo?.number!==body.reviewedPullNumber||prInfo?.state!=='open'||
+      prInfo?.merged===true||
+      prInfo.head?.repo?.full_name!==owner+'/'+repo||
+      prInfo.base?.repo?.full_name!==owner+'/'+repo||
+      prInfo.head?.sha!==body.reviewedHead||
+      prInfo.base?.sha!==body.reviewedBase||
+      prInfo.base?.ref!=='version/v2'||body.reviewedBase!==body.sourceSha)
+      return rwUnknown('PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED');
+    headCommit=(await octokit.rest.repos.getCommit({
+      owner,repo,ref:body.reviewedHead}))?.data;
+    baseCommit=(await octokit.rest.repos.getCommit({
+      owner,repo,ref:body.reviewedBase}))?.data;
+    if(headCommit?.sha!==body.reviewedHead||
+      headCommit?.commit?.tree?.sha!==body.reviewedTree||
+      baseCommit?.sha!==body.reviewedBase||
+      !RW_SHA.test(baseCommit?.commit?.tree?.sha??''))
+      return rwUnknown('PRODUCT_REVIEW_GIT_OBJECT_MISMATCH');
+    // Final last awaited read — Host redoes ALL these checks under its
+    // version-scoped CAS fence before any physical freeze.
+    liveBranch=(await octokit.rest.repos.getBranch({
+      owner,repo,branch:'version/v2'}))?.data;
+    if(liveBranch?.commit?.sha!==body.sourceSha)
+      return rwUnknown('PRODUCT_REVIEW_VERSION_SOURCE_MOVED');
+  }catch(e){return rwUnknown(errorReason(e));}
   return Object.freeze({status:'INDEPENDENTLY_VERIFIED',
     reason:'EXACT_GITHUB_REVIEW_WITNESS_VERIFIED',independentlyVerified:true,
-    sourceQualified:true,reviewRef:ref,draftRef:body.draftRef,
+    sourceQualified:true,reviewRef:ref,reviewedPullNumber:body.reviewedPullNumber,
+    draftRef:body.draftRef,
     productDigest:body.productDigest,sourceSha:body.sourceSha,
     taskPackBlobSha:body.taskPackBlobSha,writeSetSha256:body.writeSetSha256,
     reviewedHead:body.reviewedHead,reviewedTree:body.reviewedTree,
