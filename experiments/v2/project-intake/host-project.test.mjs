@@ -814,6 +814,26 @@ async function verifyAcceptedClaim312(issueNumber,actorRole){
     claimRef:v.commentRef,operatorId:claim.operatorId,writerId:claim.writerId,
     transportActor:claim.writerLogin}};
 }
+const p312FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"]);
+const p312VersionDagKey='tally:v2:version-task-dag:'+
+  createHash('sha256').update('kaicreator-mm/tally#version/v2').digest('hex');
+function p312FsDocumentMatches(document,digest){
+  if(typeof document!=='string'||!document.length||document.length>65536)return false;
+  let entries;
+  try{
+    const decoded=JSON.parse(document);
+    entries=Array.isArray(decoded)?decoded:decoded?.allowed_write_set;
+  }catch{
+    entries=document.split(String.fromCharCode(10)).map(path=>
+      path.endsWith(String.fromCharCode(13))?path.slice(0,-1):path);
+  }
+  if(!Array.isArray(entries)||entries.length!==p312FsPaths.length||
+    !entries.every(path=>typeof path==='string'&&path.length>0))return false;
+  const normalized=[...new Set(entries)].sort();
+  return normalized.length===p312FsPaths.length&&
+    normalized.every((path,index)=>path===p312FsPaths[index])&&
+    createHash('sha256').update(JSON.stringify(normalized)).digest('hex')===digest;
+}
 async function verifyFrozenWriteSet312(issueNumber,sourceSha){
   const env=process.env;
   const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
@@ -829,10 +849,12 @@ async function verifyFrozenWriteSet312(issueNumber,sourceSha){
   finally{if(db)await db.close();}
   const value=row?.value;
   if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
-    value.taskPackBlobSha!==pack||value.writeSetSha256!==digest||
-    typeof value.document!=='string'||value.document.length>65536||
-    !value.document.includes('experiments/v2/project-intake/host-project.mjs')||
-    !value.document.includes('web/v2/intake-controller.mjs'))
+    (!Number.isSafeInteger(row?.revision)||row.revision<1)||
+    value.schema!=='tally/version-task-writeset/v1'||
+    value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
+    value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
+    value.writeSetSha256!==digest||
+    !p312FsDocumentMatches(value.document,digest))
     return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
   return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
 }
@@ -1020,10 +1042,13 @@ if(command==='seed'){
     await db.put('tally:v2:claim-admission:'+sha256(claimKey),value,
       {mustBeAbsent:true});
   }
-  const fsw={phase:'FROZEN_DAG_WRITESET',
+  const fsw={schema:'tally/version-task-writeset/v1',phase:'FROZEN_DAG_WRITESET',
+    repository:'kaicreator-mm/tally',issueNumber:312,
     sourceSha:arg==='fsw-stale'?'9'.repeat(40):data.sourceSha,
-    taskPackBlobSha:data.taskPackBlobSha,writeSetSha256:data.writeSetSha256,
-    document:data.fswDocument};
+    versionPackBlobSha:data.taskPackBlobSha,writeSetSha256:data.writeSetSha256,
+    versionTaskDagKey:'tally:v2:version-task-dag:'+
+      sha256('kaicreator-mm/tally#version/v2'),
+    document:data.fswDocument,frozenAt:'2026-11-13T00:00:00Z'};
   await db.put('tally:v2:task-writeset:312',fsw,{mustBeAbsent:true});
   await db.close();
   writeFixture({branchSha:data.sourceSha,
@@ -1409,7 +1434,10 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
     // Physical case scaffolding.
     const sourceSha=run('git',['-C',REPO_ROOT,'rev-parse','HEAD']).stdout.trim();
     assert.match(sourceSha,/^[0-9a-f]{40}$/);
-    const pack='b'.repeat(40),set='c'.repeat(64),witnessId=77003;
+    const pack='b'.repeat(40),witnessId=77003;
+    const fswPaths312=[".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"];
+    const set=sha256(JSON.stringify(fswPaths312));
+    assert.equal(set,'3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916');
     const builder={dispatchId:'dispatch:312:builder:phys',operatorId:'zcode:t312:builder',
       operatorKind:'other',writerId:'writer:312:builder',writerLogin:'kaicreator-mm',
       commentId:77001};
@@ -1419,12 +1447,7 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
     const draft={product:{goal:'T312 physical Product ReviewWitness replay',
       nonGoals:['No forged Task PASS','No fake Release']},l2:{decision:'KEEP_MERGED_L2_ARCHITECTURE'},
       provenance:['157','158']};
-    const fswDocument=['.woodpecker/v2-alm-workspace.yaml',
-      'experiments/v2/project-intake/host-project.mjs',
-      'experiments/v2/project-intake/host-project.test.mjs',
-      'packages/tally-engineering-business/src/index.mjs',
-      'packages/tally-github-c/src/project-intake.mjs',
-      'web/v2/intake-controller.mjs','web/v2/journey-server.mjs'].join('\n');
+    const fswDocument=fswPaths312.join('\n');
     const caseInput=extra=>({sourceSha,taskPackBlobSha:pack,writeSetSha256:set,
       reviewCommentId:witnessId,reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
       reviewedBase:sourceSha,draft,builder,reviewer,fswDocument,...extra});
@@ -1496,6 +1519,23 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
       'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-'+witnessId);
     const posFence=jsonLine(driver(posDir,['readfence']).stdout,'T312_DRIVER_FENCE=');
     assert.equal(posFence.phase,'RELEASED');
+
+    // #312: authentic E0-format positive above; spoofed FSW documents fail closed.
+    for(const [name,document,digestOverride] of [
+      ['missing14',fswPaths312.slice(0,2).join('\n'),set],
+      ['extra',[...fswPaths312,'unsafe/extra.mjs'].join('\n'),set],
+      ['duplicate',[...fswPaths312.slice(0,-1),fswPaths312[0]].join('\n'),set],
+      ['echo-digest',fswDocument,'f'.repeat(64)]]){
+      const dir=mkCase('fsw-'+name,caseInput({fswDocument:document,
+        writeSetSha256:digestOverride}));
+      assert.equal(driver(dir,['seed']).status,0,'seed '+name);
+      const out=jsonLine(driver(dir,['persist']).stdout,'T312_DRIVER_PERSIST=');
+      assert.equal(out.state,'UNKNOWN',name);
+      assert.equal(out.reason,'PRODUCT_DRAFT_SOURCE_OR_CLAIM_STALE',name);
+      const read=jsonLine(driver(dir,['readreg']).stdout,'T312_DRIVER_REG=');
+      assert.equal(read.draftPhase,null,name);
+      assert.equal(read.frozenPhase,null,name);
+    }
 
     // K2 noclaim: reviewer Claim row absent; builder-only seed.
     const nocDir=mkCase('noclaim',caseInput({reviewer:null}));

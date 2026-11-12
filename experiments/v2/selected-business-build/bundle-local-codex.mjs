@@ -179,6 +179,26 @@ async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
     return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};
   return {ok:true,pair};
 }
+const p312FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"]);
+const p312VersionDagKey='tally:v2:version-task-dag:'+
+  createHash('sha256').update('kaicreator-mm/tally#version/v2').digest('hex');
+function p312FsDocumentMatches(document,digest){
+  if(typeof document!=='string'||!document.length||document.length>65536)return false;
+  let entries;
+  try{
+    const decoded=JSON.parse(document);
+    entries=Array.isArray(decoded)?decoded:decoded?.allowed_write_set;
+  }catch{
+    entries=document.split(String.fromCharCode(10)).map(path=>
+      path.endsWith(String.fromCharCode(13))?path.slice(0,-1):path);
+  }
+  if(!Array.isArray(entries)||entries.length!==p312FsPaths.length||
+    !entries.every(path=>typeof path==='string'&&path.length>0))return false;
+  const normalized=[...new Set(entries)].sort();
+  return normalized.length===p312FsPaths.length&&
+    normalized.every((path,index)=>path===p312FsPaths[index])&&
+    createHash('sha256').update(JSON.stringify(normalized)).digest('hex')===digest;
+}
 async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
   if(issueNumber===312){
     const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
@@ -196,10 +216,12 @@ async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
     finally{if(db)await db.close();}
     const value=row?.value;
     if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
-      value.taskPackBlobSha!==pack||value.writeSetSha256!==digest||
-      typeof value.document!=='string'||value.document.length>65536||
-      !value.document.includes('experiments/v2/project-intake/host-project.mjs')||
-      !value.document.includes('web/v2/intake-controller.mjs'))
+      (!Number.isSafeInteger(row?.revision)||row.revision<1)||
+      value.schema!=='tally/version-task-writeset/v1'||
+      value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
+      value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
+      value.writeSetSha256!==digest||
+      !p312FsDocumentMatches(value.document,digest))
       return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
     return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
   }
