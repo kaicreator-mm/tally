@@ -159,3 +159,181 @@ export function createProjectIntakeHost({openStore,verifyAcceptedClaim,
         url:match.url,itemCount:match.itemCount})});
   }});
 }
+
+
+// #312 successor: strict Host-only immutable draft and source-bound ReviewWitness.
+import {createHash as productReviewSha256} from 'node:crypto';
+export const PRODUCT312_DRAFT_KEY='tally:v2:product-intake:312:draft:';
+export const PRODUCT312_FREEZE_KEY='tally:v2:product-intake:312:frozen:';
+const product312Unknown=(reason,extra={})=>Object.freeze({state:'UNKNOWN',reason,
+  issueNumber:312,authorized:false,admitted:false,taskPass:false,
+  releasePass:false,...extra});
+const product312Canonical=v=>Array.isArray(v)?v.map(product312Canonical):
+  v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[
+    k,product312Canonical(v[k])])):v;
+const product312Plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&
+  Object.getPrototypeOf(v)===Object.prototype;
+const product312Draft=v=>product312Plain(v)&&
+  Object.keys(v).sort().join(',')==='l2,product,provenance'&&
+  product312Plain(v.product)&&product312Plain(v.l2)&&
+  typeof v.product.goal==='string'&&v.product.goal.trim().length>0&&
+  v.product.goal.length<=256&&Array.isArray(v.product.nonGoals)&&
+  v.product.nonGoals.length<=8&&v.product.nonGoals.every(x=>
+    typeof x==='string'&&x.length>0&&x.length<=256)&&
+  typeof v.l2.decision==='string'&&v.l2.decision.length<=128&&
+  Array.isArray(v.provenance)&&v.provenance.length<=16&&
+  v.provenance.every(x=>typeof x==='string'&&x.length>0&&x.length<=256)&&
+  JSON.stringify(v).length<=4096;
+const product312Digest=(draft,sourceSha)=>productReviewSha256('sha256')
+  .update(JSON.stringify(product312Canonical({draft,sourceSha}))).digest('hex');
+/**
+ * Trusted Host injection contract: accepted Claim records (not caller roles),
+ * exact frozen Task Pack/write-set readback and current version ref reader.
+ * A physical VERSION_ONLY shared-CAS fence is mandatory for final Freeze.
+ */
+export function createProductReviewHost312({openStore,verifyAcceptedClaim,
+  verifyFrozenWriteSet,readReviewWitness,readCurrentVersion,
+  withVersionFence,env=process.env}={}){
+  const registry=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
+  const sourceOk=sourceSha=>SHA.test(sourceSha??'')&&
+    sourceSha===env.TALLY_CLAIM_SOURCE_SHA&&typeof registry==='string'&&
+    registry.length>0;
+  const storeCall=async fn=>{
+    let store;
+    try{
+      store=await openStore({path:registry,busyTimeoutMs:1000});
+      return await fn(store);
+    }finally{if(store)await store.close();}
+  };
+  const admitted=async(input,role)=>{
+    const evidence=await verifyAcceptedClaim(312,role);
+    const writeSet=await verifyFrozenWriteSet(312,input.sourceSha);
+    const claim=evidence?.claim;
+    if(evidence?.ok!==true||claim?.accepted!==true||
+      claim.issueNumber!==312||claim.role!==role||
+      claim.sourceSha!==input.sourceSha||
+      claim.taskPackBlobSha!==input.taskPackBlobSha||
+      claim.writeSetSha256!==input.writeSetSha256||
+      writeSet?.ok!==true||writeSet.taskPackBlobSha!==input.taskPackBlobSha||
+      writeSet.writeSetSha256!==input.writeSetSha256)
+      return null;
+    return claim;
+  };
+  const current=async sourceSha=>{
+    const observed=await readCurrentVersion();
+    return observed?.ok===true&&observed.sha===sourceSha;
+  };
+  return Object.freeze({
+    async persistDraft(input){
+      if(typeof openStore!=='function'||typeof verifyAcceptedClaim!=='function'||
+        typeof verifyFrozenWriteSet!=='function'||typeof readCurrentVersion!=='function')
+        return product312Unknown('PRODUCT_REVIEW_HOST_UNAVAILABLE');
+      if(!sourceOk(input?.sourceSha)||!SHA.test(input?.taskPackBlobSha??'')||
+        !DIGEST.test(input?.writeSetSha256??'')||!product312Draft(input?.draft))
+        return product312Unknown('PRODUCT_DRAFT_INPUT_INVALID');
+      try{
+        const builder=await admitted(input,'builder');
+        if(!builder||!await current(input.sourceSha))
+          return product312Unknown('PRODUCT_DRAFT_SOURCE_OR_CLAIM_STALE');
+        const digest=product312Digest(input.draft,input.sourceSha);
+        const key=PRODUCT312_DRAFT_KEY+input.sourceSha;
+        const draftRef='draft:sha256:'+digest;
+        const record={phase:'DRAFT_PENDING_REVIEW',issueNumber:312,
+          sourceSha:input.sourceSha,productDigest:digest,draftRef,
+          taskPackBlobSha:input.taskPackBlobSha,
+          writeSetSha256:input.writeSetSha256,
+          builderClaimRef:builder.claimRef,
+          draft:product312Canonical(input.draft)};
+        return await storeCall(async store=>{
+          const prior=await store.get(key);
+          if(prior&&JSON.stringify(prior.value)!==JSON.stringify(record))
+            return product312Unknown('PRODUCT_DRAFT_ALREADY_EXISTS');
+          if(!prior)await store.put(key,record,{mustBeAbsent:true});
+          const saved=(await store.get(key))?.value;
+          if(JSON.stringify(saved)!==JSON.stringify(record))
+            return product312Unknown('PRODUCT_DRAFT_READBACK_UNVERIFIED');
+          return Object.freeze({state:'DRAFT_PENDING_REVIEW',
+            reason:'HOST_DRAFT_PERSISTED_AND_READ_BACK',draftRef,
+            productDigest:digest,sourceSha:input.sourceSha,
+            issueNumber:312,authorized:false,admitted:false,
+            taskPass:false,releasePass:false});
+        });
+      }catch{return product312Unknown('PRODUCT_DRAFT_CAS_UNKNOWN');}
+    },
+    async freezeReviewedDraft(input){
+      if(typeof openStore!=='function'||typeof verifyAcceptedClaim!=='function'||
+        typeof verifyFrozenWriteSet!=='function'||typeof readReviewWitness!=='function'||
+        typeof readCurrentVersion!=='function'||typeof withVersionFence!=='function')
+        return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+      if(!sourceOk(input?.sourceSha)||!SHA.test(input?.taskPackBlobSha??'')||
+        !DIGEST.test(input?.writeSetSha256??'')||
+        !Number.isSafeInteger(input?.reviewCommentId)||input.reviewCommentId<1||
+        !SHA.test(input?.reviewedHead??'')||!SHA.test(input?.reviewedTree??'')||
+        !SHA.test(input?.reviewedBase??''))
+        return product312Unknown('PRODUCT_REVIEW_FREEZE_INPUT_INVALID');
+      try{
+        const builder=await admitted(input,'builder');
+        const reviewer=await admitted(input,'reviewer');
+        if(!builder||!reviewer||
+          builder.operatorId===reviewer.operatorId||
+          builder.writerId===reviewer.writerId)
+          return product312Unknown('PRODUCT_REVIEW_PROCESS_OR_CLAIM_UNVERIFIED');
+        const draft=await storeCall(async store=>
+          (await store.get(PRODUCT312_DRAFT_KEY+input.sourceSha))?.value);
+        if(draft?.phase!=='DRAFT_PENDING_REVIEW'||
+          draft.sourceSha!==input.sourceSha||
+          draft.taskPackBlobSha!==input.taskPackBlobSha||
+          draft.writeSetSha256!==input.writeSetSha256||
+          draft.builderClaimRef!==builder.claimRef||
+          draft.productDigest!==product312Digest(draft.draft,input.sourceSha))
+          return product312Unknown('PRODUCT_DRAFT_NOT_PERSISTED_OR_STALE');
+        const expected={issueNumber:312,sourceSha:input.sourceSha,
+          taskPackBlobSha:input.taskPackBlobSha,
+          writeSetSha256:input.writeSetSha256,
+          productDigest:draft.productDigest,draftRef:draft.draftRef,
+          reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+          reviewedBase:input.reviewedBase};
+        const witness=await readReviewWitness({commentId:input.reviewCommentId,
+          expected,builderClaim:builder,reviewerClaim:reviewer});
+        if(witness?.status!=='INDEPENDENTLY_VERIFIED'||
+          witness.independentlyVerified!==true||
+          witness.sourceSha!==input.sourceSha||
+          witness.productDigest!==draft.productDigest||
+          witness.draftRef!==draft.draftRef)
+          return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+        if(!await current(input.sourceSha))
+          return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
+        return await withVersionFence({sourceSha:input.sourceSha,
+          operation:'PRODUCT_REVIEW_FREEZE_312'},async()=>{
+          if(!await current(input.sourceSha))
+            return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
+          return storeCall(async store=>{
+            const key=PRODUCT312_FREEZE_KEY+input.sourceSha;
+            const value={phase:'FROZEN_PRODUCT_INTAKE',issueNumber:312,
+              sourceSha:input.sourceSha,draftRef:draft.draftRef,
+              productDigest:draft.productDigest,
+              taskPackBlobSha:input.taskPackBlobSha,
+              writeSetSha256:input.writeSetSha256,
+              builderClaimRef:builder.claimRef,
+              reviewerClaimRef:reviewer.claimRef,
+              reviewRef:witness.reviewRef};
+            const prior=await store.get(key);
+            if(prior&&JSON.stringify(prior.value)!==JSON.stringify(value))
+              return product312Unknown('PRODUCT_REVIEW_FREEZE_CONFLICT');
+            if(!prior)await store.put(key,value,{mustBeAbsent:true});
+            const saved=(await store.get(key))?.value;
+            if(JSON.stringify(saved)!==JSON.stringify(value))
+              return product312Unknown('PRODUCT_REVIEW_FREEZE_READBACK_UNVERIFIED');
+            return Object.freeze({state:'FROZEN_COMPLETE',
+              reason:'SOURCE_BOUND_HOST_CAS_READBACK_VERIFIED',
+              issueNumber:312,sourceSha:input.sourceSha,
+              productDigest:draft.productDigest,draftRef:draft.draftRef,
+              reviewRef:witness.reviewRef,receiptRef:'receipt:sha256:'+
+              draft.productDigest,frozen:true,
+              authorized:false,admitted:false,taskPass:false,releasePass:false});
+          });
+        });
+      }catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+    }
+  });
+}
