@@ -293,32 +293,38 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
           productDigest:draft.productDigest,draftRef:draft.draftRef,
           reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
           reviewedBase:input.reviewedBase};
-        const witness=await readReviewWitness({commentId:input.reviewCommentId,
-          expected,builderClaim:builder,reviewerClaim:reviewer});
-        if(witness?.status!=='INDEPENDENTLY_VERIFIED'||
-          witness.independentlyVerified!==true||
-          witness.sourceQualified!==true||
-          witness.authorized!==false||witness.taskPass!==false||
-          witness.releasePass!==false||
-          witness.sourceSha!==input.sourceSha||
-          witness.productDigest!==draft.productDigest||
-          witness.draftRef!==draft.draftRef||
-          witness.taskPackBlobSha!==input.taskPackBlobSha||
-          witness.writeSetSha256!==input.writeSetSha256||
-          witness.reviewedHead!==input.reviewedHead||
-          witness.reviewedTree!==input.reviewedTree||
-          witness.reviewedBase!==input.reviewedBase||
-          witness.reviewerOperatorId!==reviewer.operatorId||
-          witness.reviewerWriterId!==reviewer.writerId||
-          typeof witness.reviewRef!=='string'||
-          !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/.test(witness.reviewRef)||
-          witness.p0!==0||witness.p1!==0||
-          !Number.isSafeInteger(witness.p2)||witness.p2<0||witness.p2>32)
+        const validWitness=w=>w?.status==='INDEPENDENTLY_VERIFIED'&&
+          w.independentlyVerified===true&&w.sourceQualified===true&&
+          w.authorized===false&&w.taskPass===false&&w.releasePass===false&&
+          w.sourceSha===input.sourceSha&&
+          w.productDigest===draft.productDigest&&w.draftRef===draft.draftRef&&
+          w.taskPackBlobSha===input.taskPackBlobSha&&
+          w.writeSetSha256===input.writeSetSha256&&
+          w.reviewedHead===input.reviewedHead&&
+          w.reviewedTree===input.reviewedTree&&
+          w.reviewedBase===input.reviewedBase&&
+          w.reviewerOperatorId===reviewer.operatorId&&
+          w.reviewerWriterId===reviewer.writerId&&
+          typeof w.reviewRef==='string'&&
+          /^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/.test(w.reviewRef)&&
+          w.p0===0&&w.p1===0&&Number.isSafeInteger(w.p2)&&
+          w.p2>=0&&w.p2<=32;
+        const witnessRequest={commentId:input.reviewCommentId,
+          expected,builderClaim:builder,reviewerClaim:reviewer};
+        // First read-only qualification must not reserve a shared effect fence.
+        const preflight=await readReviewWitness(witnessRequest);
+        if(!validWitness(preflight))
           return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
         if(!await current(input.sourceSha))
           return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
         return await withVersionFence({sourceSha:input.sourceSha,
           operation:'PRODUCT_REVIEW_FREEZE_312'},async()=>{
+          // Recheck the *actual* GitHub comment after obtaining exclusive
+          // shared CAS fence. An edit between preflight and fence is fatal.
+          const witness=await readReviewWitness(witnessRequest);
+          if(!validWitness(witness))
+            return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+          // Final branch currentness check follows the awaited witness read.
           if(!await current(input.sourceSha))
             return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
           return storeCall(async store=>{
@@ -334,7 +340,13 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
             const prior=await store.get(key);
             if(prior&&JSON.stringify(prior.value)!==JSON.stringify(value))
               return product312Unknown('PRODUCT_REVIEW_FREEZE_CONFLICT');
-            if(!prior)await store.put(key,value,{mustBeAbsent:true});
+            // Re-read version immediately before a create-only CAS effect,
+            // after all asynchronous witness/store GET operations.
+            if(!prior){
+              if(!await current(input.sourceSha))
+                return product312Unknown('PRODUCT_REVIEW_SOURCE_MOVED');
+              await store.put(key,value,{mustBeAbsent:true});
+            }
             const saved=(await store.get(key))?.value;
             if(JSON.stringify(saved)!==JSON.stringify(value))
               return product312Unknown('PRODUCT_REVIEW_FREEZE_READBACK_UNVERIFIED');
