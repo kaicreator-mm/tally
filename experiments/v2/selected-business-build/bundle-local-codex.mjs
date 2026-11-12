@@ -370,7 +370,10 @@ export async function freezeProductIntake(input){
 }
 // #312 selected Host-only Product ReviewWitness. The final Freeze uses the
 // SAME durable version/v2 CAS effect fence as E0's native DAG POST/Freeze.
-// Incomplete/ambiguous effects keep HELD; a new instance cannot bypass them.
+// The fence row uses the immutable E0 schema 'tally/version-dag-effect-fence/v1'
+// (packages/tally-github-native-c/src/version-task-dag-write-port.mjs): one key,
+// one schema, both lanes. Incomplete/ambiguous effects keep HELD; a new
+// instance cannot bypass them, and no lane ever expires or reseeds a HELD row.
 const product312FenceKey='tally:v2:version-dag-effect-fence:'+
   createHash('sha256').update(OWNER+'/'+REPO+'#version/v2').digest('hex');
 const product312Unknown=reason=>({state:'UNKNOWN',reason,issueNumber:312,
@@ -399,12 +402,12 @@ async function withProduct312VersionFence({sourceSha,operation},run){
       // or RELEASED row legitimately lives at revision 0 (E0 write-port
       // precedent), so only a non-integer revision is invalid here.
       if(!Number.isSafeInteger(before.revision)||
-        v?.schema!=='tally/v2/version-dag-effect-fence/v1'||
+        v?.schema!=='tally/version-dag-effect-fence/v1'||
         v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
         v.sourceSha!==sourceSha||v.phase!=='RELEASED')
         return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
     }
-    const held={schema:'tally/v2/version-dag-effect-fence/v1',phase:'HELD',
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
       repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
       writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
     const reservation=await db.put(product312FenceKey,held,

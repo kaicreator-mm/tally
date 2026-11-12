@@ -837,7 +837,9 @@ async function verifyFrozenWriteSet312(issueNumber,sourceSha){
   return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
 }
 // Verbatim mirror of the sealed provider's shared version-dag effect fence:
-// same key/schema/registry/env contract and HELD/RELEASED semantics.
+// same key/schema/registry/env contract and HELD/RELEASED semantics. The row
+// schema is the immutable E0 'tally/version-dag-effect-fence/v1' (one key, one
+// schema, both lanes) pinned by packages/tally-github-native-c write-port.
 const fenceKey='tally:v2:version-dag-effect-fence:'+
   createHash('sha256').update(OWNER+'/'+REPO+'#version/v2').digest('hex');
 const unknown=reason=>({state:'UNKNOWN',reason,issueNumber:312,frozen:false,
@@ -858,11 +860,11 @@ async function withFence({sourceSha,operation},fn){
     const before=await db.get(fenceKey);
     if(before){const v=before.value;
       if(!Number.isSafeInteger(before.revision)||
-        v?.schema!=='tally/v2/version-dag-effect-fence/v1'||
+        v?.schema!=='tally/version-dag-effect-fence/v1'||
         v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
         v.sourceSha!==sourceSha||v.phase!=='RELEASED')
         return unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');}
-    const held={schema:'tally/v2/version-dag-effect-fence/v1',phase:'HELD',
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
       repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
       writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
     const reservation=await db.put(fenceKey,held,
@@ -898,7 +900,7 @@ export async function __acquireHeldFence(){
       busyTimeoutMs:1000});
     const before=await db.get(fenceKey);
     if(before)return {held:false,reason:'FENCE_NOT_VACANT'};
-    const held={schema:'tally/v2/version-dag-effect-fence/v1',phase:'HELD',
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
       repository:OWNER+'/'+REPO,versionId:'version/v2',
       sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
       writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation:'T312_TEST_HOLD',
@@ -910,9 +912,11 @@ export async function __acquireHeldFence(){
 export async function __readFence(){
   let db;
   try{db=await openSqliteCasStore({path:process.env.TALLY_VERSION_DAG_REGISTRY_PATH,
-      busyTimeoutMs:1000});
+    busyTimeoutMs:1000});
     const row=await db.get(fenceKey);
-    return row?{phase:row.value?.phase??null,sourceSha:row.value?.sourceSha??null}:null;
+    return row?{phase:row.value?.phase??null,sourceSha:row.value?.sourceSha??null,
+      schema:row.value?.schema??null,writerId:row.value?.writerId??null,
+      closedStatus:row.value?.closedStatus??null,revision:row.revision}:null;
   }finally{if(db)await db.close().catch(()=>{});}
 }
 const fixtureOctokit=()=>{const state=fixture();
@@ -983,11 +987,13 @@ export const freezeVersionTaskDag=async()=>notRun('T312_FIXTURE_LANE_NOT_ENABLED
 // provider outside the K for reason-fidelity negatives, and reads back the
 // physical SQLite state (registry rows, fence phase). Runs in the
 // consumer-fixture install dir with per-case env.
-const T312_DRIVER=String.raw`import {createHash} from 'node:crypto';
+const T312_DRIVER=String.raw`import {createHash,randomUUID} from 'node:crypto';
 import {readFileSync,writeFileSync} from 'node:fs';
 const [,,command,arg]=process.argv;
 const env=process.env;
 const sha256=x=>createHash('sha256').update(x).digest('hex');
+const sharedFenceKey='tally:v2:version-dag-effect-fence:'+
+  sha256('kaicreator-mm/tally#version/v2');
 const {openSqliteCasStore}=await import('@kaicreator/domain-harness-host-node');
 const input=()=>JSON.parse(readFileSync(env.T312_INPUT,'utf8'));
 const readFixture=()=>JSON.parse(readFileSync(env.T312_FIXTURE,'utf8'));
@@ -1093,6 +1099,81 @@ else if(command==='readfence'){
   const provider=await import('@kaicreator/tally-local-codex-host-bundle');
   const out=await provider.__readFence();
   console.log('T312_DRIVER_FENCE='+JSON.stringify(out));
+}
+else if(command==='e0'){
+  // REAL E0 write-port source over the SAME physical shared SQLite fence
+  // registry the #312 lane uses. Transport is fixture (per the fixture-
+  // provider pattern); the fence rows, CAS conditions and schema are the
+  // real E0 contract. arg: release | ackloss.
+  const {createVersionTaskDagWritePort}=await import(
+    'file:///'+env.T312_REPO_ROOT.replace(/\\/g,'/')+
+    '/packages/tally-github-native-c/src/version-task-dag-write-port.mjs');
+  const sourceSha=env.TALLY_V2_VERSION_SHA;
+  const repository='kaicreator-mm/tally';
+  const packBlobSha='d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d';
+  const packRef='https://github.com/'+repository+'/blob/'+
+    'b3ad8ae7833028999a9c27cac7042037bca6d961/docs/implementation/v2/e0-interop.json';
+  const issueUrl=n=>'https://github.com/'+repository+'/issues/'+n;
+  const updatedAt='2026-11-09T11:00:00Z';
+  const pack={schema:'tally/version-task-pack/v1',status:'CANDIDATE_NOT_FROZEN',
+    repository,versionId:'version/v2',versionBaseSha:sourceSha,
+    observedAt:'2026-11-09T11:09:59.214Z',
+    taskIssues:[284,312,219].map(n=>({issueNumber:n,title:'Task '+n,
+      issueState:'open',updatedAt})),
+    edges:[{from:284,to:312,kind:'PLANNED',evidenceRef:issueUrl(312),
+      dependencyRef:issueUrl(284)}]};
+  const blockedBy={};
+  const octokit={rest:{
+      repos:{getBranch:async()=>({data:{commit:{sha:sourceSha}}})},
+      issues:{get:async({issue_number})=>({data:{number:issue_number,
+        id:issue_number*1000,state:'open',updated_at:updatedAt,
+        repository_url:'https://api.github.com/repos/kaicreator-mm/tally'}})}},
+    paginate:{iterator:async function*(route,params){
+      yield {data:blockedBy[params.issue_number]??[]};}},
+    request:async(route,params)=>{
+      if(arg==='ackloss')throw new Error('E0 interop fixture: POST ACK lost');
+      blockedBy[params.issue_number]=[...(blockedBy[params.issue_number]??[]),
+        {id:params.issue_id,number:params.issue_id/1000,state:'open',
+          html_url:issueUrl(params.issue_id/1000)}];
+      return {status:201,data:{}};}};
+  const store=await openSqliteCasStore({path:env.TALLY_VERSION_DAG_REGISTRY_PATH,
+    busyTimeoutMs:1000});
+  const review=()=>({status:'INDEPENDENTLY_VERIFIED',taskPackBlobSha:packBlobSha,
+    sourceSha,reviewedHeadSha:sourceSha,reviewer:'independent-reviewer',
+    author:'web-builder',reviewRef:'https://github.com/'+repository+'/pull/384',
+    verifiedAt:'2026-11-09T12:00:00.000Z'});
+  const approval=()=>({status:'OWNER_APPROVED',taskPackBlobSha:packBlobSha,
+    sourceSha,owner:'kaicreator-mm',
+    approvalRef:issueUrl(284)+'#issuecomment-6739635285',
+    approvedAt:'2026-11-09T12:01:00.000Z'});
+  const port=createVersionTaskDagWritePort({repository,versionId:'version/v2',
+    expectedVersionSha:sourceSha,store,
+    taskPackReader:async({expectedBlobSha})=>({status:'VERIFIED',
+      blobSha:expectedBlobSha,content:JSON.stringify(pack)}),
+    reviewWitnessReader:async()=>review(),ownerApprovalReader:async()=>approval(),
+    nativeRosterReader:async()=>({connected:true}),
+    octokit,owner:'kaicreator-mm',repo:'tally',
+    writerAuthority:{mode:'SINGLE_WRITER_ADMISSION',exclusiveHostControl:true,
+      repository,writerId:'writer:e0-interop-lane',githubWriterLogin:'kaicreator-mm'},
+    writeSetDocumentByIssue:{},freezeWriteSetPolicy:'VERSION_ONLY'});
+  const out=await port.addNativeTaskDependency({taskPackRef:packRef,
+    taskPackBlobSha:packBlobSha,blockedIssueNumber:312,blockedByIssueNumber:284});
+  await store.close();
+  console.log('T312_DRIVER_E0='+JSON.stringify(out));
+}
+else if(command==='stale-row'){
+  // Seed a RELEASED row carrying the pre-fix #312-only schema prefix. The
+  // normalized lanes must refuse it fail-closed (no silent migration, no
+  // reseed, no expiry) on BOTH sides of the shared fence.
+  const db=await openSqliteCasStore({path:env.TALLY_VERSION_DAG_REGISTRY_PATH,
+    busyTimeoutMs:1000});
+  const row={schema:'tally/v2/version-dag-effect-fence/v1',phase:'RELEASED',
+    repository:'kaicreator-mm/tally',versionId:'version/v2',
+    sourceSha:input().sourceSha,writerId:'writer:legacy-prefix',
+    operation:'LEGACY_PREFIX_RELEASE',nonce:randomUUID()};
+  await db.put(sharedFenceKey,row,{mustBeAbsent:true});
+  await db.close();
+  console.log('T312_DRIVER_STALE_ROW=SEEDED');
 }
 else throw Error('T312_DRIVER_UNKNOWN_COMMAND '+command);
 `;
@@ -1352,6 +1433,7 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
       writeFileSync(join(dir,'t312-input.json'),JSON.stringify(input));
       return dir;};
     const caseEnv=(dir,extra={})=>({...process.env,
+      T312_REPO_ROOT:REPO_ROOT,
       TALLY_TASK_CLAIM_312_REGISTRY_PATH:join(dir,'registry.sqlite'),
       TALLY_VERSION_DAG_REGISTRY_PATH:join(dir,'fence.sqlite'),
       TALLY_VERSION_DAG_WRITER_ID:'writer:t312-physical',
@@ -1522,12 +1604,111 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
     const fswReg=jsonLine(driver(fswDir,['readreg']).stdout,'T312_DRIVER_REG=');
     assert.equal(fswReg.draftPhase,null);assert.equal(fswReg.frozenPhase,null);
 
+    // R12 F1 — E0 RELEASED → #312 takes HELD → #312 RELEASED on the SAME
+    // physical fence registry. The REAL E0 write-port source releases the
+    // shared fence first; the #312 lane (separate process) must accept that
+    // E0-schema RELEASED row, freeze, and release it again.
+    const f1Dir=mkCase('e0-interop-f1',caseInput());
+    const f1E0=jsonLine(driver(f1Dir,['e0','release']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f1E0.status,'NATIVE_EDGE_VERIFIED','E0 lane must complete');
+    let f1Fence=jsonLine(driver(f1Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f1Fence.phase,'RELEASED');
+    assert.equal(f1Fence.schema,'tally/version-dag-effect-fence/v1');
+    assert.equal(f1Fence.writerId,'writer:e0-interop-lane');
+    assert.equal(f1Fence.closedStatus,'NATIVE_EDGE_VERIFIED');
+    assert.equal(driver(f1Dir,['seed']).status,0,'seed f1');
+    assert.equal(driver(f1Dir,['persist','bind-witness']).status,0,'persist f1');
+    const f1Freeze=jsonLine(driver(f1Dir,['freeze']).stdout,'T312_DRIVER_FREEZE=');
+    assert.equal(f1Freeze.state,'FROZEN_COMPLETE',
+      'the #312 lane must accept the E0-schema RELEASED fence row');
+    const f1Reg=jsonLine(driver(f1Dir,['readreg']).stdout,'T312_DRIVER_REG=');
+    assert.equal(f1Reg.frozenPhase,'FROZEN_PRODUCT_INTAKE');
+    f1Fence=jsonLine(driver(f1Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f1Fence.phase,'RELEASED');
+    assert.equal(f1Fence.schema,'tally/version-dag-effect-fence/v1',
+      'the #312 lane must write back the SAME E0 fence schema');
+    assert.equal(f1Fence.writerId,'writer:t312-physical');
+    assert.equal(f1Fence.closedStatus,'FROZEN');
+
+    // R12 F2 — #312 RELEASED → E0 takes HELD → E0 completes (the reverse
+    // handoff; pre-fix the E0 port refused the foreign-schema RELEASED row).
+    const f2E0=jsonLine(driver(f1Dir,['e0','release']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f2E0.status,'NATIVE_EDGE_VERIFIED',
+      'the E0 lane must accept the #312-released fence row');
+    const f2Fence=jsonLine(driver(f1Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f2Fence.phase,'RELEASED');
+    assert.equal(f2Fence.schema,'tally/version-dag-effect-fence/v1');
+    assert.equal(f2Fence.writerId,'writer:e0-interop-lane');
+
+    // R12 F3 — E0 lost-POST-ACK keeps the shared fence HELD; the #312 lane
+    // and a restarted E0 process are both refused; nothing expires/reseeds.
+    const f3Dir=mkCase('e0-interop-f3',caseInput());
+    const f3Ack=jsonLine(driver(f3Dir,['e0','ackloss']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f3Ack.status,'UNKNOWN');
+    assert.equal(f3Ack.reason,'NATIVE_WRITE_ACK_LOST');
+    assert.equal(driver(f3Dir,['seed']).status,0,'seed f3');
+    assert.equal(driver(f3Dir,['persist','bind-witness']).status,0,'persist f3');
+    const f3Freeze=jsonLine(driver(f3Dir,['freeze']).stdout,'T312_DRIVER_FREEZE=');
+    assert.equal(f3Freeze.state,'UNKNOWN');
+    assert.equal(f3Freeze.reason,'PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+    const f3Reg=jsonLine(driver(f3Dir,['readreg']).stdout,'T312_DRIVER_REG=');
+    assert.equal(f3Reg.frozenPhase,null,'no freeze under an E0-held fence');
+    let f3Fence=jsonLine(driver(f3Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f3Fence.phase,'HELD');
+    assert.equal(f3Fence.writerId,'writer:e0-interop-lane');
+    // Restart: a fresh E0 process faces its own HELD row and is blocked too.
+    const f3Retry=jsonLine(driver(f3Dir,['e0','release']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f3Retry.status,'BLOCKED');
+    assert.equal(f3Retry.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
+    f3Fence=jsonLine(driver(f3Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f3Fence.phase,'HELD','HELD survives process restarts');
+
+    // R12 F4 — #312 lost freeze-ACK keeps the fence HELD; the E0 lane in a
+    // fresh process is refused (cross-lane restart semantics).
+    const f4Dir=mkCase('e0-interop-f4',caseInput());
+    assert.equal(driver(f4Dir,['seed']).status,0,'seed f4');
+    assert.equal(driver(f4Dir,['persist','bind-witness']).status,0,'persist f4');
+    const f4AckLoss=jsonLine(driver(f4Dir,['freeze'],{T312_FAULT:'ack_loss'}).stdout,
+      'T312_DRIVER_FREEZE=');
+    assert.equal(f4AckLoss.state,'UNKNOWN');
+    let f4Fence=jsonLine(driver(f4Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f4Fence.phase,'HELD');
+    assert.equal(f4Fence.writerId,'writer:t312-physical');
+    const f4E0=jsonLine(driver(f4Dir,['e0','release']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f4E0.status,'BLOCKED');
+    assert.equal(f4E0.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
+    f4Fence=jsonLine(driver(f4Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f4Fence.phase,'HELD','the E0 attempt must not release the fence');
+
+    // R12 F5 — a pre-fix legacy-schema RELEASED row fails closed on BOTH
+    // lanes: no silent schema migration, no reseed, no expiry.
+    const f5Dir=mkCase('e0-interop-f5',caseInput());
+    assert.equal(driver(f5Dir,['stale-row']).status,0,'seed legacy row');
+    assert.equal(driver(f5Dir,['seed']).status,0,'seed f5');
+    assert.equal(driver(f5Dir,['persist','bind-witness']).status,0,'persist f5');
+    const f5Freeze=jsonLine(driver(f5Dir,['freeze']).stdout,'T312_DRIVER_FREEZE=');
+    assert.equal(f5Freeze.state,'UNKNOWN');
+    assert.equal(f5Freeze.reason,'PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+    const f5E0=jsonLine(driver(f5Dir,['e0','release']).stdout,'T312_DRIVER_E0=');
+    assert.equal(f5E0.status,'BLOCKED');
+    assert.equal(f5E0.reason,'VERSION_EFFECT_FENCE_RECONCILIATION_REQUIRED');
+    const f5Fence=jsonLine(driver(f5Dir,['readfence']).stdout,'T312_DRIVER_FENCE=');
+    assert.equal(f5Fence.schema,'tally/v2/version-dag-effect-fence/v1',
+      'the incompatible legacy row must remain untouched');
+    const f5Reg=jsonLine(driver(f5Dir,['readreg']).stdout,'T312_DRIVER_REG=');
+    assert.equal(f5Reg.frozenPhase,null);
+
     console.log('T312_PHYSICAL_REPLAY_EVIDENCE='+JSON.stringify({
       dh:T312_DH_SHA,sourceSha,routes:'SELECTED_T312',provider:'FIXTURE_TRANSPORT_REAL_HOST_C',
       realProviderBlocked:'FROZEN_ABSENT_UNKNOWN',positive:'FROZEN_COMPLETE',
       idempotentResend:true,crossProcessHeldFence:true,editedWitness:'UNVERIFIED',
       sourceDrift:'SOURCE_MOVED',ackLoss:'HELD_RETRY_REFUSED',noPackBinding:'UNVERIFIED',
-      staleFsw:'REFUSED',physicalGithubEffect:'NOT_RUN',authorized:false,taskPass:false,
+      staleFsw:'REFUSED',
+      e0SharedFence:{schema:'tally/version-dag-effect-fence/v1',
+        e0ReleasedThen312Frozen:'F1_PASS',frozen312ReleasedThenE0:'F2_PASS',
+        e0AckLossHeldBlocks312:'F3_PASS',held312AckLossBlocksE0:'F4_PASS',
+        legacySchemaRowRefusedBothLanes:'F5_PASS',heldExpiryOrReseed:'NEVER'},
+      physicalGithubEffect:'NOT_RUN',authorized:false,taskPass:false,
       releasePass:false}));
   }finally{rmSync(root,{recursive:true,force:true});}
 });
@@ -1543,4 +1724,25 @@ test('#312 Host accepts K-kernel data-only (null-prototype) draft payloads',asyn
   const written=await provider.persistDraft({...p312Input,draft:nullProtoDraft});
   assert.equal(written.state,'DRAFT_PENDING_REVIEW');
   assert.match(written.draftRef,/^draft:sha256:[a-f0-9]{64}$/);
+});
+
+test('#312/E0 shared effect-fence schema pin: one key, one schema, both lanes',()=>{
+  // The #312 sealed provider fence and the E0 write port share one physical
+  // CAS fence key; both must read/write the immutable E0 row schema. A drift
+  // re-introduces the R11 cross-lane incompatibility (each lane refusing the
+  // other's RELEASED rows), so it must fail the always-on suite immediately.
+  const e0Schema="'tally/version-dag-effect-fence/v1'";
+  const legacySchema="'tally/v2/version-dag-effect-fence/v1'";
+  const provider=readFileSync(join(REPO_ROOT,'experiments','v2',
+    'selected-business-build','bundle-local-codex.mjs'),'utf8');
+  const e0Port=readFileSync(join(REPO_ROOT,'packages','tally-github-native-c',
+    'src','version-task-dag-write-port.mjs'),'utf8');
+  assert.ok(provider.includes(e0Schema),
+    'the #312 provider must write the E0 fence schema');
+  assert.equal(provider.includes(legacySchema),false,
+    'the #312 provider must not carry a private fence schema');
+  assert.ok(e0Port.includes(e0Schema),
+    'the E0 write port still pins the immutable fence schema');
+  assert.equal(e0Port.includes(legacySchema),false,
+    'the E0 write port must not adopt a private fence schema');
 });
