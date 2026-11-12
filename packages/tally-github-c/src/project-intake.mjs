@@ -268,7 +268,7 @@ export async function readProductReviewWitnessFromClient({
       baseCommit?.sha!==body.reviewedBase||
       !RW_SHA.test(baseCommit?.commit?.tree?.sha??''))
       return rwUnknown('PRODUCT_REVIEW_GIT_OBJECT_MISMATCH');
-    let mergeCommit=null,mergeAncestryVerified=false;
+    let mergeCommit=null;
     if(mergedSource){
       mergeCommit=(await octokit.rest.repos.getCommit({
         owner,repo,ref:prInfo.merge_commit_sha}))?.data;
@@ -292,7 +292,6 @@ export async function readProductReviewWitnessFromClient({
           compare.merge_base_commit?.sha!==prInfo.merge_commit_sha)
           return rwUnknown('PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED');
       }
-      mergeAncestryVerified=true;
     }
     // Final last awaited read — Host redoes ALL these checks under its
     // version-scoped CAS fence before any physical freeze.
@@ -305,7 +304,7 @@ export async function readProductReviewWitnessFromClient({
     reason:'EXACT_GITHUB_REVIEW_WITNESS_VERIFIED',independentlyVerified:true,
     sourceQualified:true,reviewRef:ref,reviewedPullNumber:body.reviewedPullNumber,
     sourceProvenance:mergedSource?'MERGED_PR_ANCESTRY':'OPEN_PR',
-    mergeCommitSha:mergedSource&&mergeAncestryVerified?prInfo.merge_commit_sha:null,
+    mergeCommitSha:mergedSource?prInfo.merge_commit_sha:null,
     draftRef:body.draftRef,
     productDigest:body.productDigest,sourceSha:body.sourceSha,
     taskPackBlobSha:body.taskPackBlobSha,writeSetSha256:body.writeSetSha256,
