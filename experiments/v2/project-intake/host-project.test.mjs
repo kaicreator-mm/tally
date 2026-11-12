@@ -513,9 +513,16 @@ const p312Make=(overrides={})=>{
     verifyFrozenWriteSet:async()=>({ok:true,
       taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
     readCurrentVersion:async()=>({ok:true,sha:p312Source}),
-    readReviewWitness:async({expected})=>({status:'INDEPENDENTLY_VERIFIED',
-      independentlyVerified:true,sourceSha:expected.sourceSha,
-      productDigest:expected.productDigest,draftRef:expected.draftRef,
+    readReviewWitness:async({expected,reviewerClaim})=>({status:'INDEPENDENTLY_VERIFIED',
+      independentlyVerified:true,sourceQualified:true,
+      authorized:false,taskPass:false,releasePass:false,
+      sourceSha:expected.sourceSha,productDigest:expected.productDigest,
+      draftRef:expected.draftRef,taskPackBlobSha:expected.taskPackBlobSha,
+      writeSetSha256:expected.writeSetSha256,
+      reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+      reviewedBase:expected.reviewedBase,
+      reviewerOperatorId:reviewerClaim.operatorId,
+      reviewerWriterId:reviewerClaim.writerId,p0:0,p1:0,p2:0,
       reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345'}),
     withVersionFence:async(meta,fn)=>{calls.push('fence');return fn();},
     env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
@@ -596,4 +603,25 @@ test('#312 Host ACK-loss after CAS write remains UNKNOWN, no fake receipt or Tas
   assert.equal(retry.state,'DRAFT_PENDING_REVIEW');
   assert.equal((await store.get(PRODUCT312_DRAFT_KEY+p312Source)).value.phase,
     'DRAFT_PENDING_REVIEW');
+});
+
+
+test('#312 Host rejects a falsely positive C status with missing coordinate binding',async()=>{
+  const bad=p312Make({readReviewWitness:async({expected,reviewerClaim})=>({
+    status:'INDEPENDENTLY_VERIFIED',independentlyVerified:true,
+    sourceQualified:true,authorized:false,taskPass:false,releasePass:false,
+    sourceSha:expected.sourceSha,productDigest:expected.productDigest,
+    draftRef:expected.draftRef,taskPackBlobSha:expected.taskPackBlobSha,
+    writeSetSha256:expected.writeSetSha256,
+    reviewedHead:'9'.repeat(40),reviewedTree:expected.reviewedTree,
+    reviewedBase:expected.reviewedBase,
+    reviewerOperatorId:reviewerClaim.operatorId,
+    reviewerWriterId:reviewerClaim.writerId,
+    p0:0,p1:0,p2:0,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345'})});
+  await bad.provider.persistDraft(p312Input);
+  const denied=await bad.provider.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(denied.state,'UNKNOWN');
+  assert.equal(denied.reason,'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+  assert.equal(await bad.store.get(PRODUCT312_FREEZE_KEY+p312Source),null);
 });
