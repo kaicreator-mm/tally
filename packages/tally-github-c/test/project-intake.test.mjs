@@ -119,3 +119,102 @@ test('invalid requests refuse without any client call',async()=>{
   }
   assert.equal(called,false);
 });
+
+
+import {readProductReviewWitnessFromClient} from './project-intake.mjs';
+const witness312Sha='a'.repeat(40),witness312Blob='b'.repeat(40);
+const witness312Digest='c'.repeat(64),witness312Set='d'.repeat(64);
+const witness312Expected={
+  issueNumber:312,sourceSha:witness312Sha,
+  draftRef:'draft:sha256:'+witness312Digest,productDigest:witness312Digest,
+  taskPackBlobSha:witness312Blob,writeSetSha256:witness312Set,
+  reviewedHead:'e'.repeat(40),reviewedTree:'f'.repeat(40),
+  reviewedBase:'1'.repeat(40)};
+const witness312Builder={accepted:true,issueNumber:312,role:'builder',
+  sourceSha:witness312Sha,taskPackBlobSha:witness312Blob,
+  writeSetSha256:witness312Set,claimRef:'claim:312:builder',
+  operatorId:'host:builder',writerId:'writer:builder',transportActor:'kaicreator-mm'};
+const witness312Reviewer={...witness312Builder,role:'reviewer',
+  claimRef:'claim:312:reviewer',operatorId:'host:reviewer',writerId:'writer:reviewer'};
+const witness312Ref='https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345';
+const witness312Body={
+  schema:'tally.v2.product-review-witness/1',status:'INDEPENDENTLY_VERIFIED',
+  repository:'kaicreator-mm/tally',issueNumber:312,reviewRef:witness312Ref,
+  draftRef:witness312Expected.draftRef,productDigest:witness312Digest,
+  sourceSha:witness312Sha,taskPackBlobSha:witness312Blob,writeSetSha256:witness312Set,
+  reviewedHead:witness312Expected.reviewedHead,
+  reviewedTree:witness312Expected.reviewedTree,
+  reviewedBase:witness312Expected.reviewedBase,
+  builderClaimRef:witness312Builder.claimRef,
+  reviewerClaimRef:witness312Reviewer.claimRef,
+  reviewerOperatorId:witness312Reviewer.operatorId,
+  reviewerWriterId:witness312Reviewer.writerId,p0:0,p1:0,p2:1};
+const witness312Comment={id:12345,html_url:witness312Ref,
+  user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
+  updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify(witness312Body)};
+const witness312Read=({comment=witness312Comment,expected=witness312Expected,
+  builderClaim=witness312Builder,reviewerClaim=witness312Reviewer,fail,
+  call}={})=>readProductReviewWitnessFromClient({
+  octokit:{rest:{issues:{getComment:async()=>{
+    if(call)call();
+    if(fail)throw {status:fail};
+    return {data:comment};
+  }}}},
+  commentId:12345,expected,builderClaim,reviewerClaim});
+
+test('#312 canonical unedited review with same GitHub login but independent processes qualifies only source',async()=>{
+  const got=await witness312Read();
+  assert.equal(got.status,'INDEPENDENTLY_VERIFIED');
+  assert.equal(got.independentlyVerified,true);
+  assert.equal(got.reviewRef,witness312Ref);
+  assert.equal(got.p2,1);
+  assert.equal(got.reviewerLogin,'kaicreator-mm');
+  assert.equal(got.taskPass,false);assert.equal(got.releasePass,false);
+});
+
+test('#312 missing/fake Claims and shared operator or writer fail before GitHub HTTP',async()=>{
+  for(const [builderClaim,reviewerClaim,reason] of [
+    [witness312Builder,{...witness312Reviewer,accepted:false},'PRODUCT_REVIEW_CLAIM_UNVERIFIED'],
+    [witness312Builder,{...witness312Reviewer,operatorId:witness312Builder.operatorId},'PRODUCT_REVIEW_SAME_PROCESS'],
+    [witness312Builder,{...witness312Reviewer,writerId:witness312Builder.writerId},'PRODUCT_REVIEW_SAME_PROCESS'],
+    [witness312Builder,{...witness312Reviewer,role:'builder'},'PRODUCT_REVIEW_CLAIM_UNVERIFIED'],
+    [{...witness312Builder,taskPackBlobSha:'9'.repeat(40)},witness312Reviewer,'PRODUCT_REVIEW_CLAIM_UNVERIFIED']
+  ]){
+    let reads=0;
+    const got=await witness312Read({builderClaim,reviewerClaim,call:()=>reads++});
+    assert.equal(got.status,'UNKNOWN');assert.equal(got.reason,reason);
+    assert.equal(reads,0);assert.equal(got.taskPass,false);
+  }
+});
+
+test('#312 forged, edited, misbound and non-PASS witness fails closed',async()=>{
+  const bad=[
+    [{...witness312Comment,updated_at:'2026-11-12T12:00:01Z'},'PRODUCT_REVIEW_COMMENT_UNVERIFIED'],
+    [{...witness312Comment,user:{login:'other'}},'PRODUCT_REVIEW_COMMENT_UNVERIFIED'],
+    [{...witness312Comment,html_url:'https://github.com/other/repo'},'PRODUCT_REVIEW_COMMENT_UNVERIFIED'],
+    [{...witness312Comment,body:JSON.stringify({...witness312Body,p1:1})},'PRODUCT_REVIEW_FINDINGS_BLOCKED'],
+    [{...witness312Comment,body:JSON.stringify({...witness312Body,reviewRef:'fake'})},'PRODUCT_REVIEW_WITNESS_MISMATCH'],
+    [{...witness312Comment,body:JSON.stringify({...witness312Body,sourceSha:'8'.repeat(40)})},'PRODUCT_REVIEW_WITNESS_MISMATCH'],
+    [{...witness312Comment,body:JSON.stringify({...witness312Body,unexpected:true})},'PRODUCT_REVIEW_SCHEMA_INVALID'],
+    [{...witness312Comment,body:'not valid JSON'},'PRODUCT_REVIEW_JSON_NONCANONICAL'],
+    [{...witness312Comment,body:'{"a":1,"a":2}'},'PRODUCT_REVIEW_JSON_NONCANONICAL']
+  ];
+  for(const [comment,reason] of bad){
+    const got=await witness312Read({comment});
+    assert.equal(got.status,'UNKNOWN');assert.equal(got.reason,reason);
+    assert.equal(got.taskPass,false);
+  }
+});
+
+test('#312 source/Pack/FSW/HEAD/Tree/Base drift and Github denial refuse',async()=>{
+  for(const key of ['sourceSha','taskPackBlobSha','writeSetSha256',
+    'reviewedHead','reviewedTree','reviewedBase']){
+    const value=key==='writeSetSha256'?'9'.repeat(64):'9'.repeat(40);
+    const got=await witness312Read({expected:{...witness312Expected,[key]:value}});
+    assert.equal(got.status,'UNKNOWN',key);
+    assert.equal(got.taskPass,false,key);
+  }
+  const access=await witness312Read({fail:403});
+  assert.equal(access.status,'UNKNOWN');
+  assert.equal(access.reason,'GITHUB_ACCESS_DENIED');
+});
