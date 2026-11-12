@@ -490,3 +490,110 @@ test('T210 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
       physicalGithubEffect:'NOT_RUN',dh:REPLAY_DH_SHA}));
   }finally{rmSync(root,{recursive:true,force:true});}
 });
+
+
+import {createProductReviewHost312,PRODUCT312_DRAFT_KEY,
+  PRODUCT312_FREEZE_KEY} from './host-project.mjs';
+const p312Source='a'.repeat(40),p312Pack='b'.repeat(40),p312Set='c'.repeat(64);
+const p312Draft={product:{goal:'Real Product ReviewWitness',nonGoals:['No fake Task PASS']},
+  l2:{decision:'KEEP_MERGED_L2_ARCHITECTURE'},provenance:['157','158']};
+const p312Input={sourceSha:p312Source,taskPackBlobSha:p312Pack,
+  writeSetSha256:p312Set,draft:p312Draft};
+const p312Claim=role=>({accepted:true,issueNumber:312,role,sourceSha:p312Source,
+  taskPackBlobSha:p312Pack,writeSetSha256:p312Set,claimRef:'claim:312:'+role,
+  operatorId:'operator:'+role,writerId:'writer:'+role,transportActor:'kaicreator-mm'});
+const p312Make=(overrides={})=>{
+  const store=memoryStore();
+  const calls=[];
+  const provider=createProductReviewHost312({
+    openStore:async()=>store,
+    verifyAcceptedClaim:async(issue,role)=>{
+      calls.push('claim:'+role);
+      return {ok:true,claim:p312Claim(role)};},
+    verifyFrozenWriteSet:async()=>({ok:true,
+      taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
+    readCurrentVersion:async()=>({ok:true,sha:p312Source}),
+    readReviewWitness:async({expected})=>({status:'INDEPENDENTLY_VERIFIED',
+      independentlyVerified:true,sourceSha:expected.sourceSha,
+      productDigest:expected.productDigest,draftRef:expected.draftRef,
+      reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345'}),
+    withVersionFence:async(meta,fn)=>{calls.push('fence');return fn();},
+    env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
+      TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture.sqlite'},
+    ...overrides});
+  return {provider,calls,store};
+};
+const p312FreezeArgs={sourceSha:p312Source,taskPackBlobSha:p312Pack,
+  writeSetSha256:p312Set,reviewCommentId:12345,
+  reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
+  reviewedBase:'f'.repeat(40)};
+test('#312 trusted Host persists immutable draft digest (not caller), then CAS freezes witnessed source',async()=>{
+  const {provider,store,calls}=p312Make();
+  const written=await provider.persistDraft({...p312Input,productDigest:'9'.repeat(64)});
+  assert.equal(written.state,'DRAFT_PENDING_REVIEW');
+  assert.match(written.draftRef,/^draft:sha256:[a-f0-9]{64}$/);
+  assert.notEqual(written.productDigest,'9'.repeat(64));
+  const actual=(await store.get(PRODUCT312_DRAFT_KEY+p312Source)).value;
+  assert.equal(actual.productDigest,written.productDigest);
+  const frozen=await provider.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(frozen.state,'FROZEN_COMPLETE');
+  assert.equal(frozen.receiptRef,'receipt:sha256:'+written.productDigest);
+  assert.equal(frozen.taskPass,false);assert.equal(frozen.releasePass,false);
+  assert.equal((await store.get(PRODUCT312_FREEZE_KEY+p312Source)).value.reviewRef,
+    'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345');
+  assert.ok(calls.includes('claim:builder'));
+  assert.ok(calls.includes('claim:reviewer'));
+  assert.ok(calls.includes('fence'));
+  const repeated=await provider.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(repeated.state,'FROZEN_COMPLETE');
+  assert.equal((await provider.persistDraft(p312Input)).state,'DRAFT_PENDING_REVIEW');
+});
+
+test('#312 Host cannot freeze UI-only reviewer string without accepted draft and two roles',async()=>{
+  const {provider}=p312Make();
+  assert.equal((await provider.freezeReviewedDraft(p312FreezeArgs)).reason,
+    'PRODUCT_DRAFT_NOT_PERSISTED_OR_STALE');
+  await provider.persistDraft(p312Input);
+  const refuse=p312Make({verifyAcceptedClaim:async(issue,role)=>({
+    ok:true,claim:{...p312Claim(role),
+      operatorId:role==='reviewer'?'operator:builder':'operator:builder'}})});
+  await refuse.provider.persistDraft(p312Input);
+  assert.equal((await refuse.provider.freezeReviewedDraft(p312FreezeArgs)).reason,
+    'PRODUCT_REVIEW_PROCESS_OR_CLAIM_UNVERIFIED');
+});
+
+test('#312 Host no shared physical fence, edited/missing witness or moved source stays UNKNOWN',async()=>{
+  const {provider,store}=p312Make({withVersionFence:undefined});
+  await provider.persistDraft(p312Input);
+  assert.equal((await provider.freezeReviewedDraft(p312FreezeArgs)).reason,
+    'PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+  assert.equal(await store.get(PRODUCT312_FREEZE_KEY+p312Source),null);
+  const lost=p312Make({readReviewWitness:async()=>({status:'UNKNOWN',reason:'COMMENT_EDITED'})});
+  await lost.provider.persistDraft(p312Input);
+  assert.equal((await lost.provider.freezeReviewedDraft(p312FreezeArgs)).reason,
+    'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+  const moved=p312Make({readCurrentVersion:async()=>({ok:true,sha:'9'.repeat(40)})});
+  assert.equal((await moved.provider.persistDraft(p312Input)).reason,
+    'PRODUCT_DRAFT_SOURCE_OR_CLAIM_STALE');
+});
+
+test('#312 Host ACK-loss after CAS write remains UNKNOWN, no fake receipt or Task PASS',async()=>{
+  const store=memoryStore();let ambiguous=true;
+  const openStore=async()=>({
+    get:key=>store.get(key),
+    close:()=>store.close(),
+    async put(key,value,condition){
+      await store.put(key,value,condition);
+      if(ambiguous){ambiguous=false;throw Error('ACK lost after server committed');}
+    }
+  });
+  const {provider}=p312Make({openStore});
+  const first=await provider.persistDraft(p312Input);
+  assert.equal(first.state,'UNKNOWN');
+  assert.equal(first.reason,'PRODUCT_DRAFT_CAS_UNKNOWN');
+  assert.equal(first.taskPass,false);
+  const retry=await provider.persistDraft(p312Input);
+  assert.equal(retry.state,'DRAFT_PENDING_REVIEW');
+  assert.equal((await store.get(PRODUCT312_DRAFT_KEY+p312Source)).value.phase,
+    'DRAFT_PENDING_REVIEW');
+});
