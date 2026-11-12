@@ -163,6 +163,8 @@ export function createProjectIntakeHost({openStore,verifyAcceptedClaim,
 
 // #312 successor: strict Host-only immutable draft and source-bound ReviewWitness.
 import {createHash as productReviewSha256} from 'node:crypto';
+import {readProductReviewWitnessFromClient}
+  from '../../../packages/tally-github-c/src/project-intake.mjs';
 export const PRODUCT312_DRAFT_KEY='tally:v2:product-intake:312:draft:';
 export const PRODUCT312_FREEZE_KEY='tally:v2:product-intake:312:frozen:';
 const product312Unknown=(reason,extra={})=>Object.freeze({state:'UNKNOWN',reason,
@@ -193,7 +195,14 @@ const product312Digest=(draft,sourceSha)=>productReviewSha256('sha256')
  */
 export function createProductReviewHost312({openStore,verifyAcceptedClaim,
   verifyFrozenWriteSet,readReviewWitness,readCurrentVersion,
-  withVersionFence,env=process.env}={}){
+  withVersionFence,octokit,env=process.env}={}){
+  // GitHub C→Host wiring: an explicitly injected witness reader wins (tests,
+  // alternative selected transports); without one, a Host-injected selected C
+  // client (octokit) binds the REAL read-only #312 ReviewWitness validator.
+  // Neither present still fails closed at the fence gate below.
+  const witnessReader=typeof readReviewWitness==='function'?readReviewWitness:
+    typeof octokit?.rest?.issues?.getComment==='function'?
+      request=>readProductReviewWitnessFromClient({octokit,...request}):undefined;
   const registry=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
   const sourceOk=sourceSha=>SHA.test(sourceSha??'')&&
     sourceSha===env.TALLY_CLAIM_SOURCE_SHA&&typeof registry==='string'&&
@@ -262,7 +271,7 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
     },
     async freezeReviewedDraft(input){
       if(typeof openStore!=='function'||typeof verifyAcceptedClaim!=='function'||
-        typeof verifyFrozenWriteSet!=='function'||typeof readReviewWitness!=='function'||
+        typeof verifyFrozenWriteSet!=='function'||typeof witnessReader!=='function'||
         typeof readCurrentVersion!=='function'||typeof withVersionFence!=='function')
         return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
       if(!sourceOk(input?.sourceSha)||!SHA.test(input?.taskPackBlobSha??'')||
@@ -312,7 +321,7 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
         const witnessRequest={commentId:input.reviewCommentId,
           expected,builderClaim:builder,reviewerClaim:reviewer};
         // First read-only qualification must not reserve a shared effect fence.
-        const preflight=await readReviewWitness(witnessRequest);
+        const preflight=await witnessReader(witnessRequest);
         if(!validWitness(preflight))
           return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
         if(!await current(input.sourceSha))
@@ -321,7 +330,7 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
           operation:'PRODUCT_REVIEW_FREEZE_312'},async()=>{
           // Recheck the *actual* GitHub comment after obtaining exclusive
           // shared CAS fence. An edit between preflight and fence is fatal.
-          const witness=await readReviewWitness(witnessRequest);
+          const witness=await witnessReader(witnessRequest);
           if(!validWitness(witness))
             return product312Unknown('PRODUCT_REVIEW_WITNESS_UNVERIFIED');
           // Final branch currentness check follows the awaited witness read.
@@ -353,6 +362,8 @@ export function createProductReviewHost312({openStore,verifyAcceptedClaim,
             return Object.freeze({state:'FROZEN_COMPLETE',
               reason:'SOURCE_BOUND_HOST_CAS_READBACK_VERIFIED',
               issueNumber:312,sourceSha:input.sourceSha,
+              taskPackBlobSha:input.taskPackBlobSha,
+              writeSetSha256:input.writeSetSha256,
               productDigest:draft.productDigest,draftRef:draft.draftRef,
               reviewRef:witness.reviewRef,receiptRef:'receipt:sha256:'+
               draft.productDigest,frozen:true,

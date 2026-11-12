@@ -655,3 +655,79 @@ test('#312 second witness read inside shared fence catches comment edit with zer
   assert.equal(frozen.taskPass,false);
   assert.equal(await store.get(PRODUCT312_FREEZE_KEY+p312Source),null);
 });
+
+
+test('#312 Host binds the real GitHub C witness validator when only octokit is injected',async()=>{
+  // No readReviewWitness injection: the C→Host source wiring must route the
+  // REAL readProductReviewWitnessFromClient over the selected C client.
+  const store=memoryStore();
+  let comment=null;
+  const provider=createProductReviewHost312({
+    openStore:async()=>store,
+    verifyAcceptedClaim:async(issue,role)=>({ok:true,claim:p312Claim(role)}),
+    verifyFrozenWriteSet:async()=>({ok:true,
+      taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
+    readCurrentVersion:async()=>({ok:true,sha:p312Source}),
+    octokit:{rest:{issues:{getComment:async()=>{
+      if(!comment)throw {status:404};
+      return {data:comment};
+    }}}},
+    withVersionFence:async(meta,fn)=>fn(),
+    env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
+      TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture.sqlite'}});
+  const persisted=await provider.persistDraft(p312Input);
+  assert.equal(persisted.state,'DRAFT_PENDING_REVIEW');
+  // The canonical witness comment is authored AFTER the Host persisted the
+  // draft, binding the Host-derived digest (never a caller digest).
+  comment={id:12345,
+    html_url:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+    user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
+    updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify({
+      schema:'tally.v2.product-review-witness/1',status:'INDEPENDENTLY_VERIFIED',
+      repository:'kaicreator-mm/tally',issueNumber:312,
+      reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+      draftRef:persisted.draftRef,productDigest:persisted.productDigest,
+      sourceSha:p312Source,taskPackBlobSha:p312Pack,writeSetSha256:p312Set,
+      reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
+      reviewedBase:'f'.repeat(40),
+      builderClaimRef:'claim:312:builder',reviewerClaimRef:'claim:312:reviewer',
+      reviewerOperatorId:'operator:reviewer',reviewerWriterId:'writer:reviewer',
+      p0:0,p1:0,p2:1})};
+  const frozen=await provider.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(frozen.state,'FROZEN_COMPLETE');
+  assert.equal(frozen.taskPackBlobSha,p312Pack);
+  assert.equal(frozen.writeSetSha256,p312Set);
+  assert.equal(frozen.receiptRef,'receipt:sha256:'+persisted.productDigest);
+  // Same login, distinct accepted reviewer process: GitHub login equality is
+  // provenance only; the edited comment still fails closed.
+  const edited={...comment,updated_at:'2026-11-12T12:00:01Z'};
+  const secondStore=memoryStore();
+  const refused=createProductReviewHost312({
+    openStore:async()=>secondStore,verifyAcceptedClaim:async(issue,role)=>(
+      {ok:true,claim:p312Claim(role)}),
+    verifyFrozenWriteSet:async()=>({ok:true,
+      taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
+    readCurrentVersion:async()=>({ok:true,sha:p312Source}),
+    octokit:{rest:{issues:{getComment:async()=>({data:edited})}}},
+    withVersionFence:async(meta,fn)=>fn(),
+    env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
+      TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture.sqlite'}});
+  await refused.persistDraft(p312Input);
+  const denied=await refused.freezeReviewedDraft(p312FreezeArgs);
+  assert.equal(denied.state,'UNKNOWN');
+  assert.equal(denied.reason,'PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+  assert.equal(await secondStore.get(PRODUCT312_FREEZE_KEY+p312Source),null);
+});
+
+test('#312 Host refuses malformed draft shapes before any persistence',async()=>{
+  const {provider}=p312Make();
+  assert.equal((await provider.persistDraft({...p312Input,
+    draft:{product:{},l2:{},provenance:[]}})).reason,
+    'PRODUCT_DRAFT_INPUT_INVALID');
+  assert.equal((await provider.persistDraft({...p312Input,
+    draft:{...p312Draft,product:{goal:'',nonGoals:[]}}})).reason,
+    'PRODUCT_DRAFT_INPUT_INVALID');
+  assert.equal((await provider.persistDraft({...p312Input,
+    draft:{...p312Draft,extra:'field'}})).reason,
+    'PRODUCT_DRAFT_INPUT_INVALID');
+});
