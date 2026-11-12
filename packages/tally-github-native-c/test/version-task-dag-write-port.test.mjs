@@ -263,6 +263,75 @@ test('Native POST refuses changed live version HEAD even with unchanged Task tim
     /TRUSTED_VERSION_TASK_DAG_WRITE_PORT_REQUIRED/);
 });
 
+test('Native POST refuses source drift during second awaited Owner witness read',async()=>{
+  const gh=fakeOctokit({blockedBy:{312:[]}});
+  let liveBranchSha=versionSha,ownerReads=0,branchReads=0;
+  gh.octokit.rest.repos.getBranch=async()=>{
+    branchReads++;
+    return {data:{commit:{sha:liveBranchSha}}};
+  };
+  const store=memoryStore(),pack=candidatePack();
+  const port=createVersionTaskDagWritePort({repository,versionId,
+    expectedVersionSha:versionSha,store,
+    taskPackReader:async()=>({status:'VERIFIED',blobSha:packBlobSha,
+      content:JSON.stringify(pack)}),
+    reviewWitnessReader:async()=>review(),
+    ownerApprovalReader:async()=>{
+      ownerReads++;
+      if(ownerReads===2){
+        // Simulate an external version/v2 merge while the second authentic
+        // witness awaits GitHub. Task state/updatedAt intentionally stays S1.
+        await Promise.resolve();
+        liveBranchSha='f'.repeat(40);
+      }
+      return approval();
+    },
+    nativeRosterReader:async()=>nativeProjection({pack}),
+    octokit:gh.octokit,owner,repo,writerAuthority,
+    writeSetDocumentByIssue:writeSetDocs(pack)});
+  const r=await port.addNativeTaskDependency(edgeInput);
+  assert.equal(ownerReads,2,'initial and fence-held Owner witness both read');
+  assert.equal(branchReads,1,'final ref must be read after second witness');
+  assert.equal(r.status,'BLOCKED');
+  assert.equal(r.reason,'VERSION_BRANCH_NOT_PINNED');
+  assert.equal(r.githubEffect,'NOT_RUN');
+  assert.equal(gh.posts.length,0,'no dependency POST against stale S1');
+  assert.equal(store.puts().length,2,
+    'blocked fence-held operation must release its own durable reservation');
+});
+
+test('Native POST fails closed when ref becomes unreadable during final witness',async()=>{
+  const gh=fakeOctokit({blockedBy:{312:[]}});
+  let ownerReads=0,branchReads=0,refDenied=false;
+  gh.octokit.rest.repos.getBranch=async()=>{
+    branchReads++;
+    if(refDenied)throw Object.assign(new Error('branch access denied'),{status:403});
+    return {data:{commit:{sha:versionSha}}};
+  };
+  const pack=candidatePack(),store=memoryStore();
+  const port=createVersionTaskDagWritePort({repository,versionId,
+    expectedVersionSha:versionSha,store,
+    taskPackReader:async()=>({status:'VERIFIED',blobSha:packBlobSha,
+      content:JSON.stringify(pack)}),
+    reviewWitnessReader:async()=>review(),
+    ownerApprovalReader:async()=>{
+      ownerReads++;
+      if(ownerReads===2){await Promise.resolve();refDenied=true;}
+      return approval();
+    },
+    nativeRosterReader:async()=>nativeProjection({pack}),
+    octokit:gh.octokit,owner,repo,writerAuthority,
+    writeSetDocumentByIssue:writeSetDocs(pack)});
+  const r=await port.addNativeTaskDependency(edgeInput);
+  assert.equal(ownerReads,2);
+  assert.equal(branchReads,1);
+  assert.equal(r.status,'BLOCKED');
+  assert.equal(r.reason,'GITHUB_ACCESS_DENIED');
+  assert.equal(r.githubEffect,'NOT_RUN');
+  assert.equal(gh.posts.length,0);
+  assert.equal(store.puts().length,2);
+});
+
 test('Native POST refuses reviewer/Owner revoked after initial authorization',async()=>{
   for(const who of ['reviewer','owner']){
     let reviewReads=0,ownerReads=0;

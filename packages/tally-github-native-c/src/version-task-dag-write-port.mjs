@@ -357,13 +357,15 @@ export function createVersionTaskDagWritePort({
         reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',repository,versionId,
         blockedIssueNumber,blockedByIssueNumber,dependencyId:present.id,
         native:true,githubEffect:'NOT_RUN',writePerformed:false,...flags()});
-      // Gate 9 — last-moment current branch and exact unedited witness
-      // readback under the same durable fence as final DAG Freeze. A previous
-      // source SHA or an edited/deleted Review or Owner comment cannot POST.
-      const currentness=await currentBranchReason();
-      if(currentness)return blocked(currentness);
+      // Gate 9 — finish the asynchronous independent/Owner witness read
+      // before the FINAL live version ref check. Otherwise the version can
+      // advance while the second witness lookup awaits GitHub, allowing a
+      // stale approved Pack to POST after its source SHA stops being current.
+      // Both checks run under the SAME durable effect fence as DAG Freeze.
       const refreshedWitnessReason=await witnessReason(witnessScope);
       if(refreshedWitnessReason)return blocked(refreshedWitnessReason);
+      const currentness=await currentBranchReason();
+      if(currentness)return blocked(currentness);
       // Write — official blocked_by endpoint, blocker bound by live issue id.
       try{
         await octokit.request(
