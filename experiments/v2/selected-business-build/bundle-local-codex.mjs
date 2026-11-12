@@ -127,6 +127,18 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
   if(!row)return {ok:false,reason:'CLAIM_REGISTRY_RECORD_NOT_FOUND'};
   if(row.value?.phase!=='PUBLISHED_VERIFIED')return {ok:false,reason:'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED'};
   if(!validClaimRow(row,claim,issueNumber,actorRole,env))return {ok:false,reason:'CLAIM_REGISTRY_RESERVATION_MISMATCH'};
+  if(issueNumber===312){
+    // Two distinct accepted role Claims must be tied to the exact reviewed
+    // Pack and FSW, not just reuse a same-source historical Claim. If the
+    // native CAS record has no Pack binding, refuse rather than invent it.
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const writeSet=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(pack??'')||!/^[0-9a-f]{64}$/.test(writeSet??'')||
+      claim.registryPath!==env.TALLY_TASK_CLAIM_312_REGISTRY_PATH||
+      row.value.taskPackBlobSha!==pack||
+      row.value.writeSetSha256!==writeSet)
+      return {ok:false,reason:'PRODUCT_REVIEW_ROLE_CLAIM_PACK_UNVERIFIED'};
+  }
   const token=env.TALLY_GITHUB_READ_TOKEN;
   if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
   try{
