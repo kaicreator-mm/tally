@@ -238,13 +238,23 @@ export async function readProductReviewWitnessFromClient({
   try{
     prInfo=(await octokit.rest.pulls.get({
       owner,repo,pull_number:body.reviewedPullNumber}))?.data;
-    if(prInfo?.number!==body.reviewedPullNumber||prInfo?.state!=='open'||
-      prInfo?.merged===true||
+    // #392 explicitly integrates qualified source before the final
+    // physical Task Pack/Claims. An OPEN-only PR check would make the final
+    // current-source #312 ReviewWitness impossible after that legal merge.
+    // Accept either an exact OPEN candidate, or a fully proven MERGED
+    // two-parent source commit with current-branch ancestry. Never infer
+    // qualification from a CLOSED/unmerged, squashed or rebased PR.
+    const openCandidate=prInfo?.state==='open'&&prInfo.merged!==true;
+    const mergedSource=prInfo?.state==='closed'&&prInfo.merged===true&&
+      ISO(prInfo.merged_at)&&RW_SHA.test(prInfo.merge_commit_sha??'');
+    if(prInfo?.number!==body.reviewedPullNumber||
+      (!openCandidate&&!mergedSource)||
       prInfo.head?.repo?.full_name!==owner+'/'+repo||
       prInfo.base?.repo?.full_name!==owner+'/'+repo||
       prInfo.head?.sha!==body.reviewedHead||
       prInfo.base?.sha!==body.reviewedBase||
-      prInfo.base?.ref!=='version/v2'||body.reviewedBase!==body.sourceSha)
+      prInfo.base?.ref!=='version/v2'||
+      (openCandidate&&body.reviewedBase!==body.sourceSha))
       return rwUnknown('PRODUCT_REVIEW_GIT_PR_NOT_VERIFIED');
     headCommit=(await octokit.rest.repos.getCommit({
       owner,repo,ref:body.reviewedHead}))?.data;
@@ -255,6 +265,32 @@ export async function readProductReviewWitnessFromClient({
       baseCommit?.sha!==body.reviewedBase||
       !RW_SHA.test(baseCommit?.commit?.tree?.sha??''))
       return rwUnknown('PRODUCT_REVIEW_GIT_OBJECT_MISMATCH');
+    let mergeCommit=null,mergeAncestryVerified=false;
+    if(mergedSource){
+      mergeCommit=(await octokit.rest.repos.getCommit({
+        owner,repo,ref:prInfo.merge_commit_sha}))?.data;
+      // Official GitHub 'merge' method has exactly two parents: old version
+      // and reviewed source HEAD. Squash/rebase requires separate provenance
+      // and is deliberately NOT accepted through this conditional path.
+      if(mergeCommit?.sha!==prInfo.merge_commit_sha||
+        !Array.isArray(mergeCommit.parents)||
+        mergeCommit.parents.length!==2||
+        mergeCommit.parents[0]?.sha!==body.reviewedBase||
+        mergeCommit.parents[1]?.sha!==body.reviewedHead||
+        !RW_SHA.test(mergeCommit.commit?.tree?.sha??''))
+        return rwUnknown('PRODUCT_REVIEW_GIT_MERGE_PROVENANCE_MISMATCH');
+      if(body.sourceSha!==prInfo.merge_commit_sha){
+        if(typeof octokit.rest.repos.compareCommits!=='function')
+          return rwUnknown('PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED');
+        const compare=(await octokit.rest.repos.compareCommits({
+          owner,repo,base:prInfo.merge_commit_sha,head:body.sourceSha}))?.data;
+        if(compare?.status!=='ahead'||compare?.behind_by!==0||
+          !Number.isSafeInteger(compare.ahead_by)||compare.ahead_by<1||
+          compare.merge_base_commit?.sha!==prInfo.merge_commit_sha)
+          return rwUnknown('PRODUCT_REVIEW_GIT_ANCESTRY_UNVERIFIED');
+      }
+      mergeAncestryVerified=true;
+    }
     // Final last awaited read — Host redoes ALL these checks under its
     // version-scoped CAS fence before any physical freeze.
     liveBranch=(await octokit.rest.repos.getBranch({
@@ -265,6 +301,8 @@ export async function readProductReviewWitnessFromClient({
   return Object.freeze({status:'INDEPENDENTLY_VERIFIED',
     reason:'EXACT_GITHUB_REVIEW_WITNESS_VERIFIED',independentlyVerified:true,
     sourceQualified:true,reviewRef:ref,reviewedPullNumber:body.reviewedPullNumber,
+    sourceProvenance:mergedSource?'MERGED_PR_ANCESTRY':'OPEN_PR',
+    mergeCommitSha:mergedSource&&mergeAncestryVerified?prInfo.merge_commit_sha:null,
     draftRef:body.draftRef,
     productDigest:body.productDigest,sourceSha:body.sourceSha,
     taskPackBlobSha:body.taskPackBlobSha,writeSetSha256:body.writeSetSha256,
