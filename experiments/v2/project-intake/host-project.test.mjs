@@ -533,7 +533,7 @@ const p312Make=(overrides={})=>{
 const p312FreezeArgs={sourceSha:p312Source,taskPackBlobSha:p312Pack,
   writeSetSha256:p312Set,reviewCommentId:12345,
   reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
-  reviewedBase:'f'.repeat(40)};
+  reviewedBase:p312Source};
 test('#312 trusted Host persists immutable draft digest (not caller), then CAS freezes witnessed source',async()=>{
   const {provider,store,calls}=p312Make();
   const written=await provider.persistDraft({...p312Input,productDigest:'9'.repeat(64)});
@@ -657,6 +657,16 @@ test('#312 second witness read inside shared fence catches comment edit with zer
 });
 
 
+const p312OfficialGitTransport=commentReader=>({rest:{
+  issues:{getComment:commentReader},
+  pulls:{get:async()=>({data:{number:401,state:'open',merged:false,
+    head:{sha:'d'.repeat(40),repo:{full_name:'kaicreator-mm/tally'}},
+    base:{sha:p312Source,ref:'version/v2',
+      repo:{full_name:'kaicreator-mm/tally'}}}})},
+  repos:{
+    getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
+      ref==='d'.repeat(40)?'e'.repeat(40):'b'.repeat(40)}}}}),
+    getBranch:async()=>({data:{commit:{sha:p312Source}}})}}});
 test('#312 Host binds the real GitHub C witness validator when only octokit is injected',async()=>{
   // No readReviewWitness injection: the C→Host source wiring must route the
   // REAL readProductReviewWitnessFromClient over the selected C client.
@@ -668,10 +678,10 @@ test('#312 Host binds the real GitHub C witness validator when only octokit is i
     verifyFrozenWriteSet:async()=>({ok:true,
       taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
     readCurrentVersion:async()=>({ok:true,sha:p312Source}),
-    octokit:{rest:{issues:{getComment:async()=>{
+    octokit:p312OfficialGitTransport(async()=>{
       if(!comment)throw {status:404};
       return {data:comment};
-    }}}},
+    }),
     withVersionFence:async(meta,fn)=>fn(),
     env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
       TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture.sqlite'}});
@@ -681,15 +691,15 @@ test('#312 Host binds the real GitHub C witness validator when only octokit is i
   // draft, binding the Host-derived digest (never a caller digest).
   comment={id:12345,
     html_url:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+    issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
     user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
     updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify({
-      schema:'tally.v2.product-review-witness/1',status:'INDEPENDENTLY_VERIFIED',
-      repository:'kaicreator-mm/tally',issueNumber:312,
-      reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+      schema:'tally.v2.product-review-witness/2',status:'INDEPENDENTLY_VERIFIED',
+      repository:'kaicreator-mm/tally',issueNumber:312,reviewedPullNumber:401,
       draftRef:persisted.draftRef,productDigest:persisted.productDigest,
       sourceSha:p312Source,taskPackBlobSha:p312Pack,writeSetSha256:p312Set,
       reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
-      reviewedBase:'f'.repeat(40),
+      reviewedBase:p312Source,
       builderClaimRef:'claim:312:builder',reviewerClaimRef:'claim:312:reviewer',
       reviewerOperatorId:'operator:reviewer',reviewerWriterId:'writer:reviewer',
       p0:0,p1:0,p2:1})};
@@ -708,7 +718,7 @@ test('#312 Host binds the real GitHub C witness validator when only octokit is i
     verifyFrozenWriteSet:async()=>({ok:true,
       taskPackBlobSha:p312Pack,writeSetSha256:p312Set}),
     readCurrentVersion:async()=>({ok:true,sha:p312Source}),
-    octokit:{rest:{issues:{getComment:async()=>({data:edited})}}},
+    octokit:p312OfficialGitTransport(async()=>({data:edited})),
     withVersionFence:async(meta,fn)=>fn(),
     env:{TALLY_CLAIM_SOURCE_SHA:p312Source,
       TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture.sqlite'}});
@@ -906,8 +916,19 @@ export async function __readFence(){
   }finally{if(db)await db.close().catch(()=>{});}
 }
 const fixtureOctokit=()=>{const state=fixture();
+  const body=state.witness?.comment?.body?
+    JSON.parse(state.witness.comment.body):null;
   return {rest:{
-    repos:{getBranch:async()=>({data:{commit:{sha:state.branchSha}}})},
+    repos:{
+      getBranch:async()=>({data:{commit:{sha:state.branchSha}}}),
+      getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
+        body&&ref===body.reviewedHead?body.reviewedTree:'b'.repeat(40)}}}})},
+    pulls:{get:async({pull_number})=>({data:body&&
+      pull_number===body.reviewedPullNumber?
+      {number:pull_number,state:'open',merged:false,
+        head:{sha:body.reviewedHead,repo:{full_name:'kaicreator-mm/tally'}},
+        base:{sha:body.reviewedBase,ref:'version/v2',
+          repo:{full_name:'kaicreator-mm/tally'}}}:null})},
     issues:{getComment:async({comment_id})=>({data:
       comment_id===state.witness?.id?state.witness.comment:null})}}};};
 function host312(){
@@ -1019,9 +1040,9 @@ else if(command==='persist'){
     const f=readFixture();
     const ref='https://github.com/kaicreator-mm/tally/issues/312#issuecomment-'+
       data.reviewCommentId;
-    const body={schema:'tally.v2.product-review-witness/1',
+    const body={schema:'tally.v2.product-review-witness/2',
       status:'INDEPENDENTLY_VERIFIED',repository:'kaicreator-mm/tally',
-      issueNumber:312,reviewRef:ref,draftRef:out.draftRef,
+      issueNumber:312,reviewedPullNumber:401,draftRef:out.draftRef,
       productDigest:out.productDigest,sourceSha:data.sourceSha,
       taskPackBlobSha:data.taskPackBlobSha,writeSetSha256:data.writeSetSha256,
       reviewedHead:data.reviewedHead,reviewedTree:data.reviewedTree,
@@ -1033,7 +1054,8 @@ else if(command==='persist'){
       reviewerOperatorId:data.reviewer.operatorId,
       reviewerWriterId:data.reviewer.writerId,p0:0,p1:0,p2:1};
     f.witness={id:data.reviewCommentId,comment:{id:data.reviewCommentId,
-      html_url:ref,user:{login:data.reviewer.writerLogin},
+      html_url:ref,issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
+      user:{login:data.reviewer.writerLogin},
       created_at:'2026-11-13T08:00:00Z',
       updated_at:env.T312_EDIT_WITNESS==='1'?'2026-11-13T08:00:01Z':'2026-11-13T08:00:00Z',
       body:JSON.stringify(body)}};
@@ -1324,7 +1346,7 @@ test('T312 selected K physical replay: two intents, shared SQLite fence, fail-cl
       'web/v2/intake-controller.mjs','web/v2/journey-server.mjs'].join('\n');
     const caseInput=extra=>({sourceSha,taskPackBlobSha:pack,writeSetSha256:set,
       reviewCommentId:witnessId,reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),
-      reviewedBase:'f'.repeat(40),draft,builder,reviewer,fswDocument,...extra});
+      reviewedBase:sourceSha,draft,builder,reviewer,fswDocument,...extra});
     const mkCase=(name,input)=>{
       const dir=join(root,'data-'+name);mkdirSync(dir);
       writeFileSync(join(dir,'t312-input.json'),JSON.stringify(input));
