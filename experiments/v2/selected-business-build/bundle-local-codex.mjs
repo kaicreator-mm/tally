@@ -34,14 +34,14 @@ import {createLocalCodexHost} from ${JSON.stringify(host)};
 import {Octokit} from ${JSON.stringify(octokit)};
 import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
-import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} from ${JSON.stringify(intakeHostModule)};
-import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
+import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake, createProductReviewHost312} from ${JSON.stringify(intakeHostModule)};
+import {readProjectIntakeFromClient,readProductReviewWitnessFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
   readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
 // issue keys; every claim/config value comes from issue-keyed Host env, never
@@ -59,6 +59,7 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
+  312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
   222:{actorRole:'builder'}
 };
@@ -69,8 +70,9 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // Host claim configuration: #172 keeps the legacy TALLY_CLAIM_* names; the
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
-function claimEnv(env,issueNumber){
-  const p=issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
+function claimEnv(env,issueNumber,actorRole='builder'){
+  const p=issueNumber===312?'TALLY_TASK_CLAIM_312_'+actorRole.toUpperCase()+'_':
+    issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
@@ -109,8 +111,8 @@ function validClaimRow(row,claim,issueNumber,actorRole,env){
 // native publication witness. Shared by Builder attempts and Reviewer Join.
 async function verifyAcceptedClaim(env,issueNumber,actorRole){
   const binding=TASK_BINDINGS[issueNumber];
-  const claim=claimEnv(env,issueNumber);
-  if(binding?.actorRole!==actorRole||!SHA.test(claim.sourceSha??'')||
+  const claim=claimEnv(env,issueNumber,actorRole);
+  if((binding?.actorRole!==actorRole&&!(issueNumber===312&&actorRole==='reviewer'))||!SHA.test(claim.sourceSha??'')||
     !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
     !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
     !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
@@ -144,6 +146,12 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       witness.generation!==1||witness.transportActor!==claim.writerLogin)
       return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};
   }catch{return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};}
+  if(issueNumber===312)return {ok:true,claim:{accepted:true,issueNumber:312,
+    role:actorRole,sourceSha:claim.sourceSha,
+    taskPackBlobSha:env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA,
+    writeSetSha256:env.TALLY_TASK_CLAIM_312_WRITESET_SHA256,
+    claimRef:row.value.commentRef,operatorId:claim.operatorId,
+    writerId:claim.writerId,transportActor:claim.writerLogin}};
   return {ok:true,claim};
 }
 async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
@@ -160,6 +168,29 @@ async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
   return {ok:true,pair};
 }
 async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
+  if(issueNumber===312){
+    const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(sourceSha??'')||!SHA.test(pack??'')||
+      !/^[a-f0-9]{64}$/.test(digest??'')||
+      typeof registryPath!=='string'||!registryPath)
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    let db,row;
+    try{
+      db=await openSqliteCasStore({path:registryPath,busyTimeoutMs:1000});
+      row=await db.get(writeSetKeyFor(312));
+    }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
+    finally{if(db)await db.close();}
+    const value=row?.value;
+    if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
+      value.taskPackBlobSha!==pack||value.writeSetSha256!==digest||
+      typeof value.document!=='string'||value.document.length>65536||
+      !value.document.includes('experiments/v2/project-intake/host-project.mjs')||
+      !value.document.includes('web/v2/intake-controller.mjs'))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
+  }
   const claim=claimEnv(env,issueNumber);
   const candidateRelativePath=TASK_BINDINGS[issueNumber].candidateRelativePath;
   if(!claim.writeSetSha256||typeof claim.registryPath!=='string'||!claim.registryPath)
