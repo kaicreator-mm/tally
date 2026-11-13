@@ -432,25 +432,25 @@ export async function freezeReviewedMaintenanceCandidate(input){
 const MAINTENANCE_ISSUE=219;
 const CANDIDATE_DIGEST=/^[0-9a-f]{64}$/;
 const ISSUE_URL_BOUNDARY=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
-const MAINTENANCE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
-  'MAINTENANCE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
-  'CANDIDATE_REVIEW_NOT_VERIFIED','MAINTENANCE_REVIEW_DIGEST_MISMATCH',
-  'CANDIDATE_REVIEW_NOT_INDEPENDENT','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
-  'MAINTENANCE_ISSUE_DIGEST_MISMATCH','GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
-  'GITHUB_PUBLISH_UNKNOWN','MAINTENANCE_ISSUE_READBACK_MISMATCH',
-  'MAINTENANCE_ISSUE_IDENTITY_CONFLICT','MAINTENANCE_ISSUE_INPUT_INVALID',
-  'GITHUB_ACCESS_DENIED','GITHUB_RATE_LIMITED','GITHUB_UNAUTHENTICATED',
-  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_PUBLICATION_CONFLICT','LOCAL_AGENT_PROVIDER_THREW']);
+// Reachable Host UNKNOWN-effect reasons are not a closed enumeration: the
+// shared version fence and the reconcile/readback paths surface fresh reason
+// tokens (e.g. MAINTENANCE_ISSUE_PENDING_RECONCILIATION,
+// MAINTENANCE_PUBLICATION_FENCE_UNKNOWN, MAINTENANCE_ISSUE_CREATE_READBACK_
+// MISSING, GITHUB_PUBLICATION_UNKNOWN). A lost acknowledgment must stay
+// PUBLICATION_UNKNOWN with githubEffect UNKNOWN — never be rewritten into a
+// pre-effect refusal. The boundary contract is the state+effect shape; the
+// reason only has to be a bounded machine token.
+const MAINTENANCE_TOKEN=/^[A-Z][A-Z0-9_]{0,127}$/;
 const validMaintenanceIssue=(input,o)=>{
   if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(MAINTENANCE_ISSUE)||
     o.sourceSha!==input.sourceSha||o.candidateDigest!==input.candidateDigest||
     o.claimGeneration!==1||o.authorized!==false||o.agentLaunch!==false||
     o.historicalReleaseMutation!==false||o.taskPass!==false||
     o.releasePass!==false)return false;
-  if(o.state==='NOT_ADMITTED')return MAINTENANCE_REASONS.has(o.reason)&&
+  if(o.state==='NOT_ADMITTED')return MAINTENANCE_TOKEN.test(o.reason??'')&&
     o.claimAccepted===false&&o.admitted===false&&o.githubEffect==='NOT_RUN'&&
     o.replayFixture===false&&o.issue===null;
-  if(o.state==='PUBLICATION_UNKNOWN')return MAINTENANCE_REASONS.has(o.reason)&&
+  if(o.state==='PUBLICATION_UNKNOWN')return MAINTENANCE_TOKEN.test(o.reason??'')&&
     o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='UNKNOWN'&&
     o.replayFixture===false&&o.issue===null;
   if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&
