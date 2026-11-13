@@ -71,15 +71,32 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
     phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',issueRef:__test.ISSUE_REF,
     sourceSha:sha,candidateDigest:digest,
     reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+    reviewedPullNumber:278,
     reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sha,
+    builderClaimRef:'claim:author',reviewerClaimRef:'claim:reviewer',
     builderOperatorId:'author:1',reviewerOperatorId:'reviewer:1',
     reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
   },{mustBeAbsent:true});await d.close();
   return ctx;};
 const host=(ctx={},overrides={})=>createMaintenanceHost({
   openStore:ctx.openStore??(async()=>memoryStore().store),
-  verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true}),env:env(),...overrides});
+  verifyAcceptedClaim:async(_n,role='builder')=>({ok:true,claim:{
+    accepted:true,issueNumber:219,role,sourceSha:sha,
+    claimRef:role==='builder'?'claim:author':'claim:reviewer',
+    operatorId:role==='builder'?'author:1':'reviewer:1',
+    writerId:role==='builder'?'writer:author':'writer:reviewer',
+    transportActor:'kaicreator-mm'}}),
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readReviewWitness:async({commentId,expected})=>({
+    state:'REVIEW_VERIFIED',reviewed:true,
+    reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+    sourceSha:expected.sourceSha,candidateDigest:expected.candidateDigest,
+    reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+    reviewedAt:'2026-10-31T09:00:00.000Z',p0:0,p1:0,
+    authorized:false,taskPass:false}),
+  readCurrentVersion:async()=>({ok:true,sha}),
+  withVersionFence:async(_meta,run)=>run(),
+  env:env(),...overrides});
 const publishInput=(over={})=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
   sourceSha:sha,candidateDigest:digest,...over});
 const issueReadback=n=>({state:'READBACK_VERIFIED',issue:{number:n,
@@ -1032,4 +1049,66 @@ test('#219 Host freeze refuses a witness verdict that changes across the fence',
     .hostFreezeReviewedMaintenanceCandidate(input);
   assert.equal(result.reason,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
   assert.equal(ctx.m.createCount(),1,'no candidate or proof may land');
+});
+
+test('#219 live publication authority rejects revoked review, role, FSW or version',async()=>{
+  for(const key of ['review','role','fsw','version','fence']){
+    const ctx=await reviewedFrozen();
+    let posts=0;
+    const changes={
+      review:{readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'})},
+      role:{verifyAcceptedClaim:async(_n,role)=>role==='reviewer'?
+        {ok:false,reason:'CLAIM_REVOKED'}:{ok:true}},
+      fsw:{verifyFrozenWriteSet:async()=>({ok:false})},
+      version:{readCurrentVersion:async()=>({ok:true,sha:'b'.repeat(40)})},
+      fence:{withVersionFence:undefined}};
+    const out=await host(ctx,{...publishTransport(302),...changes[key],
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.notEqual(out.state,'MAINTENANCE_ISSUE_PUBLISHED',key);
+    assert.equal(posts,0,key);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false,key);
+    assert.equal(out.taskPass,false);
+  }
+});
+test('#219 publication checks C witness again while fenced, before pending CAS',async()=>{
+  const ctx=await reviewedFrozen();
+  let reads=0,posts=0;
+  const result=await host(ctx,{...publishTransport(302),
+    readReviewWitness:async({commentId,expected})=>{
+      reads++;
+      return reads===1?{state:'REVIEW_VERIFIED',reviewed:true,
+        reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+        sourceSha:sha,candidateDigest:digest,
+        reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+        reviewedAt:'2026-10-31T09:00:00.000Z',
+        authorized:false,taskPass:false,p0:0,p1:0}:{state:'REVIEW_UNKNOWN'};},
+    publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}},
+  }).hostPublishMaintenanceIssue(publishInput());
+  assert.equal(reads,2);assert.equal(result.state,'NOT_ADMITTED');
+  assert.equal(result.reason,'MAINTENANCE_PUBLICATION_WITNESS_STALE');
+  assert.equal(posts,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false);
+});
+test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST',async()=>{
+  for(const throwError of [false,true]){
+    const ctx=await reviewedFrozen();
+    await ctx.m.store.put(MAINTENANCE_PENDING_KEY,{
+      phase:'PENDING_MAINTENANCE_ISSUE',sourceSha:sha,candidateDigest:digest});
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>{if(throwError)throw Error('network');
+        return {state:'RECONCILE_COMPLETE',reason:'MAINTENANCE_ISSUE_ABSENT',
+          matches:[]};},
+      readIssue:async()=>issueReadback(302),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}}
+    }).hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'PUBLICATION_UNKNOWN');
+    assert.equal(result.githubEffect,'UNKNOWN');
+    assert.equal(result.reason,throwError?
+      'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN':
+      'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+    assert.equal(posts,0);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  }
 });
