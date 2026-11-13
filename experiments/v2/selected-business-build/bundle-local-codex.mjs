@@ -624,6 +624,24 @@ function maintenanceHostFor(){
     },
     withVersionFence:withMaintenanceVersionFence});
 }
+// #219: draft and independently reviewed freeze are separate selected
+// capabilities; never use a typed reviewer name or preseeded direct Host row.
+export async function persistMaintenanceDraft(input){
+  if(input?.issueNumber!==219||input.sourceRef!==issueRefFor(219))
+    return {state:'NOT_ADMITTED',reason:'MAINTENANCE_DRAFT_INPUT_INVALID',
+      issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};
+  try{return await maintenanceHostFor().hostPersistMaintenanceDraft(input);}
+  catch{return {state:'NOT_ADMITTED',reason:'MAINTENANCE_DRAFT_CAS_UNKNOWN',
+    issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};}
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  if(input?.issueNumber!==219||input.sourceRef!==issueRefFor(219))
+    return {state:'NOT_ADMITTED',reason:'MAINTENANCE_REVIEW_INPUT_INVALID',
+      issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};
+  try{return await maintenanceHostFor().hostFreezeReviewedMaintenanceCandidate(input);}
+  catch{return {state:'NOT_ADMITTED',reason:'MAINTENANCE_REVIEW_FREEZE_UNKNOWN',
+    issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};}
+}
 export async function publishMaintenanceIssue(input){
   return maintenanceHostFor().hostPublishMaintenanceIssue(input);
 }
