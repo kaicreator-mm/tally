@@ -1145,6 +1145,54 @@ test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST
   }
 });
 
+test('#219 shim keeps every reachable lost-ACK reason UNKNOWN and refuses non-token reasons',()=>{
+  // Behavior test of the shipped sealed-boundary validation: the state+effect
+  // shape is the contract, reasons are bounded machine tokens, and a lost
+  // acknowledgment must never be rewritten into a pre-effect refusal.
+  const src=readFileSync(new URL('../selected-business-build/local-codex-shim.mjs',
+    import.meta.url),'utf8');
+  const start=src.indexOf('const MAINTENANCE_ISSUE=219;');
+  const end=src.indexOf('export async function publishMaintenanceIssue');
+  assert.ok(start>=0&&end>start,'missing shim maintenance validation block');
+  const mod=runInNewContext('(function(){'+src.slice(start,end)+
+    ';return {validMaintenanceIssue};})()',
+    {issueRefFor:n=>'https://github.com/kaicreator-mm/tally/issues/'+n,
+      SHA:/^[0-9a-f]{40}$/});
+  const input={issueNumber:219,sourceSha:sha,candidateDigest:digest};
+  const unknownShape=reason=>({state:'PUBLICATION_UNKNOWN',reason,
+    issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+    claimGeneration:1,authorized:false,agentLaunch:false,
+    historicalReleaseMutation:false,taskPass:false,releasePass:false,
+    claimAccepted:true,admitted:true,replayFixture:false,
+    githubEffect:'UNKNOWN',issue:null});
+  for(const reason of ['MAINTENANCE_ISSUE_PENDING_RECONCILIATION',
+    'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN','MAINTENANCE_ISSUE_READBACK_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN','GITHUB_PUBLICATION_UNKNOWN',
+    'MAINTENANCE_ISSUE_CREATE_READBACK_MISSING','GITHUB_PUBLISH_UNKNOWN']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),true,reason);
+  }
+  for(const reason of ['local_agent_threw','not a token','A'.repeat(129),'','ok!']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),false,
+      'non-token reason must be refused: '+JSON.stringify(reason));
+  }
+  for(const reason of ['MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+    'MAINTENANCE_ISSUE_DIGEST_MISMATCH','CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH']){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape(reason),
+      state:'NOT_ADMITTED',claimAccepted:false,admitted:false,
+      githubEffect:'NOT_RUN'}),true,reason);
+  }
+  for(const broken of [
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',claimAccepted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',admitted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',githubEffect:'NOT_RUN'},
+    {state:'NOT_ADMITTED',reason:'MAINTENANCE_FREEZE_STORE_UNAVAILABLE',claimAccepted:true},
+  ]){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape('GITHUB_PUBLISH_UNKNOWN'),...broken}),false,
+      'shape violation must refuse: '+JSON.stringify(broken));
+  }
+});
+
 test('#219 selected K role-env and exact FSW checker reject forged path sets',()=>{
   const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   const extract=name=>{
