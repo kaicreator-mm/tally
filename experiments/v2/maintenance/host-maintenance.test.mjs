@@ -4,14 +4,18 @@ import {spawnSync} from 'node:child_process';
 import {existsSync,mkdirSync,writeFileSync,readFileSync,mkdtempSync,rmSync,
   readdirSync,copyFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {runInNewContext} from 'node:vm';
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createMaintenanceHost,recordMaintenanceCandidate,
   observeLearningSuggestions,validateMaintenanceCandidate,
   maintenanceCandidateDigest,learningSuggestionsFromReports,
-  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
+  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,
+  MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
   MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
+import {readMaintenanceReviewWitnessFromClient}
+  from '../../../packages/tally-github-c/src/maintenance-effects.mjs';
 
 const REPO_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
 const run=(cmd,args,opts={})=>{
@@ -61,11 +65,39 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
   const frozen=await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore}),
     ...over.args});
   assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  // Old fixtures explicitly model a separate already-qualified Host proof.
+  // Without this row legacy name-only CAS is now forbidden to publish.
+  const d=await ctx.openStore();
+  await d.put(MAINTENANCE_REVIEW_PROOF_KEY,{
+    phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',issueRef:__test.ISSUE_REF,
+    sourceSha:sha,candidateDigest:digest,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+    reviewedPullNumber:278,
+    reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sha,
+    builderClaimRef:'claim:author',reviewerClaimRef:'claim:reviewer',
+    builderOperatorId:'author:1',reviewerOperatorId:'reviewer:1',
+    reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
+  },{mustBeAbsent:true});await d.close();
   return ctx;};
 const host=(ctx={},overrides={})=>createMaintenanceHost({
   openStore:ctx.openStore??(async()=>memoryStore().store),
-  verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true}),env:env(),...overrides});
+  verifyAcceptedClaim:async(_n,role='builder')=>({ok:true,claim:{
+    accepted:true,issueNumber:219,role,sourceSha:sha,
+    claimRef:role==='builder'?'claim:author':'claim:reviewer',
+    operatorId:role==='builder'?'author:1':'reviewer:1',
+    writerId:role==='builder'?'writer:author':'writer:reviewer',
+    transportActor:'kaicreator-mm'}}),
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readReviewWitness:async({commentId,expected})=>({
+    state:'REVIEW_VERIFIED',reviewed:true,
+    reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+    sourceSha:expected.sourceSha,candidateDigest:expected.candidateDigest,
+    reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+    reviewedAt:'2026-10-31T09:00:00.000Z',p0:0,p1:0,
+    authorized:false,taskPass:false}),
+  readCurrentVersion:async()=>({ok:true,sha}),
+  withVersionFence:async(_meta,run)=>run(),
+  env:env(),...overrides});
 const publishInput=(over={})=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
   sourceSha:sha,candidateDigest:digest,...over});
 const issueReadback=n=>({state:'READBACK_VERIFIED',issue:{number:n,
@@ -430,6 +462,22 @@ const env=Object.assign({},process.env,{TALLY_LOCAL_REPLAY:'1',
 const host=createMaintenanceHost({env,openStore,
   verifyAcceptedClaim:async()=>({ok:true}),
   verifyFrozenWriteSet:async()=>({ok:true})});
+// New routes intentionally fail closed in the injected replay: no synthetic
+// original GitHub Claim/review authority or production CAS is minted.
+export async function persistMaintenanceDraft(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
 export async function publishMaintenanceIssue(input){
   const result=await host.hostPublishMaintenanceIssue(input);
   console.error('J219_PROVIDER_PUBLISH_RETURN',JSON.stringify(result));
@@ -517,7 +565,9 @@ const openFacade=async()=>{
 };
 if(process.env.J219_CONSUMER_MODE==='noflag'){
   const {sqlite,facade}=await openFacade();
-  for(const intentType of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+  for(const intentType of ['persistMaintenanceDraft',
+    'freezeReviewedMaintenanceCandidate',
+    'publishMaintenanceIssue','recordTaskLearningOutcome']){
     let refused=false,detail='';
     try{
       const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
@@ -535,6 +585,23 @@ if(process.env.J219_CONSUMER_MODE==='noflag'){
   facade.stop();await sqlite.close();process.exit(0);
 }
 const {sqlite,facade}=await openFacade();
+// Selected route existence is tested with the real loaded K. These replay
+// requests MUST remain NOT_ADMITTED and perform no CAS/GitHub writes, because
+// the physical accepted role Claims and canonical review are not configured.
+for(const intentType of ['persistMaintenanceDraft',
+  'freezeReviewedMaintenanceCandidate']){
+  const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
+    messageId:'j219-guarded-'+intentType,
+    input:{issueRef,issueNumber:219,sourceSha,candidateDigest,
+      candidate:{sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207'},
+      reviewCommentId:1,reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sourceSha}});
+  assert.equal(receipt.status,'admitted',JSON.stringify(receipt).slice(0,450));
+  const output=receipt.admitted.effects[0].output;
+  assert.equal(output.state,'NOT_ADMITTED',intentType);
+  assert.equal(output.taskPass,false);
+  assert.equal(output.releasePass,false);
+}
 const publishReceipt=await facade.send({intentType:'publishMaintenanceIssue',
   instanceKey:'maintenance-219',messageId:'j219-publish-1',
   input:{issueRef,issueNumber:219,sourceSha,candidateDigest}});
@@ -685,7 +752,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withFlag.stdout,/"maintenanceRoutes": "SELECTED"/);
     const sealedPath=join(root,'sealed-app.json');
     const sealed=JSON.parse(readFileSync(sealedPath,'utf8'));
-    for(const intent of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+    for(const intent of ['persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
+      'publishMaintenanceIssue','recordTaskLearningOutcome']){
       const route=sealed.routes.find(r=>r.intentId===intent);
       assert.ok(route,'maintenance route missing: '+intent);
       assert.equal(route.capabilityId,'tally-local-codex');
@@ -695,7 +763,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withoutFlag.stdout,/"maintenanceRoutes": "NOT_SELECTED"/);
     const noflagPath=join(root,'sealed-app-noflag.json');
     const noflag=JSON.parse(readFileSync(noflagPath,'utf8'));
-    assert.equal(noflag.routes.some(r=>['publishMaintenanceIssue',
+    assert.equal(noflag.routes.some(r=>['persistMaintenanceDraft',
+      'freezeReviewedMaintenanceCandidate','publishMaintenanceIssue',
       'recordTaskLearningOutcome'].includes(r.intentId)),
       false,'maintenance routes must be absent without T219_MAINTENANCE=1');
     assert.ok(!readFileSync(sealedPath,'utf8').includes(REPLAY_CANARY),'no canary in sealed bytes');
@@ -749,4 +818,448 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
 test('Task 219 frozen write-set binding names the admitted Host path',()=>{
   const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
+
+test('#219 candidate draft requires accepted claim and FSW, and is create-only',async()=>{
+  const ctx=persisted(),args={...publishInput(),candidate:candidate()};
+  const inst=()=>createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:true}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()});
+  const first=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(first.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(ctx.m.createCount(),1);
+  const second=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(second.reason,'MAINTENANCE_DRAFT_ALREADY_RECORDED');
+  assert.equal(ctx.m.createCount(),1);
+  const drift=await inst().hostPersistMaintenanceDraft({...args,
+    candidate:{...candidate(),summary:'different'}});
+  assert.equal(drift.state,'NOT_ADMITTED');
+  const blocked=await createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()})
+    .hostPersistMaintenanceDraft(args);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+});
+test('#219 Host candidate freeze requires twice witnessed distinct roles and fenced CAS',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:builder',operatorId:'op:builder',writerId:'w:builder',
+    transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const marker='https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001';
+  const witness={state:'REVIEW_VERIFIED',reviewed:true,reviewRef:marker,
+    sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+    authorized:false,taskPass:false};
+  let reads=0,fences=0;
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();},...over});
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),3);
+  const row=ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY).value;
+  assert.equal(row.review.author,'op:builder');
+  assert.equal(row.review.reviewer,'op:reviewer');
+  assert.equal(row.taskPass,false);assert.equal(row.authorized,false);
+  const repeated=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(repeated.state,'RECORDED_COMPLETE');
+  assert.equal(ctx.m.createCount(),3);
+  const noFence=await mk({withVersionFence:null})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(noFence.reason,'MAINTENANCE_HOST_CONFIG_INVALID');
+});
+test('#219 Host ReviewWitness refuses a same operator and any untrusted/absent source',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:b',operatorId:'same',writerId:'w:b',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:r',writerId:'w:r'};
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'}),
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run(),...over});
+  const missing=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(missing.reason,'MAINTENANCE_DRAFT_NOT_VERIFIED');
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const same=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(same.reason,'MAINTENANCE_REVIEW_SAME_PROCESS');
+  assert.equal(ctx.m.createCount(),1);
+  const blocked=await mk({verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'})})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+  assert.equal(ctx.m.createCount(),1);
+});
+
+test('#219 name-only legacy candidate cannot publish without separately frozen review proof',async()=>{
+  const ctx=persisted();
+  await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore})});
+  let publishes=0;
+  const h=host(ctx,{...publishTransport(),
+    publishIssue:async()=>{publishes++;return {state:'ISSUE_PUBLISHED',
+      issue:issueReadback(999).issue};}});
+  const r=await h.hostPublishMaintenanceIssue(publishInput());
+  assert.equal(r.state,'NOT_ADMITTED');
+  assert.equal(r.reason,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+  assert.equal(publishes,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+});
+
+test('#219 fence-time Claim/FSW revocation refuses CAS without Review Proof',async()=>{
+  for(const revoked of ['reviewer','fsw']){
+    const ctx=persisted();
+    const input={...publishInput(),reviewCommentId:6840000001,
+      reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sha};
+    const b={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+      claimRef:'claim:builder',operatorId:'operator:builder',
+      writerId:'writer:builder',transportActor:'kaicreator-mm'};
+    const r={...b,role:'reviewer',claimRef:'claim:reviewer',
+      operatorId:'operator:reviewer',writerId:'writer:reviewer'};
+    let reviewerReads=0,fswReads=0,fenceCalls=0;
+    const witness={state:'REVIEW_VERIFIED',reviewed:true,
+      reviewRef:__test.ISSUE_REF+'#issuecomment-6840000001',
+      sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+      reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+      authorized:false,taskPass:false};
+    const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+      verifyAcceptedClaim:async(_n,role)=>{
+        if(role==='reviewer'&&++reviewerReads===2&&revoked==='reviewer')
+          return {ok:false,reason:'CLAIM_REVOKED'};
+        return {ok:true,claim:role==='reviewer'?r:b};},
+      verifyFrozenWriteSet:async()=>{
+        fswReads++;
+        return fswReads>=3&&revoked==='fsw'?
+          {ok:false,reason:'WRITE_SET_REVOKED'}:{ok:true};},
+      readReviewWitness:async()=>witness,
+      readCurrentVersion:async()=>({ok:true,sha}),
+      withVersionFence:async(_meta,run)=>{fenceCalls++;return run();}});
+    const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+    assert.equal(draft.state,'DRAFT_PENDING_REVIEW');
+    const result=await h.hostFreezeReviewedMaintenanceCandidate(input);
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,revoked==='reviewer'?
+      'MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED':
+      'MAINTENANCE_REVIEW_WRITE_SET_CHANGED');
+    assert.equal(fenceCalls,1);
+    assert.equal(ctx.m.createCount(),1,'only the pre-review draft exists');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),false);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),false);
+    assert.equal(result.githubEffect,'NOT_RUN');
+    assert.equal(result.taskPass,false);
+  }
+});
+
+// Real wiring contract: the Host freeze must accept the EXACT return surface
+// of the merged qualified C reader (#409), which carries no reviewedAt yet.
+// Fixtures that silently add the field would mask an unsatisfiable contract.
+const realCWitness=async(input,claims)=>{
+  const NODE_ID='IC_j219contract01';
+  const REVIEW_REF=`https://github.com/kaicreator-mm/tally/issues/219#issuecomment-${input.reviewCommentId}`;
+  const TS='2026-11-13T02:00:00Z';
+  const witnessBody=JSON.stringify({schema:'tally.v2.maintenance-review-witness/1',
+    status:'INDEPENDENTLY_VERIFIED',repository:'kaicreator-mm/tally',issueNumber:219,
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    reviewedPullNumber:input.reviewedPullNumber,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
+    builderClaimRef:claims.builderClaim.claimRef,
+    reviewerClaimRef:claims.reviewerClaim.claimRef,
+    reviewerOperatorId:claims.reviewerClaim.operatorId,
+    reviewerWriterId:claims.reviewerClaim.writerId,p0:0,p1:0,p2:1});
+  const octokit={graphql:async()=>({node:{__typename:'IssueComment',
+      id:NODE_ID,fullDatabaseId:String(input.reviewCommentId),url:REVIEW_REF,
+      body:witnessBody,lastEditedAt:null,editor:null,
+      issue:{number:219,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
+    rest:{issues:{getComment:async()=>({data:{id:input.reviewCommentId,
+        node_id:NODE_ID,html_url:REVIEW_REF,
+        issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/219',
+        user:{login:'kaicreator-mm'},created_at:TS,updated_at:TS,
+        body:witnessBody}})},
+      pulls:{get:async()=>({data:{number:input.reviewedPullNumber,state:'open',
+        merged:false,head:{sha:input.reviewedHead,
+          repo:{full_name:'kaicreator-mm/tally'}},
+        base:{sha:input.reviewedBase,ref:'version/v2'}}})},
+      repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
+          ref===input.reviewedHead?input.reviewedTree:'f'.repeat(40)}}}}),
+        getBranch:async()=>({data:{commit:{sha:input.sourceSha}}})}}};
+  return readMaintenanceReviewWitnessFromClient({octokit,...claims,
+    commentId:input.reviewCommentId,
+    expected:{issueNumber:219,sourceSha:input.sourceSha,
+      candidateDigest:input.candidateDigest,
+      reviewedPullNumber:input.reviewedPullNumber,
+      reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+      reviewedBase:input.reviewedBase}});
+};
+test('#219 Host freeze accepts the real merged C immutable ReviewWitness and records proof',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000002,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  assert.equal(witness.state,'REVIEW_VERIFIED',witness.reason);
+  assert.equal(witness.reviewedAt,'2026-11-13T02:00:00Z');
+  let reads=0,fences=0;
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();}});
+  const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  assert.equal(draft.state,'DRAFT_PENDING_REVIEW',draft.reason);
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),3,'draft, candidate and proof created');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),true);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),true);
+  assert.equal(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY).value.reviewedAt,
+    '2026-11-13T02:00:00Z');
+});
+test('#219 Host freeze completes end-to-end once the C transport carries the witness instant',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000004,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>witness,
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()});
+  await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  const proof=(await ctx.openStore().then(s=>s.get(MAINTENANCE_REVIEW_PROOF_KEY))).value;
+  assert.equal(proof.reviewedAt,'2026-11-13T02:00:00Z');
+});
+test('#219 Host freeze refuses a witness verdict that changes across the fence',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000003,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async()=>({ok:true,claim:builder}),
+    verifyFrozenWriteSet:async()=>({ok:true})})
+    .hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  let reads=0;
+  const result=await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;
+      return reads===1?witness:{...witness,p2:7};},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(result.reason,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+  assert.equal(ctx.m.createCount(),1,'no candidate or proof may land');
+});
+
+test('#219 live publication authority rejects revoked review, role, FSW or version',async()=>{
+  for(const key of ['review','role','fsw','version','fence']){
+    const ctx=await reviewedFrozen();
+    let posts=0;
+    const changes={
+      review:{readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'})},
+      role:{verifyAcceptedClaim:async(_n,role)=>role==='reviewer'?
+        {ok:false,reason:'CLAIM_REVOKED'}:{ok:true}},
+      fsw:{verifyFrozenWriteSet:async()=>({ok:false})},
+      version:{readCurrentVersion:async()=>({ok:true,sha:'b'.repeat(40)})},
+      fence:{withVersionFence:undefined}};
+    const out=await host(ctx,{...publishTransport(302),...changes[key],
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.notEqual(out.state,'MAINTENANCE_ISSUE_PUBLISHED',key);
+    assert.equal(posts,0,key);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false,key);
+    assert.equal(out.taskPass,false);
+  }
+});
+test('#219 publication checks C witness again while fenced, before pending CAS',async()=>{
+  const ctx=await reviewedFrozen();
+  let reads=0,posts=0;
+  const result=await host(ctx,{...publishTransport(302),
+    readReviewWitness:async({commentId,expected})=>{
+      reads++;
+      return reads===1?{state:'REVIEW_VERIFIED',reviewed:true,
+        reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+        sourceSha:sha,candidateDigest:digest,
+        reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+        reviewedAt:'2026-10-31T09:00:00.000Z',
+        authorized:false,taskPass:false,p0:0,p1:0}:{state:'REVIEW_UNKNOWN'};},
+    publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}},
+  }).hostPublishMaintenanceIssue(publishInput());
+  assert.equal(reads,2);assert.equal(result.state,'NOT_ADMITTED');
+  assert.equal(result.reason,'MAINTENANCE_PUBLICATION_WITNESS_STALE');
+  assert.equal(posts,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false);
+});
+test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST',async()=>{
+  for(const throwError of [false,true]){
+    const ctx=await reviewedFrozen();
+    await ctx.m.store.put(MAINTENANCE_PENDING_KEY,{
+      phase:'PENDING_MAINTENANCE_ISSUE',sourceSha:sha,candidateDigest:digest});
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>{if(throwError)throw Error('network');
+        return {state:'RECONCILE_COMPLETE',reason:'MAINTENANCE_ISSUE_ABSENT',
+          matches:[]};},
+      readIssue:async()=>issueReadback(302),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}}
+    }).hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'PUBLICATION_UNKNOWN');
+    assert.equal(result.githubEffect,'UNKNOWN');
+    assert.equal(result.reason,throwError?
+      'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN':
+      'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+    assert.equal(posts,0);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  }
+});
+
+test('#219 shim keeps every reachable lost-ACK reason UNKNOWN and refuses non-token reasons',()=>{
+  // Behavior test of the shipped sealed-boundary validation: the state+effect
+  // shape is the contract, reasons are bounded machine tokens, and a lost
+  // acknowledgment must never be rewritten into a pre-effect refusal.
+  const src=readFileSync(new URL('../selected-business-build/local-codex-shim.mjs',
+    import.meta.url),'utf8');
+  const start=src.indexOf('const MAINTENANCE_ISSUE=219;');
+  const end=src.indexOf('export async function publishMaintenanceIssue');
+  assert.ok(start>=0&&end>start,'missing shim maintenance validation block');
+  const mod=runInNewContext('(function(){'+src.slice(start,end)+
+    ';return {validMaintenanceIssue};})()',
+    {issueRefFor:n=>'https://github.com/kaicreator-mm/tally/issues/'+n,
+      SHA:/^[0-9a-f]{40}$/});
+  const input={issueNumber:219,sourceSha:sha,candidateDigest:digest};
+  const unknownShape=reason=>({state:'PUBLICATION_UNKNOWN',reason,
+    issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+    claimGeneration:1,authorized:false,agentLaunch:false,
+    historicalReleaseMutation:false,taskPass:false,releasePass:false,
+    claimAccepted:true,admitted:true,replayFixture:false,
+    githubEffect:'UNKNOWN',issue:null});
+  for(const reason of ['MAINTENANCE_ISSUE_PENDING_RECONCILIATION',
+    'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN','MAINTENANCE_ISSUE_READBACK_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN','GITHUB_PUBLICATION_UNKNOWN',
+    'MAINTENANCE_ISSUE_CREATE_READBACK_MISSING','GITHUB_PUBLISH_UNKNOWN']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),true,reason);
+  }
+  for(const reason of ['local_agent_threw','not a token','A'.repeat(129),'','ok!']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),false,
+      'non-token reason must be refused: '+JSON.stringify(reason));
+  }
+  for(const reason of ['MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+    'MAINTENANCE_ISSUE_DIGEST_MISMATCH','CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH']){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape(reason),
+      state:'NOT_ADMITTED',claimAccepted:false,admitted:false,
+      githubEffect:'NOT_RUN'}),true,reason);
+  }
+  for(const broken of [
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',claimAccepted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',admitted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',githubEffect:'NOT_RUN'},
+    {state:'NOT_ADMITTED',reason:'MAINTENANCE_FREEZE_STORE_UNAVAILABLE',claimAccepted:true},
+  ]){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape('GITHUB_PUBLISH_UNKNOWN'),...broken}),false,
+      'shape violation must refuse: '+JSON.stringify(broken));
+  }
+});
+
+test('#219 selected K role-env and exact FSW checker reject forged path sets',()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const extract=name=>{
+    const start=src.indexOf('function '+name+'(');
+    const end=src.indexOf('\n}',start);
+    assert.ok(start>=0&&end>start,'missing selected K '+name);
+    return src.slice(start,end+2);
+  };
+  const claimEnv=runInNewContext('('+extract('claimEnv')+')');
+  const cfg={TALLY_CLAIM_SOURCE_SHA:sha};
+  for(const [role,operator] of [['builder','operator:b'],['reviewer','operator:r']]){
+    const prefix='TALLY_TASK_CLAIM_219_'+role.toUpperCase()+'_';
+    Object.assign(cfg,{[prefix+'OPERATOR_ID']:operator,
+      [prefix+'WRITER_ID']:'writer:'+role,[prefix+'COMMENT_ID']:role==='builder'?'11':'12',
+      [prefix+'WRITER_LOGIN']:'kaicreator-mm',
+      [prefix+'DISPATCH_ID']:'dispatch:'+role,
+      [prefix+'REGISTRY_PATH']:'shared:219',
+      [prefix+'WRITESET_SHA256']:'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797'});
+  }
+  const b=claimEnv(cfg,219,'builder'),r=claimEnv(cfg,219,'reviewer');
+  assert.notEqual(b.operatorId,r.operatorId);
+  assert.notEqual(b.writerId,r.writerId);
+  assert.notEqual(b.commentId,r.commentId);
+  assert.equal(b.writerLogin,r.writerLogin,'same GitHub login allowed');
+  assert.equal(b.registryPath,r.registryPath);
+  const paths=[".woodpecker/v2-alm-workspace.yaml",
+    "experiments/v2/maintenance/host-maintenance.mjs",
+    "experiments/v2/maintenance/host-maintenance.test.mjs",
+    "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+    "experiments/v2/selected-business-build/local-codex-shim.mjs",
+    "experiments/v2/selected-business-build/producer.mjs",
+    "packages/tally-engineering-business/src/index.mjs",
+    "packages/tally-engineering-business/test/business-policy.test.mjs",
+    "packages/tally-github-c/src/maintenance-effects.mjs",
+    "packages/tally-github-c/test/maintenance-effects.test.mjs",
+    "web/v2/journey-server.mjs","web/v2/journey-view.html",
+    "web/v2/maintenance-controller.mjs","web/v2/maintenance-controller.test.mjs"].sort();
+  const digest=sha256HexOf(paths);
+  assert.equal(digest,'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797');
+  const matches=runInNewContext('('+extract('fsDocumentMatches')+')',{createHash});
+  assert.equal(matches(JSON.stringify(paths),paths,digest),true);
+  for(const bogus of [[...paths,'evil.mjs'],[...paths.slice(0,-1),paths[0]],
+    paths.map(x=>x+'-suffix'),[paths[0]]]){
+    assert.equal(matches(JSON.stringify(bogus),paths,digest),false);
+  }
+  assert.equal(matches(JSON.stringify(paths),paths,'f'.repeat(64)),false);
+  assert.match(src,/readGitHubClaimPublicationWitness/);
+  assert.match(src,/MAINTENANCE_ROLE_CLAIM_PACK_UNVERIFIED/);
+});
+test('#219 shared fence preserves failed RELEASED acknowledgement as UNKNOWN',async()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const start=src.indexOf('async function withMaintenanceVersionFence(');
+  const end=src.indexOf('\n}',start);
+  assert.ok(start>0&&end>start);
+  const source=src.slice(start,end+2);
+  const mk=(impl)=>runInNewContext('('+source+')',{
+    withProduct312VersionFence:impl,
+    maintenanceSafeNoEffectReasons:new Set(),
+    product312Unknown:reason=>({state:'UNKNOWN',reason})});
+  const work=async()=>({state:'RECORDED_COMPLETE',
+    reason:'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS'});
+  const bad=await mk(async(_meta,callback)=>{
+    await callback();return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(bad.state,'UNKNOWN');
+  const good=await mk(async(_meta,callback)=>{
+    await callback();return {state:'FROZEN_COMPLETE'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(good.state,'RECORDED_COMPLETE');
 });

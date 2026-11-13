@@ -7,6 +7,8 @@ import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
   assessCandidatePublication,projectCandidatePublication,assessProductIntakeFreeze,
   projectProductIntakeFreeze,assessProjectIntakeAdmission,projectProjectIntakeAdmission,
+  assessMaintenanceDraftPersist,projectMaintenanceDraftPersist,
+  assessMaintenanceCandidateFreeze,projectMaintenanceCandidateFreeze,
   assessMaintenanceIssuePublication,projectMaintenanceIssuePublication,
   assessTaskLearningOutcome,projectTaskLearningOutcome,
   assessQualifiedReleaseDelivery,projectQualifiedReleaseDelivery,
@@ -30,22 +32,24 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
     'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
     'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
     'effect:tally-product-review-witness-freeze']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
     'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
     'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
     'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
@@ -107,7 +111,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,14);
+  assert.equal(Object.keys(p.effectBindings).length,16);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
   // T210 intake intents: freeze is an idempotent Host CAS write, admission is
@@ -131,6 +135,8 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
     'publish-reviewed-candidate':'rule:tally-reviewed-candidate-publication',
     'freeze-product-intake':'rule:tally-product-intake-freeze',
     'admit-project-intake':'rule:tally-project-intake-admission',
+    'persist-maintenance-draft':'rule:tally-maintenance-draft-persist',
+    'freeze-maintenance-candidate':'rule:tally-maintenance-candidate-freeze',
     'publish-maintenance-issue':'rule:tally-maintenance-issue-publication',
     'record-task-learning-outcome':'rule:tally-task-learning-outcome',
     'deliver-qualified-release':'rule:tally-qualified-release-delivery',
@@ -863,6 +869,184 @@ test('#219 publication effect dispatches sealed resource only for qualified inpu
   assert.equal(calls,1);
 });
 
+test('#219 publication projection keeps every reachable lost-ACK reason UNKNOWN',()=>{
+  // The shared version fence and the reconcile/readback paths surface fresh
+  // reason tokens (not a closed enumeration); the boundary contract is the
+  // state+effect shape, so a lost acknowledgment stays PUBLICATION_UNKNOWN.
+  const unknown=(reason)=>({state:'PUBLICATION_UNKNOWN',reason,
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+    claimAccepted:true,admitted:true,authorized:false,agentLaunch:false,
+    historicalReleaseMutation:false,replayFixture:false,
+    githubEffect:'UNKNOWN',issue:null,taskPass:false,releasePass:false});
+  for(const reason of ['MAINTENANCE_ISSUE_PENDING_RECONCILIATION',
+    'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN','MAINTENANCE_ISSUE_READBACK_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN','GITHUB_PUBLICATION_UNKNOWN',
+    'MAINTENANCE_ISSUE_CREATE_READBACK_MISSING','GITHUB_PUBLISH_UNKNOWN']){
+    const y=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:unknown(reason),effectId:'fx'});
+    assert.equal(y.state,'PUBLICATION_UNKNOWN',reason);
+    assert.equal(y.reason,reason,reason);
+    assert.equal(y.githubEffect,'UNKNOWN',reason);
+    assert.equal(y.admitted,false,reason);assert.equal(y.taskPass,false,reason);
+  }
+  for(const bad of ['local_agent_threw','not a token','A'.repeat(129),'','ok!']){
+    const z=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:unknown(bad),effectId:'fx'});
+    assert.equal(z.admitted,false,JSON.stringify(bad));
+    assert.equal(z.taskPass,false);
+    assert.notEqual(z.reason,bad,'a non-token reason must never cross verbatim');
+  }
+  // Previously unlisted pre-effect refusals keep their precise reason too.
+  for(const reason of ['MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED','MAINTENANCE_FREEZE_STORE_UNAVAILABLE']){
+    const w=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:{...unknown(reason),state:'NOT_ADMITTED',claimAccepted:false,
+        admitted:false,githubEffect:'NOT_RUN'},effectId:'fx'});
+    assert.equal(w.state,'NOT_ADMITTED',reason);
+    assert.equal(w.reason,reason,reason);
+    assert.equal(w.taskPass,false);
+  }
+});
+
+const draft219Input=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  candidate:{sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
+    requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
+    subjectSha:'5'.repeat(40),summary:'Post-release regression against v1.5.5',
+    priorRelease:{version:'v1.5.5',commitSha:'5'.repeat(40),
+      evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'}}});
+const draft219Recorded=()=>({state:'DRAFT_PENDING_REVIEW',
+  reason:'MAINTENANCE_DRAFT_RECORDED',issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+  authorized:false,agentLaunch:false,historicalReleaseMutation:false,
+  taskPass:false,releasePass:false});
+const freeze219Input=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  reviewCommentId:12345,reviewedPullNumber:409,reviewedHead:'a'.repeat(40),
+  reviewedTree:'b'.repeat(40),reviewedBase:'d'.repeat(40)});
+const freeze219Recorded=()=>({state:'RECORDED_COMPLETE',
+  reason:'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  receiptRef:'receipt:sha256:'+'e'.repeat(64),frozen:true,replayFixture:false,
+  claimAccepted:false,admitted:false,authorized:false,agentLaunch:false,
+  historicalReleaseMutation:false,githubEffect:'NOT_RUN',
+  taskPass:false,releasePass:false});
+
+test('#219 draft/freeze screening enforces the exact #219 allowlist and shapes',()=>{
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/210'},{issueNumber:210},
+    {sourceSha:'bad'},{candidateDigest:'zz'},{candidate:null},{candidate:'x'},
+  ]){
+    const x=assessMaintenanceDraftPersist({...draft219Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+    assert.equal(x.admitted,false);
+  }
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/210'},{issueNumber:210},
+    {reviewCommentId:0},{reviewedPullNumber:'x'},{reviewedHead:'bad'},
+    {reviewedTree:null},{reviewedBase:'a'.repeat(39)},
+  ]){
+    const x=assessMaintenanceCandidateFreeze({...freeze219Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+    assert.equal(x.admitted,false);
+  }
+  for(const empty of [null,undefined,{},[]]){
+    assert.equal(assessMaintenanceDraftPersist(empty).state,'UNQUALIFIED_INPUT');
+    assert.equal(assessMaintenanceCandidateFreeze(empty).state,'UNQUALIFIED_INPUT');
+  }
+  const okDraft=assessMaintenanceDraftPersist(draft219Input());
+  assert.equal(okDraft.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(okDraft.reason,'REQUIRES_SEALED_MAINTENANCE_DRAFT_PERSIST');
+  const okFreeze=assessMaintenanceCandidateFreeze(freeze219Input());
+  assert.equal(okFreeze.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(okFreeze.reason,'REQUIRES_SEALED_MAINTENANCE_CANDIDATE_FREEZE');
+});
+
+test('#219 draft/freeze projections admit only verified CAS shapes and never authority',()=>{
+  const draft=projectMaintenanceDraftPersist({input:draft219Input(),
+    observation:draft219Recorded(),effectId:'m219-a'});
+  assert.equal(draft.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(draft.frozen,false);
+  assert.equal(draft.githubEffect,'NOT_RUN');
+  assert.equal(draft.authorized,false);assert.equal(draft.admitted,false);
+  assert.equal(draft.taskPass,false);assert.equal(draft.releasePass,false);
+  const frozen=projectMaintenanceCandidateFreeze({input:freeze219Input(),
+    observation:freeze219Recorded(),effectId:'m219-b'});
+  assert.equal(frozen.state,'RECORDED_COMPLETE');assert.equal(frozen.frozen,true);
+  assert.equal(frozen.receiptRef,'receipt:sha256:'+'e'.repeat(64));
+  assert.equal(frozen.githubEffect,'NOT_RUN');
+  assert.equal(frozen.authorized,false);assert.equal(frozen.admitted,false);
+  assert.equal(frozen.taskPass,false);assert.equal(frozen.releasePass,false);
+  for(const change of [
+    {frozen:false},{candidateDigest:'f'.repeat(64)},
+    {receiptRef:'receipt:sha256:'+'f'.repeat(64)},
+    {state:'NOT_RECORDED',reason:'MAINTENANCE_REVIEW_DIGEST_MISMATCH'},
+    {taskPass:true},{authorized:true},{sourceSha:'9'.repeat(40)},
+  ]){
+    const y=projectMaintenanceCandidateFreeze({input:freeze219Input(),
+      observation:{...freeze219Recorded(),...change},effectId:'m219-c'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+  for(const change of [
+    {reason:'MAINTENANCE_DRAFT_CONFLICT'},{candidateDigest:'f'.repeat(64)},
+    {sourceSha:'9'.repeat(40)},{authorized:true},
+  ]){
+    const y=projectMaintenanceDraftPersist({input:draft219Input(),
+      observation:{...draft219Recorded(),...change},effectId:'m219-d'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+  assert.equal(projectMaintenanceDraftPersist({input:draft219Input(),
+    observation:null,effectId:'m219-e'}).reason,
+    'UNVERIFIED_MAINTENANCE_DRAFT_PERSISTENCE');
+  assert.equal(projectMaintenanceCandidateFreeze({input:freeze219Input(),
+    observation:null,effectId:'m219-f'}).reason,
+    'UNVERIFIED_MAINTENANCE_CANDIDATE_FREEZE');
+});
+
+test('#219 draft/freeze K effects dispatch one sealed call each for qualified input',async()=>{
+  const p=getPolicy();
+  const persist=p.effectBindings['effect:tally-maintenance-draft-persist'];
+  const freeze=p.effectBindings['effect:tally-maintenance-candidate-freeze'];
+  assert.equal(persist.semantics,'idempotent');
+  assert.deepEqual(persist.resource,
+    {key:'tally-local-codex',operation:'tally.persistMaintenanceDraft'});
+  assert.deepEqual(persist.external,{permitTtlMs:3600000,await:'terminal'});
+  assert.equal(freeze.semantics,'idempotent');
+  assert.deepEqual(freeze.resource,
+    {key:'tally-local-codex',operation:'tally.freezeReviewedMaintenanceCandidate'});
+  let calls=[];
+  const makeResources=observation=>({call:async(key,op,arg)=>{
+    calls.push({key,op,arg});
+    return {phase:'terminal',outcome:{ok:true,output:observation}};
+  }});
+  const persisted=await persist.handler({input:draft219Input(),effectId:'m219-g',
+    resources:makeResources(draft219Recorded())});
+  assert.equal(persisted.state,'DRAFT_PENDING_REVIEW');
+  assert.deepEqual(calls,[{key:'tally-local-codex',op:'tally.persistMaintenanceDraft',
+    arg:{sourceRef:'https://github.com/kaicreator-mm/tally/issues/219',
+      issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+      candidate:draft219Input().candidate,effectId:'m219-g'}}]);
+  calls=[];
+  const frozen=await freeze.handler({input:freeze219Input(),effectId:'m219-h',
+    resources:makeResources(freeze219Recorded())});
+  assert.equal(frozen.state,'RECORDED_COMPLETE');assert.equal(frozen.frozen,true);
+  assert.equal(frozen.taskPass,false);
+  assert.equal(calls[0].op,'tally.freezeReviewedMaintenanceCandidate');
+  assert.equal(calls[0].arg.reviewCommentId,12345);
+  assert.equal(calls[0].arg.reviewedPullNumber,409);
+  // Unqualified input never reaches the sealed seam.
+  calls=[];
+  const refused=await freeze.handler({input:{...freeze219Input(),reviewCommentId:0},
+    effectId:'m219-i',resources:makeResources(freeze219Recorded())});
+  assert.equal(refused.state,'UNQUALIFIED_INPUT');assert.equal(calls.length,0);
+  await assert.rejects(freeze.handler({input:freeze219Input(),effectId:'m219-j',
+    resources:null}),/SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+});
+
 test('#219 publication idempotency key renders within Kernel grammar',()=>{
   const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
   const p=getPolicy();
@@ -871,6 +1055,31 @@ test('#219 publication idempotency key renders within Kernel grammar',()=>{
   const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
     .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(maintInput()[name]??''));
   assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+
+test('#219 draft/freeze idempotency keys render within Kernel grammar at worst case',()=>{
+  // Kernel refuses resolved keys outside ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$
+  // before any journal write; the freeze template must hold for a real
+  // 10-digit GitHub comment id (6511046226), not only short test fixtures.
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const draftT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='persist-maintenance-draft');
+  const freezeT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='freeze-maintenance-candidate');
+  const render=(t,vals)=>t.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(vals[name]??''));
+  const draftRendered=render(draftT,{issueNumber:219,sourceSha:'d'.repeat(40),
+    candidateDigest:'e'.repeat(64)});
+  assert.ok(pattern.test(draftRendered),draftRendered);
+  assert.ok(draftRendered.length<=128,draftRendered.length);
+  assert.ok(!draftRendered.includes('/'));
+  const freezeRendered=render(freezeT,{candidateDigest:'e'.repeat(64),
+    reviewCommentId:6511046226});
+  assert.ok(pattern.test(freezeRendered),freezeRendered);
+  assert.ok(freezeRendered.length<=128,freezeRendered.length+' for a real 10-digit comment id');
+  assert.ok(!freezeRendered.includes('/'));
+  assert.equal(freezeRendered,'maint-freeze:'+'e'.repeat(64)+':6511046226');
 });
 
 test('#219 learning screening requires decision enum and bounded outcome',()=>{

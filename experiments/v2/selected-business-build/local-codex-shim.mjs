@@ -6,6 +6,8 @@ import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   freezeProductIntake as nativeFreezeProductIntake,
   persistProductDraft312 as nativePersistProductDraft312,
   freezeProductReview312 as nativeFreezeProductReview312,
+  persistMaintenanceDraft as nativePersistMaintenanceDraft,
+  freezeReviewedMaintenanceCandidate as nativeFreezeReviewedMaintenanceCandidate,
   publishMaintenanceIssue as nativePublishMaintenanceIssue,
   recordTaskLearningOutcome as nativeRecordTaskLearningOutcome,
   hostReleaseDelivery as nativeHostReleaseDelivery,
@@ -18,7 +20,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.persistMaintenanceDraft','tally.freezeReviewedMaintenanceCandidate','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -365,6 +367,64 @@ export async function freezeProductReview312(input){
     product312Unknown(input,'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'),'freeze');
 }
 
+// #219 selected CAS operations return only narrow, non-authorizing
+// observations. Caller-asserted Task/Release authority is never passed through.
+const maintenanceSelectionEnvelope=(input,action,output)=>Object.freeze({
+  phase:'terminal',
+  externalRef:'tally:219:'+String(input?.candidateDigest??'invalid')+':'+action,
+  outcome:{ok:true,output:Object.freeze(output)}});
+const maintenanceSelectionDenied=(input,reason)=>({
+  state:'NOT_ADMITTED',reason,
+  issueRef:issueRefFor(219),sourceSha:SHA.test(input?.sourceSha??'')?
+    input.sourceSha:null,
+  candidateDigest:/^[a-f0-9]{64}$/.test(input?.candidateDigest??'')?
+    input.candidateDigest:null,
+  claimGeneration:1,authorized:false,admitted:false,
+  taskPass:false,releasePass:false,githubEffect:'NOT_RUN'});
+const maintenanceSelectionBase=(input,o)=>o&&typeof o==='object'&&
+  !Array.isArray(o)&&o.issueRef===issueRefFor(219)&&
+  o.sourceSha===input.sourceSha&&o.candidateDigest===input.candidateDigest&&
+  o.claimGeneration===1&&o.authorized===false&&
+  o.taskPass===false&&o.releasePass===false;
+export async function persistMaintenanceDraft(input){
+  const valid=input?.issueNumber===219&&input.sourceRef===issueRefFor(219)&&
+    SHA.test(input.sourceSha??'')&&
+    /^[a-f0-9]{64}$/.test(input.candidateDigest??'')&&
+    input.candidate&&typeof input.candidate==='object'&&
+    !Array.isArray(input.candidate);
+  if(!valid)return maintenanceSelectionEnvelope(input,'draft',
+    maintenanceSelectionDenied(input,'MAINTENANCE_DRAFT_INPUT_INVALID'));
+  let observed;
+  try{observed=await nativePersistMaintenanceDraft(input);}catch{observed=null;}
+  if(maintenanceSelectionBase(input,observed)&&
+     observed.state==='DRAFT_PENDING_REVIEW'&&
+     ['MAINTENANCE_DRAFT_RECORDED','MAINTENANCE_DRAFT_ALREADY_RECORDED']
+       .includes(observed.reason))
+    return maintenanceSelectionEnvelope(input,'draft',observed);
+  return maintenanceSelectionEnvelope(input,'draft',
+    maintenanceSelectionDenied(input,observed?.reason??'MAINTENANCE_DRAFT_CAS_UNKNOWN'));
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  const valid=input?.issueNumber===219&&input.sourceRef===issueRefFor(219)&&
+    SHA.test(input.sourceSha??'')&&
+    /^[a-f0-9]{64}$/.test(input.candidateDigest??'')&&
+    Number.isSafeInteger(input.reviewCommentId)&&input.reviewCommentId>0&&
+    Number.isSafeInteger(input.reviewedPullNumber)&&
+    input.reviewedPullNumber>0&&SHA.test(input.reviewedHead??'')&&
+    SHA.test(input.reviewedTree??'')&&input.reviewedBase===input.sourceSha;
+  if(!valid)return maintenanceSelectionEnvelope(input,'freeze',
+    maintenanceSelectionDenied(input,'MAINTENANCE_REVIEW_INPUT_INVALID'));
+  let observed;
+  try{observed=await nativeFreezeReviewedMaintenanceCandidate(input);}
+  catch{observed=null;}
+  if(maintenanceSelectionBase(input,observed)&&
+     observed.state==='RECORDED_COMPLETE'&&observed.frozen===true&&
+     observed.receiptRef==='receipt:sha256:'+input.candidateDigest)
+    return maintenanceSelectionEnvelope(input,'freeze',observed);
+  return maintenanceSelectionEnvelope(input,'freeze',
+    maintenanceSelectionDenied(input,observed?.reason??'MAINTENANCE_REVIEW_FREEZE_UNKNOWN'));
+}
+
 // T219 — J08b authorized native Issue publication boundary. Only the exact
 // bounded observation shapes cross; a lost acknowledgment stays UNKNOWN with
 // a null Issue, a verified publication carries the canonical Issue identity,
@@ -372,25 +432,25 @@ export async function freezeProductReview312(input){
 const MAINTENANCE_ISSUE=219;
 const CANDIDATE_DIGEST=/^[0-9a-f]{64}$/;
 const ISSUE_URL_BOUNDARY=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
-const MAINTENANCE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
-  'MAINTENANCE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
-  'CANDIDATE_REVIEW_NOT_VERIFIED','MAINTENANCE_REVIEW_DIGEST_MISMATCH',
-  'CANDIDATE_REVIEW_NOT_INDEPENDENT','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
-  'MAINTENANCE_ISSUE_DIGEST_MISMATCH','GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
-  'GITHUB_PUBLISH_UNKNOWN','MAINTENANCE_ISSUE_READBACK_MISMATCH',
-  'MAINTENANCE_ISSUE_IDENTITY_CONFLICT','MAINTENANCE_ISSUE_INPUT_INVALID',
-  'GITHUB_ACCESS_DENIED','GITHUB_RATE_LIMITED','GITHUB_UNAUTHENTICATED',
-  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_PUBLICATION_CONFLICT','LOCAL_AGENT_PROVIDER_THREW']);
+// Reachable Host UNKNOWN-effect reasons are not a closed enumeration: the
+// shared version fence and the reconcile/readback paths surface fresh reason
+// tokens (e.g. MAINTENANCE_ISSUE_PENDING_RECONCILIATION,
+// MAINTENANCE_PUBLICATION_FENCE_UNKNOWN, MAINTENANCE_ISSUE_CREATE_READBACK_
+// MISSING, GITHUB_PUBLICATION_UNKNOWN). A lost acknowledgment must stay
+// PUBLICATION_UNKNOWN with githubEffect UNKNOWN — never be rewritten into a
+// pre-effect refusal. The boundary contract is the state+effect shape; the
+// reason only has to be a bounded machine token.
+const MAINTENANCE_TOKEN=/^[A-Z][A-Z0-9_]{0,127}$/;
 const validMaintenanceIssue=(input,o)=>{
   if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==issueRefFor(MAINTENANCE_ISSUE)||
     o.sourceSha!==input.sourceSha||o.candidateDigest!==input.candidateDigest||
     o.claimGeneration!==1||o.authorized!==false||o.agentLaunch!==false||
     o.historicalReleaseMutation!==false||o.taskPass!==false||
     o.releasePass!==false)return false;
-  if(o.state==='NOT_ADMITTED')return MAINTENANCE_REASONS.has(o.reason)&&
+  if(o.state==='NOT_ADMITTED')return MAINTENANCE_TOKEN.test(o.reason??'')&&
     o.claimAccepted===false&&o.admitted===false&&o.githubEffect==='NOT_RUN'&&
     o.replayFixture===false&&o.issue===null;
-  if(o.state==='PUBLICATION_UNKNOWN')return MAINTENANCE_REASONS.has(o.reason)&&
+  if(o.state==='PUBLICATION_UNKNOWN')return MAINTENANCE_TOKEN.test(o.reason??'')&&
     o.claimAccepted===true&&o.admitted===true&&o.githubEffect==='UNKNOWN'&&
     o.replayFixture===false&&o.issue===null;
   if(o.state==='REPLAY_COMPLETE')return o.reason==='REPLAY_FIXTURE_ONLY'&&

@@ -185,6 +185,7 @@ test('#219 source-qualified official IssueComment ReviewWitness is read-only and
   const got=await mReview();
   assert.equal(got.state,'REVIEW_VERIFIED');
   assert.equal(got.reviewRef,mReviewRef);assert.equal(got.p2,1);
+  assert.equal(got.reviewedAt,mComment.created_at,'trusted original GitHub first-post time');
   assert.equal(got.authorized,false);assert.equal(got.taskPass,false);
 });
 test('#219 review witness refuses missing Claims, same process, same-second edits and forged identity',async()=>{
