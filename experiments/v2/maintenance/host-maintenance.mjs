@@ -28,6 +28,7 @@ const RELEASE_TAG=/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const VERSION=/^v?[0-9]+\.[0-9]+(?:\.[0-9]+)?$/;
 const DECISIONS=new Set(['ADOPTED','REJECTED']);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
+export const MAINTENANCE_DRAFT_KEY=`tally:v2:maintenance-draft:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
 export const MAINTENANCE_LEARNING_KEY=`tally:v2:maintenance-learning:${ISSUE}`;
@@ -258,7 +259,8 @@ async function loadLearning(openStore,registryPath){
  * observed fact only — measuredEffect never becomes a quality gain.
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
-  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,env=process.env}={}){
+  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,
+  readReviewWitness,readCurrentVersion,withVersionFence,env=process.env}={}){
   const pin=input=>
     input?.issueNumber===ISSUE&&input.sourceRef===ISSUE_REF&&
     SHA.test(input.sourceSha??'')&&DIGEST.test(input.candidateDigest??'')&&
@@ -266,6 +268,125 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
     typeof env.TALLY_TASK_CLAIM_219_REGISTRY_PATH==='string'&&
     env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
   return Object.freeze({
+    // Pre-review durable CAS draft; cannot be created by a typed reviewer.
+    async hostPersistMaintenanceDraft(input={}){
+      if(!pin(input))return denied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+      if(typeof verifyAcceptedClaim!=='function'||
+         typeof verifyFrozenWriteSet!=='function'||typeof openStore!=='function')
+        return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
+      const candidate=validateMaintenanceCandidate(input.candidate);
+      if(!candidate||sha256(candidate)!==input.candidateDigest)
+        return denied(input,'MAINTENANCE_DRAFT_INVALID');
+      const claim=await verifyAcceptedClaim(ISSUE,'builder');
+      if(claim?.ok!==true)return denied(input,claim?.reason??'CLAIM_UNVERIFIED');
+      const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(fs?.ok!==true)return denied(input,fs?.reason??'DAG_WRITESET_NOT_VERIFIED');
+      const value={phase:'DRAFT_MAINTENANCE_CANDIDATE',issueRef:ISSUE_REF,
+        sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+        candidate,authorized:false,taskPass:false,releasePass:false};
+      const same=row=>row?.value?.phase===value.phase&&
+        row.value.sourceSha===value.sourceSha&&
+        row.value.candidateDigest===value.candidateDigest&&
+        JSON.stringify(row.value)===JSON.stringify(value);
+      let db;
+      try{
+        db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+        const prior=await db.get(MAINTENANCE_DRAFT_KEY);
+        if(prior&&!same(prior))return denied(input,'MAINTENANCE_DRAFT_CONFLICT');
+        if(!prior)await db.put(MAINTENANCE_DRAFT_KEY,value,{mustBeAbsent:true});
+        const after=await db.get(MAINTENANCE_DRAFT_KEY);
+        if(!same(after))return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');
+        return Object.freeze({...flags,state:'DRAFT_PENDING_REVIEW',
+          reason:prior?'MAINTENANCE_DRAFT_ALREADY_RECORDED':'MAINTENANCE_DRAFT_RECORDED',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          candidateDigest:input.candidateDigest,authorized:false,
+          taskPass:false,releasePass:false});
+      }catch{return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');}
+      finally{if(db)await db.close();}
+    },
+    // Separate C ReviewWitness, independently accepted role Claims and FSW
+    // are reread inside a real selected version CAS fence before creation.
+    async hostFreezeReviewedMaintenanceCandidate(input={}){
+      if(!pin(input)||!Number.isSafeInteger(input.reviewCommentId)||
+         input.reviewCommentId<1||!Number.isSafeInteger(input.reviewedPullNumber)||
+         input.reviewedPullNumber<1||!SHA.test(input.reviewedHead??'')||
+         !SHA.test(input.reviewedTree??'')||
+         input.reviewedBase!==input.sourceSha)
+        return denied(input,'MAINTENANCE_REVIEW_INPUT_INVALID');
+      if(typeof verifyAcceptedClaim!=='function'||
+         typeof verifyFrozenWriteSet!=='function'||
+         typeof readReviewWitness!=='function'||
+         typeof readCurrentVersion!=='function'||
+         typeof withVersionFence!=='function'||typeof openStore!=='function')
+        return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
+      let db,draft;
+      try{
+        db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+        draft=await db.get(MAINTENANCE_DRAFT_KEY);
+      }catch{return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');}
+      finally{if(db)await db.close();}
+      if(draft?.value?.phase!=='DRAFT_MAINTENANCE_CANDIDATE'||
+         draft.value.sourceSha!==input.sourceSha||
+         draft.value.candidateDigest!==input.candidateDigest||
+         maintenanceCandidateDigest(draft.value.candidate)!==input.candidateDigest)
+        return denied(input,'MAINTENANCE_DRAFT_NOT_VERIFIED');
+      const [b,r]=await Promise.all([
+        verifyAcceptedClaim(ISSUE,'builder'),
+        verifyAcceptedClaim(ISSUE,'reviewer')]);
+      const ok=(c,role)=>c?.ok===true&&c.claim?.accepted===true&&
+        c.claim.role===role&&c.claim.issueNumber===ISSUE&&
+        c.claim.sourceSha===input.sourceSha&&
+        typeof c.claim.claimRef==='string'&&c.claim.claimRef.length>0&&
+        typeof c.claim.operatorId==='string'&&c.claim.operatorId.length>0&&
+        typeof c.claim.writerId==='string'&&c.claim.writerId.length>0&&
+        typeof c.claim.transportActor==='string'&&c.claim.transportActor.length>0;
+      if(!ok(b,'builder')||!ok(r,'reviewer'))
+        return denied(input,'MAINTENANCE_REVIEW_ROLE_CLAIM_UNVERIFIED');
+      if(b.claim.operatorId===r.claim.operatorId||b.claim.writerId===r.claim.writerId)
+        return denied(input,'MAINTENANCE_REVIEW_SAME_PROCESS');
+      const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(fs?.ok!==true)return denied(input,fs?.reason??'DAG_WRITESET_NOT_VERIFIED');
+      const bind=c=>({...c,candidateDigest:draft.value.candidateDigest});
+      const expected={issueNumber:ISSUE,sourceSha:input.sourceSha,
+        candidateDigest:draft.value.candidateDigest,
+        reviewedPullNumber:input.reviewedPullNumber,
+        reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+        reviewedBase:input.reviewedBase};
+      const args={commentId:input.reviewCommentId,expected,
+        builderClaim:bind(b.claim),reviewerClaim:bind(r.claim)};
+      const ref=ISSUE_REF+'#issuecomment-'+input.reviewCommentId;
+      const witnessOk=w=>w?.state==='REVIEW_VERIFIED'&&w.reviewed===true&&
+        w.reviewRef===ref&&w.sourceSha===input.sourceSha&&
+        w.candidateDigest===input.candidateDigest&&
+        w.reviewedHead===input.reviewedHead&&w.reviewedTree===input.reviewedTree&&
+        ISO(w.reviewedAt??'')&&w.taskPass===false&&w.authorized===false;
+      let first;
+      try{first=await readReviewWitness(args);}
+      catch{return denied(input,'MAINTENANCE_REVIEW_WITNESS_UNVERIFIED');}
+      if(!witnessOk(first))return denied(input,'MAINTENANCE_REVIEW_WITNESS_UNVERIFIED');
+      try{
+        const current=await readCurrentVersion();
+        if(current?.ok!==true||current.sha!==input.sourceSha)
+          return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
+      }catch{return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');}
+      try{
+        return await withVersionFence({repository:OWNER+'/'+REPO,
+          versionId:'version/v2',sourceSha:input.sourceSha,
+          operation:'FREEZE_REVIEWED_MAINTENANCE'},async()=>{
+          const second=await readReviewWitness(args);
+          if(!witnessOk(second)||second.reviewedAt!==first.reviewedAt)
+            return denied(input,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+          const current=await readCurrentVersion();
+          if(current?.ok!==true||current.sha!==input.sourceSha)
+            return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
+          return recordMaintenanceCandidate({openStore,
+            registryPath:env.TALLY_TASK_CLAIM_219_REGISTRY_PATH,
+            sourceSha:input.sourceSha,candidate:draft.value.candidate,
+            author:b.claim.operatorId,reviewer:r.claim.operatorId,
+            reviewedAt:second.reviewedAt});
+        });
+      }catch{return denied(input,'MAINTENANCE_REVIEW_FREEZE_UNKNOWN');}
+    },
     async hostPublishMaintenanceIssue(input={}){
       if(typeof verifyAcceptedClaim!=='function'||typeof verifyFrozenWriteSet!=='function')
         return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
