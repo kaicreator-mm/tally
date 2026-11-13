@@ -461,6 +461,22 @@ const env=Object.assign({},process.env,{TALLY_LOCAL_REPLAY:'1',
 const host=createMaintenanceHost({env,openStore,
   verifyAcceptedClaim:async()=>({ok:true}),
   verifyFrozenWriteSet:async()=>({ok:true})});
+// New routes intentionally fail closed in the injected replay: no synthetic
+// original GitHub Claim/review authority or production CAS is minted.
+export async function persistMaintenanceDraft(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
 export async function publishMaintenanceIssue(input){
   const result=await host.hostPublishMaintenanceIssue(input);
   console.error('J219_PROVIDER_PUBLISH_RETURN',JSON.stringify(result));
@@ -548,7 +564,9 @@ const openFacade=async()=>{
 };
 if(process.env.J219_CONSUMER_MODE==='noflag'){
   const {sqlite,facade}=await openFacade();
-  for(const intentType of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+  for(const intentType of ['persistMaintenanceDraft',
+    'freezeReviewedMaintenanceCandidate',
+    'publishMaintenanceIssue','recordTaskLearningOutcome']){
     let refused=false,detail='';
     try{
       const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
@@ -566,6 +584,23 @@ if(process.env.J219_CONSUMER_MODE==='noflag'){
   facade.stop();await sqlite.close();process.exit(0);
 }
 const {sqlite,facade}=await openFacade();
+// Selected route existence is tested with the real loaded K. These replay
+// requests MUST remain NOT_ADMITTED and perform no CAS/GitHub writes, because
+// the physical accepted role Claims and canonical review are not configured.
+for(const intentType of ['persistMaintenanceDraft',
+  'freezeReviewedMaintenanceCandidate']){
+  const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
+    messageId:'j219-guarded-'+intentType,
+    input:{issueRef,issueNumber:219,sourceSha,candidateDigest,
+      candidate:{sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207'},
+      reviewCommentId:1,reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sourceSha}});
+  assert.equal(receipt.status,'admitted',JSON.stringify(receipt).slice(0,450));
+  const output=receipt.admitted.effects[0].output;
+  assert.equal(output.state,'NOT_ADMITTED',intentType);
+  assert.equal(output.taskPass,false);
+  assert.equal(output.releasePass,false);
+}
 const publishReceipt=await facade.send({intentType:'publishMaintenanceIssue',
   instanceKey:'maintenance-219',messageId:'j219-publish-1',
   input:{issueRef,issueNumber:219,sourceSha,candidateDigest}});
@@ -716,7 +751,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withFlag.stdout,/"maintenanceRoutes": "SELECTED"/);
     const sealedPath=join(root,'sealed-app.json');
     const sealed=JSON.parse(readFileSync(sealedPath,'utf8'));
-    for(const intent of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+    for(const intent of ['persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
+      'publishMaintenanceIssue','recordTaskLearningOutcome']){
       const route=sealed.routes.find(r=>r.intentId===intent);
       assert.ok(route,'maintenance route missing: '+intent);
       assert.equal(route.capabilityId,'tally-local-codex');
@@ -726,7 +762,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withoutFlag.stdout,/"maintenanceRoutes": "NOT_SELECTED"/);
     const noflagPath=join(root,'sealed-app-noflag.json');
     const noflag=JSON.parse(readFileSync(noflagPath,'utf8'));
-    assert.equal(noflag.routes.some(r=>['publishMaintenanceIssue',
+    assert.equal(noflag.routes.some(r=>['persistMaintenanceDraft',
+      'freezeReviewedMaintenanceCandidate','publishMaintenanceIssue',
       'recordTaskLearningOutcome'].includes(r.intentId)),
       false,'maintenance routes must be absent without T219_MAINTENANCE=1');
     assert.ok(!readFileSync(sealedPath,'utf8').includes(REPLAY_CANARY),'no canary in sealed bytes');
