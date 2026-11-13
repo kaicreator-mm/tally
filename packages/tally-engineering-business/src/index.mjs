@@ -441,7 +441,7 @@ export function getPolicy(){
     targetState:'open',
     effectIntents:[{
       effectType:'effect:tally-maintenance-candidate-freeze',inputFrom:maintenanceCandidateFreezeInputFrom,
-      idempotencyKeyFrom:{template:'maint-freeze:{issueNumber}:{sourceSha}:{candidateDigest}:{reviewCommentId}'}
+      idempotencyKeyFrom:{template:'maint-freeze:{candidateDigest}:{reviewCommentId}'}
     }]
   };
   const maintenanceCandidateFreezeWorkflow={

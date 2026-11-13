@@ -17,7 +17,8 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
+  'publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
 const capabilityFile = process.env.T06F_NATIVE_PAIR === '1'
