@@ -657,7 +657,15 @@ test('#312 second witness read inside shared fence catches comment edit with zer
 });
 
 
-const p312OfficialGitTransport=commentReader=>({rest:{
+const p312OfficialGitTransport=commentReader=>({
+  graphql:async(query,{id})=>{
+    const raw=(await commentReader())?.data;
+    return {node:raw&&id===raw.node_id?{
+      __typename:'IssueComment',databaseId:raw.id,url:raw.html_url,
+      body:raw.body,lastEditedAt:null,editor:null,
+      issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}:null};
+  },
+  rest:{
   issues:{getComment:commentReader},
   pulls:{get:async()=>({data:{number:401,state:'open',merged:false,
     head:{sha:'d'.repeat(40),repo:{full_name:'kaicreator-mm/tally'}},
@@ -689,7 +697,7 @@ test('#312 Host binds the real GitHub C witness validator when only octokit is i
   assert.equal(persisted.state,'DRAFT_PENDING_REVIEW');
   // The canonical witness comment is authored AFTER the Host persisted the
   // draft, binding the Host-derived digest (never a caller digest).
-  comment={id:12345,
+  comment={id:12345,node_id:'IC_witness12345',
     html_url:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
     issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
     user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
@@ -946,7 +954,14 @@ export async function __readFence(){
 const fixtureOctokit=()=>{const state=fixture();
   const body=state.witness?.comment?.body?
     JSON.parse(state.witness.comment.body):null;
-  return {rest:{
+  return {graphql:async(query,{id})=>{
+    const raw=fixture().witness?.comment;
+    return {node:raw&&id===raw.node_id?{
+      __typename:'IssueComment',databaseId:raw.id,url:raw.html_url,
+      body:raw.body,lastEditedAt:raw.created_at===raw.updated_at?null:raw.updated_at,
+      editor:raw.created_at===raw.updated_at?null:{login:'edited'},
+      issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}:null};
+  },rest:{
     repos:{
       getBranch:async()=>({data:{commit:{sha:state.branchSha}}}),
       getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
@@ -1087,6 +1102,7 @@ else if(command==='persist'){
       reviewerOperatorId:data.reviewer.operatorId,
       reviewerWriterId:data.reviewer.writerId,p0:0,p1:0,p2:1};
     f.witness={id:data.reviewCommentId,comment:{id:data.reviewCommentId,
+      node_id:'IC_witness'+data.reviewCommentId,
       html_url:ref,issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
       user:{login:data.reviewer.writerLogin},
       created_at:'2026-11-13T08:00:00Z',

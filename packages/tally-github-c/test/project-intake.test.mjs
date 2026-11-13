@@ -149,7 +149,7 @@ const witness312Body={
   reviewerClaimRef:witness312Reviewer.claimRef,
   reviewerOperatorId:witness312Reviewer.operatorId,
   reviewerWriterId:witness312Reviewer.writerId,p0:0,p1:0,p2:1};
-const witness312Comment={id:12345,html_url:witness312Ref,
+const witness312Comment={id:12345,node_id:'IC_witness12345',html_url:witness312Ref,
   issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
   user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
   updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify(witness312Body)};
@@ -164,8 +164,16 @@ const witness312Base={sha:witness312Sha,commit:{tree:{sha:'2'.repeat(40)}}};
 const witness312Read=({comment=witness312Comment,expected=witness312Expected,
   builderClaim=witness312Builder,reviewerClaim=witness312Reviewer,fail,
   call,pr=witness312Pr,head=witness312Head,base=witness312Base,
-  liveSha=witness312Sha,commitError}={})=>readProductReviewWitnessFromClient({
-  octokit:{rest:{
+  liveSha=witness312Sha,commitError,graphOverride,graphError,noGraphql=false}={})=>readProductReviewWitnessFromClient({
+  octokit:{graphql:noGraphql?undefined:async(query,{id})=>{
+    if(graphError)throw {status:graphError};
+    assert.match(query,/lastEditedAt/);
+    assert.equal(id,comment.node_id);
+    return {node:graphOverride??{
+      __typename:'IssueComment',databaseId:comment.id,url:comment.html_url,
+      body:comment.body,lastEditedAt:null,editor:null,
+      issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
+  },rest:{
     issues:{getComment:async()=>{
       if(call)call();
       if(fail)throw {status:fail};
@@ -186,6 +194,35 @@ test('#312 canonical unedited review with same GitHub login but independent proc
   assert.equal(got.p2,1);
   assert.equal(got.reviewerLogin,'kaicreator-mm');
   assert.equal(got.taskPass,false);assert.equal(got.releasePass,false);
+});
+
+
+test('#312 same-second edited comment is refused by official GraphQL edit provenance',async()=>{
+  const baseGraph={
+    __typename:'IssueComment',databaseId:12345,url:witness312Ref,
+    body:witness312Comment.body,lastEditedAt:null,editor:null,
+    issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}};
+  for(const mutation of [
+    {lastEditedAt:'2026-11-12T12:00:00.750Z',editor:{login:'kaicreator-mm'}},
+    {lastEditedAt:'2026-11-12T12:00:00Z'},
+    {body:'{}'},
+    {databaseId:12346},
+    {url:'https://github.com/other/repo/issues/312#issuecomment-12345'},
+    {issue:{number:312,repository:{nameWithOwner:'other/repo'}}}
+  ]){
+    const got=await witness312Read({
+      graphOverride:{...baseGraph,...mutation},
+      comment:{...witness312Comment,updated_at:witness312Comment.created_at}});
+    assert.equal(got.status,'UNKNOWN',JSON.stringify(mutation));
+    assert.equal(got.reason,'PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNVERIFIED');
+    assert.equal(got.taskPass,false);
+  }
+  const noGraph=await witness312Read({noGraphql:true});
+  assert.equal(noGraph.reason,'PRODUCT_REVIEW_INPUT_INVALID');
+  const inaccessible=await witness312Read({graphError:403});
+  assert.equal(inaccessible.reason,'PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');
+  const noNode=await witness312Read({comment:{...witness312Comment,node_id:undefined}});
+  assert.equal(noNode.reason,'PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');
 });
 
 test('#312 missing/fake Claims and shared operator or writer fail before GitHub HTTP',async()=>{
@@ -242,12 +279,16 @@ test('#312 immutable first POST then server-assigned GET comment ref is derivabl
   const payload=JSON.stringify(witness312Body);
   assert.equal(JSON.parse(payload).reviewRef,undefined);
   let posted=null,assigned=null,reads=0;
-  const transport={rest:{
+  const transport={graphql:async(query,{id})=>({
+    node:{__typename:'IssueComment',databaseId:posted.id,url:posted.html_url,
+      body:posted.body,lastEditedAt:null,editor:null,
+      issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
+    rest:{
     issues:{
       createComment:async ({owner,repo,issue_number,body})=>{
         assert.equal(owner,'kaicreator-mm');assert.equal(repo,'tally');
         assert.equal(issue_number,312);assert.equal(body,payload);
-        posted={...witness312Comment,id:89921,
+        posted={...witness312Comment,id:89921,node_id:'IC_witness89921',
           html_url:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-89921',
           body};
         return {data:posted};},

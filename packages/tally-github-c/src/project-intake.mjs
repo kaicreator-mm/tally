@@ -187,7 +187,8 @@ export async function readProductReviewWitnessFromClient({
     typeof octokit?.rest?.issues?.getComment!=='function'||
     typeof octokit?.rest?.pulls?.get!=='function'||
     typeof octokit?.rest?.repos?.getCommit!=='function'||
-    typeof octokit?.rest?.repos?.getBranch!=='function')
+    typeof octokit?.rest?.repos?.getBranch!=='function'||
+    typeof octokit?.graphql!=='function')
     return rwUnknown('PRODUCT_REVIEW_INPUT_INVALID');
   if(!rwClaim(builderClaim,'builder',expected)||
     !rwClaim(reviewerClaim,'reviewer',expected))
@@ -207,6 +208,37 @@ export async function readProductReviewWitnessFromClient({
     !ISO(comment.created_at)||comment.created_at!==comment.updated_at||
     typeof comment.body!=='string'||comment.body.length>8192)
     return rwUnknown('PRODUCT_REVIEW_COMMENT_UNVERIFIED');
+  // REST's seconds-granularity created_at===updated_at cannot prove a
+  // comment was never edited in the same second. Bind a second official,
+  // read-only GraphQL IssueComment observation to this exact REST node ID,
+  // original body, numeric ID and repository/Issue. Missing GraphQL or
+  // lastEditedAt!=null fails closed; no caller-supplied immutable receipt.
+  if(typeof comment.node_id!=='string'||! /^[A-Za-z0-9_-]{8,256}$/.test(comment.node_id))
+    return rwUnknown('PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');
+  let graphComment;
+  try{
+    const result=await octokit.graphql(`query($id: ID!) {
+      node(id: $id) {
+        __typename
+        ... on IssueComment {
+          databaseId
+          url
+          body
+          lastEditedAt
+          editor { login }
+          issue { number repository { nameWithOwner } }
+        }
+      }
+    }`,{id:comment.node_id});
+    graphComment=result?.node;
+  }catch{return rwUnknown('PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');}
+  if(graphComment?.__typename!=='IssueComment'||
+     graphComment.databaseId!==commentId||
+     graphComment.url!==ref||graphComment.body!==comment.body||
+     graphComment.lastEditedAt!==null||graphComment.editor!==null||
+     graphComment.issue?.number!==312||
+     graphComment.issue.repository?.nameWithOwner!==owner+'/'+repo)
+    return rwUnknown('PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNVERIFIED');
   let body;
   try{
     body=JSON.parse(comment.body);
