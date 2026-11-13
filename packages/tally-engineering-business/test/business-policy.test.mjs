@@ -1057,6 +1057,31 @@ test('#219 publication idempotency key renders within Kernel grammar',()=>{
   assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
 });
 
+test('#219 draft/freeze idempotency keys render within Kernel grammar at worst case',()=>{
+  // Kernel refuses resolved keys outside ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$
+  // before any journal write; the freeze template must hold for a real
+  // 10-digit GitHub comment id (6511046226), not only short test fixtures.
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const draftT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='persist-maintenance-draft');
+  const freezeT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='freeze-maintenance-candidate');
+  const render=(t,vals)=>t.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(vals[name]??''));
+  const draftRendered=render(draftT,{issueNumber:219,sourceSha:'d'.repeat(40),
+    candidateDigest:'e'.repeat(64)});
+  assert.ok(pattern.test(draftRendered),draftRendered);
+  assert.ok(draftRendered.length<=128,draftRendered.length);
+  assert.ok(!draftRendered.includes('/'));
+  const freezeRendered=render(freezeT,{candidateDigest:'e'.repeat(64),
+    reviewCommentId:6511046226});
+  assert.ok(pattern.test(freezeRendered),freezeRendered);
+  assert.ok(freezeRendered.length<=128,freezeRendered.length+' for a real 10-digit comment id');
+  assert.ok(!freezeRendered.includes('/'));
+  assert.equal(freezeRendered,'maint-freeze:'+'e'.repeat(64)+':6511046226');
+});
+
 test('#219 learning screening requires decision enum and bounded outcome',()=>{
   for(const change of [
     {issueNumber:197},{sourceSha:'short'},{learningId:'zz'},
