@@ -278,7 +278,7 @@ const witnessReader312=comment=>request=>readProductReviewWitnessFromClient({
       const raw=comment();
       assert.match(query,/fullDatabaseId/);
       return {node:raw&&id===raw.node_id?{
-        __typename:'IssueComment',
+        __typename:'IssueComment',id:raw.node_id,
         fullDatabaseId:String(raw.id),url:raw.html_url,body:raw.body,
         lastEditedAt:raw.created_at===raw.updated_at?null:raw.updated_at,
         editor:raw.created_at===raw.updated_at?null:{login:'test-editor'},
