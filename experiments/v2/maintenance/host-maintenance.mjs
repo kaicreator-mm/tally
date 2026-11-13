@@ -377,6 +377,23 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           const second=await readReviewWitness(args);
           if(!witnessOk(second)||second.reviewedAt!==first.reviewedAt)
             return denied(input,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+          // A role Claim or FSW may be revoked while the first C read is in
+          // flight. Re-read both under the selected shared version fence,
+          // BEFORE any immutable candidate or proof CAS creation.
+          const [freshBuilder,freshReviewer]=await Promise.all([
+            verifyAcceptedClaim(ISSUE,'builder'),
+            verifyAcceptedClaim(ISSUE,'reviewer')]);
+          const changed=(fresh,original,role)=>!ok(fresh,role)||
+            ['claimRef','operatorId','writerId','transportActor'].some(
+              key=>fresh.claim[key]!==original.claim[key]);
+          if(changed(freshBuilder,b,'builder')||
+             changed(freshReviewer,r,'reviewer')||
+             freshBuilder.claim.operatorId===freshReviewer.claim.operatorId||
+             freshBuilder.claim.writerId===freshReviewer.claim.writerId)
+            return denied(input,'MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED');
+          const freshWriteSet=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+          if(freshWriteSet?.ok!==true)
+            return denied(input,'MAINTENANCE_REVIEW_WRITE_SET_CHANGED');
           const current=await readCurrentVersion();
           if(current?.ok!==true||current.sha!==input.sourceSha)
             return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
