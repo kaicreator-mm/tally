@@ -179,8 +179,8 @@ const mReview=({comment=mComment,graph=mGraph,expected=mReviewExpected,
         base:{sha:expected.reviewedBase,ref:'version/v2'}}})},
       repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{
         tree:{sha:ref===expected.reviewedHead?expected.reviewedTree:'f'.repeat(40)}}}}),
-        getBranch:async()=>({data:{commit:{sha:expected.sourceSha}}})}}}},
-    commentId:mReviewCommentId,expected,builderClaim,reviewerClaim});
+        getBranch:async()=>({data:{commit:{sha:expected.sourceSha}}})}}},
+      commentId:mReviewCommentId,expected,builderClaim,reviewerClaim});
 test('#219 source-qualified official IssueComment ReviewWitness is read-only and not Task approval',async()=>{
   const got=await mReview();
   assert.equal(got.state,'REVIEW_VERIFIED');
