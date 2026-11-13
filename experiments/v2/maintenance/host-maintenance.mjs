@@ -679,6 +679,11 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
         repository:`${OWNER}/${REPO}`,issue:readback.issue,duplicate:false});
         });
+        // A fence entry refusal carries the precise shared-fence blocker
+        // (e.g. the version DAG registry not being admitted yet) — surface
+        // it instead of collapsing it into a generic fence unknown.
+        if(fenced&&fenced.state==='UNKNOWN'&&typeof fenced.reason==='string')
+          return unknownEffect(input,fenced.reason);
         if(!fenced||!['NOT_ADMITTED','REPLAY_COMPLETE',
            'PUBLICATION_UNKNOWN','MAINTENANCE_ISSUE_PUBLISHED'].includes(fenced.state))
           return unknownEffect(input,'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN');

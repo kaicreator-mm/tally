@@ -38,7 +38,8 @@ import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake, 
 import {readProjectIntakeFromClient,readProductReviewWitnessFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
-  readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
+  readMaintenanceIssueFromClient,readMaintenanceReviewWitnessFromClient}
+  from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
 import {createHash,randomUUID} from 'node:crypto';
@@ -112,7 +113,9 @@ function validClaimRow(row,claim,issueNumber,actorRole,env){
 async function verifyAcceptedClaim(env,issueNumber,actorRole){
   const binding=TASK_BINDINGS[issueNumber];
   const claim=claimEnv(env,issueNumber,actorRole);
-  if((binding?.actorRole!==actorRole&&!(issueNumber===312&&actorRole==='reviewer'))||!SHA.test(claim.sourceSha??'')||
+  if((binding?.actorRole!==actorRole&&
+      !(issueNumber===312&&actorRole==='reviewer')&&
+      !(issueNumber===219&&actorRole==='reviewer'))||!SHA.test(claim.sourceSha??'')||
     !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
     !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
     !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
@@ -138,6 +141,15 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       row.value.taskPackBlobSha!==pack||
       row.value.writeSetSha256!==writeSet)
       return {ok:false,reason:'PRODUCT_REVIEW_ROLE_CLAIM_PACK_UNVERIFIED'};
+  }
+  if(issueNumber===219){
+    // The #219 Host freeze/publish authority consumes the same durable
+    // role-claim contract as #312: distinct operator/writer identities bound
+    // to the exact CAS row, with the comment ref as the claim reference.
+    return {ok:true,claim:{accepted:true,issueNumber:219,
+      role:actorRole,sourceSha:claim.sourceSha,
+      claimRef:row.value.commentRef,operatorId:claim.operatorId,
+      writerId:claim.writerId,transportActor:claim.writerLogin}};
   }
   const token=env.TALLY_GITHUB_READ_TOKEN;
   if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
@@ -465,6 +477,33 @@ async function withProduct312VersionFence({sourceSha,operation},run){
   }catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
   finally{if(db)await db.close().catch(()=>{});}
 }
+// #219 reuses the SAME shared version/v2 CAS fence primitive as #312. The
+// primitive releases only on a completed effect or a refusal PROVEN to
+// predate every CAS write; anything ambiguous stays HELD for reconciliation.
+// This adapter only translates the #219 result vocabulary onto that contract
+// and restores the original Host result for its caller — the fence row
+// semantics, env pins and release discipline are the shared ones.
+const maintenanceSafeNoEffectReasons=new Set([
+  'MAINTENANCE_REVIEW_WITNESS_CHANGED','MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED',
+  'MAINTENANCE_REVIEW_WRITE_SET_CHANGED','MAINTENANCE_SOURCE_SHA_STALE',
+  'MAINTENANCE_PUBLICATION_ROLE_CHANGED','MAINTENANCE_PUBLICATION_WRITE_SET_STALE',
+  'MAINTENANCE_PUBLICATION_SOURCE_STALE','MAINTENANCE_PUBLICATION_WITNESS_STALE',
+  'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED']);
+async function withMaintenanceVersionFence({sourceSha,operation},run){
+  let original=null;
+  const fenced=await withProduct312VersionFence({sourceSha,operation},async()=>{
+    original=await run();
+    const done=original?.state==='RECORDED_COMPLETE'||
+      original?.state==='MAINTENANCE_ISSUE_PUBLISHED'||
+      original?.state==='REPLAY_COMPLETE';
+    if(done)return {...original,state:'FROZEN_COMPLETE'};
+    if(original?.state==='NOT_ADMITTED'&&
+       maintenanceSafeNoEffectReasons.has(original.reason))
+      return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CONFLICT'};
+    return original;
+  });
+  return original??fenced;
+}
 function product312HostFor(){
   const env=process.env;
   const token=env.TALLY_GITHUB_READ_TOKEN;
@@ -517,7 +556,19 @@ function maintenanceHostFor(){
         request:{timeout:15000}}),...publishInput});
     },
     findIssue:args=>findMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
-    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args})});
+    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
+    // Trusted C ReviewWitness + current version + the shared version CAS
+    // fence: without these the Host methods stay config-invalid fail-closed.
+    readReviewWitness:args=>readMaintenanceReviewWitnessFromClient({
+      octokit:readOctokit(),...args}),
+    readCurrentVersion:async()=>{
+      try{
+        const branch=await readOctokit().rest.repos.getBranch({
+          owner:OWNER,repo:REPO,branch:'version/v2'});
+        return {ok:true,sha:branch?.data?.commit?.sha};
+      }catch{return {ok:false,sha:null};}
+    },
+    withVersionFence:withMaintenanceVersionFence});
 }
 export async function publishMaintenanceIssue(input){
   return maintenanceHostFor().hostPublishMaintenanceIssue(input);
