@@ -4,10 +4,8 @@ import {workbenchActionGate,workbenchActionControl,localizedActionStatus,
   ACTION_STATUS_MESSAGES,DISPATCH_NOT_CONNECTED_MESSAGE} from './human-action-gate.ts';
 import {actionSourceLink} from './model.ts';
 import type {WorkbenchSnapshot,WorkAction} from './model.ts';
-import {buildSync} from 'esbuild';
-import {createElement} from 'react';
 import type {FunctionComponent} from 'react';
-import {renderToStaticMarkup} from 'react-dom/server';
+import {createRequire} from 'node:module';
 import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
@@ -253,9 +251,30 @@ test('denial reasons are localized and never show raw internal codes',()=>{
 // View-level render tests: Node cannot load .tsx directly, so the real view is
 // bundled once with the repo's pinned esbuild toolchain and rendered through
 // react-dom/server; assertions cover the exact disabled/positive/localized
-// display contract for the Workbench action button.
+// display contract for the Workbench action button. The source gate runs these
+// model tests before any npm install by design (.woodpecker/v2-alm-workspace.yaml:
+// "pure-TS model tests run without any npm install"), so esbuild/react only
+// resolve in a toolchain checkout; without one the render tests skip visibly
+// (same convention as the J219/T210/T312 physical replay gates).
+const viewToolchainAvailable=(()=>{
+  const require=createRequire(import.meta.url);
+  for(const pkg of ['esbuild','react','react-dom/server']){
+    try{require.resolve(pkg);}catch{return false;}
+  }
+  return true;
+})();
+const viewSkipReason=viewToolchainAvailable?false:
+  'needs esbuild+react toolchain (npm --prefix apps/tally-web install); dep-free source gate skips view render';
 let viewsModule:Record<string,unknown>|null=null;
-async function loadViews():Promise<Record<string,unknown>>{
+async function renderWorkbenchActionButton(
+  props:Record<string,unknown>):Promise<string>{
+  const {buildSync}=await import('esbuild') as {buildSync:(options:{
+    entryPoints:string[];outfile:string;bundle:boolean;format:'esm';
+    platform:'node';jsx:'automatic';logLevel:'silent'})=>unknown};
+  const react=await import('react') as {createElement:(
+    component:unknown,props:Record<string,unknown>)=>unknown};
+  const reactDomServer=await import('react-dom/server') as
+    {renderToStaticMarkup:(element:unknown)=>string};
   if(!viewsModule){
     const dir=mkdtempSync(join(tmpdir(),'tally-workbench-view-'));
     process.on('exit',()=>{try{rmSync(dir,{recursive:true,force:true})}
@@ -266,41 +285,40 @@ async function loadViews():Promise<Record<string,unknown>>{
       jsx:'automatic',logLevel:'silent'});
     viewsModule=await import(pathToFileURL(outfile).href) as Record<string,unknown>;
   }
-  return viewsModule;
-}
-test('rendered action button shows dispatch-not-connected state, disabled, without positive label',async()=>{
-  const {WorkbenchActionButton}=await loadViews() as
+  const {WorkbenchActionButton}=viewsModule as
     {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
-  const html=renderToStaticMarkup(createElement(WorkbenchActionButton,{
-    snapshot:inbox,catalog,action:work}));
+  return reactDomServer.renderToStaticMarkup(
+    react.createElement(WorkbenchActionButton,props));
+}
+test('rendered action button shows dispatch-not-connected state, disabled, without positive label',
+  {skip:viewSkipReason},async()=>{
+  const html=await renderWorkbenchActionButton({snapshot:inbox,catalog,action:work});
   assert.match(html,/disabled/);
   assert.ok(html.includes('派发尚未接入'));
   assert.ok(!html.includes('审核候选'));
   assert.ok(!html.includes('FRESH_HOST_ACTION'));
 });
-test('rendered action button keeps positive Host label when dispatch callback is connected',async()=>{
-  const {WorkbenchActionButton}=await loadViews() as
-    {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
-  const html=renderToStaticMarkup(createElement(WorkbenchActionButton,{
-    snapshot:inbox,catalog,action:work,onAction:()=>{}}));
+test('rendered action button keeps positive Host label when dispatch callback is connected',
+  {skip:viewSkipReason},async()=>{
+  const html=await renderWorkbenchActionButton({
+    snapshot:inbox,catalog,action:work,onAction:()=>{}});
   assert.ok(!html.includes('disabled'));
   assert.ok(html.includes('审核候选'));
   assert.ok(!html.includes('FRESH_HOST_ACTION'));
   assert.ok(!html.includes('派发尚未接入'));
 });
-test('rendered action button maps denial codes to localized messages',async()=>{
-  const {WorkbenchActionButton}=await loadViews() as
-    {WorkbenchActionButton:FunctionComponent<Record<string,unknown>>};
-  const disconnected=renderToStaticMarkup(createElement(WorkbenchActionButton,{
+test('rendered action button maps denial codes to localized messages',
+  {skip:viewSkipReason},async()=>{
+  const disconnected=await renderWorkbenchActionButton({
     snapshot:inbox,catalog:{...catalog,connected:false},action:work,
-    onAction:()=>{}}));
+    onAction:()=>{}});
   assert.match(disconnected,/disabled/);
   assert.ok(disconnected.includes(
     ACTION_STATUS_MESSAGES.HOST_ACTION_SOURCE_NOT_CONNECTED));
   assert.ok(!disconnected.includes('HOST_ACTION_SOURCE_NOT_CONNECTED'));
-  const unbound=renderToStaticMarkup(createElement(WorkbenchActionButton,{
-    snapshot:inbox,catalog,action:{...work,hostActionId:null,
-      hostActionRevision:null,hostActionKind:null},onAction:()=>{}}));
+  const unbound=await renderWorkbenchActionButton({snapshot:inbox,catalog,
+    action:{...work,hostActionId:null,hostActionRevision:null,
+      hostActionKind:null},onAction:()=>{}});
   assert.match(unbound,/disabled/);
   assert.ok(unbound.includes(ACTION_STATUS_MESSAGES.HOST_ACTION_IDENTITY_NOT_BOUND));
   assert.ok(!unbound.includes('HOST_ACTION_IDENTITY_NOT_BOUND'));
