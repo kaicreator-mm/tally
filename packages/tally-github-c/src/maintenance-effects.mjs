@@ -254,5 +254,6 @@ export async function readMaintenanceReviewWitnessFromClient({
     repository:REPOSITORY,reviewRef:ref,reviewed:true,
     sourceSha:body.sourceSha,candidateDigest:body.candidateDigest,
     reviewedHead:body.reviewedHead,reviewedTree:body.reviewedTree,
+    reviewedAt:comment.created_at,
     p0:0,p1:0,p2:body.p2});
 }
