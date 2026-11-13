@@ -72,7 +72,7 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
 function claimEnv(env,issueNumber,actorRole='builder'){
-  const p=issueNumber===312?'TALLY_TASK_CLAIM_312_'+actorRole.toUpperCase()+'_':
+  const p=(issueNumber===312||issueNumber===219)?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
     issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
@@ -143,13 +143,16 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       return {ok:false,reason:'PRODUCT_REVIEW_ROLE_CLAIM_PACK_UNVERIFIED'};
   }
   if(issueNumber===219){
-    // The #219 Host freeze/publish authority consumes the same durable
-    // role-claim contract as #312: distinct operator/writer identities bound
-    // to the exact CAS row, with the comment ref as the claim reference.
-    return {ok:true,claim:{accepted:true,issueNumber:219,
-      role:actorRole,sourceSha:claim.sourceSha,
-      claimRef:row.value.commentRef,operatorId:claim.operatorId,
-      writerId:claim.writerId,transportActor:claim.writerLogin}};
+    // Distinct role-specific CAS rows share the same approved 14-path FSW
+    // and current Pack; a historical row without this provenance fails.
+    const pack=env.TALLY_TASK_CLAIM_219_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_219_WRITESET_SHA256;
+    if(!SHA.test(pack??'')||!DIGEST_219.test(digest??'')||
+       digest!==p219FsDigest||
+       row.value.taskPackBlobSha!==pack||
+       row.value.writeSetSha256!==digest||
+       claim.registryPath!==env.TALLY_TASK_CLAIM_219_REGISTRY_PATH)
+      return {ok:false,reason:'MAINTENANCE_ROLE_CLAIM_PACK_UNVERIFIED'};
   }
   const token=env.TALLY_GITHUB_READ_TOKEN;
   if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
@@ -170,10 +173,10 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       witness.generation!==1||witness.transportActor!==claim.writerLogin)
       return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};
   }catch{return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};}
-  if(issueNumber===312)return {ok:true,claim:{accepted:true,issueNumber:312,
-    role:actorRole,sourceSha:claim.sourceSha,
-    taskPackBlobSha:env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA,
-    writeSetSha256:env.TALLY_TASK_CLAIM_312_WRITESET_SHA256,
+  if(issueNumber===312||issueNumber===219)return {ok:true,claim:{
+    accepted:true,issueNumber,role:actorRole,sourceSha:claim.sourceSha,
+    taskPackBlobSha:env['TALLY_TASK_CLAIM_'+issueNumber+'_TASK_PACK_BLOB_SHA'],
+    writeSetSha256:env['TALLY_TASK_CLAIM_'+issueNumber+'_WRITESET_SHA256'],
     claimRef:row.value.commentRef,operatorId:claim.operatorId,
     writerId:claim.writerId,transportActor:claim.writerLogin}};
   return {ok:true,claim};
@@ -191,10 +194,24 @@ async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
     return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};
   return {ok:true,pair};
 }
+const DIGEST_219=/^[a-f0-9]{64}$/;
+const p219FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml",
+  "experiments/v2/maintenance/host-maintenance.mjs",
+  "experiments/v2/maintenance/host-maintenance.test.mjs",
+  "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+  "experiments/v2/selected-business-build/local-codex-shim.mjs",
+  "experiments/v2/selected-business-build/producer.mjs",
+  "packages/tally-engineering-business/src/index.mjs",
+  "packages/tally-engineering-business/test/business-policy.test.mjs",
+  "packages/tally-github-c/src/maintenance-effects.mjs",
+  "packages/tally-github-c/test/maintenance-effects.test.mjs",
+  "web/v2/journey-server.mjs","web/v2/journey-view.html",
+  "web/v2/maintenance-controller.mjs","web/v2/maintenance-controller.test.mjs"].sort());
+const p219FsDigest='3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797';
 const p312FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"]);
 const p312VersionDagKey='tally:v2:version-task-dag:'+
   createHash('sha256').update('kaicreator-mm/tally#version/v2').digest('hex');
-function p312FsDocumentMatches(document,digest){
+function fsDocumentMatches(document,paths,digest){
   if(typeof document!=='string'||!document.length||document.length>65536)return false;
   let entries;
   try{
@@ -204,14 +221,39 @@ function p312FsDocumentMatches(document,digest){
     entries=document.split(String.fromCharCode(10)).map(path=>
       path.endsWith(String.fromCharCode(13))?path.slice(0,-1):path);
   }
-  if(!Array.isArray(entries)||entries.length!==p312FsPaths.length||
+  if(!Array.isArray(entries)||entries.length!==paths.length||
     !entries.every(path=>typeof path==='string'&&path.length>0))return false;
   const normalized=[...new Set(entries)].sort();
-  return normalized.length===p312FsPaths.length&&
-    normalized.every((path,index)=>path===p312FsPaths[index])&&
+  return normalized.length===paths.length&&
+    normalized.every((path,index)=>path===paths[index])&&
     createHash('sha256').update(JSON.stringify(normalized)).digest('hex')===digest;
 }
 async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
+  if(issueNumber===219){
+    const registryPath=env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
+    const pack=env.TALLY_TASK_CLAIM_219_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_219_WRITESET_SHA256;
+    if(!SHA.test(sourceSha??'')||!SHA.test(pack??'')||
+       digest!==p219FsDigest||typeof registryPath!=='string'||!registryPath)
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    let db,row;
+    try{
+      db=await openSqliteCasStore({path:registryPath,busyTimeoutMs:1000});
+      row=await db.get(writeSetKeyFor(219));
+    }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
+    finally{if(db)await db.close();}
+    const v=row?.value;
+    if(!Number.isSafeInteger(row?.revision)||row.revision<0||
+       v?.phase!=='FROZEN_DAG_WRITESET'||
+       v.schema!=='tally/version-task-writeset/v1'||
+       v.repository!==OWNER+'/'+REPO||v.issueNumber!==219||
+       v.sourceSha!==sourceSha||v.versionPackBlobSha!==pack||
+       v.versionTaskDagKey!==p312VersionDagKey||
+       v.writeSetSha256!==digest||
+       !fsDocumentMatches(v.document,p219FsPaths,digest))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
+  }
   if(issueNumber===312){
     const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
     const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
@@ -235,7 +277,7 @@ async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
       value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
       value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
       value.writeSetSha256!==digest||
-      !p312FsDocumentMatches(value.document,digest))
+      !fsDocumentMatches(value.document,p312FsPaths,digest))
       return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
     return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
   }
@@ -502,7 +544,19 @@ async function withMaintenanceVersionFence({sourceSha,operation},run){
       return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CONFLICT'};
     return original;
   });
-  return original??fenced;
+  // A successful Host operation is not durable success until the shared
+  // HELD -> RELEASED CAS ACK and readback both succeed. Never hide the
+  // primitive's UNKNOWN result behind an earlier optimistic Host return.
+  if(fenced?.state==='FROZEN_COMPLETE'&&
+     ['RECORDED_COMPLETE','MAINTENANCE_ISSUE_PUBLISHED',
+      'REPLAY_COMPLETE'].includes(original?.state))
+    return original;
+  if(fenced?.state==='UNKNOWN'&&
+     fenced.reason==='PRODUCT_REVIEW_FREEZE_CONFLICT'&&
+     original?.state==='NOT_ADMITTED'&&
+     maintenanceSafeNoEffectReasons.has(original.reason))
+    return original;
+  return fenced??product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
 }
 function product312HostFor(){
   const env=process.env;
