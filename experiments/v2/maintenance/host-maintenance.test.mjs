@@ -858,3 +858,48 @@ test('#219 name-only legacy candidate cannot publish without separately frozen r
   assert.equal(publishes,0);
   assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
 });
+
+test('#219 fence-time Claim/FSW revocation refuses CAS without Review Proof',async()=>{
+  for(const revoked of ['reviewer','fsw']){
+    const ctx=persisted();
+    const input={...publishInput(),reviewCommentId:6840000001,
+      reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sha};
+    const b={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+      claimRef:'claim:builder',operatorId:'operator:builder',
+      writerId:'writer:builder',transportActor:'kaicreator-mm'};
+    const r={...b,role:'reviewer',claimRef:'claim:reviewer',
+      operatorId:'operator:reviewer',writerId:'writer:reviewer'};
+    let reviewerReads=0,fswReads=0,fenceCalls=0;
+    const witness={state:'REVIEW_VERIFIED',reviewed:true,
+      reviewRef:__test.ISSUE_REF+'#issuecomment-6840000001',
+      sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+      reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+      authorized:false,taskPass:false};
+    const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+      verifyAcceptedClaim:async(_n,role)=>{
+        if(role==='reviewer'&&++reviewerReads===2&&revoked==='reviewer')
+          return {ok:false,reason:'CLAIM_REVOKED'};
+        return {ok:true,claim:role==='reviewer'?r:b};},
+      verifyFrozenWriteSet:async()=>{
+        fswReads++;
+        return fswReads>=3&&revoked==='fsw'?
+          {ok:false,reason:'WRITE_SET_REVOKED'}:{ok:true};},
+      readReviewWitness:async()=>witness,
+      readCurrentVersion:async()=>({ok:true,sha}),
+      withVersionFence:async(_meta,run)=>{fenceCalls++;return run();}});
+    const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+    assert.equal(draft.state,'DRAFT_PENDING_REVIEW');
+    const result=await h.hostFreezeReviewedMaintenanceCandidate(input);
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,revoked==='reviewer'?
+      'MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED':
+      'MAINTENANCE_REVIEW_WRITE_SET_CHANGED');
+    assert.equal(fenceCalls,1);
+    assert.equal(ctx.m.createCount(),1,'only the pre-review draft exists');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),false);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),false);
+    assert.equal(result.githubEffect,'NOT_RUN');
+    assert.equal(result.taskPass,false);
+  }
+});
