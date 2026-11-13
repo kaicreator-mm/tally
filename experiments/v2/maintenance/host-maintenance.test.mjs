@@ -10,7 +10,7 @@ import {fileURLToPath} from 'node:url';
 import {createMaintenanceHost,recordMaintenanceCandidate,
   observeLearningSuggestions,validateMaintenanceCandidate,
   maintenanceCandidateDigest,learningSuggestionsFromReports,
-  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
+  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
   MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
 
 const REPO_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
@@ -749,4 +749,86 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
 test('Task 219 frozen write-set binding names the admitted Host path',()=>{
   const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
+
+test('#219 candidate draft requires accepted claim and FSW, and is create-only',async()=>{
+  const ctx=persisted(),args={...publishInput(),candidate:candidate()};
+  const inst=()=>createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:true}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()});
+  const first=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(first.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(ctx.m.createCount(),1);
+  const second=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(second.reason,'MAINTENANCE_DRAFT_ALREADY_RECORDED');
+  assert.equal(ctx.m.createCount(),1);
+  const drift=await inst().hostPersistMaintenanceDraft({...args,
+    candidate:{...candidate(),summary:'different'}});
+  assert.equal(drift.state,'NOT_ADMITTED');
+  const blocked=await createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()})
+    .hostPersistMaintenanceDraft(args);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+});
+test('#219 Host candidate freeze requires twice witnessed distinct roles and fenced CAS',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:builder',operatorId:'op:builder',writerId:'w:builder',
+    transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const marker='https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001';
+  const witness={state:'REVIEW_VERIFIED',reviewed:true,reviewRef:marker,
+    sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+    authorized:false,taskPass:false};
+  let reads=0,fences=0;
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();},...over});
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),2);
+  const row=ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY).value;
+  assert.equal(row.review.author,'op:builder');
+  assert.equal(row.review.reviewer,'op:reviewer');
+  assert.equal(row.taskPass,false);assert.equal(row.authorized,false);
+  const repeated=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(repeated.state,'RECORDED_COMPLETE');
+  assert.equal(ctx.m.createCount(),2);
+  const noFence=await mk({withVersionFence:null})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(noFence.reason,'MAINTENANCE_HOST_CONFIG_INVALID');
+});
+test('#219 Host ReviewWitness refuses a same operator and any untrusted/absent source',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:b',operatorId:'same',writerId:'w:b',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:r',writerId:'w:r'};
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'}),
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run(),...over});
+  const missing=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(missing.reason,'MAINTENANCE_DRAFT_NOT_VERIFIED');
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const same=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(same.reason,'MAINTENANCE_REVIEW_SAME_PROCESS');
+  assert.equal(ctx.m.createCount(),1);
+  const blocked=await mk({verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'})})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+  assert.equal(ctx.m.createCount(),1);
 });
