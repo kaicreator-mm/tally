@@ -4,6 +4,7 @@ import {spawnSync} from 'node:child_process';
 import {existsSync,mkdirSync,writeFileSync,readFileSync,mkdtempSync,rmSync,
   readdirSync,copyFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {runInNewContext} from 'node:vm';
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -1142,4 +1143,75 @@ test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST
     assert.equal(posts,0);
     assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
   }
+});
+
+test('#219 selected K role-env and exact FSW checker reject forged path sets',()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const extract=name=>{
+    const start=src.indexOf('function '+name+'(');
+    const end=src.indexOf('\n}',start);
+    assert.ok(start>=0&&end>start,'missing selected K '+name);
+    return src.slice(start,end+2);
+  };
+  const claimEnv=runInNewContext('('+extract('claimEnv')+')');
+  const cfg={TALLY_CLAIM_SOURCE_SHA:sha};
+  for(const [role,operator] of [['builder','operator:b'],['reviewer','operator:r']]){
+    const prefix='TALLY_TASK_CLAIM_219_'+role.toUpperCase()+'_';
+    Object.assign(cfg,{[prefix+'OPERATOR_ID']:operator,
+      [prefix+'WRITER_ID']:'writer:'+role,[prefix+'COMMENT_ID']:role==='builder'?'11':'12',
+      [prefix+'WRITER_LOGIN']:'kaicreator-mm',
+      [prefix+'DISPATCH_ID']:'dispatch:'+role,
+      [prefix+'REGISTRY_PATH']:'shared:219',
+      [prefix+'WRITESET_SHA256']:'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797'});
+  }
+  const b=claimEnv(cfg,219,'builder'),r=claimEnv(cfg,219,'reviewer');
+  assert.notEqual(b.operatorId,r.operatorId);
+  assert.notEqual(b.writerId,r.writerId);
+  assert.notEqual(b.commentId,r.commentId);
+  assert.equal(b.writerLogin,r.writerLogin,'same GitHub login allowed');
+  assert.equal(b.registryPath,r.registryPath);
+  const paths=[".woodpecker/v2-alm-workspace.yaml",
+    "experiments/v2/maintenance/host-maintenance.mjs",
+    "experiments/v2/maintenance/host-maintenance.test.mjs",
+    "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+    "experiments/v2/selected-business-build/local-codex-shim.mjs",
+    "experiments/v2/selected-business-build/producer.mjs",
+    "packages/tally-engineering-business/src/index.mjs",
+    "packages/tally-engineering-business/test/business-policy.test.mjs",
+    "packages/tally-github-c/src/maintenance-effects.mjs",
+    "packages/tally-github-c/test/maintenance-effects.test.mjs",
+    "web/v2/journey-server.mjs","web/v2/journey-view.html",
+    "web/v2/maintenance-controller.mjs","web/v2/maintenance-controller.test.mjs"].sort();
+  const digest=sha256HexOf(paths);
+  assert.equal(digest,'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797');
+  const matches=runInNewContext('('+extract('fsDocumentMatches')+')',{createHash});
+  assert.equal(matches(JSON.stringify(paths),paths,digest),true);
+  for(const bogus of [[...paths,'evil.mjs'],[...paths.slice(0,-1),paths[0]],
+    paths.map(x=>x+'-suffix'),[paths[0]]]){
+    assert.equal(matches(JSON.stringify(bogus),paths,digest),false);
+  }
+  assert.equal(matches(JSON.stringify(paths),paths,'f'.repeat(64)),false);
+  assert.match(src,/readGitHubClaimPublicationWitness/);
+  assert.match(src,/MAINTENANCE_ROLE_CLAIM_PACK_UNVERIFIED/);
+});
+test('#219 shared fence preserves failed RELEASED acknowledgement as UNKNOWN',async()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const start=src.indexOf('async function withMaintenanceVersionFence(');
+  const end=src.indexOf('\n}',start);
+  assert.ok(start>0&&end>start);
+  const source=src.slice(start,end+2);
+  const mk=(impl)=>runInNewContext('('+source+')',{
+    withProduct312VersionFence:impl,
+    maintenanceSafeNoEffectReasons:new Set(),
+    product312Unknown:reason=>({state:'UNKNOWN',reason})});
+  const work=async()=>({state:'RECORDED_COMPLETE',
+    reason:'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS'});
+  const bad=await mk(async(_meta,callback)=>{
+    await callback();return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(bad.state,'UNKNOWN');
+  const good=await mk(async(_meta,callback)=>{
+    await callback();return {state:'FROZEN_COMPLETE'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(good.state,'RECORDED_COMPLETE');
 });
