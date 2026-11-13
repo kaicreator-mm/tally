@@ -164,13 +164,14 @@ const witness312Base={sha:witness312Sha,commit:{tree:{sha:'2'.repeat(40)}}};
 const witness312Read=({comment=witness312Comment,expected=witness312Expected,
   builderClaim=witness312Builder,reviewerClaim=witness312Reviewer,fail,
   call,pr=witness312Pr,head=witness312Head,base=witness312Base,
-  liveSha=witness312Sha,commitError,graphOverride,graphError,noGraphql=false}={})=>readProductReviewWitnessFromClient({
+  liveSha=witness312Sha,commitError,graphOverride,graphError,noGraphql=false,
+  commentId=12345}={})=>readProductReviewWitnessFromClient({
   octokit:{graphql:noGraphql?undefined:async(query,{id})=>{
     if(graphError)throw {status:graphError};
     assert.match(query,/lastEditedAt/);
     assert.equal(id,comment.node_id);
     return {node:graphOverride??{
-      __typename:'IssueComment',databaseId:comment.id,url:comment.html_url,
+      __typename:'IssueComment',fullDatabaseId:String(comment.id),url:comment.html_url,
       body:comment.body,lastEditedAt:null,editor:null,
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
   },rest:{
@@ -184,7 +185,7 @@ const witness312Read=({comment=witness312Comment,expected=witness312Expected,
         if(commitError)throw {status:commitError};
         return {data:ref===expected.reviewedHead?head:base};},
       getBranch:async()=>({data:{commit:{sha:liveSha}}})}}},
-  commentId:12345,expected,builderClaim,reviewerClaim});
+  commentId,expected,builderClaim,reviewerClaim});
 
 test('#312 canonical unedited review with same GitHub login but independent processes qualifies only source',async()=>{
   const got=await witness312Read();
@@ -199,14 +200,16 @@ test('#312 canonical unedited review with same GitHub login but independent proc
 
 test('#312 same-second edited comment is refused by official GraphQL edit provenance',async()=>{
   const baseGraph={
-    __typename:'IssueComment',databaseId:12345,url:witness312Ref,
+    __typename:'IssueComment',fullDatabaseId:'12345',url:witness312Ref,
     body:witness312Comment.body,lastEditedAt:null,editor:null,
     issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}};
   for(const mutation of [
     {lastEditedAt:'2026-11-12T12:00:00.750Z',editor:{login:'kaicreator-mm'}},
     {lastEditedAt:'2026-11-12T12:00:00Z'},
     {body:'{}'},
-    {databaseId:12346},
+    {fullDatabaseId:'12346'},
+    {fullDatabaseId:'012345'},
+    {fullDatabaseId:9007199254740992},
     {url:'https://github.com/other/repo/issues/312#issuecomment-12345'},
     {issue:{number:312,repository:{nameWithOwner:'other/repo'}}}
   ]){
@@ -223,6 +226,15 @@ test('#312 same-second edited comment is refused by official GraphQL edit proven
   assert.equal(inaccessible.reason,'PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');
   const noNode=await witness312Read({comment:{...witness312Comment,node_id:undefined}});
   assert.equal(noNode.reason,'PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');
+});
+
+test('#312 real GitHub IssueComment fullDatabaseId > 32-bit Int binds losslessly',async()=>{
+  const id=6840997337;
+  const ref='https://github.com/kaicreator-mm/tally/issues/312#issuecomment-'+id;
+  const got=await witness312Read({commentId:id,
+    comment:{...witness312Comment,id,node_id:'IC_witness'+id,html_url:ref}});
+  assert.equal(got.status,'INDEPENDENTLY_VERIFIED');
+  assert.equal(got.reviewRef,ref);
 });
 
 test('#312 missing/fake Claims and shared operator or writer fail before GitHub HTTP',async()=>{
@@ -280,7 +292,7 @@ test('#312 immutable first POST then server-assigned GET comment ref is derivabl
   assert.equal(JSON.parse(payload).reviewRef,undefined);
   let posted=null,assigned=null,reads=0;
   const transport={graphql:async(query,{id})=>({
-    node:{__typename:'IssueComment',databaseId:posted.id,url:posted.html_url,
+    node:{__typename:'IssueComment',fullDatabaseId:String(posted.id),url:posted.html_url,
       body:posted.body,lastEditedAt:null,editor:null,
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
     rest:{
@@ -379,7 +391,15 @@ async function merged312Read({
   if(withCompare)repos.compareCommits=async({base,head})=>{
     assert.equal(base,mergeSha);assert.equal(head,sourceSha);
     return {data:compareData};};
-  return readProductReviewWitnessFromClient({octokit:{rest:{
+  return readProductReviewWitnessFromClient({octokit:{
+    graphql:async(query,{id})=>{
+      assert.match(query,/fullDatabaseId/);
+      assert.equal(id,comment.node_id);
+      return {node:{__typename:'IssueComment',fullDatabaseId:String(comment.id),
+        url:comment.html_url,body:comment.body,lastEditedAt:null,editor:null,
+        issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
+    },
+    rest:{
     issues:{getComment:async()=>({data:comment})},
     pulls:{get:async()=>({data:pr})},repos}},
     expected,commentId:12345,builderClaim,reviewerClaim});

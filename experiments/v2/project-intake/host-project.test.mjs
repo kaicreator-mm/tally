@@ -661,7 +661,7 @@ const p312OfficialGitTransport=commentReader=>({
   graphql:async(query,{id})=>{
     const raw=(await commentReader())?.data;
     return {node:raw&&id===raw.node_id?{
-      __typename:'IssueComment',databaseId:raw.id,url:raw.html_url,
+      __typename:'IssueComment',fullDatabaseId:String(raw.id),url:raw.html_url,
       body:raw.body,lastEditedAt:null,editor:null,
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}:null};
   },
@@ -957,7 +957,7 @@ const fixtureOctokit=()=>{const state=fixture();
   return {graphql:async(query,{id})=>{
     const raw=fixture().witness?.comment;
     return {node:raw&&id===raw.node_id?{
-      __typename:'IssueComment',databaseId:raw.id,url:raw.html_url,
+      __typename:'IssueComment',fullDatabaseId:String(raw.id),url:raw.html_url,
       body:raw.body,lastEditedAt:raw.created_at===raw.updated_at?null:raw.updated_at,
       editor:raw.created_at===raw.updated_at?null:{login:'edited'},
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}:null};

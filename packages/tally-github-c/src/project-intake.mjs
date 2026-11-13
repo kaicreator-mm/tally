@@ -221,7 +221,7 @@ export async function readProductReviewWitnessFromClient({
       node(id: $id) {
         __typename
         ... on IssueComment {
-          databaseId
+          fullDatabaseId
           url
           body
           lastEditedAt
@@ -232,8 +232,14 @@ export async function readProductReviewWitnessFromClient({
     }`,{id:comment.node_id});
     graphComment=result?.node;
   }catch{return rwUnknown('PRODUCT_REVIEW_COMMENT_EDIT_PROVENANCE_UNAVAILABLE');}
+  // REST Issue comment IDs exceed GraphQL's 32-bit databaseId:Int range.
+  // fullDatabaseId:BigInt is the authoritative lossless identity; refuse
+  // unsafe JSON numbers and noncanonical decimals rather than rounding.
+  const fullId=graphComment?.fullDatabaseId;
+  const observedId=typeof fullId==='string'&&/^[1-9][0-9]*$/.test(fullId)?
+    fullId:Number.isSafeInteger(fullId)&&fullId>0?String(fullId):null;
   if(graphComment?.__typename!=='IssueComment'||
-     graphComment.databaseId!==commentId||
+     observedId!==String(commentId)||
      graphComment.url!==ref||graphComment.body!==comment.body||
      graphComment.lastEditedAt!==null||graphComment.editor!==null||
      graphComment.issue?.number!==312||
