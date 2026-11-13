@@ -356,11 +356,14 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const args={commentId:input.reviewCommentId,expected,
         builderClaim:bind(b.claim),reviewerClaim:bind(r.claim)};
       const ref=ISSUE_REF+'#issuecomment-'+input.reviewCommentId;
+      // The current qualified C transport (#409) returns no reviewedAt yet;
+      // absent is accepted, a present value must still be a real instant.
       const witnessOk=w=>w?.state==='REVIEW_VERIFIED'&&w.reviewed===true&&
         w.reviewRef===ref&&w.sourceSha===input.sourceSha&&
         w.candidateDigest===input.candidateDigest&&
         w.reviewedHead===input.reviewedHead&&w.reviewedTree===input.reviewedTree&&
-        ISO(w.reviewedAt??'')&&w.taskPass===false&&w.authorized===false;
+        (w.reviewedAt===undefined||ISO(w.reviewedAt))&&
+        w.taskPass===false&&w.authorized===false;
       let first;
       try{first=await readReviewWitness(args);}
       catch{return denied(input,'MAINTENANCE_REVIEW_WITNESS_UNVERIFIED');}
@@ -375,7 +378,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           versionId:'version/v2',sourceSha:input.sourceSha,
           operation:'FREEZE_REVIEWED_MAINTENANCE'},async()=>{
           const second=await readReviewWitness(args);
-          if(!witnessOk(second)||second.reviewedAt!==first.reviewedAt)
+          // Full canonical verdict equality across the fence: both reads pin
+          // the same commentId, and any comment mutation flips the C reader's
+          // own edited-provenance gates — stricter than a timestamp compare.
+          if(!witnessOk(second)||JSON.stringify(second)!==JSON.stringify(first))
             return denied(input,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
           // A role Claim or FSW may be revoked while the first C read is in
           // flight. Re-read both under the selected shared version fence,
@@ -401,6 +407,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
             registryPath:env.TALLY_TASK_CLAIM_219_REGISTRY_PATH,
             sourceSha:input.sourceSha,candidate:draft.value.candidate,
             author:b.claim.operatorId,reviewer:r.claim.operatorId,
+            // Witness-provided instant only — never a Host clock fabrication.
+            // The current qualified C transport omits it: the proof JSON then
+            // carries no reviewedAt key and the publication gate keeps this
+            // fail-closed until the C transport carries the witness instant.
             reviewedAt:second.reviewedAt});
           if(recorded?.state!=='RECORDED_COMPLETE')return recorded;
           // Native Issue publication can consume ONLY this extra proof:

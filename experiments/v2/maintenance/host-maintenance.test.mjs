@@ -13,6 +13,8 @@ import {createMaintenanceHost,recordMaintenanceCandidate,
   MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,
   MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
   MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
+import {readMaintenanceReviewWitnessFromClient}
+  from '../../../packages/tally-github-c/src/maintenance-effects.mjs';
 
 const REPO_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
 const run=(cmd,args,opts={})=>{
@@ -902,4 +904,132 @@ test('#219 fence-time Claim/FSW revocation refuses CAS without Review Proof',asy
     assert.equal(result.githubEffect,'NOT_RUN');
     assert.equal(result.taskPass,false);
   }
+});
+
+// Real wiring contract: the Host freeze must accept the EXACT return surface
+// of the merged qualified C reader (#409), which carries no reviewedAt yet.
+// Fixtures that silently add the field would mask an unsatisfiable contract.
+const realCWitness=async(input,claims)=>{
+  const NODE_ID='IC_j219contract01';
+  const REVIEW_REF=`https://github.com/kaicreator-mm/tally/issues/219#issuecomment-${input.reviewCommentId}`;
+  const TS='2026-11-13T02:00:00Z';
+  const witnessBody=JSON.stringify({schema:'tally.v2.maintenance-review-witness/1',
+    status:'INDEPENDENTLY_VERIFIED',repository:'kaicreator-mm/tally',issueNumber:219,
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    reviewedPullNumber:input.reviewedPullNumber,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
+    builderClaimRef:claims.builderClaim.claimRef,
+    reviewerClaimRef:claims.reviewerClaim.claimRef,
+    reviewerOperatorId:claims.reviewerClaim.operatorId,
+    reviewerWriterId:claims.reviewerClaim.writerId,p0:0,p1:0,p2:1});
+  const octokit={graphql:async()=>({node:{__typename:'IssueComment',
+      id:NODE_ID,fullDatabaseId:String(input.reviewCommentId),url:REVIEW_REF,
+      body:witnessBody,lastEditedAt:null,editor:null,
+      issue:{number:219,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
+    rest:{issues:{getComment:async()=>({data:{id:input.reviewCommentId,
+        node_id:NODE_ID,html_url:REVIEW_REF,
+        issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/219',
+        user:{login:'kaicreator-mm'},created_at:TS,updated_at:TS,
+        body:witnessBody}})},
+      pulls:{get:async()=>({data:{number:input.reviewedPullNumber,state:'open',
+        merged:false,head:{sha:input.reviewedHead,
+          repo:{full_name:'kaicreator-mm/tally'}},
+        base:{sha:input.reviewedBase,ref:'version/v2'}}})},
+      repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
+          ref===input.reviewedHead?input.reviewedTree:'f'.repeat(40)}}}}),
+        getBranch:async()=>({data:{commit:{sha:input.sourceSha}}})}}};
+  return readMaintenanceReviewWitnessFromClient({octokit,...claims,
+    commentId:input.reviewCommentId,
+    expected:{issueNumber:219,sourceSha:input.sourceSha,
+      candidateDigest:input.candidateDigest,
+      reviewedPullNumber:input.reviewedPullNumber,
+      reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+      reviewedBase:input.reviewedBase}});
+};
+test('#219 Host freeze accepts the real merged C witness gates, then stays fail-closed at the record instant',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000002,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  assert.equal(witness.state,'REVIEW_VERIFIED',witness.reason);
+  assert.equal(witness.reviewedAt,undefined,
+    'the merged C transport does not carry a witness instant yet');
+  let reads=0,fences=0;
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();}});
+  const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  assert.equal(draft.state,'DRAFT_PENDING_REVIEW',draft.reason);
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  // The witness/claims/fence/FSW recheck gates all accept the real C shape;
+  // the canonical record writer still requires an ISO witness instant, so
+  // with the current C transport the freeze refuses WITHOUT any CAS write.
+  assert.equal(frozen.state,'NOT_RECORDED');
+  assert.equal(frozen.reason,'MAINTENANCE_INPUT_INVALID');
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),1,'only the pre-review draft exists');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),false);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),false);
+});
+test('#219 Host freeze completes end-to-end once the C transport carries the witness instant',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000004,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  // Models the declared next C contract (additive): the reader returns the
+  // comment instant it already reads and verifies. No Host change is needed.
+  const witness={...(await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer})),
+    reviewedAt:'2026-11-13T02:00:00Z'};
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>witness,
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()});
+  await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  const proof=(await ctx.openStore().then(s=>s.get(MAINTENANCE_REVIEW_PROOF_KEY))).value;
+  assert.equal(proof.reviewedAt,'2026-11-13T02:00:00Z');
+});
+test('#219 Host freeze refuses a witness verdict that changes across the fence',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000003,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async()=>({ok:true,claim:builder}),
+    verifyFrozenWriteSet:async()=>({ok:true})})
+    .hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  let reads=0;
+  const result=await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;
+      return reads===1?witness:{...witness,p2:7};},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(result.reason,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+  assert.equal(ctx.m.createCount(),1,'no candidate or proof may land');
 });
