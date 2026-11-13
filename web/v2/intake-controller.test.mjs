@@ -273,7 +273,19 @@ const memoryStore=()=>{const map=new Map();return {
 /** Real GitHub C witness reader over a stub transport whose comment lazily
  * binds whatever digest the Host persisted for the reviewed draft. */
 const witnessReader312=comment=>request=>readProductReviewWitnessFromClient({
-  octokit:{rest:{
+  octokit:{
+    graphql:async(query,{id})=>{
+      const raw=comment();
+      assert.match(query,/fullDatabaseId/);
+      return {node:raw&&id===raw.node_id?{
+        __typename:'IssueComment',id:raw.node_id,
+        fullDatabaseId:String(raw.id),url:raw.html_url,body:raw.body,
+        lastEditedAt:raw.created_at===raw.updated_at?null:raw.updated_at,
+        editor:raw.created_at===raw.updated_at?null:{login:'test-editor'},
+        issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}
+      }:null};
+    },
+    rest:{
     issues:{getComment:async()=>({data:comment()})},
     pulls:{get:async()=>({data:{number:401,state:'open',merged:false,
       head:{sha:head312,repo:{full_name:'kaicreator-mm/tally'}},
@@ -293,7 +305,8 @@ const host312=(comment,{store,readCurrentVersion}={})=>createProductReviewHost31
   withVersionFence:async(meta,fn)=>fn(),
   env:{TALLY_CLAIM_SOURCE_SHA:sourceSha,
     TALLY_TASK_CLAIM_312_REGISTRY_PATH:'fixture-312.sqlite'}});
-const canonicalWitness312=()=>({id:commentId312,html_url:reviewRef312,
+const canonicalWitness312=()=>({id:commentId312,
+  node_id:'IC_E264_witness'+commentId312,html_url:reviewRef312,
   issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/312',
   user:{login:'kaicreator-mm'},created_at:'2026-11-12T12:00:00Z',
   updated_at:'2026-11-12T12:00:00Z',body:JSON.stringify({
