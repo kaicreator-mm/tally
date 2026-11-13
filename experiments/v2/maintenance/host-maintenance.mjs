@@ -418,7 +418,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           const proof={phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',
             issueRef:ISSUE_REF,sourceSha:input.sourceSha,
             candidateDigest:input.candidateDigest,
-            reviewRef:ref,reviewedHead:input.reviewedHead,
+            reviewRef:ref,reviewedPullNumber:input.reviewedPullNumber,
+            reviewedHead:input.reviewedHead,
             reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
             builderClaimRef:b.claim.claimRef,reviewerClaimRef:r.claim.claimRef,
             builderOperatorId:b.claim.operatorId,reviewerOperatorId:r.claim.operatorId,
@@ -480,7 +481,8 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
          proof.issueRef!==ISSUE_REF||proof.sourceSha!==input.sourceSha||
          proof.candidateDigest!==input.candidateDigest||
          !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/219#issuecomment-[1-9][0-9]*$/.test(proof.reviewRef??'')||
-         !SHA.test(proof.reviewedHead??'')||
+         !Number.isSafeInteger(proof.reviewedPullNumber)||
+         proof.reviewedPullNumber<1||!SHA.test(proof.reviewedHead??'')||
          !SHA.test(proof.reviewedTree??'')||
          proof.reviewedBase!==input.sourceSha||
          proof.builderOperatorId!==reviewed.review.author||
@@ -488,6 +490,76 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
          !ISO(proof.reviewedAt??'')||
          proof.taskPass!==false||proof.releasePass!==false)
         return denied(input,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+      // Freeze-time proof is historical: publication needs fresh authority.
+      if(typeof readReviewWitness!=='function'||
+         typeof readCurrentVersion!=='function'||
+         typeof withVersionFence!=='function')
+        return denied(input,'MAINTENANCE_PUBLICATION_LIVE_AUTHORITY_REQUIRED');
+      const commentId=Number(proof.reviewRef.split('#issuecomment-')[1]);
+      if(!Number.isSafeInteger(commentId)||commentId<1)
+        return denied(input,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+      const expected={issueNumber:ISSUE,sourceSha:input.sourceSha,
+        candidateDigest:input.candidateDigest,
+        reviewedPullNumber:proof.reviewedPullNumber,
+        reviewedHead:proof.reviewedHead,reviewedTree:proof.reviewedTree,
+        reviewedBase:proof.reviewedBase};
+      const roleOk=(c,role)=>c?.ok===true&&c.claim?.accepted===true&&
+        c.claim.role===role&&c.claim.issueNumber===ISSUE&&
+        c.claim.sourceSha===input.sourceSha&&
+        typeof c.claim.claimRef==='string'&&c.claim.claimRef.length>0&&
+        typeof c.claim.operatorId==='string'&&c.claim.operatorId.length>0&&
+        typeof c.claim.writerId==='string'&&c.claim.writerId.length>0&&
+        typeof c.claim.transportActor==='string'&&c.claim.transportActor.length>0;
+      const publishAuthority=async()=>{
+        try{
+          const [b,r]=await Promise.all([
+            verifyAcceptedClaim(ISSUE,'builder'),
+            verifyAcceptedClaim(ISSUE,'reviewer')]);
+          if(!roleOk(b,'builder')||!roleOk(r,'reviewer')||
+             b.claim.claimRef!==proof.builderClaimRef||
+             r.claim.claimRef!==proof.reviewerClaimRef||
+             b.claim.operatorId!==proof.builderOperatorId||
+             r.claim.operatorId!==proof.reviewerOperatorId||
+             b.claim.operatorId===r.claim.operatorId||
+             b.claim.writerId===r.claim.writerId)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_ROLE_CHANGED'};
+          const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+          if(fs?.ok!==true)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_WRITE_SET_STALE'};
+          const current=await readCurrentVersion();
+          if(current?.ok!==true||current.sha!==input.sourceSha)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_SOURCE_STALE'};
+          const bind=c=>({...c,candidateDigest:input.candidateDigest});
+          const w=await readReviewWitness({commentId,expected,
+            builderClaim:bind(b.claim),reviewerClaim:bind(r.claim)});
+          if(w?.state!=='REVIEW_VERIFIED'||w.reviewed!==true||
+             w.reviewRef!==proof.reviewRef||
+             w.sourceSha!==input.sourceSha||
+             w.candidateDigest!==input.candidateDigest||
+             w.reviewedHead!==proof.reviewedHead||
+             w.reviewedTree!==proof.reviewedTree||
+             w.reviewedAt!==proof.reviewedAt||
+             w.p0!==0||w.p1!==0||
+             w.authorized!==false||w.taskPass!==false)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_WITNESS_STALE'};
+          return {ok:true,witness:w,claimRefs:[
+            b.claim.claimRef,r.claim.claimRef]};
+        }catch{return {ok:false,reason:'MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN'};}
+      };
+      const beforeFence=await publishAuthority();
+      if(!beforeFence.ok)return denied(input,beforeFence.reason);
+      try{
+        const fenced=await withVersionFence({repository:OWNER+'/'+REPO,
+          versionId:'version/v2',sourceSha:input.sourceSha,
+          operation:'PUBLISH_MAINTENANCE_ISSUE'},async()=>{
+          const underFence=await publishAuthority();
+          if(!underFence.ok)return denied(input,underFence.reason);
+          if(JSON.stringify(underFence.witness)!==
+             JSON.stringify(beforeFence.witness)||
+             JSON.stringify(underFence.claimRefs)!==
+             JSON.stringify(beforeFence.claimRefs))
+            return denied(input,'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED');
+          // CAS reconciliation and the native POST run inside the shared fence.
       let issueRecord;
       try{
         opened=await store(openStore,registryPath);
@@ -606,6 +678,12 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         candidateDigest:input.candidateDigest,claimAccepted:true,admitted:true,
         replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
         repository:`${OWNER}/${REPO}`,issue:readback.issue,duplicate:false});
+        });
+        if(!fenced||!['NOT_ADMITTED','REPLAY_COMPLETE',
+           'PUBLICATION_UNKNOWN','MAINTENANCE_ISSUE_PUBLISHED'].includes(fenced.state))
+          return unknownEffect(input,'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN');
+        return fenced;
+      }catch{return unknownEffect(input,'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN');}
     },
     async hostRecordTaskLearningOutcome(input={}){
       if(typeof verifyAcceptedClaim!=='function')
