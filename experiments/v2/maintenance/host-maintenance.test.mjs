@@ -10,7 +10,8 @@ import {fileURLToPath} from 'node:url';
 import {createMaintenanceHost,recordMaintenanceCandidate,
   observeLearningSuggestions,validateMaintenanceCandidate,
   maintenanceCandidateDigest,learningSuggestionsFromReports,
-  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
+  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,
+  MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
   MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
 
 const REPO_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
@@ -61,6 +62,17 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
   const frozen=await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore}),
     ...over.args});
   assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  // Old fixtures explicitly model a separate already-qualified Host proof.
+  // Without this row legacy name-only CAS is now forbidden to publish.
+  const d=await ctx.openStore();
+  await d.put(MAINTENANCE_REVIEW_PROOF_KEY,{
+    phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',issueRef:__test.ISSUE_REF,
+    sourceSha:sha,candidateDigest:digest,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+    reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sha,
+    builderOperatorId:'author:1',reviewerOperatorId:'reviewer:1',
+    reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
+  },{mustBeAbsent:true});await d.close();
   return ctx;};
 const host=(ctx={},overrides={})=>createMaintenanceHost({
   openStore:ctx.openStore??(async()=>memoryStore().store),
@@ -796,14 +808,14 @@ test('#219 Host candidate freeze requires twice witnessed distinct roles and fen
   const frozen=await mk().hostFreezeReviewedMaintenanceCandidate(input);
   assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
   assert.equal(reads,2);assert.equal(fences,1);
-  assert.equal(ctx.m.createCount(),2);
+  assert.equal(ctx.m.createCount(),3);
   const row=ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY).value;
   assert.equal(row.review.author,'op:builder');
   assert.equal(row.review.reviewer,'op:reviewer');
   assert.equal(row.taskPass,false);assert.equal(row.authorized,false);
   const repeated=await mk().hostFreezeReviewedMaintenanceCandidate(input);
   assert.equal(repeated.state,'RECORDED_COMPLETE');
-  assert.equal(ctx.m.createCount(),2);
+  assert.equal(ctx.m.createCount(),3);
   const noFence=await mk({withVersionFence:null})
     .hostFreezeReviewedMaintenanceCandidate(input);
   assert.equal(noFence.reason,'MAINTENANCE_HOST_CONFIG_INVALID');
@@ -831,4 +843,18 @@ test('#219 Host ReviewWitness refuses a same operator and any untrusted/absent s
     .hostFreezeReviewedMaintenanceCandidate(input);
   assert.equal(blocked.state,'NOT_ADMITTED');
   assert.equal(ctx.m.createCount(),1);
+});
+
+test('#219 name-only legacy candidate cannot publish without separately frozen review proof',async()=>{
+  const ctx=persisted();
+  await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore})});
+  let publishes=0;
+  const h=host(ctx,{...publishTransport(),
+    publishIssue:async()=>{publishes++;return {state:'ISSUE_PUBLISHED',
+      issue:issueReadback(999).issue};}});
+  const r=await h.hostPublishMaintenanceIssue(publishInput());
+  assert.equal(r.state,'NOT_ADMITTED');
+  assert.equal(r.reason,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+  assert.equal(publishes,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
 });

@@ -29,6 +29,7 @@ const VERSION=/^v?[0-9]+\.[0-9]+(?:\.[0-9]+)?$/;
 const DECISIONS=new Set(['ADOPTED','REJECTED']);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
 export const MAINTENANCE_DRAFT_KEY=`tally:v2:maintenance-draft:${ISSUE}`;
+export const MAINTENANCE_REVIEW_PROOF_KEY=`tally:v2:maintenance-review-proof:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
 export const MAINTENANCE_LEARNING_KEY=`tally:v2:maintenance-learning:${ISSUE}`;
@@ -379,11 +380,36 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           const current=await readCurrentVersion();
           if(current?.ok!==true||current.sha!==input.sourceSha)
             return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
-          return recordMaintenanceCandidate({openStore,
+          const recorded=await recordMaintenanceCandidate({openStore,
             registryPath:env.TALLY_TASK_CLAIM_219_REGISTRY_PATH,
             sourceSha:input.sourceSha,candidate:draft.value.candidate,
             author:b.claim.operatorId,reviewer:r.claim.operatorId,
             reviewedAt:second.reviewedAt});
+          if(recorded?.state!=='RECORDED_COMPLETE')return recorded;
+          // Native Issue publication can consume ONLY this extra proof:
+          // a legacy author/reviewer text-only row is insufficient.
+          const proof={phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',
+            issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+            candidateDigest:input.candidateDigest,
+            reviewRef:ref,reviewedHead:input.reviewedHead,
+            reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
+            builderClaimRef:b.claim.claimRef,reviewerClaimRef:r.claim.claimRef,
+            builderOperatorId:b.claim.operatorId,reviewerOperatorId:r.claim.operatorId,
+            reviewedAt:second.reviewedAt,taskPass:false,releasePass:false};
+          let db=null;
+          try{
+            db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+            const prior=await db.get(MAINTENANCE_REVIEW_PROOF_KEY);
+            if(prior&&JSON.stringify(prior.value)!==JSON.stringify(proof))
+              return denied(input,'MAINTENANCE_REVIEW_PROOF_CONFLICT');
+            if(!prior)await db.put(MAINTENANCE_REVIEW_PROOF_KEY,proof,
+              {mustBeAbsent:true});
+            const final=await db.get(MAINTENANCE_REVIEW_PROOF_KEY);
+            if(JSON.stringify(final?.value)!==JSON.stringify(proof))
+              return denied(input,'MAINTENANCE_REVIEW_PROOF_CAS_UNKNOWN');
+          }catch{return denied(input,'MAINTENANCE_REVIEW_PROOF_CAS_UNKNOWN');}
+          finally{if(db)await db.close();}
+          return recorded;
         });
       }catch{return denied(input,'MAINTENANCE_REVIEW_FREEZE_UNKNOWN');}
     },
@@ -414,6 +440,27 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const candidate=validateMaintenanceCandidate(reviewed.candidate);
       if(!candidate||sha256(candidate)!==input.candidateDigest)
         return denied(input,'MAINTENANCE_REVIEW_DIGEST_MISMATCH');
+      // Migration guard: older rows created by a typed reviewer string have
+      // no trusted C/Host proof and MUST NEVER publish a native Issue.
+      let proofRow;
+      try{
+        opened=await store(openStore,registryPath);
+        proofRow=await opened.get(MAINTENANCE_REVIEW_PROOF_KEY);
+      }catch{return denied(input,'MAINTENANCE_REVIEW_PROOF_UNAVAILABLE');}
+      finally{if(opened)await opened.close();}
+      const proof=proofRow?.value;
+      if(proof?.phase!=='VERIFIED_MAINTENANCE_REVIEW_PROOF'||
+         proof.issueRef!==ISSUE_REF||proof.sourceSha!==input.sourceSha||
+         proof.candidateDigest!==input.candidateDigest||
+         !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/219#issuecomment-[1-9][0-9]*$/.test(proof.reviewRef??'')||
+         !SHA.test(proof.reviewedHead??'')||
+         !SHA.test(proof.reviewedTree??'')||
+         proof.reviewedBase!==input.sourceSha||
+         proof.builderOperatorId!==reviewed.review.author||
+         proof.reviewerOperatorId!==reviewed.review.reviewer||
+         !ISO(proof.reviewedAt??'')||
+         proof.taskPass!==false||proof.releasePass!==false)
+        return denied(input,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
       let issueRecord;
       try{
         opened=await store(openStore,registryPath);
