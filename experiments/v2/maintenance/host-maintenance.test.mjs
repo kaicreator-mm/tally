@@ -963,7 +963,7 @@ const realCWitness=async(input,claims)=>{
       reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
       reviewedBase:input.reviewedBase}});
 };
-test('#219 Host freeze accepts the real merged C witness gates, then stays fail-closed at the record instant',async()=>{
+test('#219 Host freeze accepts the real merged C immutable ReviewWitness and records proof',async()=>{
   const ctx=persisted();
   const input={...publishInput(),reviewCommentId:6840000002,
     reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
@@ -975,8 +975,7 @@ test('#219 Host freeze accepts the real merged C witness gates, then stays fail-
     operatorId:'op:reviewer',writerId:'w:reviewer'};
   const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
   assert.equal(witness.state,'REVIEW_VERIFIED',witness.reason);
-  assert.equal(witness.reviewedAt,undefined,
-    'the merged C transport does not carry a witness instant yet');
+  assert.equal(witness.reviewedAt,'2026-11-13T02:00:00Z');
   let reads=0,fences=0;
   const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
     verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
@@ -987,15 +986,13 @@ test('#219 Host freeze accepts the real merged C witness gates, then stays fail-
   const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
   assert.equal(draft.state,'DRAFT_PENDING_REVIEW',draft.reason);
   const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
-  // The witness/claims/fence/FSW recheck gates all accept the real C shape;
-  // the canonical record writer still requires an ISO witness instant, so
-  // with the current C transport the freeze refuses WITHOUT any CAS write.
-  assert.equal(frozen.state,'NOT_RECORDED');
-  assert.equal(frozen.reason,'MAINTENANCE_INPUT_INVALID');
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
   assert.equal(reads,2);assert.equal(fences,1);
-  assert.equal(ctx.m.createCount(),1,'only the pre-review draft exists');
-  assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),false);
-  assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),false);
+  assert.equal(ctx.m.createCount(),3,'draft, candidate and proof created');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),true);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),true);
+  assert.equal(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY).value.reviewedAt,
+    '2026-11-13T02:00:00Z');
 });
 test('#219 Host freeze completes end-to-end once the C transport carries the witness instant',async()=>{
   const ctx=persisted();
@@ -1007,10 +1004,7 @@ test('#219 Host freeze completes end-to-end once the C transport carries the wit
     writerId:'w:builder',transportActor:'kaicreator-mm'};
   const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
     operatorId:'op:reviewer',writerId:'w:reviewer'};
-  // Models the declared next C contract (additive): the reader returns the
-  // comment instant it already reads and verifies. No Host change is needed.
-  const witness={...(await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer})),
-    reviewedAt:'2026-11-13T02:00:00Z'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
   const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
     verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
     verifyFrozenWriteSet:async()=>({ok:true}),
