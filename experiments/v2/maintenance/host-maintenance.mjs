@@ -531,14 +531,18 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       if(pending?.value?.phase==='PENDING_MAINTENANCE_ISSUE'){
         if(pending.value.candidateDigest!==input.candidateDigest)
           return denied(input,'MAINTENANCE_ISSUE_DIGEST_MISMATCH');
-        const found=await findIssue({marker,title});
+        let found;
+        try{found=await findIssue({marker,title});}
+        catch{return unknownEffect(input,'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN');}
         if(found?.state==='RECONCILE_CONFLICT')
           return unknownEffect(input,found.reason);
         if(found?.state==='RECONCILE_UNKNOWN')
           return unknownEffect(input,found.reason);
         if(found?.state==='RECONCILE_COMPLETE'&&found.matches.length===1){
           const number=found.matches[0].number;
-          const readback=await readIssue({issueNumber:number,title,marker});
+          let readback;
+          try{readback=await readIssue({issueNumber:number,title,marker});}
+          catch{return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_UNKNOWN');}
           if(readback?.state!=='READBACK_VERIFIED')
             return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_MISMATCH');
           try{
@@ -558,6 +562,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
             githubEffect:'PERFORMED_VERIFIED',repository:`${OWNER}/${REPO}`,
             issue:readback.issue,duplicate:false});
         }
+        // A pending CAS marker means GitHub POST may already have happened.
+        // Zero matches (including eventually consistent search) never permits
+        // another POST, and absence is NOT a storage failure.
+        return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
       }
       try{
         opened=await store(openStore,registryPath);
@@ -576,8 +584,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }catch{return unknownEffect(input,'GITHUB_PUBLISH_UNKNOWN');}
       if(publishedEffect?.state!=='ISSUE_PUBLISHED')
         return unknownEffect(input,publishedEffect?.reason??'GITHUB_PUBLISH_UNKNOWN');
-      const readback=await readIssue({issueNumber:publishedEffect.issue.number,
-        title,marker});
+      let readback;
+      try{readback=await readIssue({issueNumber:publishedEffect.issue.number,
+        title,marker});}
+      catch{return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_UNKNOWN');}
       if(readback?.state!=='READBACK_VERIFIED')
         return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_MISMATCH');
       try{
