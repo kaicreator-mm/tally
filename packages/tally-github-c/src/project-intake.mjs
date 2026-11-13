@@ -221,6 +221,7 @@ export async function readProductReviewWitnessFromClient({
       node(id: $id) {
         __typename
         ... on IssueComment {
+          id
           fullDatabaseId
           url
           body
@@ -239,6 +240,7 @@ export async function readProductReviewWitnessFromClient({
   const observedId=typeof fullId==='string'&&/^[1-9][0-9]*$/.test(fullId)?
     fullId:Number.isSafeInteger(fullId)&&fullId>0?String(fullId):null;
   if(graphComment?.__typename!=='IssueComment'||
+     graphComment.id!==comment.node_id||
      observedId!==String(commentId)||
      graphComment.url!==ref||graphComment.body!==comment.body||
      graphComment.lastEditedAt!==null||graphComment.editor!==null||

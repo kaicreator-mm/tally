@@ -171,7 +171,8 @@ const witness312Read=({comment=witness312Comment,expected=witness312Expected,
     assert.match(query,/lastEditedAt/);
     assert.equal(id,comment.node_id);
     return {node:graphOverride??{
-      __typename:'IssueComment',fullDatabaseId:String(comment.id),url:comment.html_url,
+      __typename:'IssueComment',id:comment.node_id,
+      fullDatabaseId:String(comment.id),url:comment.html_url,
       body:comment.body,lastEditedAt:null,editor:null,
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
   },rest:{
@@ -200,13 +201,15 @@ test('#312 canonical unedited review with same GitHub login but independent proc
 
 test('#312 same-second edited comment is refused by official GraphQL edit provenance',async()=>{
   const baseGraph={
-    __typename:'IssueComment',fullDatabaseId:'12345',url:witness312Ref,
+    __typename:'IssueComment',id:witness312Comment.node_id,
+    fullDatabaseId:'12345',url:witness312Ref,
     body:witness312Comment.body,lastEditedAt:null,editor:null,
     issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}};
   for(const mutation of [
     {lastEditedAt:'2026-11-12T12:00:00.750Z',editor:{login:'kaicreator-mm'}},
     {lastEditedAt:'2026-11-12T12:00:00Z'},
     {body:'{}'},
+    {id:'IC_wrong_node'},
     {fullDatabaseId:'12346'},
     {fullDatabaseId:'012345'},
     {fullDatabaseId:9007199254740992},
@@ -292,7 +295,8 @@ test('#312 immutable first POST then server-assigned GET comment ref is derivabl
   assert.equal(JSON.parse(payload).reviewRef,undefined);
   let posted=null,assigned=null,reads=0;
   const transport={graphql:async(query,{id})=>({
-    node:{__typename:'IssueComment',fullDatabaseId:String(posted.id),url:posted.html_url,
+    node:{__typename:'IssueComment',id:posted.node_id,
+      fullDatabaseId:String(posted.id),url:posted.html_url,
       body:posted.body,lastEditedAt:null,editor:null,
       issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
     rest:{
@@ -395,7 +399,8 @@ async function merged312Read({
     graphql:async(query,{id})=>{
       assert.match(query,/fullDatabaseId/);
       assert.equal(id,comment.node_id);
-      return {node:{__typename:'IssueComment',fullDatabaseId:String(comment.id),
+      return {node:{__typename:'IssueComment',id:comment.node_id,
+        fullDatabaseId:String(comment.id),
         url:comment.html_url,body:comment.body,lastEditedAt:null,editor:null,
         issue:{number:312,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
     },
