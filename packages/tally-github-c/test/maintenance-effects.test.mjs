@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
-  readMaintenanceIssueFromClient,maintenanceMarkerFor,__test}
+  readMaintenanceIssueFromClient,readMaintenanceReviewWitnessFromClient,
+  maintenanceMarkerFor,__test}
   from '../src/maintenance-effects.mjs';
 
 const digest='c'.repeat(64);
@@ -137,4 +138,70 @@ test('module holds no credential surface and stays repository-pinned',()=>{
   assert.equal(__test.readbackIssue({number:1,state:'closed',title,
     html_url:'https://github.com/kaicreator-mm/tally/issues/1'}),null);
   assert.equal(__test.errorReason({status:404}),'GITHUB_RESOURCE_NOT_FOUND');
+});
+
+
+const mReviewSha='a'.repeat(40),mReviewTree='b'.repeat(40);
+const mReviewDigest='c'.repeat(64),mReviewCommentId=6840000001;
+const mReviewRef='https://github.com/kaicreator-mm/tally/issues/219#issuecomment-'+mReviewCommentId;
+const mReviewExpected={issueNumber:219,sourceSha:mReviewSha,
+  candidateDigest:mReviewDigest,reviewedPullNumber:278,
+  reviewedHead:'d'.repeat(40),reviewedTree:mReviewTree,reviewedBase:mReviewSha};
+const mBuilder={accepted:true,role:'builder',issueNumber:219,
+  sourceSha:mReviewSha,candidateDigest:mReviewDigest,
+  claimRef:'claim:219:builder',operatorId:'operator:builder',
+  writerId:'writer:builder',transportActor:'kaicreator-mm'};
+const mReviewer={...mBuilder,role:'reviewer',
+  claimRef:'claim:219:reviewer',operatorId:'operator:reviewer',
+  writerId:'writer:reviewer'};
+const mBody={schema:'tally.v2.maintenance-review-witness/1',
+  status:'INDEPENDENTLY_VERIFIED',repository:'kaicreator-mm/tally',
+  issueNumber:219,...mReviewExpected,
+  builderClaimRef:mBuilder.claimRef,reviewerClaimRef:mReviewer.claimRef,
+  reviewerOperatorId:mReviewer.operatorId,reviewerWriterId:mReviewer.writerId,
+  p0:0,p1:0,p2:1};
+const mComment={id:mReviewCommentId,node_id:'IC_maintenance219',
+  html_url:mReviewRef,
+  issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/219',
+  user:{login:'kaicreator-mm'},created_at:'2026-11-13T01:00:00Z',
+  updated_at:'2026-11-13T01:00:00Z',body:JSON.stringify(mBody)};
+const mGraph={__typename:'IssueComment',id:mComment.node_id,
+  fullDatabaseId:String(mComment.id),url:mReviewRef,
+  body:mComment.body,lastEditedAt:null,editor:null,
+  issue:{number:219,repository:{nameWithOwner:'kaicreator-mm/tally'}}};
+const mReview=({comment=mComment,graph=mGraph,expected=mReviewExpected,
+  builderClaim=mBuilder,reviewerClaim=mReviewer,noGraphql=false,prState='open'}={})=>
+  readMaintenanceReviewWitnessFromClient({
+    octokit:{graphql:noGraphql?undefined:async()=>({node:graph}),rest:{
+      issues:{getComment:async()=>({data:comment})},
+      pulls:{get:async()=>({data:{number:278,state:prState,merged:false,
+        head:{sha:expected.reviewedHead,repo:{full_name:'kaicreator-mm/tally'}},
+        base:{sha:expected.reviewedBase,ref:'version/v2'}}})},
+      repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{
+        tree:{sha:ref===expected.reviewedHead?expected.reviewedTree:'f'.repeat(40)}}}}),
+        getBranch:async()=>({data:{commit:{sha:expected.sourceSha}}})}}}},
+    commentId:mReviewCommentId,expected,builderClaim,reviewerClaim});
+test('#219 source-qualified official IssueComment ReviewWitness is read-only and not Task approval',async()=>{
+  const got=await mReview();
+  assert.equal(got.state,'REVIEW_VERIFIED');
+  assert.equal(got.reviewRef,mReviewRef);assert.equal(got.p2,1);
+  assert.equal(got.authorized,false);assert.equal(got.taskPass,false);
+});
+test('#219 review witness refuses missing Claims, same process, same-second edits and forged identity',async()=>{
+  for(const opts of [
+    {reviewerClaim:{...mReviewer,accepted:false}},
+    {reviewerClaim:{...mReviewer,operatorId:mBuilder.operatorId}},
+    {reviewerClaim:{...mReviewer,writerId:mBuilder.writerId}},
+    {comment:{...mComment,updated_at:'2026-11-13T01:00:01Z'}},
+    {graph:{...mGraph,lastEditedAt:'2026-11-13T01:00:00.5Z'}},
+    {graph:{...mGraph,fullDatabaseId:'6840000002'}},
+    {graph:{...mGraph,id:'IC_wrong'}},
+    {graph:{...mGraph,body:'{}'}},
+    {graph:{...mGraph,issue:{number:219,repository:{nameWithOwner:'other/repo'}}}},
+    {noGraphql:true},{prState:'closed'}
+  ]){
+    const got=await mReview(opts);
+    assert.equal(got.state,'REVIEW_UNKNOWN',JSON.stringify(opts));
+    assert.equal(got.reviewed,false);assert.equal(got.taskPass,false);
+  }
 });
