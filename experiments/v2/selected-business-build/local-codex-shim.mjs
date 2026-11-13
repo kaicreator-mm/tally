@@ -6,6 +6,8 @@ import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   freezeProductIntake as nativeFreezeProductIntake,
   persistProductDraft312 as nativePersistProductDraft312,
   freezeProductReview312 as nativeFreezeProductReview312,
+  persistMaintenanceDraft as nativePersistMaintenanceDraft,
+  freezeReviewedMaintenanceCandidate as nativeFreezeReviewedMaintenanceCandidate,
   publishMaintenanceIssue as nativePublishMaintenanceIssue,
   recordTaskLearningOutcome as nativeRecordTaskLearningOutcome,
   hostReleaseDelivery as nativeHostReleaseDelivery,
@@ -18,7 +20,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.persistMaintenanceDraft','tally.freezeReviewedMaintenanceCandidate','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 const ISSUES=new Set([172,177,178,196,197,198]);
@@ -363,6 +365,64 @@ export async function freezeProductReview312(input){
     return product312Envelope(input,observed,'freeze');
   return product312Envelope(input,
     product312Unknown(input,'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'),'freeze');
+}
+
+// #219 selected CAS operations return only narrow, non-authorizing
+// observations. Caller-asserted Task/Release authority is never passed through.
+const maintenanceSelectionEnvelope=(input,action,output)=>Object.freeze({
+  phase:'terminal',
+  externalRef:'tally:219:'+String(input?.candidateDigest??'invalid')+':'+action,
+  outcome:{ok:true,output:Object.freeze(output)}});
+const maintenanceSelectionDenied=(input,reason)=>({
+  state:'NOT_ADMITTED',reason,
+  issueRef:issueRefFor(219),sourceSha:SHA.test(input?.sourceSha??'')?
+    input.sourceSha:null,
+  candidateDigest:/^[a-f0-9]{64}$/.test(input?.candidateDigest??'')?
+    input.candidateDigest:null,
+  claimGeneration:1,authorized:false,admitted:false,
+  taskPass:false,releasePass:false,githubEffect:'NOT_RUN'});
+const maintenanceSelectionBase=(input,o)=>o&&typeof o==='object'&&
+  !Array.isArray(o)&&o.issueRef===issueRefFor(219)&&
+  o.sourceSha===input.sourceSha&&o.candidateDigest===input.candidateDigest&&
+  o.claimGeneration===1&&o.authorized===false&&
+  o.taskPass===false&&o.releasePass===false;
+export async function persistMaintenanceDraft(input){
+  const valid=input?.issueNumber===219&&input.sourceRef===issueRefFor(219)&&
+    SHA.test(input.sourceSha??'')&&
+    /^[a-f0-9]{64}$/.test(input.candidateDigest??'')&&
+    input.candidate&&typeof input.candidate==='object'&&
+    !Array.isArray(input.candidate);
+  if(!valid)return maintenanceSelectionEnvelope(input,'draft',
+    maintenanceSelectionDenied(input,'MAINTENANCE_DRAFT_INPUT_INVALID'));
+  let observed;
+  try{observed=await nativePersistMaintenanceDraft(input);}catch{observed=null;}
+  if(maintenanceSelectionBase(input,observed)&&
+     observed.state==='DRAFT_PENDING_REVIEW'&&
+     ['MAINTENANCE_DRAFT_RECORDED','MAINTENANCE_DRAFT_ALREADY_RECORDED']
+       .includes(observed.reason))
+    return maintenanceSelectionEnvelope(input,'draft',observed);
+  return maintenanceSelectionEnvelope(input,'draft',
+    maintenanceSelectionDenied(input,observed?.reason??'MAINTENANCE_DRAFT_CAS_UNKNOWN'));
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  const valid=input?.issueNumber===219&&input.sourceRef===issueRefFor(219)&&
+    SHA.test(input.sourceSha??'')&&
+    /^[a-f0-9]{64}$/.test(input.candidateDigest??'')&&
+    Number.isSafeInteger(input.reviewCommentId)&&input.reviewCommentId>0&&
+    Number.isSafeInteger(input.reviewedPullNumber)&&
+    input.reviewedPullNumber>0&&SHA.test(input.reviewedHead??'')&&
+    SHA.test(input.reviewedTree??'')&&input.reviewedBase===input.sourceSha;
+  if(!valid)return maintenanceSelectionEnvelope(input,'freeze',
+    maintenanceSelectionDenied(input,'MAINTENANCE_REVIEW_INPUT_INVALID'));
+  let observed;
+  try{observed=await nativeFreezeReviewedMaintenanceCandidate(input);}
+  catch{observed=null;}
+  if(maintenanceSelectionBase(input,observed)&&
+     observed.state==='RECORDED_COMPLETE'&&observed.frozen===true&&
+     observed.receiptRef==='receipt:sha256:'+input.candidateDigest)
+    return maintenanceSelectionEnvelope(input,'freeze',observed);
+  return maintenanceSelectionEnvelope(input,'freeze',
+    maintenanceSelectionDenied(input,observed?.reason??'MAINTENANCE_REVIEW_FREEZE_UNKNOWN'));
 }
 
 // T219 — J08b authorized native Issue publication boundary. Only the exact
