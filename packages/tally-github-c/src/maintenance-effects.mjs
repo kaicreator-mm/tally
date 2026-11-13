@@ -170,7 +170,7 @@ export async function readMaintenanceReviewWitnessFromClient({
      comment.issue_url!=='https://api.github.com/repos/'+REPOSITORY+'/issues/219'||
      comment.user?.login!==reviewerClaim.transportActor||
      typeof comment.body!=='string'||comment.body.length>8192||
-     !/^\\d{4}-\\d\\d-\\d\\dT/.test(comment.created_at??'')||
+     !/^\d{4}-\d\d-\d\dT/.test(comment.created_at??'')||
      comment.created_at!==comment.updated_at||
      typeof comment.node_id!=='string'||!/^[A-Za-z0-9_-]{8,256}$/.test(comment.node_id))
     return denied('MAINTENANCE_REVIEW_COMMENT_UNVERIFIED');
