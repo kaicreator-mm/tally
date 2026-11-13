@@ -130,6 +130,47 @@ export function verifyGuidedSnapshot(snapshot,scope,currentSha){
      snapshot.currentness!=='CURRENT'||snapshot.readback!=='VERIFIED')return false;
   return projectStep(snapshot.step)!==null;
 }
+/** Validate values against the *issued* Business field constraints before any
+ * Host dispatch; frontend convenience validation is not sufficient authority. */
+function answerMatchesIssuedField(field,value){
+  if(value===null)
+    return !field.required&&(field.kind!=='multiLimited'||field.minSelected===0);
+  if(value===''&&!field.required&&
+     ['text','textArea','choice','choiceWithOther','number'].includes(field.kind))
+    return true;
+  const selectedOption=id=>typeof id==='string'&&
+    Array.isArray(field.options)&&
+    field.options.some(option=>option.id===id&&option.eligible===true);
+  switch(field.kind){
+    case 'text':case 'textArea':
+      return typeof value==='string'&&value.length<=field.maxLength;
+    case 'choice':
+      return selectedOption(value);
+    case 'choiceWithOther':
+      if(typeof value!=='string')return false;
+      if(value.startsWith('other:')){
+        const other=value.slice('other:'.length);
+        return other.length>0&&other.length<=field.otherMaxLength;
+      }
+      return selectedOption(value);
+    case 'multi':case 'multiLimited':
+      if(!Array.isArray(value)||new Set(value).size!==value.length||
+         !value.every(selectedOption))return false;
+      return field.kind!=='multiLimited'||
+        (value.length>=field.minSelected&&value.length<=field.maxSelected);
+    case 'boolean':
+      return typeof value==='boolean';
+    case 'confirm':
+      return value===true;
+    case 'number':{
+      if(typeof value!=='string'||value.trim()==='')return false;
+      const number=Number(value);
+      return Number.isFinite(number)&&number>=field.min&&number<=field.max&&
+        (!field.integerOnly||Number.isSafeInteger(number));
+    }
+    default:return false;
+  }
+}
 export function verifyGuidedPayload(payload,snapshot){
   if(!plain(payload)||Object.keys(payload).sort().join(',')!==
     'answers,journeyId,revision,sourceSha,stepId')return false;
@@ -137,7 +178,9 @@ export function verifyGuidedPayload(payload,snapshot){
   if(!step||payload.sourceSha!==snapshot.sourceSha||
     payload.journeyId!==step.journeyId||payload.stepId!==step.stepId||
     payload.revision!==step.revision||!plain(payload.answers))return false;
+  if(!Array.isArray(step.fields)||step.fields.length<1||step.fields.length>24)return false;
   const allowed=new Map(step.fields.map(f=>[f.id,f]));
+  if(allowed.size!==step.fields.length)return false;
   const visible=field=>{
     if(!field.visibleWhen)return true;
     if(field.visibleWhen.fieldId===field.id)return false;
@@ -149,13 +192,8 @@ export function verifyGuidedPayload(payload,snapshot){
   if(Object.keys(payload.answers).length>24)return false;
   for(const [key,value] of Object.entries(payload.answers)){
     const field=allowed.get(key);
-    if(!field||field.disabledReason||!visible(field)||!valueOk(value))return false;
-    if(value===null&&!field.required)continue;
-    if((['multi','multiLimited'].includes(field.kind)&&!Array.isArray(value))||
-      (['boolean','confirm'].includes(field.kind)&&typeof value!=='boolean')||
-      (['text','textArea','choice','choiceWithOther','number'].includes(field.kind)&&
-        typeof value!=='string'))return false;
-    if(field.kind==='confirm'&&value!==true)return false;
+    if(!field||field.disabledReason||!visible(field)||!valueOk(value)||
+       !answerMatchesIssuedField(field,value))return false;
     if(field.required&&(value===null||
       typeof value==='string'&&value.trim().length===0||
       Array.isArray(value)&&value.length===0))return false;

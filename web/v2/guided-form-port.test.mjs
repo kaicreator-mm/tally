@@ -32,6 +32,55 @@ test('unknown/oversized form payloads rejected',()=>{
   assert.equal(verifyGuidedPayload({...form,answers:{goal:'x'.repeat(5000)}},snapshot),false);
   assert.equal(verifyGuidedPayload({...form,token:'secret'},snapshot),false);
 });
+
+test('issued FormStep constraints reject overflow, forged choices and invalid numeric values',()=>{
+  const base={id:'f',label,required:true};
+  const good={id:'ok',label,eligible:true};
+  const blocked={id:'blocked',label,eligible:false};
+  const fieldCases=[
+    {field:{...base,kind:'text',maxLength:4},valid:'abcd',bad:['abcde']},
+    {field:{...base,kind:'textArea',maxLength:2},valid:'ab',bad:['abc']},
+    {field:{...base,kind:'number',min:1,max:10,integerOnly:true},valid:'5',
+      bad:['abc','11','0','1.5','Infinity','9007199254740993']},
+    {field:{...base,kind:'number',min:0,max:10,integerOnly:false},valid:'1.5',
+      bad:['NaN','11','']},
+    {field:{...base,kind:'choice',options:[good,blocked]},valid:'ok',
+      bad:['unknown','blocked']},
+    {field:{...base,kind:'choiceWithOther',options:[good,blocked],otherMaxLength:3},
+      valid:'other:abc',bad:['other:','other:abcd','blocked','unknown']},
+    {field:{...base,kind:'multi',options:[good,blocked]},valid:['ok'],
+      bad:[['blocked'],['unknown'],['ok','ok']]},
+    {field:{...base,kind:'multiLimited',options:[good,blocked],
+      minSelected:1,maxSelected:1},valid:['ok'],
+      bad:[[],['blocked'],['ok','ok']]},
+    {field:{...base,kind:'confirm',statement:label},valid:true,bad:[false]},
+    {field:{...base,kind:'boolean'},valid:false,bad:['false']}
+  ];
+  for(const {field,valid,bad} of fieldCases){
+    const s={...snapshot,step:{...step,fields:[field]}};
+    const wrap=value=>({...form,answers:{f:value}});
+    assert.equal(verifyGuidedPayload(wrap(valid),s),true,field.kind+' positive');
+    for(const value of bad)
+      assert.equal(verifyGuidedPayload(wrap(value),s),false,
+        field.kind+' rejects '+JSON.stringify(value));
+  }
+  const optional={...snapshot,step:{...step,fields:[{...base,required:false,
+    kind:'multiLimited',options:[good],minSelected:1,maxSelected:1}]}};
+  assert.equal(verifyGuidedPayload({...form,answers:{f:null}},optional),false);
+  assert.equal(verifyGuidedPayload({...form,answers:{f:[]}},optional),false);
+  assert.equal(verifyGuidedPayload({...form,answers:{}},optional),true);
+});
+test('invalid issued answers are denied before invoking selected Host dispatch',async()=>{
+  let dispatches=0;
+  const invalidSnapshot={...snapshot,step:{...step,fields:[
+    {id:'f',kind:'text',required:true,label,maxLength:2}]}};
+  const host={readCurrentStep:async()=>invalidSnapshot,
+    dispatchStep:async()=>{dispatches++;return {ok:true,nextStep:null}}};
+  const result=await submitGuidedStep(host,scope,sha,{...form,answers:{f:'toolong'}});
+  assert.equal(result.reason,'GUIDED_STEP_STALE_OR_INVALID');
+  assert.equal(dispatches,0);
+});
+
 test('no selected Host dispatcher prevents effect',async()=>{
   assert.equal((await submitGuidedStep({readCurrentStep:async()=>snapshot},scope,sha,form)).reason,
     'GUIDED_HOST_DISPATCH_UNAVAILABLE');

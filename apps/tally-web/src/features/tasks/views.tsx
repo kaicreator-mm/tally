@@ -13,6 +13,7 @@ import {DataTable} from '../../components/ui/DataTable.tsx';
 import {EmptyState} from '../../components/ui/States.tsx';
 import {Collapse} from '../../components/ui/Collapse.tsx';
 import type {TaskActionCatalog,TaskActionRequest} from '../task-actions/model.ts';
+import {canonicalTaskIssueNumber} from '../task-actions/model.ts';
 import {TaskActionsView} from '../task-actions/views.tsx';
 
 export type ViewMode='list'|'board';
@@ -200,7 +201,8 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
           {zh?'当前可用操作':'Available actions'}</strong>
         <TaskActionsView catalog={actionCatalog} projectId={projectId}
-          versionId={task.versionId} taskIssue={Number(task.id)}
+          versionId={task.versionId}
+          taskIssue={canonicalTaskIssueNumber(task.id)??0}
           onDispatch={onAction} locale={locale}/>
       </section>:null}
       <section aria-label={zh?'执行与评审':'execution'}>

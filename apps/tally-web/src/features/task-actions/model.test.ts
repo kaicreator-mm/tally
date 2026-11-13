@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {taskActionsFor,taskActionRequest} from './model.ts';
+import {canonicalTaskIssueNumber,taskActionsFor,taskActionRequest} from './model.ts';
 import type {TaskActionCatalog} from './model.ts';
 const source={repository:'org/tally',sourceSha:'a'.repeat(40),
   currentness:'CURRENT',readback:'VERIFIED'};
@@ -26,4 +26,20 @@ test('stale source, duplicate or unqualified actions do not create requests',()=
     'org/tally','version/v2',42),null);
   assert.equal(taskActionRequest({...catalog,actions:[]},'org/tally','version/v2',
     catalog.actions[0]),null);
+});
+
+test('noncanonical or unsafe Issue ids cannot alias a different action',()=>{
+  assert.equal(canonicalTaskIssueNumber('42'),42);
+  for(const raw of ['0','042','-1','1e3','9007199254740992',
+    '9007199254740993','not-an-issue']){
+    assert.equal(canonicalTaskIssueNumber(raw),null,raw);
+  }
+  assert.equal(taskActionsFor(catalog,'org/tally','version/v2',0),null);
+  assert.equal(taskActionsFor(catalog,'org/tally','version/v2',Number.MAX_SAFE_INTEGER+1),null);
+  const unsafe={...catalog,actions:[{...catalog.actions[0],
+    taskIssue:Number.MAX_SAFE_INTEGER+1}]};
+  assert.equal(taskActionsFor(unsafe,'org/tally','version/v2',
+    Number.MAX_SAFE_INTEGER+1),null);
+  assert.equal(taskActionRequest(unsafe,'org/tally','version/v2',
+    unsafe.actions[0]),null);
 });
