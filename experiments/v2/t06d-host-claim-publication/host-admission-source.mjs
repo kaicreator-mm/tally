@@ -6,6 +6,14 @@
  * None of these facts alone is a CAS-accepted Claim, K permit or Agent effect.
  * This adapter is read-only: callers must never supply authority booleans or
  * writer identity through a request, comment, B port, Agent or UI endpoint.
+ *
+ * #412 dual-role admission: one Task may hold one accepted Claim per role
+ * against this one exact current registry. A PUBLISHED_VERIFIED row of a
+ * different role for the same Task/source with distinct dispatch/operator/
+ * writer identities and a matching live native candidate projection is
+ * compatible; same-role duplicates, foreign-Task rows, pending rows, shared
+ * identities and divergent rows stay fail-closed, and a native candidate
+ * without a verified CAS row is rejected outright.
  */
 import {Octokit} from '@octokit/rest';
 import {readNativeHostClaimPreflightFromClient} from '../../../packages/tally-github-native-c/src/task-claim-host-preflight.mjs';
@@ -119,24 +127,56 @@ export function createHostAdmissionSourceFromClient({
       return denied('HOST_TASK_OR_WRITER_REQUEST_NOT_BOUND',request);
     const observed=await readNativeHostClaimPreflightFromClient({
       octokit,owner,repo,issueNumber:taskAuthority.issueNumber,
-      expectedSourceSha:taskAuthority.sourceSha,limit:1000
+      expectedSourceSha:taskAuthority.sourceSha,
+      actorRole:taskAuthority.actorRole,limit:1000
     });
     if(observed.status!=='NATIVE_SOURCE_PREFLIGHT_READY')
       return denied(observed.reason??'NATIVE_GITHUB_SOURCE_INCOMPLETE_OR_STALE',request);
     const registry=await registrySnapshot();
     if(registry.error)return denied(registry.error,request);
-    const activeIncompatibleClaimCount=registry.rows.filter(row=>
-      row.protectedClaimKey!==request.protectedClaimKey).length;
-    if(activeIncompatibleClaimCount>0)return Object.freeze({
+    // #412 dual-role classification. A durable row is COMPATIBLE only when
+    // it is the same Task/source/generation under a DIFFERENT canonical role
+    // key, is PUBLISHED_VERIFIED (a pending row of any role blocks), carries
+    // dispatch/operator/writer identities all distinct from this request's
+    // Host lane, and has a live native candidate projection matching it on
+    // key, comment, dispatch, role, operator and source. Every other row is
+    // incompatible and counted; the controller contract still requires
+    // activeIncompatibleClaimCount===0 for admission.
+    const candidates=observed.claimRoleCandidates??[];
+    const candidateByKey=new Map(candidates.map(c=>[c.protectedClaimKey,c]));
+    let incompatible=0;
+    for(const row of registry.rows){
+      const candidate=row.issueRef===request.issueRef&&
+        row.sourceSha===request.sourceSha&&row.generation===request.generation&&
+        row.phase==='PUBLISHED_VERIFIED'&&
+        row.actorRole!==request.actorRole&&
+        row.dispatchId!==request.dispatchId&&
+        row.operatorId!==request.operatorId&&
+        row.writerId!==writerAuthority.writerId
+        ?candidateByKey.get(row.protectedClaimKey):undefined;
+      const compatible=!!candidate&&
+        candidate.commentId===row.commentId&&
+        candidate.dispatchId===row.dispatchId&&
+        candidate.actorRole===row.actorRole&&
+        candidate.operatorId===row.operatorId&&
+        candidate.sourceSha===row.sourceSha;
+      if(!compatible)incompatible++;
+    }
+    if(incompatible>0)return Object.freeze({
       ...denied('INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',request),
-      activeIncompatibleClaimCount
+      activeIncompatibleClaimCount:incompatible
     });
+    // A native claim candidate without a durable verified row in THIS
+    // Host's registry is divergent or forged: fail closed with zero writes.
+    const rowKeys=new Set(registry.rows.map(row=>row.protectedClaimKey));
+    if(candidates.some(c=>!rowKeys.has(c.protectedClaimKey)))
+      return denied('CLAIM_CANDIDATE_WITHOUT_VERIFIED_CAS_ROW',request);
     return Object.freeze({
       sourceKind:'NATIVE_GITHUB_CURRENT_ADMISSION',sourceQualified:true,
       complete:true,issueRef:request.issueRef,sourceSha:request.sourceSha,
       issueState:observed.issueState,workflowState:observed.workflowState,
       workItemType:observed.workItemType,dependencyState:observed.dependencyState,
-      activeIncompatibleClaimCount,dispatchSourceBound:true,
+      activeIncompatibleClaimCount:0,dispatchSourceBound:true,
       publisherSourceBound:true,claimStatus:'NOT_VERIFIED',
       authorized:false,admitted:false,taskPass:false,releasePass:false
     });
