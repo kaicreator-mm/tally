@@ -5,7 +5,7 @@
   "versionId": "version/v2",
   "versionBaseSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
   "versionBaseTree": "6868938767fe72214958edcaccf59f422e25805f",
-  "observedAt": "2026-11-14T19:47:02.064Z",
+  "observedAt": "2026-11-14T20:29:48.530Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -25,6 +25,24 @@
     "taskOutcomePass": false,
     "statement": "Candidate as-of evidence only. No Claim, FSW, CAS effect, Freeze, Task PASS, Release or merge is authorized by this artifact."
   },
+  "independentReviewHistory": [
+    {
+      "generation": "R31",
+      "pullRequest": 415,
+      "reviewId": 5906922353,
+      "reviewUrl": "https://github.com/kaicreator-mm/tally/pull/415#pullrequestreview-5906922353",
+      "verdict": "BLOCK",
+      "p0": 0,
+      "p1": 1,
+      "p2": 2,
+      "findings": [
+        "P1-1 no single-Task FSW creation route in source and Pack FSW field contract contradicted the verifyFrozenWriteSet(312) gate",
+        "P2-1 T06d store decorator has no in-repo implementation",
+        "P2-2 verification plan lacked an explicit Host driver/adapter independent review item"
+      ],
+      "disposition": "This R31.1 regeneration fixes exactly those findings; all other R31 content (live 51/37 structure, 16-path digest, overlap matrix, #412 record, dual-role/witness/fence contract, #401 ancestry) carried forward unchanged apart from refreshed live readback timestamps."
+    }
+  ],
   "claimAcceptance": "NOT_VERIFIED",
   "closureEvidence": "NOT_VERIFIED",
   "plannedEdges": [],
@@ -723,7 +741,7 @@
         "state:planned"
       ],
       "createdAt": "2026-11-05T04:00:25Z",
-      "updatedAt": "2026-11-14T17:03:57Z",
+      "updatedAt": "2026-11-14T19:57:17Z",
       "closedAt": null,
       "scopeDisposition": "CORE_V2",
       "dispatchableByDisposition": true,
@@ -2311,7 +2329,7 @@
       "concurrencyStatement": "No overlap pair may be dispatched concurrently. Unresolved overlaps #219/#273/#276/#264 must remain serialized after #312 with fresh current native-edge and write-set readback at each handoff. This pack asserts no concurrency for any overlapping pair."
     },
     "freshRecompute": {
-      "observedAt": "2026-11-14T19:47:02.064Z",
+      "observedAt": "2026-11-14T20:29:48.530Z",
       "method": "Exact pairwise intersection of normalized unique path lists extracted from live type:task Issue bodies this lane; wildcards retained literally; includes out-of-roster #412.",
       "openTasksWithWriteSet": 17,
       "openTasksWithoutWriteSet": [
@@ -2956,49 +2974,52 @@
     },
     "t06dStoreDecorator": {
       "attachedBy": "HOST_ENV_ONLY",
+      "implementationStatus": "HOST_COMPOSITION_CODE_NOT_IN_REPO_SOURCE",
+      "implementationStatement": "The decorator is Host-side composition code around the T06d store, not an existing repository source API; no repo source change is authorized by this Pack to provide it.",
       "attachPoints": [
         "PENDING put",
         "PUBLISHED_VERIFIED put"
       ],
       "attachedFields": {
-        "taskPackBlobSha": "exact #312 Task Pack blob identity recorded at admission",
+        "taskPackBlobSha": "exact #312 Task Pack blob identity recorded at admission (this pack generation git blob SHA-1, pinned via TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA)",
         "writeSetSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916"
       },
+      "hardPrecondition": "DECORATOR_EQUIVALENCE and MISSING_PIN_ZERO_WRITE verifications pass BEFORE any Claim POST; the decorated store is the only permitted path for Claim publication.",
       "consistencyRule": "Both puts attach identical taskPackBlobSha/writeSetSha256; any divergence between the two puts fails closed.",
       "preservedSemantics": "mustBeAbsent -> real publish -> exact readback -> mustMatchRevision; create-only CAS; no direct seed, no fixture authority, no overwrite of an existing row."
     },
     "fswOperation": {
       "schema": "tally/version-task-writeset/v1",
-      "mode": "SINGLE_TASK_CREATE_ONLY_HOST_OPERATION",
-      "statement": "One per-Task FSW row for #312 is written only by the Host operation, only inside a fresh review/Owner dual-read plus the shared version effect fence.",
-      "fields": {
-        "issueNumber": 312,
-        "paths": [
-          ".woodpecker/v2-alm-workspace.yaml",
-          "experiments/v2/project-intake/host-project.mjs",
-          "experiments/v2/project-intake/host-project.test.mjs",
-          "experiments/v2/selected-business-build/bundle-local-codex.mjs",
-          "experiments/v2/selected-business-build/local-codex-shim.mjs",
-          "experiments/v2/selected-business-build/producer.mjs",
-          "packages/tally-engineering-business/src/index.mjs",
-          "packages/tally-engineering-business/test/business-policy.test.mjs",
-          "packages/tally-github-c/src/project-intake.mjs",
-          "packages/tally-github-c/test/project-intake.test.mjs",
-          "web/v2/intake-controller.mjs",
-          "web/v2/intake-controller.test.mjs",
-          "web/v2/intake-view.mjs",
-          "web/v2/intake-view.test.mjs",
-          "web/v2/journey-server.mjs",
-          "web/v2/journey-view.html"
-        ],
-        "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916",
-        "taskPackBlobSha": "bound at admission",
-        "sourceSha": "current selected source",
-        "generation": 1,
-        "protectedClaimKey": "kaicreator-mm/tally#312:builder:__default__",
-        "phase": "FROZEN_DAG_WRITESET"
+      "mode": "HOST_COMPOSITION_ADAPTER_PRECONDITION_SINGLE_TASK_CREATE_ONLY",
+      "missingPreconditionStatement": "No single-Task FSW creation route exists in the current source at 6cc52fbb151d0a0be12ace0972d869c0d5c0c267: the only production FSW writer freezeVersionTaskDag (packages/tally-github-native-c/src/version-task-dag-write-port.mjs) is version-wide (VERSION_ONLY mints zero per-Task rows; ALL_TASKS materializes all 51 roster rows and is forbidden here — it would re-freeze structure and mint rows for closed historical Tasks). The single-Task FSW operation for #312 is therefore an explicitly declared missing precondition, satisfied only by an independently implemented and independently reviewed Host-composition adapter that composes existing public CAS store/fence primitives. It is NOT an existing repo API, NOT a direct seed, NOT fixture authority, and NOT a repo source change authorized by this Pack.",
+      "scopedFutureHome": "packages/tally-github-native-c/src/version-task-dag-write-port.mjs is the natural repo home for such an operation but is NOT inside the #312 16-path write set; if the operation is ever implemented in repo source, a future Pack generation whose write set includes that port file must carry it through its own Claim/FSW route. This Pack authorizes no such edit.",
+      "rowKey": "tally:v2:task-writeset:312",
+      "rowContract": {
+        "basis": "Exact row shape verified by verifyFrozenWriteSet(312) (experiments/v2/selected-business-build/bundle-local-codex.mjs) and rowValue in version-task-dag-write-port.mjs; any created row must pass that gate verbatim.",
+        "fields": {
+          "schema": "tally/version-task-writeset/v1",
+          "phase": "FROZEN_DAG_WRITESET",
+          "repository": "kaicreator-mm/tally",
+          "issueNumber": 312,
+          "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+          "writeSetSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916",
+          "document": "Canonical form JSON.stringify([\".woodpecker/v2-alm-workspace.yaml\",\"experiments/v2/project-intake/host-project.mjs\",\"experiments/v2/project-intake/host-project.test.mjs\",\"experiments/v2/selected-business-build/bundle-local-codex.mjs\",\"experiments/v2/selected-business-build/local-codex-shim.mjs\",\"experiments/v2/selected-business-build/producer.mjs\",\"packages/tally-engineering-business/src/index.mjs\",\"packages/tally-engineering-business/test/business-policy.test.mjs\",\"packages/tally-github-c/src/project-intake.mjs\",\"packages/tally-github-c/test/project-intake.test.mjs\",\"web/v2/intake-controller.mjs\",\"web/v2/intake-controller.test.mjs\",\"web/v2/intake-view.mjs\",\"web/v2/intake-view.test.mjs\",\"web/v2/journey-server.mjs\",\"web/v2/journey-view.html\"]) (sorted 16-path array); verifiable equivalent forms accepted by the gate: a JSON object {allowed_write_set:[...16 paths...]} or a newline-separated path list, all normalized to the same digest by the Host-side matcher.",
+          "versionPackBlobSha": "The exact git blob SHA-1 of THIS PackBlob generation (the pack document under review), pinned via TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA before any operation; the literal value is recorded in the publishing commit message and PR description and is not embedded inside this JSON to avoid self-reference. Distinct in role from the Claim-row taskPackBlobSha field: versionPackBlobSha binds the FSW row to the pack generation, taskPackBlobSha pins each Claim row; both derive from the same pack blob identity.",
+          "versionTaskDagKey": "tally:v2:version-task-dag:b6bba4e5346a013caa0a16ba2b06a8d7f1aa8ac379aac8ff3ea37e680114e9fd",
+          "versionTaskDagKeyDerivation": "sha256('kaicreator-mm/tally#version/v2') prefixed by tally:v2:version-task-dag: — the deterministic existing key shared with the version effect fence lane",
+          "frozenAt": "Set once at creation; equality on all other fields binds on later comparisons."
+        },
+        "fieldExclusions": "generation and protectedClaimKey are Claim-row identity fields and are NOT FSW row fields; paths and pathsSha256 are Pack-document field names and are NOT FSW row fields (the row carries document and writeSetSha256).",
+        "revision": "Integer CAS revision, safe integer >= 0; create-only put starts and stays at revision 0."
       },
-      "readbackRule": "Exact readback of the created row is required; revision must match the create result; existing or duplicate rows fail closed."
+      "operationPreconditions": [
+        "Fresh independent exact-blob Pack review of this generation with P0=0/P1=0.",
+        "Owner dual-read of the pack/blob identity and admission coordinates.",
+        "An accepted #312 Builder Claim (published through the decorated store with pins, PUBLISHED_VERIFIED, exact comment/CAS readback).",
+        "Shared version effect fence held (same fence key tally:v2:version-dag-effect-fence:<sha256(kaicreator-mm/tally#version/v2)> and schema tally/version-dag-effect-fence/v1 used by the freeze lane); no lane bypasses a HELD fence."
+      ],
+      "operationSequence": "Public CAS mustBeAbsent put of the exact rowContract value, then get/readback of the created row; full validation of the composed document BEFORE the first CAS write (no partial acceptance); any conflict, existing divergent row, or partial write leaves state UNKNOWN — reconcile by readback only, never overwrite or blind retry.",
+      "forbiddenAlternatives": "No re-run of freezeVersionTaskDag VERSION_ONLY or ALL_TASKS policies for this purpose; no write through test/replay fixture consumers; no CAS seed."
     },
     "reviewerWitness": {
       "schema": "tally.v2.product-review-witness/2",
@@ -3014,12 +3035,16 @@
     "schema": "tally.v2.verification-plan/1",
     "items": [
       {
+        "id": "HOST_DRIVER_ADAPTER_INDEPENDENT_REVIEW",
+        "detail": "HARD PRECURSOR TO ANY REAL EFFECT: all Host-side driver/adapter/composition code (T06d store decorator, the single-Task FSW composition adapter, and the witness POST driver) is reviewed by a distinct-conversation independent reviewer with exact content SHA-256 and a written report; review must reach P0=0/P1=0 before that code may produce any real effect (Claim POST, FSW put, witness POST, fence effect). This governs Host-composition code, which repo source PR review does not cover."
+      },
+      {
         "id": "DECORATOR_EQUIVALENCE",
-        "detail": "Host-env store decorator attaches identical taskPackBlobSha/writeSetSha256 on PENDING and PUBLISHED_VERIFIED puts; readback of both revisions shows byte-consistent pins."
+        "detail": "HARD PRECONDITION BEFORE ANY CLAIM POST: the Host-composition store decorator (not repo source) attaches identical taskPackBlobSha/writeSetSha256 on PENDING and PUBLISHED_VERIFIED puts; readback of both revisions shows byte-consistent pins."
       },
       {
         "id": "MISSING_PIN_ZERO_WRITE",
-        "detail": "A put without the required pins writes nothing (zero rows, zero comments, zero CAS effects) and fails closed."
+        "detail": "HARD PRECONDITION BEFORE ANY CLAIM POST: a put without the required pins writes nothing (zero rows, zero comments, zero CAS effects) and fails closed."
       },
       {
         "id": "CONCURRENT_AND_LOST_ACK",
@@ -3031,7 +3056,11 @@
       },
       {
         "id": "FSW_FIELD_AND_PATH_VALIDATION",
-        "detail": "FSW row schema tally/version-task-writeset/v1 fields validated exactly; 16 paths byte-equal to this pack; digest equality enforced; duplicate/create-only semantics enforced."
+        "detail": "The composed #312 FSW row is validated field-exact against the verifyFrozenWriteSet(312) gate shape: schema tally/version-task-writeset/v1, phase FROZEN_DAG_WRITESET, repository kaicreator-mm/tally, issueNumber 312, sourceSha 6cc52fbb151d0a0be12ace0972d869c0d5c0c267, writeSetSha256 3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916, document normalized to the digest, versionPackBlobSha equal to this pack generation blob pin, versionTaskDagKey tally:v2:version-task-dag:b6bba4e5346a013caa0a16ba2b06a8d7f1aa8ac379aac8ff3ea37e680114e9fd, frozenAt present, integer revision >= 0, create-only; no generation/protectedClaimKey/paths/pathsSha256 fields on the row."
+      },
+      {
+        "id": "PRE_EXECUTION_FSW_GATE_EQUIVALENCE",
+        "detail": "BEFORE any real FSW put and BEFORE any Claim admission that consumes the row: an independent field/document validation fully equivalent to verifyFrozenWriteSet(312) semantics is executed against the composed row value (document normalization digest match, versionPackBlobSha/versionTaskDagKey pin equality, phase/schema/repository/issueNumber/sourceSha equality, revision floor), proving the row the Pack describes passes the DAG_WRITESET gate verbatim; the equivalence check and its evidence are part of the Host driver adapter review scope."
       },
       {
         "id": "REVIEWWITNESS_REST_GRAPHQL",
@@ -3177,11 +3206,12 @@
     "preservationNote": "PRESERVED_FROM_R17_PACK (blob sha1 44da8c5865d4f3ee0258ff9e7c7309c927b47c3e / sha256 334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9, versionBaseSha fdb809c2fe51487eb9610130c634db4bf627f5e4) NOT_REVALIDATED this lane"
   },
   "notes": [
-    "R31 fresh as-of #312 Product ReviewWitness candidate pack rebuilt at selected source 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 (tree 6868938767fe72214958edcaccf59f422e25805f, parents fdb809c2fe51487eb9610130c634db4bf627f5e4 + 1fd1357ed59c23380fd9b89dd1caa4ab88f021c3, merge message carries Refs: #412 #312 #392 #259), lane TALLY_V2_312_CURRENT_SOURCE_PACK, 2026-11-14T19:47:02.064Z.",
+    "R31.1 fix-generation of the #312 Product ReviewWitness candidate pack at selected source 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 (tree 6868938767fe72214958edcaccf59f422e25805f, parents fdb809c2fe51487eb9610130c634db4bf627f5e4 + 1fd1357ed59c23380fd9b89dd1caa4ab88f021c3, merge message carries Refs: #412 #312 #392 #259), lane TALLY_V2_312_CURRENT_SOURCE_PACK, 2026-11-14T20:29:48.530Z. Supersedes the R31 blob after independent review BLOCK (PR #415 review 5906922353, P0=0/P1=1/P2=2): fswOperation rewritten as an explicit Host-composition adapter precondition with the exact verifyFrozenWriteSet(312) row contract; store decorator declared Host-composition code with hard pre-Claim-POST verifications; verification plan extended with pre-execution FSW gate-equivalence and Host driver/adapter independent review items.",
     "Task identities, titles, states, labels, updatedAt/closedAt and all native edges re-read from official GitHub endpoints this session; roster 51/51 exact; 37/37 edges exact-matched; nativeDependencyReadback identical to R17; #312 predecessor #284 reads closed.",
     "#312 16-path allowed_write_set re-read from the live issue body this lane: path_count 16, paths_sha256 3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916 recompute MATCH, byte-identical path list to R17. Fresh overlap matrix recomputed over all live open type:task bodies plus out-of-roster #412; unresolved #312 serialization targets this lane: #219 (8 shared paths), #264 (3 shared paths), #273 (2 shared paths), #276 (1 shared paths); integrated-source overlaps #196/#197/#198/#202/#207 remain non-concurrent; no pair may run concurrently; #412 four-path set has zero overlap with the 16 paths. Live drift observed vs R17: #264 write set is now 12 paths (R17 recorded 11), its shared set with #312 is 3 paths incl web/v2/intake-controller.test.mjs; #219/#273/#276 counts unchanged.",
     "scopeDispositions / claimSubjects / mvpScope / overlapGroups are PRESERVED_FROM_R17_PACK (blob sha1 44da8c5865d4f3ee0258ff9e7c7309c927b47c3e / sha256 334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9, versionBaseSha fdb809c2fe51487eb9610130c634db4bf627f5e4) NOT_REVALIDATED this lane; claim acceptance and closure evidence remain NOT_VERIFIED; carried row 284 predates its live closed completion and its live fields are authoritative.",
     "#412 is recorded as an out-of-roster enabling defect merged source-only via PR #414 (this pack's versionBaseSha), Woodpecker #758 5/5 and push #760 success. The merge fixes dual-role Claim admission so the same-registry builder/reviewer Claims required by #312 are admissible; it is not a #312 Task PASS and creates no Claim/FSW/CAS authority.",
-    "Physical Freeze remains a future Host/Owner action: it requires a fresh accepted #312 Builder Claim, a distinct accepted Reviewer Claim in the same new dedicated registry, the create-only FSW row under the version effect fence, a canonical unedited v2 ReviewWitness, current-branch readback and final Host CAS readback — none of which exist yet. Any version/v2 advance past 6cc52fbb requires a new pack generation."
+    "Physical Freeze remains a future Host/Owner action: it requires a fresh accepted #312 Builder Claim, a distinct accepted Reviewer Claim in the same new dedicated registry, the independently implemented and independently reviewed single-Task FSW composition adapter producing the exact verifyFrozenWriteSet(312)-conformant row under the version effect fence, a canonical unedited v2 ReviewWitness, current-branch readback and final Host CAS readback — none of which exist yet. Any version/v2 advance past 6cc52fbb requires a new pack generation.",
+    "The Host-side composition code named by this contract (store decorator, single-Task FSW adapter, witness POST driver) does not exist in repository source; none of it is authorized by this Pack, and each piece requires distinct-conversation independent review (exact content SHA-256, P0/P1=0) before any real effect. This document adds only governance text; no product source, workflow, or write-set path is changed by this fix generation."
   ]
 }
