@@ -1,0 +1,296 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 412,
+  "parentIssue": 312,
+  "coordinatorIssues": [392, 259],
+  "phase": "DUAL_ROLE_CLAIM_ADMISSION_DEFECT_REPAIR",
+  "revision": "R1",
+  "observedAt": "2026-11-14T17:26:32Z",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+    "treeSha": "d8766aa7502e4bb739e5c7e603415471a114dcc0"
+  },
+  "packArtifactBranch": {
+    "branch": "task/tally-i412-pack-zcode",
+    "baseSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+    "purpose": "immutable governance-only defect Task Pack artifact",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "sourceEvidence": {
+    "disposition": "SOURCE_ANALYSIS_STRUCTURAL_FAIL_CLOSED_DEFECT_PINNED_BY_EXISTING_NEGATIVE_TEST",
+    "defectOrigin": "Isolated during #312 R30 dual-role admission closeout planning (Owner direction: kaicreator-mm/tally#392 comment 6881140176, 2026-11-14). The real T06d/T06j Host admission path cannot accept the two distinct role Claims required by #312.",
+    "defects": [
+      {
+        "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+        "blobSha": "5b161ee6b5cac22275ce15b09ffb24deb451a580",
+        "contentSha256": "dd577c77798c0ba1f1a1dea4541f216d1bf59173884980b0cd3e6d899ebb956a",
+        "defect": "readNativeHostClaimPreflightFromClient requires claimEvents.reason==='NO_DISPATCH_CLAIM_EVENTS' and candidateCount===0. After one lawful role Claim is published on the Issue, every further role Claim fails NATIVE_CLAIM_ABSENCE_UNQUALIFIED. The behavior is pinned by the existing negative test 'even shape-valid self-reported DISPATCH_CLAIMED denies clean preflight' in task-claim-host-preflight.test.mjs (blob e68a22aca09c1667f408d53ec108805dce492251)."
+      },
+      {
+        "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs",
+        "blobSha": "0b493e0cd85769ab654538d2edd7b94bd7bef17e",
+        "contentSha256": "39c80439a9227f19f86bba4a8f1a8a4a8f91c2d33f7e1508b531ef3c26d48b6b",
+        "defect": "createHostAdmissionSourceFromClient.registrySnapshot classification counts every registry row whose protectedClaimKey differs from the request key as incompatible (activeIncompatibleClaimCount). The intentionally compatible builder-versus-reviewer roles of the same Task/source therefore deny INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS, and the controller contract (single-writer.mjs validPreflight requires activeIncompatibleClaimCount===0) makes the second role unadmittable."
+      }
+    ],
+    "testEvidence": {
+      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+      "blobSha": "e40ffb2c44194e76780a048ce38a940ba84b6e82",
+      "contentSha256": "177e263687b5f907d146a9c14673303827d3193f2056ca79d3ecca7a19abec48"
+    },
+    "boundary": "This is a fail-closed admission defect: the gate rejects a lawful second role. It is NOT permission to bypass preflight, seed CAS, reuse a historical Claim, publish a replacement Claim on an already-claimed protected key, or split the selected Host registry into disconnected per-role registries."
+  },
+  "stableUpstream": [
+    {
+      "issue": 284,
+      "status": "CLOSED_COMPLETED",
+      "outcomeReceipt": "issuecomment-6880940145 (SHA-256 020eaaf906a7717b4e9197a679e7bfac8754d5ac8644340bf69d6c84ff11cbee)",
+      "note": "E0-only Task Outcome closed completed. Its original one-and-only root Claim and 14-path FSW were consumed by #284 itself; R17 was reused, not refrozen. No #284 Claim/FSW/registry reuse for #412."
+    },
+    {
+      "issue": 312,
+      "status": "OPEN_STATE_PLANNED",
+      "frozenWriteSetDigest": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916",
+      "frozenWriteSetPathCount": 16,
+      "liveBlockedBy": [{ "issue": 284, "state": "closed", "labels": ["type:task", "state:done"] }],
+      "note": "#412 is an enabling repair for #312. #312's one-shot protected Claim and frozen 16-path FSW are NOT consumed by this repair and must not be mutated. #312 resumes only after #412 completes and its own current-source qualification is refreshed."
+    },
+    {
+      "issue": 219,
+      "status": "OPEN_STATE_PLANNED",
+      "frozenWriteSetDigest": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+      "frozenWriteSetPathCount": 14,
+      "liveBlockedBy": [{ "issue": 312, "state": "open", "labels": ["type:task", "state:planned"] }],
+      "note": "Serialized after #312; cannot lawfully edit or claim until #312 completes. Zero write-set overlap with #412."
+    },
+    {
+      "issue": 260,
+      "status": "R17_FROZEN_ROSTER_BASELINE",
+      "r17PackBlob": {
+        "gitBlobSha1": "44da8c5865d4f3ee0258ff9e7c7309c927b47c3e",
+        "contentSha256": "334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9"
+      },
+      "note": "R17 51-Task/37-edge VERSION_ONLY Freeze is immutable at version/v2@fdb809c2fe51487eb9610130c634db4bf627f5e4 and predates #412. #412 is not a member of the frozen roster. Any physical Freeze or roster-claiming step that must name #412 owes an additive A/#260 refresh on its own lane with a full live re-read; this Pack does not mutate the frozen R17 CAS and adds no native dependency edge."
+    }
+  ],
+  "allowed_write_set": [
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.mjs",
+      "owner": "DUAL_ROLE_CLAIM_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Role-aware registry classification: a PUBLISHED_VERIFIED row of a different role for the same Task/source/generation with distinct dispatchId/operatorId/writerId and a matching live native candidate projection is compatible, not incompatible; all other rows stay incompatible and counted."
+    },
+    {
+      "path": "experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs",
+      "owner": "DUAL_ROLE_CLAIM_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Dual-role positive/negative admission regression: builder-then-reviewer and reviewer-then-builder through the real controller, same login distinct operator/writer, pending/divergent/same-identity rows denied, zero-write denials."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+      "owner": "DUAL_ROLE_CLAIM_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Role-bearing candidate evaluation: accept candidates whose roles differ from the requested role with canonical keys and generation 1; keep zero-candidate fresh-Task behavior, same-role duplicates and unqualified candidates fail-closed."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs",
+      "owner": "DUAL_ROLE_CLAIM_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Preflight dual-role regression: compatible-role READY with bounded projections, duplicate-role/missing-key/wrong-generation/key-role-mismatch denials, legacy undeclared-role denial preserved."
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "writeSetNormalization": "tally.v2.allowed-write-set-normalization/1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_PASS_ZERO_OVERLAP",
+    "pathCount": 4,
+    "pathsSha256": "9f31a64538382e5cf457da5e7a1f707168b9760bb92ca8ffbb87e2e4ff62ae05",
+    "observedOpenTaskIssueCount": 20,
+    "openTaskIssuesObserved": [196, 197, 198, 199, 200, 202, 207, 208, 209, 219, 260, 261, 262, 263, 264, 273, 276, 312, 377, 412],
+    "openTasksWithNormalizedWriteSet": 17,
+    "openTasksWithoutWriteSet": [199, 200],
+    "normalizationDigestMismatches": [],
+    "digestMatchWithOtherOpenTasks": [],
+    "perPathOverlapWithOpenTasks": [],
+    "overlapWithOpenTasks": [],
+    "overlapPathCount": 0,
+    "otherOverlapPathCount": 0,
+    "keyDisjointFacts": [
+      { "issue": 312, "pathCount": 16, "pathsSha256": "3c0fd1f97ceada4feb7628ba61143cc98333efebf1ee520f62631db79fd0c916", "changeSinceR16Audit": "none" },
+      { "issue": 219, "pathCount": 14, "pathsSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797", "changeSinceR16Audit": "none" },
+      { "issue": 284, "pathCount": 14, "pathsSha256": "36411b4bbed4ad951f051ef7f4100395cf85ef9acadadbc87bcad77bcbc8dae8", "changeSinceR16Audit": "issue closed completed 2026-11-14; write set no longer open" }
+    ],
+    "openLanesBoundToTasks": [
+      { "pr": 410, "task": 219, "headSha": "3879dbc00b9c129f175904de5e805cc1d06eb994" },
+      { "pr": 411, "task": 284, "headSha": "fb7e9f9cb42267f9627b1e6672bcc792dfe6fc39", "disposition": "docs-only" }
+    ],
+    "candidatePairTreatment": "Current open set carries 17 normalized write sets. Adding #412 adds exactly one new unique digest with zero pair overlap. Any A/#260 refresh must recompute the pair matrix live rather than hardcode this value.",
+    "note": "Exact-path audit performed 2026-11-15 against live GitHub issue bodies with canonical JSON.stringify(sorted) SHA-256 normalization, verified against known digests (#377 58148dec..., #207 915df93f..., #312 3c0fd1f9...). This audit does not admit source writes or create a Claim/FSW/dependency."
+  },
+  "repairContract": {
+    "roleCompatibilityModel": {
+      "identity": "Process independence between the two roles requires distinct operatorId AND distinct writerId under the selected Host. The GitHub transport login may be identical; a different login alone is not independence proof.",
+      "canonicalKeys": "Each role claim binds protectedClaimKey <repository>#<issueNumber>:<actorRole>:__default__ with admission_generation 1. Same Task + different role = different key = potentially compatible. Same Task + same role = same key = duplicate, never admittable.",
+      "sameRegistry": "Both roles are admitted against ONE exact current registry/Pack/FSW binding of the selected Host. Splitting roles into disconnected registries is prohibited."
+    },
+    "preflight": {
+      "input": "Add optional actorRole (builder|reviewer|validator). Invalid value fails INVALID_NATIVE_PREFLIGHT_REQUEST.",
+      "pairReadUnchanged": "readNativeTaskSourcePairFromClient continues to qualify Issue currentness, WorkItem source-qualification and pair drift; its claimEvents acceptance widens only within the two pair-qualified reasons (NO_DISPATCH_CLAIM_EVENTS, CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED) with consistent counts.",
+      "roleBearingCandidates": "Candidates are re-observed through the existing readClaimEventCandidatesFromClient entry (imported, not modified). Its own fail-closed behavior (duplicate dispatch, cross-task/stale, edited identity, malformed canonical comment, scan limit, mid-read drift) propagates as BLOCKED with the reader reason.",
+      "zeroCandidates": "Zero candidates yields NATIVE_SOURCE_PREFLIGHT_READY exactly as today: fresh-Task behavior unchanged.",
+      "candidatesPresentUndeclaredRole": "Candidates present without a declared request actorRole stays BLOCKED with NATIVE_CLAIM_ABSENCE_UNQUALIFIED (legacy fail-closed path preserved).",
+      "candidatesPresentDeclaredRole": [
+        "Each candidate must carry a valid actor_role in builder|reviewer|validator, protected_claim_key exactly <repository>#<issueNumber>:<candidate.actorRole>:__default__, and admission_generation === 1; otherwise BLOCKED NATIVE_CLAIM_ROLE_CANDIDATE_UNQUALIFIED.",
+        "A candidate whose actor_role equals the requested role, or two candidates sharing one protectedClaimKey, is a claim overwrite attempt: BLOCKED NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE.",
+        "Otherwise NATIVE_SOURCE_PREFLIGHT_READY with a bounded role-bearing candidate projection (commentId, commentRef, dispatchId, actorRole, operatorId, protectedClaimKey, claimGeneration, sourceSha, transportActor, sourceClass). Everything stays claimAccepted:false, claimStatus NOT_VERIFIED, advisory; dispatchSourceBound/publisherSourceBound stay false and no permit boolean is added."
+      ]
+    },
+    "hostAdmission": {
+      "requestBinding": "readAdmissionFacts passes taskAuthority.actorRole into the preflight; boundRequest and validTask are unchanged.",
+      "registrySnapshotUnchanged": "Row validation, duplicate-key conflict and double-read drift detection unchanged.",
+      "compatibleRowAllOf": [
+        "row.issueRef === request.issueRef and row.repository === request.repository and row.sourceSha === request.sourceSha and row.generation === 1 (same Task/source/generation binding)",
+        "row.actorRole !== request.actorRole (different canonical role key)",
+        "row.phase === 'PUBLISHED_VERIFIED' (a PENDING row of any role blocks admission; lost ACK reconciles by readback, never blind POST)",
+        "row.dispatchId !== request.dispatchId",
+        "row.operatorId !== request.operatorId",
+        "row.writerId !== writerAuthority.writerId",
+        "exactly one preflight candidate projection matches the row on protectedClaimKey, commentId, dispatchId, actorRole, operatorId and sourceSha (the CAS row has a live native counterpart; divergent rows fail closed)"
+      ],
+      "incompatibleRows": "Every row failing any compatible clause is incompatible. activeIncompatibleClaimCount counts incompatible rows only; count>0 denies INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS with the count (exact reason preserved). complete:true still requires count===0, so single-writer.mjs validPreflight is satisfied without any controller edit.",
+      "candidateWithoutRow": "Any candidate projection without a matching compatible registry row denies CLAIM_CANDIDATE_WITHOUT_VERIFIED_CAS_ROW: a native claim observed outside this Host's durable CAS is divergent or forged.",
+      "preservedFailClosed": [
+        "Same-role/same-protected-key duplicates (controller store.get denial plus classification), duplicate dispatch IDs, same-process Reviewer (same operatorId), shared writerId.",
+        "Stale source SHA, cross-Task rows/events, malformed/edited events, wrong key/generation (registry row invalid -> HOST_RESERVATION_REGISTRY_INCOMPLETE).",
+        "Registry drift/conflict/unavailable, forged request or authority fields, unready/non-task/blocked-Issue/stale-SHA native facts, and every existing GitHub transport failure path."
+      ]
+    },
+    "nonGoals": [
+      "No preflight bypass, no temporary adapter, no CAS seeding, no registry reset.",
+      "No disconnected per-role registries.",
+      "No edit to single-writer.mjs, task-source-pair.mjs, task-claim-events.mjs, task-claim-github-publisher.mjs, task-claim-host-readback-port.mjs, workflows, Pack/UI/Business paths.",
+      "No change to the one-shot create-only CAS semantics of the controller.",
+      "No real second GitHub Claim on #412 itself; the second-role identities in regression coverage are test-internal."
+    ]
+  },
+  "versionTaskPackReference": {
+    "path": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "headSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+    "treeSha": "d8766aa7502e4bb739e5c7e603415471a114dcc0",
+    "status": "CANDIDATE_STALE_AS_OF_2026-11-09_BASE_7ebb1cdd_R17_FROZEN_ROSTER_IS_AUTHORITY",
+    "nextRequiredRefresh": "Before any physical Freeze or roster-claiming step that names #412, A/#260 must produce a fresh candidate on its own lane: live re-read of all Task metadata, #412 as PLANNED_DEFECT_NO_CLAIM, exact 4-path digest, full live pair matrix, and PLANNED-only #412->#312 edge if the Owner authorizes that native dependency write. No native dependency write is authorized by this Pack."
+  },
+  "plannedEdges": [
+    {
+      "from": 412,
+      "to": 312,
+      "kind": "PLANNED",
+      "reason": "#412 repair re-enables #312's dual-role Claims. This is a planning annotation only: no native blocked_by write is authorized here, and #312's one-shot Claim/FSW stay untouched."
+    }
+  ],
+  "nativeDependencyAudit": {
+    "issue412BlockedBy": [],
+    "issue312BlockedBy": [{ "issue": 284, "state": "closed", "labels": ["type:task", "state:done"] }],
+    "issue219BlockedBy": [{ "issue": 312, "state": "open", "labels": ["type:task", "state:planned"] }],
+    "requiredAtAdmission": "Re-read live blocked_by for #412 (must remain empty of open blockers), Issue labels type:task + state:ready set only at admission time, and full native Task metadata. Any new edge serializes or blocks this Task.",
+    "root284Effect": false,
+    "host370DependencyWrite": false,
+    "nativeDependencyWrite": false,
+    "nativeRuntimeDependencies": { "@octokit/rest": "22.0.1", "canonicalize": "5.1.0", "yaml": "2.8.1", "ajv": "8.17.1", "node": ">=24" }
+  },
+  "hostIdentity": {
+    "task412BuilderClaim": {
+      "protectedClaimKey": "kaicreator-mm/tally#412:builder:__default__",
+      "sourceSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i412:local-builder:1",
+      "dispatchId": "dispatch:412:dual-role-claim-admission:20261115:1",
+      "generation": 1,
+      "registryPath": "_tmp/tally-alm-claims/registry-412.sqlite",
+      "registryRule": "A dedicated per-Task registry is required but is not itself an isolation proof. Only the genuine selected Host may prepare/use it while holding the accepted shared writer/admission fence. Never reuse #312/#284/#210/#377/#370 registries."
+    },
+    "reviewerRoleBoundary": "The repaired capability admits a second distinct role on #312's own Task under #312's own selected-Host binding. This Pack does NOT authorize a real reviewer-role GitHub Claim on #412; regression coverage uses test-internal reviewer identities against a GitHub surrogate plus a real shared SQLite registry.",
+    "sameLoginRule": "Builder and Reviewer may share githubWriterLogin. writerId and operatorId must be distinct between the two roles; same operatorId (same-process Reviewer) or same writerId or same dispatchId denies.",
+    "writerIdentitySource": "Trusted selected-Host configuration only; never caller-supplied exclusiveHostControl, process absence, snapshots, mock witnesses or a raw boolean.",
+    "host370Boundary": "Do not compete with #370 for real Host writes, modify its Pack/source/registry/processes or treat its candidate fence as accepted before exact independent evidence exists."
+  },
+  "authority": {
+    "ownerAuthorization": "Owner direction at kaicreator-mm/tally#392 comment 6881140176 (R30, 2026-11-14): open #412 as a separate P1 defect Task; the original #312 Writer's continuation session repairs the source defects directly with incremental regression and sends every new SHA to a distinct-conversation independent Reviewer. The exact PackBlob-bound Owner receipt remains a durable gate.",
+    "requiredArtifacts": [
+      "Fresh independent exact-blob review of this immutable R1 Pack PR and its exact PackBlob (git blob SHA-1 + content SHA-256) with P0/P1=0.",
+      "Owner receipt bound to exact PackBlob dual hash, source base SHA fdb809c2fe51487eb9610130c634db4bf627f5e4, 4-path digest 9f31a64538382e5cf457da5e7a1f707168b9760bb92ca8ffbb87e2e4ff62ae05, protected Claim key, generation and dispatch ID.",
+      "Issue #412 normalized exact 4-path body block (already present) and formally planned Task metadata without any Claim event (live readback 2026-11-15: zero comments, zero DISPATCH_CLAIMED candidates, blocked_by empty).",
+      "Accepted #412 Builder Host Claim via the real T06d/T06j Host controller plus exact native comment/CAS readback under the genuine selected Host fence.",
+      "Per-task FROZEN_DAG_WRITESET public CAS write/readback bound to the exact PackBlob, Owner receipt, source base SHA and 4-path digest.",
+      "Distinct-conversation non-Writer exact-SHA/tree source review with P0/P1=0 for the repair HEAD and for every subsequent repair SHA."
+    ],
+    "authorized": false,
+    "admitted": false,
+    "taskPass": false,
+    "releasePass": false
+  },
+  "gates": [
+    "Exact Issue #412 evidence, source base fdb809c2fe51487eb9610130c634db4bf627f5e4 and 4-path write set 9f31a64538382e5cf457da5e7a1f707168b9760bb92ca8ffbb87e2e4ff62ae05; zero overlap with all other open Tasks; no historical #312/#284/#210/#377 Claim or FSW reuse.",
+    "Immutable governance-only Pack PR and GitHub Contents API PackBlob dual identity; independent Pack review then exact PackBlob-bound Owner receipt.",
+    "Before Host admission set #412 to state:ready only after all prior gates; native preflight must prove open/type:task/state:ready/dependency CLEAR/zero open blockers; the preflight's own claim-qualification now proves zero same-role candidates and only compatible-role candidates.",
+    "The genuine selected Host must hold the accepted shared writer/admission fence across reservation, native publication, exact readback and FROZEN_DAG_WRITESET creation/readback for the #412 Builder Claim. If the fence is not lawfully supplied, stop with ADMISSION_BLOCK and zero CAS/source writes.",
+    "Only after exact Builder Claim/FSW readback create the separate JIT source branch at version/v2@fdb809c2fe51487eb9610130c634db4bf627f5e4.",
+    "Run Windows Node 24 syntax checks FIRST, then focused dual-role tests (RED-first for the new positive dual-role cases on unfixed source), complete native C suite, complete T06d/T06j suites and required existing checks; bind final self-hosted Woodpecker to the final exact implementation HEAD.",
+    "One continuous Builder repairs any in-scope failure without new dispatch; then stop for fresh independent Exact-SHA source review. Every repair HEAD goes to the distinct-conversation non-Writer Reviewer.",
+    "Guarded integration into version/v2 only after review P0/P1=0; read back actual merge commit/tree/message and current push CI. No main merge, Tag, deployment or Release PASS. Task Outcome is separate from PR merge and never asserts #312, installed J01-J08 or Release PASS."
+  ],
+  "validationPlan": [
+    "Node >=24 node --check on both changed source files before any test or CI; record node -v.",
+    "Focused preflight suite: node --test packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs. New dual-role positive cases must FAIL on the unfixed source (defect coverage proof) and PASS after repair.",
+    "Focused T06j admission suite: node --test experiments/v2/t06d-host-claim-publication/host-admission-source.test.mjs with the same RED-first requirement for dual-role positives.",
+    "Complete native C suite: node --test packages/tally-github-native-c/test/ (all existing negatives stay green, including task-claim-composition.test.mjs which is outside the write set and must remain unmodified).",
+    "Complete T06d controller suite: node --test experiments/v2/t06d-host-claim-publication/single-writer.test.mjs (unmodified, stays green).",
+    "Physical shared-SQLite two-process regression: builder-then-reviewer and reviewer-then-builder through openSqliteCasStore registry from two OS processes with real-style native comment readback; both accepted role rows under the same current registry; lost-ACK PENDING row blocks and reconciles by readback with no blind POST.",
+    "git diff --check clean and base->HEAD exactly the four admitted source/test paths; exact commands, Node24/platform, real exit codes, exact HEAD/tree persisted.",
+    "Exact-SHA Woodpecker CI on the PR; any clone-transient failure is diagnosed per the CI SOP and re-run on the same SHA, never masked by new commits."
+  ],
+  "forbidden": [
+    "No source edit before lawful independent admission and exact Builder Claim/FSW readback.",
+    "No edit outside the exact 4-path write set; no weakening or unrelated modification of existing tests; task-claim-composition.test.mjs and single-writer.test.mjs must remain untouched.",
+    "No bypass of preflight, no temporary adapter, no direct CAS seed, no raw SQLite mutation, no registry deletion/reset, no process termination.",
+    "No reuse of #312/#284/#210/#377 Claims/FSW/registries; no mutation of R17 frozen CAS, #312 16-path FSW or #219 14-path FSW.",
+    "No same-role claim overwrite, no second dispatch on an already-claimed protected key, no blind POST after lost ACK.",
+    "No disconnected per-role registry split; both roles verify against the one exact current registry/Pack/FSW binding.",
+    "No native dependency write, Task closure, version Freeze, version/v2->main merge, tag, Release or deployment.",
+    "No extra source path, CI profile, new scheduler, new Host authority or generic claim API."
+  ],
+  "sourceJitBranch": {
+    "branch": "task/tally-i412-zcode",
+    "baseRef": "version/v2",
+    "baseSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+    "baseTreeSha": "d8766aa7502e4bb739e5c7e603415471a114dcc0",
+    "createOnlyAfter": "PackBlob-bound Owner receipt, accepted #412 Builder Host Claim and per-task FROZEN_DAG_WRITESET readback",
+    "sourceChangesAllowed": true,
+    "mustNotReusePackArtifactBranch": true
+  },
+  "claimBindingRules": {
+    "schema": "tally.dual-role-claim-admission-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/DUAL_ROLE_CLAIM_ADMISSION_TASK_PACK_R1.json at the final Pack PR HEAD, dual-recorded with its content SHA-256.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final Pack commit after reading the Contents API PackBlob; never self-embed the Pack blob SHA.",
+    "ownerReceiptMustBind": [
+      "exact PackBlob SHA-1 and content SHA-256",
+      "source SHA fdb809c2fe51487eb9610130c634db4bf627f5e4",
+      "writeSetSha256 9f31a64538382e5cf457da5e7a1f707168b9760bb92ca8ffbb87e2e4ff62ae05",
+      "protectedClaimKey kaicreator-mm/tally#412:builder:__default__",
+      "generation 1",
+      "dispatchId dispatch:412:dual-role-claim-admission:20261115:1"
+    ],
+    "frozenWriteSetMustBind": [
+      "immutable Task Pack blob URL and exact PackBlob dual hash",
+      "source SHA and 4-path write-set digest",
+      "exact PackBlob-bound Owner approval and independent Pack review references",
+      "protected Claim key, generation and dispatch ID",
+      "original #412 DISPATCH_CLAIMED comment ID/ref and trusted Host writer ID",
+      "frozenAt"
+    ],
+    "nullPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "registry": "Dedicated _tmp/tally-alm-claims/registry-412.sqlite through public DomainHarness APIs under the genuine selected Host fence; never reuse #312/#284/#210/#377/#370 registries; both roles of any one Task verify against this one exact current registry binding."
+  },
+  "note": "This Pack authorizes no source edit, CI dispatch, CAS write or external effect by itself. It defines one bounded fail-closed admission repair that permits exactly two distinct lawful role Claims on one Task/source/Pack/FSW while preserving ADS Claim/CAS/FSW, single-writer, physical Host fencing, independent review and exact-SHA gates."
+}
