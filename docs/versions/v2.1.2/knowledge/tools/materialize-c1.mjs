@@ -21,7 +21,8 @@ export function build(graph, patch) {
   assert(!originals.get('se:LOC-09F-GH-REPLICATION')['se:locator'].includes('23:03'));
   assert.deepEqual(Object.keys(patch.changes).sort(), [
     'se:GRAPH-V2.1.1-SEK08', 'se:DM-REQ-FUNCTIONAL-DOC-METHOD',
-    'se:PAT-REQ-USER-STORY-SPECIFICATION', 'se:CASE-09F-GH-DB-FAILOVER'
+    'se:PAT-REQ-USER-STORY-SPECIFICATION', 'se:CASE-09F-GH-DB-FAILOVER',
+    'se:LOC-CS2023-SE-REQ-KU', 'se:LOC-CS2023-SE-VALIDATION-KU'
   ].sort());
   assert.deepEqual(patch.additions.map(x => x['@id']).sort(), [
     'se:LOC-09F-GH-BACKLOG', 'se:EVD-09F-GH-BACKLOG'
@@ -44,6 +45,11 @@ export function build(graph, patch) {
   assert(dm['se:constraints'].some(x => x.includes('At least one')));
   assert(!dm['se:constraints'].some(x => x === 'The chosen method applies uniformly across the requirement set for consistency.'));
   assert(!ids.get('se:PAT-REQ-USER-STORY-SPECIFICATION')['se:solution'].includes('uniform across'));
+  for(const [id,page,printed] of [['se:LOC-CS2023-SE-REQ-KU',241,242],['se:LOC-CS2023-SE-VALIDATION-KU',245,246]]){
+    const loc=ids.get(id);
+    assert.equal(loc['se:record_version'],'0.1.1');
+    assert(loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed));
+  }
   const c = ids.get('se:CASE-09F-GH-DB-FAILOVER');
   const e = ids.get('se:EVD-09F-GH-BACKLOG');
   const l = ids.get('se:LOC-09F-GH-BACKLOG');

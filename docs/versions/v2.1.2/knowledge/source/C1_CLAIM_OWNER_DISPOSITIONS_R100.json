@@ -1,6 +1,6 @@
 {
   "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
-  "recordVersion": "0.1.1",
+  "recordVersion": "0.1.2",
   "version": "v2.1.2-candidate",
   "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
   "recordedOn": "2026-11-14",
@@ -19,11 +19,12 @@
     "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
     "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
     "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
-    "candidateGraphBlob": "c3015c4178467fdcf87e39dfe18fa6a9b317c6b4",
-    "candidateGraphProducedAt": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "candidateGraphBlob": "f7210fc658d5a4f2ec841c07c7d5103d5282ae63",
     "recordedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
     "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
-    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization"
+    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
+    "candidateGraphBaseProducedAt": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "candidateGraphCurrentRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED"
   },
   "sourceRecordGap": {
     "id": "TALLY-C1-R100-SCHEMA-01",
@@ -51,6 +52,10 @@
         "locator": {
           "recordVersion": "0.1.0",
           "digestSha256": "a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "26fa2a5d697a485583e7b32c4ff676277eaa9e0078448f0b06e610e87b2d47df"
         }
       },
       "elementAttribution": {
@@ -74,7 +79,19 @@
       "originalReviewStatus": "PENDING",
       "candidateReviewStatus": "PENDING",
       "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
-      "semanticOracle": "NOT_ATTESTED"
+      "semanticOracle": "NOT_ATTESTED",
+      "locatorCorrection": {
+        "status": "VERSIONED_SOURCE_REPAIRED_NOT_FROZEN_REWRITTEN",
+        "sourceDocument": "https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf",
+        "pdfZeroBasedPageIndex": 241,
+        "printedPage": 242,
+        "section": "SE-Requirements: Product Requirements",
+        "scope": "KA Core topics 1a-1c",
+        "originalFrozenLocatorVersion": "0.1.0",
+        "candidateLocatorVersion": "0.1.1",
+        "originalWrongPageAnchor": "PDF page indices 174-176",
+        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904596720"
+      }
     },
     {
       "claimId": "se:CLM-TVV-0001",
@@ -93,6 +110,10 @@
         "locator": {
           "recordVersion": "0.1.0",
           "digestSha256": "f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947"
         }
       },
       "elementAttribution": {
@@ -118,7 +139,19 @@
       "originalReviewStatus": "PENDING",
       "candidateReviewStatus": "PENDING",
       "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
-      "semanticOracle": "NOT_ATTESTED"
+      "semanticOracle": "NOT_ATTESTED",
+      "locatorCorrection": {
+        "status": "VERSIONED_SOURCE_REPAIRED_NOT_FROZEN_REWRITTEN",
+        "sourceDocument": "https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf",
+        "pdfZeroBasedPageIndex": 245,
+        "printedPage": 246,
+        "section": "SE-Validation: Software Verification and Validation",
+        "scope": "CS Core topic 1 and learning outcome 2",
+        "originalFrozenLocatorVersion": "0.1.0",
+        "candidateLocatorVersion": "0.1.1",
+        "originalWrongPageAnchor": "PDF page indices 174-176",
+        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904596720"
+      }
     }
   ],
   "qualification": {
@@ -133,5 +166,5 @@
     "effectAuthorized": false,
     "releaseAuthorized": false
   },
-  "next": "A future canonical adoption gate must use a separate SourceOwnerDisposition contract and re-evaluate STALE on actual adoption; this sidecar does not modify the 809-node graph or grant Claim lifecycle, Oracle, SAP/R8/Global/Root/Effect."
+  "next": "R102 two CS2023 Locator corrections are new-version only, recordVersion 0.1.1 and changed candidate digest; frozen v2.1.1 remains unchanged. Future canonical adoption requires distinct SourceOwnerDisposition and independent Oracle; no change to 106 PENDING claims, SAP, R8, Global/Root, Effect or Release."
 }

@@ -7782,12 +7782,12 @@
     {
       "@id": "se:LOC-CS2023-SE-REQ-KU",
       "@type": "se:SourceLocator",
-      "se:accessed_on": "2026-11-06",
+      "se:accessed_on": "2026-11-14",
       "se:created_on": "2026-11-06",
       "se:lifecycle_status": "ACTIVE",
-      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements' (KA Core topics 1-6, Non-core topics 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176",
+      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements' (KA Core topics 1-6, Non-core topics 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; verified PDF zero-based index 241, printed page 242 in IEEE-CS CS2023 Final Report; publisher section: SE-Requirements: Product Requirements",
       "se:locator_type": "SECTION",
-      "se:record_version": "0.1.0",
+      "se:record_version": "0.1.1",
       "se:source_ref": {
         "@id": "se:SRC-CS2023"
       },
@@ -7812,12 +7812,12 @@
     {
       "@id": "se:LOC-CS2023-SE-VALIDATION-KU",
       "@type": "se:SourceLocator",
-      "se:accessed_on": "2026-11-06",
+      "se:accessed_on": "2026-11-14",
       "se:created_on": "2026-11-06",
       "se:lifecycle_status": "ACTIVE",
-      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation' (CS Core topics 1-5, KA Core topics 6-9, Non-core topics 10-14); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176",
+      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation' (CS Core topics 1-5, KA Core topics 6-9, Non-core topics 10-14); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; verified PDF zero-based index 245, printed page 246 in IEEE-CS CS2023 Final Report; publisher section: SE-Validation: Software Verification and Validation",
       "se:locator_type": "SECTION",
-      "se:record_version": "0.1.0",
+      "se:record_version": "0.1.1",
       "se:source_ref": {
         "@id": "se:SRC-CS2023"
       },

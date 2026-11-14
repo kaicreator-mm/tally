@@ -1,4 +1,4 @@
-# Tally v2.1.2 C1 Original Owner source amendment (R13)
+# Tally v2.1.2 C1 Original Owner source amendment (R13) + R102 PDF Locator repair
 
 STATUS: ORIGINAL_SOURCE_OWNER_DECISIONS_2_OF_2 / SOURCE_CANDIDATE_CANONICAL_LANE_INTEGRATED / ORACLE_NOT_ATTESTED.
 Owner confirmation: https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6808543942
@@ -6,6 +6,10 @@ Immutable original commit: 3e94685ca57a4b7258988826697af1c1c3a6b3c8
 Immutable original Graph Blob: 0f6007315fd7352fe6fd218effcfecf672cb4961
 Single-Writer branch based on wip/v2.1.1-knowledge at 706a3ec33c2ba7ba3b60116471139113edb7a6cb.
 Frozen `docs/versions/v2.1.1`, historical #299/#351 and frozen R8 are not modified (verified by Git Blob pins and PR diff scope).
+
+## R102 SourceLocator P2 correction
+
+Two incorrect frozen CS2023 PDF index references 174-176 are corrected in the new version only: REQ zero-based index 241/printed 242; Validation zero-based index 245/printed 246. New Locator record version 0.1.1; frozen v2.1.1 remains byte-identical, 106 PENDING Claims, no Oracle, SAP or R8 promotion. The canonical JSON-LD/Turtle/manifest and R100 bindings reflect the new source evidence.
 
 ## Source record
 
@@ -43,7 +47,7 @@ applied post-projection. Tools:
 Build gates (all enforced by `build-c1-canonical.mjs --check`):
 
 - **R1** frozen-input Git Blob SHA-1 pins (10 lanes, registry, catalog, frozen
-  graph `0f600731…`, overlay `d7900570…`) — drift or missing input fails closed.
+  graph `0f600731…`, updated R102 overlay Git Blob) — drift or missing input fails closed.
 - **R2** lane-integration fidelity: the overlay-free projection reproduces the
   frozen v2.1.1 `generated/graph.jsonld` and `generated/graph.ttl`
   **byte-for-byte** and the canonical N-Triples digest
@@ -59,7 +63,7 @@ Build gates (all enforced by `build-c1-canonical.mjs --check`):
   construction paths (overlay on generated graph vs. lane-level projection +
   overlay) converge.
 - **R5** Turtle parse-back == JSON-LD expansion == internal canonical triple
-  set (9,678 triples; canonical digest `2e4fbab6e056137317032ce15cebe1a41e22ea8955835250e06c721987f0c8fc`).
+  set (9,678 triples; canonical digest `b9b808bb30ec7fd6488db295ba004d909d9616e372e118152e5828b7f12d5dd8`).
 - **R6** determinism: independent rebuilds byte-identical.
 - **R7** `generated/manifest.sha256` digests match the committed bytes.
 

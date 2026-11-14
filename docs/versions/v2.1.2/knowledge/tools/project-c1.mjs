@@ -68,7 +68,7 @@ export const PINS = {
   registry: '1ce6d3da3594959b6cee7fdc7d03778cef60ad78',
   catalog: 'a0f088d11878b27b600e604f2cc8d792a85cca9d',
   frozenGraphJsonld: '0f6007315fd7352fe6fd218effcfecf672cb4961',
-  overlay: 'd790057091c3befac60a27c2f16a08faa53f5fa1',
+  overlay: '9115a39d10f45b8524aab8d95d114a42b1d7bcdc',
 };
 
 export const ORIGINAL_COMMIT = '3e94685ca57a4b7258988826697af1c1c3a6b3c8';
@@ -487,6 +487,12 @@ export function assertC1Candidate(nodes, overlay, originalNodes) {
   }
   if (!(caze['se:outcome'].includes('200,000') && caze['se:outcome'].includes('23:03') && caze['se:outcome'].includes('dropped'))) {
     throw new Error('project-c1: dropped-payload caveat lost from case outcome');
+  }
+
+  // R102: only two current-version CS2023 locators corrected, frozen v2.1.1 unchanged.
+  for(const [id,page,printed] of [['se:LOC-CS2023-SE-REQ-KU',241,242],['se:LOC-CS2023-SE-VALIDATION-KU',245,246]]){
+    const loc=byId.get(id);
+    if(!changed.has(id)||!loc||loc['se:record_version']!=='0.1.1'||loc['se:accessed_on']!=='2026-11-14'||!loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed)||loc['se:locator'].includes('indices 174-176'))throw Error('project-c1: R102 PDF locator P2 drift '+id);
   }
 
   // renamed graph root

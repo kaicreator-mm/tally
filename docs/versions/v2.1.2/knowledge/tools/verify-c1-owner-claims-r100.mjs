@@ -7,8 +7,8 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 
 const ORIGINAL='0f6007315fd7352fe6fd218effcfecf672cb4961';
-const CANDIDATE='c3015c4178467fdcf87e39dfe18fa6a9b317c6b4';
-const GRAPH_PRODUCED_AT='b226ecaab32cbef427393157399a1bdc7cdaef16';
+const CANDIDATE='f7210fc658d5a4f2ec841c07c7d5103d5282ae63';
+const GRAPH_BASE_PRODUCED_AT='b226ecaab32cbef427393157399a1bdc7cdaef16';
 const SIDECAR='docs/versions/v2.1.2/knowledge/source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json';
 const REPO_ROOT=fileURLToPath(new URL('../../../../../',import.meta.url));
 const EXPECTED=[
@@ -42,7 +42,7 @@ function verifyRecordGap(d){
 
 export function verify(d,f,c){
   assert.equal(d.schema,'tally.dke.c1-scoped-source-owner-claim-dispositions/1');
-  assert.equal(d.recordVersion,'0.1.1');
+  assert.equal(d.recordVersion,'0.1.2');
   assert.equal(d.version,'v2.1.2-candidate');
   assert.equal(d.status,'OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE');
   assert.equal(d.authority.sourceOwnerLogin,'kaicreator-mm');
@@ -55,7 +55,8 @@ export function verify(d,f,c){
   assert.equal(d.sources.originalRepoCommit,'3e94685ca57a4b7258988826697af1c1c3a6b3c8');
   assert.equal(d.sources.originalGraphBlob,ORIGINAL);
   assert.equal(d.sources.candidateGraphBlob,CANDIDATE);
-  assert.equal(d.sources.candidateGraphProducedAt,GRAPH_PRODUCED_AT);
+  assert.equal(d.sources.candidateGraphBaseProducedAt,GRAPH_BASE_PRODUCED_AT);
+  assert.equal(d.sources.candidateGraphCurrentRevisionPolicy,'ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED');
   assert.equal(d.sources.recordedAtRevisionPolicy,'ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED');
   assert.equal(d.sources.publisher,'Computer Science Curricula 2023, Final report, DOI 10.1145/3664191');
   assert.equal(d.sources.rightsScope,'Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization');
@@ -95,7 +96,22 @@ export function verify(d,f,c){
     assert.ok(claim&&originalClaim&&ev&&originalEv&&loc&&originalLoc);
     assert.deepEqual(claim,originalClaim);
     assert.deepEqual(ev,originalEv);
-    assert.deepEqual(loc,originalLoc);
+    assert.notDeepEqual(loc,originalLoc);
+    const proof=row.locatorCorrection;
+    const page=i===0?241:245, printed=i===0?242:246;
+    assert.equal(proof.status,'VERSIONED_SOURCE_REPAIRED_NOT_FROZEN_REWRITTEN');
+    assert.equal(proof.pdfZeroBasedPageIndex,page);
+    assert.equal(proof.printedPage,printed);
+    assert.equal(proof.originalFrozenLocatorVersion,'0.1.0');
+    assert.equal(proof.candidateLocatorVersion,'0.1.1');
+    assert.equal(proof.sourceDocument,'https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf');
+    assert.equal(loc['se:record_version'],'0.1.1');
+    assert.equal(loc['se:accessed_on'],'2026-11-14');
+    assert.ok(loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed));
+    assert.ok(originalLoc['se:locator'].includes('PDF page indices 174-176'));
+    assert.deepEqual(Object.keys(loc).filter(k=>JSON.stringify(loc[k])!==JSON.stringify(originalLoc[k])).sort(),['se:accessed_on','se:locator','se:record_version']);
+    assert.equal(row.recordBindings.candidateLocator.recordVersion,'0.1.1');
+    assert.equal(canonicalRecordDigest(loc),row.recordBindings.candidateLocator.digestSha256,'STALE candidate Locator '+row.locatorId);
     assert.equal(claim['se:review_status'],'PENDING');
     assert.equal(claim['se:lifecycle_status'],'PENDING_REVIEW');
     assert.equal(claim['se:SUPPORTED_BY']?.['@id']??claim['se:evidence_refs']?.['@id'],row.evidenceId);
@@ -107,8 +123,9 @@ export function verify(d,f,c){
     for(const [kind,node] of [['claim',claim],['evidence',ev],['locator',loc]]){
       const binding=row.recordBindings[kind];
       assert.equal(binding.recordVersion,'0.1.0');
-      assert.equal(node['se:record_version'],binding.recordVersion,'STALE record_version '+row[kind+'Id']);
-      assert.equal(canonicalRecordDigest(node),binding.digestSha256,'STALE canonical record digest '+row[kind+'Id']);
+      const bound=kind==='locator'?originalLoc:node;
+      assert.equal(bound['se:record_version'],binding.recordVersion,'STALE original record_version '+row[kind+'Id']);
+      assert.equal(canonicalRecordDigest(bound),binding.digestSha256,'STALE original record digest '+row[kind+'Id']);
     }
     assert.deepEqual(row.elementAttribution,exp.element);
     assert.equal(claim['se:APPLIES_TO']?.['@id'],row.elementAttribution.taxonomyNodeRef);
@@ -140,7 +157,10 @@ export function selfTest(d,f,c){
     {kind:'unknown',fn:x=>{x.d.claims[1].elementAttribution.globalStatus='QUALIFIED'}},
     {kind:'stale',fn:x=>{x.d.claims[0].recordBindings.claim.digestSha256='0'.repeat(64)}},
     {kind:'stale',fn:x=>{x.d.claims[1].recordBindings.evidence.recordVersion='0.1.1'}},
-    {kind:'stale',fn:x=>{x.d.sources.candidateGraphProducedAt='862ae64be30cd9f3a54f6fa44db4e1adca05ba73'}}
+    {kind:'stale',fn:x=>{x.d.sources.candidateGraphBaseProducedAt='862ae64be30cd9f3a54f6fa44db4e1adca05ba73'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:LOC-CS2023-SE-REQ-KU')['se:locator']=lookup(x.f,'se:LOC-CS2023-SE-REQ-KU')['se:locator']}},
+    {kind:'negative',fn:x=>{x.d.claims[1].locatorCorrection.pdfZeroBasedPageIndex=174}},
+    {kind:'stale',fn:x=>{x.d.claims[0].recordBindings.candidateLocator.digestSha256='0'.repeat(64)}}
   ];
   for(const [i,mutant] of mutants.entries()){
     const x={d:structuredClone(d),f:structuredClone(f),c:structuredClone(c)};

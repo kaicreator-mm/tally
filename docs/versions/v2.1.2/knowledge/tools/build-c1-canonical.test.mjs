@@ -116,6 +116,18 @@ test('GH-2018 positive: topology locator preserved, separate backlog locator + P
   assert.ok(caze['se:outcome'].includes('dropped') && caze['se:outcome'].includes('does not imply lossless delivery'));
 });
 
+test('R102 corrected CS2023 PDF locators reject old 174-176 range', () => {
+  const cand=buildGraph('v212-c1',inputs),byId=new Map(cand.nodes.map(n=>[n['@id'],n]));
+  for(const [id,page,printed] of [['se:LOC-CS2023-SE-REQ-KU',241,242],['se:LOC-CS2023-SE-VALIDATION-KU',245,246]]){
+    const loc=byId.get(id);
+    assert.equal(loc['se:record_version'],'0.1.1');
+    assert.ok(loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed));
+    const fake=structuredClone(inputs);
+    fake.overlay.changes[id]['se:locator']='wrong PDF page indices 174-176';
+    assert.throws(()=>buildGraph('v212-c1',fake),/R102 PDF locator P2 drift/);
+  }
+});
+
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
   const cand = buildGraph('v212-c1', inputs);
   const claims = cand.nodes.filter((n) => n['@type'] === 'se:KnowledgeClaim');
