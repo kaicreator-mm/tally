@@ -273,3 +273,188 @@ test('Host factory rejects missing credential, untrusted writer and incomplete p
     store:{get:async()=>null},owner,repo,writerAuthority,taskAuthority}),
     /TRUSTED_HOST_ADMISSION_SOURCE_REQUIRED/);
 });
+
+// ---- #412 dual-role admission regression (FROZEN_DAG_WRITESET 9f31a645...) ----
+const writerAuthorityB=writerAuthority;
+const writerAuthorityR=Object.freeze({...writerAuthority,
+  writerId:'tally-host:win32:i412:reviewer:1'});
+const reviewerDispatch='dispatch:166:t06j:reviewer:1';
+const taskAuthorityR=Object.freeze({issueNumber,sourceSha,actorRole:'reviewer',
+  dispatchId:reviewerDispatch,operatorKind:'claude-code',operatorId:'claude:reviewer1'});
+const requestR=Object.freeze({repository,issueNumber,issueRef,sourceSha,
+  actorRole:'reviewer',dispatchId:taskAuthorityR.dispatchId,
+  operatorKind:taskAuthorityR.operatorKind,operatorId:taskAuthorityR.operatorId,
+  generation:1,
+  protectedClaimKey:`${repository}#${issueNumber}:reviewer:__default__`});
+const builderCommentId=901;
+const publishedBuilderRow=Object.freeze({phase:'PUBLISHED_VERIFIED',generation:1,
+  protectedClaimKey:`${repository}#${issueNumber}:builder:__default__`,
+  repository,issueRef,sourceSha,dispatchId:taskAuthority.dispatchId,
+  actorRole:'builder',operatorKind:'codex',operatorId:taskAuthority.operatorId,
+  writerId:writerAuthorityB.writerId,commentId:builderCommentId,
+  commentRef:issueRef+'#issuecomment-'+builderCommentId});
+const builderClaimComment=claim({id:builderCommentId});
+function adapterR({githubOptions={},store=memoryStore()}={}){
+  const gh=github(githubOptions);
+  const source=createHostAdmissionSourceFromClient({octokit:gh.octokit,store,
+    owner,repo,writerAuthority:writerAuthorityR,taskAuthority:taskAuthorityR});
+  return {source,gh,store};
+}
+
+test('compatible other-role PUBLISHED_VERIFIED row admits the second role with zero writes',async()=>{
+  const h=adapterR({githubOptions:{comments:[builderClaimComment]},
+    store:memoryStore({initial:[publishedBuilderRow]})});
+  const x=await h.source.readAdmissionFacts(requestR);
+  assert.equal(x.sourceKind,'NATIVE_GITHUB_CURRENT_ADMISSION',JSON.stringify(x));
+  assert.equal(x.complete,true);assert.equal(x.sourceQualified,true);
+  assert.equal(x.activeIncompatibleClaimCount,0);
+  assert.equal(x.dispatchSourceBound,true);assert.equal(x.publisherSourceBound,true);
+  for(const key of ['authorized','admitted','taskPass','releasePass'])assert.equal(x[key],false);
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
+test('same operatorId, writerId, dispatchId, PENDING, divergent or stale row denies the second role',async()=>{
+  const variants=[
+    ['sameOperator',memoryStore({initial:[{...publishedBuilderRow,operatorId:taskAuthorityR.operatorId}]})],
+    ['sameWriter',memoryStore({initial:[{...publishedBuilderRow,writerId:writerAuthorityR.writerId}]})],
+    ['sameDispatch',memoryStore({initial:[{...publishedBuilderRow,dispatchId:reviewerDispatch}]})],
+    ['pendingRow',memoryStore({initial:[{...publishedBuilderRow,phase:'PENDING_GITHUB_PUBLISH'}]})],
+    ['divergentComment',memoryStore({initial:[{...publishedBuilderRow,commentId:902,
+      commentRef:issueRef+'#issuecomment-902'}]})],
+    ['staleSource',memoryStore({initial:[{...publishedBuilderRow,sourceSha:'b'.repeat(40)}]})],
+  ];
+  for(const [label,store] of variants){
+    const h=adapterR({githubOptions:{comments:[builderClaimComment]},store});
+    const x=await h.source.readAdmissionFacts(requestR);
+    assert.equal(x.complete,false,label+':'+JSON.stringify(x));
+    assert.equal(x.reason,'INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS',label);
+    assert.equal(h.store.writes,0,label);assert.equal(h.gh.state.posts,0,label);
+  }
+});
+
+test('native candidate without a verified CAS row denies as divergent',async()=>{
+  const h=adapterR({githubOptions:{comments:[builderClaimComment]},store:memoryStore()});
+  const x=await h.source.readAdmissionFacts(requestR);
+  assert.equal(x.complete,false);
+  assert.equal(x.reason,'CLAIM_CANDIDATE_WITHOUT_VERIFIED_CAS_ROW');
+  assert.equal(h.store.writes,0);assert.equal(h.gh.state.posts,0);
+});
+
+// Sequential-comment-id surrogate for multi-claim flows; the shared github()
+// above pins id 901 for single-claim tests and must stay untouched.
+function githubMulti({initialComments=[]}={}){
+  const state={posts:0,issueReads:0,comments:[...initialComments]};
+  const octokit={rest:{issues:{
+    async get(){state.issueReads++;return {data:{id:1660,number:issueNumber,
+      html_url:issueRef,state:'open',updated_at:date,
+      labels:[{name:'state:ready'},{name:'type:task'}]}};},
+    async listComments(){throw Error('PAGINATION_REQUIRED');},
+    async createComment({body}){
+      state.posts++;
+      const id=900+state.posts;
+      const created={id,body,html_url:issueRef+'#issuecomment-'+id,
+        issue_url:apiIssue,created_at:date,updated_at:date,
+        user:{login:writerAuthorityB.githubWriterLogin}};
+      state.comments.push(created);
+      return {data:created};
+    },
+    async getComment({comment_id:id}){
+      const found=state.comments.find(row=>row.id===id);
+      if(!found)throw Object.assign(Error('NOT_FOUND'),{status:404});
+      return {data:found};
+    }
+  },repos:{async getCommit(){return {data:{sha:sourceSha}};}}}};
+  octokit.paginate={async *iterator(route){
+    if(typeof route==='string'){
+      yield {data:[]};
+      return;
+    }
+    yield {data:[...state.comments]};
+  }};
+  return {octokit,state};
+}
+function memoryOrReal(){throw Error('unused');}
+
+test('two distinct-role claims compose through one shared CAS registry under distinct writers',async()=>{
+  const gh=githubMulti(),db=memoryStore();
+  const controllerB=createHostSingleWriterClaimController({store:db,
+    source:createHostAdmissionSourceFromClient({octokit:gh.octokit,
+      store:db,owner,repo,writerAuthority:writerAuthorityB,taskAuthority}),
+    publisher:createHostBoundNativeGitHubClaimPublisher({octokit:gh.octokit,
+      owner,repo,writerAuthority:writerAuthorityB}),writerAuthority:writerAuthorityB});
+  const b=await controllerB.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+    actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
+    operatorId:taskAuthority.operatorId,expectedGeneration:0});
+  assert.equal(b.status,'RECORDED',JSON.stringify(b));
+  assert.equal(gh.state.posts,1);
+  const controllerR=createHostSingleWriterClaimController({store:db,
+    source:createHostAdmissionSourceFromClient({octokit:gh.octokit,
+      store:db,owner,repo,writerAuthority:writerAuthorityR,taskAuthority:taskAuthorityR}),
+    publisher:createHostBoundNativeGitHubClaimPublisher({octokit:gh.octokit,
+      owner,repo,writerAuthority:writerAuthorityR}),writerAuthority:writerAuthorityR});
+  const r=await controllerR.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+    actorRole:'reviewer',dispatchId:reviewerDispatch,operatorKind:'claude-code',
+    operatorId:taskAuthorityR.operatorId,expectedGeneration:0});
+  assert.equal(r.status,'RECORDED',JSON.stringify(r));
+  assert.equal(r.protectedClaimKey,requestR.protectedClaimKey);
+  assert.equal(gh.state.posts,2);
+  assert.equal(db.rows.size,2);
+  const phases=[...db.rows.values()].map(row=>row.value.phase).sort();
+  assert.deepEqual(phases,['PUBLISHED_VERIFIED','PUBLISHED_VERIFIED']);
+  const keys=[...db.rows.values()].map(row=>row.value.protectedClaimKey).sort();
+  assert.deepEqual(keys,[request.protectedClaimKey,requestR.protectedClaimKey]);
+  assert.equal(r.admitted,false);assert.equal(r.authorized,false);
+});
+
+test('reverse order: Reviewer first, then Builder, same shared registry',async()=>{
+  const gh=githubMulti(),db=memoryStore();
+  const controllerR=createHostSingleWriterClaimController({store:db,
+    source:createHostAdmissionSourceFromClient({octokit:gh.octokit,
+      store:db,owner,repo,writerAuthority:writerAuthorityR,taskAuthority:taskAuthorityR}),
+    publisher:createHostBoundNativeGitHubClaimPublisher({octokit:gh.octokit,
+      owner,repo,writerAuthority:writerAuthorityR}),writerAuthority:writerAuthorityR});
+  const r=await controllerR.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+    actorRole:'reviewer',dispatchId:reviewerDispatch,operatorKind:'claude-code',
+    operatorId:taskAuthorityR.operatorId,expectedGeneration:0});
+  assert.equal(r.status,'RECORDED',JSON.stringify(r));
+  const controllerB=createHostSingleWriterClaimController({store:db,
+    source:createHostAdmissionSourceFromClient({octokit:gh.octokit,
+      store:db,owner,repo,writerAuthority:writerAuthorityB,taskAuthority}),
+    publisher:createHostBoundNativeGitHubClaimPublisher({octokit:gh.octokit,
+      owner,repo,writerAuthority:writerAuthorityB}),writerAuthority:writerAuthorityB});
+  const b=await controllerB.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+    actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
+    operatorId:taskAuthority.operatorId,expectedGeneration:0});
+  assert.equal(b.status,'RECORDED',JSON.stringify(b));
+  assert.equal(gh.state.posts,2);
+  assert.equal(db.rows.size,2);
+});
+
+test('same-process second role (shared operatorId) denies without a second POST',async()=>{
+  const gh=githubMulti(),db=memoryStore();
+  const controllerB=createHostSingleWriterClaimController({store:db,
+    source:createHostAdmissionSourceFromClient({octokit:gh.octokit,
+      store:db,owner,repo,writerAuthority:writerAuthorityB,taskAuthority}),
+    publisher:createHostBoundNativeGitHubClaimPublisher({octokit:gh.octokit,
+      owner,repo,writerAuthority:writerAuthorityB}),writerAuthority:writerAuthorityB});
+  const b=await controllerB.reserveAndPublish({owner,repo,issueNumber,sourceSha,
+    actorRole:'builder',dispatchId:taskAuthority.dispatchId,operatorKind:'codex',
+    operatorId:taskAuthority.operatorId,expectedGeneration:0});
+  assert.equal(b.status,'RECORDED');
+  const sameOperator=taskAuthority.operatorId;
+  const taskAuthoritySameProcess=Object.freeze({...taskAuthorityR,
+    operatorId:sameOperator});
+  const requestSame=Object.freeze({...requestR,operatorId:sameOperator});
+  const gh2=github({comments:[builderClaimComment]});
+  const sourceSame=createHostAdmissionSourceFromClient({octokit:gh2.octokit,
+    store:memoryStore({initial:[{...publishedBuilderRow},{...publishedBuilderRow,
+      phase:'PENDING_GITHUB_PUBLISH',actorRole:'reviewer',
+      protectedClaimKey:requestR.protectedClaimKey,dispatchId:reviewerDispatch,
+      operatorId:sameOperator,writerId:writerAuthorityR.writerId,
+      commentId:903,commentRef:issueRef+'#issuecomment-903'}]}),
+    owner,repo,writerAuthority:writerAuthorityR,
+    taskAuthority:taskAuthoritySameProcess});
+  const x=await sourceSame.readAdmissionFacts(requestSame);
+  assert.equal(x.complete,false);
+  assert.equal(x.reason,'INCOMPATIBLE_OR_PENDING_CLAIM_EXISTS');
+});

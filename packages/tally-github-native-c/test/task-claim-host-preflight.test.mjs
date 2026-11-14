@@ -95,3 +95,107 @@ test('missing read token, unsupported source SHA and limit fail closed',async()=
   assert.equal((await check({}, {limit:1001})).reason,'INVALID_NATIVE_PREFLIGHT_REQUEST');
   assert.equal((await check({}, {expectedSourceSha:'bad'})).reason,'INVALID_NATIVE_PREFLIGHT_REQUEST');
 });
+
+// ---- #412 dual-role admission regression (FROZEN_DAG_WRITESET 9f31a645...) ----
+const keyFor=(role)=>`kaicreator-mm/tally#${issueNumber}:${role}:__default__`;
+const claimEvent=(changes={})=>({
+  schema:'ads/github/v3',kind:'event',data:{
+    schema:'ai-dev/event-v2',event:'DISPATCH_CLAIMED',task:`#${issueNumber}`,
+    issue:`#${issueNumber}`,sha,dispatch_state:'CLAIMED',
+    admission_generation:1,...changes}
+});
+const claimComment=(id,changes={})=>({id,
+  body:'<!-- ads:github -->\n'+fence+'yaml\n'+stringify(claimEvent(changes.data??{})).trimEnd()+'\n'+fence,
+  html_url:issue+'#issuecomment-'+id,
+  created_at:'2026-11-14T18:09:38Z',updated_at:'2026-11-14T18:09:38Z',
+  user:{login:'kaicreator-mm'},...changes});
+const builderClaim=claimComment(801,{data:{
+  actor_role:'builder',operator_kind:'codex',operator_id:'codex:builder1',
+  dispatch_id:'dispatch:125:builder',protected_claim_key:keyFor('builder')}});
+const reviewerClaim=claimComment(802,{data:{
+  actor_role:'reviewer',operator_kind:'claude-code',operator_id:'claude:reviewer1',
+  dispatch_id:'dispatch:125:reviewer',protected_claim_key:keyFor('reviewer')}});
+
+test('invalid declared actorRole fails request validation',async()=>{
+  const x=await check({},{actorRole:'leader'});
+  assert.equal(x.reason,'INVALID_NATIVE_PREFLIGHT_REQUEST');noPermit(x);
+});
+
+test('fresh Task with declared role and zero candidates stays READY',async()=>{
+  const x=await check({},{actorRole:'builder'});
+  assert.equal(x.status,'NATIVE_SOURCE_PREFLIGHT_READY');
+  assert.equal(x.claimCandidates,0);
+  assert.deepEqual(x.claimCandidateRoles,[]);
+  assert.equal(x.claimRoleCandidates.length,0);
+  noPermit(x);
+});
+
+test('existing builder Claim admits a distinct-role Reviewer with bounded projections',async()=>{
+  const x=await check({comments:[builderClaim]},{actorRole:'reviewer'});
+  assert.equal(x.status,'NATIVE_SOURCE_PREFLIGHT_READY');
+  assert.equal(x.nativePreflightReady,true);
+  assert.equal(x.claimCandidates,1);
+  assert.deepEqual(x.claimCandidateRoles,['builder']);
+  assert.equal(x.claimRoleCandidates.length,1);
+  const p=x.claimRoleCandidates[0];
+  assert.equal(p.commentId,801);
+  assert.equal(p.dispatchId,'dispatch:125:builder');
+  assert.equal(p.actorRole,'builder');
+  assert.equal(p.operatorId,'codex:builder1');
+  assert.equal(p.protectedClaimKey,keyFor('builder'));
+  assert.equal(p.claimGeneration,1);
+  assert.equal(p.sourceSha,sha);
+  assert.equal(p.transportActor,'kaicreator-mm');
+  assert.equal(x.claimStatus,'NOT_VERIFIED');noPermit(x);
+});
+
+test('existing Reviewer Claim admits a distinct-role Builder (symmetric)',async()=>{
+  const x=await check({comments:[reviewerClaim]},{actorRole:'builder'});
+  assert.equal(x.status,'NATIVE_SOURCE_PREFLIGHT_READY');
+  assert.deepEqual(x.claimCandidateRoles,['reviewer']);
+  noPermit(x);
+});
+
+test('same-role duplicate candidate denies the requested role',async()=>{
+  const x=await check({comments:[builderClaim]},{actorRole:'builder'});
+  assert.equal(x.reason,'NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE');noPermit(x);
+});
+
+test('two candidates sharing one protectedClaimKey deny as claim overwrite',async()=>{
+  const second=claimComment(803,{data:{
+    actor_role:'builder',operator_kind:'codex',operator_id:'codex:builder2',
+    dispatch_id:'dispatch:125:builder2',protected_claim_key:keyFor('builder')}});
+  const x=await check({comments:[builderClaim,second]},{actorRole:'reviewer'});
+  assert.equal(x.reason,'NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE');noPermit(x);
+});
+
+test('candidates without canonical key or generation 1 deny unqualified',async()=>{
+  const noKey=claimComment(804,{data:{
+    actor_role:'builder',operator_kind:'codex',operator_id:'codex:builder1',
+    dispatch_id:'dispatch:125:nokey'}});
+  const x=await check({comments:[noKey]},{actorRole:'reviewer'});
+  assert.equal(x.reason,'NATIVE_CLAIM_ROLE_CANDIDATE_UNQUALIFIED');noPermit(x);
+  const wrongKey=claimComment(805,{data:{
+    actor_role:'builder',operator_kind:'codex',operator_id:'codex:builder1',
+    dispatch_id:'dispatch:125:wrongkey',protected_claim_key:keyFor('reviewer')}});
+  const y=await check({comments:[wrongKey]},{actorRole:'reviewer'});
+  assert.equal(y.reason,'NATIVE_CLAIM_ROLE_CANDIDATE_UNQUALIFIED');noPermit(y);
+  const gen2=claimComment(806,{data:{
+    actor_role:'builder',operator_kind:'codex',operator_id:'codex:builder1',
+    dispatch_id:'dispatch:125:gen2',protected_claim_key:keyFor('builder'),
+    admission_generation:2}});
+  const z=await check({comments:[gen2]},{actorRole:'reviewer'});
+  assert.equal(z.reason,'NATIVE_CLAIM_ROLE_CANDIDATE_UNQUALIFIED');noPermit(z);
+  const badRole=claimComment(807,{data:{
+    actor_role:'leader',operator_kind:'codex',operator_id:'codex:leader',
+    dispatch_id:'dispatch:125:leader',protected_claim_key:keyFor('leader')}});
+  const w=await check({comments:[badRole]},{actorRole:'reviewer'});
+  // A non-ADS role never validates against the pinned event schema, so the
+  // canonical comment reader fails closed before role classification runs.
+  assert.equal(w.reason,'NATIVE_GITHUB_SOURCE_INCOMPLETE_OR_STALE');noPermit(w);
+});
+
+test('candidates present without a declared role keep the legacy denial reason',async()=>{
+  const x=await check({comments:[builderClaim]});
+  assert.equal(x.reason,'NATIVE_CLAIM_ABSENCE_UNQUALIFIED');noPermit(x);
+});
