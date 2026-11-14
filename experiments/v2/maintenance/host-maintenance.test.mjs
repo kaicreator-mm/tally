@@ -416,7 +416,8 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
 const REPLAY_DH_SHA='061376f4a023070f215f9feffad5c24d96d503cb';
 const REPLAY_CANARY='UNIT_TEST_SECRET_j219_replay_do_not_leak';
 const REPLAY_PROVIDER=String.raw`import {createMaintenanceHost,recordMaintenanceCandidate,
-  observeLearningSuggestions,MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_LEARNING_KEY}
+  observeLearningSuggestions,maintenanceCandidateDigest,MAINTENANCE_CANDIDATE_KEY,
+  MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_LEARNING_KEY}
   from '__TALLY_ROOT__experiments/v2/maintenance/host-maintenance.mjs';
 const docs=new Map();
 const openStore=async()=>({
@@ -431,17 +432,31 @@ const openStore=async()=>({
   async close(){}});
 const registryPath='T219_REPLAY_IN_MEMORY';
 const sourceSha=process.env.TALLY_CLAIM_SOURCE_SHA;
-const candidate={
-  sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
-  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
-  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-  summary:'Post-release behavior regression against immutable v1.5.5',
-  priorRelease:{version:'v1.5.5',commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'}};
+const candidate=__J219_CANDIDATE_JSON__;
 const review=await recordMaintenanceCandidate({openStore,registryPath,sourceSha,
   candidate,author:'author:j219',reviewer:'reviewer:j219',
   reviewedAt:'2026-10-31T09:00:00.000Z'});
 if(review.state!=='RECORDED_COMPLETE')throw new Error('J219_REVIEW_SEED_FAILED');
+// Publish requires an already-qualified trusted review proof row (the Host
+// refuses MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING otherwise). Seed it for
+// the exact canonical candidate digest shared with the consumer; this is
+// fixture storage only — no GitHub authority, no Task/Release pass.
+const candidateDigest=maintenanceCandidateDigest(candidate);
+if(candidateDigest!==process.env.J219_REPLAY_CANDIDATE_DIGEST)
+  throw new Error('J219_REPLAY_DIGEST_MISMATCH');
+const proofStore=await openStore();
+await proofStore.put(MAINTENANCE_REVIEW_PROOF_KEY,{
+  phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha,candidateDigest,
+  reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+  reviewedPullNumber:278,
+  reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sourceSha,
+  builderClaimRef:'claim:author',reviewerClaimRef:'claim:reviewer',
+  builderOperatorId:'author:j219',reviewerOperatorId:'reviewer:j219',
+  reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
+},{mustBeAbsent:true});
+await proofStore.close();
 const summaryObservation={envelope:{schema:'ads/github/v5',kind:'report',
     data:{report_kind:'EXECUTION_SUMMARY',report_id:'rep-1',revision:1,
       publisher_namespace:'tally',capture_coverage:'COMPLETE',
@@ -459,9 +474,27 @@ const ledger=await observeLearningSuggestions({openStore,registryPath,sourceSha,
 if(ledger.state!=='RECORDED_COMPLETE')throw new Error('J219_LEDGER_SEED_FAILED');
 const env=Object.assign({},process.env,{TALLY_LOCAL_REPLAY:'1',
   TALLY_TASK_CLAIM_219_REGISTRY_PATH:registryPath});
+// Publication authority fixtures mirror the reviewedFrozen unit fixture:
+// distinct builder/reviewer role Claims bound to the seeded proof row, a
+// verified witness read and a version fence; every physical GitHub effect
+// stays NOT_RUN and no synthetic GitHub authority leaves this process.
+const roleClaim=role=>({ok:true,claim:{accepted:true,issueNumber:219,role,
+  sourceSha,claimRef:role==='builder'?'claim:author':'claim:reviewer',
+  operatorId:role==='builder'?'author:j219':'reviewer:j219',
+  writerId:role==='builder'?'writer:author:j219':'writer:reviewer:j219',
+  transportActor:'kaicreator-mm'}});
 const host=createMaintenanceHost({env,openStore,
-  verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true})});
+  verifyAcceptedClaim:async(_issue,role='builder')=>roleClaim(role),
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readReviewWitness:async({commentId,expected})=>({
+    state:'REVIEW_VERIFIED',reviewed:true,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-'+commentId,
+    sourceSha:expected.sourceSha,candidateDigest:expected.candidateDigest,
+    reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+    reviewedAt:'2026-10-31T09:00:00.000Z',p0:0,p1:0,
+    authorized:false,taskPass:false}),
+  readCurrentVersion:async()=>({ok:true,sha:sourceSha}),
+  withVersionFence:async(_meta,run)=>run()});
 // New routes intentionally fail closed in the injected replay: no synthetic
 // original GitHub Claim/review authority or production CAS is minted.
 export async function persistMaintenanceDraft(input){
@@ -512,11 +545,44 @@ export async function freezeProductIntake(){
   return {state:'NOT_FROZEN',reason:'PRODUCT_FREEZE_INPUT_INVALID',
     authorized:false,admitted:false,taskPass:false,releasePass:false};
 }
+export async function persistProductDraft312(){
+  return {state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function freezeProductReview312(){
+  return {state:'NOT_FROZEN',reason:'PRODUCT_FREEZE_INPUT_INVALID',
+    authorized:false,admitted:false,taskPass:false,releasePass:false};
+}
+export async function hostReleaseDelivery(){
+  return {state:'NOT_QUALIFIED',reason:'INDEPENDENT_HOST_ADMISSION_NOT_CONNECTED',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function addNativeTaskDependency(){
+  return {status:'NOT_VERIFIED',reason:'TASK_PACK_IDENTITY_INVALID',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function freezeVersionTaskDag(){
+  return {status:'NOT_VERIFIED',reason:'TASK_PACK_IDENTITY_INVALID',
+    authorized:false,taskPass:false,releasePass:false};
+}
 `;
 // Deterministic ledger identity of the seeded fixture report (matches
 // learningSuggestionsFromReports: sha256 over the canonical identity array).
 const REPLAY_LEARNING_ID=createHash('sha256').update(
   JSON.stringify(['rep-1',1,6540000001,'EXECUTION_SUMMARY'])).digest('hex');
+// The replay candidate and its Host-canonical digest are computed ONCE here
+// with the real maintenanceCandidateDigest so the provider-seeded review
+// proof row and the consumer-side digest always agree; a locally re-derived
+// key order would silently diverge from the Host canonical form.
+const REPLAY_CANDIDATE=Object.freeze({sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
+  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
+  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
+  summary:'Post-release behavior regression against immutable v1.5.5',
+  priorRelease:Object.freeze({version:'v1.5.5',
+    commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
+    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'})});
+const REPLAY_CANDIDATE_DIGEST=maintenanceCandidateDigest(REPLAY_CANDIDATE);
+assert.match(REPLAY_CANDIDATE_DIGEST??'/',/^[0-9a-f]{64}$/);
 const REPLAY_CONSUMER=String.raw`import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -534,14 +600,12 @@ assert.ok(digestMatch,'provider digest marker required');
 const providerPath=fileURLToPath(import.meta.resolve('@kaicreator/tally-local-codex-host-bundle'));
 assert.equal(sha(readFileSync(providerPath)),digestMatch[1],'PROVIDER_INTEGRITY_MISMATCH');
 const sourceSha=process.env.J219_REPLAY_SOURCE_SHA;
-const candidateDigest=createHash('sha256').update(JSON.stringify({
-  priorRelease:{commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5',
-    immutable:true,version:'v1.5.5'},
-  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
-  sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
-  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-  summary:'Post-release behavior regression against immutable v1.5.5'}).toString()).digest('hex');
+// The candidate digest is the Host-canonical digest of the exact seeded
+// replay candidate, computed once in the test scope with the real
+// maintenanceCandidateDigest and transported via env; a locally re-derived
+// key order would silently diverge from the Host canonical form.
+const candidateDigest=process.env.J219_REPLAY_CANDIDATE_DIGEST;
+assert.match(candidateDigest??'/',/^[0-9a-f]{64}$/);
 const issueRef='https://github.com/kaicreator-mm/tally/issues/219';
 const learningId=process.env.J219_REPLAY_LEARNING_ID;
 const deployment={deployedAppId:'deploy:tally-v2-j219-replay',tenantId:'tenant:tally-v2',
@@ -586,8 +650,11 @@ if(process.env.J219_CONSUMER_MODE==='noflag'){
 }
 const {sqlite,facade}=await openFacade();
 // Selected route existence is tested with the real loaded K. These replay
-// requests MUST remain NOT_ADMITTED and perform no CAS/GitHub writes, because
-// the physical accepted role Claims and canonical review are not configured.
+// requests MUST stay non-authoritative with no CAS/GitHub write, because the
+// physical accepted role Claims and canonical review are not configured. The
+// Host refusal is projected at the K boundary as UNKNOWN with the bounded
+// refusal reason preserved (CAS-only projection semantics); it never becomes
+// a definitive caller-facing admission or a fabricated Task/Release pass.
 for(const intentType of ['persistMaintenanceDraft',
   'freezeReviewedMaintenanceCandidate']){
   const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
@@ -598,7 +665,10 @@ for(const intentType of ['persistMaintenanceDraft',
       reviewedTree:'e'.repeat(40),reviewedBase:sourceSha}});
   assert.equal(receipt.status,'admitted',JSON.stringify(receipt).slice(0,450));
   const output=receipt.admitted.effects[0].output;
-  assert.equal(output.state,'NOT_ADMITTED',intentType);
+  assert.equal(output.state,'UNKNOWN',intentType);
+  assert.match(output.reason??'/',/^[A-Z][A-Z0-9_]{0,127}$/);
+  assert.equal(output.authorized,false);
+  assert.equal(output.admitted,false);
   assert.equal(output.taskPass,false);
   assert.equal(output.releasePass,false);
 }
@@ -720,7 +790,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     writeFileSync(join(providerDir,'package.json'),JSON.stringify({name:'@kaicreator/tally-local-codex-host-bundle',
       version:'0.0.0',private:true,type:'module',exports:'./index.mjs'}));
     writeFileSync(join(providerDir,'index.mjs'),
-      REPLAY_PROVIDER.replace('__TALLY_ROOT__','file:///'+REPO_ROOT.replace(/\\/g,'/')));
+      REPLAY_PROVIDER.replace('__TALLY_ROOT__','file:///'+REPO_ROOT.replace(/\\/g,'/'))
+        .replace('__J219_CANDIDATE_JSON__',JSON.stringify(REPLAY_CANDIDATE)));
     assert.equal(run('npm',['pack','--pack-destination',packed,providerDir]).status,0,'provider pack');
     const producerDir=join(root,'producer');mkdirSync(producerDir);
     writeFileSync(join(producerDir,'package.json'),JSON.stringify({name:'tally-j219-producer',
@@ -792,6 +863,7 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
       J219_CONSUMER_MODE:mode,J219_REPLAY_SOURCE_SHA:sourceSha,
       TALLY_CLAIM_SOURCE_SHA:sourceSha,
       J219_REPLAY_LEARNING_ID:REPLAY_LEARNING_ID,
+      J219_REPLAY_CANDIDATE_DIGEST:REPLAY_CANDIDATE_DIGEST,
       J219_REPLAY_CANARY:REPLAY_CANARY,
       J219_CONSUMER_TMP:dataDir});
     const flagged=run(process.execPath,[join(consumerDir,'consumer-j219.mjs')],
@@ -818,6 +890,48 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
 test('Task 219 frozen write-set binding names the admitted Host path',()=>{
   const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
+
+test('#219 producer business provides seals every declared business intent',()=>{
+  // The Kernel refuses routes whose intent is missing from the business
+  // module's sealed provides (V10_ROUTE_INVALID); only the physical J219
+  // replay builds maintenance routes, so this source-level pin keeps the
+  // producer composition and the declared business intents consistent in
+  // every unit run.
+  const businessSource=readFileSync(new URL(
+    '../../../packages/tally-engineering-business/src/index.mjs',import.meta.url),'utf8');
+  const producerSource=readFileSync(new URL(
+    '../selected-business-build/producer.mjs',import.meta.url),'utf8');
+  const declared=/export const INTENT_TYPES = Object\.freeze\(\[([^\]]+)\]\);/
+    .exec(businessSource);
+  assert.ok(declared,'business INTENT_TYPES declaration must be parseable');
+  const names=[...declared[1].matchAll(/'([^']+)'/g)].map(x=>x[1]);
+  assert.ok(names.length>=16,'expected the full declared business intent list');
+  for(const name of names)
+    assert.ok(producerSource.includes(`'intent:${name}'`),
+      'producer business provides must seal intent:'+name);
+  // The sealed capability's static import surface must be covered by the
+  // replay provider bundle: a missing export fails the whole module at K
+  // load time (V10_IMPORT_EVAL_FAILED), which only the physical J219 replay
+  // otherwise reaches.
+  const shimSource=readFileSync(new URL(
+    '../selected-business-build/local-codex-shim.mjs',import.meta.url),'utf8');
+  const testSource=readFileSync(fileURLToPath(import.meta.url),'utf8');
+  const providerBlock=/const REPLAY_PROVIDER=String\.raw`([\s\S]*?)`;/
+    .exec(testSource);
+  assert.ok(providerBlock,'REPLAY_PROVIDER template must be parseable');
+  const providerExports=new Set(
+    [...providerBlock[1].matchAll(/^export (?:async )?function (\w+)/gm)]
+      .map(x=>x[1]));
+  const shimImports=/import \{([\s\S]*?)\}\s*from '@kaicreator\/tally-local-codex-host-bundle'/
+    .exec(shimSource);
+  assert.ok(shimImports,'shim provider import must be parseable');
+  const importedNames=shimImports[1].split(',')
+    .map(x=>x.trim().split(/\s+as\s+/)[0]).filter(Boolean);
+  assert.ok(importedNames.length>=14,'expected the full shim import surface');
+  for(const name of importedNames)
+    assert.ok(providerExports.has(name),
+      'REPLAY_PROVIDER must export shim-imported name:'+name);
 });
 
 test('#219 candidate draft requires accepted claim and FSW, and is create-only',async()=>{
