@@ -4,7 +4,7 @@
 // Coverage:
 //   positive: PyYAML parity of the Node YAML-subset parser over the whole
 //     frozen corpus; overlay-free projection reproduces the frozen v2.1.1
-//     exports byte-for-byte; candidate invariants (809/106/0, OD05 narrowing,
+//     exports byte-for-byte; candidate invariants (811/106/2/0, OD05 narrowing,
 //     GH-2018 patch, UNKNOWN conservation); overlay preview byte convergence;
 //     Turtle parse-back equivalence; determinism; manifest digests.
 //   negative (fail-closed, incl. source failure): lane byte drift, unavailable
@@ -29,6 +29,8 @@ import {
   gitBlobSha1, parseTtl, triplesEqualSet, canonicalDigest, nodesToTriples,
 } from './project-c1.mjs';
 import { parseYaml, YamlError } from './yaml-min.mjs';
+import { verify as verifyOwnerClaims } from './verify-c1-owner-claims-r100.mjs';
+import { assertSourceOwnerDispositionEvolution } from './source-owner-disposition.mjs';
 
 function canonicalJson(value) {
   if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -78,8 +80,8 @@ test('R2 overlay-free lane projection reproduces the frozen v2.1.1 export byte-f
 
 test('R3/R4 candidate invariants hold and the overlay preview converges byte-for-byte', () => {
   const cand = buildGraph('v212-c1', inputs);
-  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes);
-  assert.equal(cand.nodes.length, 809);
+  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner);
+  assert.equal(cand.nodes.length, 811);
   assert.equal(cand.jsonld, readFileSync(REPO_ROOT + PATHS.outGraphJsonld, 'utf8'));
   assert.equal(cand.ttl, readFileSync(REPO_ROOT + PATHS.outGraphTtl, 'utf8'));
   assert.equal(
@@ -141,6 +143,37 @@ test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs O
   assert.equal(q.sap, '0/6');
   assert.equal(q.dkeR8, '0/53');
   assert.equal(q.root, 'UNKNOWN');
+});
+
+test('R107 SourceOwnerDisposition is canonical, exact-bound, and separate from Claim review', () => {
+  const cand=buildGraph('v212-c1',inputs);
+  const dispositions=cand.nodes.filter(n=>n['@type']==='se:SourceOwnerDisposition');
+  assert.deepEqual(dispositions.map(n=>n['@id']).sort(),['se:SOD-CS2023-REQ-R1','se:SOD-CS2023-VV-R1']);
+  for(const disposition of dispositions){
+    assert.equal(disposition['se:disposition'],'ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE');
+    assert.equal(disposition['se:lifecycle_status'],'ACTIVE');
+    assert.equal(disposition['se:professional_oracle_status'],'NOT_ATTESTED');
+    assert.equal(disposition['se:publication_permission'],'NOT_GRANTED_BY_THIS_OWNER_DECISION');
+    assert.equal(disposition['se:claim_lifecycle_effect'],'NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING');
+    assert.ok(disposition['se:unknown'].length>0);
+    const claim=cand.nodes.find(n=>n['@id']===disposition['se:claim_ref']['@id']);
+    assert.equal(claim['se:review_status'],'PENDING');
+    assert.equal(claim['se:lifecycle_status'],'PENDING_REVIEW');
+  }
+});
+
+test('SourceOwnerDisposition evolution permits non-ACTIVE history and rejects duplicate ACTIVE lineage', () => {
+  const cand=buildGraph('v212-c1',inputs);
+  const current=structuredClone(cand.nodes.find(n=>n['@id']==='se:SOD-CS2023-REQ-R1'));
+  const previous=structuredClone(current);
+  previous['@id']='se:SOD-CS2023-REQ-R0';
+  previous['se:record_version']='0.0.9';
+  previous['se:lifecycle_status']='SUPERSEDED';
+  current['se:supersedes_ref']={'@id':previous['@id']};
+  assert.doesNotThrow(()=>assertSourceOwnerDispositionEvolution([previous,current]));
+  const duplicateActive=structuredClone(previous);
+  duplicateActive['se:lifecycle_status']='ACTIVE';
+  assert.throws(()=>assertSourceOwnerDispositionEvolution([duplicateActive,current]),/cannot remain ACTIVE|multiple ACTIVE/);
 });
 
 test('R5 candidate export equivalence: TTL parse-back == JSON-LD == internal canonical set', () => {
@@ -232,6 +265,23 @@ test('negative: lane content tampering diverges from the frozen canonical bytes'
   assert.notEqual(baseline.digest, FROZEN_DIGEST);
 });
 
+test('negative: ACTIVE SourceOwnerDisposition stale exact binding fails closed', () => {
+  const tampered=structuredClone(inputs);
+  tampered.sourceOwner.document.claims[0].recordBindings.candidateLocator.digestSha256='0'.repeat(64);
+  assert.throws(()=>buildGraph('v212-c1',tampered),/STALE candidate_locator digest/);
+});
+
+test('negative: source+projection co-drift cannot bypass independent Owner expectations', () => {
+  const tampered=structuredClone(inputs);
+  tampered.sourceOwner.document.claims[0].scope='universal professional mandate with unrestricted rights';
+  const cand=buildGraph('v212-c1',tampered);
+  const frozen=JSON.parse(readFileSync(REPO_ROOT+PATHS.frozenGraphJsonld,'utf8'));
+  assert.throws(
+    ()=>verifyOwnerClaims(tampered.sourceOwner.document,frozen,JSON.parse(cand.jsonld),tampered.sourceOwner.schema),
+    assert.AssertionError,
+  );
+});
+
 test('negative: unauthorized ReviewDecision addition fails closed', () => {
   const tampered = structuredClone(inputs);
   tampered.overlay.additions.push({ '@id': 'se:UNAUTHORIZED-DECISION', '@type': 'se:ReviewDecision' });
@@ -272,9 +322,10 @@ test('regression: --write repairs stale or missing Owner preview in an isolated 
     ...Object.keys(PINS.lanes).map(PATHS.lanes),
     PATHS.registry, PATHS.catalog,
     PATHS.frozenGraphJsonld, PATHS.frozenGraphTtl, PATHS.overlay,
+    PATHS.sourceOwnerDispositions, PATHS.sourceOwnerSchema,
     PATHS.outGraphJsonld, PATHS.outGraphTtl, PATHS.outManifest, PATHS.outPreview,
     ...['build-c1-canonical.mjs', 'project-c1.mjs', 'materialize-c1.mjs',
-         'yaml-min.mjs', 'rdf-min.mjs'].map(name => toolPrefix + name),
+         'source-owner-disposition.mjs', 'yaml-min.mjs', 'rdf-min.mjs'].map(name => toolPrefix + name),
   ];
   const run = mode => spawnSync(process.execPath,
     [join(tempRoot, toolPrefix + 'build-c1-canonical.mjs'), mode],

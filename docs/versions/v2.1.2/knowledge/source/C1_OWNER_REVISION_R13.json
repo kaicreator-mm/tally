@@ -18,7 +18,7 @@
   "changes": {
     "se:GRAPH-V2.1.1-SEK08": {
       "@id": "se:GRAPH-V2.1.2-C1-OWNER-R13",
-      "se:graph_version": "0.1.1",
+      "se:graph_version": "0.2.0",
       "se:generated_on": "2026-11-12"
     },
     "se:DM-REQ-FUNCTIONAL-DOC-METHOD": {

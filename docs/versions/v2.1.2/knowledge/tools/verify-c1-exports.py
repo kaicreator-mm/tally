@@ -11,8 +11,9 @@
 #   4. sha256(graph.ttl) and sha256(graph.jsonld) match manifest.sha256
 #   5. reference-valued slots expand to URIRefs; se:predicate values URIRefs;
 #      no dangling record references within the node-id space
-#   6. counts: 809 subjects with se: KnowledgeGraph root
-#      se:GRAPH-V2.1.2-C1-OWNER-R13, 106 PENDING claims, 0 ReviewDecision
+#   6. counts: 811 subjects with se: KnowledgeGraph root
+#      se:GRAPH-V2.1.2-C1-OWNER-R13, 106 PENDING claims, 2 SourceOwnerDispositions,
+#      0 ReviewDecision
 #   7. optional --also-v211: the frozen v2.1.1 exports still verify against
 #      their own manifest (frozen-history regression anchor)
 #
@@ -55,7 +56,7 @@ def digest_of(lines):
 
 
 def verify_pair(root, ttl_rel, jsonld_rel, manifest_rel, expected_root_id,
-                expected_nodes, label):
+                expected_nodes, label, expected_dispositions=0):
     ttl_path = root / ttl_rel
     jsonld_path = root / jsonld_rel
     manifest_path = root / manifest_rel
@@ -124,9 +125,14 @@ def verify_pair(root, ttl_rel, jsonld_rel, manifest_rel, expected_root_id,
     if decisions:
         fail(f'{label}: ReviewDecision present: {decisions}')
 
+    dispositions = [s for s, o in g_ttl.subject_objects(RDF_TYPE)
+                    if o == URIRef(SE + 'SourceOwnerDisposition')]
+    if len(dispositions) != expected_dispositions:
+        fail(f'{label}: SourceOwnerDisposition count {len(dispositions)} != {expected_dispositions}')
+
     print(f'VERIFY PASS [{label}]: ttl_triples={triples} jsonld_triples={triples} '
           f'digest={digest} subjects={len(subjects)} claims=106/106 PENDING '
-          f'review_decision=0 root=se:{expected_root_id}')
+          f'source_owner_dispositions={len(dispositions)} review_decision=0 root=se:{expected_root_id}')
 
 
 def main():
@@ -137,7 +143,7 @@ def main():
         'docs/versions/v2.1.2/knowledge/generated/graph.ttl',
         'docs/versions/v2.1.2/knowledge/generated/graph.jsonld',
         'docs/versions/v2.1.2/knowledge/generated/manifest.sha256',
-        'GRAPH-V2.1.2-C1-OWNER-R13', 809, 'v2.1.2-c1')
+        'GRAPH-V2.1.2-C1-OWNER-R13', 811, 'v2.1.2-c1', expected_dispositions=2)
     if also_v211:
         verify_pair(
             root,

@@ -5,9 +5,14 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
+import {
+  canonicalRecordDigest, assertC1SourceOwnerDispositions,
+  readSourceOwnerInputs, SOURCE_OWNER_SCHEMA_PATH,
+} from './source-owner-disposition.mjs';
+export {canonicalRecordDigest};
 
 const ORIGINAL='0f6007315fd7352fe6fd218effcfecf672cb4961';
-const CANDIDATE='f7210fc658d5a4f2ec841c07c7d5103d5282ae63';
+const CANDIDATE='8719bb8990ef692c511fc478c7512db1559248a9';
 const GRAPH_BASE_PRODUCED_AT='b226ecaab32cbef427393157399a1bdc7cdaef16';
 const SIDECAR='docs/versions/v2.1.2/knowledge/source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json';
 const REPO_ROOT=fileURLToPath(new URL('../../../../../',import.meta.url));
@@ -27,22 +32,25 @@ const EXPECTED=[
 ];
 const lookup=(g,id)=>g['@graph'].find(x=>x['@id']===id);
 const gitBlob=(b)=>createHash('sha1').update('blob '+b.length+'\0').update(b).digest('hex');
-const canonical=(v)=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
-export const canonicalRecordDigest=(record)=>createHash('sha256').update(JSON.stringify(canonical(record)),'utf8').digest('hex');
 const git=(args)=>execFileSync('git',args,{cwd:REPO_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
 
 function verifyRecordGap(d){
   assert.equal(d.sourceRecordGap.id,'TALLY-C1-R100-SCHEMA-01');
-  assert.equal(d.sourceRecordGap.status,'OPEN_PENDING_RETAINED_OUT_OF_GRAPH_SIDECAR');
+  assert.equal(d.sourceRecordGap.status,'RESOLVED_IN_V212_SOURCE_OWNER_DISPOSITION_CONTRACT');
   assert.ok(d.sourceRecordGap.reviewerRoleEnum.includes('not SOURCE_OWNER'));
   assert.ok(d.sourceRecordGap.reviewOutcomeEnum.includes('not ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE'));
   assert.ok(d.sourceRecordGap.acceptPromotionCoupling.includes('validate_knowledge_graph.py:423-431'));
   assert.ok(d.sourceRecordGap.minimalFutureExtension.includes('SourceOwnerDisposition'));
+  assert.equal(d.sourceRecordGap.resolution.schema,'docs/versions/v2.1.2/knowledge/model/source-owner-disposition.schema.json');
+  assert.equal(d.sourceRecordGap.resolution.validatorAndProducer,'docs/versions/v2.1.2/knowledge/tools/source-owner-disposition.mjs');
+  assert.equal(d.sourceRecordGap.resolution.graphType,'se:SourceOwnerDisposition');
+  assert.equal(d.sourceRecordGap.resolution.reviewDecisionCoupling,'NONE');
+  assert.equal(d.sourceRecordGap.resolution.claimLifecyclePromotion,'FORBIDDEN');
 }
 
-export function verify(d,f,c){
+export function verify(d,f,c,schema){
   assert.equal(d.schema,'tally.dke.c1-scoped-source-owner-claim-dispositions/1');
-  assert.equal(d.recordVersion,'0.1.2');
+  assert.equal(d.recordVersion,'0.2.0');
   assert.equal(d.version,'v2.1.2-candidate');
   assert.equal(d.status,'OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE');
   assert.equal(d.authority.sourceOwnerLogin,'kaicreator-mm');
@@ -72,7 +80,8 @@ export function verify(d,f,c){
   assert.equal(d.qualification.effectAuthorized,false);
   assert.equal(d.qualification.releaseAuthorized,false);
   assert.equal(f['@graph'].length,807);
-  assert.equal(c['@graph'].length,809);
+  assert.equal(c['@graph'].length,811);
+  assert.equal(c['@graph'].filter(n=>n['@type']==='se:SourceOwnerDisposition').length,2);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:ReviewDecision').length,0);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:KnowledgeClaim').length,106);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:KnowledgeClaim'&&n['se:review_status']==='PENDING').length,106);
@@ -134,11 +143,12 @@ export function verify(d,f,c){
   assert.equal(source?.['se:stable_identifier'],'DOI 10.1145/3664191');
   assert.equal(source?.['se:record_version'],'0.1.0');
   assert.ok(source['se:rights_handling'].includes('do not reproduce substantial report text'));
+  assertC1SourceOwnerDispositions(d,schema,f['@graph'],c['@graph']);
   return 'OWNER_SCOPED_METADATA_ONLY__CLAIM_LIFECYCLE_PENDING';
 }
 
-export function selfTest(d,f,c){
-  const result=verify(d,f,c);
+export function selfTest(d,f,c,schema){
+  const result=verify(d,f,c,schema);
   const mutants=[
     {kind:'negative',fn:x=>{x.d.claims[0].ownerDisposition='ORACLE_ACCEPTED'}},
     {kind:'negative',fn:x=>{x.d.claims[1].locatorId='se:FAKE'}},
@@ -151,7 +161,14 @@ export function selfTest(d,f,c){
     {kind:'negative',fn:x=>{lookup(x.c,'se:CLM-TVV-0001')['se:review_status']='ACCEPTED'}},
     {kind:'negative',fn:x=>{x.d.authority.independentEducationalReview='https://invalid.example/review'}},
     {kind:'negative',fn:x=>{x.d.sources.rightsScope='unrestricted redistribution and training'}},
-    {kind:'negative',fn:x=>{x.d.sourceRecordGap.status='RESOLVED'}},
+    {kind:'negative',fn:x=>{x.d.sourceRecordGap.status='OPEN_PENDING_RETAINED_OUT_OF_GRAPH_SIDECAR'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SOD-CS2023-REQ-R1')['se:source_owner_login']='forged-owner'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SOD-CS2023-VV-R1')['se:professional_oracle_status']='ATTESTED_BY_DISTINCT_SEMANTIC_REVIEW'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SOD-CS2023-REQ-R1')['se:rights_scope']='unrestricted redistribution and training'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SOD-CS2023-VV-R1')['se:claim_lifecycle_effect']='ACCEPTED'}},
+    {kind:'negative',fn:x=>{x.d.claims[0].dispositionLifecycle='SUPERSEDED'}},
+    {kind:'stale',fn:x=>{lookup(x.c,'se:SOD-CS2023-REQ-R1')['se:candidate_locator_digest_sha256']='0'.repeat(64)}},
+    {kind:'stale',fn:x=>{x.d.claims[1].dispositionRecordVersion='0.0.9'}},
     {kind:'unknown',fn:x=>{x.d.qualification.parentRoot='QUALIFIED'}},
     {kind:'unknown',fn:x=>{x.d.qualification.originalD04='PASS'}},
     {kind:'unknown',fn:x=>{x.d.claims[1].elementAttribution.globalStatus='QUALIFIED'}},
@@ -165,11 +182,11 @@ export function selfTest(d,f,c){
   for(const [i,mutant] of mutants.entries()){
     const x={d:structuredClone(d),f:structuredClone(f),c:structuredClone(c)};
     mutant.fn(x);
-    assert.throws(()=>verify(x.d,x.f,x.c),assert.AssertionError,mutant.kind+' case '+i);
+    assert.throws(()=>verify(x.d,x.f,x.c,schema),assert.AssertionError,mutant.kind+' case '+i);
   }
   const count=(kind)=>mutants.filter(x=>x.kind===kind).length;
   return {schema:'tally.dke.c1-r100-owner-adoption-contract-test/1',result,total:mutants.length+1,passed:mutants.length+1,
-    positive:1,negative:count('negative'),unknown:count('unknown'),stale:count('stale'),originalGraphModified:false,professionalOracleAttested:false,formalSapQualified:false};
+    positive:1,negative:count('negative'),unknown:count('unknown'),stale:count('stale'),sourceOwnerDispositions:2,originalGraphModified:false,professionalOracleAttested:false,formalSapQualified:false};
 }
 
 function verifySchemaGap(schemaText,validatorText){
@@ -184,13 +201,16 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const ob=readFileSync(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld',import.meta.url));
   const cb=readFileSync(new URL('../generated/graph.jsonld',import.meta.url));
   const db=readFileSync(new URL('../source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json',import.meta.url));
+  const sb=readFileSync(new URL('../model/source-owner-disposition.schema.json',import.meta.url));
+  const ownerInputs=readSourceOwnerInputs();
   assert.equal(gitBlob(ob),ORIGINAL);
   assert.equal(gitBlob(cb),CANDIDATE);
   assert.equal(gitBlob(db),git(['rev-parse','HEAD:'+SIDECAR]),'sidecar bytes differ from exact HEAD');
+  assert.equal(gitBlob(sb),git(['rev-parse','HEAD:'+SOURCE_OWNER_SCHEMA_PATH]),'SourceOwnerDisposition schema bytes differ from exact HEAD');
   const schemaText=readFileSync(new URL('../../../v2.1.1/knowledge/model/schema/software-engineering.yaml',import.meta.url),'utf8');
   const validatorText=readFileSync(new URL('../../../v2.1.1/knowledge/model/validate_knowledge_graph.py',import.meta.url),'utf8');
   verifySchemaGap(schemaText,validatorText);
   const d=JSON.parse(db.toString('utf8'));
-  console.log(JSON.stringify({...selfTest(d,JSON.parse(ob),JSON.parse(cb)),node:process.version,
-    platform:process.platform,recordedAtRevision:git(['rev-parse','HEAD']),tree:git(['rev-parse','HEAD^{tree}']),sidecarBlob:gitBlob(db),originalBlob:ORIGINAL,candidateBlob:CANDIDATE},null,2));
+  console.log(JSON.stringify({...selfTest(d,JSON.parse(ob),JSON.parse(cb),ownerInputs.schema),node:process.version,
+    platform:process.platform,recordedAtRevision:git(['rev-parse','HEAD']),tree:git(['rev-parse','HEAD^{tree}']),sidecarBlob:gitBlob(db),sourceOwnerDispositionSchemaBlob:gitBlob(sb),originalBlob:ORIGINAL,candidateBlob:CANDIDATE},null,2));
 }

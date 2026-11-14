@@ -3,11 +3,15 @@ import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { serializeJsonld } from './rdf-min.mjs';
+import {
+  readSourceOwnerInputs, materializeSourceOwnerDispositions,
+  assertC1SourceOwnerDispositions,
+} from './source-owner-disposition.mjs';
 export const original = fileURLToPath(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld', import.meta.url));
 export const overlay = fileURLToPath(new URL('../source/C1_OWNER_REVISION_R13.json', import.meta.url));
 export const preview = fileURLToPath(new URL('../generated/c1-candidate.graph.jsonld', import.meta.url));
 const expectedBlob = '0f6007315fd7352fe6fd218effcfecf672cb4961';
-export function build(graph, patch) {
+export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
   assert.equal(patch.original.graphBlob, expectedBlob);
   assert.equal(patch.owner.OD05, 'NARROW_CLAIM');
   assert.equal(patch.owner.GH2018, 'ACCEPT_PATCH');
@@ -37,10 +41,14 @@ export function build(graph, patch) {
     assert(!originals.has(n['@id']), 'duplicate addition ' + n['@id']);
     out['@graph'].push(structuredClone(n));
   }
+  for (const n of materializeSourceOwnerDispositions(sourceOwner.document, sourceOwner.schema)) {
+    assert(!originals.has(n['@id']), 'duplicate disposition ' + n['@id']);
+    out['@graph'].push(n);
+  }
   out['@graph'].sort((a,b) => a['@id'].localeCompare(b['@id'], 'en'));
-  assert.equal(out['@graph'].length, 809);
+  assert.equal(out['@graph'].length, 811);
   const ids = new Map(out['@graph'].map(n => [n['@id'], n]));
-  assert.equal(ids.size, 809);
+  assert.equal(ids.size, 811);
   const dm = ids.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD');
   assert(dm['se:constraints'].some(x => x.includes('At least one')));
   assert(!dm['se:constraints'].some(x => x === 'The chosen method applies uniformly across the requirement set for consistency.'));
@@ -63,6 +71,7 @@ export function build(graph, patch) {
   assert.equal(ids.get('se:LOC-09F-GH-REPLICATION')['se:locator'], originals.get('se:LOC-09F-GH-REPLICATION')['se:locator']);
   assert.equal(out['@graph'].filter(n => n['@type'] === 'se:KnowledgeClaim').length, 106);
   assert.equal(out['@graph'].filter(n => n['@type'] === 'se:ReviewDecision').length, 0);
+  assertC1SourceOwnerDispositions(sourceOwner.document, sourceOwner.schema, graph['@graph'], out['@graph']);
   return out;
 }
 export function materialize() {
@@ -76,7 +85,7 @@ export function materialize() {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (process.argv.includes('--check')) {
     assert.equal(materialize(), readFileSync(preview, 'utf8'), 'preview must match authoritative source overlay');
-    console.log('PASS: 809 nodes, 106 pending claims, 0 ReviewDecision; Oracle NOT_ATTESTED');
+    console.log('PASS: 811 nodes, 106 pending claims, 2 SourceOwnerDispositions, 0 ReviewDecision; Oracle NOT_ATTESTED');
   } else if (process.argv.includes('--write')) {
     writeFileSync(preview, materialize());
     console.log('Updated v2.1.2 C1 candidate preview (not certified RDF graph)');

@@ -23,6 +23,7 @@ export const PREFIXES = {
 const PREFIX_KEYS = ['rdf', 'xsd', 'se'];
 
 export function expandCurie(curie) {
+  if (/^https?:\/\//.test(curie)) return curie;
   const i = curie.indexOf(':');
   if (i <= 0) throw new Error(`rdf-min: not a CURIE: "${curie}"`);
   const p = PREFIXES[curie.slice(0, i)];
@@ -307,6 +308,11 @@ export function parseTtl(text) {
             k = end + 1;
           }
           objs.push({ kind: 'lit', v, dt });
+        } else if (text2[k] === '<') {
+          const end=text2.indexOf('>',k+1);
+          if(end<0)throw new Error(`rdf-min.parseTtl: unterminated IRI at line ${i+1}`);
+          objs.push({kind:'iri',v:text2.slice(k+1,end)});
+          k=end+1;
         } else {
           const m = /^([A-Za-z][\w-]*):([^\s,;.]+)/.exec(text2.slice(k));
           if (!m) throw new Error(`rdf-min.parseTtl: cannot parse object at line ${i + 1}: "${text2.slice(k, k + 40)}"`);

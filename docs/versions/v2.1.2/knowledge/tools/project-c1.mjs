@@ -21,6 +21,12 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { parseYaml } from './yaml-min.mjs';
 import {
+  SOURCE_OWNER_PATH, SOURCE_OWNER_SCHEMA_PATH,
+  SOURCE_OWNER_BLOB, SOURCE_OWNER_SCHEMA_BLOB,
+  readSourceOwnerInputs, materializeSourceOwnerDispositions,
+  assertC1SourceOwnerDispositions,
+} from './source-owner-disposition.mjs';
+import {
   nodesToTriples, canonicalDigest, projectRecord, serializeJsonld,
   serializeTtl, parseTtl, triplesEqualSet, sortNodes, nodesDeepEqual,
 } from './rdf-min.mjs';
@@ -37,6 +43,8 @@ export const PATHS = {
   frozenGraphTtl: `${V211}/knowledge/generated/graph.ttl`,
   frozenManifest: `${V211}/knowledge/generated/manifest.sha256`,
   overlay: `${V212}/knowledge/source/C1_OWNER_REVISION_R13.json`,
+  sourceOwnerDispositions: SOURCE_OWNER_PATH,
+  sourceOwnerSchema: SOURCE_OWNER_SCHEMA_PATH,
   outGraphJsonld: `${V212}/knowledge/generated/graph.jsonld`,
   outGraphTtl: `${V212}/knowledge/generated/graph.ttl`,
   outManifest: `${V212}/knowledge/generated/manifest.sha256`,
@@ -68,7 +76,9 @@ export const PINS = {
   registry: '1ce6d3da3594959b6cee7fdc7d03778cef60ad78',
   catalog: 'a0f088d11878b27b600e604f2cc8d792a85cca9d',
   frozenGraphJsonld: '0f6007315fd7352fe6fd218effcfecf672cb4961',
-  overlay: '9115a39d10f45b8524aab8d95d114a42b1d7bcdc',
+  overlay: '061decf47b0120d6958058963980117211cea7b9',
+  sourceOwnerDispositions: SOURCE_OWNER_BLOB,
+  sourceOwnerSchema: SOURCE_OWNER_SCHEMA_BLOB,
 };
 
 export const ORIGINAL_COMMIT = '3e94685ca57a4b7258988826697af1c1c3a6b3c8';
@@ -146,7 +156,8 @@ export function loadInputs() {
   const frozenGraphJsonld = readPinned(PATHS.frozenGraphJsonld, PINS.frozenGraphJsonld, 'frozen v2.1.1 graph.jsonld');
   const overlayBytes = readPinned(PATHS.overlay, PINS.overlay, 'C1 owner overlay R13');
   const overlay = JSON.parse(overlayBytes.text);
-  return { lanes, registry, catalog, overlay, frozenGraphJsonld };
+  const sourceOwner = readSourceOwnerInputs();
+  return { lanes, registry, catalog, overlay, sourceOwner, frozenGraphJsonld };
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +408,11 @@ function collectRefs(node) {
   return refs;
 }
 
+const EXTERNAL_AUTHORITY_REF_KEYS = new Set([
+  'se:source_owner_ref', 'se:source_owner_authority_ref',
+  'se:independent_educational_review_ref', 'se:professional_oracle_ref',
+]);
+
 export function assertRefsResolve(nodes) {
   const ids = new Set(nodes.map((n) => n['@id']));
   if (ids.size !== nodes.length) throw new Error('project-c1: duplicate node ids in final graph');
@@ -405,6 +421,7 @@ export function assertRefsResolve(nodes) {
       // se:predicate points into the relationship-catalog meaning IRI space,
       // not the record-id space (same shape as the frozen v2.1.1 export)
       if (key === 'se:predicate') continue;
+      if (EXTERNAL_AUTHORITY_REF_KEYS.has(key) && /^https:\/\/[^\s]+$/.test(r)) continue;
       if (!ids.has(r)) throw new Error(`project-c1: dangling reference ${n['@id']} -> ${r}`);
     }
   }
@@ -432,8 +449,10 @@ export function assertV211Baseline(nodes) {
   return ids;
 }
 
-export function assertC1Candidate(nodes, overlay, originalNodes) {
-  assertStatusConservation(nodes, 809);
+export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
+  assertStatusConservation(nodes, 811);
+  const expectedDispositions = materializeSourceOwnerDispositions(sourceOwner.document, sourceOwner.schema);
+  const dispositionIds = new Set(expectedDispositions.map(n => n['@id']));
   const byId = new Map(nodes.map((n) => [n['@id'], n]));
   const changed = new Set(Object.keys(overlay.changes ?? {}));
   const added = new Set((overlay.additions ?? []).map((a) => a['@id']));
@@ -495,9 +514,11 @@ export function assertC1Candidate(nodes, overlay, originalNodes) {
     if(!changed.has(id)||!loc||loc['se:record_version']!=='0.1.1'||loc['se:accessed_on']!=='2026-11-14'||!loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed)||loc['se:locator'].includes('indices 174-176'))throw Error('project-c1: R102 PDF locator P2 drift '+id);
   }
 
+  assertC1SourceOwnerDispositions(sourceOwner.document, sourceOwner.schema, originalNodes, nodes);
+
   // renamed graph root
   const root = byId.get('se:GRAPH-V2.1.2-C1-OWNER-R13');
-  if (!root || root['se:graph_version'] !== '0.1.1' || root['se:generated_on'] !== BUILD_DATE
+  if (!root || root['se:graph_version'] !== '0.2.0' || root['se:generated_on'] !== BUILD_DATE
     || root['se:domain_ref']?.['@id'] !== 'se:DOMAIN-SOFTWARE-ENGINEERING') {
     throw new Error('project-c1: v2.1.2 graph root wrong');
   }
@@ -513,7 +534,7 @@ export function assertC1Candidate(nodes, overlay, originalNodes) {
     }
   }
   for (const n of nodes) {
-    if (added.has(n['@id'])) continue;
+    if (added.has(n['@id']) || dispositionIds.has(n['@id'])) continue;
     if (n['@id'] === 'se:GRAPH-V2.1.2-C1-OWNER-R13') continue;
     if (!origById.has(n['@id'])) {
       throw new Error(`project-c1: node ${n['@id']} has no original provenance`);
@@ -539,7 +560,7 @@ export const TTL_HEADER_V212 = [
   '# Tally v2.1.2 C1 owner-source canonical knowledge-graph projection (Turtle).',
   '# Single-Writer source candidate: OD05=NARROW_CLAIM + GH-2018=ACCEPT_PATCH (Tally #398 R13).',
   '# Deterministic: sorted subjects/predicates/objects; fixed build date 2026-11-12.',
-  '# Source of truth: frozen v2.1.1 canonical lane inputs + source/C1_OWNER_REVISION_R13.json overlay.',
+  '# Source of truth: frozen v2.1.1 canonical lane inputs + R13 overlay + separately validated R100 SourceOwnerDisposition sidecar.',
 ];
 
 // Build the canonical triple set + exports for one variant.
@@ -560,9 +581,11 @@ export function buildGraph(variant, inputs = loadInputs()) {
     };
   }
   if (variant !== 'v212-c1') throw new Error(`project-c1: unknown variant ${variant}`);
-  const { nodes, changedOriginalIds } = applyOverlay(baselineNodes, inputs.overlay);
+  const { nodes: overlaidNodes, changedOriginalIds } = applyOverlay(baselineNodes, inputs.overlay);
+  const dispositionNodes = materializeSourceOwnerDispositions(inputs.sourceOwner.document, inputs.sourceOwner.schema);
+  const nodes = [...overlaidNodes, ...dispositionNodes];
   // candidate invariants are part of the build itself, not only of the CLI
-  assertC1Candidate(nodes, inputs.overlay, baselineNodes);
+  assertC1Candidate(nodes, inputs.overlay, baselineNodes, inputs.sourceOwner);
   const triples = nodesToTriples(nodes);
   return {
     nodes,

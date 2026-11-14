@@ -6652,7 +6652,7 @@
         "@id": "se:DOMAIN-SOFTWARE-ENGINEERING"
       },
       "se:generated_on": "2026-11-12",
-      "se:graph_version": "0.1.1"
+      "se:graph_version": "0.2.0"
     },
     {
       "@id": "se:LOC-07A-SWEBOK-KA10-ASSESSMENT",
@@ -16175,6 +16175,116 @@
       "se:subject_ref": {
         "@id": "se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES"
       }
+    },
+    {
+      "@id": "se:SOD-CS2023-REQ-R1",
+      "@type": "se:SourceOwnerDisposition",
+      "se:candidate_element_attribution": "dke:ev16.d02.se-requirements-child",
+      "se:candidate_element_status": "CANDIDATE_ATTRIBUTION_ONLY_NOT_SAP_GLOBAL_ROOT_R8",
+      "se:candidate_locator_digest_sha256": "26fa2a5d697a485583e7b32c4ff676277eaa9e0078448f0b06e610e87b2d47df",
+      "se:candidate_locator_record_version": "0.1.1",
+      "se:candidate_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-REQ-KU"
+      },
+      "se:claim_digest_sha256": "03e34ca1f8232186e5d32681e4a3af9f6b0d579b9442cef196da07c9029250a1",
+      "se:claim_lifecycle_effect": "NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING",
+      "se:claim_record_version": "0.1.0",
+      "se:claim_ref": {
+        "@id": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS"
+      },
+      "se:created_on": "2026-11-14",
+      "se:disposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "se:evidence_digest_sha256": "4923289fae7218314e260750f56ef0b39215e907fdd84d3f99b5eddfd7b7eafa",
+      "se:evidence_record_version": "0.1.0",
+      "se:evidence_ref": {
+        "@id": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS"
+      },
+      "se:independent_educational_review_ref": {
+        "@id": "https://github.com/kaicreator-mm/domain-forge/pull/208#pullrequestreview-5890546555"
+      },
+      "se:lifecycle_status": "ACTIVE",
+      "se:negative": "No universal single-method uniformity, method superiority, Pattern/Case/DecisionModel automatic adoption or professional mandate",
+      "se:original_locator_digest_sha256": "a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6",
+      "se:original_locator_record_version": "0.1.0",
+      "se:original_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-REQ-KU"
+      },
+      "se:positive": "At least one structured functional-requirements documentation method; allow context-appropriate use cases/user stories and explain trade-offs",
+      "se:professional_oracle_status": "NOT_ATTESTED",
+      "se:publication_permission": "NOT_GRANTED_BY_THIS_OWNER_DECISION",
+      "se:record_version": "0.1.0",
+      "se:rights_scope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
+      "se:scope": "CS2023 SE-Requirements: Product Requirements, KA Core 1a-1c; curriculum teaching and bounded original paraphrase only",
+      "se:source_owner_authority_ref": {
+        "@id": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6877334744"
+      },
+      "se:source_owner_authority_type": "PROJECT_OWNER_DELEGATED_EXECUTION_NOT_PERSONAL_LINE_BY_LINE_ATTESTATION",
+      "se:source_owner_login": "kaicreator-mm",
+      "se:source_owner_ref": {
+        "@id": "https://github.com/kaicreator-mm"
+      },
+      "se:source_ref": {
+        "@id": "se:SRC-CS2023"
+      },
+      "se:taxonomy_node_ref": {
+        "@id": "se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS"
+      },
+      "se:unknown": "Any publication license beyond bibliographic metadata/short paraphrase; independent professional applicability and original Product SAP"
+    },
+    {
+      "@id": "se:SOD-CS2023-VV-R1",
+      "@type": "se:SourceOwnerDisposition",
+      "se:candidate_element_attribution": "dke:ev16.d02.se-verification-child",
+      "se:candidate_element_status": "CANDIDATE_ATTRIBUTION_ONLY_NOT_SAP_GLOBAL_ROOT_R8",
+      "se:candidate_locator_digest_sha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947",
+      "se:candidate_locator_record_version": "0.1.1",
+      "se:candidate_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-KU"
+      },
+      "se:claim_digest_sha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97",
+      "se:claim_lifecycle_effect": "NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING",
+      "se:claim_record_version": "0.1.0",
+      "se:claim_ref": {
+        "@id": "se:CLM-TVV-0001"
+      },
+      "se:created_on": "2026-11-14",
+      "se:disposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "se:evidence_digest_sha256": "f08e84eb855ee94a333c143558086f8fdc79f32744ce3da8318dc7e5bb5c5507",
+      "se:evidence_record_version": "0.1.0",
+      "se:evidence_ref": {
+        "@id": "se:EVD-TVV-0003"
+      },
+      "se:independent_educational_review_ref": {
+        "@id": "https://github.com/kaicreator-mm/domain-forge/pull/208#pullrequestreview-5890546555"
+      },
+      "se:lifecycle_status": "ACTIVE",
+      "se:negative": "Passing tests is not automatic customer/functional acceptance, SWEBOK/ISO universal qualification, Parent/Root ownership or Effect authorization",
+      "se:original_locator_digest_sha256": "f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3",
+      "se:original_locator_record_version": "0.1.0",
+      "se:original_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-KU"
+      },
+      "se:positive": "Verification and validation ask two distinct educational questions, with no inference of full business acceptance",
+      "se:professional_oracle_status": "NOT_ATTESTED",
+      "se:publication_permission": "NOT_GRANTED_BY_THIS_OWNER_DECISION",
+      "se:record_version": "0.1.0",
+      "se:rights_scope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
+      "se:scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
+      "se:source_owner_authority_ref": {
+        "@id": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6877334744"
+      },
+      "se:source_owner_authority_type": "PROJECT_OWNER_DELEGATED_EXECUTION_NOT_PERSONAL_LINE_BY_LINE_ATTESTATION",
+      "se:source_owner_login": "kaicreator-mm",
+      "se:source_owner_ref": {
+        "@id": "https://github.com/kaicreator-mm"
+      },
+      "se:source_ref": {
+        "@id": "se:SRC-CS2023"
+      },
+      "se:taxonomy_node_ref": {
+        "@id": "se:NODE-CS2023-SE-VALIDATION"
+      },
+      "se:unknown": "Independent professional Oracle, completed business-acceptance evidence, original Root/Global/SAP/R8 qualification"
     },
     {
       "@id": "se:SRC-09F-CF-KV-REDESIGN-2025",

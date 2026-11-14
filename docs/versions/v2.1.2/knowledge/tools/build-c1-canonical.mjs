@@ -14,8 +14,8 @@
 //   R1 frozen-input Git Blob pins (lanes, registry, catalog, overlay, frozen graph)
 //   R2 overlay-free projection == frozen v2.1.1 graph.jsonld / graph.ttl bytes
 //      and canonical N-Triples digest 2625a6b3... (lane-integration fidelity)
-//   R3 candidate invariants: 809 nodes; 106 PENDING claims; 0 ReviewDecision /
-//      Counterexample / ACCEPTED; OD05 narrowing present; GH-2018 separate
+//   R3 candidate invariants: 811 nodes; 106 PENDING claims; two separate
+//      SourceOwnerDisposition records; 0 ReviewDecision / Counterexample / ACCEPTED; OD05 narrowing present; GH-2018 separate
 //      locator + PENDING evidence + ~200k dropped-payload caveat preserved;
 //      UNKNOWN conservation; originals preserved; all refs resolve
 //   R4 overlay candidate preview == canonical export bytes (two construction
@@ -50,7 +50,7 @@ function run() {
     throw new Error('Provide --check, --write or --reproduce-v211; no implicit mutation');
   }
   const inputs = loadInputs(); // R1: Git Blob pins verified here
-  console.log('R1 frozen-input Git Blob pins verified (10 lanes, registry, catalog, frozen graph, overlay)');
+  console.log('R1 frozen-input and v2.1.2 extension Git Blob pins verified (10 lanes, registry, catalog, frozen graph, overlay, Owner disposition source/schema)');
 
   // R2: overlay-free lane projection reproduces the frozen canonical export
   const baseline = buildGraph('v211-baseline', inputs);
@@ -66,8 +66,8 @@ function run() {
 
   // R3: candidate invariants
   const cand = buildGraph('v212-c1', inputs);
-  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes);
-  console.log('R3 candidate invariants OK (809 nodes; 106 PENDING claims; 0 ReviewDecision; OD05 narrowed; GH-2018 patched with dropped-payload caveat; UNKNOWN conserved)');
+  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner);
+  console.log('R3 candidate invariants OK (811 nodes; 106 PENDING claims; 2 SourceOwnerDispositions; 0 ReviewDecision; OD05 narrowed; GH-2018 patched with dropped-payload caveat; UNKNOWN conserved)');
 
   // R5: Turtle parse-back == JSON-LD == internal canonical set
   const parsedTtl = parseTtl(cand.ttl);

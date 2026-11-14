@@ -1,6 +1,6 @@
 {
   "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
-  "recordVersion": "0.1.2",
+  "recordVersion": "0.2.0",
   "version": "v2.1.2-candidate",
   "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
   "recordedOn": "2026-11-14",
@@ -19,7 +19,7 @@
     "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
     "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
     "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
-    "candidateGraphBlob": "f7210fc658d5a4f2ec841c07c7d5103d5282ae63",
+    "candidateGraphBlob": "8719bb8990ef692c511fc478c7512db1559248a9",
     "recordedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
     "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
     "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
@@ -28,15 +28,25 @@
   },
   "sourceRecordGap": {
     "id": "TALLY-C1-R100-SCHEMA-01",
-    "status": "OPEN_PENDING_RETAINED_OUT_OF_GRAPH_SIDECAR",
+    "status": "RESOLVED_IN_V212_SOURCE_OWNER_DISPOSITION_CONTRACT",
     "reviewerRoleEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1055-1061 permits HUMAN_DOMAIN_REVIEWER/HUMAN_SUBJECT_EXPERT/HUMAN_SOURCE_REVIEWER/MAINTAINER, not SOURCE_OWNER",
     "reviewOutcomeEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1062-1068 permits ACCEPT/REJECT/REQUEST_CHANGES/DEFER, not ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
     "acceptPromotionCoupling": "docs/versions/v2.1.1/knowledge/model/validate_knowledge_graph.py:423-431 requires an ACCEPT target to be ACCEPTED with an exact digest, so an in-graph Owner ACCEPT would unlawfully promote the PENDING Claim",
-    "minimalFutureExtension": "A separate SourceOwnerDisposition bound to exact Claim/Evidence/Locator record versions and canonical SHA-256 digests, rights and candidate Element attribution; do not widen ACCEPTED semantics"
+    "minimalFutureExtension": "A separate SourceOwnerDisposition bound to exact Claim/Evidence/Locator record versions and canonical SHA-256 digests, rights and candidate Element attribution; do not widen ACCEPTED semantics",
+    "resolution": {
+      "schema": "docs/versions/v2.1.2/knowledge/model/source-owner-disposition.schema.json",
+      "validatorAndProducer": "docs/versions/v2.1.2/knowledge/tools/source-owner-disposition.mjs",
+      "graphType": "se:SourceOwnerDisposition",
+      "reviewDecisionCoupling": "NONE",
+      "claimLifecyclePromotion": "FORBIDDEN"
+    }
   },
   "claims": [
     {
       "claimId": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+      "dispositionId": "se:SOD-CS2023-REQ-R1",
+      "dispositionRecordVersion": "0.1.0",
+      "dispositionLifecycle": "ACTIVE",
       "evidenceId": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
       "locatorId": "se:LOC-CS2023-SE-REQ-KU",
       "sourceId": "se:SRC-CS2023",
@@ -95,6 +105,9 @@
     },
     {
       "claimId": "se:CLM-TVV-0001",
+      "dispositionId": "se:SOD-CS2023-VV-R1",
+      "dispositionRecordVersion": "0.1.0",
+      "dispositionLifecycle": "ACTIVE",
       "evidenceId": "se:EVD-TVV-0003",
       "locatorId": "se:LOC-CS2023-SE-VALIDATION-KU",
       "sourceId": "se:SRC-CS2023",
@@ -166,5 +179,5 @@
     "effectAuthorized": false,
     "releaseAuthorized": false
   },
-  "next": "R102 two CS2023 Locator corrections are new-version only, recordVersion 0.1.1 and changed candidate digest; frozen v2.1.1 remains unchanged. Future canonical adoption requires distinct SourceOwnerDisposition and independent Oracle; no change to 106 PENDING claims, SAP, R8, Global/Root, Effect or Release."
+  "next": "The v2.1.2 graph now carries two distinct SourceOwnerDisposition records under the resolved R100 schema gap. Original and candidate Claims remain PENDING with no ReviewDecision. Future Claim ACCEPTED or original SAP/Global/Root/R8 qualification requires a separate exact Claim review and distinct professional semantic Oracle; no publication, Effect or Release authorization is inferred."
 }
