@@ -1,5 +1,6 @@
 {
   "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
+  "recordVersion": "0.1.1",
   "version": "v2.1.2-candidate",
   "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
   "recordedOn": "2026-11-14",
@@ -19,9 +20,18 @@
     "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
     "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
     "candidateGraphBlob": "c3015c4178467fdcf87e39dfe18fa6a9b317c6b4",
-    "candidateSourceRevision": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "candidateGraphProducedAt": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "recordedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
     "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
-    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication or independent publisher authorization"
+    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization"
+  },
+  "sourceRecordGap": {
+    "id": "TALLY-C1-R100-SCHEMA-01",
+    "status": "OPEN_PENDING_RETAINED_OUT_OF_GRAPH_SIDECAR",
+    "reviewerRoleEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1055-1061 permits HUMAN_DOMAIN_REVIEWER/HUMAN_SUBJECT_EXPERT/HUMAN_SOURCE_REVIEWER/MAINTAINER, not SOURCE_OWNER",
+    "reviewOutcomeEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1062-1068 permits ACCEPT/REJECT/REQUEST_CHANGES/DEFER, not ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+    "acceptPromotionCoupling": "docs/versions/v2.1.1/knowledge/model/validate_knowledge_graph.py:423-431 requires an ACCEPT target to be ACCEPTED with an exact digest, so an in-graph Owner ACCEPT would unlawfully promote the PENDING Claim",
+    "minimalFutureExtension": "A separate SourceOwnerDisposition bound to exact Claim/Evidence/Locator record versions and canonical SHA-256 digests, rights and candidate Element attribution; do not widen ACCEPTED semantics"
   },
   "claims": [
     {
@@ -29,6 +39,31 @@
       "evidenceId": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
       "locatorId": "se:LOC-CS2023-SE-REQ-KU",
       "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "03e34ca1f8232186e5d32681e4a3af9f6b0d579b9442cef196da07c9029250a1"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "4923289fae7218314e260750f56ef0b39215e907fdd84d3f99b5eddfd7b7eafa"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6"
+        }
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS",
+        "candidateElementRef": "dke:ev16.d02.se-requirements-child",
+        "positiveCq": "CS2023_REQUIREMENTS_TEACHING",
+        "unknownCq": "REQUIREMENTS_UNIFORM_METHOD",
+        "parentElementRef": "dke:ev16.d02.se-requirements-vv-child",
+        "parentStatus": "UNKNOWN",
+        "globalRefs": [],
+        "globalStatus": "UNASSIGNED_UNKNOWN",
+        "rootStatus": "UNKNOWN"
+      },
       "scope": "CS2023 SE-Requirements: Product Requirements, KA Core 1a-1c; curriculum teaching and bounded original paraphrase only",
       "positive": "At least one structured functional-requirements documentation method; allow context-appropriate use cases/user stories and explain trade-offs",
       "negative": "No universal single-method uniformity, method superiority, Pattern/Case/DecisionModel automatic adoption or professional mandate",
@@ -46,6 +81,33 @@
       "evidenceId": "se:EVD-TVV-0003",
       "locatorId": "se:LOC-CS2023-SE-VALIDATION-KU",
       "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f08e84eb855ee94a333c143558086f8fdc79f32744ce3da8318dc7e5bb5c5507"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3"
+        }
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-VALIDATION",
+        "candidateElementRef": "dke:ev16.d02.se-verification-child",
+        "positiveCq": "CS2023_VV_TEACHING",
+        "unknownCq": "VV_AUTOMATIC_BUSINESS_ACCEPTANCE",
+        "parentElementRef": "dke:ev16.d02.se-requirements-vv-child",
+        "parentStatus": "UNKNOWN",
+        "globalRefs": [
+          "se:REL-TVV-0020"
+        ],
+        "globalStatus": "UNKNOWN_PUBLISHER_MANDATE_EXCLUDED",
+        "rootStatus": "UNKNOWN"
+      },
       "scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
       "positive": "Verification and validation ask two distinct educational questions, with no inference of full business acceptance",
       "negative": "Passing tests is not automatic customer/functional acceptance, SWEBOK/ISO universal qualification, Parent/Root ownership or Effect authorization",
@@ -71,5 +133,5 @@
     "effectAuthorized": false,
     "releaseAuthorized": false
   },
-  "next": "Original single Writer must link this sidecar to next-version canonical source contract with explicit separate SourceOwnerDecision vs ProfessionalOracle/Lifecycle gates and affected Native + other-conversation review; this sidecar alone cannot modify the 809-node graph or grant SAP/R8/Effect."
+  "next": "A future canonical adoption gate must use a separate SourceOwnerDisposition contract and re-evaluate STALE on actual adoption; this sidecar does not modify the 809-node graph or grant Claim lifecycle, Oracle, SAP/R8/Global/Root/Effect."
 }
