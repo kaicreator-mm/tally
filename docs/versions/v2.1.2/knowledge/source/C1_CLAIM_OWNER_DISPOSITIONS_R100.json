@@ -1,0 +1,75 @@
+{
+  "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
+  "version": "v2.1.2-candidate",
+  "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
+  "recordedOn": "2026-11-14",
+  "authority": {
+    "repository": "kaicreator-mm/tally",
+    "sourceOwnerLogin": "kaicreator-mm",
+    "decisionRecord": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6877334744",
+    "delegationType": "PROJECT_OWNER_DELEGATED_EXECUTION_NOT_PERSONAL_LINE_BY_LINE_ATTESTATION",
+    "priorOd05AndGhDecision": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6808543942",
+    "independentEducationalReview": "https://github.com/kaicreator-mm/domain-forge/pull/208#pullrequestreview-5890546555",
+    "publicationPermission": "NOT_GRANTED_BY_THIS_OWNER_DECISION",
+    "independentProfessionalOracle": "NOT_ATTESTED"
+  },
+  "sources": {
+    "originalRepoCommit": "3e94685ca57a4b7258988826697af1c1c3a6b3c8",
+    "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
+    "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
+    "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
+    "candidateGraphBlob": "c3015c4178467fdcf87e39dfe18fa6a9b317c6b4",
+    "candidateSourceRevision": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
+    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication or independent publisher authorization"
+  },
+  "claims": [
+    {
+      "claimId": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+      "evidenceId": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+      "locatorId": "se:LOC-CS2023-SE-REQ-KU",
+      "sourceId": "se:SRC-CS2023",
+      "scope": "CS2023 SE-Requirements: Product Requirements, KA Core 1a-1c; curriculum teaching and bounded original paraphrase only",
+      "positive": "At least one structured functional-requirements documentation method; allow context-appropriate use cases/user stories and explain trade-offs",
+      "negative": "No universal single-method uniformity, method superiority, Pattern/Case/DecisionModel automatic adoption or professional mandate",
+      "unknown": "Any publication license beyond bibliographic metadata/short paraphrase; independent professional applicability and original Product SAP",
+      "ownerDisposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "originalClaimLifecycle": "PENDING_REVIEW",
+      "candidateClaimLifecycle": "PENDING_REVIEW",
+      "originalReviewStatus": "PENDING",
+      "candidateReviewStatus": "PENDING",
+      "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
+      "semanticOracle": "NOT_ATTESTED"
+    },
+    {
+      "claimId": "se:CLM-TVV-0001",
+      "evidenceId": "se:EVD-TVV-0003",
+      "locatorId": "se:LOC-CS2023-SE-VALIDATION-KU",
+      "sourceId": "se:SRC-CS2023",
+      "scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
+      "positive": "Verification and validation ask two distinct educational questions, with no inference of full business acceptance",
+      "negative": "Passing tests is not automatic customer/functional acceptance, SWEBOK/ISO universal qualification, Parent/Root ownership or Effect authorization",
+      "unknown": "Independent professional Oracle, completed business-acceptance evidence, original Root/Global/SAP/R8 qualification",
+      "ownerDisposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "originalClaimLifecycle": "PENDING_REVIEW",
+      "candidateClaimLifecycle": "PENDING_REVIEW",
+      "originalReviewStatus": "PENDING",
+      "candidateReviewStatus": "PENDING",
+      "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
+      "semanticOracle": "NOT_ATTESTED"
+    }
+  ],
+  "qualification": {
+    "originalFrozenGraphModified": false,
+    "originalProducerClaimLifecycleAdopted": false,
+    "sourceOwnerDecisionsRecorded": 2,
+    "originalR8": "1/53_SCOPED_ONLY",
+    "formalSap": "0/6",
+    "formalGlobal": "0/5",
+    "parentRoot": "UNKNOWN",
+    "originalD04": "NOT_RUN",
+    "effectAuthorized": false,
+    "releaseAuthorized": false
+  },
+  "next": "Original single Writer must link this sidecar to next-version canonical source contract with explicit separate SourceOwnerDecision vs ProfessionalOracle/Lifecycle gates and affected Native + other-conversation review; this sidecar alone cannot modify the 809-node graph or grant SAP/R8/Effect."
+}
