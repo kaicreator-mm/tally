@@ -21,13 +21,18 @@
  * Host-supplied `historicalClaimCasReadback` port (a read transport like the
  * supplied Octokit, never caller/request or comment input) and independently
  * requires the historical CAS row to be exactly TERMINAL_VERIFIED for the
- * same Task, dispatchId, protectedClaimKey, generation and predecessor
- * comment id. A PENDING row (including lost-ACK PENDING) blocks with
- * NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row blocks with
- * NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable row or
- * failing/absent port blocks with NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE
- * (UNKNOWN stays distinguishable from FAILED). Without terminalized history
- * the port is never consulted and behavior is unchanged.
+ * same repository, native Task/Issue, historical source SHA, Claim comment
+ * identity, actor/operator identity, dispatchId, protectedClaimKey and
+ * generation. Every required field in the real R33 row is checked; issueRef
+ * binds the native Issue, while an optional issueNumber must match when
+ * supplied but is not invented as a required field. Missing or divergent
+ * required fields are not silently ignored. A PENDING row (including lost-ACK
+ * PENDING) blocks with NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row
+ * blocks with NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable
+ * row or failing/absent port blocks with
+ * NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE and is never inferred to be
+ * PENDING or terminal. Without terminalized history the port is never
+ * consulted and behavior is unchanged.
  */
 import {Octokit} from '@octokit/rest';
 import {readNativeTaskSourcePairFromClient} from './task-source-pair.mjs';
@@ -124,10 +129,17 @@ export async function readNativeHostClaimPreflightFromClient({
       }catch{row=null;}
       if(!row||typeof row!=='object'||Array.isArray(row))
         return blocked('NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
-      const identity=row.dispatchId===t.dispatchId&&
+      const identity=row.repository===owner+'/'+repo&&
+        (row.issueNumber===undefined||row.issueNumber===issueNumber)&&
+        row.issueRef===facts.workItem.issueRef&&
+        row.dispatchId===t.dispatchId&&
         row.protectedClaimKey===t.protectedClaimKey&&
+        row.protectedClaimKey===
+          owner+'/'+repo+'#'+issueNumber+':'+t.actorRole+':__default__'&&
         row.generation===t.claimGeneration&&
-        row.commentId===t.commentId;
+        row.commentId===t.commentId&&row.commentRef===t.commentRef&&
+        row.sourceSha===t.sourceSha&&row.actorRole===t.actorRole&&
+        row.operatorKind===t.operatorKind&&row.operatorId===t.operatorId;
       if(!identity)return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
       if(row.phase==='PENDING'||row.phase==='PENDING_GITHUB_PUBLISH')
         return blocked('NATIVE_HISTORICAL_CAS_ROW_PENDING');
