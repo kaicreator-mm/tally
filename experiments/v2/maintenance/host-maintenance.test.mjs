@@ -1106,7 +1106,11 @@ const realCWitness=async(input,claims)=>{
         base:{sha:input.reviewedBase,ref:'version/v2'}}})},
       repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
           ref===input.reviewedHead?input.reviewedTree:'f'.repeat(40)}}}}),
-        getBranch:async()=>({data:{commit:{sha:input.sourceSha}}})}}};
+        getBranch:async()=>({data:{commit:{sha:input.sourceSha}}}),
+        // #417 merged-witness reader requires the full client surface up
+        // front; the OPEN current-base fixture never dereferences it.
+        compareCommits:async()=>({data:{ahead_by:0,behind_by:0,
+          merge_base_commit:{sha:input.sourceSha}}})}}};
   return readMaintenanceReviewWitnessFromClient({octokit,...claims,
     commentId:input.reviewCommentId,
     expected:{issueNumber:219,sourceSha:input.sourceSha,
