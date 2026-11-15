@@ -296,6 +296,9 @@ test('terminal Claim without a CAS readback port blocks (missing readback)',asyn
   noPermit(x);
 });
 
+// These fixtures carry the artificial fully-populated shape (comment and
+// terminal fields present and matching). The genuine single-writer
+// reservation shape is covered separately below.
 test('PENDING and lost-ACK historical rows block after a real readback',async()=>{
   for(const phase of ['PENDING_GITHUB_PUBLISH','PENDING']){
     const port=terminalPort(terminalRow({phase}));
@@ -303,6 +306,79 @@ test('PENDING and lost-ACK historical rows block after a real readback',async()=
       {actorRole:'builder',historicalClaimCasReadback:port.readback});
     assert.equal(x.status,'BLOCKED');
     assert.equal(x.reason,'NATIVE_HISTORICAL_CAS_ROW_PENDING');
+    assert.equal(port.reads(),1);
+    noPermit(x);
+  }
+});
+
+// The genuine single-writer lost-ACK reservation shape
+// (experiments/v2/t06d-host-claim-publication/single-writer.mjs
+// reserveAndPublish, verbatim field set): phase/generation/
+// protectedClaimKey/repository/issueRef/sourceSha/dispatchId/actorRole/
+// operatorKind/operatorId/writerId — no commentId/commentRef/
+// terminalCommentId/terminalCommentRef, which only appear later at
+// PUBLISHED_VERIFIED (and in terminalization values). Persisted lost ACK is
+// exactly this shape, so a PENDING phase must classify from the durable
+// reservation alone.
+const pendingReservation=(phase,changes={})=>({phase,generation:1,
+  protectedClaimKey:keyFor('builder'),repository:owner+'/'+repo,
+  issueRef:issue,sourceSha:histSha125,dispatchId:'dispatch:125:hist',
+  actorRole:'builder',operatorKind:'codex',operatorId:'codex:builder0',
+  writerId:'tally-host:win32:i427:test:1',...changes});
+const pendingRow=(phase,changes={},envelope={})=>({
+  key:terminalCasKey(keyFor('builder')),revision:0,
+  value:pendingReservation(phase,changes),...envelope});
+
+test('genuine lost-ACK reservation shape without comment/terminal fields stays exactly PENDING',async()=>{
+  for(const phase of ['PENDING','PENDING_GITHUB_PUBLISH']){
+    const port=terminalPort(pendingRow(phase));
+    const x=await check({comments:[staleBuilder,exactDone]},
+      {actorRole:'builder',historicalClaimCasReadback:port.readback});
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'NATIVE_HISTORICAL_CAS_ROW_PENDING');
+    assert.equal(port.reads(),1);
+    noPermit(x);
+  }
+});
+
+test('pending row with present-but-different comment/terminal or core identity still diverges',async()=>{
+  for(const changes of [
+    {commentId:999},{commentRef:issue+'#issuecomment-999'},
+    {terminalCommentId:999},{terminalCommentRef:issue+'#issuecomment-999'},
+    {dispatchId:'dispatch:125:other'},{sourceSha:'c'.repeat(40)},
+    {protectedClaimKey:keyFor('reviewer')},{generation:2},
+    {repository:'kaicreator-mm/other'},
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/999'},
+    {actorRole:'reviewer'},{operatorKind:'other'},
+    {operatorId:'codex:intruder'},{issueNumber:999}
+  ]){
+    const port=terminalPort(pendingRow('PENDING_GITHUB_PUBLISH',changes));
+    const x=await check({comments:[staleBuilder,exactDone]},
+      {actorRole:'builder',historicalClaimCasReadback:port.readback});
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+    assert.equal(port.reads(),1);
+    noPermit(x);
+  }
+});
+
+test('pending-tolerant identity never bypasses the envelope check',async()=>{
+  const rows=[
+    pendingRow('PENDING',{},{key:terminalCasKey(keyFor('reviewer'))}),
+    pendingRow('PENDING',{},{key:'tally:v2:claim-admission:not-a-canonical-key'}),
+    pendingRow('PENDING_GITHUB_PUBLISH',{},{revision:-1}),
+    pendingRow('PENDING_GITHUB_PUBLISH',{},{revision:1.5}),
+    pendingRow('PENDING_GITHUB_PUBLISH',{},{revision:'0'}),
+    pendingRow('PENDING',{},{value:null}),
+    {...pendingRow('PENDING'),key:undefined},
+    {...pendingRow('PENDING'),revision:undefined}
+  ];
+  for(const row of rows){
+    const port=terminalPort(row);
+    const x=await check({comments:[staleBuilder,exactDone]},
+      {actorRole:'builder',historicalClaimCasReadback:port.readback});
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
     assert.equal(port.reads(),1);
     noPermit(x);
   }
@@ -462,13 +538,14 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
       .digest('hex');
   const schema='CREATE TABLE IF NOT EXISTS v8_host_docs '+
     '(key TEXT PRIMARY KEY, revision INTEGER NOT NULL, value TEXT NOT NULL)';
-  const seed=(phase,generation,changes={},key=casKey)=>{
+  const seed=(phase,generation,changes={},key=casKey,rawValue=undefined)=>{
     rmSync(histPath,{force:true});
     rmSync(freshPath,{force:true});
     const db=new DatabaseSync(histPath);
     db.exec(schema);
     const revision=phase==='TERMINAL_VERIFIED'?3:0;
-    const value=phase===null?null:JSON.stringify({
+    const value=phase===null?null:
+      rawValue!==undefined?rawValue:JSON.stringify({
       phase,repository:'kaicreator-mm/tally',
       issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
       protectedClaimKey:'kaicreator-mm/tally#219:builder:__default__',
@@ -513,16 +590,48 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
   db.close();
   assert.equal(after.revision,terminalBefore.revision,'historical revision must stay unchanged');
   assert.equal(after.value,terminalBefore.value,'historical value bytes must stay unchanged');
-  // PENDING historical row: BLOCKED, readback happened, no blind POST, and
-  // no fresh registry is created.
-  seed('PENDING_GITHUB_PUBLISH',1);
-  const pending=run('pending');
-  assert.equal(pending.preflightStatus,'BLOCKED');
-  assert.equal(pending.preflightReason,'NATIVE_HISTORICAL_CAS_ROW_PENDING');
-  assert.equal(pending.portReads,1);
-  assert.equal(pending.githubPosts,0);
-  assert.equal(pending.freshRegistryCreated,false);
-  assert.equal(existsSync(freshPath),false);
+  // Verbatim genuine single-writer lost-ACK reservation shape (field set of
+  // reserveAndPublish in experiments/v2/t06d-host-claim-publication/
+  // single-writer.mjs): no commentId/commentRef/terminalCommentId/
+  // terminalCommentRef, plus writerId. Persisted lost publish ACK is exactly
+  // this shape and must classify as exactly PENDING for both pending phases
+  // with one readback, zero POST and no fresh registry.
+  const genuineReservation=(phase,changes={})=>JSON.stringify({
+    phase,generation:1,
+    protectedClaimKey:'kaicreator-mm/tally#219:builder:__default__',
+    repository:'kaicreator-mm/tally',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:'ad3123e7646428ec3b13fac5b6f510b683a133c8',
+    dispatchId:'dispatch:219:maintenance:20261031:1',
+    actorRole:'builder',operatorKind:'other',
+    operatorId:'zcode:i219:builder:1',
+    writerId:'tally-host:win32:i219:1',...changes});
+  for(const phase of ['PENDING','PENDING_GITHUB_PUBLISH']){
+    seed(phase,1,{},casKey,genuineReservation(phase));
+    const pending=run('pending');
+    assert.equal(pending.preflightStatus,'BLOCKED');
+    assert.equal(pending.preflightReason,'NATIVE_HISTORICAL_CAS_ROW_PENDING');
+    assert.equal(pending.portReads,1);
+    assert.equal(pending.githubPosts,0);
+    assert.equal(pending.freshRegistryCreated,false);
+    assert.equal(existsSync(freshPath),false);
+  }
+  // Present-but-different identity on a pending-shaped row still diverges:
+  // pending tolerance covers absent comment/terminal fields, never foreign ones.
+  for(const changes of [
+    {dispatchId:'dispatch:219:other'},
+    {terminalCommentId:999},
+    {commentId:6545079272}
+  ]){
+    seed('PENDING_GITHUB_PUBLISH',1,{},casKey,
+      genuineReservation('PENDING_GITHUB_PUBLISH',changes));
+    const pendingDiv=run('pending');
+    assert.equal(pendingDiv.preflightStatus,'BLOCKED');
+    assert.equal(pendingDiv.preflightReason,'NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+    assert.equal(pendingDiv.portReads,1);
+    assert.equal(pendingDiv.githubPosts,0);
+    assert.equal(existsSync(freshPath),false);
+  }
   // divergent terminal row: BLOCKED.
   seed('TERMINAL_VERIFIED',2);
   const divergent=run('divergent');
