@@ -8,11 +8,12 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
   'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
   'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+  'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
   'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
   'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
   'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
@@ -107,6 +108,27 @@ const maintenanceInputFrom=Object.freeze({
   issueNumber:{source:'event',path:['payload','issueNumber']},
   sourceSha:{source:'event',path:['payload','sourceSha']},
   candidateDigest:{source:'event',path:['payload','candidateDigest']},
+});
+// T219 — draft persistence and witnessed-candidate freeze are separate
+// selected intents ahead of publication; the Host alone derives the canonical
+// candidate digest and re-verifies the whole authority chain.
+const maintenanceDraftInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  candidateDigest:{source:'event',path:['payload','candidateDigest']},
+  candidate:{source:'event',path:['payload','candidate']},
+});
+const maintenanceCandidateFreezeInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  candidateDigest:{source:'event',path:['payload','candidateDigest']},
+  reviewCommentId:{source:'event',path:['payload','reviewCommentId']},
+  reviewedPullNumber:{source:'event',path:['payload','reviewedPullNumber']},
+  reviewedHead:{source:'event',path:['payload','reviewedHead']},
+  reviewedTree:{source:'event',path:['payload','reviewedTree']},
+  reviewedBase:{source:'event',path:['payload','reviewedBase']},
 });
 const learningInputFrom=Object.freeze({
   issueRef:{source:'event',path:['payload','issueRef']},
@@ -392,12 +414,46 @@ export function getPolicy(){
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[witnessFreezeTransition]},finalState],
   };
+  // T219: source-bound immutable candidate draft first. The Host alone derives
+  // the canonical {candidate,sourceSha} digest; a caller digest is never proof
+  // of persistence, and this CAS-only intent has no GitHub effect.
+  const maintenanceDraftPersistTransition={
+    transitionKey:'persist-maintenance-draft',
+    trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_DRAFT_PERSIST_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-maintenance-draft-persist',inputFrom:maintenanceDraftInputFrom,
+      idempotencyKeyFrom:{template:'maint-draft:{issueNumber}:{sourceSha}:{candidateDigest}'}
+    }]
+  };
+  const maintenanceDraftPersistWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[maintenanceDraftPersistTransition]},finalState],
+  };
+  // T219: the independently reviewed candidate freeze. Authority is ONLY the
+  // Host observation chain re-read under the shared physical CAS fence
+  // (accepted builder + reviewer-role Claims, frozen write-set, persisted
+  // draft, canonical unedited review-witness comment). CAS-only: no GitHub
+  // effect, and a recorded freeze replays identically.
+  const maintenanceCandidateFreezeTransition={
+    transitionKey:'freeze-maintenance-candidate',
+    trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_CANDIDATE_FREEZE_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-maintenance-candidate-freeze',inputFrom:maintenanceCandidateFreezeInputFrom,
+      idempotencyKeyFrom:{template:'maint-freeze:{candidateDigest}:{reviewCommentId}'}
+    }]
+  };
+  const maintenanceCandidateFreezeWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[maintenanceCandidateFreezeTransition]},finalState],
+  };
   return {
     packageId:MODULE_ID,policyId:'tally-readiness',domainId:'tally-engineering',
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition,draftPersistTransition,witnessFreezeTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceDraftPersistTransition,maintenanceCandidateFreezeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition,draftPersistTransition,witnessFreezeTransition]},
         finalState,
       ],
     },
@@ -442,6 +498,18 @@ export function getPolicy(){
       eventType:'TALLY_MAINTENANCE_ISSUE_PUBLICATION_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         candidateDigest:'candidateDigest'},
+    },'rule:tally-maintenance-draft-persist':{
+      ruleId:'rule:tally-maintenance-draft-persist',
+      eventType:'TALLY_MAINTENANCE_DRAFT_PERSIST_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        candidateDigest:'candidateDigest',candidate:'candidate'},
+    },'rule:tally-maintenance-candidate-freeze':{
+      ruleId:'rule:tally-maintenance-candidate-freeze',
+      eventType:'TALLY_MAINTENANCE_CANDIDATE_FREEZE_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        candidateDigest:'candidateDigest',reviewCommentId:'reviewCommentId',
+        reviewedPullNumber:'reviewedPullNumber',reviewedHead:'reviewedHead',
+        reviewedTree:'reviewedTree',reviewedBase:'reviewedBase'},
     },'rule:tally-task-learning-outcome':{
       ruleId:'rule:tally-task-learning-outcome',
       eventType:'TALLY_TASK_LEARNING_OUTCOME_REQUESTED',
@@ -532,6 +600,24 @@ export function getPolicy(){
         // Claim, frozen DAG write-set, frozen independent Product review and
         // canonical GitHub readback. No caller/UI/Agent credential.
         roles:['requester','planner','builder','reviewer'],definition:intakeWorkflow,
+      },
+      persistMaintenanceDraft:{
+        trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_DRAFT_PERSIST_REQUESTED'},
+        ruleId:'rule:tally-maintenance-draft-persist',
+        // T219: the immutable candidate draft reaches trusted Host storage only
+        // through this sealed intent; the Host recomputes the canonical digest
+        // and every caller role can only REQUEST persistence. CAS-only effect.
+        roles:['requester','planner','builder','reviewer'],definition:maintenanceDraftPersistWorkflow,
+      },
+      freezeReviewedMaintenanceCandidate:{
+        trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_CANDIDATE_FREEZE_REQUESTED'},
+        ruleId:'rule:tally-maintenance-candidate-freeze',
+        // T219: freeze authority is ONLY the sealed Host observation chain —
+        // accepted builder Claim plus an independent accepted reviewer-role
+        // Claim on the exact source, the frozen write-set, the persisted draft
+        // and the canonical unedited GitHub review-witness comment re-read
+        // under the shared physical CAS fence. CAS-only effect.
+        roles:['requester','planner','builder','reviewer'],definition:maintenanceCandidateFreezeWorkflow,
       },
       publishMaintenanceIssue:{
         trigger:{kind:'event',eventType:'TALLY_MAINTENANCE_ISSUE_PUBLICATION_REQUESTED'},
@@ -753,6 +839,55 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectProjectIntakeAdmission({input,observation,effectId});
+        },
+      },
+      'effect:tally-maintenance-draft-persist':{
+        // T219: the sealed Host immutable candidate-draft persistence. The
+        // Host alone derives the digest over the canonical candidate; the K
+        // effect is idempotent because the Host CAS create replays an
+        // identical draft record and refuses a divergent one. CAS-only.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.persistMaintenanceDraft'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessMaintenanceDraftPersist(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.persistMaintenanceDraft',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+              candidate:input.candidate,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectMaintenanceDraftPersist({input,observation,effectId});
+        },
+      },
+      'effect:tally-maintenance-candidate-freeze':{
+        // T219: the sealed Host witnessed-candidate freeze. The Host re-reads
+        // both role Claims, the frozen write-set, the persisted draft and the
+        // canonical review-witness comment inside the shared CAS fence and
+        // reads back the immutable freeze; CAS-only, replay-safe.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.freezeReviewedMaintenanceCandidate'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessMaintenanceCandidateFreeze(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call('tally-local-codex',
+            'tally.freezeReviewedMaintenanceCandidate',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+              reviewCommentId:input.reviewCommentId,
+              reviewedPullNumber:input.reviewedPullNumber,
+              reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+              reviewedBase:input.reviewedBase,effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectMaintenanceCandidateFreeze({input,observation,effectId});
         },
       },
       'effect:tally-maintenance-issue-publication':{
@@ -1732,6 +1867,123 @@ export function projectProductReviewWitnessFreeze({input,observation,effectId}={
  */
 const MAINTENANCE_ISSUE=219;
 const CANDIDATE_DIGEST=/^[0-9a-f]{64}$/;
+// Reachable Host UNKNOWN-effect reasons are not a closed enumeration (the
+// shared version fence and reconcile/readback paths surface fresh tokens);
+// the boundary contract is the state+effect shape, so a reason only has to be
+// a bounded machine token. A lost acknowledgment stays UNKNOWN — never a
+// pre-effect refusal.
+const MAINTENANCE_REASON_TOKEN=/^[A-Z][A-Z0-9_]{0,127}$/;
+/**
+ * T219 — advisory input screening for the immutable candidate-draft
+ * persistence intent. Repo/issue allowlist is exact (kaicreator-mm/tally#219);
+ * a caller digest is only a correlation key, the Host recomputes the canonical
+ * candidate digest after the sealed dispatch.
+ */
+export function assessMaintenanceDraftPersist(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,candidateDigest,candidate}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${MAINTENANCE_ISSUE}`||
+    issueNumber!==MAINTENANCE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !CANDIDATE_DIGEST.test(candidateDigest??'')||
+    !candidate||typeof candidate!=='object'||Array.isArray(candidate))
+    return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_MAINTENANCE_DRAFT_PERSIST',
+    issueRef,issueNumber,sourceSha,candidateDigest,candidate,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+const maintenanceDraftDenied=(reason,effectId)=>Object.freeze({state:'UNKNOWN',
+  reason,effectId,issueNumber:MAINTENANCE_ISSUE,frozen:false,authorized:false,
+  admitted:false,taskPass:false,releasePass:false});
+/**
+ * Positive output records only the Host-persisted draft identity (Host-derived
+ * digest, DRAFT_PENDING_REVIEW readback); it never authorizes, freezes,
+ * publishes or passes. githubEffect stays NOT_RUN (CAS-only intent).
+ */
+export function projectMaintenanceDraftPersist({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.candidateDigest!==input?.candidateDigest||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false)
+      return maintenanceDraftDenied('UNVERIFIED_MAINTENANCE_DRAFT_PERSISTENCE',effectId);
+    if(o.state==='NOT_ADMITTED'&&MAINTENANCE_REASON_TOKEN.test(o.reason??'')&&
+      o.admitted===false&&o.githubEffect==='NOT_RUN')
+      return maintenanceDraftDenied(o.reason,effectId);
+    if(o.state==='DRAFT_PENDING_REVIEW'&&
+      ['MAINTENANCE_DRAFT_RECORDED','MAINTENANCE_DRAFT_ALREADY_RECORDED']
+        .includes(o.reason)&&o.claimGeneration===1&&
+      CANDIDATE_DIGEST.test(o.candidateDigest??''))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,
+        issueRef:o.issueRef,issueNumber:MAINTENANCE_ISSUE,
+        sourceSha:o.sourceSha,candidateDigest:o.candidateDigest,
+        draftRef:'draft:sha256:'+o.candidateDigest,frozen:false,
+        authorized:false,admitted:false,githubEffect:'NOT_RUN',
+        taskPass:false,releasePass:false});
+    return maintenanceDraftDenied('UNVERIFIED_MAINTENANCE_DRAFT_PERSISTENCE',effectId);
+  }catch{return maintenanceDraftDenied('UNTRUSTED_MAINTENANCE_DRAFT_PERSISTENCE',effectId);}
+}
+/**
+ * T219 — advisory input screening for the independently reviewed candidate
+ * freeze intent. Only the exact GitHub #219 coordinates, reviewed source
+ * identity and review-comment pointer qualify; they are pointers the Host
+ * re-verifies (unedited canonical comment, accepted builder + independent
+ * reviewer-role Claims) under the shared physical CAS fence, never authority.
+ */
+export function assessMaintenanceCandidateFreeze(input){
+  const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
+    admitted:false,authorized:false,taskPass:false,releasePass:false};
+  if(!input||typeof input!=='object'||Array.isArray(input))return Object.freeze(unqualified);
+  const {issueRef,issueNumber,sourceSha,candidateDigest,reviewCommentId,
+    reviewedPullNumber,reviewedHead,reviewedTree,reviewedBase}=input;
+  if(issueRef!==`https://github.com/kaicreator-mm/tally/issues/${MAINTENANCE_ISSUE}`||
+    issueNumber!==MAINTENANCE_ISSUE||!SOURCE_SHA.test(sourceSha??'')||
+    !CANDIDATE_DIGEST.test(candidateDigest??'')||
+    !Number.isSafeInteger(reviewCommentId)||reviewCommentId<1||
+    !Number.isSafeInteger(reviewedPullNumber)||reviewedPullNumber<1||
+    !SOURCE_SHA.test(reviewedHead??'')||!SOURCE_SHA.test(reviewedTree??'')||
+    !SOURCE_SHA.test(reviewedBase??''))return Object.freeze(unqualified);
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_MAINTENANCE_CANDIDATE_FREEZE',
+    issueRef,issueNumber,sourceSha,candidateDigest,reviewCommentId,
+    reviewedPullNumber,reviewedHead,reviewedTree,reviewedBase,
+    admitted:false,authorized:false,taskPass:false,releasePass:false});
+}
+const maintenanceFreezeDenied=(reason,effectId)=>Object.freeze({state:'UNKNOWN',
+  reason,effectId,issueNumber:MAINTENANCE_ISSUE,frozen:false,authorized:false,
+  admitted:false,taskPass:false,releasePass:false});
+/**
+ * Positive output records only THIS K intent's Host-freeze receipt bound to
+ * the exact source, candidate digest and review-witness comment; it never
+ * authorizes the caller, publishes, passes the Task or releases. githubEffect
+ * stays NOT_RUN (CAS-only intent).
+ */
+export function projectMaintenanceCandidateFreeze({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||o.issueRef!==input?.issueRef||
+      o.sourceSha!==input?.sourceSha||o.candidateDigest!==input?.candidateDigest||
+      o.authorized!==false||o.taskPass!==false||o.releasePass!==false)
+      return maintenanceFreezeDenied('UNVERIFIED_MAINTENANCE_CANDIDATE_FREEZE',effectId);
+    if(o.state==='NOT_ADMITTED'&&MAINTENANCE_REASON_TOKEN.test(o.reason??'')&&
+      o.admitted===false&&o.githubEffect==='NOT_RUN')
+      return maintenanceFreezeDenied(o.reason,effectId);
+    if(o.state==='RECORDED_COMPLETE'&&o.frozen===true&&
+      o.receiptRef==='receipt:sha256:'+o.candidateDigest&&
+      o.githubEffect==='NOT_RUN'&&
+      CANDIDATE_DIGEST.test(o.candidateDigest??''))
+      return Object.freeze({state:o.state,
+        reason:o.reason??'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS',
+        effectId,issueRef:o.issueRef,issueNumber:MAINTENANCE_ISSUE,
+        sourceSha:o.sourceSha,candidateDigest:o.candidateDigest,
+        receiptRef:o.receiptRef,frozen:true,authorized:false,admitted:false,
+        claimAccepted:o.claimAccepted===true,githubEffect:'NOT_RUN',
+        taskPass:false,releasePass:false});
+    return maintenanceFreezeDenied('UNVERIFIED_MAINTENANCE_CANDIDATE_FREEZE',effectId);
+  }catch{return maintenanceFreezeDenied('UNTRUSTED_MAINTENANCE_CANDIDATE_FREEZE',effectId);}
+}
 export function assessMaintenanceIssuePublication(input){
   const unqualified={state:'UNQUALIFIED_INPUT',reason:'MISSING_SOURCE_IDENTITY',
     admitted:false,authorized:false,taskPass:false,releasePass:false};
@@ -1746,15 +1998,6 @@ export function assessMaintenanceIssuePublication(input){
     admitted:false,authorized:false,taskPass:false,releasePass:false});
 }
 
-const MAINTENANCE_REASONS=new Set(['CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
-  'MAINTENANCE_HOST_CONFIG_INVALID','DAG_WRITESET_NOT_VERIFIED',
-  'CANDIDATE_REVIEW_NOT_VERIFIED','MAINTENANCE_REVIEW_DIGEST_MISMATCH',
-  'CANDIDATE_REVIEW_NOT_INDEPENDENT','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
-  'MAINTENANCE_ISSUE_DIGEST_MISMATCH','GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
-  'GITHUB_PUBLISH_UNKNOWN','MAINTENANCE_ISSUE_READBACK_MISMATCH',
-  'MAINTENANCE_ISSUE_IDENTITY_CONFLICT','MAINTENANCE_ISSUE_INPUT_INVALID',
-  'GITHUB_ACCESS_DENIED','GITHUB_RATE_LIMITED','GITHUB_UNAUTHENTICATED',
-  'GITHUB_RESOURCE_NOT_FOUND','GITHUB_PUBLICATION_CONFLICT']);
 const ISSUE_URL_EXACT=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
 const maintenanceDenied=(reason,effectId,state='NOT_ADMITTED')=>Object.freeze({state,
   reason,effectId,admitted:false,authorized:false,taskPass:false,releasePass:false});
@@ -1774,10 +2017,10 @@ export function projectMaintenanceIssuePublication({input,observation,effectId}=
       o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
       o.claimGeneration!==1)
       return maintenanceDenied('UNVERIFIED_MAINTENANCE_ISSUE_PUBLICATION',effectId);
-    if(o.state==='NOT_ADMITTED'&&MAINTENANCE_REASONS.has(o.reason)&&
+    if(o.state==='NOT_ADMITTED'&&MAINTENANCE_REASON_TOKEN.test(o.reason??'')&&
       o.admitted===false&&o.githubEffect==='NOT_RUN'&&o.issue===null)
       return maintenanceDenied(o.reason,effectId);
-    if(o.state==='PUBLICATION_UNKNOWN'&&MAINTENANCE_REASONS.has(o.reason)&&
+    if(o.state==='PUBLICATION_UNKNOWN'&&MAINTENANCE_REASON_TOKEN.test(o.reason??'')&&
       o.githubEffect==='UNKNOWN'&&o.issue===null)
       return Object.freeze({...maintenanceDenied(o.reason,effectId,o.state),
         githubEffect:'UNKNOWN'});
