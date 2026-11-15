@@ -1,0 +1,225 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 427,
+  "parentIssue": 422,
+  "coordinatorIssues": [392, 259],
+  "phase": "HISTORICAL_CLAIM_CAS_IDENTITY_REPAIR",
+  "revision": "R1",
+  "observedAt": "2026-11-15T17:42:31Z",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "ae779e4fb2bfa8a0c1474775b13d583d546442c7",
+    "treeSha": "aac5f55a294276e7fbb5df57201aac36b904c327",
+    "sourceNote": "Live GitHub branch readback at observedAt. This is the official two-parent merge of PR #426 with parents 54dfdbfa2bf4f75ca038d98a7a0c2701121cc479 and 46f46c0af773f81f44fdb5dbe15d71652d810389. Earlier SOURCE_HEAD 54dfdbfa is ancestry, not current source. Woodpecker push pipeline 794 at this exact source is SUCCESS."
+  },
+  "packArtifactBranch": {
+    "branch": "task/tally-i427-r36-pack-zcode",
+    "baseSha": "ae779e4fb2bfa8a0c1474775b13d583d546442c7",
+    "purpose": "immutable governance-only successor defect Task Pack artifact (Draft PR targeting version/v2)",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "taskIdentity": {
+    "issueRef": "https://github.com/kaicreator-mm/tally/issues/427",
+    "title": "[v2][P1 Defect] Historical Claim CAS envelope key is not bound to native DONE",
+    "liveState": "open",
+    "liveLabelsAtObservation": ["state:planned", "type:task"],
+    "blockedBy": [],
+    "canonicalClaimEventCount": 0,
+    "rosterDisposition": "OUT_OF_ROSTER_ENABLING_DEFECT_NO_R17_REFREEZE",
+    "ownerDirection": "R36 Original Writer repair under fresh lawful source Claim/FSW; no stale Claim reuse, forged fields, lowered security gates, self-signed independent review, Task PASS, main merge, Tag or deployment."
+  },
+  "sourceEvidence": {
+    "disposition": "SOURCE_VISIBLE_READ_BOUNDARY_GAP_WITH_REAL_HOST_ROW_READBACK",
+    "defectOrigin": "Successor to #422 comment 6897880424 and the source/Issue review conflict on #424. PR #426 repaired the value-level source/Issue checks and is merged at ae779e4f, but the current preflight still accepts only a value-shaped readback and has no authenticating check for the real Host CAS envelope key/revision. A wrong or missing CAS key coordinate cannot qualify the canonical historical row.",
+    "defects": [
+      {
+        "path": "packages/tally-github-native-c/src/task-claim-events.mjs",
+        "blobSha": "dfe8a3bf1666b157186ce14ce523a93dfe425ccf",
+        "contentSha256": "a41f2bc7d6a70ca99db3ef9347353e5ea119042e0fec341afe6a2243a3163aaa",
+        "defect": "No new DONE parser defect is asserted. This path remains admitted only for narrowly required DONE/terminal-comment binding regression; its current REST+GraphQL unedited proof and exact candidate/DONE binding must remain unchanged unless a RED counterexample requires a minimal repair."
+      },
+      {
+        "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+        "blobSha": "7298b559d3d2864be4e5fd95d8c311133775906f",
+        "contentSha256": "322d808da9fefef1af9f12595c23aa7b5306e495a8fc42fe19e4f2ef327449d0",
+        "defect": "historicalClaimCasReadback is queried with native/DONE coordinates, but its return is treated directly as the CAS value. The genuine Host row is an envelope {key, revision, value}; no expected key is derived, no envelope key/revision is validated, and terminalCommentId/terminalCommentRef are not compared with the observed DONE. The implementation cannot prove that the returned bytes are the canonical CAS row rather than an otherwise matching value from a wrong key."
+      },
+      {
+        "path": "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+        "blobSha": "43ee7287971331fe5dfdd50daadb9d5f918b145c",
+        "contentSha256": "06912955f19b56ce232024d099057b361db22f1c278b056a1b9c8633844c5a69",
+        "defect": "Current DONE coverage must remain green. Additional coverage is allowed only if the terminal-comment binding regression requires it; no weakening of same-second edit, malformed, duplicate, cross-Task or stale-event rejection is allowed."
+      },
+      {
+        "path": "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs",
+        "blobSha": "671816f98c0e6403ee39f0e45f0238a0bf0b09ca",
+        "contentSha256": "5b5edb76e75c17c665045d037c0bb0c6e0ffae8f33f7ac5f3472908a2cdbcb15",
+        "defect": "Fixtures return value-only objects, so they cannot falsify wrong/missing CAS envelope key or missing revision/value acceptance. The genuine physical fixture must use the actual Host envelope and retain wrong-source, wrong-Issue, missing-field, PENDING/lost-ACK, zero-POST and no-fresh-registry negatives."
+      }
+    ],
+    "genuineHostCasRow": {
+      "registry": "C:/xDev/kAiCreator/_tmp/tally-alm-claims/registry-219.sqlite",
+      "access": "READ_ONLY_SQLITE_URI_mode=ro",
+      "tableSchema": "CREATE TABLE v8_host_docs (key TEXT PRIMARY KEY, revision INTEGER NOT NULL, value TEXT NOT NULL)",
+      "key": "tally:v2:claim-admission:34a8269d2eaaf50089381766ef9c77f18f0bd7765556cd286f070950a036edf5",
+      "keyDerivation": "tally:v2:claim-admission: + sha256('kaicreator-mm/tally#219:builder:__default__')",
+      "revision": 3,
+      "valueSha256": "9f7e54d3c744ae79a0231c97f89e1e1053ae14c704727240fe6e2da31ad90823",
+      "phase": "TERMINAL_VERIFIED",
+      "issueNumberPresent": false,
+      "requiredValueFieldsObserved": ["actorRole", "commentId", "commentRef", "dispatchId", "generation", "issueRef", "operatorId", "operatorKind", "phase", "protectedClaimKey", "repository", "sourceSha"],
+      "terminalFieldsObserved": ["terminalCommentId", "terminalCommentRef", "terminalEvidence", "terminalOccurredAt", "terminalReservationRevision", "terminalWriterId", "writerId"],
+      "terminalCommentId": 6895328722,
+      "terminalCommentRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6895328722",
+      "mutation": "NONE",
+      "evidenceFile": "_tmp/i422-r36-cas-identity/real-219-cas.json"
+    },
+    "genuineDone": {
+      "commentId": 6895328722,
+      "nodeId": "IC_kwDOUaqf_88AAAABmv5d0g",
+      "restCreatedAt": "2026-11-15T13:52:54Z",
+      "restUpdatedAt": "2026-11-15T13:52:54Z",
+      "graphQlFullDatabaseId": "6895328722",
+      "graphQlLastEditedAt": null,
+      "graphQlEditor": null,
+      "issueNumber": 219,
+      "repository": "kaicreator-mm/tally",
+      "evidenceFiles": ["_tmp/i422-r36-cas-identity/done-6895328722-rest.json", "_tmp/i422-r36-cas-identity/done-6895328722-graphql.json"]
+    },
+    "boundary": "The repair is a native read-boundary validation change only. It does not implement the production adapter port, grant a Claim, mutate CAS, terminalize #422, dispatch #219 or create a maintenance Issue."
+  },
+  "predecessorGovernance": {
+    "issue422": {
+      "claimCommentId": 6894965396,
+      "dispatchId": "dispatch:422:claim-succession:builder:20261115:1",
+      "protectedClaimKey": "kaicreator-mm/tally#422:builder:__default__",
+      "claimSourceSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+      "claimState": "SOURCE_STALE_NONTERMINAL",
+      "reuse": "FORBIDDEN",
+      "terminalization": "NOT_PERMITTED_NO_FALSE_DONE"
+    },
+    "pr424": {
+      "state": "MERGED",
+      "mergeCommit": "54dfdbfa2bf4f75ca038d98a7a0c2701121cc479",
+      "finding": "Same-head REWORK/ACCEPT conflict preserved; source/Issue value checks subsequently changed by #426."
+    },
+    "pr426": {
+      "state": "MERGED",
+      "headSha": "46f46c0af773f81f44fdb5dbe15d71652d810389",
+      "mergeCommit": "ae779e4fb2bfa8a0c1474775b13d583d546442c7",
+      "independentReview": "A distinct independent ACCEPT review at 46f46c0 is recorded on PR #426; it is not this Task's review or Task PASS.",
+      "claimBoundary": "The PR body names the original #422 Claim/FSW. This Pack does not reuse them or retroactively convert that integration into fresh-source admission. Current source is treated as the new starting fact."
+    },
+    "issue219": {
+      "historicalCasMutation": "NONE",
+      "successorClaimAuthorized": false,
+      "maintenanceIssueCreationAuthorized": false,
+      "packRebuildRequired": true,
+      "note": "PR #425 is pinned to stale base 54dfdbfa. Any #219 lane must rebuild at the actual current source after this repair and obtain fresh independent review/Owner receipt; no witness or CI status is carried forward as current."
+    }
+  },
+  "allowed_write_set": [
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-events.mjs",
+      "owner": "HISTORICAL_CLAIM_CAS_IDENTITY_REPAIR",
+      "purpose": "Preserve exact canonical DONE observation; change only if a new RED terminal-comment binding case proves a minimal repair necessary."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+      "owner": "HISTORICAL_CLAIM_CAS_IDENTITY_REPAIR",
+      "purpose": "Require and validate the genuine Host CAS envelope {key, revision, value}; derive the canonical key from protectedClaimKey; bind value identity and terminalCommentId/Ref to native DONE; fail closed on missing/divergent/pending/unreadable rows."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+      "owner": "HISTORICAL_CLAIM_CAS_IDENTITY_REPAIR",
+      "purpose": "Preserve and, only where needed, extend exact DONE/terminal-comment negative coverage without weakening existing event gates."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs",
+      "owner": "HISTORICAL_CLAIM_CAS_IDENTITY_REPAIR",
+      "purpose": "Add genuine-envelope positive plus wrong/missing key, missing revision/value, wrong source/Issue/terminal comment, missing fields, PENDING/lost-ACK, divergent/missing row, zero-POST/no-fresh-registry physical negatives."
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "writeSetNormalization": "tally.v2.allowed-write-set-normalization/1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_SERIALIZED_SINGLE_WRITER",
+    "pathCount": 4,
+    "pathsSha256": "b088685bb72d39115f51f1977a592cac99aae25c4aa01481501323965537712a",
+    "openTypeTaskCount": 20,
+    "nonemptyOverlaps": [
+      {
+        "issue": 422,
+        "pathCount": 4,
+        "disposition": "SERIALIZED_ORIGINAL_WRITER_NO_CONCURRENT_LANE"
+      }
+    ],
+    "allOtherOpenTaskOverlaps": 0,
+    "observedAt": "2026-11-15T17:36:27.295898+00:00",
+    "evidenceFile": "_tmp/i422-r36-cas-identity/open-task-overlaps.json",
+    "admissionRule": "Re-read immediately before Claim. Any additional overlap or active writer is BLOCKED. This successor Task is not concurrent with #422 and uses a different native Issue, dispatch, registry and FSW key."
+  },
+  "repairContract": {
+    "readbackShape": "The trusted Host port returns the actual CAS row envelope {key, revision, value}. No value-only compatibility path remains authoritative for terminalized historical Claims; no field absent from the genuine value is invented.",
+    "expectedCasKey": "tally:v2:claim-admission: + SHA-256(protectedClaimKey), UTF-8, lowercase hexadecimal; this is the existing single-writer.mjs keyOf algorithm.",
+    "requiredEnvelope": "key exact string match; revision nonnegative safe integer; value non-array object.",
+    "requiredValueBindings": ["repository", "issueRef", "dispatchId", "protectedClaimKey", "generation", "commentId", "commentRef", "sourceSha", "actorRole", "operatorKind", "operatorId", "terminalCommentId", "terminalCommentRef", "phase=TERMINAL_VERIFIED"],
+    "optionalIssueNumber": "Absent is valid because the genuine value omits it; when supplied it must equal the native Issue number.",
+    "pendingAndLostAck": "PENDING or PENDING_GITHUB_PUBLISH returns NATIVE_HISTORICAL_CAS_ROW_PENDING. Lost ACK never triggers retry or blind POST and never creates a fresh successor registry.",
+    "divergent": "Wrong/missing key, invalid/missing revision/value, wrong source/Issue/comment/actor/operator/dispatch/key/generation/terminal DONE identity and nonterminal phases fail closed as NATIVE_HISTORICAL_CAS_ROW_DIVERGENT or NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE according to the existing reason boundary.",
+    "unchanged": "No-DONE and nonterminal-history behavior, GraphQL unedited proof, #414 dual-role admission, permit booleans and production adapter scope remain unchanged.",
+    "physicalPositive": "Use the genuine #219 envelope key/revision/value shape read-only, including no issueNumber, then admit a fresh successor only in a new fixture registry through the real controller with exactly one fixture POST.",
+    "physicalNegatives": "Wrong key/source/Issue/terminal comment, missing required envelope/value fields, PENDING/lost-ACK, divergent and missing rows produce zero GitHub POST and no fresh registry; historical fixture row remains byte-identical."
+  },
+  "admissionPlan": {
+    "orderedGates": [
+      "Independent distinct-conversation non-Writer exact-blob Pack review P0/P1=0 at the committed Pack HEAD/tree/blob hashes.",
+      "Bounded Owner receipt naming this Pack, current source, exact 4-path digest, serialized #422 overlap and one fresh Builder Claim/FSW.",
+      "Set #427 state:ready only after live OPEN/type:task/blocked_by=[]/source/zero-canonical-Claim readback.",
+      "Fresh dedicated registry C:/xDev/kAiCreator/_tmp/i427-r36-host/registry-427.sqlite; protected key kaicreator-mm/tally#427:builder:__default__; new dispatch/operator/writer; generation 0 to 1 through the genuine T06d/T06j controller.",
+      "Create-only per-Task FSW tally:v2:task-writeset:427 with exact Pack/Owner/review/Claim binding and independent readback before any source edit.",
+      "New source worktree based at the live admitted source; RED-first then minimal implementation; exact changed-path audit."
+    ],
+    "proposedDispatch": "dispatch:427:historical-cas-identity:builder:20261116:1",
+    "proposedOperator": "zcode:i427:r36:builder:1",
+    "proposedWriter": "tally-host:win32:i427:r36:builder:1",
+    "claimAcceptance": "NOT_VERIFIED",
+    "fswStatus": "NOT_CREATED",
+    "registryStatus": "NOT_CREATED"
+  },
+  "validationPlan": {
+    "runtime": "Node v24.21.0 on win32 with PATH explicitly prefixed and node -v recorded",
+    "redFirst": "Run the new envelope/terminal-binding cases against unmodified ae779e4f source and retain real nonzero exit codes.",
+    "focused": ["packages/tally-github-native-c/test/task-claim-events.test.mjs", "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs"],
+    "adjacent": ["packages/tally-github-native-c/test/task-claim-composition.test.mjs", "complete packages/tally-github-native-c node --test test/*.test.mjs"],
+    "officialLocal": "tools/task-check.sh with real exit code; do not describe its no-root-package behavior as a full product suite.",
+    "remote": "Exact-SHA Woodpecker PR CI; diagnose clone-only network failures separately and never use empty commits.",
+    "review": "Distinct-conversation non-Writer exact-SHA/tree source review P0/P1=0 for every implementation HEAD. Writer does not sign it and does not claim Task PASS."
+  },
+  "authority": {
+    "packFrozen": false,
+    "claimAccepted": false,
+    "writeSetFrozen": false,
+    "sourceEditAuthorized": false,
+    "dispatchable": false,
+    "taskPass": false,
+    "releasePass": false,
+    "mainMergeAuthorized": false,
+    "tagAuthorized": false,
+    "deploymentAuthorized": false,
+    "independentPackReview": "NOT_PERFORMED",
+    "ownerReceipt": "NOT_RECEIVED"
+  },
+  "ciEvidence": {
+    "basePipeline": 794,
+    "baseEvent": "push",
+    "baseCommit": "ae779e4fb2bfa8a0c1474775b13d583d546442c7",
+    "baseStatus": "SUCCESS",
+    "packPipeline": "NOT_RUN_UNTIL_PACK_PR_PUBLISHED",
+    "implementationPipeline": "NOT_RUN"
+  },
+  "completionBoundary": "Delivery stops at a new implementation PR, exact-SHA CI and a requested independent source review. Guarded integration belongs to the authorized integrator. #219 requires a new Pack generation at the then-current source and separately reviewed production adapter wiring. No Issue closure, Task Outcome PASS, Release eligibility, main merge, Tag or deployment is asserted by this Pack."
+}
