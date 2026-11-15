@@ -30,9 +30,10 @@ import {
 } from './project-c1.mjs';
 import { parseYaml, YamlError } from './yaml-min.mjs';
 import { verify as verifyOwnerClaims } from './verify-c1-owner-claims-r100.mjs';
-import { assertSourceOwnerDispositionEvolution } from './source-owner-disposition.mjs';
+import { assertSourceOwnerDispositionEvolution, canonicalRecordDigest } from './source-owner-disposition.mjs';
 import {
   R137_IDS, R137_SHARED_SECTION_EVIDENCE, R137_SHARED_SECTION_DIRECT_CLAIMS,
+  R141_REVIEWED_LO2_SOURCE_CONTRACT, assertSelectedCqSourceBinding, readScbSchema,
 } from './selected-cq-source-binding.mjs';
 
 function canonicalJson(value) {
@@ -215,6 +216,55 @@ test('R137 negative: unauthorized overlay relationship predicate fails closed', 
   const rel=tampered.overlay.additions.find(a=>a['@id']===R137_IDS.claimSupport);
   rel['se:predicate']={'@id':'se:NOT_IN_CATALOG'};
   assert.throws(()=>buildGraph('v212-c1',tampered),/not declared in RELATIONSHIP_CATALOG/);
+});
+
+// R141 P1: page/index and Graph/SHA coherence alone cannot adjudicate the
+// actual meaning of the selected outcome Evidence or its support assertion.
+// All tests below keep the reviewed publisher p246 and p248 Locators unchanged.
+test('R141 positive: publisher-bounded LO2 Evidence and support remain code-pinned', () => {
+  const candidate=buildGraph('v212-c1',inputs);
+  const byId=new Map(candidate.nodes.map(n=>[n['@id'],n]));
+  const evidence=byId.get(R137_IDS.outcomeEvidence);
+  const support=byId.get(R137_IDS.claimSupport);
+  assert.equal(evidence['se:statement'],R141_REVIEWED_LO2_SOURCE_CONTRACT.outcomeEvidenceStatement);
+  assert.equal(canonicalRecordDigest(evidence),R141_REVIEWED_LO2_SOURCE_CONTRACT.outcomeEvidenceDigest);
+  assert.equal(support['se:rationale'],R141_REVIEWED_LO2_SOURCE_CONTRACT.supportRationale);
+  assert.equal(canonicalRecordDigest(support),R141_REVIEWED_LO2_SOURCE_CONTRACT.supportDigest);
+  assert.equal(byId.get(R137_IDS.scb)['se:professional_oracle_status'],'NOT_ATTESTED');
+});
+
+test('R141 NEG: source-meaning inversion is refused despite correct p246/p248 pages, IDs and status', () => {
+  const candidate=buildGraph('v212-c1',inputs);
+  const nodes=structuredClone(candidate.nodes);
+  const inverted=nodes.find(n=>n['@id']===R137_IDS.outcomeEvidence);
+  inverted['se:statement']='CS2023 mandates that verification and validation are identical, and green tests prove customer acceptance.';
+  // Invokes the SAME validator on a graph with the expected original Locator,
+  // SCB fields and unchanged SHA digests. Earlier R137 validation false-passed.
+  assert.throws(
+    ()=>assertSelectedCqSourceBinding(inputs.sourceOwner.document,readScbSchema(),nodes,inputs.overlay),
+    /R141 SEMANTIC_INVERSION/
+  );
+});
+
+test('R141 NEG: regenerated overlay/graph with mutually inverted Evidence and support cannot launder meaning', () => {
+  const tampered=structuredClone(inputs);
+  const evidence=tampered.overlay.additions.find(n=>n['@id']===R137_IDS.outcomeEvidence);
+  const relation=tampered.overlay.additions.find(n=>n['@id']===R137_IDS.claimSupport);
+  evidence['se:statement']='Verification and validation have the same meaning; test success is business acceptance.';
+  relation['se:rationale']='The publisher mandates that test success proves business acceptance.';
+  // buildGraph would ordinarily regenerate both graph and SCB from tampered
+  // source-side input; the frozen reviewed semantic contract must reject it.
+  assert.throws(()=>buildGraph('v212-c1',tampered),/R141 SEMANTIC_INVERSION/);
+});
+
+test('R141 NEG: changed Claim-support rationale rejected even when Evidence meaning stays correct', () => {
+  const candidate=buildGraph('v212-c1',inputs);
+  const nodes=structuredClone(candidate.nodes);
+  nodes.find(n=>n['@id']===R137_IDS.claimSupport)['se:rationale']='All tests pass, therefore customer approval is automatic.';
+  assert.throws(
+    ()=>assertSelectedCqSourceBinding(inputs.sourceOwner.document,readScbSchema(),nodes,inputs.overlay),
+    /R141 SEMANTIC_INVERSION/
+  );
 });
 
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
