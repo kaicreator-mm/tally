@@ -23,13 +23,16 @@
  * requires the historical CAS row to be exactly TERMINAL_VERIFIED for the
  * same repository, native Task/Issue, historical source SHA, Claim comment
  * identity, actor/operator identity, dispatchId, protectedClaimKey and
- * generation. Every one of those real R33 row fields is required; a missing
- * or divergent field is not silently ignored. A PENDING row (including
- * NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row blocks with
- * NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable row or
- * failing/absent port blocks with NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE
- * (UNKNOWN stays distinguishable from FAILED). Without terminalized history
- * the port is never consulted and behavior is unchanged.
+ * generation. Every required field in the real R33 row is checked; issueRef
+ * binds the native Issue, while an optional issueNumber must match when
+ * supplied but is not invented as a required field. Missing or divergent
+ * required fields are not silently ignored. A PENDING row (including lost-ACK
+ * PENDING) blocks with NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row
+ * blocks with NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable
+ * row or failing/absent port blocks with
+ * NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE and is never inferred to be
+ * PENDING or terminal. Without terminalized history the port is never
+ * consulted and behavior is unchanged.
  */
 import {Octokit} from '@octokit/rest';
 import {readNativeTaskSourcePairFromClient} from './task-source-pair.mjs';
@@ -127,7 +130,7 @@ export async function readNativeHostClaimPreflightFromClient({
       if(!row||typeof row!=='object'||Array.isArray(row))
         return blocked('NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
       const identity=row.repository===owner+'/'+repo&&
-        row.issueNumber===issueNumber&&
+        (row.issueNumber===undefined||row.issueNumber===issueNumber)&&
         row.issueRef===facts.workItem.issueRef&&
         row.dispatchId===t.dispatchId&&
         row.protectedClaimKey===t.protectedClaimKey&&

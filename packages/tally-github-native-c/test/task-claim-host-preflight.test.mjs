@@ -241,8 +241,10 @@ const doneComment=(id,data,overrides={})=>({id,node_id:'IC_done_125_'+id,
   created_at:'2026-11-15T12:00:00Z',updated_at:'2026-11-15T12:00:00Z',
   user:{login:'scheduler-bot'},...overrides});
 const exactDone=doneComment(802,doneData(801,histSha125));
+// The genuine R33 row has issueRef but no issueNumber. A supplied wrong
+// issueNumber remains a negative; absence must not reject the real schema.
 const terminalRow=(changes={})=>({phase:'TERMINAL_VERIFIED',
-  repository:owner+'/'+repo,issueNumber,issueRef:issue,
+  repository:owner+'/'+repo,issueRef:issue,
   dispatchId:'dispatch:125:hist',protectedClaimKey:keyFor('builder'),
   generation:1,commentId:801,commentRef:issue+'#issuecomment-801',
   sourceSha:histSha125,actorRole:'builder',operatorKind:'codex',
@@ -318,7 +320,7 @@ test('divergent terminal row (wrong generation or comment binding) blocks',async
 
 test('R34 CAS readback must bind the exact repository, Issue, source and Claim identity',async()=>{
   const missing=key=>{const row=terminalRow();delete row[key];return row;};
-  const required=['repository','issueNumber','issueRef','dispatchId',
+  const required=['repository','issueRef','dispatchId',
     'protectedClaimKey','generation','commentId','commentRef','sourceSha',
     'actorRole','operatorKind','operatorId'];
   const rows=[
@@ -427,7 +429,7 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
     if(phase!==null){
       db.prepare('INSERT INTO v8_host_docs (key, revision, value) VALUES (?, 0, ?)')
         .run(casKey,JSON.stringify({
-          phase,repository:'kaicreator-mm/tally',issueNumber:219,
+          phase,repository:'kaicreator-mm/tally',
           issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
           protectedClaimKey:'kaicreator-mm/tally#219:builder:__default__',
           generation,dispatchId:'dispatch:219:maintenance:20261031:1',
@@ -493,7 +495,7 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
   assert.equal(wrongSource.githubPosts,0);
   assert.equal(wrongSource.freshRegistryCreated,false);
   assert.equal(existsSync(freshPath),false);
-  // missing CAS readback: BLOCKED with UNKNOWN preserved.
+  // missing CAS readback: BLOCKED as unavailable, never inferred PENDING/terminal.
   seed(null,1);
   const missing=run('missing');
   assert.equal(missing.preflightStatus,'BLOCKED');
