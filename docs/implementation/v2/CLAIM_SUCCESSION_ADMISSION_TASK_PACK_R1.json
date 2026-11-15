@@ -1,0 +1,420 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 422,
+  "parentIssue": 219,
+  "coordinatorIssues": [392, 259],
+  "phase": "CLAIM_SUCCESSION_ADMISSION_DEFECT_REPAIR",
+  "revision": "R1",
+  "observedAt": "2026-11-15T12:19:01Z",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+    "treeSha": "6872ff136d640cc0d590de1b5671f9daf01be191",
+    "sourceNote": "Live version/v2 re-read this lane via GitHub API and mirror objects: branch version/v2 resolves to the official two-parent #410 merge fa49891d (parents 25bc59f9bd85d74929cd0b247d3b50a2306ab7f1 + 8833480dd88f096f038c348e626a55623db2ae47, tree 6872ff13). Push pipeline #781 at this exact SHA is SUCCESS (7 workflows). No newer version/v2 commit exists as of observedAt."
+  },
+  "packArtifactBranch": {
+    "branch": "task/tally-i422-pack-zcode",
+    "baseSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+    "purpose": "immutable governance-only defect Task Pack artifact (Draft PR targeting version/v2)",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "sourceEvidence": {
+    "disposition": "SOURCE_ANALYSIS_FAIL_CLOSED_ADMISSION_DEFECT_PINNED_BY_LIVE_TRACE_AND_EXISTING_NEGATIVE_TESTS",
+    "defectOrigin": "Isolated during the #219 R30 native-closeout lane (recorded in kaicreator-mm/tally#219 comment 6893898433, 2026-11-15T11:52:27Z): live preflight against #219 found the immutable historical Builder Claim comment 6545079271 at stale source ad3123e7646428ec3b13fac5b6f510b683a133c8; the current candidate reader rejects that stale Claim before role-compatibility checks, and even a lawfully terminalized historical Claim leaves no path to a fresh current-source successor. Owner direction in #422 (R30 lineage): the original Writer repairs with incremental regression and independent exact-SHA review; coordinators #392/#259.",
+    "defects": [
+      {
+        "path": "packages/tally-github-native-c/src/task-claim-events.mjs",
+        "blobSha": "03d52d31a9bc986dd0c0cca0d393c1801cf72b14",
+        "contentSha256": "3d446e238fc0d1989e24c69ea736a2778daea27154ba1214a49dbee2deb6a955",
+        "defect": "readClaimEventCandidatesFromClient returns CROSS_TASK_OR_STALE_CLAIM_EVENT for the whole scan when any DISPATCH_CLAIMED candidate binds e.sha !== expectedSourceSha (the historical #219 Builder Claim at ad3123e fails the current fa49891d read). There is no DISPATCH_STATE_CHANGED handling at all: no DONE representation, no predecessor binding fields, no terminal-vs-nonterminal classification. Consequently a lawfully terminalized historical Claim and a live stale nonterminal Claim are indistinguishable to every downstream reader, and the Task can never pass preflight again."
+      },
+      {
+        "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+        "blobSha": "b7f0b7c22949a9baf96bd37b6ef8bd27ae514782",
+        "contentSha256": "a50eb7f81aa866835ecae5209ceec68c80e53d34b52cf49897cf6038237cdf00",
+        "defect": "readNativeHostClaimPreflightFromClient has no concept of a terminalized historical Claim: any observed candidate for the requested role stays NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE, any unqualified candidate stays NATIVE_CLAIM_ROLE_CANDIDATE_UNQUALIFIED, and the reader-level stale rejection propagates as BLOCKED. Even after the historical Claim is lawfully terminalized (native DONE + historical CAS TERMINAL_VERIFIED), a fresh current-source successor with a new dispatch ID and a fresh dedicated registry has no lawful admission path on the same Task."
+      },
+      {
+        "path": "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+        "blobSha": "4521d8551b259250d2451a99252895bb172177ef",
+        "contentSha256": "81bf0ac8f706a71b2bbd380b6754cf4427b8479e64899257830a34b016e982a8",
+        "defect": "No regression coverage exists for terminal DONE events: 'wrong task/issue/source and malformed event-v2 field are rejected' pins only the stale-rejection surface; there is no positive valid-DONE-filters-only-the-terminal-Claim case and no negative DONE cases (wrong predecessor/comment/dispatch/key/generation/source, edited body, wrong Issue, duplicate, malformed)."
+      },
+      {
+        "path": "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs",
+        "blobSha": "10dfced8a63c1902feade7dad50a645aa40c28f1",
+        "contentSha256": "9a65db7134ee4ee3f244711c7348d3293621ad297df3a88968d87b312cf20d41",
+        "defect": "No regression coverage exists for fresh-successor admission after lawful terminalization: no case proves a fresh successor in a new registry is admitted while a terminal historical Claim is present, and no case proves PENDING/divergent/missing historical CAS readback stays fail-closed."
+      }
+    ],
+    "historicalClaimEvidence": {
+      "issueNumber": 219,
+      "commentId": 6545079271,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6545079271",
+      "liveReadback": "created_at 2026-10-31T15:01:07Z == updated_at (unedited), transport login kaicreator-mm; canonical ads/github marker + yaml envelope, event DISPATCH_CLAIMED, actor_role builder, operator_id zcode:i219:builder:1, dispatch_id dispatch:219:maintenance:20261031:1, dispatch_state CLAIMED, protected_claim_key kaicreator-mm/tally#219:builder:__default__, admission_generation 1, sha ad3123e7646428ec3b13fac5b6f510b683a133c8 (stale relative to current version/v2 fa49891d).",
+      "historicalRegistry": {
+        "designatedPath": "C:/xDev/kAiCreator/_tmp/tally-alm-claims/registry-219.sqlite",
+        "status": "HISTORICAL_IMMUTABLE_EVIDENCE",
+        "note": "The October #219 historical registry holds the #219 PUBLISHED_VERIFIED admission row and the real maintenance Issue #220 record (old-source history, recorded in #219 comment 6893898433). This Pack performs no CAS read or write against it; the future terminalization must dual-read it fresh under its own independent review."
+      },
+      "realMaintenanceIssue": {
+        "issueNumber": 220,
+        "title": "[maintenance] Candidate PR CI fails when the Host commit omits the required Refs trailer",
+        "liveState": "open",
+        "createdAt": "2026-10-31T16:32:13Z",
+        "note": "The real #219 maintenance Issue published by the historical lane. Preserved as history; never modified, never closed by this repair, and never duplicated."
+      },
+      "ownerWitnessRecord": {
+        "commentId": 6893780310,
+        "commentRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6893780310",
+        "createdAt": "2026-11-15T11:41:49Z",
+        "binding": "Canonical Owner approval witness for the #219 Governed Maintenance R2 Pack generation (task_pack_head fb2b25bac7f00f34434a1c649ed4ad3d5961f05f, blob 71f43b3ce6e568e71f506c348298091ef7f6af58 / sha256 a68db5d06a5c4418fcb84808b5ea6e08893f8064d1bf167926b40b6522944145, source fa49891d, witness_binding OPEN_421).",
+        "executionState": "NOT_EXECUTED_AND_NOT_EXECUTABLE",
+        "recordedConsequence": "Its step-1 precondition (#219 with zero canonical DISPATCH_CLAIMED events) is factually unsatisfiable while immutable historical Claim 6545079271 exists, it is source-bound to fa49891d/Open-421 which advances when this repair lands, and #219 remains state:planned with zero Claims/FSW executed (recorded in #219 comment 6893898433). It must not be silently carried forward: any later #219 source advance gets a fresh Pack generation and a new Owner witness."
+      }
+    },
+    "testEvidence": {
+      "pinnedNegativeCases": [
+        "task-claim-events.test.mjs 'wrong task/issue/source and malformed event-v2 field are rejected' pins stale-source whole-scan rejection.",
+        "task-claim-events.test.mjs 'malformed YAML / duplicate key / edited comment rejected rather than ignored' pins edited-identity rejection.",
+        "task-claim-events.test.mjs 'duplicate dispatch ID, page limit, late 403 fail closed, never leak error' pins duplicate-dispatch and read-failure rejection.",
+        "task-claim-host-preflight.test.mjs 'even shape-valid self-reported DISPATCH_CLAIMED denies clean preflight' pins the undeclared-role legacy denial.",
+        "task-claim-host-preflight.test.mjs 'existing builder Claim admits a distinct-role Reviewer with bounded projections' and the symmetric Reviewer-to-Builder case pin the merged #414 dual-role admission repair that must remain intact."
+      ],
+      "defectRepro": "A live readClaimEventCandidatesFromClient read of kaicreator-mm/tally#219 at expectedSourceSha fa49891d fails closed with reason CROSS_TASK_OR_STALE_CLAIM_EVENT because historical comment 6545079271 binds sha ad3123e (recorded live in the #219 closeout lane; reproducible by any fresh reader)."
+    },
+    "boundary": "The two src defects are admission-read-model defects in the native candidate/preflight readers. They are not permission grants, not registry schemas, and not CAS store changes; the repair stays inside the two src files and their two test files."
+  },
+  "stableUpstream": [
+    {
+      "issue": 312,
+      "status": "CLOSED_COMPLETED",
+      "stateReason": "completed",
+      "outcomeReceiptCommentId": 6885755818,
+      "note": "#312 Product ReviewWitness closed completed lawfully (live re-read this lane: state closed, state_reason completed). Its completion consumed the #412 dual-role admission repair. #312 is a closed predecessor, not an active writer; its 16-path FSW and claims are immutable history and are NOT consumed or mutated by this Pack."
+    },
+    {
+      "issue": 219,
+      "status": "OPEN_STATE_PLANNED_HELD",
+      "liveLabels": ["type:task", "state:planned"],
+      "frozenWriteSetDigest": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+      "frozenWriteSetPathCount": 14,
+      "liveBlockedBy": [
+        {
+          "issue": 312,
+          "state": "closed",
+          "stateReason": "completed"
+        }
+      ],
+      "note": "#219 dependency state reads CLEAR (its only blocker #312 is closed/completed), but the Task is HELD at state:planned because its lane is blocked by this admission defect: the immutable historical Builder Claim 6545079271 (source ad3123e) plus the real maintenance Issue #220 make every fresh preflight fail closed, and Owner witness 6893780310 is not executable. #219 resumes only after this repair completes, the historical Claim is lawfully terminalized, and a fresh #219 Pack generation + fresh Owner witness exist."
+    },
+    {
+      "issue": 412,
+      "status": "CLOSED_COMPLETED_INTEGRATED_SOURCE",
+      "stateReason": "completed",
+      "mergedVia": "PR #414 merge 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 (an ancestor of fa49891d)",
+      "overlappingPaths": [
+        "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+        "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs"
+      ],
+      "note": "#412 dual-role admission defect was repaired by PR #414 inside the same native-c files this Pack touches. #412 is a closed predecessor whose write set is integrated source: recorded as an integrated-source overlap, NOT a concurrent writer, no serialization required. The #414 dual-role behavior (one accepted Claim per role, distinct roles compatible, same-role duplicates deny) is preserved unchanged by this repair and its existing cases must stay green."
+    },
+    {
+      "issue": 260,
+      "status": "R17_FROZEN_ROSTER_BASELINE",
+      "r17PackBlob": {
+        "gitBlobSha1": "44da8c5865d4f3ee0258ff9e7c7309c927b47c3e",
+        "contentSha256": "334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9"
+      },
+      "note": "R17 51-Task/37-edge VERSION_ONLY structural Freeze is immutable history and is NOT touched, refrozen or re-enacted by this Pack. #422 (like #412/#417) is an out-of-roster enabling defect outside the frozen 51-Task roster; any physical Freeze or roster-claiming step that must name #422 owes an additive A/#260 refresh on its own lane with a full live re-read."
+    }
+  ],
+  "currentCandidatePacks": {
+    "schema": "tally.v2.current-candidate-packs/1",
+    "issue219": {
+      "pullRequest": 421,
+      "title": "docs(v2): #219 current-source Governed Maintenance Task Pack R2",
+      "state": "OPEN_DRAFT_CANDIDATE",
+      "headSha": "fb2b25bac7f00f34434a1c649ed4ad3d5961f05f",
+      "packBlobSha1": "71f43b3ce6e568e71f506c348298091ef7f6af58",
+      "packBlobSha256": "a68db5d06a5c4418fcb84808b5ea6e08893f8064d1bf167926b40b6522944145",
+      "rebuildRequirement": "PR #421 is the current #219 candidate as of this Pack's observedAt, but it MUST be rebuilt after this repair lands: (a) the repair modifies two of the native-c files the #219 lane consumes and advances version/v2, so the as-of base fa49891d goes stale; (b) Owner witness 6893780310 is source-bound to that base and its step-1 zero-canonical-events precondition is unsatisfiable; (c) the historical Claim admission landscape changes (terminal DONE + CAS readback become representable). The rebuilt #219 generation supersedes PR #421's blob; the earlier candidate and witness are not carried forward."
+    },
+    "relatedOpenDefectLanes": [
+      {
+        "pullRequest": 418,
+        "issue": 417,
+        "note": "#417 merged-witness enabling defect lane remains OPEN with its own 2-path write set d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578; zero overlap with this Pack (live re-read)."
+      }
+    ]
+  },
+  "allowed_write_set": [
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-events.mjs",
+      "owner": "CLAIM_SUCCESSION_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Terminal-event read model: recognize exact, unedited canonical DISPATCH_STATE_CHANGED events with dispatch_state DONE that bind the same Task, the historical dispatchId, protectedClaimKey, admission_generation and predecessor_claim_comment_id to an observed historical DISPATCH_CLAIMED candidate; expose terminal-classified candidates without granting admission; keep every other stale/cross-task/edited/duplicate/malformed surface fail-closed with today's reasons."
+    },
+    {
+      "path": "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+      "owner": "CLAIM_SUCCESSION_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Fresh-successor admission rule: a terminalized historical Claim (exact DONE binding plus independent historical CAS TERMINAL_VERIFIED readback) is ignored for fresh admission and does not count as an active incompatible role; a fresh current-source successor is admitted only with a new dispatch ID against a fresh dedicated registry; wrong predecessor/comment/dispatch/key/generation, edited/malformed DONE, cross-Task DONE, duplicate dispatch IDs, same protected key without lawful terminal proof, pending/divergent CAS and lost ACK stay fail-closed; merged #414 dual-role behavior preserved unchanged."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-events.test.mjs",
+      "owner": "CLAIM_SUCCESSION_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Terminal-event regression: valid DONE filters only the exactly-bound historical Claim; wrong predecessor/comment/dispatch/key/generation/source, edited body, wrong Issue, duplicate dispatch and malformed DONE all reject; terminal classification is observation only, never admission."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs",
+      "owner": "CLAIM_SUCCESSION_ADMISSION_DEFECT_REPAIR",
+      "purpose": "Successor regression: terminalized historical Claim plus verified CAS row admits a fresh successor in a new registry (new dispatch ID); PENDING historical row, divergent terminal row and missing CAS readback stay BLOCKED; new Builder-to-Reviewer and Reviewer-to-Builder dual-role cases stay green and an old terminal Claim does not count as an active incompatible role; a real-#219-shaped fixture covers the terminal event/CAS shape without mutating any real history."
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "writeSetNormalization": "tally.v2.allowed-write-set-normalization/1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_PASS_ZERO_OVERLAP",
+    "pathCount": 4,
+    "pathsSha256": "b088685bb72d39115f51f1977a592cac99aae25c4aa01481501323965537712a",
+    "normalizationMethod": "sha256(JSON.stringify(paths.trim().sorted.unique)) over the exact allowed_write_set block re-read from the live #422 issue body this lane; recompute MATCH.",
+    "observedOpenTaskIssueCount": 20,
+    "openTaskIssuesObserved": [196, 197, 198, 199, 200, 202, 207, 208, 209, 219, 260, 261, 262, 263, 264, 273, 276, 377, 417, 422],
+    "openTasksWithNormalizedWriteSet": 18,
+    "openTasksWithoutWriteSet": [199, 200],
+    "perPathOverlapWithOpenTasks": [],
+    "overlapWithOpenTasks": [],
+    "overlapPathCount": 0,
+    "keyFacts": [
+      {
+        "issue": 219,
+        "pathCount": 14,
+        "pathsSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+        "changeSinceR17": "none (byte-stable across fdb809c2/6cc52fbb/fa49891d generations); zero overlap with #422"
+      },
+      {
+        "issue": 417,
+        "pathCount": 2,
+        "pathsSha256": "d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578",
+        "declaredDigestVerified": true,
+        "note": "packages/tally-github-c/src|maintenance-effects paths; zero overlap with #422"
+      },
+      {
+        "issue": 377,
+        "pathCount": 2,
+        "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac",
+        "note": "recomputed this lane from the live body; prefix matches the known #377 digest recorded in the #412 Pack audit (58148dec...); zero overlap with #422"
+      },
+      {
+        "issue": 412,
+        "status": "CLOSED_COMPLETED_INTEGRATED_SOURCE",
+        "overlappingPathCount": 2,
+        "disposition": "integrated source via merged PR #414; not an open writer; no serialization required; never re-opened or reused"
+      }
+    ],
+    "candidatePairTreatment": "All 18 normalized open write sets re-extracted from live GitHub bodies this lane; none shares a single path with #422's 4 paths. Adding #422 adds exactly one new unique digest with zero pair overlap. Out-of-roster #412's two native-c paths are integrated source (merged #414) and are not concurrent. Any A/#260 refresh must recompute the pair matrix live rather than hardcode this value.",
+    "note": "Exact-path audit performed 2026-11-15 against live GitHub issue bodies with canonical JSON.stringify(sorted) SHA-256 normalization. This audit does not admit source writes or create a Claim/FSW/dependency."
+  },
+  "repairContract": {
+    "doneEventValidationModel": {
+      "canonicalShape": "A terminal marker is a canonical ads/github DISPATCH_STATE_CHANGED event comment with dispatch_state DONE. It is exact and unedited only when: the canonical comment parse passes unchanged (single marker, byte-stable body, created_at === updated_at); it binds the same native Task Issue; its dispatchId equals the historical candidate's dispatchId; its protectedClaimKey equals the historical candidate's protectedClaimKey; its admission_generation equals the historical candidate's generation; and predecessor_claim_comment_id equals the historical candidate's exact comment id. A DONE binding any other Task, dispatch, key, generation or comment id is invalid, not merely inapplicable.",
+      "filterScope": "A legal DONE filters ONLY the historical candidate it exactly binds. It never filters other candidates, never transfers authority, never constitutes a new Claim, and never relaxes any other fail-closed rule.",
+      "editedAndMalformed": "Edited DONE bodies (created_at !== updated_at or body hash drift), duplicate dispatch IDs, malformed canonical comments and non-DONE state changes keep today's rejection behavior unchanged."
+    },
+    "dualReadback": {
+      "principle": "Native DONE alone is not a new Claim, not admission and not permission. Before a fresh registry is created for a successor, the Host independently reads back the historical CAS row and requires it to be exactly TERMINAL_VERIFIED for the same Task, dispatchId, protectedClaimKey and generation as the DONE binding.",
+      "failClosed": [
+        "Historical row PENDING (including lost-ACK PENDING): BLOCKED; reconcile by readback, never blind POST.",
+        "Historical row divergent (different state, task, dispatch, key or generation than the DONE binding): BLOCKED.",
+        "Historical row missing / CAS readback unavailable: BLOCKED with UNKNOWN preserved distinguishable from FAILED."
+      ],
+      "readModel": "Reads go through public DomainHarness CAS store APIs under the real Host fence; never raw SQLite, never fixture authority."
+    },
+    "freshSuccessorRules": [
+      "A fresh successor uses a NEW dispatch ID (never the historical dispatch:219:maintenance:20261031:1) and a FRESH DEDICATED registry.",
+      "A fresh successor never rewrites, aliases, seeds from or deletes the historical row; the historical registry row and its comment are immutable history.",
+      "A fresh successor never edits or replaces the historical DISPATCH_CLAIMED comment and never publishes a second maintenance Issue; #220 stays the one real #219 maintenance Issue.",
+      "The terminalized historical Claim does not count as an active incompatible role in the merged #414 role-compatibility model; a distinct role remains admissible and the same role remains a duplicate denial unless it is the fresh successor itself.",
+      "Fresh admission still requires the full existing surface: open/type:task/state:ready/CLEAR/zero open blockers preflight, canonical key and generation binding, protected-claim-key uniqueness in the new registry, exact native comment/CAS readback and FSW creation."
+    ],
+    "rejectionMatrix": [
+      {"case": "stale nonterminal historical Claim (no DONE)", "result": "BLOCKED, current reason surface preserved"},
+      {"case": "DONE bound to wrong predecessor comment id", "result": "BLOCKED"},
+      {"case": "DONE with edited or otherwise non-canonical body", "result": "BLOCKED (edited-identity class)"},
+      {"case": "DONE bound to a different Task (cross-Task DONE)", "result": "BLOCKED (cross-task class)"},
+      {"case": "DONE with wrong dispatchId, protectedClaimKey or admission_generation", "result": "BLOCKED"},
+      {"case": "DONE from a different source SHA than the historical claim's own ad3123e binding", "result": "BLOCKED"},
+      {"case": "duplicate DONE or DONE duplicating an existing dispatch ID", "result": "BLOCKED (duplicate dispatch class)"},
+      {"case": "historical CAS row PENDING or lost-ACK", "result": "BLOCKED; reconcile by readback only"},
+      {"case": "historical CAS row divergent from the DONE binding", "result": "BLOCKED"},
+      {"case": "historical CAS readback missing/unavailable", "result": "BLOCKED with UNKNOWN distinguishable"},
+      {"case": "same protected key with no lawful terminal proof", "result": "BLOCKED (claim overwrite attempt)"},
+      {"case": "fresh successor reusing the historical dispatch ID or registry", "result": "BLOCKED"}
+    ],
+    "roleCompatibilityPreservation": "The merged #414 dual-role repair (PR #414 merge 6cc52fbb, already consumed by #312) is preserved intact: one accepted Claim per role in one exact current registry, distinct roles compatible, same-role duplicates and unqualified candidates deny, undeclared-role legacy denial preserved. This repair only adds the terminal-historical-Claim carve-out; every existing dual-role test case must stay green unmodified in its asserted behavior.",
+    "nonGoals": [
+      "No permission or role model change; no registry schema change; no CAS store implementation change.",
+      "No change to the canonical comment reader's fail-closed parsing surface (marker, yaml canonicality, schema pin).",
+      "No general re-admission of stale claims; only exactly-bound, terminal-verified historical Claims are filtered.",
+      "No #219 or #220 GitHub state mutation by the repair itself; no new maintenance Issue; no native dependency write."
+    ]
+  },
+  "issue219TerminalizationPath": {
+    "schema": "tally.v2.historical-claim-terminalization-path/1",
+    "status": "SEPARATELY_AUTHORIZED_FUTURE_HOST_OWNER_ACTION_NOT_THIS_PACK",
+    "patternReuse": "The #219 historical Claim terminalization may reuse the reviewed i319 terminalize-203.mjs pattern (request comment 6683110889 lineage): one process, one terminalizePublishedClaim call, no retry of any kind, fail-closed on UNKNOWN; reviewed-HEAD identity pinning (expected head/tree verified before any effect); real Host quiescence measurement with a writer fence held across preflight (process-table scan excluding self, pending-reservation count across registries); public openSqliteCasStore API only (never raw SQLite); exact CAS row readback after the effect.",
+    "requiredComposition": [
+      "Native DISPATCH_STATE_CHANGED DONE event published through the real reviewed publisher path with the exact binding fields (same Task #219, dispatchId dispatch:219:maintenance:20261031:1, protectedClaimKey kaicreator-mm/tally#219:builder:__default__, generation 1, predecessor_claim_comment_id 6545079271).",
+      "Historical CAS row transitioned to TERMINAL_VERIFIED inside C:/xDev/kAiCreator/_tmp/tally-alm-claims/registry-219.sqlite with create-only semantics and exact row readback binding the same four fields.",
+      "Real Host quiescence proof (writer fence + process scan + zero unrelated pending reservations) held across the whole sequence."
+    ],
+    "independentReviewRequirement": "The terminalization script/plan must be reviewed by a distinct-conversation non-Writer at the exact HEAD/tree before execution (same standard as the i319 request/review chain), with the reviewed identity pinned in the script header; any post-review change voids the review.",
+    "authorizationRequirement": "Terminalization is NOT authorized by this Pack candidate. It requires its own fresh Owner receipt bound to the exact terminalization plan identity, and it must happen before the rebuilt #219 Pack generation is frozen so the fresh generation can record the terminalized state as as-of evidence.",
+    "historyPreservation": "#219's historical PUBLISHED_VERIFIED row and the real maintenance Issue #220 are preserved as history. Terminalization changes the row's lifecycle state to a terminal value with a native event trail; it does not delete, rewrite identity fields, or re-bind the row to any new dispatch."
+  },
+  "plannedEdges": [
+    {
+      "from": 422,
+      "to": 219,
+      "kind": "PLANNED",
+      "reason": "The #422 repair re-enables lawful successor admission for #219's current-source Claims. Planning annotation only: no native blocked_by write is authorized by this Pack; #422's live blocked_by is empty and must stay that way until its own admission."
+    }
+  ],
+  "nativeDependencyAudit": {
+    "issue422BlockedBy": [],
+    "issue219BlockedBy": [
+      {
+        "issue": 312,
+        "state": "closed",
+        "stateReason": "completed"
+      }
+    ],
+    "issue417BlockedBy": [],
+    "requiredAtAdmission": "Re-read live blocked_by for #422 (must remain empty of open blockers), set labels type:task + state:ready only at admission time after all Pack gates, and re-read full native Task metadata. Any new edge serializes or blocks this Task and voids this audit.",
+    "root284Effect": false,
+    "host370DependencyWrite": false,
+    "nativeDependencyWrite": false,
+    "nativeRuntimeDependencies": {
+      "@octokit/rest": "22.0.1",
+      "canonicalize": "5.1.0",
+      "yaml": "2.8.1",
+      "ajv": "8.17.1",
+      "node": ">=24"
+    }
+  },
+  "hostIdentity": {
+    "task422BuilderClaim": {
+      "protectedClaimKey": "kaicreator-mm/tally#422:builder:__default__",
+      "sourceSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i422:local-builder:1",
+      "dispatchId": "dispatch:422:claim-succession:20261115:1",
+      "generation": 1,
+      "registryPath": "_tmp/tally-alm-claims/registry-422.sqlite",
+      "registryRule": "A dedicated per-Task registry is required but is not itself an isolation proof. Only the genuine selected Host may prepare/use it while holding the accepted shared writer/admission fence. Never reuse #219 (historical registry-219.sqlite is terminalization evidence only), #312/#284/#210/#377/#370/#412 registries."
+    },
+    "historicalRegistryBoundary": "#219's historical registry C:/xDev/kAiCreator/_tmp/tally-alm-claims/registry-219.sqlite is read-only evidence for the #219 terminalization path; the #422 repair and its fresh successor claims never write to it, and the fresh #219 successor (after the rebuild) gets a NEW dedicated registry, not a re-open of this file.",
+    "reviewerRoleBoundary": "This Pack does NOT authorize a real reviewer-role GitHub Claim on #422; regression coverage uses test-internal reviewer identities against a GitHub surrogate plus a real shared SQLite registry, exactly as the #412 Pack scoped it.",
+    "sameLoginRule": "Builder and Reviewer may share githubWriterLogin. writerId and operatorId must be distinct between the two roles; same operatorId, same writerId or same dispatchId denies.",
+    "writerIdentitySource": "Trusted selected-Host configuration only; never caller-supplied exclusiveHostControl, process absence, snapshots, mock witnesses or a raw boolean.",
+    "host370Boundary": "Do not compete with #370 for real Host writes, modify its Pack/source/registry/processes or treat its candidate fence as accepted before exact independent evidence exists."
+  },
+  "authority": {
+    "ownerAuthorization": "Owner direction recorded in kaicreator-mm/tally#422 (R30 lineage): the original Writer repairs with incremental regression and independent exact-SHA review; coordinators #392/#259. The exact PackBlob-bound Owner receipt remains a durable gate and is NOT satisfied by this candidate.",
+    "requiredArtifacts": [
+      "Fresh independent exact-blob review of this immutable R1 Pack PR and its exact PackBlob (git blob SHA-1 + content SHA-256) with P0/P1=0.",
+      "Owner receipt bound to exact PackBlob dual hash, source base SHA fa49891dcb39c6eb8517f84087f890e8d4d47f93, 4-path digest b088685bb72d39115f51f1977a592cac99aae25c4aa01481501323965537712a, protected Claim key, generation and dispatch ID.",
+      "Issue #422 normalized exact 4-path body block (already present, live re-read this lane: digest recompute MATCH) and formally planned Task metadata with zero comments and zero DISPATCH_CLAIMED candidates (live readback 2026-11-15: zero comments, zero claim events, blocked_by empty).",
+      "Accepted #422 Builder Host Claim via the real T06d/T06j Host controller plus exact native comment/CAS readback under the genuine selected Host fence.",
+      "Per-task FROZEN_DAG_WRITESET public CAS write/readback bound to the exact PackBlob, Owner receipt, source base SHA and 4-path digest.",
+      "Distinct-conversation non-Writer exact-SHA/tree source review with P0/P1=0 for the repair HEAD and for every subsequent repair SHA.",
+      "For the follow-on #219 lane: independently reviewed terminalization plan (i319 pattern) with its own Owner receipt, then a rebuilt #219 Pack generation with a fresh Owner witness."
+    ],
+    "authorized": false,
+    "admitted": false,
+    "taskPass": false,
+    "releasePass": false
+  },
+  "gates": [
+    "Exact Issue #422 evidence, source base fa49891dcb39c6eb8517f890e8d4d47f93 (tree 6872ff13) and 4-path write set b088685bb72d39115f51f1977a592cac99aae25c4aa01481501323965537712a; zero overlap with all open Tasks; #412's native-c paths recorded as integrated source, not concurrent; no historical #219/#312/#284/#210/#377 Claim or FSW reuse.",
+    "Immutable governance-only Pack PR and GitHub Contents API PackBlob dual identity; independent Pack review then exact PackBlob-bound Owner receipt.",
+    "Before Host admission set #422 to state:ready only after all prior gates; native preflight must prove open/type:task/state:ready/dependency CLEAR/zero open blockers with zero same-role candidates.",
+    "The genuine selected Host must hold the accepted shared writer/admission fence across reservation, native publication, exact readback and FROZEN_DAG_WRITESET creation/readback for the #422 Builder Claim. If the fence is not lawfully supplied, stop with ADMISSION_BLOCK and zero CAS/source writes.",
+    "Only after exact Builder Claim/FSW readback create the separate JIT source branch at version/v2@fa49891d (tree 6872ff13); never reuse the Pack artifact branch for source.",
+    "Run Windows Node 24 syntax checks FIRST (node --check on both src files, record node -v), then focused RED-first terminal/successor tests (new positive cases must FAIL on unfixed source), then the complete native C suite with task-claim-composition.test.mjs and all existing negatives unmodified and green.",
+    "One continuous Builder repairs any in-scope failure without new dispatch; then stop for fresh independent Exact-SHA source review. Every repair HEAD goes to the distinct-conversation non-Writer Reviewer; reviewer repairs happen on the reviewer's own new HEAD and are re-reviewed.",
+    "Guarded integration into version/v2 only after review P0/P1=0; read back the actual merge commit/tree/message and current push CI. No main merge, Tag, deployment or Release PASS. Task Outcome is separate from PR merge and never asserts #219 completion.",
+    "#219 rebuild order after this repair lands (each step gated): (1) #219 historical Claim 6545079271 terminalization per issue219TerminalizationPath, independently reviewed with its own Owner receipt; (2) fresh #219 current-source Pack generation rebuilt at the new post-merge base, superseding PR #421's R2 blob; (3) fresh #219 Owner witness bound to that new PackBlob (witness 6893780310 not carried forward); (4) only then #219 dual-role Claims/FSW/ReviewWitness per that fresh generation."
+  ],
+  "validationPlan": [
+    "Node >=24 node --check on both changed src files before any test or CI; record node -v.",
+    "Focused events suite: node --test packages/tally-github-native-c/test/task-claim-events.test.mjs. New valid-DONE positive cases must FAIL on unfixed source (defect coverage proof) and PASS after repair; all edited/malformed/cross-task/duplicate DONE negatives stay red against bypass attempts.",
+    "Focused preflight suite: node --test packages/tally-github-native-c/test/task-claim-host-preflight.test.mjs with the same RED-first requirement for the fresh-successor positive; PENDING/divergent/missing-CAS negatives stay BLOCKED.",
+    "Complete native C suite: node --test packages/tally-github-native-c/test/ (all existing negatives stay green, including task-claim-composition.test.mjs which is outside the write set and must remain unmodified).",
+    "Dual-role preservation: existing 'existing builder Claim admits a distinct-role Reviewer' and symmetric cases stay green unmodified; add the explicit case proving an old terminal Claim does not count as an active incompatible role.",
+    "Physical shared-SQLite two-process regression: terminalized-historical-row fixture in a real openSqliteCasStore registry plus fresh-successor admission from a second OS process with real-style native comment readback; PENDING row blocks and reconciles by readback with no blind POST; the fixture reproduces the real #219 event/CAS shape (dispatch 219:maintenance:20261031:1, key #219:builder:__default__, generation 1, predecessor comment 6545079271) WITHOUT touching any real GitHub comment or registry.",
+    "git diff --check clean and base->HEAD exactly the four admitted source/test paths; exact commands, Node24/platform, real exit codes, exact HEAD/tree persisted.",
+    "Exact-SHA Woodpecker CI on the PR; any clone-transient failure is diagnosed per the CI SOP and re-run on the same SHA, never masked by new commits."
+  ],
+  "forbidden": [
+    "No source edit before lawful independent admission and exact Builder Claim/FSW readback.",
+    "No edit outside the exact 4-path write set; no weakening or unrelated modification of existing tests; task-claim-composition.test.mjs and task-dispatch-state-events surfaces must remain untouched.",
+    "No reuse, edit, replacement or deletion of the historical #219 Builder Claim comment 6545079271; no claim overwrite; no second dispatch on an already-claimed protected key; no blind POST after lost ACK.",
+    "No rewrite, alias, seed, deletion or reset of the historical registry-219.sqlite; no raw SQLite mutation of any registry; no registry reuse across Tasks; no disconnected per-role registry split.",
+    "No second maintenance Issue for #219 and no modification, closure or duplication of #220.",
+    "No bypass of preflight or the CAS dual-readback; no temporary adapter; no treating native DONE alone as admission or permission.",
+    "No native dependency write, Task closure, R17/FSW mutation, version Freeze, version/v2->main merge, tag, Release or deployment.",
+    "No extra source path, CI profile, new scheduler, new Host authority or generic claim API."
+  ],
+  "sourceJitBranch": {
+    "branch": "task/tally-i422-zcode",
+    "baseRef": "version/v2",
+    "baseSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+    "baseTreeSha": "6872ff136d640cc0d590de1b5671f9daf01be191",
+    "createOnlyAfter": "PackBlob-bound Owner receipt, accepted #422 Builder Host Claim and per-task FROZEN_DAG_WRITESET readback",
+    "sourceChangesAllowed": true,
+    "mustNotReusePackArtifactBranch": true
+  },
+  "claimBindingRules": {
+    "schema": "tally.claim-succession-admission-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/CLAIM_SUCCESSION_ADMISSION_TASK_PACK_R1.json at the final Pack PR HEAD, dual-recorded with its content SHA-256.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final Pack commit after reading the Contents API PackBlob; never self-embed the Pack blob SHA.",
+    "ownerReceiptMustBind": [
+      "exact PackBlob SHA-1 and content SHA-256",
+      "source SHA fa49891dcb39c6eb8517f890e8d4d47f93",
+      "writeSetSha256 b088685bb72d39115f51f1977a592cac99aae25c4aa01481501323965537712a",
+      "protectedClaimKey kaicreator-mm/tally#422:builder:__default__",
+      "generation 1",
+      "dispatchId dispatch:422:claim-succession:20261115:1"
+    ],
+    "frozenWriteSetMustBind": [
+      "immutable Task Pack blob URL and exact PackBlob dual hash",
+      "source SHA and 4-path write-set digest",
+      "exact PackBlob-bound Owner approval and independent Pack review references",
+      "protected Claim key, generation and dispatch ID",
+      "original #422 DISPATCH_CLAIMED comment ID/ref and trusted Host writer ID",
+      "frozenAt"
+    ],
+    "nullPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "registry": "Dedicated _tmp/tally-alm-claims/registry-422.sqlite through public DomainHarness APIs under the genuine selected Host fence; never reuse the historical registry-219.sqlite or #312/#284/#210/#377/#370/#412 registries."
+  },
+  "ciQualification": {
+    "schema": "tally/v2.ci-qualification/1",
+    "status": "CI_QUALIFIED_AT_BASE",
+    "scope": "version/v2 push pipeline at this generation base fa49891dcb39c6eb8517f890e8d4d47f93 only.",
+    "pushPipeline": {
+      "number": 781,
+      "event": "push",
+      "branch": "version/v2",
+      "status": "SUCCESS",
+      "workflows": 7,
+      "names": ["v2-alm-workspace", "v2-candidate-publication", "v2-release-delivery", "v2-t06j-host-admission", "v2-t06l-kernel-admission", "v2-t06m-local-agent", "v2-t06n-concurrent-agent"]
+    },
+    "priorTransientRecord": "Push pipelines #775/#776 at the same SHA failed only in the documented GitHub network-window clone-transient class (recorded in the #219 R2 Pack, PR #421); the controlled same-SHA rerun #781 is SUCCESS, so the base source is CI-qualified. The future Pack PR's own CI is a separate gate.",
+    "consequence": "This Pack candidate is published against a CI-qualified base; independent exact-blob review remains the next gate."
+  },
+  "note": "This Pack authorizes no source edit, CI dispatch, CAS write, terminalization or external effect by itself. It defines one bounded fail-closed admission repair that permits exactly one lawful fresh successor per protected key after an exactly-bound, unedited DONE event and an independent historical CAS TERMINAL_VERIFIED readback, while preserving ADS Claim/CAS/FSW, single-writer, physical Host fencing, the merged #414 dual-role behavior, independent review and exact-SHA gates. CANDIDATE_NOT_FROZEN; authority flags all false; R17 frozen roster untouched."
+}
