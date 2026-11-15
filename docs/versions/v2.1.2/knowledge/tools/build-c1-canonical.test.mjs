@@ -33,6 +33,8 @@ import { verify as verifyOwnerClaims } from './verify-c1-owner-claims-r100.mjs';
 import { assertSourceOwnerDispositionEvolution } from './source-owner-disposition.mjs';
 import {
   R137_IDS, R137_SHARED_SECTION_EVIDENCE, R137_SHARED_SECTION_DIRECT_CLAIMS,
+  R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST, R140_REVIEWED_CLAIM_SUPPORT_DIGEST,
+  assertSelectedCqSourceBinding, readScbSchema,
 } from './selected-cq-source-binding.mjs';
 
 function canonicalJson(value) {
@@ -215,6 +217,60 @@ test('R137 negative: unauthorized overlay relationship predicate fails closed', 
   const rel=tampered.overlay.additions.find(a=>a['@id']===R137_IDS.claimSupport);
   rel['se:predicate']={'@id':'se:NOT_IN_CATALOG'};
   assert.throws(()=>buildGraph('v212-c1',tampered),/not declared in RELATIONSHIP_CATALOG/);
+});
+
+// R140 P1: independently fixed, publisher-anchored semantic expectation.
+test('R140 positive: outcome Evidence and support relation match independent fixed semantic digests', () => {
+  const cand=buildGraph('v212-c1',inputs);
+  const byId=new Map(cand.nodes.map(n=>[n['@id'],n]));
+  assert.equal(sha256(canonicalJson(byId.get(R137_IDS.outcomeEvidence))),R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST);
+  assert.equal(sha256(canonicalJson(byId.get(R137_IDS.claimSupport))),R140_REVIEWED_CLAIM_SUPPORT_DIGEST);
+  assert.equal(byId.get(R137_IDS.outcomeEvidence)['se:record_version'],'0.1.0');
+  assert.equal(byId.get(R137_IDS.claimSupport)['se:record_version'],'0.1.0');
+  assertSelectedCqSourceBinding(inputs.sourceOwner.document,readScbSchema(),cand.nodes,inputs.overlay);
+});
+
+test('R140 negative: Evidence statement inverted while both pages/IDs/status stay valid', () => {
+  const tampered=structuredClone(inputs);
+  const ev=tampered.overlay.additions.find(n=>n['@id']===R137_IDS.outcomeEvidence);
+  ev['se:statement']='CS2023 demands verification and validation be identical; green tests automatically establish customer acceptance.';
+  assert.equal(ev['se:source_locator_ref']['@id'],R137_IDS.outcomeLocator);
+  assert.equal(ev['se:record_version'],'0.1.0');
+  assert.throws(()=>buildGraph('v212-c1',tampered),/R140 LO2 Evidence semantic inversion/);
+});
+
+test('R140 negative: outcome Evidence metadata and support rationale each fail semantic drift', () => {
+  for(const field of ['se:context','se:result','se:limitations','se:uncertainty']){
+    const tampered=structuredClone(inputs);
+    const ev=tampered.overlay.additions.find(n=>n['@id']===R137_IDS.outcomeEvidence);
+    ev[field]='Fabricated publisher authority grants customer acceptance from passing tests.';
+    assert.throws(()=>buildGraph('v212-c1',tampered),/R140 LO2 Evidence semantic\/digest drift/,field);
+  }
+  for(const field of ['se:context','se:rationale']){
+    const tampered=structuredClone(inputs);
+    const rel=tampered.overlay.additions.find(n=>n['@id']===R137_IDS.claimSupport);
+    rel[field]='Publisher mandates identical verification and validation; green tests imply release acceptance.';
+    assert.throws(()=>buildGraph('v212-c1',tampered),/R140 claim-support (rationale semantic inversion|semantic\/digest drift)/,field);
+  }
+});
+
+test('R140 negative: coordinated Overlay + graph + Sidecar + simulated manifest repin cannot launder wrong Evidence meaning', () => {
+  const baseline=buildGraph('v212-c1',inputs);
+  const candidate=structuredClone(baseline.nodes);
+  const patchedOverlay=structuredClone(inputs.overlay);
+  const alteredText='CS2023 requires treating verification and validation as identical; all tests passed establishes customer acceptance.';
+  candidate.find(n=>n['@id']===R137_IDS.outcomeEvidence)['se:statement']=alteredText;
+  patchedOverlay.additions.find(n=>n['@id']===R137_IDS.outcomeEvidence)['se:statement']=alteredText;
+  const authorSidecar=structuredClone(inputs.sourceOwner.document);
+  const repinnedCandidateBytes=Buffer.from(JSON.stringify(candidate),'utf8');
+  authorSidecar.sources.candidateGraphBlob=gitBlobSha1(repinnedCandidateBytes);
+  const repinnedManifestSha256=createHash('sha256').update(repinnedCandidateBytes).digest('hex');
+  assert.equal(authorSidecar.sources.candidateGraphBlob,gitBlobSha1(repinnedCandidateBytes));
+  assert.equal(repinnedManifestSha256,createHash('sha256').update(repinnedCandidateBytes).digest('hex'));
+  // The input pins now agree with each other, but the source-anchored
+  // verification code DOES NOT derive its expected truth from these pins.
+  assert.throws(()=>assertSelectedCqSourceBinding(authorSidecar,readScbSchema(),candidate,patchedOverlay),
+    /R140 LO2 Evidence semantic inversion/);
 });
 
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
