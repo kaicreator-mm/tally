@@ -23,11 +23,20 @@
  * requires the historical CAS row to be exactly TERMINAL_VERIFIED for the
  * same repository, native Task/Issue, historical source SHA, Claim comment
  * identity, actor/operator identity, dispatchId, protectedClaimKey and
- * generation. Every required field in the real R33 row is checked; issueRef
+ * generation. #427 additionally requires the genuine Host {key,revision,value}
+ * envelope: key is tally:v2:claim-admission: plus SHA-256(protectedClaimKey),
+ * revision is a nonnegative safe integer, and terminalCommentId/Ref bind the
+ * exact observed DONE. A value-only object cannot prove the canonical CAS row.
+ * Every required field in the real R33 row is checked; issueRef
  * binds the native Issue, while an optional issueNumber must match when
  * supplied but is not invented as a required field. Missing or divergent
- * required fields are not silently ignored. A PENDING row (including lost-ACK
- * PENDING) blocks with NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row
+ * required fields are not silently ignored. For the pending phases the
+ * comment/terminal identity fields are pending-tolerant (the genuine
+ * single-writer lost-ACK reservation carries no commentId/commentRef/
+ * terminalCommentId/terminalCommentRef yet): absent is allowed, but a
+ * present-but-different value still diverges. A PENDING row (including
+ * lost-ACK PENDING) blocks with NATIVE_HISTORICAL_CAS_ROW_PENDING; a
+ * divergent row
  * blocks with NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable
  * row or failing/absent port blocks with
  * NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE and is never inferred to be
@@ -35,6 +44,7 @@
  * consulted and behavior is unchanged.
  */
 import {Octokit} from '@octokit/rest';
+import {createHash} from 'node:crypto';
 import {readNativeTaskSourcePairFromClient} from './task-source-pair.mjs';
 import {readClaimEventCandidatesFromClient} from './task-claim-events.mjs';
 
@@ -125,25 +135,49 @@ export async function readNativeHostClaimPreflightFromClient({
           dispatchId:t.dispatchId,protectedClaimKey:t.protectedClaimKey,
           generation:t.claimGeneration,predecessorCommentId:t.commentId,
           sourceSha:t.sourceSha,
-          terminalizedByDoneCommentId:t.terminalizedByDoneCommentId}));
+          terminalizedByDoneCommentId:t.terminalizedByDoneCommentId,
+          terminalizedByDoneCommentRef:t.terminalizedByDoneCommentRef}));
       }catch{row=null;}
       if(!row||typeof row!=='object'||Array.isArray(row))
         return blocked('NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
-      const identity=row.repository===owner+'/'+repo&&
-        (row.issueNumber===undefined||row.issueNumber===issueNumber)&&
-        row.issueRef===facts.workItem.issueRef&&
-        row.dispatchId===t.dispatchId&&
-        row.protectedClaimKey===t.protectedClaimKey&&
-        row.protectedClaimKey===
+      const expectedCasKey='tally:v2:claim-admission:'+
+        createHash('sha256').update(t.protectedClaimKey).digest('hex');
+      const value=row.value;
+      const envelope=row.key===expectedCasKey&&
+        Number.isSafeInteger(row.revision)&&row.revision>=0&&
+        value&&typeof value==='object'&&!Array.isArray(value);
+      if(!envelope)return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+      // Core identity is strict for every phase. The comment/terminal fields
+      // are strict for every non-pending phase; for the pending phases
+      // (Pack repairContract.pendingAndLostAck) the genuine single-writer
+      // reservation has no commentId/commentRef/terminalCommentId/
+      // terminalCommentRef yet, so absence is tolerated while a
+      // present-but-different value still diverges.
+      const pendingPhase=value.phase==='PENDING'||
+        value.phase==='PENDING_GITHUB_PUBLISH';
+      const coreIdentity=value.repository===owner+'/'+repo&&
+        (value.issueNumber===undefined||value.issueNumber===issueNumber)&&
+        value.issueRef===facts.workItem.issueRef&&
+        value.dispatchId===t.dispatchId&&
+        value.protectedClaimKey===t.protectedClaimKey&&
+        value.protectedClaimKey===
           owner+'/'+repo+'#'+issueNumber+':'+t.actorRole+':__default__'&&
-        row.generation===t.claimGeneration&&
-        row.commentId===t.commentId&&row.commentRef===t.commentRef&&
-        row.sourceSha===t.sourceSha&&row.actorRole===t.actorRole&&
-        row.operatorKind===t.operatorKind&&row.operatorId===t.operatorId;
-      if(!identity)return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
-      if(row.phase==='PENDING'||row.phase==='PENDING_GITHUB_PUBLISH')
-        return blocked('NATIVE_HISTORICAL_CAS_ROW_PENDING');
-      if(row.phase!=='TERMINAL_VERIFIED')
+        value.generation===t.claimGeneration&&
+        value.sourceSha===t.sourceSha&&value.actorRole===t.actorRole&&
+        value.operatorKind===t.operatorKind&&value.operatorId===t.operatorId&&
+        (pendingPhase?
+          (value.commentId===undefined||value.commentId===t.commentId)&&
+          (value.commentRef===undefined||value.commentRef===t.commentRef)&&
+          (value.terminalCommentId===undefined||
+           value.terminalCommentId===t.terminalizedByDoneCommentId)&&
+          (value.terminalCommentRef===undefined||
+           value.terminalCommentRef===t.terminalizedByDoneCommentRef):
+        value.commentId===t.commentId&&value.commentRef===t.commentRef&&
+        value.terminalCommentId===t.terminalizedByDoneCommentId&&
+        value.terminalCommentRef===t.terminalizedByDoneCommentRef);
+      if(!coreIdentity)return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+      if(pendingPhase)return blocked('NATIVE_HISTORICAL_CAS_ROW_PENDING');
+      if(value.phase!=='TERMINAL_VERIFIED')
         return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
     }
   }
