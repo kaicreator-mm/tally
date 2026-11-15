@@ -153,6 +153,7 @@ export async function readMaintenanceReviewWitnessFromClient({
      typeof octokit?.rest?.pulls?.get!=='function'||
      typeof octokit?.rest?.repos?.getCommit!=='function'||
      typeof octokit?.rest?.repos?.getBranch!=='function'||
+     typeof octokit?.rest?.repos?.compareCommits!=='function'||
      typeof octokit?.graphql!=='function')
     return denied('MAINTENANCE_REVIEW_INPUT_INVALID');
   if(!claim(builderClaim,'builder')||!claim(reviewerClaim,'reviewer'))
@@ -225,9 +226,16 @@ export async function readMaintenanceReviewWitnessFromClient({
      body.p0!==0||body.p1!==0||
      !Number.isSafeInteger(body.p2)||body.p2<0||body.p2>32)
     return denied('MAINTENANCE_REVIEW_WITNESS_MISMATCH');
-  // At this C-stage, refuse merged/stale PRs until the later selected Host
-  // can prove an exact two-parent merge, immutable source ancestry and CAS.
-  // Never infer currentness or accepted Task Outcome from body text alone.
+  // Currentness is proven from official GitHub state only; it is never
+  // inferred from witness body text. Two qualified source shapes exist:
+  // (a) an OPEN candidate whose reviewed base IS the live source, and
+  // (b) a fully proven CLOSED/MERGED source (project-intake mergedSource
+  // pattern): an official two-parent merge commit with first parent
+  // exactly the reviewed base and second parent exactly the reviewed
+  // head, where the live source is that merge commit or a GitHub-confirmed
+  // ahead-only descendant. Squash/rebase merges, wrong parent order,
+  // wrong repo/branch/tree/base, stale or divergent ancestry and any
+  // unverifiable currentness fail closed.
   try{
     const pr=(await octokit.rest.pulls.get({owner:OWNER,repo:REPO,
       pull_number:body.reviewedPullNumber}))?.data;
@@ -237,17 +245,44 @@ export async function readMaintenanceReviewWitnessFromClient({
       ref:expected.reviewedBase}))?.data;
     const live=(await octokit.rest.repos.getBranch({owner:OWNER,repo:REPO,
       branch:'version/v2'}))?.data;
-    if(pr?.number!==body.reviewedPullNumber||pr.state!=='open'||pr.merged===true||
-       pr.head?.sha!==body.reviewedHead||
-       pr.head.repo?.full_name!==REPOSITORY||
-       pr.base?.sha!==body.reviewedBase||
-       pr.base?.ref!=='version/v2'||
-       head?.sha!==body.reviewedHead||
-       head.commit?.tree?.sha!==body.reviewedTree||
-       base?.sha!==body.reviewedBase||
-       live?.commit?.sha!==body.sourceSha||
-       body.reviewedBase!==body.sourceSha)
-      return denied('MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT');
+    const sharedOk=pr?.number===body.reviewedPullNumber&&
+       pr.head?.sha===body.reviewedHead&&
+       pr.head.repo?.full_name===REPOSITORY&&
+       pr.base?.sha===body.reviewedBase&&
+       pr.base?.ref==='version/v2'&&
+       head?.sha===body.reviewedHead&&
+       head.commit?.tree?.sha===body.reviewedTree&&
+       base?.sha===body.reviewedBase&&
+       live?.commit?.sha===body.sourceSha;
+    if(!sharedOk)return denied('MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT');
+    if(pr.state==='open'&&pr.merged!==true){
+      // OPEN current-base candidate: the reviewed base must be the live
+      // source itself.
+      if(body.reviewedBase!==body.sourceSha)
+        return denied('MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT');
+    }else if(pr.state==='closed'&&pr.merged===true&&
+       typeof pr.merged_at==='string'){
+      const mergeSha=pr.merge_commit_sha;
+      if(typeof mergeSha!=='string'||!SHA.test(mergeSha))
+        return denied('MAINTENANCE_REVIEW_MERGE_COMMIT_UNAVAILABLE');
+      const merge=(await octokit.rest.repos.getCommit({owner:OWNER,repo:REPO,
+        ref:mergeSha}))?.data;
+      const parents=Array.isArray(merge?.parents)?
+        merge.parents.map(p=>p?.sha):[];
+      if(parents.length!==2)
+        return denied('MAINTENANCE_REVIEW_SOURCE_NOT_TWO_PARENT_MERGE');
+      if(parents[0]!==body.reviewedBase||parents[1]!==body.reviewedHead)
+        return denied('MAINTENANCE_REVIEW_MERGE_PARENT_ORDER_INVALID');
+      const compare=(await octokit.rest.repos.compareCommits({
+        owner:OWNER,repo:REPO,base:mergeSha,head:live.commit.sha}))?.data;
+      const ahead=compare?.ahead_by,behind=compare?.behind_by;
+      if(!Number.isSafeInteger(ahead)||ahead<0||behind!==0||
+         compare?.merge_base_commit?.sha!==mergeSha||
+         (ahead===0&&live.commit.sha!==mergeSha))
+        return denied('MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT');
+    }else{
+      return denied('MAINTENANCE_REVIEW_SOURCE_NOT_MERGED');
+    }
   }catch{return denied('MAINTENANCE_REVIEW_GITHUB_READ_UNKNOWN');}
   return freeze({...flags,state:'REVIEW_VERIFIED',
     reason:'MAINTENANCE_SOURCE_REVIEW_WITNESS_VERIFIED',
