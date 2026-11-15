@@ -12,6 +12,22 @@
  * preserved unchanged. Candidates are re-observed through the existing
  * canonical comment reader (imported, not modified); no permit or writer
  * grant is produced here.
+ *
+ * #422 claim succession: a terminalized historical Claim (an exact, unedited
+ * DONE binding observed by the candidate reader) is excluded from fresh
+ * admission candidates and does not count as an active incompatible role.
+ * Native DONE alone is not a Claim, not admission and not permission: when
+ * any terminalized historical Claim is observed, this preflight requires a
+ * Host-supplied `historicalClaimCasReadback` port (a read transport like the
+ * supplied Octokit, never caller/request or comment input) and independently
+ * requires the historical CAS row to be exactly TERMINAL_VERIFIED for the
+ * same Task, dispatchId, protectedClaimKey, generation and predecessor
+ * comment id. A PENDING row (including lost-ACK PENDING) blocks with
+ * NATIVE_HISTORICAL_CAS_ROW_PENDING; a divergent row blocks with
+ * NATIVE_HISTORICAL_CAS_ROW_DIVERGENT; a missing row, unreadable row or
+ * failing/absent port blocks with NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE
+ * (UNKNOWN stays distinguishable from FAILED). Without terminalized history
+ * the port is never consulted and behavior is unchanged.
  */
 import {Octokit} from '@octokit/rest';
 import {readNativeTaskSourcePairFromClient} from './task-source-pair.mjs';
@@ -28,18 +44,24 @@ const blocked=(reason)=>Object.freeze({
 });
 
 /**
- * Test seam for a Host-supplied authenticated Octokit. Callers cannot
- * inject dependenciesComplete, a claimed role, a writer grant or CAS result.
+ * Test seam for a Host-supplied authenticated Octokit plus an optional
+ * Host-supplied historical CAS readback port. Callers cannot inject
+ * dependenciesComplete, a claimed role, a writer grant or a CAS result: the
+ * port is only a read transport, and this preflight still independently
+ * verifies TERMINAL_VERIFIED against the native DONE binding it observed.
  * The complete existing native pair reader rechecks Issue currentness.
  */
 export async function readNativeHostClaimPreflightFromClient({
-  octokit,owner,repo,issueNumber,expectedSourceSha,actorRole,limit=1000
+  octokit,owner,repo,issueNumber,expectedSourceSha,actorRole,limit=1000,
+  historicalClaimCasReadback
 }={}){
   if(!NAME.test(owner??'')||!NAME.test(repo??'')||
      !Number.isSafeInteger(issueNumber)||issueNumber<1||
      !SHA.test(expectedSourceSha??'')||
      (actorRole!==undefined&&!ROLES.has(actorRole))||
-     !Number.isSafeInteger(limit)||limit<1||limit>1000)
+     !Number.isSafeInteger(limit)||limit<1||limit>1000||
+     (historicalClaimCasReadback!==undefined&&
+      typeof historicalClaimCasReadback!=='function'))
     return blocked('INVALID_NATIVE_PREFLIGHT_REQUEST');
   const facts=await readNativeTaskSourcePairFromClient({
     octokit,owner,repo,issueNumber,expectedSourceSha,limit
@@ -82,6 +104,37 @@ export async function readNativeHostClaimPreflightFromClient({
     return blocked(observed.reason??'NATIVE_CLAIM_ABSENCE_UNQUALIFIED');
   if(observed.candidateCount!==claim.candidateCount)
     return blocked('NATIVE_CLAIM_ABSENCE_UNQUALIFIED');
+  // #422: a terminalized historical Claim is admissible history only when the
+  // Host independently proves its CAS row exactly TERMINAL_VERIFIED for the
+  // DONE binding. Native DONE alone is never admission or permission.
+  const terminalized=Array.isArray(observed.terminalizedHistoricalClaims)?
+    [...observed.terminalizedHistoricalClaims]:[];
+  if(terminalized.length>0){
+    if(typeof historicalClaimCasReadback!=='function')
+      return blocked('NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
+    for(const t of terminalized){
+      let row=null;
+      try{
+        row=await historicalClaimCasReadback(Object.freeze({
+          issueNumber,issueRef:facts.workItem.issueRef,
+          dispatchId:t.dispatchId,protectedClaimKey:t.protectedClaimKey,
+          generation:t.claimGeneration,predecessorCommentId:t.commentId,
+          sourceSha:t.sourceSha,
+          terminalizedByDoneCommentId:t.terminalizedByDoneCommentId}));
+      }catch{row=null;}
+      if(!row||typeof row!=='object'||Array.isArray(row))
+        return blocked('NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
+      const identity=row.dispatchId===t.dispatchId&&
+        row.protectedClaimKey===t.protectedClaimKey&&
+        row.generation===t.claimGeneration&&
+        row.commentId===t.commentId;
+      if(!identity)return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+      if(row.phase==='PENDING'||row.phase==='PENDING_GITHUB_PUBLISH')
+        return blocked('NATIVE_HISTORICAL_CAS_ROW_PENDING');
+      if(row.phase!=='TERMINAL_VERIFIED')
+        return blocked('NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+    }
+  }
   const roles=new Set();
   const projections=[];
   if(observed.candidates.length>0){
@@ -118,6 +171,16 @@ export async function readNativeHostClaimPreflightFromClient({
     claimCandidates:observed.candidates.length,
     claimCandidateRoles:Object.freeze([...roles].sort()),
     claimRoleCandidates:Object.freeze(projections),
+    terminalizedHistoricalClaimCount:terminalized.length,
+    terminalizedHistoricalClaims:Object.freeze(terminalized.map(t=>
+      Object.freeze({
+        commentId:t.commentId,commentRef:t.commentRef,
+        dispatchId:t.dispatchId,actorRole:t.actorRole,
+        operatorId:t.operatorId,protectedClaimKey:t.protectedClaimKey,
+        claimGeneration:t.claimGeneration,sourceSha:t.sourceSha,
+        transportActor:t.transportActor,
+        terminalizedByDoneCommentId:t.terminalizedByDoneCommentId,
+        terminalizedByDoneCommentRef:t.terminalizedByDoneCommentRef}))),
     // Explicitly NOT the Host controller's privileged
     // NATIVE_GITHUB_CURRENT_ADMISSION: writer/dispatch may be spoofed.
     dispatchSourceBound:false,publisherSourceBound:false,
