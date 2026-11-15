@@ -43,6 +43,65 @@ export const R137_ADDITION_IDS=[
   R137_IDS.outcomeLocator,R137_IDS.outcomeEvidence,R137_IDS.claimSupport,
 ];
 
+// R140 fixed Source-First reviewer anchor: independently from candidate/sidecar
+// revision or rebuilt graph/manifest hashes, retain exact bounded *educational*
+// semantics recorded from CS2023 SE-Validation (publisher PDF index247,
+// printed p248, Illustrative Learning Outcomes, CS Core #2).  Any change to
+// these constants is a source-contract change requiring distinct review.
+// THIS IS NOT A PROFESSIONAL ORACLE OR AN ORIGINAL CLAIM ADMISSION.
+export const R140_PUBLISHER_VV_LO2_ANCHOR=Object.freeze({
+  source:'Computer Science Curricula 2023, January 2024, DOI 10.1145/3664191',
+  sourcePdf:'https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf',
+  sectionPage:'246', outcomePage:'248',
+  educationalMeaning:'Students distinguish program validation from verification; no test-passed-implies-customer-acceptance entailment',
+});
+export const R140_REVIEWED_OUTCOME_EVIDENCE=Object.freeze({
+  "@id": "se:EVD-TVV-0016",
+  "@type": "se:Evidence",
+  "se:created_on": "2026-11-15",
+  "se:record_version": "0.1.0",
+  "se:lifecycle_status": "PENDING_REVIEW",
+  "se:source_locator_ref": {
+    "@id": "se:LOC-CS2023-SE-VALIDATION-LO2"
+  },
+  "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
+  "se:statement": "CS2023's SE-Validation CS Core illustrative learning outcome 2 expects students to distinguish between program validation and verification, completing the outcome-specific source leg for the two-question verification/validation distinction.",
+  "se:context": "The paired CS Core illustrative learning outcome 2 of the SE-Validation unit, on the outcome-specific page.",
+  "se:method": "Full-text extraction of the official Body of Knowledge PDF on 2026-11-15; outcome-list page anchored separately from the section-start concepts page (zero-based index 245, printed page 246).",
+  "se:result": "Outcome-specific anchor for the claim's learning-outcome leg; section-start concepts remain anchored by the separate 0.1.1 SECTION locator.",
+  "se:limitations": "A learning outcome is a curriculum teaching objective; it does not elaborate when each question is fully answered and is not a professional-standard definition.",
+  "se:uncertainty": "The publisher PDF raw-byte SHA256 and any independent page-image audit remain UNKNOWN.",
+  "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
+  "se:synthetic": false
+});
+export const R140_REVIEWED_CLAIM_SUPPORT=Object.freeze({
+  "@id": "se:REL-TVV-0024",
+  "@type": "se:RelationshipAssertion",
+  "se:created_on": "2026-11-15",
+  "se:record_version": "0.1.0",
+  "se:lifecycle_status": "PENDING_REVIEW",
+  "se:subject_ref": {
+    "@id": "se:CLM-TVV-0001"
+  },
+  "se:predicate": {
+    "@id": "se:SUPPORTED_BY"
+  },
+  "se:object_ref": {
+    "@id": "se:EVD-TVV-0016"
+  },
+  "se:evidence_refs": {
+    "@id": "se:EVD-TVV-0016"
+  },
+  "se:context": "Outcome-specific support leg: the V&V two-question definition claim is additionally supported by evidence anchored to the CS Core illustrative learning outcome 2 page.",
+  "se:rationale": "The claim's learning-outcome leg restates evidence extracted from the CS Core outcome 2 page (zero-based index 247, printed page 248), complementing the section-start locator; the original claim record itself remains byte-identical.",
+  "se:synthetic": false
+});
+// Canonical SHA-256 of *code-fixed reviewed records*, not of mutable source
+// pins supplied by the same producer. Synchronized candidate/sidecar drift
+// cannot change these expected digests at runtime.
+export const R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST=canonicalRecordDigest(R140_REVIEWED_OUTCOME_EVIDENCE);
+export const R140_REVIEWED_CLAIM_SUPPORT_DIGEST=canonicalRecordDigest(R140_REVIEWED_CLAIM_SUPPORT);
+
 export const readText=(relPath)=>readFileSync(REPO_ROOT+relPath,'utf8');
 
 export function selectedCqBindingRow(document){
@@ -168,6 +227,16 @@ export function assertSelectedCqSourceBinding(document,schema,candidateNodes,ove
   assert.equal(outcomeEvidence['se:lifecycle_status'],'PENDING_REVIEW','outcome evidence must stay PENDING_REVIEW');
   assert.equal(outcomeEvidence['se:extraction_status'],'EXTRACTED_PENDING_REVIEW','outcome evidence must stay EXTRACTED_PENDING_REVIEW');
   assert.equal(outcomeEvidence['se:synthetic'],false,'outcome evidence must be non-synthetic');
+  // R140 P1: source semantics may not be redefined by co-mutated overlay,
+  // sidecar and graph. This independently reviewed exact outcome Evidence
+  // contract covers statement, extraction method, context, limitations and
+  // uncertainty; source locator alone is not evidence of LO2 meaning.
+  assert.equal(outcomeEvidence['se:record_version'],'0.1.0','R140 STALE outcome Evidence record version');
+  assert.equal(outcomeEvidence['se:statement'],R140_REVIEWED_OUTCOME_EVIDENCE['se:statement'],
+    'R140 LO2 Evidence semantic inversion (source-anchored statement)');
+  assert.equal(canonicalRecordDigest(outcomeEvidence),R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST,
+    'R140 LO2 Evidence semantic/digest drift (fixed independent source contract)');
+
   const outcomeLocator=byId.get(R137_IDS.outcomeLocator);
   assert.equal(outcomeLocator['se:locator_type'],'PAGE','outcome pinpoint must be a PAGE locator');
   assert.equal(outcomeLocator['se:verification_state'],'LOCATOR_VERIFIED','outcome locator must be LOCATOR_VERIFIED');
@@ -190,6 +259,16 @@ export function assertSelectedCqSourceBinding(document,schema,candidateNodes,ove
   assert.equal(support['se:object_ref']?.['@id'],R137_IDS.outcomeEvidence,'claim-support object drift');
   assert.equal(support['se:predicate']?.['@id'],'se:SUPPORTED_BY','claim-support predicate drift');
   assert.equal(support['se:lifecycle_status'],'PENDING_REVIEW','claim support must stay PENDING_REVIEW');
+  // R140: the claim-support rationale is itself semantic evidence. Record
+  // version and full reviewed content digest are pinned in validator CODE,
+  // not inferred from a mutually repinned graph/sidecar or author expected.
+  assert.equal(support['se:record_version'],'0.1.0','R140 STALE claim-support record version');
+  assert.equal(support['se:synthetic'],false,'R140 claim-support assertion cannot become synthetic');
+  assert.equal(support['se:rationale'],R140_REVIEWED_CLAIM_SUPPORT['se:rationale'],
+    'R140 claim-support rationale semantic inversion');
+  assert.equal(canonicalRecordDigest(support),R140_REVIEWED_CLAIM_SUPPORT_DIGEST,
+    'R140 claim-support semantic/digest drift (fixed independent source contract)');
+
 
   // qualification boundaries
   assert.equal(scb['se:binding_scope'],'SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL');
