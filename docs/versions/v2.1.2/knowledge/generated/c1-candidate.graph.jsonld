@@ -6096,6 +6096,25 @@
       "se:synthetic": false
     },
     {
+      "@id": "se:EVD-TVV-0016",
+      "@type": "se:Evidence",
+      "se:context": "The paired CS Core illustrative learning outcome 2 of the SE-Validation unit, on the outcome-specific page.",
+      "se:created_on": "2026-11-15",
+      "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
+      "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
+      "se:lifecycle_status": "PENDING_REVIEW",
+      "se:limitations": "A learning outcome is a curriculum teaching objective; it does not elaborate when each question is fully answered and is not a professional-standard definition.",
+      "se:method": "Full-text extraction of the official Body of Knowledge PDF on 2026-11-15; outcome-list page anchored separately from the section-start concepts page (zero-based index 245, printed page 246).",
+      "se:record_version": "0.1.0",
+      "se:result": "Outcome-specific anchor for the claim's learning-outcome leg; section-start concepts remain anchored by the separate 0.1.1 SECTION locator.",
+      "se:source_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-LO2"
+      },
+      "se:statement": "CS2023's SE-Validation CS Core illustrative learning outcome 2 expects students to distinguish between program validation and verification, completing the outcome-specific source leg for the two-question verification/validation distinction.",
+      "se:synthetic": false,
+      "se:uncertainty": "The publisher PDF raw-byte SHA256 and any independent page-image audit remain UNKNOWN."
+    },
+    {
       "@id": "se:EVD-TVV-SWEBOK-FAULTS-ORACLES-LIMITS",
       "@type": "se:Evidence",
       "se:context": "SWEBOK Guide v4.0a Chapter 5 section 1 (1.1, 1.2.7, 1.2.8), printed pages 5-3 to 5-5.",
@@ -6651,8 +6670,8 @@
       "se:domain_ref": {
         "@id": "se:DOMAIN-SOFTWARE-ENGINEERING"
       },
-      "se:generated_on": "2026-11-12",
-      "se:graph_version": "0.2.0"
+      "se:generated_on": "2026-11-15",
+      "se:graph_version": "0.2.1"
     },
     {
       "@id": "se:LOC-07A-SWEBOK-KA10-ASSESSMENT",
@@ -7823,6 +7842,21 @@
       },
       "se:verification_state": "LOCATOR_VERIFIED",
       "se:verified_content_summary": "V&V concept questions, testing objectives, test kinds, DAMP vs DRY, test planning and coverage dimensions, test development techniques and tooling, V&V in the development cycle, domain-specific V&V and tooling topics with illustrative learning outcomes."
+    },
+    {
+      "@id": "se:LOC-CS2023-SE-VALIDATION-LO2",
+      "@type": "se:SourceLocator",
+      "se:accessed_on": "2026-11-15",
+      "se:created_on": "2026-11-15",
+      "se:lifecycle_status": "ACTIVE",
+      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation', Illustrative Learning Outcomes, CS Core outcome 2 ('Distinguish between program validation and verification.'); heading and outcome text verified by full-text extraction of the official PDF on 2026-11-15; verified PDF zero-based index 247, printed page 248 in IEEE-CS CS2023 Final Report; publisher section: SE-Validation: Software Verification and Validation, Illustrative Learning Outcomes (CS Core)",
+      "se:locator_type": "PAGE",
+      "se:record_version": "0.1.0",
+      "se:source_ref": {
+        "@id": "se:SRC-CS2023"
+      },
+      "se:verification_state": "LOCATOR_VERIFIED",
+      "se:verified_content_summary": "CS Core Illustrative Learning Outcomes 1-4 of the SE-Validation unit on the outcome-specific page, including outcome 2 'Distinguish between program validation and verification.'; this outcome page is separate from the section-start concepts page (zero-based index 245, printed page 246)."
     },
     {
       "@id": "se:LOC-NIST-218-PW7",
@@ -16174,6 +16208,80 @@
       "se:record_version": "0.1.0",
       "se:subject_ref": {
         "@id": "se:CLM-TVV-SWEBOK-TECHNIQUE-CLASSES"
+      }
+    },
+    {
+      "@id": "se:REL-TVV-0024",
+      "@type": "se:RelationshipAssertion",
+      "se:context": "Outcome-specific support leg: the V&V two-question definition claim is additionally supported by evidence anchored to the CS Core illustrative learning outcome 2 page.",
+      "se:created_on": "2026-11-15",
+      "se:evidence_refs": {
+        "@id": "se:EVD-TVV-0016"
+      },
+      "se:lifecycle_status": "PENDING_REVIEW",
+      "se:object_ref": {
+        "@id": "se:EVD-TVV-0016"
+      },
+      "se:predicate": {
+        "@id": "se:SUPPORTED_BY"
+      },
+      "se:rationale": "The claim's learning-outcome leg restates evidence extracted from the CS Core outcome 2 page (zero-based index 247, printed page 248), complementing the section-start locator; the original claim record itself remains byte-identical.",
+      "se:record_version": "0.1.0",
+      "se:subject_ref": {
+        "@id": "se:CLM-TVV-0001"
+      },
+      "se:synthetic": false
+    },
+    {
+      "@id": "se:SCB-CS2023-VV-R1",
+      "@type": "se:SelectedCqSourceBinding",
+      "se:binding_authority_ref": {
+        "@id": "https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084"
+      },
+      "se:binding_scope": "SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL",
+      "se:candidate_element_attribution": "dke:ev16.d02.se-verification-child",
+      "se:claim_digest_sha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97",
+      "se:claim_lifecycle_effect": "NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING",
+      "se:claim_record_version": "0.1.0",
+      "se:claim_ref": {
+        "@id": "se:CLM-TVV-0001"
+      },
+      "se:claim_support_ref": {
+        "@id": "se:REL-TVV-0024"
+      },
+      "se:created_on": "2026-11-15",
+      "se:lifecycle_status": "ACTIVE",
+      "se:outcome_anchor_type": "PAGE",
+      "se:outcome_evidence_ref": {
+        "@id": "se:EVD-TVV-0016"
+      },
+      "se:outcome_locator_digest_sha256": "1b75df53c55436f51a406e957291f778b8a7eea42760b4115dd14901a1cbab56",
+      "se:outcome_locator_record_version": "0.1.0",
+      "se:outcome_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-LO2"
+      },
+      "se:outcome_pdf_zero_based_page": "247",
+      "se:outcome_printed_page": "248",
+      "se:positive_cq": "CS2023_VV_TEACHING",
+      "se:professional_oracle_status": "NOT_ATTESTED",
+      "se:publication_permission": "NOT_GRANTED_BY_THIS_OWNER_DECISION",
+      "se:record_version": "0.1.0",
+      "se:section_anchor_type": "SECTION",
+      "se:section_evidence_ref": {
+        "@id": "se:EVD-TVV-0003"
+      },
+      "se:section_locator_digest_sha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947",
+      "se:section_locator_record_version": "0.1.1",
+      "se:section_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-KU"
+      },
+      "se:section_pdf_zero_based_page": "245",
+      "se:section_printed_page": "246",
+      "se:source_ref": {
+        "@id": "se:SRC-CS2023"
+      },
+      "se:taxonomy_node_ref": {
+        "@id": "se:NODE-CS2023-SE-VALIDATION"
       }
     },
     {

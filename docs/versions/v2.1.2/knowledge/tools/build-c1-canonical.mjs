@@ -14,8 +14,9 @@
 //   R1 frozen-input Git Blob pins (lanes, registry, catalog, overlay, frozen graph)
 //   R2 overlay-free projection == frozen v2.1.1 graph.jsonld / graph.ttl bytes
 //      and canonical N-Triples digest 2625a6b3... (lane-integration fidelity)
-//   R3 candidate invariants: 811 nodes; 106 PENDING claims; two separate
-//      SourceOwnerDisposition records; 0 ReviewDecision / Counterexample / ACCEPTED; OD05 narrowing present; GH-2018 separate
+//   R3 candidate invariants: 815 nodes; 106 PENDING claims; two separate
+//      SourceOwnerDisposition records; one consumed SelectedCqSourceBinding;
+//      0 ReviewDecision / Counterexample / ACCEPTED; OD05 narrowing present; GH-2018 separate
 //      locator + PENDING evidence + ~200k dropped-payload caveat preserved;
 //      UNKNOWN conservation; originals preserved; all refs resolve
 //   R4 overlay candidate preview == canonical export bytes (two construction
@@ -66,8 +67,8 @@ function run() {
 
   // R3: candidate invariants
   const cand = buildGraph('v212-c1', inputs);
-  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner);
-  console.log('R3 candidate invariants OK (811 nodes; 106 PENDING claims; 2 SourceOwnerDispositions; 0 ReviewDecision; OD05 narrowed; GH-2018 patched with dropped-payload caveat; UNKNOWN conserved)');
+  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner, inputs.catalog);
+  console.log('R3 candidate invariants OK (815 nodes; 106 PENDING claims; 2 SourceOwnerDispositions; 1 SelectedCqSourceBinding with consumed p246+p248 two-leg source; 0 ReviewDecision; OD05 narrowed; GH-2018 patched with dropped-payload caveat; UNKNOWN conserved)');
 
   // R5: Turtle parse-back == JSON-LD == internal canonical set
   const parsedTtl = parseTtl(cand.ttl);

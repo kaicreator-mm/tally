@@ -10,7 +10,7 @@ import {nodesDeepEqual, projectRecord} from './rdf-min.mjs';
 export const REPO_ROOT=fileURLToPath(new URL('../../../../../',import.meta.url));
 export const SOURCE_OWNER_PATH='docs/versions/v2.1.2/knowledge/source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json';
 export const SOURCE_OWNER_SCHEMA_PATH='docs/versions/v2.1.2/knowledge/model/source-owner-disposition.schema.json';
-export const SOURCE_OWNER_BLOB='0ec426e5a71d8291557932141e6d41c3c12f7b66';
+export const SOURCE_OWNER_BLOB='c3abfea090500a58976e7a331d1cbcf397d602f4';
 export const SOURCE_OWNER_SCHEMA_BLOB='78cb22c57eb8b69e0a03891a2e4c90e29ffca5f6';
 
 const canonical=value=>Array.isArray(value)?value.map(canonical):

@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kaicreator-mm/tally/docs/versions/v2.1.2/knowledge/model/selected-cq-source-binding.schema.json",
+  "title": "Tally v2.1.2 SelectedCqSourceBinding",
+  "description": "Executable two-leg source binding for a selected candidate CQ (R137). Each selected CQ consumes BOTH a section-start source leg and a distinct outcome-pinpoint source leg with exact record versions, canonical SHA-256 digests and page anchors. An orphan binding (leg records or claim-support assertion missing from the graph) or a stale digest fails closed. This binding is candidate/research-scoped only: it never qualifies a frozen R8 Cell, never promotes a Claim lifecycle and never attests a professional Oracle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "@id",
+    "@type",
+    "se:record_version",
+    "se:lifecycle_status",
+    "se:created_on",
+    "se:positive_cq",
+    "se:binding_scope",
+    "se:claim_ref",
+    "se:claim_record_version",
+    "se:claim_digest_sha256",
+    "se:section_locator_ref",
+    "se:section_locator_record_version",
+    "se:section_locator_digest_sha256",
+    "se:section_evidence_ref",
+    "se:section_anchor_type",
+    "se:section_pdf_zero_based_page",
+    "se:section_printed_page",
+    "se:outcome_locator_ref",
+    "se:outcome_locator_record_version",
+    "se:outcome_locator_digest_sha256",
+    "se:outcome_evidence_ref",
+    "se:outcome_anchor_type",
+    "se:outcome_pdf_zero_based_page",
+    "se:outcome_printed_page",
+    "se:claim_support_ref",
+    "se:source_ref",
+    "se:taxonomy_node_ref",
+    "se:candidate_element_attribution",
+    "se:claim_lifecycle_effect",
+    "se:professional_oracle_status",
+    "se:publication_permission"
+  ],
+  "properties": {
+    "@id": {
+      "type": "string",
+      "pattern": "^se:SCB-[A-Z0-9][A-Z0-9._-]*$"
+    },
+    "@type": {
+      "const": "se:SelectedCqSourceBinding"
+    },
+    "se:record_version": {
+      "$ref": "#/$defs/version"
+    },
+    "se:lifecycle_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED"]
+    },
+    "se:created_on": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "se:positive_cq": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "se:binding_scope": {
+      "const": "SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL"
+    },
+    "se:claim_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:claim_record_version": {
+      "$ref": "#/$defs/version"
+    },
+    "se:claim_digest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "se:section_locator_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:section_locator_record_version": {
+      "$ref": "#/$defs/version"
+    },
+    "se:section_locator_digest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "se:section_evidence_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:section_anchor_type": {
+      "const": "SECTION"
+    },
+    "se:section_pdf_zero_based_page": {
+      "$ref": "#/$defs/page"
+    },
+    "se:section_printed_page": {
+      "$ref": "#/$defs/page"
+    },
+    "se:outcome_locator_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:outcome_locator_record_version": {
+      "$ref": "#/$defs/version"
+    },
+    "se:outcome_locator_digest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "se:outcome_evidence_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:outcome_anchor_type": {
+      "const": "PAGE"
+    },
+    "se:outcome_pdf_zero_based_page": {
+      "$ref": "#/$defs/page"
+    },
+    "se:outcome_printed_page": {
+      "$ref": "#/$defs/page"
+    },
+    "se:claim_support_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:source_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:taxonomy_node_ref": {
+      "$ref": "#/$defs/ref"
+    },
+    "se:candidate_element_attribution": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "se:claim_lifecycle_effect": {
+      "const": "NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING"
+    },
+    "se:professional_oracle_status": {
+      "const": "NOT_ATTESTED"
+    },
+    "se:publication_permission": {
+      "const": "NOT_GRANTED_BY_THIS_OWNER_DECISION"
+    },
+    "se:binding_authority_ref": {
+      "$ref": "#/$defs/ref"
+    }
+  },
+  "$defs": {
+    "ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["@id"],
+      "properties": {
+        "@id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "page": {
+      "type": "string",
+      "pattern": "^[0-9]{1,4}$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "x-two-leg-rule": "The section leg and the outcome leg MUST reference distinct SourceLocator records with distinct digests and distinct PDF pages; the outcome leg is the only exact-page pinpoint for the illustrative learning outcome. Reusing one locator for both legs (e.g. asserting the section-start page as the outcome proof) is STALE/tampered and fails closed.",
+  "x-qualification-boundary": "A SelectedCqSourceBinding is executable source-consumption evidence for the selected research candidate CQ only. It does not widen frozen R8 Cells, does not create ReviewDecision, does not set Claim review_status/lifecycle_status and does not attest any professional semantic Oracle."
+}

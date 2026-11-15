@@ -18,8 +18,8 @@
   "changes": {
     "se:GRAPH-V2.1.1-SEK08": {
       "@id": "se:GRAPH-V2.1.2-C1-OWNER-R13",
-      "se:graph_version": "0.2.0",
-      "se:generated_on": "2026-11-12"
+      "se:graph_version": "0.2.1",
+      "se:generated_on": "2026-11-15"
     },
     "se:DM-REQ-FUNCTIONAL-DOC-METHOD": {
       "se:constraints": [
@@ -106,6 +106,64 @@
       "se:limitations": "First-party self-report, no independent operational audit, no universal failure/failover guarantee.",
       "se:uncertainty": "The publisher HTML raw-byte SHA256 and independent causal/loss audit remain UNKNOWN.",
       "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
+      "se:synthetic": false
+    },
+    {
+      "@id": "se:LOC-CS2023-SE-VALIDATION-LO2",
+      "@type": "se:SourceLocator",
+      "se:created_on": "2026-11-15",
+      "se:record_version": "0.1.0",
+      "se:lifecycle_status": "ACTIVE",
+      "se:source_ref": {
+        "@id": "se:SRC-CS2023"
+      },
+      "se:locator_type": "PAGE",
+      "se:locator": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation', Illustrative Learning Outcomes, CS Core outcome 2 ('Distinguish between program validation and verification.'); heading and outcome text verified by full-text extraction of the official PDF on 2026-11-15; verified PDF zero-based index 247, printed page 248 in IEEE-CS CS2023 Final Report; publisher section: SE-Validation: Software Verification and Validation, Illustrative Learning Outcomes (CS Core)",
+      "se:verified_content_summary": "CS Core Illustrative Learning Outcomes 1-4 of the SE-Validation unit on the outcome-specific page, including outcome 2 'Distinguish between program validation and verification.'; this outcome page is separate from the section-start concepts page (zero-based index 245, printed page 246).",
+      "se:verification_state": "LOCATOR_VERIFIED",
+      "se:accessed_on": "2026-11-15"
+    },
+    {
+      "@id": "se:EVD-TVV-0016",
+      "@type": "se:Evidence",
+      "se:created_on": "2026-11-15",
+      "se:record_version": "0.1.0",
+      "se:lifecycle_status": "PENDING_REVIEW",
+      "se:source_locator_ref": {
+        "@id": "se:LOC-CS2023-SE-VALIDATION-LO2"
+      },
+      "se:evidence_type": "DIRECT_SOURCE_PARAPHRASE",
+      "se:statement": "CS2023's SE-Validation CS Core illustrative learning outcome 2 expects students to distinguish between program validation and verification, completing the outcome-specific source leg for the two-question verification/validation distinction.",
+      "se:context": "The paired CS Core illustrative learning outcome 2 of the SE-Validation unit, on the outcome-specific page.",
+      "se:method": "Full-text extraction of the official Body of Knowledge PDF on 2026-11-15; outcome-list page anchored separately from the section-start concepts page (zero-based index 245, printed page 246).",
+      "se:result": "Outcome-specific anchor for the claim's learning-outcome leg; section-start concepts remain anchored by the separate 0.1.1 SECTION locator.",
+      "se:limitations": "A learning outcome is a curriculum teaching objective; it does not elaborate when each question is fully answered and is not a professional-standard definition.",
+      "se:uncertainty": "The publisher PDF raw-byte SHA256 and any independent page-image audit remain UNKNOWN.",
+      "se:extraction_status": "EXTRACTED_PENDING_REVIEW",
+      "se:synthetic": false
+    },
+    {
+      "@id": "se:REL-TVV-0024",
+      "@type": "se:RelationshipAssertion",
+      "se:created_on": "2026-11-15",
+      "se:record_version": "0.1.0",
+      "se:lifecycle_status": "PENDING_REVIEW",
+      "se:subject_ref": {
+        "@id": "se:CLM-TVV-0001"
+      },
+      "se:predicate": {
+        "@id": "se:SUPPORTED_BY"
+      },
+      "se:object_ref": {
+        "@id": "se:EVD-TVV-0016"
+      },
+      "se:evidence_refs": [
+        {
+          "@id": "se:EVD-TVV-0016"
+        }
+      ],
+      "se:context": "Outcome-specific support leg: the V&V two-question definition claim is additionally supported by evidence anchored to the CS Core illustrative learning outcome 2 page.",
+      "se:rationale": "The claim's learning-outcome leg restates evidence extracted from the CS Core outcome 2 page (zero-based index 247, printed page 248), complementing the section-start locator; the original claim record itself remains byte-identical.",
       "se:synthetic": false
     }
   ],

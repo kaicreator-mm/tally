@@ -7,6 +7,10 @@ import {
   readSourceOwnerInputs, materializeSourceOwnerDispositions,
   assertC1SourceOwnerDispositions,
 } from './source-owner-disposition.mjs';
+import {
+  readScbSchema, materializeSelectedCqSourceBinding,
+  assertSelectedCqSourceBinding,
+} from './selected-cq-source-binding.mjs';
 export const original = fileURLToPath(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld', import.meta.url));
 export const overlay = fileURLToPath(new URL('../source/C1_OWNER_REVISION_R13.json', import.meta.url));
 export const preview = fileURLToPath(new URL('../generated/c1-candidate.graph.jsonld', import.meta.url));
@@ -29,7 +33,8 @@ export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
     'se:LOC-CS2023-SE-REQ-KU', 'se:LOC-CS2023-SE-VALIDATION-KU'
   ].sort());
   assert.deepEqual(patch.additions.map(x => x['@id']).sort(), [
-    'se:LOC-09F-GH-BACKLOG', 'se:EVD-09F-GH-BACKLOG'
+    'se:EVD-09F-GH-BACKLOG', 'se:EVD-TVV-0016', 'se:LOC-09F-GH-BACKLOG',
+    'se:LOC-CS2023-SE-VALIDATION-LO2', 'se:REL-TVV-0024'
   ].sort());
   const out = structuredClone(graph);
   for (const [id, fields] of Object.entries(patch.changes)) {
@@ -45,10 +50,12 @@ export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
     assert(!originals.has(n['@id']), 'duplicate disposition ' + n['@id']);
     out['@graph'].push(n);
   }
+  const scbNode = materializeSelectedCqSourceBinding(sourceOwner.document, readScbSchema(), out['@graph'], patch);
+  out['@graph'].push(scbNode);
   out['@graph'].sort((a,b) => a['@id'].localeCompare(b['@id'], 'en'));
-  assert.equal(out['@graph'].length, 811);
+  assert.equal(out['@graph'].length, 815);
   const ids = new Map(out['@graph'].map(n => [n['@id'], n]));
-  assert.equal(ids.size, 811);
+  assert.equal(ids.size, 815);
   const dm = ids.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD');
   assert(dm['se:constraints'].some(x => x.includes('At least one')));
   assert(!dm['se:constraints'].some(x => x === 'The chosen method applies uniformly across the requirement set for consistency.'));
@@ -71,6 +78,9 @@ export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
   assert.equal(ids.get('se:LOC-09F-GH-REPLICATION')['se:locator'], originals.get('se:LOC-09F-GH-REPLICATION')['se:locator']);
   assert.equal(out['@graph'].filter(n => n['@type'] === 'se:KnowledgeClaim').length, 106);
   assert.equal(out['@graph'].filter(n => n['@type'] === 'se:ReviewDecision').length, 0);
+  // R137: the selected-CQ two-leg source binding must be consumed in this
+  // reconstruction path as well (byte-convergence R4 additionally proves it)
+  assertSelectedCqSourceBinding(sourceOwner.document, readScbSchema(), out['@graph'], patch);
   assertC1SourceOwnerDispositions(sourceOwner.document, sourceOwner.schema, graph['@graph'], out['@graph']);
   return out;
 }
@@ -85,7 +95,7 @@ export function materialize() {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   if (process.argv.includes('--check')) {
     assert.equal(materialize(), readFileSync(preview, 'utf8'), 'preview must match authoritative source overlay');
-    console.log('PASS: 811 nodes, 106 pending claims, 2 SourceOwnerDispositions, 0 ReviewDecision; Oracle NOT_ATTESTED');
+    console.log('PASS: 815 nodes (R137 two-leg selected-CQ binding consumed), 106 pending claims, 2 SourceOwnerDispositions, 1 SelectedCqSourceBinding, 0 ReviewDecision; Oracle NOT_ATTESTED');
   } else if (process.argv.includes('--write')) {
     writeFileSync(preview, materialize());
     console.log('Updated v2.1.2 C1 candidate preview (not certified RDF graph)');

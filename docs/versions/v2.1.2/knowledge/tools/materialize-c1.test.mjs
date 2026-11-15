@@ -5,7 +5,7 @@ import { build, materialize, original, overlay, preview } from './materialize-c1
 const get = (g,id) => g['@graph'].find(n=>n['@id']===id);
 test('byte-pinned original reconstructs exact candidate without touching history', () => {
   assert.equal(materialize(), readFileSync(preview,'utf8'));
-  assert.equal(JSON.parse(materialize())['@graph'].length, 811);
+  assert.equal(JSON.parse(materialize())['@graph'].length, 815);
 });
 test('OD05 accepts mixed methods and rejects universal uniformity claim', () => {
   const g=JSON.parse(materialize()), dm=get(g,'se:DM-REQ-FUNCTIONAL-DOC-METHOD');

@@ -1,6 +1,6 @@
 {
   "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
-  "recordVersion": "0.2.0",
+  "recordVersion": "0.2.1",
   "version": "v2.1.2-candidate",
   "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
   "recordedOn": "2026-11-14",
@@ -19,7 +19,7 @@
     "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
     "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
     "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
-    "candidateGraphBlob": "8719bb8990ef692c511fc478c7512db1559248a9",
+    "candidateGraphBlob": "a49ddf58a0c4a5b25ebdd4018c8234f64e6365e0",
     "recordedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
     "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
     "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
@@ -140,7 +140,38 @@
           "se:REL-TVV-0020"
         ],
         "globalStatus": "UNKNOWN_PUBLISHER_MANDATE_EXCLUDED",
-        "rootStatus": "UNKNOWN"
+        "rootStatus": "UNKNOWN",
+        "selectedCqSourceBinding": {
+          "id": "se:SCB-CS2023-VV-R1",
+          "recordVersion": "0.1.0",
+          "lifecycle": "ACTIVE",
+          "createdOn": "2026-11-15",
+          "positiveCq": "CS2023_VV_TEACHING",
+          "bindingScope": "SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL",
+          "claimRef": "se:CLM-TVV-0001",
+          "claimRecordVersion": "0.1.0",
+          "claimDigestSha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97",
+          "sectionLeg": {
+            "locatorRef": "se:LOC-CS2023-SE-VALIDATION-KU",
+            "recordVersion": "0.1.1",
+            "digestSha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947",
+            "evidenceRef": "se:EVD-TVV-0003",
+            "anchorType": "SECTION",
+            "pdfZeroBasedPage": "245",
+            "printedPage": "246"
+          },
+          "outcomeLeg": {
+            "locatorRef": "se:LOC-CS2023-SE-VALIDATION-LO2",
+            "recordVersion": "0.1.0",
+            "digestSha256": "1b75df53c55436f51a406e957291f778b8a7eea42760b4115dd14901a1cbab56",
+            "evidenceRef": "se:EVD-TVV-0016",
+            "anchorType": "PAGE",
+            "pdfZeroBasedPage": "247",
+            "printedPage": "248"
+          },
+          "claimSupportRef": "se:REL-TVV-0024",
+          "authorityRecord": "https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084"
+        }
       },
       "scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
       "positive": "Verification and validation ask two distinct educational questions, with no inference of full business acceptance",
@@ -163,7 +194,19 @@
         "originalFrozenLocatorVersion": "0.1.0",
         "candidateLocatorVersion": "0.1.1",
         "originalWrongPageAnchor": "PDF page indices 174-176",
-        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904629289"
+        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904629289",
+        "outcomePinpoint": {
+          "status": "VERSIONED_TWO_PAGE_ANCHOR_SECTION_START_PLUS_OUTCOME_PINPOINT",
+          "sectionStartAnchor": "p246 SECTION locator (se:LOC-CS2023-SE-VALIDATION-KU rv0.1.1) remains the shared 8-Evidence/5-Claim section anchor, unchanged",
+          "outcomePinpointLocator": "se:LOC-CS2023-SE-VALIDATION-LO2",
+          "outcomePinpointLocatorVersion": "0.1.0",
+          "outcomePdfZeroBasedPageIndex": 247,
+          "outcomePrintedPage": 248,
+          "outcomeEvidence": "se:EVD-TVV-0016",
+          "consumedBySelectedCq": "CS2023_VV_TEACHING via se:SCB-CS2023-VV-R1 and se:REL-TVV-0024",
+          "sharedLocatorFanoutPreserved": "8 Evidence (EVD-TVV-0003/0004/0005/0006/0007/0008/0009/0014) and 5 direct Claims (CLM-TVV-0001/0002/0003/0006/0007) unchanged; no in-place mutation of the original 0.1.1 SECTION locator",
+          "authorityRecord": "https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084"
+        }
       }
     }
   ],

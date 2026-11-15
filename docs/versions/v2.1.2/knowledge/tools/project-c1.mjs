@@ -27,6 +27,10 @@ import {
   assertC1SourceOwnerDispositions,
 } from './source-owner-disposition.mjs';
 import {
+  readScbSchema, materializeSelectedCqSourceBinding,
+  assertSelectedCqSourceBinding, R137_IDS,
+} from './selected-cq-source-binding.mjs';
+import {
   nodesToTriples, canonicalDigest, projectRecord, serializeJsonld,
   serializeTtl, parseTtl, triplesEqualSet, sortNodes, nodesDeepEqual,
 } from './rdf-min.mjs';
@@ -76,14 +80,14 @@ export const PINS = {
   registry: '1ce6d3da3594959b6cee7fdc7d03778cef60ad78',
   catalog: 'a0f088d11878b27b600e604f2cc8d792a85cca9d',
   frozenGraphJsonld: '0f6007315fd7352fe6fd218effcfecf672cb4961',
-  overlay: '061decf47b0120d6958058963980117211cea7b9',
+  overlay: 'caaacfc3403918157991fe198668e0aa4e249262',
   sourceOwnerDispositions: SOURCE_OWNER_BLOB,
   sourceOwnerSchema: SOURCE_OWNER_SCHEMA_BLOB,
 };
 
 export const ORIGINAL_COMMIT = '3e94685ca57a4b7258988826697af1c1c3a6b3c8';
 export const FROZEN_DIGEST = '2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8';
-export const BUILD_DATE = '2026-11-12';
+export const BUILD_DATE = '2026-11-15';
 export const GRAPH_ID_V211 = 'se:GRAPH-V2.1.1-SEK08';
 
 const COLLECTION_TYPES = {
@@ -323,7 +327,7 @@ export function projectRecords(inputs) {
 // ---------------------------------------------------------------------------
 // overlay application (Owner-authorized R13 content; generic applier)
 
-const ALLOWED_ADDITION_TYPES = new Set(['se:SourceLocator', 'se:Evidence']);
+const ALLOWED_ADDITION_TYPES = new Set(['se:SourceLocator', 'se:Evidence', 'se:RelationshipAssertion']);
 const FORBIDDEN_ADDITION_TYPES = new Set(['se:ReviewDecision', 'se:Counterexample']);
 
 export function checkOverlayContract(overlay) {
@@ -411,6 +415,7 @@ function collectRefs(node) {
 const EXTERNAL_AUTHORITY_REF_KEYS = new Set([
   'se:source_owner_ref', 'se:source_owner_authority_ref',
   'se:independent_educational_review_ref', 'se:professional_oracle_ref',
+  'se:binding_authority_ref',
 ]);
 
 export function assertRefsResolve(nodes) {
@@ -449,8 +454,8 @@ export function assertV211Baseline(nodes) {
   return ids;
 }
 
-export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
-  assertStatusConservation(nodes, 811);
+export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner, catalog) {
+  assertStatusConservation(nodes, 815);
   const expectedDispositions = materializeSourceOwnerDispositions(sourceOwner.document, sourceOwner.schema);
   const dispositionIds = new Set(expectedDispositions.map(n => n['@id']));
   const byId = new Map(nodes.map((n) => [n['@id'], n]));
@@ -518,7 +523,7 @@ export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
 
   // renamed graph root
   const root = byId.get('se:GRAPH-V2.1.2-C1-OWNER-R13');
-  if (!root || root['se:graph_version'] !== '0.2.0' || root['se:generated_on'] !== BUILD_DATE
+  if (!root || root['se:graph_version'] !== '0.2.1' || root['se:generated_on'] !== BUILD_DATE
     || root['se:domain_ref']?.['@id'] !== 'se:DOMAIN-SOFTWARE-ENGINEERING') {
     throw new Error('project-c1: v2.1.2 graph root wrong');
   }
@@ -527,6 +532,7 @@ export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
   // originals preserved except the explicitly changed ids; every surviving
   // node must have original provenance
   const origById = new Map(originalNodes.map((n) => [n['@id'], n]));
+  const scbIds = new Set([R137_IDS.scb]);
   for (const n of originalNodes) {
     if (changed.has(n['@id'])) continue;
     if (!nodesDeepEqual(byId.get(n['@id']), n)) {
@@ -534,7 +540,7 @@ export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
     }
   }
   for (const n of nodes) {
-    if (added.has(n['@id']) || dispositionIds.has(n['@id'])) continue;
+    if (added.has(n['@id']) || dispositionIds.has(n['@id']) || scbIds.has(n['@id'])) continue;
     if (n['@id'] === 'se:GRAPH-V2.1.2-C1-OWNER-R13') continue;
     if (!origById.has(n['@id'])) {
       throw new Error(`project-c1: node ${n['@id']} has no original provenance`);
@@ -544,7 +550,37 @@ export function assertC1Candidate(nodes, overlay, originalNodes, sourceOwner) {
   // qualification conservation: no review decisions may appear post-overlay
   if (nodes.some((n) => n['@type'] === 'se:ReviewDecision')) throw new Error('project-c1: ReviewDecision appeared');
 
+  // R137: overlay relationship additions obey the catalog; the selected-CQ
+  // two-leg source binding must be actually consumed, not merely declared
+  if (catalog) assertOverlayRelationshipAdditions(catalog, overlay, nodes);
+  assertSelectedCqSourceBinding(sourceOwner.document, readScbSchema(), nodes, overlay);
+
   assertRefsResolve(nodes);
+}
+
+// Overlay-added RelationshipAssertions must use a catalog-declared predicate
+// with catalog-legal subject/object classes. Unlike lane assertions they do
+// not materialize typed edges onto locked original records (the SOD hard gate
+// forbids mutating the original Claim); the relation is carried by the
+// assertion node itself and enforced by the SelectedCqSourceBinding validator.
+function assertOverlayRelationshipAdditions(catalog, overlay, nodes) {
+  const declared = new Map(catalog.predicates.map((p) => [p.predicate, p]));
+  const classOf = new Map(nodes.map((n) => [n['@id'], n['@type']]));
+  for (const addition of overlay.additions ?? []) {
+    if (addition['@type'] !== 'se:RelationshipAssertion') continue;
+    const predicateLocal = addition['se:predicate']?.['@id']?.replace(/^se:/, '');
+    if (!predicateLocal || !declared.has(predicateLocal)) {
+      throw new Error(`project-c1: overlay relationship ${addition['@id']} predicate "${predicateLocal}" not declared in RELATIONSHIP_CATALOG`);
+    }
+    const decl = declared.get(predicateLocal);
+    for (const [role, clsKey] of [['se:subject_ref', 'subject_classes'], ['se:object_ref', 'object_classes']]) {
+      const refId = addition[role]?.['@id'];
+      const cls = classOf.get(refId)?.replace('se:', '');
+      if (!cls || !Array.isArray(decl[clsKey]) || !decl[clsKey].includes(cls)) {
+        throw new Error(`project-c1: overlay relationship ${addition['@id']} ${role} ${refId} (${cls ?? 'unresolved'}) not allowed for predicate ${predicateLocal}`);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -559,8 +595,9 @@ export const TTL_HEADER_V211 = [
 export const TTL_HEADER_V212 = [
   '# Tally v2.1.2 C1 owner-source canonical knowledge-graph projection (Turtle).',
   '# Single-Writer source candidate: OD05=NARROW_CLAIM + GH-2018=ACCEPT_PATCH (Tally #398 R13).',
-  '# Deterministic: sorted subjects/predicates/objects; fixed build date 2026-11-12.',
-  '# Source of truth: frozen v2.1.1 canonical lane inputs + R13 overlay + separately validated R100 SourceOwnerDisposition sidecar.',
+  '# R137: selected VV CQ two-leg source binding (p246 SECTION + p248 LO2 PAGE pinpoint).',
+  '# Deterministic: sorted subjects/predicates/objects; fixed build date 2026-11-15.',
+  '# Source of truth: frozen v2.1.1 canonical lane inputs + R13/R137 overlay + R100/R137 owner sidecar.',
 ];
 
 // Build the canonical triple set + exports for one variant.
@@ -583,9 +620,10 @@ export function buildGraph(variant, inputs = loadInputs()) {
   if (variant !== 'v212-c1') throw new Error(`project-c1: unknown variant ${variant}`);
   const { nodes: overlaidNodes, changedOriginalIds } = applyOverlay(baselineNodes, inputs.overlay);
   const dispositionNodes = materializeSourceOwnerDispositions(inputs.sourceOwner.document, inputs.sourceOwner.schema);
-  const nodes = [...overlaidNodes, ...dispositionNodes];
+  const scbNode = materializeSelectedCqSourceBinding(inputs.sourceOwner.document, readScbSchema(), overlaidNodes, inputs.overlay);
+  const nodes = [...overlaidNodes, ...dispositionNodes, scbNode];
   // candidate invariants are part of the build itself, not only of the CLI
-  assertC1Candidate(nodes, inputs.overlay, baselineNodes, inputs.sourceOwner);
+  assertC1Candidate(nodes, inputs.overlay, baselineNodes, inputs.sourceOwner, inputs.catalog);
   const triples = nodesToTriples(nodes);
   return {
     nodes,

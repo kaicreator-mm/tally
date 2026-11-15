@@ -1,4 +1,5 @@
 // Tally #398 R100: owner-disposition source sidecar cannot sign Claim lifecycle or Oracle.
+// R137: + SelectedCqSourceBinding two-leg selected-CQ source consumption checks.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -9,10 +10,14 @@ import {
   canonicalRecordDigest, assertC1SourceOwnerDispositions,
   readSourceOwnerInputs, SOURCE_OWNER_SCHEMA_PATH,
 } from './source-owner-disposition.mjs';
+import {
+  readScbSchema, assertSelectedCqSourceBinding, R137_IDS,
+  R137_SHARED_SECTION_EVIDENCE, R137_SHARED_SECTION_DIRECT_CLAIMS,
+} from './selected-cq-source-binding.mjs';
 export {canonicalRecordDigest};
 
 const ORIGINAL='0f6007315fd7352fe6fd218effcfecf672cb4961';
-const CANDIDATE='8719bb8990ef692c511fc478c7512db1559248a9';
+const CANDIDATE='a49ddf58a0c4a5b25ebdd4018c8234f64e6365e0';
 const GRAPH_BASE_PRODUCED_AT='b226ecaab32cbef427393157399a1bdc7cdaef16';
 const SIDECAR='docs/versions/v2.1.2/knowledge/source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json';
 const REPO_ROOT=fileURLToPath(new URL('../../../../../',import.meta.url));
@@ -48,9 +53,9 @@ function verifyRecordGap(d){
   assert.equal(d.sourceRecordGap.resolution.claimLifecyclePromotion,'FORBIDDEN');
 }
 
-export function verify(d,f,c,schema){
+export function verify(d,f,c,schema,overlayDocument=JSON.parse(readFileSync(new URL('../source/C1_OWNER_REVISION_R13.json',import.meta.url),'utf8'))){
   assert.equal(d.schema,'tally.dke.c1-scoped-source-owner-claim-dispositions/1');
-  assert.equal(d.recordVersion,'0.2.0');
+  assert.equal(d.recordVersion,'0.2.1');
   assert.equal(d.version,'v2.1.2-candidate');
   assert.equal(d.status,'OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE');
   assert.equal(d.authority.sourceOwnerLogin,'kaicreator-mm');
@@ -80,8 +85,9 @@ export function verify(d,f,c,schema){
   assert.equal(d.qualification.effectAuthorized,false);
   assert.equal(d.qualification.releaseAuthorized,false);
   assert.equal(f['@graph'].length,807);
-  assert.equal(c['@graph'].length,811);
+  assert.equal(c['@graph'].length,815);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:SourceOwnerDisposition').length,2);
+  assert.equal(c['@graph'].filter(n=>n['@type']==='se:SelectedCqSourceBinding').length,1);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:ReviewDecision').length,0);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:KnowledgeClaim').length,106);
   assert.equal(c['@graph'].filter(n=>n['@type']==='se:KnowledgeClaim'&&n['se:review_status']==='PENDING').length,106);
@@ -136,9 +142,25 @@ export function verify(d,f,c,schema){
       assert.equal(bound['se:record_version'],binding.recordVersion,'STALE original record_version '+row[kind+'Id']);
       assert.equal(canonicalRecordDigest(bound),binding.digestSha256,'STALE original record digest '+row[kind+'Id']);
     }
-    assert.deepEqual(row.elementAttribution,exp.element);
+    const {selectedCqSourceBinding,...elementCore}=row.elementAttribution;
+    if(i===0)assert.equal(selectedCqSourceBinding,undefined,'REQ row must not carry a SelectedCqSourceBinding');
+    assert.deepEqual(elementCore,exp.element);
     assert.equal(claim['se:APPLIES_TO']?.['@id'],row.elementAttribution.taxonomyNodeRef);
   }
+  // R137: the selected VV CQ consumes BOTH source legs executably
+  const scbSchema=readScbSchema();
+  const scb=assertSelectedCqSourceBinding(d,scbSchema,c['@graph'],overlayDocument);
+  assert.equal(scb['se:positive_cq'],'CS2023_VV_TEACHING');
+  assert.equal(scb['se:section_pdf_zero_based_page'],'245');
+  assert.equal(scb['se:section_printed_page'],'246');
+  assert.equal(scb['se:outcome_pdf_zero_based_page'],'247');
+  assert.equal(scb['se:outcome_printed_page'],'248');
+  assert.equal(scb['se:binding_scope'],'SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL');
+  const scbRow=d.claims[1].elementAttribution.selectedCqSourceBinding;
+  assert.deepEqual([scbRow.id,scbRow.recordVersion,scbRow.lifecycle],[R137_IDS.scb,'0.1.0','ACTIVE']);
+  assert.equal(scbRow.claimDigestSha256,d.claims[1].recordBindings.claim.digestSha256);
+  assert.equal(scbRow.sectionLeg.digestSha256,d.claims[1].recordBindings.candidateLocator.digestSha256);
+  assert.ok(scbRow.outcomeLeg.locatorRef!==d.claims[1].locatorId,'two legs must remain distinct locators');
   const source=lookup(c,'se:SRC-CS2023');
   assert.equal(source?.['se:stable_identifier'],'DOI 10.1145/3664191');
   assert.equal(source?.['se:record_version'],'0.1.0');
@@ -177,7 +199,22 @@ export function selfTest(d,f,c,schema){
     {kind:'stale',fn:x=>{x.d.sources.candidateGraphBaseProducedAt='862ae64be30cd9f3a54f6fa44db4e1adca05ba73'}},
     {kind:'negative',fn:x=>{lookup(x.c,'se:LOC-CS2023-SE-REQ-KU')['se:locator']=lookup(x.f,'se:LOC-CS2023-SE-REQ-KU')['se:locator']}},
     {kind:'negative',fn:x=>{x.d.claims[1].locatorCorrection.pdfZeroBasedPageIndex=174}},
-    {kind:'stale',fn:x=>{x.d.claims[0].recordBindings.candidateLocator.digestSha256='0'.repeat(64)}}
+    {kind:'stale',fn:x=>{x.d.claims[0].recordBindings.candidateLocator.digestSha256='0'.repeat(64)}},
+    // R137 selected-CQ two-leg binding mutants
+    {kind:'negative',fn:x=>{x.c['@graph']=x.c['@graph'].filter(n=>n['@id']!=='se:REL-TVV-0024')}},
+    {kind:'negative',fn:x=>{x.c['@graph']=x.c['@graph'].filter(n=>n['@id']!=='se:EVD-TVV-0016')}},
+    {kind:'negative',fn:x=>{x.c['@graph']=x.c['@graph'].filter(n=>n['@id']!=='se:LOC-CS2023-SE-VALIDATION-LO2')}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SCB-CS2023-VV-R1')['se:binding_scope']='FROZEN_R8_CELL_QUALIFIED'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:EVD-TVV-0004')['se:source_locator_ref']={'@id':'se:LOC-CS2023-SE-VALIDATION-LO2'}}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SCB-CS2023-VV-R1')['se:outcome_pdf_zero_based_page']='245'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:LOC-CS2023-SE-VALIDATION-KU')['se:locator']=lookup(x.c,'se:LOC-CS2023-SE-VALIDATION-KU')['se:locator'].replace('index 245','index 247')}},
+    {kind:'stale',fn:x=>{lookup(x.c,'se:SCB-CS2023-VV-R1')['se:outcome_locator_digest_sha256']='0'.repeat(64)}},
+    {kind:'stale',fn:x=>{x.d.claims[1].elementAttribution.selectedCqSourceBinding.outcomeLeg.digestSha256='0'.repeat(64)}},
+    {kind:'stale',fn:x=>{x.d.claims[1].elementAttribution.selectedCqSourceBinding.outcomeLeg.recordVersion='0.0.9'}},
+    {kind:'negative',fn:x=>{x.d.claims[1].elementAttribution.selectedCqSourceBinding.claimDigestSha256='0'.repeat(64)}},
+    {kind:'unknown',fn:x=>{lookup(x.c,'se:SCB-CS2023-VV-R1')['se:professional_oracle_status']='ATTESTED_BY_DISTINCT_SEMANTIC_REVIEW'}},
+    {kind:'negative',fn:x=>{lookup(x.c,'se:SCB-CS2023-VV-R1')['se:claim_lifecycle_effect']='ACCEPTED'}},
+    {kind:'negative',fn:x=>{x.d.claims[1].elementAttribution.selectedCqSourceBinding.bindingScope='FROZEN_R8_CELL_QUALIFIED'}},
   ];
   for(const [i,mutant] of mutants.entries()){
     const x={d:structuredClone(d),f:structuredClone(f),c:structuredClone(c)};
@@ -186,7 +223,7 @@ export function selfTest(d,f,c,schema){
   }
   const count=(kind)=>mutants.filter(x=>x.kind===kind).length;
   return {schema:'tally.dke.c1-r100-owner-adoption-contract-test/1',result,total:mutants.length+1,passed:mutants.length+1,
-    positive:1,negative:count('negative'),unknown:count('unknown'),stale:count('stale'),sourceOwnerDispositions:2,originalGraphModified:false,professionalOracleAttested:false,formalSapQualified:false};
+    positive:1,negative:count('negative'),unknown:count('unknown'),stale:count('stale'),sourceOwnerDispositions:2,selectedCqSourceBinding:1,originalGraphModified:false,professionalOracleAttested:false,formalSapQualified:false};
 }
 
 function verifySchemaGap(schemaText,validatorText){
@@ -202,15 +239,18 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const cb=readFileSync(new URL('../generated/graph.jsonld',import.meta.url));
   const db=readFileSync(new URL('../source/C1_CLAIM_OWNER_DISPOSITIONS_R100.json',import.meta.url));
   const sb=readFileSync(new URL('../model/source-owner-disposition.schema.json',import.meta.url));
+  const scbSchemaBytes=readFileSync(new URL('../model/selected-cq-source-binding.schema.json',import.meta.url));
   const ownerInputs=readSourceOwnerInputs();
   assert.equal(gitBlob(ob),ORIGINAL);
   assert.equal(gitBlob(cb),CANDIDATE);
   assert.equal(gitBlob(db),git(['rev-parse','HEAD:'+SIDECAR]),'sidecar bytes differ from exact HEAD');
   assert.equal(gitBlob(sb),git(['rev-parse','HEAD:'+SOURCE_OWNER_SCHEMA_PATH]),'SourceOwnerDisposition schema bytes differ from exact HEAD');
+  assert.equal(gitBlob(scbSchemaBytes),git(['rev-parse','HEAD:docs/versions/v2.1.2/knowledge/model/selected-cq-source-binding.schema.json']),'SelectedCqSourceBinding schema bytes differ from exact HEAD');
+  assert.equal(gitBlob(readFileSync(new URL('./selected-cq-source-binding.mjs',import.meta.url))),git(['rev-parse','HEAD:docs/versions/v2.1.2/knowledge/tools/selected-cq-source-binding.mjs']),'SCB validator bytes differ from exact HEAD');
   const schemaText=readFileSync(new URL('../../../v2.1.1/knowledge/model/schema/software-engineering.yaml',import.meta.url),'utf8');
   const validatorText=readFileSync(new URL('../../../v2.1.1/knowledge/model/validate_knowledge_graph.py',import.meta.url),'utf8');
   verifySchemaGap(schemaText,validatorText);
   const d=JSON.parse(db.toString('utf8'));
   console.log(JSON.stringify({...selfTest(d,JSON.parse(ob),JSON.parse(cb),ownerInputs.schema),node:process.version,
-    platform:process.platform,recordedAtRevision:git(['rev-parse','HEAD']),tree:git(['rev-parse','HEAD^{tree}']),sidecarBlob:gitBlob(db),sourceOwnerDispositionSchemaBlob:gitBlob(sb),originalBlob:ORIGINAL,candidateBlob:CANDIDATE},null,2));
+    platform:process.platform,recordedAtRevision:git(['rev-parse','HEAD']),tree:git(['rev-parse','HEAD^{tree}']),sidecarBlob:gitBlob(db),sourceOwnerDispositionSchemaBlob:gitBlob(sb),selectedCqSourceBindingSchemaBlob:gitBlob(scbSchemaBytes),originalBlob:ORIGINAL,candidateBlob:CANDIDATE},null,2));
 }

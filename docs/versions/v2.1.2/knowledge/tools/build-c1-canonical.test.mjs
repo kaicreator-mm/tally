@@ -31,6 +31,9 @@ import {
 import { parseYaml, YamlError } from './yaml-min.mjs';
 import { verify as verifyOwnerClaims } from './verify-c1-owner-claims-r100.mjs';
 import { assertSourceOwnerDispositionEvolution } from './source-owner-disposition.mjs';
+import {
+  R137_IDS, R137_SHARED_SECTION_EVIDENCE, R137_SHARED_SECTION_DIRECT_CLAIMS,
+} from './selected-cq-source-binding.mjs';
 
 function canonicalJson(value) {
   if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
@@ -80,8 +83,8 @@ test('R2 overlay-free lane projection reproduces the frozen v2.1.1 export byte-f
 
 test('R3/R4 candidate invariants hold and the overlay preview converges byte-for-byte', () => {
   const cand = buildGraph('v212-c1', inputs);
-  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner);
-  assert.equal(cand.nodes.length, 811);
+  assertC1Candidate(cand.nodes, inputs.overlay, cand.baselineNodes, inputs.sourceOwner, inputs.catalog);
+  assert.equal(cand.nodes.length, 815);
   assert.equal(cand.jsonld, readFileSync(REPO_ROOT + PATHS.outGraphJsonld, 'utf8'));
   assert.equal(cand.ttl, readFileSync(REPO_ROOT + PATHS.outGraphTtl, 'utf8'));
   assert.equal(
@@ -126,8 +129,92 @@ test('R102 corrected CS2023 PDF locators reject old 174-176 range', () => {
     assert.ok(loc['se:locator'].includes('verified PDF zero-based index '+page+', printed page '+printed));
     const fake=structuredClone(inputs);
     fake.overlay.changes[id]['se:locator']='wrong PDF page indices 174-176';
-    assert.throws(()=>buildGraph('v212-c1',fake),/R102 PDF locator P2 drift/);
+    // the R102 invariant or the earlier R137 SCB digest recomputation both fail closed
+    assert.throws(()=>buildGraph('v212-c1',fake),/R102 PDF locator P2 drift|STALE SCB section locator digest/);
   }
+});
+
+test('R137 positive: selected VV CQ consumes BOTH the p246 section leg and the p248 LO2 outcome leg', () => {
+  const cand=buildGraph('v212-c1',inputs);
+  const byId=new Map(cand.nodes.map(n=>[n['@id'],n]));
+  const scb=byId.get(R137_IDS.scb);
+  assert.ok(scb,'SelectedCqSourceBinding missing');
+  assert.equal(scb['@type'],'se:SelectedCqSourceBinding');
+  assert.equal(scb['se:positive_cq'],'CS2023_VV_TEACHING');
+  assert.equal(scb['se:section_anchor_type'],'SECTION');
+  assert.equal(scb['se:section_pdf_zero_based_page'],'245');
+  assert.equal(scb['se:section_printed_page'],'246');
+  assert.equal(scb['se:outcome_anchor_type'],'PAGE');
+  assert.equal(scb['se:outcome_pdf_zero_based_page'],'247');
+  assert.equal(scb['se:outcome_printed_page'],'248');
+  assert.equal(scb['se:binding_scope'],'SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL');
+  assert.equal(scb['se:professional_oracle_status'],'NOT_ATTESTED');
+  assert.equal(scb['se:claim_lifecycle_effect'],'NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING');
+  // distinct legs, distinct locators, distinct pages
+  assert.notEqual(scb['se:section_locator_ref']['@id'],scb['se:outcome_locator_ref']['@id']);
+  const outLoc=byId.get(R137_IDS.outcomeLocator);
+  assert.equal(outLoc['se:locator_type'],'PAGE');
+  assert.ok(outLoc['se:locator'].includes('zero-based index 247, printed page 248'));
+  assert.ok(outLoc['se:locator'].includes('Distinguish between program validation and verification'));
+  const outEvd=byId.get(R137_IDS.outcomeEvidence);
+  assert.equal(outEvd['se:source_locator_ref']['@id'],R137_IDS.outcomeLocator);
+  assert.equal(outEvd['se:lifecycle_status'],'PENDING_REVIEW');
+  const support=byId.get(R137_IDS.claimSupport);
+  assert.equal(support['se:subject_ref']['@id'],R137_IDS.claim);
+  assert.equal(support['se:object_ref']['@id'],R137_IDS.outcomeEvidence);
+  assert.equal(support['se:predicate']['@id'],'se:SUPPORTED_BY');
+  // locked originals untouched: the claim keeps exactly its original edge
+  const claim=byId.get(R137_IDS.claim);
+  assert.deepEqual([claim['se:SUPPORTED_BY']['@id']],[R137_IDS.sectionEvidence]);
+});
+
+test('R137 positive: shared SECTION locator fan-out stays exactly 8 Evidence / 5 direct Claims', () => {
+  const cand=buildGraph('v212-c1',inputs);
+  const evidenceNodes=cand.nodes.filter(n=>n['@type']==='se:Evidence');
+  const bySection=evidenceNodes.filter(n=>n['se:source_locator_ref']?.['@id']===R137_IDS.sectionLocator).map(n=>n['@id']).sort();
+  assert.deepEqual(bySection,[...R137_SHARED_SECTION_EVIDENCE].sort());
+  const byOutcome=evidenceNodes.filter(n=>n['se:source_locator_ref']?.['@id']===R137_IDS.outcomeLocator).map(n=>n['@id']);
+  assert.deepEqual(byOutcome,[R137_IDS.outcomeEvidence]);
+  const directClaims=cand.nodes.filter(n=>n['@type']==='se:KnowledgeClaim')
+    .filter(n=>(Array.isArray(n['se:evidence_refs'])?n['se:evidence_refs']:[n['se:evidence_refs']])
+      .some(r=>R137_SHARED_SECTION_EVIDENCE.includes(r?.['@id']))).map(n=>n['@id']).sort();
+  assert.deepEqual(directClaims,[...R137_SHARED_SECTION_DIRECT_CLAIMS].sort());
+});
+
+test('R137 negative: orphan outcome evidence (locator consumed by nobody) fails closed', () => {
+  const tampered=structuredClone(inputs);
+  tampered.overlay.additions=tampered.overlay.additions.filter(a=>a['@id']!==R137_IDS.outcomeEvidence);
+  assert.throws(()=>buildGraph('v212-c1',tampered),/orphan R137 record/);
+});
+
+test('R137 negative: single-page disguise (p246 double as the p248 outcome proof) fails closed', () => {
+  const tampered=structuredClone(inputs);
+  tampered.sourceOwner.document.claims[1].elementAttribution.selectedCqSourceBinding.outcomeLeg.locatorRef=R137_IDS.sectionLocator;
+  assert.throws(()=>buildGraph('v212-c1',tampered),/distinct locators|distinct PDF pages|STALE SCB outcome locator/);
+  const tampered2=structuredClone(inputs);
+  tampered2.sourceOwner.document.claims[1].elementAttribution.selectedCqSourceBinding.outcomeLeg.pdfZeroBasedPage='245';
+  assert.throws(()=>buildGraph('v212-c1',tampered2),/distinct PDF pages|outcome page anchor drift/);
+});
+
+test('R137 negative: shared-locator fan-out damage fails closed', () => {
+  const tampered=structuredClone(inputs);
+  const lane=tampered.lanes['testing-verification'];
+  const tvd=lane.collections.evidence_records.find(e=>e.id==='se:EVD-TVV-0004');
+  tvd.source_locator_ref='se:LOC-CS2023-SE-VALIDATION-LO2';
+  assert.throws(()=>buildGraph('v212-c1',tampered),/fan-out changed/);
+});
+
+test('R137 negative: stale outcome locator digest fails closed', () => {
+  const tampered=structuredClone(inputs);
+  tampered.sourceOwner.document.claims[1].elementAttribution.selectedCqSourceBinding.outcomeLeg.digestSha256='0'.repeat(64);
+  assert.throws(()=>buildGraph('v212-c1',tampered),/STALE SCB outcome locator digest/);
+});
+
+test('R137 negative: unauthorized overlay relationship predicate fails closed', () => {
+  const tampered=structuredClone(inputs);
+  const rel=tampered.overlay.additions.find(a=>a['@id']===R137_IDS.claimSupport);
+  rel['se:predicate']={'@id':'se:NOT_IN_CATALOG'};
+  assert.throws(()=>buildGraph('v212-c1',tampered),/not declared in RELATIONSHIP_CATALOG/);
 });
 
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
@@ -323,9 +410,11 @@ test('regression: --write repairs stale or missing Owner preview in an isolated 
     PATHS.registry, PATHS.catalog,
     PATHS.frozenGraphJsonld, PATHS.frozenGraphTtl, PATHS.overlay,
     PATHS.sourceOwnerDispositions, PATHS.sourceOwnerSchema,
+    'docs/versions/v2.1.2/knowledge/model/selected-cq-source-binding.schema.json',
     PATHS.outGraphJsonld, PATHS.outGraphTtl, PATHS.outManifest, PATHS.outPreview,
     ...['build-c1-canonical.mjs', 'project-c1.mjs', 'materialize-c1.mjs',
-         'source-owner-disposition.mjs', 'yaml-min.mjs', 'rdf-min.mjs'].map(name => toolPrefix + name),
+         'source-owner-disposition.mjs', 'selected-cq-source-binding.mjs',
+         'yaml-min.mjs', 'rdf-min.mjs'].map(name => toolPrefix + name),
   ];
   const run = mode => spawnSync(process.execPath,
     [join(tempRoot, toolPrefix + 'build-c1-canonical.mjs'), mode],
