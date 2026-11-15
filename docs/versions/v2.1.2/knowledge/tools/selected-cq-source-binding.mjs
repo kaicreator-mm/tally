@@ -43,6 +43,22 @@ export const R137_ADDITION_IDS=[
   R137_IDS.outcomeLocator,R137_IDS.outcomeEvidence,R137_IDS.claimSupport,
 ];
 
+// R141: fixed code-owned *research-scope* semantic anchor, independently
+// reviewable against CS2023 printed p248 LO2 and p246 section. Unlike the
+// mutable sidecar/overlay/generated graph, these expected values cannot be
+// changed by coordinated data/manifest repinning alone. A change to this
+// reviewed code contract needs fresh exact-SHA source-first review; it does
+// NOT represent a qualified human Oracle or publisher rights grant.
+export const R141_REVIEWED_LO2_SOURCE_CONTRACT=Object.freeze({
+  publisherOutcome:'Distinguish between program validation and verification.',
+  outcomeEvidenceVersion:'0.1.0',
+  outcomeEvidenceDigest:'9f70ac020048ad46dd57c01a83952fc2ca7b3ee3a2c96cd605c9b5381a407a9c',
+  outcomeEvidenceStatement:"CS2023's SE-Validation CS Core illustrative learning outcome 2 expects students to distinguish between program validation and verification, completing the outcome-specific source leg for the two-question verification/validation distinction.",
+  supportVersion:'0.1.0',
+  supportDigest:'d91331a851705acb91f40f50834f0f4146c9f88bb4d5e0812dc160472f995e5e',
+  supportRationale:"The claim's learning-outcome leg restates evidence extracted from the CS Core outcome 2 page (zero-based index 247, printed page 248), complementing the section-start locator; the original claim record itself remains byte-identical.",
+});
+
 export const readText=(relPath)=>readFileSync(REPO_ROOT+relPath,'utf8');
 
 export function selectedCqBindingRow(document){
@@ -168,6 +184,15 @@ export function assertSelectedCqSourceBinding(document,schema,candidateNodes,ove
   assert.equal(outcomeEvidence['se:lifecycle_status'],'PENDING_REVIEW','outcome evidence must stay PENDING_REVIEW');
   assert.equal(outcomeEvidence['se:extraction_status'],'EXTRACTED_PENDING_REVIEW','outcome evidence must stay EXTRACTED_PENDING_REVIEW');
   assert.equal(outcomeEvidence['se:synthetic'],false,'outcome evidence must be non-synthetic');
+  // R141 P1: a valid p248 Locator is not sufficient if the attached Evidence
+  // reverses what the publisher outcome says. Bind BOTH its independently
+  // reviewed statement and entire canonical record (including version).
+  assert.equal(outcomeEvidence['se:record_version'],R141_REVIEWED_LO2_SOURCE_CONTRACT.outcomeEvidenceVersion,
+    'R141 STALE reviewed LO2 Evidence version');
+  assert.equal(outcomeEvidence['se:statement'],R141_REVIEWED_LO2_SOURCE_CONTRACT.outcomeEvidenceStatement,
+    'R141 SEMANTIC_INVERSION: outcome Evidence contradicts reviewed publisher meaning');
+  assert.equal(canonicalRecordDigest(outcomeEvidence),R141_REVIEWED_LO2_SOURCE_CONTRACT.outcomeEvidenceDigest,
+    'R141 STALE/CO_DRIFT: outcome Evidence record changed outside reviewed semantic contract');
   const outcomeLocator=byId.get(R137_IDS.outcomeLocator);
   assert.equal(outcomeLocator['se:locator_type'],'PAGE','outcome pinpoint must be a PAGE locator');
   assert.equal(outcomeLocator['se:verification_state'],'LOCATOR_VERIFIED','outcome locator must be LOCATOR_VERIFIED');
@@ -190,6 +215,12 @@ export function assertSelectedCqSourceBinding(document,schema,candidateNodes,ove
   assert.equal(support['se:object_ref']?.['@id'],R137_IDS.outcomeEvidence,'claim-support object drift');
   assert.equal(support['se:predicate']?.['@id'],'se:SUPPORTED_BY','claim-support predicate drift');
   assert.equal(support['se:lifecycle_status'],'PENDING_REVIEW','claim support must stay PENDING_REVIEW');
+  assert.equal(support['se:record_version'],R141_REVIEWED_LO2_SOURCE_CONTRACT.supportVersion,
+    'R141 STALE reviewed LO2 Claim-support version');
+  assert.equal(support['se:rationale'],R141_REVIEWED_LO2_SOURCE_CONTRACT.supportRationale,
+    'R141 SEMANTIC_INVERSION: Claim-support rationale changed');
+  assert.equal(canonicalRecordDigest(support),R141_REVIEWED_LO2_SOURCE_CONTRACT.supportDigest,
+    'R141 STALE/CO_DRIFT: Claim-support record changed outside reviewed semantic contract');
 
   // qualification boundaries
   assert.equal(scb['se:binding_scope'],'SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL');
