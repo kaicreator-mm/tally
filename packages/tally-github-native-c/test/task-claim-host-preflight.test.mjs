@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {stringify} from 'yaml';
 import {readNativeHostClaimPreflightFromClient,
   readGitHubNativeHostClaimPreflight} from '../src/task-claim-host-preflight.mjs';
@@ -241,14 +242,20 @@ const doneComment=(id,data,overrides={})=>({id,node_id:'IC_done_125_'+id,
   created_at:'2026-11-15T12:00:00Z',updated_at:'2026-11-15T12:00:00Z',
   user:{login:'scheduler-bot'},...overrides});
 const exactDone=doneComment(802,doneData(801,histSha125));
-// The genuine R33 row has issueRef but no issueNumber. A supplied wrong
-// issueNumber remains a negative; absence must not reject the real schema.
-const terminalRow=(changes={})=>({phase:'TERMINAL_VERIFIED',
+// The genuine R33 row is a Host {key,revision,value} envelope. Its value has
+// issueRef but no issueNumber, and its terminal fields bind the exact DONE.
+const terminalCasKey=protectedClaimKey=>'tally:v2:claim-admission:'+
+  createHash('sha256').update(protectedClaimKey).digest('hex');
+const terminalValue=(changes={})=>({phase:'TERMINAL_VERIFIED',
   repository:owner+'/'+repo,issueRef:issue,
   dispatchId:'dispatch:125:hist',protectedClaimKey:keyFor('builder'),
   generation:1,commentId:801,commentRef:issue+'#issuecomment-801',
   sourceSha:histSha125,actorRole:'builder',operatorKind:'codex',
-  operatorId:'codex:builder0',...changes});
+  operatorId:'codex:builder0',terminalCommentId:802,
+  terminalCommentRef:issue+'#issuecomment-802',...changes});
+const terminalRow=(changes={},envelope={})=>({
+  key:terminalCasKey(keyFor('builder')),revision:3,
+  value:terminalValue(changes),...envelope});
 const terminalPort=(row)=>{let reads=0;return {reads:()=>reads,
   readback:async()=>{reads++;return row;}};};
 
@@ -319,7 +326,7 @@ test('divergent terminal row (wrong generation or comment binding) blocks',async
 });
 
 test('R34 CAS readback must bind the exact repository, Issue, source and Claim identity',async()=>{
-  const missing=key=>{const row=terminalRow();delete row[key];return row;};
+  const missing=key=>{const row=terminalRow();delete row.value[key];return row;};
   const required=['repository','issueRef','dispatchId',
     'protectedClaimKey','generation','commentId','commentRef','sourceSha',
     'actorRole','operatorKind','operatorId'];
@@ -343,6 +350,40 @@ test('R34 CAS readback must bind the exact repository, Issue, source and Claim i
     assert.equal(port.reads(),1);
     noPermit(x);
   }
+});
+
+test('R36 Host CAS envelope key, revision and terminal DONE identity are required',async()=>{
+  const missingEnvelope=key=>{const row=terminalRow();delete row[key];return row;};
+  const missingValue=key=>{const row=terminalRow();delete row.value[key];return row;};
+  const rows=[
+    terminalRow({}, {key:terminalCasKey(keyFor('reviewer'))}),
+    terminalRow({}, {key:'tally:v2:claim-admission:not-a-canonical-key'}),
+    terminalRow({}, {revision:-1}),terminalRow({}, {revision:1.5}),
+    terminalRow({}, {revision:'3'}),terminalRow({}, {value:null}),
+    terminalRow({terminalCommentId:999}),
+    terminalRow({terminalCommentRef:issue+'#issuecomment-999'}),
+    missingEnvelope('key'),missingEnvelope('revision'),missingEnvelope('value'),
+    missingValue('terminalCommentId'),missingValue('terminalCommentRef'),
+    terminalValue()
+  ];
+  for(const row of rows){
+    const port=terminalPort(row);
+    const x=await check({comments:[staleBuilder,exactDone]},
+      {actorRole:'builder',historicalClaimCasReadback:port.readback});
+    assert.equal(x.status,'BLOCKED');
+    assert.equal(x.reason,'NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+    assert.equal(port.reads(),1);
+    noPermit(x);
+  }
+});
+
+test('R36 matching optional issueNumber preserves the genuine-row positive',async()=>{
+  const port=terminalPort(terminalRow({issueNumber}));
+  const x=await check({comments:[staleBuilder,exactDone]},
+    {actorRole:'builder',historicalClaimCasReadback:port.readback});
+  assert.equal(x.status,'NATIVE_SOURCE_PREFLIGHT_READY');
+  assert.equal(port.reads(),1);
+  noPermit(x);
 });
 
 test('R34 same-second DONE edit and unavailable GraphQL proof deny preflight',async()=>{
@@ -421,27 +462,31 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
       .digest('hex');
   const schema='CREATE TABLE IF NOT EXISTS v8_host_docs '+
     '(key TEXT PRIMARY KEY, revision INTEGER NOT NULL, value TEXT NOT NULL)';
-  const seed=(phase,generation,changes={})=>{
+  const seed=(phase,generation,changes={},key=casKey)=>{
     rmSync(histPath,{force:true});
     rmSync(freshPath,{force:true});
     const db=new DatabaseSync(histPath);
     db.exec(schema);
-    if(phase!==null){
-      db.prepare('INSERT INTO v8_host_docs (key, revision, value) VALUES (?, 0, ?)')
-        .run(casKey,JSON.stringify({
-          phase,repository:'kaicreator-mm/tally',
-          issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
-          protectedClaimKey:'kaicreator-mm/tally#219:builder:__default__',
-          generation,dispatchId:'dispatch:219:maintenance:20261031:1',
-          actorRole:'builder',operatorKind:'other',
-          operatorId:'zcode:i219:builder:1',
-          writerId:'tally-host:historical:219:builder:1',
-          sourceSha:'ad3123e7646428ec3b13fac5b6f510b683a133c8',
-          commentId:6545079271,
-          commentRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6545079271',
-          ...changes}));
-    }
+    const revision=phase==='TERMINAL_VERIFIED'?3:0;
+    const value=phase===null?null:JSON.stringify({
+      phase,repository:'kaicreator-mm/tally',
+      issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+      protectedClaimKey:'kaicreator-mm/tally#219:builder:__default__',
+      generation,dispatchId:'dispatch:219:maintenance:20261031:1',
+      actorRole:'builder',operatorKind:'other',
+      operatorId:'zcode:i219:builder:1',
+      writerId:'tally-host:win32:i219:1',
+      sourceSha:'ad3123e7646428ec3b13fac5b6f510b683a133c8',
+      commentId:6545079271,
+      commentRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6545079271',
+      terminalCommentId:6895328722,
+      terminalCommentRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6895328722',
+      ...changes});
+    if(value!==null)
+      db.prepare('INSERT INTO v8_host_docs (key, revision, value) VALUES (?, ?, ?)')
+        .run(key,revision,value);
     db.close();
+    return {revision,value};
   };
   const run=(scn)=>{
     const r=spawnSync(process.execPath,[fileURLToPath(import.meta.url)],{
@@ -452,7 +497,7 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
   };
   // successor: READY preflight + TERMINAL_VERIFIED readback -> full
   // fresh-dedicated-registry admission from a second OS process.
-  seed('TERMINAL_VERIFIED',1);
+  const terminalBefore=seed('TERMINAL_VERIFIED',1);
   const ok=run('successor');
   assert.equal(ok.preflightStatus,'NATIVE_SOURCE_PREFLIGHT_READY');
   assert.equal(ok.historicalClaimCount,1);
@@ -466,8 +511,8 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
   const after=db.prepare(
     'SELECT revision, value FROM v8_host_docs WHERE key = ?').get(casKey);
   db.close();
-  assert.equal(after.revision,0,'historical row must stay untouched');
-  assert.equal(JSON.parse(after.value).phase,'TERMINAL_VERIFIED');
+  assert.equal(after.revision,terminalBefore.revision,'historical revision must stay unchanged');
+  assert.equal(after.value,terminalBefore.value,'historical value bytes must stay unchanged');
   // PENDING historical row: BLOCKED, readback happened, no blind POST, and
   // no fresh registry is created.
   seed('PENDING_GITHUB_PUBLISH',1);
@@ -495,6 +540,28 @@ test('physical shared-SQLite two-process successor regression (real #219 shapes)
   assert.equal(wrongSource.githubPosts,0);
   assert.equal(wrongSource.freshRegistryCreated,false);
   assert.equal(existsSync(freshPath),false);
+  // A row under a wrong CAS key is not the canonical row and cannot qualify.
+  seed('TERMINAL_VERIFIED',1,{},'tally:v2:claim-admission:'+'0'.repeat(64));
+  const wrongKey=run('wrong-key');
+  assert.equal(wrongKey.preflightStatus,'BLOCKED');
+  assert.equal(wrongKey.preflightReason,'NATIVE_HISTORICAL_CAS_READBACK_UNAVAILABLE');
+  assert.equal(wrongKey.portReads,1);
+  assert.equal(wrongKey.githubPosts,0);
+  assert.equal(existsSync(freshPath),false);
+  // Wrong Issue or terminal DONE binding is divergent even under the real key.
+  for(const [scenario,changes] of [
+    ['divergent-issue',{issueRef:'https://github.com/kaicreator-mm/tally/issues/999'}],
+    ['divergent-terminal',{terminalCommentId:999}]
+  ]){
+    seed('TERMINAL_VERIFIED',1,changes);
+    const wrong=run(scenario);
+    assert.equal(wrong.preflightStatus,'BLOCKED');
+    assert.equal(wrong.preflightReason,'NATIVE_HISTORICAL_CAS_ROW_DIVERGENT');
+    assert.equal(wrong.portReads,1);
+    assert.equal(wrong.githubPosts,0);
+    assert.equal(wrong.freshRegistryCreated,false);
+    assert.equal(existsSync(freshPath),false);
+  }
   // missing CAS readback: BLOCKED as unavailable, never inferred PENDING/terminal.
   seed(null,1);
   const missing=run('missing');
@@ -549,7 +616,7 @@ async function runI422ChildScenario(scenario){
     html_url:issue219Url+'#issuecomment-'+histCommentId,
     created_at:at,updated_at:at,user:{login:'kaicreator-mm'}};
   const exactDoneComment={
-    id:6894000001,node_id:'IC_test_219_6894000001',
+    id:6895328722,node_id:'IC_kwDOUaqf_88AAAABmv5d0g',
     body:renderEvent({schema:'ads/github/v3',kind:'event',data:{
       schema:'ai-dev/event-v2',event:'DISPATCH_STATE_CHANGED',
       actor_role:'scheduler',operator_kind:'other',
@@ -558,7 +625,7 @@ async function runI422ChildScenario(scenario){
       dispatch_id:histDispatch,dispatch_state:'DONE',
       protected_claim_key:histKey,admission_generation:1,
       predecessor_claim_comment_id:histCommentId}}),
-    html_url:issue219Url+'#issuecomment-6894000001',
+    html_url:issue219Url+'#issuecomment-6895328722',
     created_at:at,updated_at:at,user:{login:'kaicreator-mm'}};
   const posts=[];
   const published=[];
@@ -601,9 +668,10 @@ async function runI422ChildScenario(scenario){
     const db=new DatabaseSync(histPath);
     try{
       const row=db.prepare(
-        'SELECT revision, value FROM v8_host_docs WHERE key = ?')
+        'SELECT key, revision, value FROM v8_host_docs WHERE key = ?')
         .get('tally:v2:claim-admission:'+sha256hex(binding.protectedClaimKey));
-      return row==null?null:JSON.parse(row.value);
+      return row==null?null:{key:row.key,revision:row.revision,
+        value:JSON.parse(row.value)};
     }finally{db.close();}
   };
   const out={scenario};
