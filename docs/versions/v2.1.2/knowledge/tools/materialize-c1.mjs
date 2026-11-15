@@ -11,6 +11,7 @@ import {
   readScbSchema, materializeSelectedCqSourceBinding,
   assertSelectedCqSourceBinding,
 } from './selected-cq-source-binding.mjs';
+import { shapeOverlayValue } from './project-c1.mjs';
 export const original = fileURLToPath(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld', import.meta.url));
 export const overlay = fileURLToPath(new URL('../source/C1_OWNER_REVISION_R13.json', import.meta.url));
 export const preview = fileURLToPath(new URL('../generated/c1-candidate.graph.jsonld', import.meta.url));
@@ -44,7 +45,16 @@ export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
   }
   for (const n of patch.additions) {
     assert(!originals.has(n['@id']), 'duplicate addition ' + n['@id']);
-    out['@graph'].push(structuredClone(n));
+    // Consume additions through the same value-shaping rule as the canonical
+    // projection (project-c1 shapeOverlayValue), so both construction paths
+    // materialize the identical record form for the R140 fixed-anchor digests.
+    const node = { '@id': n['@id'], '@type': n['@type'] };
+    for (const [k, v] of Object.entries(n)) {
+      if (k === '@id' || k === '@type') continue;
+      const shaped = shapeOverlayValue(k, v);
+      if (shaped !== undefined) node[k] = shaped;
+    }
+    out['@graph'].push(node);
   }
   for (const n of materializeSourceOwnerDispositions(sourceOwner.document, sourceOwner.schema)) {
     assert(!originals.has(n['@id']), 'duplicate disposition ' + n['@id']);

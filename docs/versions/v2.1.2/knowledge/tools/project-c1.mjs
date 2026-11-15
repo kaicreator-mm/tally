@@ -345,8 +345,11 @@ export function checkOverlayContract(overlay) {
 }
 
 // shape an overlay change value the way the projection would have serialized
-// the equivalent record field (sorted refs, single-item collapse)
-function shapeOverlayValue(key, value) {
+// the equivalent record field (sorted refs, single-item collapse).
+// Shared with materialize-c1 so the Owner-overlay reconstruction consumes
+// additions in exactly the same shaped form as this canonical projection
+// (one record form for the R140 fixed-anchor digests on both paths).
+export function shapeOverlayValue(key, value) {
   const isRef = /^se:(.*_refs?|predicate|subject_ref|object_ref|source_ref|source_locator_ref|target_scope_ref|domain_ref|view_ref)$/.test(key);
   if (Array.isArray(value)) {
     if (value.length === 0) return undefined; // drop the key entirely

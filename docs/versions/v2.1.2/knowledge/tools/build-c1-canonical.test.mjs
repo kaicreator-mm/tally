@@ -30,7 +30,12 @@ import {
 } from './project-c1.mjs';
 import { parseYaml, YamlError } from './yaml-min.mjs';
 import { verify as verifyOwnerClaims } from './verify-c1-owner-claims-r100.mjs';
-import { assertSourceOwnerDispositionEvolution } from './source-owner-disposition.mjs';
+import { assertSourceOwnerDispositionEvolution, canonicalRecordDigest } from './source-owner-disposition.mjs';
+import {
+  build as materializeBuild,
+  original as materializeOriginalPath,
+  overlay as materializeOverlayPath,
+} from './materialize-c1.mjs';
 import {
   R137_IDS, R137_SHARED_SECTION_EVIDENCE, R137_SHARED_SECTION_DIRECT_CLAIMS,
   R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST, R140_REVIEWED_CLAIM_SUPPORT_DIGEST,
@@ -271,6 +276,26 @@ test('R140 negative: coordinated Overlay + graph + Sidecar + simulated manifest 
   // verification code DOES NOT derive its expected truth from these pins.
   assert.throws(()=>assertSelectedCqSourceBinding(authorSidecar,readScbSchema(),candidate,patchedOverlay),
     /R140 LO2 Evidence semantic inversion/);
+});
+
+test('R141: materialize reconstruction consumes overlay additions in the canonical projection shape (fixed-anchor digests hold on both construction paths)', () => {
+  const cand = buildGraph('v212-c1', inputs);
+  const projected = new Map(cand.nodes.map((n) => [n['@id'], n]));
+  const frozenGraph = JSON.parse(readFileSync(materializeOriginalPath, 'utf8'));
+  const overlayDoc = JSON.parse(readFileSync(materializeOverlayPath, 'utf8'));
+  const rebuilt = materializeBuild(frozenGraph, overlayDoc);
+  const reconstructed = new Map(rebuilt['@graph'].map((n) => [n['@id'], n]));
+  for (const [id, digest] of [
+    [R137_IDS.outcomeEvidence, R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST],
+    [R137_IDS.claimSupport, R140_REVIEWED_CLAIM_SUPPORT_DIGEST],
+  ]) {
+    assert.equal(canonicalRecordDigest(projected.get(id)), digest,
+      'R141 projection-path fixed-anchor drift for ' + id);
+    assert.equal(canonicalRecordDigest(reconstructed.get(id)), digest,
+      'R141 reconstruction-path fixed-anchor drift for ' + id);
+  }
+  assert.deepEqual(reconstructed.get(R137_IDS.claimSupport), projected.get(R137_IDS.claimSupport),
+    'R141: reconstruction and projection must materialize the identical claim-support record');
 });
 
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
