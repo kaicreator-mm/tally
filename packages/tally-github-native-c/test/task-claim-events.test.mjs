@@ -14,7 +14,7 @@ const event=(extra={})=>({
 });
 const render=x=>`<!-- ads:github -->\n\x60\x60\x60yaml\n${stringify(x).trimEnd()}\n\x60\x60\x60\nHuman explanation only.`;
 const comment=(id=100,e=event())=>({
-  id,body:render(e),
+  id,node_id:'IC_test_125_'+id,body:render(e),
   html_url:issueUrl+'#issuecomment-'+id,
   created_at:'2026-10-27T00:00:00Z',
   updated_at:'2026-10-27T00:00:00Z',
@@ -40,7 +40,13 @@ function client(pages=[[]],opts={}){
         if(opts.errorPage===i)throw Object.assign(new Error('token:UNSAFE'),{status:403});
         yield {data:pages[i]};
       }
-    }}
+    }},
+    graphql:async(_query,{id})=>{
+      const c=pages.flat().find(x=>x.node_id===id);
+      return {node:{__typename:'IssueComment',id,fullDatabaseId:String(c?.id),
+        url:c?.html_url,body:c?.body,lastEditedAt:null,editor:null,
+        issue:{number:125,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
+    }
   };
 }
 test('shape-valid native DISPATCH_CLAIMED still NOT accepted CAS, cannot execute',async()=>{
@@ -153,7 +159,7 @@ const doneEvent=(binding={})=>({
     predecessor_claim_comment_id:histCommentId,...binding}
 });
 const comment219=(id,e)=>({
-  id,body:render(e),
+  id,node_id:'IC_test_219_'+id,body:render(e),
   html_url:issue219Url+'#issuecomment-'+id,
   created_at:histCreated,updated_at:histCreated,
   user:{login:'kaicreator-mm'}
@@ -175,7 +181,17 @@ function client219(pages,opts={}){
     paginate:{async *iterator(_route,params){
       assert.equal(params.issue_number,219);
       for(const page of pages)yield {data:page};
-    }}
+    }},
+    graphql:opts.graphMissing?undefined:async(_query,{id})=>{
+      if(opts.graphUnavailable)throw new Error('GRAPHQL_UNAVAILABLE');
+      const c=pages.flat().find(x=>x.node_id===id);
+      return {node:{__typename:'IssueComment',id,
+        fullDatabaseId:String(c?.id),url:c?.html_url,
+        body:opts.graphMismatch?'DIVERGENT':c?.body,
+        lastEditedAt:opts.graphEdited?'2026-11-15T00:00:00Z':null,
+        editor:opts.graphEdited?{login:'kaicreator-mm'}:null,
+        issue:{number:219,repository:{nameWithOwner:'kaicreator-mm/tally'}}}};
+    }
   };
 }
 const histClaimComment=comment219(histCommentId,histEvent());
@@ -274,6 +290,25 @@ test('edited or identity-broken DONE is never a terminal proof',async()=>{
     assert.equal(r.reason,'NATIVE_EVENT_IDENTITY_UNVERIFIED');
     assert.equal(r.candidateCount,0);
     assert.equal(r.terminalizedHistoricalClaimCount,0);
+  }
+});
+
+test('R34 same-second DONE edits require independent GraphQL unedited proof',async()=>{
+  for(const [opts,reason] of [
+    [{graphEdited:true},'NATIVE_EVENT_EDIT_PROVENANCE_UNVERIFIED'],
+    [{graphMismatch:true},'NATIVE_EVENT_EDIT_PROVENANCE_UNVERIFIED'],
+    [{graphMissing:true},'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE'],
+    [{graphUnavailable:true},'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE']
+  ]){
+    const r=await readClaimEventCandidatesFromClient({octokit:client219([
+      [histClaimComment,exactDoneComment]],opts),
+      owner:'kaicreator-mm',repo:'tally',issueNumber:219,
+      expectedSourceSha:curSha,limit:1000});
+    assert.equal(r.reason,reason);
+    assert.equal(r.candidateCount,0);
+    assert.equal(r.terminalizedHistoricalClaimCount,0);
+    assert.equal(r.admitted,false);
+    assert.equal(r.authorized,false);
   }
 });
 

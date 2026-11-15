@@ -9,7 +9,10 @@
  * binds that candidate: same native Task Issue, same dispatchId, same
  * protectedClaimKey, same admission_generation, predecessor_claim_comment_id
  * equal to the candidate's exact comment id, and the candidate's own source
- * SHA. A DONE binding any other Task, dispatch, key, generation, comment id
+ * SHA. REST's seconds-granularity created_at===updated_at is not sufficient
+ * for DONE: a second official GraphQL IssueComment observation must bind the
+ * exact REST node/id/body/Issue and prove lastEditedAt/editor are both null.
+ * A DONE binding any other Task, dispatch, key, generation, comment id
  * or source SHA, an edited or identity-broken DONE, a duplicate DONE
  * dispatch, a DONE for an unknown dispatch and any non-DONE state change all
  * stay fail-closed. Filtering is exclusion from fresh-admission candidates
@@ -46,6 +49,43 @@ const reasonFor=e=>e?.status===401?'GITHUB_UNAUTHENTICATED':
   e?.status===403?'GITHUB_ACCESS_DENIED':
   e?.status===404?'GITHUB_RESOURCE_NOT_FOUND':
   e?.status===429?'GITHUB_RATE_LIMITED':'GITHUB_CLAIM_EVENT_READ_FAILED';
+async function doneEditProvenance({octokit,comment,owner,repo,issueNumber}){
+  if(typeof octokit.graphql!=='function'||
+    typeof comment.node_id!=='string'||
+    !/^[A-Za-z0-9_-]{8,256}$/.test(comment.node_id))
+    return 'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE';
+  let graphComment;
+  try{
+    const result=await octokit.graphql(`query($id: ID!) {
+      node(id: $id) {
+        __typename
+        ... on IssueComment {
+          id
+          fullDatabaseId
+          url
+          body
+          lastEditedAt
+          editor { login }
+          issue { number repository { nameWithOwner } }
+        }
+      }
+    }`,{id:comment.node_id});
+    graphComment=result?.node;
+  }catch{return 'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE';}
+  // REST Issue comment IDs exceed GraphQL databaseId:Int; fullDatabaseId is
+  // the lossless official identity. Reject rounding and divergent witnesses.
+  const fullId=graphComment?.fullDatabaseId;
+  const observedId=typeof fullId==='string'&&/^[1-9][0-9]*$/.test(fullId)?
+    fullId:Number.isSafeInteger(fullId)&&fullId>0?String(fullId):null;
+  if(graphComment?.__typename!=='IssueComment'||
+    graphComment.id!==comment.node_id||observedId!==String(comment.id)||
+    graphComment.url!==comment.html_url||graphComment.body!==comment.body||
+    graphComment.lastEditedAt!==null||graphComment.editor!==null||
+    graphComment.issue?.number!==issueNumber||
+    graphComment.issue.repository?.nameWithOwner!==owner+'/'+repo)
+    return 'NATIVE_EVENT_EDIT_PROVENANCE_UNVERIFIED';
+  return null;
+}
 function parseCanonicalComment(body){
   if(typeof body!=='string')return {kind:'other'};
   if(body.length>256*1024)return {kind:'bad'};
@@ -129,6 +169,9 @@ export async function readClaimEventCandidatesFromClient({
           (e.issue&&e.issue!==`#${issueNumber}`))
           return no('CROSS_TASK_OR_STALE_CLAIM_EVENT');
         if(parsed.kind==='done'){
+          const editReason=await doneEditProvenance({
+            octokit,comment:c,owner,repo,issueNumber});
+          if(editReason)return no(editReason);
           if(dones.some(d=>d.dispatchId===e.dispatch_id))
             return no('DUPLICATE_DISPATCH_CLAIM_EVENT');
           dones.push(Object.freeze({
