@@ -11,12 +11,19 @@ import {
   readScbSchema, materializeSelectedCqSourceBinding,
   assertSelectedCqSourceBinding,
 } from './selected-cq-source-binding.mjs';
-import { shapeOverlayValue } from './project-c1.mjs';
+import { shapeOverlayValue, checkOverlayContract } from './project-c1.mjs';
 export const original = fileURLToPath(new URL('../../../v2.1.1/knowledge/generated/graph.jsonld', import.meta.url));
 export const overlay = fileURLToPath(new URL('../source/C1_OWNER_REVISION_R13.json', import.meta.url));
 export const preview = fileURLToPath(new URL('../generated/c1-candidate.graph.jsonld', import.meta.url));
 const expectedBlob = '0f6007315fd7352fe6fd218effcfecf672cb4961';
 export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
+  // Reconstruction enforces the same Owner overlay qualification contract as
+  // the canonical projection (project-c1 applyOverlay runs this on its path):
+  // schema pin, OD05/GH2018, frozen-graph blob pin, qualification
+  // conservation and originalsPreserved must all hold before anything is
+  // materialized, so a reconstruction-only consumer cannot skip the
+  // fail-closed Owner gates.
+  checkOverlayContract(patch);
   assert.equal(patch.original.graphBlob, expectedBlob);
   assert.equal(patch.owner.OD05, 'NARROW_CLAIM');
   assert.equal(patch.owner.GH2018, 'ACCEPT_PATCH');
@@ -41,7 +48,19 @@ export function build(graph, patch, sourceOwner = readSourceOwnerInputs()) {
   for (const [id, fields] of Object.entries(patch.changes)) {
     const node = out['@graph'].find(n => n['@id'] === id);
     assert(node, 'missing original node ' + id);
-    Object.assign(node, fields);
+    // Consume change fields through the same value-shaping rule as the
+    // canonical projection (project-c1 applyOverlay change loop: shaped
+    // values, undefined→delete for emptied arrays, @id rename last), so both
+    // construction paths materialize the identical record form for every
+    // changed original — not only the R140 pinned additions.
+    const finalId = fields['@id'] ?? node['@id'];
+    for (const [k, v] of Object.entries(fields)) {
+      if (k === '@id') continue;
+      const shaped = shapeOverlayValue(k, v);
+      if (shaped === undefined) delete node[k];
+      else node[k] = shaped;
+    }
+    if (finalId !== node['@id']) node['@id'] = finalId;
   }
   for (const n of patch.additions) {
     assert(!originals.has(n['@id']), 'duplicate addition ' + n['@id']);

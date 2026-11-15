@@ -278,24 +278,104 @@ test('R140 negative: coordinated Overlay + graph + Sidecar + simulated manifest 
     /R140 LO2 Evidence semantic inversion/);
 });
 
-test('R141: materialize reconstruction consumes overlay additions in the canonical projection shape (fixed-anchor digests hold on both construction paths)', () => {
+test('R144: materialize reconstruction and canonical projection materialize the identical record form for every changed original and addition (fixed anchors + deep/canonical-digest parity + shaped ordering)', () => {
   const cand = buildGraph('v212-c1', inputs);
   const projected = new Map(cand.nodes.map((n) => [n['@id'], n]));
   const frozenGraph = JSON.parse(readFileSync(materializeOriginalPath, 'utf8'));
   const overlayDoc = JSON.parse(readFileSync(materializeOverlayPath, 'utf8'));
   const rebuilt = materializeBuild(frozenGraph, overlayDoc);
   const reconstructed = new Map(rebuilt['@graph'].map((n) => [n['@id'], n]));
+  // R140 fixed semantic anchors hold on BOTH construction paths.
   for (const [id, digest] of [
     [R137_IDS.outcomeEvidence, R140_REVIEWED_OUTCOME_EVIDENCE_DIGEST],
     [R137_IDS.claimSupport, R140_REVIEWED_CLAIM_SUPPORT_DIGEST],
   ]) {
     assert.equal(canonicalRecordDigest(projected.get(id)), digest,
-      'R141 projection-path fixed-anchor drift for ' + id);
+      'R144 projection-path fixed-anchor drift for ' + id);
     assert.equal(canonicalRecordDigest(reconstructed.get(id)), digest,
-      'R141 reconstruction-path fixed-anchor drift for ' + id);
+      'R144 reconstruction-path fixed-anchor drift for ' + id);
   }
-  assert.deepEqual(reconstructed.get(R137_IDS.claimSupport), projected.get(R137_IDS.claimSupport),
-    'R141: reconstruction and projection must materialize the identical claim-support record');
+  // The co-shape class is closed mechanically: EVERY overlay-changed original
+  // (including the renamed graph root, resolved through its new @id) and
+  // EVERY addition must be deep-equal and canonical-digest-equal across the
+  // projection and reconstruction construction paths.
+  for (const [id, fields] of Object.entries(overlayDoc.changes)) {
+    const targetId = fields['@id'] ?? id;
+    const a = projected.get(targetId);
+    const b = reconstructed.get(targetId);
+    assert.ok(a && b, 'R144 both paths must materialize changed original ' + targetId);
+    assert.deepEqual(b, a, 'R144 changed-original deep parity failed for ' + targetId);
+    assert.equal(canonicalRecordDigest(b), canonicalRecordDigest(a),
+      'R144 changed-original canonical-digest parity failed for ' + targetId);
+  }
+  for (const n of overlayDoc.additions) {
+    const a = projected.get(n['@id']);
+    const b = reconstructed.get(n['@id']);
+    assert.ok(a && b, 'R144 both paths must materialize addition ' + n['@id']);
+    assert.deepEqual(b, a, 'R144 addition deep parity failed for ' + n['@id']);
+    assert.equal(canonicalRecordDigest(b), canonicalRecordDigest(a),
+      'R144 addition canonical-digest parity failed for ' + n['@id']);
+    // both paths assemble additions with @id/@type pinned first
+    assert.deepEqual(Object.keys(a).slice(0, 2), ['@id', '@type'],
+      'R144 projection addition field order drifted for ' + n['@id']);
+    assert.deepEqual(Object.keys(b).slice(0, 2), ['@id', '@type'],
+      'R144 reconstruction addition field order drifted for ' + n['@id']);
+  }
+  // Shaped value ordering survives verbatim on both paths: string arrays sort
+  // lexicographically (field order) and @id ref arrays sort by id (reference
+  // order) — the two live co-shape falsifiers measured by the R142 review.
+  assert.ok(projected.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')['se:options']
+    .every((x, i, arr) => i === 0 || arr[i - 1] <= arr[i]),
+    'R144 shaped se:options must stay lexicographically sorted');
+  assert.deepEqual(
+    reconstructed.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')['se:options'],
+    projected.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')['se:options']);
+  const refIds = (rec) => rec['se:evidence_refs'].map((x) => x['@id']);
+  assert.deepEqual(refIds(projected.get('se:CASE-09F-GH-DB-FAILOVER')),
+    ['se:EVD-09F-GH-BACKLOG', 'se:EVD-09F-GH-RECOVERY', 'se:EVD-09F-GH-REPLICATION'],
+    'R144 shaped evidence_refs must stay @id-sorted');
+  assert.deepEqual(refIds(reconstructed.get('se:CASE-09F-GH-DB-FAILOVER')),
+    refIds(projected.get('se:CASE-09F-GH-DB-FAILOVER')));
+});
+
+test('R144 negative: an overlay change with an emptied array field drops the key identically on both construction paths (undefined→delete parity)', () => {
+  const tampered = structuredClone(inputs);
+  tampered.overlay.changes['se:DM-REQ-FUNCTIONAL-DOC-METHOD']['se:options'] = [];
+  const cand = buildGraph('v212-c1', tampered);
+  const projected = new Map(cand.nodes.map((n) => [n['@id'], n]));
+  const frozenGraph = JSON.parse(readFileSync(materializeOriginalPath, 'utf8'));
+  const tamperedOverlay = structuredClone(JSON.parse(readFileSync(materializeOverlayPath, 'utf8')));
+  tamperedOverlay.changes['se:DM-REQ-FUNCTIONAL-DOC-METHOD']['se:options'] = [];
+  const rebuilt = materializeBuild(frozenGraph, tamperedOverlay);
+  const reconstructed = new Map(rebuilt['@graph'].map((n) => [n['@id'], n]));
+  for (const [label, rec] of [
+    ['projection', projected.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')],
+    ['reconstruction', reconstructed.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')],
+  ]) {
+    assert.ok(rec && !('se:options' in rec),
+      'R144 ' + label + ' path must delete an emptied change key instead of assigning []');
+  }
+  assert.deepEqual(reconstructed.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD'),
+    projected.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD'),
+    'R144 emptied-key records must stay identical across both paths');
+  assert.equal(
+    canonicalRecordDigest(reconstructed.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')),
+    canonicalRecordDigest(projected.get('se:DM-REQ-FUNCTIONAL-DOC-METHOD')),
+    'R144 emptied-key canonical-digest parity failed');
+});
+
+test('R144 negative: reconstruction path enforces the Owner overlay qualification contract before materializing', () => {
+  const frozenGraph = JSON.parse(readFileSync(materializeOriginalPath, 'utf8'));
+  const overlayDoc = JSON.parse(readFileSync(materializeOverlayPath, 'utf8'));
+  const laundered = structuredClone(overlayDoc);
+  laundered.qualification.oracle = 'ATTESTED';
+  assert.throws(() => materializeBuild(frozenGraph, laundered), /qualification conservation/);
+  const drifted = structuredClone(overlayDoc);
+  drifted.owner.OD05 = 'ACCEPT_WITH_SOURCE_PROOF';
+  assert.throws(() => materializeBuild(frozenGraph, drifted), /Owner decision OD05 drifted/);
+  const unpreserved = structuredClone(overlayDoc);
+  unpreserved.originalsPreserved = false;
+  assert.throws(() => materializeBuild(frozenGraph, unpreserved), /originalsPreserved/);
 });
 
 test('UNKNOWN conservation: 106 PENDING claims, 0 ReviewDecision, Owner 2/2 vs Oracle NOT_ATTESTED', () => {
