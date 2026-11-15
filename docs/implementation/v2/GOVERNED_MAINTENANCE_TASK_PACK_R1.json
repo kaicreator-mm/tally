@@ -3,17 +3,51 @@
   "status": "CANDIDATE_NOT_FROZEN",
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
-  "versionBaseSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
-  "versionBaseTree": "6868938767fe72214958edcaccf59f422e25805f",
-  "observedAt": "2026-11-15T03:33:34.884Z",
+  "versionBaseSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+  "versionBaseTree": "6872ff136d640cc0d590de1b5671f9daf01be191",
+  "observedAt": "2026-11-15T08:54:31.402Z",
+  "packRevision": "R2",
+  "generationChain": [
+    {
+      "revision": "R17",
+      "kind": "VERSION_ONLY_STRUCTURAL_FREEZE",
+      "packBlobSha1": "44da8c5865d4f3ee0258ff9e7c7309c927b47c3e",
+      "packBlobSha256": "334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9",
+      "versionBaseSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+      "relation": "reused structural freeze, immutable"
+    },
+    {
+      "revision": "R1",
+      "kind": "DRAFT_CANDIDATE_SUPERSEDED",
+      "packBlobSha1": "ce04e5e2ddd329cc6163b2b7dd45dc2e0e1ff24a",
+      "packBlobSha256": "6c859207f5eca538a991d6eeb54d721c7e3475798c7239d7375c25214ce79484",
+      "versionBaseSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+      "pr": 416,
+      "prHead": "66eb63f5424e02502a87c4cb996183013c65ae35",
+      "relation": "historical reference only; never rewritten; never frozen; never reviewed to closure"
+    },
+    {
+      "revision": "R2",
+      "kind": "DRAFT_CANDIDATE_ACTIVE",
+      "packBlobSha1": "SELF_REFERENCE_NOT_EMBEDDABLE (recorded in the publishing commit message, PR description and issue write-backs)",
+      "versionBaseSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+      "pr": 416,
+      "relation": "this generation"
+    }
+  ],
+  "supersedes": {
+    "revision": "R1",
+    "reason": "Base advanced: version/v2 merged PR #410 (fa49891d, two-parent), landed the #417 merged-witness repair (25bc59f9) and made the merged-source ReviewWitness shape usable; R1 recorded #410 as OPEN with an OPEN-only reader P1. All R1 honest states (CANDIDATE_NOT_FROZEN / NOT_VERIFIED) carried forward."
+  },
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
     "taskIssueCount": 51,
     "claimCommentPages": 51,
-    "liveTypeTaskIssueCount": 52,
+    "liveTypeTaskIssueCount": 53,
     "outOfRosterTypeTaskIssues": [
-      412
+      412,
+      417
     ],
     "rosterIntegrity": "51/51 R17 roster issues live-verified; zero roster drift; zero new in-roster identity"
   },
@@ -27,6 +61,29 @@
   },
   "claimAcceptance": "NOT_VERIFIED",
   "closureEvidence": "NOT_VERIFIED",
+  "ciQualification": {
+    "schema": "tally/v2.ci-qualification/1",
+    "status": "CI_NOT_QUALIFIED",
+    "scope": "version/v2 push pipeline at this generation base fa49891dcb39c6eb8517f84087f890e8d4d47f93 only. This does NOT re-qualify or re-judge the PR #410 head CI (#773 7/7 SUCCESS at 8833480d, recorded in reviewedMergedSource) and is NOT a source-red verdict.",
+    "pushPipelines": [
+      {
+        "number": 775,
+        "status": "failure",
+        "event": "push",
+        "sha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+        "forensics": "alm-workspace built-in clone SUCCEEDED and reset --hard exactly fa49891d (pipeline pinned at this generation base), but the 4 DomainHarness workflows (v2-t06j/t06l/t06m/t06n) failed only in their domain-harness clone steps: TLS connect error error:0A000126 SSL routines::unexpected eof while reading through the full 3-attempt retry budget; every real replay step skipped."
+      },
+      {
+        "number": 776,
+        "status": "failure",
+        "event": "push",
+        "sha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+        "forensics": "Controlled same-SHA rerun (no empty commit): ALL 7 workflows failed only at the built-in clone step, exit status 128, same TLS unexpected eof x3 per workflow; every real step skipped."
+      }
+    ],
+    "classification": "GitHub network-window clone transient (documented class: failures concentrated in clone, exit 128, TLS unexpected eof, multiple workflows same pattern, zero real test steps executed). NOT source-red, NOT a test failure.",
+    "consequence": "Per the #415 precedent this Pack candidate is published with CI_NOT_QUALIFIED marking so independent Pack review can proceed; NO Owner receipt, NO real Claim/FSW/CAS/Host effect is authorized, and no further CI rerun is triggered from this lane until the network window closes. A green same-SHA push pipeline (or explicit Owner waiver) is required before any real Host effect."
+  },
   "plannedEdges": [],
   "r17StructuralFreezeReuse": {
     "schema": "tally/v2.structural-freeze-reuse/1",
@@ -581,7 +638,7 @@
         "state:planned"
       ],
       "createdAt": "2026-10-31T15:00:38Z",
-      "updatedAt": "2026-11-15T03:26:04Z",
+      "updatedAt": "2026-11-15T08:41:40Z",
       "closedAt": null,
       "scopeDisposition": "CORE_V2",
       "dispatchableByDisposition": false,
@@ -1131,55 +1188,142 @@
         ]
       },
       "overlapWithTask219Paths": 0,
-      "effect": "Dual-role Claim admission repair, lawfully consumed by the completed #312 (builder/reviewer same-registry admission now proven). The repaired admission source and preflight remain the same code paths #219 will use; using them is reuse of merged reviewed source, not a re-run of #412.",
+      "effect": "Dual-role Claim admission repair, lawfully consumed by the completed #312 (builder/reviewer same-registry admission now proven). Its merge 6cc52fbb is an ancestor of this generation base fa49891d. The repaired admission source and preflight remain the same code paths #219 will use; using them is reuse of merged reviewed source, not a re-run of #412.",
       "boundary": "Roster stays the original 51 Tasks; #412 is not added as a 52nd Task; no native edge is created or modified for #412; #412 grants no #219 write authority by itself."
+    },
+    {
+      "issueNumber": 417,
+      "title": "[v2][P1 Defect] Merged PR ReviewWitness cannot qualify current maintenance source",
+      "issueState": "open",
+      "stateReason": null,
+      "labels": [
+        "type:task",
+        "state:ready"
+      ],
+      "updatedAt": "2026-11-15T07:02:25Z",
+      "closedAt": null,
+      "scopeDisposition": "OUT_OF_ROSTER_ENABLING_DEFECT_REPAIRED_AND_MERGED",
+      "dispatchableByDisposition": false,
+      "mergePullNumber": 419,
+      "mergeCommitSha": "25bc59f9bd85d74929cd0b247d3b50a2306ab7f1",
+      "mergeTreeSha": "189fa0250c2fbb8a6c679a73e3bceb64e2631884",
+      "mergeParents": [
+        "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+        "a696588c77238e64031af3cef05e1c01f5a00f87"
+      ],
+      "ancestorOfThisBase": true,
+      "ci": {
+        "note": "PR #419 CI is historical evidence of the #417 lane; the repaired source is re-verified at this generation base by fresh independent source review 5909729671 sections \"#417 interaction — no OPEN-only regression\" and by local presence checks recorded in events.ndjson this lane."
+      },
+      "writeSet": {
+        "note": "Repair scope stayed inside the #219 14-path set (packages/tally-github-c/src/maintenance-effects.mjs + test); #417 itself carried no separate write-set digest beyond the #219 FSW scope."
+      },
+      "overlapWithTask219Paths": "SUBSET_OF_219_14_PATH_SCOPE",
+      "effect": "Merged-source maintenance ReviewWitness repair: readMaintenanceReviewWitnessFromClient now qualifies (a) exact OPEN current-base candidates and (b) CLOSED/MERGED two-parent sources (parents[0]=reviewedBase, parents[1]=reviewedHead; live source = merge commit or GitHub-confirmed ahead-only descendant, behind_by=0, merge_base=merge), with reviewedAt taken from the immutable GitHub comment created_at. This is the defect contract formerly recorded as p1Defects[0] (P1-MAINTENANCE-MERGED-WITNESS); it enables the #219 Host witness publication to use reviewedPullNumber=410 / reviewedHead=8833480d / reviewedTree=6872ff13 / reviewedBase=25bc59f9 / merge=fa49891d once real effects are authorized.",
+      "boundary": "Roster stays the original 51 Tasks; #417 is not added as a 52nd Task; no native edge is created or modified for #417; #417 grants no #219 write authority by itself and its repair is NOT a #219 Task PASS."
     }
   ],
-  "outOfRosterOpenArtifacts": [
-    {
-      "pullRequest": 410,
-      "title": "v2 governed maintenance candidate (R29/R30 lane)",
-      "issueState": "OPEN",
-      "isDraft": false,
-      "headSha": "3879dbc00b9c129f175904de5e805cc1d06eb994",
-      "headTreeSha": "7e5703fd2b6a837a9fe696cafcb11310b51e3e2d",
-      "headCommitParents": [
-        "e4b470e60299e0bc3076b521720d95eeafa94ef2"
+  "reviewedMergedSource": {
+    "schema": "tally.v2.reviewed-merged-source/1",
+    "pullRequest": 410,
+    "title": "v2 governed maintenance candidate (R29/R30/R33 lane)",
+    "state": "CLOSED_MERGED",
+    "mergedUpdatedAt": "2026-11-15T08:41:37Z",
+    "reviewedPullNumber": 410,
+    "reviewedHead": "8833480dd88f096f038c348e626a55623db2ae47",
+    "reviewedTree": "6872ff136d640cc0d590de1b5671f9daf01be191",
+    "reviewedBase": "25bc59f9bd85d74929cd0b247d3b50a2306ab7f1",
+    "mergeCommitSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+    "mergeParents": [
+      "25bc59f9bd85d74929cd0b247d3b50a2306ab7f1",
+      "8833480dd88f096f038c348e626a55623db2ae47"
+    ],
+    "liveSourceRelation": "live version/v2 IS the merge commit fa49891d (two-parent, parents[0]=reviewedBase, parents[1]=reviewedHead) — the qualified merged-source shape (b) of readMaintenanceReviewWitnessFromClient, verified by fresh independent review 5909729671 and re-pinable at any future Host run via the official GET responses.",
+    "review": {
+      "pullRequestReviewId": 5909729671,
+      "reviewRef": "https://github.com/kaicreator-mm/tally/pull/410#pullrequestreview-5909729671",
+      "reviewerIsNonWriter": true,
+      "verdict": "ACCEPT_SCOPED",
+      "p0": 0,
+      "p1": 0,
+      "p2": 5,
+      "p2Items": [
+        {
+          "id": "P2-A",
+          "status": "OPEN_CARRIED"
+        },
+        {
+          "id": "P2-01",
+          "status": "OPEN_CARRIED"
+        },
+        {
+          "id": "P2-B",
+          "status": "RECORDED_SEALED_REPLAY_STILL_NOT_RUN"
+        },
+        {
+          "id": "P2-N1",
+          "status": "RECORDED_STALE_TRANSITIONAL_COMMENTS"
+        },
+        {
+          "id": "P2-N2",
+          "status": "RECORDED_HANDOVER_PHRASING_PRECISION"
+        }
       ],
-      "originalBaseSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
-      "currentLiveBaseSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
-      "baseDriftStatement": "PR #410 branched at fdb809c2; live version/v2 has since advanced to 6cc52fbb (the #414 merge). The PR is OPEN/UNMERGED and must reb/refresh its base before any merge; until then its merged-source witness case cannot be exercised against a live equal base.",
-      "review": {
-        "sourceReview": "R30 Source-First ACCEPT_SCOPED",
-        "verdict": "P0=0/P1=0/P2=2 (P2-A carried; P2-01 new regression guard false-negative)",
-        "reviewLocation": "R30 COMMENT review on PR #410; readback at issues/392 comment 6879935782"
-      },
-      "ci": {
-        "pipeline": 755,
+      "submittedAt": "2026-11-15T07:57:17Z",
+      "note": "Fresh independent non-Writer exact-SHA review at head 8833480d; the earlier R30 review of old head 3879dbc0 was not transferred (readback of the R30 review: issues/392 comment 6879935782)."
+    },
+    "ci": {
+      "prPipeline": {
+        "number": 773,
         "status": "success",
         "workflows": 7,
         "event": "pull_request",
-        "headSha": "3879dbc00b9c129f175904de5e805cc1d06eb994"
+        "headSha": "8833480dd88f096f038c348e626a55623db2ae47",
+        "note": "7/7 workflows SUCCESS at the reviewed head (per review 5909729671 CI section; #772 was the documented clone-only transient at the same SHA)."
       },
-      "mergedWitnessP1": "See p1Defects[0] — the P1 is a defect of the current merged-PR witness reader, NOT a Task PASS; PR #410 is not merged and grants no authority."
+      "pushPipeline": {
+        "qualification": "CI_NOT_QUALIFIED",
+        "number": 775,
+        "status": "failure",
+        "event": "push",
+        "sha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
+        "forensics": "4 DomainHarness workflows failed only in their domain-harness clone steps: TLS connect error error:0A000126 SSL routines::unexpected eof while reading through the full 3-attempt retry budget; every real replay step skipped (never executed).",
+        "rerun": {
+          "number": 776,
+          "status": "failure",
+          "forensics": "Controlled same-SHA rerun after the #415 precedent: ALL 7 workflows failed only at the built-in clone step, exit status 128, same TLS unexpected eof x3 per workflow; clone log fetched and pinned exactly fa49891dcb39c6eb8517f84087f890e8d4d47f93. Zero real test steps executed."
+        },
+        "classification": "GitHub network-window clone transient (same class as #772/#773/#2395 history). NOT source-red: no real build/test step produced a failure. No further rerun until the network window closes; no empty commit was used."
+      }
     },
+    "boundary": "This record proves reviewed-source currentness ancestry only. It is NOT a #219 Task PASS, not a Claim, not an FSW, not a CAS freeze, and grants no #219 write authority."
+  },
+  "outOfRosterOpenArtifacts": [
     {
       "pullRequest": 411,
       "title": "docs(v2): retain exact #284 R17 frozen 51/37 VERSION_ONLY Task Pack snapshot",
       "issueState": "OPEN",
       "headSha": "fb7e9f9cb42267f9627b1e6672bcc792dfe6fc39",
       "scopeDisposition": "DOCS_ONLY_R17_PACK_ARCHIVE_HANDOFF",
-      "note": "Audit-only one-file archive of the R17 Pack snapshot; historical evidence handoff, no authority."
+      "note": "Audit-only one-file archive of the R17 Pack snapshot; historical evidence handoff, no authority. Kept unmerged to preserve intended provenance/order."
     }
   ],
   "p1Defects": [
     {
       "id": "P1-MAINTENANCE-MERGED-WITNESS",
       "severity": "P1",
+      "status": "RESOLVED_LANDED_AND_MERGED",
+      "resolution": {
+        "repairIssue": 417,
+        "repairPullRequest": 419,
+        "repairMergeCommit": "25bc59f9bd85d74929cd0b247d3b50a2306ab7f1",
+        "containedInThisBase": true,
+        "independentVerification": "Fresh independent source review 5909729671 (ACCEPT_SCOPED P0=0/P1=0/P2=5) section \"#417 interaction — no OPEN-only regression, reviewedAt honest\" verified the full merged-witness qualification present verbatim at head 8833480d (tree identical to this base fa49891d); this lane additionally re-ran local code-presence checks of the two-parent/parent-order/reviewedAt markers at fa49891d (events.ndjson op=i417-repair-presence-at-base)."
+      },
       "title": "Merged-PR maintenance ReviewWitness is unverifiable at the real Host (OPEN-only source gate)",
       "sourceFile": "packages/tally-github-c/src/maintenance-effects.mjs",
-      "currentGate": "readMaintenanceReviewWitnessFromClient requires pr.state===\"open\", pr.merged===false, body.reviewedBase===body.sourceSha and live version/v2 === sourceSha; any merged PR fails MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT (state REVIEW_UNKNOWN) before Host CAS.",
-      "impact": "Once the maintenance candidate PR merges, a real Host can never verify its ReviewWitness against the merged source, dead-ending the #219 publication chain exactly as #312’s merged two-parent provenance case previously required.",
+      "historicalGate": "readMaintenanceReviewWitnessFromClient (before #417) required pr.state===\"open\", pr.merged===false, body.reviewedBase===body.sourceSha and live version/v2 === sourceSha; any merged PR failed MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT (state REVIEW_UNKNOWN) before Host CAS.",
+      "historicalImpact": "Once the maintenance candidate PR merged, a real Host could never verify its ReviewWitness against the merged source, dead-ending the #219 publication chain exactly as #312’s merged two-parent provenance case previously required.",
       "reproEvidence": {
         "sourceCase": "MERGED_TWO_PARENT_CURRENT_SOURCE",
         "result": {
@@ -1197,9 +1341,9 @@
         "pattern": "Reuse the already-reviewed #312 project-intake merged provenance pattern (readProductReviewWitnessFromClient): accept either (a) an exact OPEN candidate PR (state open, not merged, head/tree/base equal, reviewedBase===sourceSha, live version/v2 === sourceSha) or (b) a fully proven CLOSED/MERGED two-parent source (official merge commit with exactly two parents, parents[0]===reviewedBase, parents[1]===reviewedHead; current source equals the merge commit or is a GitHub-confirmed ahead descendant with behind_by=0 and merge_base_commit===merge commit).",
         "rejections": "Squash, rebase, unverifiable compare, wrong parent order, wrong branch/repo, stale compare evidence, and any base drift where reviewedBase no longer matches the proven merge ancestry MUST fail closed.",
         "tests": "Positive OPEN-candidate case, positive merged two-parent current-source case, and a fail-closed adversarial matrix (squash, rebase, wrong parents, wrong tree, stale compare, wrong repo/branch); real Host dual-reads the witness before and after the shared version effect fence.",
-        "sequencing": "The repair lands before any merged-source #219 witness publication; until then a merged PR witness stays REVIEW_UNKNOWN/UNKNOWN (honest), never fabricated."
+        "sequencing": "Fulfilled: the repair (issue #417, PR #419, merge 25bc59f9) landed before any merged-source #219 witness publication and is contained in this generation base fa49891d."
       },
-      "boundary": "This record is a defect contract only: it authorizes no edit now, and this Pack governance artifact contains no source change."
+      "boundary": "Historical defect contract + resolution record only: no source change is part of this Pack governance artifact, and the repair is NOT a #219 Task PASS."
     }
   ],
   "claimSubjects": [
@@ -2382,19 +2526,24 @@
           "issueNumber": 207,
           "sharedPathCount": 2,
           "evidence": "overlap source already integrated into version/v2 via PR #201/#216/#218; re-opening any of these paths remains serialized, never concurrent"
+        },
+        {
+          "issueNumber": 417,
+          "sharedPathCount": 2,
+          "evidence": "overlap source integrated into version/v2 via the #417 merged-witness repair (PR #419, merge 25bc59f9, contained in base fa49891d); issue itself remains OPEN (close pending) and is NOT an active writer of unmerged source; re-opening any of these paths remains serialized, never concurrent"
         }
       ],
       "concurrencyStatement": "No overlap pair may be dispatched concurrently. Open overlaps must remain serialized after #219 with fresh current native-edge and write-set readback at each handoff. This pack asserts no concurrency for any overlapping pair."
     },
     "freshRecompute": {
-      "observedAt": "2026-11-15T03:33:34.884Z",
+      "observedAt": "2026-11-15T08:54:31.402Z",
       "method": "Exact pairwise intersection of normalized unique path lists extracted from live type:task Issue bodies this lane; wildcards retained literally; includes out-of-roster #412. #312 is CLOSED and therefore not an active writer in this matrix (its 16-path set remains a historical reference).",
-      "openTasksWithWriteSet": 16,
+      "openTasksWithWriteSet": 17,
       "openTasksWithoutWriteSet": [
         199,
         200
       ],
-      "nonzeroPairs": 28,
+      "nonzeroPairs": 29,
       "pairs": [
         {
           "tasks": [
@@ -2737,6 +2886,17 @@
         },
         {
           "tasks": [
+            219,
+            417
+          ],
+          "sharedPathCount": 2,
+          "paths": [
+            "packages/tally-github-c/src/maintenance-effects.mjs",
+            "packages/tally-github-c/test/maintenance-effects.test.mjs"
+          ]
+        },
+        {
+          "tasks": [
             273,
             276
           ],
@@ -2778,6 +2938,10 @@
         {
           "other": 276,
           "sharedPathCount": 1
+        },
+        {
+          "other": 417,
+          "sharedPathCount": 2
         }
       ],
       "task412PairCount": 0
@@ -2884,6 +3048,12 @@
         "pathCount": 4,
         "pathsSha256": "9f31a64538382e5cf457da5e7a1f707168b9760bb92ca8ffbb87e2e4ff62ae05",
         "issueState": "closed"
+      },
+      {
+        "issueNumber": 417,
+        "pathCount": 2,
+        "pathsSha256": "d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578",
+        "issueState": "open"
       }
     ]
   },
@@ -2891,7 +3061,9 @@
     "schema": "tally.v2.host-execution-contract/1",
     "registry": {
       "mode": "NEW_DEDICATED_REGISTRY_REQUIRED",
-      "statement": "A new current-source dedicated Host registry is provisioned for #219 (TALLY_TASK_CLAIM_219_REGISTRY_PATH) at the selected source SHA. R17/#284/#312 registries and CAS rows are historical immutable evidence; the new registry must not rewrite, alias, seed from, or conflict with any historical fence/claim/FSW row."
+      "designatedPath": "C:/xDev/kAiCreator/_tmp/i219-r32-host/registry-219.sqlite",
+      "createdThisLane": false,
+      "statement": "A new current-source dedicated Host registry is provisioned for #219 (TALLY_TASK_CLAIM_219_REGISTRY_PATH) at the selected source SHA; the designated filesystem path for the future Host run is the one above. As of this generation the registry file is NOT created: the version/v2 push CI window is CI_NOT_QUALIFIED (clone transients #775/#776) and no real Claim/FSW/CAS effect is authorized by this Pack candidate. R17/#284/#312/#417 registries and CAS rows are historical immutable evidence; the new registry must not rewrite, alias, seed from, or conflict with any historical fence/claim/FSW row."
     },
     "dualRoleClaims": {
       "sameRegistry": true,
@@ -2925,7 +3097,7 @@
     "fswOperation": {
       "schema": "tally/version-task-writeset/v1",
       "mode": "HOST_COMPOSITION_ADAPTER_PRECONDITION_SINGLE_TASK_CREATE_ONLY",
-      "missingPreconditionStatement": "No single-Task FSW creation route exists in the current source at 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 (freezeVersionTaskDag is version-wide VERSION_ONLY/ALL_TASKS). The single-Task FSW operation for #219 is an explicitly declared missing precondition satisfied only by an independently implemented and independently reviewed Host-composition adapter composing existing public CAS store/fence primitives. Not an existing repo API, not a direct seed, not fixture authority, not a repo source change authorized by this Pack.",
+      "missingPreconditionStatement": "No single-Task FSW creation route exists in the current source at fa49891dcb39c6eb8517f84087f890e8d4d47f93 (freezeVersionTaskDag is version-wide VERSION_ONLY/ALL_TASKS). The single-Task FSW operation for #219 is an explicitly declared missing precondition satisfied only by an independently implemented and independently reviewed Host-composition adapter composing existing public CAS store/fence primitives. Not an existing repo API, not a direct seed, not fixture authority, not a repo source change authorized by this Pack.",
       "rowKey": "tally:v2:task-writeset:219",
       "rowContract": {
         "basis": "Exact shape gated by the generic verifyFrozenWriteSet branch for #219 (bundle-local-codex.mjs TASK_BINDINGS[219].candidateRelativePath = experiments/v2/maintenance/host-maintenance.mjs) and the rowValue shape of version-task-dag-write-port.mjs.",
@@ -2934,7 +3106,7 @@
           "phase": "FROZEN_DAG_WRITESET",
           "repository": "kaicreator-mm/tally",
           "issueNumber": 219,
-          "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+          "sourceSha": "fa49891dcb39c6eb8517f84087f890e8d4d47f93",
           "writeSetSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
           "document": "Canonical form JSON.stringify([\".woodpecker/v2-alm-workspace.yaml\",\"experiments/v2/maintenance/host-maintenance.mjs\",\"experiments/v2/maintenance/host-maintenance.test.mjs\",\"experiments/v2/selected-business-build/bundle-local-codex.mjs\",\"experiments/v2/selected-business-build/local-codex-shim.mjs\",\"experiments/v2/selected-business-build/producer.mjs\",\"packages/tally-engineering-business/src/index.mjs\",\"packages/tally-engineering-business/test/business-policy.test.mjs\",\"packages/tally-github-c/src/maintenance-effects.mjs\",\"packages/tally-github-c/test/maintenance-effects.test.mjs\",\"web/v2/journey-server.mjs\",\"web/v2/journey-view.html\",\"web/v2/maintenance-controller.mjs\",\"web/v2/maintenance-controller.test.mjs\"]) (sorted 14-path array; contains experiments/v2/maintenance/host-maintenance.mjs as required by the gate); gate-equivalent forms accepted as long as normalization matches the digest.",
           "versionPackBlobSha": "The exact git blob SHA-1 of THIS PackBlob generation, pinned before any operation; the literal value is recorded in the publishing commit message and PR description, not embedded in this JSON (self-reference).",
@@ -2957,19 +3129,22 @@
     "maintenanceCandidateFreeze": {
       "schema": "tally/v2.maintenance-candidate-freeze/1",
       "existingOperation": "recordMaintenanceCandidate (experiments/v2/maintenance/host-maintenance.mjs) — real existing create-only Host operation: validates the candidate, computes candidateDigest, requires distinct author/reviewer identities (independence), writes phase REVIEWED_MAINTENANCE_CANDIDATE at key tally:v2:maintenance-candidate:219 with mustBeAbsent, exact readback, receipt receipt:sha256:<digest>; replays of the same digest/source/reviewer are idempotent, divergent rows fail MAINTENANCE_REVIEW_DIGEST_MISMATCH.",
-      "namingNote": "Governance names hostPersistMaintenanceDraft -> freezeReviewedMaintenanceCandidate map conceptually onto this existing operation chain; dedicated functions under those exact names do NOT exist in the current source (the R30 lane explicitly recorded draft/freeze as NOT_ADMITTED stubs in replay scope). Any new dedicated wrapper under those names is new Host-composition code requiring distinct-conversation independent review before any real effect.",
+      "namingNote": "At this generation base fa49891d the dedicated Host methods hostPersistMaintenanceDraft, hostFreezeReviewedMaintenanceCandidate, hostPublishMaintenanceIssue and hostRecordTaskLearningOutcome DO exist as real fail-closed exports of createMaintenanceHost (experiments/v2/maintenance/host-maintenance.mjs), with the bundle-local-codex.mjs bindings persistMaintenanceDraft / freezeReviewedMaintenanceCandidate / publishMaintenanceIssue / recordTaskLearningOutcome wired through maintenanceHostFor(). They remain UNEXECUTED for #219: no draft, no witness, no freeze, no publication and no learning row exists in any #219 registry as of this generation. The Host-side driver/adapter composition still required for a real run (store decorator with Pack/FSW pins, single-Task FSW composition adapter, witness POST driver) is new lane code requiring distinct-conversation independent review with P0=0/P1=0 before any real effect; reuse of the reviewed #312/#412/#417 lane patterns does not exempt the #219-specific differences.",
       "seededBy": "Host-owned setup only, never caller input; the write-scoped token never enters sealed bytes."
     },
     "maintenanceWitness": {
       "schema": "tally.v2.maintenance-review-witness/1",
       "publication": "Canonical flat JSON witness POSTed once by the distinct reviewer process for the exact persisted candidate/source/Pack/FSW and reviewed PR HEAD/Tree/Base; trusted readback derives the server-assigned reviewRef from the official GET response; edited or non-canonical comments fail closed (REST + GraphQL).",
-      "reader": "readMaintenanceReviewWitnessFromClient (packages/tally-github-c/src/maintenance-effects.mjs) — CURRENTLY OPEN-only; the merged two-parent provenance extension is the P1 defect contract in p1Defects[0] and must land with independent review before any merged-source witness publication.",
+      "reader": "readMaintenanceReviewWitnessFromClient (packages/tally-github-c/src/maintenance-effects.mjs) — at this generation base fa49891d the reader qualifies BOTH source shapes: (a) an exact OPEN current-base candidate PR (reviewedBase IS the live sourceSha) and (b) a fully proven CLOSED/MERGED two-parent source (official merge commit parents[0]===reviewedBase && parents[1]===reviewedHead; live source = that merge commit or a GitHub-confirmed ahead-only descendant with behind_by===0 and merge_base_commit===merge commit; squash/rebase/wrong-parent/stale-ancestry all fail closed). reviewedAt is taken from the immutable GitHub comment created_at (REST created_at===updated_at plus GraphQL lastEditedAt/editor-null unedited proof), never from a Host clock. This is the landed #417 repair (see p1Defects[0].resolution); unedited-comment provenance is verified twice on every read.",
+      "plannedWitnessBinding": "The future #219 witness publication binds reviewedPullNumber=410, reviewedHead=8833480dd88f096f038c348e626a55623db2ae47, reviewedTree=6872ff136d640cc0d590de1b5671f9daf01be191, reviewedBase=25bc59f9bd85d74929cd0b247d3b50a2306ab7f1, with live version/v2 equal to the merge commit fa49891dcb39c6eb8517f84087f890e8d4d47f93 or a GitHub-confirmed ahead-only descendant of it at run time; the Host dual-reads the witness immediately before and after the shared version effect fence (full canonical verdict equality). If version/v2 advances past fa49891d before the run, this generation is invalidated and a new Pack generation is required (REAL_CURRENT_BRANCH_READBACK).",
       "hostFunctions": [
+        "hostPersistMaintenanceDraft",
+        "hostFreezeReviewedMaintenanceCandidate",
         "hostPublishMaintenanceIssue",
         "hostRecordTaskLearningOutcome",
         "publishMaintenanceIssue"
       ],
-      "hostFunctionNote": "createMaintenanceHost (experiments/v2/maintenance/host-maintenance.mjs) binds verifyAcceptedClaim(219) + verifyFrozenWriteSet(219) + REVIEWED_MAINTENANCE_CANDIDATE candidate record + lost-ACK issue search (never a second Issue on a pending marker) + publish/readback with PUBLISHED_MAINTENANCE_ISSUE at tally:v2:maintenance-issue:219; wired through maintenanceHostFor() in bundle-local-codex.mjs; TALLY_LOCAL_REPLAY must be unset for real effects."
+      "hostFunctionNote": "createMaintenanceHost (experiments/v2/maintenance/host-maintenance.mjs) binds verifyAcceptedClaim(219) + verifyFrozenWriteSet(219) + REVIEWED_MAINTENANCE_CANDIDATE candidate record + lost-ACK issue search (never a second Issue on a pending marker) + publish/readback with PUBLISHED_MAINTENANCE_ISSUE at tally:v2:maintenance-issue:219 and the Task Learning decision/outcome ledger at tally:v2:maintenance-learning* keys; wired through maintenanceHostFor() in bundle-local-codex.mjs; TALLY_LOCAL_REPLAY must be unset for real effects. NONE of these effects has run for #219 as of this generation; the learning/outcome ledger may record only real observed-report evidence (REPORTED_QUALIFIED), never fabricated suggestions."
     },
     "p2Carryover": {
       "p2A": {
@@ -2982,7 +3157,22 @@
         "status": "OPEN_CARRIED",
         "statement": "Producer business-provides regression guard false-negative: the test uses whole-file includes so removing a business-provides intent while a capability-provides same-name string remains still passes, and reason assertions only check token format. Narrow guard fix recommended; current provides list correctness is not disputed. This Pack does not close P2-01 and no artifact may claim it closed."
       },
-      "origin": "R30 Source-First review of PR #410 (ACCEPT_SCOPED, P0=0/P1=0/P2=2), readback at issues/392 comment 6879935782."
+      "p2B": {
+        "id": "P2-B",
+        "status": "RECORDED_IMPROVED_BUT_HONEST",
+        "statement": "The sealed J219 replay remains env-gated/CI-skipped; it was independently double-executed at head 8833480d (26/26) yet still reports githubEffect NOT_RUN — replay evidence, never CI-run behavioral evidence and never a real GitHub effect."
+      },
+      "p2N1": {
+        "id": "P2-N1",
+        "status": "RECORDED_NON_BLOCKING",
+        "statement": "Stale transitional comments in host-maintenance.mjs (~lines 359/410) still say the C transport \"returns no reviewedAt yet\" although the landed transport carries comment.created_at; code is correct and fail-closed in both states (publication hard-requires ISO reviewedAt); doc drift only, text identical in the reviewed state."
+      },
+      "p2N2": {
+        "id": "P2-N2",
+        "status": "RECORDED_NON_BLOCKING",
+        "statement": "Handover phrasing precision: \"7/9 byte-identical cumulative patches\" is exact at the rebase tip d5f8391d; the final head is 6/9 because the fixture commit adds +5/-1 to host-maintenance.test.mjs — no content drift beyond that."
+      },
+      "origin": "Fresh independent source review of PR #410 at 8833480d: pullrequestreview 5909729671 (ACCEPT_SCOPED, P0=0/P1=0/P2=5, submitted 2026-11-15T07:57:17Z). P2-A/P2-01 carried OPEN from the R30 review of the old head 3879dbc0 (readback at issues/392 comment 6879935782); P2-B/P2-N1/P2-N2 are recorded by review 5909729671. This Pack does not close any of them and no artifact may claim them closed."
     }
   },
   "verificationPlan": {
@@ -3010,7 +3200,7 @@
       },
       {
         "id": "FSW_FIELD_AND_PATH_VALIDATION",
-        "detail": "The composed #219 FSW row is validated field-exact: schema tally/version-task-writeset/v1, phase FROZEN_DAG_WRITESET, repository, issueNumber 219, sourceSha 6cc52fbb151d0a0be12ace0972d869c0d5c0c267, writeSetSha256 3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797, document normalized to the digest and containing experiments/v2/maintenance/host-maintenance.mjs, versionPackBlobSha equal to this pack generation blob pin, versionTaskDagKey tally:v2:version-task-dag:b6bba4e5346a013caa0a16ba2b06a8d7f1aa8ac379aac8ff3ea37e680114e9fd, frozenAt present, integer revision >= 0, create-only."
+        "detail": "The composed #219 FSW row is validated field-exact: schema tally/version-task-writeset/v1, phase FROZEN_DAG_WRITESET, repository, issueNumber 219, sourceSha fa49891dcb39c6eb8517f84087f890e8d4d47f93, writeSetSha256 3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797, document normalized to the digest and containing experiments/v2/maintenance/host-maintenance.mjs, versionPackBlobSha equal to this pack generation blob pin, versionTaskDagKey tally:v2:version-task-dag:b6bba4e5346a013caa0a16ba2b06a8d7f1aa8ac379aac8ff3ea37e680114e9fd, frozenAt present, integer revision >= 0, create-only."
       },
       {
         "id": "PRE_EXECUTION_FSW_GATE_EQUIVALENCE",
@@ -3018,7 +3208,7 @@
       },
       {
         "id": "MAINTENANCE_WITNESS_OPEN_AND_MERGED_PROVENANCE",
-        "detail": "Witness reader verification covers: positive exact OPEN-candidate case; positive CLOSED/MERGED two-parent current-source case (merge commit parents[0]=reviewedBase, parents[1]=reviewedHead; current source = merge commit or ahead descendant behind_by=0 with merge_base=merge); fail-closed negatives for squash, rebase, wrong parent order, wrong tree, stale compare, wrong repo/branch; REST + GraphQL unedited verification. The merged case requires the P1 repair (p1Defects[0]) landed and independently reviewed first."
+        "detail": "Witness reader verification covers: positive exact OPEN-candidate case; positive CLOSED/MERGED two-parent current-source case (merge commit parents[0]=reviewedBase, parents[1]=reviewedHead; current source = merge commit or ahead descendant behind_by=0 with merge_base=merge); fail-closed negatives for squash, rebase, wrong parent order, wrong tree, stale compare, wrong repo/branch; REST + GraphQL unedited verification; reviewedAt equals the immutable GitHub comment created_at. The merged-case reader repair has LANDED (#417/PR #419, contained in base fa49891d, independently verified by review 5909729671 and by this lane presence checks); its REAL GitHub publication for #219 remains a future Host run under this plan."
       },
       {
         "id": "CANDIDATE_FREEZE_INDEPENDENCE",
@@ -3030,7 +3220,7 @@
       },
       {
         "id": "REAL_CURRENT_BRANCH_READBACK",
-        "detail": "Live version/v2 branch readback immediately before any CAS/fence effect; any advance past 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 invalidates this pack and requires a new generation."
+        "detail": "Live version/v2 branch readback immediately before any CAS/fence effect; any advance past fa49891dcb39c6eb8517f84087f890e8d4d47f93 invalidates this pack and requires a new generation. Version/v2 push CI is currently CI_NOT_QUALIFIED (clone transients #775/#776, no real step executed): the future Host run must additionally require a green same-SHA push pipeline, or an explicit Owner network-transient waiver recorded before any real effect."
       },
       {
         "id": "FINAL_HOST_CAS_READBACK",
@@ -3164,12 +3354,14 @@
     "preservationNote": "PRESERVED_FROM_R17_PACK (blob sha1 44da8c5865d4f3ee0258ff9e7c7309c927b47c3e / sha256 334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9, versionBaseSha fdb809c2fe51487eb9610130c634db4bf627f5e4) NOT_REVALIDATED this lane"
   },
   "notes": [
-    "R32 fresh as-of #219 Governed Maintenance candidate pack rebuilt at selected source 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 (tree 6868938767fe72214958edcaccf59f422e25805f, the #414 merge of fdb809c2 + 1fd1357e), lane TALLY_V2_219_CURRENT_SOURCE_PACK, 2026-11-15T03:33:34.884Z. Governance documentation only; no product source change is included or authorized.",
-    "Task identities, titles, states, labels, updatedAt/closedAt and all native edges re-read from official GitHub endpoints this session; roster 51/51 exact; 37/37 edges exact-matched; nativeDependencyReadback identical to R17; #219 native blocked_by #312 reads closed and #312 reads CLOSED/completed/state:done with outcome receipt 6885755818 — #219 is CLEAR; #273 still blocked_by #261(open) + #219(open).",
-    "#219 14-path allowed_write_set re-read from the live issue body: path_count 14, paths_sha256 3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797 recompute MATCH, byte-identical path list to R17. Fresh overlap matrix recomputed over all live open type:task bodies plus out-of-roster #412; #312 is closed and is NOT an active writer; #219 pairs this lane: #196 (3), #197 (3), #198 (3), #202 (7), #207 (2), #264 (2), #273 (2), #276 (1); unresolved serialization after #219: #264 (2 shared paths), #273 (2 shared paths), #276 (1 shared paths); #412 four-path set has zero overlap with the 14 paths.",
+    "R32 generation R2 of the fresh as-of #219 Governed Maintenance candidate pack rebuilt at selected source fa49891dcb39c6eb8517f84087f890e8d4d47f93 (tree 6872ff136d640cc0d590de1b5671f9daf01be191, the official two-parent merge of PR #410: parents 25bc59f9bd85d74929cd0b247d3b50a2306ab7f1 + 8833480dd88f096f038c348e626a55623db2ae47), lane TALLY_V2_219_CURRENT_SOURCE_PACK, 2026-11-15T08:54:31.402Z. Supersedes generation R1 (blob ce04e5e2ddd329cc6163b2b7dd45dc2e0e1ff24a / sha256 6c859207f5eca538a991d6eeb54d721c7e3475798c7239d7375c25214ce79484, base 6cc52fbb151d0a0be12ace0972d869c0d5c0c267, PR #416 head 66eb63f5) as a draft candidate BEFORE any freeze; the R1 blob is preserved as a historical reference and never rewritten. Governance documentation only; no product source change is included or authorized.",
+    "Task identities, titles, states, labels, updatedAt/closedAt and all native edges re-read from official GitHub endpoints this session; roster 51/51 exact; 37/37 edges exact-matched against R17 (structural reuse, not re-enacted); nativeDependencyReadback identical to R17; #219 native blocked_by #312 reads closed and #312 reads CLOSED/completed/state:done with outcome receipt 6885755818 — #219 is CLEAR; #273 still blocked_by #261(open) + #219(open).",
+    "#219 14-path allowed_write_set re-read from the live issue body: path_count 14, paths_sha256 3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797 recompute MATCH, byte-identical path list to R17 (digest stable across fdb809c2→6cc52fbb→fa49891d). Fresh overlap matrix recomputed over all live open type:task bodies plus out-of-roster #412; #312 is closed and is NOT an active writer; #219 serialization pairs this lane: #196 (3), #197 (3), #198 (3), #202 (7), #207 (2), #264 (2), #273 (2), #276 (1), #417 (2); unresolved serialization after #219: #264 (2 shared paths), #273 (2 shared paths), #276 (1 shared paths); #412 four-path set has zero overlap with the 14 paths.",
     "scopeDispositions / claimSubjects / mvpScope / overlapGroups are PRESERVED_FROM_R17_PACK (blob sha1 44da8c5865d4f3ee0258ff9e7c7309c927b47c3e / sha256 334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9, versionBaseSha fdb809c2fe51487eb9610130c634db4bf627f5e4) NOT_REVALIDATED this lane; carried rows 284 and 312 predate their live closed completions and their live fields are authoritative; claim acceptance and closure evidence remain NOT_VERIFIED.",
-    "#410 is recorded as an out-of-roster OPEN artifact (head 3879dbc0…/tree 7e5703fd…, original base fdb809c2, live base now 6cc52fbb): R30 ACCEPT_SCOPED P0=0/P1=0/P2=2 and Woodpecker #755 7/7 success are review/CI evidence only, NOT a #219 Task PASS. Its merged-PR maintenance ReviewWitness P1 (OPEN-only source gate) is recorded with the repro and the full repair contract inside the original 14 paths by the original #410 Writer. #411 remains the docs-only R17 archive PR.",
-    "P2-A (CAS-only ambiguous freeze UNKNOWN semantics) and P2-01 (producer business-provides regression guard false-negative) remain OPEN_CARRIED exactly as reported by the R30 review; this Pack and any artifact derived from it must not claim them closed.",
-    "Physical effects remain future Host/Owner actions: new dedicated registry, dual-role Claims through the decorated store, create-only 14-path FSW row via the reviewed Host-composition adapter, REVIEWED_MAINTENANCE_CANDIDATE freeze via recordMaintenanceCandidate, canonical maintenance witness with merged-provenance support after the P1 repair, current-branch readback and final Host CAS readback — none of which exist yet."
+    "PR #410 is now CLOSED/MERGED as the reviewed merged source: reviewedHead 8833480d / reviewedTree 6872ff13 / reviewedBase 25bc59f9 / merge fa49891d = live version/v2 (two-parent, parent order verified). Fresh independent non-Writer review pullrequestreview 5909729671 ACCEPT_SCOPED P0=0/P1=0/P2=5 at that exact head; PR CI #773 7/7 SUCCESS. This record proves source currentness ancestry only and is NOT a #219 Task PASS. #411 remains the OPEN docs-only R17 archive PR.",
+    "Out-of-roster enabling defects #412 (dual-role Claim admission, merged via #414 at 6cc52fbb, an ancestor of this base) and #417 (merged-source maintenance ReviewWitness repair, merged via #419 at 25bc59f9, contained in this base) are recorded separately; the roster stays the original 51 Tasks and no native edge changed. The former p1Defects[0] P1 is RESOLVED by the landed #417 repair and is recorded with its full history; the repair is not a #219 Task PASS.",
+    "P2-A and P2-01 remain OPEN_CARRIED; P2-B, P2-N1 and P2-N2 are recorded non-blocking notes from review 5909729671. This Pack and any artifact derived from it must not claim any of them closed.",
+    "Version/v2 push CI is CI_NOT_QUALIFIED: #775 failed only in 4 DomainHarness domain-harness clone steps (TLS unexpected eof through the retry budget, real replay steps skipped) and the controlled same-SHA rerun #776 failed only at all 7 built-in clone steps (exit 128). This is the documented GitHub network-window clone-transient class, NOT source-red and NOT a test failure. Per the #415 precedent this candidate is published for independent Pack review with CI_NOT_QUALIFIED marking; no CI rerun is triggered from this lane; a green same-SHA push pipeline or explicit Owner waiver is required before any real effect.",
+    "Physical effects remain future Host/Owner actions and none has run for #219: the designated dedicated registry (C:/xDev/kAiCreator/_tmp/i219-r32-host/registry-219.sqlite) is NOT created, no dual-role Claim, no decorated-store put, no create-only 14-path FSW row, no REVIEWED_MAINTENANCE_CANDIDATE freeze, no maintenance witness comment, no native Issue publication and no learning/outcome row exists. The dedicated Host methods (hostPersistMaintenanceDraft -> independent Reviewer witness -> freezeReviewedMaintenanceCandidate -> publishMaintenanceIssue unique-marker+readback -> learning/outcome) exist fail-closed in current source but execute only after: fresh independent exact-blob review of THIS generation with P0=0/P1=0, Owner dual-read of the pack/blob identity, driver/adapter distinct-conversation review, a green same-SHA push pipeline (or Owner waiver), and a fresh REAL_CURRENT_BRANCH_READBACK still pinning fa49891d."
   ]
 }
