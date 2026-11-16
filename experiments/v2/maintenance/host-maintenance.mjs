@@ -12,9 +12,13 @@
  * later independent outcome; quality gain is never inferred and Agents are
  * never ranked. Every deviation fails closed with a bounded reason, a lost
  * GitHub acknowledgment stays UNKNOWN and later reconciles WITHOUT creating a
- * duplicate Issue.
+ * duplicate Issue. A trusted zero-POST recovery holds a one-time, durable
+ * MAY_POST reservation BEFORE any external effect; a replayed old proof can
+ * therefore never authorize a second POST, and the full historical pending
+ * envelope (CAS key/revision/value, source, Issue, marker, title, instant)
+ * is bound before any recovery is admitted.
  */
-import {createHash} from 'node:crypto';
+import {createHash, randomBytes} from 'node:crypto';
 import {projectReport,STATES} from '../../../packages/tally-github-c/src/report-projection.mjs';
 
 const OWNER='kaicreator-mm',REPO='tally',ISSUE=219;
@@ -32,6 +36,7 @@ export const MAINTENANCE_DRAFT_KEY=`tally:v2:maintenance-draft:${ISSUE}`;
 export const MAINTENANCE_REVIEW_PROOF_KEY=`tally:v2:maintenance-review-proof:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
+export const MAINTENANCE_RECOVERY_KEY=`tally:v2:maintenance-recovery:${ISSUE}`;
 export const MAINTENANCE_LEARNING_KEY=`tally:v2:maintenance-learning:${ISSUE}`;
 export const MAINTENANCE_CLAIM_KEY=`${OWNER}/${REPO}#${ISSUE}:builder:__default__`;
 const issueUrlFor=n=>`${ISSUE_REF.replace(new RegExp('[0-9]+$',''),'')}${n}`;
@@ -627,9 +632,37 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
       let recoveredAfterZeroPost=false;
+      if(pending!==null&&pending?.value?.phase!=='PENDING_MAINTENANCE_ISSUE')
+        // An unrelated row occupies the pending key: history is never
+        // overwritten and never authorizes an external effect.
+        return denied(input,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
       if(pending?.value?.phase==='PENDING_MAINTENANCE_ISSUE'){
         if(pending.value.candidateDigest!==input.candidateDigest)
           return denied(input,'MAINTENANCE_ISSUE_DIGEST_MISMATCH');
+        // #432 R2 (P1-02): bind the FULL historical pending envelope before
+        // any external effect — CAS key, safe-integer revision, exact value
+        // digest, source, Issue, marker, title and pendingAt. The title rule
+        // is versioned and tightly scoped: a modern row carries the exact
+        // canonical title; the only accepted legacy shape is the byte-exact
+        // historical raw `[maintenance] <summary slice 0,160>` whose
+        // trimEnd equals the current canonical title (the genuine #219
+        // 205-char summary left a whitespace at the 160-character cut).
+        // A real CAS row revision is a non-negative safe integer (stores
+        // differ on whether the first create is 0 or 1).
+        if(!Number.isSafeInteger(pending.revision)||pending.revision<0)
+          return denied(input,'MAINTENANCE_PENDING_ENVELOPE_INVALID');
+        const envelopeDigest=sha256(pending.value);
+        const legacyRawTitle=`[maintenance] ${candidate.summary.slice(0,160)}`;
+        const titleOk=pending.value.title===title||
+          (pending.value.title===legacyRawTitle&&
+           legacyRawTitle.trimEnd()===title&&legacyRawTitle!==title);
+        if(pending.value.issueRef!==ISSUE_REF||
+           pending.value.sourceSha!==input.sourceSha||
+           pending.value.marker!==marker||!titleOk||
+           !ISO(pending.value.pendingAt??'')||
+           pending.value.authorized!==false||
+           pending.value.taskPass!==false||pending.value.releasePass!==false)
+          return denied(input,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
         let found;
         try{found=await findIssue({marker,title});}
         catch{return unknownEffect(input,'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN');}
@@ -670,6 +703,21 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         // MAY-POST/lost-ACK pending stays UNKNOWN with no blind retry.
         if(!(found?.state==='RECONCILE_COMPLETE'&&found.matches.length===0))
           return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        // #432 R2 (P1-01): a recovery POST is a NEW attempt B. Before any
+        // external effect it must hold a one-time, durable MAY_POST
+        // reservation. An existing reservation means some attempt already
+        // reached the POST boundary (e.g. a B that created the Issue and
+        // lost its ACK): the old A zero-POST proof is consumed forever and
+        // can NEVER authorize attempt C. Reconcile only.
+        let reservation;
+        try{
+          opened=await store(openStore,registryPath);
+          reservation=await opened.get(MAINTENANCE_RECOVERY_KEY);
+        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+        finally{if(opened)await opened.close();}
+        if(reservation!==null)
+          return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
         if(typeof verifyZeroPostAttempt!=='function')
           return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
         let attestation;
@@ -677,19 +725,78 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           attestation=await verifyZeroPostAttempt({issueNumber:ISSUE,
             issueRef:ISSUE_REF,sourceSha:input.sourceSha,
             candidateDigest:input.candidateDigest,marker,title,
-            pending:pending.value});
+            pendingKey:MAINTENANCE_PENDING_KEY,pendingRevision:pending.revision,
+            pendingValueDigest:envelopeDigest});
         }catch{return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');}
+        // The attestation must be attempt/row-specific: an attempt identity,
+        // an immutable evidenceRef naming the exact pending key, revision
+        // and value digest, and an exact echo of the envelope it claims to
+        // describe. Absent, malformed, stale or borrowed evidence fails
+        // closed — never a `ZERO_POST_ATTEMPT_VERIFIED` string alone.
         if(!(attestation?.ok===true&&
+           attestation.proof==='ZERO_POST_ATTEMPT_VERIFIED'&&
            attestation.marker===marker&&
            attestation.candidateDigest===input.candidateDigest&&
            attestation.sourceSha===input.sourceSha&&
-           attestation.proof==='ZERO_POST_ATTEMPT_VERIFIED'))
+           attestation.pendingKey===MAINTENANCE_PENDING_KEY&&
+           attestation.pendingRevision===pending.revision&&
+           attestation.pendingValueDigest===envelopeDigest&&
+           typeof attestation.attemptId==='string'&&
+           /^[A-Za-z0-9][A-Za-z0-9:_-]{7,127}$/.test(attestation.attemptId)&&
+           attestation.evidenceRef===
+             `host-cas:zero-post:${MAINTENANCE_PENDING_KEY}:${pending.revision}:${envelopeDigest}`&&
+           ISO(attestation.attestedAt??'')))
           return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
-        // The trusted attestation proves this pending row never reached the
-        // transport: resume into exactly one verified publication below; the
-        // candidate/digest/proof rows stay untouched (asserted by tests).
+        // Reserve attempt B durably BEFORE the POST, create-only; the exact
+        // old A envelope, the consumed proof and the new attempt identity are
+        // frozen into the reservation row and read back byte-for-byte.
+        const attemptId=`attempt:recovery:${randomBytes(16).toString('hex')}`;
+        const reservationValue=Object.freeze({phase:'MAY_POST_RECOVERY',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          candidateDigest:input.candidateDigest,marker,title,attemptId,
+          priorAttempt:Object.freeze({attemptId:attestation.attemptId,
+            evidenceRef:attestation.evidenceRef,attestedAt:attestation.attestedAt}),
+          pendingBinding:Object.freeze({key:MAINTENANCE_PENDING_KEY,
+            revision:pending.revision,valueDigest:envelopeDigest}),
+          reservedAt:new Date().toISOString(),authorized:false,
+          taskPass:false,releasePass:false});
+        let reservationConflict=false;
+        try{
+          opened=await store(openStore,registryPath);
+          await opened.put(MAINTENANCE_RECOVERY_KEY,reservationValue,
+            {mustBeAbsent:true});
+          const reserved=await opened.get(MAINTENANCE_RECOVERY_KEY);
+          if(JSON.stringify(reserved?.value)!==JSON.stringify(reservationValue))
+            return unknownEffect(input,
+              'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_UNKNOWN');
+        }catch(error){
+          if(error?.code==='HOST_CAS_CONFLICT')reservationConflict=true;
+          else return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_UNKNOWN');
+        }finally{if(opened){await opened.close();opened=null;}}
+        if(reservationConflict)
+          // A concurrent attempt won the single reservation: CAS uncertainty
+          // stays UNKNOWN and never repeats the GitHub publication.
+          return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+        // The reservation proves this recovery attempt holds the only MAY_POST
+        // grant: resume into exactly one verified publication below; the
+        // candidate/digest/proof AND historical pending rows stay untouched.
         recoveredAfterZeroPost=true;
       }else{
+      // Fresh attempt A: the pending row is its own durable pre-POST marker.
+      // A leftover reservation without a pending row is an anomalous CAS
+      // state — a previous recovery attempt B may have POSTed and lost its
+      // ACK — so a fresh POST must never start on top of it.
+      let leftover;
+      try{
+        opened=await store(openStore,registryPath);
+        leftover=await opened.get(MAINTENANCE_RECOVERY_KEY);
+      }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+      finally{if(opened)await opened.close();}
+      if(leftover!==null)
+        return unknownEffect(input,
+          'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
       try{
         opened=await store(openStore,registryPath);
         await opened.put(MAINTENANCE_PENDING_KEY,Object.freeze({

@@ -13,7 +13,7 @@ import {createMaintenanceHost,recordMaintenanceCandidate,
   maintenanceCandidateDigest,learningSuggestionsFromReports,
   MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,
   MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
-  MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
+  MAINTENANCE_RECOVERY_KEY,MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
 import {readMaintenanceReviewWitnessFromClient}
   from '../../../packages/tally-github-c/src/maintenance-effects.mjs';
 
@@ -381,7 +381,10 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
   const issueReadBox=n=>({number:n,title:'t',
     url:`https://github.com/kaicreator-mm/tally/issues/${n}`});
   await ctx2.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{phase:'PENDING_MAINTENANCE_ISSUE',
-    sourceSha:sha,candidateDigest:digest,marker:'m',title:'t'}));
+    issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+    marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
   const mismatch=await host(ctx2,{findIssue:async()=>({state:'RECONCILE_COMPLETE',
       reason:'MAINTENANCE_ISSUE_FOUND',matches:[issueReadBox(303)]}),
     readIssue:async()=>({state:'READBACK_MISMATCH',
@@ -427,6 +430,33 @@ const shapeRefusingTransport=(n=305)=>({
 const longSummary='A'.repeat(159)+' '+'B'.repeat(300);
 const longCandidate=()=>({...candidate(),summary:longSummary});
 const longDigest=()=>maintenanceCandidateDigest(longCandidate());
+// The genuine-shaped historical pending row: the module's own durable
+// pre-POST marker shape (unchanged since #221). `over` replaces fields or
+// deletes them when explicitly set to undefined.
+const genuinePending=(over={})=>{const value={phase:'PENDING_MAINTENANCE_ISSUE',
+  issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+  marker:`tally:maintenance:219:${digest}`,
+  title:__test.maintenanceTitle(candidate()),
+  pendingAt:'2026-11-15T23:27:00.000Z',
+  authorized:false,taskPass:false,releasePass:false};
+  for(const [key,val] of Object.entries(over))
+    if(val===undefined)delete value[key];else value[key]=val;
+  return value;};
+// The trusted attempt/row-specific zero-POST attestation surface the Host
+// requires (#432 R2): it must echo the exact pending CAS binding it was
+// asked about and carry an attempt identity plus an immutable evidenceRef.
+const zeroPostAttestation=(request,over={})=>{const value={ok:true,
+  proof:'ZERO_POST_ATTEMPT_VERIFIED',
+  marker:request.marker,candidateDigest:request.candidateDigest,
+  sourceSha:request.sourceSha,
+  attemptId:'attempt:legacy-a:00000001',
+  evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision}:${request.pendingValueDigest}`,
+  attestedAt:'2026-11-15T23:30:00.000Z',
+  pendingKey:request.pendingKey,pendingRevision:request.pendingRevision,
+  pendingValueDigest:request.pendingValueDigest};
+  for(const [key,val] of Object.entries(over))
+    if(val===undefined)delete value[key];else value[key]=val;
+  return value;};
 
 test('#432 title trims the 160-char slice so a whitespace cut point stays transport-valid',()=>{
   // Genuine #219 shape: character 160 (index 159) of the valid summary is a
@@ -506,6 +536,7 @@ test('#432 trusted zero-POST attestation recovers the genuine pending exactly on
     authorized:false,taskPass:false,releasePass:false}));
   const candidateBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY));
   const proofBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY));
+  const pendingBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
   let publishCalls=0;
   const transport={
     findIssue:async()=>({state:'RECONCILE_COMPLETE',
@@ -529,12 +560,12 @@ test('#432 trusted zero-POST attestation recovers the genuine pending exactly on
     .hostPublishMaintenanceIssue(publishInput());
   assert.equal(wrongPins.state,'PUBLICATION_UNKNOWN');
   assert.equal(publishCalls,0);
-  // The exact-pin attestation recovers into exactly one verified publication;
-  // candidate/digest/proof rows stay byte-identical.
+  // The exact-pin, attempt/evidence-bound attestation recovers into exactly
+  // one verified publication; candidate/digest/proof AND the historical
+  // pending row stay byte-identical, and a durable MAY_POST reservation for
+  // the new recovery attempt exists before the POST.
   const recovered=await host(ctx,{...transport,
-    verifyZeroPostAttempt:async request=>({ok:true,
-      proof:'ZERO_POST_ATTEMPT_VERIFIED',marker:request.marker,
-      candidateDigest:request.candidateDigest,sourceSha:request.sourceSha})})
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
     .hostPublishMaintenanceIssue(publishInput());
   assert.equal(recovered.state,'MAINTENANCE_ISSUE_PUBLISHED',JSON.stringify(recovered));
   assert.equal(recovered.reason,
@@ -545,6 +576,17 @@ test('#432 trusted zero-POST attestation recovers the genuine pending exactly on
     candidateBefore);
   assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY)),
     proofBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),
+    pendingBefore,'the historical pending row must never be rewritten');
+  const reservation=ctx.m.docs.get(MAINTENANCE_RECOVERY_KEY);
+  assert.ok(reservation,'recovery must hold a durable MAY_POST reservation');
+  assert.equal(reservation.value.phase,'MAY_POST_RECOVERY');
+  assert.equal(reservation.value.pendingBinding.key,MAINTENANCE_PENDING_KEY);
+  assert.equal(reservation.value.pendingBinding.revision,
+    ctx.m.docs.get(MAINTENANCE_PENDING_KEY).revision);
+  assert.equal(reservation.value.priorAttempt.attemptId,
+    'attempt:legacy-a:00000001');
+  assert.ok(/^attempt:recovery:[0-9a-f]{32}$/.test(reservation.value.attemptId));
   const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
   assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
   assert.equal(published.value.candidateDigest,digest);
@@ -556,7 +598,9 @@ test('#432 cross-SHA re-admission stays fail-closed: stale source refuses before
   await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{
     phase:'PENDING_MAINTENANCE_ISSUE',issueRef:__test.ISSUE_REF,sourceSha:sha,
     candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
-    title:__test.maintenanceTitle(candidate())}));
+    title:__test.maintenanceTitle(candidate()),
+    pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
   let publishCalls=0;
   const stale=await host(ctx,{
     // version/v2 advanced past the source this authority was admitted at:
@@ -566,14 +610,399 @@ test('#432 cross-SHA re-admission stays fail-closed: stale source refuses before
       reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
     readIssue:async()=>issueReadback(307),
     publishIssue:async()=>{publishCalls++;return {state:'ISSUE_PUBLISHED'};},
-    verifyZeroPostAttempt:async request=>({ok:true,
-      proof:'ZERO_POST_ATTEMPT_VERIFIED',marker:request.marker,
-      candidateDigest:request.candidateDigest,sourceSha:request.sourceSha})})
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
     .hostPublishMaintenanceIssue(publishInput());
   assert.equal(stale.state,'NOT_ADMITTED');
   assert.equal(stale.reason,'MAINTENANCE_PUBLICATION_SOURCE_STALE');
   assert.equal(stale.githubEffect,'NOT_RUN');
   assert.equal(publishCalls,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false);
+});
+
+// --- #432 R2 (independent REWORK P1-01/P1-02): one-time durable MAY_POST
+// recovery reservation + full historical pending-envelope / attestation
+// identity binding. The core counterexample: original attempt A was truthfully
+// refused BEFORE the POST; recovery attempt B POSTs but loses its ACK; the
+// eventually-consistent marker search returns zero again; the still-truthful
+// A proof must NEVER authorize attempt C.
+test('#432-R2 replayed TRUE old-A zero-POST proof after B lost ACK never posts C',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  const candidateBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY));
+  const proofBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY));
+  let publishCalls=0;
+  const lostAck={
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(306),
+    publishIssue:async()=>{publishCalls++;
+      throw new Error('connection reset after the Issue was created');}};
+  // Attempt B: the reservation lands BEFORE the POST; the POST leaves but
+  // the ACK is lost -> honest UNKNOWN.
+  const b=await host(ctx,{...lostAck,
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(b.state,'PUBLICATION_UNKNOWN');
+  assert.equal(b.reason,'GITHUB_PUBLISH_UNKNOWN');
+  assert.equal(b.githubEffect,'UNKNOWN');
+  assert.equal(publishCalls,1);
+  const reservation=ctx.m.docs.get(MAINTENANCE_RECOVERY_KEY);
+  assert.ok(reservation,'B must hold the durable one-time MAY_POST reservation');
+  assert.equal(reservation.value.phase,'MAY_POST_RECOVERY');
+  assert.equal(reservation.value.sourceSha,sha);
+  assert.equal(reservation.value.candidateDigest,digest);
+  assert.equal(reservation.value.pendingBinding.key,MAINTENANCE_PENDING_KEY);
+  assert.equal(reservation.value.pendingBinding.revision,
+    ctx.m.docs.get(MAINTENANCE_PENDING_KEY).revision);
+  assert.match(reservation.value.pendingBinding.valueDigest,/^[0-9a-f]{64}$/);
+  assert.equal(reservation.value.priorAttempt.attemptId,
+    'attempt:legacy-a:00000001');
+  assert.match(reservation.value.priorAttempt.evidenceRef,
+    /^host-cas:zero-post:tally:v2:maintenance-pending:219:[1-9][0-9]*:[0-9a-f]{64}$/);
+  assert.match(reservation.value.attemptId,/^attempt:recovery:[0-9a-f]{32}$/);
+  // GitHub search is STILL stale (zero matches) on the next run. The A proof
+  // is still truthful and still matches every field — and must be refused:
+  // the existing reservation means a B POST may already exist. No C POST.
+  const c=await host(ctx,{...lostAck,
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(c.state,'PUBLICATION_UNKNOWN');
+  assert.equal(c.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(c.githubEffect,'UNKNOWN');
+  assert.equal(publishCalls,1,'the replayed A proof must never authorize a C POST');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY)),
+    candidateBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY)),
+    proofBefore);
+  const pending=ctx.m.docs.get(MAINTENANCE_PENDING_KEY);
+  assert.equal(pending.value.phase,'PENDING_MAINTENANCE_ISSUE');
+  assert.equal(pending.value.pendingAt,'2026-11-15T23:27:00.000Z',
+    'historical A pending row must stay byte-identical');
+});
+
+test('#432-R2 existing reservation: a later exact marker readback reconciles B without any POST',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  let publishCalls=0;
+  const b=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(308),
+    publishIssue:async()=>{publishCalls++;
+      throw new Error('connection reset after the Issue was created');},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(b.state,'PUBLICATION_UNKNOWN');
+  assert.equal(publishCalls,1);
+  // The next run sees exactly one verified marker match (B's Issue surfaced):
+  // reconcile into the PUBLISHED row — never another POST.
+  const reconcile=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_FOUND',matches:[issueReadback(308).issue]}),
+    readIssue:async()=>issueReadback(308),
+    publishIssue:async()=>{publishCalls++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(reconcile.state,'MAINTENANCE_ISSUE_PUBLISHED');
+  assert.equal(reconcile.reason,'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK');
+  assert.equal(reconcile.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(reconcile.issue.number,308);
+  assert.equal(publishCalls,1,'reconciliation must not create a second Issue');
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.reconciled,true);
+  assert.equal(published.value.candidateDigest,digest);
+});
+
+test('#432-R2 pending identity is fully bound: any source/issue/marker/title/flag/timestamp mismatch fails closed',async()=>{
+  const cases={
+    WRONG_SOURCE:{sourceSha:'b'.repeat(40)},
+    WRONG_ISSUE:{issueRef:'https://github.com/kaicreator-mm/tally/issues/220'},
+    WRONG_MARKER:{marker:`tally:maintenance:219:${'c'.repeat(64)}`},
+    WRONG_TITLE:{title:__test.maintenanceTitle(candidate())+' '},
+    MISSING_TITLE:{title:undefined},
+    WRONG_PENDING_AT:{pendingAt:'not-a-date'},
+    MISSING_PENDING_AT:{pendingAt:undefined},
+    TASK_PASS_FLAG:{taskPass:true},
+    RELEASE_PASS_FLAG:{releasePass:true},
+    AUTHORIZED_FLAG:{authorized:true}};
+  for(const [name,over] of Object.entries(cases)){
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending(over)));
+    const before=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(309),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED',name);
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH',name);
+    assert.equal(result.githubEffect,'NOT_RUN',name);
+    assert.equal(posts,0,name);
+    assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),before,
+      name+': historical pending row must stay byte-identical');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false,
+      name+': no reservation may be created');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false,name);
+  }
+  // An unrelated phase occupying the pending key refuses instead of being
+  // overwritten by a fresh pending row.
+  {
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      {phase:'SOMETHING_ELSE'}));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',reason:'X',matches:[]}),
+      readIssue:async()=>issueReadback(1),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
+    assert.equal(posts,0);
+    assert.equal(ctx.m.docs.get(MAINTENANCE_PENDING_KEY).value.phase,
+      'SOMETHING_ELSE','foreign pending row must stay untouched');
+  }
+  // A non-safe-integer CAS revision refuses with the envelope reason.
+  {
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+    const racedOpenStore=async()=>{const s=await ctx.openStore();
+      return {...s,
+        get:async key=>{const row=await s.get(key);
+          return row?{value:row.value,
+            revision:key===MAINTENANCE_PENDING_KEY?'not-an-integer':row.revision}:row;}};};
+    let posts=0;
+    const result=await host({openStore:racedOpenStore},{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(309),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,'MAINTENANCE_PENDING_ENVELOPE_INVALID');
+    assert.equal(posts,0);
+  }
+});
+
+test('#432-R2 attestation binds attempt identity and immutable evidence to the exact pending envelope',async()=>{
+  const refuse=async(name,mutate)=>{
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+    const before=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(310),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>{
+        const attestation=zeroPostAttestation(request);
+        return mutate(attestation,request);}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'PUBLICATION_UNKNOWN',name);
+    assert.equal(result.reason,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION',name);
+    assert.equal(result.githubEffect,'UNKNOWN',name);
+    assert.equal(posts,0,name);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false,
+      name+': an untrusted attestation must never reserve');
+    assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),before,
+      name);
+    return ctx;};
+  await refuse('MISSING_ATTEMPT_ID',attestation=>{delete attestation.attemptId;
+    return attestation;});
+  await refuse('SHORT_ATTEMPT_ID',attestation=>({...attestation,
+    attemptId:'x'}));
+  await refuse('WRONG_ATTEMPT_EVIDENCE_REVISION',(attestation,request)=>({
+    ...attestation,
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:999:${request.pendingValueDigest}`}));
+  await refuse('UNTRUSTED_EVIDENCE_REF',attestation=>({...attestation,
+    evidenceRef:'https://example.com/proof.png'}));
+  await refuse('MISSING_EVIDENCE_REF',attestation=>{delete attestation.evidenceRef;
+    return attestation;});
+  await refuse('BORROWED_VALUE_DIGEST',(attestation,request)=>({...attestation,
+    pendingValueDigest:'f'.repeat(64),
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision}:${'f'.repeat(64)}`}));
+  await refuse('WRONG_PENDING_REVISION',(attestation,request)=>({...attestation,
+    pendingRevision:request.pendingRevision+1,
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision+1}:${request.pendingValueDigest}`}));
+  await refuse('MISSING_PROOF_STRING',attestation=>({...attestation,
+    proof:'OK'}));
+  await refuse('ECHO_OK_WITHOUT_EVIDENCE',attestation=>{delete attestation.evidenceRef;
+    delete attestation.attemptId;delete attestation.attestedAt;
+    delete attestation.pendingKey;delete attestation.pendingRevision;
+    delete attestation.pendingValueDigest;return attestation;});
+  await refuse('BAD_ATTESTED_AT',attestation=>({...attestation,
+    attestedAt:'yesterday'}));
+});
+
+test('#432-R2 genuine legacy trailing-space pending title recovers; near-miss legacy shapes refuse',async()=>{
+  // The real #219 summary was 205 characters with a whitespace at the
+  // 160-character cut point. The exact historical bytes are not recoverable
+  // from public receipts; this reproduces the exact byte shape: a valid
+  // 205-char summary whose character 160 (index 159) is a space, so the old
+  // untrimmed `[maintenance] <slice 0,160>` title ends in whitespace.
+  const summary205='A'.repeat(159)+' '+'B'.repeat(45);
+  assert.equal(summary205.length,205);
+  const legacyCandidateValue={...candidate(),summary:summary205};
+  const legacyDigestValue=maintenanceCandidateDigest(legacyCandidateValue);
+  const legacyRawTitle=`[maintenance] ${summary205.slice(0,160)}`;
+  assert.equal(legacyRawTitle.endsWith(' '),true);
+  assert.equal(legacyRawTitle.trimEnd(),
+    __test.maintenanceTitle(legacyCandidateValue));
+  // Positive: the byte-exact historical trailing-space pending title binds.
+  {
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:legacyRawTitle})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;
+        return {state:'ISSUE_PUBLISHED',issue:issueReadback(311).issue};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',
+      JSON.stringify(result));
+    assert.equal(result.reason,
+      'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY');
+    assert.equal(posts,1);
+    assert.ok(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY));
+    assert.equal(ctx.m.docs.get(MAINTENANCE_PENDING_KEY).value.title,
+      legacyRawTitle,'historical pending title must stay byte-identical');
+  }
+  // The versioned legacy rule is tightly scoped: near-miss titles that are
+  // NOT the byte-exact historical raw composition refuse closed.
+  for(const [name,badTitle] of [
+    ['DOUBLE_TRAILING_SPACE',legacyRawTitle+' '],
+    ['SHORTENED_CUT',`[maintenance] ${summary205.slice(0,120)}`],
+    ['INTERIOR_CHANGE',legacyRawTitle.slice(0,-2)+'X ']]){
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:badTitle})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'NOT_ADMITTED',name);
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH',name);
+    assert.equal(posts,0,name);
+  }
+  // The current canonical (trimmed) title is the accepted modern shape.
+  {
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:__test.maintenanceTitle(legacyCandidateValue)})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;
+        return {state:'ISSUE_PUBLISHED',issue:issueReadback(311).issue};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',
+      'canonical modern title: '+JSON.stringify(result).slice(0,160));
+    assert.equal(posts,1);
+  }
+});
+
+test('#432-R2 concurrent recovery attempts resolve exactly one CAS winner; the loser never POSTs',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  let posts=0;
+  // Winner: reservation create succeeds; the POST then loses its ACK.
+  const winner=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(312),
+    publishIssue:async()=>{posts++;
+      throw new Error('connection reset after the Issue was created');},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(winner.state,'PUBLICATION_UNKNOWN');
+  assert.equal(posts,1);
+  assert.ok(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY));
+  // Loser interleaving: it observed no reservation (its get raced before the
+  // winner committed) but its create-only reservation CAS-refused at put
+  // time — CAS uncertainty never repeats the GitHub publication. The loser
+  // shares the winner's CAS (same pending/candidate/proof rows).
+  const racedOpenStore=async()=>{const s=await ctx.openStore();
+    return {...s,
+      get:async key=>key===MAINTENANCE_RECOVERY_KEY?null:s.get(key),
+      put:async(key,value,cond)=>{
+        if(key===MAINTENANCE_RECOVERY_KEY&&cond?.mustBeAbsent===true)
+          throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
+        return s.put(key,value,cond);}};};
+  let racedPosts=0;
+  const loser=await host({openStore:racedOpenStore},{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(312),
+    publishIssue:async()=>{racedPosts++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(loser.state,'PUBLICATION_UNKNOWN');
+  assert.equal(loser.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(loser.githubEffect,'UNKNOWN');
+  assert.equal(racedPosts,0,'the CAS loser must never POST');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+});
+
+test('#432-R2 leftover reservation without a pending row blocks a fresh POST as UNKNOWN',async()=>{
+  const ctx=await reviewedFrozen();
+  // A crashed recovery may leave a reservation while the pending row is
+  // absent; a fresh attempt must never POST on top of the lost-ACK B.
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_RECOVERY_KEY,{
+    phase:'MAY_POST_RECOVERY',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),attemptId:'attempt:recovery:deadbeef',
+    priorAttempt:{attemptId:'attempt:legacy-a:1',
+      evidenceRef:'host-cas:zero-post:tally:v2:maintenance-pending:219:1:'+'e'.repeat(64),
+      attestedAt:'2026-11-15T23:30:00.000Z'},
+    pendingBinding:{key:MAINTENANCE_PENDING_KEY,revision:1,
+      valueDigest:'e'.repeat(64)},
+    reservedAt:'2026-11-15T23:31:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
+  let posts=0;
+  const result=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(313),
+    publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(result.state,'PUBLICATION_UNKNOWN');
+  assert.equal(result.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(result.githubEffect,'UNKNOWN');
+  assert.equal(posts,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false,
+    'no fresh pending row may be written on top of a leftover reservation');
   assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
 });
 
@@ -1414,8 +1843,7 @@ test('#219 publication checks C witness again while fenced, before pending CAS',
 test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST',async()=>{
   for(const throwError of [false,true]){
     const ctx=await reviewedFrozen();
-    await ctx.m.store.put(MAINTENANCE_PENDING_KEY,{
-      phase:'PENDING_MAINTENANCE_ISSUE',sourceSha:sha,candidateDigest:digest});
+    await ctx.m.store.put(MAINTENANCE_PENDING_KEY,genuinePending());
     let posts=0;
     const result=await host(ctx,{
       findIssue:async()=>{if(throwError)throw Error('network');
