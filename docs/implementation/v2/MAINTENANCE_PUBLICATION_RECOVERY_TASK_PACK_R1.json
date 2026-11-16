@@ -1,0 +1,137 @@
+{
+  "schema": "tally/v2-defect-task-pack-candidate/1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "taskIssue": 432,
+  "related": [
+    219,
+    392,
+    259,
+    431
+  ],
+  "purpose": "#432 P1 maintenance Issue local validation and pre-POST pending reconciliation repair, not v2 feature expansion",
+  "source": {
+    "branch": "version/v2",
+    "exactSha": "e825d155c18677f213ab4636bf2a62b33709deeb",
+    "treeSha": "fd9836afc9d596181c0aa3cd5ed8a91acaf98335",
+    "observedAsCurrent": true,
+    "sourceOfTruth": "GitHub branch API at Pack authoring",
+    "requiredBeforeAuthority": "re-read live current version/v2 SHA, native dependencies, issue body/updatedAt and both source blobs"
+  },
+  "taskSnapshot": {
+    "state": "open",
+    "labels": [
+      "type:task",
+      "state:planned"
+    ],
+    "updatedAt": "2026-11-15T23:36:46Z",
+    "admitted": false,
+    "activeClaimFor432": "NONE_OBSERVED_IN_ISSUE_COMMENTS",
+    "nativeDependencies": "NOT_REVALIDATED_BY_THIS_PACK",
+    "originalR17": {
+      "taskIdentities": 51,
+      "nativeEdges": 37,
+      "scope": "historical VERSION_ONLY, no task FSW"
+    },
+    "newDefect": "OUT_OF_ROSTER_NO_HISTORICAL_TASK_COUNT_INFLATION"
+  },
+  "writeSet": {
+    "paths": [
+      "experiments/v2/maintenance/host-maintenance.mjs",
+      "experiments/v2/maintenance/host-maintenance.test.mjs"
+    ],
+    "pathCount": 2,
+    "canonicalPathsSha256": "6c54ced5863f52359a8cc521839c98c3fa2ce5dc6a35cc1444b56c389fadaa62",
+    "sourceBlobSha1": {
+      "experiments/v2/maintenance/host-maintenance.mjs": "576038d81f141afcedc4b7c9b7b8297c57486958",
+      "experiments/v2/maintenance/host-maintenance.test.mjs": "57ee2175ea7067baf398419569dfd03d2b0e9d06"
+    },
+    "sharedWith": [
+      219
+    ],
+    "singleWriter": "ORIGINAL_MAINTENANCE_WRITER_AFTER_219_PAUSE",
+    "additionalPathsPermitted": false,
+    "readOnlyPackIsNotFSW": true
+  },
+  "preservedEvidence": {
+    "maintenanceOriginalSourceSha": "e825d155c18677f213ab4636bf2a62b33709deeb",
+    "acceptedBuilderClaimRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6902869432",
+    "acceptedReviewerClaimRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6902877445",
+    "reviewWitnessRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6903133532",
+    "immutableCandidateDigest": "5f121a6fe339fc39549891b5546e2e8db0cc457b896f08b7852fa6951c587252",
+    "currentPublication": "PUBLICATION_UNKNOWN / MAINTENANCE_ISSUE_INPUT_INVALID",
+    "pendingCasPhase": "PENDING_MAINTENANCE_ISSUE",
+    "githubPostCountEvidence": "OWNER_AND_REVIEWER_REPORTED_ZERO; REQUIRES_INDEPENDENT_TRUSTED_REVALIDATION",
+    "releaseEligibility": false
+  },
+  "sourceFirstFindings": [
+    {
+      "id": "P1-432-A",
+      "location": "host-maintenance.mjs maintenanceTitle()",
+      "actual": "String slices 160 characters without trimming; summary 160th character may be whitespace and transport rejects.",
+      "required": "deterministic canonical title generation and exact provider shape validation before any pending CAS reservation"
+    },
+    {
+      "id": "P1-432-B",
+      "location": "hostPublishMaintenanceIssue() guarded fence",
+      "actual": "PENDING_MAINTENANCE_ISSUE written before publishIssue validates input, leaving durable pending even on local refusal with zero POST.",
+      "required": "perform deterministic local pre-POST validation and refuse with githubEffect=NOT_RUN before pending CAS; preserve lost-ACK ambiguity after a true POST attempt"
+    },
+    {
+      "id": "P1-432-C",
+      "location": "PENDING_MAINTENANCE_ISSUE reconciliation",
+      "actual": "A zero marker search returns UNKNOWN unconditionally; same genuine pending row cannot resume.",
+      "required": "reviewed durable proof differentiating definitely NO-POST local validation refusal from MAY-POST lost ACK; zero matches alone is never proof of no POST; no direct CAS edit/blind retry"
+    }
+  ],
+  "contract": {
+    "invariants": [
+      "Exactly one title/body/marker canonicalization across prevalidate, pending row, findIssue, publishIssue, readIssue",
+      "Never emit PENDING when deterministic input is invalid before an external POST possibility",
+      "No native duplicate Issue on empty or eventually-consistent search",
+      "No manual/unguarded replacement of immutable #219 draft, digest, reviewer witness, Claim, FSW or historical CAS",
+      "Pending recovery requires independently reviewable trusted zero-POST evidence bound to same sourceSha/candidateDigest/marker/transport attempt and fence; otherwise remain UNKNOWN",
+      "Keep accepted Builder/Reviewer operator/process independence and current source/ReviewWitness checks",
+      "No extra source files, issue publication, tag or deploy by this Pack"
+    ],
+    "tests": [
+      "Long summary with cut-point whitespace: normalized title accepted, exactly one verified Issue and canonical readback",
+      "Invalid title/body/marker: zero CAS pending write and zero GitHub POST, githubEffect=NOT_RUN",
+      "Genuine historical #219-shaped PENDING with authenticated zero-POST preflight-failure witness: bounded recovery; no changed candidate/digest/proof",
+      "Pending with one exact existing Issue: canonical marker/title authenticated readback and zero new POST",
+      "Pending with multiple Issue matches, stale/missing authority, inconclusive search, or no zero-POST proof: UNKNOWN and zero POST",
+      "Pending from true possible POST/lost ACK with zero search results: still UNKNOWN and zero retry",
+      "CAS concurrency across two Host processes: one writer, no duplicate / forged success",
+      "Legacy #219 J219 sealed physical replay and normal successful paths remain green"
+    ]
+  },
+  "gates": [
+    "Independent exact-blob Source-First Pack review at this candidate HEAD, P0/P1=0, Owner evidence-bound approval; no self-signed review",
+    "Refresh live Issue, native edges, Task source, overlap and candidate Pack at current source immediately before authority",
+    "Fresh #432 Builder Claim through genuine Host, dedicated registry and two-path Task FSW with matching immutable Pack; do not consume #219 Claims",
+    "Original single Writer only two admitted paths; test RED-first real bug then focused/adjacent/physical Node24, no skip of critical positive",
+    "One meaningful exact-HEAD Woodpecker qualification, separate transient clone from test failure; no blind CI reruns",
+    "Independent non-Writer new Exact HEAD source review P0/P1=0; guarded version/v2 integration only after acceptance",
+    "Post-merge rebind #219 current-source Pack/Owner/CAS authority and independently run bounded no-duplicate pending reconciliation",
+    "Only after real accepted maintenance publication and installed Core MVP UI/Agent/QA/RQ permit can Release be considered"
+  ],
+  "authority": {
+    "packFrozen": false,
+    "ownerReceipt": false,
+    "claimAccepted": false,
+    "fswAccepted": false,
+    "sourceMutation": false,
+    "hostEffect": false,
+    "taskPass": false,
+    "releasePass": false,
+    "mainMerge": false,
+    "tag": false,
+    "deployment": false
+  },
+  "notes": [
+    "This Pack is a governance-only review candidate authored Web-first. It makes no source correction and does not cause immediate dispatch.",
+    "Prior #219 R5 Pack #431 is source e825d155-bound; if version/v2 moves after the #432 repair, rebuild the later current-source authority instead of mutating existing PackBlob.",
+    "#392 v2 Core requires only one real Agent and excludes two simultaneous Builders and measured learning. This defect is a required basic maintenance gate, not a reason to expand v2."
+  ]
+}
