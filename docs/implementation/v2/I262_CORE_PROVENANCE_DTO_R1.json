@@ -26,7 +26,8 @@
       }
     ],
     "openCount": 0,
-    "authoritativeness": "NATIVE_EDGE_STATUS_ONLY_NOT_CAS_CLAIM_OR_TASK_PASS"
+    "authoritativeness": "NATIVE_EDGE_STATUS_ONLY_NOT_CAS_CLAIM_OR_TASK_PASS",
+    "observationEpoch": "PRE_R54_GOVERNANCE_AMENDMENT__RECHECK_AT_CURRENT_RUNTIME_ADMISSION"
   },
   "reviewConstraint": {
     "issue219HistoricalOutcome": "NATIVE_CLOSED_BUT_R7_FINAL_INDEPENDENT_REVIEW_REWORK_P1_PRE_EFFECT_OWNER_AUTH_SEQUENCE",
@@ -188,7 +189,7 @@
       "readOnly": true
     },
     "missingSemantics": "Unconnected/not-read collection is null, never []; 0 only after independently verified complete source readback.",
-    "timeSemantics": "null observedAt until a trustworthy composed read timestamp exists; never fabricate a single atomic as-of time.",
+    "timeSemantics": "No single atomic observedAt timestamp can be fabricated. Historical native example issueUpdatedAt=null after R54 Issue body amendment; actual consumption MUST reread before/after live issue update and source SHA or downgrade STALE.",
     "reviewSemantics": "Exact PR commit/tree and distinct accepted independent Reviewer; GitHub issue closure, CI green, ADS self-report never qualifies Task.",
     "ciSemantics": "Compare exact candidate SHA, CI context, run result; old source green = historical-only.",
     "claimSemantics": "Published native comment != Host accepted CAS Claim; Claim accepted requires independent Host CAS/FSW/Pack proof.",
@@ -206,7 +207,7 @@
       "issueRef": "https://github.com/kaicreator-mm/tally/issues/262",
       "issueState": "open",
       "workflowState": "state:ready",
-      "issueUpdatedAt": "2026-11-16T18:11:04Z",
+      "issueUpdatedAt": null,
       "dependencySource": "OFFICIAL_GITHUB_NATIVE_GET_BLOCKED_BY",
       "blockedBy": [
         {
@@ -219,8 +220,9 @@
         }
       ],
       "openBlockers": 0,
-      "nativeReadback": "OBSERVED",
-      "taskOutcome": "NOT_VERIFIED"
+      "nativeReadback": "HISTORICAL_DIRECT_REST_OBSERVATION_RECHECK_REQUIRED",
+      "taskOutcome": "NOT_VERIFIED",
+      "issueUpdateGuard": "RE_READ_OFFICIAL_ISSUE_UPDATED_AT_AND_DEPENDENCIES_AT_ACTUAL_CONSUMPTION"
     },
     "claim": {
       "status": "NOT_VERIFIED",
@@ -441,7 +443,8 @@
     "scope": "Check full JSON at exact Git Blob; 13 source pins, native 2/2, truthful #219 R7 P1 caveat, DTO NULL-vs-zero, 16 fail-closed vectors, 2 proposed path hash, real current Pack absence and C/E isolation.",
     "tests": "JSON schema/shape and sample invariants are proposal checks, not compiled C or installed Host tests.",
     "release": "HOLD",
-    "taskPass": "NOT_SIGNED"
+    "taskPass": "NOT_SIGNED",
+    "note": "R54 Issue body append changes GitHub issue.updated_at; never present prior native sample as current live payload, and do not infer all endpoints share an as-of instant."
   },
   "sourceReuseRefs": [
     "https://github.com/kaicreator-mm/tally/issues/262#issuecomment-6924907998",
