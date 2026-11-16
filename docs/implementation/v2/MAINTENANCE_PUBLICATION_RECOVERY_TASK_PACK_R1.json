@@ -146,7 +146,20 @@
       }
     ],
     "candidateDigestToPreserve": "5f121a6fe339fc39549891b5546e2e8db0cc457b896f08b7852fa6951c587252",
-    "localEvidenceRule": "Zero marker matches alone never clears MAY_POST pending row; require trusted durable NO_POST proof, else UNKNOWN"
+    "localEvidenceRule": "Zero marker matches alone never clears MAY_POST pending row; require trusted durable NO_POST proof, else UNKNOWN",
+    "crossSourceMigration": {
+      "severity": "P1_RELEASE_PATH_FEASIBILITY_UNPROVEN",
+      "historicalSource": "e825d155c18677f213ab4636bf2a62b33709deeb",
+      "problem": "Guarded merge of #432 repair advances version/v2. #219's original accepted role Claims, 14-path FSW, candidate and ReviewWitness all bind the previous source SHA. Existing hostPublishMaintenanceIssue checks live current version equals input.sourceSha; thus a merged repair cannot automatically resume publication using unchanged historical source-bound authority.",
+      "requiredDisposition": "Preserve historical registry/CAS/draft/review as immutable; establish an independently reviewed *new current-source* Pack/Owner/Claim/FSW/review chain or a separately authorized cryptographically source-bound migration contract. Never rewrite old CAS/Claim/ReviewWitness and never publish under stale source. When old Claims prevent new role admissions, perform lawful exact DONE/TERMINAL_VERIFIED termination via reviewed T06d path before successors.",
+      "recoveryGate": "Review dual risk: (1) no duplicate Issue/zero POST evidence and (2) new version source-currentness. A past zero-native-POST assertion does not grant current-source authority.",
+      "negativeTests": [
+        "Advance version/v2 after valid old-source pending: source-stale refusal remains fail-closed without fresh authority",
+        "Pending with no marker but no independent zero-POST proof: no retry or CAS clearing",
+        "Fresh current-source qualification cannot import old source-bound claim/review as current",
+        "Reconcile one real published Issue only by exact marker/title and official GitHub readback"
+      ]
+    }
   },
   "admissionPlan": {
     "orderedGates": [
@@ -157,7 +170,8 @@
       "One meaningful exact-HEAD Woodpecker qualification, separate transient clone from test failure; no blind CI reruns",
       "Independent non-Writer new Exact HEAD source review P0/P1=0; guarded version/v2 integration only after acceptance",
       "Post-merge rebind #219 current-source Pack/Owner/CAS authority and independently run bounded no-duplicate pending reconciliation",
-      "Only after real accepted maintenance publication and installed Core MVP UI/Agent/QA/RQ permit can Release be considered"
+      "Only after real accepted maintenance publication and installed Core MVP UI/Agent/QA/RQ permit can Release be considered",
+      "Before any post-merge #219 publication, independently prove new current-source Claim/FSW/review eligibility; do not reuse old e825d155 authority or rewrite historical CAS."
     ],
     "claimAcceptance": "NOT_VERIFIED",
     "fswStatus": "NOT_CREATED",
@@ -175,7 +189,8 @@
       "Pending with multiple Issue matches, stale/missing authority, inconclusive search, or no zero-POST proof: UNKNOWN and zero POST",
       "Pending from true possible POST/lost ACK with zero search results: still UNKNOWN and zero retry",
       "CAS concurrency across two Host processes: one writer, no duplicate / forged success",
-      "Legacy #219 J219 sealed physical replay and normal successful paths remain green"
+      "Legacy #219 J219 sealed physical replay and normal successful paths remain green",
+      "Cross-SHA recovery: old-source protected Claim/FSW/review after version/v2 merge cannot authorize publication until lawful successor authority exists"
     ],
     "requiredRuntime": "Windows Node >=24 and actual selected Host/SQLite, exact SHA CI",
     "physicalClaim": "NOT_RUN"
