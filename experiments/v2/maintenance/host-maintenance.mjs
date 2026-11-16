@@ -36,6 +36,21 @@ export const MAINTENANCE_LEARNING_KEY=`tally:v2:maintenance-learning:${ISSUE}`;
 export const MAINTENANCE_CLAIM_KEY=`${OWNER}/${REPO}#${ISSUE}:builder:__default__`;
 const issueUrlFor=n=>`${ISSUE_REF.replace(new RegExp('[0-9]+$',''),'')}${n}`;
 const ISSUE_URL=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
+// #432 (P1-432-B): the deterministic transport input contract, mirrored
+// verbatim from packages/tally-github-c/src/maintenance-effects.mjs
+// (validRequest). The Host validates the exact composed strings BEFORE any
+// pending CAS reservation: a local input-shape refusal must leave zero
+// durable pending rows and must never turn an unattempted POST into UNKNOWN.
+const TRANSPORT_TITLE=/^\S(?:.{0,198}\S)?$/s;
+const TRANSPORT_BODY=/^\S[\s\S]{0,9999}\S$/;
+const TRANSPORT_MARKER=/^tally:maintenance:219:[0-9a-f]{64}$/;
+function validateTransportInput({title,body,marker}={}){
+  if(!TRANSPORT_TITLE.test(title??'')||!TRANSPORT_BODY.test(body??'')||
+     !TRANSPORT_MARKER.test(marker??'')||
+     !String(body??'').includes(String(marker??'')))
+    return Object.freeze({ok:false,reason:'MAINTENANCE_ISSUE_INPUT_INVALID'});
+  return Object.freeze({ok:true,reason:'TRANSPORT_INPUT_VALID'});
+}
 const canonical=value=>Array.isArray(value)?value.map(canonical):
   value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(
     key=>[key,canonical(value[key])])):value;
@@ -90,7 +105,10 @@ export function maintenanceCandidateDigest(candidate){
   return valid?sha256(valid):null;
 }
 function maintenanceTitle(candidate){
-  return `[maintenance] ${candidate.summary.slice(0,160)}`;
+  // #432 (P1-432-A): trim the sliced segment so a whitespace character at the
+  // 160-character cut point can never produce a trailing-whitespace title
+  // that the transport rejects locally before any GitHub POST.
+  return `[maintenance] ${candidate.summary.slice(0,160)}`.trimEnd();
 }
 function maintenanceBody(candidate,candidateDigest){
   const release=candidate.priorRelease?.version??
@@ -261,7 +279,8 @@ async function loadLearning(openStore,registryPath){
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
   verifyFrozenWriteSet,publishIssue,findIssue,readIssue,
-  readReviewWitness,readCurrentVersion,withVersionFence,env=process.env}={}){
+  readReviewWitness,readCurrentVersion,withVersionFence,
+  verifyZeroPostAttempt,env=process.env}={}){
   const pin=input=>
     input?.issueNumber===ISSUE&&input.sourceRef===ISSUE_REF&&
     SHA.test(input.sourceSha??'')&&DIGEST.test(input.candidateDigest??'')&&
@@ -592,6 +611,13 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         return denied(input,'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE');
       const title=maintenanceTitle(candidate);
       const marker=`tally:maintenance:219:${input.candidateDigest}`;
+      const body=maintenanceBody(candidate,input.candidateDigest);
+      // #432 (P1-432-B): deterministic transport-input validation BEFORE any
+      // pending CAS write. A local shape refusal leaves zero pending rows and
+      // reports NOT_RUN — never a durable PENDING that would later surface as
+      // an UNKNOWN MAY-POST reconciliation.
+      if(!validateTransportInput({title,body,marker}).ok)
+        return denied(input,'MAINTENANCE_ISSUE_INPUT_INVALID');
       // Lost-ACK reconciliation: a previous attempt may have left a pending
       // marker. Search first; never create a second Issue on top of one.
       let pending;
@@ -600,6 +626,7 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         pending=await opened.get(MAINTENANCE_PENDING_KEY);
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
+      let recoveredAfterZeroPost=false;
       if(pending?.value?.phase==='PENDING_MAINTENANCE_ISSUE'){
         if(pending.value.candidateDigest!==input.candidateDigest)
           return denied(input,'MAINTENANCE_ISSUE_DIGEST_MISMATCH');
@@ -634,11 +661,35 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
             githubEffect:'PERFORMED_VERIFIED',repository:`${OWNER}/${REPO}`,
             issue:readback.issue,duplicate:false});
         }
-        // A pending CAS marker means GitHub POST may already have happened.
-        // Zero matches (including eventually consistent search) never permits
-        // another POST, and absence is NOT a storage failure.
-        return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
-      }
+        // #432 (P1-432-C): a zero-result marker search is NOT evidence that no
+        // POST happened (eventual consistency / a lost ACK both end here).
+        // Recovery of the durable pending row is admitted ONLY through a
+        // Host-provided, evidence-bound zero-POST attestation that binds this
+        // exact candidate/source/marker under the current version fence.
+        // Absence of the marker alone never permits another POST, and a true
+        // MAY-POST/lost-ACK pending stays UNKNOWN with no blind retry.
+        if(!(found?.state==='RECONCILE_COMPLETE'&&found.matches.length===0))
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        if(typeof verifyZeroPostAttempt!=='function')
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        let attestation;
+        try{
+          attestation=await verifyZeroPostAttempt({issueNumber:ISSUE,
+            issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+            candidateDigest:input.candidateDigest,marker,title,
+            pending:pending.value});
+        }catch{return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');}
+        if(!(attestation?.ok===true&&
+           attestation.marker===marker&&
+           attestation.candidateDigest===input.candidateDigest&&
+           attestation.sourceSha===input.sourceSha&&
+           attestation.proof==='ZERO_POST_ATTEMPT_VERIFIED'))
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        // The trusted attestation proves this pending row never reached the
+        // transport: resume into exactly one verified publication below; the
+        // candidate/digest/proof rows stay untouched (asserted by tests).
+        recoveredAfterZeroPost=true;
+      }else{
       try{
         opened=await store(openStore,registryPath);
         await opened.put(MAINTENANCE_PENDING_KEY,Object.freeze({
@@ -649,10 +700,10 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           {mustBeAbsent:true});
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
+      }
       let publishedEffect;
       try{
-        publishedEffect=await publishIssue({title,
-          body:maintenanceBody(candidate,input.candidateDigest),marker});
+        publishedEffect=await publishIssue({title,body,marker});
       }catch{return unknownEffect(input,'GITHUB_PUBLISH_UNKNOWN');}
       if(publishedEffect?.state!=='ISSUE_PUBLISHED')
         return unknownEffect(input,publishedEffect?.reason??'GITHUB_PUBLISH_UNKNOWN');
@@ -668,12 +719,14 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           phase:'PUBLISHED_MAINTENANCE_ISSUE',issueRef:ISSUE_REF,
           sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
           issue:readback.issue,publishedAt:new Date().toISOString(),
-          reconciled:false,authorized:false,admitted:false,
+          reconciled:recoveredAfterZeroPost,authorized:false,admitted:false,
           taskPass:false,releasePass:false}),{mustBeAbsent:true});
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
       return Object.freeze({...flags,state:'MAINTENANCE_ISSUE_PUBLISHED',
-        reason:'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
+        reason:recoveredAfterZeroPost?
+          'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY':
+          'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
         issueRef:ISSUE_REF,sourceSha:input.sourceSha,
         candidateDigest:input.candidateDigest,claimAccepted:true,admitted:true,
         replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
@@ -805,5 +858,6 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
   });
 }
 export const __test={OWNER,REPO,ISSUE,ISSUE_REF,issueUrlFor,validateMaintenanceCandidate,
-  maintenanceCandidateDigest,maintenanceTitle,maintenanceBody,learningSuggestionsFromReports,
+  maintenanceCandidateDigest,maintenanceTitle,maintenanceBody,validateTransportInput,
+  learningSuggestionsFromReports,
   MAINTENANCE_CLAIM_KEY};

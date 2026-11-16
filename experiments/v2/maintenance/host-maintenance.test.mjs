@@ -70,7 +70,7 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
   const d=await ctx.openStore();
   await d.put(MAINTENANCE_REVIEW_PROOF_KEY,{
     phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',issueRef:__test.ISSUE_REF,
-    sourceSha:sha,candidateDigest:digest,
+    sourceSha:sha,candidateDigest:over.proofDigest??digest,
     reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
     reviewedPullNumber:278,
     reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sha,
@@ -404,6 +404,177 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
     .hostPublishMaintenanceIssue(publishInput());
   assert.equal(badPublish.state,'PUBLICATION_UNKNOWN');
   assert.equal(badPublish.reason,'GITHUB_RATE_LIMITED');
+});
+
+// --- #432 P1 repair: title truncation, premature pending CAS, trusted zero-POST recovery ---
+const TRANSPORT_TITLE=/^\S(?:.{0,198}\S)?$/s;
+const TRANSPORT_BODY=/^\S[\s\S]{0,9999}\S$/;
+const TRANSPORT_MARKER=/^tally:maintenance:219:[0-9a-f]{64}$/;
+// The real transport (packages/tally-github-c/src/maintenance-effects.mjs)
+// validates input shape locally and refuses before any POST; the Host must
+// never hand it an invalid title.
+const shapeRefusingTransport=(n=305)=>({
+  publishIssue:({title,body,marker})=>{
+    if(TRANSPORT_TITLE.test(title)&&TRANSPORT_BODY.test(body)&&
+       TRANSPORT_MARKER.test(marker)&&body.includes(marker))
+      return Promise.resolve({state:'ISSUE_PUBLISHED',issue:issueReadback(n).issue});
+    return Promise.resolve({state:'NOT_PUBLISHED',
+      reason:'MAINTENANCE_ISSUE_INPUT_INVALID'});
+  },
+  findIssue:async()=>({state:'RECONCILE_COMPLETE',
+    reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+  readIssue:async()=>issueReadback(n)});
+const longSummary='A'.repeat(159)+' '+'B'.repeat(300);
+const longCandidate=()=>({...candidate(),summary:longSummary});
+const longDigest=()=>maintenanceCandidateDigest(longCandidate());
+
+test('#432 title trims the 160-char slice so a whitespace cut point stays transport-valid',()=>{
+  // Genuine #219 shape: character 160 (index 159) of the valid summary is a
+  // space — the raw slice ends in whitespace and the transport rejects it.
+  const title=__test.maintenanceTitle(longCandidate());
+  assert.ok(!/\s$/.test(title),'title must not end in whitespace: '+
+    JSON.stringify(title.slice(-12)));
+  assert.ok(TRANSPORT_TITLE.test(title),'title must satisfy the transport shape');
+  const shortTitle=__test.maintenanceTitle(candidate());
+  assert.equal(shortTitle,
+    '[maintenance] Post-release behavior regression against immutable v1.5.5');
+});
+
+test('#432 deterministic transport-input validation refuses hostile shapes',()=>{
+  const goodBody=__test.maintenanceBody(candidate(),digest);
+  const goodMarker=`tally:maintenance:219:${digest}`;
+  const good=__test.validateTransportInput({
+    title:'[maintenance] ok',body:goodBody,marker:goodMarker});
+  assert.equal(good.ok,true,JSON.stringify(good));
+  const bad=[
+    // trailing-whitespace title (the genuine #219 defect shape)
+    {title:'[maintenance] x ',body:goodBody,marker:goodMarker},
+    // over the transport 200-char title cap (^\S(?:.{0,198}\S)?$)
+    {title:'x'.repeat(201),body:goodBody,marker:goodMarker},
+    // body must start with a non-space character
+    {title:'[maintenance] ok',body:' '+goodBody,marker:goodMarker},
+    // marker must be the exact maintenance-marker shape
+    {title:'[maintenance] ok',body:goodBody,
+      marker:'tally:maintenance:219:'+'z'.repeat(64)},
+    // the body must actually carry the marker
+    {title:'[maintenance] ok',
+      body:goodBody.replace(goodMarker,'maintenance-marker: tampered'),
+      marker:goodMarker},
+  ];
+  for(const input of bad){
+    const v=__test.validateTransportInput(input);
+    assert.equal(v.ok,false,JSON.stringify(input).slice(0,90));
+    assert.equal(v.reason,'MAINTENANCE_ISSUE_INPUT_INVALID');
+  }
+});
+
+test('#432 whitespace-cut candidate publishes exactly once; no invalid pending row ever exists',async()=>{
+  const ctx=await reviewedFrozen({args:{candidate:longCandidate()},
+    proofDigest:longDigest()});
+  let publishCalls=0;
+  const transport=shapeRefusingTransport(305);
+  const counting={...transport,
+    publishIssue:async input=>{publishCalls++;
+      return transport.publishIssue(input);}};
+  const result=await host(ctx,counting).hostPublishMaintenanceIssue(
+    publishInput({candidateDigest:longDigest()}));
+  assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',JSON.stringify(result));
+  assert.equal(result.reason,'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED');
+  assert.equal(result.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(result.issue.number,305);
+  assert.equal(publishCalls,1,'exactly one Issue must be created');
+  // Defect-B invariant: the durable pending row (written before the POST)
+  // always carries a transport-valid title; a trailing-space pending row can
+  // never again block this digest.
+  const pending=ctx.m.docs.get(MAINTENANCE_PENDING_KEY);
+  assert.ok(pending,'pending row may exist pre-POST');
+  assert.ok(TRANSPORT_TITLE.test(pending.value.title),
+    'pending title must satisfy the transport shape: '+
+    JSON.stringify(pending.value.title.slice(-12)));
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.candidateDigest,longDigest());
+});
+
+test('#432 trusted zero-POST attestation recovers the genuine pending exactly once; without it stays UNKNOWN',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{
+    phase:'PENDING_MAINTENANCE_ISSUE',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),
+    pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
+  const candidateBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY));
+  const proofBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY));
+  let publishCalls=0;
+  const transport={
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(306),
+    publishIssue:async()=>{publishCalls++;
+      return {state:'ISSUE_PUBLISHED',issue:issueReadback(306).issue};}};
+  // A zero-match marker search alone is NOT proof of no POST: without the
+  // trusted attestation the lost-ACK ambiguity stands, zero POSTs.
+  const noAttest=await host(ctx,transport)
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(noAttest.state,'PUBLICATION_UNKNOWN');
+  assert.equal(noAttest.reason,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+  assert.equal(publishCalls,0);
+  // An attestation with wrong pins is refused as well.
+  const wrongPins=await host(ctx,{...transport,
+    verifyZeroPostAttempt:async()=>({ok:true,
+      proof:'ZERO_POST_ATTEMPT_VERIFIED',
+      marker:'tally:maintenance:219:'+'0'.repeat(64),
+      candidateDigest:digest,sourceSha:sha})})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(wrongPins.state,'PUBLICATION_UNKNOWN');
+  assert.equal(publishCalls,0);
+  // The exact-pin attestation recovers into exactly one verified publication;
+  // candidate/digest/proof rows stay byte-identical.
+  const recovered=await host(ctx,{...transport,
+    verifyZeroPostAttempt:async request=>({ok:true,
+      proof:'ZERO_POST_ATTEMPT_VERIFIED',marker:request.marker,
+      candidateDigest:request.candidateDigest,sourceSha:request.sourceSha})})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(recovered.state,'MAINTENANCE_ISSUE_PUBLISHED',JSON.stringify(recovered));
+  assert.equal(recovered.reason,
+    'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY');
+  assert.equal(recovered.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(publishCalls,1,'recovery must never create a duplicate Issue');
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY)),
+    candidateBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY)),
+    proofBefore);
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.candidateDigest,digest);
+  assert.equal(published.value.reconciled,true);
+});
+
+test('#432 cross-SHA re-admission stays fail-closed: stale source refuses before recovery, CAS or POST',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{
+    phase:'PENDING_MAINTENANCE_ISSUE',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate())}));
+  let publishCalls=0;
+  const stale=await host(ctx,{
+    // version/v2 advanced past the source this authority was admitted at:
+    // old-source Claims/FSW/witness can never authorize under the new SHA.
+    readCurrentVersion:async()=>({ok:true,sha:'f'.repeat(40)}),
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(307),
+    publishIssue:async()=>{publishCalls++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>({ok:true,
+      proof:'ZERO_POST_ATTEMPT_VERIFIED',marker:request.marker,
+      candidateDigest:request.candidateDigest,sourceSha:request.sourceSha})})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(stale.state,'NOT_ADMITTED');
+  assert.equal(stale.reason,'MAINTENANCE_PUBLICATION_SOURCE_STALE');
+  assert.equal(stale.githubEffect,'NOT_RUN');
+  assert.equal(publishCalls,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
 });
 
 // --- J219 sealed producer + real K consumer replay (env-gated, no new paths) ---
