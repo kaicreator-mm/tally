@@ -4,7 +4,7 @@
   "repository": "kaicreator-mm/tally",
   "versionId": "version/v2",
   "versionBaseSha": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
-  "observedAt": "2026-11-17T20:04:23.481Z",
+  "observedAt": "2026-11-17T20:42:33.832Z",
   "source": {
     "kind": "GITHUB_NATIVE_ISSUES",
     "query": "state=all&labels=type:task",
@@ -12,7 +12,7 @@
     "claimCommentPages": 51,
     "historicalClaimEvidence": "Historical v1 claimSubjects from the source-pinned 51-subject previous candidate, not re-attested as source-current Claim/Host CAS or Task Outcome",
     "originalRosterRef": "https://github.com/kaicreator-mm/tally/pull/443",
-    "asOfTaskSources": "All 51 title/state/labels/createdAt/updatedAt/closedAt directly refreshed from official GitHub REST list; 1 timestamp impact versus accepted R2 #444: #264 updatedAt 2026-11-17T18:00:56Z after approved native dependency removal. Source tree still 62f18fd...; each native dependency independently read back from all 13 target endpoint results; validated 29 matching edges.",
+    "asOfTaskSources": "All 51 title/state/labels/createdAt/updatedAt/closedAt refreshed from official GitHub REST type:task list. Currentness R2->R3 delta: #261 updatedAt 2026-11-17T20:07:29Z (the only row change); earlier #444->R2 delta was #264 updatedAt 2026-11-17T18:00:56Z. Source tree remains 62f18fd...; all 13 official blocked_by target endpoints were independently re-read and still equal the 29 native edges.",
     "liveTypeTaskCountAtRebuild": 57,
     "originalVersionRosterSelection": "Same independently reviewed 51 original-version Tasks. Six supplemental #412/#417/#422/#427/#432/#445 excluded, not omitted from repo."
   },
@@ -566,7 +566,7 @@
         "state:ready"
       ],
       "createdAt": "2026-11-01T20:03:40Z",
-      "updatedAt": "2026-11-17T14:28:05Z",
+      "updatedAt": "2026-11-17T20:07:29Z",
       "closedAt": null,
       "scopeDisposition": "CORE_V2",
       "dispatchableByDisposition": false,
@@ -2009,14 +2009,14 @@
     ]
   },
   "notes": [
-    "The source is pinned to 62f18fd87d5a709f42900e612dcebc02c5c4f365; 51 original-version tasks are a curated scope of 56 total type:task issues, NOT an assertion that only 51 exist.",
+    "The source is pinned to 62f18fd87d5a709f42900e612dcebc02c5c4f365; 51 original-version tasks are a curated scope of 57 total type:task issues, NOT an assertion that only 51 exist.",
     "R8 #443 independent governance review P0/P1/P2=0 + Woodpecker #825 exact-head SUCCESS are separate earlier artifact receipts, not independent review or CI of THIS Blob.",
     "For actual Host version Freeze, obtain new prospective true v1 Blob-specific independent-review JSON witness and Owner-approval JSON witness accepted by the real selected Host from immutable GitHub comments, before physical CAS effect.",
     "Freeze policy VERSION_ONLY in the existing Host; actual create-only row FROZEN_VERSION_TASK_DAG and fresh live Task/native/source readback require selected single Host. No Task Claim/FSW/source writes granted.",
-    "Task #260 and #261 updatedAt were refreshed after R8: #260 2026-11-17T14:17:17Z and #261 2026-11-17T14:28:05Z. All others are R8 reviewed as-of; any later activity requires a new exact Blob.",
+    "Task #260 and #261 updatedAt after R8: #260 2026-11-17T14:17:17Z and #261 2026-11-17T20:07:29Z; current R2->R3 snapshot 51/51 exact, 50 original rows unchanged. Any later Task activity requires another new exact Blob.",
     "As-of original 51-version roster excludes six supplementary type:task Issue IDs #412,#417,#422,#427,#432,#445; this is version scope only, NOT a claim the repository has only 51 type:task issues.",
     "R2 exact-current Stage Corrected Native Pack candidate: 51 original-version Task identities, 29 official NATIVE dependency edges, zero PLANNED. Each of 13 originally edge-bearing Task official native blocked_by endpoints was independently read after the R4 8/8 approved repair. No synthetic deletion of other edges.",
-    "Direct GitHub 51-Task roster refresh showed exactly one updatedAt delta (#264) from last independently accepted 51/37 structural candidate; 34 CLOSED/17 OPEN remain native Issue states, never Task PASS.",
+    "Direct GitHub 51-Task roster originally showed #264 updatedAt delta from prior accepted 51/37 candidate; this R3 source/currentness fix adds only #261 updatedAt delta against R2. Current snapshot 34 CLOSED/17 OPEN native Issue states, never Task PASS.",
     "Historical Claim provenance from PR #444 R2 independently ACCEPT_SCOPED_CLAIM_PROVENANCE_ONLY reused byte-for-byte for its 51 Claim subjects (47 observed self-reports, 4 no event, no current Host accepted CAS Claim).",
     "#445 DAG edge reviewers approved removal of eight terminal stage-inverted native dependencies without weakening E Host safety; source-ready C/D/F ABI and installed acceptance remain explicit pre-effect gates.",
     "Before ANY physical once-only VERSION_ONLY Host Freeze, secure separate independent exact-blob review + correct selected Host-effective Owner/Review JSON comment-body witnesses bound to this exact new SHA1 Blob and source SHA. The previous #444 37-edge candidates never physically frozen.",
