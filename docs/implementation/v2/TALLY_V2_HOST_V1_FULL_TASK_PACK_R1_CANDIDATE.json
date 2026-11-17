@@ -1581,26 +1581,26 @@
       "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i274:ads-feedback:1",
+      "dispatchId": "host-fence:274:0766caed184a1b8cd164505760d2fd63c76550758ccec5c1de91ca8fbdabebd2",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#274:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6760145123,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/274#issuecomment-6760145123",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     },
     {
       "issueNumber": 275,
       "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i275:attempt-read-model:1",
+      "dispatchId": "host-fence:275:5618b301aadbc2cd17299004b88e2ed00e9877ee8925097cac78b59d85d1375a",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#275:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6760928270,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/275#issuecomment-6760928270",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     },
     {
       "issueNumber": 276,
@@ -1630,16 +1630,16 @@
     },
     {
       "issueNumber": 312,
-      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i312:r31:builder:1",
+      "dispatchId": "dispatch:312:product-review:builder:20261115:1",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#312:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6885413412,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/312#issuecomment-6885413412",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     },
     {
       "issueNumber": 319,
@@ -1669,16 +1669,16 @@
     },
     {
       "issueNumber": 370,
-      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "sourceSha": "b0deea09a9342b3a8eb5710619d9e9e2337e4fed",
       "actorRole": "builder",
       "operatorKind": "other",
-      "operatorId": "unassigned:tally-v2",
-      "dispatchId": null,
+      "operatorId": "zcode:i370:bootstrap:1",
+      "dispatchId": "host-fence:370:36a329869a6d0ac6b93436e7f25d6f53324d0f6e5e6c04eceb41b86b6427afae",
       "generation": 1,
       "protectedClaimKey": "kaicreator-mm/tally#370:builder:__default__",
-      "commentId": null,
-      "commentRef": null,
-      "candidateStatus": "NO_CLAIM_EVENT_EXPECTED"
+      "commentId": 6728053979,
+      "commentRef": "https://github.com/kaicreator-mm/tally/issues/370#issuecomment-6728053979",
+      "candidateStatus": "OBSERVED_COMMENT_SELF_REPORTED_CLAIM"
     },
     {
       "issueNumber": 377,
@@ -2064,11 +2064,78 @@
   "notes": [
     "One dedicated executable-schema candidate built from independently reviewed R8 #443 Task/37-NATIVE snapshot, plus historical 51-entry v1 claim-subject structure. Candidate is not Host-accepted or FROZEN.",
     "The source is pinned to 62f18fd87d5a709f42900e612dcebc02c5c4f365; 51 original-version tasks are a curated scope of 56 total type:task issues, NOT an assertion that only 51 exist.",
-    "ClaimSubjects from the historical v1 candidate are SELF_REPORTED or NO_CLAIM_EVENT_EXPECTED only. They are not current accepted CAS Claims. Reviewer must verify event identity/source and currentness; no historical Claim is silently promoted.",
     "R8 #443 independent governance review P0/P1/P2=0 + Woodpecker #825 exact-head SUCCESS are separate earlier artifact receipts, not independent review or CI of THIS Blob.",
     "The #219 independent R7 P1 for Owner Pack authorization after protected effects remains unresolved; no retroactive Owner approval, new #437 effect, or transfer of #219 Task PASS.",
     "For actual Host version Freeze, obtain new prospective true v1 Blob-specific independent-review JSON witness and Owner-approval JSON witness accepted by the real selected Host from immutable GitHub comments, before physical CAS effect.",
     "Freeze policy VERSION_ONLY in the existing Host; actual create-only row FROZEN_VERSION_TASK_DAG and fresh live Task/native/source readback require selected single Host. No Task Claim/FSW/source writes granted.",
-    "Task #260 and #261 updatedAt were refreshed after R8: #260 2026-11-17T14:17:17Z and #261 2026-11-17T14:28:05Z. All others are R8 reviewed as-of; any later activity requires a new exact Blob."
-  ]
+    "Task #260 and #261 updatedAt were refreshed after R8: #260 2026-11-17T14:17:17Z and #261 2026-11-17T14:28:05Z. All others are R8 reviewed as-of; any later activity requires a new exact Blob.",
+    "Claim subject provenance repaired by matching four live original DISPATCH_CLAIMED native events: #274/#275 same previous-source and DONE; #312 different source and no observed DONE plus independent reviewer event; #370 different source and DONE. 47 observed HISTORICAL_SELF_REPORT, 4 NO_CLAIM_EVENT_EXPECTED, none accepted Host CAS.",
+    "As-of original 51-version roster excludes six supplementary type:task Issue IDs #412,#417,#422,#427,#432,#445; this is version scope only, NOT a claim the repository has only 51 type:task issues."
+  ],
+  "historicalClaimEvidence": {
+    "schema": "tally/v2-claim-provenance-review-ledger/1",
+    "status": "HISTORICAL_SELF_REPORTED_NOT_ACCEPTED",
+    "purpose": "R1 independent review PR #444 P1-01/P1-02/P2-01 corrections. No Task Claim, native Terminal, independent Host admission or RQ approval is granted.",
+    "reviewRef": "https://github.com/kaicreator-mm/tally/pull/444#pullrequestreview-5943134707",
+    "corrected": [
+      {
+        "issueNumber": 274,
+        "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+        "claimEventRef": "https://github.com/kaicreator-mm/tally/issues/274#issuecomment-6760145123",
+        "historicalDoneRef": "https://github.com/kaicreator-mm/tally/issues/274#issuecomment-6781207950",
+        "sourceBinding": "ORIGINAL_CANDIDATE_HISTORICAL_SOURCE",
+        "claimedTaskPass": false,
+        "admitted": false
+      },
+      {
+        "issueNumber": 275,
+        "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+        "claimEventRef": "https://github.com/kaicreator-mm/tally/issues/275#issuecomment-6760928270",
+        "historicalDoneRef": "https://github.com/kaicreator-mm/tally/issues/275#issuecomment-6781225206",
+        "sourceBinding": "ORIGINAL_CANDIDATE_HISTORICAL_SOURCE",
+        "claimedTaskPass": false,
+        "admitted": false
+      },
+      {
+        "issueNumber": 312,
+        "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+        "claimEventRef": "https://github.com/kaicreator-mm/tally/issues/312#issuecomment-6885413412",
+        "historicalDoneRef": null,
+        "sourceBinding": "DIFFERENT_HISTORICAL_SOURCE_CURRENT_ACCEPTANCE_UNKNOWN",
+        "claimedTaskPass": false,
+        "admitted": false
+      },
+      {
+        "issueNumber": 370,
+        "sourceSha": "b0deea09a9342b3a8eb5710619d9e9e2337e4fed",
+        "claimEventRef": "https://github.com/kaicreator-mm/tally/issues/370#issuecomment-6728053979",
+        "historicalDoneRef": "https://github.com/kaicreator-mm/tally/issues/370#issuecomment-6729695352",
+        "sourceBinding": "DIFFERENT_HISTORICAL_SOURCE_CURRENT_ACCEPTANCE_UNKNOWN",
+        "claimedTaskPass": false,
+        "admitted": false
+      }
+    ],
+    "extraRoleEvent": [
+      {
+        "issueNumber": 312,
+        "actorRole": "reviewer",
+        "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+        "claimEventRef": "https://github.com/kaicreator-mm/tally/issues/312#issuecomment-6885420103",
+        "terminalState": "NO_MATCHING_DONE_VERIFIED",
+        "currentness": "UNKNOWN",
+        "accepted": false
+      }
+    ],
+    "originalVersionRosterCount": 51,
+    "liveAllTypeTaskCountAtIndependentReview": 57,
+    "offRosterIssueNumbers": [
+      412,
+      417,
+      422,
+      427,
+      432,
+      445
+    ],
+    "note": "Host selected source 62f18fd...; all four corrected records are self-reported historical DISPATCH_CLAIMED rather than current accepted CAS claims. #312's source-specific Builder and Reviewer events cannot be ignored; no effective current Claim is inferred. Genuine terminal DONE is separate historical evidence, never automatically Task PASS."
+  }
 }
