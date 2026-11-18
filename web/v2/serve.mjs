@@ -35,6 +35,8 @@ import {createAlmServer} from './journey-server.mjs';
 import {createUiNativeSource,readUiNativeVersionFromClient}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
 import {createUiRosterHost} from './ui-roster-host.mjs';
+import {readInstalledWriteJourneyEnvironment,createInstalledWriteJourneyRunner}
+  from './installed-write-journeys.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const REF=/^version\/[A-Za-z0-9_.-]+$/;
@@ -280,6 +282,20 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     taskIssueNumbers:settings.roster,
     requirementIssueSpecs:settings.requirements,
     qaStatusContext:settings.qaStatusContext});
+  // #264 E1 R91: real installed Builder write seam (J04 /api/actions start).
+  // Mounted ONLY when the trusted Host process exports
+  // TALLY_V2_AGENT_DISPATCH=host-mounted plus the exact claim/lease pins;
+  // the attempt binds to the exact served source SHA (a stale claim refuses
+  // to start). Bad pins fail START closed. Without the pins the exact R90
+  // fail-closed stub stays: launching UI never grants an executor.
+  let installedRun;
+  if(env.TALLY_V2_AGENT_DISPATCH==='host-mounted'){
+    const journeySettings=readInstalledWriteJourneyEnvironment(env);
+    if(journeySettings.claim.sourceSha!==settings.expectedSha)
+      throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
+    installedRun=createInstalledWriteJourneyRunner(
+      {settings:journeySettings,env}).run;
+  }
   // #264 E1: real frozen version Task DAG reader — read-only, composed only
   // from the trusted Host env pins validated in readUiHostEnvironment. It
   // re-reads the R80-class CAS record, the immutable PackBlob and both
@@ -353,18 +369,78 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return observed;
       }catch{return deny('REQUIREMENT_READ_FAILED');}
     },
+    // #264 E1 R91: real release evidence projection for the /app Release
+    // panel. The woodpeckerCI gate reads the actual native commit status for
+    // the pinned SHA (when TALLY_V2_QA_STATUS_CONTEXT is configured);
+    // independentRq stays UNKNOWN until the #208 exact-SHA RQ flow exists.
+    // permits stay null: no release permit authority is mounted at this
+    // source, so every action button explains what is missing instead of a
+    // dead or fabricated enabled control.
+    async release(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      const gates=[{name:'woodpeckerCI',status:'NOT_RUN',owner:'CI'},
+        {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}];
+      if(!settings.qaStatusContext)
+        return {connected:true,versionId:settings.versionId,
+          readiness:{versionId:settings.versionId,gates,permits:null,
+            rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
+      try{
+        const observed=await nativeC.qa();
+        if(observed?.connected!==true||
+           observed.source?.repository!==settings.repository)
+          return {connected:true,versionId:settings.versionId,
+            readiness:{versionId:settings.versionId,
+              gates:[{...gates[0],status:'UNKNOWN'},gates[1]],permits:null,
+              rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
+        const record=observed.records[0]??null;
+        gates[0].status=record?(record.outcome==='PASS'?'PASS':
+          record.outcome==='FAIL'?'FAIL':'UNKNOWN'):'NOT_RUN';
+        return {connected:true,versionId:settings.versionId,
+          readiness:{versionId:settings.versionId,gates,permits:null,
+            rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
+      }catch{
+        return {connected:true,versionId:settings.versionId,
+          readiness:{versionId:settings.versionId,
+            gates:[{...gates[0],status:'UNKNOWN'},gates[1]],permits:null,
+            rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
+      }
+    },
   });
-  // The legacy J01–J08 console remains fail-closed in this entrypoint.
-  // No process executor or selected K dispatch is granted by launching UI.
+  // The legacy J01–J08 console action surface: the run seam is the real
+  // installed Builder executor only when the trusted Host mounted it above;
+  // otherwise the fail-closed stub keeps every dispatch DENIED-by-absence.
   const config=defaultAlmConfig({
     dhPath:env.TALLY_V2_DH_PATH??join(process.cwd(),'domain-harness'),
     tallyPath:process.cwd(),tallyBPath:process.cwd(),
     githubToken:settings.token,currentSourceSha:settings.expectedSha,
     workRoot:env.TALLY_V2_WORK_ROOT??join(process.cwd(),'.tally-ui-readonly')
   });
+  // J07c release evidence host: the controller's pre-read reads the same
+  // real native evidence as the /app projection (never form fields). The
+  // value sourceSha is bound to the exact served SHA; a foreign request SHA
+  // answers UNKNOWN instead of leaking evidence.
+  const readReleaseSnapshot=async({sourceSha}={})=>{
+    if(sourceSha!==settings.expectedSha)return null;
+    let ciStatus='UNKNOWN',ciCoverage='NOT_CONFIGURED';
+    if(settings.qaStatusContext){
+      try{
+        const observed=await nativeC.qa();
+        if(observed?.connected===true&&
+           observed.source?.repository===settings.repository){
+          ciCoverage=observed.ciCoverage;
+          const record=observed.records[0]??null;
+          ciStatus=record?(record.outcome==='PASS'?'PASS':
+            record.outcome==='FAIL'?'FAIL':'UNKNOWN'):'NOT_RUN';
+        }
+      }catch{ciStatus='UNKNOWN';}
+    }
+    return {sourceSha:settings.expectedSha,targetSha:settings.expectedSha,
+      readiness:{status:'UNKNOWN',releasePass:false,ciStatus,ciCoverage}};
+  };
   const server=createAlmServer(config,{
-    run:async()=>({status:'FAIL',reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',
-      exitCode:1,result:null}),
+    run:installedRun??(async()=>({status:'FAIL',
+      reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
+    releaseHost:{readReleaseSnapshot},
     v2ReadModelHost,
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
@@ -378,7 +454,9 @@ const main=process.argv[1]&&resolve(process.argv[1])===
 if(main){
   startUiReadOnlyServer().then(({address,close})=>{
     process.stdout.write('TALLY_UI_READ_ONLY='+address.origin+'/app\n');
-    process.stdout.write('TALLY_UI_AGENT_DISPATCH=DENIED\n');
+    process.stdout.write('TALLY_UI_AGENT_DISPATCH='+
+      (process.env.TALLY_V2_AGENT_DISPATCH==='host-mounted'?
+        'HOST_MOUNTED_SINGLE_CODEX':'DENIED')+'\n');
     let closing=false;
     const stop=()=>{
       if(closing)return;closing=true;
