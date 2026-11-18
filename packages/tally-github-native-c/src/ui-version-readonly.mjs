@@ -343,3 +343,49 @@ export function createUiNativeSource({token,owner,repo,versionId,
       octokit:await client(),owner,repo,versionId,expectedSha,qaStatusContext}),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Dual-Epoch successor observation primitives (A2 #392/6985978779). Read-only;
+// they observe the LIVE selected branch head and prove S0 ancestry without
+// granting any authority. Existing pinned readers above keep their strict
+// current-head guard: a successor read pins its own guard at the OBSERVED
+// head and rejects any drift between probes.
+// ---------------------------------------------------------------------------
+
+/** Observe the live official branch head WITHOUT a pin-equality assertion.
+ * The dual-Epoch reader pins its strict guard at the returned observed head. */
+export async function observeUiNativeVersionHeadFromClient({
+  octokit,owner,repo,versionId
+}={}){
+  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!VERSION.test(versionId??'')||
+     !octokit?.rest?.repos?.getBranch)
+    return denied('INVALID_SELECTED_GITHUB_SOURCE');
+  try{
+    const b=(await octokit.rest.repos.getBranch({owner,repo,branch:versionId}))?.data;
+    const headSha=b?.commit?.sha;
+    if(!SHA.test(headSha??''))return denied('VERSION_BRANCH_HEAD_UNOBSERVABLE');
+    return Object.freeze({connected:true,repository:`${owner}/${repo}`,
+      versionId,headSha});
+  }catch{return denied('GITHUB_NATIVE_SOURCE_UNAVAILABLE');}
+}
+
+/** Prove baseSha is an actual ancestor of headSha via official compareCommits.
+ * Only status 'ahead' with merge-base === baseSha counts; diverged/behind/
+ * identical/equal or partial pages fail closed. */
+export async function verifyUiNativeVersionAncestryFromClient({
+  octokit,owner,repo,baseSha,headSha
+}={}){
+  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!SHA.test(baseSha??'')||
+     !SHA.test(headSha??'')||baseSha===headSha||
+     !octokit?.rest?.repos?.compareCommits)
+    return denied('INVALID_ANCESTRY_PROBE');
+  try{
+    const r=(await octokit.rest.repos.compareCommits({
+      owner,repo,basehead:baseSha+'...'+headSha}))?.data;
+    if(r?.status==='ahead'&&Number.isSafeInteger(r.ahead_by)&&r.ahead_by>=1&&
+       r.base_commit?.sha===baseSha&&r.merge_base_commit?.sha===baseSha)
+      return Object.freeze({connected:true,repository:`${owner}/${repo}`,
+        baseSha,headSha,ancestry:'BASE_IS_ANCESTOR'});
+    return denied('SUCCESSOR_ANCESTRY_UNPROVEN');
+  }catch{return denied('GITHUB_NATIVE_SOURCE_UNAVAILABLE');}
+}

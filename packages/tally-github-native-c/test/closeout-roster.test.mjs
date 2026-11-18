@@ -612,3 +612,284 @@ test('canonical unedited Web Builder handoff replacement v2 is read back as VERI
   assert.equal(result.handoffRef,commentUrl(260,handoffId));
   assert.equal(result.receiptRef,commentUrl(260,receiptId));
 });
+
+// ---------------------------------------------------------------------------
+// A2 dual-Epoch successor read contract (#392/6985978779): the original
+// S0-only reader/writer semantics above are historical and unchanged; the
+// wrapper proves BOTH pins with explicit FROZEN_HISTORICAL_VERIFIED versus
+// CURRENT_STRUCTURAL_COMPATIBLE statuses and zero CAS writes.
+// ---------------------------------------------------------------------------
+import {createHash} from 'node:crypto';
+import {
+  createHostVersionTaskDagDualEpochReader,
+  versionDagIdentityDigests
+} from '../src/closeout-roster.mjs';
+
+const s1Sha='1'.repeat(40),s2Sha='2'.repeat(40);
+function currentNativeProjection({pack=validPack(),sourceSha,progressed=false}={}){
+  const roster=progressed?pack.taskIssues.map((t,i)=>i===0
+    ?{...t,updatedAt:'2026-11-19T10:00:00Z'}:t):pack.taskIssues;
+  const base=nativeProjection({pack:{...pack,taskIssues:roster}});
+  return {...base,source:{repository,sourceSha,currentness:'CURRENT',readback:'VERIFIED'},
+    dag:{...base.dag,source:{repository,sourceSha,currentness:'CURRENT',readback:'VERIFIED'},
+      asOf:{sourceSha}}};
+}
+function dualEpochHarness({pack=validPack(),store=memoryStore(),
+  headShas=[versionSha],ancestryResult={connected:true,repository,baseSha:versionSha,
+    headSha:s1Sha,ancestry:'BASE_IS_ANCESTOR'},
+  currentRoster=null,nowValue='2026-11-19T10:00:00.000Z'}={}){
+  const h=freezeHarness({pack,store});
+  let headReads=0;
+  const branchHeadReader=async()=>{
+    const sha=headShas[Math.min(headReads++,headShas.length-1)];
+    return {connected:true,repository,versionId,headSha:sha};
+  };
+  const reader=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:h.store,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,branchHeadReader,ancestryReader:
+      async()=>ancestryResult,
+    currentRosterReader:currentRoster??(async({sourceSha})=>
+      currentNativeProjection({pack,sourceSha})),
+    now:()=>nowValue
+  });
+  return {...h,reader};
+}
+function successorWitness({pack=validPack(),observedVersionSha=s1Sha,
+  extraKeys={},omit=[]}={}){
+  const digests=versionDagIdentityDigests({taskIssues:pack.taskIssues,edges:pack.edges});
+  const base={
+    schema:'tally/v2/source-successor-compatibility-witness/v1',
+    repository,versionId,freezeBaseSha:versionSha,observedVersionSha,
+    frozenPackBlobSha:packBlobSha,
+    versionDagKey:'tally:v2:version-task-dag:'+createHash('sha256').update(repository+'#'+versionId).digest('hex'),
+    original51IdsDigest:digests.original51IdsDigest,
+    native29EdgeDigest:digests.native29EdgeDigest,
+    changedCodeBlobs:[{path:'packages/tally-github-native-c/src/closeout-roster.mjs',
+      beforeBlob:'3'.repeat(40),afterBlob:'4'.repeat(40)}],
+    affectedAbiDigest:'5'.repeat(64),
+    reviewRef:'https://github.com/'+repository+'/pull/900#pullrequestreview-1',
+    reviewedHead:observedVersionSha,
+    scopeDecisionRef:'https://github.com/'+repository+'/issues/392#issuecomment-6986858229',
+    ciRefs:['https://ci.kaicreator.com/repos/12/pipeline/900/1'],
+    issuedAt:'2026-11-19T09:00:00.000Z',expiresAt:'2026-11-26T09:00:00.000Z',
+    revoked:false,
+    ...extraKeys
+  };
+  for(const k of omit)delete base[k];
+  return base;
+}
+
+test('POS-A2-01: S1=S0 keeps original reader semantics, historical and same-source current, zero mutation',async()=>{
+  const h=dualEpochHarness();
+  const frozen=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(frozen.status,'FROZEN');
+  const before=h.store.count();
+  const result=await h.reader.readDualEpoch();
+  assert.equal(result.connected,true);
+  assert.equal(result.historical.status,'FROZEN_HISTORICAL_VERIFIED');
+  assert.equal(result.historical.source.currentness,'FROZEN_HISTORICAL');
+  assert.equal(result.current.status,'CURRENT_SAME_SOURCE');
+  assert.equal(result.current.qualified,true);
+  assert.equal(result.current.currentness,'CURRENT');
+  assert.equal(result.epoch.ancestry,'S1_EQUALS_S0');
+  assert.equal(result.compatibilityWitness.present,false);
+  assert.equal(result.authorized,false);assert.equal(result.admitted,false);
+  assert.equal(result.taskPass,false);assert.equal(result.releasePass,false);
+  assert.equal(h.store.count(),before);
+  // the original S0-only reader keeps its historical semantics unchanged
+  const legacy=await dagReader(h).readFrozenDag({repository,versionId,sourceSha:versionSha});
+  assert.equal(legacy.connected,true);
+  assert.equal(legacy.source.currentness,'CURRENT');
+});
+
+test('POS-A2-02: S1 descendant without a qualified witness returns historical=true/current=false',async()=>{
+  const h=dualEpochHarness({headShas:[s1Sha,s1Sha],
+    currentRoster:async({sourceSha})=>currentNativeProjection({sourceSha,progressed:true})});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const result=await h.reader.readDualEpoch();
+  assert.equal(result.connected,true);
+  assert.equal(result.historical.status,'FROZEN_HISTORICAL_VERIFIED');
+  assert.equal(result.historical.historical,true);
+  assert.equal(result.current.qualified,false);
+  assert.equal(result.current.currentness,'STALE');
+  assert.equal(result.current.reason,'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED');
+  assert.equal(result.current.observedVersionSha,s1Sha);
+  assert.equal(result.current.taskClaims,'UNVERIFIED');
+  assert.match(result.current.original51IdsDigest,/^[a-f0-9]{64}$/);
+  assert.equal(result.authorized,false);assert.equal(result.taskPass,false);
+  assert.equal(h.store.count(),1);
+});
+
+test('POS-A2-03: exact authenticated non-expired witness yields CURRENT_STRUCTURAL_COMPATIBLE only for this S1',async()=>{
+  const h=dualEpochHarness({headShas:[s1Sha,s1Sha],
+    currentRoster:async({sourceSha})=>currentNativeProjection({sourceSha,progressed:true})});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const witness=successorWitness();
+  const result=await h.reader.readDualEpoch({compatibilityWitness:witness});
+  assert.equal(result.connected,true);
+  assert.equal(result.current.status,'CURRENT_STRUCTURAL_COMPATIBLE');
+  assert.equal(result.current.qualified,true);
+  assert.equal(result.current.currentness,'CURRENT');
+  assert.equal(result.current.taskClaims,'UNVERIFIED');
+  assert.equal(result.compatibilityWitness.present,true);
+  assert.equal(result.compatibilityWitness.valid,true);
+  assert.equal(result.compatibilityWitness.reviewedHead,s1Sha);
+  assert.equal(result.authorized,false);assert.equal(result.admitted,false);
+  assert.equal(result.taskPass,false);assert.equal(result.releasePass,false);
+  // a different S1 invalidates the same witness (exact-S1 scoping)
+  const other=dualEpochHarness({headShas:[s2Sha,s2Sha],
+    currentRoster:async({sourceSha})=>currentNativeProjection({sourceSha})});
+  await other.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await other.reader.readDualEpoch({compatibilityWitness:witness})).reason,
+    'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+});
+
+test('NEG-A2-01: force-pushed/unproven ancestry or S2 appearing during read fail closed',async()=>{
+  const diverged=dualEpochHarness({headShas:[s1Sha,s1Sha],
+    ancestryResult:{connected:false,reason:'SUCCESSOR_ANCESTRY_UNPROVEN'}});
+  await diverged.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await diverged.reader.readDualEpoch()).reason,'SUCCESSOR_ANCESTRY_UNPROVEN');
+  const drifted=dualEpochHarness({headShas:[s1Sha,s2Sha]});
+  await drifted.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await drifted.reader.readDualEpoch()).reason,'SUCCESSOR_BRANCH_DRIFT_DURING_READ');
+});
+
+test('NEG-A2-02: changed code with an unreviewed/impersonal witness is refused',async()=>{
+  const h=dualEpochHarness({headShas:[s1Sha,s1Sha]});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  for(const mutant of [
+    successorWitness({omit:['ciRefs']}),
+    successorWitness({omit:['reviewRef']}),
+    successorWitness({omit:['changedCodeBlobs']}),
+    successorWitness({extraKeys:{reviewRef:'https://github.com/evil/tally/pull/1'}}),
+  ]){
+    const result=await h.reader.readDualEpoch({compatibilityWitness:mutant});
+    assert.equal(result.connected,false);
+    assert.equal(result.reason,'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+  }
+});
+
+test('NEG-A2-03: CAS revision or frozen Pack/witness mismatch fails closed',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  let reads=0;
+  const unstableStore={
+    async get(key){
+      const value=await h.store.get(key);
+      reads++;
+      if(reads===2)return {...value,revision:value.revision+1};
+      return value;
+    }
+  };
+  const reader=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:unstableStore,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:true,repository,versionId,headSha:s1Sha}),
+    ancestryReader:async()=>({connected:true,repository,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:async({sourceSha})=>currentNativeProjection({sourceSha})});
+  assert.equal((await reader.readDualEpoch()).reason,'FROZEN_DAG_CHANGED_DURING_READ');
+  const tampered=dualEpochHarness();
+  await tampered.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const badPackReader=async()=>({status:'VERIFIED',blobSha:packBlobSha,
+    content:JSON.stringify({...validPack(),edges:[]})});
+  const r2=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:tampered.store,
+    taskPackReader:badPackReader,reviewWitnessReader:tampered.reviewWitnessReader,
+    ownerApprovalReader:tampered.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:true,repository,versionId,headSha:s1Sha}),
+    ancestryReader:async()=>({connected:true,repository,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:async({sourceSha})=>currentNativeProjection({sourceSha})});
+  assert.equal((await r2.readDualEpoch()).reason,'FROZEN_DAG_CONTENT_MISMATCH');
+});
+
+test('NEG-A2-04: native 51/29 drift, duplicate or foreign Issue at S1 is refused',async()=>{
+  const h=dualEpochHarness({headShas:[s1Sha,s1Sha],currentRoster:async({sourceSha})=>{
+    const pack=validPack();
+    const roster=pack.taskIssues.slice(1); // one missing
+    const base=currentNativeProjection({sourceSha});
+    return {...base,
+      tasks:roster.map(t=>({id:String(t.issueNumber),versionId,title:t.title,
+        issueState:t.issueState,updatedAt:t.updatedAt})),
+      dag:{...base.dag,nodes:roster.map(t=>({taskId:String(t.issueNumber),versionId}))}};
+  }});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await h.reader.readDualEpoch()).reason,'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  const reversed=dualEpochHarness({headShas:[s1Sha,s1Sha],currentRoster:async({sourceSha})=>{
+    const base=currentNativeProjection({sourceSha});
+    return {...base,dag:{...base.dag,edges:[{from:'264',to:'260',kind:'NATIVE',
+      evidenceRef:issueUrl(260),dependencyRef:issueUrl(264)}]}};
+  }});
+  await reversed.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await reversed.reader.readDualEpoch()).reason,'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+});
+
+test('NEG-A2-05: an S0 grant or authorization-carrying extra witness key never gains S1 authority',async()=>{
+  const h=dualEpochHarness({headShas:[s1Sha,s1Sha]});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const staleGrant=successorWitness({observedVersionSha:versionSha});
+  assert.equal((await h.reader.readDualEpoch({compatibilityWitness:staleGrant})).reason,
+    'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+  const forge=successorWitness({extraKeys:{authorized:true,admitted:true}});
+  const forged=await h.reader.readDualEpoch({compatibilityWitness:forge});
+  assert.equal(forged.reason,'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+  const expired=successorWitness({extraKeys:{expiresAt:'2026-11-01T00:00:00.000Z'}});
+  assert.equal((await h.reader.readDualEpoch({compatibilityWitness:expired})).reason,
+    'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+});
+
+test('ERR-A2-01: GitHub head/transport failures stay denied and unknown, never empty-healthy',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const deniedHead=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:h.store,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:false,reason:'GITHUB_ACCESS_DENIED'}),
+    ancestryReader:async()=>({connected:true,repository,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:async({sourceSha})=>currentNativeProjection({sourceSha})});
+  assert.equal((await deniedHead.readDualEpoch()).reason,'SUCCESSOR_HEAD_OBSERVATION_UNQUALIFIED');
+  const throwingRoster=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:h.store,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:true,repository,versionId,headSha:s1Sha}),
+    ancestryReader:async()=>({connected:true,repository,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:async()=>{throw new Error('GH 500');}});
+  assert.equal((await throwingRoster.readDualEpoch()).reason,'FROZEN_DAG_READ_FAILED');
+});
+
+test('ERR-A2-02: Host CAS unavailable fails closed as unknown',async()=>{
+  const h=freezeHarness();
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const brokenStore={async get(){throw new Error('SQLITE_BUSY');}};
+  const reader=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:brokenStore,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:true,repository,versionId,headSha:versionSha}),
+    ancestryReader:async()=>({connected:true,repository,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:async({sourceSha})=>currentNativeProjection({sourceSha})});
+  const result=await reader.readDualEpoch();
+  assert.equal(result.connected,false);
+  assert.equal(result.reason,'FROZEN_DAG_READ_FAILED');
+});
+
+test('identity digests are canonical and cohort-sensitive; the dual-Epoch reader requires its trusted ports',async()=>{
+  const pack=validPack();
+  const a=versionDagIdentityDigests({taskIssues:pack.taskIssues,edges:pack.edges});
+  const reordered=versionDagIdentityDigests({taskIssues:[...pack.taskIssues].reverse(),
+    edges:[...pack.edges].reverse()});
+  assert.equal(a.original51IdsDigest,reordered.original51IdsDigest);
+  assert.equal(a.native29EdgeDigest,reordered.native29EdgeDigest);
+  const retitled=versionDagIdentityDigests({taskIssues:pack.taskIssues.map((t,i)=>
+    i===0?{...t,title:'Task 211 renamed'}:t),edges:pack.edges});
+  assert.notEqual(a.original51IdsDigest,retitled.original51IdsDigest);
+  assert.throws(()=>createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:memoryStore(),
+    taskPackReader:async()=>({}),reviewWitnessReader:async()=>({}),
+    ownerApprovalReader:async()=>({}),branchHeadReader:async()=>({}),
+    ancestryReader:async()=>({}),
+    now:()=>''}),/TRUSTED_DUAL_EPOCH_READER_REQUIRED/);
+});

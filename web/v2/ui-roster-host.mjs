@@ -287,3 +287,136 @@ export function createUiRosterHost({repository,versionId,expectedSha,
   }
   return Object.freeze({roster});
 }
+
+// ---------------------------------------------------------------------------
+// A2 dual-Epoch UI projection (#392/6983271743 + #392/6985978779). Separately
+// selected S0-historical / S1-current technical view over the read-only
+// successor reader in closeout-roster.mjs. The strict single-SHA contract in
+// createUiRosterHost/frozenOk above is preserved unchanged. This projection
+// accepts ONLY an authenticated forward compatibility witness plus the
+// original CAS record, re-checks the current 51/29 identities itself, and
+// keeps the Claim projected source version clearly separate from the frozen
+// source. It never manufactures a successful Claim or Task outcome from an
+// S1 structural match.
+// ---------------------------------------------------------------------------
+function frozenHistoricalOk(historical,repository,versionId,freezeBaseSha){
+  if(historical?.status!=='FROZEN_HISTORICAL_VERIFIED'||historical?.historical!==true||
+     historical?.source?.repository!==repository||
+     historical.source.sourceSha!==freezeBaseSha||
+     historical.source.currentness!=='FROZEN_HISTORICAL'||
+     historical.source.readback!=='VERIFIED'||historical.versionId!==versionId||
+     historical.witness?.status!=='INDEPENDENTLY_VERIFIED'||
+     historical.witness?.sourceSha!==freezeBaseSha||
+     historical.witness?.reviewedHeadSha!==freezeBaseSha||
+     typeof historical.witness?.author!=='string'||!historical.witness.author||
+     typeof historical.witness?.reviewer!=='string'||!historical.witness.reviewer||
+     !SHA.test(historical.witness?.blobSha??'')||
+     typeof historical.witness.reviewRef!=='string'||
+     !historical.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
+     historical.ownerApproval?.status!=='OWNER_APPROVED'||
+     historical.ownerApproval?.sourceSha!==freezeBaseSha||
+     historical.ownerApproval?.owner!==repository.split('/')[0]||
+     typeof historical.ownerApproval.approvalRef!=='string'||
+     !historical.ownerApproval.approvalRef.startsWith('https://github.com/'+repository+'/')||
+     typeof historical.frozenAt!=='string'||!Number.isFinite(Date.parse(historical.frozenAt))||
+     historical.frozen?.versionId!==versionId||
+     historical.frozen?.blobSha!==historical.witness.blobSha||
+     !Array.isArray(historical.frozen?.taskIssues)||historical.frozen.taskIssues.length<1||
+     historical.frozen.taskIssues.length>200||
+     !Array.isArray(historical.frozen?.edges)||historical.frozen.edges.length>2000||
+     !Array.isArray(historical.frozen?.claimSubjects)||
+     historical.frozen.claimSubjects.length!==historical.frozen.taskIssues.length)
+    return false;
+  const tasks=historical.frozen.taskIssues;
+  if(tasks.some(n=>!Number.isSafeInteger(n)||n<1)||
+     new Set(tasks).size!==tasks.length)return false;
+  const known=new Set(tasks.map(String)),subjects=new Set();
+  for(const s of historical.frozen.claimSubjects){
+    if(!s||!known.has(String(s.issueNumber))||subjects.has(String(s.issueNumber))||
+       !SHA.test(s.sourceSha??'')||
+       !['builder','reviewer','validator'].includes(s.actorRole)||
+       s.protectedClaimKey!==repository+'#'+s.issueNumber+':'+s.actorRole+':__default__'||
+       !['OBSERVED_COMMENT_SELF_REPORTED_CLAIM','NO_CLAIM_EVENT_EXPECTED'].includes(s.candidateStatus))
+      return false;
+    subjects.add(String(s.issueNumber));
+  }
+  if(subjects.size!==known.size)return false;
+  const edges=new Set();
+  for(const e of historical.frozen.edges){
+    if(!e||!known.has(String(e.from))||!known.has(String(e.to))||
+       String(e.from)===String(e.to)||!['NATIVE','PLANNED'].includes(e.kind))
+      return false;
+    const k=edgeId(e.from,e.to);
+    if(edges.has(k))return false;
+    edges.add(k);
+  }
+  return true;
+}
+export function createUiRosterDualEpochHost({repository,versionId,freezeBaseSha,
+  dualEpochHost}={}){
+  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+     !SHA.test(freezeBaseSha??'')||
+     typeof dualEpochHost?.readDualEpoch!=='function')
+    throw TypeError('DUAL_EPOCH_ROSTER_SCOPE_REQUIRED');
+  async function dualEpoch(scope={}){
+    if(scope.projectId!==undefined&&scope.projectId!==repository||
+       scope.versionId!==undefined&&scope.versionId!==versionId)
+      return denial('ROSTER_SCOPE_MISMATCH');
+    try{
+      const result=await dualEpochHost.readDualEpoch({
+        compatibilityWitness:scope.compatibilityWitness??null});
+      if(result?.connected!==true)return denial(result?.reason??'FROZEN_DAG_HOST_NOT_CONNECTED');
+      const h=result.historical;
+      if(!frozenHistoricalOk(h,repository,versionId,freezeBaseSha))
+        return denial('FROZEN_DAG_SOURCE_UNQUALIFIED');
+      const c=result.current;
+      if(!SHA.test(c?.observedVersionSha??'')||c?.historical!==false||
+         c?.taskClaims!=='UNVERIFIED'||c?.source?.repository!==repository||
+         c.source?.sourceSha!==c.observedVersionSha||
+         c.source?.currentness!=='CURRENT'||c.source?.readback!=='VERIFIED'||
+         !Number.isSafeInteger(c.taskIssueCount)||c.taskIssueCount<1||
+         !Number.isSafeInteger(c.nativeEdgeCount)||
+         result.authorized!==false||result.admitted!==false||
+         result.taskPass!==false||result.releasePass!==false)
+        return denial('SUCCESSOR_PROJECTION_UNQUALIFIED');
+      // A CURRENT_STRUCTURAL_COMPATIBLE projection is only possible with a
+      // witnessed forward decision; CURRENT_SAME_SOURCE is the S1==S0 reuse
+      // of the original R83 verification. An unqualified descendant stays an
+      // honest connected STALE projection (historical verified, current=false).
+      const witness=result.compatibilityWitness;
+      if(c.status===null||c.status===undefined){
+        if(c.qualified!==false||c.currentness!=='STALE'||typeof c.reason!=='string')
+          return denial('SUCCESSOR_PROJECTION_UNQUALIFIED');
+      }else if(c.status==='CURRENT_STRUCTURAL_COMPATIBLE'){
+        if(!(witness?.present===true&&witness?.valid===true))
+          return denial('SUCCESSOR_PROJECTION_UNQUALIFIED');
+      }else if(c.status!=='CURRENT_SAME_SOURCE'){
+        return denial('SUCCESSOR_PROJECTION_UNQUALIFIED');
+      }
+      const currentQualified=c.qualified===true&&c.currentness==='CURRENT';
+      return {connected:true,
+        frozenSource:{repository,sourceSha:freezeBaseSha,
+          currentness:'FROZEN_HISTORICAL',readback:'VERIFIED'},
+        currentSource:{repository,sourceSha:c.observedVersionSha,
+          currentness:'CURRENT',readback:'VERIFIED'},
+        epoch:{freezeBaseSha,observedVersionSha:c.observedVersionSha,
+          ancestry:c.ancestry},
+        currentnessStatus:c.status,currentness:c.currentness,
+        currentReason:c.reason??null,
+        rosterCoverage:currentQualified?'VERIFIED_COMPLETE':
+          'HISTORICAL_VERIFIED_CURRENT_STALE',
+        frozenBlobSha:h.frozen.blobSha,taskPackRef:h.taskPackRef,
+        taskCount:c.taskIssueCount,nativeEdgeCount:c.nativeEdgeCount,
+        frozenEdgeCount:h.frozen.edges.length,
+        identityDigests:{original51IdsDigest:c.original51IdsDigest,
+          native29EdgeDigest:c.native29EdgeDigest},
+        compatibilityWitness:witness,
+        claimProjection:{claimSourceEpoch:'FROZEN_S0',
+          frozenClaimSourceSha:freezeBaseSha,
+          currentObservedSourceSha:c.observedVersionSha,
+          claimReadback:'NOT_RUN_IN_SUCCESSOR_PROJECTION'},
+        authorized:false,admitted:false,taskPass:false,releasePass:false};
+    }catch{return denial('ROSTER_SOURCE_READ_FAILED');}
+  }
+  return Object.freeze({dualEpoch});
+}

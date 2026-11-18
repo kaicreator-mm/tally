@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createUiRosterHost} from './ui-roster-host.mjs';
+import {createUiRosterHost,createUiRosterDualEpochHost} from './ui-roster-host.mjs';
 
 const repository='org/tally',versionId='version/v2',versionSha='a'.repeat(40);
 const taskPackBlobSha='b'.repeat(40);
@@ -302,4 +302,130 @@ test('wrong source SHA, Task Pack blob, review reference or Owner approval denie
     assert.equal(result.connected,false);
     assert.equal(result.reason,'FROZEN_DAG_SOURCE_UNQUALIFIED');
   }
+});
+
+// ---------------------------------------------------------------------------
+// A2 dual-Epoch UI projection (#392/6985978779): separately selected
+// S0-historical / S1-current technical view. The strict single-SHA
+// createUiRosterHost contract above is unchanged. Claim projection stays
+// separate; an S1 structural match never manufactures Claim or Task success.
+// ---------------------------------------------------------------------------
+const s0Sha='6'.repeat(40),s1Sha='8'.repeat(40);
+const a2Identity={original51IdsDigest:'0'.repeat(64),native29EdgeDigest:'0'.repeat(64)};
+const a2Historical=()=>({status:'FROZEN_HISTORICAL_VERIFIED',historical:true,
+  source:{repository,sourceSha:s0Sha,currentness:'FROZEN_HISTORICAL',readback:'VERIFIED'},
+  versionId,taskPackRef,frozenAt:'2026-11-02T00:00:00Z',
+  witness:{status:'INDEPENDENTLY_VERIFIED',blobSha:taskPackBlobSha,sourceSha:s0Sha,
+    reviewedHeadSha:s0Sha,author:'source-author',reviewer:'independent-reviewer',
+    reviewRef:'https://github.com/org/tally/pull/258#pullrequestreview-1'},
+  ownerApproval:{status:'OWNER_APPROVED',sourceSha:s0Sha,owner:'org',
+    approvalRef:'https://github.com/org/tally/issues/260#issuecomment-1'},
+  frozen:{blobSha:taskPackBlobSha,taskPackRef,versionId,taskIssues:[1,2],edges:[edge],
+    claimSubjects:[subject(1),noSubject]}});
+const a2Current=({qualified=true,status='CURRENT_STRUCTURAL_COMPATIBLE'}={})=>({
+  qualified,status,historical:false,
+  taskClaims:'UNVERIFIED',currentness:qualified?'CURRENT':'STALE',
+  reason:qualified?null:'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED',
+  source:{repository,sourceSha:s1Sha,currentness:'CURRENT',readback:'VERIFIED'},
+  observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1',
+  taskIssueCount:2,nativeEdgeCount:1,...a2Identity});
+const a2Witness=()=>({present:true,valid:true,
+  reviewRef:'https://github.com/org/tally/pull/900#pullrequestreview-1',
+  reviewedHead:s1Sha,scopeDecisionRef:'https://github.com/org/tally/issues/392#issuecomment-1',
+  ciRefs:['https://ci.kaicreator.com/repos/12/pipeline/900/1'],
+  issuedAt:'2026-11-19T09:00:00.000Z',expiresAt:'2026-11-26T09:00:00.000Z',revoked:false});
+const a2Host=(result,f=async()=>result)=>
+  createUiRosterDualEpochHost({repository,versionId,freezeBaseSha:s0Sha,
+    dualEpochHost:{readDualEpoch:async args=>{await f(args);return typeof result==='function'?result(args):result;}}});
+
+test('A2 dual-Epoch roster: witnessed CURRENT_STRUCTURAL_COMPATIBLE keeps epochs and claims separate',async()=>{
+  const host=a2Host({connected:true,
+    epoch:{freezeBaseSha:s0Sha,observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1'},
+    historical:a2Historical(),current:a2Current({}),
+    compatibilityWitness:a2Witness(),
+    authorized:false,admitted:false,taskPass:false,releasePass:false});
+  const r=await host.dualEpoch({projectId:repository,versionId});
+  assert.equal(r.connected,true);
+  assert.equal(r.rosterCoverage,'VERIFIED_COMPLETE');
+  assert.equal(r.currentnessStatus,'CURRENT_STRUCTURAL_COMPATIBLE');
+  assert.equal(r.frozenSource.sourceSha,s0Sha);
+  assert.equal(r.currentSource.sourceSha,s1Sha);
+  assert.equal(r.epoch.observedVersionSha,s1Sha);
+  assert.equal(r.taskCount,2);
+  assert.equal(r.claimProjection.claimReadback,'NOT_RUN_IN_SUCCESSOR_PROJECTION');
+  assert.equal(r.claimProjection.frozenClaimSourceSha,s0Sha);
+  assert.equal(r.claimProjection.currentObservedSourceSha,s1Sha);
+  assert.equal(r.authorized,false);assert.equal(r.admitted,false);
+  assert.equal(r.taskPass,false);assert.equal(r.releasePass,false);
+});
+
+test('A2 dual-Epoch roster: S1==S0 same-source reuse is qualified without a witness',async()=>{
+  const host=a2Host({connected:true,
+    epoch:{freezeBaseSha:s0Sha,observedVersionSha:s0Sha,ancestry:'S1_EQUALS_S0'},
+    historical:a2Historical(),
+    current:{...a2Current({qualified:true,status:'CURRENT_SAME_SOURCE'}),
+      observedVersionSha:s0Sha,ancestry:'S1_EQUALS_S0',
+      source:{repository,sourceSha:s0Sha,currentness:'CURRENT',readback:'VERIFIED'}},
+    compatibilityWitness:{present:false,valid:null},
+    authorized:false,admitted:false,taskPass:false,releasePass:false});
+  const r=await host.dualEpoch();
+  assert.equal(r.connected,true);
+  assert.equal(r.rosterCoverage,'VERIFIED_COMPLETE');
+  assert.equal(r.currentnessStatus,'CURRENT_SAME_SOURCE');
+  assert.equal(r.currentSource.sourceSha,s0Sha);
+});
+
+test('A2 dual-Epoch roster: unwitnessed descendant stays honest HISTORICAL_VERIFIED_CURRENT_STALE',async()=>{
+  const host=a2Host({connected:true,
+    epoch:{freezeBaseSha:s0Sha,observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1'},
+    historical:a2Historical(),current:a2Current({qualified:false,status:null}),
+    compatibilityWitness:{present:false,valid:null},
+    authorized:false,admitted:false,taskPass:false,releasePass:false});
+  const r=await host.dualEpoch({projectId:repository,versionId});
+  assert.equal(r.connected,true);
+  assert.equal(r.rosterCoverage,'HISTORICAL_VERIFIED_CURRENT_STALE');
+  assert.equal(r.currentness,'STALE');
+  assert.equal(r.currentReason,'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED');
+});
+
+test('A2 dual-Epoch roster: compatibility is never manufactured without a valid witness projection',async()=>{
+  for(const witness of [
+    {present:false,valid:null},
+    {present:true,valid:false},
+  ]){
+    const host=a2Host({connected:true,
+      epoch:{freezeBaseSha:s0Sha,observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1'},
+      historical:a2Historical(),current:a2Current({}),
+      compatibilityWitness:witness,
+      authorized:false,admitted:false,taskPass:false,releasePass:false});
+    const r=await host.dualEpoch();
+    assert.equal(r.connected,false);
+    assert.equal(r.reason,'SUCCESSOR_PROJECTION_UNQUALIFIED');
+  }
+});
+
+test('A2 dual-Epoch roster: reader denials pass through and tampering fails closed',async()=>{
+  const denied=await a2Host({connected:false,reason:'SUCCESSOR_ANCESTRY_UNPROVEN'}).dualEpoch();
+  assert.equal(denied.connected,false);
+  assert.equal(denied.reason,'SUCCESSOR_ANCESTRY_UNPROVEN');
+  const tampered=await a2Host({connected:true,
+    epoch:{freezeBaseSha:s0Sha,observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1'},
+    historical:{...a2Historical(),witness:{...a2Historical().witness,status:'SELF_REPORTED'}},
+    current:a2Current({}),compatibilityWitness:a2Witness(),
+    authorized:false,admitted:false,taskPass:false,releasePass:false}).dualEpoch();
+  assert.equal(tampered.reason,'FROZEN_DAG_SOURCE_UNQUALIFIED');
+  const grantful=await a2Host({connected:true,
+    epoch:{freezeBaseSha:s0Sha,observedVersionSha:s1Sha,ancestry:'S0_ANCESTOR_OF_S1'},
+    historical:a2Historical(),current:a2Current({}),
+    compatibilityWitness:a2Witness(),
+    authorized:true,admitted:false,taskPass:false,releasePass:false}).dualEpoch();
+  assert.equal(grantful.reason,'SUCCESSOR_PROJECTION_UNQUALIFIED');
+  const scope=await a2Host({connected:true,
+    epoch:{},historical:a2Historical(),current:a2Current({}),
+    compatibilityWitness:a2Witness(),
+    authorized:false,admitted:false,taskPass:false,releasePass:false})
+    .dualEpoch({projectId:'evil/repo'});
+  assert.equal(scope.reason,'ROSTER_SCOPE_MISMATCH');
+  assert.throws(()=>createUiRosterDualEpochHost({repository,versionId,
+    freezeBaseSha:s0Sha,dualEpochHost:{}}),/DUAL_EPOCH_ROSTER_SCOPE_REQUIRED/);
 });
