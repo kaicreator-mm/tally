@@ -237,18 +237,29 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
     return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
   // After invoking dispatch, an exception or unqualified response cannot
   // prove whether K/Host completed its effect. Do not issue a second call.
-  let result;
   try{
-    result=await host.dispatchStep({
+    const result=await host.dispatchStep({
       ...scope,sourceSha:currentSha,journeyId:payload.journeyId,
       stepId:payload.stepId,revision:payload.revision,answers:payload.answers});
+    if(!plain(result))return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
+    // Accessor ACKs are not stable snapshots. Read own data descriptors once;
+    // Proxy traps and all validation/projection failures remain UNKNOWN.
+    const okDescriptor=Object.getOwnPropertyDescriptor(result,'ok');
+    const nextDescriptor=Object.getOwnPropertyDescriptor(result,'nextStep');
+    if(!okDescriptor||!nextDescriptor||
+       !Object.prototype.hasOwnProperty.call(okDescriptor,'value')||
+       !Object.prototype.hasOwnProperty.call(nextDescriptor,'value')||
+       okDescriptor.value!==true)
+      return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
+    const nextStep=nextDescriptor.value;
+    const projected=nextStep===null?null:projectStep(nextStep);
+    if(nextStep!==null&&projected===null)
+      return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
+    if(projected!==null&&
+       !verifyGuidedSnapshot({...read,step:projected,projectId:scope.projectId,
+         versionId:scope.versionId,currentness:'CURRENT',readback:'VERIFIED'},
+         scope,currentSha))
+      return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
+    return {connected:true,ok:true,nextStep:projected};
   }catch{return unknown('GUIDED_HOST_DISPATCH_OUTCOME_UNKNOWN');}
-  if(!plain(result)||result.ok!==true||
-    (result.nextStep!==null&&
-     !verifyGuidedSnapshot({...read,step:result.nextStep,projectId:scope.projectId,
-       versionId:scope.versionId,currentness:'CURRENT',readback:'VERIFIED'},
-       scope,currentSha)))
-    return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
-  return {connected:true,ok:true,nextStep:
-    result.nextStep===null?null:projectStep(result.nextStep)};
 }
