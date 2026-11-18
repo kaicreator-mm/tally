@@ -332,95 +332,13 @@ async function body(req,limit=4096){
   let text='';for await(const chunk of req){text+=chunk;if(text.length>limit)throw new Error('REQUEST_TOO_LARGE');}
   return text;
 }
-// ---- UI-E #232: dependency-free v2 read models (plain fetch, Host token) ----
-const V2_REPO='kaicreator-mm/tally';
-const V2_TOKEN=()=>process.env.TALLY_GITHUB_READ_TOKEN??null;
-const V2_TIMEOUT=15000;
-async function ghJson(path){
-  const token=V2_TOKEN();
-  if(!token||token.length<8)return {ok:false,reason:'HOST_TOKEN_UNAVAILABLE'};
-  try{
-    const response=await fetch(`https://api.github.com${path}`,{
-      headers:{authorization:`Bearer ${token}`,accept:'application/vnd.github+json',
-        'user-agent':'tally-v2-alm-readmodel'},
-      signal:AbortSignal.timeout(V2_TIMEOUT)});
-    if(!response.ok)return {ok:false,reason:`GITHUB_${response.status}`};
-    return {ok:true,data:await response.json()};
-  }catch(error){
-    return {ok:false,reason:'GITHUB_TRANSPORT_UNKNOWN'};
-  }
-}
-const notConnected=(model)=>Object.freeze({connected:false,
-  reason:'NOT_CONNECTED',model,unknown:true});
-async function v2Catalog(){
-  // Branch list paginates far beyond 100 in this repository; collect enough
-  // pages to cover version/* refs (sorted refs keep version/* near the end).
-  const names=[];
-  for(let page=1;page<=4;page++){
-    const branches=await ghJson(`/repos/${V2_REPO}/branches?per_page=100&page=${page}`);
-    if(!branches.ok)return notConnected('catalog');
-    names.push(...branches.data.map(branch=>branch.name));
-    if(branches.data.length<100)break;
-  }
-  const versions=names
-    .filter(name=>name==='main'||name.startsWith('version/'))
-    .map(name=>({id:name,projectId:V2_REPO,label:name,ref:name}));
-  return Object.freeze({connected:true,
-    projects:[{id:V2_REPO,title:'tally',repository:V2_REPO}],
-    versionsByProject:{[V2_REPO]:versions},defaultVersionId:'version/v2'});
-}
-const V2_TITLE=/^\[v2\](?:\[(UI-[A-H]|J0\d\w*)\])?(?:\[P([012])\])?\s*(.+)$/;
-function v2TaskFromIssue(issue){
-  const match=V2_TITLE.exec(issue.title??'');
-  return {
-    id:String(issue.number),
-    versionId:'version/v2',
-    title:match?match[3]:issue.title,
-    status:issue.state==='closed'?'done':'open',
-    severity:match&&match[2]?`P${match[2]}`:'P2',
-    blockedBy:[],
-    agentId:null,
-    // Honest: per-task claim/CI/attempt state is not derivable from the issue
-    // list read model — the shell shows UNKNOWN until deeper adapters land.
-    claimState:'UNKNOWN',attemptId:null,attemptState:'UNKNOWN',
-    prNumber:null,reviewState:'UNKNOWN',ciState:'UNKNOWN',
-    writeSet:[],requirementRef:null,updatedAt:issue.updated_at??null,
-  };
-}
-async function v2Tasks(versionId){
-  if(versionId&&versionId!=='version/v2')
-    return notConnected('tasks');
-  const issues=await ghJson(`/repos/${V2_REPO}/issues?state=open&per_page=100`);
-  if(!issues.ok)return notConnected('tasks');
-  const tasks=issues.data
-    .filter(issue=>!('pull_request' in issue))
-    .map(v2TaskFromIssue);
-  return Object.freeze({connected:true,versionId:versionId??'version/v2',tasks});
-}
-// Planned-edge table for the current UI workstream: PLANNED candidates from
-// the task DAG planning (#227 workfront) — explicitly NOT native blocked_by;
-// native edges arrive only from a future source-qualified adapter.
-const V2_PLANNED_EDGES=[
-  {from:'228',to:'232'},{from:'229',to:'232'},{from:'230',to:'232'},
-  {from:'231',to:'232'},{from:'233',to:'232'},{from:'234',to:'232'},
-  {from:'235',to:'232'},
-];
-async function v2Dag(versionId){
-  const tasks=await v2Tasks(versionId);
-  if(!tasks.connected)return notConnected('dag');
-  const nodes=tasks.tasks.map(task=>({
-    taskId:task.id,versionId:'version/v2',title:task.title,
-    status:task.status,severity:task.severity,
-    requirementGroup:null,phase:null,lane:null,agentId:null,
-    executable:false}));
-  const known=new Set(nodes.map(node=>node.taskId));
-  const edges=V2_PLANNED_EDGES
-    .filter(edge=>known.has(edge.from)&&known.has(edge.to))
-    .map(edge=>({...edge,kind:'PLANNED',evidenceRef:null,amendedAt:null}));
-  return Object.freeze({connected:true,versionId:'version/v2',
-    asOf:{sourceSha:'',frozenAt:null},
-    nodes,edges});
-}
+// ---- #264 E1: v2 read models come ONLY from the Host-composed selected
+// source (serve.mjs passes v2ReadModelHost). There is deliberately NO raw
+// open-Issue fallback, no synthetic provider/settings state and no
+// PLANNED-edge table here: any model without a mounted Host provider answers
+// honest NOT_CONNECTED. No effect path starts here.
+const notConnected=model=>Object.freeze({connected:false,
+  reason:'NOT_CONNECTED',model});
 function v2Release(versionId){
   // Advisory projection only; authoritative qualification stays in the
   // Host/C chain (#222) — the shell never derives Release PASS here.
@@ -429,30 +347,6 @@ function v2Release(versionId){
       gates:[{name:'woodpeckerCI',status:'UNKNOWN',owner:'CI'},
         {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}],
       permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}});
-}
-function v2Settings(){
-  return Object.freeze({connected:true,
-    snapshot:{agentProviders:[
-      {id:'zcode',enabled:true,cliPath:null,hostPrincipal:null,concurrency:1,
-        sandbox:null,buildSelected:true,credential:null},
-      {id:'codex',enabled:false,cliPath:null,hostPrincipal:null,concurrency:1,
-        sandbox:null,buildSelected:false,credential:null},
-      {id:'claude-code',enabled:false,cliPath:null,hostPrincipal:null,
-        concurrency:1,sandbox:null,buildSelected:false,credential:null}],
-    tallyLlm:{enabled:false,provider:null,model:null,endpoint:null,
-      promptTemplateVersion:null,privacyConsentPreviewShown:false,
-      tokenBudget:null,credential:null},
-    ci:{woodpeckerUrl:process.env.TALLY_WOODPECKER_URL??null,repoId:null,
-      profiles:['v2-alm-workspace'],webhookState:'UNKNOWN',lastReadbackAt:null},
-    git:{repositories:[V2_REPO],defaultBase:'version/v2',adsPin:null,
-      oauthScopes:[],requiredScopeGaps:V2_TOKEN()?[]:['read:project']},
-    deploymentEnvs:[],defaults:{locale:'zh-CN',defaultView:'list',
-      cascade:{workspace:'kaicreator-mm',project:null,version:null,task:null}}}});
-}
-function v2Metadata(versionId){
-  return Object.freeze({connected:true,versionId:versionId??null,
-    attempts:[],reports:[],lineage:[],learnedOutcomes:[],
-    note:'METADATA_ADAPTER_PENDING: task-meta/ADS 深层读模型尚未接入,所有条目保持空/UNKNOWN'});
 }
 const APP_DIST=new URL('../../apps/tally-web/dist/',import.meta.url);
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
@@ -475,10 +369,13 @@ async function staticAppResponse(relative){
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
   releaseHost,releaseSealedDispatch,
-  // E0 #284: Host-mounted version Task DAG seam. Clean-candidate resolution:
-  // the version/v2 baseline keeps its inline read models, so the UI-lane
-  // v2ReadModelHost/v2GuidedFormHost params of the E0 lineage baseline are
-  // deliberately NOT carried into this clean port.
+  // #264 E1: Host-composed v2 read model facade (serve.mjs). Its methods
+  // (catalog/tasks/dag/requirements, optional others) are the ONLY source of
+  // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
+  // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
+  // fail-closed admission below.
+  v2ReadModelHost,
+  // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
@@ -486,6 +383,14 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         // Privileged admit effects flow only through this K-consumer seam;
         // absent a seam the intake admit stays NOT_RUN in the UI.
         sealedDispatch:intakeSealedDispatch??null}),
+    // #264 E1: v2 GET read models flow ONLY through the Host-composed
+    // selected source (v2ReadModelHost); a model without a mounted provider
+    // answers honest NOT_CONNECTED — no raw fallback, no fabricated state.
+    readV2Model=(model,method,...args)=>{
+      if(typeof v2ReadModelHost?.[method]!=='function')
+        return notConnected(model);
+      return v2ReadModelHost[method](...args).catch(()=>notConnected(model));
+    },
     maintenance=createMaintenanceController({currentSourceSha:config.currentSourceSha},
       {host:maintenanceHost??null,
         // The only privileged maintenance path (authorized native Issue
@@ -503,7 +408,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   const server=http.createServer(async(req,res)=>{
     const origin=`http://127.0.0.1:${server.address().port}`;
     const send=(status,type,value)=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store',
-      'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"});
+      'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"});
       res.end(value);};
     try{
       const url=new URL(req.url,origin);
@@ -685,31 +590,31 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
             authorized:false,admitted:false,taskPass:false,releasePass:false};
         return send(200,'application/json',json(verified));
       }
-      // ---- UI-E #232: v2 shell read models + feature gate -----------------
-      // Honest read models: no token / unreachable GitHub ⇒ NOT_CONNECTED or
-      // UNKNOWN, never fabricated data. No effect path starts here.
+      // ---- #264 E1: v2 shell read models + feature gate -------------------
+      // Every model flows through the Host-composed selected source; a model
+      // without a mounted provider answers honest NOT_CONNECTED (never
+      // fabricated data, no raw open-Issue fallback, no synthetic provider
+      // state). No effect path starts here.
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
-        const catalog=await v2Catalog();
-        return send(200,'application/json',json(catalog));
+        return send(200,'application/json',json(await readV2Model('catalog','catalog')));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
         const versionId=url.searchParams.get('versionId');
-        const tasks=await v2Tasks(versionId);
-        return send(200,'application/json',json(tasks));
+        return send(200,'application/json',json(await readV2Model('tasks','tasks',{versionId})));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/dag'){
         const versionId=url.searchParams.get('versionId');
-        const dag=await v2Dag(versionId);
-        return send(200,'application/json',json(dag));
+        return send(200,'application/json',json(await readV2Model('dag','dag',{versionId})));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/release'){
         return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
-        return send(200,'application/json',json(v2Settings()));
+        return send(200,'application/json',json(await readV2Model('settings','settings')));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/metadata'){
-        return send(200,'application/json',json(v2Metadata(url.searchParams.get('versionId'))));
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',json(await readV2Model('metadata','metadata',{versionId})));
       }
       // Feature gate: /app serves the new shell bundle (built by
       // apps/tally-web); /diagnostics keeps the legacy test console; / picks
@@ -725,6 +630,12 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname==='/diagnostics'){
         return send(200,'text/html; charset=utf-8',
           await readFile(new URL('./journey-view.html',import.meta.url),'utf8'));
+      }
+      // The browser requests /favicon.ico automatically; this entrypoint
+      // ships no icon asset, so answer 204 No Content instead of a console
+      // error — no fabricated asset, no silent success payload.
+      if(req.method==='GET'&&url.pathname==='/favicon.ico'){
+        return send(204,'image/x-icon','');
       }
       return send(404,'text/plain','NOT_FOUND');
     }catch(error){return send(400,'application/json',json({status:'ERROR',reason:error.message}));}
