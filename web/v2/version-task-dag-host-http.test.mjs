@@ -231,6 +231,15 @@ test('serve.mjs Host-mount dynamic branch resolves the real E0 Host module at th
     missing.push(spec);
   }
   missing.sort();
-  assert.deepEqual(missing,[...UI_LANE_BOUNDARY_MODULES].sort(),
-    'only the five documented UI-lane modules may be absent at this base');
+  // #264 E1 R90 minimal repair: serve.mjs no longer references the five
+  // UI-lane boundary modules at all (they existed only in the unmerged
+  // Draft PR #258 and broke the installed ESM load). The guard tightens:
+  // EVERY enumerated relative specifier must now resolve to an existing
+  // file — the historical five are listed in UI_LANE_BOUNDARY_MODULES as
+  // the modules whose re-introduction as serve.mjs imports must stay
+  // visible in review.
+  assert.deepEqual(missing,[],
+    'every serve.mjs relative import must resolve at the repaired base');
+  assert.equal(UI_LANE_BOUNDARY_MODULES.length,5,
+    'the five retired UI-lane boundary module names stay documented');
 });

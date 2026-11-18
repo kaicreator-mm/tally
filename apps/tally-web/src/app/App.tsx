@@ -27,6 +27,7 @@ import type {TaskFilters,TaskRecord} from '../features/tasks/model.ts';
 import type {VersionDag} from '../features/dag/model.ts';
 import type {SettingsSnapshot} from '../features/settings/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
+import type {VersionMetadata} from '../features/metadata/model.ts';
 
 export function App({route,onNavigate,inboxCount=0}:{route:Route;
   onNavigate:(hash:string)=>void;inboxCount?:number}){
@@ -50,10 +51,13 @@ function routeBody(key:string,versionId:string|null):React.ReactNode{
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
-    case 'requirements':return <RequirementsView nodes={[]}/>
-    case 'qa':return <QaView records={[]}/>
+    // #264 E1: requirements/qa/maintenance have no selected server read
+    // model yet — honest NOT_CONNECTED, never a fabricated empty roster.
+    case 'requirements':return <RequirementsView nodes={[]} connected={false}/>
+    case 'qa':return <QaView records={[]} connected={false}/>
     case 'release':return <ReleaseRoute versionId={versionId}/>;
-    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]}/>;
+    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]}
+      connected={false}/>;
     case 'metadata':return <MetadataRoute versionId={versionId}/>;
     case 'agent-providers':case 'tally-llm':case 'ci':case 'git-github':
     case 'host':case 'storage':case 'security':case 'deployment-env':
@@ -89,8 +93,10 @@ function TasksRoute({versionId}:{versionId:string|null}){
   </>);
 }
 function AgentsRoute({versionId}:{versionId:string|null}){
+  // #264 E1: no agent/attempt provider is mounted in the read-only
+  // entrypoint — the panel must not claim a connected empty roster.
   return guard(versionId,
-    <AgentsPanel attempts={[]} connected/>);
+    <AgentsPanel attempts={[]} connected={false}/>);
 }
 function DagRoute({versionId}:{versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
@@ -112,16 +118,33 @@ function ReleaseRoute({versionId}:{versionId:string|null}){
       onAction={()=>{/* effects stay Host-owned; UI renders permit state */}}/>);
 }
 function MetadataRoute({versionId}:{versionId:string|null}){
+  // Both hooks run unconditionally (React hooks order); the frozen-roster
+  // Task read also supplies the expected Task ids for missing-report truth.
   const metadata=useHost<MetadataResponse>('metadata',
     adapter=>adapter.metadata(versionId??''),[versionId]);
+  const tasks=useHost<TasksResponse>('tasks',
+    adapter=>adapter.tasks(versionId??''),[versionId]);
   if(metadata.state==='loading')return <Skeleton lines={6}/>;
+  if(metadata.state==='not_connected')
+    return <EmptyState title="NOT_CONNECTED" hint={metadata.reason??undefined}/>;
   const data=metadata.data;
-  const version=data?.connected===true&&data.versionId
-    ?{versionId:data.versionId,attempts:[],reports:[],lineage:[],
-      learnedOutcomes:[]}
+  const connected=data?.connected===true;
+  // #264 E1: consume the Host-qualified arrays as-is (F6: missing telemetry
+  // must never render as observed 0); never fabricate expected ids.
+  const expectedTaskIds=tasks.state==='ready'&&tasks.data?.connected===true
+    ?tasks.data.tasks?.map(task=>task.id)??[]
+    :[];
+  const version=connected&&data
+    ?{versionId:data.versionId??versionId??'',
+      attempts:(data.attempts??[]) as VersionMetadata['attempts'],
+      reports:(data.reports??[]) as VersionMetadata['reports'],
+      lineage:(data.lineage??[]) as VersionMetadata['lineage'],
+      learnedOutcomes:(data.learnedOutcomes??[]) as
+        VersionMetadata['learnedOutcomes']}
     :null;
   return guard(versionId,
-    <MetadataCenter version={version} allVersions={[]} expectedTaskIds={[]}/>);
+    <MetadataCenter version={version} allVersions={[]}
+      expectedTaskIds={expectedTaskIds} connected={connected}/>);
 }
 function SettingsRoute(){
   const settings=useHost<SettingsResponse>('settings',
