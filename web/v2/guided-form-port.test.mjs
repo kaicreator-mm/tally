@@ -239,6 +239,8 @@ test('malformed next-step field metadata cannot be reported as connected success
   const denied=await submitGuidedStep({readCurrentStep:async()=>snapshot,
     dispatchStep:async()=>({ok:true,nextStep:malformed})},scope,sha,form);
   assert.equal(denied.reason,'GUIDED_HOST_RESULT_UNQUALIFIED');
+  assert.equal(denied.status,'UNKNOWN');
+  assert.equal(denied.connected,false);
 });
 test('engine payload with hidden or disabled required fields and optional null dispatches',async()=>{
   const branch={...step,fields:[
@@ -264,4 +266,87 @@ test('engine payload with hidden or disabled required fields and optional null d
   for(const extra of [{detail:'unseen'}, {disabled:'not allowed'}])
     assert.equal(verifyGuidedPayload({...payload,
       answers:{...payload.answers,...extra}},current),false);
+});
+
+// A sent dispatch can succeed even when its ACK is lost; never retry it.
+test('post-dispatch transport loss preserves UNKNOWN and exactly one send',async()=>{
+  let sends=0,reads=0;
+  const host={readCurrentStep:async()=>{reads++;return snapshot;},
+    dispatchStep:async()=>{sends++;throw new Error('ACK lost');}};
+  const result=await submitGuidedStep(host,scope,sha,form);
+  assert.deepEqual(result,{connected:false,status:'UNKNOWN',
+    reason:'GUIDED_HOST_DISPATCH_OUTCOME_UNKNOWN'});
+  assert.equal(reads,2);
+  assert.equal(sends,1);
+});
+test('unqualified post-dispatch outcomes never become safe DENIED',async()=>{
+  for(const value of [undefined,null,{ok:false},{ok:true},
+    {ok:true,nextStep:{...step,revision:0}}]){
+    let sends=0;
+    const result=await submitGuidedStep({readCurrentStep:async()=>snapshot,
+      dispatchStep:async()=>{sends++;return value;}},scope,sha,form);
+    assert.equal(result.connected,false);
+    assert.equal(result.status,'UNKNOWN');
+    assert.equal(result.reason,'GUIDED_HOST_RESULT_UNQUALIFIED');
+    assert.equal(sends,1);
+  }
+});
+test('second read failure is DENIED with zero dispatch sends',async()=>{
+  let reads=0,sends=0;
+  const result=await submitGuidedStep({readCurrentStep:async()=>{
+    if(++reads===2)throw new Error('read failed before dispatch');
+    return snapshot;
+  },dispatchStep:async()=>{sends++;return {ok:true,nextStep:null};}},
+  scope,sha,form);
+  assert.deepEqual(result,{connected:false,status:'DENIED',
+    reason:'GUIDED_HOST_PRE_DISPATCH_READ_FAILED'});
+  assert.equal(reads,2);
+  assert.equal(sends,0);
+});
+
+test('post-dispatch ACK accessors fail closed without replay',async()=>{
+  let changes=0;
+  const changing={ok:true};
+  Object.defineProperty(changing,'nextStep',{enumerable:true,get(){
+    changes++;
+    return changes===1?null:{...step,stepId:'next',revision:0};
+  }});
+  const cases=[
+    {name:'throwing ok getter',ack:{get ok(){throw new Error('ACK ok decoder failed');}}},
+    {name:'throwing nextStep getter',ack:{ok:true,
+      get nextStep(){throw new Error('ACK nextStep decoder failed');}}},
+    {name:'changing nextStep getter',ack:changing},
+  ];
+  for(const {name,ack} of cases){
+    let sends=0;
+    const result=await submitGuidedStep({readCurrentStep:async()=>snapshot,
+      dispatchStep:async()=>{sends++;return ack;}},scope,sha,form);
+    assert.equal(result.connected,false,name);
+    assert.equal(result.status,'UNKNOWN',name);
+    assert.equal(sends,1,name);
+  }
+});
+
+test('post-dispatch Proxy and projection failures stay UNKNOWN without replay',async()=>{
+  const cases=[
+    {name:'ACK descriptor trap',ack:new Proxy({ok:true,nextStep:null},{
+      getOwnPropertyDescriptor(target,key){
+        if(key==='nextStep')throw new Error('ACK descriptor failed');
+        return Reflect.getOwnPropertyDescriptor(target,key);
+      }})},
+    {name:'nextStep projection trap',ack:{ok:true,nextStep:new Proxy(
+      {...step,stepId:'next',revision:2},{
+        get(target,key,receiver){
+          if(key==='revision')throw new Error('nextStep projection failed');
+          return Reflect.get(target,key,receiver);
+        }})}},
+  ];
+  for(const {name,ack} of cases){
+    let sends=0;
+    const result=await submitGuidedStep({readCurrentStep:async()=>snapshot,
+      dispatchStep:async()=>{sends++;return ack;}},scope,sha,form);
+    assert.equal(result.connected,false,name);
+    assert.equal(result.status,'UNKNOWN',name);
+    assert.equal(sends,1,name);
+  }
 });
