@@ -12,6 +12,15 @@
 // families fail the quorum and a family label contradicting its own
 // disclosure (e.g. GLM presented as Gemini) is rejected — the Gemini lane
 // itself remains NOT_RUN.
+//
+// R182 repair (PR #399 review 5961447755): per-row sourceId/decisionId are
+// code-pinned semantic identities, not schema-regex-only fields. Each row must
+// bind exactly the reviewed CS2023 publisher source (looked up in BOTH graphs
+// and carrying the pinned DOI identity) and its own exact decisionId; a
+// duplicate or swapped decisionId fails closed. When the caller supplies
+// sidecarBytes, the parsed document is also bound to the sidecar's pinned Git
+// Blob inside this exported assertion, closing the caller-supplied-document
+// hole the R182 P1 falsifier demonstrated.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
@@ -88,11 +97,22 @@ export const R180_RECEIPTS=[
 ];
 export const R180_DISTINCT_FAMILIES=['GPT','GLM','QWEN'];
 
+// R182: the only source an R180 decision row may bind — the reviewed CS2023
+// publisher source, identified by its DOI in both the frozen and the reviewed
+// graph. A schema-valid se:SRC-* reference to any other node (or to a node
+// outside the graph) is a provenance substitution, not a metadata edit.
+export const R180_SOURCE_ID='se:SRC-CS2023';
+export const R180_SOURCE_STABLE_ID='DOI 10.1145/3664191';
+
 // Per-claim pinned semantics: element attribution and UNKNOWN conservation
 // must match the R100 Owner dispositions — the AI ledger narrows nothing.
+// R182: sourceId and decisionId are part of the immutable per-row identity:
+// each row binds exactly the reviewed CS2023 source and its own decision.
 export const R180_EXPECTED_CLAIMS=[
   {
     claimId:'se:CLM-REQ-FUNCTIONAL-DOC-METHODS',
+    decisionId:'se:AIM-CS2023-REQ-R1',
+    sourceId:R180_SOURCE_ID,
     taxonomyNodeRef:'se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS',
     candidateElementRef:'dke:ev16.d02.se-requirements-child',
     positiveCq:'CS2023_REQUIREMENTS_TEACHING',
@@ -101,6 +121,8 @@ export const R180_EXPECTED_CLAIMS=[
   },
   {
     claimId:'se:CLM-TVV-0001',
+    decisionId:'se:AIM-CS2023-VV-R1',
+    sourceId:R180_SOURCE_ID,
     taxonomyNodeRef:'se:NODE-CS2023-SE-VALIDATION',
     candidateElementRef:'dke:ev16.d02.se-verification-child',
     positiveCq:'CS2023_VV_TEACHING',
@@ -169,7 +191,15 @@ function assertExactBinding(record,graphNode,kind){
   assert.equal(canonicalRecordDigest(graphNode),record.digestSha256,'STALE '+kind+' digest');
 }
 
-export function assertAICrossModelReviewDecisions(document,schema,frozenNodes,candidateNodes,frozenBytes,candidateBytes){
+export function assertAICrossModelReviewDecisions(document,schema,frozenNodes,candidateNodes,frozenBytes,candidateBytes,sidecarBytes){
+  // R182: when the caller supplies the sidecar bytes, bind the parsed document
+  // to the pinned Git Blob inside this exported assertion — a caller-supplied
+  // document that diverges from the pinned bytes must not ride the ACCEPT path.
+  if(sidecarBytes!==undefined){
+    assert.equal(gitBlob(sidecarBytes),AI_DECISION_BLOB,'sidecar bytes diverge from pinned Git Blob');
+    assert.deepEqual(JSON.parse(sidecarBytes.toString('utf8')),document,
+      'caller-supplied parsed document diverges from the pinned sidecar bytes');
+  }
   // envelope + authority
   assert.equal(document.schema,'tally.dke.c1-ai-cross-model-review-decisions/1');
   assert.equal(document.recordVersion,'0.1.0');
@@ -227,8 +257,8 @@ export function assertAICrossModelReviewDecisions(document,schema,frozenNodes,ca
   assert.equal(candidateNodes.filter(n=>n['@type']==='se:SourceOwnerDisposition').length,2);
   assert.equal(candidateNodes.filter(n=>n['@type']==='se:SelectedCqSourceBinding').length,1);
   // wrong-source masquerade: the reviewed publisher identity is pinned
-  const source=lookup(candidateNodes,'se:SRC-CS2023','publisher source');
-  assert.equal(source['se:stable_identifier'],'DOI 10.1145/3664191','publisher source identity drift');
+  const source=lookup(candidateNodes,R180_SOURCE_ID,'publisher source');
+  assert.equal(source['se:stable_identifier'],R180_SOURCE_STABLE_ID,'publisher source identity drift');
 
   // exactly the two selected claims, each exact-bound to the reviewed graph
   assert.equal(document.claims.length,2,'exactly the two selected REQ/VV claims may be decided');
@@ -237,6 +267,21 @@ export function assertAICrossModelReviewDecisions(document,schema,frozenNodes,ca
     const expected=R180_EXPECTED_CLAIMS[rowIndex];
     assert.equal(row.claimId,expected.claimId,'claim row drift at index '+rowIndex);
     validateSchema(row,schema);
+    // R182: per-row immutable identity — the decisionId and the bound source
+    // are pinned code constants, not merely schema-regex-shaped strings.
+    assert.equal(row.decisionId,expected.decisionId,
+      'decisionId drift/forgery at index '+rowIndex+': each reviewed Claim owns exactly one pinned decision');
+    assert.equal(row.sourceId,expected.sourceId,
+      'sourceId drift at index '+rowIndex+': a decision row may only bind the reviewed CS2023 source');
+    // R182 semantic binding: the row-referenced source must actually exist in
+    // BOTH graphs and carry the pinned DOI identity — a real but unrelated
+    // in-graph se:SRC-* node (different DOI) must not be silently accepted.
+    const rowSource=lookup(candidateNodes,row.sourceId,'candidate source referenced by row '+rowIndex);
+    const frozenRowSource=lookup(frozenNodes,row.sourceId,'original source referenced by row '+rowIndex);
+    assert.equal(rowSource['se:stable_identifier'],R180_SOURCE_STABLE_ID,
+      'candidate source identity (DOI) drift at index '+rowIndex);
+    assert.equal(frozenRowSource['se:stable_identifier'],R180_SOURCE_STABLE_ID,
+      'original source identity (DOI) drift at index '+rowIndex);
     assert.equal(row.decisionLifecycle,'ACTIVE');
     assert.equal(row.decisionRecordVersion,'0.1.0','STALE decision record_version (bump only via a superseding ledger)');
     const attribution=row.elementAttribution;
@@ -289,6 +334,10 @@ export function assertAICrossModelReviewDecisions(document,schema,frozenNodes,ca
   // the two decisions must be exactly the R180 selected pair
   assert.deepEqual(document.claims.map(r=>r.claimId).sort(),
     ['se:CLM-REQ-FUNCTIONAL-DOC-METHODS','se:CLM-TVV-0001']);
+  // R182 P2: the two decisionIds must be distinct so a Forge map/lookup can
+  // never collapse two separately reviewed Claims into one decision.
+  assert.equal(new Set(document.claims.map(r=>r.decisionId)).size,document.claims.length,
+    'duplicate decisionId across rows: each reviewed Claim must keep its own decision');
 
   // P2 observations are recorded, never auto-applied
   const p2Ids=new Set(document.p2Observations.map(p=>p.id));

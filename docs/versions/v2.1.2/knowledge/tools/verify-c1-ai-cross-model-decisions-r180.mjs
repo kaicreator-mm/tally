@@ -6,8 +6,12 @@
 // forgery, lifecycle/ReviewDecision promotion, rights/Oracle/SAP/Effect
 // inflation, p248 elevation, wrong source) / unknown (retained UNKNOWN and
 // UNKNOWN authorities must not silently qualify) / stale (digest, record
-// version, wrong-blob bindings all fail closed). This harness is native Node
-// >=24, zero dependencies, and writes nothing.
+// version, wrong-blob bindings all fail closed). R182 adds the
+// sourceId/decisionId identity class: per-row sourceId must bind the pinned
+// CS2023 source (in both graphs, pinned DOI) and per-row decisionId must be
+// the exact pinned id, unique across rows; a caller-supplied document must
+// match the pinned sidecar bytes when bytes are supplied. This harness is
+// native Node >=24, zero dependencies, and writes nothing.
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {execFileSync} from 'node:child_process';
@@ -26,13 +30,20 @@ const REPO_ROOT=fileURLToPath(new URL('../../../../../',import.meta.url));
 const git=(args)=>execFileSync('git',args,{cwd:REPO_ROOT,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
 const lookup=(g,id)=>g['@graph'].find(x=>x['@id']===id);
 
-export function verify(document,schema,frozen,candidate,frozenBytes,candidateBytes){
-  return assertAICrossModelReviewDecisions(document,schema,frozen['@graph'],candidate['@graph'],frozenBytes,candidateBytes);
+export function verify(document,schema,frozen,candidate,frozenBytes,candidateBytes,sidecarBytes){
+  return assertAICrossModelReviewDecisions(document,schema,frozen['@graph'],candidate['@graph'],frozenBytes,candidateBytes,sidecarBytes);
 }
 
-export function selfTest(document,schema,frozen,candidate,frozenBytes,candidateBytes){
-  const result=verify(document,schema,frozen,candidate,frozenBytes,candidateBytes);
+export function selfTest(document,schema,frozen,candidate,frozenBytes,candidateBytes,sidecarBytes){
+  const result=verify(document,schema,frozen,candidate,frozenBytes,candidateBytes,sidecarBytes);
   const mutants=[
+    // ---- R182 P1/P2: sourceId / decisionId identity binding ----
+    {kind:'negative',fn:x=>{x.d.claims[0].sourceId='se:SRC-UNRELATED'}},                        // R182 P1 exact falsifier: schema-valid, not in graph
+    {kind:'negative',fn:x=>{x.d.claims[1].sourceId='se:SRC-SWEBOK-GUIDE-4-0A'}},              // real but wrong in-graph source (different DOI)
+    {kind:'negative',fn:x=>{x.d.claims[1].decisionId=x.d.claims[0].decisionId}},              // duplicate decisionId across rows
+    {kind:'negative',fn:x=>{const t=x.d.claims[0].decisionId;x.d.claims[0].decisionId=x.d.claims[1].decisionId;x.d.claims[1].decisionId=t}}, // swapped decisionIds
+    {kind:'negative',fn:x=>{x.d.receipts[0].findingsP2=9}},                                   // caller-supplied document diverges from pinned sidecar bytes
+    {kind:'stale',fn:x=>{x.d.claims[0].decisionId='se:AIM-CS2023-REQ-R2'}},                   // schema-valid but unpinned decisionId
     // ---- forged / duplicate reviewer identity ----
     {kind:'negative',fn:x=>{x.d.receipts[1].modelFamily='GEMINI'}},                       // GLM impersonating Gemini
     {kind:'negative',fn:x=>{x.d.receipts[2].modelFamily='GLM'}},                          // duplicate family quorum
@@ -105,9 +116,13 @@ export function selfTest(document,schema,frozen,candidate,frozenBytes,candidateB
   ];
   for(const [i,mutant] of mutants.entries()){
     const x={d:structuredClone(document),f:structuredClone(frozen),c:structuredClone(candidate),
-      fb:structuredClone(frozenBytes),cb:structuredClone(candidateBytes)};
+      fb:structuredClone(frozenBytes),cb:structuredClone(candidateBytes),
+      // Buffer.from (not structuredClone): a cloned Buffer degrades to a bare
+      // Uint8Array whose toString('utf8') is comma-separated numbers, which
+      // would break the validator's JSON.parse of the sidecar bytes.
+      sb:sidecarBytes===undefined?undefined:Buffer.from(sidecarBytes)};
     mutant.fn(x);
-    assert.throws(()=>verify(x.d,schema,x.f,x.c,x.fb,x.cb),assert.AssertionError,
+    assert.throws(()=>verify(x.d,schema,x.f,x.c,x.fb,x.cb,x.sb),assert.AssertionError,
       mutant.kind+' mutant '+i+' must fail closed');
   }
   const count=(kind)=>mutants.filter(x=>x.kind===kind).length;
@@ -134,7 +149,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   assert.equal(gitBlob(sb),git(['rev-parse','HEAD:'+AI_DECISION_SCHEMA_PATH]),'schema bytes differ from exact HEAD');
   assert.equal(gitBlob(lb),git(['rev-parse','HEAD:'+LIB_PATH]),'validator bytes differ from exact HEAD');
   const d=JSON.parse(db.toString('utf8'));
-  console.log(JSON.stringify({...selfTest(d,JSON.parse(sb.toString('utf8')),JSON.parse(ob.toString('utf8')),JSON.parse(cb.toString('utf8')),ob,cb),
+  console.log(JSON.stringify({...selfTest(d,JSON.parse(sb.toString('utf8')),JSON.parse(ob.toString('utf8')),JSON.parse(cb.toString('utf8')),ob,cb,db),
     node:process.version,platform:process.platform,
     recordedAtRevision:git(['rev-parse','HEAD']),tree:git(['rev-parse','HEAD^{tree}']),
     sidecarBlob:gitBlob(db),schemaBlob:gitBlob(sb),validatorBlob:gitBlob(lb),
