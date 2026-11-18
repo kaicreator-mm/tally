@@ -1,0 +1,314 @@
+{
+  "schema": "tally.dke.c1-ai-cross-model-review-decisions/1",
+  "recordVersion": "0.1.0",
+  "version": "v2.1.2-candidate",
+  "status": "AI_NON_HUMAN_CROSS_MODEL_REVIEW_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
+  "recordedOn": "2026-11-19",
+  "authority": {
+    "repository": "kaicreator-mm/tally",
+    "writerRole": "ORIGINAL_TALLY_399_SINGLE_WRITER",
+    "decisionCategory": "AI_NON_HUMAN_CROSS_MODEL_REVIEW_EVIDENCE_LEDGER",
+    "integrationDecisionRecord": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6983286610",
+    "integrationDecisionLabel": "R180 three-actual-distinct-model-family source-first audit convergence (GPT/GLM/Qwen)",
+    "ownerPolicyRecord": "https://github.com/kaicreator-mm/tally/issues/398",
+    "ownerPolicyNote": "Owner updated the #398 body at R180 to accept actual three different model families for the bounded DKE AI Demo; the requested Gemini lane itself remains NOT_RUN and is not claimed",
+    "claimLifecycleEffect": "NONE_ORIGINAL_AND_CANDIDATE_CLAIM_REMAIN_PENDING",
+    "reviewDecisionNodesInGraph": 0,
+    "humanAttestationSubstitute": "FORBIDDEN_AI_REVIEW_IS_NOT_PROFESSIONAL_OR_HUMAN_CERTIFICATION",
+    "professionalOracle": "NOT_ATTESTED",
+    "publicationPermission": "NOT_GRANTED_BY_THIS_OWNER_DECISION"
+  },
+  "sources": {
+    "originalRepoCommit": "3e94685ca57a4b7258988826697af1c1c3a6b3c8",
+    "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
+    "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
+    "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
+    "reviewedGraphBlob": "a49ddf58a0c4a5b25ebdd4018c8234f64e6365e0",
+    "reviewedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
+    "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
+    "publisherPdf": "https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf",
+    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization"
+  },
+  "reviewContract": {
+    "quorum": "THREE_ACTUAL_DISTINCT_MODEL_FAMILIES",
+    "requiredVerdictPerClaim": "ACCEPT_SCOPED",
+    "requiredUnanimity": "ALL_RECEIPTS_SAME_VERDICT_PER_CLAIM",
+    "maxBlockerFindings": "P0_AND_P1_MUST_BE_ZERO_PER_RECEIPT",
+    "blindFirstPassRequired": true,
+    "receiptIdentityBinding": "Each decision binds the exact GitHub review comments as three separate provenance references; receipt identity is additionally pinned in validator code so a co-mutated sidecar cannot forge it",
+    "geminiLane": "NOT_RUN__GLM_5_3_SUBSTITUTE_EXECUTED_WITH_FULL_DISCLOSURE__COUNTED_AS_GLM_FAMILY_ONLY_NOT_GEMINI",
+    "geminiFamilyVoteCount": 0,
+    "distinctFamilyCount": 3,
+    "distinctFamilies": ["GPT", "GLM", "QWEN"],
+    "integrationResult": "REQ_AND_VV_3_OF_3_ACCEPT_SCOPED_AI_NON_HUMAN",
+    "resultScope": "DKE_DEMO_AI_CROSS_REVIEWED_SCOPED__REQ_AND_VV_ONLY"
+  },
+  "receipts": [
+    {
+      "receiptKey": "R180-GPT",
+      "modelFamily": "GPT",
+      "provider": "OpenAI",
+      "modelId": "GPT-6",
+      "modelFamilyDisclosure": "MODEL_FAMILY_SELF_DECLARED_GPT",
+      "commentId": "6976173032",
+      "commentUrl": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6976173032",
+      "reqVerdict": "ACCEPT_SCOPED",
+      "vvVerdict": "ACCEPT_SCOPED",
+      "findingsP0": 0,
+      "findingsP1": 0,
+      "findingsP2": 2,
+      "blindFirstPass": true,
+      "runId": "DKE2_AI_REVIEW_GPT_20261118_580b3ace_R1",
+      "runIdType": "REVIEW_ASSIGNED_IDENTIFIER_NOT_PLATFORM_CONVERSATION_ID",
+      "completedAtUtc": "2026-11-18T10:42:52.751Z"
+    },
+    {
+      "receiptKey": "R180-GLM",
+      "modelFamily": "GLM",
+      "provider": "BigModel",
+      "modelId": "GLM-5.3",
+      "modelFamilyDisclosure": "SUBSTITUTE_LANE_DISCLOSED_MODEL_FAMILY_ACTUAL_GLM__GEMINI_FAMILY_EXECUTION_NOT_PERFORMED__NOT_COUNTED_AS_GEMINI",
+      "commentId": "6976329069",
+      "commentUrl": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6976329069",
+      "reqVerdict": "ACCEPT_SCOPED",
+      "vvVerdict": "ACCEPT_SCOPED",
+      "findingsP0": 0,
+      "findingsP1": 0,
+      "findingsP2": 3,
+      "blindFirstPass": true,
+      "runId": "DKE2_AI_REVIEW_GEMINI_20261118_580b3ace_R1_GLM_SUBSTITUTE",
+      "runIdType": "REVIEW_DEFINED_NOT_PLATFORM_CONVERSATION_ID",
+      "completedAtUtc": "2026-11-18T10:50:00Z"
+    },
+    {
+      "receiptKey": "R180-QWEN",
+      "modelFamily": "QWEN",
+      "provider": "Alibaba Model Studio International",
+      "modelId": "qwen-alibaba-model-studio-intl/qwen3.8-max",
+      "modelFamilyDisclosure": "MODEL_FAMILY_SELF_DECLARED_QWEN",
+      "commentId": "6976586466",
+      "commentUrl": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6976586466",
+      "reqVerdict": "ACCEPT_SCOPED",
+      "vvVerdict": "ACCEPT_SCOPED",
+      "findingsP0": 0,
+      "findingsP1": 0,
+      "findingsP2": 1,
+      "blindFirstPass": true,
+      "runId": "DKE2_AI_REVIEW_QWEN_20261118_580b3ace_R1",
+      "runIdType": "REVIEW_DEFINED_NOT_PLATFORM_CONVERSATION_ID",
+      "completedAtUtc": "2026-11-18T10:56:30Z"
+    }
+  ],
+  "claims": [
+    {
+      "claimId": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+      "decisionId": "se:AIM-CS2023-REQ-R1",
+      "decisionRecordVersion": "0.1.0",
+      "decisionLifecycle": "ACTIVE",
+      "evidenceId": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+      "locatorId": "se:LOC-CS2023-SE-REQ-KU",
+      "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "03e34ca1f8232186e5d32681e4a3af9f6b0d579b9442cef196da07c9029250a1"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "4923289fae7218314e260750f56ef0b39215e907fdd84d3f99b5eddfd7b7eafa"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "26fa2a5d697a485583e7b32c4ff676277eaa9e0078448f0b06e610e87b2d47df"
+        }
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS",
+        "candidateElementRef": "dke:ev16.d02.se-requirements-child",
+        "positiveCq": "CS2023_REQUIREMENTS_TEACHING",
+        "unknownCq": "REQUIREMENTS_UNIFORM_METHOD"
+      },
+      "scope": "CS2023 SE-Requirements: Product Requirements, KA Core 1a-1c; curriculum teaching and bounded original paraphrase only",
+      "positive": "At least one structured functional-requirements documentation method; context-appropriate use cases/user stories and explained trade-offs; three model families independently found the record faithful to the publisher page (printed p242 / PDF zero-based index 241)",
+      "negative": "No universal single-method uniformity, no method superiority, no Pattern/Case/DecisionModel automatic adoption, no professional mandate",
+      "unknown": "Any publication license beyond bibliographic metadata/short paraphrase; independent professional applicability and original Product SAP",
+      "aiReviewDecision": "ACCEPT_SCOPED_AI_NON_HUMAN_CROSS_MODEL",
+      "claimLifecycleAfterDecision": "UNCHANGED_PENDING_REVIEW",
+      "reviewStatusAfterDecision": "UNCHANGED_PENDING",
+      "semanticOracle": "NOT_ATTESTED",
+      "counterexamples": [
+        {
+          "id": "NEG-REQ-UNIVERSAL-METHOD",
+          "example": "The same single documentation method MUST uniformly govern every requirement in all projects",
+          "expectedRejection": "The universal quantifier is absent from CS2023 topic 1 (at-least-one existential); rejecting this extension does not reject the bounded Claim"
+        },
+        {
+          "id": "NEG-REQ-METHOD-SUPERIORITY",
+          "example": "User stories are categorically better, or the Claim derives automatic professional Pattern/DecisionModel/Root authority",
+          "expectedRejection": "Not established by the source; the Claim and the Owner disposition already exclude method superiority and authority promotion"
+        },
+        {
+          "id": "NEG-REQ-ORACLE-LAUNDERING",
+          "example": "This AI cross-model decision is presented as a human professional Oracle attestation or as an in-graph ReviewDecision/ACCEPTED Claim",
+          "expectedRejection": "AI_MODEL_NON_HUMAN only; professional Oracle NOT_ATTESTED; ReviewDecision nodes in the candidate graph must remain exactly 0"
+        }
+      ],
+      "staleDiscriminators": [
+        "Original locator rv0.1.0 digest a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6 used as the current pin (HCI-era wrong page anchor) is STALE; the current pin is candidate locator rv0.1.1",
+        "Wrong graph blob (frozen 0f600731 or any other) substituted for the reviewed candidate blob a49ddf58 is STALE",
+        "Swapped VV locator or edited Claim/Evidence/Locator record without a recomputed canonical SHA-256 is STALE"
+      ],
+      "integration": {
+        "receiptCount": 3,
+        "distinctFamilyCount": 3,
+        "acceptScopedCount": 3,
+        "p0Total": 0,
+        "p1Total": 0,
+        "result": "AI_CROSS_MODEL_3_OF_3_ACCEPT_SCOPED"
+      }
+    },
+    {
+      "claimId": "se:CLM-TVV-0001",
+      "decisionId": "se:AIM-CS2023-VV-R1",
+      "decisionRecordVersion": "0.1.0",
+      "decisionLifecycle": "ACTIVE",
+      "evidenceId": "se:EVD-TVV-0003",
+      "locatorId": "se:LOC-CS2023-SE-VALIDATION-KU",
+      "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f08e84eb855ee94a333c143558086f8fdc79f32744ce3da8318dc7e5bb5c5507"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947"
+        }
+      },
+      "pendingOutcomeLeg": {
+        "status": "CONTENT_VERIFIED_BY_ALL_THREE_REVIEWS__LIFECYCLE_NOT_ELEVATED",
+        "relationRef": "se:REL-TVV-0024",
+        "relationRecordVersion": "0.1.0",
+        "relationDigestSha256": "d91331a851705acb91f40f50834f0f4146c9f88bb4d5e0812dc160472f995e5e",
+        "evidenceRef": "se:EVD-TVV-0016",
+        "evidenceRecordVersion": "0.1.0",
+        "evidenceDigestSha256": "9f70ac020048ad46dd57c01a83952fc2ca7b3ee3a2c96cd605c9b5381a407a9c",
+        "locatorRef": "se:LOC-CS2023-SE-VALIDATION-LO2",
+        "locatorRecordVersion": "0.1.0",
+        "locatorDigestSha256": "1b75df53c55436f51a406e957291f778b8a7eea42760b4115dd14901a1cbab56",
+        "printedPage": "248",
+        "pdfZeroBasedPage": "247",
+        "requiredLifecycle": "PENDING_REVIEW",
+        "rule": "A page-tight accepted second support leg requires its own future versioned review decision; this AI cross-model ledger never retroactively accepts it"
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-VALIDATION",
+        "candidateElementRef": "dke:ev16.d02.se-verification-child",
+        "positiveCq": "CS2023_VV_TEACHING",
+        "unknownCq": "VV_AUTOMATIC_BUSINESS_ACCEPTANCE"
+      },
+      "scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
+      "positive": "Verification and validation ask two distinct educational questions (p246 section start), with the p248 illustrative learning outcome 2 as a separate curriculum objective; three model families independently verified both pages and found the record faithful, with no inference of full business acceptance",
+      "negative": "Passing tests is not automatic customer/functional acceptance, no SWEBOK/ISO universal qualification, no Parent/Root ownership or Effect authorization, no verification/validation identity inversion",
+      "unknown": "Independent professional Oracle, completed business-acceptance evidence, original Root/Global/SAP/R8 qualification",
+      "aiReviewDecision": "ACCEPT_SCOPED_AI_NON_HUMAN_CROSS_MODEL",
+      "claimLifecycleAfterDecision": "UNCHANGED_PENDING_REVIEW",
+      "reviewStatusAfterDecision": "UNCHANGED_PENDING",
+      "semanticOracle": "NOT_ATTESTED",
+      "counterexamples": [
+        {
+          "id": "NEG-VV-TEST-PASS-ACCEPTANCE",
+          "example": "All unit tests green implies customer/business validation PASS",
+          "expectedRejection": "Not implied by CS2023; acceptance appears in the source only as a testing level/type"
+        },
+        {
+          "id": "NEG-VV-PAGE-INVERSION",
+          "example": "The p246 section directly contains the p248 learning-outcome list, or the PENDING_REVIEW relation REL-TVV-0024 is ACCEPTED",
+          "expectedRejection": "Two-leg distinction (p246 SECTION direct support vs p248 PAGE pending leg) is preserved by the R137 binding and must not collapse"
+        },
+        {
+          "id": "NEG-VV-IDENTITY-INVERSION",
+          "example": "Verification equals validation, or the two questions are interchangeable",
+          "expectedRejection": "The source defines them as two distinct questions; identity inversion is rejected"
+        },
+        {
+          "id": "NEG-VV-STANDARD-QUALIFICATION",
+          "example": "The curriculum definition is treated as a SWEBOK/ISO formal standard qualification or a published professional Oracle",
+          "expectedRejection": "claim_kind=DEFINITION applicability explicitly excludes professional-standard qualification; Oracle remains NOT_ATTESTED"
+        }
+      ],
+      "staleDiscriminators": [
+        "Original SECTION locator rv0.1.0 digest f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3 (HCI-era anchor) used as the current pin is STALE",
+        "The p248 PAGE locator or the p242 REQ locator swapped in as the direct section support is STALE",
+        "Co-mutated overlay+graph+sidecar where the R140 code-fixed outcome Evidence/claim-support anchors mismatch is STALE",
+        "Any fabricated fresh ACCEPTED relation or wrong Claim record version is STALE/tampered"
+      ],
+      "integration": {
+        "receiptCount": 3,
+        "distinctFamilyCount": 3,
+        "acceptScopedCount": 3,
+        "p0Total": 0,
+        "p1Total": 0,
+        "result": "AI_CROSS_MODEL_3_OF_3_ACCEPT_SCOPED"
+      }
+    }
+  ],
+  "p2Observations": [
+    {
+      "id": "P2-REQ-EVD-STALE-UNCERTAINTY",
+      "reportedBy": ["R180-GPT", "R180-GLM", "R180-QWEN"],
+      "area": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+      "observation": "Evidence rv0.1.0 uncertainty text says the printed page was not independently confirmed, while candidate Locator rv0.1.1 and all three reviews independently verified printed p242 / index 241",
+      "disposition": "PRESERVED_NOT_AUTO_APPLIED__ORIGINAL_EVD_STAYS_IMMUTABLE__PROSPECTIVE_VERSIONED_REVISION_ONLY"
+    },
+    {
+      "id": "P2-VV-SECTION-VS-PENDING-PAGE-TRACEABILITY",
+      "reportedBy": ["R180-GPT", "R180-GLM"],
+      "area": "se:EVD-TVV-0003 / se:REL-TVV-0024",
+      "observation": "The direct SECTION support starts at p246 while the p248 outcome leg is a separate pending evidence/relation; the two-leg distinction must stay explicit in every consumer",
+      "disposition": "PRESERVED_NOT_AUTO_APPLIED__TWO_LEG_DISTINCTION_ENFORCED_BY_EXISTING_R137_R140_GATES"
+    },
+    {
+      "id": "P2-GLM-PHRASING-AND-UNCERTAINTY-NOTE",
+      "reportedBy": ["R180-GLM"],
+      "area": "Claim phrasing / pending-leg uncertainty",
+      "observation": "GLM notes the bounded REQ teaching phrasing can read as mildly normative (already constrained by scope_description) and the pending VV evidence uncertainty may remain overconservative now that a publisher PDF raw-byte SHA-256 (c7cc63986e866b7cdda60c3f02dea83099a1d975c628a02b3f8bf50c07f524dd, as downloaded 2026-11-18) exists in review receipts",
+      "disposition": "PRESERVED_NOT_AUTO_APPLIED__RECORDED_ONLY__NO_RECORD_MUTATION"
+    }
+  ],
+  "nonselectedClaims": {
+    "totalKnowledgeClaims": 106,
+    "selectedByThisLedger": 2,
+    "untouched": 104,
+    "requiredReviewStatus": "PENDING",
+    "requiredLifecycleStatus": "PENDING_REVIEW",
+    "proof": "The reviewed candidate graph blob a49ddf58 is asserted byte-identical at runtime; all 106 claims remain PENDING and 0 ReviewDecision nodes exist"
+  },
+  "qualification": {
+    "originalFrozenGraphModified": false,
+    "reviewedCandidateGraphMutatedByThisLedger": false,
+    "aiReviewDecisionsRecorded": 2,
+    "humanOracleAttestations": 0,
+    "formalSap": "0/6",
+    "formalGlobal": "0/5",
+    "parentRoot": "UNKNOWN",
+    "originalR8": "1/53_SCOPED_ONLY",
+    "originalD04": "NOT_RUN",
+    "effectAuthorized": false,
+    "releaseAuthorized": false,
+    "forgeAiDemoCellAuthorization": "NONE_BY_THIS_LEDGER__FORGE_208_SINGLE_WRITER_DECIDES_SEPARATELY_WITH_EXACT_PROVENANCE"
+  },
+  "next": "This ledger is the Writer-side versioned input for Forge #208's separately versioned one-Cell AI-DEMO original source consumption. It is AI non-human review evidence only: not a human professional Oracle, not publisher authorization, not SAP/Root/R8/Effect/Release qualification, and not a Claim lifecycle transition. The 104 non-selected Claims stay PENDING; the p248 support leg stays PENDING_REVIEW; frozen v2.1.1 (807 nodes) is unaffected."
+}

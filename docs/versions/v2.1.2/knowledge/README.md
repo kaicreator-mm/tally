@@ -1,6 +1,6 @@
-# Tally v2.1.2 C1 Original Owner source amendment (R13) + R102 PDF Locator repair + R107 disposition contract + R137 selected-CQ two-leg source binding
+# Tally v2.1.2 C1 Original Owner source amendment (R13) + R102 PDF Locator repair + R107 disposition contract + R137 selected-CQ two-leg source binding + R180 AI cross-model review ledger
 
-STATUS: ORIGINAL_SOURCE_OWNER_DECISIONS_2_OF_2 / SOURCE_OWNER_DISPOSITION_CONTRACT_RESOLVED / SELECTED_CQ_TWO_LEG_SOURCE_BOUND_CONSUMED / CLAIM_LIFECYCLE_PENDING / ORACLE_NOT_ATTESTED.
+STATUS: ORIGINAL_SOURCE_OWNER_DECISIONS_2_OF_2 / SOURCE_OWNER_DISPOSITION_CONTRACT_RESOLVED / SELECTED_CQ_TWO_LEG_SOURCE_BOUND_CONSUMED / AI_CROSS_MODEL_REVIEW_LEDGER_RECORDED_SCOPED / CLAIM_LIFECYCLE_PENDING / ORACLE_NOT_ATTESTED.
 Owner confirmation: https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6808543942
 Immutable original commit: 3e94685ca57a4b7258988826697af1c1c3a6b3c8
 Immutable original Graph Blob: 0f6007315fd7352fe6fd218effcfecf672cb4961
@@ -64,6 +64,38 @@ edge. Authority record: DIE DKE #2 R137
 (https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084).
 This binding is scoped to the selected research candidate CQ; a formal frozen
 R8 Cell LO2 dependency has NOT been established and is not widened here.
+
+## R180 AI non-human cross-model review ledger (GPT / GLM / Qwen)
+
+The R180 integrator convergence (three actual distinct model families, blind
+first passes, P0/P1=0, unanimous `ACCEPT_SCOPED` on the two selected original
+Claims) is recorded by the original Writer as a **versioned sidecar ledger**,
+not as graph content: `source/C1_AI_CROSS_MODEL_REVIEW_DECISIONS_R180.json`
+(schema `tally.dke.c1-ai-cross-model-review-decisions/1`, machine schema
+`model/ai-cross-model-review-decision.schema.json`, native validator
+`tools/ai-cross-model-review-decision.mjs`, harness
+`tools/verify-c1-ai-cross-model-decisions-r180.mjs --check`). Integration
+decision record: [#398 R180](https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6983286610);
+the three receipt comments (GPT 6976173032 / GLM 6976329069 / Qwen 6976586466)
+are bound as three separate provenance references with code-pinned identity
+(roster drift, duplicate model families and forged family labels — e.g. GLM
+presented as Gemini — all fail closed; the Gemini lane itself remains NOT_RUN).
+
+Hard properties enforced on every run: the reviewed candidate graph blob stays
+exactly `a49ddf58…` and frozen v2.1.1 stays `0f600731…` (807 nodes) — the
+ledger mutates nothing; both decisions exact-bind Claim/Evidence/Locator (and
+the p248 pending leg) record versions + canonical SHA-256 digests; all 106
+KnowledgeClaims stay `PENDING`, 0 in-graph `ReviewDecision`, no `se:AIM-*`
+nodes are materialized; the p248 support leg
+(`REL-TVV-0024`/`EVD-TVV-0016`/`LOC-…-LO2`) remains `PENDING_REVIEW` and is
+never retroactively accepted; the 104 non-selected claims are untouched; P2
+review observations are recorded with `PRESERVED_NOT_AUTO_APPLIED` only;
+human/professional Oracle stays NOT_ATTESTED, publication permission stays
+NOT_GRANTED, and formal SAP 0/6 / Global 0/5 / Parent/Root UNKNOWN /
+scoped R8 1/53 / Effect/Release unauthorized are conserved. This ledger is
+AI non-human review evidence only — it is not a human professional
+certification — and authorizes no Forge #208 Cell by itself; the Forge #208
+single Writer decides that separately with its own exact provenance.
 
 ## Source record
 
