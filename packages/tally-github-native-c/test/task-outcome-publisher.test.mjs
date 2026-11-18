@@ -129,7 +129,8 @@ test('POS qualified Outcome publishes once with full provenance and reconciles',
 test('NEG REWORK and DEFER decisions never publish and never pass',async()=>{
   for(const decision of ['REWORK','DEFER']){
     const chain=seedChain();
-    const publisher=makePublisher({stores:{
+    const store=memoryStore(); // the store the publisher would mint into
+    const publisher=makePublisher({store,stores:{
       fswStore:chain.fswStore,claimStore:chain.claimStore,joinStore:chain.joinStore}});
     const result=await publisher.publishQualifiedOutcome(
       {...chain.input,decision:{...chain.input.decision,decision}});
@@ -137,8 +138,8 @@ test('NEG REWORK and DEFER decisions never publish and never pass',async()=>{
     assert.equal(result.reason,'DECISION_'+decision+'_NOT_TASK_PASS');
     assert.equal(result.taskPass,false);
     assert.equal(result.publication,'HOLD');
-    const outcomeRows=[...chain.fswStore._rows.keys(),...chain.claimStore._rows.keys(),...chain.joinStore._rows.keys()].filter(k=>k.startsWith('tally:v2:task-outcome:'));
-  assert.equal(outcomeRows.length,0,'REWORK/DEFER must mint zero outcome rows');
+    const outcomeRows=[...store._rows.keys()].filter(k=>k.startsWith('tally:v2:task-outcome:'));
+    assert.equal(outcomeRows.length,0,'REWORK/DEFER must mint zero outcome rows');
   }
 });
 
