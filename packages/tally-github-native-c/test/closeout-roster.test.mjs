@@ -680,6 +680,21 @@ function successorWitness({pack=validPack(),observedVersionSha=s1Sha,
   return base;
 }
 
+test('A2 regression: the successor reader passes a NUMBER taskIssueNumbers array to the current roster port',async()=>{
+  const seen=[];
+  const h=dualEpochHarness({currentRoster:async({sourceSha,taskIssueNumbers})=>{
+    seen.push(taskIssueNumbers);
+    return currentNativeProjection({sourceSha});
+  }});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  await h.reader.readDualEpoch();
+  assert.equal(seen.length,1);
+  for(const arr of seen){
+    assert.ok(Array.isArray(arr));
+    for(const n of arr)assert.ok(Number.isSafeInteger(n)&&n>0,'number array required, got '+typeof n);
+  }
+});
+
 test('POS-A2-01: S1=S0 keeps original reader semantics, historical and same-source current, zero mutation',async()=>{
   const h=dualEpochHarness();
   const frozen=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
