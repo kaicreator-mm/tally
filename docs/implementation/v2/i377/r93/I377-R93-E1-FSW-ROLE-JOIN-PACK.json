@@ -1,0 +1,144 @@
+{
+  "schema": "tally/i377-r93-prospective-per-task-admission-pack/v1",
+  "disposition": "CANDIDATE_ONLY_NOT_ADMITTED",
+  "repo": "kaicreator-mm/tally",
+  "mainIssues": [
+    392,
+    259
+  ],
+  "taskIssue": 377,
+  "source": {
+    "ref": "version/v2",
+    "observedS0": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "sourceEpoch": "S0_TO_S1_COMPATIBILITY_NOT_ADOPTED",
+    "mustRevalidateBeforeWrite": true
+  },
+  "frozen": {
+    "originalTaskCount": 51,
+    "originalNativeEdgeCount": 29,
+    "versionOnly": true,
+    "packBlob": "8df559d9a84a4c66a12a33818037aecd47f1519f",
+    "mustRemainImmutable": true
+  },
+  "evidence": {
+    "designContractComment": 6983294817,
+    "independentDesignReviewComment": 6984755442,
+    "independentProspectivePlanReviewComment": 6985700071,
+    "prospectivePlanPr": 452,
+    "prospectivePlanHead": "a02b43c66c4309ca3344af502fafd684e43b41fc",
+    "historicalDefectPackPr": 378,
+    "historicalRepairMergedPr": 394
+  },
+  "authority": {
+    "selectedHost": "NOT_PROVEN",
+    "acceptedCurrentTaskPack": "NONE",
+    "nativeTaskAdmission": "NOT_GRANTED",
+    "currentClaim": "NONE",
+    "currentFsw": "NONE",
+    "sourceWritePermission": false,
+    "taskPass": false,
+    "releaseQualification": "HOLD"
+  },
+  "independentReview": {
+    "required": true,
+    "role": "OTHER_CONVERSATION_NON_WRITER",
+    "criterion": "Exact HEAD + exact JSON Blob + source/currentness + single-writer ownership + selected Host authorization"
+  },
+  "admissibleEffectsNow": [
+    "DOCS_ONLY_CANDIDATE_PR",
+    "READ_ONLY_GITHUB_EVIDENCE",
+    "COORDINATOR_COMMENT"
+  ],
+  "forbiddenNow": [
+    "PRODUCTION_SOURCE_WRITE",
+    "HOST_CAS_PUT",
+    "FSW_CREATE",
+    "ROLE_CLAIM_CREATE",
+    "GITHUB_LABEL_PATCH",
+    "NATIVE_TASK_EVENT",
+    "TASK_OUTCOME",
+    "STRUCTURAL_REFREEZE",
+    "RELEASE"
+  ],
+  "packId": "I377-R93-E1",
+  "kind": "POST_FREEZE_FSW_AND_INDEPENDENT_ROLE_JOIN",
+  "prospectiveIssueNumber": null,
+  "allowedWriteSet": [
+    "packages/tally-github-native-c/src/task-acceptance-fsw-port.mjs",
+    "packages/tally-github-native-c/src/task-role-joint-binding-port.mjs",
+    "packages/tally-github-native-c/test/task-acceptance-fsw-port.test.mjs",
+    "packages/tally-github-native-c/test/task-role-joint-binding-port.test.mjs"
+  ],
+  "allowedWriteSetCount": 4,
+  "allowedWriteSetDigestSha256": "54142d9b7350820315ea1806c08654c383333185bd5730904870b853f4aafd38",
+  "writeSetOwnership": "PROSPECTIVE_DISJOINT_NEW_PATHS_ONLY__NO_EXISTING_A260_B261_E264_SHARED_FILES",
+  "prerequisites": [
+    "E0 independently adopted zero-write #377 Pack",
+    "E3 genuine state:ready and dependency/current source readback",
+    "NEW E1 task/Pack independent admission with exact four paths, Claim/FSW/Host fence",
+    "Post-freeze value schema and CAS key/shape reviewed against existing read-only/host ports"
+  ],
+  "wireContract": {
+    "fsw": {
+      "schema": "tally/version-task-writeset/v1",
+      "key": "tally:v2:task-writeset:377",
+      "document": "[]",
+      "documentSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "put": {
+        "mustBeAbsent": true
+      },
+      "authorizes": false,
+      "readback": "same exact key + revision + full value, source epoch, Pack and fence; any ambiguity UNKNOWN"
+    },
+    "claims": {
+      "roles": [
+        "validator",
+        "reviewer"
+      ],
+      "distinctOperatorRequired": true,
+      "distinctProtectedClaimKeys": true,
+      "acceptedHostCasAndNativeRefsRequired": true,
+      "commentAckIsNotAcceptedClaim": true,
+      "roleClaimBeforeJoin": true,
+      "reviewDecisionAfterValidatorEvidence": true
+    },
+    "join": {
+      "schema": "NOT_ADOPTED",
+      "keyNamespace": "NOT_ADOPTED",
+      "put": {
+        "mustBeAbsent": true
+      },
+      "bind": [
+        "FSW_KEY",
+        "FSW_REVISION",
+        "FSW_VALUE_DIGEST",
+        "VALIDATOR_ACCEPTED_CAS_AND_NATIVE",
+        "REVIEWER_ACCEPTED_CAS_AND_NATIVE",
+        "SOURCE",
+        "PACK",
+        "DISPATCH",
+        "GENERATION",
+        "FENCE"
+      ],
+      "consumerMustRereadAll": true,
+      "authorizesTaskPass": false
+    }
+  },
+  "actualCodeBoundaries": {
+    "frozenWriterBlob": "17a9e7c3e1cfce011f20173e3e0c23f56bf8bdd8",
+    "preflightBlob": "ce6cd17a0985619e6531841ba63efffe5b3cef89",
+    "transportBlob": "f895b99fc5a97c69bd0cae56b9365d81791ec927",
+    "existingFreezeWriterMustNotBeChanged": true,
+    "existingTransportAckDoesNotGrantClaim": true
+  },
+  "requiredRunnableTests": [
+    "POS dual accepted independent roles one immutable FSW+Join",
+    "NEG role-late and role-competitor (P2-N1 independent review)",
+    "NEG same operator/duplicate key/revoked/missing native CAS",
+    "NEG two concurrent create-only puts only one durable winner; losing writer cannot infer authorization",
+    "NEG FSW/JOIN lost ACK one send then UNKNOWN/reconcile no second put",
+    "NEG source/Pack/fence/revision drift",
+    "POS/NEG separate process with selected Host durable CAS, not FakeCAS only"
+  ],
+  "selectedHostIntegration": "NOT_INCLUDED; E264 single-writer admitted integration separate"
+}
