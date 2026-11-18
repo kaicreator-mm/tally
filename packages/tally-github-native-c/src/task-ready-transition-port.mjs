@@ -229,7 +229,7 @@ export function createTaskReadyTransitionPort({
       !issue.labels.includes('state:planned');
     return Object.freeze({status:ready?'READY_RECONCILED':'STILL_PLANNED',
       repository,targetIssue,labels:Object.freeze(issue.labels),
-      updatedAt:issue.updated_at,
+      updatedAt:issue.updatedAt,
       fencePhase:fence?.value?.phase??'ABSENT',githubEffect:'NOT_RUN',
       retryPolicy:'NO_BLIND_PATCH',...flags()});
   }
