@@ -1,0 +1,12 @@
+4a0d324f539d006f7b8eb84e3f2532483222b2ab8726744e06ae8535cfd1cef9  docs/versions/v2.1.1/authority/SOURCE_REGISTRY.yaml
+c1918ac5eec527b8453f922b35bc3c63c6aa815aae3945f239fb4dc8a205c148  docs/versions/v2.1.1/knowledge/model/RELATIONSHIP_CATALOG.yaml
+6978dc69fc8182fb550eb174cf46c538cc52d6c4e4e5d277afe9f2440fa6a053  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/architecture-design/records.yaml
+cfb2413fa5372e7742a0d2b50a457ef803531ceeb7ef102e2b9f0faafa0ad10f  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/build-delivery/records.yaml
+ad384bcd11c369823c3ee57eaac9bbd24ca7984486b51d3d01ba3e40f3d8ef3f  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/foundations-processes/records.yaml
+f0a752dd06d50f0a8e47b4acc1f4b9f7307a7e1a73b51f9fa09951d949066cfa  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/implementation-code/records.yaml
+bf432a04e50ef73ed1d093dabcc80b9a801e2b8b15e74aacf2ba8f5a35036aca  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/maintenance-evolution/records.yaml
+00c7d810873b4941cc08a0b1f74e05db3890cac51e9d6419dc4a8c388c6eef89  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/planning-risk-quality/records.yaml
+5ba3d4712da9ab701527019b0661a2c8c39c62263f18e999075b812a2e681a3d  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/reliability-performance/records.yaml
+1161f6fc35cea2568c1fe08415ec9cfa14d7307643a3395169f43a390f7bd58e  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/requirements/records.yaml
+7f00785a904fd42572f1c1f28afe87bd8455b4712866148302e62ef12040c732  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/security-engineering/records.yaml
+7371acace4b9bb8ff9ebd8a3df1c650927d6e5cb1d7cfa00da4a0fa57769b29b  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/testing-verification/records.yaml

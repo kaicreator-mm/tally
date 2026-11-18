@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kaicreator-mm/tally/docs/versions/v2.1.2/knowledge/model/ai-cross-model-review-decision.schema.json",
+  "title": "Tally v2.1.2 AI non-human cross-model review decision",
+  "description": "Versioned decision row of the R180 AI cross-model review evidence ledger (GPT/GLM/Qwen, three actual distinct model families). Each row binds one original Claim/Evidence/Locator chain by exact record versions and canonical SHA-256 digests, records the scoped non-human review outcome, and forbids every promotion path: no Claim lifecycle transition, no in-graph ReviewDecision, no human professional Oracle attestation, no publisher rights grant, no SAP/Root/Global/R8/Effect/Release qualification. A stale digest/version, a duplicated model family, a forged family identity (e.g. GLM presented as Gemini) or an elevated pending leg fails closed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claimId",
+    "decisionId",
+    "decisionRecordVersion",
+    "decisionLifecycle",
+    "evidenceId",
+    "locatorId",
+    "sourceId",
+    "scope",
+    "aiReviewDecision",
+    "claimLifecycleAfterDecision",
+    "reviewStatusAfterDecision",
+    "semanticOracle"
+  ],
+  "properties": {
+    "claimId": {
+      "$ref": "#/$defs/graphRef"
+    },
+    "decisionId": {
+      "type": "string",
+      "pattern": "^se:AIM-[A-Z0-9][A-Z0-9._-]*$"
+    },
+    "decisionRecordVersion": {
+      "$ref": "#/$defs/version"
+    },
+    "decisionLifecycle": {
+      "type": "string",
+      "enum": ["ACTIVE", "SUPERSEDED", "RETRACTED"]
+    },
+    "evidenceId": {
+      "$ref": "#/$defs/graphRef"
+    },
+    "locatorId": {
+      "$ref": "#/$defs/graphRef"
+    },
+    "sourceId": {
+      "$ref": "#/$defs/graphRef"
+    },
+    "recordBindings": {
+      "type": "object"
+    },
+    "pendingOutcomeLeg": {
+      "type": "object"
+    },
+    "elementAttribution": {
+      "type": "object"
+    },
+    "scope": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "positive": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "negative": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "unknown": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "aiReviewDecision": {
+      "const": "ACCEPT_SCOPED_AI_NON_HUMAN_CROSS_MODEL"
+    },
+    "claimLifecycleAfterDecision": {
+      "const": "UNCHANGED_PENDING_REVIEW"
+    },
+    "reviewStatusAfterDecision": {
+      "const": "UNCHANGED_PENDING"
+    },
+    "semanticOracle": {
+      "const": "NOT_ATTESTED"
+    },
+    "counterexamples": {
+      "type": "array"
+    },
+    "staleDiscriminators": {
+      "type": "array"
+    },
+    "integration": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "graphRef": {
+      "type": "string",
+      "pattern": "^se:[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "x-quorum-rule": "The ledger quorum requires three receipts from three ACTUAL distinct model families, unanimous ACCEPT_SCOPED per claim, and P0=P1=0 on every receipt. Two receipts of the same family (duplicate-model counting) or any receipt whose family label contradicts its own disclosure (forged identity, e.g. GLM presented as Gemini) must fail closed. The Gemini lane itself remains NOT_RUN.",
+  "x-qualification-boundary": "An AI cross-model review decision is non-human review evidence only. It is not a human or professional Oracle attestation, not a publisher authorization, not a Claim lifecycle transition, and does not create in-graph ReviewDecision nodes (the count must remain exactly 0)."
+}

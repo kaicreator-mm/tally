@@ -1,0 +1,6 @@
+# Tally v2.1.2 C1 generated-graph manifest (deterministic build)
+# build date (fixed): 2026-11-12
+# canonical graph digest (sha256 over sorted N-Triples): 84e840cbd43a15fb8e41e959d18f1f49fcf37e79fbd03f6adc63c16857cf2034
+# verify with: sha256sum -c manifest.sha256
+d5833d5af79d064635f54281f35673712be5cc2f2611f424bbb060370f203542  graph.ttl
+cf734019aa28b09a9f7b6dab2020202ab614cd590728f965b10dc964cef97a6e  graph.jsonld

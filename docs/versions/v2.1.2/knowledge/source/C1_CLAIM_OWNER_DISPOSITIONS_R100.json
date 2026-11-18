@@ -1,0 +1,226 @@
+{
+  "schema": "tally.dke.c1-scoped-source-owner-claim-dispositions/1",
+  "recordVersion": "0.2.1",
+  "version": "v2.1.2-candidate",
+  "status": "OWNER_SCOPED_DECISIONS_VERSIONED_NOT_CLAIM_LIFECYCLE",
+  "recordedOn": "2026-11-14",
+  "authority": {
+    "repository": "kaicreator-mm/tally",
+    "sourceOwnerLogin": "kaicreator-mm",
+    "decisionRecord": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6877334744",
+    "delegationType": "PROJECT_OWNER_DELEGATED_EXECUTION_NOT_PERSONAL_LINE_BY_LINE_ATTESTATION",
+    "priorOd05AndGhDecision": "https://github.com/kaicreator-mm/tally/issues/398#issuecomment-6808543942",
+    "independentEducationalReview": "https://github.com/kaicreator-mm/domain-forge/pull/208#pullrequestreview-5890546555",
+    "publicationPermission": "NOT_GRANTED_BY_THIS_OWNER_DECISION",
+    "independentProfessionalOracle": "NOT_ATTESTED"
+  },
+  "sources": {
+    "originalRepoCommit": "3e94685ca57a4b7258988826697af1c1c3a6b3c8",
+    "originalGraphPath": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
+    "originalGraphBlob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
+    "candidateGraphPath": "docs/versions/v2.1.2/knowledge/generated/graph.jsonld",
+    "candidateGraphBlob": "a49ddf58a0c4a5b25ebdd4018c8234f64e6365e0",
+    "recordedAtRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED",
+    "publisher": "Computer Science Curricula 2023, Final report, DOI 10.1145/3664191",
+    "rightsScope": "Metadata/locator and concise original paraphrase only; no substantial text republication, LLM-training grant or independent publisher authorization",
+    "candidateGraphBaseProducedAt": "b226ecaab32cbef427393157399a1bdc7cdaef16",
+    "candidateGraphCurrentRevisionPolicy": "ATTESTED_BY_NATIVE_GIT_HEAD_NOT_SELF_EMBEDDED"
+  },
+  "sourceRecordGap": {
+    "id": "TALLY-C1-R100-SCHEMA-01",
+    "status": "RESOLVED_IN_V212_SOURCE_OWNER_DISPOSITION_CONTRACT",
+    "reviewerRoleEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1055-1061 permits HUMAN_DOMAIN_REVIEWER/HUMAN_SUBJECT_EXPERT/HUMAN_SOURCE_REVIEWER/MAINTAINER, not SOURCE_OWNER",
+    "reviewOutcomeEnum": "docs/versions/v2.1.1/knowledge/model/schema/software-engineering.yaml:1062-1068 permits ACCEPT/REJECT/REQUEST_CHANGES/DEFER, not ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+    "acceptPromotionCoupling": "docs/versions/v2.1.1/knowledge/model/validate_knowledge_graph.py:423-431 requires an ACCEPT target to be ACCEPTED with an exact digest, so an in-graph Owner ACCEPT would unlawfully promote the PENDING Claim",
+    "minimalFutureExtension": "A separate SourceOwnerDisposition bound to exact Claim/Evidence/Locator record versions and canonical SHA-256 digests, rights and candidate Element attribution; do not widen ACCEPTED semantics",
+    "resolution": {
+      "schema": "docs/versions/v2.1.2/knowledge/model/source-owner-disposition.schema.json",
+      "validatorAndProducer": "docs/versions/v2.1.2/knowledge/tools/source-owner-disposition.mjs",
+      "graphType": "se:SourceOwnerDisposition",
+      "reviewDecisionCoupling": "NONE",
+      "claimLifecyclePromotion": "FORBIDDEN"
+    }
+  },
+  "claims": [
+    {
+      "claimId": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+      "dispositionId": "se:SOD-CS2023-REQ-R1",
+      "dispositionRecordVersion": "0.1.0",
+      "dispositionLifecycle": "ACTIVE",
+      "evidenceId": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+      "locatorId": "se:LOC-CS2023-SE-REQ-KU",
+      "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "03e34ca1f8232186e5d32681e4a3af9f6b0d579b9442cef196da07c9029250a1"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "4923289fae7218314e260750f56ef0b39215e907fdd84d3f99b5eddfd7b7eafa"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "a7c854418b608ce14843e236aac6dfaf406b29fbe549b7eecf04b539592f92c6"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "26fa2a5d697a485583e7b32c4ff676277eaa9e0078448f0b06e610e87b2d47df"
+        }
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS",
+        "candidateElementRef": "dke:ev16.d02.se-requirements-child",
+        "positiveCq": "CS2023_REQUIREMENTS_TEACHING",
+        "unknownCq": "REQUIREMENTS_UNIFORM_METHOD",
+        "parentElementRef": "dke:ev16.d02.se-requirements-vv-child",
+        "parentStatus": "UNKNOWN",
+        "globalRefs": [],
+        "globalStatus": "UNASSIGNED_UNKNOWN",
+        "rootStatus": "UNKNOWN"
+      },
+      "scope": "CS2023 SE-Requirements: Product Requirements, KA Core 1a-1c; curriculum teaching and bounded original paraphrase only",
+      "positive": "At least one structured functional-requirements documentation method; allow context-appropriate use cases/user stories and explain trade-offs",
+      "negative": "No universal single-method uniformity, method superiority, Pattern/Case/DecisionModel automatic adoption or professional mandate",
+      "unknown": "Any publication license beyond bibliographic metadata/short paraphrase; independent professional applicability and original Product SAP",
+      "ownerDisposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "originalClaimLifecycle": "PENDING_REVIEW",
+      "candidateClaimLifecycle": "PENDING_REVIEW",
+      "originalReviewStatus": "PENDING",
+      "candidateReviewStatus": "PENDING",
+      "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
+      "semanticOracle": "NOT_ATTESTED",
+      "locatorCorrection": {
+        "status": "VERSIONED_SOURCE_REPAIRED_NOT_FROZEN_REWRITTEN",
+        "sourceDocument": "https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf",
+        "pdfZeroBasedPageIndex": 241,
+        "printedPage": 242,
+        "section": "SE-Requirements: Product Requirements",
+        "scope": "KA Core topics 1a-1c",
+        "originalFrozenLocatorVersion": "0.1.0",
+        "candidateLocatorVersion": "0.1.1",
+        "originalWrongPageAnchor": "PDF page indices 174-176",
+        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904629289"
+      }
+    },
+    {
+      "claimId": "se:CLM-TVV-0001",
+      "dispositionId": "se:SOD-CS2023-VV-R1",
+      "dispositionRecordVersion": "0.1.0",
+      "dispositionLifecycle": "ACTIVE",
+      "evidenceId": "se:EVD-TVV-0003",
+      "locatorId": "se:LOC-CS2023-SE-VALIDATION-KU",
+      "sourceId": "se:SRC-CS2023",
+      "recordBindings": {
+        "claim": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97"
+        },
+        "evidence": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f08e84eb855ee94a333c143558086f8fdc79f32744ce3da8318dc7e5bb5c5507"
+        },
+        "locator": {
+          "recordVersion": "0.1.0",
+          "digestSha256": "f76d33bfe8f1b5700c7f1827effe7d69104029b0fcc5aecfe500cab9b04da6e3"
+        },
+        "candidateLocator": {
+          "recordVersion": "0.1.1",
+          "digestSha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947"
+        }
+      },
+      "elementAttribution": {
+        "taxonomyNodeRef": "se:NODE-CS2023-SE-VALIDATION",
+        "candidateElementRef": "dke:ev16.d02.se-verification-child",
+        "positiveCq": "CS2023_VV_TEACHING",
+        "unknownCq": "VV_AUTOMATIC_BUSINESS_ACCEPTANCE",
+        "parentElementRef": "dke:ev16.d02.se-requirements-vv-child",
+        "parentStatus": "UNKNOWN",
+        "globalRefs": [
+          "se:REL-TVV-0020"
+        ],
+        "globalStatus": "UNKNOWN_PUBLISHER_MANDATE_EXCLUDED",
+        "rootStatus": "UNKNOWN",
+        "selectedCqSourceBinding": {
+          "id": "se:SCB-CS2023-VV-R1",
+          "recordVersion": "0.1.0",
+          "lifecycle": "ACTIVE",
+          "createdOn": "2026-11-15",
+          "positiveCq": "CS2023_VV_TEACHING",
+          "bindingScope": "SELECTED_CQ_RESEARCH_CANDIDATE_ONLY_NOT_FROZEN_R8_CELL",
+          "claimRef": "se:CLM-TVV-0001",
+          "claimRecordVersion": "0.1.0",
+          "claimDigestSha256": "090f49a4d44bb0fb7a23408e3ca57b4dfc27a80a4a1fa94c8f87680c2f7afb97",
+          "sectionLeg": {
+            "locatorRef": "se:LOC-CS2023-SE-VALIDATION-KU",
+            "recordVersion": "0.1.1",
+            "digestSha256": "9878731436bd96e09ad1d4cf3a7529952d5a3f4660963c016b18d6d751f43947",
+            "evidenceRef": "se:EVD-TVV-0003",
+            "anchorType": "SECTION",
+            "pdfZeroBasedPage": "245",
+            "printedPage": "246"
+          },
+          "outcomeLeg": {
+            "locatorRef": "se:LOC-CS2023-SE-VALIDATION-LO2",
+            "recordVersion": "0.1.0",
+            "digestSha256": "1b75df53c55436f51a406e957291f778b8a7eea42760b4115dd14901a1cbab56",
+            "evidenceRef": "se:EVD-TVV-0016",
+            "anchorType": "PAGE",
+            "pdfZeroBasedPage": "247",
+            "printedPage": "248"
+          },
+          "claimSupportRef": "se:REL-TVV-0024",
+          "authorityRecord": "https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084"
+        }
+      },
+      "scope": "CS2023 SE-Validation, CS Core topic 1 and learning outcome 2; curriculum teaching and bounded original paraphrase only",
+      "positive": "Verification and validation ask two distinct educational questions, with no inference of full business acceptance",
+      "negative": "Passing tests is not automatic customer/functional acceptance, SWEBOK/ISO universal qualification, Parent/Root ownership or Effect authorization",
+      "unknown": "Independent professional Oracle, completed business-acceptance evidence, original Root/Global/SAP/R8 qualification",
+      "ownerDisposition": "ACCEPT_SCOPED_FOR_VERSIONED_CANDIDATE",
+      "originalClaimLifecycle": "PENDING_REVIEW",
+      "candidateClaimLifecycle": "PENDING_REVIEW",
+      "originalReviewStatus": "PENDING",
+      "candidateReviewStatus": "PENDING",
+      "evidenceExtraction": "EXTRACTED_PENDING_REVIEW",
+      "semanticOracle": "NOT_ATTESTED",
+      "locatorCorrection": {
+        "status": "VERSIONED_SOURCE_REPAIRED_NOT_FROZEN_REWRITTEN",
+        "sourceDocument": "https://ieeecs-media.computer.org/media/education/reports/CS2023.pdf",
+        "pdfZeroBasedPageIndex": 245,
+        "printedPage": 246,
+        "section": "SE-Validation: Software Verification and Validation",
+        "scope": "CS Core topic 1 and learning outcome 2",
+        "originalFrozenLocatorVersion": "0.1.0",
+        "candidateLocatorVersion": "0.1.1",
+        "originalWrongPageAnchor": "PDF page indices 174-176",
+        "reviewEvidence": "https://github.com/kaicreator-mm/tally/pull/399#pullrequestreview-5904629289",
+        "outcomePinpoint": {
+          "status": "VERSIONED_TWO_PAGE_ANCHOR_SECTION_START_PLUS_OUTCOME_PINPOINT",
+          "sectionStartAnchor": "p246 SECTION locator (se:LOC-CS2023-SE-VALIDATION-KU rv0.1.1) remains the shared 8-Evidence/5-Claim section anchor, unchanged",
+          "outcomePinpointLocator": "se:LOC-CS2023-SE-VALIDATION-LO2",
+          "outcomePinpointLocatorVersion": "0.1.0",
+          "outcomePdfZeroBasedPageIndex": 247,
+          "outcomePrintedPage": 248,
+          "outcomeEvidence": "se:EVD-TVV-0016",
+          "consumedBySelectedCq": "CS2023_VV_TEACHING via se:SCB-CS2023-VV-R1 and se:REL-TVV-0024",
+          "sharedLocatorFanoutPreserved": "8 Evidence (EVD-TVV-0003/0004/0005/0006/0007/0008/0009/0014) and 5 direct Claims (CLM-TVV-0001/0002/0003/0006/0007) unchanged; no in-place mutation of the original 0.1.1 SECTION locator",
+          "authorityRecord": "https://github.com/kaicreator-mm/domain-intelligence-engineering/issues/2#issuecomment-6890002084"
+        }
+      }
+    }
+  ],
+  "qualification": {
+    "originalFrozenGraphModified": false,
+    "originalProducerClaimLifecycleAdopted": false,
+    "sourceOwnerDecisionsRecorded": 2,
+    "originalR8": "1/53_SCOPED_ONLY",
+    "formalSap": "0/6",
+    "formalGlobal": "0/5",
+    "parentRoot": "UNKNOWN",
+    "originalD04": "NOT_RUN",
+    "effectAuthorized": false,
+    "releaseAuthorized": false
+  },
+  "next": "The v2.1.2 graph now carries two distinct SourceOwnerDisposition records under the resolved R100 schema gap. Original and candidate Claims remain PENDING with no ReviewDecision. Future Claim ACCEPTED or original SAP/Global/Root/R8 qualification requires a separate exact Claim review and distinct professional semantic Oracle; no publication, Effect or Release authorization is inferred."
+}
