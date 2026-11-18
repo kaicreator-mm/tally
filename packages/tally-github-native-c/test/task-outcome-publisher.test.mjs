@@ -120,7 +120,7 @@ test('POS qualified Outcome publishes once with full provenance and reconciles',
   assert.equal(row.value.phase,'QUALIFIED_OUTCOME_PUBLISHED');
   assert.equal(row.value.fsw.valueSha256,chain.input.fsw.valueSha256);
   assert.equal(row.value.reviewDecision.decision,'ACCEPT');
-  assert.ok(row.value.distinctFrom.includes('NATIVE_DONE_LABEL'));
+  assert.deepEqual([...row.value.distinctFrom],['DISPATCH_CLAIMED_COMMENT_ACK','NATIVE_ISSUE_CLOSED','NATIVE_DONE_LABEL','JOURNEY_PROJECTION','PR394_SOURCE_REPAIR_GREEN'],'all five pack-literal markers');
   const rec=await publisher.reconcileTaskOutcome({joinValueSha256:chain.input.join.valueSha256});
   assert.equal(rec.status,'OUTCOME_PRESENT');
   assert.equal(rec.taskPass,false,'reconciliation classifies, never authorizes');
@@ -137,7 +137,8 @@ test('NEG REWORK and DEFER decisions never publish and never pass',async()=>{
     assert.equal(result.reason,'DECISION_'+decision+'_NOT_TASK_PASS');
     assert.equal(result.taskPass,false);
     assert.equal(result.publication,'HOLD');
-    assert.equal(Object.keys(chain.joinStore._rows).length,Object.keys(chain.fswStore._rows).length);
+    const outcomeRows=[...chain.fswStore._rows.keys(),...chain.claimStore._rows.keys(),...chain.joinStore._rows.keys()].filter(k=>k.startsWith('tally:v2:task-outcome:'));
+  assert.equal(outcomeRows.length,0,'REWORK/DEFER must mint zero outcome rows');
   }
 });
 

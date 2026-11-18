@@ -187,7 +187,7 @@ export function createTaskOutcomePublisher({
         sourcePack:inp.sourcePack,ci:inp.ci,hostFence:inp.hostFence,
         publisherWriterId:writerAuthority.writerId,publishedAt:clock(),
         distinctFrom:Object.freeze(['DISPATCH_CLAIMED_COMMENT_ACK','NATIVE_ISSUE_CLOSED',
-          'NATIVE_DONE_LABEL','JOURNEY_PROJECTION','SOURCE_REPAIR_MERGE']),
+          'NATIVE_DONE_LABEL','JOURNEY_PROJECTION','PR394_SOURCE_REPAIR_GREEN']),
       };
       let reservation=null;
       try{reservation=await store.put(outcomeKey,outcomeValue,{mustBeAbsent:true});}
