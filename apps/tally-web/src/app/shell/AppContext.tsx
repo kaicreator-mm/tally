@@ -1,12 +1,12 @@
-import {createContext,useContext, useMemo,useState,type ReactNode} from 'react';
+import {createContext,useContext,useMemo,useState,type ReactNode} from 'react';
 import type {Locale} from '../../i18n/index.ts';
 import {createT,rememberLocale,formatDyn,type StorageLike} from '../../i18n/index.ts';
+import {resolveScope,chooseProject,chooseVersion,
+  type ScopeCatalog,type SelectedScope} from './scope.ts';
 
 export interface ProjectSummary{id:string;title:string;repository?:string;}
 export interface VersionSummary{id:string;projectId:string;label:string;ref?:string;}
-/** Host-provided shell catalog. UI-E #232 wires the real adapter; until then
- * every entry is absent (NOT_CONNECTED), never faked. */
-export interface ShellCatalog{
+export interface ShellCatalog extends ScopeCatalog{
   projects:readonly ProjectSummary[]|null;
   versionsByProject:Readonly<Record<string,readonly VersionSummary[]>>|null;
 }
@@ -32,11 +32,14 @@ export const ShellContext=createContext<ShellState>({
 });
 export const useShell=()=>useContext(ShellContext);
 export function ShellProvider({children,storage,catalog={
-  projects:null,versionsByProject:null}}:
-  {children:ReactNode;storage?:StorageLike;catalog?:ShellCatalog}){
+  projects:null,versionsByProject:null},requestedScope={},onScopeChange}:
+  {children:ReactNode;storage?:StorageLike;catalog?:ShellCatalog;
+    requestedScope?:Partial<SelectedScope>;
+    onScopeChange?:(scope:SelectedScope)=>void}){
   const [locale,setLocaleState]=useState<Locale>('zh-CN');
-  const [projectId,setProjectId]=useState<string|null>(null);
-  const [versionId,setVersionId]=useState<string|null>(null);
+  // URL query is resolved against the Host catalog on every render.
+  // There is no unsynchronized duplicate local selection state.
+  const {projectId,versionId}=resolveScope(catalog,requestedScope);
   const value=useMemo<ShellState>(()=>{
     const t=createT(locale);
     return {
@@ -45,11 +48,11 @@ export function ShellProvider({children,storage,catalog={
       t:(key,params)=>t(key,params),
       td:(key,params)=>formatDyn(locale,key,params),
       projectId,versionId,
-      // Strict three-level rule: switching project always clears version.
-      selectProject(id){setProjectId(id);setVersionId(null);},
-      selectVersion(id){setVersionId(id);},
+      selectProject(id){onScopeChange?.(chooseProject(catalog,id));},
+      selectVersion(id){onScopeChange?.(chooseVersion(catalog,
+        {projectId,versionId},id));},
       catalog,
     };
-  },[locale,projectId,versionId,catalog,storage]);
+  },[locale,projectId,versionId,catalog,storage,onScopeChange]);
   return <ShellContext.Provider value={value}>{children}</ShellContext.Provider>;
 }
