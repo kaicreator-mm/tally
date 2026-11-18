@@ -5,7 +5,10 @@ export function Select({label,value,options,onChange,placeholder,disabled}:
   {label?:string;value:string|null;options:readonly SelectOption[];
    onChange:(value:string)=>void;placeholder?:string;disabled?:boolean}){
   const id=useId();
-  return <div style={{display:'grid',gap:'var(--s1)',minWidth:120}}>
+  // #449 U4: no inline min-width floor here — .topbar .select-field lets the
+  // picker shrink under flex pressure (sole mount: TopBar) instead of forcing
+  // the shell's implicit grid track (and the document) wider than the viewport.
+  return <div className="select-field" style={{display:'grid',gap:'var(--s1)'}}>
     {label?<label htmlFor={id} className="sr-only">{label}</label>:null}
     <select id={id} value={value??''} disabled={disabled}
       onChange={event=>onChange(event.target.value)}
