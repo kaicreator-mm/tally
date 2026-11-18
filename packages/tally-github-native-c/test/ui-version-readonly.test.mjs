@@ -364,3 +364,71 @@ test('moved branch or invalid CI context cannot yield a connected QA state',asyn
     ...args(qaClient()),qaStatusContext:'hiddenValidation/PASS'}))
     .reason,'QA_STATUS_SOURCE_NOT_CONFIGURED');
 });
+
+// ---------------------------------------------------------------------------
+// A2 dual-Epoch observation primitives (#392/6985978779): live head observation
+// without pin assertion + official-ancestry proof. The strict current-head
+// guard in the pinned readers above is unchanged and never relaxed.
+// ---------------------------------------------------------------------------
+import {observeUiNativeVersionHeadFromClient,verifyUiNativeVersionAncestryFromClient}
+  from '../src/ui-version-readonly.mjs';
+
+const s0Sha='7'.repeat(40),s1Sha='9'.repeat(40);
+const headClient=(branchSha=s1Sha)=>({
+  rest:{repos:{getBranch:async()=>({data:{commit:{sha:branchSha}}})}}});
+const ancestryClient=({status='ahead',aheadBy=3,baseCommit=s0Sha,mergeBase=s0Sha}={})=>({
+  rest:{repos:{compareCommits:async()=>({data:{status,ahead_by:aheadBy,
+    base_commit:{sha:baseCommit},merge_base_commit:{sha:mergeBase}}})}}});
+
+test('A2 head observation reports the official live branch tip without a pin assertion',async()=>{
+  const moved=await observeUiNativeVersionHeadFromClient({
+    ...{octokit:headClient(s1Sha),owner,repo,versionId}});
+  assert.equal(moved.connected,true);
+  assert.equal(moved.headSha,s1Sha);
+  assert.equal(moved.repository,'org/tally');
+  assert.equal(moved.versionId,versionId);
+  const other=await observeUiNativeVersionHeadFromClient({
+    octokit:headClient(s0Sha),owner,repo,versionId});
+  assert.equal(other.headSha,s0Sha);
+});
+test('A2 head observation fails closed on invalid input or transport failure',async()=>{
+  assert.equal((await observeUiNativeVersionHeadFromClient({
+    octokit:headClient(),owner:'bad name!',repo,versionId})).reason,
+    'INVALID_SELECTED_GITHUB_SOURCE');
+  assert.equal((await observeUiNativeVersionHeadFromClient({
+    owner,repo,versionId})).reason,'INVALID_SELECTED_GITHUB_SOURCE');
+  assert.equal((await observeUiNativeVersionHeadFromClient({
+    octokit:{rest:{repos:{getBranch:async()=>({data:{commit:{}}})}}},
+    owner,repo,versionId})).reason,'VERSION_BRANCH_HEAD_UNOBSERVABLE');
+  assert.equal((await observeUiNativeVersionHeadFromClient({
+    octokit:{rest:{repos:{getBranch:async()=>{throw new Error('403');}}}},
+    owner,repo,versionId})).reason,'GITHUB_NATIVE_SOURCE_UNAVAILABLE');
+});
+test('A2 ancestry probe proves only a real official ancestor',async()=>{
+  const ok=await verifyUiNativeVersionAncestryFromClient({
+    octokit:ancestryClient({}),owner,repo,baseSha:s0Sha,headSha:s1Sha});
+  assert.equal(ok.connected,true);
+  assert.equal(ok.ancestry,'BASE_IS_ANCESTOR');
+  assert.equal(ok.baseSha,s0Sha);
+  for(const bad of [
+    ancestryClient({status:'diverged'}),
+    ancestryClient({status:'ahead',mergeBase:'4'.repeat(40)}),
+    ancestryClient({status:'ahead',baseCommit:'4'.repeat(40)}),
+    ancestryClient({status:'behind'}),
+  ]){
+    const r=await verifyUiNativeVersionAncestryFromClient({
+      octokit:bad,owner,repo,baseSha:s0Sha,headSha:s1Sha});
+    assert.equal(r.connected,false);
+    assert.equal(r.reason,'SUCCESSOR_ANCESTRY_UNPROVEN');
+  }
+  assert.equal((await verifyUiNativeVersionAncestryFromClient({
+    octokit:ancestryClient({}),owner,repo,baseSha:s1Sha,headSha:s1Sha})).reason,
+    'INVALID_ANCESTRY_PROBE');
+  assert.equal((await verifyUiNativeVersionAncestryFromClient({
+    octokit:ancestryClient({}),owner,repo,baseSha:'short',headSha:s1Sha})).reason,
+    'INVALID_ANCESTRY_PROBE');
+  assert.equal((await verifyUiNativeVersionAncestryFromClient({
+    octokit:{rest:{repos:{compareCommits:async()=>{throw new Error('429');}}}},
+    owner,repo,baseSha:s0Sha,headSha:s1Sha})).reason,
+    'GITHUB_NATIVE_SOURCE_UNAVAILABLE');
+});

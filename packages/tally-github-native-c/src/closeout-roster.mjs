@@ -646,3 +646,219 @@ export function createHostCloseoutRosterPorts({
       writerLogin,writerId,store,handoffReader,repository,versionId,expectedVersionSha})
   });
 }
+
+// ---------------------------------------------------------------------------
+// A2 dual-Epoch successor read contract (#392/6983271743 + #392/6985978779).
+// The original reader above conflates one SHA as freeze pin and live branch
+// head; the S0-only function/API behavior above stays historical and is NOT
+// modified. The wrapper below is a separately admitted READ-ONLY successor:
+// it proves the S0 frozen record (original CAS row, immutable Pack blob,
+// witnesses) AND separately observes the live branch head S1 (ancestry +
+// strictly-pinned native re-read), with explicit FROZEN_HISTORICAL_VERIFIED
+// versus CURRENT_STRUCTURAL_COMPATIBLE statuses. It never writes CAS, never
+// grants Claim/FSW/Task authority, and never labels an S1 structural match as
+// a Claim or Task outcome.
+// ---------------------------------------------------------------------------
+
+const WITNESS_KEYS=new Set(['schema','repository','versionId','freezeBaseSha',
+  'observedVersionSha','frozenPackBlobSha','versionDagKey','original51IdsDigest',
+  'native29EdgeDigest','changedCodeBlobs','affectedAbiDigest','reviewRef',
+  'reviewedHead','scopeDecisionRef','ciRefs','issuedAt','expiresAt','revoked']);
+
+/** Canonical identity digests of a version Task Pack cohort: sorted
+ * (issueNumber,title) pairs and sorted NATIVE edge keys. A successor
+ * compatibility witness binds these digests so it can never be replayed
+ * against a different frozen 51/29 cohort. */
+export function versionDagIdentityDigests({taskIssues,edges}={}){
+  if(!Array.isArray(taskIssues)||!taskIssues.length||!Array.isArray(edges))return null;
+  const ids=taskIssues.map(t=>({issueNumber:Number(t?.issueNumber),
+    title:String(t?.title??'')}))
+    .filter(t=>Number.isSafeInteger(t.issueNumber))
+    .sort((a,b)=>a.issueNumber-b.issueNumber||a.title.localeCompare(b.title));
+  if(ids.length!==taskIssues.length)return null;
+  const edgeKeys=edges.filter(e=>e?.kind==='NATIVE')
+    .map(e=>({from:Number(e?.from),to:Number(e?.to)}))
+    .filter(e=>Number.isSafeInteger(e.from)&&Number.isSafeInteger(e.to))
+    .sort((a,b)=>a.from-b.from||a.to-b.to);
+  if(edgeKeys.length!==edges.filter(e=>e?.kind==='NATIVE').length)return null;
+  return {original51IdsDigest:hash(JSON.stringify(ids)),
+    native29EdgeDigest:hash(JSON.stringify(edgeKeys))};
+}
+
+function successorWitnessValid(w,repository,versionId,freezeBaseSha,s1,doc,key,digests,clock){
+  if(!plain(w)||Object.keys(w).some(k=>!WITNESS_KEYS.has(k))||
+     w.schema!=='tally/v2/source-successor-compatibility-witness/v1'||
+     w.repository!==repository||w.versionId!==versionId||
+     w.freezeBaseSha!==freezeBaseSha||w.observedVersionSha!==s1||
+     w.frozenPackBlobSha!==doc.blobSha||w.versionDagKey!==key||
+     w.original51IdsDigest!==digests.original51IdsDigest||
+     w.native29EdgeDigest!==digests.native29EdgeDigest||
+     !Array.isArray(w.changedCodeBlobs)||w.changedCodeBlobs.length<1||
+     w.changedCodeBlobs.some(c=>!plain(c)||typeof c.path!=='string'||!c.path||
+       !SHA.test(c.beforeBlob??'')||!SHA.test(c.afterBlob??''))||
+     !/^[a-f0-9]{64}$/.test(w.affectedAbiDigest??'')||
+     typeof w.reviewRef!=='string'||
+     !w.reviewRef.startsWith('https://github.com/'+repository+'/')||
+     !SHA.test(w.reviewedHead??'')||w.reviewedHead!==s1||
+     typeof w.scopeDecisionRef!=='string'||
+     !w.scopeDecisionRef.startsWith('https://github.com/'+repository+'/')||
+     !Array.isArray(w.ciRefs)||w.ciRefs.length<1||
+     w.ciRefs.some(r=>typeof r!=='string'||!r.startsWith('https://ci.kaicreator.com/'))||
+     !Number.isFinite(Date.parse(w.issuedAt??''))||
+     !Number.isFinite(Date.parse(w.expiresAt??''))||
+     Date.parse(w.expiresAt)<=Date.parse(clock())||w.revoked!==false)
+    return false;
+  return true;
+}
+
+/** Read-only dual-Epoch successor reader. freezeBaseSha is the immutable S0
+ * freeze pin; the live branch head is observed per request as S1 and pinned
+ * strictly (before and after) for the current native re-read. Without an
+ * authenticated forward compatibility witness a descendant S1 stays
+ * FROZEN_HISTORICAL_VERIFIED with current=false (STALE) — never CURRENT. */
+export function createHostVersionTaskDagDualEpochReader({
+  repository,versionId,freezeBaseSha,store,taskPackReader,
+  reviewWitnessReader,ownerApprovalReader,
+  branchHeadReader,ancestryReader,currentRosterReader,now
+}={}){
+  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+     !SHA.test(freezeBaseSha??'')||typeof store?.get!=='function'||
+     typeof taskPackReader!=='function'||typeof reviewWitnessReader!=='function'||
+     typeof ownerApprovalReader!=='function'||
+     typeof branchHeadReader!=='function'||typeof ancestryReader!=='function'||
+     typeof currentRosterReader!=='function')
+    throw new TypeError('TRUSTED_DUAL_EPOCH_READER_REQUIRED');
+  const clock=now??(()=>new Date().toISOString());
+  const key='tally:v2:version-task-dag:'+hash(repository+'#'+versionId);
+  async function readDualEpoch({compatibilityWitness=null}={}){
+    try{
+      // Historical leg: original S0 CAS row, immutable Pack blob and witnesses.
+      const before=await store.get(key),doc=before?.value;
+      if(!doc||doc.schema!=='tally/version-task-dag/v1'||
+         doc.phase!=='FROZEN_VERSION_TASK_DAG'||doc.repository!==repository||
+         doc.versionId!==versionId||doc.sourceSha!==freezeBaseSha||
+         doc.authorized!==false||doc.admitted!==false||
+         doc.taskPass!==false||doc.releasePass!==false||
+         !SHA.test(doc.blobSha??'')||doc.frozen?.blobSha!==doc.blobSha||
+         doc.witness?.status!=='INDEPENDENTLY_VERIFIED'||
+         doc.witness?.blobSha!==doc.blobSha||doc.witness?.sourceSha!==freezeBaseSha||
+         doc.witness?.reviewedHeadSha!==freezeBaseSha||
+         !ID.test(doc.witness?.reviewer??'')||!ID.test(doc.witness?.author??'')||
+         !Number.isFinite(Date.parse(doc.witness.verifiedAt??''))||
+         typeof doc.witness.reviewRef!=='string'||
+         !doc.witness.reviewRef.startsWith('https://github.com/'+repository+'/')||
+         doc.ownerApproval?.status!=='OWNER_APPROVED'||
+         doc.ownerApproval?.sourceSha!==freezeBaseSha||
+         doc.ownerApproval?.owner!==repository.split('/')[0]||
+         !Number.isFinite(Date.parse(doc.ownerApproval.approvedAt??''))||
+         typeof doc.frozenAt!=='string'||!Number.isFinite(Date.parse(doc.frozenAt))||
+         doc.frozen?.versionId!==versionId||doc.frozen?.taskPackRef!==doc.taskPackRef||
+         !immutableBlobRef(doc.taskPackRef,repository)||
+         typeof doc.ownerApproval.approvalRef!=='string'||
+         !doc.ownerApproval.approvalRef.startsWith('https://github.com/'+repository+'/'))
+        return denied('FROZEN_DAG_RECORD_UNQUALIFIED');
+      const file=await taskPackReader({taskPackRef:doc.taskPackRef,expectedBlobSha:doc.blobSha});
+      if(file?.status!=='VERIFIED'||file.blobSha!==doc.blobSha||
+         typeof file.content!=='string')return denied('TASK_PACK_READBACK_FAILED');
+      const pack=JSON.parse(file.content);
+      if(!validTaskPack(pack,repository,versionId,freezeBaseSha,doc.blobSha)||
+         !same(pack.taskIssues.map(x=>x.issueNumber),doc.frozen.taskIssues)||
+         !same(pack.edges,doc.frozen.edges)||!same(pack.claimSubjects,doc.frozen.claimSubjects))
+        return denied('FROZEN_DAG_CONTENT_MISMATCH');
+      const [review,approval]=await Promise.all([
+        reviewWitnessReader({taskPackRef:doc.taskPackRef,taskPackBlobSha:doc.blobSha,
+          versionId,sourceSha:freezeBaseSha}),
+        ownerApprovalReader({taskPackRef:doc.taskPackRef,taskPackBlobSha:doc.blobSha,
+          versionId,sourceSha:freezeBaseSha})
+      ]);
+      if(review?.status!=='INDEPENDENTLY_VERIFIED'||
+         review.taskPackBlobSha!==doc.blobSha||review.sourceSha!==freezeBaseSha||
+         review.reviewedHeadSha!==freezeBaseSha||
+         review.reviewedHeadSha!==doc.witness.reviewedHeadSha||
+         review.reviewer!==doc.witness.reviewer||review.author!==doc.witness.author||
+         review.reviewRef!==doc.witness.reviewRef||
+         approval?.status!=='OWNER_APPROVED'||approval.taskPackBlobSha!==doc.blobSha||
+         approval.sourceSha!==freezeBaseSha||approval.owner!==repository.split('/')[0]||
+         approval.owner!==doc.ownerApproval?.owner||
+         approval.approvalRef!==doc.ownerApproval?.approvalRef)
+        return denied('FROZEN_DAG_WITNESS_STALE');
+      const digests=versionDagIdentityDigests({taskIssues:pack.taskIssues,edges:pack.edges});
+      if(!digests)return denied('FROZEN_DAG_CONTENT_MISMATCH');
+      // Observe the live official branch head S1 (before).
+      const headBefore=await branchHeadReader();
+      if(headBefore?.connected!==true||!SHA.test(headBefore.headSha??'')||
+         headBefore.versionId!==versionId||headBefore.repository!==repository)
+        return denied('SUCCESSOR_HEAD_OBSERVATION_UNQUALIFIED');
+      const s1=headBefore.headSha;
+      // Current leg: strictly pinned native re-read at the OBSERVED head.
+      let current;
+      if(s1===freezeBaseSha){
+        const currentNative=await currentRosterReader({
+          sourceSha:s1,taskIssueNumbers:pack.taskIssues});
+        if(!nativeRosterMatchesPack(currentNative,pack,repository,versionId,s1,
+            {requireSnapshotEquality:false}))
+          return denied('SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+        current={qualified:true,status:'CURRENT_SAME_SOURCE',historical:false,
+          taskClaims:'UNVERIFIED',currentness:'CURRENT',reason:null,
+          source:{repository,sourceSha:s1,currentness:'CURRENT',readback:'VERIFIED'},
+          observedVersionSha:s1,ancestry:'S1_EQUALS_S0',
+          taskIssueCount:pack.taskIssues.length,
+          nativeEdgeCount:pack.edges.filter(e=>e.kind==='NATIVE').length,
+          ...digests};
+      }else{
+        const anc=await ancestryReader({baseSha:freezeBaseSha,headSha:s1});
+        if(anc?.connected!==true||anc.ancestry!=='BASE_IS_ANCESTOR')
+          return denied('SUCCESSOR_ANCESTRY_UNPROVEN');
+        const currentNative=await currentRosterReader({
+          sourceSha:s1,taskIssueNumbers:pack.taskIssues});
+        if(!nativeRosterMatchesPack(currentNative,pack,repository,versionId,s1,
+            {requireSnapshotEquality:false}))
+          return denied('SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+        current={qualified:false,status:null,historical:false,
+          taskClaims:'UNVERIFIED',currentness:'STALE',
+          reason:'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED',
+          source:{repository,sourceSha:s1,currentness:'CURRENT',readback:'VERIFIED'},
+          observedVersionSha:s1,ancestry:'S0_ANCESTOR_OF_S1',
+          taskIssueCount:pack.taskIssues.length,
+          nativeEdgeCount:pack.edges.filter(e=>e.kind==='NATIVE').length,
+          ...digests};
+      }
+      // Forward code/ABI compatibility witness: strictly validated, never a
+      // grant. Extra (e.g. authorization-granting) keys fail closed outright.
+      let witnessProjection;
+      if(compatibilityWitness!==null){
+        if(!successorWitnessValid(compatibilityWitness,repository,versionId,
+            freezeBaseSha,s1,doc,key,digests,clock))
+          return denied('SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
+        witnessProjection={present:true,valid:true,
+          reviewRef:compatibilityWitness.reviewRef,
+          reviewedHead:compatibilityWitness.reviewedHead,
+          scopeDecisionRef:compatibilityWitness.scopeDecisionRef,
+          ciRefs:compatibilityWitness.ciRefs,
+          issuedAt:compatibilityWitness.issuedAt,expiresAt:compatibilityWitness.expiresAt,
+          revoked:false};
+        if(s1!==freezeBaseSha)
+          current={...current,qualified:true,status:'CURRENT_STRUCTURAL_COMPATIBLE',
+            currentness:'CURRENT',reason:null};
+      }else witnessProjection={present:false,valid:null};
+      // Re-observe the head after the native read (S2-appears check) and
+      // recheck the immutable CAS revision/value.
+      const headAfter=await branchHeadReader();
+      if(headAfter?.connected!==true||headAfter.headSha!==s1)
+        return denied('SUCCESSOR_BRANCH_DRIFT_DURING_READ');
+      const after=await store.get(key);
+      if(!after||after.revision!==before.revision||!same(after.value,before.value))
+        return denied('FROZEN_DAG_CHANGED_DURING_READ');
+      return {connected:true,
+        epoch:{freezeBaseSha,observedVersionSha:s1,ancestry:current.ancestry},
+        historical:{status:'FROZEN_HISTORICAL_VERIFIED',historical:true,
+          source:{repository,sourceSha:freezeBaseSha,currentness:'FROZEN_HISTORICAL',
+            readback:'VERIFIED'},
+          versionId,taskPackRef:doc.taskPackRef,frozenAt:doc.frozenAt,
+          witness:doc.witness,ownerApproval:doc.ownerApproval,frozen:doc.frozen},
+        current,compatibilityWitness:witnessProjection,
+        authorized:false,admitted:false,taskPass:false,releasePass:false};
+    }catch{return denied('FROZEN_DAG_READ_FAILED');}
+  }
+  return Object.freeze({readDualEpoch});
+}
