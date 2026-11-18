@@ -28,24 +28,38 @@ export function MetadataCenter({version,allVersions,expectedTaskIds,
         <Card>
           <CardHeader title={zh?'用量汇总(含覆盖率)':'Usage (with coverage)'}
             sub={zh?'缺失遥测不计为 0;跨版本不合并':'missing ≠ zero; no cross-version merge'}/>
-          <dl style={{display:'grid',gridTemplateColumns:'auto auto auto 1fr',
-            gap:'8px 14px',margin:0,fontSize:13}}>
-            <dt style={{color:'var(--text-muted)'}}>{zh?'尝试':'Attempts'}</dt>
-            <dd style={{margin:0}}>{usage.attempts}</dd><span/>
-            <span style={{color:'var(--text-muted)'}}>
-              {Object.entries(usage.byRole).map(([role,entry])=>
-                `${role}: ${entry.measured}/${entry.count}`).join(' · ')}</span>
-            <dt style={{color:'var(--text-muted)'}}>{zh?'时长(可测)':'Duration (measured)'}</dt>
-            <dd style={{margin:0}}>{Math.round(usage.measuredDuration/1000)}s</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.durationCoverage)}</dd><span/>
-            <dt style={{color:'var(--text-muted)'}}>tokens 入</dt>
-            <dd style={{margin:0}}>{usage.tokensIn}</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.tokenInCoverage)}</dd><span/>
-            <dt style={{color:'var(--text-muted)'}}>tokens 出</dt>
-            <dd style={{margin:0}}>{usage.tokensOut}</dd>
-            <dd style={{margin:0,color:'var(--text-faint)'}}>{pct(usage.tokenOutCoverage)}</dd><span/>
-            <dt style={{color:'var(--text-muted)'}}>{zh?'费用':'Cost'}</dt>
-            <dd style={{margin:0}}><Badge tone="warn">UNKNOWN</Badge></dd><span/><span/>
+          <dl style={{margin:0,fontSize:13}}>
+            <div style={{display:'grid',gridTemplateColumns:'auto auto 1fr',
+              gap:'8px 14px'}}>
+              <dt style={{color:'var(--text-muted)'}}>{zh?'尝试':'Attempts'}</dt>
+              <dd style={{margin:0}}>{usage.attempts}</dd>
+              <dd style={{margin:0,color:'var(--text-muted)'}}>
+                {Object.entries(usage.byRole).map(([role,entry])=>
+                  `${role}: ${entry.measured}/${entry.count}`).join(' · ')}</dd>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'auto auto 1fr',
+              gap:'8px 14px'}}>
+              <dt style={{color:'var(--text-muted)'}}>{zh?'时长(可测)':'Duration (measured)'}</dt>
+              <dd style={{margin:0}}>{Math.round(usage.measuredDuration/1000)}s</dd>
+              <dd style={{margin:0,color:'var(--text-muted)'}}>{pct(usage.durationCoverage)}</dd>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'auto auto 1fr',
+              gap:'8px 14px'}}>
+              <dt style={{color:'var(--text-muted)'}}>tokens 入</dt>
+              <dd style={{margin:0}}>{usage.tokensIn}</dd>
+              <dd style={{margin:0,color:'var(--text-muted)'}}>{pct(usage.tokenInCoverage)}</dd>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'auto auto 1fr',
+              gap:'8px 14px'}}>
+              <dt style={{color:'var(--text-muted)'}}>tokens 出</dt>
+              <dd style={{margin:0}}>{usage.tokensOut}</dd>
+              <dd style={{margin:0,color:'var(--text-muted)'}}>{pct(usage.tokenOutCoverage)}</dd>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'auto auto 1fr',
+              gap:'8px 14px'}}>
+              <dt style={{color:'var(--text-muted)'}}>{zh?'费用':'Cost'}</dt>
+              <dd style={{margin:0}}><Badge tone="warn">UNKNOWN</Badge></dd>
+            </div>
           </dl>
         </Card>
         <Card>

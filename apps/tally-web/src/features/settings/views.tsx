@@ -28,10 +28,10 @@ export function SettingsCenter({snapshot,connected=true,locale='zh',
   if(!connected)return <EmptyState title={zh?'未连接真实数据源':'Not connected'}
     hint="UI-E #232"/>;
   if(!snapshot)return <EmptyState title={zh?'配置快照不可用':'Snapshot unavailable'}/>;
-  return <div style={{display:'grid',gridTemplateColumns:'200px 1fr',
-    gap:'var(--s5)',alignItems:'start'}}>
+  return <div style={{display:'flex',flexWrap:'wrap',gap:'var(--s5)',
+    alignItems:'flex-start'}}>
     <nav aria-label={zh?'配置导航':'settings nav'}
-      style={{display:'grid',gap:2}}>
+      style={{display:'grid',gap:2,flex:'0 0 200px'}}>
       {SETTINGS_SECTIONS.map(key=><button key={key}
         aria-current={section===key?'true':undefined}
         onClick={()=>setSection(key)}
@@ -41,7 +41,7 @@ export function SettingsCenter({snapshot,connected=true,locale='zh',
           cursor:'pointer',font:'inherit',fontWeight:section===key?600:400}}>
         {zh?SECTION_LABEL[key].zh:SECTION_LABEL[key].en}</button>)}
     </nav>
-    <div style={{display:'grid',gap:'var(--s5)'}}>
+    <div style={{display:'grid',gap:'var(--s5)',flex:'1 1 320px',minWidth:0}}>
       {section==='agentProviders'
         ?<AgentProvidersSection providers={snapshot.agentProviders} zh={zh}/>
         :section==='tallyLlm'
@@ -87,7 +87,7 @@ function ProviderRow({provider,zh}:{provider:AgentProviderConfig;zh:boolean}){
         <span style={{color:'var(--warn)',fontSize:12}}>{toggle.reason}</span>:null}
     </div>
     <dl style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'2px 12px',
-      margin:0,fontSize:12.5,color:'var(--text-secondary)'}}>
+      margin:0,fontSize:12.5,color:'var(--text-secondary)',overflowWrap:'anywhere'}}>
       <dt>CLI</dt><dd style={{margin:0}}>{provider.cliPath??'—'}</dd>
       <dt>{zh?'主机主体':'Host principal'}</dt>
       <dd style={{margin:0}}>{provider.hostPrincipal??'—'}</dd>
@@ -122,7 +122,7 @@ function TallyLlmSection({snapshot,zh}:{snapshot:SettingsSnapshot;zh:boolean}){
         <input type="checkbox" checked={llm.enabled} readOnly/>
         {zh?'启用(需 BUILD 选中 Provider)':'Enabled (BUILD-selected provider only)'}</label>
       <dl style={{display:'grid',gridTemplateColumns:'auto 1fr',gap:'2px 12px',
-        margin:0,fontSize:13}}>
+        margin:0,fontSize:13,overflowWrap:'anywhere'}}>
         <dt>Provider</dt><dd style={{margin:0}}>{llm.provider??'—'}</dd>
         <dt>Model</dt><dd style={{margin:0}}>{llm.model??'—'}</dd>
         <dt>{zh?'提示词模板版本':'Prompt template'}</dt>
