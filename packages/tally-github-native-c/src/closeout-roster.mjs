@@ -794,7 +794,7 @@ export function createHostVersionTaskDagDualEpochReader({
       let current;
       if(s1===freezeBaseSha){
         const currentNative=await currentRosterReader({
-          sourceSha:s1,taskIssueNumbers:pack.taskIssues});
+          sourceSha:s1,taskIssueNumbers:pack.taskIssues.map(x=>x.issueNumber)});
         if(!nativeRosterMatchesPack(currentNative,pack,repository,versionId,s1,
             {requireSnapshotEquality:false}))
           return denied('SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
@@ -810,7 +810,7 @@ export function createHostVersionTaskDagDualEpochReader({
         if(anc?.connected!==true||anc.ancestry!=='BASE_IS_ANCESTOR')
           return denied('SUCCESSOR_ANCESTRY_UNPROVEN');
         const currentNative=await currentRosterReader({
-          sourceSha:s1,taskIssueNumbers:pack.taskIssues});
+          sourceSha:s1,taskIssueNumbers:pack.taskIssues.map(x=>x.issueNumber)});
         if(!nativeRosterMatchesPack(currentNative,pack,repository,versionId,s1,
             {requireSnapshotEquality:false}))
           return denied('SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
