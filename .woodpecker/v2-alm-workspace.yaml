@@ -100,8 +100,11 @@ steps:
       - node --test $files
       - node --check web/v2/journey-client.mjs
       # Build the production bundle the ALM server serves at /app (feature
-      # gate UI-E #232). Dependencies resolve from the npmmirror cache.
-      - npm --prefix apps/tally-web install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      # gate UI-E #232). npm ci installs exactly the committed
+      # package-lock.json (integrity-checked): a floating install once
+      # pulled a bad-mirror-sync rollup build and broke the Linux Vite
+      # build (Woodpecker #833/#834). Still resolves from npmmirror.
+      - npm --prefix apps/tally-web ci --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
       - npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com
       - npm --prefix apps/tally-web run build
       - test -f apps/tally-web/dist/index.html
