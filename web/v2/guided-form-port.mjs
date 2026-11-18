@@ -11,6 +11,9 @@ const valueOk=(value)=>value===null||typeof value==='boolean'||
   (Array.isArray(value)&&value.length<=32&&value.every(v=>typeof v==='string'&&
     v.length>0&&v.length<=128&&!/[\u0000-\u001f\u007f]/.test(v)));
 const deny=(reason)=>({connected:false,status:'DENIED',reason});
+// An effect may have happened before a transport or ACK failure.
+// UNKNOWN is never authority to replay the selected Host dispatch.
+const unknown=(reason)=>({connected:false,status:'UNKNOWN',reason});
 const plain=(v)=>!!v&&typeof v==='object'&&!Array.isArray(v);
 const validId=value=>typeof value==='string'&&ID.test(value);
 const localized=value=>plain(value)&&titleOk(value.zh)&&titleOk(value.en);
@@ -223,24 +226,29 @@ export async function submitGuidedStep(host,scope,currentSha,payload){
     return deny('GUIDED_STEP_STALE_OR_INVALID');
   if(typeof host?.dispatchStep!=='function')
     return deny('GUIDED_HOST_DISPATCH_UNAVAILABLE');
+  // The second source read is a side-effect-free fence. A failed read
+  // still proves dispatch was not invoked by this port.
+  let latest;
   try{
-    // Close the read→dispatch race: the selected Business/Host must still
-    // issue the same exact step immediately before the side effect. K/Host
-    // performs its own CAS/permit check inside dispatchStep.
-    const latest=await host.readCurrentStep({...scope,sourceSha:currentSha});
-    if(!verifyGuidedSnapshot(latest,scope,currentSha)||
-       canonicalJson(projectStep(latest.step))!==canonicalJson(read.step))
-      return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
-    const result=await host.dispatchStep({
+    latest=await host.readCurrentStep({...scope,sourceSha:currentSha});
+  }catch{return deny('GUIDED_HOST_PRE_DISPATCH_READ_FAILED');}
+  if(!verifyGuidedSnapshot(latest,scope,currentSha)||
+     canonicalJson(projectStep(latest.step))!==canonicalJson(read.step))
+    return deny('GUIDED_STEP_CHANGED_BEFORE_DISPATCH');
+  // After invoking dispatch, an exception or unqualified response cannot
+  // prove whether K/Host completed its effect. Do not issue a second call.
+  let result;
+  try{
+    result=await host.dispatchStep({
       ...scope,sourceSha:currentSha,journeyId:payload.journeyId,
       stepId:payload.stepId,revision:payload.revision,answers:payload.answers});
-    if(!plain(result)||result.ok!==true||
-      (result.nextStep!==null&&
-       !verifyGuidedSnapshot({...read,step:result.nextStep,projectId:scope.projectId,
-         versionId:scope.versionId,currentness:'CURRENT',readback:'VERIFIED'},
-         scope,currentSha)))
-      return deny('GUIDED_HOST_RESULT_UNQUALIFIED');
-    return {connected:true,ok:true,nextStep:
-      result.nextStep===null?null:projectStep(result.nextStep)};
-  }catch{return deny('GUIDED_HOST_DISPATCH_FAILED');}
+  }catch{return unknown('GUIDED_HOST_DISPATCH_OUTCOME_UNKNOWN');}
+  if(!plain(result)||result.ok!==true||
+    (result.nextStep!==null&&
+     !verifyGuidedSnapshot({...read,step:result.nextStep,projectId:scope.projectId,
+       versionId:scope.versionId,currentness:'CURRENT',readback:'VERIFIED'},
+       scope,currentSha)))
+    return unknown('GUIDED_HOST_RESULT_UNQUALIFIED');
+  return {connected:true,ok:true,nextStep:
+    result.nextStep===null?null:projectStep(result.nextStep)};
 }
