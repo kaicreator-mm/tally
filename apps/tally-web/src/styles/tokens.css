@@ -7,7 +7,12 @@
   --bg-app:#0b1020;--bg-panel:#111a2d;--bg-raised:#152139;--bg-hover:#1a2740;
   --border-subtle:#263452;--border-strong:#3a527c;
   /* text */
-  --text-primary:#edf2ff;--text-secondary:#c3d3ef;--text-muted:#8ba0c5;--text-faint:#64779c;
+  --text-primary:#edf2ff;--text-secondary:#c3d3ef;--text-muted:#8ba0c5;
+  /* #448 X1: faint #64779c was 3.64-4.20:1 on app/panel/raised — below the
+     4.5:1 normal-text floor for the 12px hints/notes it actually colors.
+     #7a90b6 = 5.07-5.85:1 on the same surfaces, still one hierarchy step
+     below --text-muted (#8ba0c5). */
+  --text-faint:#7a90b6;
   /* brand & semantics */
   --brand:#6ea8ff;--brand-strong:#8ec5ff;--brand-ink:#0b1a33;
   --ok:#3ecf9a;--ok-dim:#123a34;--warn:#f3c96b;--warn-dim:#3a2f16;
