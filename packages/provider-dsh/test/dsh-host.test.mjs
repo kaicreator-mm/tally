@@ -16,7 +16,8 @@ const issueRef='https://github.com/kaicreator-mm/tally/issues/64';
 const builderSid='S-1-5-21-2839165489-1832998833-1574237796-1003';
 const API_KEY='test-dsh-secret-0123456789abcdef';
 const candidateResult={writeSetValid:true,paths:[LOCAL_DSH_CONSTANTS.candidateRelativePath],
-  candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),candidateRef:'refs/tally-candidates/test'};
+  candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),
+  candidateRef:LOCAL_DSH_CONSTANTS.candidateRefPrefix+'test'};
 const attemptKey=id=>LOCAL_DSH_CONSTANTS.attemptKeyPrefix+id;
 const FAKE_DSH=fileURLToPath(new URL('./fake-dsh.mjs',import.meta.url));
 const answerBehavior=(close,child)=>{
@@ -88,6 +89,8 @@ test('happy path: exact candidate, restricted env, durable replay, no secret lea
     assert.equal(first.reason,'REAL_DSH_CANDIDATE_RECORDED');
     assert.equal(first.agentLaunch,true);assert.equal(first.taskPass,false);
     assert.equal(first.candidateTree,candidateResult.candidateTree);
+    assert.equal(first.candidateRef,candidateResult.candidateRef);
+    assert.deepEqual(first.candidatePaths,[LOCAL_DSH_CONSTANTS.candidateRelativePath]);
     assert.equal(first.process.exitCode,0);
     assert.ok(/^[0-9a-f]{64}$/.test(first.finalAnswerSha256??''));
     const exec=headlessCalls(calls).at(-1);
@@ -190,6 +193,16 @@ test('cancellation is complete only after process-tree termination',async()=>{
   },{behavior:()=>{}});
 });
 
+test('a signal already aborted before the run cancels immediately, never times out',async()=>{
+  await withHost(async({host,kills,config})=>{
+    const controller=new AbortController();controller.abort();
+    const x=await host.runAttempt({...config,timeoutMs:60000,signal:controller.signal});
+    assert.equal(x.state,'LOCAL_ATTEMPT_CANCELLED');
+    assert.equal(x.reason,'ATTEMPT_CANCELLED');
+    assert.ok(kills.includes(4242));
+  },{behavior:()=>{}});
+});
+
 test('spawn/lost ACK becomes UNKNOWN and cannot blindly relaunch',async()=>{
   await withHost(async({host,calls,config})=>{
     const x=await host.runAttempt(config);
@@ -257,6 +270,12 @@ test('danger-full-access needs an explicit allowance; invalid modes are refused'
 
 test('factory requires an injected CAS store factory',async()=>{
   assert.throws(()=>createLocalDshHost({}),e=>e.code==='DSH_HOST_STORE_FACTORY_REQUIRED');
+});
+
+test('candidate ref namespace is provider-unique (no codex/zcode collision)',()=>{
+  assert.equal(LOCAL_DSH_CONSTANTS.candidateRefPrefix,'refs/tally-dsh-candidates/');
+  assert.notEqual(LOCAL_DSH_CONSTANTS.candidateRefPrefix,'refs/tally-candidates/');
+  assert.notEqual(LOCAL_DSH_CONSTANTS.candidateRefPrefix,'refs/tally-zcode-candidates/');
 });
 
 test('atomic shared-worktree grants deny the second competing attempt',async()=>{
@@ -343,6 +362,7 @@ test('real probe: pinned version accepted, drift and missing CLI refused',async(
       ['--fake-version','0.2.2-rc.5'],{deepseekApiKey:API_KEY}));
     assert.equal(ok.available,true);assert.equal(ok.providerVersion,'0.2.2-rc.5');
     assert.equal(ok.provider,'dsh');assert.equal(ok.binSource,'config');
+    assert.equal(ok.canaryVerified,true,'CANARY tier ran the pinned round-trip');
     const drifted=await ops.probeProvider(realConfig(dir,'attempt:dsh:probe:2',
       ['--fake-version','9.9.9-x'],{deepseekApiKey:API_KEY}));
     assert.equal(drifted.available,false);assert.equal(drifted.stage,'VERSION');
@@ -362,6 +382,37 @@ test('real probe: pinned version accepted, drift and missing CLI refused',async(
   }finally{await rm(dir,{recursive:true,force:true});}
 });
 
+test('probe tiers run in order: VERSION, CREDENTIALS(AUTH), then CANARY',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-dsh-canary-'));
+  try{
+    const ops=createDefaultDshOperations((...a)=>spawn(...a));
+    const counter=join(dir,'version-count');
+    // Both executable tiers each run one pinned round-trip (fake invocation 1
+    // = VERSION, invocation 2 = CANARY) and the credential tier sits between.
+    const ok=await ops.probeProvider(realConfig(dir,'attempt:dsh:canary:0',
+      ['--fake-version','0.2.2-rc.5','--fake-counter',counter],{deepseekApiKey:API_KEY}));
+    assert.equal(ok.available,true);assert.equal(ok.canaryVerified,true);
+    assert.equal((await readFile(counter,'utf8')).trim(),'2');
+    // Canary tier failing (second round-trip drifts) refuses without spawn.
+    const counter2=join(dir,'version-count-2');
+    const canaryFail=await ops.probeProvider(realConfig(dir,'attempt:dsh:canary:1',
+      ['--fake-version','0.2.2-rc.5','--fake-counter',counter2,
+        '--fake-version-fail-from','2'],{deepseekApiKey:API_KEY}));
+    assert.equal(canaryFail.available,false);
+    assert.equal(canaryFail.stage,'CANARY');
+    assert.equal(canaryFail.observedVersion,'0.0.0-canary-drift');
+    assert.equal(canaryFail.exitCode,3);
+    assert.equal(canaryFail.canaryMatched,false);
+    // Credential tier failing stops the gate after the VERSION round-trip:
+    // the counter records exactly one invocation, CANARY never runs.
+    const neverCounter=join(dir,'never');
+    const nokey=await ops.probeProvider(realConfig(dir,'attempt:dsh:canary:2',
+      ['--fake-version','0.2.2-rc.5','--fake-counter',neverCounter],{deepseekApiKey:null}));
+    assert.equal(nokey.available,false);assert.equal(nokey.stage,'AUTH');
+    assert.equal((await readFile(neverCounter,'utf8')).trim(),'1');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
 test('real headless run end-to-end: candidate tree, ref, readback and env evidence',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'tally-dsh-e2e-'));
   try{
@@ -376,6 +427,8 @@ test('real headless run end-to-end: candidate tree, ref, readback and env eviden
       assert.equal(x.state,'LOCAL_CANDIDATE_READY');
       assert.equal(x.reason,'REAL_DSH_CANDIDATE_RECORDED');
       assert.ok(/^[0-9a-f]{40}$/.test(x.candidateCommit??''));
+      assert.ok(x.candidateRef?.startsWith('refs/tally-dsh-candidates/'));
+      assert.deepEqual(x.candidatePaths,['NOTES.md']);
       assert.ok(x.finalAnswerPreview.includes('FAKE_DSH_FINAL_ANSWER'));
       // Host-owned candidate reads back independently from the repository.
       const readback=await ops.verifyCandidateReadback(config,

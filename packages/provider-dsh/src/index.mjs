@@ -8,3 +8,4 @@ export {createLocalDshHost,createLocalDshHostWithDhStore,LOCAL_DSH_CONSTANTS}
   from './dsh-host.mjs';
 export {PINNED_DSH_VERSION,DSH_PERMISSION_MODES,resolveDshSelection,dshConfigFromEnv}
   from './dsh-config.mjs';
+export {createDshTaskProvider} from './dsh-task-provider.mjs';

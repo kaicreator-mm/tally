@@ -35,7 +35,16 @@
  *  - attempt records live under their own key prefix, while resource grants
  *    use the byte-identical `tally:v2:local-agent-grant:` derivation so a
  *    DSH attempt and a Codex attempt can never hold the same worktree or
- *    candidate path concurrently;
+ *    candidate path concurrently; candidate refs use their own
+ *    `refs/tally-dsh-candidates/` namespace so a DSH and a Codex (or R105
+ *    ZCode) attempt can never collide on one ref either;
+ *  - the capability probe is the R105 three-tier gate VERSION →
+ *    CREDENTIALS(AUTH) → CANARY: any failed tier returns available:false and
+ *    an attempt then refuses before ever spawning (the CANARY tier re-runs
+ *    the pinned `--version` round-trip through the credential-carrying
+ *    execution-shaped environment — the only source-verified no-model-call
+ *    invocation of dsh 0.2.x — proving the real argv/env path of an attempt
+ *    actually executes);
  *  - `sandboxCliPath` is optional only in the sense that omitting it selects
  *    direct spawn for contract tests/smokes; on a real Host the default
  *    confinement proof (builder principal check) then fails closed.
@@ -58,6 +67,13 @@ const ATTEMPT_KEY_PREFIX='tally:v2:local-dsh-attempt:';
 // Byte-identical to local-codex-host.mjs: grants guard PHYSICAL resources and
 // must exclude across providers, not just within one.
 const GRANT_KEY_PREFIX='tally:v2:local-agent-grant:';
+// Provider-unique candidate ref namespace. The Codex Host owns
+// refs/tally-candidates/<id> and the R105 ZCode provider owns
+// refs/tally-zcode-candidates/<id>; sharing the Codex prefix would let a DSH
+// and a Codex attempt with the same sanitized attemptId collide on one ref
+// (`git update-ref` overwrites unconditionally) with neither host able to
+// detect it, because attempt records live under disjoint CAS key prefixes.
+const CANDIDATE_REF_PREFIX='refs/tally-dsh-candidates/';
 const grantKeyFor=(kind,value)=>GRANT_KEY_PREFIX+kind+':'+
   createHash('sha256').update(value).digest('hex');
 const safeError=code=>Object.assign(new Error(code),{code});
@@ -264,8 +280,28 @@ function createDefaultOperations(spawnFn){
       return {available:false,reason:'LOCAL_AGENT_UNAVAILABLE',stage:'AUTH',
         provider:'dsh',credentialEnv:'DEEPSEEK_API_KEY',credentialPresent:false,
         pinnedVersion:pinned,binSource:source};
+    // CANARY tier: re-run the pinned round-trip through the execution-shaped
+    // environment (DSH_* surface + credential present) and the same argv
+    // composition an attempt will take. No model API call is involved —
+    // `--version` is the only source-verified no-model invocation of 0.2.x.
+    const canaryEnv={...dshBuilderEnvironment(config),
+      DSH_TELEMETRY_MODE:'DISABLED',
+      ...(config.permissionMode?{DSH_PERMISSION_MODE:config.permissionMode}:{}),
+      ...(config.deepseekApiKey?{DEEPSEEK_API_KEY:config.deepseekApiKey}:{})};
+    const useWrapper=typeof config.sandboxCliPath==='string'&&config.sandboxCliPath;
+    const canary=await short(spawnFn,useWrapper?config.sandboxCliPath:bin,
+      useWrapper?[...sandboxPrefix,bin,...binArgs,'--version']:
+        [...binArgs,'--version'],
+      {env:canaryEnv,timeoutMs:15000},
+      config.deepseekApiKey?[config.deepseekApiKey]:[]);
+    const canaryOut=canary.stdout.trim().split(/\r?\n/)[0]?.trim()??'';
+    if(canary.code!==0||canary.spawnError||canaryOut!==pinned)
+      return {available:false,reason:'LOCAL_AGENT_UNAVAILABLE',stage:'CANARY',
+        provider:'dsh',exitCode:canary.code,spawnError:canary.spawnError??false,
+        observedVersion:canaryOut||null,pinnedVersion:pinned,binSource:source,
+        canaryMatched:false};
     return {available:true,provider:'dsh',providerVersion:observed,
-      pinnedVersion:pinned,binSource:source};
+      pinnedVersion:pinned,binSource:source,canaryVerified:true};
   }
   async function readDenied(config,path,isDirectory=false){
     const access=isDirectory?
@@ -375,7 +411,7 @@ function createDefaultOperations(spawnFn){
         GIT_COMMITTER_NAME:'Tally Host',GIT_COMMITTER_EMAIL:'tally-host@localhost'}});
     if(commit.code!==0||!SHA.test(commit.stdout.trim()))throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const commitSha=commit.stdout.trim();
-    const ref='refs/tally-candidates/'+sanitizeId(config.attemptId);
+    const ref=CANDIDATE_REF_PREFIX+sanitizeId(config.attemptId);
     const updated=await run(['update-ref',ref,commitSha]);
     if(updated.code!==0)throw safeError('CANDIDATE_TREE_UNAVAILABLE');
     const readback=await run(['rev-parse',commitSha+'^{tree}']);
@@ -406,7 +442,8 @@ function createDefaultOperations(spawnFn){
 const ACTIVE_PHASES=new Set(['STARTING','PERMITTED','RUNNING']);
 const overlapDenied=(base,reason)=>({...base,state:'NOT_ADMITTED',reason,
   claimAccepted:false,admitted:false,agentLaunch:false,replayFixture:false,
-  candidateTree:null,candidateCommit:null,process:null});
+  candidateTree:null,candidateCommit:null,candidateRef:null,candidatePaths:null,
+  process:null});
 
 /** Default operations ports, exported for composability in tests/wiring. */
 export const createDefaultDshOperations=createDefaultOperations;
@@ -440,7 +477,8 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
       !SID.test(config.builderSid??'')||!DSH_PERMISSION_MODES.includes(config.permissionMode??'')||
       (config.permissionMode==='danger-full-access'&&!config.allowDangerousFullAccess))
       return {...base,state:'AGENT_NOT_EXECUTED',reason:'DSH_CONFIG_INVALID',
-        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,process:null};
+        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+        candidateRef:null,candidatePaths:null,process:null};
     let store=await openStore({path:config.hostStorePath,busyTimeoutMs:5000});
     const key=ATTEMPT_KEY_PREFIX+config.attemptId;
     try{
@@ -449,13 +487,14 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
         const value=existing.value;
         if(value?.phase==='CANDIDATE_READY')return {...base,state:'LOCAL_CANDIDATE_READY',
           reason:'REAL_DSH_CANDIDATE_RECORDED',agentLaunch:true,replayFixture:false,
-          candidateTree:value.candidateTree,candidateCommit:value.candidateCommit,process:value.process};
+          candidateTree:value.candidateTree,candidateCommit:value.candidateCommit,
+          candidateRef:value.candidateRef??null,process:value.process};
         if(value?.phase==='NOT_EXECUTED')return {...base,state:'AGENT_NOT_EXECUTED',
           reason:value.reason,agentLaunch:false,replayFixture:false,candidateTree:null,
           candidateCommit:null,process:null};
         return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_STATUS_UNKNOWN',
           agentLaunch:true,replayFixture:false,candidateTree:value?.candidateTree??null,
-          candidateCommit:value?.candidateCommit??null,
+          candidateCommit:value?.candidateCommit??null,candidateRef:value?.candidateRef??null,
           process:value?.process??{status:'UNKNOWN',exitCode:null,pid:null,
             builderPrincipal:config.builderPrincipal,builderSid:config.builderSid,
             startedAt:null,terminatedAt:null}};
@@ -504,7 +543,8 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
         await update({...current.value,phase:'NOT_EXECUTED',reason,...detail,terminatedAt:iso(now)});
         await releaseGrants();
         return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,replayFixture:false,
-          candidateTree:null,candidateCommit:null,process:null};
+          candidateTree:null,candidateCommit:null,candidateRef:null,candidatePaths:null,
+          process:null};
       };
       const probe=await ops.probeProvider(config);
       if(!probe.available)return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
@@ -535,7 +575,8 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
         current=await store.get(key);revision=current.revision;
         await update({...current.value,phase:'UNKNOWN',reason,process:{status:'UNKNOWN',pid:null}});
         return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason,agentLaunch:true,replayFixture:false,
-          candidateTree:null,candidateCommit:null,process:{status:'UNKNOWN',exitCode:null,pid:null,
+          candidateTree:null,candidateCommit:null,candidateRef:null,candidatePaths:null,
+          process:{status:'UNKNOWN',exitCode:null,pid:null,
             builderPrincipal:confinement.builderPrincipal,builderSid:confinement.builderSid,
             startedAt,terminatedAt:iso(now)}};
       }
@@ -549,6 +590,10 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
       timer.unref?.();
       const abort=()=>{cancelled=true;terminate(running.child.pid).catch(()=>{});};
       config.signal?.addEventListener('abort',abort,{once:true});
+      // A signal that was already aborted before registration would never
+      // fire its abort event; classify from intent immediately instead of
+      // letting the attempt run to timeout under a dead cancel channel.
+      if(config.signal?.aborted)abort();
       const terminal=await running.done;
       clearTimeout(timer);config.signal?.removeEventListener('abort',abort);
       if((timedOut||cancelled||terminal.orphanPipe)&&terminal.terminatedAt){
@@ -597,9 +642,11 @@ export function createLocalDshHost({spawnFn=spawn,operations,now=()=>Date.now(),
       await releaseGrants();
       return {...base,state,reason,agentLaunch:true,replayFixture:false,
         candidateTree:candidate.candidateTree??null,candidateCommit:candidate.candidateCommit??null,
+        candidateRef:candidate.candidateRef??null,
         process,...(state==='LOCAL_CANDIDATE_READY'?
           {finalAnswerSha256:recordExtras.finalAnswerSha256,
-            finalAnswerPreview:recordExtras.finalAnswerPreview}:{})};
+            finalAnswerPreview:recordExtras.finalAnswerPreview,
+            candidatePaths:candidate.paths}:{})};
     }finally{await store.close();}
   }
   return Object.freeze({runAttempt,
@@ -625,5 +672,6 @@ export async function createLocalDshHostWithDhStore({openSqliteCasStore,...optio
 
 export const LOCAL_DSH_CONSTANTS=Object.freeze({candidateRelativePath:CANDIDATE,
   attemptKeyPrefix:ATTEMPT_KEY_PREFIX,grantKeyPrefix:GRANT_KEY_PREFIX,
+  candidateRefPrefix:CANDIDATE_REF_PREFIX,
   pinnedDshVersion:PINNED_DSH_VERSION,permissionModes:DSH_PERMISSION_MODES,
   builderEnvironment:dshBuilderEnvironment,executionEnvironment:dshExecutionEnvironment});

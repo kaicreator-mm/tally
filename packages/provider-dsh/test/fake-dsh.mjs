@@ -5,6 +5,10 @@
  * argv flags (the host builds a clean allowlisted env, so env-based scenario
  * selection would never reach this process):
  *   --fake-version <v>          version line for `--version` (default 0.2.2-rc.5)
+ *   --fake-version-fail-from <n>  with --fake-counter: fail `--version` from
+ *                               the n-th invocation on (exit 3, drifted line)
+ *   --fake-counter <path>       persist the `--version` invocation count so a
+ *                               later invocation can be made to fail (CANARY)
  *   --fake-scenario <name>      answer | empty | exit7 | missing-credential |
  *                               orphan | hang
  *   --fake-write <json>         relative paths to create in cwd (worktree)
@@ -14,7 +18,7 @@
  * surface; stdout is the final answer, exit 0 only on completed runs.
  */
 import {spawn} from 'node:child_process';
-import {appendFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {appendFileSync,readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {dirname,join,resolve} from 'node:path';
 
 const args=process.argv.slice(2);
@@ -36,6 +40,18 @@ if(recordPath){
 }
 
 if(args.includes('--version')){
+  const counterPath=flag('--fake-counter');
+  let invocation=1;
+  if(counterPath){
+    try{invocation=Number(readFileSync(counterPath,'utf8').trim())+1;}catch{invocation=1;}
+    writeFileSync(counterPath,String(invocation),'utf8');
+  }
+  const failFrom=Number(flag('--fake-version-fail-from')??0);
+  if(failFrom>0&&invocation>=failFrom){
+    process.stderr.write('dsh: simulated version instability\n');
+    process.stdout.write('0.0.0-canary-drift\n');
+    process.exit(3);
+  }
   process.stdout.write(version+'\n');
   process.exit(0);
 }
