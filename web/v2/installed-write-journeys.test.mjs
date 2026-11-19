@@ -407,7 +407,11 @@ test('write-journey runner: mounted review-repair spawns the real single-review 
   let captured=null;
   const fakeSpawn=async(script,env)=>{
     captured={script,env};
-    const startedAt=Date.now();
+    // Back-date the spawn instant slightly: some CI filesystems stamp file
+    // mtimes from a coarser clock than Date.now(), so a just-written durable
+    // result can otherwise land "before" its own spawn (real consumers write
+    // seconds later and never hit this).
+    const startedAt=Date.now()-5;
     const {mkdir,writeFile}=await import('node:fs/promises');
     await mkdir(env.TALLY_LOCAL_EVIDENCE_DIR,{recursive:true});
     await writeFile(join(env.TALLY_LOCAL_EVIDENCE_DIR,'e2e-result.json'),
