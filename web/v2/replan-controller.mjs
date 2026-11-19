@@ -153,6 +153,9 @@ export function createReplanController(config,{host,sealedDispatch,openStore,now
       return record('activate-revision',blocked('NO_OWNER_DECISION'));
     if(candidate?.authority?.claimBound!==true)
       return record('activate-revision',blocked('NO_NEW_TASK_CLAIM'));
+    // R05: a Claim/FSW bound to another Task cannot be copied or reused here.
+    if(candidate?.authority?.claimRef!==PINNED_CLAIM)
+      return record('activate-revision',blocked('ACTIVE_CLAIM_REASSIGNED'));
     const activationDigest=state.digest;
     if(state.activation&&state.activation.activationDigest===activationDigest&&
        state.activation.state==='ACTIVATED')

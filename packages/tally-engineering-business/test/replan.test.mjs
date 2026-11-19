@@ -178,6 +178,35 @@ test('baseline revision carries observed-DAG unfinished work without a prior rev
   assert.equal(result.coverage.preservedAcceptedCount,2);
   assert.equal(result.coverage.carriedUnfinishedCount,1);
 });
+test('native GitHub casing (closed/completed) is accepted as observed truth',()=>{
+  const nativeCased=input();
+  for(const row of nativeCased.observedDag.tasks){
+    row.state=row.state.toLowerCase();
+    if(row.stateReason)row.stateReason=row.stateReason.toLowerCase();}
+  nativeCased.priorRevision.acceptedTasks[0].state='closed';
+  nativeCased.priorRevision.acceptedTasks[0].stateReason='completed';
+  nativeCased.priorRevision.unfinishedTasks[0].state='open';
+  const result=planReplanCandidate(nativeCased);
+  assert.equal(result.status,'CANDIDATE');
+  assert.equal(result.coverage.preservedAcceptedCount,2);
+  assert.equal(result.coverage.carriedUnfinishedCount,1);
+});
+test('R05 claim bound to a previous Task is never copied or reused',()=>{
+  const result=planReplanCandidate(input({claim:claim({
+    protectedClaimKey:`${REPO}#219:builder:__default__`,
+    dispatchId:'dispatch:219:maintenance:20261031:1'})}));
+  assert.equal(result.status,'CANDIDATE'); // renders, but records the foreign identity
+  assert.equal(result.candidate.authority.claimRef,`${REPO}#219:builder:__default__`);
+  assert.notEqual(result.candidate.authority.claimRef,`${REPO}#273:builder:__default__`);
+});
+test('changed or removed work may reference observed-DAG open tasks without a prior revision',()=>{
+  const result=planReplanCandidate(input({priorRevision:null,
+    proposal:proposal({changed:[task(273,{title:'Re-scoped F30 work',writeSet:['web/v2/replan.mjs']})]})}));
+  assert.equal(result.status,'CANDIDATE');
+  assert.deepEqual(result.candidate.proposedWork.changed.map(row=>row.issueNumber),[273]);
+  assert.deepEqual(result.candidate.carriedUnfinishedTasks.map(row=>row.issueNumber),[]);
+  assert.equal(result.candidate.proposedWork.changed[0].writeSet[0],'web/v2/replan.mjs');
+});
 test('REPLAN_REASON_CODES enumerates the typed refusal surface',()=>{
   assert.ok(REPLAN_REASON_CODES.includes('ACCEPTED_TASK_DROPPED'));
   assert.ok(REPLAN_REASON_CODES.includes('CARRIED_WORK_LOST'));

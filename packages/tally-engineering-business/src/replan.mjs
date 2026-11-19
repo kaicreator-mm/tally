@@ -24,8 +24,10 @@ const freeze=value=>{if(Array.isArray(value))return Object.freeze(value.map(free
     return Object.freeze(out);}return value;};
 const unique=value=>[...new Set(value)];
 const intersection=(a,b)=>a.filter(x=>b.includes(x));
-const terminal=value=>value?.state==='CLOSED'&&['COMPLETED','NOT_PLANNED'].includes(value?.stateReason);
-const openTask=value=>value?.state==='OPEN';
+const upper=value=>typeof value==='string'?value.toUpperCase():value;
+const terminal=value=>upper(value?.state)==='CLOSED'&&
+  ['COMPLETED','NOT_PLANNED'].includes(upper(value?.stateReason));
+const openTask=value=>upper(value?.state)==='OPEN';
 const taskNumbers=value=>unique(array(value).map(row=>row?.issueNumber).filter(x=>ISSUE.test(String(x??''))));
 const strings=value=>Array.isArray(value)&&value.every(row=>typeof row==='string'&&PATH.test(row));
 const numbers=value=>Array.isArray(value)&&value.every(row=>Number.isSafeInteger(row)&&row>0);
@@ -34,7 +36,7 @@ const evidenceRows=value=>Array.isArray(value)&&value.every(row=>row&&typeof row
 const taskRow=value=>value&&typeof value==='object'&&!Array.isArray(value)&&
   Number.isSafeInteger(value.issueNumber)&&value.issueNumber>0&&
   typeof value.title==='string'&&value.title.length>0&&value.title.length<=512&&
-  typeof value.state==='string'&&['OPEN','CLOSED'].includes(value.state)&&
+  typeof value.state==='string'&&['OPEN','CLOSED'].includes(upper(value.state))&&
   (value.stateReason===undefined||typeof value.stateReason==='string')&&
   numbers(array(value.blockedBy))&&strings(array(value.writeSet));
 const proposalRow=value=>taskRow(value)&&(value.reason===undefined||
@@ -150,7 +152,8 @@ export function planReplanCandidate(input={}){
     return refusal('BLOCKED','DUPLICATE_TASK_ID','duplicate key, WorkUnit alias or conflicting Task revision is rejected',
       {asOf:at,witness:{duplicateTaskNumbers:unique([...duplicates,...withinAdded])}});
   const removedNumbers=removed.map(row=>row.issueNumber);
-  const openExisting=new Set(array(priorUnfinished).filter(openTask).map(row=>row.issueNumber));
+  const openExisting=new Set([...array(priorUnfinished).filter(openTask),
+    ...dagTasks.filter(openTask)].map(row=>row.issueNumber));
   const phantom=unique([...changed.map(row=>row.issueNumber),...removedNumbers]
     .filter(id=>!openExisting.has(id)));
   if(phantom.length>0)
@@ -201,6 +204,7 @@ export function planReplanCandidate(input={}){
       claimDispatchId:claim?.dispatchId??null,
       claimWriteSetSha256:claim?.writeSetSha256??null},
     selectedKEffectAuthorityNote:'ADVISORY_ONLY_NO_ACTIVATION_AUTHORITY',
+    advisoryOnly:true,
     mustNot:['DO_NOT_TREAT_CANDIDATE_AS_NATIVE_TASK','DO_NOT_DISPATCH_AGENT_FROM_CANDIDATE',
       'DO_NOT_DELETE_NATIVE_BLOCKED_BY','DO_NOT_REWRITE_ACCEPTED_TASK_FACTS',
       'DO_NOT_AUTO_AMEND_PRODUCT_OR_L2']});

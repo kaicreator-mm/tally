@@ -152,6 +152,24 @@ test('R07/R08 activation without Owner decision or accepted Claim refuses before
   assert.equal(blockedClaim.reason,'NO_NEW_TASK_CLAIM');
   assert.equal(docs.size,0);
 });
+test('R05 ACTIVE_CLAIM_REASSIGNED a foreign-Task claim cannot activate this Task',async()=>{
+  const docs=new Map();
+  const controller=make({},{openStore:async()=>makeCasStore({docs})});
+  const foreignClaim={...claim(),protectedClaimKey:`${REPO}#219:builder:__default__`,
+    dispatchId:'dispatch:219:maintenance:20261031:1'};
+  await controller.dispatch(SHA,'derive-candidate',deriveArgs({claim:foreignClaim}));
+  assert.equal(controller.snapshot().candidate.advisoryOnly,true);
+  await controller.dispatch(SHA,'review-candidate',{reviewer:'independent:reviewer'});
+  const refused=await activate(controller,{});
+  assert.equal(refused.status,'BLOCKED');
+  assert.equal(refused.reason,'ACTIVE_CLAIM_REASSIGNED');
+  assert.equal(docs.size,0);
+});
+test('snapshot mirrors the advisory flag of the derived candidate',async()=>{
+  const controller=make({});
+  await controller.dispatch(SHA,'derive-candidate',deriveArgs());
+  assert.equal(controller.snapshot().candidate.advisoryOnly,true);
+});
 test('review admission: independence, presence and staleness gate activation',async()=>{
   const controller=make({});
   const noCandidate=await activate(controller,{});
