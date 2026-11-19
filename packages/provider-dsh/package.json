@@ -1,0 +1,15 @@
+{
+  "name": "@kaicreator/tally-provider-dsh",
+  "version": "0.0.0-v2.1-candidate",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
