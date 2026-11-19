@@ -397,8 +397,13 @@ test('review dispatch pins admit a valid mount and refuse malformed ones',()=>{
 });
 
 test('write-journey runner: mounted review-repair spawns the real single-review consumer',async()=>{
+  // Isolated evidence directory: node:test runs tests in one file
+  // concurrently, and a shared dir races the durable-result readback
+  // against another test's truncate window (empty read ⇒ UNKNOWN).
+  const reviewEvidence='C:/tmp/review-evidence';
   const settings=readInstalledWriteJourneyEnvironment(
-    {...consumerPins,...claimPins,...reviewPins});
+    {...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_AGENT_EVIDENCE_DIR:reviewEvidence});
   let captured=null;
   const fakeSpawn=async(script,env)=>{
     captured={script,env};
@@ -415,25 +420,33 @@ test('write-journey runner: mounted review-repair spawns the real single-review 
     return {code:0,signal:null,startedAt,terminatedAt:Date.now()};
   };
   const runner=createInstalledWriteJourneyRunner({settings,
-    env:{...consumerPins,...claimPins,...reviewPins},spawnE2e:fakeSpawn});
+    env:{...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_AGENT_EVIDENCE_DIR:reviewEvidence},spawnE2e:fakeSpawn});
   const review=await runner.run('review-repair');
   assert.equal(review.status,'PASS');
-  assert.equal(review.evidenceDir,'C:/tmp/single-evidence');
+  assert.equal(review.evidenceDir,reviewEvidence);
   assert.match(captured.script,
     /experiments[/\\]v2[/\\]selected-business-build[/\\]single-codex-review-e2e\.mjs$/);
   assert.equal(captured.env.TALLY_REVIEW_DECISION,'ACCEPT');
   assert.equal(captured.env.TALLY_REVIEW_DECISION_ID,'decision:264:j5:1');
   assert.equal(captured.env.TALLY_CLAIM_SOURCE_SHA,sha);
-  assert.equal(captured.env.TALLY_LOCAL_EVIDENCE_DIR,'C:/tmp/single-evidence');
+  assert.equal(captured.env.TALLY_LOCAL_EVIDENCE_DIR,reviewEvidence);
   // The builder lane stays wired to the J04 consumer; a mounted review seam
   // must never redirect the start kind.
   const start=await runner.run('start');
   assert.equal(start.status,'PASS');
   assert.match(captured.script,
     /experiments[/\\]v2[/\\]selected-business-build[/\\]local-codex-windows-e2e\.mjs$/);
-  // A lost durable review result on exit 0 stays UNKNOWN, never PASS.
-  const lost=createInstalledWriteJourneyRunner({settings,
-    env:{...consumerPins,...claimPins,...reviewPins},
+  // A lost durable review result on exit 0 stays UNKNOWN, never PASS (its
+  // own never-written evidence directory: the mtime filter alone must not be
+  // the only guard on platforms with coarse timestamp granularity).
+  const lostEvidence='C:/tmp/review-lost-evidence';
+  const lost=createInstalledWriteJourneyRunner({
+    settings:readInstalledWriteJourneyEnvironment(
+      {...consumerPins,...claimPins,...reviewPins,
+        TALLY_V2_AGENT_EVIDENCE_DIR:lostEvidence}),
+    env:{...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_AGENT_EVIDENCE_DIR:lostEvidence},
     spawnE2e:async()=>({code:0,signal:null,startedAt:Date.now(),
       terminatedAt:Date.now()})});
   const lostResult=await lost.run('review-repair');
