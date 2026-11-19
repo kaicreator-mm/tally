@@ -359,7 +359,7 @@ test('integration: real git worktree, real process spawn, fake zcode binary end-
     const config={issueRef,sourceSha:sha,attemptId:'attempt:zcode:integration:1',
       repositoryPath:dir,worktreePath:join(dir,'wt'),cliPath:fakeCli,
       nodePath:process.execPath,credentialsPath:join(dir,'credentials.json'),
-      emptyGitConfig,taskPrompt:'Create the candidate note file.',
+      emptyGitConfig,gitPath,taskPrompt:'Create the candidate note file.',
       allowedWriteSet:['LOCAL_ZCODE_L3.md'],timeoutMs:60000,
       systemRoot:process.env.SystemRoot??'C:\\Windows',
       systemDrive:process.env.SystemDrive??'C:'};
