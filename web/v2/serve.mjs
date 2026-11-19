@@ -430,6 +430,12 @@ export async function createInstalledReleaseDispatch({settings,env=process.env,
       return seamResult('OBSERVED',observed.reason??'MERGED_REQUALIFY_REQUIRED',
         {...base,mergedSha:observed.mergedSha??null,
           mergedTree:observed.mergedTree??null});
+    if(observed?.state==='TAG_CREATED_RELEASE_NOT_PUBLISHED')
+      return seamResult('OBSERVED',observed.reason??'TAG_CREATED_RELEASE_NOT_PUBLISHED',
+        {...base,githubEffect:'PERFORMED_READBACK_VERIFIED',
+          tag:observed.tag??null,
+          tagCommitSha:observed.commitSha??null,
+          tagCommitTree:observed.commitTree??null});
     if(observed?.state==='GITHUB_EFFECT_UNKNOWN')
       return seamResult('GITHUB_EFFECT_UNKNOWN',
         observed.reason??'GITHUB_EFFECT_UNKNOWN',base);
@@ -478,6 +484,121 @@ export async function createInstalledReleaseDispatch({settings,env=process.env,
       return seamResult('NOT_RUN','PUBLISH_EFFECT_NOT_BOUND');
     return seamResult('DENIED','UNKNOWN_ACTION');
   };
+}
+/** #491 J07 — real release qualification read (RQ / Owner grant /
+ * operation-specific Host permits) plus the accurate live main target
+ * readback. Fully injectable ({octokit, openStore, pins}) so tests run
+ * hermetically; serve mounts it with lazy Host-only transports under
+ * TALLY_V2_RELEASE_QUALIFICATION=host-mounted. Every row is exact-source /
+ * exact-target bound and expiry-checked; absent registries or unreadable
+ * rows answer the honest UNKNOWN — an advisory gate PASS can never become a
+ * permit here. */
+export function createReleaseQualificationRead({
+  octokit=null,openStore=null,pins={},sourceSha=null,
+  now=()=>new Date().toISOString()}={}){
+  if(!SHA.test(sourceSha??''))throw new TypeError('RELEASE_QUALIFICATION_SOURCE_REQUIRED');
+  const OWNER=typeof pins.owner==='string'?pins.owner:null;
+  const REPO=typeof pins.repo==='string'?pins.repo:null;
+  const readRow=async(path,key)=>{
+    if(!openStore||typeof path!=='string'||!path)return null;
+    let store;
+    try{
+      store=await openStore({path,busyTimeoutMs:1000});
+      return await store.get(key);
+    }catch{return null;}
+    finally{await store?.close?.().catch(()=>{});}
+  };
+  const isoNow=now();
+  const expired=expiresAt=>typeof expiresAt!=='string'||
+    !Number.isFinite(Date.parse(expiresAt))||Date.parse(expiresAt)<Date.parse(isoNow);
+  /** Live main target: actual SHA + tree, fail-closed UNKNOWN on any drift. */
+  const readTarget=async()=>{
+    if(!octokit||!OWNER||!REPO)
+      return {targetSha:null,targetTree:null,targetState:'UNKNOWN',
+        targetReason:'RELEASE_TARGET_READ_UNAVAILABLE'};
+    try{
+      const branch=(await octokit.rest.repos.getBranch(
+        {owner:OWNER,repo:REPO,branch:'main'}))?.data;
+      const targetSha=branch?.commit?.sha??null;
+      if(!SHA.test(targetSha??''))
+        return {targetSha:null,targetTree:null,targetState:'UNKNOWN',
+          targetReason:'RELEASE_TARGET_HEAD_UNOBSERVABLE'};
+      const commit=(await octokit.rest.repos.getCommit(
+        {owner:OWNER,repo:REPO,ref:targetSha}))?.data;
+      const targetTree=commit?.commit?.tree?.sha??null;
+      if(!SHA.test(targetTree??''))
+        return {targetSha:null,targetTree:null,targetState:'UNKNOWN',
+          targetReason:'RELEASE_TARGET_TREE_UNOBSERVABLE'};
+      return {targetSha,targetTree,targetState:'OBSERVED',targetReason:null};
+    }catch{return {targetSha:null,targetTree:null,targetState:'UNKNOWN',
+      targetReason:'RELEASE_TARGET_READ_UNAVAILABLE'};}
+  };
+  const readSourceTree=async()=>{
+    if(!octokit||!OWNER||!REPO)return null;
+    try{
+      const commit=(await octokit.rest.repos.getCommit(
+        {owner:OWNER,repo:REPO,ref:sourceSha}))?.data;
+      const tree=commit?.commit?.tree?.sha??null;
+      return SHA.test(tree??'')?tree:null;
+    }catch{return null;}
+  };
+  return Object.freeze({readTarget,async readAuthority(){
+    const target=await readTarget();
+    const base={rqState:'UNKNOWN',ownerGrantState:'UNKNOWN',permits:null,
+      sourceSha,...target};
+    if(!openStore||(!pins.rqRegistryPath&&!pins.grantRegistryPath&&
+      !pins.permitRegistryPath))
+      return base;
+    const sourceTree=await readSourceTree();
+    const observedTarget=target.targetSha??'';
+    const observedTargetTree=target.targetTree??'';
+    // RQ: exact (source,tree,target,tree,operation) binding — mirrors the
+    // J07b host-release readIndependentRq key contract for the MERGE lane.
+    let rqState='UNKNOWN';
+    if(sourceTree&&target.targetState==='OBSERVED'){
+      const key='tally:v2:release-rq:'+createHash('sha256')
+        .update(JSON.stringify([sourceSha,sourceTree,observedTarget,
+          observedTargetTree,'MERGE'])).digest('hex');
+      const row=await readRow(pins.rqRegistryPath,key);
+      const value=row?.value;
+      if(value&&value.state==='QUALIFIED'&&
+        value.verifierIndependentlyBound===true&&
+        value.sourceSha===sourceSha&&value.targetSha===observedTarget)
+        rqState='QUALIFIED';
+      else if(value)rqState='NOT_QUALIFIED';
+    }
+    // Owner grant: exact (source,target,operation) for MERGE.
+    let ownerGrantState='UNKNOWN';
+    if(target.targetState==='OBSERVED'){
+      const key='tally:v2:release-grant:'+createHash('sha256')
+        .update(JSON.stringify([sourceSha,observedTarget,'MERGE'])).digest('hex');
+      const row=await readRow(pins.grantRegistryPath,key);
+      const value=row?.value;
+      if(value&&value.state==='GRANTED'&&value.sourceSha===sourceSha&&
+        value.targetSha===observedTarget)ownerGrantState='GRANTED';
+      else if(value)ownerGrantState='NOT_GRANTED';
+    }
+    // Operation-specific Host permits; only rows bound to the exact source
+    // AND the observed live target count; expiry degrades to UNKNOWN.
+    const permits=[];
+    if(target.targetState==='OBSERVED'){
+      for(const operation of ['merge','tag','publish']){
+        const key='tally:v2:release-permit:'+createHash('sha256')
+          .update(JSON.stringify([operation,sourceSha,observedTarget])).digest('hex');
+        const row=await readRow(pins.permitRegistryPath,key);
+        const value=row?.value;
+        if(!value||value.operation!==operation||
+          value.sourceSha!==sourceSha||value.targetSha!==observedTarget)
+          continue;
+        const state=value.state==='GRANTED'&&!expired(value.expiresAt)?'GRANTED':
+          value.state==='DENIED'?'DENIED':'UNKNOWN';
+        permits.push(Object.freeze({operation,state,
+          sourceSha,grantedAt:typeof value.grantedAt==='string'?
+            value.grantedAt:null}));
+      }
+    }
+    return {...base,rqState,ownerGrantState,permits:Object.freeze(permits)};
+  }});
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
   const settings=readUiHostEnvironment(env);
@@ -531,6 +652,30 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       octokit:new Octokit({auth:settings.token,request:{timeout:15000}}),
       owner:settings.owner,repo:settings.repo,versionId:settings.versionId,
       expectedSha:settings.expectedSha});
+  }
+  // #491 J07: real release qualification reader. The target readback
+  // (live main SHA/tree) is ALWAYS mounted from the read token — the
+  // snapshot must never report the version source as the target again.
+  // Authority rows (RQ/grant/permits) come from Host-pinned registries
+  // only under TALLY_V2_RELEASE_QUALIFICATION=host-mounted; without the
+  // pin the release model keeps the honest UNKNOWN (permits null).
+  let releaseQualificationReader=null;
+  {
+    const {Octokit}=await import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js');
+    const releaseOctokit=new Octokit({auth:settings.token,
+      request:{timeout:15000}});
+    const mounted=env.TALLY_V2_RELEASE_QUALIFICATION==='host-mounted';
+    let openStore=null;
+    if(mounted)
+      ({openSqliteCasStore:openStore}=await import(
+        '@kaicreator/domain-harness-host-node'));
+    releaseQualificationReader=createReleaseQualificationRead({
+      octokit:releaseOctokit,openStore,sourceSha:settings.expectedSha,
+      pins:{owner:settings.owner,repo:settings.repo,
+        rqRegistryPath:env.TALLY_V2_RELEASE_RQ_REGISTRY_PATH??null,
+        grantRegistryPath:env.TALLY_V2_RELEASE_GRANT_REGISTRY_PATH??null,
+        permitRegistryPath:env.TALLY_V2_RELEASE_PERMIT_REGISTRY_PATH??null}});
   }
   // #264 E1 R91: real installed Builder write seam (J04 /api/actions start).
   // Mounted ONLY when the trusted Host process exports
@@ -640,25 +785,29 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return observed;
       }catch{return deny('REQUIREMENT_READ_FAILED');}
     },
-    // #264 J07: the /app Release panel reads the same real J07a advisory
-    // projection as the controller's pre-read — all thirteen required gates
-    // with truthful NOT_RUN/UNKNOWN/STALE statuses (the observed CI record
-    // included). No gate may report PASS-verified: at most
-    // REPORTED_PASS_UNVERIFIED. permits stay null: no release permit
-    // authority is mounted at this source, so every action button explains
-    // what is missing instead of a dead or fabricated enabled control.
+    // #491 J07: the /app Release panel reads the REAL Host qualification
+    // (rqState/ownerGrantState/operation permits from Host-pinned
+    // registries, exact-source and exact-live-target bound) alongside the
+    // J07a advisory 13-gate projection. Without the mount the authority
+    // stays the honest UNKNOWN (permits null); a GRANTED permit can only
+    // come from a real Host-issued row — the advisory gates never become
+    // authorization.
     async release(scope){
       if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
       try{
-        const {projection}=await composeReleaseReadiness();
+        const [{projection},authority]=await Promise.all([
+          composeReleaseReadiness(),
+          releaseQualificationReader.readAuthority()]);
         return {connected:true,versionId:settings.versionId,
           readiness:{versionId:settings.versionId,
             gates:projection.gates.map(gate=>({name:gate.name,
               status:gate.status,reason:gate.reason,owner:null,
               evidenceRef:gate.evidenceRef})),
             gateCounts:projection.gateCounts,blockers:projection.blockers,
-            permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN',
-            advisoryOnly:true}};
+            permits:authority.permits,rqState:authority.rqState,
+            ownerGrantState:authority.ownerGrantState,
+            targetSha:authority.targetSha,targetTree:authority.targetTree,
+            targetState:authority.targetState,advisoryOnly:true}};
       }catch{
         return {connected:true,versionId:settings.versionId,
           readiness:{versionId:settings.versionId,gates:[],permits:null,
@@ -709,8 +858,13 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   };
   const readReleaseSnapshot=async({sourceSha}={})=>{
     if(sourceSha!==settings.expectedSha)return null;
-    const {ciStatus,ciCoverage,projection}=await composeReleaseReadiness();
-    return {sourceSha:settings.expectedSha,targetSha:settings.expectedSha,
+    const [{ciStatus,ciCoverage,projection},target]=await Promise.all([
+      composeReleaseReadiness(),releaseQualificationReader.readTarget()]);
+    // #491: targetSha is the LIVE main HEAD read (never the version source
+    // again); unreadable/drifted targets surface UNKNOWN fail-closed.
+    return {sourceSha:settings.expectedSha,
+      targetSha:target.targetSha,targetTree:target.targetTree,
+      targetState:target.targetState,
       readiness:{status:projection.status,reason:projection.reason,
         releasePass:false,ciStatus,ciCoverage,
         gates:projection.gates,gateCounts:projection.gateCounts,

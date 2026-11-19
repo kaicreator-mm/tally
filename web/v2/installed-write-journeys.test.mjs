@@ -757,12 +757,16 @@ test('v2 release model renders the real 13-gate J07a advisory projection',async(
     assert.equal(release.readiness.advisoryOnly,true);
     assert.equal(release.readiness.gateCounts.required,13);
     assert.equal(release.readiness.gateCounts.reportedPass,0);
-    // The controller pre-read carries the same truthful projection.
+    // #491: the controller pre-read now carries the LIVE target readback;
+    // with no reachable GitHub target the whole controller snapshot is the
+    // honest fail-closed UNKNOWN (it must never fabricate a target again).
     const snapshot=await (await fetch(
       server.address.origin+'/api/release/snapshot')).json();
-    assert.equal(snapshot.snapshot.readiness.status,'BLOCKED');
-    assert.equal(snapshot.snapshot.readiness.gates.length,13);
-    assert.equal(snapshot.snapshot.readiness.releasePass,false);
+    assert.equal(snapshot.snapshot.status,'UNKNOWN');
+    assert.equal(snapshot.snapshot.releasePass,false);
+    assert.equal(snapshot.snapshot.canMerge,false);
+    assert.equal(snapshot.snapshot.canTag,false);
+    assert.equal(snapshot.snapshot.canPublish,false);
   }finally{await server.close();}
 });
 test('release Host Consumer dispatch admits only pinned Host configurations',async()=>{
