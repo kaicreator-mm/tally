@@ -319,8 +319,11 @@ test('task prompt is bounded and mentions every allowed path exactly once',()=>{
 
 test('integration: real git worktree, real process spawn, fake zcode binary end-to-end',async()=>{
   const dir=await mkdtemp(join(tmpdir(),'tally-zcode-integration-'));
+  // The host's git operations run with the stripped hostEnvironment PATH, so
+  // the test resolves an ABSOLUTE git path (PATH lookup would fail there).
   const gitPath=process.env.TALLY_TEST_GIT_PATH??
-    (process.platform==='win32'?'C:\\Program Files\\Git\\cmd\\git.exe':'git');
+    (process.platform==='win32'?'C:\\Program Files\\Git\\cmd\\git.exe':
+      (spawnSync('which',['git'],{encoding:'utf8'}).stdout.trim()||'git'));
   const gitSync=(args,cwd=dir)=>spawnSync(gitPath,['-c','user.name=Tally Test',
     '-c','user.email=tally-test@localhost','-c','commit.gpgsign=false',...args],
     {cwd,encoding:'utf8'});
