@@ -683,7 +683,7 @@ function classifyRun({
       state: 'COMPLETED',
       evidence: {
         ...evidence,
-        summary: capText(answer, EVIDENCE_SUMMARY_CAP),
+        summary: redactFine(capText(answer, EVIDENCE_SUMMARY_CAP)),
         summaryTruncated: answer.length > EVIDENCE_SUMMARY_CAP,
       },
     };
@@ -696,7 +696,7 @@ function classifyRun({
   }
   const completed = {
     ...evidence,
-    summary: capText(obs.text, EVIDENCE_SUMMARY_CAP),
+    summary: redactFine(capText(obs.text, EVIDENCE_SUMMARY_CAP)),
     summaryTruncated: obs.text.length > EVIDENCE_SUMMARY_CAP,
     sessionId: obs.sessionHandle,
     observedProvider: obs.provider,
