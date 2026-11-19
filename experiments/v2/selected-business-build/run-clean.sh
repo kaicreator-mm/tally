@@ -150,6 +150,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-readonly.test.mjs" "$tmp/consumer/local-codex-readonly.test.mjs"
     # R103 P1-01 regression input: the test spawns the consumer's real
     # branch against fixture claim registries. Only the T264 lane seals the
     # reviewSingleCandidate route into the build, so the consumer is copied
@@ -157,7 +158,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     if [[ "${T264_SINGLE_REVIEW:-0}" == "1" ]]; then
       cp "$TALLY/experiments/v2/selected-business-build/consumer-single-review-codex.mjs" "$tmp/consumer/consumer-single-review-codex.mjs"
     fi
-    node --test "$tmp/consumer/local-codex.test.mjs"
+    node --test "$tmp/consumer/local-codex.test.mjs" "$tmp/consumer/local-codex-readonly.test.mjs"
     if [[ "${T06N_CONCURRENT:-0}" == "1" ]]; then
       # T06n: ONE K facade runs Builder A (#177) and Builder B (#178) with two
       # distinct instance keys/attempts so the real external effects overlap,
@@ -190,6 +191,19 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     else
       cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+      if [[ "${TALLY_V2_PROVIDER_REPLAY:-0}" == "1" ]]; then
+        # #473 R107: prove the SAME sealed B/K/C composition resolves one
+        # explicitly enabled non-default AgentProvider/1. Replay returns
+        # before any provider probe/process/Host effect; the default Codex
+        # replay above remains unchanged and no second Host/CAS is created.
+        TALLY_GITHUB_READ_TOKEN="$native_token" \
+        TALLY_AGENT_PROVIDER_ATTEMPTS_JSON="{\"attempt:t06m:provider-replay:${CI_PIPELINE_NUMBER:-local}\":\"zcode\"}" \
+        TALLY_V2_AGENT_PROVIDERS_ENABLED=codex,zcode \
+        TALLY_AGENT_PROVIDER_CONFIG_JSON='{"zcode":{}}' \
+        TALLY_AGENT_PROVIDER_ENV_JSON='{"zcode":{}}' \
+        TALLY_LOCAL_ATTEMPT_ID="attempt:t06m:provider-replay:${CI_PIPELINE_NUMBER:-local}" \
+          node "$tmp/consumer/consumer-local-codex.mjs"
+      fi
     fi
     if [[ "${T264_SINGLE_REVIEW:-0}" == "1" ]]; then
       # #264 J05: single-Builder ReviewDecision/TaskOutcome consumer over the

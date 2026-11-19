@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
 import {fileURLToPath} from 'node:url';
 import {mkdtemp,rm} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
@@ -811,4 +812,175 @@ test('consumer real branch admits per-role registry keys and rejects wrong-key r
       assert.ok(stderr.includes('T264_CLAIM_NOT_PUBLISHED'),stderr.slice(-800));
     }finally{await rm(dir,{recursive:true,force:true});}
   }
+});
+
+// ---------------------------------------------------------------------------
+// #473 R107 repair 1 — readAttemptRecord is a strictly read-only reconcile
+// port: same vocabulary as runAttempt's durable replay, but a missing row
+// stays ATTEMPT_RECORD_NOT_FOUND and NOTHING is ever created, granted or
+// launched (R106 ABI review P1: runAttempt can launch when no row exists).
+// ---------------------------------------------------------------------------
+test('readAttemptRecord replays durable states without any side effect',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'t264-readonly-replay-'));
+  try{
+    const config=configFor(dir,'attempt:t06m:replay:1');
+    const host=createLocalCodexHost({spawnFn:()=>
+      {throw Error('readAttemptRecord must never spawn');},now:()=>Date.UTC(2026,10,19)});
+    // The hardened read-only port (readonly+fileMustExist) cannot even open
+    // a missing store file: a truly absent store is STORE_UNAVAILABLE, and
+    // the read must not create the file or any row either way.
+    const noStore=await host.readAttemptRecord(config);
+    assert.equal(noStore.state,'LOCAL_ATTEMPT_UNKNOWN');
+    assert.equal(noStore.reason,'ATTEMPT_RECORD_STORE_UNAVAILABLE');
+    assert.equal(noStore.readOnly,true);
+    assert.equal(existsSync(config.hostStorePath),false,
+      'a read-only reconcile must not create the store file');
+    // Absent row in an EXISTING store: honest NOT_FOUND.
+    let store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    await store.close();
+    const absent=await host.readAttemptRecord(config);
+    assert.equal(absent.state,'LOCAL_ATTEMPT_UNKNOWN');
+    assert.equal(absent.reason,'ATTEMPT_RECORD_NOT_FOUND');
+    assert.equal(absent.readOnly,true);
+    assert.equal(absent.agentLaunch,false);
+    store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    assert.equal((await store.list(LOCAL_CODEX_CONSTANTS.attemptKeyPrefix)).length,0,
+      'a read-only reconcile must not create an attempt row');
+    await store.close();
+    // Terminal NOT_EXECUTED row replays as AGENT_NOT_EXECUTED (full attempt
+    // identity recorded — the hardened read-only port cross-checks it).
+    store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    await store.put(attemptKey(config.attemptId),{phase:'NOT_EXECUTED',
+      reason:'CANDIDATE_PATH_OCCUPIED',sourceSha:config.sourceSha,
+      issueRef:config.issueRef,attemptId:config.attemptId},{mustBeAbsent:true});
+    await store.close();
+    const refused=await host.readAttemptRecord(config);
+    assert.equal(refused.state,'AGENT_NOT_EXECUTED');
+    assert.equal(refused.reason,'CANDIDATE_PATH_OCCUPIED');
+    assert.equal(refused.readOnly,true);
+    // CANDIDATE_READY row replays with its candidate identity.
+    const ready=configFor(dir,'attempt:t06m:replay:2');
+    store=await openSqliteCasStore({path:ready.hostStorePath,busyTimeoutMs:1000});
+    await store.put(attemptKey(ready.attemptId),{phase:'CANDIDATE_READY',
+      sourceSha:ready.sourceSha,issueRef:ready.issueRef,attemptId:ready.attemptId,
+      candidateTree:'e'.repeat(40),candidateCommit:'f'.repeat(40),
+      process:{status:'EXITED_OK',exitCode:0,pid:4242}},{mustBeAbsent:true});
+    await store.close();
+    const complete=await host.readAttemptRecord(ready);
+    assert.equal(complete.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(complete.candidateCommit,'f'.repeat(40));
+    assert.equal(complete.readOnly,true);
+    // Unreadable store: honest UNKNOWN, never a guess.
+    const broken=await host.readAttemptRecord({...configFor(dir,'attempt:t06m:replay:3'),
+      hostStorePath:join(dir,'no-dir','host.sqlite')});
+    assert.equal(broken.state,'LOCAL_ATTEMPT_UNKNOWN');
+    assert.equal(broken.reason,'ATTEMPT_RECORD_STORE_UNAVAILABLE');
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+// ---------------------------------------------------------------------------
+// #473 R107 — AgentProvider/1 substitutes only the process execution point.
+// The existing Host CAS/grants/worktree/write-set/candidate path remains the
+// sole authority; no parallel Host store or scheduler is involved.
+// ---------------------------------------------------------------------------
+function providerFake(id,execute){
+  return {id,
+    probe:async()=>({state:'AVAILABLE',reason:null,evidence:null}),
+    execute,cancel:async()=>({state:'NOT_RUNNING',reason:null,evidence:null}),
+    reconcile:async()=>({state:'UNKNOWN',reason:'NOT_RECONCILED',evidence:null})};
+}
+
+test('AgentProvider candidate uses the same Host CAS and cannot rebind an attempt',async()=>{
+  await withHost(async({host,config,calls})=>{
+    let seen=null;
+    const provider=providerFake('zcode',async request=>{
+      seen=request;
+      return {state:'COMPLETED',reason:null,evidence:{pid:4343,exitCode:0,spawned:true}};
+    });
+    const first=await host.runAttempt({...config,providerId:'zcode',agentProvider:provider,
+      providerEnv:{DEEPSEEK_API_KEY:'not-recorded'}});
+    assert.equal(first.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(first.providerId,'zcode');
+    assert.equal(first.taskPass,false);
+    assert.equal(first.process.pid,4343);
+    assert.equal(first.process.builderPrincipal,null,
+      'an adapter process is not mislabeled as the Codex sandbox principal');
+    assert.equal(calls.length,0,'the provider owns its process; Host spawns no Codex CLI');
+    assert.equal(seen.taskId,'172');
+    assert.equal(seen.worktreePath,config.worktreePath);
+    assert.ok(seen.prompt.includes(LOCAL_CODEX_CONSTANTS.candidateRelativePath));
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.providerId,'zcode');
+    assert.equal(row.value.phase,'CANDIDATE_READY');
+    assert.equal(JSON.stringify(row).includes('not-recorded'),false);
+    assert.deepEqual(row.value.envAllowlist,['DEEPSEEK_API_KEY']);
+    await store.close();
+    const rebound=await host.runAttempt({...config,providerId:'dsh',
+      agentProvider:providerFake('dsh',async()=>{
+        throw Error('a rebound attempt must never execute');})});
+    assert.equal(rebound.state,'LOCAL_ATTEMPT_UNKNOWN');
+    assert.equal(rebound.reason,'ATTEMPT_IDENTITY_MISMATCH');
+    assert.equal(rebound.agentLaunch,false);
+  });
+});
+
+test('two providers share existing Host grants for disjoint parallel Tasks',async()=>{
+  await withHost(async({host,config})=>{
+    let active=0,maxActive=0;
+    const execute=async()=>{
+      active++;maxActive=Math.max(maxActive,active);
+      await new Promise(resolve=>setTimeout(resolve,40));
+      active--;
+      return {state:'COMPLETED',reason:null,evidence:{pid:4343,exitCode:0,spawned:true}};
+    };
+    const baseA={...config,attemptId:'attempt:r107:parallel:a',
+      worktreePath:join(config.repositoryPath,'wt-a'),candidateRelativePath:CONCURRENT_A};
+    const baseB={...config,attemptId:'attempt:r107:parallel:b',
+      worktreePath:join(config.repositoryPath,'wt-b'),candidateRelativePath:CONCURRENT_B};
+    const [a,b]=await Promise.all([
+      host.runAttempt({...baseA,providerId:'zcode',agentProvider:providerFake('zcode',execute)}),
+      host.runAttempt({...baseB,providerId:'dsh',agentProvider:providerFake('dsh',execute)})]);
+    assert.equal(a.state,'LOCAL_CANDIDATE_READY');assert.equal(b.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(maxActive,2,'two disjoint provider executions really overlapped');
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const rows=await store.list(LOCAL_CODEX_CONSTANTS.attemptKeyPrefix);
+    assert.equal(rows.length,2);
+    const values=[];
+    for(const key of rows)values.push((await store.get(key)).value);
+    assert.deepEqual(new Set(values.map(value=>value.providerId)),new Set(['zcode','dsh']));
+    assert.equal((await store.list('tally:v2:local-agent-grant:')).length,0,
+      'settled attempts release the same existing Host grants');
+    await store.close();
+  });
+});
+
+test('provider overlap refusal and COMPLETED write-set violation stay Host-owned',async()=>{
+  await withHost(async({host,config})=>{
+    let release;
+    const gate=new Promise(resolve=>{release=resolve;});
+    let started;
+    const entered=new Promise(resolve=>{started=resolve;});
+    const running=host.runAttempt({...config,providerId:'zcode',
+      agentProvider:providerFake('zcode',async()=>{
+        started();await gate;
+        return {state:'COMPLETED',reason:null,evidence:{pid:4343,exitCode:0,spawned:true}};
+      })});
+    await entered;
+    const overlap=await host.runAttempt({...config,attemptId:'attempt:r107:overlap:b',
+      worktreePath:join(config.repositoryPath,'wt-other'),providerId:'dsh',
+      agentProvider:providerFake('dsh',async()=>{
+        throw Error('overlapping provider must not execute');})});
+    assert.equal(overlap.state,'NOT_ADMITTED');
+    assert.equal(overlap.reason,'CANDIDATE_WRITE_GRANT_OVERLAP');
+    release();assert.equal((await running).state,'LOCAL_CANDIDATE_READY');
+    const violation=await host.runAttempt({...config,attemptId:'attempt:r107:violation:b',
+      worktreePath:join(config.repositoryPath,'wt-violation'),providerId:'dsh',
+      agentProvider:providerFake('dsh',async()=>({state:'COMPLETED',reason:null,
+        evidence:{pid:4343,exitCode:0,spawned:true}}))});
+    assert.equal(violation.state,'LOCAL_ATTEMPT_FAILED');
+    assert.equal(violation.reason,'WRITE_SET_VIOLATION');
+    assert.equal(violation.taskPass,false);
+  },{ops:operations({finalizeCandidate:async config=>
+    config.attemptId==='attempt:r107:violation:b'?{writeSetValid:false,paths:['forbidden.txt']}:candidate})});
 });

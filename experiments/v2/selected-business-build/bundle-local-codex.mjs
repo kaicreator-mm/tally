@@ -31,6 +31,12 @@ import {readGitHubClaimPublicationWitness} from ${JSON.stringify(witness)};
 import {readGitHubNativeTaskSourcePair} from ${JSON.stringify(sourcePair)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createLocalCodexHost} from ${JSON.stringify(host)};
+import {createAgentProviderRegistry} from ${JSON.stringify(resolve(tally,'packages/tally-agent-provider/src/index.mjs'))};
+import {createZcodeAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-zcode/src/index.mjs'))};
+import {createDshAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-dsh-adapter/src/index.mjs'))};
+import {createOpenCodeAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-opencode/src/index.mjs'))};
+import {createPiAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-pi/src/index.mjs'))};
+import {createGrokAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-grok/src/index.mjs'))};
 import {Octokit} from ${JSON.stringify(octokit)};
 import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
@@ -316,6 +322,57 @@ function attemptWorktreePath(env,attemptId){
   const root=env.TALLY_LOCAL_WORKTREE_ROOT??env.TALLY_LOCAL_REPOSITORY_PATH;
   return root+'/.tally-t06n-worktrees/'+safe;
 }
+// #473 R107: resolve exactly one process-only AgentProvider/1 for this
+// attempt. This is the canonical registry from packages/tally-agent-provider,
+// not a scheduler or an admission authority. Codex never enters a wrapper:
+// its existing selected-chain execution below is byte-for-byte preserved.
+async function resolveAttemptProvider(env,input){
+  let attemptProviders={};
+  if(env.TALLY_AGENT_PROVIDER_ATTEMPTS_JSON){
+    try{attemptProviders=JSON.parse(env.TALLY_AGENT_PROVIDER_ATTEMPTS_JSON);}
+    catch{return {reason:'PROVIDER_CONFIG_INVALID'};}
+    if(!attemptProviders||typeof attemptProviders!=='object'||Array.isArray(attemptProviders))
+      return {reason:'PROVIDER_CONFIG_INVALID'};
+  }
+  const providerId=attemptProviders[input.attemptId]??env.TALLY_V2_AGENT_PROVIDER??'codex';
+  const enabledProviderIds=(env.TALLY_V2_AGENT_PROVIDERS_ENABLED??'codex')
+    .split(',').map(value=>value.trim()).filter(Boolean);
+  if(!/^[a-z][a-z0-9-]{0,63}$/.test(providerId))
+    return {reason:'PROVIDER_ID_INVALID'};
+  if(!enabledProviderIds.includes(providerId))return {reason:'PROVIDER_DISABLED'};
+  if(providerId==='codex')return {providerId,agentProvider:null,providerEnv:null};
+  let configs,environment;
+  try{
+    configs=JSON.parse(env.TALLY_AGENT_PROVIDER_CONFIG_JSON??'{}');
+    environment=JSON.parse(env.TALLY_AGENT_PROVIDER_ENV_JSON??'{}');
+  }catch{return {reason:'PROVIDER_CONFIG_INVALID'};}
+  const config=configs?.[providerId],providerEnv=environment?.[providerId];
+  if(!config||typeof config!=='object'||Array.isArray(config)||
+    !providerEnv||typeof providerEnv!=='object'||Array.isArray(providerEnv))
+    return {reason:'PROVIDER_CONFIG_INVALID'};
+  try{
+    const shared={sandboxCliPath:env.TALLY_CODEX_SANDBOX_PATH,
+      sandboxCodexHome:env.TALLY_CODEX_HOME,gitPath:env.TALLY_GIT_PATH,
+      builderProfile:env.TALLY_BUILDER_PROFILE,builderTemp:env.TALLY_BUILDER_TEMP,
+      emptyGitConfig:env.TALLY_EMPTY_GIT_CONFIG,modelProxy:env.TALLY_MODEL_PROXY,
+      caBundle:env.TALLY_CA_BUNDLE,repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH};
+    let provider;
+    if(providerId==='zcode')provider=createZcodeAgentProvider({config:{...shared,...config,
+      allowedWriteSet:[TASK_BINDINGS[input.issueNumber].candidateRelativePath]}});
+    else if(providerId==='dsh')provider=await createDshAgentProvider({config:{...shared,...config}});
+    else if(providerId==='opencode')provider=createOpenCodeAgentProvider(config);
+    else if(providerId==='pi')provider=createPiAgentProvider(config);
+    else if(providerId==='grok')provider=createGrokAgentProvider(config);
+    else return {reason:'PROVIDER_NOT_INSTALLED'};
+    const registry=createAgentProviderRegistry([provider],{defaultProviderId:'codex'});
+    return {providerId,providerEnv,agentProvider:registry.resolve({providerId,
+      enabledProviderIds,pin:{taskId:String(input.issueNumber),attemptId:input.attemptId,
+        sourceSha:input.sourceSha,providerId}})};
+  }catch(error){
+    return {reason:typeof error?.message==='string'&&
+      /^PROVIDER_[A-Z_]+$/.test(error.message)?error.message:'PROVIDER_CONFIG_INVALID'};
+  }
+}
 export async function runLocalCodexAttempt(input){
   const env=process.env;
   const binding=TASK_BINDINGS[input?.issueNumber];
@@ -330,11 +387,17 @@ export async function runLocalCodexAttempt(input){
   if(!writeSetCheck.ok)return denied(input,writeSetCheck.reason);
   const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,issueNumber,input.sourceSha);
   if(!pairCheck.ok)return denied(input,pairCheck.reason);
+  const provider=await resolveAttemptProvider(env,input);
+  if(provider.reason)return denied(input,provider.reason);
   if(env.TALLY_LOCAL_REPLAY==='1')
-    return {...admitted(input,'REPLAY_COMPLETE','REPLAY_FIXTURE_ONLY',false),replayFixture:true};
+    return {...admitted(input,'REPLAY_COMPLETE','REPLAY_FIXTURE_ONLY',false),
+      ...(provider.providerId==='codex'?{}:{providerId:provider.providerId}),replayFixture:true};
   try{
     return await createLocalCodexHost().runAttempt({issueRef:issueRefFor(issueNumber),
       sourceSha:input.sourceSha,attemptId:input.attemptId,
+      taskId:String(issueNumber),
+      ...(provider.providerId==='codex'?{}:{providerId:provider.providerId,
+        agentProvider:provider.agentProvider,providerEnv:provider.providerEnv}),
       candidateRelativePath:binding.candidateRelativePath,
       worktreePath:env.TALLY_LOCAL_WORKTREE_PATH??attemptWorktreePath(env,input.attemptId),
       hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,

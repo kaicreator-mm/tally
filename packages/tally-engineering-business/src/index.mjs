@@ -1487,7 +1487,9 @@ const LOCAL_REASONS=new Set([
   'ATTEMPT_ALREADY_RECONCILED','ATTEMPT_STATUS_UNKNOWN','ATTEMPT_TIMEOUT_RECONCILED',
   'ATTEMPT_CANCELLED','ATTEMPT_PROCESS_FAILED','WRITE_SET_VIOLATION',
   'CANDIDATE_TREE_UNAVAILABLE','LOCAL_AGENT_PROVIDER_THREW',
-  'CANDIDATE_WORKTREE_OVERLAP','CANDIDATE_WRITE_GRANT_OVERLAP'
+  'CANDIDATE_WORKTREE_OVERLAP','CANDIDATE_WRITE_GRANT_OVERLAP',
+  'PROVIDER_CONFIG_INVALID','PROVIDER_DISABLED','PROVIDER_NOT_INSTALLED',
+  'PROVIDER_ID_INVALID','PROVIDER_OBSERVATION_INVALID','ATTEMPT_IDENTITY_MISMATCH'
 ]);
 const localDenied=(reason,effectId)=>Object.freeze({state:'NOT_ADMITTED',reason,effectId,
   admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
@@ -1499,12 +1501,15 @@ export function projectLocalCodexAttempt({input,observation,effectId}={}){
       o.sourceSha!==input?.sourceSha||o.attemptId!==input?.attemptId||
       !LOCAL_REASONS.has(o.reason)&&o.state!=='LOCAL_CANDIDATE_READY'&&o.state!=='REPLAY_COMPLETE')
       return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
+    if(o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
+      o.claimGeneration!==1||(o.providerId!==undefined&&
+        !/^[a-z][a-z0-9-]{0,63}$/.test(o.providerId)))
+      return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
     const common={issueRef:o.issueRef,sourceSha:o.sourceSha,attemptId:o.attemptId,
       claimGeneration:o.claimGeneration,claimAccepted:o.claimAccepted,
       admitted:o.admitted,authorized:o.authorized,agentLaunch:o.agentLaunch,
-      taskPass:o.taskPass,releasePass:o.releasePass};
-    if(o.authorized!==false||o.taskPass!==false||o.releasePass!==false||
-      o.claimGeneration!==1)return localDenied('UNVERIFIED_LOCAL_CODEX_OBSERVATION',effectId);
+      taskPass:o.taskPass,releasePass:o.releasePass,
+      ...(o.providerId&&o.providerId!=='codex'?{providerId:o.providerId}:{})};
     if(o.state==='NOT_ADMITTED'&&LOCAL_REASONS.has(o.reason)&&o.admitted===false&&
       o.claimAccepted===false&&o.agentLaunch===false)
       return Object.freeze({state:o.state,reason:o.reason,effectId,...common});
@@ -1516,8 +1521,12 @@ export function projectLocalCodexAttempt({input,observation,effectId}={}){
       o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===true&&
       o.replayFixture===false&&SOURCE_SHA.test(o.candidateTree??'')&&
       SOURCE_SHA.test(o.candidateCommit??'')&&o.process?.status==='EXITED'&&
-      o.process.exitCode===0&&typeof o.process.builderPrincipal==='string'&&
-      typeof o.process.builderSid==='string'&&Number.isSafeInteger(o.process.pid))
+      o.process.exitCode===0&&
+      (Number.isSafeInteger(o.process.pid)||
+        (o.providerId&&o.providerId!=='codex'&&o.process.pid===null))&&
+      ((typeof o.process.builderPrincipal==='string'&&typeof o.process.builderSid==='string')||
+        (o.providerId&&o.providerId!=='codex'&&
+          o.process.builderPrincipal===null&&o.process.builderSid===null)))
       return Object.freeze({state:o.state,reason:o.reason,effectId,...common,replayFixture:false,
         candidateTree:o.candidateTree,candidateCommit:o.candidateCommit,
         process:Object.freeze({status:'EXITED',exitCode:0,pid:o.process.pid,

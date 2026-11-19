@@ -105,11 +105,22 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
     if(!ID.test(decisionId??''))throw new TypeError('REVIEW_DECISION_ID_INVALID');
     review=Object.freeze({decision,decisionId});
   }
+  // #473 R107: task-selected AgentProvider pin. Host-pinned only — a
+  // browser/agent request can never choose the provider; the default stays
+  // codex (the proven selected-chain lane) and every other provider must be
+  // explicitly present in the enabled list. One Attempt binds exactly one
+  // provider and there is never an implicit fallback.
+  const provider=env.TALLY_V2_AGENT_PROVIDER??'codex';
+  const enabledProviders=(env.TALLY_V2_AGENT_PROVIDERS_ENABLED??'codex')
+    .split(',').map(value=>value.trim()).filter(Boolean);
+  if(!/^[a-z][a-z0-9-]{0,63}$/.test(provider)||
+     !enabledProviders.includes(provider))
+    throw new TypeError('AGENT_PROVIDER_PIN_INVALID');
   return Object.freeze({claim:Object.freeze({...claim,
       commentId:claim.commentId,
       timeoutMs:Number.isSafeInteger(timeoutMs)&&timeoutMs>=60000&&
         timeoutMs<=30*60*1000?timeoutMs:10*60*1000}),
-    worktreePath,evidenceDir,
+    worktreePath,evidenceDir,provider,
     ...(review?{review}:{})});
 }
 
@@ -186,6 +197,10 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
       return {status:'UNKNOWN',reason:'REVIEW_CONSUMER_NOT_MOUNTED',exitCode:null,
         signal:null,timeout:false,observedAt:new Date().toISOString(),result:null};
     }
+    // #473 R107: every provider uses the SAME selected sealed B→K→Host/C
+    // driver. The trusted provider pin only substitutes the process-only
+    // execution point inside local-codex-host; Claim/FSW/CAS/worktree/grants
+    // and candidate readback never fork into a second Host or scheduler.
     const script=join(env.TALLY_LOCAL_REPOSITORY_PATH,
       'experiments','v2','selected-business-build','local-codex-windows-e2e.mjs');
     const exit=await spawnE2e(script,runnerEnv(),claim.timeoutMs);

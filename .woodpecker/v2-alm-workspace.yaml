@@ -15,6 +15,13 @@ when:
         - 'experiments/v2/maintenance/**'
         - 'experiments/v2/release/**'
         - 'experiments/v2/selected-business-build/**'
+        - 'packages/tally-agent-provider/**'
+        - 'packages/tally-provider-codex/**'
+        - 'packages/tally-provider-zcode/**'
+        - 'packages/tally-provider-dsh-adapter/**'
+        - 'packages/tally-provider-opencode/**'
+        - 'packages/tally-provider-pi/**'
+        - 'packages/tally-provider-grok/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
     branch: [task/tally-i92-k3]
@@ -77,6 +84,9 @@ steps:
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
+      # #473 R107: AgentProvider/1 contract + six adapter suites (node
+      # built-ins only — safe for this lane's minimal install set).
+      - node --test packages/tally-agent-provider/test/*.test.mjs packages/tally-provider-codex/test/*.test.mjs packages/tally-provider-zcode/test/*.test.mjs packages/tally-provider-dsh-adapter/test/*.test.mjs packages/tally-provider-opencode/test/*.test.mjs packages/tally-provider-pi/test/*.test.mjs packages/tally-provider-grok/test/*.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'

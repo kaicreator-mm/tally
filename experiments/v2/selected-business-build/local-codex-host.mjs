@@ -7,6 +7,7 @@ import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 
 const SHA=/^[0-9a-f]{40}$/;
 const ATTEMPT=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,79}$/;
+const PROVIDER_ID=/^[a-z][a-z0-9-]{0,63}$/;
 const SID=/^S-1-5-21(?:-\d+){4}$/;
 const CANDIDATE='experiments/v2/selected-business-build/LOCAL_CODEX_L3.md';
 const keyFor=attemptId=>'tally:v2:local-agent-attempt:'+attemptId;
@@ -309,23 +310,43 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
     return result.code===0;
   });
   async function runAttempt(config){
+    const providerId=config.providerId??'codex';
+    const agentProvider=config.agentProvider??null;
+    const taskId=config.taskId??/\/issues\/([1-9][0-9]*)$/.exec(config.issueRef??'')?.[1];
     const flags={claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
       taskPass:false,releasePass:false};
-    const base={issueRef:config.issueRef,sourceSha:config.sourceSha,attemptId:config.attemptId,...flags};
+    const base={issueRef:config.issueRef,sourceSha:config.sourceSha,attemptId:config.attemptId,
+      ...(providerId==='codex'?{}:{providerId}),...flags};
     const candidatePath=config.candidateRelativePath??CANDIDATE;
     if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.attemptId??'')||
       !SID.test(config.builderSid??''))return {...base,state:'AGENT_NOT_EXECUTED',
       reason:'BUILDER_CONFINEMENT_UNAVAILABLE',agentLaunch:false,replayFixture:false,
       candidateTree:null,candidateCommit:null,process:null};
+    if(!PROVIDER_ID.test(providerId)||(providerId!=='codex'&&!ATTEMPT.test(taskId??''))||
+      (providerId!=='codex'&&
+        (!agentProvider||agentProvider.id!==providerId||
+          typeof agentProvider.probe!=='function'||typeof agentProvider.execute!=='function'||
+          typeof agentProvider.cancel!=='function'||typeof agentProvider.reconcile!=='function'))||
+      (config.providerEnv!==undefined&&(!config.providerEnv||
+        typeof config.providerEnv!=='object'||Array.isArray(config.providerEnv))))
+      return {...base,state:'AGENT_NOT_EXECUTED',reason:'PROVIDER_CONFIG_INVALID',
+        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,process:null};
     let store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:5000});
     const key=keyFor(config.attemptId);
     try{
       const existing=await store.get(key);
       if(existing){
         const value=existing.value;
+        if((value?.providerId??'codex')!==providerId||
+          (value?.sourceSha&&value.sourceSha!==config.sourceSha)||
+          (value?.issueRef&&value.issueRef!==config.issueRef))
+          return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_IDENTITY_MISMATCH',
+            agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+            process:value?.process??null,readOnly:true};
         if(value?.phase==='CANDIDATE_READY')return {...base,state:'LOCAL_CANDIDATE_READY',
           reason:'REAL_CODEX_CANDIDATE_RECORDED',agentLaunch:true,replayFixture:false,
-          candidateTree:value.candidateTree,candidateCommit:value.candidateCommit,process:value.process};
+          candidateTree:value.candidateTree,candidateCommit:value.candidateCommit,process:value.process,
+          readOnly:true};
         if(value?.phase==='NOT_EXECUTED')return {...base,state:'AGENT_NOT_EXECUTED',
           reason:value.reason,agentLaunch:false,replayFixture:false,candidateTree:null,
           candidateCommit:null,process:null};
@@ -372,7 +393,8 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       const startedAt=iso(now);
       await store.put(key,{phase:'STARTING',attemptId:config.attemptId,sourceSha:config.sourceSha,
         issueRef:config.issueRef,claimGeneration:1,worktreePath:config.worktreePath,
-        candidateRelativePath:candidatePath,startedAt},{mustBeAbsent:true});
+        candidateRelativePath:candidatePath,startedAt,
+        ...(providerId==='codex'?{}:{providerId})},{mustBeAbsent:true});
       let revision=0;
       const update=async value=>{const result=await store.put(key,value,{mustMatchRevision:revision});
         revision=result.revision;};
@@ -383,8 +405,11 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,replayFixture:false,
           candidateTree:null,candidateCommit:null,process:null};
       };
-      const probe=await ops.probeProvider(config);
-      if(!probe.available)return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
+      const probe=agentProvider?
+        await agentProvider.probe({env:config.providerEnv??{}}).catch(()=>null):
+        await ops.probeProvider(config);
+      if(agentProvider?probe?.state!=='AVAILABLE':!probe.available)
+        return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
       // Pre-spawn path-occupancy refusal (#264 J04 overwrite lesson): refuse
       // before any worktree/ACL/spawn side effect, never overwrite tracked
       // history through the sealed "Create exactly <path>" prompt. Both a
@@ -407,13 +432,114 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       if(!confinement.verified)return await notExecuted(confinement.reason,{confinement});
       const env=builderEnvironment(config);
       const prompt=`Work only in the current disposable Git worktree. Create exactly ${candidatePath} with a short Markdown candidate note containing attempt ${config.attemptId}. Do not modify any other path, do not commit, do not use GitHub or network except the model provider, and stop after writing the file.`;
-      const argv=[config.sandboxCliPath,...sandboxPrefix,config.cliPath,'exec',
-        '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config','--ignore-rules',
-        '--ephemeral','--json','-C',worktree.worktreePath,prompt];
+      const providerEnv=config.providerEnv??{};
+      const argv=agentProvider?['AgentProvider/1',providerId]:
+        [config.sandboxCliPath,...sandboxPrefix,config.cliPath,'exec',
+          '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config','--ignore-rules',
+          '--ephemeral','--json','-C',worktree.worktreePath,prompt];
       current=await store.get(key);revision=current.revision;
       await update({...current.value,phase:'PERMITTED',argv,cwd:worktree.worktreePath,
-        envAllowlist:Object.keys(env),builderPrincipal:confinement.builderPrincipal,
-        builderSid:confinement.builderSid,hiddenVerifierStatus:confinement.hiddenVerifierStatus});
+        envAllowlist:Object.keys(agentProvider?providerEnv:env),
+        builderPrincipal:agentProvider?null:confinement.builderPrincipal,
+        builderSid:agentProvider?null:confinement.builderSid,
+        hiddenVerifierStatus:confinement.hiddenVerifierStatus});
+      if(agentProvider){
+        // AgentProvider/1 is ONLY the process-execution substitution point.
+        // Claim/FSW admission, the CAS row/grants, worktree, candidate tree,
+        // write-set fence and git readback above/below remain this one Host.
+        const controller=new AbortController();
+        let timedOut=false,cancelled=false;
+        const abort=()=>{cancelled=true;controller.abort();};
+        if(config.signal?.aborted)abort();
+        else config.signal?.addEventListener('abort',abort,{once:true});
+        const timeoutMs=Number.isSafeInteger(config.timeoutMs)&&config.timeoutMs>0?
+          config.timeoutMs:300000;
+        const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeoutMs);
+        timer.unref?.();
+        const providerStartedAt=iso(now);
+        current=await store.get(key);revision=current.revision;
+        await update({...current.value,phase:'RUNNING',process:{status:'RUNNING',pid:null,
+          builderPrincipal:null,builderSid:null,startedAt:providerStartedAt}});
+        let hardTimer;
+        const hardBound=new Promise(resolve=>{
+          hardTimer=setTimeout(()=>resolve(null),timeoutMs+60000);
+          hardTimer.unref?.();
+        });
+        let observation;
+        try{
+          observation=await Promise.race([agentProvider.execute(
+            {taskId,attemptId:config.attemptId,sourceSha:config.sourceSha,
+              prompt,worktreePath:worktree.worktreePath,timeoutMs},
+            {signal:controller.signal,env:providerEnv}),hardBound]).catch(()=>null);
+        }finally{
+          clearTimeout(timer);clearTimeout(hardTimer);
+          config.signal?.removeEventListener('abort',abort);
+        }
+        if(!observation||!['COMPLETED','FAILED','CANCELLED','UNKNOWN'].includes(observation.state)){
+          const reason=observation?'PROVIDER_OBSERVATION_INVALID':
+            timedOut?'ATTEMPT_TIMEOUT_RECONCILED':'ATTEMPT_STATUS_UNKNOWN';
+          if(!observation)await agentProvider.cancel({taskId,attemptId:config.attemptId,
+            sourceSha:config.sourceSha,providerId}).catch(()=>null);
+          const process={status:'UNKNOWN',exitCode:null,pid:null,builderPrincipal:null,
+            builderSid:null,startedAt:providerStartedAt,terminatedAt:iso(now)};
+          current=await store.get(key);revision=current.revision;
+          await update({...current.value,phase:'UNKNOWN',reason,process,
+            providerObservation:observation?{state:observation.state??null,
+              reason:observation.reason??null}:null,terminatedAt:process.terminatedAt});
+          // A provider that never settled may still own a live process. Keep
+          // the CAS resource grants for reconciliation; never open an overlap.
+          if(observation)await releaseGrants();
+          return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason,agentLaunch:true,
+            replayFixture:false,candidateTree:null,candidateCommit:null,process};
+        }
+        const evidence=observation.evidence??{};
+        const processEvidence=evidence.process??evidence;
+        const launched=observation.state==='COMPLETED'||
+          (evidence.agentLaunch!==false&&evidence.spawned!==false);
+        if(!launched){
+          const reason=observation.state==='CANCELLED'?'ATTEMPT_CANCELLED':
+            'LOCAL_AGENT_UNAVAILABLE';
+          current=await store.get(key);revision=current.revision;
+          await update({...current.value,phase:'NOT_EXECUTED',reason,process:null,
+            providerObservation:{state:observation.state,reason:observation.reason??null},
+            terminatedAt:iso(now)});
+          await releaseGrants();
+          return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,
+            replayFixture:false,candidateTree:null,candidateCommit:null,process:null};
+        }
+        const candidate=await ops.finalizeCandidate(config).catch(error=>({error:error.code}));
+        const process={status:observation.state==='UNKNOWN'?'UNKNOWN':'EXITED',
+          exitCode:Number.isSafeInteger(processEvidence.exitCode)?processEvidence.exitCode:null,
+          pid:Number.isSafeInteger(processEvidence.pid)?processEvidence.pid:null,
+          builderPrincipal:null,builderSid:null,startedAt:providerStartedAt,
+          terminatedAt:iso(now)};
+        let state,reason,phase;
+        if(timedOut||observation.state==='UNKNOWN'){
+          state='LOCAL_ATTEMPT_UNKNOWN';
+          reason=timedOut?'ATTEMPT_TIMEOUT_RECONCILED':'ATTEMPT_STATUS_UNKNOWN';phase='UNKNOWN';
+        }else if(cancelled||observation.state==='CANCELLED'){
+          state='LOCAL_ATTEMPT_CANCELLED';reason='ATTEMPT_CANCELLED';phase='CANCELLED';
+        }else if(!candidate.writeSetValid&&candidate.paths?.length){
+          state='LOCAL_ATTEMPT_FAILED';reason=candidate.error??'WRITE_SET_VIOLATION';phase='FAILED';
+        }else if(observation.state==='FAILED'){
+          state='LOCAL_ATTEMPT_FAILED';reason='ATTEMPT_PROCESS_FAILED';phase='FAILED';
+        }else if(!candidate.writeSetValid){
+          state='LOCAL_ATTEMPT_FAILED';reason=candidate.error??'WRITE_SET_VIOLATION';phase='FAILED';
+        }else{
+          state='LOCAL_CANDIDATE_READY';reason='REAL_CODEX_CANDIDATE_RECORDED';
+          phase='CANDIDATE_READY';
+        }
+        current=await store.get(key);revision=current.revision;
+        await update({...current.value,phase,reason,process,
+          providerObservation:{state:observation.state,reason:observation.reason??null},
+          candidateTree:candidate.candidateTree??null,
+          candidateCommit:candidate.candidateCommit??null,candidateRef:candidate.candidateRef??null,
+          terminatedAt:process.terminatedAt});
+        await releaseGrants();
+        return {...base,state,reason,agentLaunch:true,replayFixture:false,
+          candidateTree:candidate.candidateTree??null,candidateCommit:candidate.candidateCommit??null,
+          process};
+      }
       const running=spawnCapture(spawnFn,argv[0],argv.slice(1),{cwd:worktree.worktreePath,env,
         timeoutMs:0});
       if(!Number.isSafeInteger(running.child.pid)){
@@ -789,7 +915,74 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
     }catch{return unknown('REVIEW_DECISION_ACK_LOST');}
     finally{if(store)await store.close();}
   }
+  /** #473 R107 repair 1 — READ-ONLY attempt-record reconciliation port.
+   * Mirrors runAttempt's durable-replay branch exactly (same state
+   * vocabulary and field shapes) but can never create, launch, mutate or
+   * grant anything: it opens the host store, reads the one attempt row and
+   * closes. A missing row is the honest read-only answer UNKNOWN — adapters
+   * must use this for reconcile instead of runAttempt, which can still
+   * launch when no durable row exists (R106 ABI review P1). */
+  async function readAttemptRecord(config){
+    const providerId=config.providerId??'codex';
+    const flags={claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+      taskPass:false,releasePass:false};
+    const base={issueRef:config.issueRef,sourceSha:config.sourceSha,
+      attemptId:config.attemptId,...(providerId==='codex'?{}:{providerId}),...flags};
+    if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.attemptId??'')||
+      !PROVIDER_ID.test(providerId))
+      return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_INPUT_INVALID',
+        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+        process:null,readOnly:true};
+    let db;
+    try{
+      // better-sqlite3 READONLY + fileMustExist: unlike openSqliteCasStore,
+      // this cannot create a missing DB, install schema, enable WAL or write
+      // any attempt/grant row. Reconcile uses the same v8_host_docs grammar,
+      // but strictly as a read-only durable query (R108 independent P1).
+      const Database=(await import('better-sqlite3')).default;
+      db=new Database(config.hostStorePath,{readonly:true,fileMustExist:true});
+      db.pragma('busy_timeout = 5000');
+    }catch{
+      return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_RECORD_STORE_UNAVAILABLE',
+        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+        process:null,readOnly:true};
+    }
+    try{
+      const existing=db.prepare('SELECT revision, value FROM v8_host_docs WHERE key = ?')
+        .get(keyFor(config.attemptId));
+      if(!existing)
+        return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_RECORD_NOT_FOUND',
+          agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+          process:null,readOnly:true};
+      const value=JSON.parse(existing.value);
+      if((value?.providerId??'codex')!==providerId||
+        value?.sourceSha!==config.sourceSha||value?.issueRef!==config.issueRef)
+        return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_IDENTITY_MISMATCH',
+          agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+          process:value?.process??null,readOnly:true};
+      if(value?.phase==='CANDIDATE_READY')
+        return {...base,state:'LOCAL_CANDIDATE_READY',
+          reason:'REAL_CODEX_CANDIDATE_RECORDED',agentLaunch:true,replayFixture:false,
+          candidateTree:value.candidateTree,candidateCommit:value.candidateCommit,
+          process:value.process,readOnly:true};
+      if(value?.phase==='NOT_EXECUTED')
+        return {...base,state:'AGENT_NOT_EXECUTED',reason:value.reason,agentLaunch:false,
+          replayFixture:false,candidateTree:null,candidateCommit:null,process:null,
+          readOnly:true};
+      return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_STATUS_UNKNOWN',
+        agentLaunch:true,replayFixture:false,candidateTree:value?.candidateTree??null,
+        candidateCommit:value?.candidateCommit??null,
+        process:value?.process??{status:'UNKNOWN',exitCode:null,pid:null,
+          builderPrincipal:config.builderPrincipal,builderSid:config.builderSid,
+          startedAt:null,terminatedAt:null},readOnly:true};
+    }catch{
+      return {...base,state:'LOCAL_ATTEMPT_UNKNOWN',reason:'ATTEMPT_RECORD_READ_FAILED',
+        agentLaunch:false,replayFixture:false,candidateTree:null,candidateCommit:null,
+        process:null,readOnly:true};
+    }finally{try{db.close();}catch{}}
+  }
   return Object.freeze({runAttempt,joinReviewedCandidates,reviewSingleCandidate,
+    readAttemptRecord,
     probeProvider:config=>ops.probeProvider(config),
     proveConfinement:(config,worktreePath)=>ops.proveConfinement(config,worktreePath)});
 }
