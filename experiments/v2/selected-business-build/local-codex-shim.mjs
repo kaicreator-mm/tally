@@ -63,7 +63,10 @@ const flags=(admitted,claimAccepted,agentLaunch)=>({claimGeneration:1,claimAccep
 const common=(input,o,state,reason,fl)=>({state,reason,
   issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
   attemptId:input.attemptId,
-  ...(o.providerId&&o.providerId!=='codex'?{providerId:o.providerId}:{}),...fl});
+  // Null-safe: denied(...) legitimately calls common with o=null (R107 real
+  // acceptance found the merged providerId spread crashing every real
+  // denial — replay lanes never exercise this path).
+  ...(o?.providerId&&o.providerId!=='codex'?{providerId:o.providerId}:{}),...fl});
 const joinCommon=(input,o,state,reason,fl)=>({state,reason,
   issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
   joinId:input.joinId,...fl});
