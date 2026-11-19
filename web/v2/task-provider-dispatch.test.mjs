@@ -269,3 +269,34 @@ test('cancel accepts providers answering a richer {cancelled} receipt',async()=>
   const done=await inFlight;
   assert.equal(done.outcome.state,'LOCAL_CANDIDATE_READY');
 });
+
+test('cancel reaches providers keying their channel by the execute-time signal',async()=>{
+  const controller=new AbortController();
+  let stallRelease;
+  const stall=new Promise(resolve=>{stallRelease=resolve;});
+  // emulate the dsh facade shape: internal registry keyed by input.signal
+  const registry=new Map();
+  const provider=Object.freeze({providerId:'zcode',
+    probe:async()=>({available:true,provider:'zcode'}),
+    execute:async input=>{registry.set(input.signal,{abort:()=>controller.abort()});
+      await stall;
+      return {providerId:'zcode',attemptId:input.attemptId,sourceSha:input.sourceSha,
+        state:'LOCAL_CANDIDATE_READY',reason:'FAKE_READY',agentLaunch:true,
+        process:{status:'EXITED',exitCode:0,pid:6,startedAt:null,terminatedAt:null},
+        taskPass:false,releasePass:false};},
+    cancel:async({signal})=>{const entry=registry.get(signal);
+      if(!entry||signal.aborted)return false;
+      entry.abort();return true;},
+    readback:async()=>({verified:true})});
+  const dispatch=createTaskProviderDispatch({registry:registryWith(provider),
+    admission:admissionPorts(),now});
+  const inFlight=dispatch.dispatch(request({signal:controller.signal}));
+  // the signal-keyed registry only populates once execute actually runs
+  // (slot reservation alone happens earlier, before the admission gates)
+  while(registry.size===0)await Promise.resolve();
+  const cancelled=await dispatch.cancel({taskId:'task:1',controller});
+  assert.equal(cancelled.cancelled,true);
+  assert.ok(controller.signal.aborted);
+  stallRelease();
+  await inFlight;
+});

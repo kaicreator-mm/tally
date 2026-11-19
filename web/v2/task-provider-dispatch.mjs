@@ -140,9 +140,11 @@ export function createTaskProviderDispatch({registry,admission={},now=()=>Date.n
     if(controller.signal.aborted)
       return {cancelled:false,reason:'ALREADY_ABORTED',taskId:record.taskId,
         attemptId:record.attemptId};
-    // Providers may answer boolean or a richer {cancelled} receipt (e.g. an
-    // internal in-flight registry); both reduce to the same honest result.
-    const answer=await provider.cancel({controller,attemptId:record.attemptId});
+    // Providers key their in-flight cancel channel differently (AbortController
+    // itself, the execute-time signal object, or the attemptId); the dispatch
+    // passes all three handles so every conformance shape resolves.
+    const answer=await provider.cancel({controller,signal:controller.signal,
+      attemptId:record.attemptId});
     const cancelled=answer===true||(answer!==null&&typeof answer==='object'&&
       answer.cancelled===true);
     return {cancelled,taskId:record.taskId,
