@@ -493,8 +493,13 @@ test('task provider cancel has exactly three outcomes through the abort channel 
   const controller=new AbortController();
   assert.equal(provider.cancel({signal:controller}),true);
   assert.equal(controller.signal.aborted,true);
+  // the R105 dispatch passes the controller under the controller key
+  const dispatchController=new AbortController();
+  assert.equal(provider.cancel({controller:dispatchController}),true);
+  assert.equal(dispatchController.signal.aborted,true);
   // already aborted: nothing left to cancel, false
   assert.equal(provider.cancel({signal:controller}),false);
+  assert.equal(provider.cancel({controller:dispatchController}),false);
   const aborted=new AbortController();aborted.abort();
   assert.equal(provider.cancel({signal:aborted}),false);
   // missing channel: false with the CANCEL_CHANNEL_ABSENT reason, never throws

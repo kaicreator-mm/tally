@@ -376,12 +376,13 @@ export function createZcodeProviderHost({spawnFn=spawn,operations,now=()=>Date.n
  * false on every path: execution evidence only, never a Task/Release PASS
  * grant; no failure-driven fallback; selection still goes through
  * resolveZcodeProviderSelection (explicit request + enabled + probe). cancel()
- * treats input.signal as the ONLY cancel channel: in Node the abort affordance
- * lives on the AbortController (a bare AbortSignal has no abort() method), so
- * the channel is controller-shaped — execute() passes the listened signal to
- * the host exactly as given, cancel() flips the controller, and the host's own
- * abort listener terminates the process tree (this never kills directly). The
- * `host` key is test injection only (fake host, never a real spawn). */
+ * takes a controller-shaped channel: in Node the abort affordance lives on
+ * the AbortController (a bare AbortSignal has no abort() method) — the R105
+ * dispatch passes {controller}, direct callers may pass either key — execute()
+ * passes the listened signal to the host exactly as given, cancel() flips the
+ * controller, and the host's own abort listener terminates the process tree
+ * (this never kills directly). The `host` key is test injection only (fake
+ * host, never a real spawn). */
 export function createZcodeTaskProvider({spawnFn,operations,now,killTree,host}={}){
   const h=host??createZcodeProviderHost({spawnFn,operations,now,killTree});
   const attemptConfig=input=>({...input?.providerConfig,
@@ -403,13 +404,13 @@ export function createZcodeTaskProvider({spawnFn,operations,now,killTree,host}={
         taskId:input?.taskId??null,process};
     },
     cancel(input){
-      const signal=input?.signal;
-      if(!signal||typeof signal.abort!=='function'){
+      const channel=input?.controller??input?.signal;
+      if(!channel||typeof channel.abort!=='function'){
         console.error('ZCODE_TASK_PROVIDER_CANCEL','CANCEL_CHANNEL_ABSENT');
         return false;
       }
-      if(signal.signal?.aborted===true||signal.aborted===true)return false;
-      signal.abort();
+      if(channel.signal?.aborted===true)return false;
+      channel.abort();
       return true;
     },
     readback:(config,candidate)=>h.joinVerifyCandidate(config,candidate)});
