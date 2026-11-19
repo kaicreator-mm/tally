@@ -57,7 +57,8 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
   const currentSha=()=>config.currentSourceSha;
   const clock=now??(()=>new Date().toISOString());
   const state={candidateInput:null,candidate:null,digest:null,review:null,
-    learning:[],learningRecords:new Map(),publication:null,history:[]};
+    learning:[],learningRecords:new Map(),publication:null,history:[],
+    readDefect:null};
   const record=(actionKind,result)=>{state.history.push({action:actionKind,
     at:clock(),...result});return result;};
   const stale=sourceSha=>SHA.test(sourceSha??'')&&sourceSha!==currentSha();
@@ -94,6 +95,44 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
     return {input,projection,at};
   }
   const actions={
+    // #489: real GitHub #437 readback. This does NOT create a writable draft,
+    // a review digest, a Claim or an authorized publication request.
+    async 'load-defect'(sourceSha){
+      if(stale(sourceSha))return {status:'STALE_SOURCE'};
+      if(typeof host?.readMaintenanceDefects!=='function')
+        return record('load-defect',{status:'NOT_RUN',
+          reason:'HOST_GITHUB_READ_REQUIRED'});
+      let observed;
+      try{observed=await host.readMaintenanceDefects({sourceSha:currentSha()});}
+      catch{return record('load-defect',{status:'NOT_RUN',
+        reason:'MAINTENANCE_HOST_READ_FAILED'});}
+      if(observed?.connected!==true||observed.sourceSha!==currentSha()||
+         observed.repository!==REPOSITORY||observed.readOnly!==true||
+         observed.authorized!==false||observed.taskPass!==false||
+         observed.releasePass!==false||
+         observed.priorReleaseEvidence!=='REPORTED_RELEASE_UNVERIFIED'||
+         !Array.isArray(observed.defects)||observed.defects.length!==1||
+         observed.defects[0]?.issueRef!==
+           `https://github.com/${REPOSITORY}/issues/437`||
+         observed.defects[0]?.requirementRef!==
+           `https://github.com/${REPOSITORY}/issues/392`)
+        return record('load-defect',{status:'NOT_RUN',
+          reason:observed?.reason??'MAINTENANCE_SOURCE_UNVERIFIED'});
+      const projection=projectMaintenanceIntake({
+        repository:REPOSITORY,observedAsOf:observed.observedAsOf,
+        priorRelease:observed.priorRelease,defects:observed.defects,learning:[]});
+      if(projection.status!=='CANDIDATES_ONLY'||
+         projection.candidates.length!==1||
+         projection.priorRelease!=='REPORTED_RELEASE_UNVERIFIED')
+        return record('load-defect',{status:'NOT_RUN',
+          reason:'MAINTENANCE_PROJECTION_UNVERIFIED'});
+      state.readDefect={candidate:projection.candidates[0],
+        priorRelease:projection.previous,sourceSha:currentSha()};
+      return record('load-defect',{status:'OK',
+        sourceIssueRef:state.readDefect.candidate.sourceIssueRef,
+        priorReleaseEvidence:'REPORTED_RELEASE_UNVERIFIED',
+        taskPass:false,releasePass:false,nativeTaskCreated:false});
+    },
     'report-defect'(sourceSha,args){
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
       const built=buildCandidateInput(args);
@@ -237,7 +276,7 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
       {version:state.candidateInput.releaseVersion,
         commitSha:state.candidateInput.releaseCommitSha,
         evidenceRef:`https://github.com/${REPOSITORY}/releases/tag/${state.candidateInput.releaseVersion}`,
-        immutable:true}:null;
+        immutable:true}:(state.readDefect?.priorRelease??null);
     const learning=state.learning.map(row=>{
       const recordState=state.learningRecords.get(row.learningId);
       return {...row,decision:recordState?.decision??null,
@@ -260,7 +299,20 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
         priorRelease:state.candidate.priorRelease,
         priorReleaseEvidence:state.candidate.priorReleaseEvidence,
         nextAction:state.candidate.nextAction,
+        historicalReleaseMutation:false}:state.readDefect?{
+        state:'PROPOSED',digest:null,
+        sourceIssueRef:state.readDefect.candidate.sourceIssueRef,
+        requirementRef:state.readDefect.candidate.requirementRef,
+        summary:state.readDefect.candidate.summary,
+        priorRelease:state.readDefect.priorRelease,
+        priorReleaseEvidence:'REPORTED_RELEASE_UNVERIFIED',
+        nextAction:state.readDefect.candidate.nextAction,
         historicalReleaseMutation:false}:null,
+      sourceDefectRead:state.readDefect?{status:'OBSERVED',
+        sourceSha:state.readDefect.sourceSha,
+        sourceIssueRef:state.readDefect.candidate.sourceIssueRef,
+        authorized:false,taskPass:false,releasePass:false}:
+        {status:'NOT_RUN',reason:'HOST_GITHUB_READ_REQUIRED'},
       review:state.review?{state:'REVIEWED',reviewer:state.review.reviewer,
         at:state.review.at,digest:state.review.digest,
         current:state.review.digest===state.digest,
@@ -307,6 +359,7 @@ export function renderMaintenanceWorkspace(snapshot,nextResult){
     `<p class="empty" role="status">No defect candidate reported yet.</p>`}
     ${snapshot.review?`<p>Independent review ${badge('REVIEWED')} by <code>${escape(snapshot.review.reviewer)}</code> · ${snapshot.review.current?'current':'STALE'}</p>`:
       `<p class="quiet">Independent review: ${badge('NOT_RUN')} — a model or author proposal never becomes an authorized candidate.</p>`}
+    ${mode==='write'?`<p><button type="button" data-action="load-defect">Load existing GitHub defect #437 (read-only)</button></p>`:''}
     ${mode==='write'?`<form class="intake-form" aria-label="Report defect against a prior release">
       <div class="field"><label for="maint-summary">Defect summary</label>
         <input id="maint-summary" name="summary" type="text" maxlength="512" required></div>
