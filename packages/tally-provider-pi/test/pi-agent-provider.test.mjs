@@ -584,6 +584,12 @@ test('cancel(attempt pin): CANCEL_REQUESTED then CANCELLED; afterwards NOT_RUNNI
   const donePromise = runExecute(provider, {worktree},
     {DEEPSEEK_API_KEY: 'test-key', TALLY_FAKE_PI_SCENARIO: 'hang'});
   await waitFor(() => readRecords(record).some((row) => row.child_pid > 0));
+  const stalePin = createProviderAttemptPin({
+    taskId: pin.taskId, attemptId: pin.attemptId,
+    sourceSha: 'b'.repeat(40), providerId: 'pi',
+  });
+  assert.equal((await provider.cancel(stalePin)).state, 'NOT_RUNNING',
+    'stale-source pin must not kill the current execution');
   const cancelResult = await provider.cancel(pin);
   assert.equal(cancelResult.state, 'CANCEL_REQUESTED');
   const done = await donePromise;
@@ -775,4 +781,26 @@ test('completed JSON and text summaries redact secret-shaped agent output', asyn
       'agent stdout must never echo secret-shaped material into Host observation');
     assert.match(result.evidence.summary, /\\[REDACTED\\]/);
   }
+});
+
+
+test('duplicate same Task/Attempt cannot overwrite live pi cancellation handle', async (t) => {
+  const dir = newTestDir(t);
+  const record = path.join(dir, 'calls.jsonl');
+  const worktree = path.join(dir, 'ws');
+  mkdirSync(worktree);
+  const provider = makeProvider(t, {recordPath: record});
+  const ctx = {DEEPSEEK_API_KEY: 'test-key', TALLY_FAKE_PI_SCENARIO: 'hang'};
+  const first = runExecute(provider, {worktree}, ctx);
+  const duplicate = await runExecute(provider, {worktree}, ctx);
+  assert.equal(duplicate.state, 'FAILED');
+  assert.equal(duplicate.reason, 'PI_ATTEMPT_ALREADY_ACTIVE');
+  await waitFor(() => readRecords(record).some(row => row.child_pid > 0));
+  const pin = createProviderAttemptPin({
+    taskId: 't1', attemptId: 'a1', sourceSha: SOURCE_SHA, providerId: 'pi',
+  });
+  assert.equal((await provider.cancel(pin)).state, 'CANCEL_REQUESTED');
+  assert.equal((await first).state, 'CANCELLED');
+  assert.equal(readRecords(record).filter(row => row.kind === 'print').length, 1,
+    'duplicate attempt must not spawn a second pi process');
 });
