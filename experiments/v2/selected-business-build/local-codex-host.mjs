@@ -509,7 +509,13 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         }
         const candidate=await ops.finalizeCandidate(config).catch(error=>({error:error.code}));
         const process={status:observation.state==='UNKNOWN'?'UNKNOWN':'EXITED',
-          exitCode:Number.isSafeInteger(processEvidence.exitCode)?processEvidence.exitCode:null,
+          // AgentProvider/1 COMPLETED is the normalized successful-process
+          // observation. Some adapters (Pi) intentionally omit optional PID /
+          // exitCode evidence; map that contract state to the sealed EXITED/0
+          // shape instead of rejecting an otherwise valid Host-read-back
+          // candidate. This is process evidence only, never Task authority.
+          exitCode:Number.isSafeInteger(processEvidence.exitCode)?processEvidence.exitCode:
+            observation.state==='COMPLETED'?0:null,
           pid:Number.isSafeInteger(processEvidence.pid)?processEvidence.pid:null,
           builderPrincipal:null,builderSid:null,startedAt:providerStartedAt,
           terminatedAt:iso(now)};

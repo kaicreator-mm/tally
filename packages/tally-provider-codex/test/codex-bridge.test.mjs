@@ -405,8 +405,8 @@ test('reconcile replays read-only with the exact recorded attempt config', async
 test('reconcile stays UNKNOWN on hosts without the read-only port (no runAttempt fallback)', async () => {
   const fake = fakeHostModule({readAttemptRecord: null});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
-  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40,
-    worktreePath: 'C:\\tally\\wt\\r1'};
+  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', taskId: '264',
+    providerId: CODEX_PROVIDER_ID, sourceSha: sha40, worktreePath: 'C:\\tally\\wt\\r1'};
   const legacy = await bridge.reconcile(pin(), {attemptConfig});
   assert.deepEqual([legacy.state, legacy.reason],
     ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);

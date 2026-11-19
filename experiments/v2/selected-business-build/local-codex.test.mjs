@@ -925,6 +925,21 @@ test('AgentProvider candidate uses the same Host CAS and cannot rebind an attemp
   });
 });
 
+test('Pi-shaped COMPLETED without optional PID/exitCode maps to sealed EXITED/0',async()=>{
+  await withHost(async({host,config})=>{
+    const result=await host.runAttempt({...config,providerId:'pi',
+      agentProvider:providerFake('pi',async()=>({state:'COMPLETED',reason:null,
+        evidence:{spawned:true}}))});
+    assert.equal(result.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(result.providerId,'pi');
+    assert.equal(result.process.status,'EXITED');
+    assert.equal(result.process.exitCode,0);
+    assert.equal(result.process.pid,null);
+    assert.equal(result.process.builderPrincipal,null);
+    assert.equal(result.taskPass,false);
+  });
+});
+
 test('two providers share existing Host grants for disjoint parallel Tasks',async()=>{
   await withHost(async({host,config})=>{
     let active=0,maxActive=0;
