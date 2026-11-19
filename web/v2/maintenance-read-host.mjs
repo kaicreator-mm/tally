@@ -2,9 +2,12 @@
  * READ ONLY: no issue creation, Claim, CAS, Release qualification or Task effect.
  * This is a Host-owned source read, not browser-provided evidence.
  */
+import {maintenanceCandidateDigest} from
+  '../../experiments/v2/maintenance/host-maintenance.mjs';
+
 const SHA=/^[a-f0-9]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+$/;
-const BODY_MARKER=/^maintenance-marker: tally:maintenance:219:[a-f0-9]{64}$/m;
+const BODY_MARKER=/^maintenance-marker: tally:maintenance:219:([a-f0-9]{64})$/m;
 const DEFECT=437;
 const SOURCE=219;
 const REQUIREMENT=392;
@@ -23,7 +26,7 @@ export function parseMaintenanceDefectIssue({issue,owner,repo}={}){
       issue?.number!==DEFECT||
       issue?.html_url!==issueUrl(owner,repo,DEFECT)||
       !['open','closed'].includes(issue?.state)||!!issue?.pull_request||
-      typeof issue?.body!=='string'||!BODY_MARKER.test(issue.body)||
+      typeof issue?.body!=='string'||
       typeof issue?.created_at!=='string'||
       !Number.isFinite(Date.parse(issue.created_at)))
     return null;
@@ -32,13 +35,35 @@ export function parseMaintenanceDefectIssue({issue,owner,repo}={}){
   const subjectSha=field(issue.body,'subject');
   const version=field(issue.body,'reported release');
   const summary=field(issue.body,'summary');
-  if(source!==issueUrl(owner,repo,SOURCE)||
+  const marker=BODY_MARKER.exec(issue.body);
+  if(!marker||
+     source!==issueUrl(owner,repo,SOURCE)||
      requirement!==issueUrl(owner,repo,REQUIREMENT)||
      !SHA.test(subjectSha??'')||
      !/^v1\.5\.5(?: \(immutable, never rewritten\))?$/.test(version??'')||
      !summary||summary.length>512)return null;
+  // The marker digest is carried for the caller to verify AFTER the tag
+  // commit identity is resolved (see readMaintenanceDefects) — the digest
+  // binds the priorRelease commit, which parse alone cannot know yet.
   return Object.freeze({issueRef:issueUrl(owner,repo,DEFECT),
-    requirementRef:requirement,subjectSha,summary,observedAt:issue.created_at});
+    requirementRef:requirement,subjectSha,summary,observedAt:issue.created_at,
+    markerDigest:marker[1]});
+}
+
+/** Re-derive the maintenance-marker digest from the issue's own fields with
+ * the exact business formula that composed it at publication. A body whose
+ * fields drifted from its marker (edited summary/subject/release) must never
+ * surface as canonical (independent review P1-1). */
+function markerDigestMatches(defect,owner,repo,tagCommitSha){
+  const digest=maintenanceCandidateDigest({
+    sourceIssueRef:issueUrl(owner,repo,SOURCE),
+    requirementRef:issueUrl(owner,repo,REQUIREMENT),
+    subjectSha:defect.subjectSha,
+    summary:defect.summary,
+    priorRelease:{version:'v1.5.5',commitSha:tagCommitSha,
+      evidenceRef:`https://github.com/${owner}/${repo}/releases/tag/v1.5.5`,
+      immutable:true}});
+  return digest===defect.markerDigest;
 }
 
 /**
@@ -77,6 +102,8 @@ export function createMaintenanceReadHost({octokit,owner,repo,versionId,
       }
       if(object?.type!=='commit'||!SHA.test(object.sha??''))
         return fail('PRIOR_RELEASE_TAG_UNVERIFIED');
+      if(!markerDigestMatches(defect,owner,repo,object.sha))
+        return fail('DEFECT_MARKER_DIGEST_MISMATCH');
       const observedAsOf=now();
       if(!Number.isFinite(Date.parse(observedAsOf))||
           Date.parse(defect.observedAt)>Date.parse(observedAsOf))

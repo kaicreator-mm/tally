@@ -2,10 +2,22 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createMaintenanceReadHost,parseMaintenanceDefectIssue}
   from './maintenance-read-host.mjs';
+import {maintenanceCandidateDigest} from
+  '../../experiments/v2/maintenance/host-maintenance.mjs';
 
 const SHA='a'.repeat(40);
 const TAG_SHA='b'.repeat(40);
 const SUBJECT='62f18fd87d5a709f42900e612dcebc02c5c4f365';
+const SUMMARY='Genuine #219 maintenance lost-ACK, no second POST.';
+// The marker must be the EXACT business digest over the fixture's own
+// fields + the resolved tag commit (the read host re-derives it — review P1-1).
+const MARKER=maintenanceCandidateDigest({
+  sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  requirementRef:'https://github.com/kaicreator-mm/tally/issues/392',
+  subjectSha:SUBJECT,summary:SUMMARY,
+  priorRelease:{version:'v1.5.5',commitSha:TAG_SHA,
+    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5',
+    immutable:true}});
 const body=`Defect candidate against an immutable historical release; the next
 version may absorb it only through governed intake.
 
@@ -13,9 +25,9 @@ version may absorb it only through governed intake.
 - requirement: https://github.com/kaicreator-mm/tally/issues/392
 - subject: ${SUBJECT}
 - reported release: v1.5.5 (immutable, never rewritten)
-- summary: Genuine #219 maintenance lost-ACK, no second POST.
+- summary: ${SUMMARY}
 
-maintenance-marker: tally:maintenance:219:${'c'.repeat(64)}
+maintenance-marker: tally:maintenance:219:${MARKER}
 `;
 const makeIssue=(text=body)=>({number:437,
   html_url:'https://github.com/kaicreator-mm/tally/issues/437',
@@ -75,6 +87,25 @@ test('reject forged issue marker, source, issue number or missing identity',()=>
     {...makeIssue(),pull_request:{}},
   ])assert.equal(parseMaintenanceDefectIssue({
     issue:altered,owner:'kaicreator-mm',repo:'tally'}),null);
+});
+test('edited body with drifted marker digest is refused, never canonical (P1-1)',async()=>{
+  // Same 64-hex marker SHAPE but wrong VALUE: parse succeeds, the read host
+  // must re-derive the digest over the issue's own fields + tag commit and
+  // refuse DEFECT_MARKER_DIGEST_MISMATCH instead of surfacing the tampered
+  // body as canonical.
+  const drifted=makeIssue(body.replace(MARKER,'e'.repeat(64)));
+  assert.notEqual(parseMaintenanceDefectIssue({
+    issue:drifted,owner:'kaicreator-mm',repo:'tally'}),null,
+    'parse-level still accepts the well-shaped body; the digest gate is the read host');
+  const {host}=fixture({issue:drifted});
+  assert.deepEqual(await host.readMaintenanceDefects({sourceSha:SHA}),
+    {connected:false,reason:'DEFECT_MARKER_DIGEST_MISMATCH'});
+  // Any edited FIELD (summary drift) with the ORIGINAL marker equally fails.
+  const editedSummary=makeIssue(body.replace(SUMMARY,
+    'Tampered summary that no longer matches the marker binding.'));
+  const {host:editedHost}=fixture({issue:editedSummary});
+  assert.equal((await editedHost.readMaintenanceDefects({sourceSha:SHA})).reason,
+    'DEFECT_MARKER_DIGEST_MISMATCH');
 });
 test('annotated tags resolve commit but a missing/invalid tag never qualifies',async()=>{
   const annotated=fixture({tagType:'tag'});
