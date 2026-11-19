@@ -756,3 +756,23 @@ test('parsePiStream: empty and truncated-only inputs yield no success', () => {
     assert.equal(obs.hasAssistant, false, `input ${JSON.stringify(input)} must not count as success`);
   }
 });
+
+
+test('completed JSON and text summaries redact secret-shaped agent output', async (t) => {
+  const dir = newTestDir(t);
+  const worktree = path.join(dir, 'ws');
+  mkdirSync(worktree);
+  const sample = 'sk-0123456789abcdefghijklmnopqrstuv';
+  writeFileSync(path.join(worktree, 'secret-note.txt'), sample + '\n');
+  for (const outputMode of ['json', 'text']) {
+    const provider = makeProvider(t, {factory: {outputMode}});
+    const result = await runExecute(provider, {
+      prompt: 'read secret-note.txt', worktree,
+      attemptId: 'secret-' + outputMode,
+    }, {DEEPSEEK_API_KEY: 'test-key'});
+    assert.equal(result.state, 'COMPLETED');
+    assert.doesNotMatch(JSON.stringify(result.evidence), /sk-0123456789abcdefghijklmnopqrstuv/,
+      'agent stdout must never echo secret-shaped material into Host observation');
+    assert.match(result.evidence.summary, /\\[REDACTED\\]/);
+  }
+});
