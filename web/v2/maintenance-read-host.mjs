@@ -34,7 +34,8 @@ export function parseMaintenanceDefectIssue({issue,owner,repo}={}){
   const summary=field(issue.body,'summary');
   if(source!==issueUrl(owner,repo,SOURCE)||
      requirement!==issueUrl(owner,repo,REQUIREMENT)||
-     !SHA.test(subjectSha??'')||version!=='v1.5.5'||
+     !SHA.test(subjectSha??'')||
+     !/^v1\\.5\\.5(?: \\(immutable, never rewritten\\))?$/.test(version??'')||
      !summary||summary.length>512)return null;
   return Object.freeze({issueRef:issueUrl(owner,repo,DEFECT),
     requirementRef:requirement,subjectSha,summary,observedAt:issue.created_at});
