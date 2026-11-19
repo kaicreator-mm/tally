@@ -126,6 +126,13 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
          projection.priorRelease!=='REPORTED_RELEASE_UNVERIFIED')
         return record('load-defect',{status:'NOT_RUN',
           reason:'MAINTENANCE_PROJECTION_UNVERIFIED'});
+      // Reading canonical #437 cannot inherit a previous hand-entered
+      // draft's digest/reviewer or its potential Issue publication state.
+      state.candidateInput=null;
+      state.candidate=null;
+      state.digest=null;
+      state.review=null;
+      state.publication=null;
       state.readDefect={candidate:projection.candidates[0],
         priorRelease:projection.previous,sourceSha:currentSha()};
       return record('load-defect',{status:'OK',
@@ -137,6 +144,7 @@ export function createMaintenanceController(config,{host,sealedDispatch,now}={})
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
       const built=buildCandidateInput(args);
       if(built.error)return record('report-defect',blocked(built.error));
+      state.readDefect=null;
       state.candidateInput=built.input;
       state.candidate=built.projection.candidates[0]??null;
       state.digest=maintenanceCandidateDigest({
