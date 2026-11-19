@@ -183,7 +183,10 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
         <Badge tone={severityTone(task.severity)}>{task.severity}</Badge>
         <Badge tone={statusTone(task.status)}>
           {zh?STATUS_LABEL[task.status].zh:STATUS_LABEL[task.status].en}</Badge>
-        <Badge tone={task.claimState==='ACCEPTED'?'ok':'warn'}>
+        <Badge tone={task.claimState==='ACCEPTED'?'ok':'warn'}
+          title={task.claimState==='ACCEPTED'?undefined:
+            (zh?'Claim 未被 Host 接受,派发不可用'
+              :'Claim not accepted by Host; dispatch unavailable')}>
           Claim:{task.claimState}</Badge>
       </div>
       <section aria-label={zh?'阻塞原因':'blockers'}>
@@ -204,7 +207,21 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           versionId={task.versionId}
           taskIssue={canonicalTaskIssueNumber(task.id)??0}
           onDispatch={onAction} locale={locale}/>
-      </section>:null}
+      </section>
+      :<section aria-label={zh?'任务可执行操作':'Task actions'}>
+        {/* #448 X11/G4: catalog/projectId 缺省不再是静默死端——诚实说明
+            缺什么,不伪造恢复路径、不渲染无 handler 的动作按钮。 */}
+        <strong style={{display:'block',marginBottom:'var(--s2)'}}>
+          {zh?'当前可用操作':'Available actions'}</strong>
+        <EmptyState title={actionCatalog===undefined
+          ?(zh?'操作清单不可用':'Action catalog unavailable')
+          :(zh?'未指定项目':'No project selected')}
+          hint={actionCatalog===undefined
+          ?(zh?'当前没有经过验证的 Host 任务操作清单;接入并验证后,此处会列出该任务可执行的操作。'
+             :'No qualified Host task-action catalog yet; admitted actions appear here once it is wired and verified.')
+          :(zh?'当前未传入项目绑定,无法解析该任务的操作清单。'
+             :'No project binding was provided; the task action catalog cannot be resolved.')}/>
+      </section>}
       <section aria-label={zh?'执行与评审':'execution'}>
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
           {zh?'执行与评审':'Execution & review'}</strong>
@@ -216,7 +233,13 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           <dd style={{margin:0}}>{zh?TASK_EXECUTION_LABEL[execution!.state].zh:
             TASK_EXECUTION_LABEL[execution!.state].en}</dd>
           <dt style={{color:'var(--text-muted)'}}>Attempt</dt>
-          <dd style={{margin:0}}>{execution!.attemptId} · {task.attemptState??'UNKNOWN'}</dd>
+          <dd style={{margin:0}}>{execution!.attemptId} · {task.attemptState??'UNKNOWN'}
+            {task.attemptState==null
+              ?(zh?'(读模型未上报执行状态)':'(not reported by the read model)')
+              :task.attemptState==='UNKNOWN'
+                ?(zh?'(执行状态未知,需 Host 对账)'
+                  :'(execution unknown; Host reconciliation needed)')
+              :''}</dd>
           <dt style={{color:'var(--text-muted)'}}>{zh?'进度摘要':'Progress summary'}</dt>
           <dd style={{margin:0}}>{execution!.progressSummary}</dd>
           <dt style={{color:'var(--text-muted)'}}>Heartbeat</dt>
