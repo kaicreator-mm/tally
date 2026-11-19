@@ -294,3 +294,100 @@ test('static page and rendered view keep the no-JSON and accessibility contract'
   const html=readFileSync(new URL('./journey-view.html',import.meta.url),'utf8');
   assert.doesNotMatch(html,/<button/i);assert.doesNotMatch(html,/onclick|onerror|onsubmit/i);
 });
+
+ 
+// #489: selected Host must load the real #437 defect as a read-only PROPOSED
+// candidate. No form fields, publication digest or Claim are synthesized.
+const canonicalReadback=()=>({
+  connected:true,repository:'kaicreator-mm/tally',sourceSha,
+  observedAsOf:'2026-11-20T00:00:00Z',readOnly:true,authorized:false,
+  taskPass:false,releasePass:false,
+  priorReleaseEvidence:'REPORTED_RELEASE_UNVERIFIED',
+  priorRelease:{version:'v1.5.5',commitSha:'b'.repeat(40),
+    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'},
+  defects:[{issueRef:'https://github.com/kaicreator-mm/tally/issues/437',
+    requirementRef:'https://github.com/kaicreator-mm/tally/issues/392',
+    subjectSha:'62f18fd87d5a709f42900e612dcebc02c5c4f365',
+    observedAt:'2026-11-16T18:53:55Z',
+    summary:'Real previously published maintenance defect'}],
+});
+
+test('J08 load-defect without real Host stays NOT_RUN and does not create a draft',
+  async()=>{
+    const controller=make();
+    const result=await act(controller,'load-defect');
+    assert.equal(result.status,'NOT_RUN');
+    assert.equal(result.reason,'HOST_GITHUB_READ_REQUIRED');
+    assert.equal(controller.snapshot().candidate,null);
+    assert.equal(controller.snapshot().taskPass,false);
+  });
+
+test('selected Host #437 produces PROPOSED, never review, publish or Task PASS',
+  async()=>{
+    const seen=[];
+    const controller=make({host:{readMaintenanceDefects:async params=>{
+      seen.push(params);return canonicalReadback();}}});
+    const result=await act(controller,'load-defect');
+    assert.equal(result.status,'OK');
+    assert.deepEqual(seen,[{sourceSha}]);
+    const snapshot=controller.snapshot();
+    assert.equal(snapshot.sourceDefectRead.status,'OBSERVED');
+    assert.equal(snapshot.candidate.state,'PROPOSED');
+    assert.equal(snapshot.candidate.digest,null);
+    assert.equal(snapshot.candidate.sourceIssueRef,
+      'https://github.com/kaicreator-mm/tally/issues/437');
+    assert.equal(snapshot.candidate.requirementRef,
+      'https://github.com/kaicreator-mm/tally/issues/392');
+    assert.equal(snapshot.priorRelease.commitSha,'b'.repeat(40));
+    assert.equal(snapshot.candidate.priorReleaseEvidence,
+      'REPORTED_RELEASE_UNVERIFIED');
+    assert.equal(snapshot.taskPass,false);
+    assert.equal(snapshot.nativeWriteAuthorized,false);
+    assert.equal((await act(controller,'review-candidate',{reviewer:'reviewer:ada'}))
+      .reason,'NO_CANDIDATE_TO_REVIEW');
+    assert.equal((await act(controller,'publish-maintenance-issue'))
+      .reason,'NO_CANDIDATE_TO_PUBLISH');
+    assert.match(renderMaintenanceWorkspace(snapshot,{mode:'write'}),
+      /Load existing GitHub defect #437/);
+  });
+
+test('untrusted or stale Host readback cannot populate a candidate',async()=>{
+  for(const invalid of [
+    {...canonicalReadback(),sourceSha:'f'.repeat(40)},
+    {...canonicalReadback(),taskPass:true},
+    {...canonicalReadback(),priorReleaseEvidence:'PASS'},
+    {...canonicalReadback(),defects:[{...canonicalReadback().defects[0],
+      requirementRef:'https://github.com/kaicreator-mm/tally/issues/999'}]},
+    {...canonicalReadback(),defects:[]},
+  ]){
+    const controller=make({host:{readMaintenanceDefects:async()=>invalid}});
+    assert.equal((await act(controller,'load-defect')).status,'NOT_RUN');
+    assert.equal(controller.snapshot().candidate,null);
+  }
+});
+
+test('real same-origin API reads canonical #437 only from injected Host',async()=>{
+  const config=defaultAlmConfig({dhPath:'/dh',tallyPath:'/tally',tallyBPath:'/tally',
+    githubToken:'secret-token',currentSourceSha:sourceSha,workRoot:'C:/work'});
+  const app=createAlmServer(config,{run:async()=>({status:'FAIL',exitCode:1,
+    result:null}),maintenanceHost:{readMaintenanceDefects:async()=>canonicalReadback()}});
+  const {origin,actionKey}=await app.listen();
+  const post=(sha,key=actionKey)=>fetch(origin+'/api/maintenance/actions',{
+    method:'POST',headers:{'content-type':'application/json',origin,
+      'x-tally-action-key':key},
+    body:JSON.stringify({kind:'load-defect',sourceSha:sha,args:{}})});
+  try{
+    assert.equal((await post(sourceSha,'bad')).status,403);
+    assert.equal((await post('f'.repeat(40))).status,409);
+    const loaded=await post(sourceSha);
+    assert.equal(loaded.status,200);
+    assert.equal((await loaded.json()).status,'OK');
+    const snap=await fetch(origin+'/api/maintenance/snapshot').then(r=>r.json());
+    assert.equal(snap.snapshot.candidate.state,'PROPOSED');
+    assert.match(snap.html,/#437/);
+    assert.equal(snap.snapshot.review,null);
+    assert.equal(snap.snapshot.taskPass,false);
+    assert.equal(snap.snapshot.releasePass,false);
+    assert.equal(JSON.stringify(snap).includes('secret-token'),false);
+  }finally{await app.close();}
+});
