@@ -407,7 +407,11 @@ test('invalid inputs never execute; missing host authorization is NOT_ADMITTED',
 });
 
 test('builder environment is an explicit allowlist; spawn env forces isolation keys',()=>{
-  const env=piBuilderEnvironment({cliPath:'C:\\tools\\pi\\pi.exe',
+  // Build the CLI path with platform-native join so dirname round-trips:
+  // dirname of a literal Windows path on POSIX collapses to '.', which says
+  // nothing about the allowlist itself.
+  const cliDir=join('opt','pi-bin');
+  const env=piBuilderEnvironment({cliPath:join(cliDir,'pi.exe'),
     emptyGitConfig:'C:\\empty\\gitconfig',builderTemp:'C:\\temp'});
   for(const name of ['GITHUB_TOKEN','GH_TOKEN','WOODPECKER_TOKEN','SSH_AUTH_SOCK',
     'SSH_AGENT_PID','DEEPSEEK_API_KEY','ANTHROPIC_API_KEY','OPENAI_API_KEY',
@@ -422,8 +426,8 @@ test('builder environment is an explicit allowlist; spawn env forces isolation k
   assert.equal(env.NO_COLOR,'1');
   // the builder env always joins PATH with ';' regardless of platform (see
   // piBuilderEnvironment): assert the FIRST segment is the configured CLI
-  // directory instead of a Windows-only startsWith
-  assert.equal(env.PATH.split(';')[0],'C:\\tools\\pi');
+  // directory instead of a Windows-only literal
+  assert.equal(env.PATH.split(';')[0],cliDir);
   const dirs={home:'C:\\iso\\home',agentConfig:'C:\\iso\\agent-config',
     sessions:'C:\\iso\\sessions'};
   const spawnEnv=piSpawnEnvironment({env:{DEEPSEEK_API_KEY:'explicit-channel-only',
