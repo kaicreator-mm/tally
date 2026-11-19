@@ -854,6 +854,165 @@ test('NEG-A2-05: an S0 grant or authorization-carrying extra witness key never g
     'SUCCESSOR_COMPATIBILITY_WITNESS_INVALID');
 });
 
+// ---------------------------------------------------------------------------
+// J02 per-edge amendment disposition (#392/7003690062 + #392/7004225002):
+// three lawfully removed native edges (#264<-#260/#261/#273, GitHub edge ids
+// 6151430262/6151430563/6175524365) admitted by an exact-mirror attested
+// ledger. The S0 frozen edge set, Pack blob and identity digests stay
+// untouched; every drift the ledger does not exactly mirror still fails
+// closed, and no amendment relaxes the S1==S0 strict equality.
+// ---------------------------------------------------------------------------
+function threeRemovalPack(){
+  const pack=validPack();
+  pack.source.taskIssueCount=7;
+  pack.taskIssues=[211,212,260,261,273,210,264].map(n=>({
+    issueNumber:n,title:'Task '+n,issueState:n===264?'open':'closed',
+    labels:['type:task'],updatedAt:'2026-11-02T02:59:00Z'}));
+  pack.edges=[260,261,273,210].map(from=>({from,to:264,kind:'NATIVE',
+    evidenceRef:issueUrl(264),dependencyRef:issueUrl(from)}))
+    .concat([{from:211,to:212,kind:'PLANNED',evidenceRef:issueUrl(212),
+      dependencyRef:issueUrl(211)}]);
+  pack.claimSubjects=[absentSubject(211),absentSubject(212),observedSubject,
+    absentSubject(261),absentSubject(273),absentSubject(210),absentSubject(264)];
+  return pack;
+}
+const removalEvidence='https://github.com/'+repository+
+  '/issues/264#issuecomment-7003690062';
+const threeRemovals=()=>[260,261,273].map(from=>({kind:'NATIVE_EDGE_REMOVED',
+  from,to:264,evidenceRef:removalEvidence}));
+function removalsLiveProjection({sourceSha,extraEdges=[]}={}){
+  const base=currentNativeProjection({pack:threeRemovalPack(),sourceSha,progressed:true});
+  const live=base.dag.edges.filter(e=>![260,261,273].includes(Number(e.from)));
+  return {...base,dag:{...base.dag,edges:live.concat(extraEdges)}};
+}
+function amendedDualHarness({edgeAmendments=null,headShas=[s1Sha,s1Sha],
+  currentRoster=null}={}){
+  const h=freezeHarness({pack:threeRemovalPack()});
+  let headReads=0;
+  const reader=createHostVersionTaskDagDualEpochReader({
+    repository,versionId,freezeBaseSha:versionSha,store:h.store,
+    taskPackReader:h.taskPackReader,reviewWitnessReader:h.reviewWitnessReader,
+    ownerApprovalReader:h.ownerApprovalReader,
+    branchHeadReader:async()=>({connected:true,repository,versionId,
+      headSha:headShas[Math.min(headReads++,headShas.length-1)]}),
+    ancestryReader:async()=>({connected:true,repository,baseSha:versionSha,
+      headSha:s1Sha,ancestry:'BASE_IS_ANCESTOR'}),
+    currentRosterReader:currentRoster??
+      (async({sourceSha})=>removalsLiveProjection({sourceSha})),
+    edgeAmendments,now:()=>'2026-11-19T10:00:00.000Z'});
+  return {...h,reader};
+}
+
+test('POS-A2-06: the three attested removals admit S1 structurally while S0 keeps its frozen edge set verbatim',async()=>{
+  const pack=threeRemovalPack();
+  const h=amendedDualHarness({edgeAmendments:threeRemovals()});
+  const freeze=await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal(freeze.status,'FROZEN',JSON.stringify(freeze));
+  const result=await h.reader.readDualEpoch();
+  assert.equal(result.connected,true);
+  // S0 leg unchanged: frozen edges keep all four NATIVE edges incl. the removed three.
+  assert.equal(result.historical.status,'FROZEN_HISTORICAL_VERIFIED');
+  const frozenNative=result.historical.frozen.edges.filter(e=>e.kind==='NATIVE');
+  assert.equal(frozenNative.length,4);
+  assert.ok(frozenNative.some(e=>e.from===260&&e.to===264));
+  assert.ok(frozenNative.some(e=>e.from===261&&e.to===264));
+  assert.ok(frozenNative.some(e=>e.from===273&&e.to===264));
+  // Identity digests still bind the FROZEN cohort, never the amended live one.
+  const digests=versionDagIdentityDigests({taskIssues:pack.taskIssues,edges:pack.edges});
+  assert.equal(result.current.native29EdgeDigest,digests.native29EdgeDigest);
+  assert.equal(result.current.original51IdsDigest,digests.original51IdsDigest);
+  // S1 leg: structural pass over 26-vs-29-style drift, still honest STALE
+  // without a witness, with observed counts and the applied ledger exposed.
+  assert.equal(result.current.nativeEdgeCount,4);
+  assert.equal(result.current.observedNativeEdgeCount,1);
+  assert.equal(result.current.edgeAmendmentLedger.declared,3);
+  assert.deepEqual(result.current.edgeAmendmentLedger.applied.map(a=>a.from),
+    [260,261,273]);
+  assert.equal(result.current.edgeAmendmentLedger.applied[0].evidenceRef,
+    removalEvidence);
+  assert.equal(result.current.qualified,false);
+  assert.equal(result.current.currentness,'STALE');
+  assert.equal(result.current.reason,'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED');
+  assert.equal(result.current.taskClaims,'UNVERIFIED');
+  assert.equal(result.authorized,false);assert.equal(result.admitted,false);
+  assert.equal(result.taskPass,false);assert.equal(result.releasePass,false);
+  assert.equal(h.store.count(),1);
+});
+
+test('POS-A2-07: after the amended structural match a genuine witness yields CURRENT_STRUCTURAL_COMPATIBLE',async()=>{
+  const h=amendedDualHarness({edgeAmendments:threeRemovals()});
+  await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const witness=successorWitness({pack:threeRemovalPack()});
+  const result=await h.reader.readDualEpoch({compatibilityWitness:witness});
+  assert.equal(result.connected,true);
+  assert.equal(result.current.status,'CURRENT_STRUCTURAL_COMPATIBLE');
+  assert.equal(result.current.qualified,true);
+  assert.equal(result.current.currentness,'CURRENT');
+  assert.equal(result.current.reason,null);
+  assert.equal(result.current.observedNativeEdgeCount,1);
+  assert.equal(result.current.edgeAmendmentLedger.applied.length,3);
+  assert.equal(result.compatibilityWitness.present,true);
+  assert.equal(result.compatibilityWitness.valid,true);
+  assert.equal(result.compatibilityWitness.reviewedHead,s1Sha);
+  assert.equal(result.authorized,false);assert.equal(result.admitted,false);
+  assert.equal(result.taskPass,false);assert.equal(result.releasePass,false);
+});
+
+test('NEG-A2-06: unattested, mis-attested or foreign drift still fails closed; amendments never relax S1==S0',async()=>{
+  // (1) three removals with NO ledger — the documented dff5329e blocker itself.
+  const none=amendedDualHarness();
+  await none.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await none.reader.readDualEpoch()).reason,
+    'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  // (2) ledger declares only two of the three removals.
+  const two=amendedDualHarness({edgeAmendments:threeRemovals().slice(0,2)});
+  await two.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await two.reader.readDualEpoch()).reason,
+    'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  // (3) ledger over-declares: 210->264 attested but still live.
+  const over=amendedDualHarness({edgeAmendments:threeRemovals()
+    .concat([{kind:'NATIVE_EDGE_REMOVED',from:210,to:264,
+      evidenceRef:removalEvidence}])});
+  await over.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await over.reader.readDualEpoch()).reason,
+    'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  // (4) attested edge never existed in the frozen cohort.
+  const foreign=amendedDualHarness({edgeAmendments:threeRemovals()
+    .concat([{kind:'NATIVE_EDGE_REMOVED',from:617,to:264,
+      evidenceRef:removalEvidence}])});
+  await foreign.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await foreign.reader.readDualEpoch()).reason,
+    'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  // (5) live graph ADDS a native edge the ledger does not cover (no re-added
+  // or foreign edge is ever admissible, attested or not).
+  const added=amendedDualHarness({edgeAmendments:threeRemovals(),
+    currentRoster:async({sourceSha})=>removalsLiveProjection({sourceSha,
+      extraEdges:[{from:'261',to:'211',kind:'NATIVE',
+        evidenceRef:issueUrl(211),dependencyRef:issueUrl(261)}]})});
+  await added.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  assert.equal((await added.reader.readDualEpoch()).reason,
+    'SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
+  // (6) malformed ledger (extra key / foreign evidenceRef) is rejected at
+  // construction, never silently ignored.
+  assert.throws(()=>amendedDualHarness({edgeAmendments:[{kind:'NATIVE_EDGE_REMOVED',
+    from:260,to:264,evidenceRef:removalEvidence,authorized:true}]}),
+    /INVALID_EDGE_AMENDMENT_LEDGER/);
+  assert.throws(()=>amendedDualHarness({edgeAmendments:[{kind:'NATIVE_EDGE_REMOVED',
+    from:260,to:264,evidenceRef:'https://github.com/evil/tally/issues/1'}]}),
+    /INVALID_EDGE_AMENDMENT_LEDGER/);
+  // (7) S1==S0 keeps STRICT equality: the ledger is inert for same-source.
+  const same=amendedDualHarness({edgeAmendments:threeRemovals(),
+    headShas:[versionSha,versionSha],
+    currentRoster:async({sourceSha})=>currentNativeProjection(
+      {pack:threeRemovalPack(),sourceSha})});
+  await same.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
+  const sameResult=await same.reader.readDualEpoch();
+  assert.equal(sameResult.connected,true);
+  assert.equal(sameResult.current.status,'CURRENT_SAME_SOURCE');
+  assert.equal(sameResult.current.qualified,true);
+  assert.equal(sameResult.current.edgeAmendmentLedger??null,null);
+});
+
 test('ERR-A2-01: GitHub head/transport failures stay denied and unknown, never empty-healthy',async()=>{
   const h=freezeHarness();
   await h.writer.freezeVersionTaskDag({taskPackRef,taskPackBlobSha:packBlobSha});
