@@ -725,3 +725,11 @@ test('integration: real git worktree, real process spawn, fake opencode binary e
     assert.equal(violation.candidateTree,null);
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+test('task provider cancel accepts the dispatch controller key',async()=>{
+  const provider=createOpencodeTaskProvider();
+  const controller=new AbortController();
+  assert.equal(provider.cancel({controller}),true);
+  assert.ok(controller.signal.aborted);
+  assert.equal(provider.cancel({controller}),false);
+});

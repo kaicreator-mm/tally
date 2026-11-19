@@ -519,14 +519,17 @@ export function createOpencodeTaskProvider({spawnFn=spawn,operations,now=()=>Dat
       await dirs.remove();
     }
   }
-  /** input.signal is the only cancel channel. Not-aborted → abort() and true;
-   * already-aborted → false; missing signal (or no abort surface) → false. */
+  /** The cancel channel is controller-shaped: the R105 dispatch passes the
+   * AbortController under the controller key; direct callers may pass a
+   * signal-like object under signal (with the abort face on input.abort or
+   * on the signal itself). Not-aborted → abort() and true; already-aborted
+   * → false; missing channel (or no abort surface) → false. */
   function cancel(input){
-    const signal=input?.signal;
-    if(!signal||typeof signal!=='object')return false;
-    if(signal.aborted)return false;
-    const abort=typeof input.abort==='function'?input.abort:
-      typeof signal.abort==='function'?()=>signal.abort():null;
+    const channel=input?.controller??input?.signal;
+    if(!channel||typeof channel!=='object')return false;
+    if(channel.signal?.aborted===true||channel.aborted===true)return false;
+    const abort=typeof channel.abort==='function'?()=>channel.abort():
+      typeof input?.abort==='function'?input.abort:null;
     if(!abort)return false;
     abort();
     return true;
