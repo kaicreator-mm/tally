@@ -366,6 +366,55 @@ export function createZcodeProviderHost({spawnFn=spawn,operations,now=()=>Date.n
     probeProvider:config=>ops.probeProvider(config)});
 }
 
+/** R105 unified TaskProvider facade. The five-member shape every provider
+ * exports under the common TaskProvider interface: {providerId,probe,execute,
+ * cancel,readback}. execute() maps the unified ProviderAttemptInput onto the
+ * existing runAttempt config — allowedWriteSet and taskPrompt come from the
+ * unified input (they override any providerConfig copy), every remaining
+ * providerConfig field is flattened — and re-attaches providerId/taskId plus
+ * a non-null unified process member on the outcome. taskPass/releasePass stay
+ * false on every path: execution evidence only, never a Task/Release PASS
+ * grant; no failure-driven fallback; selection still goes through
+ * resolveZcodeProviderSelection (explicit request + enabled + probe). cancel()
+ * treats input.signal as the ONLY cancel channel: in Node the abort affordance
+ * lives on the AbortController (a bare AbortSignal has no abort() method), so
+ * the channel is controller-shaped — execute() passes the listened signal to
+ * the host exactly as given, cancel() flips the controller, and the host's own
+ * abort listener terminates the process tree (this never kills directly). The
+ * `host` key is test injection only (fake host, never a real spawn). */
+export function createZcodeTaskProvider({spawnFn,operations,now,killTree,host}={}){
+  const h=host??createZcodeProviderHost({spawnFn,operations,now,killTree});
+  const attemptConfig=input=>({...input?.providerConfig,
+    sourceSha:input?.sourceSha,attemptId:input?.attemptId,
+    worktreePath:input?.worktreePath,allowedWriteSet:input?.allowedWriteSet,
+    taskPrompt:input?.taskPrompt,issueRef:input?.issueRef,signal:input?.signal,
+    timeoutMs:input?.timeoutMs,hostAuthorization:input?.hostAuthorization});
+  return Object.freeze({
+    providerId:ZCODE_PROVIDER_CONSTANTS.providerId,
+    probe:(config={})=>h.probeProvider(config),
+    async execute(input){
+      const attempt=await h.runAttempt(attemptConfig(input));
+      // The unified outcome always carries the process member; the host
+      // returns null on paths that never reached a spawn (not executed,
+      // replayed from git, not admitted).
+      const process=attempt.process??{status:'UNKNOWN',exitCode:null,pid:null,
+        startedAt:null,terminatedAt:null};
+      return {...attempt,providerId:ZCODE_PROVIDER_CONSTANTS.providerId,
+        taskId:input?.taskId??null,process};
+    },
+    cancel(input){
+      const signal=input?.signal;
+      if(!signal||typeof signal.abort!=='function'){
+        console.error('ZCODE_TASK_PROVIDER_CANCEL','CANCEL_CHANNEL_ABSENT');
+        return false;
+      }
+      if(signal.signal?.aborted===true||signal.aborted===true)return false;
+      signal.abort();
+      return true;
+    },
+    readback:(config,candidate)=>h.joinVerifyCandidate(config,candidate)});
+}
+
 /** Selection policy. The default provider is codex; zcode requires an explicit
  * request AND an enabled config row AND a locally validated capability probe.
  * There is deliberately NO failure-driven fallback: a codex failure never

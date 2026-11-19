@@ -7,8 +7,8 @@ import {join} from 'node:path';
 import {spawn,spawnSync} from 'node:child_process';
 import {createZcodeProviderHost,ZCODE_PROVIDER_CONSTANTS,
   ZCODE_PROVIDER_CONSTANTS as CONSTANTS_CHECK,resolveZcodeProviderSelection,
-  createZcodeJourneyRun,zcodeBuilderEnvironment,zcodeTaskPrompt,
-  parseZcodeAgentResult} from './zcode-provider.mjs';
+  createZcodeJourneyRun,createZcodeTaskProvider,zcodeBuilderEnvironment,
+  zcodeTaskPrompt,parseZcodeAgentResult} from './zcode-provider.mjs';
 
 const sourceSha='2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9';
 const issueRef='https://github.com/kaicreator-mm/tally/issues/64';
@@ -397,4 +397,135 @@ test('exported constants match the codex contract vocabulary',()=>{
   assert.equal(CONSTANTS_CHECK.providerId,'zcode');
   assert.equal(ZCODE_PROVIDER_CONSTANTS.candidateRefPrefix,'refs/tally-zcode-candidates/');
   assert.equal(ZCODE_PROVIDER_CONSTANTS.canaryPrompt,'Reply with exactly: OK');
+});
+
+test('task provider facade exposes the frozen five-member interface and providerId',()=>{
+  const provider=createZcodeTaskProvider();
+  assert.equal(Object.isFrozen(provider),true);
+  assert.deepEqual(Object.keys(provider).sort(),
+    ['cancel','execute','probe','providerId','readback']);
+  assert.equal(provider.providerId,ZCODE_PROVIDER_CONSTANTS.providerId);
+  assert.equal(provider.providerId,'zcode');
+  for(const member of ['probe','execute','cancel','readback'])
+    assert.equal(typeof provider[member],'function');
+});
+
+test('task provider execute maps the unified input onto the runAttempt config',async()=>{
+  const calls=[];
+  const attempt={provider:'zcode',sourceSha,attemptId:'attempt:zcode:facade:1',
+    state:'LOCAL_CANDIDATE_READY',reason:'REAL_ZCODE_CANDIDATE_RECORDED',
+    agentLaunch:true,replayFixture:false,taskPass:false,releasePass:false,
+    candidateTree:'a'.repeat(40),candidateCommit:'b'.repeat(40),
+    candidateRef:'refs/tally-zcode-candidates/facade',candidatePaths:ALLOWED,
+    process:{status:'EXITED',exitCode:0,pid:4242,
+      startedAt:'2026-11-19T00:00:00.000Z',terminatedAt:'2026-11-19T00:01:00.000Z'}};
+  const provider=createZcodeTaskProvider({host:{
+    probeProvider:async config=>{calls.push(['probe',config]);
+      return {available:true,provider:'zcode',version:'0.16.9'};},
+    runAttempt:async config=>{calls.push(['runAttempt',config]);return attempt;},
+    joinVerifyCandidate:async()=>({})}});
+  const signal=new AbortController().signal;
+  const hostAuthorization={claimKey:'kaicreator-mm/tally#64:builder:__default__',
+    dispatchId:'dispatch:64:alm-write:20261119:1',admissionGeneration:1};
+  const input={providerId:'zcode',taskId:'64',attemptId:'attempt:zcode:facade:1',
+    sourceSha,worktreePath:'C:/repo/.tally-worktrees/attempt-1',
+    allowedWriteSet:ALLOWED,taskPrompt:'Create the candidate note file.',
+    issueRef,hostAuthorization,
+    providerConfig:{cliPath:'C:/bin/zcode.mjs',repositoryPath:'C:/repo',
+      credentialsPath:'C:/creds.json',gitPath:'C:/git.exe',
+      taskPrompt:'providerConfig copy must lose',allowedWriteSet:['stale.md']},
+    signal,timeoutMs:600000};
+  const outcome=await provider.execute(input);
+  // providerConfig flattens; the unified top-level fields take precedence.
+  const [,config]=calls.find(([name])=>name==='runAttempt');
+  assert.equal(config.cliPath,'C:/bin/zcode.mjs');
+  assert.equal(config.repositoryPath,'C:/repo');
+  assert.equal(config.credentialsPath,'C:/creds.json');
+  assert.equal(config.gitPath,'C:/git.exe');
+  assert.equal(config.allowedWriteSet,ALLOWED);
+  assert.equal(config.taskPrompt,'Create the candidate note file.');
+  assert.equal(config.sourceSha,sourceSha);
+  assert.equal(config.attemptId,'attempt:zcode:facade:1');
+  assert.equal(config.worktreePath,'C:/repo/.tally-worktrees/attempt-1');
+  assert.equal(config.issueRef,issueRef);
+  assert.equal(config.signal,signal);
+  assert.equal(config.timeoutMs,600000);
+  assert.deepEqual(config.hostAuthorization,hostAuthorization);
+  // probe is a passthrough of the given provider config
+  const probe=await provider.probe(input.providerConfig);
+  assert.equal(probe.available,true);
+  assert.equal(probe.version,'0.16.9');
+  assert.deepEqual(calls.find(([name])=>name==='probe'),
+    ['probe',input.providerConfig]);
+  // outcome carries the unified identity members without granting any PASS
+  assert.equal(outcome.providerId,'zcode');
+  assert.equal(outcome.provider,'zcode');
+  assert.equal(outcome.taskId,'64');
+  assert.equal(outcome.state,'LOCAL_CANDIDATE_READY');
+  assert.equal(outcome.taskPass,false);
+  assert.equal(outcome.releasePass,false);
+  assert.deepEqual(outcome.process,attempt.process);
+});
+
+test('task provider normalizes a null process and never grants taskPass/releasePass',async()=>{
+  const provider=createZcodeTaskProvider({host:{runAttempt:async()=>({
+    provider:'zcode',sourceSha,attemptId:'attempt:zcode:facade:2',
+    state:'AGENT_NOT_EXECUTED',reason:'LOCAL_AGENT_UNAVAILABLE',
+    agentLaunch:false,replayFixture:false,taskPass:false,releasePass:false,
+    process:null})}});
+  const outcome=await provider.execute({taskId:'64',
+    attemptId:'attempt:zcode:facade:2',sourceSha,
+    allowedWriteSet:ALLOWED,taskPrompt:'x',providerConfig:{}});
+  assert.deepEqual(outcome.process,{status:'UNKNOWN',exitCode:null,pid:null,
+    startedAt:null,terminatedAt:null});
+  assert.equal(outcome.taskId,'64');
+  assert.equal(outcome.taskPass,false);
+  assert.equal(outcome.releasePass,false);
+  assert.equal(outcome.state,'AGENT_NOT_EXECUTED');
+});
+
+test('task provider cancel has exactly three outcomes through the abort channel only',()=>{
+  const provider=createZcodeTaskProvider({host:{
+    probeProvider:async()=>({available:true,provider:'zcode'}),
+    runAttempt:async()=>({}),joinVerifyCandidate:async()=>({})}});
+  // live channel (AbortController-shaped: the abort affordance lives on the
+  // controller, the host listens on controller.signal): abort() fires, true
+  const controller=new AbortController();
+  assert.equal(provider.cancel({signal:controller}),true);
+  assert.equal(controller.signal.aborted,true);
+  // already aborted: nothing left to cancel, false
+  assert.equal(provider.cancel({signal:controller}),false);
+  const aborted=new AbortController();aborted.abort();
+  assert.equal(provider.cancel({signal:aborted}),false);
+  // missing channel: false with the CANCEL_CHANNEL_ABSENT reason, never throws
+  const errors=[];
+  const originalError=console.error;
+  console.error=(...args)=>errors.push(args);
+  try{
+    assert.equal(provider.cancel({}),false);
+    assert.equal(provider.cancel(),false);
+    assert.equal(provider.cancel({signal:'not-a-signal'}),false);
+    assert.equal(provider.cancel({signal:controller.signal}),false,
+      'a bare AbortSignal carries no abort affordance');
+  }finally{console.error=originalError;}
+  assert.equal(errors.length,4);
+  for(const args of errors)
+    assert.ok(args.includes('CANCEL_CHANNEL_ABSENT'),args.join(' '));
+});
+
+test('task provider readback is a transparent joinVerifyCandidate passthrough',async()=>{
+  const candidate={attemptId:'attempt:zcode:facade:3',
+    candidateCommit:'c'.repeat(40)};
+  const config={sourceSha,allowedWriteSet:ALLOWED,repositoryPath:'C:/repo'};
+  let seen=null;
+  const verified={taskPass:false,releasePass:false,provider:'zcode',
+    sourceSha,attemptId:candidate.attemptId,state:'CANDIDATE_READBACK_VERIFIED',
+    reason:'ZCODE_CANDIDATE_VERIFIED_FROM_GIT',agentLaunch:false};
+  const provider=createZcodeTaskProvider({host:{joinVerifyCandidate:
+    async(...args)=>{seen=args;return verified;}}});
+  const result=await provider.readback(config,candidate);
+  assert.deepEqual(seen,[config,candidate]);
+  assert.equal(result,verified);
+  assert.equal(result.taskPass,false);
+  assert.equal(result.releasePass,false);
 });
