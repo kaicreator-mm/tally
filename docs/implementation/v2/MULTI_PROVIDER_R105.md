@@ -44,14 +44,14 @@
 
 ## Provider 盘点（as-of 本提交；真实执行状态见各 Provider PR 收据）
 
-| Provider | 载体 | 默认 | 真实执行 |
-| --- | --- | --- | --- |
-| codex | 现有 local-codex-host（不在注册表） | 默认 | 已有真实收据（既有链路） |
-| zcode | PR #470 `web/v2/zcode-provider.mjs` + 统一 facade | DISABLED | 真实收据已录（#470，candidate 434ac166） |
-| dsh (DeepSeek) | PR #467 `packages/provider-dsh` + 统一 facade | DISABLED | 本 PR 未跑真实 API（容量由 controller 统一安排） |
-| opencode | R105 `web/v2/opencode-provider.mjs`（契约源 PR #471 Go） | DISABLED | 见该 PR 收据 |
-| pi | R105 `web/v2/pi-provider.mjs`（契约源 PR #469 Go） | DISABLED | 见该 PR 收据 |
-| grok | R105 `web/v2/grok-provider.mjs`（契约源 PR #468 Go） | DISABLED | 无真实凭据 ⇒ 仅契约验证，保持 DISABLED |
+| Provider | 载体 | 默认 | R105 验证后状态 | 真实执行（as-of 2026-11-19） |
+| --- | --- | --- | --- | --- |
+| codex | 现有 local-codex-host（不在注册表） | 默认 | 默认路径字节不变 | 既有真实收据（既有链路） |
+| zcode | PR #470 `web/v2/zcode-provider.mjs` + 统一 facade | DISABLED | AVAILABLE（v2.1 candidate） | #470 真实收据 `434ac166` + R105 facade 真实 turn `664f1aab` |
+| dsh (DeepSeek) | PR #467 `packages/provider-dsh` + 统一 facade | DISABLED | UNKNOWN（真实 API 执行 NOT_RUN） | 包内 39 测试绿；#467 历史烟雾收据 |
+| opencode | PR #478 `web/v2/opencode-provider.mjs`（契约源 PR #471 Go） | DISABLED | AVAILABLE | live probe canary "OK" + R105 真实并行候选 `46daccad` |
+| pi | PR #479 `web/v2/pi-provider.mjs`（契约源 PR #469 Go） | DISABLED | AVAILABLE | 真实 canary exit 0 + R105 真实并行候选 `9cdeb2e5` |
+| grok | PR #480 `web/v2/grok-provider.mjs`（契约源 PR #468 Go） | DISABLED | DISABLED（凭据 ABSENT） | 仅契约验证（22 测试），无真实运行 |
 
 ## REMAINING_INTEGRATION（Phase 4，阻塞于 R102 写集释放）
 
@@ -61,11 +61,15 @@
 - `experiments/v2/selected-business-build/{bundle-local-codex.mjs,local-codex-shim.mjs,producer.mjs}`：B→K→Host/C 链上把 providerId 戳进可信 Attempt 上下文。
 新文件先行部分（不冲突）：本契约层 + 各 Provider 适配器/facade + 注入式端口定义；接线时只需在各热点文件做一次注入调用。
 
-## 验证状态（诚实记录）
+## 验证状态（诚实记录，Phase 5 已执行）
 
-- 本层 26 用例 node:test 全绿（Windows Node v24.21.0；真实退出码 EXIT=0）。
-- `find web/v2 -name '*.test.mjs'` 全 lane 本地预跑：仅 1 例环境型失败（`version-task-dag-host-http` 需 lane 前置 `npm --prefix packages/tally-github-native-c install`，按 CI 同款命令补装后 6/6 绿——非本 diff 引入）。
-- 真实并行正例（≥2 Provider 两个不冲突 Task）、真实 Candidate 生成与 git 回读：NOT_RUN（Phase 5 由 controller 统一执行后在本文件补记）。
-- Go Worker 测试 PASS 不作为 v2 TypeScript Host PASS（本层无 Go 依赖）。
+- 本层 node:test 全绿（Windows Node v24.21.0；真实退出码 EXIT=0；含 dispatch 17 用例 + contract/registry 10 用例）。
+- `find web/v2 -name '*.test.mjs'` 全 lane 本地预跑：staging 汇总工位 299/299 绿（dsh 包另 39 pass/1 平台 skip）；仅 1 例环境型失败（`version-task-dag-host-http` 需 lane 前置 `npm --prefix packages/tally-github-native-c install`，按 CI 同款命令补装后 6/6 绿——非本 diff 引入）。
+- **真实并行正例 PASS**（2026-11-19，host-local 收据 `_tmp/r105/real-parallel-receipt.json`）：pi + opencode 两个互不冲突 Task 同时派发（独立 worktree、不相交写集、独立 candidate ref），scratch repo sourceSha `13960ca1`；双 `LOCAL_CANDIDATE_READY`；**真实 agent 进程窗口相交**（pi pid 18736 于 13:07:15.194–19.983Z，opencode pid 30608 于 13:07:17.844–43.473Z，processOverlap=attemptOverlap=true）；双独立 git 回读 verified（parent=sourceSha、单路径全匹配：pi candidate `9cdeb2e5` [PARALLEL_PI_NOTE.md]，opencode candidate `46daccad` [PARALLEL_OPENCODE_NOTE.md]）。前两轮诚实失败记录在案（缺 `git init` 致 sourceSha 空、pi 路径误用无扩展名形态——MSYS PATH 解析假象）。
+- **zcode 统一 facade 真实执行 PASS**（`_tmp/r105/zcode-facade-receipt.json`）：probe 0.16.9 canary "OK"；真实 turn pid 2164 exit 0 ~33s；candidate `664f1aab`（parent `e04c085c`，tree `d83c7839`，单路径 ZCODE_FACADE_NOTE.md）独立回读 verified。#470 历史真实收据（candidate `434ac166`）依然有效。
+- 装配一致性（staging 六分支零冲突合并后）：五 Provider 结构化契约全过、注册表全 DISABLED 默认、显式未启用拒绝、enabled+probe 准入（`_tmp/r105/conformance.test.mjs` 5/5 绿）。
+- 负例矩阵在单测层覆盖：同 Task 双 attempt 拒（含跨 await 竞态）、写集/worktree/容量/DAG 门各拒、不可用 Provider 拒、Claim 拒、说谎 outcome 强制归 UNKNOWN、失败不回退 codex。
+- dsh 真实 DeepSeek API 执行：**NOT_RUN**（本轮未暂存沙箱化 builder 环境；包内三级 probe/命名空间隔离等修复以 39 测试为准，#467 历史烟雾收据为旁证）。grok：**DISABLED**（凭据 ABSENT，仅契约验证，无任何真实运行表述）。
+- Go Worker 测试 PASS 不作为 v2 TypeScript Host PASS（本层无 Go 依赖；opencode/pi/grok 的 Go 契约仅作参考源）。
 
 Refs: #64
