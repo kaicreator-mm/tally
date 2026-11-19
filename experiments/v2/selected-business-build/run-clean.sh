@@ -150,6 +150,13 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
+    # R103 P1-01 regression input: the test spawns the consumer's real
+    # branch against fixture claim registries. Only the T264 lane seals the
+    # reviewSingleCandidate route into the build, so the consumer is copied
+    # only there; every other lane (t06n) honestly skips the regression.
+    if [[ "${T264_SINGLE_REVIEW:-0}" == "1" ]]; then
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-single-review-codex.mjs" "$tmp/consumer/consumer-single-review-codex.mjs"
+    fi
     node --test "$tmp/consumer/local-codex.test.mjs"
     if [[ "${T06N_CONCURRENT:-0}" == "1" ]]; then
       # T06n: ONE K facade runs Builder A (#177) and Builder B (#178) with two
@@ -183,6 +190,13 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     else
       cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
+    fi
+    if [[ "${T264_SINGLE_REVIEW:-0}" == "1" ]]; then
+      # #264 J05: single-Builder ReviewDecision/TaskOutcome consumer over the
+      # same sealed K/C composition (selected only under explicit Host
+      # enablement; requires the TALLY_TASK_CLAIM_264_REVIEWER_* pins).
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-single-review-codex.mjs" "$tmp/consumer/consumer-single-review-codex.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-single-review-codex.mjs"
     fi
   else
     cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"

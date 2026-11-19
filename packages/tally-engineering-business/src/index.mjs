@@ -8,10 +8,11 @@ export const ABI_VERSION = 'v08-business-abi/1';
 export const ENDPOINTS = Object.freeze([
   {endpointId:'business:tally-task-readiness',kind:'business-policy'},
 ]);
-export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
+export const INTENT_TYPES = Object.freeze(['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','reviewSingleCandidate','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 export const EFFECT_TYPES = Object.freeze(['effect:tally-readiness-observation',
   'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-  'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+  'effect:tally-reviewer-candidate-join','effect:tally-single-candidate-review',
+  'effect:tally-reviewed-candidate-publication',
   'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
   'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
   'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
@@ -68,6 +69,23 @@ const joinInputFrom=Object.freeze({
   sourceSha:{source:'event',path:['payload','sourceSha']},
   joinId:{source:'event',path:['payload','joinId']},
   candidates:{source:'event',path:['payload','candidates']},
+});
+// #264 J05: single-Builder review request. The decision (ACCEPT/REWORK/DEFER)
+// rides as the reviewer's expressed judgment; every authority fact (reviewer
+// Claim, builder CAS record, git/PR/CI readback) stays Host/sealed-C owned.
+const singleReviewInputFrom=Object.freeze({
+  issueRef:{source:'event',path:['payload','issueRef']},
+  issueNumber:{source:'event',path:['payload','issueNumber']},
+  sourceSha:{source:'event',path:['payload','sourceSha']},
+  decisionId:{source:'event',path:['payload','decisionId']},
+  decision:{source:'event',path:['payload','decision']},
+  attemptId:{source:'event',path:['payload','attemptId']},
+  candidateCommit:{source:'event',path:['payload','candidateCommit']},
+  candidateTree:{source:'event',path:['payload','candidateTree']},
+  repairCommit:{source:'event',path:['payload','repairCommit']},
+  repairTree:{source:'event',path:['payload','repairTree']},
+  prNumber:{source:'event',path:['payload','prNumber']},
+  reviewRef:{source:'event',path:['payload','reviewRef']},
 });
 const freezeInputFrom=Object.freeze({
   issueRef:{source:'event',path:['payload','issueRef']},
@@ -256,6 +274,22 @@ export function getPolicy(){
   const joinWorkflow={
     workflowKey:'tally-readiness',initialState:'open',initialContext:{},
     guards:[],states:[{stateKey:'open',transitions:[joinTransition]},finalState],
+  };
+  // #264 J05: one ReviewDecision per (issue, source, decisionId). K-level
+  // idempotency keeps a retry from re-executing the sealed Host effect; the
+  // Host CAS rows are independently create-only under their own stable key.
+  const singleReviewTransition={
+    transitionKey:'review-single-candidate',
+    trigger:{kind:'event',eventType:'TALLY_SINGLE_CANDIDATE_REVIEW_REQUESTED'},
+    targetState:'open',
+    effectIntents:[{
+      effectType:'effect:tally-single-candidate-review',inputFrom:singleReviewInputFrom,
+      idempotencyKeyFrom:{template:'single-review:{issueNumber}:{sourceSha}:{decisionId}'}
+    }]
+  };
+  const singleReviewWorkflow={
+    workflowKey:'tally-readiness',initialState:'open',initialContext:{},
+    guards:[],states:[{stateKey:'open',transitions:[singleReviewTransition]},finalState],
   };
   const publicationTransition={
     transitionKey:'publish-reviewed-candidate',
@@ -453,7 +487,7 @@ export function getPolicy(){
     workflowDefinition:{
       workflowKey:'tally-readiness',initialState:'open',initialContext:{},
       guards:[],states:[
-        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceDraftPersistTransition,maintenanceCandidateFreezeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition,draftPersistTransition,witnessFreezeTransition]},
+        {stateKey:'open',transitions:[inspectTransition,admitTransition,localAgentTransition,joinTransition,singleReviewTransition,publicationTransition,freezeTransition,intakeTransition,maintenanceDraftPersistTransition,maintenanceCandidateFreezeTransition,maintenanceTransition,learningTransition,releaseTransition,dependencyTransition,dagFreezeTransition,draftPersistTransition,witnessFreezeTransition]},
         finalState,
       ],
     },
@@ -479,6 +513,14 @@ export function getPolicy(){
       eventType:'TALLY_REVIEWED_CANDIDATES_JOIN_REQUESTED',
       payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
         joinId:'joinId',candidates:'candidates'},
+    },'rule:tally-single-candidate-review':{
+      ruleId:'rule:tally-single-candidate-review',
+      eventType:'TALLY_SINGLE_CANDIDATE_REVIEW_REQUESTED',
+      payloadFromInput:{issueRef:'issueRef',issueNumber:'issueNumber',sourceSha:'sourceSha',
+        decisionId:'decisionId',decision:'decision',attemptId:'attemptId',
+        candidateCommit:'candidateCommit',candidateTree:'candidateTree',
+        repairCommit:'repairCommit',repairTree:'repairTree',prNumber:'prNumber',
+        reviewRef:'reviewRef'},
     },'rule:tally-reviewed-candidate-publication':{
       ruleId:'rule:tally-reviewed-candidate-publication',
       eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED',
@@ -579,6 +621,19 @@ export function getPolicy(){
         // The caller role gates only who may REQUEST the Join check.
         roles:['requester','planner','builder','reviewer'],
         definition:joinWorkflow,
+      },
+      reviewSingleCandidate:{
+        trigger:{kind:'event',eventType:'TALLY_SINGLE_CANDIDATE_REVIEW_REQUESTED'},
+        ruleId:'rule:tally-single-candidate-review',
+        // #264 J05 single-Builder lane: the ReviewDecision authority is ONLY
+        // the sealed C observation (independently accepted reviewer-role
+        // Claim distinct from the Builder Claim, the durable Builder
+        // CANDIDATE_READY record, exact candidate/repair git readback, the
+        // candidate PR head and exact-SHA CI). The caller only REQUESTS the
+        // review; the decision value expresses the reviewer's judgment and
+        // never upgrades Task PASS without the full Host outcome chain.
+        roles:['requester','planner','builder','reviewer'],
+        definition:singleReviewWorkflow,
       },
       publishReviewedCandidate:{
         trigger:{kind:'event',eventType:'TALLY_REVIEWED_CANDIDATE_PUBLICATION_REQUESTED'},
@@ -781,6 +836,32 @@ export function getPolicy(){
           const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
             envelope.outcome.output:null;
           return projectReviewedCandidateJoin({input,observation,effectId});
+        },
+      },
+      'effect:tally-single-candidate-review':{
+        // Idempotent at K level (one decision per decisionId); the sealed C
+        // Host effect is itself create-only in CAS with exact readback, so a
+        // replay never writes a second decision or outcome row.
+        semantics:'idempotent',
+        resource:{key:'tally-local-codex',operation:'tally.reviewSingleCandidate'},
+        external:{permitTtlMs:3600000,await:'terminal'},
+        handler:async ({input,effectId,resources})=>{
+          if(!resources||typeof resources.call!=='function')
+            throw new Error('SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED');
+          const advisory=assessSingleCandidateReview(input);
+          if(advisory.state!=='OBSERVED_INPUT_ONLY')return {...advisory,effectId};
+          const envelope=await resources.call(
+            'tally-local-codex','tally.reviewSingleCandidate',
+            {sourceRef:input.issueRef,issueNumber:input.issueNumber,
+              sourceSha:input.sourceSha,decisionId:input.decisionId,
+              decision:input.decision,attemptId:input.attemptId,
+              candidateCommit:input.candidateCommit,candidateTree:input.candidateTree,
+              repairCommit:input.repairCommit,repairTree:input.repairTree,
+              prNumber:input.prNumber,
+              ...(input.reviewRef?{reviewRef:input.reviewRef}:{}),effectId});
+          const observation=envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+            envelope.outcome.output:null;
+          return projectSingleCandidateReview({input,observation,effectId});
         },
       },
       'effect:tally-reviewed-candidate-publication':{
@@ -1549,6 +1630,123 @@ export function projectReviewedCandidateJoin({input,observation,effectId}={}){
         taskPass:false,releasePass:false});
     return joinDenied('UNVERIFIED_REVIEWER_JOIN_OBSERVATION',effectId);
   }catch{return joinDenied('UNTRUSTED_REVIEWER_JOIN_OBSERVATION',effectId);}
+}
+
+/**
+ * #264 J05 — advisory input screening for the single-candidate review
+ * intent. The reviewer-Claim fact, the Builder CAS record, the git/PR/CI
+ * readback and the ReviewDecision CAS row can only come from the selected
+ * sealed C; the decision value expresses the reviewer's judgment and no
+ * input shape is ever review or outcome evidence.
+ */
+const SINGLE_DECISION_VALUES=new Set(['ACCEPT','REWORK','DEFER']);
+export function assessSingleCandidateReview(input){
+  const unqualified=Object.freeze({state:'UNQUALIFIED_INPUT',reason:'MISSING_INPUT',
+    admitted:false,claimAccepted:false,authorized:false,agentLaunch:false,
+    taskPass:false,releasePass:false});
+  if(!input||typeof input!=='object'||Array.isArray(input))return unqualified;
+  const {issueRef,issueNumber,sourceSha,decisionId,decision,attemptId,
+    candidateCommit,candidateTree,repairCommit,repairTree,prNumber}=input;
+  if(!(ISSUE_REF.test(issueRef)&&Number.isSafeInteger(issueNumber)&&issueNumber>0&&
+    issueRef.endsWith(`/issues/${issueNumber}`)&&SOURCE_SHA.test(sourceSha)&&
+    LOCAL_ATTEMPT_ID.test(decisionId??'')&&SINGLE_DECISION_VALUES.has(decision??'')&&
+    LOCAL_ATTEMPT_ID.test(attemptId??'')&&SOURCE_SHA.test(candidateCommit??'')&&
+    SOURCE_SHA.test(candidateTree??'')&&SOURCE_SHA.test(repairCommit??'')&&
+    SOURCE_SHA.test(repairTree??'')&&Number.isSafeInteger(prNumber)&&
+    prNumber>=1))
+    return Object.freeze({...unqualified,reason:'MISSING_SOURCE_IDENTITY'});
+  if(input.reviewRef!==undefined&&input.reviewRef!==null&&
+    !(typeof input.reviewRef==='string'&&/^https:\/\/github\.com\//.test(input.reviewRef)))
+    return Object.freeze({...unqualified,reason:'MISSING_SOURCE_IDENTITY'});
+  return Object.freeze({state:'OBSERVED_INPUT_ONLY',
+    reason:'REQUIRES_SEALED_SINGLE_REVIEW_OBSERVATION',
+    issueRef,issueNumber,sourceSha,decisionId,decision,attemptId,candidateCommit,
+    candidateTree,repairCommit,repairTree,prNumber,admitted:false,claimAccepted:false,
+    authorized:false,agentLaunch:false,taskPass:false,releasePass:false});
+}
+
+const SINGLE_REVIEW_REASONS=new Set([
+  ...JOIN_REASONS,'REVIEW_INPUT_INVALID','BUILDER_STORE_UNAVAILABLE',
+  'BUILDER_RECORD_NOT_FOUND','BUILDER_RECORD_NOT_READY','BUILDER_RECORD_STALE',
+  'BUILDER_RECORD_MISMATCH','REPAIR_READBACK_MISMATCH','PR_READBACK_MISMATCH',
+  'CI_EXACT_SHA_NOT_VERIFIED','GITHUB_READBACK_UNAVAILABLE',
+  'REVIEW_HOST_STORE_PINS_REQUIRED','REVIEW_DECISION_CONFLICT'
+]);
+const SINGLE_UNKNOWN_REASONS=new Set(['REVIEW_DECISION_ACK_LOST',
+  'REVIEW_DECISION_READBACK_UNVERIFIED']);
+const SINGLE_RECORDED_REASONS=new Set(['REVIEW_DECISION_CAS_READBACK_VERIFIED',
+  'REVIEW_DECISION_ALREADY_RECORDED']);
+const singleReviewDenied=(reason,effectId)=>Object.freeze({state:'NOT_ADMITTED',
+  reason,effectId,admitted:false,claimAccepted:false,authorized:false,
+  agentLaunch:false,decision:null,decisionRecord:null,taskOutcome:null,
+  taskPass:false,releasePass:false});
+/**
+ * #264 J05 — Business projection of the sealed C single-candidate review
+ * observation. A recorded decision is NOT Task PASS: taskPass may only be
+ * true together with a QUALIFIED_TASK_OUTCOME_PUBLISHED outcome from the
+ * same observation; REWORK/DEFER, HOLD, UNKNOWN and every denial keep
+ * taskPass=false and releasePass=false.
+ */
+export function projectSingleCandidateReview({input,observation,effectId}={}){
+  try{
+    const o=observation;
+    if(!o||typeof o!=='object'||Array.isArray(o)||
+      o.issueRef!==input?.issueRef||o.sourceSha!==input?.sourceSha||
+      o.decisionId!==input?.decisionId)
+      return singleReviewDenied('UNVERIFIED_SINGLE_REVIEW_OBSERVATION',effectId);
+    if(o.authorized!==false||o.releasePass!==false||o.claimGeneration!==1)
+      return singleReviewDenied('UNVERIFIED_SINGLE_REVIEW_OBSERVATION',effectId);
+    const common={issueRef:o.issueRef,sourceSha:o.sourceSha,decisionId:o.decisionId,
+      claimGeneration:o.claimGeneration,authorized:false,releasePass:false};
+    if(o.state==='NOT_ADMITTED'&&SINGLE_REVIEW_REASONS.has(o.reason)&&
+      o.admitted===false&&o.claimAccepted===false&&o.agentLaunch===false&&
+      o.taskPass===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,
+        claimAccepted:false,admitted:false,agentLaunch:false,decision:null,
+        decisionRecord:null,taskOutcome:null,taskPass:false});
+    if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+      o.replayFixture===true&&o.taskPass===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,
+        claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
+        decision:null,decisionRecord:null,taskOutcome:null,taskPass:false});
+    if(o.state==='REVIEW_DECISION_UNKNOWN'&&SINGLE_UNKNOWN_REASONS.has(o.reason)&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+      o.replayFixture===false&&o.reconciliationRequired===true&&o.taskPass===false)
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,
+        claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+        reconciliationRequired:true,decision:null,decisionRecord:null,
+        taskOutcome:null,taskPass:false});
+    if(o.state==='REVIEW_DECISION_RECORDED'&&SINGLE_RECORDED_REASONS.has(o.reason)&&
+      o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+      o.replayFixture===false&&o.decision===input.decision&&
+      o.decisionRecord&&typeof o.decisionRecord==='object'&&!Array.isArray(o.decisionRecord)&&
+      typeof o.decisionRecord.decisionKey==='string'&&
+      o.decisionRecord.decisionKey.startsWith('tally:v2:single-review-decision:')&&
+      Number.isSafeInteger(o.decisionRecord.revision)&&o.decisionRecord.revision>=0&&
+      typeof o.decisionRecord.decidedAt==='string'&&
+      Number.isFinite(Date.parse(o.decisionRecord.decidedAt))&&
+      typeof o.decisionRecord.alreadyRecorded==='boolean'&&
+      o.taskOutcome&&typeof o.taskOutcome==='object'&&!Array.isArray(o.taskOutcome)&&
+      (o.taskOutcome.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'?
+        (o.taskOutcome.reason==='SINGLE_CANDIDATE_FULL_CHAIN_CAS_READBACK_VERIFIED'&&
+         Number.isSafeInteger(o.taskOutcome.revision)&&o.taskOutcome.revision>=0&&
+         o.taskOutcome.publication==='PUBLISHED'&&o.taskOutcome.taskPass===true&&
+         o.taskOutcome.releasePass===false):
+        ['HOLD','UNKNOWN'].includes(o.taskOutcome.status)&&
+         o.taskOutcome.publication==='HOLD'&&o.taskOutcome.taskPass===false&&
+         o.taskOutcome.releasePass===false&&
+         (o.taskOutcome.status!=='UNKNOWN'||
+           o.taskOutcome.reconciliationRequired===true))&&
+      o.taskPass===(o.taskOutcome.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'))
+      return Object.freeze({state:o.state,reason:o.reason,effectId,...common,
+        claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+        decision:o.decision,
+        decisionRecord:Object.freeze({...o.decisionRecord}),
+        taskOutcome:Object.freeze({...o.taskOutcome}),
+        taskPass:o.taskOutcome.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'});
+    return singleReviewDenied('UNVERIFIED_SINGLE_REVIEW_OBSERVATION',effectId);
+  }catch{return singleReviewDenied('UNTRUSTED_SINGLE_REVIEW_OBSERVATION',effectId);}
 }
 
 const PUBLICATION_ISSUES=new Set([197,198]);

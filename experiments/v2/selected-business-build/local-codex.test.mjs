@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
+import {fileURLToPath} from 'node:url';
 import {mkdtemp,rm} from 'node:fs/promises';
+import {stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
-import {createLocalCodexHost,LOCAL_CODEX_CONSTANTS} from './local-codex-host.mjs';
+import {createLocalCodexHost,createDefaultOperations,LOCAL_CODEX_CONSTANTS} from './local-codex-host.mjs';
 
 const sourceSha='2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9';
 const issueRef='https://github.com/kaicreator-mm/tally/issues/172';
@@ -383,4 +385,430 @@ test('bounded repair uses a new attempt id and preserves prior failure evidence'
     assert.equal(again.state,'LOCAL_CANDIDATE_READY');
     assert.equal(calls.length,1,'repaired attempt restart must not relaunch');
   }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+
+// ---------------------------------------------------------------------------
+// #264 J05 — sealed-prompt path-occupancy guard + single-candidate review
+// ---------------------------------------------------------------------------
+test('tracked candidate path refuses the Builder attempt before any spawn',async()=>{
+  await withHost(async({host,calls,config})=>{
+    const occupied=await host.runAttempt(config);
+    assert.equal(occupied.state,'AGENT_NOT_EXECUTED');
+    assert.equal(occupied.reason,'CANDIDATE_PATH_OCCUPIED');
+    assert.equal(occupied.agentLaunch,false);
+    assert.equal(calls.length,0,'occupancy refusal must precede the spawn');
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.phase,'NOT_EXECUTED');
+    assert.equal(row.value.reason,'CANDIDATE_PATH_OCCUPIED');
+    await store.close();
+  },{ops:operations({candidatePathOccupied:async()=>({occupied:true})})});
+  // An explicitly authorized replacement is the only way past the guard
+  // (a fresh attempt id: the refusal above left a terminal NOT_EXECUTED row).
+  await withHost(async({host,calls,config})=>{
+    const x=await host.runAttempt({...config,attemptId:'attempt:t06m:replace:1',
+      candidateReplacementAuthorized:true});
+    assert.equal(x.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(calls.length,1);
+  },{ops:operations({candidatePathOccupied:async config=>
+    ({occupied:config.candidateReplacementAuthorized!==true})})});
+});
+
+test('unproven occupancy (git error) refuses the Builder attempt without spawning (R103 P1-02)',async()=>{
+  await withHost(async({host,calls,config})=>{
+    const unknown=await host.runAttempt(config);
+    assert.equal(unknown.state,'AGENT_NOT_EXECUTED');
+    assert.equal(unknown.reason,'CANDIDATE_PATH_OCCUPANCY_UNKNOWN');
+    assert.equal(unknown.agentLaunch,false);
+    assert.equal(calls.length,0,'unproven occupancy must precede the spawn');
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.phase,'NOT_EXECUTED');
+    assert.equal(row.value.reason,'CANDIDATE_PATH_OCCUPANCY_UNKNOWN');
+    await store.close();
+  },{ops:operations({candidatePathOccupied:async()=>({occupied:null,
+    detail:'fatal: Not a valid object name'})})});
+});
+
+const reviewCandidateCommit='023db3aa9a6c30ef5975c6f085ba207ec315cb09';
+const reviewCandidateTree='ff7cd2b35ea65d6c7ab316b963eed4066af455db';
+const reviewRepairCommit='d9fbc0239a8c38daae0c5637451f1e6b10fce983';
+const reviewRepairTree='cb761f739b2fd2bc737f68ad19e4a0b41c63c023';
+function reviewOperations(overrides={}){
+  const path=LOCAL_CODEX_CONSTANTS.candidateRelativePath;
+  return {
+    probeProvider:async()=>({available:true}),
+    prepareWorktree:async config=>({worktreePath:config.worktreePath,baseSha:config.sourceSha}),
+    proveConfinement:async config=>({verified:true,builderPrincipal:config.builderPrincipal,
+      builderSid:config.builderSid,hiddenVerifierStatus:'HIDDEN_NOT_QUALIFIED'}),
+    finalizeCandidate:async()=>candidate,
+    verifyCandidateReadback:async()=>({verified:true,candidateTree:reviewCandidateTree,
+      parent:sourceSha,paths:[path]}),
+    verifyRepairReadback:async()=>({verified:true,repairTree:reviewRepairTree,
+      parent:reviewCandidateCommit,paths:[path],candidatePath:path}),
+    ...overrides
+  };
+}
+// Mirror of the host's frozen REVIEW_REQUIRED_CI_CONTEXTS: the exact-SHA
+// combined status must carry each of these terminal-success contexts before
+// the single-candidate qualification gate may pass (R103 review P1-03).
+const reviewRequiredContexts=[
+  'ci/woodpecker/pr/v2-alm-workspace',
+  'ci/woodpecker/pr/v2-candidate-publication',
+  'ci/woodpecker/pr/v2-t06l-kernel-admission',
+  'ci/woodpecker/pr/v2-t06m-local-agent',
+  'ci/woodpecker/pr/v2-t06n-concurrent-agent'];
+function greenCombinedStatus(){
+  return {state:'success',totalCount:reviewRequiredContexts.length,
+    contexts:reviewRequiredContexts.map(context=>({context,state:'success'}))};
+}
+function reviewConfigFor(dir,overrides={}){
+  return {issueRef:'https://github.com/kaicreator-mm/tally/issues/264',
+    sourceSha,decisionId:'decision:264:j5:test:1',decision:'ACCEPT',
+    attemptId:'attempt:264:e1:r91:4',
+    candidateCommit:reviewCandidateCommit,candidateTree:reviewCandidateTree,
+    repairCommit:reviewRepairCommit,repairTree:reviewRepairTree,prNumber:466,
+    builderStorePath:join(dir,'builder.sqlite'),
+    decisionStorePath:join(dir,'review.sqlite'),repositoryPath:dir,
+    reviewer:{operatorId:'zcode:i264:e1:reviewer:1',writerId:'tally-host:win32:reviewer:1',
+      writerLogin:'kaicreator-mm',claimRef:'https://github.com/kaicreator-mm/tally/issues/264#issuecomment-7004539047',
+      commentId:7004539047},
+    builder:{operatorId:'zcode:i264:e1:integration:1',
+      writerId:'tally-host:win32:i264:e1:integration:1'},
+    reviewRef:'https://github.com/kaicreator-mm/tally/pull/466#pullrequestreview-5971578979',
+    githubReads:{
+      readPullRequest:async n=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+      readCombinedStatus:async sha=>greenCombinedStatus()},
+    ...overrides};
+}
+async function seedBuilderRecord(config,overrides={}){
+  const store=await openSqliteCasStore({path:config.builderStorePath,busyTimeoutMs:1000});
+  await store.put(attemptKey(config.attemptId),{phase:'CANDIDATE_READY',
+    attemptId:config.attemptId,sourceSha:config.sourceSha,issueRef:config.issueRef,
+    claimGeneration:1,candidateRelativePath:LOCAL_CODEX_CONSTANTS.candidateRelativePath,
+    candidateTree:reviewCandidateTree,candidateCommit:reviewCandidateCommit,
+    candidateRef:'refs/tally-candidates/attempt-264-e1-r91-4',
+    worktreePath:'C:/worktrees/attempt-264',...overrides},{mustBeAbsent:true});
+  await store.close();
+}
+function reviewHost(dir,ops){
+  return createLocalCodexHost({spawnFn:()=>{throw Error('review must not spawn');},
+    operations:ops??reviewOperations(),now:()=>Date.UTC(2026,10,19),killTree:async()=>true});
+}
+const decisionKeyPrefix=LOCAL_CODEX_CONSTANTS.reviewDecisionKeyPrefix;
+const outcomeKeyPrefix=LOCAL_CODEX_CONSTANTS.reviewOutcomeKeyPrefix;
+
+test('single-candidate ACCEPT records the decision and publishes the qualified outcome',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t264-review-'));
+  try{
+    const config=reviewConfigFor(dir);
+    await seedBuilderRecord(config);
+    const host=reviewHost(dir);
+    const x=await host.reviewSingleCandidate(config);
+    assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+    assert.equal(x.reason,'REVIEW_DECISION_CAS_READBACK_VERIFIED');
+    assert.equal(x.decision,'ACCEPT');
+    assert.equal(x.taskPass,true);
+    assert.equal(x.releasePass,false);
+    assert.equal(x.taskOutcome.status,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.ok(x.decisionRecord.decisionKey.startsWith(decisionKeyPrefix));
+    const store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+    const decisionRow=await store.get(x.decisionRecord.decisionKey);
+    assert.equal(decisionRow.value.phase,'REVIEW_DECISION_RECORDED');
+    assert.equal(decisionRow.value.decision,'ACCEPT');
+    assert.equal(decisionRow.value.reviewer.operatorId,config.reviewer.operatorId);
+    assert.equal(decisionRow.value.builder.operatorId,config.builder.operatorId);
+    const outcomeRow=await store.get(x.taskOutcome.outcomeKey);
+    assert.equal(outcomeRow.value.phase,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.equal(outcomeRow.value.taskPass??undefined,undefined,
+      'outcome row carries no taskPass flag — status is the authority');
+    const keys=await store.list(decisionKeyPrefix);
+    assert.equal(keys.length,1,'one create-only decision row');
+    await store.close();
+    // Idempotent replay: same inputs answer ALREADY_RECORDED with the SAME
+    // rows — never a second CAS write.
+    const again=await host.reviewSingleCandidate(config);
+    assert.equal(again.state,'REVIEW_DECISION_RECORDED');
+    assert.equal(again.reason,'REVIEW_DECISION_ALREADY_RECORDED');
+    assert.equal(again.decisionRecord.decisionKey,x.decisionRecord.decisionKey);
+    assert.equal(again.taskOutcome.status,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.equal(again.taskOutcome.alreadyPublished,true);
+    const store2=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+    assert.equal((await store2.list(decisionKeyPrefix)).length,1);
+    assert.equal((await store2.list(outcomeKeyPrefix)).length,1);
+    await store2.close();
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('REWORK and DEFER record the decision but never publish or pass the task',async()=>{
+  for(const decision of ['REWORK','DEFER']){
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-review-'+decision.toLowerCase()+'-'));
+    try{
+      const config=reviewConfigFor(dir,{decision,decisionId:'decision:264:j5:'+decision.toLowerCase()+':1'});
+      await seedBuilderRecord(config);
+      const x=await reviewHost(dir).reviewSingleCandidate(config);
+      assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+      assert.equal(x.decision,decision);
+      assert.equal(x.taskPass,false);
+      assert.equal(x.taskOutcome.status,'HOLD');
+      assert.equal(x.taskOutcome.reason,'DECISION_'+decision+'_NOT_TASK_PASS');
+      const store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+      assert.equal((await store.list(decisionKeyPrefix)).length,1);
+      assert.equal((await store.list(outcomeKeyPrefix)).length,0,
+        decision+' must never publish a task outcome row');
+      await store.close();
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
+});
+
+test('single-candidate review denies broken provenance chains fail-closed',async()=>{
+  const cases=[
+    ['REVIEW_INPUT_INVALID',config=>reviewHost(config.repositoryPath),
+      config=>({...config,decision:'SHIP_IT'})],
+    ['BUILDER_RECORD_NOT_FOUND',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_NOT_READY',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_STALE',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_MISMATCH',config=>reviewHost(config.repositoryPath),config=>config],
+    ['CANDIDATE_READBACK_MISMATCH',
+      config=>reviewHost(config.repositoryPath,reviewOperations({
+        verifyCandidateReadback:async()=>({verified:true,candidateTree:'f'.repeat(40),
+          parent:sourceSha,paths:[LOCAL_CODEX_CONSTANTS.candidateRelativePath]})})),
+      config=>config],
+    ['REPAIR_READBACK_MISMATCH',
+      config=>reviewHost(config.repositoryPath,reviewOperations({
+        verifyRepairReadback:async()=>({verified:false})})),
+      config=>config],
+    ['PR_READBACK_MISMATCH',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:'0'.repeat(40),baseRef:'version/v2'}),
+        readCombinedStatus:async()=>greenCombinedStatus()}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'failure',totalCount:5})}})],
+    // R103 review P1-03: one unrelated green context must never satisfy the
+    // qualification CI gate — each task-required named context must be
+    // present and terminal-success at the exact repair SHA.
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'success',totalCount:1,
+          contexts:[{context:'ci/woodpecker/pr/v2-unrelated',state:'success'}]})}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'success',totalCount:4,
+          contexts:reviewRequiredContexts.slice(0,4)
+            .map(context=>({context,state:'success'}))})}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'pending',totalCount:5,
+          contexts:reviewRequiredContexts.map((context,index)=>({context,
+            state:index===0?'pending':'success'}))})}})],
+    ['REVIEW_DECISION_CONFLICT',config=>reviewHost(config.repositoryPath),config=>config],
+  ];
+  let index=0;
+  for(const [reason,mkHost,configFn] of cases){
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-deny-'));
+    try{
+      const base=reviewConfigFor(dir);
+      if(reason==='BUILDER_RECORD_NOT_READY')
+        await seedBuilderRecord(base,{phase:'FAILED'});
+      else if(reason==='BUILDER_RECORD_STALE')
+        await seedBuilderRecord(base,{sourceSha:'f'.repeat(40)});
+      else if(reason==='BUILDER_RECORD_MISMATCH')
+        await seedBuilderRecord(base,{candidateCommit:'e'.repeat(40)});
+      else if(reason!=='BUILDER_RECORD_NOT_FOUND'&&reason!=='REVIEW_INPUT_INVALID'&&
+        reason!=='REVIEW_DECISION_CONFLICT')
+        await seedBuilderRecord(base);
+      if(reason==='REVIEW_DECISION_CONFLICT'){
+        await seedBuilderRecord(base);
+        // Pre-seed the exact idempotency key with a DIFFERENT decision: the
+        // create-only key must refuse the conflicting second decision.
+        const {createHash}=await import('node:crypto');
+        const decisionKey=decisionKeyPrefix+createHash('sha256')
+          .update(JSON.stringify([base.issueRef,base.sourceSha,base.attemptId,
+            base.candidateCommit,base.repairCommit,base.reviewer.operatorId]))
+          .digest('hex');
+        const store=await openSqliteCasStore({path:base.decisionStorePath,busyTimeoutMs:1000});
+        await store.put(decisionKey,{schema:'tally/single-review-decision/v1',
+          phase:'REVIEW_DECISION_RECORDED',decision:'REWORK',
+          sourceSha:base.sourceSha,candidateCommit:base.candidateCommit,
+          repairCommit:base.repairCommit,
+          reviewer:{operatorId:base.reviewer.operatorId}},{mustBeAbsent:true});
+        await store.close();
+      }
+      const host=mkHost(base);
+      const x=await host.reviewSingleCandidate(configFn(base));
+      assert.equal(x.state,'NOT_ADMITTED',reason+' #'+index);
+      assert.equal(x.reason,reason,reason+' #'+index);
+      assert.equal(x.taskPass,false);
+      assert.equal(x.taskOutcome,null);
+      // No denial may write a decision row (the pre-seeded conflict fixture
+      // stays untouched at exactly one) and none may ever write an outcome.
+      const store=await openSqliteCasStore({path:base.decisionStorePath,busyTimeoutMs:1000});
+      const decisionRows=await store.list(decisionKeyPrefix);
+      assert.equal(decisionRows.length,reason==='REVIEW_DECISION_CONFLICT'?1:0,
+        reason+' must not write a decision row');
+      assert.equal((await store.list(outcomeKeyPrefix)).length,0,
+        reason+' must never write an outcome row');
+      await store.close();
+    }finally{await rm(dir,{recursive:true,force:true});}
+    index++;
+  }
+});
+
+test('an unreadable decision store stays UNKNOWN for read-only reconciliation',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t264-unknown-'));
+  try{
+    const config=reviewConfigFor(dir,{decisionStorePath:join(dir,'no-dir','review.sqlite')});
+    await seedBuilderRecord(config);
+    const x=await reviewHost(dir).reviewSingleCandidate(config);
+    assert.equal(x.state,'REVIEW_DECISION_UNKNOWN');
+    assert.equal(x.reason,'REVIEW_DECISION_ACK_LOST');
+    assert.equal(x.reconciliationRequired,true);
+    assert.equal(x.taskPass,false);
+    assert.equal(x.decisionRecord,null);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+// ---------------------------------------------------------------------------
+// R103 review P1-02 — the REAL git-backed occupancy guard must distinguish
+// proven answers from unproven git failures; a git error may never read as
+// "not occupied" (fail-open) and never spawn the Builder.
+// ---------------------------------------------------------------------------
+test('real candidatePathOccupied classifies git exit 0 / proven-absent / unproven failures',async()=>{
+  const occupancySpawn=(code,stderr)=>{
+    return (command,args,options)=>fakeChild((close,child)=>{
+      if(stderr!==undefined)child.stderr.emit('data',Buffer.from(stderr));
+      close(code,null);
+    });
+  };
+  const cases=[
+    // exit 0: the path IS tracked at the pinned source SHA.
+    {spawn:occupancySpawn(0,''),expected:{occupied:true},label:'occupied'},
+    // git's proven-absent signature for cat-file -e <ref>:<path>.
+    {spawn:occupancySpawn(128,"fatal: path 'x.md' does not exist in 'dff5329e'\n"),
+      expected:{occupied:false},label:'proven-absent'},
+    // Any other nonzero shape is UNPROVEN — bad ref, bad repository, missing
+    // git binary, timeout — and must never read as absence.
+    {spawn:occupancySpawn(128,'fatal: Not a valid object name badref\n'),
+      expected:{occupied:null},label:'bad-ref'},
+    {spawn:occupancySpawn(128,''),expected:{occupied:null},label:'no-stderr'},
+    {spawn:occupancySpawn(null,''),expected:{occupied:null},label:'launch-failure'},
+  ];
+  for(const {spawn:spawnFn,expected,label} of cases){
+    const ops=createDefaultOperations(spawnFn);
+    assert.equal(typeof ops.candidatePathOccupied,'function');
+    const result=await ops.candidatePathOccupied({sourceSha:'d'.repeat(40),
+      repositoryPath:'C:\repo',gitPath:'C:\git.exe'});
+    assert.equal(result.occupied,expected.occupied,label);
+    if(expected.occupied===null)assert.ok(typeof result.detail==='string',label);
+  }
+  // The separately authorized replacement short-circuits before any git run.
+  let ran=false;
+  const ops=createDefaultOperations((...a)=>{ran=true;return fakeChild(close=>close(0,null));});
+  const bypass=await ops.candidatePathOccupied({sourceSha:'d'.repeat(40),
+    repositoryPath:'C:\repo',gitPath:'C:\git.exe',candidateReplacementAuthorized:true});
+  assert.equal(bypass.occupied,false);
+  assert.equal(ran,false,'authorized replacement must not run git');
+});
+
+// ---------------------------------------------------------------------------
+// R103 review P1-01 — real-branch reviewer registry admission: the reviewer
+// iteration must read the REVIEWER claim key from the reviewer registry.
+// Runs only where the consumer's sealed dependencies resolve (the CI
+// run-clean lane installs them); otherwise an honest skip, never a fake pass.
+// ---------------------------------------------------------------------------
+test('consumer real branch admits per-role registry keys and rejects wrong-key rows',async(t)=>{
+  const consumerUrl=new URL('./consumer-single-review-codex.mjs',import.meta.url);
+  let consumerPresent=false;
+  try{await stat(fileURLToPath(consumerUrl));consumerPresent=true;}catch{}
+  if(!consumerPresent)
+    return void t.skip('T264 consumer not present in this lane (run-clean copies it only under T264_SINGLE_REVIEW; other lanes do not seal the single-review route)');
+  let depsResolved=true;
+  try{import.meta.resolve('@kaicreator/tally-local-codex-host-bundle',consumerUrl);}
+  catch{depsResolved=false;}
+  if(!depsResolved)
+    return void t.skip('T264 consumer sealed deps not installed in this env (CI run-clean lane covers this regression)');
+  const {spawn}=await import('node:child_process');
+  const {createHash}=await import('node:crypto');
+  const claimKey=role=>`kaicreator-mm/tally#264:${role}:__default__`;
+  const registryKey=claim=>'tally:v2:claim-admission:'+
+    createHash('sha256').update(claim).digest('hex');
+  const seedRegistry=async(path,protectedClaimKey)=>{
+    const store=await openSqliteCasStore({path,busyTimeoutMs:1000});
+    await store.put(registryKey(protectedClaimKey),{phase:'PUBLISHED_VERIFIED',
+      generation:1,protectedClaimKey},{mustBeAbsent:true});
+    await store.close();
+  };
+  const runConsumer=async(dir,reviewerRegistryKey)=>{
+    const builderRegistry=join(dir,'builder-claim.sqlite');
+    const reviewerRegistry=join(dir,'reviewer-claim.sqlite');
+    const builderStore=join(dir,'builder-store.sqlite');
+    const store=await openSqliteCasStore({path:builderStore,busyTimeoutMs:1000});
+    await store.close();
+    await seedRegistry(builderRegistry,claimKey('builder'));
+    await seedRegistry(reviewerRegistry,reviewerRegistryKey);
+    const evidence=join(dir,'evidence');
+    const env={...process.env,TALLY_LOCAL_REPLAY:'0',
+      TALLY_GITHUB_READ_TOKEN:'fixture-not-a-secret',
+      TALLY_CLAIM_SOURCE_SHA:'d'.repeat(40),
+      TALLY_LOCAL_ISSUE_NUMBER:'264',
+      TALLY_LOCAL_EVIDENCE_DIR:evidence,
+      TALLY_LOCAL_BUILDER_STORE_PATH:builderStore,
+      TALLY_LOCAL_REVIEW_STORE_PATH:join(dir,'review-store.sqlite'),
+      TALLY_TASK_CLAIM_264_DISPATCH_ID:'dispatch:264:t:test:builder:1',
+      TALLY_TASK_CLAIM_264_OPERATOR_ID:'zcode:t264:test:builder:1',
+      TALLY_TASK_CLAIM_264_OPERATOR_KIND:'other',
+      TALLY_TASK_CLAIM_264_WRITER_ID:'tally-host:win32:t264:test:builder:1',
+      TALLY_TASK_CLAIM_264_WRITER_LOGIN:'kaicreator-mm',
+      TALLY_TASK_CLAIM_264_COMMENT_ID:'1',
+      TALLY_TASK_CLAIM_264_REGISTRY_PATH:builderRegistry,
+      TALLY_TASK_CLAIM_264_REVIEWER_DISPATCH_ID:'dispatch:264:t:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_OPERATOR_ID:'zcode:t264:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_OPERATOR_KIND:'other',
+      TALLY_TASK_CLAIM_264_REVIEWER_WRITER_ID:'tally-host:win32:t264:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_WRITER_LOGIN:'kaicreator-mm',
+      TALLY_TASK_CLAIM_264_REVIEWER_COMMENT_ID:'2',
+      TALLY_TASK_CLAIM_264_REVIEWER_REGISTRY_PATH:reviewerRegistry};
+    const child=spawn(process.execPath,[fileURLToPath(consumerUrl)],{env,windowsHide:true});
+    let stdout='',stderr='';
+    child.stdout.on('data',c=>{stdout+=c;});
+    child.stderr.on('data',c=>{stderr+=c;});
+    const exit=await new Promise(resolve=>{
+      const timer=setTimeout(()=>{child.kill();resolve({code:null,timeout:true});},120000);
+      child.once('close',(code,signal)=>{clearTimeout(timer);resolve({code,signal});});
+    });
+    return {exit,stdout,stderr};
+  };
+  // Positive: separate per-role keys in separate registries. The real branch
+  // must pass claim admission and terminate with the bounded consumer result
+  // (a downstream NOT_ADMITTED effect is expected: the fixture builder store
+  // carries no CANDIDATE_READY row). Under the R103 defect this crashed with
+  // T264_CLAIM_NOT_PUBLISHED because the reviewer registry was read with the
+  // builder key.
+  {
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-p1-01-pos-'));
+    try{
+      const {exit,stdout,stderr}=await runConsumer(dir,claimKey('reviewer'));
+      assert.equal(exit.code,0,'positive real-branch admission must not crash: '+stderr.slice(-800));
+      assert.ok(!stderr.includes('T264_CLAIM_NOT_PUBLISHED'),
+        'per-role keys must pass the real-branch claim admission');
+      assert.ok(stdout.includes('T264_SINGLE_REVIEW_K_HOST_DECISION=PASS'),stdout.slice(-800));
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
+  // Negative (wrong key): the reviewer registry holds the BUILDER claim key —
+  // exactly the row the R103 defect read — so the reviewer-role lookup must
+  // fail closed with T264_CLAIM_NOT_PUBLISHED.
+  {
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-p1-01-neg-'));
+    try{
+      const {exit,stderr}=await runConsumer(dir,claimKey('builder'));
+      assert.notEqual(exit.code,0,'wrong-key reviewer registry must fail closed');
+      assert.ok(stderr.includes('T264_CLAIM_NOT_PUBLISHED'),stderr.slice(-800));
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
 });

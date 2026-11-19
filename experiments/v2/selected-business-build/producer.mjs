@@ -17,7 +17,7 @@ if (!businessFile) throw new Error('TALLY_BUSINESS_SOURCE_REQUIRED');
 const business = await import(pathToFileURL(businessFile).href);
 assert.equal(business.PACKAGE_KIND, 'business');
 assert.equal(business.ABI_VERSION, 'v08-business-abi/1');
-assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
+assert.deepEqual([...business.INTENT_TYPES], ['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','reviewSingleCandidate','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
   'publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
 assert.equal(business.getPolicy().packageId, business.MODULE_ID);
 const bBytes = readFileSync(businessFile, 'utf8');
@@ -96,6 +96,7 @@ const modules = [
     abiVersion:business.ABI_VERSION,endpoint:'business-policy',
     bytes:bBytes,provides:['business:policy/1','intent:inspectTaskReadiness',
       'intent:admitClaimedTask','intent:runLocalCodexAttempt','intent:joinReviewedCandidates',
+      'intent:reviewSingleCandidate',
       'intent:publishReviewedCandidate','intent:freezeProductIntake',
       'intent:admitProjectIntake','intent:persistMaintenanceDraft',
       'intent:freezeReviewedMaintenanceCandidate','intent:publishMaintenanceIssue',
@@ -124,6 +125,7 @@ const modules = [
     bytes:localCodexBytes,provides:['capability:tally-local-codex/1',
       'intent:runLocalCodexAttempt',
       ...(process.env.T06N_CONCURRENT==='1'?['intent:joinReviewedCandidates']:[]),
+      ...(process.env.T264_SINGLE_REVIEW==='1'?['intent:reviewSingleCandidate']:[]),
       ...(process.env.T06P_PUBLISH==='1'?['intent:publishReviewedCandidate']:[]),
       ...(process.env.T210_PROJECT_INTAKE==='1'?['intent:freezeProductIntake',
         'intent:admitProjectIntake']:[]),
@@ -139,6 +141,8 @@ const modules = [
     handlers:[{operationId:'tally.runLocalCodexAttempt',handler:'runLocalCodexAttempt'},
       ...(process.env.T06N_CONCURRENT==='1'?
         [{operationId:'tally.joinReviewedCandidates',handler:'joinReviewedCandidates'}]:[]),
+      ...(process.env.T264_SINGLE_REVIEW==='1'?
+        [{operationId:'tally.reviewSingleCandidate',handler:'reviewSingleCandidate'}]:[]),
       ...(process.env.T06P_PUBLISH==='1'?
         [{operationId:'tally.publishReviewedCandidate',handler:'publishReviewedCandidate'}]:[]),
       ...(process.env.T210_PROJECT_INTAKE==='1'?
@@ -171,6 +175,9 @@ const routes=[
     ...(process.env.T06N_CONCURRENT==='1'?
       [{intentId:'joinReviewedCandidates',operationId:'tally.joinReviewedCandidates',
         capabilityId:'tally-local-codex',handlerId:'joinReviewedCandidates'}]:[]),
+    ...(process.env.T264_SINGLE_REVIEW==='1'?
+      [{intentId:'reviewSingleCandidate',operationId:'tally.reviewSingleCandidate',
+        capabilityId:'tally-local-codex',handlerId:'reviewSingleCandidate'}]:[]),
     ...(process.env.T06P_PUBLISH==='1'?
       [{intentId:'publishReviewedCandidate',operationId:'tally.publishReviewedCandidate',
         capabilityId:'tally-local-codex',handlerId:'publishReviewedCandidate'}]:[]),
@@ -215,6 +222,7 @@ assert.equal(built.modules.filter(x=>x.role==='capability').length,selectedCapab
 assert.equal(built.routes[0].intentId,'inspectTaskReadiness');
 const selectedRouteCount=selectedCapabilityCount+
   (localCodexBytes&&process.env.T06N_CONCURRENT==='1'?1:0)+
+  (localCodexBytes&&process.env.T264_SINGLE_REVIEW==='1'?1:0)+
   (localCodexBytes&&process.env.T06P_PUBLISH==='1'?1:0)+
   (localCodexBytes&&process.env.T210_PROJECT_INTAKE==='1'?2:0)+
   (localCodexBytes&&process.env.T312_PRODUCT_REVIEW==='1'?2:0)+
@@ -238,6 +246,19 @@ if(process.env.T06N_CONCURRENT==='1'){
 }else{
   assert.equal(built.routes.some(x=>x.intentId==='joinReviewedCandidates'),false,
     'T06n join route is selected only when T06N_CONCURRENT=1');
+}
+if(localCodexBytes&&process.env.T264_SINGLE_REVIEW==='1'){
+  const singleRoute=built.routes.find(x=>x.intentId==='reviewSingleCandidate');
+  assert.equal(singleRoute.capabilityId,'tally-local-codex');
+  assert.equal(singleRoute.handlerId,'reviewSingleCandidate');
+  const capability=built.modules.find(x=>
+    x.packageId==='capability-tally-local-codex@v1.0.0');
+  assert.equal(capability?.handlers?.some(x=>
+    x.operationId==='tally.reviewSingleCandidate'&&
+    x.handler==='reviewSingleCandidate'),true);
+}else{
+  assert.equal(built.routes.some(x=>x.intentId==='reviewSingleCandidate'),false,
+    '#264 single-review route is selected only when T264_SINGLE_REVIEW=1');
 }
 if(process.env.T06P_PUBLISH==='1'){
   const route=built.routes.find(x=>x.intentId==='publishReviewedCandidate');

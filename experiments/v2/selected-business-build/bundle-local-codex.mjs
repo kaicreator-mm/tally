@@ -64,8 +64,13 @@ const TASK_BINDINGS={
   // candidate note contract as the #172/#196 single Builder (the T06M
   // consumer's independent readback asserts exactly this one path); every
   // claim/writeset/source-pair/witness check below binds the attempt to
-  // issue #264's own accepted Claim row and current source SHA.
-  264:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
+  // issue #264's own accepted Claim row and current source SHA. J05 adds the
+  // single-candidate Reviewer lane on the SAME issue under a separate
+  // reviewer-role Claim (TALLY_TASK_CLAIM_264_REVIEWER_* Host pins): one
+  // Builder, one independent Reviewer, never a second Builder and never a
+  // T06N two-candidate Join shortcut.
+  264:{actorRole:'builder',reviewerLane:'single',
+    candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
   312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
   222:{actorRole:'builder'}
@@ -78,7 +83,9 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
 function claimEnv(env,issueNumber,actorRole='builder'){
-  const p=(issueNumber===312||issueNumber===219)?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
+  const roleSuffixed=(issueNumber===312||issueNumber===219)||
+    (actorRole!=='builder'&&TASK_BINDINGS[issueNumber]?.reviewerLane==='single');
+  const p=roleSuffixed?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
     issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
@@ -121,7 +128,8 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
   const claim=claimEnv(env,issueNumber,actorRole);
   if((binding?.actorRole!==actorRole&&
       !(issueNumber===312&&actorRole==='reviewer')&&
-      !(issueNumber===219&&actorRole==='reviewer'))||!SHA.test(claim.sourceSha??'')||
+      !(issueNumber===219&&actorRole==='reviewer')&&
+      !(actorRole==='reviewer'&&binding?.reviewerLane==='single'))||!SHA.test(claim.sourceSha??'')||
     !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
     !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
     !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
@@ -392,6 +400,117 @@ export async function joinReviewedCandidates(input){
       claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
       joinedAt:joined.joinedAt,candidates:joined.candidates};
   }catch{return joinDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
+}
+// #264 J05 — single-Builder ReviewDecision provider binding. The lane exists
+// ONLY for an issue whose TASK_BINDING declares reviewerLane:'single': one
+// current Builder candidate, one independently accepted reviewer-role Claim
+// (verified below, never caller-asserted), the exact current source pair and
+// the frozen write-set. Every external fact (builder CAS row, git readback,
+// PR head, exact-SHA CI) is re-derived by the Host effect; this provider only
+// binds trusted Host env pins plus transports. The reviewer must never share
+// the Builder's operator/writer identity (no self-review).
+const SINGLE_REVIEW_DECISIONS=new Set(['ACCEPT','REWORK','DEFER']);
+const singleBase=input=>({issueRef:issueRefFor(input.issueNumber),
+  sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  decisionId:ATTEMPT.test(input?.decisionId??'')?input.decisionId:null,
+  claimGeneration:1,authorized:false,taskPass:false,releasePass:false});
+const singleDenied=(input,reason)=>({...singleBase(input),state:'NOT_ADMITTED',
+  reason,claimAccepted:false,admitted:false,agentLaunch:false,replayFixture:false,
+  decision:null,decisionRecord:null,taskOutcome:null});
+async function readPullRequestHead(octokit,pullNumber){
+  const response=await octokit.rest.pulls.get({owner:OWNER,repo:REPO,
+    pull_number:pullNumber});
+  const data=response?.data;
+  if(!data||typeof data!=='object')return null;
+  return {state:data.state,headSha:data.head?.sha??null,baseRef:data.base?.ref??null};
+}
+async function readCombinedStatusState(octokit,commit){
+  const response=await octokit.rest.repos.getCombinedStatusForRef(
+    {owner:OWNER,repo:REPO,ref:commit});
+  const data=response?.data;
+  if(!data||typeof data!=='object')return null;
+  // Project the per-context statuses: the Host qualification gate requires
+  // each task-required named context terminal-success at this exact SHA —
+  // {state,totalCount} alone could not distinguish one unrelated green
+  // context from the required set (R103 review P1-03).
+  return {state:data.state,
+    totalCount:Array.isArray(data.statuses)?data.statuses.length:0,
+    contexts:Array.isArray(data.statuses)?data.statuses.map(x=>({
+      context:typeof x?.context==='string'?x.context:null,
+      state:typeof x?.state==='string'?x.state:null})):[]};
+}
+export async function reviewSingleCandidate(input){
+  const env=process.env;
+  const issueNumber=input?.issueNumber;
+  const binding=TASK_BINDINGS[issueNumber];
+  if(input?.sourceRef!==issueRefFor(issueNumber)||!binding||
+    binding.reviewerLane!=='single'||!SHA.test(input.sourceSha??'')||
+    !ATTEMPT.test(input.decisionId??'')||!ATTEMPT.test(input.attemptId??'')||
+    !SHA.test(input.candidateCommit??'')||!SHA.test(input.candidateTree??'')||
+    !SHA.test(input.repairCommit??'')||!SHA.test(input.repairTree??'')||
+    !SINGLE_REVIEW_DECISIONS.has(input.decision??'')||
+    !Number.isSafeInteger(input.prNumber)||input.prNumber<1||
+    input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA)
+    return singleDenied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+  if(env.TALLY_LOCAL_REPLAY==='1')
+    return {...singleBase(input),state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
+      decision:null,decisionRecord:null,taskOutcome:null};
+  // The Reviewer Claim is verified independently of the Builder Claim; both
+  // must be current, accepted and bound to the exact source SHA.
+  const reviewerCheck=await verifyAcceptedClaim(env,issueNumber,'reviewer');
+  if(!reviewerCheck.ok)return singleDenied(input,reviewerCheck.reason);
+  const builderCheck=await verifyAcceptedClaim(env,issueNumber,'builder');
+  if(!builderCheck.ok)return singleDenied(input,builderCheck.reason);
+  const builderClaim=claimEnv(env,issueNumber,'builder');
+  if(builderClaim.operatorId===reviewerCheck.claim.operatorId||
+    builderClaim.writerId===reviewerCheck.claim.writerId)
+    return singleDenied(input,'REVIEWER_SELF_ASSERTION');
+  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,
+    issueNumber,input.sourceSha);
+  if(!pairCheck.ok)return singleDenied(input,pairCheck.reason);
+  const writeSetCheck=await verifyFrozenWriteSet(env,issueNumber,input.sourceSha);
+  if(!writeSetCheck.ok)return singleDenied(input,writeSetCheck.reason);
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    return singleDenied(input,'LOCAL_AGENT_UNAVAILABLE');
+  const builderStorePath=env.TALLY_LOCAL_BUILDER_STORE_PATH;
+  const decisionStorePath=env.TALLY_LOCAL_REVIEW_STORE_PATH??env.TALLY_LOCAL_HOST_STORE_PATH;
+  if(typeof builderStorePath!=='string'||!builderStorePath||
+    typeof decisionStorePath!=='string'||!decisionStorePath)
+    return singleDenied(input,'REVIEW_HOST_STORE_PINS_REQUIRED');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const reviewer=reviewerCheck.claim;
+  try{
+    const observed=await createLocalCodexHost().reviewSingleCandidate({
+      issueRef:issueRefFor(issueNumber),sourceSha:input.sourceSha,
+      decisionId:input.decisionId,decision:input.decision,
+      attemptId:input.attemptId,candidateCommit:input.candidateCommit,
+      candidateTree:input.candidateTree,repairCommit:input.repairCommit,
+      repairTree:input.repairTree,prNumber:input.prNumber,
+      builderStorePath,decisionStorePath,
+      repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
+      gitPath:env.TALLY_GIT_PATH,
+      reviewRef:typeof input.reviewRef==='string'&&input.reviewRef?
+        input.reviewRef:null,
+      reviewer:{operatorId:reviewer.operatorId,writerId:reviewer.writerId,
+        writerLogin:reviewer.writerLogin,
+        claimRef:issueRefFor(issueNumber)+'#issuecomment-'+reviewer.commentId,
+        commentId:reviewer.commentId},
+      builder:{operatorId:builderClaim.operatorId,writerId:builderClaim.writerId},
+      githubReads:{readPullRequest:n=>readPullRequestHead(octokit,n),
+        readCombinedStatus:sha=>readCombinedStatusState(octokit,sha)}});
+    if(observed.state==='NOT_ADMITTED')return singleDenied(input,observed.reason);
+    if(observed.state==='REVIEW_DECISION_UNKNOWN')
+      return {...singleBase(input),state:observed.state,reason:observed.reason,
+        claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+        reconciliationRequired:true,decision:null,decisionRecord:null,taskOutcome:null};
+    const qualified=observed.taskOutcome?.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED';
+    return {...singleBase(input),state:observed.state,reason:observed.reason,
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+      decision:observed.decision,decisionRecord:observed.decisionRecord,
+      taskOutcome:observed.taskOutcome,taskPass:qualified===true,releasePass:false};
+  }catch{return singleDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
 }
 export async function publishReviewedCandidate(input){
   const env=process.env,token=env.TALLY_GITHUB_READ_TOKEN;
