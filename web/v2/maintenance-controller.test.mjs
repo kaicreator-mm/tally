@@ -391,3 +391,21 @@ test('real same-origin API reads canonical #437 only from injected Host',async()
     assert.equal(JSON.stringify(snap).includes('secret-token'),false);
   }finally{await app.close();}
 });
+
+
+test('canonical #437 load clears a previous hand-entered reviewed draft, never reuses its digest',async()=>{
+  const controller=make({host:{readMaintenanceDefects:async()=>canonicalReadback()}});
+  assert.equal((await act(controller,'report-defect',reportArgs())).status,'OK');
+  assert.equal((await act(controller,'review-candidate',{reviewer:'reviewer:ada'})).status,'OK');
+  assert.ok(controller.snapshot().candidate.digest);
+  assert.ok(controller.snapshot().review);
+  assert.equal((await act(controller,'load-defect')).status,'OK');
+  assert.equal(controller.snapshot().candidate.state,'PROPOSED');
+  assert.equal(controller.snapshot().candidate.digest,null);
+  assert.equal(controller.snapshot().review,null);
+  assert.equal((await act(controller,'publish-maintenance-issue')).reason,
+    'NO_CANDIDATE_TO_PUBLISH');
+  assert.equal((await act(controller,'report-defect',reportArgs())).status,'OK');
+  assert.equal(controller.snapshot().sourceDefectRead.status,'NOT_RUN',
+    'later hand-written drafts must not inherit canonical readback status');
+});
