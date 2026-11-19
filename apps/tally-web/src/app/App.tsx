@@ -10,9 +10,11 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
+import {submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
 import type {TasksResponse,DagResponse,ReleaseResponse,
-  SettingsResponse,MetadataResponse} from '../adapters/host.ts';
+  SettingsResponse,MetadataResponse,AgentAttemptsResponse,
+  ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
@@ -27,6 +29,7 @@ import type {TaskFilters,TaskRecord} from '../features/tasks/model.ts';
 import type {VersionDag} from '../features/dag/model.ts';
 import type {SettingsSnapshot} from '../features/settings/model.ts';
 import type {ReleaseReadiness} from '../features/release/model.ts';
+import type {AttemptRecord} from '../features/agents/model.ts';
 import type {VersionMetadata} from '../features/metadata/model.ts';
 
 export function App({route,onNavigate,inboxCount=0}:{route:Route;
@@ -93,10 +96,18 @@ function TasksRoute({versionId}:{versionId:string|null}){
   </>);
 }
 function AgentsRoute({versionId}:{versionId:string|null}){
-  // #264 E1: no agent/attempt provider is mounted in the read-only
-  // entrypoint — the panel must not claim a connected empty roster.
+  // #264 E1 R91: real observed runs of this installed server's /api/actions
+  // seam. Before any run the roster is honestly empty-UNKNOWN (never a
+  // claimed confirmed-empty history); after a real dispatch the attempt row
+  // shows the actual observed state with UNKNOWN telemetry preserved.
+  const attempts=useHost<AgentAttemptsResponse>('agent-attempts',
+    adapter=>adapter.agentAttempts(),[]);
+  if(attempts.state==='loading')return <Skeleton lines={6}/>;
+  if(attempts.state==='not_connected')
+    return <EmptyState title="NOT_CONNECTED" hint={attempts.reason??undefined}/>;
   return guard(versionId,
-    <AgentsPanel attempts={[]} connected={false}/>);
+    <AgentsPanel attempts={(attempts.data?.attempts??[]) as AttemptRecord[]}
+      connected={attempts.data?.connected===true}/>);
 }
 function DagRoute({versionId}:{versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
@@ -110,12 +121,45 @@ function DagRoute({versionId}:{versionId:string|null}){
 function ReleaseRoute({versionId}:{versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',
     adapter=>adapter.release(versionId??''),[versionId]);
+  // #264 E1 R91: the real J07c submission seam. The exact source SHA comes
+  // from the freshly read evidence snapshot; the operator action key comes
+  // from the server's ?actionKey= contract (same as the legacy consoles) —
+  // without it the server's same-origin/CSRF admission denies. Every outcome
+  // (DENIED with its real reason, UNKNOWN, transport failure) renders
+  // truthfully; nothing here fabricates a Release PASS.
+  const [lastAction,setLastAction]=useState<
+    {kind:string;status:string;reason:string|null}|null>(null);
+  const [submitting,setSubmitting]=useState(false);
+  const act=(kind:'merge'|'tag'|'publish')=>{
+    if(submitting)return;
+    setSubmitting(true);
+    const actionKey=new URLSearchParams(window.location.search)
+      .get('actionKey')??'';
+    void submitReleaseAction(actionKey,kind).then((result:
+      ReleaseActionResult&{transportError?:string})=>{
+      setLastAction({kind,status:result.status??'UNKNOWN',
+        reason:result.reason??result.transportError??null});
+    }).catch(error=>{
+      setLastAction({kind,status:'DENIED',
+        reason:error instanceof Error?error.message:String(error)});
+    }).finally(()=>setSubmitting(false));
+  };
   if(release.state==='loading')return <Skeleton lines={4}/>;
   const readiness=(release.data?.readiness??null) as ReleaseReadiness|null;
   return guard(versionId,
-    <ReleaseView readiness={readiness}
-      connected={release.data?.connected===true}
-      onAction={()=>{/* effects stay Host-owned; UI renders permit state */}}/>);
+    <>
+      <ReleaseView readiness={readiness}
+        connected={release.data?.connected===true}
+        onAction={operation=>act(operation)}/>
+      <p role="status" aria-live="polite" data-release-last-action={
+        lastAction?`${lastAction.kind}:${lastAction.status}`:undefined}
+        style={{margin:0,color:'var(--text-muted)',fontSize:13}}>
+        {lastAction
+          ?`${lastAction.kind} → ${lastAction.status}`+
+            (lastAction.reason?` — ${lastAction.reason}`:'')
+          :null}
+      </p>
+    </>);
 }
 function MetadataRoute({versionId}:{versionId:string|null}){
   // Both hooks run unconditionally (React hooks order); the frozen-roster

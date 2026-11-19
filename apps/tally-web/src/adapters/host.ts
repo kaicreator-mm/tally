@@ -71,11 +71,52 @@ export interface MetadataResponse{connected:boolean;reason?:string;model?:string
   versionId:string|null;
   attempts?:unknown[];reports?:unknown[];lineage?:unknown[];
   learnedOutcomes?:unknown[];note?:string;}
+/** #264 E1 R91 — real observed runs of THIS installed server's /api/actions
+ * seam. Structural twin of features/agents AttemptRecord; missing telemetry
+ * (duration/tokens/cost/model) is null (UNKNOWN), never zero. */
+export interface AgentAttemptRecord{
+  attemptId:string;taskIds:readonly string[];agentId:string;
+  state:'RUNNING'|'EXITED_OK'|'EXITED_FAIL'|'CANCELLED'|'UNKNOWN';
+  startedAt:string|null;terminatedAt:string|null;
+  durationMs:number|null;tokensIn:number|null;tokensOut:number|null;
+  costUsd:null;model:string|null;provider:string|null;
+  role?:'BUILDER'|'REVIEWER'|'REPAIR'|'VALIDATOR'|'ORCHESTRATOR'|'UNKNOWN'|null;
+}
+export interface AgentAttemptsResponse{connected:boolean;
+  attempts?:AgentAttemptRecord[];
+  coverage?:{attemptCount:number;observedRuntime:number;hostReceipts:number;
+    adsReports:number;metrics:string};}
+/** J07c real release evidence snapshot (the controller's observed state). */
+export interface ReleaseSnapshotResponse{
+  html:string;
+  snapshot:{status:string;sourceSha:string;targetSha?:string;
+    canMerge?:boolean;canTag?:boolean;canPublish?:boolean;releasePass?:boolean;
+    readiness?:{status:string;releasePass?:boolean;ciStatus?:string;
+      ciCoverage?:string}|null;};
+  lastResult?:{kind:string;status:string;reason?:string}|null;}
+export interface ReleaseActionResult{status:string;reason?:string;
+  releasePass?:boolean;authorized?:boolean;taskPass?:boolean;
+  mutationPerformed?:boolean;}
 
 async function getJson<T>(path:string):Promise<T>{
   const response=await fetch(path,{cache:'no-store'});
   if(!response.ok)throw new Error(`HOST_${response.status}`);
   return await response.json() as T;
+}
+/** #264 E1 R91: same-origin sealed POST. The operator action key comes from
+ * the installed server's ?actionKey= URL contract (same as the legacy
+ * consoles); without it the server's CSRF admission denies — never a second
+ * credential channel. */
+async function postJson<T>(path:string,actionKey:string,
+  payload:unknown):Promise<T>{
+  const response=await fetch(path,{method:'POST',cache:'no-store',
+    headers:{'content-type':'application/json',...(actionKey?
+      {'x-tally-action-key':actionKey}:{})},
+    body:JSON.stringify(payload)});
+  const result=await response.json() as T;
+  if(!response.ok&&!(result as {status?:string})?.status)
+    throw new Error(`HOST_${response.status}`);
+  return result;
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
@@ -88,7 +129,27 @@ export const hostAdapter=Object.freeze({
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
   metadata:(versionId:string)=>getJson<MetadataResponse>(
     `/api/v2/metadata?versionId=${encodeURIComponent(versionId)}`),
+  agentAttempts:()=>getJson<AgentAttemptsResponse>('/api/v2/agent-attempts'),
+  releaseSnapshot:()=>getJson<ReleaseSnapshotResponse>('/api/release/snapshot'),
 });
+/** #264 E1 R91: the real J07c submission flow. The controller admits only a
+ * sourceSha matching its pinned source, so the exact SHA comes from the
+ * freshly read evidence snapshot — never from a browser-typed field. */
+export async function submitReleaseAction(actionKey:string,
+  kind:'merge'|'tag'|'publish'):Promise<ReleaseActionResult|{
+  status:string;reason:string;transportError?:string}>{
+  try{
+    const snapshot=await getJson<ReleaseSnapshotResponse>('/api/release/snapshot');
+    const sourceSha=snapshot.snapshot?.sourceSha;
+    if(typeof sourceSha!=='string'||!/^[0-9a-f]{40}$/.test(sourceSha))
+      return {status:'DENIED',reason:'NATIVE_RELEASE_EVIDENCE_NOT_READ'};
+    return await postJson<ReleaseActionResult>('/api/release/actions',actionKey,
+      {kind,sourceSha});
+  }catch(error){
+    return {status:'DENIED',reason:'TRANSPORT_FAIL',
+      transportError:error instanceof Error?error.message:String(error)};
+  }
+}
 /** Wrap any adapter call: transport failure degrades to NOT_CONNECTED with
  * the model name preserved — the UI never mistakes an outage for emptiness. */
 export async function orNotConnected<T>(model:string,

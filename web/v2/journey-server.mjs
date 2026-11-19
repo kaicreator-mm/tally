@@ -607,6 +607,15 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         return send(200,'application/json',json(await readV2Model('dag','dag',{versionId})));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/release'){
+        // #264 E1 R91: when the mounted Host facade supplies a real release
+        // evidence provider it wins; the advisory projection stays the
+        // documented default only for an unmounted facade (never a raw
+        // fallback over a mounted provider).
+        if(typeof v2ReadModelHost?.release==='function'){
+          const versionId=url.searchParams.get('versionId');
+          return send(200,'application/json',
+            json(await readV2Model('release','release',{versionId})));
+        }
         return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
@@ -615,6 +624,43 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname==='/api/v2/metadata'){
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',json(await readV2Model('metadata','metadata',{versionId})));
+      }
+      // #264 E1 R91: real installed agent/attempt read model — the MOST
+      // RECENT observed run of THIS server's actual /api/actions seam (the
+      // controller's sanctioned run seam; the controller exposes only the
+      // latest entry, so earlier runs stay visible in the legacy console
+      // snapshot, not here). No fabricated attempt ids, tokens or cost:
+      // missing telemetry stays null (UNKNOWN), and before any real run the
+      // roster is empty with connected:true (records UNKNOWN, not a claimed
+      // confirmed-empty history). A timeout renders EXITED_FAIL like the
+      // shared AttemptRecord vocabulary allows; the API result keeps the
+      // timeout distinction.
+      if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
+        const snapshot=controller.snapshot();
+        const latest=snapshot.result;
+        // Only a REAL execution (observedAt + evidenceDir, i.e. an actual
+        // spawn of the consumer, including a spawn that died in 'error') is
+        // an attempt row. The R90 fail-closed stub and the unmounted review
+        // seam carry neither marker, so they never render as attempts.
+        const executed=Boolean(latest&&latest.observedAt&&latest.evidenceDir);
+        const dispatchedIssue=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER);
+        const taskIds=Number.isSafeInteger(dispatchedIssue)&&dispatchedIssue>0
+          ?[String(dispatchedIssue)]
+          :snapshot.tasks
+            .filter(task=>task.agentAttemptState!=='NOT_RUN')
+            .map(task=>String(task.issue));
+        const attempts=executed?[{attemptId:`attempt:${latest.kind}:${latest.observedAt}`,
+          taskIds,agentId:'local-codex-windows',
+          state:latest.status==='PASS'?'EXITED_OK':
+            latest.status==='FAIL'?'EXITED_FAIL':'UNKNOWN',
+          startedAt:null,terminatedAt:latest.observedAt,
+          durationMs:null,tokensIn:null,tokensOut:null,costUsd:null,
+          model:null,provider:'codex',
+          role:latest.kind==='start'?'BUILDER':
+            latest.kind==='review-repair'?'REVIEWER':'UNKNOWN'}]:[];
+        return send(200,'application/json',json({connected:true,attempts,
+          coverage:{attemptCount:attempts.length,observedRuntime:attempts.length,
+            hostReceipts:0,adsReports:0,metrics:'SERVER_OBSERVED_RUNS_ONLY'}}));
       }
       // Feature gate: /app serves the new shell bundle (built by
       // apps/tally-web); /diagnostics keeps the legacy test console; / picks
