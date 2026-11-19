@@ -21,6 +21,7 @@ package main
 import (
 	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 	"tally/runtimes/codex"
 	"tally/runtimes/dsh"
 	"tally/runtimes/fake"
+	"tally/runtimes/grok"
 )
 
 // runtimeBuilder 按 worker 共享配置面构造一个 runtime 适配器。builder 只在
@@ -96,6 +98,36 @@ func newRuntimeRegistry() *runtimeRegistry {
 			}
 		}
 		return rt, nil
+	})
+	// v2.1 provider candidate canary:xAI 官方 Grok CLI 适配器缺省禁用 ——
+	// runtime=grok 且 canary 开关(TALLY_GROK_CANARY=1)且显式二进制路径三者
+	// 同时出现才可构造(fail-closed 同 DSH P4-06:选择失败绝不开 runtime 会话、
+	// 绝不建 worktree、绝不落 run 事实)。认证 XAI_API_KEY 只经本注册边界从
+	// worker 进程 env 透传进适配器 Config.Env(grok spawn 是白名单 env,不继承
+	// owner 环境),值绝不落盘、绝不进日志。canary 关闭时 Codex/fake 缺省面
+	// 零影响。
+	r.register(grok.DescriptorName, func(cfg v13Config) (agentruntime.Runtime, error) {
+		if !cfg.GrokCanary {
+			return nil, fmt.Errorf("grok 为 v2.1 provider candidate canary 适配器,默认禁用:需 TALLY_GROK_CANARY=1 显式启用")
+		}
+		if strings.TrimSpace(cfg.GrokBin) == "" {
+			return nil, fmt.Errorf("grok canary 需要显式二进制路径 TALLY_GROK_BIN(npm dist-tag latest 已观测失准,不做隐式发现)")
+		}
+		gcfg := grok.Config{
+			BinPath:        cfg.GrokBin,
+			Model:          cfg.GrokModel,
+			PermissionMode: cfg.GrokPermissionMode,
+			PinnedVersion:  grok.PinnedGrokVersion,
+		}
+		if key := os.Getenv("XAI_API_KEY"); key != "" {
+			gcfg.Env = map[string]string{"XAI_API_KEY": key}
+		}
+		// 最早闸:权限枚举等配置面在此拒绝(同 DSH P4-06 AC);二进制存在性
+		// 与钉版身份归 Start 的 fail-closed 闸。
+		if err := gcfg.Validate(); err != nil {
+			return nil, fmt.Errorf("grok 配置无效: %w", err)
+		}
+		return grok.New(gcfg), nil
 	})
 	return r
 }
