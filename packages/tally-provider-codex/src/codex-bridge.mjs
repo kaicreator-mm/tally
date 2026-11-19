@@ -210,7 +210,8 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
     attemptConfig.signal = controller.signal;
     inflight.set(request.attemptId, {taskId: request.taskId,
       sourceSha: request.sourceSha, controller});
-    replayConfigs.set(request.attemptId, attemptConfig);
+    replayConfigs.set(request.attemptId, {config: attemptConfig,
+      taskId: request.taskId});
     let launched = false;
     try {
       let host;
@@ -271,27 +272,32 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
   }
 
   /**
-   * Reconcile replays through host runAttempt, which is read-only for any
-   * attempt that already has a durable record and never relaunches one. The
-   * bridge therefore replays only configs it can vouch for: the one recorded
-   * when execute launched the attempt here, or one explicitly supplied by the
-   * trusted Host in context.attemptConfig (pin identity is re-checked). With
-   * neither, the bridge refuses to synthesize a launch-capable config and
-   * fails closed to UNKNOWN instead of risking a launch side effect.
+   * Reconcile is STRICTLY READ-ONLY (R106 ABI review P1 / R107 repair 1):
+   * runAttempt can still LAUNCH when no durable row exists, so it may never
+   * be called from reconcile. The bridge uses the host's dedicated
+   * readAttemptRecord port — same state vocabulary, zero side effects — and
+   * answers UNKNOWN when the port is absent (older host) or when no
+   * vouchered config names the store to read (the one recorded when execute
+   * launched here, or one supplied by the trusted Host with the exact pin).
    */
   async function reconcile(attempt, context) {
     if (!attempt || typeof attempt !== 'object' ||
         typeof attempt.attemptId !== 'string' || typeof attempt.sourceSha !== 'string')
       return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
         reason: BRIDGE_REASONS.ATTEMPT_PIN_INVALID, evidence: null});
-    let attemptConfig = replayConfigs.get(attempt.attemptId) ?? null;
-    if (attemptConfig && attemptConfig.sourceSha !== attempt.sourceSha)
-      return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
-        reason: BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH, evidence: null});
+    let tracked = replayConfigs.get(attempt.attemptId) ?? null;
+    if (tracked) {
+      if (tracked.config.sourceSha !== attempt.sourceSha ||
+          tracked.taskId !== attempt.taskId)
+        return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
+          reason: BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH, evidence: null});
+    }
+    let attemptConfig = tracked?.config ?? null;
     if (!attemptConfig) {
       const supplied = context?.attemptConfig;
       if (supplied && typeof supplied === 'object' &&
-          supplied.attemptId === attempt.attemptId && supplied.sourceSha === attempt.sourceSha)
+          supplied.attemptId === attempt.attemptId &&
+          supplied.sourceSha === attempt.sourceSha)
         attemptConfig = supplied;
     }
     if (!attemptConfig)
@@ -301,8 +307,12 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
     try { host = await loadHostOnce(); }
     catch { return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
       reason: BRIDGE_REASONS.HOST_MODULE_UNAVAILABLE, evidence: null}); }
+    if (typeof host.readAttemptRecord !== 'function')
+      return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
+        reason: BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE, evidence: null});
     try {
-      return mapAttemptOutcome('reconcile', await host.runAttempt(attemptConfig));
+      return mapAttemptOutcome('reconcile',
+        await host.readAttemptRecord(attemptConfig));
     } catch (error) {
       return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
         reason: sanitizeReason(error?.code, BRIDGE_REASONS.HOST_EXECUTION_ERROR),

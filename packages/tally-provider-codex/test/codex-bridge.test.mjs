@@ -13,8 +13,9 @@ const readyResult = {state: 'LOCAL_CANDIDATE_READY', reason: 'REAL_CODEX_CANDIDA
   agentLaunch: true, candidateTree: 'b'.repeat(40), candidateCommit: 'c'.repeat(40),
   candidateRef: 'refs/tally-candidates/attempt:264:r1', process: exitedProcess};
 
-function fakeHostModule({runAttempt, probeProvider} = {}) {
-  const calls = {created: [], runAttempt: [], probeProvider: []};
+function fakeHostModule({runAttempt, probeProvider, readAttemptRecord} = {}) {
+  const calls = {created: [], runAttempt: [], probeProvider: [],
+    readAttemptRecord: []};
   const instance = {
     runAttempt: async config => {
       calls.runAttempt.push(config);
@@ -25,6 +26,11 @@ function fakeHostModule({runAttempt, probeProvider} = {}) {
       return probeProvider ? probeProvider(config) : {available: true, provider: 'codex-cli'};
     },
   };
+  if (readAttemptRecord !== null)
+    instance.readAttemptRecord = async config => {
+      calls.readAttemptRecord.push(config);
+      return readAttemptRecord ? readAttemptRecord(config, calls) : readyResult;
+    };
   return {module: {createLocalCodexHost: deps => {
     calls.created.push(deps);
     return instance;
@@ -362,56 +368,73 @@ test('cancel with a mismatched pin or malformed pin fails closed without abortin
   assert.equal((await pending).state, 'CANCELLED');
 });
 
-test('reconcile replays through the host with the exact recorded attempt config', async () => {
+test('reconcile replays read-only with the exact recorded attempt config', async () => {
   const results = [readyResult, {state: 'LOCAL_ATTEMPT_UNKNOWN',
     reason: 'ATTEMPT_STATUS_UNKNOWN', agentLaunch: true,
     process: {status: 'RUNNING', pid: 4242, startedAt: '2026-01-01T00:00:00.000Z'}}];
-  let call = 0;
-  const fake = fakeHostModule({runAttempt: async () => results[Math.min(call++, results.length - 1)]});
+  const fake = fakeHostModule({readAttemptRecord: async () => results[1]});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
   const reconciled = await bridge.reconcile(pin(), {});
   assert.deepEqual([reconciled.state, reconciled.reason],
     ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
-  assert.equal(fake.calls.runAttempt.length, 0);
+  assert.equal(fake.calls.readAttemptRecord.length, 0);
   const completed = await bridge.execute(request(), {});
   assert.equal(completed.state, 'COMPLETED');
   const running = await bridge.reconcile(pin(), {});
   assert.deepEqual([running.state, running.reason], ['RUNNING', 'ATTEMPT_STATUS_UNKNOWN']);
-  assert.equal(fake.calls.runAttempt.length, 2);
-  assert.equal(fake.calls.runAttempt[1].attemptId, 'attempt:264:r1');
-  assert.deepEqual(fake.calls.runAttempt[1], fake.calls.runAttempt[0]);
+  // R106 P1 regression: reconcile reads the durable record only — the
+  // launch-capable runAttempt must never be called from reconcile.
+  assert.equal(fake.calls.runAttempt.length, 1,
+    'reconcile must never call the launch-capable runAttempt');
+  assert.equal(fake.calls.readAttemptRecord.length, 1);
+  assert.equal(fake.calls.readAttemptRecord[0].attemptId, 'attempt:264:r1');
+  assert.deepEqual(fake.calls.readAttemptRecord[0], fake.calls.runAttempt[0]);
   const failed = await bridge.reconcile(pin({sourceSha: 'f'.repeat(40)}), {});
   assert.deepEqual([failed.state, failed.reason],
     ['UNKNOWN', BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH]);
+  const wrongTask = await bridge.reconcile(pin({taskId: '999'}), {});
+  assert.deepEqual([wrongTask.state, wrongTask.reason],
+    ['UNKNOWN', BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH]);
+});
+
+test('reconcile stays UNKNOWN on hosts without the read-only port (no runAttempt fallback)', async () => {
+  const fake = fakeHostModule({readAttemptRecord: null});
+  const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
+  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40,
+    worktreePath: 'C:\\tally\\wt\\r1'};
+  const legacy = await bridge.reconcile(pin(), {attemptConfig});
+  assert.deepEqual([legacy.state, legacy.reason],
+    ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
+  assert.equal(fake.calls.runAttempt.length, 0,
+    'a legacy host must never be probed through launch-capable runAttempt');
 });
 
 test('reconcile accepts an attemptConfig supplied by the trusted Host context', async () => {
-  const fake = fakeHostModule({runAttempt: async () => readyResult});
+  const fake = fakeHostModule({readAttemptRecord: async () => readyResult});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
   const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40,
     worktreePath: 'C:\\tally\\wt\\r1'};
   const completed = await bridge.reconcile(pin(), {attemptConfig});
   assert.equal(completed.state, 'COMPLETED');
-  assert.equal(fake.calls.runAttempt.length, 1);
-  assert.equal(fake.calls.runAttempt[0], attemptConfig);
+  assert.equal(fake.calls.readAttemptRecord.length, 1);
+  assert.equal(fake.calls.runAttempt.length, 0);
+  assert.deepEqual(fake.calls.readAttemptRecord[0], attemptConfig);
   const wrongSha = await bridge.reconcile(pin(), {attemptConfig:
     {...attemptConfig, sourceSha: 'e'.repeat(40)}});
   assert.deepEqual([wrongSha.state, wrongSha.reason],
     ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
-  assert.equal(fake.calls.runAttempt.length, 1);
+  assert.equal(fake.calls.readAttemptRecord.length, 1);
 });
 
 test('reconcile replay of a terminal failure maps FAILED; NOT_ADMITTED replays as UNKNOWN', async () => {
-  const results = [readyResult, {state: 'LOCAL_ATTEMPT_FAILED',
-    reason: 'ATTEMPT_PROCESS_FAILED', agentLaunch: true, process: exitedProcess}];
-  let call = 0;
-  const fake = fakeHostModule({runAttempt: async () => results[Math.min(call++, results.length - 1)]});
+  const fake = fakeHostModule({readAttemptRecord: async () => ({state: 'LOCAL_ATTEMPT_FAILED',
+    reason: 'ATTEMPT_PROCESS_FAILED', agentLaunch: true, process: exitedProcess})});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
   const executed = await bridge.execute(request(), {});
   assert.equal(executed.state, 'COMPLETED');
   const failed = await bridge.reconcile(pin(), {});
   assert.deepEqual([failed.state, failed.reason], ['FAILED', 'ATTEMPT_PROCESS_FAILED']);
-  const denied = fakeHostModule({runAttempt: async () => ({state: 'NOT_ADMITTED',
+  const denied = fakeHostModule({readAttemptRecord: async () => ({state: 'NOT_ADMITTED',
     reason: 'CANDIDATE_WRITE_GRANT_OVERLAP', agentLaunch: false, process: null})});
   const bridge2 = createCodexBridge({loadHost: async () => denied.module,
     config: bridgeConfig});
