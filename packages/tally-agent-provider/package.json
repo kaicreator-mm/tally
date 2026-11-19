@@ -3,11 +3,21 @@
   "version": "0.0.0-v2.1-candidate",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "exports": {
     ".": {
       "types": "./src/index.d.mts",
       "default": "./src/index.mjs"
     }
   },
-  "scripts": {"test": "node --test test/*.test.mjs"}
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "test:types": "tsc --noEmit --strict --module esnext --moduleResolution bundler --target es2022 --lib es2022,dom test/types-smoke.ts",
+    "verify": "npm run test:types && npm test"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3"
+  }
 }

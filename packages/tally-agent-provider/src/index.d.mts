@@ -35,10 +35,11 @@ export interface AgentProvider {
   readonly id: AgentProviderId;
   readonly contractVersion: 1;
   readonly capabilities: readonly string[];
-  probe(context?: unknown): Promise<ProviderObservation>;
+  /** All four operations share the Host-supplied execution context shape. */
+  probe(context?: ProviderExecutionContext): Promise<ProviderObservation>;
   execute(request: ProviderExecutionRequest, context: ProviderExecutionContext): Promise<ProviderObservation>;
-  cancel(attempt: ProviderAttemptPin, context?: unknown): Promise<ProviderObservation>;
-  reconcile(attempt: ProviderAttemptPin, context?: unknown): Promise<ProviderObservation>;
+  cancel(attempt: ProviderAttemptPin, context?: ProviderExecutionContext): Promise<ProviderObservation>;
+  reconcile(attempt: ProviderAttemptPin, context?: ProviderExecutionContext): Promise<ProviderObservation>;
 }
 export interface ProviderRegistry {
   list(): readonly Pick<AgentProvider, 'id' | 'contractVersion' | 'capabilities'>[];
@@ -49,6 +50,8 @@ export interface ProviderRegistry {
   }): AgentProvider;
 }
 export function normalizeProviderObservation(operation: ProviderOperation, observation: unknown): Readonly<Required<ProviderObservation>>;
+/** Validates binding fields (review P1-1) and returns a frozen shallow copy. */
+export function validateProviderExecutionRequest(request: unknown): Readonly<ProviderExecutionRequest>;
 export function defineAgentProvider(provider: AgentProvider): AgentProvider;
 export function createProviderAttemptPin(pin: ProviderAttemptPin): ProviderAttemptPin;
 export function createAgentProviderRegistry(providers: readonly AgentProvider[], options?: {defaultProviderId?: string}): ProviderRegistry;

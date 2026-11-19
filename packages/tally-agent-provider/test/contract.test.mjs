@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   AGENT_PROVIDER_CONTRACT_VERSION, defineAgentProvider,
   createAgentProviderRegistry, createProviderAttemptPin,
-  normalizeProviderObservation,
+  normalizeProviderObservation, validateProviderExecutionRequest,
 } from '../src/index.mjs';
 
 const good = (id='codex') => ({id, contractVersion: 1, capabilities: [],
@@ -14,14 +14,16 @@ const good = (id='codex') => ({id, contractVersion: 1, capabilities: [],
 });
 const pin = (providerId='codex') => createProviderAttemptPin({
   taskId:'264',attemptId:'attempt:264:r1',sourceSha:'a'.repeat(40),providerId});
+const request = (over={}) => ({taskId:'264',attemptId:'attempt:264:r1',
+  sourceSha:'a'.repeat(40),prompt:'do the work',worktreePath:'C:/tmp/wt',...over});
 
 test('version and all four operations form one mandatory contract', async () => {
   assert.equal(AGENT_PROVIDER_CONTRACT_VERSION,1);
   const provider=defineAgentProvider(good());
   assert.deepEqual(await provider.probe(),{state:'AVAILABLE',reason:null,evidence:null});
-  assert.equal((await provider.execute()).state,'COMPLETED');
-  assert.equal((await provider.cancel()).state,'CANCEL_REQUESTED');
-  assert.equal((await provider.reconcile()).state,'UNKNOWN');
+  assert.equal((await provider.execute(request())).state,'COMPLETED');
+  assert.equal((await provider.cancel(pin())).state,'CANCEL_REQUESTED');
+  assert.equal((await provider.reconcile(pin())).state,'UNKNOWN');
   assert.throws(()=>defineAgentProvider({...good(),cancel:null}),/PROVIDER_OPERATION_MISSING_CANCEL/);
   assert.throws(()=>defineAgentProvider({...good(),contractVersion:2}),/UNSUPPORTED/);
 });
@@ -49,7 +51,7 @@ test('provider observations cannot assert authority or a Task PASS', async () =>
       /UNEXPECTED_FIELD/);
   }
   const liar=defineAgentProvider({...good(),execute:async()=>({state:'COMPLETED',taskPass:true})});
-  await assert.rejects(()=>liar.execute(),/UNEXPECTED_FIELD/);
+  await assert.rejects(()=>liar.execute(request()),/UNEXPECTED_FIELD/);
   assert.throws(()=>normalizeProviderObservation('execute',{state:'UNKNOWN'}),/UNKNOWN_REASON_REQUIRED/);
   assert.throws(()=>normalizeProviderObservation('execute',{state:'SUCCESS'}),/STATE_INVALID/);
   assert.throws(()=>normalizeProviderObservation('probe',{state:'FAILED'}),/STATE_INVALID/);
@@ -63,8 +65,43 @@ test('each installed adapter remains independent and does not create a scheduler
   const registry=createAgentProviderRegistry([provider('codex'),provider('zcode')]);
   const tasks=[{taskId:'a',providerId:'codex'},{taskId:'b',providerId:'zcode'}];
   const outcomes=await Promise.all(tasks.map(async t=>
-    registry.resolve({providerId:t.providerId,enabledProviderIds:['codex','zcode']}).execute(t)));
+    registry.resolve({providerId:t.providerId,enabledProviderIds:['codex','zcode']})
+      .execute(request({taskId:t.taskId}))));
   assert.deepEqual(seen,[{id:'codex',taskId:'a'},{id:'zcode',taskId:'b'}]);
   assert.deepEqual(outcomes.map(x=>x.state),['COMPLETED','COMPLETED']);
   assert.equal('taskPass' in outcomes[0],false);
+});
+
+test('binding inputs are validated at the provider boundary (review P1-1)', async () => {
+  // A valid request passes validation and comes back frozen.
+  const validated=validateProviderExecutionRequest(request({timeoutMs:5000}));
+  assert.equal(Object.isFrozen(validated),true);
+  assert.equal(validated.taskId,'264');
+  // Malformed bindings are refused with typed reasons, never silently executed.
+  let called=false;
+  const spy=defineAgentProvider({...good(),
+    execute:async()=>{called=true;return {state:'COMPLETED'};}});
+  for (const [name,over] of [
+    ['empty taskId',{taskId:''}],
+    ['empty attemptId',{attemptId:''}],
+    ['garbage sourceSha',{sourceSha:'garbage'}],
+    ['non-string prompt',{prompt:42}],
+    ['empty worktreePath',{worktreePath:''}],
+    ['non-positive timeoutMs',{timeoutMs:0}],
+  ]) {
+    await assert.rejects(()=>spy.execute(request(over)),
+      {name:'TypeError'},'must reject '+name);
+    assert.equal(called,false,'adapter must not run for '+name);
+  }
+  await assert.rejects(()=>spy.execute(undefined),/PROVIDER_REQUEST_INVALID/);
+  await assert.rejects(()=>spy.execute(null),/PROVIDER_REQUEST_INVALID/);
+  // cancel/reconcile pin shapes are validated with the same discipline.
+  let cancelCalled=false;
+  const cancellable=defineAgentProvider({...good(),
+    cancel:async()=>{cancelCalled=true;return {state:'NOT_RUNNING'};}});
+  await assert.rejects(()=>cancellable.cancel({providerId:'codex',
+    taskId:'264',attemptId:'attempt:264:r1',sourceSha:'bad'}),/SOURCE_SHA/);
+  await assert.rejects(()=>cancellable.cancel(undefined),/PROVIDER_ATTEMPT_PIN_INVALID/);
+  assert.equal(cancelCalled,false);
+  assert.equal((await cancellable.cancel(pin())).state,'NOT_RUNNING');
 });

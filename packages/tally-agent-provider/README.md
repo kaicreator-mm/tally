@@ -15,6 +15,27 @@ independent Git candidate creation/readback, Review, CI and Task Outcome.
 A Provider `COMPLETED` result is **not** Task PASS or PR/Release authority.
 The registry is an in-memory lookup, not a scheduler or execution journal.
 
+## Review status
+
+An independent delta review (recorded on PR #474) found **P0=0, P1=3**, all
+fixed in this branch:
+
+- `validateProviderExecutionRequest` + boundary validation in the
+  `defineAgentProvider` wrapper: `execute` requests and `cancel`/`reconcile`
+  attempt pins carry the same Task/Attempt/sourceSha binding discipline as
+  `createProviderAttemptPin`, and adapters receive frozen copies.
+- `probe`/`cancel`/`reconcile` contexts are typed
+  `ProviderExecutionContext` (was `unknown`), so all six adapters share one
+  context shape under `contractVersion:1`.
+- `npm run verify` chains `test:types` (tsc strict compile of
+  `test/types-smoke.ts`) with the contract tests, making the TS/ESM proof
+  repeatable (`typescript` is a devDependency).
+
+Deferred (reviewed, deliberately not fixed here): the P2 list from the same
+review, and CI lane wiring — `.woodpecker/` is inside the active R104
+exclusive write set, so per-package CI coverage is an explicit commitment for
+the integration Writer (issue #473 step F), not silently assumed.
+
 ## Public interface
 
 `AgentProvider` has `id`, `contractVersion:1`, declared `capabilities`, and

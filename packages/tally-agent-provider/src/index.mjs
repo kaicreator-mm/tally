@@ -19,6 +19,41 @@ const RESULT_KEYS = new Set(['state', 'reason', 'evidence']);
 
 function fail(reason) { throw new TypeError(reason); }
 function validId(value) { return typeof value === 'string' && ID.test(value); }
+const TASK_OR_ATTEMPT = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+
+/** Shared Task/Attempt/sourceSha binding discipline (pins and requests). */
+function validateBindingFields({taskId, attemptId, sourceSha} = {}) {
+  if (!TASK_OR_ATTEMPT.test(taskId ?? '')) fail('PROVIDER_TASK_ID_INVALID');
+  if (!TASK_OR_ATTEMPT.test(attemptId ?? '')) fail('PROVIDER_ATTEMPT_ID_INVALID');
+  if (typeof sourceSha !== 'string' || !SHA.test(sourceSha))
+    fail('PROVIDER_SOURCE_SHA_INVALID');
+}
+
+/** Pin-shaped identity: binding fields plus the selected provider id. */
+function validatePinFields(pin = {}) {
+  if (!validId(pin.providerId)) fail('PROVIDER_ID_INVALID');
+  validateBindingFields(pin);
+}
+
+/**
+ * Host-supplied execution requests carry the same Task/Attempt/sourceSha
+ * binding discipline as pins: validated at the provider boundary so a
+ * malformed binding can never flow silently into adapter execution
+ * (independent review P1-1). Returns a frozen shallow copy.
+ */
+export function validateProviderExecutionRequest(request) {
+  if (!request || typeof request !== 'object' || Array.isArray(request))
+    fail('PROVIDER_REQUEST_INVALID');
+  validateBindingFields(request);
+  const {prompt, worktreePath, timeoutMs} = request;
+  if (typeof prompt !== 'string') fail('PROVIDER_PROMPT_INVALID');
+  if (typeof worktreePath !== 'string' || worktreePath.length === 0 ||
+      worktreePath.length > 1024) fail('PROVIDER_WORKTREE_PATH_INVALID');
+  if (timeoutMs !== undefined &&
+      (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0))
+    fail('PROVIDER_TIMEOUT_INVALID');
+  return Object.freeze({...request});
+}
 
 /** A Provider result is an observation, NEVER a Task/Review/Release fact. */
 export function normalizeProviderObservation(operation, observation) {
@@ -56,10 +91,23 @@ export function defineAgentProvider(specification) {
   for (const operation of Object.keys(STATES))
     if (typeof specification[operation] !== 'function')
       fail('PROVIDER_OPERATION_MISSING_' + operation.toUpperCase());
+  // Inputs are validated with the same rigour as outputs (review P1-1):
+  // execute receives a frozen validated request; cancel/reconcile receive a
+  // frozen pin-shaped attempt identity. Adapters never see unvalidated
+  // bindings, and cannot mutate Host-owned request objects.
   const operations = Object.fromEntries(Object.keys(STATES).map(operation => [
     operation,
-    async (...args) => normalizeProviderObservation(
-      operation, await specification[operation](...args)),
+    async (...args) => {
+      if (operation === 'execute') args[0] = validateProviderExecutionRequest(args[0]);
+      if (operation === 'cancel' || operation === 'reconcile') {
+        if (!args[0] || typeof args[0] !== 'object' || Array.isArray(args[0]))
+          fail('PROVIDER_ATTEMPT_PIN_INVALID');
+        validatePinFields(args[0]);
+        args[0] = Object.freeze({...args[0]});
+      }
+      return normalizeProviderObservation(
+        operation, await specification[operation](...args));
+    },
   ]));
   return Object.freeze({id: specification.id,
     contractVersion: AGENT_PROVIDER_CONTRACT_VERSION,
@@ -68,13 +116,7 @@ export function defineAgentProvider(specification) {
 
 /** Selection pins do not grant admission; the selected Host validates them. */
 export function createProviderAttemptPin({taskId, attemptId, sourceSha, providerId}) {
-  if (!validId(providerId)) fail('PROVIDER_ID_INVALID');
-  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(taskId ?? ''))
-    fail('PROVIDER_TASK_ID_INVALID');
-  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(attemptId ?? ''))
-    fail('PROVIDER_ATTEMPT_ID_INVALID');
-  if (typeof sourceSha !== 'string' || !SHA.test(sourceSha))
-    fail('PROVIDER_SOURCE_SHA_INVALID');
+  validatePinFields({providerId, taskId, attemptId, sourceSha});
   return Object.freeze({taskId, attemptId, sourceSha, providerId});
 }
 
