@@ -124,45 +124,43 @@ Verdict: `UPLOAD_OFF_LIVE_VERIFIED`. This upgrades the overlay from
 "source-derived" to live-verified, and quantifies the outbound data the
 v2.1 Host must not leak.
 
-### 5.3 REAL Windows-principal verification — PARTIAL, then ENV-BLOCKED
+### 5.3 REAL Windows-principal verification — PASS (after interactive repair)
 
 Machine: `nilar`, builder principal `nilar\codexsandboxonline`
 (S-…-1004), verifier S-…-1003, Codex CLI 0.166.0 elevated backend.
 
-Verified live before the block:
+Findings and repairs along the way (all machine-level, recorded):
 
-- **probe under the confined principal**: `dsh --version` executed inside
-  the Codex Windows sandbox (elevated, least-privilege builder) matched the
-  pinned `0.2.2-rc.5` exactly (`available:true`) — the version gate works
-  under real confinement;
-- **confinement matrix fail-closed on a real finding**: the new
-  `OPERATOR_DSH` check (denied-read of the operator's `~/.dsh`, absent from
-  the Codex host's list) refused the run because `C:\Users\15549\.dsh`
-  carried a leftover explicit ACE `Nilar\CodexSandboxUsers:(OI)(CI)(RX)`
-  (spike-era) — the confined builder could enumerate operator DSH state.
-  Machine hardening applied (reversible): that group ACE was removed from
-  `~/.dsh` (`icacls /remove`; the parallel ACE on `~/.codex` was left
-  untouched as the Codex baseline, whose `auth.json` carries its own
-  file-level builder DENY).
+- The new `OPERATOR_DSH` denied-read check initially refused the run on a
+  real finding: `C:\Users\15549\.dsh` carried an explicit
+  `Nilar\CodexSandboxUsers:(OI)(CI)(RX)` ACE, letting the confined builder
+  enumerate operator DSH state. Removing the ACE proved non-durable — the
+  authorized elevated setup re-run **re-granted** it — so the fix mirrors
+  the Codex baseline's own technique (its `auth.json` carries a builder
+  file-level DENY): `icacls ~\.dsh /deny *S-…-1004:(OI)(CI)(R)`. A DENY
+  always wins over the group grant and survives setup re-runs.
+- The elevated orchestrator mid-round required the documented one-time
+  interactive repair (`run-elevated-setup.ps1` via UAC, operator-approved);
+  alternatives were verified contract-ineligible live: `unelevated` runs as
+  the operator principal (`nilar\15549`), `mxc` runs with Administrators.
 
-Blocked remainder (honest status): the follow-up full attempt could not
-re-enter the sandbox — the elevated orchestrator's setup helper now fails
-with `orchestrator_helper_launch_canceled: ShellExecuteExW failed … 1223`
-(UAC cancelled; the first successful round consumed a live authorization).
-Alternatives are contract-ineligible, verified live: `unelevated` runs as
-the operator principal (`nilar\15549`, not confined), `mxc` runs with the
-Administrators group. Repair is the documented idempotent one-time setup
-(skill codex-windows-sandbox):
+Final receipt (`smoke/run-dsh-windows-confinement.mjs`, `PASS: true`):
 
-```
-powershell -NoProfile -Command "Start-Process powershell -ArgumentList \
-  '-NoProfile','-ExecutionPolicy','Bypass','-File', \
-  'C:\Users\15549\.agents\skills\codex-windows-sandbox\scripts\run-elevated-setup.ps1' \
-  -Verb RunAs -Wait"
-```
+- Stage 1 probe: `dsh --version` **inside the sandbox, as the confined
+  builder** — `available:true`, observed `0.2.2-rc.5` == pinned;
+- Stage 1 confinement matrix: `verified:true` (principal, SID, no-admin,
+  verifier-distinct, hidden-fixture deny, operator `~/.dsh` + `~/.ssh`
+  denied reads, GCM refused, remote-write refused);
+- Stage 2 full confined attempt: `LOCAL_CANDIDATE_READY /
+  REAL_DSH_CANDIDATE_RECORDED`, one real model turn via the Host sandbox
+  wrapper (`sandboxWrapper: HOST_SANDBOX`), process exited 0 under
+  `builderPrincipal: nilar\codexsandboxonline`; the real model wrote exactly
+  `packages/provider-dsh/DSH_CANDIDATE_NOTE.md` inside the disposable
+  worktree; the Host-created candidate tree/commit verified by independent
+  git readback (`parent` == source SHA, single path); the durable record
+  contains the 24-key env allowlist and **no credential material**.
 
-then re-run `smoke/run-dsh-windows-confinement.mjs` (shipped in this
-package; stages: sandbox probe → full confinement matrix on a scratch
-worktree → one real confined headless attempt with candidate finalize and
-independent readback). Status until then: `REAL_DSH_WINDOWS_CONFINEMENT =
-ENV-BLOCKED (interactive admin repair pending; partial live evidence above)`.
+Honest scope: this proves the provider under real Windows principal
+confinement at Host level. It is still NOT a Task/Review/Release PASS and
+not a v2 installed-path execution (the package remains default-off, outside
+#392's single-provider freeze).

@@ -141,3 +141,18 @@ TALLY_DSH_BIN=/tmp/dsh-smoke/node_modules/@deepseek-ai/dsh/lib/bin.js \
 
 Prints a JSON receipt; never prints the credential. Without the gates it
 reports `REAL_DSH_SMOKE: NOT_RUN` and exits 0.
+
+## Real Windows-principal confinement check (gated, Windows Host)
+
+```bash
+TALLY_DSH_SMOKE_CONFIRM=1 \
+TALLY_DSH_NODE=<installed node.exe> \
+TALLY_DSH_BIN=<dsh lib/bin.js> \
+  node smoke/run-dsh-windows-confinement.mjs
+```
+
+Runs the full default operation set (sandbox probe → confinement matrix →
+one real confined headless attempt with candidate finalize and independent
+readback) under the Codex Windows sandbox elevated backend as the confined
+builder principal. Requires the one-time elevated machine setup (skill
+`codex-windows-sandbox`). Final receipt in DELIVERY_RECEIPT.md §5.3.
