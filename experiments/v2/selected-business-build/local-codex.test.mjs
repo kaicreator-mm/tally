@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
 import {fileURLToPath} from 'node:url';
 import {mkdtemp,rm} from 'node:fs/promises';
+import {stat} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
@@ -723,6 +724,10 @@ test('real candidatePathOccupied classifies git exit 0 / proven-absent / unprove
 // ---------------------------------------------------------------------------
 test('consumer real branch admits per-role registry keys and rejects wrong-key rows',async(t)=>{
   const consumerUrl=new URL('./consumer-single-review-codex.mjs',import.meta.url);
+  let consumerPresent=false;
+  try{await stat(fileURLToPath(consumerUrl));consumerPresent=true;}catch{}
+  if(!consumerPresent)
+    return void t.skip('T264 consumer not present in this lane (run-clean copies it only under T264_SINGLE_REVIEW; other lanes do not seal the single-review route)');
   let depsResolved=true;
   try{import.meta.resolve('@kaicreator/tally-local-codex-host-bundle',consumerUrl);}
   catch{depsResolved=false;}
