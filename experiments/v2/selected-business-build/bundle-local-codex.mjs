@@ -60,6 +60,12 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
+  // #264 E1 R91: the current Closeout-E integrator lane. Same sealed L3
+  // candidate note contract as the #172/#196 single Builder (the T06M
+  // consumer's independent readback asserts exactly this one path); every
+  // claim/writeset/source-pair/witness check below binds the attempt to
+  // issue #264's own accepted Claim row and current source SHA.
+  264:{actorRole:'builder',candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
   312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
   222:{actorRole:'builder'}
