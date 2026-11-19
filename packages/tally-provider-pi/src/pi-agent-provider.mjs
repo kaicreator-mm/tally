@@ -466,7 +466,11 @@ export function createPiAgentProvider(options = {}) {
       const key = `${request?.taskId ?? ''}::${request?.attemptId ?? ''}`;
       // Register synchronously (before the first await) so a cancel that
       // races this execute can never miss the process.
-      const entry = {pid: 0, cancelRequested: false};
+      // A second execute with the same Task/Attempt must not overwrite the
+      // live cancellation handle and spawn another process. Host CAS remains
+      // authoritative across processes; this is a local defensive guard.
+      if (inFlight.has(key)) return {state: 'FAILED', reason: 'PI_ATTEMPT_ALREADY_ACTIVE'};
+      const entry = {pid: 0, cancelRequested: false, sourceSha: request.sourceSha};
       inFlight.set(key, entry);
       let dirs = null;
       let onAbort = null;
@@ -606,7 +610,9 @@ export function createPiAgentProvider(options = {}) {
     async cancel(attempt) {
       const key = `${attempt?.taskId ?? ''}::${attempt?.attemptId ?? ''}`;
       const entry = inFlight.get(key);
-      if (!entry) return {state: 'NOT_RUNNING'};
+      // Do not allow an old source epoch's attempt pin to cancel a newer
+      // live execution that reuses Task/Attempt text.
+      if (!entry || entry.sourceSha !== attempt.sourceSha) return {state: 'NOT_RUNNING'};
       entry.cancelRequested = true;
       if (entry.pid > 0) await killTree(entry.pid);
       return {state: 'CANCEL_REQUESTED'};
