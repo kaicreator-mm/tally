@@ -1,0 +1,15 @@
+{
+  "name": "@kaicreator/tally-provider-opencode",
+  "version": "0.0.0-v2.1-candidate",
+  "private": true,
+  "type": "module",
+  "description": "Tally v2.1 candidate AgentProvider/1 adapter for the OpenCode CLI (opencode-ai@1.19.6). Default-off, observation-only; CLI contract from PR #471 field evidence.",
+  "exports": {
+    ".": {
+      "default": "./src/index.mjs"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
