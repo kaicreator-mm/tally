@@ -243,3 +243,29 @@ test('cancel routes an AbortController through the provider; idle cancel is hone
   assert.equal(idle.cancelled,false);
   assert.equal(idle.reason,'ATTEMPT_NOT_ACTIVE');
 });
+
+test('cancel accepts providers answering a richer {cancelled} receipt',async()=>{
+  const controller=new AbortController();
+  let stallRelease;
+  const stall=new Promise(resolve=>{stallRelease=resolve;});
+  const rich=fakeProvider('zcode',{execute:async input=>{await stall;
+    return {providerId:'zcode',attemptId:input.attemptId,sourceSha:input.sourceSha,
+      state:'LOCAL_CANDIDATE_READY',reason:'FAKE_READY',agentLaunch:true,
+      process:{status:'EXITED',exitCode:0,pid:5,startedAt:null,terminatedAt:null},
+      taskPass:false,releasePass:false};}});
+  const richCancel=rich.cancel;
+  // emulate an in-flight-registry provider returning {cancelled,attemptId}
+  const provider=Object.freeze({...rich,
+    cancel:async(args)=>{const result=await richCancel(args);
+      return {cancelled:result,attemptId:args?.attemptId??null,channel:'signal'};}});
+  const dispatch=createTaskProviderDispatch({registry:registryWith(provider),
+    admission:admissionPorts(),now});
+  const inFlight=dispatch.dispatch(request({signal:controller.signal}));
+  while(dispatch.describeActive().length===0)await Promise.resolve();
+  const cancelled=await dispatch.cancel({taskId:'task:1',controller});
+  assert.equal(cancelled.cancelled,true);
+  assert.ok(controller.signal.aborted);
+  stallRelease();
+  const done=await inFlight;
+  assert.equal(done.outcome.state,'LOCAL_CANDIDATE_READY');
+});

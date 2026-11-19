@@ -140,9 +140,12 @@ export function createTaskProviderDispatch({registry,admission={},now=()=>Date.n
     if(controller.signal.aborted)
       return {cancelled:false,reason:'ALREADY_ABORTED',taskId:record.taskId,
         attemptId:record.attemptId};
-    const cancelled=await provider.cancel({controller,
-      attemptId:record.attemptId});
-    return {cancelled:cancelled===true,taskId:record.taskId,
+    // Providers may answer boolean or a richer {cancelled} receipt (e.g. an
+    // internal in-flight registry); both reduce to the same honest result.
+    const answer=await provider.cancel({controller,attemptId:record.attemptId});
+    const cancelled=answer===true||(answer!==null&&typeof answer==='object'&&
+      answer.cancelled===true);
+    return {cancelled,taskId:record.taskId,
       attemptId:record.attemptId,providerId:record.providerId};
   }
   function describeActive(){return [...active.values()].map(record=>({...record}));}
