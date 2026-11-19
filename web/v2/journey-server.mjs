@@ -190,7 +190,7 @@ const RELEASE_BOOTSTRAP=String.raw`import('./release-client.mjs')
 const json=(value)=>JSON.stringify(value);
 const INTAKE_ACTIONS=['submit-goal','select-evidence','confirm-inspect','draft-product',
   'review-draft','freeze-draft','admit-project-intake','refresh-source-facts'];
-const MAINTENANCE_ACTIONS=['report-defect','review-candidate','load-learning',
+const MAINTENANCE_ACTIONS=['load-defect','report-defect','review-candidate','load-learning',
   'record-learning','publish-maintenance-issue'];
 const RELEASE_ACTIONS=['merge','tag','publish'];
 // E0 #284: the two Host-mounted privileged version Task DAG operations. The

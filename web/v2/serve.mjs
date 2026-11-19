@@ -33,6 +33,7 @@ import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {defaultAlmConfig} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
+import {createMaintenanceReadHost} from './maintenance-read-host.mjs';
 import {createUiNativeSource,readUiNativeVersionFromClient,
   observeUiNativeVersionHeadFromClient,verifyUiNativeVersionAncestryFromClient}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
@@ -519,6 +520,18 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     taskIssueNumbers:settings.roster,
     requirementIssueSpecs:settings.requirements,
     qaStatusContext:settings.qaStatusContext});
+  // #489 J08: canonical GitHub #437 read-only selected Host. Off by
+  // default; token and exact source pins stay in the Host, never in browser
+  // or maintenance form fields. Does not mount the native Issue writer.
+  let maintenanceHost;
+  if(env.TALLY_V2_MAINTENANCE_READ==='host-mounted'){
+    const {Octokit}=await import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js');
+    maintenanceHost=createMaintenanceReadHost({
+      octokit:new Octokit({auth:settings.token,request:{timeout:15000}}),
+      owner:settings.owner,repo:settings.repo,versionId:settings.versionId,
+      expectedSha:settings.expectedSha});
+  }
   // #264 E1 R91: real installed Builder write seam (J04 /api/actions start).
   // Mounted ONLY when the trusted Host process exports
   // TALLY_V2_AGENT_DISPATCH=host-mounted plus the exact claim/lease pins;
@@ -707,6 +720,7 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     run:installedRun??(async()=>({status:'FAIL',
       reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
     releaseHost:{readReleaseSnapshot},
+    ...(maintenanceHost?{maintenanceHost}:{}),
     v2ReadModelHost,
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
