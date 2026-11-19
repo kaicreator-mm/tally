@@ -180,8 +180,11 @@ export function planReplanCandidate(input={}){
     .concat(dagTasks.filter(row=>terminal(row)&&!priorAccepted.some(prior=>prior.issueNumber===row.issueNumber)))
     .filter(row=>!droppedNumbers.has(row.issueNumber));
   const changedNumbers=changed.map(row=>row.issueNumber);
-  const carriedUnfinished=priorUnfinished.filter(row=>openTask(row)&&
-    !droppedNumbers.has(row.issueNumber)&&!changedNumbers.includes(row.issueNumber));
+  const carriedUnfinished=[
+    ...array(priorUnfinished).filter(row=>openTask(row)),
+    ...dagTasks.filter(row=>openTask(row)&&
+      !array(priorUnfinished).some(prior=>prior.issueNumber===row.issueNumber))]
+    .filter(row=>!droppedNumbers.has(row.issueNumber)&&!changedNumbers.includes(row.issueNumber));
   const payload=freeze({type:'PlanRevisionCandidate',status:'CANDIDATE',
     predecessorRevisionId:priorRevision?.revisionId??null,
     sourcePins:{repository,versionId,sourceSha,observedAsOf:at},

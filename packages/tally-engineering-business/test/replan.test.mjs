@@ -170,6 +170,14 @@ test('candidate digest binds content: a changed proposal changes the digest',()=
   assert.equal(replanCandidateDigest(base),base.candidateDigest);
   assert.match(base.candidateDigest,/^[0-9a-f]{64}$/);
 });
+test('baseline revision carries observed-DAG unfinished work without a prior revision',()=>{
+  const result=planReplanCandidate(input({priorRevision:null}));
+  assert.equal(result.status,'CANDIDATE');
+  assert.equal(result.candidate.predecessorRevisionId,null);
+  assert.deepEqual(result.candidate.carriedUnfinishedTasks.map(row=>row.issueNumber),[273]);
+  assert.equal(result.coverage.preservedAcceptedCount,2);
+  assert.equal(result.coverage.carriedUnfinishedCount,1);
+});
 test('REPLAN_REASON_CODES enumerates the typed refusal surface',()=>{
   assert.ok(REPLAN_REASON_CODES.includes('ACCEPTED_TASK_DROPPED'));
   assert.ok(REPLAN_REASON_CODES.includes('CARRIED_WORK_LOST'));
