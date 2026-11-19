@@ -420,7 +420,10 @@ test('builder environment is an explicit allowlist; spawn env forces isolation k
   assert.equal(env.GIT_TERMINAL_PROMPT,'0');
   assert.equal(env.GCM_INTERACTIVE,'never');
   assert.equal(env.NO_COLOR,'1');
-  assert.ok(env.PATH.startsWith('C:\\tools\\pi'));
+  // the builder env always joins PATH with ';' regardless of platform (see
+  // piBuilderEnvironment): assert the FIRST segment is the configured CLI
+  // directory instead of a Windows-only startsWith
+  assert.equal(env.PATH.split(';')[0],'C:\\tools\\pi');
   const dirs={home:'C:\\iso\\home',agentConfig:'C:\\iso\\agent-config',
     sessions:'C:\\iso\\sessions'};
   const spawnEnv=piSpawnEnvironment({env:{DEEPSEEK_API_KEY:'explicit-channel-only',
