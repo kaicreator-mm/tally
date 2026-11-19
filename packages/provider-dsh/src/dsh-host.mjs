@@ -92,7 +92,13 @@ function dshBuilderEnvironment(config){
   const root=config.systemRoot??(IS_WIN?'C:\\Windows':'/usr');
   const builderProfile=config.builderProfile??(IS_WIN?'C:\\Users\\CodexSandboxOnline':undefined);
   const gitDir=dirname(config.gitPath??DEFAULT_GIT);
-  const path=IS_WIN?[gitDir,root+'\\System32','C:\\Program Files\\Git\\cmd'].join(';')
+  // Node's directory joins the PATH when the CLI runs through an explicit
+  // interpreter entry (binPath = node + binArgsPrefix), so tool subprocesses
+  // spawned by the harness can still resolve node.
+  const binDir=typeof config.binPath==='string'&&config.binPath.includes('\\')?
+    dirname(config.binPath):null;
+  const path=IS_WIN?[...(binDir?[binDir]:[]),gitDir,root+'\\System32','C:\\Program Files\\Git\\cmd']
+      .join(';')
     :['/usr/local/bin','/usr/bin','/bin'].join(':');
   const env={
     SystemRoot:root,SystemDrive:config.systemDrive??'C:',
@@ -119,6 +125,9 @@ function dshBuilderEnvironment(config){
   // provider's proxy assumption.
   if(config.modelProxy){env.HTTPS_PROXY=config.modelProxy;env.HTTP_PROXY=config.modelProxy;}
   if(config.emptyGitConfig)env.GIT_CONFIG_GLOBAL=config.emptyGitConfig;
+  // Scratch CODEX_HOME for the Host sandbox wrapper (the elevated backend
+  // selection rides this home's config only — never the operator's).
+  if(config.sandboxCodexHome)env.CODEX_HOME=config.sandboxCodexHome;
   // DEEPSEEK_API_KEY is intentionally NOT part of the base allowlist; it is
   // added only to the execution environment when explicitly configured.
   return env;
@@ -332,7 +341,9 @@ function createDefaultOperations(spawnFn){
     await writeFile(patchPath,SESSION_LOG_DISABLE_PATCH,'utf8');
     if(IS_WIN){
       for(const [path,permission] of [[dirname(config.worktreePath),'RX'],
-        [config.worktreePath,'M'],[dshHome,'F']]){
+        [config.worktreePath,'M'],[dshHome,'F'],
+        ...(typeof config.sandboxCodexHome==='string'&&config.sandboxCodexHome?
+          [[config.sandboxCodexHome,'F']]:[])]){
         const acl=await short(spawnFn,'C:\\Windows\\System32\\icacls.exe',[path,'/grant',
           `*${config.builderSid}:(OI)(CI)(${permission})`],{env:hostEnvironment(config),timeoutMs:15000});
         if(acl.code!==0)throw safeError('BUILDER_ACL_UNAVAILABLE');

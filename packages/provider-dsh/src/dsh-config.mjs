@@ -70,6 +70,8 @@ export function dshConfigFromEnv(env={},overrides={}){
     pipeGraceMs:positiveInt(env.TALLY_DSH_PIPE_GRACE_MS,5000),
     deepseekApiKey:env.DEEPSEEK_API_KEY??null,
     sandboxCliPath:env.TALLY_DSH_SANDBOX_CLI_PATH??env.TALLY_CODEX_SANDBOX_PATH??undefined,
+    // Scratch CODEX_HOME selecting the sandbox wrapper's elevated backend.
+    sandboxCodexHome:env.TALLY_DSH_SANDBOX_CODEX_HOME??env.TALLY_CODEX_HOME??undefined,
     gitPath:env.TALLY_GIT_PATH??undefined,
     repositoryPath:env.TALLY_REPOSITORY_PATH??undefined,
     worktreePath:env.TALLY_LOCAL_WORKTREE_PATH??undefined,

@@ -98,13 +98,12 @@ scope change: route it through `v2-ads-project-verifier.yaml` review.
 - `--json` NDJSON events and `--session-id` resume exist in 0.2.x and are
   deliberately unused (projection-only stream; resume requires cwd-stable
   sessions); the adapter keeps the plain headless surface the pin verifies.
-- The session-log upload disable overlay is source-derived
-  (`docs/config-catalog.md` of 0.2.2-rc.5, plugin `session-log-deepseek`,
-  config `enabled:false`). Live-verified 2026-11-19: 0.2.x `--patch` overlays
-  must be a top-level YAML ARRAY of loader patch entries (the mapping form
-  is rejected), and the array-form overlay is accepted by a real
-  `0.2.2-rc.5` run; the actual upload-off effect remains source-derived
-  (labeled in the smoke receipt, never assumed).
+- The session-log upload disable overlay is **live-verified**: 0.2.x
+  `--patch` overlays must be a top-level YAML ARRAY of loader patch entries
+  (the spike-era mapping form is rejected); by default every model request
+  carries a ~41 KB `dsh_session_log` payload, and the shipped
+  `session-log-deepseek.enabled=false` overlay removes it while turns still
+  complete (`smoke/run-dsh-session-log-verify.mjs`, DELIVERY_RECEIPT §5.2).
 
 ## 6. Legacy Go adapter (`runtimes/dsh/**`)
 

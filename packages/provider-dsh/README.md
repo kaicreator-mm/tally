@@ -36,8 +36,10 @@ for the recorded integration seams).
 - per-attempt throwaway `DSH_HOME` (sessions/storages/profiles never cross
   attempts), `DSH_TELEMETRY_MODE=DISABLED`, and a `--patch` overlay that
   disables the default-on DeepSeek session-log upload
-  (`session-log-deepseek.enabled=false`, source-derived from the 0.2.2-rc.5
-  config catalog; the smoke receipt labels its live-verification status);
+  (`session-log-deepseek.enabled=false`) — **live-verified**: by default the
+  CLI ships a ~41 KB `dsh_session_log` payload with every model request; the
+  shipped overlay removes it (see `smoke/run-dsh-session-log-verify.mjs` and
+  `DELIVERY_RECEIPT.md` §5.2);
 - honest failure classification: cancel > orphan-pipe > write-set > nonzero
   exit > empty-final-answer; timeout/lost-ACK/ambiguous restart is durable
   `UNKNOWN` and never relaunches;
@@ -121,7 +123,9 @@ is spawned for real (`node test/fake-dsh.mjs`), covering: CLI missing /
 version drift / missing credential / confinement failure / happy path with
 candidate readback / write-set violation / cancel / timeout / lost-ACK /
 orphan pipes / empty final answer / secret redaction / grant races /
-cross-provider exclusion.
+cross-provider exclusion. Suite status: Windows 25 pass + 1 POSIX-only skip;
+Linux (Ubuntu, Node 24) 26/26 with zero skips including the live
+orphan-pipe/grace/process-group-reap chain.
 
 ## Real smoke (optional, gated)
 
