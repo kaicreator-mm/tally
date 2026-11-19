@@ -262,8 +262,8 @@ export function DualEpochPanel({projection,state,reason,locale='zh'}:{
       <div><dt style={{fontWeight:600}}>{zh?'名册覆盖':'roster coverage'}</dt>
         <dd style={{margin:0}}><Badge tone={projection.rosterCoverage===
           'VERIFIED_COMPLETE'?'ok':'warn'}>{projection.rosterCoverage}</Badge></dd></div>
-      <div><dt style={{fontWeight:600}}>{zh?'边计数(frozen/live)':'edges (frozen/live)'}</dt>
-        <dd style={{margin:0}}>{projection.frozenEdgeCount??'—'} / {
+      <div><dt style={{fontWeight:600}}>{zh?'NATIVE 边计数(冻结/实时)':'NATIVE edges (frozen/live)'}</dt>
+        <dd style={{margin:0}}>{projection.nativeEdgeCount??'—'} / {
           projection.observedNativeEdgeCount??'—'}</dd></div>
       <div><dt style={{fontWeight:600}}>{zh?'兼容见证':'compatibility witness'}</dt>
         <dd style={{margin:0}}><Badge tone={projection.compatibilityWitness?.present===true?

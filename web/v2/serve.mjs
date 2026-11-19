@@ -214,51 +214,79 @@ async function createFrozenDagReadHost({settings}){
         content:Buffer.from(data.content,'base64').toString('utf8')};
     }catch{return {status:'NOT_VERIFIED',reason:'TASK_PACK_READ_FAILED'};}
   };
-  const witnessReader=(issueNumber,commentId,login,kind)=>
-    async({taskPackBlobSha,sourceSha})=>{
-      if(!Number.isSafeInteger(issueNumber)||issueNumber<1||
-         !Number.isSafeInteger(commentId)||commentId<1)
-        return {status:'NOT_VERIFIED'};
+  const dagKey='tally:v2:version-task-dag:'+
+    createHash('sha256').update(settings.repository+'#'+settings.versionId)
+      .digest('hex');
+  /** Witness ports built per-read against the OPEN CAS store. The frozen
+   * witness JSON lives in the immutable CAS row (the R80-class artifacts are
+   * human-readable receipts, not JSON bodies); the port re-reads the LIVE
+   * artifact at the frozen ref (PR review via the review API, owner
+   * approval via the issue-comment API), cross-checks it against the Host
+   * pins, and only then returns the frozen witness with its blob/source
+   * bindings for the reader's own exact cross-validation. Any drift between
+   * pins, frozen refs and the live artifact denies NOT_VERIFIED. */
+  const buildWitnessReaders=store=>{
+    const frozenDoc=async()=>{
+      const row=await store.get(dagKey);
+      return plain(row?.value)?row.value:null;
+    };
+    const parseReviewRef=ref=>{
+      const m=typeof ref==='string'?
+        /\/pull\/(\d+)#pullrequestreview-(\d+)$/.exec(ref):null;
+      return m?{pullNumber:Number(m[1]),reviewId:Number(m[2])}:null;
+    };
+    const parseApprovalRef=ref=>{
+      const m=typeof ref==='string'?
+        /\/issues\/(\d+)#issuecomment-(\d+)$/.exec(ref):null;
+      return m?{issueNumber:Number(m[1]),commentId:Number(m[2])}:null;
+    };
+    const reviewWitnessReader=async({taskPackBlobSha,sourceSha})=>{
       try{
-        const params={owner:settings.owner,repo:settings.repo,
-          comment_id:commentId};
-        const first=(await octokit.rest.issues.getComment(params))?.data;
-        const second=(await octokit.rest.issues.getComment(params))?.data;
-        const valid=c=>plain(c)&&c.id===commentId&&
-          c.html_url==='https://github.com/'+settings.repository+'/issues/'+
-            issueNumber+'#issuecomment-'+commentId&&
-          c.issue_url==='https://api.github.com/repos/'+settings.repository+
-            '/issues/'+issueNumber&&
-          c.user?.login===login&&typeof c.body==='string'&&
-          c.body.length<=65536;
-        if(!valid(first)||!valid(second)||first.body!==second.body||
-           first.updated_at!==second.updated_at)
+        const doc=await frozenDoc();
+        const witness=doc?.witness;
+        if(!plain(witness))return {status:'NOT_VERIFIED'};
+        const live=parseReviewRef(witness.reviewRef);
+        if(!live||live.pullNumber!==settings.frozenPins.reviewIssue||
+           live.reviewId!==settings.frozenPins.reviewCommentId)
           return {status:'NOT_VERIFIED'};
-        let witness;
-        try{witness=JSON.parse(first.body);}catch{return {status:'NOT_VERIFIED'};}
-        if(!plain(witness)||witness.taskPackBlobSha!==taskPackBlobSha||
-           witness.sourceSha!==sourceSha)return {status:'NOT_VERIFIED'};
-        if(kind==='review'){
-          return witness.status==='INDEPENDENTLY_VERIFIED'&&
-            witness.reviewedHeadSha===sourceSha&&
-            typeof witness.reviewer==='string'&&witness.reviewer&&
-            typeof witness.author==='string'&&witness.author&&
-            witness.reviewer!==witness.author&&
-            typeof witness.reviewRef==='string'&&
-            witness.reviewRef.startsWith('https://github.com/'+
-              settings.repository+'/')&&
-            Number.isFinite(Date.parse(witness.verifiedAt??''))
-            ?witness:{status:'NOT_VERIFIED'};
-        }
-        return witness.status==='OWNER_APPROVED'&&
-          witness.owner===settings.owner&&
-          typeof witness.approvalRef==='string'&&
-          witness.approvalRef.startsWith('https://github.com/'+
-            settings.repository+'/')&&
-          Number.isFinite(Date.parse(witness.approvedAt??''))
-          ?witness:{status:'NOT_VERIFIED'};
+        const read=()=>octokit.rest.pulls.getReview({owner:settings.owner,
+          repo:settings.repo,pull_number:live.pullNumber,
+          review_id:live.reviewId}).then(r=>r?.data??null);
+        const first=await read(),second=await read();
+        if(!plain(first)||!plain(second)||first.id!==live.reviewId||
+           first.html_url!==witness.reviewRef||
+           first.user?.login!==settings.frozenPins.reviewLogin||
+           !['APPROVED','COMMENTED'].includes(first.state)||
+           first.body!==second.body||
+           first.submitted_at!==second.submitted_at)
+          return {status:'NOT_VERIFIED'};
+        return {...witness,taskPackBlobSha:doc.blobSha,sourceSha:doc.sourceSha};
       }catch{return {status:'NOT_VERIFIED'};}
     };
+    const ownerApprovalReader=async()=>{
+      try{
+        const doc=await frozenDoc();
+        const approval=doc?.ownerApproval;
+        if(!plain(approval))return {status:'NOT_VERIFIED'};
+        const live=parseApprovalRef(approval.approvalRef);
+        if(!live||live.issueNumber!==settings.frozenPins.approvalIssue||
+           live.commentId!==settings.frozenPins.approvalCommentId)
+          return {status:'NOT_VERIFIED'};
+        const read=()=>octokit.rest.issues.getComment({owner:settings.owner,
+          repo:settings.repo,comment_id:live.commentId})
+          .then(r=>r?.data??null);
+        const first=await read(),second=await read();
+        if(!plain(first)||!plain(second)||first.id!==live.commentId||
+           first.html_url!==approval.approvalRef||
+           first.user?.login!==settings.frozenPins.approvalLogin||
+           first.created_at!==first.updated_at||
+           first.body!==second.body)
+          return {status:'NOT_VERIFIED'};
+        return {...approval,taskPackBlobSha:doc.blobSha};
+      }catch{return {status:'NOT_VERIFIED'};}
+    };
+    return {reviewWitnessReader,ownerApprovalReader};
+  };
   const nativeRosterReader=({taskIssueNumbers})=>readUiNativeVersionFromClient({
     octokit,owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
@@ -281,14 +309,13 @@ async function createFrozenDagReadHost({settings}){
     const store=await openSqliteCasStore({
       path:pins.registryPath,busyTimeoutMs:1000});
     try{
+      const witnessReaders=buildWitnessReaders(store);
       const reader=createHostVersionTaskDagReader({
         repository:settings.repository,versionId:settings.versionId,
         expectedVersionSha:settings.expectedSha,store,taskPackReader,
         nativeRosterReader,
-        reviewWitnessReader:witnessReader(pins.reviewIssue,
-          pins.reviewCommentId,pins.reviewLogin,'review'),
-        ownerApprovalReader:witnessReader(pins.approvalIssue,
-          pins.approvalCommentId,pins.approvalLogin,'approval')});
+        reviewWitnessReader:witnessReaders.reviewWitnessReader,
+        ownerApprovalReader:witnessReaders.ownerApprovalReader});
       return await reader.readFrozenDag(scope);
     }finally{await store.close().catch(()=>{});}
   },
@@ -300,13 +327,12 @@ async function createFrozenDagReadHost({settings}){
     const store=await openSqliteCasStore({
       path:pins.registryPath,busyTimeoutMs:1000});
     try{
+      const witnessReaders=buildWitnessReaders(store);
       const reader=createHostVersionTaskDagDualEpochReader({
         repository:settings.repository,versionId:settings.versionId,
         freezeBaseSha:settings.freezeBaseSha,store,taskPackReader,
-        reviewWitnessReader:witnessReader(pins.reviewIssue,
-          pins.reviewCommentId,pins.reviewLogin,'review'),
-        ownerApprovalReader:witnessReader(pins.approvalIssue,
-          pins.approvalCommentId,pins.approvalLogin,'approval'),
+        reviewWitnessReader:witnessReaders.reviewWitnessReader,
+        ownerApprovalReader:witnessReaders.ownerApprovalReader,
         branchHeadReader,ancestryReader,currentRosterReader,
         edgeAmendments:settings.edgeAmendments});
       return await reader.readDualEpoch({compatibilityWitness:null});

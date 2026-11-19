@@ -117,14 +117,20 @@ function DagRoute({versionId}:{versionId:string|null}){
   // DAG below keeps its own honest NOT_CONNECTED semantics.
   const dualEpoch=useHost<DualEpochResponse>('dual-epoch',
     adapter=>adapter.dualEpoch(versionId??''),[versionId]);
+  const epochPanel=<DualEpochPanel projection={(dualEpoch.data??null) as
+    (DualEpochResponse|null)} state={dualEpoch.state}
+    reason={dualEpoch.reason??null}/>;
   if(dag.state==='loading')return <Skeleton lines={6}/>;
   if(dag.state==='not_connected')
-    return <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>;
+    // J02 truth: at a frozen-epoch descendant the single-epoch DAG read
+    // honestly denies — the dual-epoch panel above carries the S0/S1
+    // projection, so it must render on this path too, never be swallowed.
+    return guard(versionId,
+      <>{epochPanel}
+        <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>
+      </>);
   return guard(versionId,
-    <>
-      <DualEpochPanel projection={(dualEpoch.data??null) as
-        (DualEpochResponse|null)} state={dualEpoch.state}
-        reason={dualEpoch.reason??null}/>
+    <>{epochPanel}
       <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>
     </>);
 }
