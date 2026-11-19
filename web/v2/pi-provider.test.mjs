@@ -278,9 +278,16 @@ test('timeout terminates the process tree and records UNKNOWN',async()=>{
 });
 
 test('cancellation through the input signal kills the child and records CANCELLED',async()=>{
-  await withHost(async({provider,kills,input})=>{
-    const controller=new AbortController();setTimeout(()=>controller.abort(),10);
-    const x=await provider.execute({...input,timeoutMs:1000,signal:controller.signal});
+  await withHost(async({provider,kills,calls,input})=>{
+    const controller=new AbortController();
+    // Abort only AFTER the spawn is observed: a fixed 10ms timer races the
+    // async prep chain (probe/worktree/session dirs) — when it fires before
+    // the spawn the honest outcome is cancelled-without-spawn and no kill,
+    // which made this test flake. Waiting for the spawn pins ONE timeline.
+    const execute=provider.execute({...input,timeoutMs:1000,signal:controller.signal});
+    while(calls.length===0)await new Promise(resolve=>setImmediate(resolve));
+    controller.abort();
+    const x=await execute;
     assert.equal(x.state,'LOCAL_ATTEMPT_CANCELLED');
     assert.equal(x.reason,'ATTEMPT_CANCELLED');
     assert.ok(kills.includes(4242));assert.equal(x.taskPass,false);
