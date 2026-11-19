@@ -21,6 +21,7 @@ package main
 import (
 	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 	"tally/runtimes/codex"
 	"tally/runtimes/dsh"
 	"tally/runtimes/fake"
+	"tally/runtimes/opencode"
 )
 
 // runtimeBuilder 按 worker 共享配置面构造一个 runtime 适配器。builder 只在
@@ -96,6 +98,38 @@ func newRuntimeRegistry() *runtimeRegistry {
 			}
 		}
 		return rt, nil
+	})
+	// v2.1 provider candidate canary:OpenCode V2 CLI 适配器缺省禁用 ——
+	// runtime=opencode 且 canary 开关(TALLY_OPENCODE_CANARY=1)且显式二进制
+	// 路径三者同时出现才可构造(fail-closed 同 DSH P4-06)。适配器隔离面
+	//(per-session XDG 目录树 + 永不 --attach)保证不复用 owner 用户级共享
+	// 服务;凭据经 TALLY_OPENCODE_AUTH_ENV 指名的环境变量在注册边界读入
+	// Config.Env(值绝不落盘、绝不进日志)。canary 关闭时 Codex/fake 缺省面
+	// 零影响。
+	r.register(opencode.DescriptorName, func(cfg v13Config) (agentruntime.Runtime, error) {
+		if !cfg.OpencodeCanary {
+			return nil, fmt.Errorf("opencode 为 v2.1 provider candidate canary 适配器,默认禁用:需 TALLY_OPENCODE_CANARY=1 显式启用")
+		}
+		if strings.TrimSpace(cfg.OpencodeBin) == "" {
+			return nil, fmt.Errorf("opencode canary 需要显式二进制路径 TALLY_OPENCODE_BIN(钉住版本面,不做隐式发现)")
+		}
+		ocfg := opencode.Config{
+			BinPath:       cfg.OpencodeBin,
+			Model:         cfg.OpencodeModel,
+			Agent:         cfg.OpencodeAgent,
+			PinnedVersion: opencode.PinnedOpenCodeVersion,
+		}
+		if authEnv := os.Getenv("TALLY_OPENCODE_AUTH_ENV"); authEnv != "" {
+			if v := os.Getenv(authEnv); v != "" {
+				ocfg.Env = map[string]string{authEnv: v}
+			}
+		}
+		// 最早闸:model/agent token 等配置面在此拒绝(同 DSH P4-06 AC);
+		// 二进制存在性与钉版身份归 Start 的 fail-closed 闸。
+		if err := ocfg.Validate(); err != nil {
+			return nil, fmt.Errorf("opencode 配置无效: %w", err)
+		}
+		return opencode.New(ocfg), nil
 	})
 	return r
 }
