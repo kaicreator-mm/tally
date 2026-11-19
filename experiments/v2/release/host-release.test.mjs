@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {createReleaseHost} from './host-release.mjs';
 const head='a'.repeat(40),target='b'.repeat(40),headTree='c'.repeat(40),targetTree='d'.repeat(40);
@@ -74,7 +75,109 @@ test('tag cannot reuse premerge RQ or bypass Host CAS',async()=>{
   const ctx=mock({env:{...env,TALLY_RELEASE_TAG_SOURCE_SHA:target}});
   assert.equal((await ctx.host.tag({tag:'v2.0.0',commitSha:head,commitTree:headTree})).reason,
     'TAG_SOURCE_NOT_PINNED');
+  // The request-scope tag field is IGNORED: without a trusted Host-pinned
+  // TALLY_RELEASE_TAG_NAME the operation refuses TAG_NAME_NOT_PINNED (the
+  // historical unbound literal now fires only when a name IS pinned but
+  // the TAG CAS path is not — see the #491 block below).
   const r=await ctx.host.tag({tag:'v2.0.0',commitSha:target,commitTree:targetTree});
-  assert.equal(r.reason,'TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING');
+  assert.equal(r.reason,'TAG_NAME_NOT_PINNED');
   denied(r);
+});
+
+// ---------------------------------------------------------------------------
+// #491 J07 — tag delivery: durable Host CAS + real client tag creation with
+// idempotent recovery. The old fail-closed bound survives as the unbound
+// case (no pinned tag name / no CAS path).
+// ---------------------------------------------------------------------------
+const tagEnv={...env,TALLY_RELEASE_TAG_SOURCE_SHA:head,
+  TALLY_RELEASE_TAG_NAME:'v2.0.0',
+  TALLY_RELEASE_TAG_CAS_PATH:'C:/host/tag.sqlite'};
+const tagInput={commitSha:head,commitTree:headTree};
+function tagOctokit(created){
+  return {rest:{git:{
+    getRef:async({ref})=>{
+      if(ref==='heads/main')return {data:{object:{sha:head}}};
+      if(ref.startsWith('tags/')&&created.value)
+        return {data:{object:{type:'commit',sha:head}}};
+      const e=new Error('not found');e.status=404;throw e;},
+    getCommit:async({commit_sha:sha})=>
+      ({data:{sha,tree:{sha:sha===head?headTree:targetTree}}}),
+    createRef:async({ref,sha})=>{
+      if(ref!=='refs/tags/v2.0.0'||sha!==head)throw Error('BAD_TAG_CREATE');
+      created.value=true;return {data:{ref,object:{sha}}};}
+  }}};
+}
+test('tag stays fail-closed without a pinned tag name or CAS path',async()=>{
+  const noName=mock({env:{...env,TALLY_RELEASE_TAG_SOURCE_SHA:head,
+    TALLY_RELEASE_TAG_CAS_PATH:'C:/host/tag.sqlite'}});
+  assert.equal((await noName.host.tag(tagInput)).reason,'TAG_NAME_NOT_PINNED');
+  const noCas=mock({env:{...env,TALLY_RELEASE_TAG_SOURCE_SHA:head,
+    TALLY_RELEASE_TAG_NAME:'v2.0.0'}});
+  const bound=await noCas.host.tag(tagInput);
+  assert.equal(bound.state,'NOT_ADMITTED');
+  assert.equal(bound.reason,'TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING');
+  for(const x of [noName,noCas])assert.equal(x.stored.size,0);
+});
+test('qualified tag creates once, durably, with readback; replay is idempotent',async()=>{
+  const created={value:false};
+  const ok=mock({env:tagEnv,override:{octokit:tagOctokit(created)}});
+  const first=await ok.host.tag(tagInput);
+  assert.equal(first.state,'TAG_CREATED_RELEASE_NOT_PUBLISHED');
+  assert.equal(first.reason,'RELEASE_OBJECT_AND_USER_ACCEPTANCE_SEPARATE');
+  assert.equal(first.tag,'v2.0.0');
+  assert.equal(first.githubEffect,'PERFORMED_READBACK_VERIFIED');
+  assert.equal(first.releasePass,false);
+  assert.equal(first.authorized,false);
+  const row=ok.stored.get('tally:v2:release-tag-op:'+
+    createHash('sha256')
+      .update(JSON.stringify(['v2.0.0',head,headTree])).digest('hex'));
+  assert.equal(row.state,'TAG_CREATED');
+  assert.equal(row.tag,'v2.0.0');
+  assert.equal(created.value,true);
+  // Replay: terminal row + verified readback → idempotent OBSERVED, no
+  // second createRef (created.value already true; a second create would
+  // throw because createRef is not called again — assert via counter).
+  let creates=0;
+  const counting={rest:{git:{
+    getRef:async({ref})=>{
+      if(ref==='heads/main')return {data:{object:{sha:head}}};
+      if(ref.startsWith('tags/'))return {data:{object:{type:'commit',sha:head}}};
+      const e=new Error('nf');e.status=404;throw e;},
+    getCommit:async({commit_sha:sha})=>
+      ({data:{sha,tree:{sha:sha===head?headTree:targetTree}}}),
+    createRef:async()=>{creates++;throw Error('MUST_NOT_CREATE_AGAIN');}
+  }}};
+  const replay=mock({env:tagEnv,override:{octokit:counting}});
+  // seed the terminal row into the replay store via the first host
+  const seeded=mock({env:tagEnv,override:{octokit:tagOctokit({value:false})}});
+  await seeded.host.tag(tagInput);
+  replay.stored.clear();
+  for(const [k,v] of seeded.stored)replay.stored.set(k,v);
+  const again=await replay.host.tag(tagInput);
+  assert.equal(again.state,'TAG_CREATED_RELEASE_NOT_PUBLISHED');
+  assert.equal(again.reason,'TAG_IDEMPOTENT_REPLAY_READBACK_VERIFIED');
+  assert.equal(again.reconciled,true);
+  assert.equal(creates,0,'idempotent replay must not call createRef');
+});
+test('pending rows and uncertain creates reconcile, never blind-reexecute',async()=>{
+  const pending=mock({env:tagEnv,override:{octokit:tagOctokit({value:false})}});
+  const key='tally:v2:release-tag-op:'+
+    createHash('sha256')
+      .update(JSON.stringify(['v2.0.0',head,headTree])).digest('hex');
+  pending.stored.set(key,{state:'PENDING_TAG_CREATE',tag:'v2.0.0'});
+  const r1=await pending.host.tag(tagInput);
+  assert.equal(r1.state,'RECONCILIATION_REQUIRED');
+  assert.equal(r1.reason,'PREVIOUS_TAG_OPERATION_PENDING');
+  // terminal row but the tag does NOT point at the commit → reconcile
+  const drifted=mock({env:tagEnv,override:{octokit:{rest:{git:{
+    getRef:async({ref})=>{
+      if(ref==='heads/main')return {data:{object:{sha:head}}};
+      const e=new Error('nf');e.status=404;throw e;},
+    getCommit:async({commit_sha:sha})=>
+      ({data:{sha,tree:{sha:sha===head?headTree:targetTree}}}),
+    createRef:async()=>{throw Error('MUST_NOT_CREATE');}
+  }}}}});
+  drifted.stored.set(key,{state:'TAG_CREATED',tag:'v2.0.0'});
+  const r2=await drifted.host.tag(tagInput);
+  assert.equal(r2.state,'RECONCILIATION_REQUIRED');
 });
