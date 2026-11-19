@@ -12,7 +12,7 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import {submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {TasksResponse,DagResponse,ReleaseResponse,
+import type {TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -23,7 +23,7 @@ import {ReleaseView} from '../features/release/views.tsx';
 import {MaintenanceView} from '../features/maintenance/views.tsx';
 import {MetadataCenter} from '../features/metadata/views.tsx';
 import {SettingsCenter} from '../features/settings/views.tsx';
-import {DagView} from '../features/dag/views.tsx';
+import {DagView,DualEpochPanel} from '../features/dag/views.tsx';
 import {EMPTY_FILTERS} from '../features/tasks/model.ts';
 import type {TaskFilters,TaskRecord} from '../features/tasks/model.ts';
 import type {VersionDag} from '../features/dag/model.ts';
@@ -112,11 +112,21 @@ function AgentsRoute({versionId}:{versionId:string|null}){
 function DagRoute({versionId}:{versionId:string|null}){
   const dag=useHost<DagResponse>('dag',
     adapter=>adapter.dag(versionId??''),[versionId]);
+  // #264 J02: independent S0/S1 dual-epoch read. An unmounted seam
+  // (DUAL_EPOCH_NOT_CONFIGURED) degrades only this panel — the single-epoch
+  // DAG below keeps its own honest NOT_CONNECTED semantics.
+  const dualEpoch=useHost<DualEpochResponse>('dual-epoch',
+    adapter=>adapter.dualEpoch(versionId??''),[versionId]);
   if(dag.state==='loading')return <Skeleton lines={6}/>;
   if(dag.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={dag.reason??undefined}/>;
   return guard(versionId,
-    <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>);
+    <>
+      <DualEpochPanel projection={(dualEpoch.data??null) as
+        (DualEpochResponse|null)} state={dualEpoch.state}
+        reason={dualEpoch.reason??null}/>
+      <DagView dag={(dag.data??null) as VersionDag|null} versionId={versionId}/>
+    </>);
 }
 function ReleaseRoute({versionId}:{versionId:string|null}){
   const release=useHost<ReleaseResponse>('release',

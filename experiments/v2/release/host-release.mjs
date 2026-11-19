@@ -12,8 +12,16 @@ const output=(state,reason,more={})=>Object.freeze({state,reason,
   authorized:false,taskPass:false,releasePass:false,canPublish:false,...more});
 const no=(reason)=>output('NOT_ADMITTED',reason);
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const claimSource=env=>SHA.test(env.TALLY_TASK_CLAIM_222_SOURCE_SHA??'')?
-  env.TALLY_TASK_CLAIM_222_SOURCE_SHA:null;
+// J07 #264 wiring: the claim pin is lane-configurable. The generic
+// TALLY_RELEASE_CLAIM_SOURCE_SHA wins; the historical #222-era name stays
+// as the documented fallback so existing Host recipes keep working.
+const claimSource=env=>SHA.test(env.TALLY_RELEASE_CLAIM_SOURCE_SHA??'')?
+  env.TALLY_RELEASE_CLAIM_SOURCE_SHA:
+  SHA.test(env.TALLY_TASK_CLAIM_222_SOURCE_SHA??'')?
+    env.TALLY_TASK_CLAIM_222_SOURCE_SHA:null;
+const claimIssue=env=>{
+  const n=Number(env.TALLY_RELEASE_CLAIM_ISSUE??222);
+  return Number.isSafeInteger(n)&&n>0?n:222;};
 const selected=(input,env)=>claimSource(env)!==null&&SHA.test(input?.headSha??'')&&
   SHA.test(input?.headTree??'')&&SHA.test(input?.targetSha??'')&&
   SHA.test(input?.targetTree??'')&&input.headSha===env.TALLY_RELEASE_SOURCE_SHA&&
@@ -45,11 +53,11 @@ export function createReleaseHost({verifyNativeClaim,verifyWriteSet,readIndepend
     if(!selected(input,env))return no('RELEASE_SOURCE_NOT_PINNED');
     let claim,scope,rq,grant;
     try{
-      claim=await verifyNativeClaim({issueNumber:222,role:'builder',
+      claim=await verifyNativeClaim({issueNumber:claimIssue(env),role:'builder',
         sourceSha:claimSource(env)});
       if(claim?.state!=='ACCEPTED'||claim?.sourceSha!==claimSource(env))
         return no('NATIVE_CLAIM_NOT_VERIFIED');
-      scope=await verifyWriteSet({issueNumber:222,sourceSha:claimSource(env)});
+      scope=await verifyWriteSet({issueNumber:claimIssue(env),sourceSha:claimSource(env)});
       if(scope?.state!=='FROZEN_VERIFIED')return no('TASK_WRITESET_NOT_VERIFIED');
       rq=await readIndependentRq({sourceSha:input.headSha,sourceTree:input.headTree,
         targetSha:input.targetSha,targetTree:input.targetTree,operation});
@@ -100,11 +108,11 @@ export function createReleaseHost({verifyNativeClaim,verifyWriteSet,readIndepend
         !claimSource(env)||input.commitSha!==env.TALLY_RELEASE_TAG_SOURCE_SHA)return no('TAG_SOURCE_NOT_PINNED');
       let grant,rq,claim,scope;
       try{
-        claim=await verifyNativeClaim({issueNumber:222,role:'builder',
+        claim=await verifyNativeClaim({issueNumber:claimIssue(env),role:'builder',
           sourceSha:claimSource(env)});
         if(claim?.state!=='ACCEPTED'||claim?.sourceSha!==claimSource(env))
           return no('NATIVE_CLAIM_NOT_VERIFIED');
-        scope=await verifyWriteSet({issueNumber:222,sourceSha:claimSource(env)});
+        scope=await verifyWriteSet({issueNumber:claimIssue(env),sourceSha:claimSource(env)});
         if(scope?.state!=='FROZEN_VERIFIED')return no('TASK_WRITESET_NOT_VERIFIED');
         rq=await readIndependentRq({sourceSha:input.commitSha,sourceTree:input.commitTree,
           targetSha:input.commitSha,targetTree:input.commitTree,operation:'TAG'});

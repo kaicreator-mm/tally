@@ -615,3 +615,239 @@ test('release action submission reaches the real fail-closed admission',async()=
     assert.equal(stale.status,409);
   }finally{await app.close();}
 });
+
+// ---------------------------------------------------------------------------
+// #264 J02 — dual-epoch read seam (S0 frozen epoch + live S1) environment
+// admission and route truth (zero network, zero credentials).
+// ---------------------------------------------------------------------------
+const frozenEnv={...validEnv,TALLY_V2_FROZEN_DAG_HOST:'read-only',
+  TALLY_VERSION_DAG_REGISTRY_PATH:'/tmp/registry.sqlite',
+  TALLY_VERSION_DAG_REVIEW_ISSUE:'392',
+  TALLY_VERSION_DAG_REVIEW_COMMENT_ID:'6976912326',
+  TALLY_VERSION_DAG_REVIEW_LOGIN:'kaicreator-mm',
+  TALLY_VERSION_DAG_APPROVAL_ISSUE:'392',
+  TALLY_VERSION_DAG_APPROVAL_COMMENT_ID:'6574693761',
+  TALLY_VERSION_DAG_APPROVAL_LOGIN:'kaicreator-mm'};
+const j02Amendments=JSON.stringify([
+  {kind:'NATIVE_EDGE_REMOVED',from:260,to:264,
+    evidenceRef:'https://github.com/kaicreator-mm/tally/pull/465'},
+  {kind:'NATIVE_EDGE_REMOVED',from:261,to:264,
+    evidenceRef:'https://github.com/kaicreator-mm/tally/pull/465'},
+  {kind:'NATIVE_EDGE_REMOVED',from:273,to:264,
+    evidenceRef:'https://github.com/kaicreator-mm/tally/pull/465'}]);
+test('dual-epoch pins require frozen DAG pins and validate strictly',()=>{
+  const settings=readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_FREEZE_BASE_SHA:sha});
+  assert.equal(settings.freezeBaseSha,sha);
+  assert.equal(settings.edgeAmendments,null);
+  const withLedger=readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_FREEZE_BASE_SHA:sha,
+    TALLY_V2_EDGE_AMENDMENTS_JSON:j02Amendments});
+  assert.equal(withLedger.edgeAmendments.length,3);
+  assert.equal(withLedger.edgeAmendments[0].kind,'NATIVE_EDGE_REMOVED');
+  // A malformed freeze base, a malformed ledger, amendments without a
+  // freeze base, and dual-epoch pins without frozen DAG pins all refuse
+  // START closed.
+  assert.throws(()=>readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_FREEZE_BASE_SHA:'not-a-sha'}),/INVALID_HOST_FREEZE_BASE_SHA/);
+  assert.throws(()=>readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_FREEZE_BASE_SHA:sha,
+    TALLY_V2_EDGE_AMENDMENTS_JSON:'not-json'}),
+    /INVALID_HOST_EDGE_AMENDMENTS_LEDGER/);
+  assert.throws(()=>readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_FREEZE_BASE_SHA:sha,
+    TALLY_V2_EDGE_AMENDMENTS_JSON:'[]'}),
+    /INVALID_HOST_EDGE_AMENDMENTS_LEDGER/);
+  assert.throws(()=>readUiHostEnvironment({...validEnv,
+    TALLY_V2_EDGE_AMENDMENTS_JSON:j02Amendments}),
+    /DUAL_EPOCH_REQUIRES_FROZEN_DAG_PINS/);
+  assert.throws(()=>readUiHostEnvironment({...frozenEnv,
+    TALLY_V2_EDGE_AMENDMENTS_JSON:j02Amendments}),
+    /EDGE_AMENDMENTS_REQUIRE_FREEZE_BASE_SHA/);
+});
+test('dual-epoch route passes the mounted projection verbatim and stays unmounted-honest',async()=>{
+  const projection={connected:true,
+    frozenSource:{repository:'kaicreator-mm/tally',sourceSha:sha,
+      currentness:'FROZEN_HISTORICAL',readback:'VERIFIED'},
+    currentSource:{repository:'kaicreator-mm/tally',sourceSha:otherSha,
+      currentness:'CURRENT',readback:'VERIFIED'},
+    epoch:{freezeBaseSha:sha,observedVersionSha:otherSha,
+      ancestry:'S0_ANCESTOR_OF_S1'},
+    currentnessStatus:null,currentness:'STALE',
+    currentReason:'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED',
+    rosterCoverage:'HISTORICAL_VERIFIED_CURRENT_STALE',
+    frozenBlobSha:otherSha,taskPackRef:'https://github.com/kaicreator-mm/tally/blob/'+
+      sha+'/pack.json',
+    taskCount:51,nativeEdgeCount:29,frozenEdgeCount:29,
+    observedNativeEdgeCount:26,
+    edgeAmendmentLedger:{disposition:'NATIVE_EDGE_REMOVED',declared:3,
+      applied:[{from:260,to:264,
+        evidenceRef:'https://github.com/kaicreator-mm/tally/pull/465'}]},
+    compatibilityWitness:{present:false,valid:null},
+    authorized:false,admitted:false,taskPass:false,releasePass:false};
+  const calls=[];
+  const app=createAlmServer(config,{v2ReadModelHost:{
+    async dualEpoch(scope){calls.push(scope);return projection;}}});
+  const {origin}=await app.listen();
+  try{
+    const observed=await (await fetch(
+      origin+'/api/v2/dual-epoch?versionId=version%2Fv2')).json();
+    assert.equal(observed.connected,true);
+    assert.equal(observed.currentnessStatus,null);
+    assert.equal(observed.currentness,'STALE');
+    assert.equal(observed.currentReason,
+      'CURRENT_SOURCE_COMPATIBILITY_UNWITNESSED');
+    assert.equal(observed.rosterCoverage,'HISTORICAL_VERIFIED_CURRENT_STALE');
+    assert.equal(observed.observedNativeEdgeCount,26);
+    assert.equal(observed.edgeAmendmentLedger.declared,3);
+    assert.deepEqual(calls,[{versionId:'version/v2'}]);
+  }finally{await app.close();}
+  // Without any mounted Host model the route answers the honest
+  // NOT_CONNECTED default (never a fabricated dual-epoch state).
+  const bare=createAlmServer(config);
+  const {origin:bareOrigin}=await bare.listen();
+  try{
+    const observed=await (await fetch(
+      bareOrigin+'/api/v2/dual-epoch?versionId=version%2Fv2')).json();
+    assert.equal(observed.connected,false);
+    assert.equal(observed.reason,'NOT_CONNECTED');
+    assert.equal(observed.model,'dual-epoch');
+  }finally{await bare.close();}
+});
+test('installed server without a freeze base answers DUAL_EPOCH_NOT_CONFIGURED',async()=>{
+  // Boot the real installed entrypoint WITHOUT frozen/dual-epoch pins: no
+  // heavy transport is loaded and the dual-epoch model must deny honestly
+  // (a single-epoch fallback dressed as dual-epoch would be a lie).
+  const server=await startUiReadOnlyServer({env:{...validEnv}});
+  try{
+    const observed=await (await fetch(
+      server.address.origin+'/api/v2/dual-epoch?versionId=version%2Fv2')).json();
+    assert.equal(observed.connected,false);
+    assert.equal(observed.reason,'DUAL_EPOCH_NOT_CONFIGURED');
+    // Scope guard precedes the mount check in the serve composition: a
+    // foreign version denies PROJECT_VERSION_SCOPE_MISMATCH even while the
+    // dual-epoch host stays unmounted.
+    const foreign=await (await fetch(
+      server.address.origin+'/api/v2/dual-epoch?versionId=version%2Fv3')).json();
+    assert.equal(foreign.connected,false);
+    assert.equal(foreign.reason,'PROJECT_VERSION_SCOPE_MISMATCH');
+  }finally{await server.close();}
+});
+
+// ---------------------------------------------------------------------------
+// #264 J07 — real release eligibility projection + Release Host Consumer
+// dispatch admission (zero credentials; fixture CAS rows only).
+// ---------------------------------------------------------------------------
+test('v2 release model renders the real 13-gate J07a advisory projection',async()=>{
+  // Booted WITHOUT a QA status context: every gate is honestly NOT_RUN
+  // (EVIDENCE_MISSING) and the projection can never claim PASS authority.
+  const server=await startUiReadOnlyServer({env:{...validEnv}});
+  try{
+    const release=await (await fetch(
+      server.address.origin+'/api/v2/release?versionId=version%2Fv2')).json();
+    assert.equal(release.connected,true);
+    const gates=release.readiness.gates;
+    assert.equal(gates.length,13);
+    assert.ok(gates.every(gate=>gate.status==='NOT_RUN'));
+    assert.ok(gates.some(gate=>gate.name==='woodpeckerCI'));
+    assert.ok(gates.some(gate=>gate.name==='releaseQualification'));
+    assert.equal(release.readiness.permits,null);
+    assert.equal(release.readiness.rqState,'UNKNOWN');
+    assert.equal(release.readiness.ownerGrantState,'UNKNOWN');
+    assert.equal(release.readiness.advisoryOnly,true);
+    assert.equal(release.readiness.gateCounts.required,13);
+    assert.equal(release.readiness.gateCounts.reportedPass,0);
+    // The controller pre-read carries the same truthful projection.
+    const snapshot=await (await fetch(
+      server.address.origin+'/api/release/snapshot')).json();
+    assert.equal(snapshot.snapshot.readiness.status,'BLOCKED');
+    assert.equal(snapshot.snapshot.readiness.gates.length,13);
+    assert.equal(snapshot.snapshot.readiness.releasePass,false);
+  }finally{await server.close();}
+});
+test('release Host Consumer dispatch admits only pinned Host configurations',async()=>{
+  const {createInstalledReleaseDispatch}=await import('./serve.mjs');
+  const baseSettings={repository:'kaicreator-mm/tally',owner:'kaicreator-mm',
+    repo:'tally',expectedSha:sha,token:'nonpublicfixture'};
+  const {TALLY_GITHUB_READ_TOKEN:omitToken,...tokenlessEnv}=validEnv;
+  assert.ok(!omitToken||omitToken.length>0);
+  await assert.rejects(()=>createInstalledReleaseDispatch(
+    {settings:{...baseSettings,token:undefined},
+      env:{...tokenlessEnv,
+        TALLY_V2_RELEASE_DISPATCH:'host-mounted',
+        TALLY_RELEASE_SOURCE_SHA:sha}}),
+    /RELEASE_HOST_TOKEN_REQUIRED/);
+  await assert.rejects(()=>createInstalledReleaseDispatch(
+    {settings:baseSettings,env:{...validEnv,
+      TALLY_GITHUB_WRITE_TOKEN:'write-token-fixture',
+      TALLY_RELEASE_SOURCE_SHA:otherSha}}),
+    /RELEASE_SOURCE_SHA_STALE/);
+  const dispatch=await createInstalledReleaseDispatch(
+    {settings:baseSettings,env:{...validEnv,
+      TALLY_GITHUB_WRITE_TOKEN:'write-token-fixture',
+      TALLY_RELEASE_SOURCE_SHA:sha},
+      openSqliteCasStore:async()=>{
+        throw Error('NO_STORE_ACCESS_ON_PIN_DENIAL');}});
+  // Pin-validation denials answer the verified seam shape without network:
+  // unknown intent, stale source SHA, unpinned merge PR, unpinned tag source
+  // and the deliberately unbound publish effect.
+  const intent=await dispatch({intentType:'deliverQualifiedRelease',
+    input:{kind:'merge',sourceSha:sha}});
+  assert.equal(intent.status,'DENIED');
+  assert.equal(intent.reason,'MERGE_PR_NOT_PINNED');
+  assert.equal(intent.releasePass,false);
+  assert.equal(intent.authorized,false);
+  assert.equal(intent.taskPass,false);
+  assert.equal(intent.releasePublished,false);
+  const stale=await dispatch({intentType:'deliverQualifiedRelease',
+    input:{kind:'merge',sourceSha:otherSha}});
+  assert.equal(stale.status,'STALE');
+  const foreign=await dispatch({intentType:'somethingElse',
+    input:{kind:'merge',sourceSha:sha}});
+  assert.equal(foreign.status,'DENIED');
+  assert.equal(foreign.reason,'UNKNOWN_INTENT_OR_INPUT');
+  const tag=await dispatch({intentType:'deliverQualifiedRelease',
+    input:{kind:'tag',sourceSha:sha}});
+  assert.equal(tag.status,'DENIED');
+  assert.equal(tag.reason,'TAG_SOURCE_NOT_PINNED');
+  const publish=await dispatch({intentType:'deliverQualifiedRelease',
+    input:{kind:'publish',sourceSha:sha}});
+  assert.equal(publish.status,'NOT_RUN');
+  assert.equal(publish.reason,'PUBLISH_EFFECT_NOT_BOUND');
+});
+test('mounted release dispatch passes verifyReleaseSeamResult; forged shapes degrade',async()=>{
+  const verified={status:'OBSERVED',reason:'HOST_GATES_OBSERVED',
+    releasePass:false,authorized:false,taskPass:false,
+    releasePublished:false,hostState:'HOST_GATES_OBSERVED'};
+  const app=createAlmServer(config,{releaseSealedDispatch:async()=>{
+    return verified;}});
+  const {origin,actionKey}=await app.listen();
+  try{
+    const post=body=>fetch(origin+'/api/release/actions',
+      {method:'POST',headers:{'content-type':'application/json',origin,
+        'x-tally-action-key':actionKey},body:JSON.stringify(body)});
+    const observed=await post({kind:'merge',sourceSha:sha});
+    assert.equal(observed.status,200);
+    const body=await observed.json();
+    assert.equal(body.status,'OBSERVED');
+    assert.equal(body.hostState,'HOST_GATES_OBSERVED');
+    assert.equal(body.releasePass,false);
+  }finally{await app.close();}
+  // A forged authority shape (releasePass true) is refused by the same
+  // verifier the serve mount feeds — the seam can never launder a PASS.
+  const forged=createAlmServer(config,{releaseSealedDispatch:async()=>{
+    return {status:'OBSERVED',reason:'FORGED',releasePass:true,
+      authorized:false,taskPass:false,releasePublished:false};}});
+  const forgedAddress=await forged.listen();
+  try{
+    const observed=await fetch(forgedAddress.origin+'/api/release/actions',
+      {method:'POST',headers:{'content-type':'application/json',
+        origin:forgedAddress.origin,
+        'x-tally-action-key':forgedAddress.actionKey},
+        body:JSON.stringify({kind:'merge',sourceSha:sha})});
+    const body=await observed.json();
+    assert.equal(body.status,'DENIED');
+    assert.equal(body.reason,'SEAM_SHAPE_INVALID');
+    assert.equal(body.releasePass,false);
+  }finally{await forged.close();}
+});

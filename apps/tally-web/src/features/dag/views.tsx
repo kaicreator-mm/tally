@@ -222,3 +222,75 @@ export function useVersionDag(load:(versionId:string)=>VersionDag|null,
   // reloads; previous nodes are never reused across versions.
   return useMemo(()=>versionId?load(versionId):null,[versionId,load]);
 }
+
+/** #264 J02 — dual-epoch truth panel above the DAG: S0 frozen historical
+ * epoch vs the live S1 branch head, with the per-edge amendment ledger for
+ * the frozen-minus-live native edge delta. Every state stays distinguishable:
+ * unmounted seam, read failure, verified same-source, witnessed-compatible
+ * and honest STALE/unwitnessed descendant — nothing here claims a witness. */
+export function DualEpochPanel({projection,state,reason,locale='zh'}:{
+  projection:import('../../adapters/host.ts').DualEpochResponse|null;
+  state:'loading'|'ready'|'not_connected';reason:string|null;
+  locale?:'zh'|'en'}){
+  const zh=locale==='zh';
+  if(state==='loading')
+    return <Card><CardHeader title={zh?'双 Epoch 读模型 · 读取中':'Dual-epoch read · loading'}/></Card>;
+  if(!projection||projection.connected!==true)
+    return <Card><CardHeader title={zh?'双 Epoch 读模型 · 未连接':'Dual-epoch read · NOT_CONNECTED'}
+      sub={reason??projection?.reason??'DUAL_EPOCH_NOT_CONFIGURED'}/></Card>;
+  const epoch=projection.epoch;
+  const ledger=projection.edgeAmendmentLedger??null;
+  const statusTone=projection.currentnessStatus===null?'warn':
+    projection.currentnessStatus==='CURRENT_STRUCTURAL_COMPATIBLE'?'ok':'info';
+  return <Card>
+    <CardHeader title={zh?'双 Epoch · S0 冻结 ↔ S1 实时':'Dual-epoch · S0 frozen ↔ S1 live'}
+      sub={zh?'S0=R80 冻结 Epoch(历史已验证);S1=当前分支头(独立观察)'
+        :'S0=R80 frozen epoch (historically verified); S1=live branch head (independently observed)'}/>
+    <dl style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',
+      gap:8,margin:'8px 0 0'}}>
+      <div><dt style={{fontWeight:600}}>S0 {zh?'冻结基线':'freeze base'}</dt>
+        <dd style={{margin:0}}><code>{epoch?.freezeBaseSha.slice(0,12)??'—'}</code></dd></div>
+      <div><dt style={{fontWeight:600}}>S1 {zh?'观察头':'observed head'}</dt>
+        <dd style={{margin:0}}><code>{epoch?.observedVersionSha.slice(0,12)??'—'}</code>
+          <Badge tone={epoch?.ancestry==='S1_EQUALS_S0'?'info':'neutral'}>
+            {epoch?.ancestry??'—'}</Badge></dd></div>
+      <div><dt style={{fontWeight:600}}>{zh?'当前状态':'currentness'}</dt>
+        <dd style={{margin:0}}><Badge tone={statusTone}>
+          {projection.currentnessStatus??'STALE_UNWITNESSED'}</Badge>
+          {projection.currentReason?(
+            <Badge tone="warn">{projection.currentReason}</Badge>):null}</dd></div>
+      <div><dt style={{fontWeight:600}}>{zh?'名册覆盖':'roster coverage'}</dt>
+        <dd style={{margin:0}}><Badge tone={projection.rosterCoverage===
+          'VERIFIED_COMPLETE'?'ok':'warn'}>{projection.rosterCoverage}</Badge></dd></div>
+      <div><dt style={{fontWeight:600}}>{zh?'边计数(frozen/live)':'edges (frozen/live)'}</dt>
+        <dd style={{margin:0}}>{projection.frozenEdgeCount??'—'} / {
+          projection.observedNativeEdgeCount??'—'}</dd></div>
+      <div><dt style={{fontWeight:600}}>{zh?'兼容见证':'compatibility witness'}</dt>
+        <dd style={{margin:0}}><Badge tone={projection.compatibilityWitness?.present===true?
+          'ok':'warn'}>{projection.compatibilityWitness?.present===true?
+          'PRESENT_VALID':'ABSENT'}</Badge></dd></div>
+    </dl>
+    {ledger!==null?(
+      <>
+        <p style={{margin:'10px 0 4px',fontWeight:600}}>
+          {zh?'边修正账本 · '+ledger.disposition+' · 声明 '+ledger.declared+' 条(Host 注记)'
+            :'Edge amendment ledger · '+ledger.disposition+' · declared '+ledger.declared+' (Host-attested)'}
+        </p>
+        <ul style={{margin:0,paddingLeft:18}}>
+          {ledger.applied.map(entry=>(
+            <li key={entry.from+'>'+entry.to}>
+              #{entry.from} → #{entry.to}
+              {typeof entry.evidenceRef==='string'?(
+                <a href={entry.evidenceRef} target="_blank" rel="noreferrer">
+                  {zh?'证据':'evidence'}</a>):null}
+            </li>))}
+        </ul>
+      </>
+    ):(
+      <p style={{margin:'10px 0 0'}}>
+        {zh?'无 Host 注记的边修正(冻结集合与实时集合一致或 S1==S0)'
+          :'No Host-attested edge amendments (frozen and live sets agree, or S1==S0)'}
+      </p>
+    )}
+  </Card>;
+}

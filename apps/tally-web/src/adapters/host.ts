@@ -63,14 +63,43 @@ export interface SettingsResponse{connected:boolean;reason?:string;model?:string
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
   readiness?:{versionId:string;
-    gates:{name:string;status:string;owner:string|null}[];
+    gates:{name:string;status:string;reason?:string|null;
+      owner:string|null;evidenceRef?:string|null}[];
+    gateCounts?:{required:number;reportedPass:number;
+      missingOrUnqualified:number;comparison:string};
+    blockers?:{name:string;status:string;reason:string|null}[];
     permits:{operation:string;state:string;sourceSha:string|null;
       grantedAt:string|null}[]|null;
-    rqState:string;ownerGrantState:string};}
+    rqState:string;ownerGrantState:string;advisoryOnly?:boolean};}
 export interface MetadataResponse{connected:boolean;reason?:string;model?:string;
   versionId:string|null;
   attempts?:unknown[];reports?:unknown[];lineage?:unknown[];
   learnedOutcomes?:unknown[];note?:string;}
+/** #264 J02 — dual-epoch projection (S0 frozen historical + live S1).
+ * currentnessStatus null means the honest STALE/unwitnessed descendant;
+ * observedNativeEdgeCount/edgeAmendmentLedger carry the live-edge truth and
+ * the Host-attested per-edge disposition for the frozen-minus-live delta. */
+export interface DualEpochResponse{
+  connected:boolean;reason?:string;
+  frozenSource?:{repository:string;sourceSha:string;
+    currentness:string;readback:string};
+  currentSource?:{repository:string;sourceSha:string;
+    currentness:string;readback:string};
+  epoch?:{freezeBaseSha:string;observedVersionSha:string;ancestry:string};
+  currentnessStatus:'CURRENT_SAME_SOURCE'|'CURRENT_STRUCTURAL_COMPATIBLE'|null;
+  currentness:'CURRENT'|'STALE';
+  currentReason:string|null;
+  rosterCoverage:string;
+  frozenBlobSha?:string|null;taskPackRef?:string|null;
+  taskCount?:number;nativeEdgeCount?:number;frozenEdgeCount?:number;
+  observedNativeEdgeCount?:number|null;
+  edgeAmendmentLedger?:{disposition:string;declared:number;
+    applied:{from:number;to:number;evidenceRef:string}[]}|null;
+  identityDigests?:{original51IdsDigest:string;native29EdgeDigest:string};
+  compatibilityWitness?:{present:boolean;valid:boolean|null}|null;
+  claimProjection?:{claimSourceEpoch:string;frozenClaimSourceSha:string;
+    currentObservedSourceSha:string;claimReadback:string};
+  authorized:boolean;admitted:boolean;taskPass:boolean;releasePass:boolean;}
 /** #264 E1 R91 — real observed runs of THIS installed server's /api/actions
  * seam. Structural twin of features/agents AttemptRecord; missing telemetry
  * (duration/tokens/cost/model) is null (UNKNOWN), never zero. */
@@ -124,6 +153,8 @@ export const hostAdapter=Object.freeze({
     `/api/v2/tasks?versionId=${encodeURIComponent(versionId)}`),
   dag:(versionId:string)=>getJson<DagResponse>(
     `/api/v2/dag?versionId=${encodeURIComponent(versionId)}`),
+  dualEpoch:(versionId:string)=>getJson<DualEpochResponse>(
+    `/api/v2/dual-epoch?versionId=${encodeURIComponent(versionId)}`),
   settings:()=>getJson<SettingsResponse>('/api/v2/settings'),
   release:(versionId:string)=>getJson<ReleaseResponse>(
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
