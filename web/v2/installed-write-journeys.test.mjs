@@ -437,6 +437,23 @@ test('agent-attempts projection renders only real executions',async()=>{
     if(previousIssue===undefined)delete process.env.TALLY_LOCAL_ISSUE_NUMBER;
     else process.env.TALLY_LOCAL_ISSUE_NUMBER=previousIssue;
     await app2.close();}
+  // A real spawn that died in 'error' (no exit code, no timeout, but a real
+  // launch with an evidence directory) IS an attempt: visible, EXITED_FAIL.
+  const errorRun=async kind=>({status:'FAIL',exitCode:null,signal:null,
+    timeout:false,observedAt:'2026-11-19T08:05:00.000Z',
+    evidenceDir:`C:/tmp/evidence/${kind}`,result:null});
+  const app3=createAlmServer(config,{run:errorRun});
+  const {origin:origin3,actionKey:key3}=await app3.listen();
+  try{
+    await fetch(origin3+'/api/actions',{method:'POST',
+      headers:{'content-type':'application/json',origin:origin3,
+        'x-tally-action-key':key3},
+      body:JSON.stringify({kind:'start',sourceSha:sha})});
+    const data=await (await fetch(
+      origin3+'/api/v2/agent-attempts')).json();
+    assert.equal(data.attempts.length,1);
+    assert.equal(data.attempts[0].state,'EXITED_FAIL');
+  }finally{await app3.close();}
 });
 
 test('release evidence passthrough uses the mounted provider and keeps the advisory default',async()=>{

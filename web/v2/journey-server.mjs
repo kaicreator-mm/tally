@@ -625,21 +625,24 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',json(await readV2Model('metadata','metadata',{versionId})));
       }
-      // #264 E1 R91: real installed agent/attempt read model — the observed
-      // history of THIS server's actual /api/actions runs (the controller's
-      // sanctioned run seam). No fabricated attempt ids, tokens or cost:
+      // #264 E1 R91: real installed agent/attempt read model — the MOST
+      // RECENT observed run of THIS server's actual /api/actions seam (the
+      // controller's sanctioned run seam; the controller exposes only the
+      // latest entry, so earlier runs stay visible in the legacy console
+      // snapshot, not here). No fabricated attempt ids, tokens or cost:
       // missing telemetry stays null (UNKNOWN), and before any real run the
       // roster is empty with connected:true (records UNKNOWN, not a claimed
-      // confirmed-empty history).
+      // confirmed-empty history). A timeout renders EXITED_FAIL like the
+      // shared AttemptRecord vocabulary allows; the API result keeps the
+      // timeout distinction.
       if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
         const snapshot=controller.snapshot();
         const latest=snapshot.result;
-        // Only a REAL execution (observedAt + evidenceDir + exit code or a
-        // recorded timeout) is an attempt row. The R90 fail-closed stub and
-        // the unmounted review seam never launch a process, so they must not
-        // render as failed/unknown agent attempts.
-        const executed=Boolean(latest&&latest.observedAt&&latest.evidenceDir&&
-          (latest.exitCode!==null||latest.timeout===true));
+        // Only a REAL execution (observedAt + evidenceDir, i.e. an actual
+        // spawn of the consumer, including a spawn that died in 'error') is
+        // an attempt row. The R90 fail-closed stub and the unmounted review
+        // seam carry neither marker, so they never render as attempts.
+        const executed=Boolean(latest&&latest.observedAt&&latest.evidenceDir);
         const dispatchedIssue=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER);
         const taskIds=Number.isSafeInteger(dispatchedIssue)&&dispatchedIssue>0
           ?[String(dispatchedIssue)]
