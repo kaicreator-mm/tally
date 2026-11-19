@@ -21,6 +21,7 @@ package main
 import (
 	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 	"tally/runtimes/codex"
 	"tally/runtimes/dsh"
 	"tally/runtimes/fake"
+	"tally/runtimes/pi"
 )
 
 // runtimeBuilder 按 worker 共享配置面构造一个 runtime 适配器。builder 只在
@@ -96,6 +98,38 @@ func newRuntimeRegistry() *runtimeRegistry {
 			}
 		}
 		return rt, nil
+	})
+	// v2.1 provider candidate canary:pi coding agent 适配器缺省禁用 ——
+	// runtime=pi 且 canary 开关(TALLY_PI_CANARY=1)且显式二进制路径三者同时
+	// 出现才可构造(fail-closed 同 DSH P4-06)。认证:pi 的 spawn 面剥离全部
+	// provider 凭据环境变量(runtimes/pi isolation),Config.Env 是唯一显式
+	// 通道 —— canary 操作者经 TALLY_PI_AUTH_ENV 指名要透传的凭据环境变量名
+	//(如 DEEPSEEK_API_KEY),值只从 worker 进程 env 读入、绝不落盘、绝不进
+	// 日志。canary 关闭时 Codex/fake 缺省面零影响。
+	r.register(pi.DescriptorName, func(cfg v13Config) (agentruntime.Runtime, error) {
+		if !cfg.PICanary {
+			return nil, fmt.Errorf("pi 为 v2.1 provider candidate canary 适配器,默认禁用:需 TALLY_PI_CANARY=1 显式启用")
+		}
+		if strings.TrimSpace(cfg.PIBin) == "" {
+			return nil, fmt.Errorf("pi canary 需要显式二进制路径 TALLY_PI_BIN(钉住版本面,不做隐式发现)")
+		}
+		pcfg := pi.Config{
+			BinPath:       cfg.PIBin,
+			Model:         cfg.PIModel,
+			Provider:      cfg.PIProvider,
+			PinnedVersion: pi.PinnedPiVersion,
+		}
+		if authEnv := os.Getenv("TALLY_PI_AUTH_ENV"); authEnv != "" {
+			if v := os.Getenv(authEnv); v != "" {
+				pcfg.Env = map[string]string{authEnv: v}
+			}
+		}
+		// 最早闸:枚举等配置面在此拒绝(同 DSH P4-06 AC);二进制存在性与
+		// 钉版身份归 Start 的 fail-closed 闸。
+		if err := pcfg.Validate(); err != nil {
+			return nil, fmt.Errorf("pi 配置无效: %w", err)
+		}
+		return pi.New(pcfg), nil
 	})
 	return r
 }

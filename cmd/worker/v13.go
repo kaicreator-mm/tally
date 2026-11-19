@@ -90,6 +90,14 @@ type v13Config struct {
 	DSHBin      string
 	DSHModel    string
 	DSHProvider string
+	// PI canary 配置面(v2.1 provider candidate):pi coding agent 适配器缺省
+	// 禁用,只有显式配置(runtime=pi + canary 开关 + 二进制路径)才可构造。
+	// PIModel/PIProvider 是期望旗标(--model/--provider 透传),与实际生效
+	// 模型/provider(json NDJSON 可观察)是两个事实(runtimes/pi 身份纪律)。
+	PICanary   bool
+	PIBin      string
+	PIModel    string
+	PIProvider string
 	// Profile / Model / Behavior 是 CodegenRun 的归因坐标(§11.2.1/§15.2)。
 	Profile  string
 	Model    string
@@ -111,6 +119,10 @@ func v13ConfigFromEnv(repo string) v13Config {
 		DSHBin:       os.Getenv("TALLY_DSH_BIN"),
 		DSHModel:     os.Getenv("TALLY_DSH_MODEL"),
 		DSHProvider:  os.Getenv("TALLY_DSH_PROVIDER"),
+		PICanary:     os.Getenv("TALLY_PI_CANARY") == "1",
+		PIBin:        os.Getenv("TALLY_PI_BIN"),
+		PIModel:      os.Getenv("TALLY_PI_MODEL"),
+		PIProvider:   os.Getenv("TALLY_PI_PROVIDER"),
 		Profile:      envOr("TALLY_V13_PROFILE", "default-coding"),
 		Model:        envOr("TALLY_V13_MODEL", "default"),
 		Behavior:     envOr("TALLY_V13_BEHAVIOR", "v1"),
