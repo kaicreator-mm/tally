@@ -384,3 +384,241 @@ test('bounded repair uses a new attempt id and preserves prior failure evidence'
     assert.equal(calls.length,1,'repaired attempt restart must not relaunch');
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+
+// ---------------------------------------------------------------------------
+// #264 J05 — sealed-prompt path-occupancy guard + single-candidate review
+// ---------------------------------------------------------------------------
+test('tracked candidate path refuses the Builder attempt before any spawn',async()=>{
+  await withHost(async({host,calls,config})=>{
+    const occupied=await host.runAttempt(config);
+    assert.equal(occupied.state,'AGENT_NOT_EXECUTED');
+    assert.equal(occupied.reason,'CANDIDATE_PATH_OCCUPIED');
+    assert.equal(occupied.agentLaunch,false);
+    assert.equal(calls.length,0,'occupancy refusal must precede the spawn');
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.phase,'NOT_EXECUTED');
+    assert.equal(row.value.reason,'CANDIDATE_PATH_OCCUPIED');
+    await store.close();
+  },{ops:operations({candidatePathOccupied:async()=>true})});
+  // An explicitly authorized replacement is the only way past the guard
+  // (a fresh attempt id: the refusal above left a terminal NOT_EXECUTED row).
+  await withHost(async({host,calls,config})=>{
+    const x=await host.runAttempt({...config,attemptId:'attempt:t06m:replace:1',
+      candidateReplacementAuthorized:true});
+    assert.equal(x.state,'LOCAL_CANDIDATE_READY');
+    assert.equal(calls.length,1);
+  },{ops:operations({candidatePathOccupied:async config=>
+    config.candidateReplacementAuthorized!==true})});
+});
+
+const reviewCandidateCommit='023db3aa9a6c30ef5975c6f085ba207ec315cb09';
+const reviewCandidateTree='ff7cd2b35ea65d6c7ab316b963eed4066af455db';
+const reviewRepairCommit='d9fbc0239a8c38daae0c5637451f1e6b10fce983';
+const reviewRepairTree='cb761f739b2fd2bc737f68ad19e4a0b41c63c023';
+function reviewOperations(overrides={}){
+  const path=LOCAL_CODEX_CONSTANTS.candidateRelativePath;
+  return {
+    probeProvider:async()=>({available:true}),
+    prepareWorktree:async config=>({worktreePath:config.worktreePath,baseSha:config.sourceSha}),
+    proveConfinement:async config=>({verified:true,builderPrincipal:config.builderPrincipal,
+      builderSid:config.builderSid,hiddenVerifierStatus:'HIDDEN_NOT_QUALIFIED'}),
+    finalizeCandidate:async()=>candidate,
+    verifyCandidateReadback:async()=>({verified:true,candidateTree:reviewCandidateTree,
+      parent:sourceSha,paths:[path]}),
+    verifyRepairReadback:async()=>({verified:true,repairTree:reviewRepairTree,
+      parent:reviewCandidateCommit,paths:[path],candidatePath:path}),
+    ...overrides
+  };
+}
+function reviewConfigFor(dir,overrides={}){
+  return {issueRef:'https://github.com/kaicreator-mm/tally/issues/264',
+    sourceSha,decisionId:'decision:264:j5:test:1',decision:'ACCEPT',
+    attemptId:'attempt:264:e1:r91:4',
+    candidateCommit:reviewCandidateCommit,candidateTree:reviewCandidateTree,
+    repairCommit:reviewRepairCommit,repairTree:reviewRepairTree,prNumber:466,
+    builderStorePath:join(dir,'builder.sqlite'),
+    decisionStorePath:join(dir,'review.sqlite'),repositoryPath:dir,
+    reviewer:{operatorId:'zcode:i264:e1:reviewer:1',writerId:'tally-host:win32:reviewer:1',
+      writerLogin:'kaicreator-mm',claimRef:'https://github.com/kaicreator-mm/tally/issues/264#issuecomment-7004539047',
+      commentId:7004539047},
+    builder:{operatorId:'zcode:i264:e1:integration:1',
+      writerId:'tally-host:win32:i264:e1:integration:1'},
+    reviewRef:'https://github.com/kaicreator-mm/tally/pull/466#pullrequestreview-5971578979',
+    githubReads:{
+      readPullRequest:async n=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+      readCombinedStatus:async sha=>({state:'success',totalCount:5})},
+    ...overrides};
+}
+async function seedBuilderRecord(config,overrides={}){
+  const store=await openSqliteCasStore({path:config.builderStorePath,busyTimeoutMs:1000});
+  await store.put(attemptKey(config.attemptId),{phase:'CANDIDATE_READY',
+    attemptId:config.attemptId,sourceSha:config.sourceSha,issueRef:config.issueRef,
+    claimGeneration:1,candidateRelativePath:LOCAL_CODEX_CONSTANTS.candidateRelativePath,
+    candidateTree:reviewCandidateTree,candidateCommit:reviewCandidateCommit,
+    candidateRef:'refs/tally-candidates/attempt-264-e1-r91-4',
+    worktreePath:'C:/worktrees/attempt-264',...overrides},{mustBeAbsent:true});
+  await store.close();
+}
+function reviewHost(dir,ops){
+  return createLocalCodexHost({spawnFn:()=>{throw Error('review must not spawn');},
+    operations:ops??reviewOperations(),now:()=>Date.UTC(2026,10,19),killTree:async()=>true});
+}
+const decisionKeyPrefix=LOCAL_CODEX_CONSTANTS.reviewDecisionKeyPrefix;
+const outcomeKeyPrefix=LOCAL_CODEX_CONSTANTS.reviewOutcomeKeyPrefix;
+
+test('single-candidate ACCEPT records the decision and publishes the qualified outcome',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t264-review-'));
+  try{
+    const config=reviewConfigFor(dir);
+    await seedBuilderRecord(config);
+    const host=reviewHost(dir);
+    const x=await host.reviewSingleCandidate(config);
+    assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+    assert.equal(x.reason,'REVIEW_DECISION_CAS_READBACK_VERIFIED');
+    assert.equal(x.decision,'ACCEPT');
+    assert.equal(x.taskPass,true);
+    assert.equal(x.releasePass,false);
+    assert.equal(x.taskOutcome.status,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.ok(x.decisionRecord.decisionKey.startsWith(decisionKeyPrefix));
+    const store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+    const decisionRow=await store.get(x.decisionRecord.decisionKey);
+    assert.equal(decisionRow.value.phase,'REVIEW_DECISION_RECORDED');
+    assert.equal(decisionRow.value.decision,'ACCEPT');
+    assert.equal(decisionRow.value.reviewer.operatorId,config.reviewer.operatorId);
+    assert.equal(decisionRow.value.builder.operatorId,config.builder.operatorId);
+    const outcomeRow=await store.get(x.taskOutcome.outcomeKey);
+    assert.equal(outcomeRow.value.phase,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.equal(outcomeRow.value.taskPass??undefined,undefined,
+      'outcome row carries no taskPass flag — status is the authority');
+    const keys=await store.list(decisionKeyPrefix);
+    assert.equal(keys.length,1,'one create-only decision row');
+    await store.close();
+    // Idempotent replay: same inputs answer ALREADY_RECORDED with the SAME
+    // rows — never a second CAS write.
+    const again=await host.reviewSingleCandidate(config);
+    assert.equal(again.state,'REVIEW_DECISION_RECORDED');
+    assert.equal(again.reason,'REVIEW_DECISION_ALREADY_RECORDED');
+    assert.equal(again.decisionRecord.decisionKey,x.decisionRecord.decisionKey);
+    assert.equal(again.taskOutcome.status,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+    assert.equal(again.taskOutcome.alreadyPublished,true);
+    const store2=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+    assert.equal((await store2.list(decisionKeyPrefix)).length,1);
+    assert.equal((await store2.list(outcomeKeyPrefix)).length,1);
+    await store2.close();
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('REWORK and DEFER record the decision but never publish or pass the task',async()=>{
+  for(const decision of ['REWORK','DEFER']){
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-review-'+decision.toLowerCase()+'-'));
+    try{
+      const config=reviewConfigFor(dir,{decision,decisionId:'decision:264:j5:'+decision.toLowerCase()+':1'});
+      await seedBuilderRecord(config);
+      const x=await reviewHost(dir).reviewSingleCandidate(config);
+      assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+      assert.equal(x.decision,decision);
+      assert.equal(x.taskPass,false);
+      assert.equal(x.taskOutcome.status,'HOLD');
+      assert.equal(x.taskOutcome.reason,'DECISION_'+decision+'_NOT_TASK_PASS');
+      const store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:1000});
+      assert.equal((await store.list(decisionKeyPrefix)).length,1);
+      assert.equal((await store.list(outcomeKeyPrefix)).length,0,
+        decision+' must never publish a task outcome row');
+      await store.close();
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
+});
+
+test('single-candidate review denies broken provenance chains fail-closed',async()=>{
+  const cases=[
+    ['REVIEW_INPUT_INVALID',config=>reviewHost(config.repositoryPath),
+      config=>({...config,decision:'SHIP_IT'})],
+    ['BUILDER_RECORD_NOT_FOUND',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_NOT_READY',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_STALE',config=>reviewHost(config.repositoryPath),config=>config],
+    ['BUILDER_RECORD_MISMATCH',config=>reviewHost(config.repositoryPath),config=>config],
+    ['CANDIDATE_READBACK_MISMATCH',
+      config=>reviewHost(config.repositoryPath,reviewOperations({
+        verifyCandidateReadback:async()=>({verified:true,candidateTree:'f'.repeat(40),
+          parent:sourceSha,paths:[LOCAL_CODEX_CONSTANTS.candidateRelativePath]})})),
+      config=>config],
+    ['REPAIR_READBACK_MISMATCH',
+      config=>reviewHost(config.repositoryPath,reviewOperations({
+        verifyRepairReadback:async()=>({verified:false})})),
+      config=>config],
+    ['PR_READBACK_MISMATCH',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:'0'.repeat(40),baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'success',totalCount:5})}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'failure',totalCount:5})}})],
+    ['REVIEW_DECISION_CONFLICT',config=>reviewHost(config.repositoryPath),config=>config],
+  ];
+  let index=0;
+  for(const [reason,mkHost,configFn] of cases){
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-deny-'));
+    try{
+      const base=reviewConfigFor(dir);
+      if(reason==='BUILDER_RECORD_NOT_READY')
+        await seedBuilderRecord(base,{phase:'FAILED'});
+      else if(reason==='BUILDER_RECORD_STALE')
+        await seedBuilderRecord(base,{sourceSha:'f'.repeat(40)});
+      else if(reason==='BUILDER_RECORD_MISMATCH')
+        await seedBuilderRecord(base,{candidateCommit:'e'.repeat(40)});
+      else if(reason!=='BUILDER_RECORD_NOT_FOUND'&&reason!=='REVIEW_INPUT_INVALID'&&
+        reason!=='REVIEW_DECISION_CONFLICT')
+        await seedBuilderRecord(base);
+      if(reason==='REVIEW_DECISION_CONFLICT'){
+        await seedBuilderRecord(base);
+        // Pre-seed the exact idempotency key with a DIFFERENT decision: the
+        // create-only key must refuse the conflicting second decision.
+        const {createHash}=await import('node:crypto');
+        const decisionKey=decisionKeyPrefix+createHash('sha256')
+          .update(JSON.stringify([base.issueRef,base.sourceSha,base.attemptId,
+            base.candidateCommit,base.repairCommit,base.reviewer.operatorId]))
+          .digest('hex');
+        const store=await openSqliteCasStore({path:base.decisionStorePath,busyTimeoutMs:1000});
+        await store.put(decisionKey,{schema:'tally/single-review-decision/v1',
+          phase:'REVIEW_DECISION_RECORDED',decision:'REWORK',
+          sourceSha:base.sourceSha,candidateCommit:base.candidateCommit,
+          repairCommit:base.repairCommit,
+          reviewer:{operatorId:base.reviewer.operatorId}},{mustBeAbsent:true});
+        await store.close();
+      }
+      const host=mkHost(base);
+      const x=await host.reviewSingleCandidate(configFn(base));
+      assert.equal(x.state,'NOT_ADMITTED',reason+' #'+index);
+      assert.equal(x.reason,reason,reason+' #'+index);
+      assert.equal(x.taskPass,false);
+      assert.equal(x.taskOutcome,null);
+      // No denial may write a decision row (the pre-seeded conflict fixture
+      // stays untouched at exactly one) and none may ever write an outcome.
+      const store=await openSqliteCasStore({path:base.decisionStorePath,busyTimeoutMs:1000});
+      const decisionRows=await store.list(decisionKeyPrefix);
+      assert.equal(decisionRows.length,reason==='REVIEW_DECISION_CONFLICT'?1:0,
+        reason+' must not write a decision row');
+      assert.equal((await store.list(outcomeKeyPrefix)).length,0,
+        reason+' must never write an outcome row');
+      await store.close();
+    }finally{await rm(dir,{recursive:true,force:true});}
+    index++;
+  }
+});
+
+test('an unreadable decision store stays UNKNOWN for read-only reconciliation',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-t264-unknown-'));
+  try{
+    const config=reviewConfigFor(dir,{decisionStorePath:join(dir,'no-dir','review.sqlite')});
+    await seedBuilderRecord(config);
+    const x=await reviewHost(dir).reviewSingleCandidate(config);
+    assert.equal(x.state,'REVIEW_DECISION_UNKNOWN');
+    assert.equal(x.reason,'REVIEW_DECISION_ACK_LOST');
+    assert.equal(x.reconciliationRequired,true);
+    assert.equal(x.taskPass,false);
+    assert.equal(x.decisionRecord,null);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});

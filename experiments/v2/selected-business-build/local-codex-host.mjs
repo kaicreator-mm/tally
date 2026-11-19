@@ -12,6 +12,18 @@ const CANDIDATE='experiments/v2/selected-business-build/LOCAL_CODEX_L3.md';
 const keyFor=attemptId=>'tally:v2:local-agent-attempt:'+attemptId;
 const grantKeyFor=(kind,value)=>'tally:v2:local-agent-grant:'+kind+':'+
   createHash('sha256').update(value).digest('hex');
+// #264 J05 single-Builder review lane: one stable decision idempotency key
+// binds repository/issue/source/attempt/candidate/repair/reviewer identity;
+// decision and outcome rows are create-only with exact readback.
+const REVIEW_DECISIONS=new Set(['ACCEPT','REWORK','DEFER']);
+const reviewDecisionKeyFor=decisionKey=>
+  'tally:v2:single-review-decision:'+decisionKey;
+const reviewOutcomeKeyFor=decisionKey=>
+  'tally:v2:single-task-outcome:'+decisionKey;
+const reviewDecisionKeyOf=config=>createHash('sha256')
+  .update(JSON.stringify([config.issueRef,config.sourceSha,config.attemptId,
+    config.candidateCommit,config.repairCommit,
+    config.reviewer?.operatorId??null])).digest('hex');
 const safeError=code=>Object.assign(new Error(code),{code});
 const iso=now=>new Date(now()).toISOString();
 
@@ -227,7 +239,39 @@ function createDefaultOperations(spawnFn){
     return {verified:true,candidateTree:tree.stdout.trim(),parent:parent.stdout.trim(),
       paths:diff.stdout.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)};
   }
-  return {probeProvider,proveConfinement,prepareWorktree,finalizeCandidate,verifyCandidateReadback,sandbox};
+  async function candidatePathOccupied(config){
+    // Sealed-prompt path-occupancy guard (#264 J04 lesson): the Builder prompt
+    // says "Create exactly <path>"; if that path is already tracked at the
+    // pinned source SHA the attempt would silently overwrite tracked history.
+    // Refuse unless an explicit, separately authorized replacement flag is
+    // set by the trusted Host configuration — never by the Agent or caller.
+    if(config.candidateReplacementAuthorized===true)return false;
+    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const candidatePath=config.candidateRelativePath??CANDIDATE;
+    const check=await short(spawnFn,gitPath,['-C',config.repositoryPath,'cat-file','-e',
+      config.sourceSha+':'+candidatePath],{env:hostEnvironment(config)});
+    return check.code===0;
+  }
+  async function verifyRepairReadback(config){
+    // Independent git readback of the repaired candidate PR head: the repair
+    // commit must inherit the original candidate (no history rewrite), carry
+    // the expected tree and change exactly the frozen single path.
+    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.repositoryPath,...args],
+      {env:hostEnvironment(config),...options});
+    const candidatePath=config.candidateRelativePath??CANDIDATE;
+    const [tree,parent,diff]=await Promise.all([
+      run(['rev-parse',config.repairCommit+'^{tree}']),
+      run(['rev-parse',config.repairCommit+'^']),
+      run(['diff','--name-only',config.sourceSha,config.repairCommit])
+    ]);
+    if(tree.code!==0||parent.code!==0||diff.code!==0)return {verified:false};
+    return {verified:true,repairTree:tree.stdout.trim(),parent:parent.stdout.trim(),
+      paths:diff.stdout.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),
+      candidatePath};
+  }
+  return {probeProvider,proveConfinement,prepareWorktree,finalizeCandidate,
+    verifyCandidateReadback,candidatePathOccupied,verifyRepairReadback,sandbox};
 }
 
 const ACTIVE_PHASES=new Set(['STARTING','PERMITTED','RUNNING']);
@@ -320,6 +364,11 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       };
       const probe=await ops.probeProvider(config);
       if(!probe.available)return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
+      // Pre-spawn path-occupancy refusal (#264 J04 overwrite lesson): refuse
+      // before any worktree/ACL/spawn side effect, never overwrite tracked
+      // history through the sealed "Create exactly <path>" prompt.
+      if(ops.candidatePathOccupied&&await ops.candidatePathOccupied(config))
+        return await notExecuted('CANDIDATE_PATH_OCCUPIED');
       const worktree=await ops.prepareWorktree(config);
       let current=await store.get(key);revision=current.revision;
       await update({...current.value,worktreePath:worktree.worktreePath,baseSha:worktree.baseSha});
@@ -448,11 +497,260 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         agentLaunch:false,replayFixture:false,joinedAt,candidates:joined};
     }finally{if(store)await store.close();}
   }
-  return Object.freeze({runAttempt,joinReviewedCandidates,
+  // #264 J05 — single-Builder ReviewDecision + minimal qualified Task Outcome.
+  // The Reviewer never launches a process and never writes source. Every fact
+  // is re-derived: the Builder attempt record from the durable Builder CAS
+  // store, candidate/repair provenance from independent git readback, the PR
+  // head and exact-SHA CI from live GitHub reads. The decision row is
+  // create-only under one stable idempotency key with exact readback; a lost
+  // or ambiguous CAS ACK stays UNKNOWN for read-only reconciliation, never a
+  // blind second write. Task PASS requires the full single-candidate
+  // qualification chain AND an ACCEPT decision; REWORK/DEFER and every
+  // denial keep taskPass=false. This lane never touches the T06N Join.
+  async function reviewSingleCandidate(config){
+    const flags={claimGeneration:1,claimAccepted:true,admitted:true,authorized:false,
+      taskPass:false,releasePass:false};
+    const base={issueRef:config.issueRef,sourceSha:config.sourceSha,
+      decisionId:config.decisionId,...flags};
+    const denied=(reason,extra={})=>({...base,state:'NOT_ADMITTED',reason,
+      claimAccepted:false,admitted:false,agentLaunch:false,replayFixture:false,
+      decision:null,decisionRecord:null,taskOutcome:null,...extra});
+    const unknown=(reason,extra={})=>({...base,state:'REVIEW_DECISION_UNKNOWN',reason,
+      agentLaunch:false,replayFixture:false,reconciliationRequired:true,
+      decision:null,decisionRecord:null,taskOutcome:null,...extra});
+    if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.decisionId??'')||
+      !ATTEMPT.test(config.attemptId??'')||!SHA.test(config.candidateCommit??'')||
+      !SHA.test(config.candidateTree??'')||!SHA.test(config.repairCommit??'')||
+      !SHA.test(config.repairTree??'')||!REVIEW_DECISIONS.has(config.decision??'')||
+      !Number.isSafeInteger(config.prNumber)||config.prNumber<1)
+      return denied('REVIEW_INPUT_INVALID');
+    let store=null;
+    const decisionKey=reviewDecisionKeyOf(config);
+    try{
+      // Gate 1 — the Builder's own durable attempt record: CANDIDATE_READY at
+      // the exact pinned source, with the exact candidate commit and tree.
+      let builderStore=null;
+      try{
+        builderStore=await openSqliteCasStore({path:config.builderStorePath,
+          busyTimeoutMs:5000});
+      }catch{return denied('BUILDER_STORE_UNAVAILABLE');}
+      let builderRow=null;
+      try{
+        builderRow=await builderStore.get(keyFor(config.attemptId));
+      }catch{builderRow=null;}
+      finally{await builderStore.close();}
+      const record=builderRow?.value;
+      if(!record)return denied('BUILDER_RECORD_NOT_FOUND');
+      if(record.phase!=='CANDIDATE_READY')return denied('BUILDER_RECORD_NOT_READY');
+      if(record.sourceSha!==config.sourceSha)return denied('BUILDER_RECORD_STALE');
+      if(record.candidateCommit!==config.candidateCommit||
+        record.candidateTree!==config.candidateTree)
+        return denied('BUILDER_RECORD_MISMATCH');
+      const candidatePath=record.candidateRelativePath??CANDIDATE;
+      // Gate 2 — independent git readback: candidate parent/tree/single path,
+      // then the repair commit inheriting the candidate with no history
+      // rewrite and the same single changed path.
+      const candidate=await ops.verifyCandidateReadback(
+        {...config,sourceSha:config.sourceSha},{candidateCommit:config.candidateCommit});
+      if(!candidate.verified||candidate.candidateTree!==config.candidateTree||
+        candidate.parent!==config.sourceSha||candidate.paths.length!==1||
+        candidate.paths[0]!==candidatePath)
+        return denied('CANDIDATE_READBACK_MISMATCH');
+      const repair=await ops.verifyRepairReadback(
+        {...config,candidateRelativePath:candidatePath});
+      if(!repair.verified||repair.repairTree!==config.repairTree||
+        repair.parent!==config.candidateCommit||repair.paths.length!==1||
+        repair.paths[0]!==candidatePath)
+        return denied('REPAIR_READBACK_MISMATCH');
+      // Gate 3 — live GitHub facts: the candidate PR head must still be the
+      // reviewed repair commit on the selected base, and the exact-SHA CI
+      // must be green at that commit (never at any other SHA).
+      let pull=null,status=null;
+      try{
+        pull=await config.githubReads?.readPullRequest?.(config.prNumber);
+        status=await config.githubReads?.readCombinedStatus?.(config.repairCommit);
+      }catch{return denied('GITHUB_READBACK_UNAVAILABLE');}
+      if(!pull||pull.state!=='open'||pull.headSha!==config.repairCommit||
+        pull.baseRef!=='version/v2')
+        return denied('PR_READBACK_MISMATCH');
+      if(!status||status.state!=='success'||!Number.isSafeInteger(status.totalCount)||
+        status.totalCount<1)
+        return denied('CI_EXACT_SHA_NOT_VERIFIED');
+      store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:5000});
+      const decisionKeyFull=reviewDecisionKeyFor(decisionKey);
+      const decidedAt=iso(now);
+      const decisionValue={schema:'tally/single-review-decision/v1',
+        phase:'REVIEW_DECISION_RECORDED',decision:config.decision,
+        repository:'kaicreator-mm/tally',issueRef:config.issueRef,
+        sourceSha:config.sourceSha,attemptId:config.attemptId,
+        candidateCommit:config.candidateCommit,candidateTree:config.candidateTree,
+        candidateRelativePath:candidatePath,repairCommit:config.repairCommit,
+        repairTree:config.repairTree,prNumber:config.prNumber,
+        reviewer:Object.freeze({operatorId:config.reviewer?.operatorId??null,
+          writerId:config.reviewer?.writerId??null,
+          writerLogin:config.reviewer?.writerLogin??null,
+          claimRef:config.reviewer?.claimRef??null,
+          commentId:config.reviewer?.commentId??null}),
+        builder:Object.freeze({operatorId:config.builder?.operatorId??null,
+          writerId:config.builder?.writerId??null}),
+        reviewRef:config.reviewRef??null,decidedAt};
+      let recorded;
+      const existing=await store.get(decisionKeyFull);
+      if(existing){
+        const v=existing.value;
+        if(v?.phase!=='REVIEW_DECISION_RECORDED'||
+          v.decision!==decisionValue.decision||
+          v.sourceSha!==decisionValue.sourceSha||
+          v.candidateCommit!==decisionValue.candidateCommit||
+          v.repairCommit!==decisionValue.repairCommit||
+          v.reviewer?.operatorId!==decisionValue.reviewer.operatorId)
+          return denied('REVIEW_DECISION_CONFLICT');
+        recorded={key:decisionKeyFull,revision:existing.revision,
+          value:v,alreadyRecorded:true};
+      }else{
+        let reservation;
+        try{
+          reservation=await store.put(decisionKeyFull,decisionValue,{mustBeAbsent:true});
+        }catch(error){
+          if(error&&error.message==='CAS_EXISTS'){
+            const reread=await store.get(decisionKeyFull);
+            const v=reread?.value;
+            if(v?.phase==='REVIEW_DECISION_RECORDED'&&
+              v.decision===decisionValue.decision&&
+              v.reviewer?.operatorId===decisionValue.reviewer.operatorId)
+              recorded={key:decisionKeyFull,revision:reread.revision,value:v,
+                alreadyRecorded:true};
+            else return denied('REVIEW_DECISION_CONFLICT');
+          }else return unknown('REVIEW_DECISION_ACK_LOST',
+            {decisionKey:decisionKeyFull,
+             retryPolicy:'READ_BACK_BEFORE_RETRY_NO_BLIND_SECOND_WRITE'});
+        }
+        if(!recorded){
+          if(!Number.isSafeInteger(reservation?.revision))
+            return unknown('REVIEW_DECISION_ACK_LOST',{decisionKey:decisionKeyFull});
+          const proof=await store.get(decisionKeyFull);
+          if(proof?.revision!==reservation.revision||
+            proof?.value?.phase!=='REVIEW_DECISION_RECORDED'||
+            proof.value.decision!==decisionValue.decision||
+            proof.value.repairCommit!==decisionValue.repairCommit)
+            return unknown('REVIEW_DECISION_READBACK_UNVERIFIED',
+              {decisionKey:decisionKeyFull});
+          recorded={key:decisionKeyFull,revision:proof.revision,value:proof.value,
+            alreadyRecorded:false};
+        }
+      }
+      const decisionRecord=Object.freeze({decisionKey:decisionKeyFull,
+        revision:recorded.revision,decision:recorded.value.decision,
+        decidedAt:recorded.value.decidedAt,alreadyRecorded:recorded.alreadyRecorded});
+      // Gate 4 — qualified Task Outcome: ONLY an ACCEPT decision with every
+      // gate above verified may publish; REWORK/DEFER hold publication.
+      if(config.decision!=='ACCEPT')
+        return {...base,state:'REVIEW_DECISION_RECORDED',
+          reason:recorded.alreadyRecorded?
+            'REVIEW_DECISION_ALREADY_RECORDED':'REVIEW_DECISION_CAS_READBACK_VERIFIED',
+          agentLaunch:false,replayFixture:false,decision:config.decision,
+          decisionRecord,taskOutcome:Object.freeze({status:'HOLD',
+            reason:'DECISION_'+config.decision+'_NOT_TASK_PASS',publication:'HOLD',
+            taskPass:false,releasePass:false})};
+      const outcomeKeyFull=reviewOutcomeKeyFor(decisionKey);
+      const outcomeValue={schema:'tally/single-task-outcome/v1',
+        phase:'QUALIFIED_TASK_OUTCOME_PUBLISHED',repository:'kaicreator-mm/tally',
+        issueRef:config.issueRef,sourceSha:config.sourceSha,
+        attemptId:config.attemptId,candidateCommit:config.candidateCommit,
+        candidateTree:config.candidateTree,repairCommit:config.repairCommit,
+        repairTree:config.repairTree,prNumber:config.prNumber,
+        decision:{decision:config.decision,decisionKey:decisionKeyFull,
+          revision:recorded.revision,decidedAt:recorded.value.decidedAt,
+          reviewRef:config.reviewRef??null},
+        reviewer:decisionValue.reviewer,builder:decisionValue.builder,
+        ci:{commit:config.repairCommit,combinedState:'success',
+          contextCount:status.totalCount},
+        publisherWriterId:config.reviewer?.writerId??null,publishedAt:iso(now),
+        distinctFrom:Object.freeze(['DISPATCH_CLAIMED_COMMENT_ACK',
+          'NATIVE_ISSUE_CLOSED','NATIVE_DONE_LABEL','JOURNEY_PROJECTION',
+          'PR466_INDEPENDENT_SOURCE_REVIEW'])};
+      let outcome;
+      const existingOutcome=await store.get(outcomeKeyFull);
+      if(existingOutcome){
+        const v=existingOutcome.value;
+        if(v?.phase!=='QUALIFIED_TASK_OUTCOME_PUBLISHED'||
+          v.decision?.decisionKey!==decisionKeyFull)
+          return {...base,state:'REVIEW_DECISION_RECORDED',
+            reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',
+            agentLaunch:false,replayFixture:false,decision:config.decision,
+            decisionRecord,taskOutcome:Object.freeze({status:'HOLD',
+              reason:'OUTCOME_ROW_CONFLICT',publication:'HOLD',
+              taskPass:false,releasePass:false})};
+        outcome={key:outcomeKeyFull,revision:existingOutcome.revision,
+          alreadyPublished:true};
+      }else{
+        let reservation;
+        try{reservation=await store.put(outcomeKeyFull,outcomeValue,{mustBeAbsent:true});}
+        catch(error){
+          if(error&&error.message==='CAS_EXISTS'){
+            const reread=await store.get(outcomeKeyFull);
+            if(reread?.value?.phase==='QUALIFIED_TASK_OUTCOME_PUBLISHED')
+              outcome={key:outcomeKeyFull,revision:reread.revision,alreadyPublished:true};
+            else return {...base,state:'REVIEW_DECISION_RECORDED',
+              reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',agentLaunch:false,
+              replayFixture:false,decision:config.decision,decisionRecord,
+              taskOutcome:Object.freeze({status:'HOLD',reason:'OUTCOME_ROW_CONFLICT',
+                publication:'HOLD',taskPass:false,releasePass:false})};
+          }else return {...base,state:'REVIEW_DECISION_RECORDED',
+            reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',agentLaunch:false,
+            replayFixture:false,decision:config.decision,decisionRecord,
+            taskOutcome:Object.freeze({status:'UNKNOWN',reason:'OUTCOME_ACK_LOST',
+              publication:'HOLD',reconciliationRequired:true,taskPass:false,
+              releasePass:false,
+              retryPolicy:'READ_BACK_BEFORE_RETRY_NO_BLIND_SECOND_PUBLISH'})};
+        }
+        if(!outcome){
+          if(!Number.isSafeInteger(reservation?.revision))
+            return {...base,state:'REVIEW_DECISION_RECORDED',
+              reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',agentLaunch:false,
+              replayFixture:false,decision:config.decision,decisionRecord,
+              taskOutcome:Object.freeze({status:'UNKNOWN',reason:'OUTCOME_ACK_LOST',
+                publication:'HOLD',reconciliationRequired:true,taskPass:false,
+                releasePass:false})};
+          const proof=await store.get(outcomeKeyFull);
+          if(proof?.revision!==reservation.revision||
+            proof?.value?.phase!=='QUALIFIED_TASK_OUTCOME_PUBLISHED'||
+            proof.value.sourceSha!==config.sourceSha||
+            proof.value.repairCommit!==config.repairCommit)
+            return {...base,state:'REVIEW_DECISION_RECORDED',
+              reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',agentLaunch:false,
+              replayFixture:false,decision:config.decision,decisionRecord,
+              taskOutcome:Object.freeze({status:'UNKNOWN',
+                reason:'OUTCOME_READBACK_UNVERIFIED',publication:'HOLD',
+                reconciliationRequired:true,taskPass:false,releasePass:false})};
+          outcome={key:outcomeKeyFull,revision:proof.revision,alreadyPublished:false};
+        }
+      }
+      return {...base,state:'REVIEW_DECISION_RECORDED',
+        reason:recorded.alreadyRecorded?
+          'REVIEW_DECISION_ALREADY_RECORDED':'REVIEW_DECISION_CAS_READBACK_VERIFIED',
+        agentLaunch:false,replayFixture:false,decision:config.decision,
+        decisionRecord,
+        // Top-level Task PASS exists ONLY together with the published
+        // qualified outcome; the decision alone never passes the task.
+        taskPass:true,releasePass:false,
+        taskOutcome:Object.freeze({
+          status:'QUALIFIED_TASK_OUTCOME_PUBLISHED',
+          reason:'SINGLE_CANDIDATE_FULL_CHAIN_CAS_READBACK_VERIFIED',
+          outcomeKey:outcomeKeyFull,revision:outcome.revision,
+          alreadyPublished:outcome.alreadyPublished,publication:'PUBLISHED',
+          taskPass:true,releasePass:false})};
+    }catch{return unknown('REVIEW_DECISION_ACK_LOST');}
+    finally{if(store)await store.close();}
+  }
+  return Object.freeze({runAttempt,joinReviewedCandidates,reviewSingleCandidate,
     probeProvider:config=>ops.probeProvider(config),
     proveConfinement:(config,worktreePath)=>ops.proveConfinement(config,worktreePath)});
 }
 
 export const LOCAL_CODEX_CONSTANTS=Object.freeze({candidateRelativePath:CANDIDATE,
   attemptKeyPrefix:'tally:v2:local-agent-attempt:',joinKeyPrefix:'tally:v2:reviewer-join:',
+  reviewDecisionKeyPrefix:'tally:v2:single-review-decision:',
+  reviewOutcomeKeyPrefix:'tally:v2:single-task-outcome:',
+  reviewDecisions:Object.freeze(['ACCEPT','REWORK','DEFER']),
   builderEnvironment});

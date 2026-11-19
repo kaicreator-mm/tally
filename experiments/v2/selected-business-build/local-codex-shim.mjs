@@ -1,6 +1,7 @@
 /** T06m/T06n/T210/T219/J222/E0-#284 sealed Local Codex C boundary. Provider output is never Task evidence. */
 import {runLocalCodexAttempt as nativeRunLocalCodexAttempt,
   joinReviewedCandidates as nativeJoinReviewedCandidates,
+  reviewSingleCandidate as nativeReviewSingleCandidate,
   publishReviewedCandidate as nativePublishReviewedCandidate,
   hostProjectIntake as nativeHostProjectIntake,
   freezeProductIntake as nativeFreezeProductIntake,
@@ -20,7 +21,7 @@ export const MODULE_ID='capability-tally-local-codex@v1.0.0';
 export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-local-codex';
-export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.persistMaintenanceDraft','tally.freezeReviewedMaintenanceCandidate','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
+export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.reviewSingleCandidate','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.persistMaintenanceDraft','tally.freezeReviewedMaintenanceCandidate','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
 // #264 R91: the current attempt's own issue number may be extended by the
@@ -163,6 +164,102 @@ export async function runLocalCodexAttempt(input){
 export async function joinReviewedCandidates(input){
   const output=await computeJoinReviewedCandidates(input);
   return Object.freeze({phase:'terminal',externalRef:`tally:${input?.issueNumber??'invalid'}:${input?.joinId??'invalid'}`,
+    outcome:{ok:true,output}});
+}
+
+// #264 J05 — sealed single-candidate Review boundary. Only the exact bounded
+// observation shapes cross: NOT_ADMITTED / REPLAY_COMPLETE /
+// REVIEW_DECISION_UNKNOWN / REVIEW_DECISION_RECORDED. Identity is re-attached
+// and re-verified here so provider garbage, a caller-supplied Task PASS or a
+// second-writer shape can never become review or outcome authority. Task PASS
+// may only ever cross together with a QUALIFIED_TASK_OUTCOME_PUBLISHED
+// outcome; REWORK/DEFER and every denial keep taskPass=false.
+const SINGLE_DECISIONS=new Set(['ACCEPT','REWORK','DEFER']);
+const SINGLE_REVIEW_REASONS=new Set([
+  ...JOIN_REASONS,'REVIEW_INPUT_INVALID','BUILDER_STORE_UNAVAILABLE',
+  'BUILDER_RECORD_NOT_FOUND','BUILDER_RECORD_NOT_READY','BUILDER_RECORD_STALE',
+  'BUILDER_RECORD_MISMATCH','REPAIR_READBACK_MISMATCH','PR_READBACK_MISMATCH',
+  'CI_EXACT_SHA_NOT_VERIFIED','GITHUB_READBACK_UNAVAILABLE',
+  'REVIEW_HOST_STORE_PINS_REQUIRED','REVIEW_DECISION_CONFLICT'
+]);
+const SINGLE_UNKNOWN_REASONS=new Set(['REVIEW_DECISION_ACK_LOST',
+  'REVIEW_DECISION_READBACK_UNVERIFIED']);
+const SINGLE_RECORDED_REASONS=new Set(['REVIEW_DECISION_CAS_READBACK_VERIFIED',
+  'REVIEW_DECISION_ALREADY_RECORDED']);
+const singleCommon=(input,o,state,reason,fl)=>({state,reason,
+  issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
+  decisionId:input.decisionId,...fl});
+const singleDenied=(input,reason)=>Object.freeze({...singleCommon(input,null,
+  'NOT_ADMITTED',reason,flags(false,false,false)),replayFixture:false,
+  decision:null,decisionRecord:null,taskOutcome:null});
+const validSingleCommon=(input,o)=>o&&typeof o==='object'&&!Array.isArray(o)&&
+  o.issueRef===issueRefFor(input.issueNumber)&&o.sourceSha===input.sourceSha&&
+  o.decisionId===input.decisionId&&o.claimGeneration===1&&
+  o.authorized===false&&o.releasePass===false;
+const validDecisionRecord=(input,o)=>o&&typeof o==='object'&&!Array.isArray(o)&&
+  typeof o.decisionKey==='string'&&
+  o.decisionKey.startsWith('tally:v2:single-review-decision:')&&
+  o.decision===input.decision&&Number.isSafeInteger(o.revision)&&o.revision>=0&&
+  typeof o.decidedAt==='string'&&Number.isFinite(Date.parse(o.decidedAt))&&
+  typeof o.alreadyRecorded==='boolean';
+const validTaskOutcome=(input,o)=>o&&typeof o==='object'&&!Array.isArray(o)&&
+  (o.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'?
+    (o.reason==='SINGLE_CANDIDATE_FULL_CHAIN_CAS_READBACK_VERIFIED'&&
+     typeof o.outcomeKey==='string'&&
+     o.outcomeKey.startsWith('tally:v2:single-task-outcome:')&&
+     Number.isSafeInteger(o.revision)&&o.revision>=0&&
+     o.publication==='PUBLISHED'&&o.taskPass===true&&o.releasePass===false):
+  ['HOLD','UNKNOWN'].includes(o.status)&&o.publication==='HOLD'&&
+    o.taskPass===false&&o.releasePass===false&&
+    (o.status!=='UNKNOWN'||o.reconciliationRequired===true));
+async function computeReviewSingleCandidate(input){
+  if(!input||input.sourceRef!==issueRefFor(input.issueNumber)||
+    !ISSUES.has(input.issueNumber)||
+    !SHA.test(input.sourceSha??'')||!ATTEMPT.test(input.decisionId??'')||
+    !ATTEMPT.test(input.attemptId??'')||!SHA.test(input.candidateCommit??'')||
+    !SHA.test(input.candidateTree??'')||!SHA.test(input.repairCommit??'')||
+    !SHA.test(input.repairTree??'')||!SINGLE_DECISIONS.has(input.decision??'')||
+    !Number.isSafeInteger(input.prNumber)||input.prNumber<1)
+    return singleDenied({issueNumber:ISSUES.has(input?.issueNumber)?
+        input.issueNumber:264,
+      sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+      decisionId:ATTEMPT.test(input?.decisionId??'')?input.decisionId:null},
+      'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+  let o;
+  try{o=await nativeReviewSingleCandidate(input);}
+  catch{return singleDenied(input,'LOCAL_AGENT_PROVIDER_THREW');}
+  if(!validSingleCommon(input,o))return singleDenied(input,'LOCAL_AGENT_PROVIDER_THREW');
+  if(o.state==='NOT_ADMITTED'&&SINGLE_REVIEW_REASONS.has(o.reason)&&
+    o.admitted===false&&o.claimAccepted===false&&o.agentLaunch===false&&
+    o.taskPass===false)
+    return singleDenied(input,o.reason);
+  if(o.state==='REPLAY_COMPLETE'&&o.reason==='REPLAY_FIXTURE_ONLY'&&
+    o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+    o.replayFixture===true&&o.taskPass===false)
+    return Object.freeze({...singleCommon(input,o,o.state,o.reason,
+      flags(true,true,false)),replayFixture:true,decision:null,
+      decisionRecord:null,taskOutcome:null});
+  if(o.state==='REVIEW_DECISION_UNKNOWN'&&SINGLE_UNKNOWN_REASONS.has(o.reason)&&
+    o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+    o.replayFixture===false&&o.reconciliationRequired===true&&o.taskPass===false)
+    return Object.freeze({...singleCommon(input,o,o.state,o.reason,
+      flags(true,true,false)),replayFixture:false,reconciliationRequired:true,
+      decision:null,decisionRecord:null,taskOutcome:null});
+  if(o.state==='REVIEW_DECISION_RECORDED'&&SINGLE_RECORDED_REASONS.has(o.reason)&&
+    o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===false&&
+    o.replayFixture===false&&o.decision===input.decision&&
+    validDecisionRecord(input,o.decisionRecord)&&validTaskOutcome(input,o.taskOutcome)&&
+    o.taskPass===(o.taskOutcome.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'))
+    return Object.freeze({...singleCommon(input,o,o.state,o.reason,
+      flags(true,true,false)),replayFixture:false,decision:o.decision,
+      decisionRecord:Object.freeze({...o.decisionRecord}),
+      taskOutcome:Object.freeze({...o.taskOutcome}),
+      taskPass:o.taskOutcome.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED'});
+  return singleDenied(input,'LOCAL_AGENT_PROVIDER_THREW');
+}
+export async function reviewSingleCandidate(input){
+  const output=await computeReviewSingleCandidate(input);
+  return Object.freeze({phase:'terminal',externalRef:`tally:${input?.issueNumber??'invalid'}:${input?.decisionId??'invalid'}:single-review`,
     outcome:{ok:true,output}});
 }
 

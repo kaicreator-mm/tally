@@ -15,11 +15,17 @@
  *  - the candidate contract is the existing consumer's own (one file,
  *    independent git readback, parent === pinned source SHA).
  *
- * The review-repair (J05) consumer is not mounted at this source: two
- * disjoint builder attempts under one protected claim key are not lawful,
- * so the seam answers UNKNOWN REVIEW_CONSUMER_NOT_MOUNTED instead of
- * fabricating a reviewer join. Independent source review stays the
- * R97 section 2.C reviewer-conversation flow outside this seam.
+ * The review-repair (J05) consumer is the single-Builder ReviewDecision
+ * lane (#264): mounted ONLY when the trusted Host process additionally
+ * exports TALLY_V2_REVIEW_DISPATCH=host-mounted plus the reviewer decision
+ * pins. It spawns the existing selected single-review consumer
+ * (single-codex-review-e2e.mjs → sealed B→K→C → consumer-single-review),
+ * which verifies the independent reviewer Claim, the Builder CAS record,
+ * candidate/repair git readback, the PR head and exact-SHA CI before any
+ * ReviewDecision CAS write. Without those pins the seam keeps the honest
+ * fail-closed answer UNKNOWN REVIEW_CONSUMER_NOT_MOUNTED — never a
+ * fabricated join, never a second Builder (the T06N two-candidate Join
+ * stays a separate lane with its own cardinality rule).
  */
 import {spawn} from 'node:child_process';
 import {stat,readFile} from 'node:fs/promises';
@@ -84,11 +90,27 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(!Number.isSafeInteger(Number(env.TALLY_LOCAL_ISSUE_NUMBER))||
      Number(env.TALLY_LOCAL_ISSUE_NUMBER)<1)
     throw new TypeError('AGENT_LOCAL_ISSUE_NUMBER_INVALID');
+  // #264 J05: the single-Builder ReviewDecision seam mounts only under its
+  // own trusted Host pin; the decision value is the reviewer's expressed
+  // judgment pinned by the Host process (authority itself stays with the
+  // independently verified reviewer Claim inside the sealed C).
+  let review=null;
+  if(env.TALLY_V2_REVIEW_DISPATCH!==undefined){
+    if(env.TALLY_V2_REVIEW_DISPATCH!=='host-mounted')
+      throw new TypeError('REVIEW_DISPATCH_MODE_INVALID');
+    const decision=env.TALLY_V2_REVIEW_DECISION;
+    if(!['ACCEPT','REWORK','DEFER'].includes(decision??''))
+      throw new TypeError('REVIEW_DECISION_INVALID');
+    const decisionId=env.TALLY_V2_REVIEW_DECISION_ID;
+    if(!ID.test(decisionId??''))throw new TypeError('REVIEW_DECISION_ID_INVALID');
+    review=Object.freeze({decision,decisionId});
+  }
   return Object.freeze({claim:Object.freeze({...claim,
       commentId:claim.commentId,
       timeoutMs:Number.isSafeInteger(timeoutMs)&&timeoutMs>=60000&&
         timeoutMs<=30*60*1000?timeoutMs:10*60*1000}),
-    worktreePath,evidenceDir});
+    worktreePath,evidenceDir,
+    ...(review?{review}:{})});
 }
 
 /** Spawn the existing consumer exactly the way the journey-controller's
@@ -134,6 +156,9 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
     TALLY_LOCAL_ISSUE_NUMBER:env.TALLY_LOCAL_ISSUE_NUMBER,
     TALLY_LOCAL_WORKTREE_PATH:worktreePath,
     TALLY_LOCAL_EVIDENCE_DIR:evidenceDir});
+  const reviewEnv=()=>({...runnerEnv(),
+    ...(settings.review?{TALLY_REVIEW_DECISION:settings.review.decision,
+      TALLY_REVIEW_DECISION_ID:settings.review.decisionId}:{})});
   const observed=async(kind,exit)=>{
     let result=null;
     try{const info=await stat(join(evidenceDir,'e2e-result.json'));
@@ -147,11 +172,20 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
       signal:exit.signal??null,timeout:exit.timeout===true,observedAt,result,evidenceDir};
   };
   return Object.freeze({async run(kind){
-    if(kind!=='start')
-      // No evidenceDir on purpose: nothing executed, so the observed-runs
-      // projection must never render this as an attempt row.
+    if(kind!=='start'){
+      // J05 single-Builder ReviewDecision lane: only a Host process that
+      // exported the review dispatch pins gets the real consumer; otherwise
+      // nothing executed and the observed-runs projection must never render
+      // this as an attempt row.
+      if(kind==='review-repair'&&settings.review){
+        const script=join(env.TALLY_LOCAL_REPOSITORY_PATH,
+          'experiments','v2','selected-business-build','single-codex-review-e2e.mjs');
+        const exit=await spawnE2e(script,reviewEnv(),claim.timeoutMs);
+        return observed(kind,exit);
+      }
       return {status:'UNKNOWN',reason:'REVIEW_CONSUMER_NOT_MOUNTED',exitCode:null,
         signal:null,timeout:false,observedAt:new Date().toISOString(),result:null};
+    }
     const script=join(env.TALLY_LOCAL_REPOSITORY_PATH,
       'experiments','v2','selected-business-build','local-codex-windows-e2e.mjs');
     const exit=await spawnE2e(script,runnerEnv(),claim.timeoutMs);

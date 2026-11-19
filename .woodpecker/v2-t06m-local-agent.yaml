@@ -88,6 +88,9 @@ steps:
       - export TALLY_CLAIM_OPERATOR_ID=zcode:i172:local:1 TALLY_CLAIM_OPERATOR_KIND=other
       - export TALLY_CLAIM_WRITER_ID=tally-host:win32:i172:1 TALLY_CLAIM_WRITER_LOGIN=kaicreator-mm
       - export TALLY_CLAIM_COMMENT_ID=6523851380 TALLY_CLAIM_REGISTRY_PATH=
+      # #264 J05: replay lane of the single-Builder ReviewDecision consumer
+      # (fixture-seeded claims; no network, no GitHub write, no Builder spawn).
+      - export T264_SINGLE_REVIEW=1
       - bash experiments/v2/selected-business-build/run-clean.sh > "$work/consumer.log" 2>&1 || { rc=$?; node ci-post-error.mjs "$work/consumer.log"; exit "$rc"; }
       - echo TALLY_V2_T06M_DH_V0103_PUBLIC_K_HOST_REPLAY_PASS
       - echo TALLY_V2_T06M_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER

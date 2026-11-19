@@ -1133,6 +1133,14 @@ export async function joinReviewedCandidates(input){
     admitted:true,agentLaunch:false,replayFixture:true,authorized:false,
     taskPass:false,releasePass:false,state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY'};
 }
+export async function reviewSingleCandidate(input){
+  return {issueRef:input&&input.sourceRef,sourceSha:input&&input.sourceSha,
+    decisionId:input&&input.decisionId,claimGeneration:1,claimAccepted:true,
+    admitted:true,agentLaunch:false,replayFixture:true,authorized:false,
+    taskPass:false,releasePass:false,state:'REPLAY_COMPLETE',
+    reason:'REPLAY_FIXTURE_ONLY',decision:null,decisionRecord:null,
+    taskOutcome:null};
+}
 export async function publishReviewedCandidate(){
   return {state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
     authorized:false,taskPass:false,releasePass:false};

@@ -366,6 +366,81 @@ test('stale claim source SHA refuses START closed at boot',async()=>{
     /AGENT_CLAIM_SOURCE_SHA_STALE/);
 });
 
+// ---------------------------------------------------------------------------
+// #264 J05 — single-Builder ReviewDecision seam (review dispatch mount)
+// ---------------------------------------------------------------------------
+const reviewPins={TALLY_V2_REVIEW_DISPATCH:'host-mounted',
+  TALLY_V2_REVIEW_DECISION:'ACCEPT',
+  TALLY_V2_REVIEW_DECISION_ID:'decision:264:j5:1'};
+
+test('review dispatch pins admit a valid mount and refuse malformed ones',()=>{
+  const settings=readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins,...reviewPins});
+  assert.equal(settings.review.decision,'ACCEPT');
+  assert.equal(settings.review.decisionId,'decision:264:j5:1');
+  // Unmounted stays the honest default: no review pins, no review mount.
+  const unmounted=readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins});
+  assert.equal(unmounted.review,undefined);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_REVIEW_DISPATCH:'browser'}),
+    /REVIEW_DISPATCH_MODE_INVALID/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_REVIEW_DECISION:'SHIP_IT'}),
+    /REVIEW_DECISION_INVALID/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins,...reviewPins,
+      TALLY_V2_REVIEW_DECISION_ID:'bad id'}),
+    /REVIEW_DECISION_ID_INVALID/);
+});
+
+test('write-journey runner: mounted review-repair spawns the real single-review consumer',async()=>{
+  const settings=readInstalledWriteJourneyEnvironment(
+    {...consumerPins,...claimPins,...reviewPins});
+  let captured=null;
+  const fakeSpawn=async(script,env)=>{
+    captured={script,env};
+    const startedAt=Date.now();
+    const {mkdir,writeFile}=await import('node:fs/promises');
+    await mkdir(env.TALLY_LOCAL_EVIDENCE_DIR,{recursive:true});
+    await writeFile(join(env.TALLY_LOCAL_EVIDENCE_DIR,'e2e-result.json'),
+      JSON.stringify({status:'PASS',exitCode:0,lane:'t264-single-review',
+        realReviewEffect:true,decisionRequested:'ACCEPT',
+        result:{result:'REVIEW_DECISION_RECORDED',
+          reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',
+          decision:'ACCEPT',decisionKey:'tally:v2:single-review-decision:'+'d'.repeat(64),
+          taskOutcomeStatus:'QUALIFIED_TASK_OUTCOME_PUBLISHED',taskPass:true}})+'\n');
+    return {code:0,signal:null,startedAt,terminatedAt:Date.now()};
+  };
+  const runner=createInstalledWriteJourneyRunner({settings,
+    env:{...consumerPins,...claimPins,...reviewPins},spawnE2e:fakeSpawn});
+  const review=await runner.run('review-repair');
+  assert.equal(review.status,'PASS');
+  assert.equal(review.evidenceDir,'C:/tmp/single-evidence');
+  assert.match(captured.script,
+    /experiments[/\\]v2[/\\]selected-business-build[/\\]single-codex-review-e2e\.mjs$/);
+  assert.equal(captured.env.TALLY_REVIEW_DECISION,'ACCEPT');
+  assert.equal(captured.env.TALLY_REVIEW_DECISION_ID,'decision:264:j5:1');
+  assert.equal(captured.env.TALLY_CLAIM_SOURCE_SHA,sha);
+  assert.equal(captured.env.TALLY_LOCAL_EVIDENCE_DIR,'C:/tmp/single-evidence');
+  // The builder lane stays wired to the J04 consumer; a mounted review seam
+  // must never redirect the start kind.
+  const start=await runner.run('start');
+  assert.equal(start.status,'PASS');
+  assert.match(captured.script,
+    /experiments[/\\]v2[/\\]selected-business-build[/\\]local-codex-windows-e2e\.mjs$/);
+  // A lost durable review result on exit 0 stays UNKNOWN, never PASS.
+  const lost=createInstalledWriteJourneyRunner({settings,
+    env:{...consumerPins,...claimPins,...reviewPins},
+    spawnE2e:async()=>({code:0,signal:null,startedAt:Date.now(),
+      terminatedAt:Date.now()})});
+  const lostResult=await lost.run('review-repair');
+  assert.equal(lostResult.status,'UNKNOWN');
+  assert.equal(lostResult.reason,'ACK_LOST');
+});
+
 test('agent-attempts projection renders only real executions',async()=>{
   // Before any action: connected with an honestly empty roster. The run
   // seam mirrors the exact R90 serve.mjs fail-closed stub.

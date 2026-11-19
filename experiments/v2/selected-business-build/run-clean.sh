@@ -184,6 +184,13 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
       cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
     fi
+    if [[ "${T264_SINGLE_REVIEW:-0}" == "1" ]]; then
+      # #264 J05: single-Builder ReviewDecision/TaskOutcome consumer over the
+      # same sealed K/C composition (selected only under explicit Host
+      # enablement; requires the TALLY_TASK_CLAIM_264_REVIEWER_* pins).
+      cp "$TALLY/experiments/v2/selected-business-build/consumer-single-review-codex.mjs" "$tmp/consumer/consumer-single-review-codex.mjs"
+      TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-single-review-codex.mjs"
+    fi
   else
     cp "$TALLY/experiments/v2/selected-business-build/consumer-native-sqlite.mjs" "$tmp/consumer/consumer-native-sqlite.mjs"
     TALLY_GITHUB_READ_TOKEN="$native_token" node ./consumer-native-sqlite.mjs
