@@ -23,7 +23,16 @@ export const CAPABILITY_ID='tally-local-codex';
 export const OPERATIONS=Object.freeze(['tally.runLocalCodexAttempt','tally.joinReviewedCandidates','tally.publishReviewedCandidate','tally.freezeProductIntake','tally.hostProjectIntake','tally.persistProductDraft312','tally.freezeProductReview312','tally.persistMaintenanceDraft','tally.freezeReviewedMaintenanceCandidate','tally.publishMaintenanceIssue','tally.recordTaskLearningOutcome','tally.deliverQualifiedRelease','tally.addNativeTaskDependency','tally.freezeVersionTaskDag']);
 // Host-owned pins: #172 single Builder plus T06n Builders #177/#178 and the
 // separate Reviewer #179. Any other issue is caller authority and refuses.
-const ISSUES=new Set([172,177,178,196,197,198]);
+// #264 R91: the current attempt's own issue number may be extended by the
+// trusted Host process pin TALLY_LOCAL_ISSUE_NUMBER (the same pin the T06M
+// consumer already requires to compose the attempt identity); every other
+// issue still refuses. The claim/registry/GitHub witness checks below bind
+// the attempt to that exact issue's accepted Claim — the allowlist only
+// decides which issue identities this sealed C will entertain at all.
+const ISSUES=new Set([172,177,178,196,197,198,
+  ...(Number.isSafeInteger(Number(process.env.TALLY_LOCAL_ISSUE_NUMBER))&&
+    Number(process.env.TALLY_LOCAL_ISSUE_NUMBER)>0
+    ?[Number(process.env.TALLY_LOCAL_ISSUE_NUMBER)]:[])]);
 const REVIEWER_ISSUE=Number(process.env.TALLY_CONCURRENT_ISSUE_REVIEWER??179);
 const OWNER='kaicreator-mm',REPO='tally';
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
