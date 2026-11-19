@@ -142,8 +142,13 @@ try{
     };
   }else{
     // Real lane: both accepted Claim registries must already exist with
-    // PUBLISHED_VERIFIED rows (Host-process-only T06d publications).
-    for(const pins of [builderPins(),reviewerPins()]){
+    // PUBLISHED_VERIFIED rows (Host-process-only T06d publications). The role
+    // must tag its tuple explicitly: builderPins()/reviewerPins() allocate a
+    // fresh object per call, so reference equality against a re-invocation
+    // can never identify the reviewer iteration and the old form read the
+    // builder key from the reviewer registry (R103 review P1-01).
+    for(const {role,pins} of [{role:'builder',pins:builderPins()},
+        {role:'reviewer',pins:reviewerPins()}]){
       assert.ok(pins.dispatchId&&pins.operatorId&&pins.operatorKind&&
         pins.writerId&&pins.writerLogin,'T264_CLAIM_PINS_REQUIRED');
       assert.ok(Number.isSafeInteger(pins.commentId)&&pins.commentId>0,
@@ -151,8 +156,7 @@ try{
       assert.ok(typeof pins.registryPath==='string'&&pins.registryPath,
         'T264_CLAIM_REGISTRY_PATH_REQUIRED');
       const registry=await openSqliteCasStore({path:pins.registryPath,busyTimeoutMs:1000});
-      const row=await registry.get(registryKeyOf(claimKey(
-        pins===reviewerPins()?'reviewer':'builder')));
+      const row=await registry.get(registryKeyOf(claimKey(role)));
       assert.equal(row?.value?.phase,'PUBLISHED_VERIFIED','T264_CLAIM_NOT_PUBLISHED');
       registries.push(registry);
     }

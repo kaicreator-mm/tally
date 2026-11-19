@@ -16,6 +16,16 @@ const grantKeyFor=(kind,value)=>'tally:v2:local-agent-grant:'+kind+':'+
 // binds repository/issue/source/attempt/candidate/repair/reviewer identity;
 // decision and outcome rows are create-only with exact readback.
 const REVIEW_DECISIONS=new Set(['ACCEPT','REWORK','DEFER']);
+// Task-required CI contexts for the single-candidate qualification gate: the
+// exact-SHA combined status must carry EACH of these terminal-success
+// contexts. A single unrelated green context (or missing/pending/failing
+// required ones) must never qualify the task CI gate (R103 review P1-03).
+const REVIEW_REQUIRED_CI_CONTEXTS=Object.freeze([
+  'ci/woodpecker/pr/v2-alm-workspace',
+  'ci/woodpecker/pr/v2-candidate-publication',
+  'ci/woodpecker/pr/v2-t06l-kernel-admission',
+  'ci/woodpecker/pr/v2-t06m-local-agent',
+  'ci/woodpecker/pr/v2-t06n-concurrent-agent']);
 const reviewDecisionKeyFor=decisionKey=>
   'tally:v2:single-review-decision:'+decisionKey;
 const reviewOutcomeKeyFor=decisionKey=>
@@ -101,7 +111,7 @@ function quotePs(value){return "'"+value.replaceAll("'","''")+"'";}
 
 const sandboxPrefix=['-c','sandbox_mode="workspace-write"','-c',
   'sandbox_workspace_write.network_access=true','sandbox','--'];
-function createDefaultOperations(spawnFn){
+export function createDefaultOperations(spawnFn){
   const sandbox=(config,command,args,options={})=>short(spawnFn,config.sandboxCliPath,
     [...sandboxPrefix,command,...args],{env:builderEnvironment(config),...options});
   const git=(config,args,options={})=>short(spawnFn,config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe',
@@ -245,12 +255,23 @@ function createDefaultOperations(spawnFn){
     // pinned source SHA the attempt would silently overwrite tracked history.
     // Refuse unless an explicit, separately authorized replacement flag is
     // set by the trusted Host configuration — never by the Agent or caller.
-    if(config.candidateReplacementAuthorized===true)return false;
+    // Returns {occupied:true|false} only when git PROVED the answer; every
+    // other nonzero result (invalid ref/repo, launch failure, timeout) is
+    // {occupied:null} and the caller must fail closed without spawning — a
+    // git error may never read as "not occupied" (R103 review P1-02).
+    if(config.candidateReplacementAuthorized===true)return {occupied:false};
     const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
     const candidatePath=config.candidateRelativePath??CANDIDATE;
     const check=await short(spawnFn,gitPath,['-C',config.repositoryPath,'cat-file','-e',
       config.sourceSha+':'+candidatePath],{env:hostEnvironment(config)});
-    return check.code===0;
+    if(check.code===0)return {occupied:true};
+    const stderr=typeof check.stderr==='string'?check.stderr:'';
+    // git's proven-absent signature for `cat-file -e <ref>:<path>`; any other
+    // failure shape (bad ref, bad repository, no git binary, timeout) stays
+    // UNKNOWN instead of guessing absence.
+    if(/(?:^|\r?\n)fatal: path '.*' does not exist in '.*'(?:\r?\n|$)/.test(stderr))
+      return {occupied:false};
+    return {occupied:null,detail:stderr.slice(0,400)};
   }
   async function verifyRepairReadback(config){
     // Independent git readback of the repaired candidate PR head: the repair
@@ -366,9 +387,19 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       if(!probe.available)return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
       // Pre-spawn path-occupancy refusal (#264 J04 overwrite lesson): refuse
       // before any worktree/ACL/spawn side effect, never overwrite tracked
-      // history through the sealed "Create exactly <path>" prompt.
-      if(ops.candidatePathOccupied&&await ops.candidatePathOccupied(config))
-        return await notExecuted('CANDIDATE_PATH_OCCUPIED');
+      // history through the sealed "Create exactly <path>" prompt. Both a
+      // PROVEN occupied path and an UNPROVEN occupancy (git error, bad ref,
+      // bad repository, launch failure, timeout) refuse without spawning;
+      // only a proven-absent path (or the separately authorized replacement)
+      // may proceed (R103 review P1-02 fail-closed repair).
+      if(ops.candidatePathOccupied){
+        const occupancy=await ops.candidatePathOccupied(config);
+        if(occupancy?.occupied===true)
+          return await notExecuted('CANDIDATE_PATH_OCCUPIED');
+        if(occupancy==null||typeof occupancy!=='object'||occupancy.occupied==null)
+          return await notExecuted('CANDIDATE_PATH_OCCUPANCY_UNKNOWN',
+            {occupancyDetail:occupancy?.detail??null});
+      }
       const worktree=await ops.prepareWorktree(config);
       let current=await store.get(key);revision=current.revision;
       await update({...current.value,worktreePath:worktree.worktreePath,baseSha:worktree.baseSha});
@@ -573,9 +604,24 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       if(!pull||pull.state!=='open'||pull.headSha!==config.repairCommit||
         pull.baseRef!=='version/v2')
         return denied('PR_READBACK_MISMATCH');
-      if(!status||status.state!=='success'||!Number.isSafeInteger(status.totalCount)||
-        status.totalCount<1)
+      if(!status||status.state!=='success')
         return denied('CI_EXACT_SHA_NOT_VERIFIED');
+      // R103 review P1-03: one unrelated green context must never qualify
+      // this gate. Every task-required named context must be present and
+      // terminal-success at the exact repair SHA; missing, pending, failing
+      // or unrelated-only contexts all deny with the observed evidence.
+      const observedContexts=new Map(Array.isArray(status.contexts)?
+        status.contexts.filter(x=>x&&typeof x.context==='string')
+          .map(x=>[x.context,x.state]):[]);
+      const ciMissingContexts=[],ciNotTerminalContexts=[];
+      for(const context of REVIEW_REQUIRED_CI_CONTEXTS){
+        const state=observedContexts.get(context);
+        if(state===undefined)ciMissingContexts.push(context);
+        else if(state!=='success')ciNotTerminalContexts.push({context,state});
+      }
+      if(ciMissingContexts.length||ciNotTerminalContexts.length)
+        return denied('CI_EXACT_SHA_NOT_VERIFIED',{ciMissingContexts,
+          ciNotTerminalContexts,observedContexts:[...observedContexts]});
       store=await openSqliteCasStore({path:config.decisionStorePath,busyTimeoutMs:5000});
       const decisionKeyFull=reviewDecisionKeyFor(decisionKey);
       const decidedAt=iso(now);

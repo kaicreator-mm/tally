@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
+import {fileURLToPath} from 'node:url';
 import {mkdtemp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
-import {createLocalCodexHost,LOCAL_CODEX_CONSTANTS} from './local-codex-host.mjs';
+import {createLocalCodexHost,createDefaultOperations,LOCAL_CODEX_CONSTANTS} from './local-codex-host.mjs';
 
 const sourceSha='2c6631dbdc3458d4dea43fdc7d78cd292c0aebe9';
 const issueRef='https://github.com/kaicreator-mm/tally/issues/172';
@@ -401,7 +402,7 @@ test('tracked candidate path refuses the Builder attempt before any spawn',async
     assert.equal(row.value.phase,'NOT_EXECUTED');
     assert.equal(row.value.reason,'CANDIDATE_PATH_OCCUPIED');
     await store.close();
-  },{ops:operations({candidatePathOccupied:async()=>true})});
+  },{ops:operations({candidatePathOccupied:async()=>({occupied:true})})});
   // An explicitly authorized replacement is the only way past the guard
   // (a fresh attempt id: the refusal above left a terminal NOT_EXECUTED row).
   await withHost(async({host,calls,config})=>{
@@ -410,7 +411,23 @@ test('tracked candidate path refuses the Builder attempt before any spawn',async
     assert.equal(x.state,'LOCAL_CANDIDATE_READY');
     assert.equal(calls.length,1);
   },{ops:operations({candidatePathOccupied:async config=>
-    config.candidateReplacementAuthorized!==true})});
+    ({occupied:config.candidateReplacementAuthorized!==true})})});
+});
+
+test('unproven occupancy (git error) refuses the Builder attempt without spawning (R103 P1-02)',async()=>{
+  await withHost(async({host,calls,config})=>{
+    const unknown=await host.runAttempt(config);
+    assert.equal(unknown.state,'AGENT_NOT_EXECUTED');
+    assert.equal(unknown.reason,'CANDIDATE_PATH_OCCUPANCY_UNKNOWN');
+    assert.equal(unknown.agentLaunch,false);
+    assert.equal(calls.length,0,'unproven occupancy must precede the spawn');
+    const store=await openSqliteCasStore({path:config.hostStorePath,busyTimeoutMs:1000});
+    const row=await store.get(attemptKey(config.attemptId));
+    assert.equal(row.value.phase,'NOT_EXECUTED');
+    assert.equal(row.value.reason,'CANDIDATE_PATH_OCCUPANCY_UNKNOWN');
+    await store.close();
+  },{ops:operations({candidatePathOccupied:async()=>({occupied:null,
+    detail:'fatal: Not a valid object name'})})});
 });
 
 const reviewCandidateCommit='023db3aa9a6c30ef5975c6f085ba207ec315cb09';
@@ -432,6 +449,19 @@ function reviewOperations(overrides={}){
     ...overrides
   };
 }
+// Mirror of the host's frozen REVIEW_REQUIRED_CI_CONTEXTS: the exact-SHA
+// combined status must carry each of these terminal-success contexts before
+// the single-candidate qualification gate may pass (R103 review P1-03).
+const reviewRequiredContexts=[
+  'ci/woodpecker/pr/v2-alm-workspace',
+  'ci/woodpecker/pr/v2-candidate-publication',
+  'ci/woodpecker/pr/v2-t06l-kernel-admission',
+  'ci/woodpecker/pr/v2-t06m-local-agent',
+  'ci/woodpecker/pr/v2-t06n-concurrent-agent'];
+function greenCombinedStatus(){
+  return {state:'success',totalCount:reviewRequiredContexts.length,
+    contexts:reviewRequiredContexts.map(context=>({context,state:'success'}))};
+}
 function reviewConfigFor(dir,overrides={}){
   return {issueRef:'https://github.com/kaicreator-mm/tally/issues/264',
     sourceSha,decisionId:'decision:264:j5:test:1',decision:'ACCEPT',
@@ -448,7 +478,7 @@ function reviewConfigFor(dir,overrides={}){
     reviewRef:'https://github.com/kaicreator-mm/tally/pull/466#pullrequestreview-5971578979',
     githubReads:{
       readPullRequest:async n=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
-      readCombinedStatus:async sha=>({state:'success',totalCount:5})},
+      readCombinedStatus:async sha=>greenCombinedStatus()},
     ...overrides};
 }
 async function seedBuilderRecord(config,overrides={}){
@@ -551,11 +581,31 @@ test('single-candidate review denies broken provenance chains fail-closed',async
     ['PR_READBACK_MISMATCH',config=>reviewHost(config.repositoryPath),
       config=>({...config,githubReads:{
         readPullRequest:async()=>({state:'open',headSha:'0'.repeat(40),baseRef:'version/v2'}),
-        readCombinedStatus:async()=>({state:'success',totalCount:5})}})],
+        readCombinedStatus:async()=>greenCombinedStatus()}})],
     ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
       config=>({...config,githubReads:{
         readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
         readCombinedStatus:async()=>({state:'failure',totalCount:5})}})],
+    // R103 review P1-03: one unrelated green context must never satisfy the
+    // qualification CI gate — each task-required named context must be
+    // present and terminal-success at the exact repair SHA.
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'success',totalCount:1,
+          contexts:[{context:'ci/woodpecker/pr/v2-unrelated',state:'success'}]})}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'success',totalCount:4,
+          contexts:reviewRequiredContexts.slice(0,4)
+            .map(context=>({context,state:'success'}))})}})],
+    ['CI_EXACT_SHA_NOT_VERIFIED',config=>reviewHost(config.repositoryPath),
+      config=>({...config,githubReads:{
+        readPullRequest:async()=>({state:'open',headSha:reviewRepairCommit,baseRef:'version/v2'}),
+        readCombinedStatus:async()=>({state:'pending',totalCount:5,
+          contexts:reviewRequiredContexts.map((context,index)=>({context,
+            state:index===0?'pending':'success'}))})}})],
     ['REVIEW_DECISION_CONFLICT',config=>reviewHost(config.repositoryPath),config=>config],
   ];
   let index=0;
@@ -621,4 +671,139 @@ test('an unreadable decision store stays UNKNOWN for read-only reconciliation',a
     assert.equal(x.taskPass,false);
     assert.equal(x.decisionRecord,null);
   }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+// ---------------------------------------------------------------------------
+// R103 review P1-02 — the REAL git-backed occupancy guard must distinguish
+// proven answers from unproven git failures; a git error may never read as
+// "not occupied" (fail-open) and never spawn the Builder.
+// ---------------------------------------------------------------------------
+test('real candidatePathOccupied classifies git exit 0 / proven-absent / unproven failures',async()=>{
+  const occupancySpawn=(code,stderr)=>{
+    return (command,args,options)=>fakeChild((close,child)=>{
+      if(stderr!==undefined)child.stderr.emit('data',Buffer.from(stderr));
+      close(code,null);
+    });
+  };
+  const cases=[
+    // exit 0: the path IS tracked at the pinned source SHA.
+    {spawn:occupancySpawn(0,''),expected:{occupied:true},label:'occupied'},
+    // git's proven-absent signature for cat-file -e <ref>:<path>.
+    {spawn:occupancySpawn(128,"fatal: path 'x.md' does not exist in 'dff5329e'\n"),
+      expected:{occupied:false},label:'proven-absent'},
+    // Any other nonzero shape is UNPROVEN — bad ref, bad repository, missing
+    // git binary, timeout — and must never read as absence.
+    {spawn:occupancySpawn(128,'fatal: Not a valid object name badref\n'),
+      expected:{occupied:null},label:'bad-ref'},
+    {spawn:occupancySpawn(128,''),expected:{occupied:null},label:'no-stderr'},
+    {spawn:occupancySpawn(null,''),expected:{occupied:null},label:'launch-failure'},
+  ];
+  for(const {spawn:spawnFn,expected,label} of cases){
+    const ops=createDefaultOperations(spawnFn);
+    assert.equal(typeof ops.candidatePathOccupied,'function');
+    const result=await ops.candidatePathOccupied({sourceSha:'d'.repeat(40),
+      repositoryPath:'C:\repo',gitPath:'C:\git.exe'});
+    assert.equal(result.occupied,expected.occupied,label);
+    if(expected.occupied===null)assert.ok(typeof result.detail==='string',label);
+  }
+  // The separately authorized replacement short-circuits before any git run.
+  let ran=false;
+  const ops=createDefaultOperations((...a)=>{ran=true;return fakeChild(close=>close(0,null));});
+  const bypass=await ops.candidatePathOccupied({sourceSha:'d'.repeat(40),
+    repositoryPath:'C:\repo',gitPath:'C:\git.exe',candidateReplacementAuthorized:true});
+  assert.equal(bypass.occupied,false);
+  assert.equal(ran,false,'authorized replacement must not run git');
+});
+
+// ---------------------------------------------------------------------------
+// R103 review P1-01 — real-branch reviewer registry admission: the reviewer
+// iteration must read the REVIEWER claim key from the reviewer registry.
+// Runs only where the consumer's sealed dependencies resolve (the CI
+// run-clean lane installs them); otherwise an honest skip, never a fake pass.
+// ---------------------------------------------------------------------------
+test('consumer real branch admits per-role registry keys and rejects wrong-key rows',async(t)=>{
+  const consumerUrl=new URL('./consumer-single-review-codex.mjs',import.meta.url);
+  let depsResolved=true;
+  try{import.meta.resolve('@kaicreator/tally-local-codex-host-bundle',consumerUrl);}
+  catch{depsResolved=false;}
+  if(!depsResolved)
+    return void t.skip('T264 consumer sealed deps not installed in this env (CI run-clean lane covers this regression)');
+  const {spawn}=await import('node:child_process');
+  const {createHash}=await import('node:crypto');
+  const claimKey=role=>`kaicreator-mm/tally#264:${role}:__default__`;
+  const registryKey=claim=>'tally:v2:claim-admission:'+
+    createHash('sha256').update(claim).digest('hex');
+  const seedRegistry=async(path,protectedClaimKey)=>{
+    const store=await openSqliteCasStore({path,busyTimeoutMs:1000});
+    await store.put(registryKey(protectedClaimKey),{phase:'PUBLISHED_VERIFIED',
+      generation:1,protectedClaimKey},{mustBeAbsent:true});
+    await store.close();
+  };
+  const runConsumer=async(dir,reviewerRegistryKey)=>{
+    const builderRegistry=join(dir,'builder-claim.sqlite');
+    const reviewerRegistry=join(dir,'reviewer-claim.sqlite');
+    const builderStore=join(dir,'builder-store.sqlite');
+    const store=await openSqliteCasStore({path:builderStore,busyTimeoutMs:1000});
+    await store.close();
+    await seedRegistry(builderRegistry,claimKey('builder'));
+    await seedRegistry(reviewerRegistry,reviewerRegistryKey);
+    const evidence=join(dir,'evidence');
+    const env={...process.env,TALLY_LOCAL_REPLAY:'0',
+      TALLY_GITHUB_READ_TOKEN:'fixture-not-a-secret',
+      TALLY_CLAIM_SOURCE_SHA:'d'.repeat(40),
+      TALLY_LOCAL_ISSUE_NUMBER:'264',
+      TALLY_LOCAL_EVIDENCE_DIR:evidence,
+      TALLY_LOCAL_BUILDER_STORE_PATH:builderStore,
+      TALLY_LOCAL_REVIEW_STORE_PATH:join(dir,'review-store.sqlite'),
+      TALLY_TASK_CLAIM_264_DISPATCH_ID:'dispatch:264:t:test:builder:1',
+      TALLY_TASK_CLAIM_264_OPERATOR_ID:'zcode:t264:test:builder:1',
+      TALLY_TASK_CLAIM_264_OPERATOR_KIND:'other',
+      TALLY_TASK_CLAIM_264_WRITER_ID:'tally-host:win32:t264:test:builder:1',
+      TALLY_TASK_CLAIM_264_WRITER_LOGIN:'kaicreator-mm',
+      TALLY_TASK_CLAIM_264_COMMENT_ID:'1',
+      TALLY_TASK_CLAIM_264_REGISTRY_PATH:builderRegistry,
+      TALLY_TASK_CLAIM_264_REVIEWER_DISPATCH_ID:'dispatch:264:t:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_OPERATOR_ID:'zcode:t264:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_OPERATOR_KIND:'other',
+      TALLY_TASK_CLAIM_264_REVIEWER_WRITER_ID:'tally-host:win32:t264:test:reviewer:1',
+      TALLY_TASK_CLAIM_264_REVIEWER_WRITER_LOGIN:'kaicreator-mm',
+      TALLY_TASK_CLAIM_264_REVIEWER_COMMENT_ID:'2',
+      TALLY_TASK_CLAIM_264_REVIEWER_REGISTRY_PATH:reviewerRegistry};
+    const child=spawn(process.execPath,[fileURLToPath(consumerUrl)],{env,windowsHide:true});
+    let stdout='',stderr='';
+    child.stdout.on('data',c=>{stdout+=c;});
+    child.stderr.on('data',c=>{stderr+=c;});
+    const exit=await new Promise(resolve=>{
+      const timer=setTimeout(()=>{child.kill();resolve({code:null,timeout:true});},120000);
+      child.once('close',(code,signal)=>{clearTimeout(timer);resolve({code,signal});});
+    });
+    return {exit,stdout,stderr};
+  };
+  // Positive: separate per-role keys in separate registries. The real branch
+  // must pass claim admission and terminate with the bounded consumer result
+  // (a downstream NOT_ADMITTED effect is expected: the fixture builder store
+  // carries no CANDIDATE_READY row). Under the R103 defect this crashed with
+  // T264_CLAIM_NOT_PUBLISHED because the reviewer registry was read with the
+  // builder key.
+  {
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-p1-01-pos-'));
+    try{
+      const {exit,stdout,stderr}=await runConsumer(dir,claimKey('reviewer'));
+      assert.equal(exit.code,0,'positive real-branch admission must not crash: '+stderr.slice(-800));
+      assert.ok(!stderr.includes('T264_CLAIM_NOT_PUBLISHED'),
+        'per-role keys must pass the real-branch claim admission');
+      assert.ok(stdout.includes('T264_SINGLE_REVIEW_K_HOST_DECISION=PASS'),stdout.slice(-800));
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
+  // Negative (wrong key): the reviewer registry holds the BUILDER claim key —
+  // exactly the row the R103 defect read — so the reviewer-role lookup must
+  // fail closed with T264_CLAIM_NOT_PUBLISHED.
+  {
+    const dir=await mkdtemp(join(tmpdir(),'tally-t264-p1-01-neg-'));
+    try{
+      const {exit,stderr}=await runConsumer(dir,claimKey('builder'));
+      assert.notEqual(exit.code,0,'wrong-key reviewer registry must fail closed');
+      assert.ok(stderr.includes('T264_CLAIM_NOT_PUBLISHED'),stderr.slice(-800));
+    }finally{await rm(dir,{recursive:true,force:true});}
+  }
 });

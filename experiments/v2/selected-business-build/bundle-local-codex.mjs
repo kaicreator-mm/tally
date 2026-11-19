@@ -429,8 +429,15 @@ async function readCombinedStatusState(octokit,commit){
     {owner:OWNER,repo:REPO,ref:commit});
   const data=response?.data;
   if(!data||typeof data!=='object')return null;
+  // Project the per-context statuses: the Host qualification gate requires
+  // each task-required named context terminal-success at this exact SHA —
+  // {state,totalCount} alone could not distinguish one unrelated green
+  // context from the required set (R103 review P1-03).
   return {state:data.state,
-    totalCount:Array.isArray(data.statuses)?data.statuses.length:0};
+    totalCount:Array.isArray(data.statuses)?data.statuses.length:0,
+    contexts:Array.isArray(data.statuses)?data.statuses.map(x=>({
+      context:typeof x?.context==='string'?x.context:null,
+      state:typeof x?.state==='string'?x.state:null})):[]};
 }
 export async function reviewSingleCandidate(input){
   const env=process.env;
