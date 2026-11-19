@@ -30,11 +30,15 @@
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
+import {createHash} from 'node:crypto';
 import {defaultAlmConfig} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
-import {createUiNativeSource,readUiNativeVersionFromClient}
+import {createUiNativeSource,readUiNativeVersionFromClient,
+  observeUiNativeVersionHeadFromClient,verifyUiNativeVersionAncestryFromClient}
   from '../../packages/tally-github-native-c/src/ui-version-readonly.mjs';
-import {createUiRosterHost} from './ui-roster-host.mjs';
+import {projectReleaseReadiness} from
+  '../../packages/tally-engineering-business/src/release-readiness.mjs';
+import {createUiRosterHost,createUiRosterDualEpochHost} from './ui-roster-host.mjs';
 import {readInstalledWriteJourneyEnvironment,createInstalledWriteJourneyRunner}
   from './installed-write-journeys.mjs';
 
@@ -131,12 +135,34 @@ export function readUiHostEnvironment(env){
     if(typeof frozenPins.reviewLogin!=='string'||!frozenPins.reviewLogin)
       throw new TypeError('HOST_FROZEN_DAG_REVIEW_LOGIN_REQUIRED');
   }
+  // #264 J02 dual-epoch read mount: TALLY_V2_FREEZE_BASE_SHA declares the
+  // expected S0 freeze epoch (the R80 CAS row must still pin exactly it),
+  // while expectedSha stays the served live S1 pin. The per-edge amendment
+  // ledger is Host governance input (NATIVE_EDGE_REMOVED only, repo-scoped
+  // evidence); it is never accepted from a request. Both require the same
+  // frozen-DAG read pins; the reader factory revalidates every entry.
+  const freezeBaseSha=env.TALLY_V2_FREEZE_BASE_SHA??null;
+  if(freezeBaseSha!==null&&!SHA.test(freezeBaseSha))
+    throw new TypeError('INVALID_HOST_FREEZE_BASE_SHA');
+  let edgeAmendments=null;
+  if(env.TALLY_V2_EDGE_AMENDMENTS_JSON!==undefined){
+    try{edgeAmendments=JSON.parse(env.TALLY_V2_EDGE_AMENDMENTS_JSON);}
+    catch{throw new TypeError('INVALID_HOST_EDGE_AMENDMENTS_LEDGER');}
+    if(!Array.isArray(edgeAmendments)||!edgeAmendments.length||
+       edgeAmendments.length>64)
+      throw new TypeError('INVALID_HOST_EDGE_AMENDMENTS_LEDGER');
+  }
+  if((freezeBaseSha!==null||edgeAmendments!==null)&&
+     frozenDagMode!=='read-only')
+    throw new TypeError('DUAL_EPOCH_REQUIRES_FROZEN_DAG_PINS');
+  if(edgeAmendments!==null&&freezeBaseSha===null)
+    throw new TypeError('EDGE_AMENDMENTS_REQUIRE_FREEZE_BASE_SHA');
   const [owner,repo]=repository.split('/');
   return {repository,owner,repo,versionId,expectedSha,roster,requirements,qaStatusContext,ads,
     auditReadOnly:auditMode==='read-only',
     workbenchReadOnly:workbenchMode==='read-only',
     frozenDagReadOnly:frozenDagMode==='read-only',
-    frozenPins,
+    frozenPins,freezeBaseSha,edgeAmendments,
     token:env.TALLY_GITHUB_READ_TOKEN};
 }
 /** #264 E1: read-only frozen version Task DAG reader composition. Mirrors the
@@ -146,7 +172,8 @@ export function readUiHostEnvironment(env){
  * PackBlob + selected source SHA. Heavy transports load lazily so a plain
  * read-only boot never requires the Host-only dependency chain. */
 async function createFrozenDagReadHost({settings}){
-  const [{Octokit},{createHostVersionTaskDagReader},{openSqliteCasStore}]=
+  const [{Octokit},{createHostVersionTaskDagReader,
+      createHostVersionTaskDagDualEpochReader},{openSqliteCasStore}]=
     await Promise.all([
       import('../../packages/tally-github-native-c'+
         '/node_modules/@octokit/rest/dist-src/index.js'),
@@ -156,6 +183,9 @@ async function createFrozenDagReadHost({settings}){
      typeof createHostVersionTaskDagReader!=='function'||
      typeof openSqliteCasStore!=='function')
     throw new TypeError('FROZEN_DAG_READER_TRANSPORTS_UNAVAILABLE');
+  if(settings.freezeBaseSha!==null&&
+     typeof createHostVersionTaskDagDualEpochReader!=='function')
+    throw new TypeError('DUAL_EPOCH_READER_TRANSPORTS_UNAVAILABLE');
   const octokit=new Octokit({auth:settings.token,
     request:{timeout:15000}});
   const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
@@ -184,71 +214,269 @@ async function createFrozenDagReadHost({settings}){
         content:Buffer.from(data.content,'base64').toString('utf8')};
     }catch{return {status:'NOT_VERIFIED',reason:'TASK_PACK_READ_FAILED'};}
   };
-  const witnessReader=(issueNumber,commentId,login,kind)=>
-    async({taskPackBlobSha,sourceSha})=>{
-      if(!Number.isSafeInteger(issueNumber)||issueNumber<1||
-         !Number.isSafeInteger(commentId)||commentId<1)
-        return {status:'NOT_VERIFIED'};
+  const dagKey='tally:v2:version-task-dag:'+
+    createHash('sha256').update(settings.repository+'#'+settings.versionId)
+      .digest('hex');
+  /** Witness ports built per-read against the OPEN CAS store. The frozen
+   * witness JSON lives in the immutable CAS row (the R80-class artifacts are
+   * human-readable receipts, not JSON bodies); the port re-reads the LIVE
+   * artifact at the frozen ref (PR review via the review API, owner
+   * approval via the issue-comment API), cross-checks it against the Host
+   * pins, and only then returns the frozen witness with its blob/source
+   * bindings for the reader's own exact cross-validation. Any drift between
+   * pins, frozen refs and the live artifact denies NOT_VERIFIED. */
+  const buildWitnessReaders=store=>{
+    const frozenDoc=async()=>{
+      const row=await store.get(dagKey);
+      return plain(row?.value)?row.value:null;
+    };
+    const parseReviewRef=ref=>{
+      const m=typeof ref==='string'?
+        /\/pull\/(\d+)#pullrequestreview-(\d+)$/.exec(ref):null;
+      return m?{pullNumber:Number(m[1]),reviewId:Number(m[2])}:null;
+    };
+    const parseApprovalRef=ref=>{
+      const m=typeof ref==='string'?
+        /\/issues\/(\d+)#issuecomment-(\d+)$/.exec(ref):null;
+      return m?{issueNumber:Number(m[1]),commentId:Number(m[2])}:null;
+    };
+    const reviewWitnessReader=async({taskPackBlobSha,sourceSha})=>{
       try{
-        const params={owner:settings.owner,repo:settings.repo,
-          comment_id:commentId};
-        const first=(await octokit.rest.issues.getComment(params))?.data;
-        const second=(await octokit.rest.issues.getComment(params))?.data;
-        const valid=c=>plain(c)&&c.id===commentId&&
-          c.html_url==='https://github.com/'+settings.repository+'/issues/'+
-            issueNumber+'#issuecomment-'+commentId&&
-          c.issue_url==='https://api.github.com/repos/'+settings.repository+
-            '/issues/'+issueNumber&&
-          c.user?.login===login&&typeof c.body==='string'&&
-          c.body.length<=65536;
-        if(!valid(first)||!valid(second)||first.body!==second.body||
-           first.updated_at!==second.updated_at)
+        const doc=await frozenDoc();
+        const witness=doc?.witness;
+        if(!plain(witness))return {status:'NOT_VERIFIED'};
+        const live=parseReviewRef(witness.reviewRef);
+        if(!live||live.pullNumber!==settings.frozenPins.reviewIssue||
+           live.reviewId!==settings.frozenPins.reviewCommentId)
           return {status:'NOT_VERIFIED'};
-        let witness;
-        try{witness=JSON.parse(first.body);}catch{return {status:'NOT_VERIFIED'};}
-        if(!plain(witness)||witness.taskPackBlobSha!==taskPackBlobSha||
-           witness.sourceSha!==sourceSha)return {status:'NOT_VERIFIED'};
-        if(kind==='review'){
-          return witness.status==='INDEPENDENTLY_VERIFIED'&&
-            witness.reviewedHeadSha===sourceSha&&
-            typeof witness.reviewer==='string'&&witness.reviewer&&
-            typeof witness.author==='string'&&witness.author&&
-            witness.reviewer!==witness.author&&
-            typeof witness.reviewRef==='string'&&
-            witness.reviewRef.startsWith('https://github.com/'+
-              settings.repository+'/')&&
-            Number.isFinite(Date.parse(witness.verifiedAt??''))
-            ?witness:{status:'NOT_VERIFIED'};
-        }
-        return witness.status==='OWNER_APPROVED'&&
-          witness.owner===settings.owner&&
-          typeof witness.approvalRef==='string'&&
-          witness.approvalRef.startsWith('https://github.com/'+
-            settings.repository+'/')&&
-          Number.isFinite(Date.parse(witness.approvedAt??''))
-          ?witness:{status:'NOT_VERIFIED'};
+        const read=()=>octokit.rest.pulls.getReview({owner:settings.owner,
+          repo:settings.repo,pull_number:live.pullNumber,
+          review_id:live.reviewId}).then(r=>r?.data??null);
+        const first=await read(),second=await read();
+        if(!plain(first)||!plain(second)||first.id!==live.reviewId||
+           first.html_url!==witness.reviewRef||
+           first.user?.login!==settings.frozenPins.reviewLogin||
+           !['APPROVED','COMMENTED'].includes(first.state)||
+           first.body!==second.body||
+           first.submitted_at!==second.submitted_at)
+          return {status:'NOT_VERIFIED'};
+        return {...witness,taskPackBlobSha:doc.blobSha,sourceSha:doc.sourceSha};
       }catch{return {status:'NOT_VERIFIED'};}
     };
+    const ownerApprovalReader=async()=>{
+      try{
+        const doc=await frozenDoc();
+        const approval=doc?.ownerApproval;
+        if(!plain(approval))return {status:'NOT_VERIFIED'};
+        const live=parseApprovalRef(approval.approvalRef);
+        if(!live||live.issueNumber!==settings.frozenPins.approvalIssue||
+           live.commentId!==settings.frozenPins.approvalCommentId)
+          return {status:'NOT_VERIFIED'};
+        const read=()=>octokit.rest.issues.getComment({owner:settings.owner,
+          repo:settings.repo,comment_id:live.commentId})
+          .then(r=>r?.data??null);
+        const first=await read(),second=await read();
+        if(!plain(first)||!plain(second)||first.id!==live.commentId||
+           first.html_url!==approval.approvalRef||
+           first.user?.login!==settings.frozenPins.approvalLogin||
+           first.created_at!==first.updated_at||
+           first.body!==second.body)
+          return {status:'NOT_VERIFIED'};
+        return {...approval,taskPackBlobSha:doc.blobSha};
+      }catch{return {status:'NOT_VERIFIED'};}
+    };
+    return {reviewWitnessReader,ownerApprovalReader};
+  };
   const nativeRosterReader=({taskIssueNumbers})=>readUiNativeVersionFromClient({
     octokit,owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
     taskIssueNumbers});
+  // #264 J02 dual-epoch ports: the live branch head observer, the official
+  // ancestry probe and a roster reader pinned at the OBSERVED head (never
+  // the served pin — S1 may be a frozen-epoch descendant).
+  const branchHeadReader=()=>observeUiNativeVersionHeadFromClient({
+    octokit,owner:settings.owner,repo:settings.repo,
+    versionId:settings.versionId});
+  const ancestryReader=({baseSha,headSha})=>
+    verifyUiNativeVersionAncestryFromClient({
+      octokit,owner:settings.owner,repo:settings.repo,baseSha,headSha});
+  const currentRosterReader=({sourceSha,taskIssueNumbers})=>
+    readUiNativeVersionFromClient({octokit,owner:settings.owner,
+      repo:settings.repo,versionId:settings.versionId,
+      expectedSha:sourceSha,taskIssueNumbers});
   const pins=settings.frozenPins;
   return Object.freeze({async readFrozenDag(scope={}){
     const store=await openSqliteCasStore({
       path:pins.registryPath,busyTimeoutMs:1000});
     try{
+      const witnessReaders=buildWitnessReaders(store);
       const reader=createHostVersionTaskDagReader({
         repository:settings.repository,versionId:settings.versionId,
         expectedVersionSha:settings.expectedSha,store,taskPackReader,
         nativeRosterReader,
-        reviewWitnessReader:witnessReader(pins.reviewIssue,
-          pins.reviewCommentId,pins.reviewLogin,'review'),
-        ownerApprovalReader:witnessReader(pins.approvalIssue,
-          pins.approvalCommentId,pins.approvalLogin,'approval')});
+        reviewWitnessReader:witnessReaders.reviewWitnessReader,
+        ownerApprovalReader:witnessReaders.ownerApprovalReader});
       return await reader.readFrozenDag(scope);
     }finally{await store.close().catch(()=>{});}
-  }});
+  },
+  // Dual-epoch projection (S0 frozen historical + live S1 current). Only
+  // mounted when the Host pinned a freeze base; amendments come exclusively
+  // from the validated Host env ledger. A browser-supplied witness is never
+  // accepted here — scope.compatibilityWitness is deliberately ignored.
+  ...(settings.freezeBaseSha===null?{}:{async readDualEpoch(){
+    const store=await openSqliteCasStore({
+      path:pins.registryPath,busyTimeoutMs:1000});
+    try{
+      const witnessReaders=buildWitnessReaders(store);
+      const reader=createHostVersionTaskDagDualEpochReader({
+        repository:settings.repository,versionId:settings.versionId,
+        freezeBaseSha:settings.freezeBaseSha,store,taskPackReader,
+        reviewWitnessReader:witnessReaders.reviewWitnessReader,
+        ownerApprovalReader:witnessReaders.ownerApprovalReader,
+        branchHeadReader,ancestryReader,currentRosterReader,
+        edgeAmendments:settings.edgeAmendments});
+      return await reader.readDualEpoch({compatibilityWitness:null});
+    }finally{await store.close().catch(()=>{});}
+  }})});
+}
+/** #264 J07 — the installed Release Host Consumer dispatch. Mounted ONLY
+ * under TALLY_V2_RELEASE_DISPATCH=host-mounted with trusted Host pins; it
+ * composes the real J07b Host gate (experiments/v2/release/host-release.mjs)
+ * whose claim/write-set ports read the pinned CAS registries and whose
+ * independent-RQ/owner-grant ports read the pinned RQ/grant registries
+ * (absent pins answer null, so the gate fails closed exactly as designed).
+ * Physical GitHub effects additionally require the explicit Host
+ * physical-effect flag plus the release CAS — never request-derived.
+ * Every answer is a fail-closed observation shape the controller's
+ * verifyReleaseSeamResult accepts; nothing here can authorize a release. */
+export async function createInstalledReleaseDispatch({settings,env=process.env,
+  openSqliteCasStore=null}={}){
+  const token=env.TALLY_GITHUB_WRITE_TOKEN??settings.token;
+  if(typeof token!=='string'||token.length<8)
+    throw new TypeError('RELEASE_HOST_TOKEN_REQUIRED');
+  if(env.TALLY_RELEASE_SOURCE_SHA!==settings.expectedSha)
+    throw new TypeError('RELEASE_SOURCE_SHA_STALE');
+  const [{Octokit},{createReleaseHost}]=await Promise.all([
+    import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js'),
+    import('../../experiments/v2/release/host-release.mjs')]);
+  // The Host-node CAS store stays lazy: the trusted Windows Host mounts with
+  // the documented dependency closure, while hermetic tests inject a fake
+  // (pin-validation denials must never open a store at all).
+  const openStore=typeof openSqliteCasStore==='function'?openSqliteCasStore:
+    (await import('@kaicreator/domain-harness-host-node')).openSqliteCasStore;
+  if(typeof Octokit!=='function'||typeof openStore!=='function'||
+     typeof createReleaseHost!=='function')
+    throw new TypeError('RELEASE_HOST_TRANSPORTS_UNAVAILABLE');
+  const digest=value=>createHash('sha256').update(value).digest('hex');
+  const readCasRow=async(path,key)=>{
+    if(typeof path!=='string'||!path)return null;
+    let store;
+    try{
+      store=await openStore({path,busyTimeoutMs:1000});
+      return await store.get(key);
+    }catch{return null;}
+    finally{await store?.close?.().catch(()=>{});}
+  };
+  const claimIssueNumber=Number(env.TALLY_RELEASE_CLAIM_ISSUE??222);
+  const claimRegistryKey='tally:v2:claim-admission:'+digest(
+    `${settings.repository}#${claimIssueNumber}:builder:__default__`);
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const verifyNativeClaim=async({sourceSha})=>{
+    const row=await readCasRow(env.TALLY_RELEASE_CLAIM_REGISTRY_PATH,
+      claimRegistryKey);
+    const value=row?.value;
+    if(value?.phase==='PUBLISHED_VERIFIED'&&value.sourceSha===sourceSha)
+      return {state:'ACCEPTED',sourceSha};
+    return {state:'NOT_VERIFIED'};
+  };
+  const verifyWriteSet=async({issueNumber})=>{
+    const row=await readCasRow(env.TALLY_RELEASE_WRITESET_REGISTRY_PATH,
+      'tally:v2:dag-admission:'+digest(
+        `${settings.repository}#${issueNumber}:builder`));
+    if(row?.value?.status==='FROZEN_WRITE_SET_CREATE_ONLY'&&
+       row?.value?.task==='#'+issueNumber)
+      return {state:'FROZEN_VERIFIED'};
+    return {state:'NOT_VERIFIED'};
+  };
+  const readIndependentRq=async exact=>{
+    const row=await readCasRow(env.TALLY_RELEASE_RQ_REGISTRY_PATH,
+      'tally:v2:release-rq:'+digest(JSON.stringify([exact.sourceSha,
+        exact.sourceTree,exact.targetSha,exact.targetTree,exact.operation])));
+    return row?.value??null;
+  };
+  const readOwnerGrant=async({sourceSha,targetSha,operation})=>{
+    const row=await readCasRow(env.TALLY_RELEASE_GRANT_REGISTRY_PATH,
+      'tally:v2:release-grant:'+digest(JSON.stringify(
+        [sourceSha,targetSha,operation])));
+    return row?.value??null;
+  };
+  const host=createReleaseHost({verifyNativeClaim,verifyWriteSet,
+    readIndependentRq,readOwnerGrant,openCasStore:openStore,
+    octokit,env});
+  const seamResult=(status,reason,extra={})=>({status,reason,releasePass:false,
+    authorized:false,taskPass:false,releasePublished:false,...extra});
+  const mapHostResult=observed=>{
+    const base={hostState:observed?.state??null,
+      githubEffect:observed?.githubEffect??'NOT_RUN',
+      operationKey:observed?.operationKey??null};
+    if(observed?.state==='HOST_GATES_OBSERVED')
+      return seamResult('OBSERVED',observed.reason??'HOST_GATES_OBSERVED',base);
+    if(observed?.state==='RECONCILIATION_REQUIRED')
+      return seamResult('RECONCILIATION_REQUIRED',
+        observed.reason??'PREVIOUS_RELEASE_OPERATION_PENDING',base);
+    if(observed?.state==='MERGED_REQUALIFY_REQUIRED')
+      return seamResult('OBSERVED',observed.reason??'MERGED_REQUALIFY_REQUIRED',
+        {...base,mergedSha:observed.mergedSha??null,
+          mergedTree:observed.mergedTree??null});
+    if(observed?.state==='GITHUB_EFFECT_UNKNOWN')
+      return seamResult('GITHUB_EFFECT_UNKNOWN',
+        observed.reason??'GITHUB_EFFECT_UNKNOWN',base);
+    return seamResult('DENIED',observed?.reason??'RELEASE_HOST_NOT_ADMITTED',base);
+  };
+  const readCommitTree=async ref=>{
+    const response=await octokit.rest.repos.getCommit(
+      {owner:settings.owner,repo:settings.repo,ref});
+    const tree=response?.data?.commit?.tree?.sha;
+    if(typeof tree!=='string'||!SHA.test(tree))
+      throw new Error('COMMIT_TREE_UNOBSERVABLE');
+    return tree;
+  };
+  return async function releaseSealedDispatch({intentType,input}){
+    if(intentType!=='deliverQualifiedRelease'||!input||typeof input!=='object')
+      return seamResult('DENIED','UNKNOWN_INTENT_OR_INPUT');
+    if(input.sourceSha!==settings.expectedSha)
+      return seamResult('STALE','SOURCE_SHA_MISMATCH');
+    if(input.kind==='merge'){
+      const pullNumber=Number(env.TALLY_RELEASE_MERGE_PR_NUMBER);
+      if(!Number.isSafeInteger(pullNumber)||pullNumber<1)
+        return seamResult('DENIED','MERGE_PR_NOT_PINNED');
+      try{
+        const headTree=await readCommitTree(settings.expectedSha);
+        const target=(await octokit.rest.repos.getBranch(
+          {owner:settings.owner,repo:settings.repo,branch:'main'}))
+          ?.data?.commit?.sha;
+        if(typeof target!=='string'||!SHA.test(target))
+          return seamResult('UNKNOWN','GITHUB_READBACK_UNAVAILABLE');
+        const targetTree=await readCommitTree(target);
+        const observed=await host.merge({pullNumber,
+          headSha:settings.expectedSha,headTree,targetSha:target,targetTree});
+        return mapHostResult(observed);
+      }catch{return seamResult('UNKNOWN','GITHUB_READBACK_UNAVAILABLE');}
+    }
+    if(input.kind==='tag'){
+      const commitSha=env.TALLY_RELEASE_TAG_SOURCE_SHA;
+      if(commitSha!==settings.expectedSha)
+        return seamResult('DENIED','TAG_SOURCE_NOT_PINNED');
+      try{
+        const commitTree=await readCommitTree(commitSha);
+        return mapHostResult(await host.tag({commitSha,commitTree}));
+      }catch{return seamResult('UNKNOWN','GITHUB_READBACK_UNAVAILABLE');}
+    }
+    if(input.kind==='publish')
+      return seamResult('NOT_RUN','PUBLISH_EFFECT_NOT_BOUND');
+    return seamResult('DENIED','UNKNOWN_ACTION');
+  };
 }
 export async function startUiReadOnlyServer({env=process.env}={}){
   const settings=readUiHostEnvironment(env);
@@ -276,6 +504,15 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       operation==='addNativeTaskDependency'?
         host.addNativeTaskDependency(input):host.freezeVersionTaskDag(input);
   }
+  // #264 J07: the installed Release Host Consumer seam — the real J07b gate
+  // composed from trusted Host pins only. Without the mount every
+  // /api/release/actions POST keeps the exact R91 fail-closed controller
+  // denial (INDEPENDENT_HOST_ADMISSION_NOT_CONNECTED); with it the request
+  // reaches the real claim/write-set/RQ/owner-grant chain and still cannot
+  // mutate GitHub unless the separate physical-effect flag is set.
+  let releaseSealedDispatch;
+  if(env.TALLY_V2_RELEASE_DISPATCH==='host-mounted')
+    releaseSealedDispatch=await createInstalledReleaseDispatch({settings,env});
   const nativeC=createUiNativeSource({token:settings.token,
     owner:settings.owner,repo:settings.repo,
     versionId:settings.versionId,expectedSha:settings.expectedSha,
@@ -308,6 +545,16 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   const rosterReadHost=createUiRosterHost({
     repository:settings.repository,versionId:settings.versionId,
     expectedSha:settings.expectedSha,frozenHost:frozenReadHost,nativeC});
+  // #264 J02: dual-epoch roster host — the honest S0/S1 projection over the
+  // R80 freeze epoch and the live branch head. Mounted only under the same
+  // frozen read pins plus an explicit freeze base; without it the API answers
+  // DUAL_EPOCH_NOT_CONFIGURED (never a single-epoch fallback dressed up).
+  const dualEpochReadHost=settings.freezeBaseSha!==null&&
+    typeof frozenReadHost?.readDualEpoch==='function'?
+    createUiRosterDualEpochHost({repository:settings.repository,
+      versionId:settings.versionId,freezeBaseSha:settings.freezeBaseSha,
+      dualEpochHost:{readDualEpoch:frozenReadHost.readDualEpoch.bind(
+        frozenReadHost)}}):null;
   // Host-composed v2 read model facade consumed by journey-server.mjs. Every
   // method fails closed; scope guards bind each read to the selected
   // repository/version. Optional providers without a selected module
@@ -357,6 +604,17 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       if(observed.connected!==true)return observed;
       return observed.dag;
     },
+    // #264 J02: verbatim dual-epoch projection (S0 frozen historical +
+    // live S1 current with the per-edge amendment ledger). The projection
+    // itself fails closed on any drift; without the Host mount this answers
+    // the honest NOT_CONNECTED-shaped denial below.
+    async dualEpoch(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(!dualEpochReadHost)return deny('DUAL_EPOCH_NOT_CONFIGURED');
+      try{
+        return await dualEpochReadHost.dualEpoch(scope);
+      }catch{return deny('DUAL_EPOCH_READ_FAILED');}
+    },
     async requirements(scope){
       if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
       if(!settings.requirements)return deny('REQUIREMENT_ROSTER_NOT_CONFIGURED');
@@ -369,39 +627,28 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return observed;
       }catch{return deny('REQUIREMENT_READ_FAILED');}
     },
-    // #264 E1 R91: real release evidence projection for the /app Release
-    // panel. The woodpeckerCI gate reads the actual native commit status for
-    // the pinned SHA (when TALLY_V2_QA_STATUS_CONTEXT is configured);
-    // independentRq stays UNKNOWN until the #208 exact-SHA RQ flow exists.
-    // permits stay null: no release permit authority is mounted at this
-    // source, so every action button explains what is missing instead of a
-    // dead or fabricated enabled control.
+    // #264 J07: the /app Release panel reads the same real J07a advisory
+    // projection as the controller's pre-read — all thirteen required gates
+    // with truthful NOT_RUN/UNKNOWN/STALE statuses (the observed CI record
+    // included). No gate may report PASS-verified: at most
+    // REPORTED_PASS_UNVERIFIED. permits stay null: no release permit
+    // authority is mounted at this source, so every action button explains
+    // what is missing instead of a dead or fabricated enabled control.
     async release(scope){
       if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
-      const gates=[{name:'woodpeckerCI',status:'NOT_RUN',owner:'CI'},
-        {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}];
-      if(!settings.qaStatusContext)
-        return {connected:true,versionId:settings.versionId,
-          readiness:{versionId:settings.versionId,gates,permits:null,
-            rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
       try{
-        const observed=await nativeC.qa();
-        if(observed?.connected!==true||
-           observed.source?.repository!==settings.repository)
-          return {connected:true,versionId:settings.versionId,
-            readiness:{versionId:settings.versionId,
-              gates:[{...gates[0],status:'UNKNOWN'},gates[1]],permits:null,
-              rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
-        const record=observed.records[0]??null;
-        gates[0].status=record?(record.outcome==='PASS'?'PASS':
-          record.outcome==='FAIL'?'FAIL':'UNKNOWN'):'NOT_RUN';
-        return {connected:true,versionId:settings.versionId,
-          readiness:{versionId:settings.versionId,gates,permits:null,
-            rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
-      }catch{
+        const {projection}=await composeReleaseReadiness();
         return {connected:true,versionId:settings.versionId,
           readiness:{versionId:settings.versionId,
-            gates:[{...gates[0],status:'UNKNOWN'},gates[1]],permits:null,
+            gates:projection.gates.map(gate=>({name:gate.name,
+              status:gate.status,reason:gate.reason,owner:null,
+              evidenceRef:gate.evidenceRef})),
+            gateCounts:projection.gateCounts,blockers:projection.blockers,
+            permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN',
+            advisoryOnly:true}};
+      }catch{
+        return {connected:true,versionId:settings.versionId,
+          readiness:{versionId:settings.versionId,gates:[],permits:null,
             rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}};
       }
     },
@@ -419,9 +666,13 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   // real native evidence as the /app projection (never form fields). The
   // value sourceSha is bound to the exact served SHA; a foreign request SHA
   // answers UNKNOWN instead of leaking evidence.
-  const readReleaseSnapshot=async({sourceSha}={})=>{
-    if(sourceSha!==settings.expectedSha)return null;
-    let ciStatus='UNKNOWN',ciCoverage='NOT_CONFIGURED';
+  // #264 J07: the readiness is the REAL J07a advisory projection — the
+  // observed CI record feeds the woodpeckerCI gate with its exact-SHA
+  // subject, pipeline evidenceRef and observedAsOf; every gate without
+  // observed evidence stays NOT_RUN/UNKNOWN and the projection can never
+  // grant merge/tag/publish authority (advisoryOnly, releasePass:false).
+  const composeReleaseReadiness=async()=>{
+    let ciStatus='UNKNOWN',ciCoverage='NOT_CONFIGURED',ciGate;
     if(settings.qaStatusContext){
       try{
         const observed=await nativeC.qa();
@@ -431,11 +682,26 @@ export async function startUiReadOnlyServer({env=process.env}={}){
           const record=observed.records[0]??null;
           ciStatus=record?(record.outcome==='PASS'?'PASS':
             record.outcome==='FAIL'?'FAIL':'UNKNOWN'):'NOT_RUN';
+          if(record&&record.subjectSha===settings.expectedSha)
+            ciGate={status:ciStatus,subjectSha:record.subjectSha,
+              observedAsOf:record.observedAt,evidenceRef:record.evidenceRef};
         }
       }catch{ciStatus='UNKNOWN';}
     }
+    const projection=projectReleaseReadiness({
+      repository:settings.repository,sourceSha:settings.expectedSha,
+      observedAsOf:new Date().toISOString(),
+      gates:ciGate?{woodpeckerCI:ciGate}:{}});
+    return {ciStatus,ciCoverage,projection};
+  };
+  const readReleaseSnapshot=async({sourceSha}={})=>{
+    if(sourceSha!==settings.expectedSha)return null;
+    const {ciStatus,ciCoverage,projection}=await composeReleaseReadiness();
     return {sourceSha:settings.expectedSha,targetSha:settings.expectedSha,
-      readiness:{status:'UNKNOWN',releasePass:false,ciStatus,ciCoverage}};
+      readiness:{status:projection.status,reason:projection.reason,
+        releasePass:false,ciStatus,ciCoverage,
+        gates:projection.gates,gateCounts:projection.gateCounts,
+        blockers:projection.blockers,independentRQRequired:true}};
   };
   const server=createAlmServer(config,{
     run:installedRun??(async()=>({status:'FAIL',
@@ -444,7 +710,9 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     v2ReadModelHost,
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
-    ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{})
+    ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{}),
+    // J07 release Host Consumer seam: same trusted-mount-only contract.
+    ...(releaseSealedDispatch?{releaseSealedDispatch}:{})
   });
   const address=await server.listen();
   return {address,close:()=>server.close()};

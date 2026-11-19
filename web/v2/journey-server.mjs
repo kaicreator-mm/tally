@@ -606,6 +606,14 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',json(await readV2Model('dag','dag',{versionId})));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/dual-epoch'){
+        // #264 J02: S0 frozen-epoch + live S1 projection (read-only). The
+        // compatibility witness is argument-only and stays server-side —
+        // a browser query parameter can never supply one.
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('dual-epoch','dualEpoch',{versionId})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/release'){
         // #264 E1 R91: when the mounted Host facade supplies a real release
         // evidence provider it wins; the advisory projection stays the

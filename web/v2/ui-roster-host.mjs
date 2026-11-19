@@ -408,6 +408,13 @@ export function createUiRosterDualEpochHost({repository,versionId,freezeBaseSha,
         frozenBlobSha:h.frozen.blobSha,taskPackRef:h.taskPackRef,
         taskCount:c.taskIssueCount,nativeEdgeCount:c.nativeEdgeCount,
         frozenEdgeCount:h.frozen.edges.length,
+        // J02 live-edge truth: observedNativeEdgeCount is the LIVE native
+        // edge count at the observed head (frozen-cohort semantics stay on
+        // nativeEdgeCount); the amendment ledger is the Host-attested
+        // per-edge disposition for the frozen-minus-live delta.
+        observedNativeEdgeCount:Number.isSafeInteger(c.observedNativeEdgeCount)?
+          c.observedNativeEdgeCount:null,
+        edgeAmendmentLedger:c.edgeAmendmentLedger??null,
         identityDigests:{original51IdsDigest:c.original51IdsDigest,
           native29EdgeDigest:c.native29EdgeDigest},
         compatibilityWitness:witness,

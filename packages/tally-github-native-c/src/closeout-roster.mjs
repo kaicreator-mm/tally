@@ -359,7 +359,7 @@ function validTaskPack(pack,repository,versionId,versionSha,blobSha){
 }
 
 function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha,
-  {requireSnapshotEquality=true}={}){
+  {requireSnapshotEquality=true,edgeAmendments=null}={}){
   // Freeze admission is strict: it binds the exact live Task status/time to
   // the reviewed candidate. After freeze, those fields are *execution progress*
   // (Issues close/reopen and receive comments) and must never invalidate the
@@ -411,12 +411,23 @@ function nativeRosterMatchesPack(native,pack,repository,versionId,versionSha,
   });
   const expectedEdges=normalize(pack.edges.filter(e=>e.kind==='NATIVE'),false);
   const observedEdges=normalize(native.dag.edges,true);
-  if(expectedEdges.some(e=>!e)||observedEdges.some(e=>!e)||
-     expectedEdges.length!==observedEdges.length)return false;
+  if(expectedEdges.some(e=>!e)||observedEdges.some(e=>!e))return false;
   const key=e=>e.from+'>'+e.to;
   expectedEdges.sort((a,b)=>key(a).localeCompare(key(b)));
   observedEdges.sort((a,b)=>key(a).localeCompare(key(b)));
-  return same(expectedEdges,observedEdges);
+  if(!edgeAmendments)
+    return expectedEdges.length===observedEdges.length&&
+      same(expectedEdges,observedEdges);
+  // Amended exact-set match: every attested removal must target a frozen
+  // NATIVE edge, and the observed set must equal the frozen set MINUS the
+  // attested removals. The ledger and the live drift are therefore exact
+  // mirror images — an undeclared removal, a re-added/foreign edge or a
+  // declaration the live graph does not honour all fail closed here.
+  const removedKeys=new Set(edgeAmendments.map(a=>a.from+'>'+a.to));
+  const expectedKeys=new Set(expectedEdges.map(key));
+  for(const k of removedKeys)if(!expectedKeys.has(k))return false;
+  const kept=expectedEdges.filter(e=>!removedKeys.has(key(e)));
+  return kept.length===observedEdges.length&&same(kept,observedEdges);
 }
 
 /** Create-only version DAG freeze writer. It refuses absent independent review or Owner approval. */
@@ -665,6 +676,33 @@ const WITNESS_KEYS=new Set(['schema','repository','versionId','freezeBaseSha',
   'native29EdgeDigest','changedCodeBlobs','affectedAbiDigest','reviewRef',
   'reviewedHead','scopeDecisionRef','ciRefs','issuedAt','expiresAt','revoked']);
 
+// J02 per-edge amendment disposition (#392/7003690062 + #392/7004225002):
+// a lawfully removed native dependency edge may be attested per-edge so the
+// S1 structural match stays exact-set over the frozen cohort MINUS the
+// attested removals. The S0 frozen edge set itself is never rewritten — the
+// pack, CAS row and identity digests keep every frozen NATIVE edge — and no
+// amendment ever grants authority: the compatibility witness stage still runs
+// only after the amended structural match.
+const EDGE_AMENDMENT_KEYS=new Set(['kind','from','to','evidenceRef']);
+function validEdgeAmendments(amendments,repository){
+  if(amendments==null)return [];
+  if(!Array.isArray(amendments)||!amendments.length)return null;
+  const seen=new Set();
+  for(const a of amendments){
+    if(!plain(a)||Object.keys(a).some(k=>!EDGE_AMENDMENT_KEYS.has(k))||
+       a.kind!=='NATIVE_EDGE_REMOVED'||
+       !Number.isSafeInteger(a.from)||!Number.isSafeInteger(a.to)||
+       a.from===a.to||
+       typeof a.evidenceRef!=='string'||
+       !a.evidenceRef.startsWith('https://github.com/'+repository+'/'))
+      return null;
+    const edgeKey=a.from+'>'+a.to;
+    if(seen.has(edgeKey))return null;
+    seen.add(edgeKey);
+  }
+  return amendments;
+}
+
 /** Canonical identity digests of a version Task Pack cohort: sorted
  * (issueNumber,title) pairs and sorted NATIVE edge keys. A successor
  * compatibility witness binds these digests so it can never be replayed
@@ -719,7 +757,8 @@ function successorWitnessValid(w,repository,versionId,freezeBaseSha,s1,doc,key,d
 export function createHostVersionTaskDagDualEpochReader({
   repository,versionId,freezeBaseSha,store,taskPackReader,
   reviewWitnessReader,ownerApprovalReader,
-  branchHeadReader,ancestryReader,currentRosterReader,now
+  branchHeadReader,ancestryReader,currentRosterReader,
+  edgeAmendments=null,now
 }={}){
   if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
      !SHA.test(freezeBaseSha??'')||typeof store?.get!=='function'||
@@ -728,6 +767,8 @@ export function createHostVersionTaskDagDualEpochReader({
      typeof branchHeadReader!=='function'||typeof ancestryReader!=='function'||
      typeof currentRosterReader!=='function')
     throw new TypeError('TRUSTED_DUAL_EPOCH_READER_REQUIRED');
+  const amendments=validEdgeAmendments(edgeAmendments,repository);
+  if(amendments===null)throw new TypeError('INVALID_EDGE_AMENDMENT_LEDGER');
   const clock=now??(()=>new Date().toISOString());
   const key='tally:v2:version-task-dag:'+hash(repository+'#'+versionId);
   async function readDualEpoch({compatibilityWitness=null}={}){
@@ -812,7 +853,8 @@ export function createHostVersionTaskDagDualEpochReader({
         const currentNative=await currentRosterReader({
           sourceSha:s1,taskIssueNumbers:pack.taskIssues.map(x=>x.issueNumber)});
         if(!nativeRosterMatchesPack(currentNative,pack,repository,versionId,s1,
-            {requireSnapshotEquality:false}))
+            {requireSnapshotEquality:false,
+             edgeAmendments:amendments.length?amendments:null}))
           return denied('SUCCESSOR_NATIVE_ROSTER_UNQUALIFIED');
         current={qualified:false,status:null,historical:false,
           taskClaims:'UNVERIFIED',currentness:'STALE',
@@ -821,6 +863,11 @@ export function createHostVersionTaskDagDualEpochReader({
           observedVersionSha:s1,ancestry:'S0_ANCESTOR_OF_S1',
           taskIssueCount:pack.taskIssues.length,
           nativeEdgeCount:pack.edges.filter(e=>e.kind==='NATIVE').length,
+          observedNativeEdgeCount:currentNative.dag.edges.length,
+          edgeAmendmentLedger:amendments.length?Object.freeze({
+            disposition:'NATIVE_EDGE_REMOVED',declared:amendments.length,
+            applied:amendments.map(a=>({from:a.from,to:a.to,
+              evidenceRef:a.evidenceRef}))}):null,
           ...digests};
       }
       // Forward code/ABI compatibility witness: strictly validated, never a

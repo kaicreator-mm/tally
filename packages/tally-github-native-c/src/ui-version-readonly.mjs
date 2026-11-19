@@ -380,8 +380,11 @@ export async function verifyUiNativeVersionAncestryFromClient({
      !octokit?.rest?.repos?.compareCommits)
     return denied('INVALID_ANCESTRY_PROBE');
   try{
+    // This dependency chain pins @octokit/rest whose compareCommits route
+    // is /compare/{base}...{head} (the newer basehead-only form would drop
+    // the pair into the query string and 404 every probe).
     const r=(await octokit.rest.repos.compareCommits({
-      owner,repo,basehead:baseSha+'...'+headSha}))?.data;
+      owner,repo,base:baseSha,head:headSha}))?.data;
     if(r?.status==='ahead'&&Number.isSafeInteger(r.ahead_by)&&r.ahead_by>=1&&
        r.base_commit?.sha===baseSha&&r.merge_base_commit?.sha===baseSha)
       return Object.freeze({connected:true,repository:`${owner}/${repo}`,
