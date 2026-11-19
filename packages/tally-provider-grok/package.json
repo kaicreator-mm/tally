@@ -1,0 +1,13 @@
+{
+  "name": "@kaicreator/tally-provider-grok",
+  "version": "0.0.0-v2.1-candidate",
+  "private": true,
+  "type": "module",
+  "description": "Tally AgentProvider/1 Node adapter for the xAI Grok Build CLI (observed contract from #468). Default DISABLED: no real Grok credentials on the authoring machine.",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
