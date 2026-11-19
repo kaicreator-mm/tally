@@ -197,6 +197,7 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
     // context.env is intentionally NOT merged: the host builder environment
     // allowlist is the only authority for what the agent process sees.
     const attemptConfig = {...config, attemptId: request.attemptId,
+      taskId: request.taskId, providerId: CODEX_PROVIDER_ID,
       sourceSha: request.sourceSha, worktreePath: request.worktreePath};
     if (typeof request.timeoutMs === 'number') attemptConfig.timeoutMs = request.timeoutMs;
     // Register the cancel handle before the first await so cancel() can target
@@ -285,10 +286,15 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
         typeof attempt.attemptId !== 'string' || typeof attempt.sourceSha !== 'string')
       return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
         reason: BRIDGE_REASONS.ATTEMPT_PIN_INVALID, evidence: null});
+    if (attempt.providerId !== CODEX_PROVIDER_ID)
+      return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
+        reason: BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH, evidence: null});
     let tracked = replayConfigs.get(attempt.attemptId) ?? null;
     if (tracked) {
       if (tracked.config.sourceSha !== attempt.sourceSha ||
-          tracked.taskId !== attempt.taskId)
+          tracked.taskId !== attempt.taskId ||
+          (tracked.config.taskId !== undefined && tracked.config.taskId !== attempt.taskId) ||
+          (tracked.config.providerId ?? CODEX_PROVIDER_ID) !== attempt.providerId)
         return normalizeProviderObservation('reconcile', {state: 'UNKNOWN',
           reason: BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH, evidence: null});
     }
@@ -297,7 +303,9 @@ export function createCodexBridge({loadHost, config = null, now} = {}) {
       const supplied = context?.attemptConfig;
       if (supplied && typeof supplied === 'object' &&
           supplied.attemptId === attempt.attemptId &&
-          supplied.sourceSha === attempt.sourceSha)
+          supplied.sourceSha === attempt.sourceSha &&
+          supplied.taskId === attempt.taskId &&
+          (supplied.providerId ?? CODEX_PROVIDER_ID) === attempt.providerId)
         attemptConfig = supplied;
     }
     if (!attemptConfig)

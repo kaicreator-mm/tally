@@ -851,3 +851,81 @@ test('mounted release dispatch passes verifyReleaseSeamResult; forged shapes deg
     assert.equal(body.releasePass,false);
   }finally{await forged.close();}
 });
+
+// ---------------------------------------------------------------------------
+// #473 R107 — task-selected AgentProvider pin admission.
+// ---------------------------------------------------------------------------
+test('agent provider pin is Host-only, default codex, explicitly enabled',()=>{
+  const base={...validEnv,TALLY_V2_AGENT_DISPATCH:'host-mounted',
+    TALLY_V2_AGENT_CLAIM_SOURCE_SHA:sha,
+    TALLY_V2_AGENT_CLAIM_DISPATCH_ID:'dispatch:264:t:test:1',
+    TALLY_V2_AGENT_CLAIM_OPERATOR_ID:'zcode:t264:test:1',
+    TALLY_V2_AGENT_CLAIM_OPERATOR_KIND:'other',
+    TALLY_V2_AGENT_CLAIM_WRITER_ID:'tally-host:win32:t264:test:1',
+    TALLY_V2_AGENT_CLAIM_WRITER_LOGIN:'kaicreator-mm',
+    TALLY_V2_AGENT_CLAIM_COMMENT_ID:'1',
+    TALLY_V2_AGENT_CLAIM_REGISTRY_PATH:'/tmp/claim.sqlite',
+    TALLY_V2_AGENT_CLAIM_WRITESET_SHA256:'0'.repeat(64),
+    TALLY_V2_AGENT_CLAIM_ATTEMPT_ID:'attempt:264:t:1',
+    TALLY_V2_AGENT_WORKTREE_PATH:'/tmp/wt',
+    TALLY_V2_AGENT_EVIDENCE_DIR:'/tmp/ev',
+    TALLY_CODEX_CLI_PATH:'C:/c.exe',TALLY_CODEX_SANDBOX_PATH:'C:/c.exe',
+    TALLY_BUILDER_PROFILE:'C:/p',TALLY_BUILDER_TEMP:'C:/t',
+    TALLY_EMPTY_GIT_CONFIG:'C:/g',TALLY_OPERATOR_HOME:'C:/o',
+    TALLY_HIDDEN_FIXTURE:'C:/h',TALLY_BUILDER_PRINCIPAL:'nilar\b',
+    TALLY_BUILDER_SID:'S-1-5-21-1',TALLY_VERIFIER_SID:'S-1-5-21-2',
+    TALLY_LOCAL_ISSUE_NUMBER:'264',TALLY_LOCAL_REPOSITORY_PATH:'C:/repo'};
+  const settings=readInstalledWriteJourneyEnvironment(base);
+  assert.equal(settings.provider,'codex','default is codex with no pin');
+  const pinned=readInstalledWriteJourneyEnvironment({...base,
+    TALLY_V2_AGENT_PROVIDER:'zcode',
+    TALLY_V2_AGENT_PROVIDERS_ENABLED:'codex,zcode'});
+  assert.equal(pinned.provider,'zcode');
+  // A provider outside the enabled list refuses START closed.
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({...base,
+    TALLY_V2_AGENT_PROVIDER:'grok'}),
+    /AGENT_PROVIDER_PIN_INVALID/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({...base,
+    TALLY_V2_AGENT_PROVIDER:'not a provider'}),
+    /AGENT_PROVIDER_PIN_INVALID/);
+});
+test('non-codex provider start retains the selected sealed Host driver',async()=>{
+  const {tmpdir}=await import('node:os');
+  const evidenceDir=join(tmpdir(),
+    'aph-journey-ev-'+Math.random().toString(36).slice(2));
+  await (await import('node:fs/promises')).mkdir(evidenceDir,{recursive:true});
+  const scripts=[];
+  const spawnE2e=async(script,env,timeoutMs)=>{
+    scripts.push(String(script).split(/[\\/]/).pop());
+    return {code:0,signal:null,timeout:false,startedAt:1,terminatedAt:2};};
+  const settings=readInstalledWriteJourneyEnvironment({
+    ...validEnv,TALLY_V2_AGENT_DISPATCH:'host-mounted',
+    TALLY_V2_AGENT_CLAIM_SOURCE_SHA:sha,
+    TALLY_V2_AGENT_CLAIM_DISPATCH_ID:'dispatch:264:t:test:2',
+    TALLY_V2_AGENT_CLAIM_OPERATOR_ID:'zcode:t264:test:2',
+    TALLY_V2_AGENT_CLAIM_OPERATOR_KIND:'other',
+    TALLY_V2_AGENT_CLAIM_WRITER_ID:'tally-host:win32:t264:test:2',
+    TALLY_V2_AGENT_CLAIM_WRITER_LOGIN:'kaicreator-mm',
+    TALLY_V2_AGENT_CLAIM_COMMENT_ID:'2',
+    TALLY_V2_AGENT_CLAIM_REGISTRY_PATH:'/tmp/claim.sqlite',
+    TALLY_V2_AGENT_CLAIM_WRITESET_SHA256:'0'.repeat(64),
+    TALLY_V2_AGENT_CLAIM_ATTEMPT_ID:'attempt:264:t:2',
+    TALLY_V2_AGENT_WORKTREE_PATH:'/tmp/wt',
+    TALLY_V2_AGENT_EVIDENCE_DIR:'/tmp/ev',
+    TALLY_V2_AGENT_PROVIDER:'zcode',
+    TALLY_V2_AGENT_PROVIDERS_ENABLED:'codex,zcode',
+    TALLY_CODEX_CLI_PATH:'C:/c.exe',TALLY_CODEX_SANDBOX_PATH:'C:/c.exe',
+    TALLY_BUILDER_PROFILE:'C:/p',TALLY_BUILDER_TEMP:'C:/t',
+    TALLY_EMPTY_GIT_CONFIG:'C:/g',TALLY_OPERATOR_HOME:'C:/o',
+    TALLY_HIDDEN_FIXTURE:'C:/h',TALLY_BUILDER_PRINCIPAL:'nilar\b',
+    TALLY_BUILDER_SID:'S-1-5-21-1',TALLY_VERIFIER_SID:'S-1-5-21-2',
+    TALLY_LOCAL_ISSUE_NUMBER:'264',TALLY_LOCAL_REPOSITORY_PATH:'C:/repo',
+    TALLY_V2_AGENT_EVIDENCE_DIR:evidenceDir});
+  const runner=createInstalledWriteJourneyRunner({settings,
+    env:{...validEnv,TALLY_LOCAL_REPOSITORY_PATH:'C:/repo',
+      TALLY_V2_AGENT_PROVIDER:'zcode'},spawnE2e});
+  const observed=await runner.run('start');
+  assert.deepEqual(scripts,['local-codex-windows-e2e.mjs'],
+    'a non-codex pin must retain the one selected sealed B/K/Host/C driver');
+  assert.equal(observed.status,'UNKNOWN','no e2e-result.json was written');
+});

@@ -9,6 +9,13 @@ when:
         - 'packages/tally-github-native-c/**'
         - 'packages/tally-ads-v5-validator/**'
         - 'experiments/v2/selected-business-build/**'
+        - 'packages/tally-agent-provider/**'
+        - 'packages/tally-provider-codex/**'
+        - 'packages/tally-provider-zcode/**'
+        - 'packages/tally-provider-dsh-adapter/**'
+        - 'packages/tally-provider-opencode/**'
+        - 'packages/tally-provider-pi/**'
+        - 'packages/tally-provider-grok/**'
         - '.woodpecker/v2-t06m-local-agent.yaml'
   - event: [pull_request, push, manual]
     branch: [task/tally-i172-k3]
@@ -91,6 +98,9 @@ steps:
       # #264 J05: replay lane of the single-Builder ReviewDecision consumer
       # (fixture-seeded claims; no network, no GitHub write, no Builder spawn).
       - export T264_SINGLE_REVIEW=1
+      # #473 R107: one additional no-effect replay through the same sealed C
+      # with zcode explicitly enabled; proves provider selection in the bundle.
+      - export TALLY_V2_PROVIDER_REPLAY=1
       - bash experiments/v2/selected-business-build/run-clean.sh > "$work/consumer.log" 2>&1 || { rc=$?; node ci-post-error.mjs "$work/consumer.log"; exit "$rc"; }
       - echo TALLY_V2_T06M_DH_V0103_PUBLIC_K_HOST_REPLAY_PASS
       - echo TALLY_V2_T06M_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER

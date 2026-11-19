@@ -238,7 +238,9 @@ try{
   const replayed=await facade.send(message);
   assert.equal(replayed.status,'admitted');assert.equal(replayed.idempotentReplay,true);
   assert.deepEqual(await sqlite.list(''),recordsBefore);
-  const summary={provider:'local-codex-host',via:'real-sealed-k-b-c',sourceSha,attemptId,
+  const summary={provider:'local-codex-host',
+    agentProviderId:effect.providerId??'codex',
+    via:'real-sealed-k-b-c',sourceSha,attemptId,
     result:effect.state,agentLaunch:effect.agentLaunch,candidateTree:effect.candidateTree??null,
     candidateCommit:effect.candidateCommit??null,replayFixture:replay,reopened:true,
     idempotentReplay:replayed.idempotentReplay,taskPass:false,hiddenPass:false,docCount:recordsBefore.length,

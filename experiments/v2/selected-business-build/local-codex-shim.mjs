@@ -49,7 +49,9 @@ const REASONS=new Set([
   'ATTEMPT_ALREADY_RECONCILED','ATTEMPT_STATUS_UNKNOWN','ATTEMPT_TIMEOUT_RECONCILED',
   'ATTEMPT_CANCELLED','ATTEMPT_PROCESS_FAILED','WRITE_SET_VIOLATION',
   'CANDIDATE_TREE_UNAVAILABLE','LOCAL_AGENT_PROVIDER_THREW',
-  'CANDIDATE_WORKTREE_OVERLAP','CANDIDATE_WRITE_GRANT_OVERLAP'
+  'CANDIDATE_WORKTREE_OVERLAP','CANDIDATE_WRITE_GRANT_OVERLAP',
+  'PROVIDER_CONFIG_INVALID','PROVIDER_DISABLED','PROVIDER_NOT_INSTALLED',
+  'PROVIDER_ID_INVALID','PROVIDER_OBSERVATION_INVALID','ATTEMPT_IDENTITY_MISMATCH'
 ]);
 const JOIN_REASONS=new Set([
   ...REASONS,'JOIN_INPUT_INVALID','CANDIDATE_NOT_FOUND','CANDIDATE_NOT_READY',
@@ -60,7 +62,8 @@ const flags=(admitted,claimAccepted,agentLaunch)=>({claimGeneration:1,claimAccep
   admitted,authorized:false,agentLaunch,taskPass:false,releasePass:false});
 const common=(input,o,state,reason,fl)=>({state,reason,
   issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
-  attemptId:input.attemptId,...fl});
+  attemptId:input.attemptId,
+  ...(o.providerId&&o.providerId!=='codex'?{providerId:o.providerId}:{}),...fl});
 const joinCommon=(input,o,state,reason,fl)=>({state,reason,
   issueRef:issueRefFor(input.issueNumber),sourceSha:input.sourceSha,
   joinId:input.joinId,...fl});
@@ -71,7 +74,8 @@ const joinDenied=(input,reason)=>Object.freeze({...joinCommon(input,null,'NOT_AD
 const validCommon=(input,o)=>o&&typeof o==='object'&&!Array.isArray(o)&&
   o.issueRef===issueRefFor(input.issueNumber)&&o.sourceSha===input.sourceSha&&
   o.attemptId===input.attemptId&&o.claimGeneration===1&&o.authorized===false&&
-  o.taskPass===false&&o.releasePass===false;
+  o.taskPass===false&&o.releasePass===false&&
+  (o.providerId===undefined||/^[a-z][a-z0-9-]{0,63}$/.test(o.providerId));
 const validJoinCommon=(input,o)=>o&&typeof o==='object'&&!Array.isArray(o)&&
   o.issueRef===issueRefFor(input.issueNumber)&&o.sourceSha===input.sourceSha&&
   o.joinId===input.joinId&&o.claimGeneration===1&&o.authorized===false&&
@@ -103,8 +107,11 @@ async function computeLocalCodexAttempt(input){
     o.admitted===true&&o.claimAccepted===true&&o.agentLaunch===true&&
     o.replayFixture===false&&SHA.test(o.candidateTree??'')&&SHA.test(o.candidateCommit??'')&&
     o.process?.status==='EXITED'&&o.process.exitCode===0&&
-    Number.isSafeInteger(o.process.pid)&&typeof o.process.builderPrincipal==='string'&&
-    typeof o.process.builderSid==='string')
+    (Number.isSafeInteger(o.process.pid)||
+      (o.providerId&&o.providerId!=='codex'&&o.process.pid===null))&&
+    ((typeof o.process.builderPrincipal==='string'&&typeof o.process.builderSid==='string')||
+      (o.providerId&&o.providerId!=='codex'&&
+        o.process.builderPrincipal===null&&o.process.builderSid===null)))
     return Object.freeze({...common(input,o,o.state,o.reason,flags(true,true,true)),
       replayFixture:false,candidateTree:o.candidateTree,candidateCommit:o.candidateCommit,
       process:processOut(o)});

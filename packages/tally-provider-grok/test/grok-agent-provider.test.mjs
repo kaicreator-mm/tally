@@ -99,8 +99,18 @@ async function lastRecord(recordPath) {
 function processAlive(pid) {
   if (!pid || pid <= 0) return false;
   if (process.platform !== 'win32') {
-    try { process.kill(pid, 0); return true; }
-    catch (error) { return error.code === 'EPERM'; } // exists but not ours
+    try { process.kill(pid, 0); }
+    catch (error) {
+      return error.code === 'EPERM'; // exists but not ours
+    }
+    // signal 0 succeeds for zombies too: a killed-but-unreaped orphan
+    // (reparented to a container PID 1 that does not adopt-reap) is DEAD
+    // for the no-orphan assertions — treat kernel state Z as not alive.
+    try {
+      const stat=readFileSync('/proc/'+pid+'/stat','utf8');
+      if (/^\s*Z/.test(stat.slice(stat.lastIndexOf(')')+1))) return false;
+    } catch {/* keep the signal-0 answer */}
+    return true;
   }
   const res = spawnSync('tasklist', ['/FI', `PID eq ${pid}`, '/FO', 'CSV', '/NH'],
     {encoding: 'utf8', timeout: 10_000});

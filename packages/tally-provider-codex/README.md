@@ -109,13 +109,15 @@ of `runAttempt` (the host terminates the process tree and durably records
 
 ### reconcile
 
-Reconcile replays through `runAttempt`, which is read-only for any attempt
-that already has a durable record (the host never relaunches an existing
-record). The bridge replays only configs it can vouch for: the config recorded
-when `execute()` launched the attempt in this process, or one explicitly
-supplied by the trusted Host via `context.attemptConfig` (pin identity is
-re-checked). With neither, it fails closed instead of risking a launch side
-effect.
+Reconcile uses the Host's dedicated **strictly read-only** `readAttemptRecord`
+port; it never calls the launch-capable `runAttempt`. The port opens SQLite
+with `readonly + fileMustExist`, so a missing store/schema cannot be created
+as a side effect. The bridge replays only configs it can vouch for: the config
+recorded when `execute()` launched the attempt in this process, or one
+explicitly supplied by the trusted Host via `context.attemptConfig`. The full
+`taskId + attemptId + sourceSha + providerId` identity is re-checked on both
+paths. With neither a vouchered config nor the read-only port, it fails closed
+with `UNKNOWN` instead of risking a launch or persistence side effect.
 
 | Host replay result | Contract observation |
 | --- | --- |
@@ -167,7 +169,7 @@ in the host CAS store.
 
 ```bash
 cd packages/tally-provider-codex && npm test
-# exit code 0; 28 tests, all fake-host injected, no real CLI touched
+# exit code 0; 29 tests, all fake-host injected, no real CLI touched
 ```
 
 ## Honest NOT_RUN list

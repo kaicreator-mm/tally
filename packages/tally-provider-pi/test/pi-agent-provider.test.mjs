@@ -102,10 +102,21 @@ function pidAlive(pid) {
   if (!pid || pid <= 0) return false;
   try {
     process.kill(pid, 0);
-    return true;
   } catch {
     return false;
   }
+  // signal 0 succeeds for POSIX zombies too. A killed-but-unreaped orphan
+  // (reparented to a PID 1 that does not adopt-reap, e.g. a container agent)
+  // is DEAD for every purpose this suite asserts — read the kernel state and
+  // treat Z as not alive so the orphan assertions stay truthful on CI.
+  if (process.platform !== 'win32') {
+    try {
+      const stat=readFileSync('/proc/'+pid+'/stat','utf8');
+      const afterClose=stat.slice(stat.lastIndexOf(')')+1);
+      if (/^\s*Z/.test(afterClose)) return false;
+    } catch {/* stat unreadable: keep the signal-0 answer */}
+  }
+  return true;
 }
 
 function assertNoPrintSpawn(recordPath) {
@@ -777,6 +788,8 @@ test('completed JSON and text summaries redact secret-shaped agent output', asyn
       attemptId: 'secret-' + outputMode,
     }, {DEEPSEEK_API_KEY: 'test-key'});
     assert.equal(result.state, 'COMPLETED');
+    assert.equal(result.evidence.exitCode, 0,
+      'COMPLETED must preserve the actual observed zero exit for sealed Host projection');
     assert.doesNotMatch(JSON.stringify(result.evidence), /sk-0123456789abcdefghijklmnopqrstuv/,
       'agent stdout must never echo secret-shaped material into Host observation');
     assert.match(result.evidence.summary, /\[REDACTED\]/);

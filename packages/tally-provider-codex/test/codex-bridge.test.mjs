@@ -208,7 +208,8 @@ test('lazy loadHost failure degrades to HOST_MODULE_UNAVAILABLE per operation', 
   const execute = await bridge.execute(request(), {});
   assert.deepEqual([execute.state, execute.reason], ['UNKNOWN', 'HOST_MODULE_UNAVAILABLE']);
   const reconcile = await bridge.reconcile(pin(), {attemptConfig:
-    {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40}});
+    {...bridgeConfig, attemptId: 'attempt:264:r1', taskId: '264',
+      providerId: CODEX_PROVIDER_ID, sourceSha: sha40}});
   assert.deepEqual([reconcile.state, reconcile.reason], ['UNKNOWN', 'HOST_MODULE_UNAVAILABLE']);
   // without a replayable attempt config, reconcile fails closed on its own terms
   const untrackable = await bridge.reconcile(pin(), {});
@@ -395,13 +396,17 @@ test('reconcile replays read-only with the exact recorded attempt config', async
   const wrongTask = await bridge.reconcile(pin({taskId: '999'}), {});
   assert.deepEqual([wrongTask.state, wrongTask.reason],
     ['UNKNOWN', BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH]);
+  const wrongProvider = await bridge.reconcile(pin({providerId: 'zcode'}), {});
+  assert.deepEqual([wrongProvider.state, wrongProvider.reason],
+    ['UNKNOWN', BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH]);
+  assert.equal(fake.calls.readAttemptRecord.length, 1);
 });
 
 test('reconcile stays UNKNOWN on hosts without the read-only port (no runAttempt fallback)', async () => {
   const fake = fakeHostModule({readAttemptRecord: null});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
-  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40,
-    worktreePath: 'C:\\tally\\wt\\r1'};
+  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', taskId: '264',
+    providerId: CODEX_PROVIDER_ID, sourceSha: sha40, worktreePath: 'C:\\tally\\wt\\r1'};
   const legacy = await bridge.reconcile(pin(), {attemptConfig});
   assert.deepEqual([legacy.state, legacy.reason],
     ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
@@ -412,8 +417,8 @@ test('reconcile stays UNKNOWN on hosts without the read-only port (no runAttempt
 test('reconcile accepts an attemptConfig supplied by the trusted Host context', async () => {
   const fake = fakeHostModule({readAttemptRecord: async () => readyResult});
   const bridge = createCodexBridge({loadHost: async () => fake.module, config: bridgeConfig});
-  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', sourceSha: sha40,
-    worktreePath: 'C:\\tally\\wt\\r1'};
+  const attemptConfig = {...bridgeConfig, attemptId: 'attempt:264:r1', taskId: '264',
+    providerId: CODEX_PROVIDER_ID, sourceSha: sha40, worktreePath: 'C:\\tally\\wt\\r1'};
   const completed = await bridge.reconcile(pin(), {attemptConfig});
   assert.equal(completed.state, 'COMPLETED');
   assert.equal(fake.calls.readAttemptRecord.length, 1);
@@ -423,7 +428,14 @@ test('reconcile accepts an attemptConfig supplied by the trusted Host context', 
     {...attemptConfig, sourceSha: 'e'.repeat(40)}});
   assert.deepEqual([wrongSha.state, wrongSha.reason],
     ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
-  assert.equal(fake.calls.readAttemptRecord.length, 1);
+  const wrongTask = await bridge.reconcile(pin({taskId: '999'}), {attemptConfig});
+  assert.deepEqual([wrongTask.state, wrongTask.reason],
+    ['UNKNOWN', BRIDGE_REASONS.RECONCILE_STATE_UNAVAILABLE]);
+  const wrongProvider = await bridge.reconcile(pin({providerId: 'zcode'}), {attemptConfig});
+  assert.deepEqual([wrongProvider.state, wrongProvider.reason],
+    ['UNKNOWN', BRIDGE_REASONS.ATTEMPT_PIN_MISMATCH]);
+  assert.equal(fake.calls.readAttemptRecord.length, 1,
+    'wrong task/provider/SHA must never read or launch an attempt');
 });
 
 test('reconcile replay of a terminal failure maps FAILED; NOT_ADMITTED replays as UNKNOWN', async () => {

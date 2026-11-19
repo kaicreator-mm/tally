@@ -384,6 +384,23 @@ test('T06m real candidate projection preserves exact tree and process without Ta
   assert.equal(x.candidateTree,'a'.repeat(40));assert.equal(x.process.pid,123);
   assert.equal(x.authorized,false);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
 });
+test('R107 AgentProvider/1 identity crosses replay and candidate projection without Task PASS',()=>{
+  const providerReady={...localReady,providerId:'zcode',process:{...localReady.process,
+    pid:null,builderPrincipal:null,builderSid:null}};
+  const ready=projectLocalCodexAttempt({input:localInput,observation:providerReady,
+    effectId:'provider-ready'});
+  assert.equal(ready.state,'LOCAL_CANDIDATE_READY');
+  assert.equal(ready.providerId,'zcode');
+  assert.equal(ready.process.pid,null);assert.equal(ready.process.builderPrincipal,null);
+  assert.equal(ready.taskPass,false);assert.equal(ready.releasePass,false);
+  const replay=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
+    providerId:'pi',state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+    agentLaunch:false,replayFixture:true},effectId:'provider-replay'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.providerId,'pi');
+  const forged=projectLocalCodexAttempt({input:localInput,observation:{...providerReady,
+    providerId:'not a provider'},effectId:'provider-forged'});
+  assert.equal(forged.state,'NOT_ADMITTED');assert.equal(forged.taskPass,false);
+});
 test('T06m replay, unavailable/confinement and UNKNOWN states remain distinct',()=>{
   const replay=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
     state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',agentLaunch:false,replayFixture:true},effectId:'r'});
