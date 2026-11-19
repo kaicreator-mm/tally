@@ -317,7 +317,7 @@ test('spawn env strips all 42 credential vars, forces isolation keys, keeps only
   mkdirSync(worktree);
   const owner = path.join(dir, 'owner');
   const ownerAgentDir = path.join(owner, 'owner-pi-agent');
-  const ownerHome = path.join(owner, 'owner-home');
+  const ownerHome = path.join(dir, 'owner-home');
   mkdirSync(ownerAgentDir, {recursive: true});
   mkdirSync(ownerHome, {recursive: true});
 
@@ -405,6 +405,35 @@ test('spawn env strips all 42 credential vars, forces isolation keys, keeps only
   } finally {
     removeIsolationDirs(dirs);
   }
+});
+
+test('secret-shaped operator env names outside the 42-var list are stripped too (review P1)', async (t) => {
+  const dir = newTestDir(t);
+  const record = path.join(dir, 'calls.jsonl');
+  const worktree = path.join(dir, 'ws');
+  mkdirSync(worktree);
+  // The inherited environment is the FULL operator env: names that merely are
+  // not on pi's own help list (CI/SCM tokens, service secrets) must not reach
+  // the agent process, while OS/functional keys survive and the explicit
+  // Host injection (DEEPSEEK_API_KEY) is applied AFTER stripping.
+  const provider = makeProvider(t, {recordPath: record, inheritedExtra: {
+    GITHUB_TOKEN: 'gh-operator', GH_HOST: 'github.com',
+    WOODPECKER_TOKEN: 'wp-operator', MY_SERVICE_SECRET: 'service',
+    CI_JOB_TOKEN: 'ci', NPM_AUTH: 'should-this-stay',
+    DEPLOY_PASSWORD: 'pw', SSH_KEY_PATH: 'kept-but-harmless-path',
+  }});
+  const done = await runExecute(provider, {worktree}, {DEEPSEEK_API_KEY: 'explicit-key'});
+  assert.equal(done.state, 'COMPLETED');
+  const rec = lastRecord(t, record);
+  const names = new Set(rec.env_names.map((n) => n.toLowerCase()));
+  assert.equal(names.has('github_token'), false);
+  assert.equal(names.has('woodpecker_token'), false);
+  assert.equal(names.has('my_service_secret'), false);
+  assert.equal(names.has('ci_job_token'), false);
+  assert.equal(names.has('deploy_password'), false);
+  assert.equal(names.has('deepseek_api_key'), true, 'explicit injection channel survives');
+  assert.ok(names.has('path'), 'OS functional keys survive');
+  assert.ok(!names.has('github_token'), 'no case tricks');
 });
 
 test('credential values never enter argv or evidence', async (t) => {

@@ -121,11 +121,23 @@ const foldCase = (name) => String(name).toLowerCase();
 /**
  * True when `name` is on the strip list (42 credential vars + 6 pi config
  * switches). Case-insensitive: Windows env var names are not case-sensitive.
+ *
+ * Independent-review P1 fix: the inherited environment is the FULL operator
+ * env, so credential-shaped names that are merely not on pi's own 42-var
+ * help list (GITHUB_TOKEN, WOODPECKER_TOKEN, *_SECRET, ...) would otherwise
+ * survive structurally into the agent process. A conservative name-shape
+ * denylist strips those too: a coding agent has no legitimate need for any
+ * token/secret/password/credential/key-shaped variable, and over-stripping
+ * cannot break a model turn (the sanctioned credential channel remains the
+ * Host context.env injection, which is applied after stripping).
  */
+const SECRET_SHAPED_NAME = /(token|secret|password|passphrase|credential|api[_-]?key|private[_-]?key|access[_-]?key([^a-z]|$)|auth)/i;
+
 export function isStrippedEnvName(name) {
   const folded = foldCase(name);
-  return PI_CREDENTIAL_ENV_VARS.some((n) => foldCase(n) === folded) ||
-    PI_CONFIG_ENV_VARS.some((n) => foldCase(n) === folded);
+  if (PI_CREDENTIAL_ENV_VARS.some((n) => foldCase(n) === folded) ||
+      PI_CONFIG_ENV_VARS.some((n) => foldCase(n) === folded)) return true;
+  return SECRET_SHAPED_NAME.test(folded);
 }
 
 /** True when `name` is one of the six forced isolation keys. */

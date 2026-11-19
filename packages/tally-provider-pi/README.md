@@ -43,6 +43,14 @@ persistence layer).
 - All **42** provider credential env vars (ANTHROPIC_*/OPENAI_*/DEEPSEEK_*/
   XAI_*/AWS_*/… exactly as observed in #469 `isolation.go`) are stripped from
   the inherited environment case-insensitively.
+- **Independent-review P1 hardening (beyond the #469 evidence)**: because the
+  inherited environment is the FULL operator env, credential-shaped names that
+  are merely absent from pi's own help list (`GITHUB_TOKEN`,
+  `WOODPECKER_TOKEN`, `*_SECRET`, `*_PASSWORD`, …) are ALSO stripped by a
+  conservative name-shape denylist. Over-stripping cannot break a model turn;
+  the sanctioned credential channel remains the Host `context.env` injection,
+  which is applied after stripping (so an injected `DEEPSEEK_API_KEY` still
+  reaches the CLI).
 - The **6** pi config switches (`PI_CODING_AGENT_DIR`,
   `PI_CODING_AGENT_SESSION_DIR`, `PI_PACKAGE_DIR`, `PI_OFFLINE`,
   `PI_TELEMETRY`, `PI_SHARE_VIEWER_URL`) are stripped and re-imposed by the

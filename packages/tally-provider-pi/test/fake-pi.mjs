@@ -155,6 +155,7 @@ function main() {
     pi_offline: envValue('PI_OFFLINE') ?? '',
     pi_telemetry: envValue('PI_TELEMETRY') ?? '',
     credentials_present: credentialsPresent(),
+    env_names: Object.keys(process.env).sort(),
     instruction,
   };
 
