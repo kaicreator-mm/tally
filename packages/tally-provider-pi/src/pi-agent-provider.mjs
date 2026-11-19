@@ -507,6 +507,13 @@ export function createPiAgentProvider(options = {}) {
           env,
           windowsHide: true,
           detached: process.platform !== 'win32',
+          // stdin MUST be closed for `-p` print mode: the real 0.85.1 CLI
+          // reads stdin to EOF before finishing its turn, so a default
+          // `pipe` stdin that the adapter never ends makes every real turn
+          // hang with zero output until the timeout tree-kills it (found by
+          // the real-CLI controller smoke; the fake CLI never reads stdin,
+          // which is why the matrix alone could not catch this).
+          stdio: ['ignore', 'pipe', 'pipe'],
         });
         entry.pid = child.pid ?? 0;
         if (entry.cancelRequested || signal?.aborted) {

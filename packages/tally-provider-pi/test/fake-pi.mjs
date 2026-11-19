@@ -206,6 +206,23 @@ function main() {
       // safe instead of guessing success.
       process.exit(0);
       return;
+    case 'stdinwait': {
+      // Regression for the real-CLI hang: pi 0.85.1 `-p` reads stdin to EOF
+      // before finishing its turn. The fake models that by answering only
+      // after stdin ends. If the adapter ever spawns with a default `pipe`
+      // stdin it never closes, this scenario never answers and the bounded
+      // timeout turns the observation into UNKNOWN — the test asserts
+      // COMPLETED, so the regression cannot pass silently.
+      process.stdin.resume();
+      process.stdin.once('end', () => {
+        const answer = 'stdin closed, turn complete';
+        if (mode === 'json') emitJSONStream(cwd, answer);
+        else process.stdout.write(answer + '\n');
+        process.exit(0);
+      });
+      process.stdin.once('error', () => process.exit(3));
+      return;
+    }
     case 'leakstderr':
       // Failure output with a secret-shaped string: the non-completed
       // summary must be redacted before entering an observation.

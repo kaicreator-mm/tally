@@ -201,6 +201,24 @@ test('version observation is cached per provider (single --version spawn)', asyn
 
 // ---- execute: happy path, observation vs expectation, argv shape ------------
 
+test('execute never leaves the child stdin open (real 0.85.1 `-p` reads stdin to EOF)', async (t) => {
+  const dir = newTestDir(t);
+  const record = path.join(dir, 'calls.jsonl');
+  const worktree = path.join(dir, 'ws');
+  mkdirSync(worktree);
+  // stdinwait answers ONLY after stdin ends. A default `pipe` stdin that the
+  // adapter never closes makes this scenario hang until the bounded timeout
+  // (UNKNOWN); with stdin ignored (NUL) EOF is immediate and the turn
+  // completes. Regression for the real-CLI hang found by the controller smoke.
+  const provider = makeProvider(t, {recordPath: record});
+  const done = await runExecute(provider, {worktree, timeoutMs: 8000}, {
+    DEEPSEEK_API_KEY: 'test-key', TALLY_FAKE_PI_SCENARIO: 'stdinwait',
+  });
+  assert.equal(done.state, 'COMPLETED');
+  assert.equal(done.reason, null);
+  assert.equal(done.evidence.summary, 'stdin closed, turn complete');
+});
+
 test('execute COMPLETED: claim evidence comes from the stream, not from expected flags', async (t) => {
   const dir = newTestDir(t);
   const record = path.join(dir, 'calls.jsonl');
