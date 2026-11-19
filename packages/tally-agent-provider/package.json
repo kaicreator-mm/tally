@@ -1,0 +1,13 @@
+{
+  "name": "@kaicreator/tally-agent-provider",
+  "version": "0.0.0-v2.1-candidate",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    }
+  },
+  "scripts": {"test": "node --test test/*.test.mjs"}
+}
