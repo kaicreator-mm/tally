@@ -532,7 +532,14 @@ test('selection defaults to codex and admits opencode only when configured and v
     codexFailure:true}).selected,'codex');
 });
 
-test('integration: real git worktree, real process spawn, fake opencode binary end-to-end',async()=>{
+test('integration: real git worktree, real process spawn, fake opencode binary end-to-end',async t=>{
+  // The fake CLI is a go-built PE (Windows has no shebang exec). Runners
+  // without a go toolchain (the CI alm lane) skip the real-binary seam
+  // honestly instead of failing on the missing compiler.
+  if(spawnSync('go',['version'],{encoding:'utf8'}).status!==0){
+    t.skip('go toolchain unavailable on this runner — real-binary seam exercised on Windows dev boxes');
+    return;
+  }
   const dir=await mkdtemp(join(tmpdir(),'tally-opencode-integration-'));
   // The host's git operations run with the stripped hostEnvironment PATH, so
   // the test resolves an ABSOLUTE git path (PATH lookup would fail there).
