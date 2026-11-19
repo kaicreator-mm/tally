@@ -45,7 +45,7 @@ async function withProvider(fn,{config={},ops,behavior=(close)=>close(0,null),
       operations:typeof ops==='function'?ops(spawnFn):
         (ops??createDefaultOperations(spawnFn)),
       now:()=>Date.UTC(2026,10,19),
-      killTree:async pid=>{kills.push(pid);lastChild?.kill();return killTree(pid);},
+      killTree:async pid=>{kills.push(pid);lastChild?.kill();return true;},
       config:{repositoryPath:dir,cliPath:process.execPath,gitPath:'git.exe',
         credentialsPath:join(dir,'credentials.json'),allowedWriteSet:ALLOWED,...config}});
     const request={taskId,attemptId,sourceSha,prompt:'Create the candidate note file.',
