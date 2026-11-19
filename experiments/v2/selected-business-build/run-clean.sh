@@ -151,6 +151,8 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-readonly.test.mjs" "$tmp/consumer/local-codex-readonly.test.mjs"
+    # R107 shim-denial regression reads the producer-sealed shim source.
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-shim.mjs" "$tmp/consumer/local-codex-shim.mjs"
     # R103 P1-01 regression input: the test spawns the consumer's real
     # branch against fixture claim registries. Only the T264 lane seals the
     # reviewSingleCandidate route into the build, so the consumer is copied

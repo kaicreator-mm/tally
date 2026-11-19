@@ -62,3 +62,44 @@ test('readAttemptRecord cannot create storage/schema and enforces full identity'
     assert.equal(accepted.candidateCommit,'c'.repeat(40));
   }finally{await rm(dir,{recursive:true,force:true});}
 });
+
+// ---------------------------------------------------------------------------
+// R107 real-acceptance regression: the sealed shim's denied() helper calls
+// common(input, null, ...) — the merged providerId spread must be null-safe
+// or EVERY real denial crashes the sealed C (replay lanes only exercise
+// REPLAY_COMPLETE and never see this). Found by the real two-provider
+// parallel acceptance (null.providerId TypeError inside the sealed
+// capability).
+// ---------------------------------------------------------------------------
+test('shim denial helper never dereferences a null observation (R107 P1)',async()=>{
+  const {createRequire}=await import('node:module');
+  const {fileURLToPath}=await import('node:url');
+  const require=createRequire(import.meta.url);
+  // Load the sealed shim exactly as producer seals it (marker replaced).
+  const {readFileSync}=await import('node:fs');
+  const source=readFileSync(new URL('./local-codex-shim.mjs',import.meta.url),'utf8')
+    .replace('__PROVIDER_SHA256__','0'.repeat(64));
+  // The shim's bare bundle import cannot resolve from a data: URL in the
+  // bare test env — substitute a stub exporting the same names as throwing
+  // functions (denial paths under test never call into the native bundle).
+  const importRe=/import\s*\{([^}]+)\}\s*from\s*'@kaicreator\/tally-local-codex-host-bundle';/;
+  const names=importRe.exec(source)[1].split(',')
+    .map(x=>x.trim()).map(x=>x.split(' as ').pop().trim());
+  const stub='data:text/javascript;base64,'+Buffer.from(
+    names.map(n=>`export const ${n}=async()=>{throw Error('STUB_NOT_CALLED');}`).join(';'),
+    'utf8').toString('base64');
+  const moduleUrl='data:text/javascript;base64,'+
+    Buffer.from(source.replace(importRe,
+      `import{${names.join(',')}}from '${stub}';`),'utf8').toString('base64');
+  const shim=await import(moduleUrl);
+  // Drive one denial end-to-end: an input with a malformed sourceSha must
+  // produce a NOT_ADMITTED observation, never a TypeError.
+  const observed=await shim.runLocalCodexAttempt({sourceRef:
+    'https://github.com/kaicreator-mm/tally/issues/172',issueNumber:172,
+    sourceSha:'not-a-sha',attemptId:'attempt:172:r107:reg:1'});
+  assert.equal(observed.outcome.output.state,'NOT_ADMITTED');
+  assert.equal(observed.outcome.output.reason,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+  // The denied observation carries no providerId and never crashes.
+  assert.equal(observed.outcome.output.providerId,undefined);
+  assert.equal(observed.outcome.output.taskPass,false);
+});
