@@ -6,37 +6,67 @@ const args={repository,ref:'main',expectedSha:sha,title:'Add one API endpoint',
   description:'Create a /health endpoint',writeToken:'github_pat_TEST_WRITE',
   requestId};
 const issued={number:18,html_url:'https://github.com/org/test/issues/18'};
-test('creates a draft by explicit POST and independent GitHub issue GET readback',async()=>{
-  let posted;
-  const fetchImpl=async(url,options)=>{
+const taskLabels=[{name:'type:task'},{name:'state:planned'}];
+const successful=(overrides={})=>{
+  let posted,issuePosts=0,labelPosts=0;
+  const fetchImpl=async (url,options)=>{
     assert.match(options.headers.authorization,/^Bearer github_pat_TEST_WRITE$/);
-    if(options.method==='POST'){
-      posted=JSON.parse(options.body);
-      assert.equal(url,'https://api.github.com/repos/org/test/issues');
-      assert.match(posted.body,/UNQUALIFIED_DRAFT/);
+    const segment=url.match(/\/labels\/(.*)$/)?.[1];
+    if(segment){
+      const name=decodeURIComponent(segment);
+      if(overrides.missingLabels&&!labelPosts)
+        return {ok:false,status:404};
+      return {ok:true,status:200,json:async()=>({name})};
+    }
+    if(url.endsWith('/labels')&&options.method==='POST'){
+      labelPosts++;return {ok:true,status:201};
+    }
+    if(url.endsWith('/issues')&&options.method==='POST'){
+      issuePosts++;posted=JSON.parse(options.body);
+      assert.deepEqual(posted.labels,['type:task','state:planned']);
       return {ok:true,status:201,json:async()=>issued};
     }
     assert.equal(url,'https://api.github.com/repos/org/test/issues/18');
-    return {ok:true,json:async()=>({...issued,title:args.title,body:posted.body})};
+    return {ok:true,status:200,json:async()=>({
+      ...issued,title:overrides.wrongTitle?'foreign':args.title,
+      body:posted.body,labels:overrides.droppedLabels?[]:taskLabels
+    })};
   };
-  const result=await createGitHubTaskDraft({...args,fetchImpl});
+  return {fetchImpl,observed:()=>({issuePosts,labelPosts,posted})};
+};
+test('creates canonical planned Task Issue without accepting a Claim',async()=>{
+  const f=successful();
+  const result=await createGitHubTaskDraft({...args,fetchImpl:f.fetchImpl});
   assert.equal(result.status,'DRAFT_ISSUE_CREATED');
+  assert.equal(result.nativeWorkflow,'PLANNED');
   assert.equal(result.taskQualified,false);
   assert.equal(result.agentAuthorized,false);
   assert.equal(result.issueUrl,issued.html_url);
+  assert.equal(f.observed().issuePosts,1);
   assert.doesNotMatch(JSON.stringify(result),/github_pat/);
 });
-test('write permission denied has bounded error code, never logs token',async()=>{
+test('on empty repo creates missing canonical labels before Issue',async()=>{
+  const f=successful({missingLabels:true});
+  const result=await createGitHubTaskDraft({...args,fetchImpl:f.fetchImpl});
+  assert.equal(result.nativeWorkflow,'PLANNED');
+  assert.equal(f.observed().labelPosts,1);
+});
+test('silent label drop returns issue URL and explicit repair state',async()=>{
+  const f=successful({droppedLabels:true});
+  const result=await createGitHubTaskDraft({...args,fetchImpl:f.fetchImpl});
+  assert.equal(result.status,'DRAFT_ISSUE_REQUIRES_LABEL_REPAIR');
+  assert.equal(result.issueUrl,issued.html_url);
+  assert.equal(result.nativeWorkflow,'NONCANONICAL');
+  assert.equal(result.agentAuthorized,false);
+});
+test('write permission denied before any Issue effect',async()=>{
   const fetchImpl=async()=>({ok:false,status:403});
   await assert.rejects(createGitHubTaskDraft({...args,fetchImpl}),
     /GITHUB_ISSUES_WRITE_PERMISSION_REQUIRED/);
 });
-test('mismatched readback remains UNKNOWN rather than reporting created',async()=>{
-  const fetchImpl=async(url)=>{
-    if(url.endsWith('/issues'))return {ok:true,status:201,json:async()=>issued};
-    return {ok:true,json:async()=>({...issued,title:'foreign',body:'wrong'})};
-  };
-  await assert.rejects(createGitHubTaskDraft({...args,fetchImpl}),
+test('mismatched Issue readback cannot report created',async()=>{
+  const f=successful({wrongTitle:true});
+  await assert.rejects(createGitHubTaskDraft({...args,fetchImpl:f.fetchImpl}),
     /DRAFT_ISSUE_READBACK_MISMATCH/);
 });
 test('invalid request or missing one-shot credential rejects without effect',async()=>{

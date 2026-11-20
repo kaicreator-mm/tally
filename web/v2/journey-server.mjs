@@ -600,6 +600,14 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         return send(200,'application/json',json(await readV2Model('catalog','catalog')));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-admission'){
+        const versionId=url.searchParams.get('versionId');
+        const number=url.searchParams.get('issueNumber')??'';
+        const issueNumber=/^[1-9][0-9]{0,9}$/.test(number)?Number(number):null;
+        return send(200,'application/json',
+          json(await readV2Model('admission','taskAdmission',
+            {versionId,issueNumber})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/task-drafts'){
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',

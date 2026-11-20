@@ -94,7 +94,9 @@ $('draft').addEventListener('submit',async event=>{
     link.href=result.issueUrl;
     link.rel='noopener noreferrer';link.target='_blank';
     link.textContent='打开新建 GitHub Issue #'+result.issueNumber;
-    output.append('已创建未授权任务草稿：',link);
+    output.append(result.status==='DRAFT_ISSUE_REQUIRES_LABEL_REPAIR'
+      ?'GitHub Issue 已创建，但缺少 Native Task 标签；请检查并修复标签：'
+      :'已创建 planned 状态的未授权任务草稿：',link);
     form.elements.namedItem('title').value='';
     form.elements.namedItem('description').value='';
   }catch(error){

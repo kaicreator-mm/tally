@@ -10,7 +10,7 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {startSelectedAgentTask,submitReleaseAction} from '../adapters/host.ts';
+import {hostAdapter,startSelectedAgentTask,submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
 import type {AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
@@ -124,6 +124,11 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [starting,setStarting]=useState(false);
   const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
+  const [checkingAdmission,setCheckingAdmission]=useState(false);
+  const [admissionResult,setAdmissionResult]=useState<{
+    issueNumber:number;repository:string;versionId:string;
+    stage:string;reason:string
+  }|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
     adapter=>adapter.tasks(versionId??''),[versionId]);
   // A new repository may have genuine draft Issues but no qualified
@@ -132,6 +137,20 @@ function TasksRoute({versionId}:{versionId:string|null}){
     adapter=>adapter.agentDispatch(),[versionId]);
   const drafts=useHost<TaskDraftsResponse>('task-drafts',
     adapter=>adapter.taskDrafts(versionId??''),[versionId]);
+  const checkAdmission=async(issueNumber:number)=>{
+    if(!versionId||checkingAdmission)return;
+    const repository=drafts.data?.repository??'';
+    setCheckingAdmission(true);setAdmissionResult(null);
+    try{
+      const outcome=await hostAdapter.taskAdmission(versionId,issueNumber);
+      setAdmissionResult({issueNumber,repository,versionId,
+        stage:outcome.stage??'NOT_CONNECTED',
+        reason:outcome.reason??'UNKNOWN'});
+    }catch{
+      setAdmissionResult({issueNumber,repository,versionId,
+        stage:'NOT_CONNECTED',reason:'TASK_ADMISSION_READ_FAILED'});
+    }finally{setCheckingAdmission(false);}
+  };
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
     return guard(versionId,<section>
@@ -150,7 +169,21 @@ function TasksRoute({versionId}:{versionId:string|null}){
               <a href={draft.issueUrl} target="_blank" rel="noopener noreferrer">
                 #{draft.issueNumber} {draft.title}</a>
               {' · '}{draft.githubIssueState}
-              {' · '}UNQUALIFIED_DRAFT</li>)}</ul>}</>}
+              {' · '}{draft.nativeWorkflow??'NONCANONICAL'}
+              {' · '}{draft.sourceCurrentness??'UNKNOWN'}
+              {' · '}UNQUALIFIED_DRAFT
+              <button type="button" disabled={checkingAdmission}
+                onClick={()=>{void checkAdmission(draft.issueNumber);}}>
+                检查任务准入
+              </button>
+              {admissionResult?.issueNumber===draft.issueNumber&&
+               admissionResult.repository===drafts.data?.repository&&
+               admissionResult.versionId===versionId?
+                <span role="status">
+                  {' · '}{admissionResult.stage}：
+                  {admissionResult.reason}
+                </span>:null}
+            </li>)}</ul>}</>}
       <p><a href="#/settings/git-github">前往配置中心添加项目或创建 GitHub Task 草稿</a></p>
     </section>);
   const connected=tasks.data?.connected===true;

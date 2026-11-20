@@ -39,8 +39,17 @@ export async function readGitHubTaskDrafts({
       continue;
     const observed=/\nObserved source SHA: ([a-f0-9]{40})\n/.exec(body)?.[1];
     if(!observed)continue;
+    const labels=Array.isArray(row.labels)?
+      row.labels.map(x=>typeof x==='string'?x:x?.name):[];
+    const type=labels.filter(x=>typeof x==='string'&&x.startsWith('type:'));
+    const states=labels.filter(x=>typeof x==='string'&&x.startsWith('state:'));
+    const nativeWorkflow=type.length===1&&type[0]==='type:task'&&
+      states.length===1&&['state:planned','state:ready'].includes(states[0])?
+      states[0]==='state:ready'?'READY':'PLANNED':'NONCANONICAL';
     tasks.push({issueNumber:n,title:row.title,issueUrl:row.html_url,
       githubIssueState:row.state,sourceSha:observed,
+      sourceCurrentness:observed===sourceSha?'CURRENT':'STALE',
+      nativeWorkflow,
       taskQualified:false,agentAuthorized:false});
   }
   return Object.freeze({connected:true,repository,versionId,sourceSha,

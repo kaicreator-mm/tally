@@ -39,7 +39,14 @@ export interface TaskDraftsResponse{connected:boolean;reason?:string;
   coverage?:'LATEST_100_ISSUES_ONLY'|'COMPLETE_SINGLE_PAGE';
   drafts?:{issueNumber:number;title:string;issueUrl:string;
     githubIssueState:'open'|'closed';sourceSha:string;
+    sourceCurrentness?:'CURRENT'|'STALE';
+    nativeWorkflow?:'PLANNED'|'READY'|'NONCANONICAL';
     taskQualified:false;agentAuthorized:false}[];}
+export interface TaskAdmissionResponse{connected:boolean;reason?:string;
+  issueNumber?:number;issueUrl?:string;sourceSha?:string;
+  stage?:'STALE_SOURCE'|'BLOCKED'|'NEEDS_CANONICAL_LABELS'|
+    'PLANNED'|'NATIVE_PREFLIGHT_READY';nativeWorkflow?:string;
+  admitted?:false;authorized?:false;agentAuthorized?:false;}
 export interface TasksResponse{
   connected:boolean;reason?:string;model?:string;versionId?:string;
   source?:SourceIdentity;rosterCoverage?:string;dependencyCoverage?:string;
@@ -176,6 +183,9 @@ async function postJson<T>(path:string,actionKey:string,
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
+  taskAdmission:(versionId:string,issueNumber:number)=>
+    getJson<TaskAdmissionResponse>(
+      `/api/v2/task-admission?versionId=${encodeURIComponent(versionId)}&issueNumber=${issueNumber}`),
   taskDrafts:(versionId:string)=>getJson<TaskDraftsResponse>(
     `/api/v2/task-drafts?versionId=${encodeURIComponent(versionId)}`),
   tasks:(versionId:string)=>getJson<TasksResponse>(

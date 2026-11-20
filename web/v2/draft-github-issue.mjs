@@ -4,6 +4,43 @@
 const REPOSITORY=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const SHA=/^[a-f0-9]{40}$/;
 const marker=id=>'tally:draft:'+id;
+const NATIVE_TASK_LABELS=Object.freeze([
+  {name:'type:task',color:'1f6feb',description:'GitHub-native Task item'},
+  {name:'state:planned',color:'afb8c1',description:'Planned Task, not ready or claimed'}
+]);
+const labelNames=NATIVE_TASK_LABELS.map(item=>item.name);
+const labelObserved=(labels)=>Array.isArray(labels)&&
+  labels.map(l=>typeof l==='string'?l:l?.name).filter(x=>typeof x==='string')
+    .filter(x=>x.startsWith('type:')||x.startsWith('state:'))
+    .sort().join('|')==='state:planned|type:task';
+async function ensureNativeTaskLabels(base,headers,fetchImpl){
+  for(const label of NATIVE_TASK_LABELS){
+    const path=base+'/labels/'+encodeURIComponent(label.name);
+    let found;
+    try{found=await fetchImpl(path,{headers,signal:AbortSignal.timeout(15000)});}
+    catch{throw new Error('TASK_LABEL_READ_UNKNOWN');}
+    if(found.status===401||found.status===403)
+      throw new Error('GITHUB_ISSUES_WRITE_PERMISSION_REQUIRED');
+    if(found.status===404){
+      let created;
+      try{created=await fetchImpl(base+'/labels',{method:'POST',headers,
+        body:JSON.stringify(label),signal:AbortSignal.timeout(15000)});}
+      catch{throw new Error('TASK_LABEL_CREATE_UNKNOWN');}
+      if(created.status===401||created.status===403)
+        throw new Error('GITHUB_ISSUES_WRITE_PERMISSION_REQUIRED');
+      if(!created.ok&&created.status!==422)
+        throw new Error('TASK_LABEL_CREATE_FAILED');
+      try{found=await fetchImpl(path,{headers,signal:AbortSignal.timeout(15000)});}
+      catch{throw new Error('TASK_LABEL_READ_UNKNOWN');}
+    }
+    if(!found.ok)throw new Error('TASK_LABEL_NOT_VERIFIED');
+    let data;
+    try{data=await found.json();}catch{throw new Error('TASK_LABEL_NOT_VERIFIED');}
+    if(data?.name?.toLowerCase()!==label.name)
+      throw new Error('TASK_LABEL_NOT_VERIFIED');
+  }
+}
+
 export async function createGitHubTaskDraft({
   repository,ref,expectedSha,title,description='',writeToken,requestId,
   fetchImpl=fetch
@@ -27,9 +64,10 @@ export async function createGitHubTaskDraft({
   const headers={authorization:'Bearer '+writeToken,
     accept:'application/vnd.github+json',
     'content-type':'application/json','user-agent':'tally-v2-task-draft'};
+  await ensureNativeTaskLabels(base,headers,fetchImpl);
   let posted;
   try{posted=await fetchImpl(base+'/issues',{method:'POST',headers,
-    body:JSON.stringify({title:title.trim(),body}),
+    body:JSON.stringify({title:title.trim(),body,labels:labelNames}),
     signal:AbortSignal.timeout(15000)});}
   catch{throw new Error('DRAFT_ISSUE_CREATION_UNKNOWN');}
   if(posted.status===401||posted.status===403)
@@ -53,7 +91,13 @@ export async function createGitHubTaskDraft({
       data.title!==title.trim()||!data.body?.includes(marker(requestId))||
       data.pull_request)
     throw new Error('DRAFT_ISSUE_READBACK_MISMATCH');
-  return Object.freeze({status:'DRAFT_ISSUE_CREATED',issueNumber:issued.number,
+  // GitHub may silently drop labels despite a successful Issue POST.
+  // A created but unlabelled Issue remains a visible repair candidate,
+  // not an invisible error and never a claimable Task.
+  const canonical=labelObserved(data.labels);
+  return Object.freeze({status:canonical?'DRAFT_ISSUE_CREATED':
+    'DRAFT_ISSUE_REQUIRES_LABEL_REPAIR',issueNumber:issued.number,
     issueUrl:issued.html_url,repository,ref,sourceSha:expectedSha,
+    nativeWorkflow:canonical?'PLANNED':'NONCANONICAL',
     taskQualified:false,agentAuthorized:false});
 }

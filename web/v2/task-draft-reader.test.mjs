@@ -11,7 +11,7 @@ const taskBody=[
 ].join('\n');
 const issue={
   number:11,title:'Create API',state:'open',
-  html_url:'https://github.com/org/test/issues/11',body:taskBody
+  html_url:'https://github.com/org/test/issues/11',body:taskBody,labels:[{name:'type:task'},{name:'state:planned'}]
 };
 const args={repository:repo,versionId:'main',sourceSha:sha,
   token:'github_pat_TEST_READ'};
@@ -30,6 +30,8 @@ test('native draft list is read-only and never promotes to Task',async()=>{
   assert.equal(data.drafts[0].taskQualified,false);
   assert.equal(data.drafts[0].agentAuthorized,false);
   assert.equal(data.drafts[0].issueNumber,11);
+  assert.equal(data.drafts[0].nativeWorkflow,'PLANNED');
+  assert.equal(data.drafts[0].sourceCurrentness,'CURRENT');
   assert.equal(data.coverage,'COMPLETE_SINGLE_PAGE');
 });
 test('GitHub token cannot read Issues -> explicit disconnected reason',async()=>{
@@ -51,4 +53,19 @@ test('foreign and malformed Issue rows never appear',async()=>{
       {...issue,number:13,title:'Foreign claim',body:'Fake'},
     ]})});
   assert.deepEqual(data.drafts,[]);
+});
+
+test('ready native state remains an unqualified draft, stale SHA is explicit',async()=>{
+  const data=await readGitHubTaskDrafts({...args,fetchImpl:async()=>({
+    ok:true,status:200,json:async()=>[{
+      ...issue,labels:[{name:'type:task'},{name:'state:ready'}],
+      body:taskBody.replace(sha,'b'.repeat(40))}]})});
+  assert.equal(data.drafts[0].nativeWorkflow,'READY');
+  assert.equal(data.drafts[0].sourceCurrentness,'STALE');
+  assert.equal(data.drafts[0].taskQualified,false);
+});
+test('missing canonical labels never imply planned or ready',async()=>{
+  const data=await readGitHubTaskDrafts({...args,fetchImpl:async()=>({
+    ok:true,status:200,json:async()=>[{...issue,labels:[]}]})});
+  assert.equal(data.drafts[0].nativeWorkflow,'NONCANONICAL');
 });

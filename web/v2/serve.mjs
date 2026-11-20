@@ -32,6 +32,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
+import {readProjectTaskAdmission} from './task-admission-read.mjs';
 import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
@@ -762,6 +763,22 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         if(final.connected!==true)return deny('DRAFT_SOURCE_DRIFT');
         return drafts;
       }catch{return deny('DRAFT_READ_FAILED');}
+    },
+    async taskAdmission(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(!Number.isSafeInteger(scope.issueNumber)||scope.issueNumber<1)
+        return deny('TASK_ADMISSION_ISSUE_INVALID');
+      try{
+        const first=await nativeC.catalog();
+        if(first.connected!==true)return deny(first.reason??'CATALOG_SOURCE_UNQUALIFIED');
+        const status=await readProjectTaskAdmission({
+          repository:settings.repository,versionId:settings.versionId,
+          sourceSha:settings.expectedSha,token:settings.token,
+          issueNumber:scope.issueNumber});
+        const after=await nativeC.catalog();
+        if(after.connected!==true)return deny('TASK_ADMISSION_SOURCE_DRIFT');
+        return status;
+      }catch{return deny('TASK_ADMISSION_READ_FAILED');}
     },
     async tasks(scope){
       const observed=await readQualifiedRoster(scope);
