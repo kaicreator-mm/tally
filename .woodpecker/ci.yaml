@@ -25,6 +25,8 @@ when:
         - 'experiments/v2/selected-business-build/**'
         - 'experiments/v2/candidate-publication/**'
         - 'experiments/v2/github-only-observation/**'
+        # native-c tests import experiments/v2/t06d-host-claim-publication/single-writer.mjs (#942)
+        - 'experiments/v2/t06d-host-claim-publication/**'
   - event: [manual]
     branch: [main, 'version/*']
 
@@ -61,6 +63,8 @@ clone:
         - 'experiments/v2/selected-business-build'
         - 'experiments/v2/candidate-publication'
         - 'experiments/v2/github-only-observation'
+        # Imported by packages/tally-github-native-c tests; absent => ERR_MODULE_NOT_FOUND (#942)
+        - 'experiments/v2/t06d-host-claim-publication'
 
 steps:
   - name: exact-source
@@ -154,6 +158,7 @@ steps:
             - '.woodpecker/ci.yaml'
             - 'packages/tally-github-native-c/**'
             - 'packages/tally-ads-v5-validator/**'
+            - 'experiments/v2/t06d-host-claim-publication/**'
     commands:
       - set -euo pipefail
       - 'test -d packages/tally-ads-v5-validator/node_modules || npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com'
