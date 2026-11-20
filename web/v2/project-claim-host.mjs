@@ -10,6 +10,8 @@ import {createHostBoundNativeGitHubClaimPublisher}
 import {readGitHubClaimPublicationWitness}
   from '../../packages/tally-github-native-c/src/task-claim-publication-witness.mjs';
 import {readProjectTaskAdmission} from './task-admission-read.mjs';
+import {readGitHubNativeTaskSourcePair}
+  from '../../packages/tally-github-native-c/src/task-source-pair.mjs';
 const SHA=/^[a-f0-9]{40}$/;
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
@@ -23,7 +25,8 @@ export function createProjectClaimHost({
   createController=createHostSingleWriterClaimController,
   createPublisher=createHostBoundNativeGitHubClaimPublisher,
   readAdmission=readProjectTaskAdmission,
-  readWitness=readGitHubClaimPublicationWitness
+  readWitness=readGitHubClaimPublicationWitness,
+  readNativePair=readGitHubNativeTaskSourcePair
 }={}){
   if(env?.TALLY_V2_CLAIM_DISPATCH!=='host-mounted')return null;
   const repository=settings?.repository,sourceSha=settings?.expectedSha;
@@ -80,12 +83,21 @@ export function createProjectClaimHost({
       // never persist a verified row if the source became stale.
       const again=await readAdmission({repository,versionId:settings.versionId,
         sourceSha,issueNumber,token:settings.token});
+      // A native Claim comment for our own role makes a second normal
+      // preflight refuse that role. Only this exact expected refusal may be
+      // reconciled with a fresh independent native source/dependency pair.
+      // Unknown or unrelated BLOCKED reasons are never positive evidence.
+      const selfClaimDuplicate=again?.stage==='BLOCKED'&&
+        again.reason==='NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE';
       if(again?.connected!==true||again.issueUrl!==issueRef||
          again.sourceSha!==sourceSha||
-         !['NATIVE_PREFLIGHT_READY','BLOCKED'].includes(again.stage)||
-         ['TASK_DRAFT_NOT_OPEN','TASK_DRAFT_SOURCE_SHA_STALE',
-          'NATIVE_ISSUE_DEPENDENCIES_BLOCKED','NATIVE_GITHUB_SOURCE_INCOMPLETE_OR_STALE',
-          'TASK_CANONICAL_LABELS_REQUIRED'].includes(again.reason))
+         (again.stage!=='NATIVE_PREFLIGHT_READY'&&!selfClaimDuplicate))
+        return null;
+      if(selfClaimDuplicate&&
+         (again.repository!==repository||again.versionId!==settings.versionId||
+          again.issueNumber!==issueNumber||again.nativeWorkflow!=='READY'||
+          again.admitted!==false||again.authorized!==false||
+          again.agentAuthorized!==false))
         return null;
       const witness=await readWitness({token:settings.token,
         owner:settings.owner,repo:settings.repo,issueNumber,
@@ -108,6 +120,31 @@ export function createProjectClaimHost({
          witness.authorized!==false||witness.taskPass!==false||
          witness.releasePass!==false)
         return null;
+      if(selfClaimDuplicate){
+        // The comment witness proves the exact publication, not that the
+        // Issue is still OPEN/READY, dependencies remain clear, or source
+        // reads succeeded. Reobserve those facts after the witness.
+        const pair=await readNativePair({token:settings.token,
+          owner:settings.owner,repo:settings.repo,issueNumber,
+          expectedSourceSha:sourceSha});
+        const work=pair?.workItem,events=pair?.claimEvents;
+        const candidate=events?.candidates?.[0];
+        if(pair?.status!=='SOURCE_PAIR_OBSERVED'||
+           pair.sourceQualified!==true||pair.issueRef!==issueRef||
+           pair.sourceSha!==sourceSha||pair.claimStatus!=='NOT_VERIFIED'||
+           pair.admitted!==false||pair.authorized!==false||
+           work?.issueRef!==issueRef||work.sourceSha!==sourceSha||
+           work.issueState!=='open'||work.workflowState!=='state:ready'||
+           work.workItemType!=='type:task'||work.dependencyState!=='CLEAR'||
+           work.openBlockerCount!==0||work.reason!=='CLAIM_NOT_VERIFIED'||
+           events?.reason!=='CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED'||
+           events.candidateCount!==1||events.candidates?.length!==1||
+           candidate?.sourceSha!==sourceSha||
+           candidate.dispatchId!=='observed-comment-'+commentId||
+           candidate.sourceClass!=='OBSERVED_COMMENT_SELF_REPORTED_CLAIM'||
+           candidate.claimAccepted!==false)
+          return null;
+      }
       return Object.freeze({sourceKind:'NATIVE_GITHUB_EXACT_READBACK',
         complete:true,edited:false,issueRef,sourceSha,
         dispatchId,actorRole:'builder',operatorId,operatorKind,
