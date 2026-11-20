@@ -15,10 +15,12 @@
 import {build} from 'esbuild';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {resolveClaimBuildTarget} from './claim-target.mjs';
 const tally=process.env.TALLY;
 const out=process.env.T06L_C_OUTPUT;
 const importsOut=process.env.T06L_IMPORTS_OUTPUT;
 if(!tally||!out||!importsOut)throw Error('T06L_BUNDLE_PATH_REQUIRED');
+const claimTarget=resolveClaimBuildTarget(process.env);
 const witness=resolve(tally,'packages/tally-github-native-c/src/task-claim-publication-witness.mjs');
 // The witness chain uses the canonical ADS v4.18 event-v2 JSON schema on
 // disk. Embed that byte-exact schema into the sealed provider bundle,
@@ -38,7 +40,7 @@ const provider=`
 import {readGitHubClaimPublicationWitness} from ${JSON.stringify(witness)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createHash} from 'node:crypto';
-const OWNER='kaicreator-mm',REPO='tally',ISSUE_NUMBER=169,ACTOR_ROLE='builder';
+const OWNER=${JSON.stringify(claimTarget.owner)},REPO=${JSON.stringify(claimTarget.repo)},ISSUE_NUMBER=${claimTarget.issueNumber},ACTOR_ROLE='builder';
 const ISSUE_REF='https://github.com/'+OWNER+'/'+REPO+'/issues/'+ISSUE_NUMBER;
 const KEY_PREFIX='tally:v2:claim-admission:';
 const SHA=/^[0-9a-f]{40}$/;

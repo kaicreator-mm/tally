@@ -8,6 +8,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {load} from '@kaicreator/domain-harness-microkernel';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
+import {resolveClaimBuildTarget} from './claim-target.mjs';
 const sealed=JSON.parse(readFileSync(new URL('./sealed-app.json',import.meta.url),'utf8'));
 // Independent trusted Host bootstrap check: BUILD-sealed C digest binds the
 // exact claim provider file. Verify before Microkernel.load imports/evaluates
@@ -48,11 +49,12 @@ assert.match(sourceSha??'',/^[0-9a-f]{40}$/);
 assert.ok(dispatchId&&operatorId&&operatorKind&&writerId&&writerLogin,
   'TALLY_CLAIM_* host pins required');
 assert.ok(Number.isSafeInteger(commentId)&&commentId>0,'TALLY_CLAIM_COMMENT_ID required');
-const ISSUE_REF='https://github.com/kaicreator-mm/tally/issues/169';
-const CLAIM_KEY='kaicreator-mm/tally#169:builder:__default__';
+const target=resolveClaimBuildTarget(process.env);
+const ISSUE_REF=target.issueRef;
+const CLAIM_KEY=target.protectedClaimKey;
 const REGISTRY_KEY='tally:v2:claim-admission:'+createHash('sha256').update(CLAIM_KEY).digest('hex');
 const rowValue=()=>({phase:'PUBLISHED_VERIFIED',generation:1,protectedClaimKey:CLAIM_KEY,
-  repository:'kaicreator-mm/tally',issueRef:ISSUE_REF,sourceSha,dispatchId,
+  repository:target.repository,issueRef:ISSUE_REF,sourceSha,dispatchId,
   actorRole:'builder',operatorKind,operatorId,writerId,commentId,
   commentRef:`${ISSUE_REF}#issuecomment-${commentId}`});
 const deployment={deployedAppId:'deploy:tally-v2-t06l',tenantId:'tenant:tally-v2',appId:sealed.appId};
@@ -70,7 +72,7 @@ const options=sqlite=>({store:kDocs(sqlite),deploymentIdentity:deployment,
   tenantId:deployment.tenantId,queryAuthority:authority,now:()=>Date.UTC(2026,9,30)});
 const messageFor=(instanceKey,messageId,input)=>({intentType:'admitClaimedTask',
   instanceKey,messageId,input});
-const positiveInput={issueRef:ISSUE_REF,issueNumber:169,sourceSha};
+const positiveInput={issueRef:ISSUE_REF,issueNumber:target.issueNumber,sourceSha};
 assert.ok(!JSON.stringify(positiveInput).includes(token),'token must NOT enter journaled Business input');
 const tmp=await mkdtemp(join(tmpdir(),'tally-t06l-claim-'));
 const db=join(tmp,'kernel.sqlite');
@@ -90,7 +92,7 @@ try {
     // 0), then confirm PUBLISHED_VERIFIED (revision 1). A one-shot write
     // would leave revision 0, which no genuine publication row ever has.
     const reservation={phase:'PENDING_GITHUB_PUBLISH',generation:1,
-      protectedClaimKey:CLAIM_KEY,repository:'kaicreator-mm/tally',
+      protectedClaimKey:CLAIM_KEY,repository:target.repository,
       issueRef:ISSUE_REF,sourceSha,dispatchId,actorRole:'builder',
       operatorKind,operatorId,writerId};
     await registry.put(REGISTRY_KEY,reservation,{mustBeAbsent:true});
@@ -118,7 +120,7 @@ try {
 
   sqlite=await openSqliteCasStore({path:db,busyTimeoutMs:1000});
   facade=await load(sealed,options(sqlite));
-  const instanceKey='task-claim-169';
+  const instanceKey='task-claim-'+target.issueNumber;
   const selector={workflowId:'tally-readiness',instanceKey,
     businessPackageId:'business-tally-task-readiness@v2.0.0'};
   const message=messageFor(instanceKey,'message-t06l-claim-01',positiveInput);
@@ -202,7 +204,7 @@ try {
     }
   };
   await falsify('f1-wrong-issue',null,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
-    {issueRef:'https://github.com/kaicreator-mm/tally/issues/170',issueNumber:170});
+    {issueRef:'https://github.com/'+target.repository+'/issues/'+(target.issueNumber+1),issueNumber:target.issueNumber+1});
   await falsify('f2-wrong-sha-input',null,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH',
     {sourceSha:'c'.repeat(40)});
   await falsify('f3-missing-row',async()=>{
@@ -211,7 +213,7 @@ try {
   },'CLAIM_REGISTRY_RECORD_NOT_FOUND');
   await falsify('f4-pending-phase',async()=>mutateRow(v=>({...v,phase:'PENDING_GITHUB_PUBLISH'})),
     'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED');
-  await falsify('f5-forged-dispatch',async()=>mutateRow(v=>({...v,dispatchId:'dispatch:169:forged:1'})),
+  await falsify('f5-forged-dispatch',async()=>mutateRow(v=>({...v,dispatchId:'dispatch:'+target.issueNumber+':forged:1'})),
     'CLAIM_REGISTRY_RESERVATION_MISMATCH');
   await falsify('f6-wrong-row-sha',async()=>mutateRow(v=>({...v,sourceSha:'d'.repeat(40)})),
     'CLAIM_REGISTRY_RESERVATION_MISMATCH');
