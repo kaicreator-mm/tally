@@ -1,16 +1,20 @@
 # Tally v2 — Woodpecker-only CI validation carrier (#173)
 
-Self-hosted Woodpecker is the **sole** CI validation carrier for `version/v2`
-(Owner direction 2026-10-29, reaffirmed on #86/#125/#166; integrated by #173).
-No GitHub Actions workflow is triggered, required, retried or used as v2
-acceptance evidence: every `.github/workflows/v2-*.yml` and the generic
-`trailer-check` exclude `version/v2` from their PR/push execution paths and are
-retained with their historical results as provenance only. Legacy `main`/`master`
-v1.5 maintenance is unchanged (`quality.yml`, `trailer-check` for all other base
-branches, `reindex-check.yml`, and `verify.yaml` below).
+Self-hosted Woodpecker is the **v2 source qualification carrier** on
+`version/v2` (Owner direction 2026-10-29, #173). Since v2.0.0 was merged to
+`main` (#208 / PR #493), selected v2 Node24 profiles also validate relevant
+`main` changes. The three main-enabled profiles are ALM workspace, Release
+delivery and native Node24 C. Other historical/replay profiles remain scoped
+to their original branches: no blanket activation or full suite on every push.
+
+Legacy GitHub Actions and the inherited Go `verify.yaml` may still concern
+older Go maintenance but do not qualify the v2 Node application. The v2
+`.github/workflows/v2-*.yml` / trailer-check exclusion on `version/v2`
+remains historical provenance; it does not assert those workflows are disabled
+on `main`. Distinguish real v2 SUCCESS from inherited Go FAILED_ENV.
 
 This directory contains the following **separate, intentionally scoped** workflows:
-- `verify.yaml` remains the inherited `main` push/manual Go maintenance verification.
+- `verify.yaml` is **inherited Go maintenance only**: automatic on `main` Go source/module/migration changes, explicit manual on `main`; a missing Go compiler is a Go-job ENV failure, not v2 Node failure.
 - `v2-native-node24.yaml` — Node24 native C source-only check. Asserts the exact
   authored SHA (`CI_COMMIT_SHA` detached), enforces `Refs:` on all non-merge
   commits of the PR range via `scripts/check-trailers.sh` semantics (base derived
@@ -41,9 +45,11 @@ This directory contains the following **separate, intentionally scoped** workflo
 The future T06m Local Agent profile (`v2-t06m-local-agent.yaml`) belongs
 exclusively to #172 and is not created here.
 
-All v2 profiles run on the already configured `backend: local` ECF VM (the local
-Docker Woodpecker Agent is the actual runner) with Node24 and Python available on
-the host. **Security:** Woodpecker Local backend runs commands directly on the
+The v2 profiles use the configured Woodpecker `backend: local` runner; their
+commands execute in the actual selected worker environment. The `image: bash`
+field does **not** install Go into a local backend. Verify the selected runner's
+capabilities for a specific Job rather than modifying NILAR and CC-LAN200 as a
+fleet. v2 Node24 gates do not require Go. **Security:** Woodpecker Local backend runs commands directly on the
 agent machine; permit PR-source execution only on a disposable, non-root,
 unprivileged VM with no Woodpecker server tokens/host secrets and no shared
 sensitive filesystem. If a trusted isolated VM is unavailable, do not enable PR
