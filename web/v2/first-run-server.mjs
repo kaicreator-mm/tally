@@ -95,7 +95,7 @@ export async function startFirstRunServer({
         html.replace('<script type="module"',
           '<meta name="tally-setup-key" content="'+key+'"><script type="module"'));
     if(req.method==='GET'&&url.pathname==='/api/setup/status'){
-      return json(200,{...(await store.status()),activeUrl:active?.address.origin+'/app'??null,
+      return json(200,{...(await store.status()),activeUrl:active?active.address.origin+'/app':null,
         activeSource,lastError});
     }
     if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/app')){

@@ -132,7 +132,7 @@ test('managed selection preserves operator mount only at the exact same SHA',asy
     const add=async repository=>fetch(url+'/api/setup/add',{method:'POST',
       headers:{'content-type':'application/json',origin:url,
         'x-tally-setup-key':key},
-      body:JSON.stringify({repository,ref:'main',token:'github_pat_test_ONLY'})});
+      body:JSON.stringify({repository,ref:'main',token:'github_pat_test_TEST_ONLY'})});
     assert.equal((await add('org/test')).status,200);
     assert.equal(mounted.TALLY_V2_AGENT_DISPATCH,'host-mounted');
     assert.equal((await add('org/other')).status,200);
