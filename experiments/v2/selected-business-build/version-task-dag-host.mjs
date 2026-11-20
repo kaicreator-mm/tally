@@ -119,6 +119,10 @@ export function createVersionTaskDagHost({env=process.env,octokit,openStore}){
      !octokit?.rest?.issues?.getComment||!octokit?.paginate?.iterator||
      !octokit?.request||typeof openStore!=='function')
     throw new TypeError('TRUSTED_VERSION_TASK_DAG_HOST_TRANSPORTS_REQUIRED');
+  const explicitRepo=env.TALLY_V2_REPOSITORY!==undefined;
+  const explicitRef=env.TALLY_V2_VERSION_REF!==undefined;
+  if(explicitRepo!==explicitRef)
+    throw new TypeError('TRUSTED_VERSION_TASK_DAG_SOURCE_REQUIRED');
   const repository=env.TALLY_V2_REPOSITORY??DEFAULT_REPOSITORY;
   const versionId=env.TALLY_V2_VERSION_REF??DEFAULT_VERSION_ID;
   if(!REPO_ID.test(repository)||!isValidVersionRef(versionId))

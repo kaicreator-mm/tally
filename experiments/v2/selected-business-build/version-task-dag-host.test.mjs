@@ -291,6 +291,10 @@ test('Host identity follows selected GitHub repository and main branch',()=>{
   assert.equal(selected.versionId,'main');
   assert.equal(selected.expectedVersionSha,versionSha);
   assert.throws(()=>createVersionTaskDagHost({env:{
+    ...env0,TALLY_V2_REPOSITORY:'org/new-project'},
+    octokit:transports.octokit,openStore:async()=>memoryStore()}),
+    /TRUSTED_VERSION_TASK_DAG_SOURCE_REQUIRED/);
+  assert.throws(()=>createVersionTaskDagHost({env:{
     ...env0,TALLY_V2_REPOSITORY:'org/invalid/extra',
     TALLY_V2_VERSION_REF:'main'},octokit:transports.octokit,
     openStore:async()=>memoryStore()}),/TRUSTED_VERSION_TASK_DAG_SOURCE_REQUIRED/);
