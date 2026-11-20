@@ -5,7 +5,7 @@
 # scripts/check-trailers.sh semantics (base from CI_COMMIT_TARGET_BRANCH, head CI_COMMIT_SHA).
 when:
   - event: [pull_request, push, manual]
-    branch: [version/v2]
+    branch: [version/v2, main]
     path:
       include:
         - 'packages/tally-github-native-c/**'
@@ -47,6 +47,8 @@ steps:
           fi
           echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
           ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        elif git rev-parse -q --verify HEAD^2 >/dev/null 2>&1; then
+          echo "CI_TRAILER_MERGE_COMMIT=SKIP_REFS (two-parent merge commit)"
         else
           echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
           git log -1 --format=%B HEAD | grep -qi '^Refs:'
