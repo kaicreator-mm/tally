@@ -374,7 +374,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
-  v2ReadModelHost,
+  v2ReadModelHost,agentHostMounted=false,
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
@@ -654,6 +654,9 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // shared AttemptRecord vocabulary allows; the API result keeps the
       // timeout distinction.
       if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
+        if(!agentHostMounted)
+          return send(200,'application/json',json({
+            connected:false,reason:'AGENT_HOST_NOT_MOUNTED'}));
         const snapshot=controller.snapshot();
         const latest=snapshot.result;
         // Only a REAL execution (observedAt + evidenceDir, i.e. an actual

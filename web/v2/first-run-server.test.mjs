@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import {startFirstRunServer} from './first-run-server.mjs';
 const sha='a'.repeat(40);
 const state=()=>({
-  selected:null,projects:[],
-  async status(){return {selected:this.selected,projects:this.projects,configured:!!this.projects.length};},
+  currentSelection:null,projects:[],
+  async status(){return {selected:this.currentSelection,projects:this.projects,configured:!!this.projects.length};},
   async add({repository,ref,token}){
     assert.equal(token,'github_pat_test_TEST_ONLY');
-    this.selected={repository,ref};
+    this.currentSelection={repository,ref};
     this.projects=[{repository,title:'test',versions:[{ref,sha}]}];
     return this.status();
   },
   async select({repository,ref}){
-    this.selected={repository,ref};
+    this.currentSelection={repository,ref};
     return {env:{TALLY_V2_REPOSITORY:repository,TALLY_V2_VERSION_REF:ref,
       TALLY_V2_VERSION_SHA:sha,TALLY_GITHUB_READ_TOKEN:'github_pat_test_TEST_ONLY'}};
   },
@@ -56,5 +56,21 @@ test('first-run setup serves without env; POST is same-origin and unprivileged',
     const redirect=await fetch(url+'/app',{redirect:'manual'});
     assert.equal(redirect.status,302);
     assert.equal(redirect.headers.get('location'),'http://127.0.0.1:65535/app');
+  }finally{await service.close();}
+});
+
+test('legacy explicit operator Host pins remain intact at first boot',async()=>{
+  let observed=null;
+  const service=await startFirstRunServer({env:{
+    TALLY_V2_REPOSITORY:'org/legacy',TALLY_V2_VERSION_REF:'version/v2',
+    TALLY_V2_VERSION_SHA:sha,TALLY_GITHUB_READ_TOKEN:'github_pat_test_ONLY',
+    TALLY_V2_AGENT_DISPATCH:'host-mounted',
+  },catalog:state(),startConfigured:async ({env})=>{
+    observed=env;
+    return {address:{origin:'http://127.0.0.1:65534'},close:async()=>{}};
+  }});
+  try{
+    assert.equal(observed.TALLY_V2_AGENT_DISPATCH,'host-mounted');
+    assert.equal(observed.TALLY_V2_REPOSITORY,'org/legacy');
   }finally{await service.close();}
 });

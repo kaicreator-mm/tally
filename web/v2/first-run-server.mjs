@@ -48,11 +48,12 @@ export async function startFirstRunServer({
     TALLY_V2_VERSION_TASK_DAG:undefined,TALLY_V2_RELEASE_DISPATCH:undefined,
     TALLY_V2_RELEASE_QUALIFICATION:undefined,
     TALLY_V2_MAINTENANCE_READ:undefined};
-  const activate=async ({settings,identity})=>{
-    // A managed Project selection is never an authority grant. The source
-    // and credential are injected only in the server process, not the browser.
-    const next=await startConfigured({env:{
-      ...stripPrivileged,...settings,TALLY_SETUP_URL:origin+'/setup'}});
+  const activate=async ({settings,identity,legacy=false})=>{
+    // Only explicit Host operator env may mount previously qualified effects.
+    // Browser-managed project switching always strips privileged Host pins.
+    const next=await startConfigured({env:legacy?
+      {...env,TALLY_SETUP_URL:origin+'/setup'}:
+      {...stripPrivileged,...settings,TALLY_SETUP_URL:origin+'/setup'}});
     const old=active;active=next;activeSource=identity;lastError=null;
     if(old)await old.close().catch(()=>{});
     return next.address.origin+'/app';
@@ -119,7 +120,8 @@ export async function startFirstRunServer({
   // to add/switch projects after startup. Partial explicit pins fail closed.
   if(env.TALLY_V2_REPOSITORY!==undefined){
     try{
-      await activate({settings:{},identity:{repository:env.TALLY_V2_REPOSITORY,
+      await activate({settings:{},legacy:true,identity:{
+        repository:env.TALLY_V2_REPOSITORY,
         ref:env.TALLY_V2_VERSION_REF,sha:env.TALLY_V2_VERSION_SHA}});
     }catch(error){lastError=codeOf(error);}
   }else{

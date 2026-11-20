@@ -897,7 +897,7 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
-    v2ReadModelHost,
+    v2ReadModelHost,agentHostMounted:Boolean(installedRun),
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
     ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{}),
