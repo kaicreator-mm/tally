@@ -300,6 +300,28 @@ test('write-journey pin admission refuses every missing or malformed pin',()=>{
     /AGENT_LOCAL_ISSUE_NUMBER_INVALID/);
 });
 
+test('alternate GitHub project cannot run the historical sealed Builder',()=>{
+  const selected={...consumerPins,...claimPins,TALLY_V2_REPOSITORY:'org/new',
+    TALLY_V2_VERSION_REF:'main',TALLY_LOCAL_ISSUE_NUMBER:'27'};
+  assert.throws(()=>readInstalledWriteJourneyEnvironment(selected),
+    /AGENT_BUILDER_TARGET_NOT_SEALED/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,T06M_TARGET_REPOSITORY:'org/new'}),
+    /AGENT_BUILDER_TARGET_PARTIAL/);
+  const targetPins={T06M_TARGET_REPOSITORY:'org/new',
+    T06M_TARGET_VERSION_REF:'main',T06M_TARGET_ISSUE_NUMBER:'27',
+    T06M_TARGET_CANDIDATE_PATH:'src/health.mjs'};
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,...targetPins,T06M_TARGET_ISSUE_NUMBER:'28'}),
+    /AGENT_BUILDER_TARGET_SCOPE_MISMATCH/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,...targetPins,T06M_TARGET_REPOSITORY:'org/foreign'}),
+    /AGENT_BUILDER_TARGET_SCOPE_MISMATCH/);
+  const result=readInstalledWriteJourneyEnvironment({...selected,...targetPins});
+  assert.equal(result.claim.sourceSha,sha);
+  assert.equal(result.worktreePath,'C:/tmp/single-worktree');
+});
+
 test('write-journey runner: start contract with an injected spawn',async()=>{
   const settings=readInstalledWriteJourneyEnvironment(
     {...consumerPins,...claimPins});

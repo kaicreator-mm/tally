@@ -14,8 +14,10 @@ const required=['DH','TALLY','TALLY_B','TALLY_GITHUB_READ_TOKEN','TALLY_CLAIM_SO
   'TALLY_BUILDER_SID','TALLY_VERIFIER_SID','TALLY_LOCAL_EVIDENCE_DIR'];
 const missing=required.filter(name=>!process.env[name]);
 if(missing.length)throw new Error('T06M_ENV_REQUIRED:'+missing.join(','));
-if(process.platform!=='win32'||Number(process.versions.node.split('.')[0])<24)
-  throw new Error('WINDOWS_NODE24_REQUIRED');
+const [nodeMajor,nodeMinor]=process.versions.node.split('.').map(Number);
+if(process.platform!=='win32'||nodeMajor<22||
+   (nodeMajor===22&&nodeMinor<16))
+  throw new Error('WINDOWS_NODE_22_16_REQUIRED');
 const evidence=resolve(process.env.TALLY_LOCAL_EVIDENCE_DIR);
 await mkdir(evidence,{recursive:true});
 await mkdir(dirname(process.env.TALLY_HIDDEN_FIXTURE),{recursive:true});
@@ -66,9 +68,11 @@ if(exit.code===0){
     execFileAsync(git,['-C',worktree,'rev-parse',result.candidateCommit+'^{tree}']),
     execFileAsync(git,['-C',worktree,'diff','--name-only',process.env.TALLY_CLAIM_SOURCE_SHA,result.candidateCommit])
   ]);
+  const approvedCandidatePath=process.env.T06M_TARGET_CANDIDATE_PATH??
+    'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md';
   if(parent.stdout.trim()!==process.env.TALLY_CLAIM_SOURCE_SHA||
     tree.stdout.trim()!==result.candidateTree||
-    paths.stdout.trim()!=='experiments/v2/selected-business-build/LOCAL_CODEX_L3.md')
+    paths.stdout.trim()!==approvedCandidatePath)
     throw new Error('INDEPENDENT_CANDIDATE_READBACK_FAILED');
   summary={...summary,status:'PASS',realAgentEffect:true,result,
     independentCandidateReadback:{parent:parent.stdout.trim(),tree:tree.stdout.trim(),

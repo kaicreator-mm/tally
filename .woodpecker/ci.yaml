@@ -114,7 +114,7 @@ steps:
       - 'test -d packages/tally-github-native-c/node_modules || npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com'
       - 'files="$(find web/v2 -type f -name "*.test.mjs" -print)"'
       - test -n "$files"
-      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs experiments/v2/selected-business-build/version-task-dag-host.test.mjs experiments/v2/selected-business-build/claim-target.test.mjs
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs experiments/v2/selected-business-build/version-task-dag-host.test.mjs experiments/v2/selected-business-build/claim-target.test.mjs experiments/v2/selected-business-build/builder-target.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/tally-v2-no-browser.json"'
       - |
         grep -q '"ok": true' "${TMPDIR:-/tmp}/tally-v2-no-browser.json"
@@ -190,6 +190,10 @@ steps:
       - set -euo pipefail
       - 'test -d packages/tally-engineering-business/node_modules || npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1'
       - node --test packages/tally-github-c/test/release-delivery.test.mjs experiments/v2/release/host-release.test.mjs
+      - bash -n experiments/v2/selected-business-build/run-clean.sh
+      - node --check experiments/v2/selected-business-build/bundle-local-codex.mjs
+      - node --check experiments/v2/selected-business-build/consumer-local-codex.mjs
+      - node --check experiments/v2/selected-business-build/local-codex-windows-e2e.mjs
       - node --check experiments/v2/selected-business-build/producer.mjs
       - node --check experiments/v2/selected-business-build/bundle-claim-reader.mjs
       - node --check experiments/v2/selected-business-build/claim-admission-shim.mjs

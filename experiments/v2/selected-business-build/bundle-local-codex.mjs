@@ -2,10 +2,12 @@
 import {build} from 'esbuild';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {resolveBuilderBuildTarget} from './builder-target.mjs';
 const tally=process.env.TALLY;
 const out=process.env.T06M_C_OUTPUT;
 const importsOut=process.env.T06M_IMPORTS_OUTPUT;
 if(!tally||!out||!importsOut)throw Error('T06M_BUNDLE_PATH_REQUIRED');
+const builderTarget=resolveBuilderBuildTarget(process.env);
 const witness=resolve(tally,'packages/tally-github-native-c/src/task-claim-publication-witness.mjs');
 const sourcePair=resolve(tally,'packages/tally-github-native-c/src/task-source-pair.mjs');
 const host=resolve(tally,'experiments/v2/selected-business-build/local-codex-host.mjs');
@@ -26,7 +28,7 @@ const claimAnchor="readFileSync(new URL('../vendor/agent-event-v2.schema.json',i
 const claimReplacement=`Buffer.from('${claimSchema.toString('base64')}','base64')`;
 const claimReplaced=claimOriginal.replace(claimAnchor,claimReplacement);
 if(claimOriginal===claimReplaced)throw Error('PINNED_ADS_EVENT_SCHEMA_EMBED_TRANSFORM_MISSED');
-const provider=`
+let provider=`
 import {readGitHubClaimPublicationWitness} from ${JSON.stringify(witness)};
 import {readGitHubNativeTaskSourcePair} from ${JSON.stringify(sourcePair)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
@@ -49,7 +51,9 @@ import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
 import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
 import {createHash,randomUUID} from 'node:crypto';
-const OWNER='kaicreator-mm',REPO='tally';
+import {exactSelectedWriteSet} from ${JSON.stringify(resolve(tally,'experiments/v2/selected-business-build/builder-target.mjs'))};
+const OWNER=${JSON.stringify(builderTarget.owner)},REPO=${JSON.stringify(builderTarget.repo)};
+const SELECTED_BUILDER_ISSUE=${builderTarget.mode==='SELECTED_BUILD'?builderTarget.issueNumber:'null'};
 // T06n Host-owned task binding map: caller input may select ONLY one of these
 // issue keys; every claim/config value comes from issue-keyed Host env, never
 // from caller authority. #172 behavior is preserved exactly. #210 is the
@@ -79,7 +83,9 @@ const TASK_BINDINGS={
     candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
   312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
-  222:{actorRole:'builder'}
+  222:{actorRole:'builder'},
+  ${builderTarget.mode==='SELECTED_BUILD'?
+    JSON.stringify(builderTarget.issueNumber)+':{actorRole:"builder",candidateRelativePath:'+JSON.stringify(builderTarget.candidateRelativePath)+'},':''}
 };
 const issueRefFor=issueNumber=>'https://github.com/'+OWNER+'/'+REPO+'/issues/'+issueNumber;
 const claimKeyFor=(issueNumber,actorRole)=>OWNER+'/'+REPO+'#'+issueNumber+':'+actorRole+':__default__';
@@ -92,7 +98,8 @@ function claimEnv(env,issueNumber,actorRole='builder'){
   const roleSuffixed=(issueNumber===312||issueNumber===219)||
     (actorRole!=='builder'&&TASK_BINDINGS[issueNumber]?.reviewerLane==='single');
   const p=roleSuffixed?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
-    issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
+    (issueNumber===172||issueNumber===SELECTED_BUILDER_ISSUE)?
+      'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
@@ -311,9 +318,15 @@ async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
     writeSet=await registry.get(writeSetKeyFor(issueNumber));
   }catch{return {ok:false,reason:'CLAIM_REGISTRY_UNAVAILABLE'};}
   finally{if(registry)await registry.close();}
-  if(writeSet?.value?.phase!=='FROZEN_DAG_WRITESET'||writeSet.value.sourceSha!==sourceSha||
-    writeSet.value.writeSetSha256!==claim.writeSetSha256||
-    !writeSet.value.document?.includes(candidateRelativePath))
+  if(issueNumber===SELECTED_BUILDER_ISSUE){
+    if(!exactSelectedWriteSet(writeSet?.value,{
+      repository:OWNER+'/'+REPO,issueNumber,sourceSha,
+      digest:claim.writeSetSha256,candidateRelativePath}))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+  }else if(writeSet?.value?.phase!=='FROZEN_DAG_WRITESET'||
+     writeSet.value.sourceSha!==sourceSha||
+     writeSet.value.writeSetSha256!==claim.writeSetSha256||
+     !writeSet.value.document?.includes(candidateRelativePath))
     return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
   return {ok:true};
 }
@@ -1038,9 +1051,22 @@ export async function freezeVersionTaskDag(input){
   return versionTaskDagHostFor().freezeVersionTaskDag(input);
 }
 `;
+// Limit any alternate-repository BUILD to the one selected Builder
+// BEFORE provider effects can run; an output-only sealed shim gate is too late.
+if(builderTarget.mode==='SELECTED_BUILD'){
+  const start=provider.indexOf('const TASK_BINDINGS={');
+  const end=provider.indexOf('const issueRefFor=',start);
+  if(start<0||end<start)
+    throw new Error('SELECTED_TASK_BINDINGS_ANCHOR_MISSING');
+  provider=provider.slice(0,start)+
+    'const TASK_BINDINGS=Object.freeze({'+builderTarget.issueNumber+
+    ':{actorRole:"builder",candidateRelativePath:'+
+    JSON.stringify(builderTarget.candidateRelativePath)+'}});\n'+
+    provider.slice(end);
+}
 const result=await build({
   stdin:{contents:provider,resolveDir:process.cwd(),sourcefile:'local-codex-provider.mjs',loader:'js'},
-  bundle:true,format:'esm',platform:'node',target:'node24',
+  bundle:true,format:'esm',platform:'node',target:'node22',
   external:['better-sqlite3','@kaicreator/domain-harness-host-node'],
   write:false,metafile:true,legalComments:'none',logLevel:'warning',
   banner:{js:'import {createRequire as __nativeRequireFactory} from "node:module"; const require = __nativeRequireFactory(import.meta.url);'},

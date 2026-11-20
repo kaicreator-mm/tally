@@ -10,6 +10,7 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {load} from '@kaicreator/domain-harness-microkernel';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
+import {resolveBuilderBuildTarget} from './builder-target.mjs';
 const execFileAsync=promisify(execFile);
 const sealed=JSON.parse(readFileSync(new URL('./sealed-app.json',import.meta.url),'utf8'));
 const selectedC=sealed.modules.find(x=>x.role==='capability'&&
@@ -122,6 +123,9 @@ if(process.env.T284_REPLAY==='1'){
 }
 
 const replay=process.env.TALLY_LOCAL_REPLAY==='1';
+const selectedBuilder=resolveBuilderBuildTarget(process.env);
+if(selectedBuilder.mode==='SELECTED_BUILD'&&replay)
+  throw new TypeError('SELECTED_BUILDER_REPLAY_NOT_A_HOST_PROOF');
 const token=process.env.TALLY_GITHUB_READ_TOKEN;
 const sourceSha=process.env.TALLY_CLAIM_SOURCE_SHA;
 const dispatchId=process.env.TALLY_CLAIM_DISPATCH_ID;
@@ -135,13 +139,18 @@ assert.ok(typeof token==='string'&&token.length>=8);
 assert.match(sourceSha??'',/^[0-9a-f]{40}$/);
 assert.ok(dispatchId&&operatorId&&operatorKind&&writerId&&writerLogin);
 assert.ok(Number.isSafeInteger(commentId)&&commentId>0);
-const issueNumber=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER??172);
-const issueRef=`https://github.com/kaicreator-mm/tally/issues/${issueNumber}`;
-const claimKey=`kaicreator-mm/tally#${issueNumber}:builder:__default__`;
+const issueNumber=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER??
+  selectedBuilder.issueNumber??172);
+if(selectedBuilder.mode==='SELECTED_BUILD'&&
+   issueNumber!==selectedBuilder.issueNumber)
+  throw new TypeError('SELECTED_BUILDER_ISSUE_NOT_PINNED');
+const taskRepository=selectedBuilder.repository;
+const issueRef=`https://github.com/${taskRepository}/issues/${issueNumber}`;
+const claimKey=`${taskRepository}#${issueNumber}:builder:__default__`;
 const registryKey='tally:v2:claim-admission:'+sha(claimKey);
 const writeSetKey=`tally:v2:task-writeset:${issueNumber}`;
 const rowValue=()=>({phase:'PUBLISHED_VERIFIED',generation:1,protectedClaimKey:claimKey,
-  repository:'kaicreator-mm/tally',issueRef,sourceSha,dispatchId,actorRole:'builder',
+  repository:taskRepository,issueRef,sourceSha,dispatchId,actorRole:'builder',
   operatorKind,operatorId,writerId,commentId,commentRef:`${issueRef}#issuecomment-${commentId}`});
 const evidenceBase=process.env.TALLY_LOCAL_EVIDENCE_DIR;
 if(evidenceBase)await mkdir(evidenceBase,{recursive:true});
@@ -158,7 +167,7 @@ if(replay){
   delete reservation.commentId;delete reservation.commentRef;
   await registry.put(registryKey,reservation,{mustBeAbsent:true});
   await registry.put(registryKey,rowValue(),{mustMatchRevision:0});
-  await registry.put(writeSetKey,{phase:'FROZEN_DAG_WRITESET',repository:'kaicreator-mm/tally',
+  await registry.put(writeSetKey,{phase:'FROZEN_DAG_WRITESET',repository:taskRepository,
     issueNumber,sourceSha,writeSetSha256,document:writeSetDocument},{mustBeAbsent:true});
   const date='2026-10-30T00:00:00Z';
   const body=`<!-- ads:github -->\n\`\`\`yaml\nschema: ads/github/v3\nkind: event\ndata:\n  schema: ai-dev/event-v2\n  event: DISPATCH_CLAIMED\n  actor_role: builder\n  operator_kind: ${operatorKind}\n  operator_id: ${operatorId}\n  task: '#${issueNumber}'\n  issue: '#${issueNumber}'\n  sha: ${sourceSha}\n  dispatch_id: ${dispatchId}\n  dispatch_state: CLAIMED\n  protected_claim_key: ${claimKey}\n  admission_generation: 1\n\`\`\`\n`;
