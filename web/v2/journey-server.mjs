@@ -673,9 +673,9 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
           {...status,actionKey}:status));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
-        if(!agentHostMounted)
-          return send(200,'application/json',json({
-            connected:false,reason:'AGENT_HOST_NOT_MOUNTED'}));
+        // Attempt history can be read even with no executor installed.
+        // A connected empty history never implies dispatch authority;
+        // /api/v2/agent-dispatch reports the Host mount separately.
         const snapshot=controller.snapshot();
         const latest=snapshot.result;
         // Only a REAL execution (observedAt + evidenceDir, i.e. an actual
