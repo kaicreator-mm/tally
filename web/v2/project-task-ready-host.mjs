@@ -49,7 +49,9 @@ export function createProjectTaskReadyHost({
           repository:settings.repository,owner:settings.owner,
           repo:settings.repo,targetIssue:issueNumber,
           expectedSourceSha:settings.expectedSha,
-          versionBranch:settings.versionId,octokit,store,writerAuthority});
+          versionBranch:settings.versionId,octokit,store,writerAuthority,
+          draftSourceIdentity:{repository:settings.repository,
+            versionId:settings.versionId,sourceSha:settings.expectedSha}});
         // Existing port re-reads the official Task, blocked_by, CAS rows,
         // current branch and verifies the single GitHub PATCH after write.
         enteredPort=true;

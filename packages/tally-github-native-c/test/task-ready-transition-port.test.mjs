@@ -34,8 +34,9 @@ function memoryStore(){
 /** Fake Octokit: paginated blocked_by, issue get/update with counters, and a
  * controllable update behavior for lost-ACK/concurrency scenarios. */
 function fakeOctokit({labels=['type:task','state:planned'],blockers=[],
-  updatedAt='2026-11-19T00:00:00Z',updateBehavior=null,branchSha=sourceSha}={}){
-  const state={labels:[...labels],updatedAt,updateCalls:0,updatePayloads:[]};
+  updatedAt='2026-11-19T00:00:00Z',updateBehavior=null,
+  branchSha=sourceSha,body=null}={}){
+  const state={labels:[...labels],updatedAt,body,updateCalls:0,updatePayloads:[]};
   const api={
     state,
     rest:{
@@ -43,7 +44,7 @@ function fakeOctokit({labels=['type:task','state:planned'],blockers=[],
         async get({issue_number}){
           assert.equal(issue_number,targetIssue);
           return {data:{id:9001,number:targetIssue,state:'open',
-            updated_at:state.updatedAt,pull_request:undefined,
+            updated_at:state.updatedAt,body:state.body,pull_request:undefined,
             repository_url:'https://api.github.com/repos/'+owner+'/'+repo,
             labels:state.labels.map(name=>({name}))}};
         },
@@ -96,6 +97,7 @@ test('POS planned→ready performs exactly one PATCH and verifies by readback',a
   assert.equal(octokit.state.updateCalls,1,'exactly one PATCH');
   assert.deepEqual(octokit.state.updatePayloads[0],['type:task','state:ready']);
   assert.equal(result.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(result.readyAt,'2026-11-19T00:05:00Z');
   assert.equal(result.writePerformed,true);
   assert.equal(result.authorized,false,'readback alone grants no authority');
   assert.equal(result.admitted,false);
@@ -284,4 +286,78 @@ test('reconcileTransitionState never patches and classifies both states',async()
     assert.equal(octokit.state.updateCalls,0,'reconciliation never PATCHes');
     assert.equal(result.taskPass,false,'readback never authorizes an Outcome');
   }
+});
+
+const draftSourceIdentity={repository,versionId:'version/v2',sourceSha};
+const draftBody=(sha=sourceSha)=>[
+  'Tally development task draft — not yet admitted to Task DAG.',
+  'Repository: '+repository,'Selected branch: version/v2',
+  'Observed source SHA: '+sha,'Request: tally:draft:request-123','',
+  'Task text','','Status: UNQUALIFIED_DRAFT. No Agent, Claim or Release authority.'
+].join('\n');
+function sourceBoundPort(octokit,store=memoryStore()){
+  return createTaskReadyTransitionPort({
+    repository,owner,repo,targetIssue,expectedSourceSha:sourceSha,
+    versionBranch:'version/v2',octokit,store,writerAuthority,draftSourceIdentity});
+}
+test('P1 Issue body edited after admission before native port entry refuses without PATCH',async()=>{
+  const octokit=fakeOctokit({body:draftBody('b'.repeat(40))});
+  const result=await sourceBoundPort(octokit).transitionToReady();
+  assert.equal(result.status,'BLOCKED');
+  assert.equal(result.reason,'TASK_DRAFT_SOURCE_IDENTITY_DRIFT');
+  assert.equal(octokit.state.updateCalls,0);
+});
+test('P1 in-fence body-only drift refuses even if updated_at has same timestamp',async()=>{
+  const octokit=fakeOctokit({body:draftBody()});
+  const original=octokit.rest.issues.get.bind(octokit);
+  let count=0;
+  octokit.rest.issues.get=async p=>{
+    if(++count===2){
+      octokit.state.body=draftBody('b'.repeat(40));
+      // Deliberately unchanged updatedAt; body proof must detect drift.
+    }
+    return original(p);
+  };
+  const result=await sourceBoundPort(octokit).transitionToReady();
+  assert.equal(result.status,'BLOCKED');
+  assert.equal(result.reason,'TASK_DRAFT_SOURCE_IDENTITY_DRIFT');
+  assert.equal(octokit.state.updateCalls,0);
+});
+test('P1 body-only description change before PATCH refuses even if source matches',async()=>{
+  const octokit=fakeOctokit({body:draftBody()});
+  const original=octokit.rest.issues.get.bind(octokit);
+  let count=0;
+  octokit.rest.issues.get=async p=>{
+    if(++count===2)octokit.state.body=draftBody().replace('Task text','Changed text');
+    return original(p);
+  };
+  const result=await sourceBoundPort(octokit).transitionToReady();
+  assert.equal(result.status,'BLOCKED');
+  assert.equal(result.reason,'ISSUE_STALE_VS_PREFLIGHT');
+  assert.equal(octokit.state.updateCalls,0);
+});
+test('P2 exact readyAt survives CAS store serialization and receipt',async()=>{
+  const octokit=fakeOctokit({body:draftBody()});
+  const store=memoryStore();
+  const result=await sourceBoundPort(octokit,store).transitionToReady();
+  assert.equal(result.status,'READY_TRANSITION_VERIFIED');
+  assert.equal(result.readyAt,'2026-11-19T00:05:00Z');
+  const fence=[...store._rows.entries()].find(([key])=>
+    key.startsWith('tally:v2:task-ready-fence:'))?.[1]?.value;
+  assert.equal(fence.phase,'RELEASED');
+  assert.equal(fence.readyAt,result.readyAt);
+  assert.equal(JSON.parse(JSON.stringify(fence)).readyAt,result.readyAt);
+  assert.equal(octokit.state.updateCalls,1);
+});
+test('post-PATCH body mismatch leaves HELD/UNKNOWN and never claims verified',async()=>{
+  const octokit=fakeOctokit({body:draftBody(),updateBehavior:()=>{
+    octokit.state.body=draftBody('b'.repeat(40));
+  }});
+  const store=memoryStore();
+  const result=await sourceBoundPort(octokit,store).transitionToReady();
+  assert.equal(result.status,'UNKNOWN');
+  assert.equal(result.reason,'POSTREAD_DRAFT_SOURCE_DRIFT');
+  assert.equal(octokit.state.updateCalls,1);
+  const fence=[...store._rows.values()][0].value;
+  assert.equal(fence.phase,'HELD');
 });

@@ -38,6 +38,8 @@ test('only a source-verified planned draft may enter native Host port',async()=>
       calls++;assert.equal(input.repository,'org/test');
       assert.equal(input.versionBranch,'main');
       assert.equal(input.targetIssue,7);
+      assert.deepEqual(input.draftSourceIdentity,{repository:'org/test',
+        versionId:'main',sourceSha:sha});
       assert.equal(input.writerAuthority.exclusiveHostControl,true);
       return {transitionToReady:async()=>{
         calls++;return {status:'READY_VERIFIED',githubEffect:'VERIFIED',

@@ -32,16 +32,35 @@ const providerReason=e=>e?.status===401?'GITHUB_UNAUTHENTICATED':
   e?.status===422?'GITHUB_VALIDATION_FAILED':null;
 const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const flags=()=>({authorized:false,admitted:false,taskPass:false});
+const DRAFT_HEADING='Tally development task draft — not yet admitted to Task DAG.';
+const DRAFT_FOOTER='Status: UNQUALIFIED_DRAFT. No Agent, Claim or Release authority.';
+function validDraftBody(body,source){
+  if(typeof body!=='string'||body.length>12000)return false;
+  const lines=body.split('\n');
+  return lines.length>=8&&lines[0]===DRAFT_HEADING&&
+    lines[1]==='Repository: '+source.repository&&
+    lines[2]==='Selected branch: '+source.versionId&&
+    lines[3]==='Observed source SHA: '+source.sourceSha&&
+    /^Request: tally:draft:[A-Za-z0-9-]{8,80}$/.test(lines[4])&&
+    lines[5]===''&&lines.at(-1)===DRAFT_FOOTER;
+}
+
 
 export function createTaskReadyTransitionPort({
   repository,owner,repo,targetIssue,expectedSourceSha,versionBranch,
-  octokit,store,writerAuthority,now
+  octokit,store,writerAuthority,now,draftSourceIdentity
 }={}){
   if(!REPO.test(repository??'')||repository!==(owner??'')+'/'+(repo??'')||
      !NAME.test(owner??'')||!NAME.test(repo??'')||
      !Number.isSafeInteger(targetIssue)||targetIssue<1||
      !SHA.test(expectedSourceSha??'')||
      (versionBranch!==undefined&&typeof versionBranch!=='string')||
+     (draftSourceIdentity!==undefined&&
+       (!plain(draftSourceIdentity)||
+        draftSourceIdentity.repository!==repository||
+        typeof versionBranch!=='string'||versionBranch.length===0||
+        draftSourceIdentity.versionId!==versionBranch||
+        draftSourceIdentity.sourceSha!==expectedSourceSha))||
      typeof store?.get!=='function'||typeof store?.put!=='function'||
      typeof octokit?.rest?.issues?.get!=='function'||
      typeof octokit?.rest?.issues?.update!=='function'||
@@ -76,7 +95,13 @@ export function createTaskReadyTransitionPort({
       return null;
     const labels=data.labels.map(l=>typeof l==='string'?l:l?.name)
       .filter(x=>typeof x==='string');
-    return {id:data.id,state:data.state,updatedAt:data.updated_at,labels};
+    const draftBodyValid=draftSourceIdentity===undefined?true:
+      validDraftBody(data.body,draftSourceIdentity);
+    const draftBodyHash=draftSourceIdentity===undefined?null:
+      typeof data.body==='string'?
+        createHash('sha256').update(data.body,'utf8').digest('hex'):null;
+    return {id:data.id,state:data.state,updatedAt:data.updated_at,labels,
+      draftBodyValid,draftBodyHash};
   }
 
   /** Official GET blocked_by pagination with per-entry identity checks
@@ -110,6 +135,7 @@ export function createTaskReadyTransitionPort({
       // would mint a double workflow state).
       const before=await readIssue();
       if(!before)return blocked('ISSUE_READBACK_FAILED');
+      if(!before.draftBodyValid)return blocked('TASK_DRAFT_SOURCE_IDENTITY_DRIFT');
       if(before.state!=='open')return blocked('ISSUE_NOT_OPEN',{state:before.state});
       if(before.labels.includes('state:ready'))
         return blocked('ALREADY_READY',{labels:before.labels});
@@ -156,7 +182,9 @@ export function createTaskReadyTransitionPort({
         // read exactly (detectable ABA/drift refuses before the PATCH).
         const inside=await readIssue();
         if(!inside)return blocked('ISSUE_READBACK_FAILED');
+        if(!inside.draftBodyValid)return blocked('TASK_DRAFT_SOURCE_IDENTITY_DRIFT');
         if(inside.updatedAt!==before.updatedAt||inside.state!==before.state||
+           inside.draftBodyHash!==before.draftBodyHash||
            inside.labels.join('\u0000')!==before.labels.join('\u0000'))
           return blocked('ISSUE_STALE_VS_PREFLIGHT',
             {beforeUpdatedAt:before.updatedAt,insideUpdatedAt:inside.updatedAt});
@@ -192,10 +220,12 @@ export function createTaskReadyTransitionPort({
         // Postread — success requires the exact ready readback.
         const after=await readIssue();
         if(!after)return unknown('POSTREAD_FAILED');
+        if(!after.draftBodyValid||after.draftBodyHash!==before.draftBodyHash)
+          return unknown('POSTREAD_DRAFT_SOURCE_DRIFT');
         if(!after.labels.includes('state:ready')||after.labels.includes('state:planned'))
           return unknown('POSTREAD_NOT_READY',{labels:after.labels});
         // Release the fence with the verified outcome.
-        const released={...held,phase:'RELEASED',readyAt:after.updated_at};
+        const released={...held,phase:'RELEASED',readyAt:after.updatedAt};
         const confirmation=await store.put(fenceKey,released,
           {mustMatchRevision:reservation.revision});
         const final=await store.get(fenceKey);
@@ -205,7 +235,7 @@ export function createTaskReadyTransitionPort({
           return unknown('TRANSITION_FENCE_RELEASE_UNKNOWN');
         return Object.freeze({status:'READY_TRANSITION_VERIFIED',
           reason:'OFFICIAL_GITHUB_LABEL_READBACK_VERIFIED',repository,targetIssue,
-          previousUpdatedAt:before.updatedAt,readyAt:after.updated_at,
+          previousUpdatedAt:before.updatedAt,readyAt:after.updatedAt,
           githubEffect:'PERFORMED_VERIFIED',writePerformed:true,
           fenceRevision:final.revision,...flags()});
       }catch{
