@@ -75,7 +75,7 @@ export async function startFirstRunServer({
     if(old)await old.close().catch(()=>{});
     return next.address.origin+'/app';
   };
-  const server=http.createServer(async(req,res)=>{
+  const handleRequest=async(req,res)=>{
     const response=(status,type,data)=>{
       res.writeHead(status,{'content-type':type,'cache-control':'no-store',
         'x-content-type-options':'nosniff','content-security-policy':
@@ -150,6 +150,17 @@ export async function startFirstRunServer({
       }finally{busy=false;}
     }
     return json(404,denial('NOT_FOUND'));
+  };
+  // Errors in an async HTTP request must not terminate the whole ALM process.
+  // Neither token bytes nor arbitrary exception messages reach HTTP responses.
+  const server=http.createServer((req,res)=>{
+    void handleRequest(req,res).catch(error=>{
+      if(res.writableEnded)return;
+      if(!res.headersSent)res.writeHead(500,{
+        'content-type':'application/json','cache-control':'no-store',
+        'x-content-type-options':'nosniff'});
+      res.end(JSON.stringify(denial(codeOf(error))));
+    });
   });
   await new Promise(resolve=>server.listen(port,'127.0.0.1',resolve));
   origin='http://127.0.0.1:'+server.address().port;

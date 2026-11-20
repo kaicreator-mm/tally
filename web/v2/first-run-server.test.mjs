@@ -140,3 +140,19 @@ test('managed selection preserves operator mount only at the exact same SHA',asy
     assert.equal(mounted.TALLY_V2_AGENT_DISPATCH,undefined);
   }finally{await service.close();}
 });
+
+test('corrupt catalog returns bounded 500 instead of crashing loopback server',async()=>{
+  const store=state();
+  store.status=async()=>{throw new Error('PROJECT_STORE_CORRUPT');};
+  const service=await startFirstRunServer({env:{},catalog:store,
+    startConfigured:async()=>{throw Error('UNEXPECTED_START');}});
+  try{
+    const origin=service.address.origin;
+    const response=await fetch(origin+'/api/setup/status');
+    assert.equal(response.status,500);
+    const data=await response.json();
+    assert.deepEqual(data,{status:'DENIED',reason:'PROJECT_STORE_CORRUPT'});
+    const stillRunning=await fetch(origin+'/setup');
+    assert.equal(stillRunning.status,200);
+  }finally{await service.close();}
+});
