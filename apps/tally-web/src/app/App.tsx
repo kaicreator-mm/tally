@@ -16,7 +16,7 @@ import type {ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catal
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
-import {agentStartDecision} from '../features/tasks/agent-start-model.ts';
+import {agentStartDecision,draftAgentStartRequest} from '../features/tasks/agent-start-model.ts';
 import type {RequirementNode} from '../features/requirements/model.ts';
 import type {QaRecord} from '../features/qa/model.ts';
 import {AgentsPanel} from '../features/agents/views.tsx';
@@ -194,6 +194,28 @@ function TasksRoute({versionId}:{versionId:string|null}){
         message:'UNKNOWN · CLAIM_PUBLICATION_READBACK_UNKNOWN'});
     }finally{setClaimPublishing(false);}
   };
+  const startDraftAgent=async(issueNumber:number,sourceSha:string)=>{
+    if(!versionId||starting||!drafts.data?.repository)return;
+    const repository=drafts.data.repository;
+    const draft=drafts.data.drafts?.find(d=>d.issueNumber===issueNumber);
+    if(!draft)return;
+    const decision=draftAgentStartRequest({
+      issueNumber,repository,versionId,sourceSha,
+      githubIssueState:draft.githubIssueState,
+      nativeWorkflow:draft.nativeWorkflow??'NONCANONICAL',
+      sourceCurrentness:draft.sourceCurrentness??'STALE',
+      claimHost:claimHost.data??null,agentHost:agentHost.data??null});
+    if(!decision.requestable)return;
+    const taskId='draft:'+repository+'/'+versionId+'#'+issueNumber;
+    setStarting(true);setLastStart(null);
+    try{
+      const result=await startSelectedAgentTask(issueNumber,sourceSha);
+      setLastStart({taskId,message:result.status+
+        (result.reason?' · '+result.reason:'')});
+    }catch{
+      setLastStart({taskId,message:'UNKNOWN · AGENT_ACTION_READBACK_UNKNOWN'});
+    }finally{setStarting(false);}
+  };
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
     return guard(versionId,<section>
@@ -250,6 +272,23 @@ function TasksRoute({versionId}:{versionId:string|null}){
               {claimResult?.issueNumber===draft.issueNumber&&
                claimResult.repository===drafts.data?.repository?
                 <span role="status">{' · '}{claimResult.message}</span>:null}
+              {drafts.data?.repository&&versionId&&
+               draftAgentStartRequest({
+                 issueNumber:draft.issueNumber,
+                 repository:drafts.data.repository,versionId,
+                 sourceSha:draft.sourceSha,
+                 githubIssueState:draft.githubIssueState,
+                 nativeWorkflow:draft.nativeWorkflow??'NONCANONICAL',
+                 sourceCurrentness:draft.sourceCurrentness??'STALE',
+                 claimHost:claimHost.data??null,agentHost:agentHost.data??null
+               }).requestable?
+                <button type="button" disabled={starting}
+                  onClick={()=>{void startDraftAgent(draft.issueNumber,draft.sourceSha);}}>
+                  {starting?'正在提交 Host 执行…':'启动选定 Agent（由 Host 核验 Claim/K）'}
+                </button>:null}
+              {lastStart?.taskId==='draft:'+drafts.data?.repository+'/'+
+               versionId+'#'+draft.issueNumber?
+                <span role="status">{' · '}{lastStart.message}</span>:null}
               {admissionResult?.issueNumber===draft.issueNumber&&
                admissionResult.repository===drafts.data?.repository&&
                admissionResult.versionId===versionId?

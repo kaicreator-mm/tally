@@ -20,3 +20,33 @@ export function agentStartDecision({
     return {enabled:false,reason:'HOST_TASK_SOURCE_MISMATCH',issueNumber};
   return {enabled:true,reason:'HOST_READY',issueNumber};
 }
+
+/** New-project issue is NOT a qualified Frozen DAG Task. This function only
+ * gates visibility of a user-requested Host action. K/C still re-checks the
+ * accepted CAS Claim, native GitHub witness and allowed write-set at runtime.
+ */
+export function draftAgentStartRequest({
+  issueNumber,repository,versionId,sourceSha,githubIssueState,nativeWorkflow,
+  sourceCurrentness,agentHost,claimHost
+}:{
+  issueNumber:number;repository:string;versionId:string;sourceSha:string;
+  githubIssueState:'open'|'closed';
+  nativeWorkflow:'PLANNED'|'READY'|'NONCANONICAL';
+  sourceCurrentness:'CURRENT'|'STALE';
+  agentHost:AgentCandidate|null;
+  claimHost:{connected:boolean;repository?:string;versionId?:string;
+    issueNumber?:number;sourceSha?:string}|null;
+}):{requestable:boolean;reason:string}{
+  if(githubIssueState!=='open'||nativeWorkflow!=='READY'||
+     sourceCurrentness!=='CURRENT')
+    return {requestable:false,reason:'DRAFT_NOT_CURRENT_READY'};
+  if(claimHost?.connected!==true||claimHost.repository!==repository||
+     claimHost.versionId!==versionId||
+     claimHost.issueNumber!==issueNumber||claimHost.sourceSha!==sourceSha)
+    return {requestable:false,reason:'CLAIM_HOST_NOT_PINNED'};
+  if(agentHost?.connected!==true||
+     agentHost.selectedTaskIssue!==issueNumber||
+     agentHost.sourceSha!==sourceSha)
+    return {requestable:false,reason:'AGENT_HOST_NOT_PINNED'};
+  return {requestable:true,reason:'HOST_K_REVALIDATION_REQUIRED'};
+}
