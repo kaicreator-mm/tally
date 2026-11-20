@@ -48,6 +48,12 @@ export interface ClaimHostResponse{connected:boolean;reason?:string;
 export interface ClaimPublishResult{status:string;reason?:string;
   claimPublication?:string;authorized?:boolean;admitted?:boolean;
   nativeCommentRef?:string;}
+export interface CandidateHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;actionKey?:string;}
+export interface CandidatePublishResult{status:string;reason?:string;
+  pullNumber?:number;pullRef?:string;branch?:string;
+  candidateCommit?:string;authorized?:false;taskPass?:false;}
 export interface WriteSetHostResponse{connected:boolean;reason?:string;
   repository?:string;versionId?:string;sourceSha?:string;
   issueNumber?:number;candidateRelativePath?:string;actionKey?:string;}
@@ -202,6 +208,7 @@ export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
   claimHost:()=>getJson<ClaimHostResponse>('/api/v2/claim-host'),
   writeSetHost:()=>getJson<WriteSetHostResponse>('/api/v2/writeset-host'),
+  candidateHost:()=>getJson<CandidateHostResponse>('/api/v2/candidate-host'),
   taskReadyHost:()=>getJson<TaskReadyHostResponse>('/api/v2/task-ready-host'),
   taskAdmission:(versionId:string,issueNumber:number)=>
     getJson<TaskAdmissionResponse>(
@@ -249,6 +256,22 @@ export async function publishSelectedTaskClaim({
   }catch{return {status:'UNKNOWN',reason:'CLAIM_PUBLICATION_READBACK_UNKNOWN'};}
 }
 /** The write set is sealed by the trusted Host; UI sends no path or digest. */
+/** A Draft PR requires a real K candidate, never an unreviewed release grant. */
+export async function publishSelectedDraftCandidate({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<CandidatePublishResult>{
+  try{
+    const mounted=await hostAdapter.candidateHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       mounted.issueNumber!==issueNumber||!mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'CANDIDATE_HOST_SCOPE_MISMATCH'};
+    return await postJson<CandidatePublishResult>(
+      '/api/v2/candidate-publish',mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'PUBLICATION_UNKNOWN',
+    reason:'DRAFT_PR_PUBLICATION_READBACK_UNKNOWN'};}
+}
 export async function freezeSelectedTaskWriteSet({
   issueNumber,repository,versionId,sourceSha
 }:{issueNumber:number;repository:string;versionId:string;

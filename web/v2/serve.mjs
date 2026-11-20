@@ -680,6 +680,24 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     projectWriteSetHost=createProjectWriteSetHost({settings,env,
       openStore:openSqliteCasStore});
   }
+  // Selected new-project candidate publication: only a real K CANDIDATE_READY
+  // and independently read-back Git commit may produce an unreviewed Draft PR.
+  // Legacy #203 reviewed-candidate publication is NOT reused or widened.
+  let projectCandidatePublisher=null;
+  if(env.TALLY_V2_CANDIDATE_PUBLISH==='host-mounted'){
+    if(!projectClaimHost)
+      throw new TypeError('SELECTED_CANDIDATE_CLAIM_HOST_REQUIRED');
+    const [{Octokit},{openSqliteCasStore},{createSelectedCandidatePublisher}]=
+      await Promise.all([
+        import('../../packages/tally-github-native-c'+
+          '/node_modules/@octokit/rest/dist-src/index.js'),
+        import('@kaicreator/domain-harness-host-node'),
+        import('./project-candidate-publisher.mjs')]);
+    projectCandidatePublisher=createSelectedCandidatePublisher({settings,env,
+      octokit:new Octokit({auth:env.TALLY_GITHUB_WRITE_TOKEN,
+        request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
   // #264 J07: the installed Release Host Consumer seam — the real J07b gate
   // composed from trusted Host pins only. Without the mount every
   // /api/release/actions POST keeps the exact R91 fail-closed controller
@@ -1013,6 +1031,7 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     ...(maintenanceHost?{maintenanceHost}:{}),
     v2ReadModelHost,taskReadyHost,claimHost:projectClaimHost,
     writeSetHost:projectWriteSetHost,
+    candidateHost:projectCandidatePublisher,
     agentHostMounted:Boolean(installedRun),
     selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
     selectedAgentProvider:installedRun?

@@ -265,6 +265,27 @@ const claimPins={TALLY_V2_AGENT_DISPATCH:'host-mounted',
   TALLY_V2_AGENT_WORKTREE_PATH:'C:/tmp/single-worktree',
   TALLY_V2_AGENT_EVIDENCE_DIR:'C:/tmp/single-evidence'};
 
+test('managed repository path and Tally driver checkout are independent',async()=>{
+  const env={...consumerPins,...claimPins,
+    TALLY_V2_AGENT_SCRIPT_ROOT:'C:/tally-driver',
+    TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH:'C:/project-source'};
+  const settings=readInstalledWriteJourneyEnvironment(env);
+  assert.equal(settings.scriptRoot,'C:/tally-driver');
+  assert.equal(settings.sourceRepositoryPath,'C:/project-source');
+  let script,sourcePath;
+  const runner=createInstalledWriteJourneyRunner({settings,env,
+    spawnE2e:async (path,runnerEnv)=>{
+      script=path;sourcePath=runnerEnv.TALLY_LOCAL_REPOSITORY_PATH;
+      return {code:1,signal:null,startedAt:Date.now(),
+        terminatedAt:Date.now()};
+    }});
+  await runner.run('start');
+  assert.ok(script.startsWith('C:/tally-driver'));
+  assert.equal(sourcePath,'C:/project-source');
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({...env,
+    TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH:'relative/path'}),
+    /AGENT_SCRIPT_OR_SOURCE_REPOSITORY_PATH_INVALID/);
+});
 test('write-journey pin admission admits a complete trusted Host pin set',()=>{
   const settings=readInstalledWriteJourneyEnvironment(
     {...consumerPins,...claimPins});

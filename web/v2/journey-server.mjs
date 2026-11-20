@@ -376,7 +376,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
   v2ReadModelHost,taskReadyHost=null,claimHost=null,writeSetHost=null,
-  agentHostMounted=false,
+  candidateHost=null,agentHostMounted=false,
   selectedAgentTaskIssue=null,selectedAgentProvider='codex',
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
@@ -630,6 +630,34 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
           issueNumber:input.issueNumber,sourceSha:input.sourceSha});
         return send(result.status==='BLOCKED'?409:
           result.status==='UNKNOWN'?503:200,'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/candidate-host'){
+        const bound=candidateHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:candidateHost.repository,
+          versionId:candidateHost.versionId,sourceSha:candidateHost.sourceSha,
+          issueNumber:candidateHost.issueNumber,actionKey,
+          authority:'HOST_PINNED_DRAFT_PR_ONLY'
+        }:{connected:false,reason:'CANDIDATE_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/candidate-publish'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!candidateHost||candidateHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'CANDIDATE_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(input?.issueNumber!==candidateHost.issueNumber||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'CANDIDATE_HOST_TASK_SCOPE_MISMATCH'}));
+        const result=await candidateHost.publish({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:
+          result.status==='PUBLICATION_UNKNOWN'?503:200,
+          'application/json',json(result));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/writeset-host'){
         const bound=writeSetHost?.sourceSha===config.currentSourceSha;

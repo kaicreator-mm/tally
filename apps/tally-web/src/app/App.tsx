@@ -10,9 +10,9 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim,freezeSelectedTaskWriteSet} from '../adapters/host.ts';
+import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim,freezeSelectedTaskWriteSet,publishSelectedDraftCandidate} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {WriteSetHostResponse,ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {CandidateHostResponse,WriteSetHostResponse,ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -124,6 +124,10 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [starting,setStarting]=useState(false);
   const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
+  const [publishingDraft,setPublishingDraft]=useState(false);
+  const [draftPublication,setDraftPublication]=useState<{
+    issueNumber:number;repository:string;message:string;pullRef?:string
+  }|null>(null);
   const [freezingWriteSet,setFreezingWriteSet]=useState(false);
   const [writeSetResult,setWriteSetResult]=useState<{
     issueNumber:number;repository:string;message:string
@@ -148,6 +152,8 @@ function TasksRoute({versionId}:{versionId:string|null}){
   // frozen Task DAG. Keep these TWO levels of evidence separate.
   const agentHost=useHost<AgentDispatchResponse>('agent-dispatch',
     adapter=>adapter.agentDispatch(),[versionId]);
+  const candidateHost=useHost<CandidateHostResponse>('candidate-host',
+    adapter=>adapter.candidateHost(),[versionId]);
   const writeSetHost=useHost<WriteSetHostResponse>('writeset-host',
     adapter=>adapter.writeSetHost(),[versionId]);
   const claimHost=useHost<ClaimHostResponse>('claim-host',
@@ -190,6 +196,24 @@ function TasksRoute({versionId}:{versionId:string|null}){
       setReadyTransitionResult({issueNumber,repository,
         message:'UNKNOWN · TASK_READY_ACTION_READBACK_UNKNOWN'});
     }finally{setReadyTransitionBusy(false);}
+  };
+  const publishDraftCandidate=async(issueNumber:number,sourceSha:string)=>{
+    if(!versionId||publishingDraft||!drafts.data?.repository)return;
+    const repository=drafts.data.repository;
+    setPublishingDraft(true);setDraftPublication(null);
+    try{
+      const result=await publishSelectedDraftCandidate({
+        issueNumber,repository,versionId,sourceSha});
+      setDraftPublication({issueNumber,repository,message:
+        result.status+(result.reason?' · '+result.reason:'')+
+        (result.status==='DRAFT_PR_PUBLISHED_VERIFIED'
+          ?' · Draft PR 等待独立 Review/CI':''),
+        ...(result.status==='DRAFT_PR_PUBLISHED_VERIFIED'&&result.pullRef?
+          {pullRef:result.pullRef}:{})});
+    }catch{
+      setDraftPublication({issueNumber,repository,
+        message:'PUBLICATION_UNKNOWN · 请先核对 GitHub，勿重复发布'});
+    }finally{setPublishingDraft(false);}
   };
   const freezeWriteSet=async(issueNumber:number,sourceSha:string)=>{
     if(!versionId||freezingWriteSet||!drafts.data?.repository)return;
@@ -328,6 +352,24 @@ function TasksRoute({versionId}:{versionId:string|null}){
                   onClick={()=>{void startDraftAgent(draft.issueNumber,draft.sourceSha);}}>
                   {starting?'正在提交 Host 执行…':'启动选定 Agent（由 Host 核验 Claim/K）'}
                 </button>:null}
+              {draft.nativeWorkflow==='READY'&&
+               draft.sourceCurrentness==='CURRENT'&&
+               candidateHost.data?.connected===true&&
+               candidateHost.data?.repository===drafts.data?.repository&&
+               candidateHost.data?.versionId===versionId&&
+               candidateHost.data?.sourceSha===draft.sourceSha&&
+               candidateHost.data?.issueNumber===draft.issueNumber?
+                <button type="button" disabled={publishingDraft}
+                  onClick={()=>{void publishDraftCandidate(draft.issueNumber,draft.sourceSha);}}>
+                  发布本地 K 候选为 Draft PR
+                </button>:null}
+              {draftPublication?.issueNumber===draft.issueNumber&&
+               draftPublication.repository===drafts.data?.repository?
+                <span role="status">{' · '}{draftPublication.message}
+                  {draftPublication.pullRef?
+                    <a href={draftPublication.pullRef} target="_blank"
+                      rel="noopener noreferrer">查看 Draft PR</a>:null}
+                </span>:null}
               {lastStart?.taskId==='draft:'+drafts.data?.repository+'/'+
                versionId+'#'+draft.issueNumber?
                 <span role="status">{' · '}{lastStart.message}</span>:null}
