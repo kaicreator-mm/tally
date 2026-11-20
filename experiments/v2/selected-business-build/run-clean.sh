@@ -13,6 +13,10 @@ trap finish EXIT
 : "${DH:?Set DH to exact released DomainHarness git checkout}"
 : "${TALLY:?Set TALLY to exact Tally PR checkout}"
 : "${TALLY_B:?Set TALLY_B to Tally v2 merged B source git checkout}"
+if [[ "${T02B_BUILD_ONLY:-0}" == '1' && "${KEEP_T02B_WORK:-0}" != '1' ]]; then
+  echo T02B_BUILD_ONLY_REQUIRES_KEEP_WORK
+  exit 2
+fi
 DH=$(cd "$DH" && pwd -P)
 TALLY=$(cd "$TALLY" && pwd -P)
 TALLY_B=$(cd "$TALLY_B" && pwd -P)
@@ -149,6 +153,17 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   fi
 fi
 npm ls --depth=0
+# New-project installed Host provisioning: separate irreversible BUILD/seal
+# from real native Claim/CAS/K/Agent effects. Caller must explicitly retain
+# the isolated work directory and later perform the real Host E2E.
+if [[ "${T02B_BUILD_ONLY:-0}" == '1' ]]; then
+  [[ -s "$tmp/consumer/sealed-app.json" ]] || { echo T02B_BUILD_ONLY_NO_SEALED_APP; exit 3; }
+  echo "T02B_BUILD_ONLY_CONSUMER_DIR=$tmp/consumer"
+  echo "T02B_BUILD_ONLY_PRODUCER_DIR=$tmp/producer"
+  echo "T02B_BUILD_ONLY_PROVIDERS_DIR=$tmp"
+  echo T02B_BUILD_ONLY_STATUS=BUILT_NOT_HOST_OR_K_VERIFIED
+  exit 0
+fi
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
