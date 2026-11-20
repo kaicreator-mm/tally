@@ -31,6 +31,7 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
+import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
@@ -916,6 +917,17 @@ if(main){
     .then(({address,close})=>{
       process.stdout.write('TALLY_UI='+address.appUrl+'\n');
       process.stdout.write('TALLY_PROJECT_SETUP='+address.origin+'/setup\n');
+      // Optional Windows convenience only. The URL contains no secret/pin,
+      // and headless CI can disable launching a browser.
+      if(process.platform==='win32'&&process.env.TALLY_V2_OPEN_BROWSER!=='0'
+         &&!process.env.CI){
+        try{
+          const child=spawn('cmd.exe',['/c','start','',address.appUrl],
+            {stdio:'ignore',windowsHide:true,detached:true});
+          child.on('error',()=>{});
+          child.unref();
+        }catch{/* printed URL remains usable */}
+      }
       let closing=false;
       const stop=()=>{
         if(closing)return;closing=true;
