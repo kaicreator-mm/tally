@@ -95,17 +95,21 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
 function claimEnv(env,issueNumber,actorRole='builder'){
+  // Resolve the BUILD-selected issue locally. Legacy role-env regressions
+  // extract this function alone; the real compiled Provider seals the pin.
+  const selectedBuilderIssue=typeof SELECTED_BUILDER_ISSUE==='number'?
+    SELECTED_BUILDER_ISSUE:null;
   const roleSuffixed=(issueNumber===312||issueNumber===219)||
     (actorRole!=='builder'&&TASK_BINDINGS[issueNumber]?.reviewerLane==='single');
   const p=roleSuffixed?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
-    (issueNumber===172||issueNumber===SELECTED_BUILDER_ISSUE)?
+    (issueNumber===172||issueNumber===selectedBuilderIssue)?
       'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
     writerLogin:env[p+'WRITER_LOGIN'],commentId:Number(env[p+'COMMENT_ID']),
     registryPath:env[p+'REGISTRY_PATH'],
-    writeSetSha256:(issueNumber===172||issueNumber===SELECTED_BUILDER_ISSUE)?
+    writeSetSha256:(issueNumber===172||issueNumber===selectedBuilderIssue)?
       env.TALLY_LOCAL_WRITESET_SHA256:env[p+'WRITESET_SHA256']};
 }
 const SHA=/^[0-9a-f]{40}$/,ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
