@@ -1,0 +1,246 @@
+# Tally v2+ CI: ONE workflow, ONE Git checkout. No Go or old T06 replay.
+# No separate clone/fetch inside steps. Manual runs opt into all relevant steps.
+when:
+  - event: [push, pull_request]
+    branch: [main, 'version/*']
+    path:
+      include:
+        - '.woodpecker/ci.yaml'
+        - 'web/v2/**'
+        - 'apps/tally-web/**'
+        - 'packages/tally-engineering-business/**'
+        - 'packages/tally-github-native-c/**'
+        - 'packages/tally-ads-v5-validator/**'
+        - 'packages/tally-github-c/**'
+        - 'packages/tally-agent-provider/**'
+        - 'packages/tally-provider-codex/**'
+        - 'packages/tally-provider-zcode/**'
+        - 'packages/tally-provider-dsh-adapter/**'
+        - 'packages/tally-provider-opencode/**'
+        - 'packages/tally-provider-pi/**'
+        - 'packages/tally-provider-grok/**'
+        - 'experiments/v2/project-intake/**'
+        - 'experiments/v2/maintenance/**'
+        - 'experiments/v2/release/**'
+        - 'experiments/v2/selected-business-build/**'
+        - 'experiments/v2/candidate-publication/**'
+        - 'experiments/v2/github-only-observation/**'
+        # native-c tests import experiments/v2/t06d-host-claim-publication/single-writer.mjs (#942)
+        - 'experiments/v2/t06d-host-claim-publication/**'
+      # Exclude documentation inside otherwise source-relevant package folders.
+      exclude:
+        - '**/*.md'
+        - '**/*.mdx'
+  - event: [manual]
+    branch: [main, 'version/*']
+
+labels:
+  backend: local
+
+# One partial/sparse checkout per CI run; no unrelated docs, Go tree, LFS,
+# submodules, full history, or DomainHarness/ADS GitHub clones.
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: true
+      recursive: false
+      lfs: false
+      sparse:
+        - '.woodpecker'
+        - 'web/v2'
+        - 'apps/tally-web'
+        - 'packages/tally-engineering-business'
+        - 'packages/tally-github-native-c'
+        - 'packages/tally-ads-v5-validator'
+        - 'packages/tally-github-c'
+        - 'packages/tally-agent-provider'
+        - 'packages/tally-provider-codex'
+        - 'packages/tally-provider-zcode'
+        - 'packages/tally-provider-dsh-adapter'
+        - 'packages/tally-provider-opencode'
+        - 'packages/tally-provider-pi'
+        - 'packages/tally-provider-grok'
+        - 'experiments/v2/project-intake'
+        - 'experiments/v2/maintenance'
+        - 'experiments/v2/release'
+        - 'experiments/v2/selected-business-build'
+        - 'experiments/v2/candidate-publication'
+        - 'experiments/v2/github-only-observation'
+        # Imported by packages/tally-github-native-c tests; absent => ERR_MODULE_NOT_FOUND (#942)
+        - 'experiments/v2/t06d-host-claim-publication'
+
+steps:
+  - name: exact-source
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'test -n "${CI_COMMIT_SHA:-}"'
+      - 'test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"'
+      - 'test "$(node -p "process.versions.node.split(String.fromCharCode(46))[0]")" = 24'
+      - |
+        # The fetched commit object already has its parents and message.
+        # Never fetch the PR base/history again merely to check trailers.
+        parents="$(git cat-file -p HEAD | grep -c '^parent ' || true)"
+        if [ "$parents" -gt 1 ]; then
+          echo "CI_MERGE_COMMIT: no synthetic Refs trailer required"
+        else
+          git log -1 --format=%B HEAD | grep -qi '^Refs:' || {
+            echo "CI_REFS_TRAILER_MISSING_ON_HEAD"
+            exit 1
+          }
+        fi
+      - echo V2_SOURCE_PINNED_ONE_CLONE
+
+  - name: v2-core-business-and-host-tests
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'web/v2/**'
+            - 'packages/tally-engineering-business/**'
+            - 'packages/tally-github-c/src/project-intake.mjs'
+            - 'packages/tally-github-c/test/project-intake.test.mjs'
+            - 'packages/tally-github-c/src/maintenance-effects.mjs'
+            - 'packages/tally-github-c/test/maintenance-effects.test.mjs'
+            - 'experiments/v2/project-intake/**'
+            - 'experiments/v2/maintenance/**'
+            - 'experiments/v2/release/**'
+            - 'experiments/v2/selected-business-build/**'
+    commands:
+      - set -euo pipefail
+      - 'test -d packages/tally-engineering-business/node_modules || npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1'
+      - 'test -d packages/tally-github-native-c/node_modules || npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com'
+      - 'files="$(find web/v2 -type f -name "*.test.mjs" -print)"'
+      - test -n "$files"
+      - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
+      - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/tally-v2-no-browser.json"'
+      - |
+        grep -q '"ok": true' "${TMPDIR:-/tmp}/tally-v2-no-browser.json"
+      - echo V2_CORE_TESTS_PASS_NO_REAL_HOST_EFFECT
+
+  - name: v2-react-ui-build
+    image: bash
+    when:
+      - path:
+          include: ['.woodpecker/ci.yaml', 'apps/tally-web/**']
+    commands:
+      - set -euo pipefail
+      - 'files="$(find apps/tally-web/src -type f -name "*.test.ts" -print)"'
+      - test -n "$files"
+      - node --test $files
+      - 'npm --prefix apps/tally-web ci --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com'
+      - 'npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com'
+      # Vite transpilation is not a TypeScript typecheck; reuse the same npm ci.
+      - ./apps/tally-web/node_modules/.bin/tsc --noEmit -p apps/tally-web/tsconfig.json
+      - npm --prefix apps/tally-web run build
+      - test -f apps/tally-web/dist/index.html
+      - echo V2_REACT_UI_PASS
+
+  - name: v2-agent-providers
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'packages/tally-agent-provider/**'
+            - 'packages/tally-provider-codex/**'
+            - 'packages/tally-provider-zcode/**'
+            - 'packages/tally-provider-dsh-adapter/**'
+            - 'packages/tally-provider-opencode/**'
+            - 'packages/tally-provider-pi/**'
+            - 'packages/tally-provider-grok/**'
+    commands:
+      - set -euo pipefail
+      - node --test packages/tally-agent-provider/test/*.test.mjs packages/tally-provider-codex/test/*.test.mjs packages/tally-provider-zcode/test/*.test.mjs packages/tally-provider-dsh-adapter/test/*.test.mjs packages/tally-provider-opencode/test/*.test.mjs packages/tally-provider-pi/test/*.test.mjs packages/tally-provider-grok/test/*.test.mjs
+      # Validate the public .d.mts contract, not just JS behavior; install only on Provider change.
+      - npm --prefix packages/tally-agent-provider install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --include=dev --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-agent-provider run test:types
+      - echo V2_PROVIDER_TESTS_AND_TYPES_PASS
+
+  - name: v2-native-github-adapter
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'packages/tally-github-native-c/**'
+            - 'packages/tally-ads-v5-validator/**'
+            - 'experiments/v2/t06d-host-claim-publication/**'
+    commands:
+      - set -euo pipefail
+      - 'test -d packages/tally-ads-v5-validator/node_modules || npm --prefix packages/tally-ads-v5-validator install --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com'
+      - 'test -d packages/tally-github-native-c/node_modules || npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com'
+      - node --test packages/tally-github-native-c/test/*.test.mjs
+      - echo V2_NATIVE_GITHUB_ADAPTER_PASS
+
+  - name: v2-release-delivery-source
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'packages/tally-github-c/src/release-delivery.mjs'
+            - 'packages/tally-github-c/test/release-delivery.test.mjs'
+            - 'experiments/v2/release/**'
+            - 'experiments/v2/selected-business-build/**'
+            - 'packages/tally-engineering-business/src/index.mjs'
+    commands:
+      - set -euo pipefail
+      - 'test -d packages/tally-engineering-business/node_modules || npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1'
+      - node --test packages/tally-github-c/test/release-delivery.test.mjs experiments/v2/release/host-release.test.mjs
+      - node --check experiments/v2/selected-business-build/producer.mjs
+      - node --check experiments/v2/selected-business-build/bundle-local-codex.mjs
+      - node --check experiments/v2/selected-business-build/local-codex-shim.mjs
+      - 'grep -q "TALLY_RELEASE_PHYSICAL_EFFECTS" experiments/v2/release/host-release.mjs'
+      - echo V2_RELEASE_SOURCE_PASS_NO_PHYSICAL_EFFECT
+
+  - name: v2-guided-intake
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'packages/tally-engineering-business/src/guided-intake.mjs'
+            - 'packages/tally-engineering-business/test/guided-intake.test.mjs'
+            - 'packages/tally-engineering-business/schemas/guided-journey-v1.schema.json'
+    commands:
+      - set -euo pipefail
+      - 'test -d packages/tally-engineering-business/node_modules || npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1'
+      - node --test packages/tally-engineering-business/test/guided-intake.test.mjs
+      - echo V2_GUIDED_INTAKE_PASS_NO_EXTERNAL_REPO_CLONE
+
+  - name: v2-candidate-publication
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'experiments/v2/candidate-publication/**'
+            - 'packages/tally-github-c/src/candidate-publication.mjs'
+            - 'packages/tally-github-c/test/candidate-publication.test.mjs'
+    commands:
+      - set -euo pipefail
+      - node --test packages/tally-github-c/test/candidate-publication.test.mjs experiments/v2/candidate-publication/host-publisher.test.mjs
+      - node --check experiments/v2/candidate-publication/publish-real.mjs
+      - echo V2_CANDIDATE_PUBLICATION_SOURCE_PASS
+
+  - name: v2-observation-offline
+    image: bash
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'experiments/v2/github-only-observation/**'
+            - 'packages/tally-github-native-c/src/read-only.mjs'
+            - 'packages/tally-github-native-c/test/read-only.test.mjs'
+            - 'packages/tally-github-c/src/report-projection.mjs'
+            - 'packages/tally-github-c/test/report-projection.test.mjs'
+            # R116 P1: both file changes must actually run the existing reconciliation suite.
+            - 'packages/tally-github-c/src/correction-reconciliation.mjs'
+            - 'packages/tally-github-c/test/correction-reconciliation.test.mjs'
+    commands:
+      - set -euo pipefail
+      - node --test packages/tally-github-c/test/report-projection.test.mjs packages/tally-github-c/test/correction-reconciliation.test.mjs experiments/v2/github-only-observation/observation.test.mjs
+      - echo V2_OBSERVATION_OFFLINE_PASS_NO_LIVE_GITHUB_FETCH
