@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Tally v2 GitHub C read-model core; native facts only",
   "engines": {
-    "node": ">=24.0.0"
+    "node": ">=22.16.0"
   },
   "exports": {
     ".": "./src/report-projection.mjs"
