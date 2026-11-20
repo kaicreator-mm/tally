@@ -12,10 +12,12 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import {submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
+import type {RequirementNode} from '../features/requirements/model.ts';
+import type {QaRecord} from '../features/qa/model.ts';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
 import {QaView} from '../features/qa/views.tsx';
@@ -54,10 +56,8 @@ function routeBody(key:string,versionId:string|null):React.ReactNode{
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
-    // #264 E1: requirements/qa/maintenance have no selected server read
-    // model yet — honest NOT_CONNECTED, never a fabricated empty roster.
-    case 'requirements':return <RequirementsView nodes={[]} connected={false}/>
-    case 'qa':return <QaView records={[]} connected={false}/>
+    case 'requirements':return <RequirementsRoute versionId={versionId}/>;
+    case 'qa':return <QaRoute versionId={versionId}/>;
     case 'release':return <ReleaseRoute versionId={versionId}/>;
     case 'maintenance':return <MaintenanceView defects={[]} learnings={[]}
       connected={false}/>;
@@ -77,6 +77,28 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
+function RequirementsRoute({versionId}:{versionId:string|null}){
+  const source=useHost<RequirementsResponse>('requirements',
+    adapter=>adapter.requirements(versionId??''),[versionId]);
+  if(source.state==='loading')return <Skeleton lines={4}/>;
+  if(source.state==='not_connected')
+    return guard(versionId,<EmptyState title="NOT_CONNECTED"
+      hint={source.reason??undefined}/>);
+  return guard(versionId,<RequirementsView
+    nodes={(source.data?.nodes??[]) as RequirementNode[]}
+    connected={source.data?.connected===true}/>);
+}
+function QaRoute({versionId}:{versionId:string|null}){
+  const source=useHost<QaResponse>('qa',
+    adapter=>adapter.qa(versionId??''),[versionId]);
+  if(source.state==='loading')return <Skeleton lines={4}/>;
+  if(source.state==='not_connected')
+    return guard(versionId,<EmptyState title="NOT_CONNECTED"
+      hint={source.reason??undefined}/>);
+  return guard(versionId,<QaView
+    records={(source.data?.records??[]) as QaRecord[]}
+    connected={source.data?.connected===true}/>);
+}
 function TasksRoute({versionId}:{versionId:string|null}){
   const [filters,setFilters]=useState<TaskFilters>({...EMPTY_FILTERS});
   const [selectedId,setSelectedId]=useState<string|null>(null);

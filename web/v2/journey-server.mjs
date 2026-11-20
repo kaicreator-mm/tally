@@ -626,6 +626,16 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         }
         return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/requirements'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('requirements','requirements',{versionId})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/qa'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('qa','qa',{versionId})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
         return send(200,'application/json',json(await readV2Model('settings','settings')));
       }

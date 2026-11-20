@@ -59,6 +59,19 @@ export interface DagResponse{
   edges:{from:string;to:string;kind:'NATIVE'|'PLANNED'|'UNRESOLVED';
     evidenceRef:string|null;amendedAt:string|null}[];
 }
+export interface RequirementsResponse{connected:boolean;reason?:string;
+  versionId?:string;structureCoverage?:string;freezeCoverage?:string;
+  nodes?:{id:string;kind:'requirement'|'epic'|'story';title:string;
+    parent:string|null;productRevision:number|null;acceptanceRefs:string[];
+    l2Decision:string|null;freezeState:'FROZEN'|'STALE'|'NOT_FROZEN'|'UNKNOWN';
+    updatedAt:string}[];}
+export interface QaResponse{connected:boolean;reason?:string;versionId?:string;
+  ciCoverage?:string;independentCoverage?:string;
+  records?:{layer:'fullRegression'|'hiddenValidation'|'criticalJourneys'|
+      'installedAcceptance';outcome:'PASS'|'FAIL'|'NOT_RUN'|'UNKNOWN';
+      provenance:'REPORTED'|'INDEPENDENT'|'NOT_RUN'|'UNKNOWN';
+      witness:string|null;evidenceRef:string|null;
+      subjectSha:string|null;observedAt:string|null}[];}
 export interface SettingsResponse{connected:boolean;reason?:string;model?:string;
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
@@ -155,6 +168,10 @@ export const hostAdapter=Object.freeze({
     `/api/v2/dag?versionId=${encodeURIComponent(versionId)}`),
   dualEpoch:(versionId:string)=>getJson<DualEpochResponse>(
     `/api/v2/dual-epoch?versionId=${encodeURIComponent(versionId)}`),
+  requirements:(versionId:string)=>getJson<RequirementsResponse>(
+    `/api/v2/requirements?versionId=${encodeURIComponent(versionId)}`),
+  qa:(versionId:string)=>getJson<QaResponse>(
+    `/api/v2/qa?versionId=${encodeURIComponent(versionId)}`),
   settings:()=>getJson<SettingsResponse>('/api/v2/settings'),
   release:(versionId:string)=>getJson<ReleaseResponse>(
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),

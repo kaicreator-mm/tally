@@ -786,6 +786,18 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return observed;
       }catch{return deny('REQUIREMENT_READ_FAILED');}
     },
+    async qa(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(!settings.qaStatusContext)return deny('QA_STATUS_SOURCE_NOT_CONFIGURED');
+      try{
+        const observed=await nativeC.qa();
+        if(observed?.connected!==true||
+           observed.source?.repository!==settings.repository||
+           observed.versionId!==settings.versionId)
+          return deny(observed?.reason??'QA_SOURCE_UNQUALIFIED');
+        return observed;
+      }catch{return deny('QA_READ_FAILED');}
+    },
     // #491 J07: the /app Release panel reads the REAL Host qualification
     // (rqState/ownerGrantState/operation permits from Host-pinned
     // registries, exact-source and exact-live-target bound) alongside the
