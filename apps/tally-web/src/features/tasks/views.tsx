@@ -210,7 +210,7 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           taskIssue={canonicalTaskIssueNumber(task.id)??0}
           onDispatch={onAction} locale={locale}/>
       </section>
-      :<section aria-label={zh?'任务可执行操作':'Task actions'}>
+      :agentStart?.enabled?null:<section aria-label={zh?'任务可执行操作':'Task actions'}>
         {/* #448 X11/G4: catalog/projectId 缺省不再是静默死端——诚实说明
             缺什么,不伪造恢复路径、不渲染无 handler 的动作按钮。 */}
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
