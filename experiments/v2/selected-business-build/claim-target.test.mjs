@@ -50,7 +50,7 @@ test('source-pinned BUILD C rechecks exact Issue, SHA and CAS Claim key',async()
     claimPublication:'REGISTRY_PUBLISHED_VERIFIED_NATIVE_READBACK',
     claimAccepted:true,admitted:true,authorized:false,
     taskPass:false,agentLaunch:false,releasePass:false};
-  const code=bound.replace(/^import[\s\S]*?from '[^']+';\s*/,'')
+  const code=bound.replace(/^import\s+[\s\S]*?from\s+['\"][^'\"]+['\"];?/gm,'')
     .replace(/^export /gm,'');
   const admit=new Function('nativeAdmitClaimedTask',code+
     '\nreturn admitClaimedTask;')(async()=>output);
