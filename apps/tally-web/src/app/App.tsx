@@ -12,7 +12,7 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import {submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -53,6 +53,8 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
 }
 function routeBody(key:string,versionId:string|null):React.ReactNode{
   switch(key){
+    case 'overview':return <OverviewRoute/>;
+    case 'product':return <RequirementsRoute versionId={versionId}/>;
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
@@ -77,6 +79,23 @@ const guard=(versionId:string|null,children:React.ReactNode)=>
   !versionId
     ?<EmptyState title="请先在右上角选择版本"/>
     :children;
+function OverviewRoute(){
+  const catalog=useHost<Catalog>('catalog',adapter=>adapter.catalog(),[]);
+  if(catalog.state==='loading')return <Skeleton lines={4}/>;
+  if(catalog.state==='not_connected')
+    return <EmptyState title="NOT_CONNECTED" hint={catalog.reason??undefined}/>;
+  const source=catalog.data?.source;
+  return <section>
+    <h2>已连接 GitHub 项目</h2>
+    <p>仓库：<strong>{source?.repository??'UNKNOWN'}</strong></p>
+    <p>当前源码 SHA：<code>{source?.sourceSha??'UNKNOWN'}</code></p>
+    <p>Source currentness：{source?.currentness??'UNKNOWN'}
+      {' · '}Readback：{source?.readback??'UNKNOWN'}</p>
+    <p>这里的连接只代表 GitHub Source 可读取，不代表 Product
+      已冻结、Task DAG 已接受或 Agent 已获执行授权。</p>
+    <p><a href="#/settings/git-github">添加 / 切换项目</a></p>
+  </section>;
+}
 function RequirementsRoute({versionId}:{versionId:string|null}){
   const source=useHost<RequirementsResponse>('requirements',
     adapter=>adapter.requirements(versionId??''),[versionId]);
