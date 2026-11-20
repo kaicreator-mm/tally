@@ -375,7 +375,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
-  v2ReadModelHost,agentHostMounted=false,
+  v2ReadModelHost,taskReadyHost=null,agentHostMounted=false,
   selectedAgentTaskIssue=null,selectedAgentProvider='codex',
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
@@ -599,6 +599,35 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // state). No effect path starts here.
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         return send(200,'application/json',json(await readV2Model('catalog','catalog')));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-ready-host'){
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({connected:false,
+            reason:'TASK_READY_ORIGIN_MISMATCH'}));
+        const bound=taskReadyHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:taskReadyHost.repository,
+          versionId:taskReadyHost.versionId,sourceSha:taskReadyHost.sourceSha,
+          actionKey,authority:'HOST_PINNED_ONLY'
+        }:{connected:false,reason:'TASK_READY_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/task-ready'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!taskReadyHost||taskReadyHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'TASK_READY_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(!Number.isSafeInteger(input?.issueNumber)||input.issueNumber<1||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'TASK_READY_SCOPE_MISMATCH'}));
+        const result=await taskReadyHost.transition({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:200,
+          'application/json',json(result));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/task-admission'){
         const versionId=url.searchParams.get('versionId');

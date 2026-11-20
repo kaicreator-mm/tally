@@ -42,6 +42,11 @@ export interface TaskDraftsResponse{connected:boolean;reason?:string;
     sourceCurrentness?:'CURRENT'|'STALE';
     nativeWorkflow?:'PLANNED'|'READY'|'NONCANONICAL';
     taskQualified:false;agentAuthorized:false}[];}
+export interface TaskReadyHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  actionKey?:string;authority?:'HOST_PINNED_ONLY';}
+export interface TaskReadyTransitionResult{status:string;reason?:string;
+  githubEffect?:string;admitted?:false;authorized?:false;}
 export interface TaskAdmissionResponse{connected:boolean;reason?:string;
   issueNumber?:number;issueUrl?:string;sourceSha?:string;
   stage?:'STALE_SOURCE'|'BLOCKED'|'NEEDS_CANONICAL_LABELS'|
@@ -183,6 +188,7 @@ async function postJson<T>(path:string,actionKey:string,
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
+  taskReadyHost:()=>getJson<TaskReadyHostResponse>('/api/v2/task-ready-host'),
   taskAdmission:(versionId:string,issueNumber:number)=>
     getJson<TaskAdmissionResponse>(
       `/api/v2/task-admission?versionId=${encodeURIComponent(versionId)}&issueNumber=${issueNumber}`),
@@ -213,6 +219,20 @@ export const hostAdapter=Object.freeze({
 /** One physical Builder task; only the server-selected Host can authorize.
  * The action key is same-origin CSRF material, not an Agent/Claim grant.
  */
+export async function transitionSelectedTaskReady({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<TaskReadyTransitionResult>{
+  try{
+    const mounted=await hostAdapter.taskReadyHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       !mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'TASK_READY_HOST_SCOPE_MISMATCH'};
+    return await postJson<TaskReadyTransitionResult>(
+      '/api/v2/task-ready',mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'TASK_READY_ACTION_READBACK_UNKNOWN'};}
+}
 export async function startSelectedAgentTask(issueNumber:number,sourceSha:string):
   Promise<AgentRunResult>{
   try{

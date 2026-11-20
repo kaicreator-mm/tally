@@ -33,6 +33,7 @@ import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
 import {readProjectTaskAdmission} from './task-admission-read.mjs';
+import {createProjectTaskReadyHost} from './project-task-ready-host.mjs';
 import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
@@ -630,6 +631,23 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       operation==='addNativeTaskDependency'?
         host.addNativeTaskDependency(input):host.freezeVersionTaskDag(input);
   }
+  // New-project native ready transition uses the EXISTING CAS-fenced
+  // planned→ready port. Only trusted, source-pinned Host configuration
+  // may install it; a browser Issues:write token never grants this effect.
+  let taskReadyHost=null;
+  if(env.TALLY_V2_TASK_READY==='host-mounted'){
+    const writeToken=env.TALLY_GITHUB_WRITE_TOKEN;
+    if(typeof writeToken!=='string'||writeToken.length<8)
+      throw new TypeError('TASK_READY_HOST_WRITE_TOKEN_REQUIRED');
+    const {Octokit}=await import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js');
+    const {openSqliteCasStore}=await import(
+      '@kaicreator/domain-harness-host-node');
+    taskReadyHost=createProjectTaskReadyHost({
+      settings,env,
+      octokit:new Octokit({auth:writeToken,request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
   // #264 J07: the installed Release Host Consumer seam — the real J07b gate
   // composed from trusted Host pins only. Without the mount every
   // /api/release/actions POST keeps the exact R91 fail-closed controller
@@ -931,7 +949,7 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
-    v2ReadModelHost,agentHostMounted:Boolean(installedRun),
+    v2ReadModelHost,taskReadyHost,agentHostMounted:Boolean(installedRun),
     selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
     selectedAgentProvider:installedRun?
       (env.TALLY_V2_AGENT_PROVIDER??'codex'):'codex',

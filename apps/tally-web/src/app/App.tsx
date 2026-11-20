@@ -10,9 +10,9 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {hostAdapter,startSelectedAgentTask,submitReleaseAction} from '../adapters/host.ts';
+import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -124,6 +124,10 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [starting,setStarting]=useState(false);
   const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
+  const [readyTransitionBusy,setReadyTransitionBusy]=useState(false);
+  const [readyTransitionResult,setReadyTransitionResult]=useState<{
+    issueNumber:number;repository:string;message:string
+  }|null>(null);
   const [checkingAdmission,setCheckingAdmission]=useState(false);
   const [admissionResult,setAdmissionResult]=useState<{
     issueNumber:number;repository:string;versionId:string;
@@ -135,6 +139,8 @@ function TasksRoute({versionId}:{versionId:string|null}){
   // frozen Task DAG. Keep these TWO levels of evidence separate.
   const agentHost=useHost<AgentDispatchResponse>('agent-dispatch',
     adapter=>adapter.agentDispatch(),[versionId]);
+  const readyHost=useHost<TaskReadyHostResponse>('task-ready-host',
+    adapter=>adapter.taskReadyHost(),[versionId]);
   const drafts=useHost<TaskDraftsResponse>('task-drafts',
     adapter=>adapter.taskDrafts(versionId??''),[versionId]);
   const checkAdmission=async(issueNumber:number)=>{
@@ -150,6 +156,21 @@ function TasksRoute({versionId}:{versionId:string|null}){
       setAdmissionResult({issueNumber,repository,versionId,
         stage:'NOT_CONNECTED',reason:'TASK_ADMISSION_READ_FAILED'});
     }finally{setCheckingAdmission(false);}
+  };
+  const transitionReady=async(issueNumber:number,sourceSha:string)=>{
+    if(!versionId||readyTransitionBusy||!drafts.data?.repository)return;
+    const repository=drafts.data.repository;
+    setReadyTransitionBusy(true);setReadyTransitionResult(null);
+    try{
+      const outcome=await transitionSelectedTaskReady({
+        issueNumber,repository,versionId,sourceSha});
+      setReadyTransitionResult({issueNumber,repository,
+        message:outcome.status+(outcome.reason?' · '+outcome.reason:'')+
+          '（重新检查任务准入以查看最新 GitHub 状态）'});
+    }catch{
+      setReadyTransitionResult({issueNumber,repository,
+        message:'UNKNOWN · TASK_READY_ACTION_READBACK_UNKNOWN'});
+    }finally{setReadyTransitionBusy(false);}
   };
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
@@ -176,6 +197,19 @@ function TasksRoute({versionId}:{versionId:string|null}){
                 onClick={()=>{void checkAdmission(draft.issueNumber);}}>
                 检查任务准入
               </button>
+              {draft.nativeWorkflow==='PLANNED'&&
+               draft.sourceCurrentness==='CURRENT'&&
+               readyHost.data?.connected===true&&
+               readyHost.data?.repository===drafts.data?.repository&&
+               readyHost.data?.versionId===versionId&&
+               readyHost.data?.sourceSha===draft.sourceSha?
+                <button type="button" disabled={readyTransitionBusy}
+                  onClick={()=>{void transitionReady(draft.issueNumber,draft.sourceSha);}}>
+                  请求可信 Host 转为 ready
+                </button>:null}
+              {readyTransitionResult?.issueNumber===draft.issueNumber&&
+               readyTransitionResult.repository===drafts.data?.repository?
+                <span role="status">{' · '}{readyTransitionResult.message}</span>:null}
               {admissionResult?.issueNumber===draft.issueNumber&&
                admissionResult.repository===drafts.data?.repository&&
                admissionResult.versionId===versionId?
