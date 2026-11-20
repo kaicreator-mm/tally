@@ -10,12 +10,13 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {submitReleaseAction} from '../adapters/host.ts';
+import {startSelectedAgentTask,submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
+import {canonicalTaskIssueNumber} from '../features/task-actions/model.ts';
 import type {RequirementNode} from '../features/requirements/model.ts';
 import type {QaRecord} from '../features/qa/model.ts';
 import {AgentsPanel} from '../features/agents/views.tsx';
@@ -121,10 +122,14 @@ function QaRoute({versionId}:{versionId:string|null}){
 function TasksRoute({versionId}:{versionId:string|null}){
   const [filters,setFilters]=useState<TaskFilters>({...EMPTY_FILTERS});
   const [selectedId,setSelectedId]=useState<string|null>(null);
+  const [starting,setStarting]=useState(false);
+  const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
     adapter=>adapter.tasks(versionId??''),[versionId]);
   // A new repository may have genuine draft Issues but no qualified
   // frozen Task DAG. Keep these TWO levels of evidence separate.
+  const agentHost=useHost<AgentDispatchResponse>('agent-dispatch',
+    adapter=>adapter.agentDispatch(),[versionId]);
   const drafts=useHost<TaskDraftsResponse>('task-drafts',
     adapter=>adapter.taskDrafts(versionId??''),[versionId]);
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
@@ -150,12 +155,39 @@ function TasksRoute({versionId}:{versionId:string|null}){
     </section>);
   const connected=tasks.data?.connected===true;
   const rows=(tasks.data?.tasks??[]) as TaskRecord[];
+  const selectedTask=selectedId?rows.find(row=>row.id===selectedId)??null:null;
+  const issueNumber=selectedTask?canonicalTaskIssueNumber(selectedTask.id):null;
+  const sourceSha=tasks.data?.source?.sourceSha??null;
+  const pinned=agentHost.state==='ready'&&
+    agentHost.data?.connected===true&&issueNumber!==null&&
+    agentHost.data.selectedTaskIssue===issueNumber&&
+    agentHost.data.sourceSha===sourceSha;
+  const accepted=selectedTask?.claimState==='ACCEPTED';
+  const allowed=Boolean(pinned&&accepted&&!starting);
+  const reason=!accepted?'CLAIM_NOT_ACCEPTED':
+    agentHost.state==='not_connected'?agentHost.reason??'AGENT_HOST_NOT_MOUNTED':
+    pinned?'HOST_READY':'HOST_TASK_SOURCE_MISMATCH';
+  const start=async()=>{
+    if(!allowed||issueNumber===null||!sourceSha||!selectedId)return;
+    const taskId=selectedId;
+    setStarting(true);setLastStart(null);
+    try{
+      const result=await startSelectedAgentTask(issueNumber,sourceSha);
+      setLastStart({taskId,message:result.status+
+        (result.reason?' · '+result.reason:'')});
+    }catch{
+      setLastStart({taskId,message:'UNKNOWN · AGENT_ACTION_READBACK_UNKNOWN'});
+    }finally{setStarting(false);}
+  };
   return guard(versionId,<>
     <TasksView tasks={rows} filters={filters} setFilters={setFilters}
       onSelectTask={id=>setSelectedId(id)} selectedTaskId={selectedId}
       versionId={versionId} connected={connected}/>
-    <TaskDrawer task={selectedId?rows.find(row=>row.id===selectedId)??null:null}
-      onClose={()=>setSelectedId(null)}/>
+    <TaskDrawer task={selectedTask} onClose={()=>setSelectedId(null)}
+      agentStart={selectedTask?{enabled:allowed,
+        provider:agentHost.data?.provider??null,reason,
+        pending:starting,lastResult:lastStart?.taskId===selectedId?
+          lastStart.message:null,onStart:()=>{void start();}}:null}/>
   </>);
 }
 function AgentsRoute({versionId}:{versionId:string|null}){

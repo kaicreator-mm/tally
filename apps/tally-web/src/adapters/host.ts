@@ -133,6 +133,11 @@ export interface AgentAttemptRecord{
   costUsd:null;model:string|null;provider:string|null;
   role?:'BUILDER'|'REVIEWER'|'REPAIR'|'VALIDATOR'|'ORCHESTRATOR'|'UNKNOWN'|null;
 }
+export interface AgentDispatchResponse{connected:boolean;reason?:string;
+  selectedTaskIssue?:number;sourceSha?:string;provider?:string;
+  authority?:'HOST_PINNED_ONLY';actionKey?:string;}
+export interface AgentRunResult{status:string;reason?:string|null;
+  observedAt?:string|null;exitCode?:number|null;}
 export interface AgentAttemptsResponse{connected:boolean;
   attempts?:AgentAttemptRecord[];
   coverage?:{attemptCount:number;observedRuntime:number;hostReceipts:number;
@@ -188,12 +193,29 @@ export const hostAdapter=Object.freeze({
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
   metadata:(versionId:string)=>getJson<MetadataResponse>(
     `/api/v2/metadata?versionId=${encodeURIComponent(versionId)}`),
+  agentDispatch:()=>getJson<AgentDispatchResponse>('/api/v2/agent-dispatch'),
   agentAttempts:()=>getJson<AgentAttemptsResponse>('/api/v2/agent-attempts'),
   releaseSnapshot:()=>getJson<ReleaseSnapshotResponse>('/api/release/snapshot'),
 });
 /** #264 E1 R91: the real J07c submission flow. The controller admits only a
  * sourceSha matching its pinned source, so the exact SHA comes from the
  * freshly read evidence snapshot — never from a browser-typed field. */
+/** One physical Builder task; only the server-selected Host can authorize.
+ * The action key is same-origin CSRF material, not an Agent/Claim grant.
+ */
+export async function startSelectedAgentTask(issueNumber:number,sourceSha:string):
+  Promise<AgentRunResult>{
+  try{
+    const selected=await hostAdapter.agentDispatch();
+    if(!selected.connected||selected.selectedTaskIssue!==issueNumber||
+       selected.sourceSha!==sourceSha||!selected.actionKey)
+      return {status:'DENIED',reason:selected.reason??'HOST_TASK_SCOPE_MISMATCH'};
+    return await postJson<AgentRunResult>('/api/actions',selected.actionKey,
+      {kind:'start',sourceSha:selected.sourceSha});
+  }catch{
+    return {status:'UNKNOWN',reason:'AGENT_ACTION_READBACK_UNKNOWN'};
+  }
+}
 export async function submitReleaseAction(actionKey:string,
   kind:'merge'|'tag'|'publish'):Promise<ReleaseActionResult|{
   status:string;reason:string;transportError?:string}>{

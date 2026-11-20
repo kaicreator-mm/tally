@@ -1,6 +1,7 @@
 /** Same-origin J01–J08 ALM server. Real actions only through journey/intake/release controllers. */
 import http from 'node:http';
 import {randomBytes} from 'node:crypto';
+import {projectAgentDispatchStatus} from './agent-dispatch-status.mjs';
 import {readFile} from 'node:fs/promises';
 import {createJourneyController} from './journey-controller.mjs';
 import {createIntakeController} from './intake-controller.mjs';
@@ -375,6 +376,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
   v2ReadModelHost,agentHostMounted=false,
+  selectedAgentTaskIssue=null,selectedAgentProvider='codex',
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
@@ -658,6 +660,18 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // confirmed-empty history). A timeout renders EXITED_FAIL like the
       // shared AttemptRecord vocabulary allows; the API result keeps the
       // timeout distinction.
+      if(req.method==='GET'&&url.pathname==='/api/v2/agent-dispatch'){
+        // Action key is only returned to the literal localhost origin.
+        // It is CSRF protection, never a substitute for Host Claim authority.
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({
+            connected:false,reason:'AGENT_ORIGIN_MISMATCH'}));
+        const status=projectAgentDispatchStatus({
+          mounted:agentHostMounted,taskIssueNumber:selectedAgentTaskIssue,
+          sourceSha:config.currentSourceSha,provider:selectedAgentProvider});
+        return send(200,'application/json',json(status.connected?
+          {...status,actionKey}:status));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
         if(!agentHostMounted)
           return send(200,'application/json',json({

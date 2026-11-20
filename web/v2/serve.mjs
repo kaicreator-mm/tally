@@ -915,6 +915,9 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
     v2ReadModelHost,agentHostMounted:Boolean(installedRun),
+    selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
+    selectedAgentProvider:installedRun?
+      (env.TALLY_V2_AGENT_PROVIDER??'codex'):'codex',
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
     ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{}),
