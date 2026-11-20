@@ -70,3 +70,44 @@ test('stale explicit Host comment pin cannot be overwritten',async()=>{
     openStore:withRegistry()});
   assert.equal(out.reason,'AGENT_CLAIM_COMMENT_PIN_MISMATCH');
 });
+
+test('new-project FSW digest is derived from exact frozen CAS, no UI pin needed',async()=>{
+  const document=JSON.stringify(['src/health.mjs']);
+  const writeSetSha256=createHash('sha256').update(document).digest('hex');
+  const newEnv={...env,TALLY_V2_WRITESET_FREEZE:'host-mounted',
+    T06M_TARGET_REPOSITORY:repository,
+    T06M_TARGET_VERSION_REF:'main',T06M_TARGET_ISSUE_NUMBER:'27',
+    T06M_TARGET_CANDIDATE_PATH:'src/health.mjs'};
+  const frozen={revision:0,value:{phase:'FROZEN_DAG_WRITESET',repository,
+    issueNumber:27,sourceSha:sha,writeSetSha256,document}};
+  const get=async key=>key===registryKey?row:
+    key==='tally:v2:task-writeset:27'?frozen:null;
+  const openStore=async()=>({get,close:async()=>{}});
+  const good=await resolveSelectedAgentClaimPins({env:newEnv,settings,openStore});
+  assert.equal(good.status,'HOST_RECEIPT_BOUND_PENDING_K');
+  assert.equal(good.env.TALLY_V2_AGENT_CLAIM_WRITESET_SHA256,writeSetSha256);
+  assert.equal(good.env.TALLY_LOCAL_WRITESET_SHA256,writeSetSha256);
+  assert.equal(good.agentAuthorized,false);
+  const denied=await resolveSelectedAgentClaimPins({settings,openStore,
+    env:{...newEnv,TALLY_LOCAL_WRITESET_SHA256:'f'.repeat(64)}});
+  assert.equal(denied.reason,'AGENT_WRITESET_PIN_MISMATCH');
+});
+test('missing, foreign or altered FSW cannot activate new-project K',async()=>{
+  const document=JSON.stringify(['src/health.mjs']);
+  const digest=createHash('sha256').update(document).digest('hex');
+  const newEnv={...env,TALLY_V2_WRITESET_FREEZE:'host-mounted',
+    T06M_TARGET_REPOSITORY:repository,T06M_TARGET_VERSION_REF:'main',
+    T06M_TARGET_ISSUE_NUMBER:'27',T06M_TARGET_CANDIDATE_PATH:'src/health.mjs'};
+  for(const candidate of [null,{phase:'FROZEN_DAG_WRITESET',
+    repository:'org/foreign',issueNumber:27,sourceSha:sha,
+    document,writeSetSha256:digest},{phase:'FROZEN_DAG_WRITESET',
+    repository,issueNumber:27,sourceSha:sha,
+    document,writeSetSha256:'f'.repeat(64)}]){
+    const openStore=async()=>({get:async key=>key===registryKey?row:
+      candidate?{revision:0,value:candidate}:null,close:async()=>{}});
+    const denied=await resolveSelectedAgentClaimPins({
+      env:newEnv,settings,openStore});
+    assert.equal(denied.status,'BLOCKED');
+    assert.equal(denied.reason,'AGENT_WRITESET_NOT_FROZEN_VERIFIED');
+  }
+});

@@ -10,9 +10,9 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim} from '../adapters/host.ts';
+import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim,freezeSelectedTaskWriteSet} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {WriteSetHostResponse,ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -124,6 +124,10 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [starting,setStarting]=useState(false);
   const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
+  const [freezingWriteSet,setFreezingWriteSet]=useState(false);
+  const [writeSetResult,setWriteSetResult]=useState<{
+    issueNumber:number;repository:string;message:string
+  }|null>(null);
   const [claimPublishing,setClaimPublishing]=useState(false);
   const [claimResult,setClaimResult]=useState<{
     issueNumber:number;repository:string;message:string
@@ -144,6 +148,8 @@ function TasksRoute({versionId}:{versionId:string|null}){
   // frozen Task DAG. Keep these TWO levels of evidence separate.
   const agentHost=useHost<AgentDispatchResponse>('agent-dispatch',
     adapter=>adapter.agentDispatch(),[versionId]);
+  const writeSetHost=useHost<WriteSetHostResponse>('writeset-host',
+    adapter=>adapter.writeSetHost(),[versionId]);
   const claimHost=useHost<ClaimHostResponse>('claim-host',
     adapter=>adapter.claimHost(),[versionId]);
   const readyHost=useHost<TaskReadyHostResponse>('task-ready-host',
@@ -184,6 +190,21 @@ function TasksRoute({versionId}:{versionId:string|null}){
       setReadyTransitionResult({issueNumber,repository,
         message:'UNKNOWN · TASK_READY_ACTION_READBACK_UNKNOWN'});
     }finally{setReadyTransitionBusy(false);}
+  };
+  const freezeWriteSet=async(issueNumber:number,sourceSha:string)=>{
+    if(!versionId||freezingWriteSet||!drafts.data?.repository)return;
+    const repository=drafts.data.repository;
+    setFreezingWriteSet(true);setWriteSetResult(null);
+    try{
+      const result=await freezeSelectedTaskWriteSet({
+        issueNumber,repository,versionId,sourceSha});
+      setWriteSetResult({issueNumber,repository,message:
+        result.status+(result.reason?' · '+result.reason:'')+
+        (result.candidateRelativePath?' · '+result.candidateRelativePath:'')});
+    }catch{
+      setWriteSetResult({issueNumber,repository,
+        message:'UNKNOWN · WRITESET_FREEZE_READBACK_UNKNOWN'});
+    }finally{setFreezingWriteSet(false);}
   };
   const publishClaim=async(issueNumber:number,sourceSha:string)=>{
     if(!versionId||claimPublishing||!drafts.data?.repository)return;
@@ -261,6 +282,20 @@ function TasksRoute({versionId}:{versionId:string|null}){
               {readyTransitionResult?.issueNumber===draft.issueNumber&&
                readyTransitionResult.repository===drafts.data?.repository?
                 <span role="status">{' · '}{readyTransitionResult.message}</span>:null}
+              {draft.nativeWorkflow==='READY'&&
+               draft.sourceCurrentness==='CURRENT'&&
+               writeSetHost.data?.connected===true&&
+               writeSetHost.data?.repository===drafts.data?.repository&&
+               writeSetHost.data?.versionId===versionId&&
+               writeSetHost.data?.sourceSha===draft.sourceSha&&
+               writeSetHost.data?.issueNumber===draft.issueNumber?
+                <button type="button" disabled={freezingWriteSet}
+                  onClick={()=>{void freezeWriteSet(draft.issueNumber,draft.sourceSha);}}>
+                  冻结 Host 允许修改的文件
+                </button>:null}
+              {writeSetResult?.issueNumber===draft.issueNumber&&
+               writeSetResult.repository===drafts.data?.repository?
+                <span role="status">{' · '}{writeSetResult.message}</span>:null}
               {draft.nativeWorkflow==='READY'&&
                draft.sourceCurrentness==='CURRENT'&&
                admissionResult?.issueNumber===draft.issueNumber&&

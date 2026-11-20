@@ -34,6 +34,7 @@ import {createHash} from 'node:crypto';
 import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
 import {readProjectTaskAdmission} from './task-admission-read.mjs';
 import {createProjectTaskReadyHost} from './project-task-ready-host.mjs';
+import {createProjectWriteSetHost} from './project-writeset-host.mjs';
 import {resolveSelectedAgentClaimPins} from './selected-claim-activation.mjs';
 import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
@@ -667,6 +668,18 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       octokit:new Octokit({auth:token,request:{timeout:15000}}),
       openStore:openSqliteCasStore});
   }
+  // New-project selected single-file FSW is an explicit Host effect. The
+  // browser can trigger only its BUILD-selected Issue/path; it supplies no
+  // write set, digest, registry path or other authority.
+  let projectWriteSetHost=null;
+  if(env.TALLY_V2_WRITESET_FREEZE==='host-mounted'){
+    if(!projectClaimHost)
+      throw new TypeError('SELECTED_WRITESET_CLAIM_HOST_REQUIRED');
+    const {openSqliteCasStore}=await import(
+      '@kaicreator/domain-harness-host-node');
+    projectWriteSetHost=createProjectWriteSetHost({settings,env,
+      openStore:openSqliteCasStore});
+  }
   // #264 J07: the installed Release Host Consumer seam — the real J07b gate
   // composed from trusted Host pins only. Without the mount every
   // /api/release/actions POST keeps the exact R91 fail-closed controller
@@ -731,7 +744,12 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       // Validate all OTHER operator pins at boot with a syntax-only stub;
       // this temporary value is never passed to the real executor/K.
       const preflight=readInstalledWriteJourneyEnvironment({
-        ...env,TALLY_V2_AGENT_CLAIM_COMMENT_ID:'1'});
+        ...env,TALLY_V2_AGENT_CLAIM_COMMENT_ID:'1',
+        // Syntax-only boot preflight. This value is NEVER forwarded to K:
+        // actual digest comes exclusively from exact frozen CAS on start.
+        ...(env.TALLY_V2_WRITESET_FREEZE==='host-mounted'&&
+          !env.TALLY_V2_AGENT_CLAIM_WRITESET_SHA256?
+          {TALLY_V2_AGENT_CLAIM_WRITESET_SHA256:'0'.repeat(64)}:{})});
       if(preflight.claim.sourceSha!==settings.expectedSha)
         throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
       const {openSqliteCasStore}=await import(
@@ -994,6 +1012,7 @@ export async function startUiReadOnlyServer({env=process.env}={}){
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
     v2ReadModelHost,taskReadyHost,claimHost:projectClaimHost,
+    writeSetHost:projectWriteSetHost,
     agentHostMounted:Boolean(installedRun),
     selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
     selectedAgentProvider:installedRun?

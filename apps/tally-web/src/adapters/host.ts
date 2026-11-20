@@ -48,6 +48,12 @@ export interface ClaimHostResponse{connected:boolean;reason?:string;
 export interface ClaimPublishResult{status:string;reason?:string;
   claimPublication?:string;authorized?:boolean;admitted?:boolean;
   nativeCommentRef?:string;}
+export interface WriteSetHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;candidateRelativePath?:string;actionKey?:string;}
+export interface WriteSetFreezeResult{status:string;reason?:string;
+  candidateRelativePath?:string;writeSetSha256?:string;
+  authorized?:false;admitted?:false;}
 export interface TaskReadyHostResponse{connected:boolean;reason?:string;
   repository?:string;versionId?:string;sourceSha?:string;
   actionKey?:string;authority?:'HOST_PINNED_ONLY';}
@@ -195,6 +201,7 @@ async function postJson<T>(path:string,actionKey:string,
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
   claimHost:()=>getJson<ClaimHostResponse>('/api/v2/claim-host'),
+  writeSetHost:()=>getJson<WriteSetHostResponse>('/api/v2/writeset-host'),
   taskReadyHost:()=>getJson<TaskReadyHostResponse>('/api/v2/task-ready-host'),
   taskAdmission:(versionId:string,issueNumber:number)=>
     getJson<TaskAdmissionResponse>(
@@ -240,6 +247,21 @@ export async function publishSelectedTaskClaim({
     return await postJson<ClaimPublishResult>('/api/v2/claim-publish',
       mounted.actionKey,{issueNumber,sourceSha});
   }catch{return {status:'UNKNOWN',reason:'CLAIM_PUBLICATION_READBACK_UNKNOWN'};}
+}
+/** The write set is sealed by the trusted Host; UI sends no path or digest. */
+export async function freezeSelectedTaskWriteSet({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<WriteSetFreezeResult>{
+  try{
+    const host=await hostAdapter.writeSetHost();
+    if(host.connected!==true||host.repository!==repository||
+       host.versionId!==versionId||host.sourceSha!==sourceSha||
+       host.issueNumber!==issueNumber||!host.actionKey)
+      return {status:'BLOCKED',reason:host.reason??'WRITESET_HOST_SCOPE_MISMATCH'};
+    return await postJson<WriteSetFreezeResult>(
+      '/api/v2/writeset-freeze',host.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'WRITESET_FREEZE_READBACK_UNKNOWN'};}
 }
 export async function transitionSelectedTaskReady({
   issueNumber,repository,versionId,sourceSha
