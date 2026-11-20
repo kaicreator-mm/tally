@@ -44,13 +44,13 @@ import {readInstalledWriteJourneyEnvironment,createInstalledWriteJourneyRunner}
   from './installed-write-journeys.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const REF=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
 const SHA=/^[a-f0-9]{40}$/;
 export function readUiHostEnvironment(env){
   const repository=env.TALLY_V2_REPOSITORY;
   const versionId=env.TALLY_V2_VERSION_REF;
   const expectedSha=env.TALLY_V2_VERSION_SHA;
-  if(!REPO.test(repository??'')||!REF.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
     !SHA.test(expectedSha??'')||
     typeof env.TALLY_GITHUB_READ_TOKEN!=='string'||
     env.TALLY_GITHUB_READ_TOKEN.length<8)

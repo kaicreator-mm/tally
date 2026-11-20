@@ -8,7 +8,7 @@
  */
 const SHA=/^[0-9a-f]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
 const ACTION_ID=/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/;
 // Only intents already present in the selected Tally Engineering Business
 // package are dispatchable. Task creation and CAS Claim publication are not
@@ -123,7 +123,7 @@ function validTaskExecution(execution,repository){
   return Boolean(match&&match[1]+'/'+match[2]===repository);
 }
 export function createUiActionPort({repository,versionId,expectedSha,host}={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(expectedSha??''))throw new TypeError('SELECTED_UI_ACTION_SCOPE_REQUIRED');
   const read=async()=>{
     if(typeof host?.readCurrentActions!=='function')
@@ -238,7 +238,7 @@ export function createUiActionHttpAdapter({actionPort,origin,csrfKey}={}){
   if(typeof actionPort?.actions!=='function'||typeof actionPort?.submit!=='function'||
      !plain(scope)||!Object.isFrozen(scope)||
      Object.keys(scope).sort().join(',')!=='repository,sourceSha,versionId'||
-     !REPO.test(scope.repository??'')||!VERSION.test(scope.versionId??'')||
+     !REPO.test(scope.repository??'')||!isValidVersionRef(scope.versionId??'')||
      !SHA.test(scope.sourceSha??'')||
      typeof origin!=='string'||!/^http:\/\/127\.0\.0\.1:[0-9]+$/.test(origin)||
      typeof csrfKey!=='string'||csrfKey.length<32)
