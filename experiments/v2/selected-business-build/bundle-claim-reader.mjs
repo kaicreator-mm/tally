@@ -144,7 +144,7 @@ export async function admitClaimedTask(input){
 const result=await build({
   stdin:{contents:provider,resolveDir:process.cwd(),sourcefile:'claim-admission-provider.mjs',
     loader:'js'},
-  bundle:true,format:'esm',platform:'node',target:'node24',
+  bundle:true,format:'esm',platform:'node',target:'node22',
   external:['better-sqlite3'],
   write:false,metafile:true,legalComments:'none',logLevel:'warning',
   // Only the separately installed trusted npm provider may use ordinary Node
