@@ -82,7 +82,10 @@ export function createProjectClaimHost({
         sourceSha,issueNumber,token:settings.token});
       if(again?.connected!==true||again.issueUrl!==issueRef||
          again.sourceSha!==sourceSha||
-         !['NATIVE_PREFLIGHT_READY','BLOCKED'].includes(again.stage))
+         !['NATIVE_PREFLIGHT_READY','BLOCKED'].includes(again.stage)||
+         ['TASK_DRAFT_NOT_OPEN','TASK_DRAFT_SOURCE_SHA_STALE',
+          'NATIVE_ISSUE_DEPENDENCIES_BLOCKED','NATIVE_GITHUB_SOURCE_INCOMPLETE_OR_STALE',
+          'TASK_CANONICAL_LABELS_REQUIRED'].includes(again.reason))
         return null;
       const witness=await readWitness({token:settings.token,
         owner:settings.owner,repo:settings.repo,issueNumber,
@@ -93,8 +96,17 @@ export function createProjectClaimHost({
       if(witness?.status!=='PUBLICATION_WITNESSED'||
          witness.sourceQualified!==true||witness.issueRef!==issueRef||
          witness.sourceSha!==sourceSha||witness.commentId!==commentId||
+         witness.commentRef!==issueRef+'#issuecomment-'+commentId||
+         witness.dispatchId!==dispatchId||witness.actorRole!=='builder'||
+         witness.operatorKind!==operatorKind||
+         witness.operatorId!==operatorId||
+         witness.protectedClaimKey!==
+           repository+'#'+issueNumber+':builder:__default__'||
+         witness.generation!==1||witness.transportActor!==writerLogin||
+         witness.claimPublication!=='NATIVE_COMMENT_READBACK_ONLY'||
          witness.claimAccepted!==false||witness.admitted!==false||
-         witness.authorized!==false)
+         witness.authorized!==false||witness.taskPass!==false||
+         witness.releasePass!==false)
         return null;
       return Object.freeze({sourceKind:'NATIVE_GITHUB_EXACT_READBACK',
         complete:true,edited:false,issueRef,sourceSha,

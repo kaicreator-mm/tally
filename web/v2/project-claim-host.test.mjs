@@ -20,7 +20,14 @@ const nativePreflight=async()=>({
 const witness=async()=>({
   status:'PUBLICATION_WITNESSED',sourceQualified:true,
   issueRef,sourceSha:sha,commentId:41,
-  claimAccepted:false,admitted:false,authorized:false});
+  commentRef:issueRef+'#issuecomment-41',
+  dispatchId:'dispatch:27:1',actorRole:'builder',
+  operatorKind:'human',operatorId:'operator:27:1',
+  protectedClaimKey:'org/new#27:builder:__default__',
+  generation:1,transportActor:'operator',
+  claimPublication:'NATIVE_COMMENT_READBACK_ONLY',
+  claimAccepted:false,admitted:false,authorized:false,
+  taskPass:false,releasePass:false});
 const octokit={rest:{issues:{createComment:()=>{}}}};
 function store(){
   const rows=new Map();
@@ -115,4 +122,27 @@ test('native preflight refusal cannot reserve CAS or POST',async()=>{
   assert.equal(out.status,'BLOCKED');
   assert.equal(out.reason,'SOURCE_OR_CLAIM_AUTHORITY_UNQUALIFIED');
   assert.equal(db.rows.size,0);
+});
+
+test('post-publication source or witness drift never records accepted CAS row',async()=>{
+  for(const scenario of ['stale-source','foreign-comment']){
+    const db=store();let admissionReads=0;
+    const host=createProjectClaimHost({settings,env,octokit,
+      openStore:async()=>db,
+      createPublisher:()=>({publishClaim:async()=>({commentId:41})}),
+      readAdmission:async()=>{
+        admissionReads++;
+        return admissionReads===2&&scenario==='stale-source'?
+          {connected:true,stage:'BLOCKED',issueUrl:issueRef,sourceSha:sha,
+            reason:'TASK_DRAFT_SOURCE_SHA_STALE'}:nativePreflight();
+      },
+      readWitness:async()=>scenario==='foreign-comment'?
+        {...await witness(),protectedClaimKey:'org/other#27:builder:__default__'}:
+        witness()});
+    const result=await host.publish({issueNumber:27,sourceSha:sha});
+    assert.equal(result.status,'BLOCKED');
+    assert.equal(result.reason,'GITHUB_CLAIM_READBACK_NOT_VERIFIED');
+    const persisted=[...db.rows.values()][0].value;
+    assert.equal(persisted.phase,'PENDING_GITHUB_PUBLISH');
+  }
 });
