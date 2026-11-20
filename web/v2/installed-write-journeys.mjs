@@ -84,6 +84,12 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(typeof evidenceDir!=='string'||!PATH_RE.test(evidenceDir))
     throw new TypeError('AGENT_EVIDENCE_DIR_INVALID');
   const timeoutMs=Number(env.TALLY_V2_AGENT_TIMEOUT_MS);
+  const missing=CONSUMER_PINS.filter(name=>
+    name==='TALLY_LOCAL_REPOSITORY_PATH'&&
+      env.TALLY_V2_AGENT_SCRIPT_ROOT&&
+      env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH?false:
+    typeof env[name]!=='string'||env[name].length===0);
+  if(missing.length)throw new TypeError('AGENT_CONSUMER_PINS_MISSING:'+missing.join(','));
   const scriptRoot=env.TALLY_V2_AGENT_SCRIPT_ROOT??
     env.TALLY_LOCAL_REPOSITORY_PATH;
   const sourceRepositoryPath=env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH??
@@ -91,12 +97,6 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(!PATH_RE.test(scriptRoot??'')||
      !PATH_RE.test(sourceRepositoryPath??''))
     throw new TypeError('AGENT_SCRIPT_OR_SOURCE_REPOSITORY_PATH_INVALID');
-  const missing=CONSUMER_PINS.filter(name=>
-    name==='TALLY_LOCAL_REPOSITORY_PATH'&&
-      env.TALLY_V2_AGENT_SCRIPT_ROOT&&
-      env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH?false:
-    typeof env[name]!=='string'||env[name].length===0);
-  if(missing.length)throw new TypeError('AGENT_CONSUMER_PINS_MISSING:'+missing.join(','));
   if(!Number.isSafeInteger(Number(env.TALLY_LOCAL_ISSUE_NUMBER))||
      Number(env.TALLY_LOCAL_ISSUE_NUMBER)<1)
     throw new TypeError('AGENT_LOCAL_ISSUE_NUMBER_INVALID');
