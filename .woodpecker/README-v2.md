@@ -42,14 +42,16 @@ This directory contains the following **separate, intentionally scoped** workflo
   closed otherwise) and runs
   `scripts/verify_project_standard.py <tally-root> --standard-repo <ads-root> --require-resolution`.
 
-The future T06m Local Agent profile (`v2-t06m-local-agent.yaml`) belongs
-exclusively to #172 and is not created here.
+The T06m Local Agent profile (`v2-t06m-local-agent.yaml`) is present and
+remains on its existing historical/`version/v2` scope (not enabled for `main`).
 
 The v2 profiles use the configured Woodpecker `backend: local` runner; their
 commands execute in the actual selected worker environment. The `image: bash`
 field does **not** install Go into a local backend. Verify the selected runner's
 capabilities for a specific Job rather than modifying NILAR and CC-LAN200 as a
-fleet. v2 Node24 gates do not require Go. **Security:** Woodpecker Local backend runs commands directly on the
+fleet. v2 Node24 gates do not require Go.
+
+**Security:** Woodpecker Local backend runs commands directly on the
 agent machine; permit PR-source execution only on a disposable, non-root,
 unprivileged VM with no Woodpecker server tokens/host secrets and no shared
 sensitive filesystem. If a trusted isolated VM is unavailable, do not enable PR
