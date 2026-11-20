@@ -16,7 +16,7 @@ import type {AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsRespon
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
-import {canonicalTaskIssueNumber} from '../features/task-actions/model.ts';
+import {agentStartDecision} from '../features/tasks/agent-start-model.ts';
 import type {RequirementNode} from '../features/requirements/model.ts';
 import type {QaRecord} from '../features/qa/model.ts';
 import {AgentsPanel} from '../features/agents/views.tsx';
@@ -156,17 +156,13 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const connected=tasks.data?.connected===true;
   const rows=(tasks.data?.tasks??[]) as TaskRecord[];
   const selectedTask=selectedId?rows.find(row=>row.id===selectedId)??null:null;
-  const issueNumber=selectedTask?canonicalTaskIssueNumber(selectedTask.id):null;
   const sourceSha=tasks.data?.source?.sourceSha??null;
-  const pinned=agentHost.state==='ready'&&
-    agentHost.data?.connected===true&&issueNumber!==null&&
-    agentHost.data.selectedTaskIssue===issueNumber&&
-    agentHost.data.sourceSha===sourceSha;
-  const accepted=selectedTask?.claimState==='ACCEPTED';
-  const allowed=Boolean(pinned&&accepted&&!starting);
-  const reason=!accepted?'CLAIM_NOT_ACCEPTED':
-    agentHost.state==='not_connected'?agentHost.reason??'AGENT_HOST_NOT_MOUNTED':
-    pinned?'HOST_READY':'HOST_TASK_SOURCE_MISMATCH';
+  const decision=agentStartDecision({taskId:selectedTask?.id??null,
+    claimState:selectedTask?.claimState??null,sourceSha,host:agentHost.data});
+  const issueNumber=decision.issueNumber;
+  const allowed=decision.enabled&&!starting;
+  const reason=agentHost.state==='not_connected'?
+    agentHost.reason??decision.reason:decision.reason;
   const start=async()=>{
     if(!allowed||issueNumber===null||!sourceSha||!selectedId)return;
     const taskId=selectedId;
