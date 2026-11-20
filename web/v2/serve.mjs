@@ -34,6 +34,7 @@ import {createHash} from 'node:crypto';
 import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
 import {readProjectTaskAdmission} from './task-admission-read.mjs';
 import {createProjectTaskReadyHost} from './project-task-ready-host.mjs';
+import {resolveSelectedAgentClaimPins} from './selected-claim-activation.mjs';
 import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
@@ -725,11 +726,36 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   // fail-closed stub stays: launching UI never grants an executor.
   let installedRun;
   if(env.TALLY_V2_AGENT_DISPATCH==='host-mounted'){
-    const journeySettings=readInstalledWriteJourneyEnvironment(env);
-    if(journeySettings.claim.sourceSha!==settings.expectedSha)
-      throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
-    installedRun=createInstalledWriteJourneyRunner(
-      {settings:journeySettings,env}).run;
+    if(!env.TALLY_V2_AGENT_CLAIM_COMMENT_ID&&projectClaimHost){
+      // Claim can be published from the UI after this server starts.
+      // Validate all OTHER operator pins at boot with a syntax-only stub;
+      // this temporary value is never passed to the real executor/K.
+      const preflight=readInstalledWriteJourneyEnvironment({
+        ...env,TALLY_V2_AGENT_CLAIM_COMMENT_ID:'1'});
+      if(preflight.claim.sourceSha!==settings.expectedSha)
+        throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
+      const {openSqliteCasStore}=await import(
+        '@kaicreator/domain-harness-host-node');
+      installedRun=async kind=>{
+        const derived=await resolveSelectedAgentClaimPins({
+          env,settings,openStore:openSqliteCasStore});
+        if(derived.status!=='HOST_RECEIPT_BOUND_PENDING_K')
+          return {status:'FAIL',reason:derived.reason,
+            exitCode:1,result:null};
+        const active=readInstalledWriteJourneyEnvironment(derived.env);
+        if(active.claim.sourceSha!==settings.expectedSha)
+          return {status:'FAIL',reason:'AGENT_CLAIM_SOURCE_SHA_STALE',
+            exitCode:1,result:null};
+        return createInstalledWriteJourneyRunner({
+          settings:active,env:derived.env}).run(kind);
+      };
+    }else{
+      const journeySettings=readInstalledWriteJourneyEnvironment(env);
+      if(journeySettings.claim.sourceSha!==settings.expectedSha)
+        throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
+      installedRun=createInstalledWriteJourneyRunner(
+        {settings:journeySettings,env}).run;
+    }
   }
   // #264 E1: real frozen version Task DAG reader — read-only, composed only
   // from the trusted Host env pins validated in readUiHostEnvironment. It
