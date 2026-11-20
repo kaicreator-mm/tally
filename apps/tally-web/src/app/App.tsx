@@ -132,6 +132,7 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [readyTransitionResult,setReadyTransitionResult]=useState<{
     issueNumber:number;repository:string;message:string
   }|null>(null);
+  const [draftRevision,setDraftRevision]=useState(0);
   const [checkingAdmission,setCheckingAdmission]=useState(false);
   const [admissionResult,setAdmissionResult]=useState<{
     issueNumber:number;repository:string;versionId:string;
@@ -148,7 +149,7 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const readyHost=useHost<TaskReadyHostResponse>('task-ready-host',
     adapter=>adapter.taskReadyHost(),[versionId]);
   const drafts=useHost<TaskDraftsResponse>('task-drafts',
-    adapter=>adapter.taskDrafts(versionId??''),[versionId]);
+    adapter=>adapter.taskDrafts(versionId??''),[versionId,draftRevision]);
   const checkAdmission=async(issueNumber:number)=>{
     if(!versionId||checkingAdmission)return;
     const repository=drafts.data?.repository??'';
@@ -172,7 +173,13 @@ function TasksRoute({versionId}:{versionId:string|null}){
         issueNumber,repository,versionId,sourceSha});
       setReadyTransitionResult({issueNumber,repository,
         message:outcome.status+(outcome.reason?' · '+outcome.reason:'')+
-          '（重新检查任务准入以查看最新 GitHub 状态）'});
+          (outcome.status==='READY_TRANSITION_VERIFIED'?
+            ' · 正在刷新 GitHub 任务状态':' · 若结果未知，请核查 GitHub 避免重复提交')});
+      if(outcome.status==='READY_TRANSITION_VERIFIED'&&
+         outcome.githubEffect==='PERFORMED_VERIFIED'){
+        setAdmissionResult(null);
+        setDraftRevision(value=>value+1);
+      }
     }catch{
       setReadyTransitionResult({issueNumber,repository,
         message:'UNKNOWN · TASK_READY_ACTION_READBACK_UNKNOWN'});
