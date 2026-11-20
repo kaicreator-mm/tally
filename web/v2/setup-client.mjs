@@ -28,6 +28,9 @@ function render(data){
     }
     target.append(section);
   }
+  $('draft-panel').hidden=!data.selected;
+  $('draft-panel').dataset.repository=data.selected?.repository??'';
+  $('draft-panel').dataset.ref=data.selected?.ref??'';
   const active=$('status');
   active.textContent=data.activeUrl?'服务已连接: '+(data.activeSource?.repository??''):
     data.lastError?'启动失败: '+data.lastError:'请选择或添加项目。';
@@ -67,3 +70,38 @@ $('add').addEventListener('submit',async event=>{
   }
 });
 load().then(render).catch(error=>{$('status').textContent=error.message;});
+
+$('draft').addEventListener('submit',async event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  const repository=$('draft-panel').dataset.repository;
+  const ref=$('draft-panel').dataset.ref;
+  const writeToken=form.elements.namedItem('writeToken').value.trim();
+  const title=form.elements.namedItem('title').value.trim();
+  const description=form.elements.namedItem('description').value.trim();
+  const output=$('draft-result');
+  output.textContent='正在创建 GitHub Issue 草稿…';
+  form.querySelector('button[type="submit"]').disabled=true;
+  try{
+    const response=await fetch('/api/setup/task-draft',{method:'POST',
+      headers:{'content-type':'application/json','x-tally-setup-key':key},
+      body:JSON.stringify({repository,ref,title,description,writeToken,
+        requestId:crypto.randomUUID()})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.reason??'DRAFT_CREATION_UNKNOWN');
+    output.replaceChildren();
+    const link=document.createElement('a');
+    link.href=result.issueUrl;
+    link.rel='noopener noreferrer';link.target='_blank';
+    link.textContent='打开新建 GitHub Issue #'+result.issueNumber;
+    output.append('已创建未授权任务草稿：',link);
+    form.elements.namedItem('title').value='';
+    form.elements.namedItem('description').value='';
+  }catch(error){
+    output.textContent='创建结果：'+error.message+
+      '。如返回 UNKNOWN，请先检查 GitHub Issues，避免重复提交。';
+  }finally{
+    form.elements.namedItem('writeToken').value='';
+    form.querySelector('button[type="submit"]').disabled=false;
+  }
+});
