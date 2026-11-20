@@ -33,6 +33,13 @@ export interface TaskDto{
   prNumber:number|null;reviewState:string;ciState:string;writeSet:string[];
   requirementRef:string|null;updatedAt:string|null;
 }
+/** Draft Issues are observable, but never frozen/accepted executable Tasks. */
+export interface TaskDraftsResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  coverage?:'LATEST_100_ISSUES_ONLY'|'COMPLETE_SINGLE_PAGE';
+  drafts?:{issueNumber:number;title:string;issueUrl:string;
+    githubIssueState:'open'|'closed';sourceSha:string;
+    taskQualified:false;agentAuthorized:false}[];}
 export interface TasksResponse{
   connected:boolean;reason?:string;model?:string;versionId?:string;
   source?:SourceIdentity;rosterCoverage?:string;dependencyCoverage?:string;
@@ -164,6 +171,8 @@ async function postJson<T>(path:string,actionKey:string,
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
+  taskDrafts:(versionId:string)=>getJson<TaskDraftsResponse>(
+    `/api/v2/task-drafts?versionId=${encodeURIComponent(versionId)}`),
   tasks:(versionId:string)=>getJson<TasksResponse>(
     `/api/v2/tasks?versionId=${encodeURIComponent(versionId)}`),
   dag:(versionId:string)=>getJson<DagResponse>(

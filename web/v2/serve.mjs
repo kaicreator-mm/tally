@@ -31,6 +31,7 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
+import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
 import {spawn} from 'node:child_process';
 import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
@@ -746,6 +747,21 @@ export async function startUiReadOnlyServer({env=process.env}={}){
           return deny(result?.reason??'CATALOG_SOURCE_UNQUALIFIED');
         return result;
       }catch{return deny('CATALOG_READ_FAILED');}
+    },
+    async taskDrafts(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      try{
+        const initial=await nativeC.catalog();
+        if(initial.connected!==true)
+          return deny(initial.reason??'DRAFT_SOURCE_UNQUALIFIED');
+        const drafts=await readGitHubTaskDrafts({
+          repository:settings.repository,versionId:settings.versionId,
+          sourceSha:settings.expectedSha,token:settings.token});
+        if(drafts.connected!==true)return drafts;
+        const final=await nativeC.catalog();
+        if(final.connected!==true)return deny('DRAFT_SOURCE_DRIFT');
+        return drafts;
+      }catch{return deny('DRAFT_READ_FAILED');}
     },
     async tasks(scope){
       const observed=await readQualifiedRoster(scope);

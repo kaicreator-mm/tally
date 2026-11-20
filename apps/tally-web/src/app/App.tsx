@@ -12,7 +12,7 @@ import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
 import {submitReleaseAction} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -104,9 +104,31 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const tasks=useHost<TasksResponse>('tasks',
     adapter=>adapter.tasks(versionId??''),[versionId]);
+  // A new repository may have genuine draft Issues but no qualified
+  // frozen Task DAG. Keep these TWO levels of evidence separate.
+  const drafts=useHost<TaskDraftsResponse>('task-drafts',
+    adapter=>adapter.taskDrafts(versionId??''),[versionId]);
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
-    return <EmptyState title="NOT_CONNECTED" hint={tasks.reason??undefined}/>;
+    return guard(versionId,<section>
+      <h2>GitHub 开发任务草稿</h2>
+      <p>正式 Task DAG 尚未连接：<code>{tasks.reason??'UNKNOWN'}</code>。
+        草稿 Issue 不代表已接受的 Task/Claim，也没有 Agent 执行权限。</p>
+      {drafts.state==='loading'?<Skeleton lines={3}/>:
+        drafts.state==='not_connected'?
+          <p>GitHub 草稿读取不可用：{drafts.reason??'UNKNOWN'}</p>:
+          <><p>{drafts.data?.coverage==='LATEST_100_ISSUES_ONLY'
+              ?'仅显示最近 100 条 GitHub Issue 中识别到的草稿'
+              :'已从 GitHub 读取当前项目的任务草稿'}</p>
+          {(drafts.data?.drafts??[]).length===0?
+            <p>暂时没有创建过的任务草稿。</p>:
+            <ul>{drafts.data?.drafts?.map(draft=><li key={draft.issueNumber}>
+              <a href={draft.issueUrl} target="_blank" rel="noopener noreferrer">
+                #{draft.issueNumber} {draft.title}</a>
+              {' · '}{draft.githubIssueState}
+              {' · '}UNQUALIFIED_DRAFT</li>)}</ul>}</>}
+      <p><a href="#/settings/git-github">前往配置中心添加项目或创建 GitHub Task 草稿</a></p>
+    </section>);
   const connected=tasks.data?.connected===true;
   const rows=(tasks.data?.tasks??[]) as TaskRecord[];
   return guard(versionId,<>

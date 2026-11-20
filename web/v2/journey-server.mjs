@@ -598,6 +598,11 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         return send(200,'application/json',json(await readV2Model('catalog','catalog')));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-drafts'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('drafts','taskDrafts',{versionId})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',json(await readV2Model('tasks','tasks',{versionId})));
