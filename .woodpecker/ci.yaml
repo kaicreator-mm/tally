@@ -77,7 +77,7 @@ steps:
       - set -euo pipefail
       - 'test -n "${CI_COMMIT_SHA:-}"'
       - 'test "$(git rev-parse HEAD)" = "$CI_COMMIT_SHA"'
-      - 'test "$(node -p "process.versions.node.split(String.fromCharCode(46))[0]")" = 24'
+      - 'node -e "const [maj,min]=process.versions.node.split(String.fromCharCode(46)).map(Number); if(maj<22||(maj===22&&min<16))process.exit(1)"'
       - |
         # The fetched commit object already has its parents and message.
         # Never fetch the PR base/history again merely to check trailers.
@@ -129,7 +129,7 @@ steps:
       - set -euo pipefail
       - 'files="$(find apps/tally-web/src -type f -name "*.test.ts" -print)"'
       - test -n "$files"
-      - node --test $files
+      - node --experimental-strip-types --test $files
       - 'npm --prefix apps/tally-web ci --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com'
       - 'npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com'
       # Vite transpilation is not a TypeScript typecheck; reuse the same npm ci.
