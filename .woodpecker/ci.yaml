@@ -27,6 +27,10 @@ when:
         - 'experiments/v2/github-only-observation/**'
         # native-c tests import experiments/v2/t06d-host-claim-publication/single-writer.mjs (#942)
         - 'experiments/v2/t06d-host-claim-publication/**'
+      # Exclude documentation inside otherwise source-relevant package folders.
+      exclude:
+        - '**/*.md'
+        - '**/*.mdx'
   - event: [manual]
     branch: [main, 'version/*']
 
@@ -128,6 +132,8 @@ steps:
       - node --test $files
       - 'npm --prefix apps/tally-web ci --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com'
       - 'npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com'
+      # Vite transpilation is not a TypeScript typecheck; reuse the same npm ci.
+      - ./apps/tally-web/node_modules/.bin/tsc --noEmit -p apps/tally-web/tsconfig.json
       - npm --prefix apps/tally-web run build
       - test -f apps/tally-web/dist/index.html
       - echo V2_REACT_UI_PASS
@@ -148,7 +154,10 @@ steps:
     commands:
       - set -euo pipefail
       - node --test packages/tally-agent-provider/test/*.test.mjs packages/tally-provider-codex/test/*.test.mjs packages/tally-provider-zcode/test/*.test.mjs packages/tally-provider-dsh-adapter/test/*.test.mjs packages/tally-provider-opencode/test/*.test.mjs packages/tally-provider-pi/test/*.test.mjs packages/tally-provider-grok/test/*.test.mjs
-      - echo V2_PROVIDER_TESTS_PASS
+      # Validate the public .d.mts contract, not just JS behavior; install only on Provider change.
+      - npm --prefix packages/tally-agent-provider install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --include=dev --registry=https://registry.npmmirror.com
+      - npm --prefix packages/tally-agent-provider run test:types
+      - echo V2_PROVIDER_TESTS_AND_TYPES_PASS
 
   - name: v2-native-github-adapter
     image: bash
@@ -228,6 +237,9 @@ steps:
             - 'packages/tally-github-native-c/test/read-only.test.mjs'
             - 'packages/tally-github-c/src/report-projection.mjs'
             - 'packages/tally-github-c/test/report-projection.test.mjs'
+            # R116 P1: both file changes must actually run the existing reconciliation suite.
+            - 'packages/tally-github-c/src/correction-reconciliation.mjs'
+            - 'packages/tally-github-c/test/correction-reconciliation.test.mjs'
     commands:
       - set -euo pipefail
       - node --test packages/tally-github-c/test/report-projection.test.mjs packages/tally-github-c/test/correction-reconciliation.test.mjs experiments/v2/github-only-observation/observation.test.mjs
