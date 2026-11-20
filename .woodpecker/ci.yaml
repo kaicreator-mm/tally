@@ -108,7 +108,8 @@ steps:
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/tally-v2-no-browser.json"'
-      - 'grep -q "\\"ok\\": true" "${TMPDIR:-/tmp}/tally-v2-no-browser.json"'
+      - |
+        grep -q '"ok": true' "${TMPDIR:-/tmp}/tally-v2-no-browser.json"
       - echo V2_CORE_TESTS_PASS_NO_REAL_HOST_EFFECT
 
   - name: v2-react-ui-build
