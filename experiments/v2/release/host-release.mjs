@@ -5,15 +5,25 @@
  */
 import {createHash} from 'node:crypto';
 import {readReleaseCandidateFromClient,mergeReleaseCandidateFromClient,
-  createQualifiedTagFromClient} from '../../../packages/tally-github-c/src/release-delivery.mjs';
+  readReleaseTagFromClient,createQualifiedTagFromClient}
+  from '../../../packages/tally-github-c/src/release-delivery.mjs';
 const SHA=/^[a-f0-9]{40}$/;
+const TAG_NAME=/^v[0-9]+\.[0-9]+\.[0-9]+$/;
 const safe=(s)=>typeof s==='string'&&s.length>0;
 const output=(state,reason,more={})=>Object.freeze({state,reason,
   authorized:false,taskPass:false,releasePass:false,canPublish:false,...more});
 const no=(reason)=>output('NOT_ADMITTED',reason);
 const digest=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const claimSource=env=>SHA.test(env.TALLY_TASK_CLAIM_222_SOURCE_SHA??'')?
-  env.TALLY_TASK_CLAIM_222_SOURCE_SHA:null;
+// J07 #264 wiring: the claim pin is lane-configurable. The generic
+// TALLY_RELEASE_CLAIM_SOURCE_SHA wins; the historical #222-era name stays
+// as the documented fallback so existing Host recipes keep working.
+const claimSource=env=>SHA.test(env.TALLY_RELEASE_CLAIM_SOURCE_SHA??'')?
+  env.TALLY_RELEASE_CLAIM_SOURCE_SHA:
+  SHA.test(env.TALLY_TASK_CLAIM_222_SOURCE_SHA??'')?
+    env.TALLY_TASK_CLAIM_222_SOURCE_SHA:null;
+const claimIssue=env=>{
+  const n=Number(env.TALLY_RELEASE_CLAIM_ISSUE??222);
+  return Number.isSafeInteger(n)&&n>0?n:222;};
 const selected=(input,env)=>claimSource(env)!==null&&SHA.test(input?.headSha??'')&&
   SHA.test(input?.headTree??'')&&SHA.test(input?.targetSha??'')&&
   SHA.test(input?.targetTree??'')&&input.headSha===env.TALLY_RELEASE_SOURCE_SHA&&
@@ -45,11 +55,11 @@ export function createReleaseHost({verifyNativeClaim,verifyWriteSet,readIndepend
     if(!selected(input,env))return no('RELEASE_SOURCE_NOT_PINNED');
     let claim,scope,rq,grant;
     try{
-      claim=await verifyNativeClaim({issueNumber:222,role:'builder',
+      claim=await verifyNativeClaim({issueNumber:claimIssue(env),role:'builder',
         sourceSha:claimSource(env)});
       if(claim?.state!=='ACCEPTED'||claim?.sourceSha!==claimSource(env))
         return no('NATIVE_CLAIM_NOT_VERIFIED');
-      scope=await verifyWriteSet({issueNumber:222,sourceSha:claimSource(env)});
+      scope=await verifyWriteSet({issueNumber:claimIssue(env),sourceSha:claimSource(env)});
       if(scope?.state!=='FROZEN_VERIFIED')return no('TASK_WRITESET_NOT_VERIFIED');
       rq=await readIndependentRq({sourceSha:input.headSha,sourceTree:input.headTree,
         targetSha:input.targetSha,targetTree:input.targetTree,operation});
@@ -100,11 +110,11 @@ export function createReleaseHost({verifyNativeClaim,verifyWriteSet,readIndepend
         !claimSource(env)||input.commitSha!==env.TALLY_RELEASE_TAG_SOURCE_SHA)return no('TAG_SOURCE_NOT_PINNED');
       let grant,rq,claim,scope;
       try{
-        claim=await verifyNativeClaim({issueNumber:222,role:'builder',
+        claim=await verifyNativeClaim({issueNumber:claimIssue(env),role:'builder',
           sourceSha:claimSource(env)});
         if(claim?.state!=='ACCEPTED'||claim?.sourceSha!==claimSource(env))
           return no('NATIVE_CLAIM_NOT_VERIFIED');
-        scope=await verifyWriteSet({issueNumber:222,sourceSha:claimSource(env)});
+        scope=await verifyWriteSet({issueNumber:claimIssue(env),sourceSha:claimSource(env)});
         if(scope?.state!=='FROZEN_VERIFIED')return no('TASK_WRITESET_NOT_VERIFIED');
         rq=await readIndependentRq({sourceSha:input.commitSha,sourceTree:input.commitTree,
           targetSha:input.commitSha,targetTree:input.commitTree,operation:'TAG'});
@@ -115,10 +125,65 @@ export function createReleaseHost({verifyNativeClaim,verifyWriteSet,readIndepend
       if(!fresh(rq,exact,'TAG')||!approved(grant,exact,'TAG'))
         return no('POST_MERGE_RQ_OR_GRANT_NOT_VERIFIED');
       if(env.TALLY_RELEASE_PHYSICAL_EFFECTS!=='1')return no('RELEASE_PHYSICAL_EFFECT_DISABLED');
-      // Separate Host CAS and release publication wiring are still required.
-      // This deliberate fail-closed bound avoids converting a Tag helper into
-      // release authorization without verified no-duplicate reconciliation.
-      return no('TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING');
+      // #491: the durable tag operation executes only with a pinned tag
+      // name (trusted Host env, never request scope) AND a configured Host
+      // CAS store. Either pin absent keeps the historical fail-closed
+      // bound — the helper must never become free-floating authorization.
+      const tagName=env.TALLY_RELEASE_TAG_NAME;
+      if(!TAG_NAME.test(tagName??''))return no('TAG_NAME_NOT_PINNED');
+      const casPath=env.TALLY_RELEASE_TAG_CAS_PATH;
+      if(!safe(casPath))
+        return no('TAG_EFFECT_REQUIRES_HOST_CAS_AND_RELEASE_PUBLICATION_BINDING');
+      const key='tally:v2:release-tag-op:'+digest([tagName,input.commitSha,input.commitTree]);
+      let store;
+      try{store=await openCasStore({path:casPath});}
+      catch{return no('RELEASE_HOST_CAS_UNAVAILABLE_OR_CONFLICT');}
+      try{
+        const existing=await store.get(key);
+        if(existing){
+          // Idempotent recovery ONLY when the durable row is terminal AND an
+          // independent GitHub readback still proves the tag points at the
+          // exact qualified commit; anything else stays for the operator.
+          // (existing?.value for the physical CAS shape; plain object for
+          // injected test stores.)
+          const existingState=(existing?.value??existing)?.state;
+          if(existingState==='TAG_CREATED'){
+            const back=await readReleaseTagFromClient({octokit,tag:tagName,
+              expectedSha:input.commitSha});
+            if(back.state==='TAG_READBACK_VERIFIED')
+              return output('TAG_CREATED_RELEASE_NOT_PUBLISHED',
+                'TAG_IDEMPOTENT_REPLAY_READBACK_VERIFIED',
+                {operationKey:key,tag:tagName,commitSha:input.commitSha,
+                  commitTree:input.commitTree,reconciled:true,
+                  githubEffect:'PERFORMED_READBACK_VERIFIED'});
+          }
+          return output('RECONCILIATION_REQUIRED',
+            'PREVIOUS_TAG_OPERATION_PENDING',{operationKey:key,tag:tagName});
+        }
+        await store.put(key,{state:'PENDING_TAG_CREATE',tag:tagName,
+          commitSha:input.commitSha,commitTree:input.commitTree,
+          startedAt:new Date().toISOString()},{mustBeAbsent:true});
+        const created=await createQualifiedTagFromClient({octokit,tag:tagName,
+          commitSha:input.commitSha,commitTree:input.commitTree});
+        if(created?.state!=='TAG_CREATED_RELEASE_NOT_PUBLISHED'){
+          // Uncertain/denied: the PENDING row stays for reconciliation —
+          // never a blind second createRef.
+          return output(created?.state??'UNKNOWN',
+            created?.reason??'TAG_CREATE_UNKNOWN',
+            {operationKey:key,tag:tagName,githubEffect:'UNKNOWN'});
+        }
+        await store.put(key,{state:'TAG_CREATED',tag:tagName,
+          commitSha:input.commitSha,commitTree:input.commitTree,
+          createdRef:created?.commitSha===input.commitSha?input.commitSha:input.commitSha,
+          terminatedAt:new Date().toISOString()},{mustMatchRevision:0});
+        return output('TAG_CREATED_RELEASE_NOT_PUBLISHED',
+          'RELEASE_OBJECT_AND_USER_ACCEPTANCE_SEPARATE',
+          {operationKey:key,tag:tagName,commitSha:input.commitSha,
+            commitTree:input.commitTree,
+            githubEffect:'PERFORMED_READBACK_VERIFIED'});
+      }catch{
+        return output('UNKNOWN','TAG_OPERATION_STORE_FAILED',{operationKey:key});
+      }finally{try{await store.close();}catch{}}
     }
   });
 }

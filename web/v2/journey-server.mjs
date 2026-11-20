@@ -57,6 +57,12 @@ const INTAKE_CLIENT=String.raw`function collectIntakeArgs(){
   if(value('l2Decision'))args.l2Decision=value('l2Decision');
   if(value('reviewer'))args.reviewer=value('reviewer');
   if(value('projectTitle'))args.projectTitle=value('projectTitle');
+  // #312 Product ReviewWitness coordinates (freeze-draft only): forwarded
+  // verbatim; the sealed K/Host re-verifies every binding.
+  const commentId=Number(value('reviewCommentId'));
+  if(Number.isSafeInteger(commentId)&&commentId>0)args.reviewCommentId=commentId;
+  for(const name of ['taskPackBlobSha','writeSetSha256','reviewedHead','reviewedTree','reviewedBase'])
+    if(value(name))args[name]=value(name).trim();
   return args;
 }
 export async function startIntakeClient(renderIntakeWorkspace){
@@ -184,9 +190,13 @@ const RELEASE_BOOTSTRAP=String.raw`import('./release-client.mjs')
 const json=(value)=>JSON.stringify(value);
 const INTAKE_ACTIONS=['submit-goal','select-evidence','confirm-inspect','draft-product',
   'review-draft','freeze-draft','admit-project-intake','refresh-source-facts'];
-const MAINTENANCE_ACTIONS=['report-defect','review-candidate','load-learning',
+const MAINTENANCE_ACTIONS=['load-defect','report-defect','review-candidate','load-learning',
   'record-learning','publish-maintenance-issue'];
 const RELEASE_ACTIONS=['merge','tag','publish'];
+// E0 #284: the two Host-mounted privileged version Task DAG operations. The
+// root Claim publication is deliberately NOT an action: it stays a
+// Host-process-only T06d operation with no HTTP surface at all.
+const VERSION_TASK_DAG_ACTIONS=['add-native-dependency','freeze'];
 const RELEASE_SEAM_STATUSES=new Set(['DENIED','UNKNOWN','NOT_RUN','OBSERVED',
   'RECONCILIATION_REQUIRED','GITHUB_EFFECT_UNKNOWN','STALE']);
 /** J07c: a seam result may only carry fail-closed observation shapes; any
@@ -197,6 +207,40 @@ function verifyReleaseSeamResult(result){
     result.releasePass!==false||result.authorized===true||
     result.taskPass===true||result.releasePublished===true)return null;
   return result;
+}
+const VERSION_TASK_DAG_SEAM_STATUSES=new Set(['NATIVE_EDGE_VERIFIED',
+  'NATIVE_EDGE_PRESENT','BLOCKED','UNKNOWN','FROZEN','REPLAY']);
+/** E0 #284: a version Task DAG seam result may only carry the exact selected
+ * Host observation statuses with every authority flag false; any forged or
+ * malformed shape degrades to DENIED here with zero effects. */
+function verifyVersionTaskDagSeamResult(result){
+  if(!result||typeof result!=='object'||Array.isArray(result)||
+    !VERSION_TASK_DAG_SEAM_STATUSES.has(result.status)||
+    result.authorized!==false||result.admitted!==false||
+    result.taskPass!==false||result.releasePass!==false)return null;
+  return result;
+}
+/** E0 #284: strict body allowlist for the two privileged operations. */
+function sanitizeVersionTaskDagArgs(args){
+  if(args===undefined)return {};
+  if(!args||typeof args!=='object'||Array.isArray(args))return null;
+  const out={},known=Object.keys(args);
+  if(known.some(key=>!['taskPackRef','taskPackBlobSha','blockedIssueNumber',
+      'blockedByIssueNumber'].includes(key)))return null;
+  if(args.taskPackRef!==undefined){
+    if(typeof args.taskPackRef!=='string'||
+       !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\/[^\s]+$/.test(args.taskPackRef))
+      return null;
+    out.taskPackRef=args.taskPackRef;}
+  if(args.taskPackBlobSha!==undefined){
+    if(typeof args.taskPackBlobSha!=='string'||!/^[a-f0-9]{40}$/.test(args.taskPackBlobSha))
+      return null;
+    out.taskPackBlobSha=args.taskPackBlobSha;}
+  for(const key of ['blockedIssueNumber','blockedByIssueNumber'])
+    if(args[key]!==undefined){
+      if(!Number.isSafeInteger(args[key])||args[key]<1)return null;
+      out[key]=args[key];}
+  return out;
 }
 const boundedString=value=>typeof value==='string'&&value.length>0&&value.length<=256;
 function sanitizeMaintenanceArgs(args){
@@ -242,7 +286,9 @@ function sanitizeIntakeArgs(args){
   if(args===undefined)return {};
   if(!args||typeof args!=='object'||Array.isArray(args))return null;
   const out={},known=Object.keys(args);
-  if(known.some(key=>!['goal','refs','nonGoals','l2Decision','reviewer','projectTitle'].includes(key)))
+  if(known.some(key=>!['goal','refs','nonGoals','l2Decision','reviewer','projectTitle',
+      'reviewCommentId','taskPackBlobSha','writeSetSha256',
+      'reviewedHead','reviewedTree','reviewedBase'].includes(key)))
     return null;
   if(args.goal!==undefined){if(!boundedString(args.goal)||args.goal.length>256)return null;out.goal=args.goal;}
   if(args.refs!==undefined){
@@ -256,6 +302,20 @@ function sanitizeIntakeArgs(args){
   if(args.l2Decision!==undefined){if(!boundedString(args.l2Decision))return null;out.l2Decision=args.l2Decision;}
   if(args.reviewer!==undefined){if(!boundedString(args.reviewer)||args.reviewer.length>128)return null;out.reviewer=args.reviewer;}
   if(args.projectTitle!==undefined){if(!boundedString(args.projectTitle)||args.projectTitle.length>120)return null;out.projectTitle=args.projectTitle;}
+  // #312 Product ReviewWitness coordinates: exact-shape facts of the real
+  // independent review artifact. Every value is re-verified Host-side against
+  // accepted Claims and the canonical GitHub comment; this allowlist only
+  // bounds the transport shape (no authority is granted here).
+  if(args.reviewCommentId!==undefined){
+    if(!Number.isSafeInteger(args.reviewCommentId)||args.reviewCommentId<1)return null;
+    out.reviewCommentId=args.reviewCommentId;}
+  for(const key of ['taskPackBlobSha','reviewedHead','reviewedTree','reviewedBase'])
+    if(args[key]!==undefined){
+      if(typeof args[key]!=='string'||!/^[a-f0-9]{40}$/.test(args[key]))return null;
+      out[key]=args[key];}
+  if(args.writeSetSha256!==undefined){
+    if(typeof args.writeSetSha256!=='string'||!/^[a-f0-9]{64}$/.test(args.writeSetSha256))return null;
+    out.writeSetSha256=args.writeSetSha256;}
   return out;
 }
 function actionDefinitions(sourceSha){return [
@@ -272,15 +332,65 @@ async function body(req,limit=4096){
   let text='';for await(const chunk of req){text+=chunk;if(text.length>limit)throw new Error('REQUEST_TOO_LARGE');}
   return text;
 }
+// ---- #264 E1: v2 read models come ONLY from the Host-composed selected
+// source (serve.mjs passes v2ReadModelHost). There is deliberately NO raw
+// open-Issue fallback, no synthetic provider/settings state and no
+// PLANNED-edge table here: any model without a mounted Host provider answers
+// honest NOT_CONNECTED. No effect path starts here.
+const notConnected=model=>Object.freeze({connected:false,
+  reason:'NOT_CONNECTED',model});
+function v2Release(versionId){
+  // Advisory projection only; authoritative qualification stays in the
+  // Host/C chain (#222) — the shell never derives Release PASS here.
+  return Object.freeze({connected:true,versionId:versionId??null,
+    readiness:{versionId:versionId??'version/v2',
+      gates:[{name:'woodpeckerCI',status:'UNKNOWN',owner:'CI'},
+        {name:'independentRq',status:'UNKNOWN',owner:'独立验证者'}],
+      permits:null,rqState:'UNKNOWN',ownerGrantState:'UNKNOWN'}});
+}
+const APP_DIST=new URL('../../apps/tally-web/dist/',import.meta.url);
+const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8',
+  '.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.png':'image/png',
+  '.map':'application/json','.json':'application/json'};
+/** Returns a response descriptor; the route handler owns the socket send. */
+async function staticAppResponse(relative){
+  const target=new URL(relative,APP_DIST);
+  if(!target.href.startsWith(APP_DIST.href))
+    return {status:403,type:'text/plain',body:'FORBIDDEN'};
+  try{
+    const bytes=await readFile(target);
+    const ext=relative.slice(relative.lastIndexOf('.'));
+    return {status:200,type:MIME[ext]??'application/octet-stream',body:bytes};
+  }catch{
+    return {status:404,type:'text/plain',
+      body:'APP_BUNDLE_NOT_BUILT (run: npm --prefix apps/tally-web run build)'};
+  }
+}
 export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   intakeJourneySnapshot,maintenanceHost,maintenanceSealedDispatch,
-  releaseHost,releaseSealedDispatch}={}){
+  releaseHost,releaseSealedDispatch,
+  // #264 E1: Host-composed v2 read model facade (serve.mjs). Its methods
+  // (catalog/tasks/dag/requirements, optional others) are the ONLY source of
+  // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
+  // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
+  // fail-closed admission below.
+  v2ReadModelHost,
+  // E0 #284: Host-mounted version Task DAG seam.
+  versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
     intake=createIntakeController({currentSourceSha:config.currentSourceSha},
       {host:intakeHost??null,journeySnapshot:intakeJourneySnapshot??(()=>controller.snapshot()),
         // Privileged admit effects flow only through this K-consumer seam;
         // absent a seam the intake admit stays NOT_RUN in the UI.
         sealedDispatch:intakeSealedDispatch??null}),
+    // #264 E1: v2 GET read models flow ONLY through the Host-composed
+    // selected source (v2ReadModelHost); a model without a mounted provider
+    // answers honest NOT_CONNECTED — no raw fallback, no fabricated state.
+    readV2Model=(model,method,...args)=>{
+      if(typeof v2ReadModelHost?.[method]!=='function')
+        return notConnected(model);
+      return v2ReadModelHost[method](...args).catch(()=>notConnected(model));
+    },
     maintenance=createMaintenanceController({currentSourceSha:config.currentSourceSha},
       {host:maintenanceHost??null,
         // The only privileged maintenance path (authorized native Issue
@@ -298,11 +408,18 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   const server=http.createServer(async(req,res)=>{
     const origin=`http://127.0.0.1:${server.address().port}`;
     const send=(status,type,value)=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store',
-      'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"});
+      'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"});
       res.end(value);};
     try{
       const url=new URL(req.url,origin);
       if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/journey-view.html')){
+        // UI-E feature gate: the production user UI is /app; the legacy test
+        // console stays reachable at /diagnostics (and at / directly when
+        // TALLY_V2_UI_GATE=legacy for rollback).
+        if(url.pathname==='/'&&process.env.TALLY_V2_UI_GATE!=='legacy'){
+          res.writeHead(302,{location:'/app'});
+          return res.end();
+        }
         return send(200,'text/html; charset=utf-8',await readFile(new URL('./journey-view.html',import.meta.url),'utf8'));
       }
       if(req.method==='GET'&&url.pathname==='/journey-view.mjs')
@@ -419,6 +536,160 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         const result=payload.kind==='start'?await controller.start(payload.sourceSha):
           await controller.reviewRepair(payload.sourceSha);
         return send(result.status==='PASS'?200:502,'application/json',json(result));
+      }
+      // ---- E0 #284: Host-mounted privileged version Task DAG operations ----
+      // Same-origin + action key + exact source SHA + strict body allowlist;
+      // absent a sealed selected-Host seam every request DENIES with zero
+      // effects. The root Claim path is NOT routable here (Host-process-only).
+      if(req.method==='POST'&&url.pathname==='/api/v2/version-task-dag/actions'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+          req.headers.origin!==origin)
+          return send(403,'application/json',json({status:'DENIED',
+            reason:'CSRF_OR_ORIGIN'}));
+        const payload=JSON.parse(await body(req,8192));
+        if(payload.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({status:'STALE_SOURCE',
+            reason:'SOURCE_SHA_MISMATCH'}));
+        if(!VERSION_TASK_DAG_ACTIONS.includes(payload.kind))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'UNKNOWN_ACTION'}));
+        if(typeof payload.args!=='object'||payload.args===null||
+           Array.isArray(payload.args))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'ARGS_INVALID'}));
+        const args=sanitizeVersionTaskDagArgs(payload.args);
+        if(args===null||(payload.kind==='add-native-dependency'&&(
+            args.taskPackRef===undefined||args.taskPackBlobSha===undefined||
+            args.blockedIssueNumber===undefined||
+            args.blockedByIssueNumber===undefined))||
+          (payload.kind==='freeze'&&(args.taskPackRef===undefined||
+            args.taskPackBlobSha===undefined||
+            Object.keys(args).some(key=>['blockedIssueNumber',
+              'blockedByIssueNumber'].includes(key)))))
+          return send(400,'application/json',json({status:'DENIED',
+            reason:'ARGS_INVALID'}));
+        if(typeof versionTaskDagSealedDispatch!=='function'){
+          const deniedResult={status:'DENIED',reason:'HOST_SEAM_NOT_CONNECTED',
+            githubEffect:'NOT_RUN',authorized:false,admitted:false,
+            taskPass:false,releasePass:false};
+          return send(200,'application/json',json(deniedResult));
+        }
+        let observed;
+        try{
+          observed=await versionTaskDagSealedDispatch({
+            operation:payload.kind==='add-native-dependency'?
+              'addNativeTaskDependency':'freezeVersionTaskDag',
+            sourceSha:payload.sourceSha,input:{...args}});
+        }catch{
+          const failed={status:'DENIED',reason:'SEAM_ERROR',githubEffect:'NOT_RUN',
+            authorized:false,admitted:false,taskPass:false,releasePass:false};
+          return send(200,'application/json',json(failed));
+        }
+        const verified=verifyVersionTaskDagSeamResult(observed)??
+          {status:'DENIED',reason:'SEAM_SHAPE_INVALID',githubEffect:'NOT_RUN',
+            authorized:false,admitted:false,taskPass:false,releasePass:false};
+        return send(200,'application/json',json(verified));
+      }
+      // ---- #264 E1: v2 shell read models + feature gate -------------------
+      // Every model flows through the Host-composed selected source; a model
+      // without a mounted provider answers honest NOT_CONNECTED (never
+      // fabricated data, no raw open-Issue fallback, no synthetic provider
+      // state). No effect path starts here.
+      if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
+        return send(200,'application/json',json(await readV2Model('catalog','catalog')));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',json(await readV2Model('tasks','tasks',{versionId})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/dag'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',json(await readV2Model('dag','dag',{versionId})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/dual-epoch'){
+        // #264 J02: S0 frozen-epoch + live S1 projection (read-only). The
+        // compatibility witness is argument-only and stays server-side —
+        // a browser query parameter can never supply one.
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('dual-epoch','dualEpoch',{versionId})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/release'){
+        // #264 E1 R91: when the mounted Host facade supplies a real release
+        // evidence provider it wins; the advisory projection stays the
+        // documented default only for an unmounted facade (never a raw
+        // fallback over a mounted provider).
+        if(typeof v2ReadModelHost?.release==='function'){
+          const versionId=url.searchParams.get('versionId');
+          return send(200,'application/json',
+            json(await readV2Model('release','release',{versionId})));
+        }
+        return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
+        return send(200,'application/json',json(await readV2Model('settings','settings')));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/metadata'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',json(await readV2Model('metadata','metadata',{versionId})));
+      }
+      // #264 E1 R91: real installed agent/attempt read model — the MOST
+      // RECENT observed run of THIS server's actual /api/actions seam (the
+      // controller's sanctioned run seam; the controller exposes only the
+      // latest entry, so earlier runs stay visible in the legacy console
+      // snapshot, not here). No fabricated attempt ids, tokens or cost:
+      // missing telemetry stays null (UNKNOWN), and before any real run the
+      // roster is empty with connected:true (records UNKNOWN, not a claimed
+      // confirmed-empty history). A timeout renders EXITED_FAIL like the
+      // shared AttemptRecord vocabulary allows; the API result keeps the
+      // timeout distinction.
+      if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
+        const snapshot=controller.snapshot();
+        const latest=snapshot.result;
+        // Only a REAL execution (observedAt + evidenceDir, i.e. an actual
+        // spawn of the consumer, including a spawn that died in 'error') is
+        // an attempt row. The R90 fail-closed stub and the unmounted review
+        // seam carry neither marker, so they never render as attempts.
+        const executed=Boolean(latest&&latest.observedAt&&latest.evidenceDir);
+        const dispatchedIssue=Number(process.env.TALLY_LOCAL_ISSUE_NUMBER);
+        const taskIds=Number.isSafeInteger(dispatchedIssue)&&dispatchedIssue>0
+          ?[String(dispatchedIssue)]
+          :snapshot.tasks
+            .filter(task=>task.agentAttemptState!=='NOT_RUN')
+            .map(task=>String(task.issue));
+        const attempts=executed?[{attemptId:`attempt:${latest.kind}:${latest.observedAt}`,
+          taskIds,agentId:'local-codex-windows',
+          state:latest.status==='PASS'?'EXITED_OK':
+            latest.status==='FAIL'?'EXITED_FAIL':'UNKNOWN',
+          startedAt:null,terminatedAt:latest.observedAt,
+          durationMs:null,tokensIn:null,tokensOut:null,costUsd:null,
+          model:null,provider:'codex',
+          role:latest.kind==='start'?'BUILDER':
+            latest.kind==='review-repair'?'REVIEWER':'UNKNOWN'}]:[];
+        return send(200,'application/json',json({connected:true,attempts,
+          coverage:{attemptCount:attempts.length,observedRuntime:attempts.length,
+            hostReceipts:0,adsReports:0,metrics:'SERVER_OBSERVED_RUNS_ONLY'}}));
+      }
+      // Feature gate: /app serves the new shell bundle (built by
+      // apps/tally-web); /diagnostics keeps the legacy test console; / picks
+      // by TALLY_V2_UI_GATE (default open ⇒ new shell).
+      if(req.method==='GET'&&(url.pathname==='/app'||url.pathname==='/app/')){
+        const served=await staticAppResponse('index.html');
+        return send(served.status,served.type,served.body);
+      }
+      if(req.method==='GET'&&url.pathname.startsWith('/app/assets/')){
+        const served=await staticAppResponse(url.pathname.slice('/app/'.length));
+        return send(served.status,served.type,served.body);
+      }
+      if(req.method==='GET'&&url.pathname==='/diagnostics'){
+        return send(200,'text/html; charset=utf-8',
+          await readFile(new URL('./journey-view.html',import.meta.url),'utf8'));
+      }
+      // The browser requests /favicon.ico automatically; this entrypoint
+      // ships no icon asset, so answer 204 No Content instead of a console
+      // error — no fabricated asset, no silent success payload.
+      if(req.method==='GET'&&url.pathname==='/favicon.ico'){
+        return send(204,'image/x-icon','');
       }
       return send(404,'text/plain','NOT_FOUND');
     }catch(error){return send(400,'application/json',json({status:'ERROR',reason:error.message}));}

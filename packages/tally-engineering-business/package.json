@@ -11,5 +11,8 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1"
   }
 }

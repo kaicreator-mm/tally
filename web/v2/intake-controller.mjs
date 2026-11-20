@@ -207,11 +207,11 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
         return record('review-draft',blocked('REVIEW_NOT_INDEPENDENT'));
       state.reviewBlock=null;
       state.review={reviewer,at:new Date().toISOString(),digest:state.draft.digest,
-        sourceSha:currentSha(),state:'REVIEWED'};
+        sourceSha:currentSha(),state:'REVIEW_PROPOSED_UNVERIFIED'};
       return record('review-draft',{status:'OK',reviewer,digest:state.review.digest,
-        independence:'REVIEWER_DIFFERS_FROM_AUTHOR'});
+        independence:'NOT_VERIFIED_REQUIRES_ACCEPTED_REVIEWER_CLAIM_AND_GITHUB_WITNESS'});
     },
-    async 'freeze-draft'(sourceSha){
+    async 'freeze-draft'(sourceSha,witness={}){
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
       if(!state.draft)return record('freeze-draft',blocked('NO_DRAFT_TO_FREEZE'));
       if(!state.review||state.review.digest!==state.draft.digest)
@@ -220,17 +220,81 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
         return record('freeze-draft',blocked('REVIEW_SOURCE_STALE'));
       if(state.decision?.status!=='STEP'||state.decision.step?.stepId!=='summary')
         return record('freeze-draft',blocked('GUIDED_SUMMARY_NOT_READY'));
-      const receiptRef=`receipt:sha256:${state.draft.digest}`;
+      // #312 Product ReviewWitness: typed reviewer labels are proposals,
+      // never an accepted Reviewer Claim, GitHub witness or Host CAS receipt.
+      // The only positive path is the sealed K seam: the selected Host first
+      // persists the draft (recomputing the digest itself), then freezes it
+      // under the exact GitHub C ReviewWitness with the shared CAS fence.
+      // Without complete witness coordinates and a live seam, zero effects.
+      const witnessReady=witness&&typeof witness==='object'&&!Array.isArray(witness)&&
+        Number.isSafeInteger(witness.reviewCommentId)&&witness.reviewCommentId>0&&
+        SHA.test(witness.taskPackBlobSha??'')&&PRODUCT_DIGEST.test(witness.writeSetSha256??'')&&
+        SHA.test(witness.reviewedHead??'')&&SHA.test(witness.reviewedTree??'')&&
+        SHA.test(witness.reviewedBase??'');
+      const refuseFreeze=reason=>{
+        state.reviewBlock={state:'NOT_VERIFIED',reason};
+        state.frozen=null;
+        return record('freeze-draft',{status:'BLOCKED',reason,
+          githubEffect:'NOT_RUN',frozen:false});
+      };
+      if(typeof sealedDispatch!=='function'||!witnessReady)
+        return refuseFreeze('HOST_PRODUCT_REVIEW_WITNESS_REQUIRED');
+      const seamOutcome=async intent=>{
+        const envelope=await sealedDispatch(intent);
+        return envelope?.phase==='terminal'&&envelope.outcome?.ok===true?
+          envelope.outcome.output:envelope;
+      };
+      const draft={product:state.draft.product,l2:state.draft.l2,
+        provenance:state.draft.provenance};
+      // The Business recomputes the Host draft digest over the same canonical
+      // {draft,sourceSha} shape, so only a receipt that binds THIS exact
+      // draft content at THIS exact source can ever be accepted.
+      const hostDigest=digestOf({draft,sourceSha:currentSha()});
+      let persisted;
+      try{
+        persisted=await seamOutcome({intentType:'persistProductDraft312',
+          input:{sourceSha:currentSha(),taskPackBlobSha:witness.taskPackBlobSha,
+            writeSetSha256:witness.writeSetSha256,draft}});
+      }catch{
+        return refuseFreeze('SEALED_K_PERSIST_DISPATCH_FAILED');
+      }
+      if(persisted?.state!=='DRAFT_PENDING_REVIEW'||
+        persisted.sourceSha!==currentSha()||
+        persisted.productDigest!==hostDigest||
+        persisted.draftRef!=='draft:sha256:'+hostDigest)
+        return refuseFreeze('HOST_DRAFT_PERSISTENCE_UNVERIFIED');
+      let receipt;
+      try{
+        receipt=await seamOutcome({intentType:'freezeProductReview312',
+          input:{sourceSha:currentSha(),taskPackBlobSha:witness.taskPackBlobSha,
+            writeSetSha256:witness.writeSetSha256,
+            reviewCommentId:witness.reviewCommentId,
+            reviewedHead:witness.reviewedHead,reviewedTree:witness.reviewedTree,
+            reviewedBase:witness.reviewedBase}});
+      }catch{
+        return refuseFreeze('SEALED_K_FREEZE_DISPATCH_FAILED');
+      }
+      if(receipt?.state!=='FROZEN_COMPLETE'||receipt.frozen!==true||
+        receipt.sourceSha!==currentSha()||receipt.productDigest!==hostDigest||
+        receipt.receiptRef!=='receipt:sha256:'+hostDigest||
+        receipt.taskPass!==false||receipt.releasePass!==false||
+        typeof receipt.reviewRef!=='string'||
+        !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/312#issuecomment-[1-9][0-9]*$/
+          .test(receipt.reviewRef))
+        return refuseFreeze('HOST_PRODUCT_REVIEW_WITNESS_UNVERIFIED');
+      state.reviewBlock=null;
       state.previousOutcome=guidedOutcome('summary','EFFECT_RECEIPT',state.evidenceRefs,
-        {receiptRef});
+        {receiptRef:receipt.receiptRef});
       recomputeDecision();
-      state.frozen={state:'FROZEN',digest:state.draft.digest,receiptRef,
+      state.frozen={state:'FROZEN',digest:hostDigest,
+        receiptRef:receipt.receiptRef,reviewRef:receipt.reviewRef,
         reviewer:state.review.reviewer,author:state.draft.author,
         frozenAt:new Date().toISOString(),sourceSha:currentSha(),
         provenance:[...state.evidenceRefs],
-        authority:'WORKBENCH_INDEPENDENT_REVIEW; native GitHub freeze authority stays Host-owned (NOT_RUN)'};
-      return record('freeze-draft',{status:'OK',receiptRef,reviewer:state.review.reviewer,
-        githubEffect:'NOT_RUN'});
+        authority:'HOST_CAS_FROZEN_PRODUCT_INTAKE; sealed K dispatch receipt verified against exact draft digest (UI holds no freeze authority)'};
+      return record('freeze-draft',{status:'OK',digest:hostDigest,
+        receiptRef:receipt.receiptRef,reviewRef:receipt.reviewRef,
+        githubEffect:'NOT_RUN',frozen:true});
     },
     async 'admit-project-intake'(sourceSha,{projectTitle}={}){
       if(stale(sourceSha))return{status:'STALE_SOURCE'};
@@ -293,7 +357,7 @@ export function createIntakeController(config,{host,journeySnapshot,sealedDispat
       draft:state.draft?{state:'CANDIDATE',author:state.draft.author,at:state.draft.at,
         digest:state.draft.digest,product:state.draft.product,l2:state.draft.l2,
         provenance:state.draft.provenance,note:'User/model drafted content; never an accepted freeze'}:null,
-      review:state.review?{state:'REVIEWED',reviewer:state.review.reviewer,
+      review:state.review?{state:state.review.state,reviewer:state.review.reviewer,
         at:state.review.at,digest:state.review.digest,
         current:state.review.digest===state.draft?.digest}:null,
         ...(state.reviewBlock?{reviewBlock:state.reviewBlock}:{}),

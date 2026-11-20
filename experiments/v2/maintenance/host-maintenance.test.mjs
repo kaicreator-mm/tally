@@ -4,14 +4,18 @@ import {spawnSync} from 'node:child_process';
 import {existsSync,mkdirSync,writeFileSync,readFileSync,mkdtempSync,rmSync,
   readdirSync,copyFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {runInNewContext} from 'node:vm';
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createMaintenanceHost,recordMaintenanceCandidate,
   observeLearningSuggestions,validateMaintenanceCandidate,
   maintenanceCandidateDigest,learningSuggestionsFromReports,
-  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
-  MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
+  MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_DRAFT_KEY,
+  MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_ISSUE_KEY,MAINTENANCE_PENDING_KEY,
+  MAINTENANCE_RECOVERY_KEY,MAINTENANCE_LEARNING_KEY,MAINTENANCE_CLAIM_KEY,__test} from './host-maintenance.mjs';
+import {readMaintenanceReviewWitnessFromClient}
+  from '../../../packages/tally-github-c/src/maintenance-effects.mjs';
 
 const REPO_ROOT=fileURLToPath(new URL('../../../',import.meta.url));
 const run=(cmd,args,opts={})=>{
@@ -61,11 +65,39 @@ const reviewedFrozen=async(over={})=>{const ctx=persisted(over);
   const frozen=await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore}),
     ...over.args});
   assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  // Old fixtures explicitly model a separate already-qualified Host proof.
+  // Without this row legacy name-only CAS is now forbidden to publish.
+  const d=await ctx.openStore();
+  await d.put(MAINTENANCE_REVIEW_PROOF_KEY,{
+    phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',issueRef:__test.ISSUE_REF,
+    sourceSha:sha,candidateDigest:over.proofDigest??digest,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+    reviewedPullNumber:278,
+    reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sha,
+    builderClaimRef:'claim:author',reviewerClaimRef:'claim:reviewer',
+    builderOperatorId:'author:1',reviewerOperatorId:'reviewer:1',
+    reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
+  },{mustBeAbsent:true});await d.close();
   return ctx;};
 const host=(ctx={},overrides={})=>createMaintenanceHost({
   openStore:ctx.openStore??(async()=>memoryStore().store),
-  verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true}),env:env(),...overrides});
+  verifyAcceptedClaim:async(_n,role='builder')=>({ok:true,claim:{
+    accepted:true,issueNumber:219,role,sourceSha:sha,
+    claimRef:role==='builder'?'claim:author':'claim:reviewer',
+    operatorId:role==='builder'?'author:1':'reviewer:1',
+    writerId:role==='builder'?'writer:author':'writer:reviewer',
+    transportActor:'kaicreator-mm'}}),
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readReviewWitness:async({commentId,expected})=>({
+    state:'REVIEW_VERIFIED',reviewed:true,
+    reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+    sourceSha:expected.sourceSha,candidateDigest:expected.candidateDigest,
+    reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+    reviewedAt:'2026-10-31T09:00:00.000Z',p0:0,p1:0,
+    authorized:false,taskPass:false}),
+  readCurrentVersion:async()=>({ok:true,sha}),
+  withVersionFence:async(_meta,run)=>run(),
+  env:env(),...overrides});
 const publishInput=(over={})=>({issueNumber:219,sourceRef:__test.ISSUE_REF,
   sourceSha:sha,candidateDigest:digest,...over});
 const issueReadback=n=>({state:'READBACK_VERIFIED',issue:{number:n,
@@ -349,7 +381,10 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
   const issueReadBox=n=>({number:n,title:'t',
     url:`https://github.com/kaicreator-mm/tally/issues/${n}`});
   await ctx2.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{phase:'PENDING_MAINTENANCE_ISSUE',
-    sourceSha:sha,candidateDigest:digest,marker:'m',title:'t'}));
+    issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+    marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
   const mismatch=await host(ctx2,{findIssue:async()=>({state:'RECONCILE_COMPLETE',
       reason:'MAINTENANCE_ISSUE_FOUND',matches:[issueReadBox(303)]}),
     readIssue:async()=>({state:'READBACK_MISMATCH',
@@ -374,6 +409,603 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
   assert.equal(badPublish.reason,'GITHUB_RATE_LIMITED');
 });
 
+// --- #432 P1 repair: title truncation, premature pending CAS, trusted zero-POST recovery ---
+const TRANSPORT_TITLE=/^\S(?:.{0,198}\S)?$/s;
+const TRANSPORT_BODY=/^\S[\s\S]{0,9999}\S$/;
+const TRANSPORT_MARKER=/^tally:maintenance:219:[0-9a-f]{64}$/;
+// The real transport (packages/tally-github-c/src/maintenance-effects.mjs)
+// validates input shape locally and refuses before any POST; the Host must
+// never hand it an invalid title.
+const shapeRefusingTransport=(n=305)=>({
+  publishIssue:({title,body,marker})=>{
+    if(TRANSPORT_TITLE.test(title)&&TRANSPORT_BODY.test(body)&&
+       TRANSPORT_MARKER.test(marker)&&body.includes(marker))
+      return Promise.resolve({state:'ISSUE_PUBLISHED',issue:issueReadback(n).issue});
+    return Promise.resolve({state:'NOT_PUBLISHED',
+      reason:'MAINTENANCE_ISSUE_INPUT_INVALID'});
+  },
+  findIssue:async()=>({state:'RECONCILE_COMPLETE',
+    reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+  readIssue:async()=>issueReadback(n)});
+const longSummary='A'.repeat(159)+' '+'B'.repeat(300);
+const longCandidate=()=>({...candidate(),summary:longSummary});
+const longDigest=()=>maintenanceCandidateDigest(longCandidate());
+// The genuine-shaped historical pending row: the module's own durable
+// pre-POST marker shape (unchanged since #221). `over` replaces fields or
+// deletes them when explicitly set to undefined.
+const genuinePending=(over={})=>{const value={phase:'PENDING_MAINTENANCE_ISSUE',
+  issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+  marker:`tally:maintenance:219:${digest}`,
+  title:__test.maintenanceTitle(candidate()),
+  pendingAt:'2026-11-15T23:27:00.000Z',
+  authorized:false,taskPass:false,releasePass:false};
+  for(const [key,val] of Object.entries(over))
+    if(val===undefined)delete value[key];else value[key]=val;
+  return value;};
+// The trusted attempt/row-specific zero-POST attestation surface the Host
+// requires (#432 R2): it must echo the exact pending CAS binding it was
+// asked about and carry an attempt identity plus an immutable evidenceRef.
+const zeroPostAttestation=(request,over={})=>{const value={ok:true,
+  proof:'ZERO_POST_ATTEMPT_VERIFIED',
+  marker:request.marker,candidateDigest:request.candidateDigest,
+  sourceSha:request.sourceSha,
+  attemptId:'attempt:legacy-a:00000001',
+  evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision}:${request.pendingValueDigest}`,
+  attestedAt:'2026-11-15T23:30:00.000Z',
+  pendingKey:request.pendingKey,pendingRevision:request.pendingRevision,
+  pendingValueDigest:request.pendingValueDigest};
+  for(const [key,val] of Object.entries(over))
+    if(val===undefined)delete value[key];else value[key]=val;
+  return value;};
+
+test('#432 title trims the 160-char slice so a whitespace cut point stays transport-valid',()=>{
+  // Genuine #219 shape: character 160 (index 159) of the valid summary is a
+  // space — the raw slice ends in whitespace and the transport rejects it.
+  const title=__test.maintenanceTitle(longCandidate());
+  assert.ok(!/\s$/.test(title),'title must not end in whitespace: '+
+    JSON.stringify(title.slice(-12)));
+  assert.ok(TRANSPORT_TITLE.test(title),'title must satisfy the transport shape');
+  const shortTitle=__test.maintenanceTitle(candidate());
+  assert.equal(shortTitle,
+    '[maintenance] Post-release behavior regression against immutable v1.5.5');
+});
+
+test('#432 deterministic transport-input validation refuses hostile shapes',()=>{
+  const goodBody=__test.maintenanceBody(candidate(),digest);
+  const goodMarker=`tally:maintenance:219:${digest}`;
+  const good=__test.validateTransportInput({
+    title:'[maintenance] ok',body:goodBody,marker:goodMarker});
+  assert.equal(good.ok,true,JSON.stringify(good));
+  const bad=[
+    // trailing-whitespace title (the genuine #219 defect shape)
+    {title:'[maintenance] x ',body:goodBody,marker:goodMarker},
+    // over the transport 200-char title cap (^\S(?:.{0,198}\S)?$)
+    {title:'x'.repeat(201),body:goodBody,marker:goodMarker},
+    // body must start with a non-space character
+    {title:'[maintenance] ok',body:' '+goodBody,marker:goodMarker},
+    // marker must be the exact maintenance-marker shape
+    {title:'[maintenance] ok',body:goodBody,
+      marker:'tally:maintenance:219:'+'z'.repeat(64)},
+    // the body must actually carry the marker
+    {title:'[maintenance] ok',
+      body:goodBody.replace(goodMarker,'maintenance-marker: tampered'),
+      marker:goodMarker},
+  ];
+  for(const input of bad){
+    const v=__test.validateTransportInput(input);
+    assert.equal(v.ok,false,JSON.stringify(input).slice(0,90));
+    assert.equal(v.reason,'MAINTENANCE_ISSUE_INPUT_INVALID');
+  }
+});
+
+test('#432 whitespace-cut candidate publishes exactly once; no invalid pending row ever exists',async()=>{
+  const ctx=await reviewedFrozen({args:{candidate:longCandidate()},
+    proofDigest:longDigest()});
+  let publishCalls=0;
+  const transport=shapeRefusingTransport(305);
+  const counting={...transport,
+    publishIssue:async input=>{publishCalls++;
+      return transport.publishIssue(input);}};
+  const result=await host(ctx,counting).hostPublishMaintenanceIssue(
+    publishInput({candidateDigest:longDigest()}));
+  assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',JSON.stringify(result));
+  assert.equal(result.reason,'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED');
+  assert.equal(result.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(result.issue.number,305);
+  assert.equal(publishCalls,1,'exactly one Issue must be created');
+  // Defect-B invariant: the durable pending row (written before the POST)
+  // always carries a transport-valid title; a trailing-space pending row can
+  // never again block this digest.
+  const pending=ctx.m.docs.get(MAINTENANCE_PENDING_KEY);
+  assert.ok(pending,'pending row may exist pre-POST');
+  assert.ok(TRANSPORT_TITLE.test(pending.value.title),
+    'pending title must satisfy the transport shape: '+
+    JSON.stringify(pending.value.title.slice(-12)));
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.candidateDigest,longDigest());
+});
+
+test('#432 trusted zero-POST attestation recovers the genuine pending exactly once; without it stays UNKNOWN',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{
+    phase:'PENDING_MAINTENANCE_ISSUE',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),
+    pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
+  const candidateBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY));
+  const proofBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY));
+  const pendingBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
+  let publishCalls=0;
+  const transport={
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(306),
+    publishIssue:async()=>{publishCalls++;
+      return {state:'ISSUE_PUBLISHED',issue:issueReadback(306).issue};}};
+  // A zero-match marker search alone is NOT proof of no POST: without the
+  // trusted attestation the lost-ACK ambiguity stands, zero POSTs.
+  const noAttest=await host(ctx,transport)
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(noAttest.state,'PUBLICATION_UNKNOWN');
+  assert.equal(noAttest.reason,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+  assert.equal(publishCalls,0);
+  // An attestation with wrong pins is refused as well.
+  const wrongPins=await host(ctx,{...transport,
+    verifyZeroPostAttempt:async()=>({ok:true,
+      proof:'ZERO_POST_ATTEMPT_VERIFIED',
+      marker:'tally:maintenance:219:'+'0'.repeat(64),
+      candidateDigest:digest,sourceSha:sha})})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(wrongPins.state,'PUBLICATION_UNKNOWN');
+  assert.equal(publishCalls,0);
+  // The exact-pin, attempt/evidence-bound attestation recovers into exactly
+  // one verified publication; candidate/digest/proof AND the historical
+  // pending row stay byte-identical, and a durable MAY_POST reservation for
+  // the new recovery attempt exists before the POST.
+  const recovered=await host(ctx,{...transport,
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(recovered.state,'MAINTENANCE_ISSUE_PUBLISHED',JSON.stringify(recovered));
+  assert.equal(recovered.reason,
+    'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY');
+  assert.equal(recovered.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(publishCalls,1,'recovery must never create a duplicate Issue');
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY)),
+    candidateBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY)),
+    proofBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),
+    pendingBefore,'the historical pending row must never be rewritten');
+  const reservation=ctx.m.docs.get(MAINTENANCE_RECOVERY_KEY);
+  assert.ok(reservation,'recovery must hold a durable MAY_POST reservation');
+  assert.equal(reservation.value.phase,'MAY_POST_RECOVERY');
+  assert.equal(reservation.value.pendingBinding.key,MAINTENANCE_PENDING_KEY);
+  assert.equal(reservation.value.pendingBinding.revision,
+    ctx.m.docs.get(MAINTENANCE_PENDING_KEY).revision);
+  assert.equal(reservation.value.priorAttempt.attemptId,
+    'attempt:legacy-a:00000001');
+  assert.ok(/^attempt:recovery:[0-9a-f]{32}$/.test(reservation.value.attemptId));
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.candidateDigest,digest);
+  assert.equal(published.value.reconciled,true);
+});
+
+test('#432 cross-SHA re-admission stays fail-closed: stale source refuses before recovery, CAS or POST',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,{
+    phase:'PENDING_MAINTENANCE_ISSUE',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),
+    pendingAt:'2026-11-15T23:27:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
+  let publishCalls=0;
+  const stale=await host(ctx,{
+    // version/v2 advanced past the source this authority was admitted at:
+    // old-source Claims/FSW/witness can never authorize under the new SHA.
+    readCurrentVersion:async()=>({ok:true,sha:'f'.repeat(40)}),
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(307),
+    publishIssue:async()=>{publishCalls++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(stale.state,'NOT_ADMITTED');
+  assert.equal(stale.reason,'MAINTENANCE_PUBLICATION_SOURCE_STALE');
+  assert.equal(stale.githubEffect,'NOT_RUN');
+  assert.equal(publishCalls,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false);
+});
+
+// --- #432 R2 (independent REWORK P1-01/P1-02): one-time durable MAY_POST
+// recovery reservation + full historical pending-envelope / attestation
+// identity binding. The core counterexample: original attempt A was truthfully
+// refused BEFORE the POST; recovery attempt B POSTs but loses its ACK; the
+// eventually-consistent marker search returns zero again; the still-truthful
+// A proof must NEVER authorize attempt C.
+test('#432-R2 replayed TRUE old-A zero-POST proof after B lost ACK never posts C',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  const candidateBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY));
+  const proofBefore=JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY));
+  let publishCalls=0;
+  const lostAck={
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(306),
+    publishIssue:async()=>{publishCalls++;
+      throw new Error('connection reset after the Issue was created');}};
+  // Attempt B: the reservation lands BEFORE the POST; the POST leaves but
+  // the ACK is lost -> honest UNKNOWN.
+  const b=await host(ctx,{...lostAck,
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(b.state,'PUBLICATION_UNKNOWN');
+  assert.equal(b.reason,'GITHUB_PUBLISH_UNKNOWN');
+  assert.equal(b.githubEffect,'UNKNOWN');
+  assert.equal(publishCalls,1);
+  const reservation=ctx.m.docs.get(MAINTENANCE_RECOVERY_KEY);
+  assert.ok(reservation,'B must hold the durable one-time MAY_POST reservation');
+  assert.equal(reservation.value.phase,'MAY_POST_RECOVERY');
+  assert.equal(reservation.value.sourceSha,sha);
+  assert.equal(reservation.value.candidateDigest,digest);
+  assert.equal(reservation.value.pendingBinding.key,MAINTENANCE_PENDING_KEY);
+  assert.equal(reservation.value.pendingBinding.revision,
+    ctx.m.docs.get(MAINTENANCE_PENDING_KEY).revision);
+  assert.match(reservation.value.pendingBinding.valueDigest,/^[0-9a-f]{64}$/);
+  assert.equal(reservation.value.priorAttempt.attemptId,
+    'attempt:legacy-a:00000001');
+  assert.match(reservation.value.priorAttempt.evidenceRef,
+    /^host-cas:zero-post:tally:v2:maintenance-pending:219:[1-9][0-9]*:[0-9a-f]{64}$/);
+  assert.match(reservation.value.attemptId,/^attempt:recovery:[0-9a-f]{32}$/);
+  // GitHub search is STILL stale (zero matches) on the next run. The A proof
+  // is still truthful and still matches every field — and must be refused:
+  // the existing reservation means a B POST may already exist. No C POST.
+  const c=await host(ctx,{...lostAck,
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(c.state,'PUBLICATION_UNKNOWN');
+  assert.equal(c.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(c.githubEffect,'UNKNOWN');
+  assert.equal(publishCalls,1,'the replayed A proof must never authorize a C POST');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY)),
+    candidateBefore);
+  assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY)),
+    proofBefore);
+  const pending=ctx.m.docs.get(MAINTENANCE_PENDING_KEY);
+  assert.equal(pending.value.phase,'PENDING_MAINTENANCE_ISSUE');
+  assert.equal(pending.value.pendingAt,'2026-11-15T23:27:00.000Z',
+    'historical A pending row must stay byte-identical');
+});
+
+test('#432-R2 existing reservation: a later exact marker readback reconciles B without any POST',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  let publishCalls=0;
+  const b=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(308),
+    publishIssue:async()=>{publishCalls++;
+      throw new Error('connection reset after the Issue was created');},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(b.state,'PUBLICATION_UNKNOWN');
+  assert.equal(publishCalls,1);
+  // The next run sees exactly one verified marker match (B's Issue surfaced):
+  // reconcile into the PUBLISHED row — never another POST.
+  const reconcile=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_FOUND',matches:[issueReadback(308).issue]}),
+    readIssue:async()=>issueReadback(308),
+    publishIssue:async()=>{publishCalls++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(reconcile.state,'MAINTENANCE_ISSUE_PUBLISHED');
+  assert.equal(reconcile.reason,'MAINTENANCE_ISSUE_RECONCILED_AFTER_LOST_ACK');
+  assert.equal(reconcile.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(reconcile.issue.number,308);
+  assert.equal(publishCalls,1,'reconciliation must not create a second Issue');
+  const published=ctx.m.docs.get(MAINTENANCE_ISSUE_KEY);
+  assert.equal(published.value.phase,'PUBLISHED_MAINTENANCE_ISSUE');
+  assert.equal(published.value.reconciled,true);
+  assert.equal(published.value.candidateDigest,digest);
+});
+
+test('#432-R2 pending identity is fully bound: any source/issue/marker/title/flag/timestamp mismatch fails closed',async()=>{
+  const cases={
+    WRONG_SOURCE:{sourceSha:'b'.repeat(40)},
+    WRONG_ISSUE:{issueRef:'https://github.com/kaicreator-mm/tally/issues/220'},
+    WRONG_MARKER:{marker:`tally:maintenance:219:${'c'.repeat(64)}`},
+    WRONG_TITLE:{title:__test.maintenanceTitle(candidate())+' '},
+    MISSING_TITLE:{title:undefined},
+    WRONG_PENDING_AT:{pendingAt:'not-a-date'},
+    MISSING_PENDING_AT:{pendingAt:undefined},
+    TASK_PASS_FLAG:{taskPass:true},
+    RELEASE_PASS_FLAG:{releasePass:true},
+    AUTHORIZED_FLAG:{authorized:true}};
+  for(const [name,over] of Object.entries(cases)){
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending(over)));
+    const before=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(309),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED',name);
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH',name);
+    assert.equal(result.githubEffect,'NOT_RUN',name);
+    assert.equal(posts,0,name);
+    assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),before,
+      name+': historical pending row must stay byte-identical');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false,
+      name+': no reservation may be created');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false,name);
+  }
+  // An unrelated phase occupying the pending key refuses instead of being
+  // overwritten by a fresh pending row.
+  {
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      {phase:'SOMETHING_ELSE'}));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',reason:'X',matches:[]}),
+      readIssue:async()=>issueReadback(1),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
+    assert.equal(posts,0);
+    assert.equal(ctx.m.docs.get(MAINTENANCE_PENDING_KEY).value.phase,
+      'SOMETHING_ELSE','foreign pending row must stay untouched');
+  }
+  // A non-safe-integer CAS revision refuses with the envelope reason.
+  {
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+    const racedOpenStore=async()=>{const s=await ctx.openStore();
+      return {...s,
+        get:async key=>{const row=await s.get(key);
+          return row?{value:row.value,
+            revision:key===MAINTENANCE_PENDING_KEY?'not-an-integer':row.revision}:row;}};};
+    let posts=0;
+    const result=await host({openStore:racedOpenStore},{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(309),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,'MAINTENANCE_PENDING_ENVELOPE_INVALID');
+    assert.equal(posts,0);
+  }
+});
+
+test('#432-R2 attestation binds attempt identity and immutable evidence to the exact pending envelope',async()=>{
+  const refuse=async(name,mutate)=>{
+    const ctx=await reviewedFrozen();
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+    const before=JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(310),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>{
+        const attestation=zeroPostAttestation(request);
+        return mutate(attestation,request);}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'PUBLICATION_UNKNOWN',name);
+    assert.equal(result.reason,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION',name);
+    assert.equal(result.githubEffect,'UNKNOWN',name);
+    assert.equal(posts,0,name);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY),false,
+      name+': an untrusted attestation must never reserve');
+    assert.equal(JSON.stringify(ctx.m.docs.get(MAINTENANCE_PENDING_KEY)),before,
+      name);
+    return ctx;};
+  await refuse('MISSING_ATTEMPT_ID',attestation=>{delete attestation.attemptId;
+    return attestation;});
+  await refuse('SHORT_ATTEMPT_ID',attestation=>({...attestation,
+    attemptId:'x'}));
+  await refuse('WRONG_ATTEMPT_EVIDENCE_REVISION',(attestation,request)=>({
+    ...attestation,
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:999:${request.pendingValueDigest}`}));
+  await refuse('UNTRUSTED_EVIDENCE_REF',attestation=>({...attestation,
+    evidenceRef:'https://example.com/proof.png'}));
+  await refuse('MISSING_EVIDENCE_REF',attestation=>{delete attestation.evidenceRef;
+    return attestation;});
+  await refuse('BORROWED_VALUE_DIGEST',(attestation,request)=>({...attestation,
+    pendingValueDigest:'f'.repeat(64),
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision}:${'f'.repeat(64)}`}));
+  await refuse('WRONG_PENDING_REVISION',(attestation,request)=>({...attestation,
+    pendingRevision:request.pendingRevision+1,
+    evidenceRef:`host-cas:zero-post:${request.pendingKey}:${request.pendingRevision+1}:${request.pendingValueDigest}`}));
+  await refuse('MISSING_PROOF_STRING',attestation=>({...attestation,
+    proof:'OK'}));
+  await refuse('ECHO_OK_WITHOUT_EVIDENCE',attestation=>{delete attestation.evidenceRef;
+    delete attestation.attemptId;delete attestation.attestedAt;
+    delete attestation.pendingKey;delete attestation.pendingRevision;
+    delete attestation.pendingValueDigest;return attestation;});
+  await refuse('BAD_ATTESTED_AT',attestation=>({...attestation,
+    attestedAt:'yesterday'}));
+});
+
+test('#432-R2 genuine legacy trailing-space pending title recovers; near-miss legacy shapes refuse',async()=>{
+  // The real #219 summary was 205 characters with a whitespace at the
+  // 160-character cut point. The exact historical bytes are not recoverable
+  // from public receipts; this reproduces the exact byte shape: a valid
+  // 205-char summary whose character 160 (index 159) is a space, so the old
+  // untrimmed `[maintenance] <slice 0,160>` title ends in whitespace.
+  const summary205='A'.repeat(159)+' '+'B'.repeat(45);
+  assert.equal(summary205.length,205);
+  const legacyCandidateValue={...candidate(),summary:summary205};
+  const legacyDigestValue=maintenanceCandidateDigest(legacyCandidateValue);
+  const legacyRawTitle=`[maintenance] ${summary205.slice(0,160)}`;
+  assert.equal(legacyRawTitle.endsWith(' '),true);
+  assert.equal(legacyRawTitle.trimEnd(),
+    __test.maintenanceTitle(legacyCandidateValue));
+  // Positive: the byte-exact historical trailing-space pending title binds.
+  {
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:legacyRawTitle})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;
+        return {state:'ISSUE_PUBLISHED',issue:issueReadback(311).issue};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',
+      JSON.stringify(result));
+    assert.equal(result.reason,
+      'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY');
+    assert.equal(posts,1);
+    assert.ok(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY));
+    assert.equal(ctx.m.docs.get(MAINTENANCE_PENDING_KEY).value.title,
+      legacyRawTitle,'historical pending title must stay byte-identical');
+  }
+  // The versioned legacy rule is tightly scoped: near-miss titles that are
+  // NOT the byte-exact historical raw composition refuse closed.
+  for(const [name,badTitle] of [
+    ['DOUBLE_TRAILING_SPACE',legacyRawTitle+' '],
+    ['SHORTENED_CUT',`[maintenance] ${summary205.slice(0,120)}`],
+    ['INTERIOR_CHANGE',legacyRawTitle.slice(0,-2)+'X ']]){
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:badTitle})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'NOT_ADMITTED',name);
+    assert.equal(result.reason,'MAINTENANCE_PENDING_IDENTITY_MISMATCH',name);
+    assert.equal(posts,0,name);
+  }
+  // The current canonical (trimmed) title is the accepted modern shape.
+  {
+    const ctx=await reviewedFrozen({args:{candidate:legacyCandidateValue},
+      proofDigest:legacyDigestValue});
+    await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,
+      genuinePending({candidateDigest:legacyDigestValue,
+        marker:`tally:maintenance:219:${legacyDigestValue}`,
+        title:__test.maintenanceTitle(legacyCandidateValue)})));
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>({state:'RECONCILE_COMPLETE',
+        reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+      readIssue:async()=>issueReadback(311),
+      publishIssue:async()=>{posts++;
+        return {state:'ISSUE_PUBLISHED',issue:issueReadback(311).issue};},
+      verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+      .hostPublishMaintenanceIssue(
+        publishInput({candidateDigest:legacyDigestValue}));
+    assert.equal(result.state,'MAINTENANCE_ISSUE_PUBLISHED',
+      'canonical modern title: '+JSON.stringify(result).slice(0,160));
+    assert.equal(posts,1);
+  }
+});
+
+test('#432-R2 concurrent recovery attempts resolve exactly one CAS winner; the loser never POSTs',async()=>{
+  const ctx=await reviewedFrozen();
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_PENDING_KEY,genuinePending()));
+  let posts=0;
+  // Winner: reservation create succeeds; the POST then loses its ACK.
+  const winner=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(312),
+    publishIssue:async()=>{posts++;
+      throw new Error('connection reset after the Issue was created');},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(winner.state,'PUBLICATION_UNKNOWN');
+  assert.equal(posts,1);
+  assert.ok(ctx.m.docs.has(MAINTENANCE_RECOVERY_KEY));
+  // Loser interleaving: it observed no reservation (its get raced before the
+  // winner committed) but its create-only reservation CAS-refused at put
+  // time — CAS uncertainty never repeats the GitHub publication. The loser
+  // shares the winner's CAS (same pending/candidate/proof rows).
+  const racedOpenStore=async()=>{const s=await ctx.openStore();
+    return {...s,
+      get:async key=>key===MAINTENANCE_RECOVERY_KEY?null:s.get(key),
+      put:async(key,value,cond)=>{
+        if(key===MAINTENANCE_RECOVERY_KEY&&cond?.mustBeAbsent===true)
+          throw Object.assign(new Error('CAS refused'),{code:'HOST_CAS_CONFLICT'});
+        return s.put(key,value,cond);}};};
+  let racedPosts=0;
+  const loser=await host({openStore:racedOpenStore},{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(312),
+    publishIssue:async()=>{racedPosts++;return {state:'ISSUE_PUBLISHED'};},
+    verifyZeroPostAttempt:async request=>zeroPostAttestation(request)})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(loser.state,'PUBLICATION_UNKNOWN');
+  assert.equal(loser.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(loser.githubEffect,'UNKNOWN');
+  assert.equal(racedPosts,0,'the CAS loser must never POST');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+});
+
+test('#432-R2 leftover reservation without a pending row blocks a fresh POST as UNKNOWN',async()=>{
+  const ctx=await reviewedFrozen();
+  // A crashed recovery may leave a reservation while the pending row is
+  // absent; a fresh attempt must never POST on top of the lost-ACK B.
+  await ctx.openStore().then(s=>s.put(MAINTENANCE_RECOVERY_KEY,{
+    phase:'MAY_POST_RECOVERY',issueRef:__test.ISSUE_REF,sourceSha:sha,
+    candidateDigest:digest,marker:`tally:maintenance:219:${digest}`,
+    title:__test.maintenanceTitle(candidate()),attemptId:'attempt:recovery:deadbeef',
+    priorAttempt:{attemptId:'attempt:legacy-a:1',
+      evidenceRef:'host-cas:zero-post:tally:v2:maintenance-pending:219:1:'+'e'.repeat(64),
+      attestedAt:'2026-11-15T23:30:00.000Z'},
+    pendingBinding:{key:MAINTENANCE_PENDING_KEY,revision:1,
+      valueDigest:'e'.repeat(64)},
+    reservedAt:'2026-11-15T23:31:00.000Z',
+    authorized:false,taskPass:false,releasePass:false}));
+  let posts=0;
+  const result=await host(ctx,{
+    findIssue:async()=>({state:'RECONCILE_COMPLETE',
+      reason:'MAINTENANCE_ISSUE_ABSENT',matches:[]}),
+    readIssue:async()=>issueReadback(313),
+    publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+    .hostPublishMaintenanceIssue(publishInput());
+  assert.equal(result.state,'PUBLICATION_UNKNOWN');
+  assert.equal(result.reason,'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+  assert.equal(result.githubEffect,'UNKNOWN');
+  assert.equal(posts,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false,
+    'no fresh pending row may be written on top of a leftover reservation');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+});
+
 // --- J219 sealed producer + real K consumer replay (env-gated, no new paths) ---
 // Runs ONLY with J219_REPLAY=1 and DH_V0103=<DH v0.10.3 checkout>. It reuses the
 // real producer.mjs with T219_MAINTENANCE=1 (and without it), then loads the
@@ -384,7 +1016,8 @@ test('lost ACK stays UNKNOWN and a later run reconciles without duplicates',asyn
 const REPLAY_DH_SHA='061376f4a023070f215f9feffad5c24d96d503cb';
 const REPLAY_CANARY='UNIT_TEST_SECRET_j219_replay_do_not_leak';
 const REPLAY_PROVIDER=String.raw`import {createMaintenanceHost,recordMaintenanceCandidate,
-  observeLearningSuggestions,MAINTENANCE_CANDIDATE_KEY,MAINTENANCE_LEARNING_KEY}
+  observeLearningSuggestions,maintenanceCandidateDigest,MAINTENANCE_CANDIDATE_KEY,
+  MAINTENANCE_REVIEW_PROOF_KEY,MAINTENANCE_LEARNING_KEY}
   from '__TALLY_ROOT__experiments/v2/maintenance/host-maintenance.mjs';
 const docs=new Map();
 const openStore=async()=>({
@@ -399,17 +1032,31 @@ const openStore=async()=>({
   async close(){}});
 const registryPath='T219_REPLAY_IN_MEMORY';
 const sourceSha=process.env.TALLY_CLAIM_SOURCE_SHA;
-const candidate={
-  sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
-  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
-  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-  summary:'Post-release behavior regression against immutable v1.5.5',
-  priorRelease:{version:'v1.5.5',commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'}};
+const candidate=__J219_CANDIDATE_JSON__;
 const review=await recordMaintenanceCandidate({openStore,registryPath,sourceSha,
   candidate,author:'author:j219',reviewer:'reviewer:j219',
   reviewedAt:'2026-10-31T09:00:00.000Z'});
 if(review.state!=='RECORDED_COMPLETE')throw new Error('J219_REVIEW_SEED_FAILED');
+// Publish requires an already-qualified trusted review proof row (the Host
+// refuses MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING otherwise). Seed it for
+// the exact canonical candidate digest shared with the consumer; this is
+// fixture storage only — no GitHub authority, no Task/Release pass.
+const candidateDigest=maintenanceCandidateDigest(candidate);
+if(candidateDigest!==process.env.J219_REPLAY_CANDIDATE_DIGEST)
+  throw new Error('J219_REPLAY_DIGEST_MISMATCH');
+const proofStore=await openStore();
+await proofStore.put(MAINTENANCE_REVIEW_PROOF_KEY,{
+  phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha,candidateDigest,
+  reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001',
+  reviewedPullNumber:278,
+  reviewedHead:'d'.repeat(40),reviewedTree:'e'.repeat(40),reviewedBase:sourceSha,
+  builderClaimRef:'claim:author',reviewerClaimRef:'claim:reviewer',
+  builderOperatorId:'author:j219',reviewerOperatorId:'reviewer:j219',
+  reviewedAt:'2026-10-31T09:00:00.000Z',taskPass:false,releasePass:false
+},{mustBeAbsent:true});
+await proofStore.close();
 const summaryObservation={envelope:{schema:'ads/github/v5',kind:'report',
     data:{report_kind:'EXECUTION_SUMMARY',report_id:'rep-1',revision:1,
       publisher_namespace:'tally',capture_coverage:'COMPLETE',
@@ -427,9 +1074,43 @@ const ledger=await observeLearningSuggestions({openStore,registryPath,sourceSha,
 if(ledger.state!=='RECORDED_COMPLETE')throw new Error('J219_LEDGER_SEED_FAILED');
 const env=Object.assign({},process.env,{TALLY_LOCAL_REPLAY:'1',
   TALLY_TASK_CLAIM_219_REGISTRY_PATH:registryPath});
+// Publication authority fixtures mirror the reviewedFrozen unit fixture:
+// distinct builder/reviewer role Claims bound to the seeded proof row, a
+// verified witness read and a version fence; every physical GitHub effect
+// stays NOT_RUN and no synthetic GitHub authority leaves this process.
+const roleClaim=role=>({ok:true,claim:{accepted:true,issueNumber:219,role,
+  sourceSha,claimRef:role==='builder'?'claim:author':'claim:reviewer',
+  operatorId:role==='builder'?'author:j219':'reviewer:j219',
+  writerId:role==='builder'?'writer:author:j219':'writer:reviewer:j219',
+  transportActor:'kaicreator-mm'}});
 const host=createMaintenanceHost({env,openStore,
-  verifyAcceptedClaim:async()=>({ok:true}),
-  verifyFrozenWriteSet:async()=>({ok:true})});
+  verifyAcceptedClaim:async(_issue,role='builder')=>roleClaim(role),
+  verifyFrozenWriteSet:async()=>({ok:true}),
+  readReviewWitness:async({commentId,expected})=>({
+    state:'REVIEW_VERIFIED',reviewed:true,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/219#issuecomment-'+commentId,
+    sourceSha:expected.sourceSha,candidateDigest:expected.candidateDigest,
+    reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+    reviewedAt:'2026-10-31T09:00:00.000Z',p0:0,p1:0,
+    authorized:false,taskPass:false}),
+  readCurrentVersion:async()=>({ok:true,sha:sourceSha}),
+  withVersionFence:async(_meta,run)=>run()});
+// New routes intentionally fail closed in the injected replay: no synthetic
+// original GitHub Claim/review authority or production CAS is minted.
+export async function persistMaintenanceDraft(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  return {state:'NOT_ADMITTED',reason:'MAINTENANCE_HOST_CONFIG_INVALID',
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    claimGeneration:1,authorized:false,admitted:false,
+    taskPass:false,releasePass:false,githubEffect:'NOT_RUN'};
+}
 export async function publishMaintenanceIssue(input){
   const result=await host.hostPublishMaintenanceIssue(input);
   console.error('J219_PROVIDER_PUBLISH_RETURN',JSON.stringify(result));
@@ -452,6 +1133,14 @@ export async function joinReviewedCandidates(input){
     admitted:true,agentLaunch:false,replayFixture:true,authorized:false,
     taskPass:false,releasePass:false,state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY'};
 }
+export async function reviewSingleCandidate(input){
+  return {issueRef:input&&input.sourceRef,sourceSha:input&&input.sourceSha,
+    decisionId:input&&input.decisionId,claimGeneration:1,claimAccepted:true,
+    admitted:true,agentLaunch:false,replayFixture:true,authorized:false,
+    taskPass:false,releasePass:false,state:'REPLAY_COMPLETE',
+    reason:'REPLAY_FIXTURE_ONLY',decision:null,decisionRecord:null,
+    taskOutcome:null};
+}
 export async function publishReviewedCandidate(){
   return {state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
     authorized:false,taskPass:false,releasePass:false};
@@ -464,11 +1153,44 @@ export async function freezeProductIntake(){
   return {state:'NOT_FROZEN',reason:'PRODUCT_FREEZE_INPUT_INVALID',
     authorized:false,admitted:false,taskPass:false,releasePass:false};
 }
+export async function persistProductDraft312(){
+  return {state:'NOT_ADMITTED',reason:'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function freezeProductReview312(){
+  return {state:'NOT_FROZEN',reason:'PRODUCT_FREEZE_INPUT_INVALID',
+    authorized:false,admitted:false,taskPass:false,releasePass:false};
+}
+export async function hostReleaseDelivery(){
+  return {state:'NOT_QUALIFIED',reason:'INDEPENDENT_HOST_ADMISSION_NOT_CONNECTED',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function addNativeTaskDependency(){
+  return {status:'NOT_VERIFIED',reason:'TASK_PACK_IDENTITY_INVALID',
+    authorized:false,taskPass:false,releasePass:false};
+}
+export async function freezeVersionTaskDag(){
+  return {status:'NOT_VERIFIED',reason:'TASK_PACK_IDENTITY_INVALID',
+    authorized:false,taskPass:false,releasePass:false};
+}
 `;
 // Deterministic ledger identity of the seeded fixture report (matches
 // learningSuggestionsFromReports: sha256 over the canonical identity array).
 const REPLAY_LEARNING_ID=createHash('sha256').update(
   JSON.stringify(['rep-1',1,6540000001,'EXECUTION_SUMMARY'])).digest('hex');
+// The replay candidate and its Host-canonical digest are computed ONCE here
+// with the real maintenanceCandidateDigest so the provider-seeded review
+// proof row and the consumer-side digest always agree; a locally re-derived
+// key order would silently diverge from the Host canonical form.
+const REPLAY_CANDIDATE=Object.freeze({sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
+  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
+  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
+  summary:'Post-release behavior regression against immutable v1.5.5',
+  priorRelease:Object.freeze({version:'v1.5.5',
+    commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
+    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'})});
+const REPLAY_CANDIDATE_DIGEST=maintenanceCandidateDigest(REPLAY_CANDIDATE);
+assert.match(REPLAY_CANDIDATE_DIGEST??'/',/^[0-9a-f]{64}$/);
 const REPLAY_CONSUMER=String.raw`import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -486,14 +1208,12 @@ assert.ok(digestMatch,'provider digest marker required');
 const providerPath=fileURLToPath(import.meta.resolve('@kaicreator/tally-local-codex-host-bundle'));
 assert.equal(sha(readFileSync(providerPath)),digestMatch[1],'PROVIDER_INTEGRITY_MISMATCH');
 const sourceSha=process.env.J219_REPLAY_SOURCE_SHA;
-const candidateDigest=createHash('sha256').update(JSON.stringify({
-  priorRelease:{commitSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-    evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5',
-    immutable:true,version:'v1.5.5'},
-  requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
-  sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
-  subjectSha:'5904e7efd68b63fa4a2a0f97f54d88e9f99f4b02',
-  summary:'Post-release behavior regression against immutable v1.5.5'}).toString()).digest('hex');
+// The candidate digest is the Host-canonical digest of the exact seeded
+// replay candidate, computed once in the test scope with the real
+// maintenanceCandidateDigest and transported via env; a locally re-derived
+// key order would silently diverge from the Host canonical form.
+const candidateDigest=process.env.J219_REPLAY_CANDIDATE_DIGEST;
+assert.match(candidateDigest??'/',/^[0-9a-f]{64}$/);
 const issueRef='https://github.com/kaicreator-mm/tally/issues/219';
 const learningId=process.env.J219_REPLAY_LEARNING_ID;
 const deployment={deployedAppId:'deploy:tally-v2-j219-replay',tenantId:'tenant:tally-v2',
@@ -517,7 +1237,9 @@ const openFacade=async()=>{
 };
 if(process.env.J219_CONSUMER_MODE==='noflag'){
   const {sqlite,facade}=await openFacade();
-  for(const intentType of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+  for(const intentType of ['persistMaintenanceDraft',
+    'freezeReviewedMaintenanceCandidate',
+    'publishMaintenanceIssue','recordTaskLearningOutcome']){
     let refused=false,detail='';
     try{
       const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
@@ -535,6 +1257,29 @@ if(process.env.J219_CONSUMER_MODE==='noflag'){
   facade.stop();await sqlite.close();process.exit(0);
 }
 const {sqlite,facade}=await openFacade();
+// Selected route existence is tested with the real loaded K. These replay
+// requests MUST stay non-authoritative with no CAS/GitHub write, because the
+// physical accepted role Claims and canonical review are not configured. The
+// Host refusal is projected at the K boundary as UNKNOWN with the bounded
+// refusal reason preserved (CAS-only projection semantics); it never becomes
+// a definitive caller-facing admission or a fabricated Task/Release pass.
+for(const intentType of ['persistMaintenanceDraft',
+  'freezeReviewedMaintenanceCandidate']){
+  const receipt=await facade.send({intentType,instanceKey:'maintenance-219',
+    messageId:'j219-guarded-'+intentType,
+    input:{issueRef,issueNumber:219,sourceSha,candidateDigest,
+      candidate:{sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207'},
+      reviewCommentId:1,reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sourceSha}});
+  assert.equal(receipt.status,'admitted',JSON.stringify(receipt).slice(0,450));
+  const output=receipt.admitted.effects[0].output;
+  assert.equal(output.state,'UNKNOWN',intentType);
+  assert.match(output.reason??'/',/^[A-Z][A-Z0-9_]{0,127}$/);
+  assert.equal(output.authorized,false);
+  assert.equal(output.admitted,false);
+  assert.equal(output.taskPass,false);
+  assert.equal(output.releasePass,false);
+}
 const publishReceipt=await facade.send({intentType:'publishMaintenanceIssue',
   instanceKey:'maintenance-219',messageId:'j219-publish-1',
   input:{issueRef,issueNumber:219,sourceSha,candidateDigest}});
@@ -653,7 +1398,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     writeFileSync(join(providerDir,'package.json'),JSON.stringify({name:'@kaicreator/tally-local-codex-host-bundle',
       version:'0.0.0',private:true,type:'module',exports:'./index.mjs'}));
     writeFileSync(join(providerDir,'index.mjs'),
-      REPLAY_PROVIDER.replace('__TALLY_ROOT__','file:///'+REPO_ROOT.replace(/\\/g,'/')));
+      REPLAY_PROVIDER.replace('__TALLY_ROOT__','file:///'+REPO_ROOT.replace(/\\/g,'/'))
+        .replace('__J219_CANDIDATE_JSON__',JSON.stringify(REPLAY_CANDIDATE)));
     assert.equal(run('npm',['pack','--pack-destination',packed,providerDir]).status,0,'provider pack');
     const producerDir=join(root,'producer');mkdirSync(producerDir);
     writeFileSync(join(producerDir,'package.json'),JSON.stringify({name:'tally-j219-producer',
@@ -685,7 +1431,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withFlag.stdout,/"maintenanceRoutes": "SELECTED"/);
     const sealedPath=join(root,'sealed-app.json');
     const sealed=JSON.parse(readFileSync(sealedPath,'utf8'));
-    for(const intent of ['publishMaintenanceIssue','recordTaskLearningOutcome']){
+    for(const intent of ['persistMaintenanceDraft','freezeReviewedMaintenanceCandidate',
+      'publishMaintenanceIssue','recordTaskLearningOutcome']){
       const route=sealed.routes.find(r=>r.intentId===intent);
       assert.ok(route,'maintenance route missing: '+intent);
       assert.equal(route.capabilityId,'tally-local-codex');
@@ -695,7 +1442,8 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
     assert.match(withoutFlag.stdout,/"maintenanceRoutes": "NOT_SELECTED"/);
     const noflagPath=join(root,'sealed-app-noflag.json');
     const noflag=JSON.parse(readFileSync(noflagPath,'utf8'));
-    assert.equal(noflag.routes.some(r=>['publishMaintenanceIssue',
+    assert.equal(noflag.routes.some(r=>['persistMaintenanceDraft',
+      'freezeReviewedMaintenanceCandidate','publishMaintenanceIssue',
       'recordTaskLearningOutcome'].includes(r.intentId)),
       false,'maintenance routes must be absent without T219_MAINTENANCE=1');
     assert.ok(!readFileSync(sealedPath,'utf8').includes(REPLAY_CANARY),'no canary in sealed bytes');
@@ -723,6 +1471,7 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
       J219_CONSUMER_MODE:mode,J219_REPLAY_SOURCE_SHA:sourceSha,
       TALLY_CLAIM_SOURCE_SHA:sourceSha,
       J219_REPLAY_LEARNING_ID:REPLAY_LEARNING_ID,
+      J219_REPLAY_CANDIDATE_DIGEST:REPLAY_CANDIDATE_DIGEST,
       J219_REPLAY_CANARY:REPLAY_CANARY,
       J219_CONSUMER_TMP:dataDir});
     const flagged=run(process.execPath,[join(consumerDir,'consumer-j219.mjs')],
@@ -749,4 +1498,493 @@ test('J219 sealed producer + real K consumer replay (physical DH v0.10.3 run)',{
 test('Task 219 frozen write-set binding names the admitted Host path',()=>{
   const bundle=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
   assert.match(bundle,/219:\{actorRole:'builder',candidateRelativePath:'experiments\/v2\/maintenance\/host-maintenance.mjs'\}/);
+});
+
+test('#219 producer business provides seals every declared business intent',()=>{
+  // The Kernel refuses routes whose intent is missing from the business
+  // module's sealed provides (V10_ROUTE_INVALID); only the physical J219
+  // replay builds maintenance routes, so this source-level pin keeps the
+  // producer composition and the declared business intents consistent in
+  // every unit run.
+  const businessSource=readFileSync(new URL(
+    '../../../packages/tally-engineering-business/src/index.mjs',import.meta.url),'utf8');
+  const producerSource=readFileSync(new URL(
+    '../selected-business-build/producer.mjs',import.meta.url),'utf8');
+  const declared=/export const INTENT_TYPES = Object\.freeze\(\[([^\]]+)\]\);/
+    .exec(businessSource);
+  assert.ok(declared,'business INTENT_TYPES declaration must be parseable');
+  const names=[...declared[1].matchAll(/'([^']+)'/g)].map(x=>x[1]);
+  assert.ok(names.length>=16,'expected the full declared business intent list');
+  for(const name of names)
+    assert.ok(producerSource.includes(`'intent:${name}'`),
+      'producer business provides must seal intent:'+name);
+  // The sealed capability's static import surface must be covered by the
+  // replay provider bundle: a missing export fails the whole module at K
+  // load time (V10_IMPORT_EVAL_FAILED), which only the physical J219 replay
+  // otherwise reaches.
+  const shimSource=readFileSync(new URL(
+    '../selected-business-build/local-codex-shim.mjs',import.meta.url),'utf8');
+  const testSource=readFileSync(fileURLToPath(import.meta.url),'utf8');
+  const providerBlock=/const REPLAY_PROVIDER=String\.raw`([\s\S]*?)`;/
+    .exec(testSource);
+  assert.ok(providerBlock,'REPLAY_PROVIDER template must be parseable');
+  const providerExports=new Set(
+    [...providerBlock[1].matchAll(/^export (?:async )?function (\w+)/gm)]
+      .map(x=>x[1]));
+  const shimImports=/import \{([\s\S]*?)\}\s*from '@kaicreator\/tally-local-codex-host-bundle'/
+    .exec(shimSource);
+  assert.ok(shimImports,'shim provider import must be parseable');
+  const importedNames=shimImports[1].split(',')
+    .map(x=>x.trim().split(/\s+as\s+/)[0]).filter(Boolean);
+  assert.ok(importedNames.length>=14,'expected the full shim import surface');
+  for(const name of importedNames)
+    assert.ok(providerExports.has(name),
+      'REPLAY_PROVIDER must export shim-imported name:'+name);
+});
+
+test('#219 candidate draft requires accepted claim and FSW, and is create-only',async()=>{
+  const ctx=persisted(),args={...publishInput(),candidate:candidate()};
+  const inst=()=>createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:true}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()});
+  const first=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(first.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(ctx.m.createCount(),1);
+  const second=await inst().hostPersistMaintenanceDraft(args);
+  assert.equal(second.reason,'MAINTENANCE_DRAFT_ALREADY_RECORDED');
+  assert.equal(ctx.m.createCount(),1);
+  const drift=await inst().hostPersistMaintenanceDraft({...args,
+    candidate:{...candidate(),summary:'different'}});
+  assert.equal(drift.state,'NOT_ADMITTED');
+  const blocked=await createMaintenanceHost({openStore:ctx.openStore,
+    verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'}),
+    verifyFrozenWriteSet:async()=>({ok:true}),env:env()})
+    .hostPersistMaintenanceDraft(args);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+});
+test('#219 Host candidate freeze requires twice witnessed distinct roles and fenced CAS',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:builder',operatorId:'op:builder',writerId:'w:builder',
+    transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const marker='https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6840000001';
+  const witness={state:'REVIEW_VERIFIED',reviewed:true,reviewRef:marker,
+    sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+    authorized:false,taskPass:false};
+  let reads=0,fences=0;
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();},...over});
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),3);
+  const row=ctx.m.docs.get(MAINTENANCE_CANDIDATE_KEY).value;
+  assert.equal(row.review.author,'op:builder');
+  assert.equal(row.review.reviewer,'op:reviewer');
+  assert.equal(row.taskPass,false);assert.equal(row.authorized,false);
+  const repeated=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(repeated.state,'RECORDED_COMPLETE');
+  assert.equal(ctx.m.createCount(),3);
+  const noFence=await mk({withVersionFence:null})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(noFence.reason,'MAINTENANCE_HOST_CONFIG_INVALID');
+});
+test('#219 Host ReviewWitness refuses a same operator and any untrusted/absent source',async()=>{
+  const ctx=persisted(),input={...publishInput(),reviewCommentId:6840000001,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    claimRef:'c:b',operatorId:'same',writerId:'w:b',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:r',writerId:'w:r'};
+  const mk=over=>createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'}),
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run(),...over});
+  const missing=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(missing.reason,'MAINTENANCE_DRAFT_NOT_VERIFIED');
+  await mk().hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const same=await mk().hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(same.reason,'MAINTENANCE_REVIEW_SAME_PROCESS');
+  assert.equal(ctx.m.createCount(),1);
+  const blocked=await mk({verifyAcceptedClaim:async()=>({ok:false,reason:'NO_CLAIM'})})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(blocked.state,'NOT_ADMITTED');
+  assert.equal(ctx.m.createCount(),1);
+});
+
+test('#219 name-only legacy candidate cannot publish without separately frozen review proof',async()=>{
+  const ctx=persisted();
+  await recordMaintenanceCandidate({...reviewArgs({openStore:ctx.openStore})});
+  let publishes=0;
+  const h=host(ctx,{...publishTransport(),
+    publishIssue:async()=>{publishes++;return {state:'ISSUE_PUBLISHED',
+      issue:issueReadback(999).issue};}});
+  const r=await h.hostPublishMaintenanceIssue(publishInput());
+  assert.equal(r.state,'NOT_ADMITTED');
+  assert.equal(r.reason,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+  assert.equal(publishes,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+});
+
+test('#219 fence-time Claim/FSW revocation refuses CAS without Review Proof',async()=>{
+  for(const revoked of ['reviewer','fsw']){
+    const ctx=persisted();
+    const input={...publishInput(),reviewCommentId:6840000001,
+      reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+      reviewedTree:'e'.repeat(40),reviewedBase:sha};
+    const b={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+      claimRef:'claim:builder',operatorId:'operator:builder',
+      writerId:'writer:builder',transportActor:'kaicreator-mm'};
+    const r={...b,role:'reviewer',claimRef:'claim:reviewer',
+      operatorId:'operator:reviewer',writerId:'writer:reviewer'};
+    let reviewerReads=0,fswReads=0,fenceCalls=0;
+    const witness={state:'REVIEW_VERIFIED',reviewed:true,
+      reviewRef:__test.ISSUE_REF+'#issuecomment-6840000001',
+      sourceSha:sha,candidateDigest:digest,reviewedHead:input.reviewedHead,
+      reviewedTree:input.reviewedTree,reviewedAt:'2026-11-13T02:00:00Z',
+      authorized:false,taskPass:false};
+    const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+      verifyAcceptedClaim:async(_n,role)=>{
+        if(role==='reviewer'&&++reviewerReads===2&&revoked==='reviewer')
+          return {ok:false,reason:'CLAIM_REVOKED'};
+        return {ok:true,claim:role==='reviewer'?r:b};},
+      verifyFrozenWriteSet:async()=>{
+        fswReads++;
+        return fswReads>=3&&revoked==='fsw'?
+          {ok:false,reason:'WRITE_SET_REVOKED'}:{ok:true};},
+      readReviewWitness:async()=>witness,
+      readCurrentVersion:async()=>({ok:true,sha}),
+      withVersionFence:async(_meta,run)=>{fenceCalls++;return run();}});
+    const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+    assert.equal(draft.state,'DRAFT_PENDING_REVIEW');
+    const result=await h.hostFreezeReviewedMaintenanceCandidate(input);
+    assert.equal(result.state,'NOT_ADMITTED');
+    assert.equal(result.reason,revoked==='reviewer'?
+      'MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED':
+      'MAINTENANCE_REVIEW_WRITE_SET_CHANGED');
+    assert.equal(fenceCalls,1);
+    assert.equal(ctx.m.createCount(),1,'only the pre-review draft exists');
+    assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),false);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),false);
+    assert.equal(result.githubEffect,'NOT_RUN');
+    assert.equal(result.taskPass,false);
+  }
+});
+
+// Real wiring contract: the Host freeze must accept the EXACT return surface
+// of the merged qualified C reader (#409), which carries no reviewedAt yet.
+// Fixtures that silently add the field would mask an unsatisfiable contract.
+const realCWitness=async(input,claims)=>{
+  const NODE_ID='IC_j219contract01';
+  const REVIEW_REF=`https://github.com/kaicreator-mm/tally/issues/219#issuecomment-${input.reviewCommentId}`;
+  const TS='2026-11-13T02:00:00Z';
+  const witnessBody=JSON.stringify({schema:'tally.v2.maintenance-review-witness/1',
+    status:'INDEPENDENTLY_VERIFIED',repository:'kaicreator-mm/tally',issueNumber:219,
+    sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+    reviewedPullNumber:input.reviewedPullNumber,reviewedHead:input.reviewedHead,
+    reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
+    builderClaimRef:claims.builderClaim.claimRef,
+    reviewerClaimRef:claims.reviewerClaim.claimRef,
+    reviewerOperatorId:claims.reviewerClaim.operatorId,
+    reviewerWriterId:claims.reviewerClaim.writerId,p0:0,p1:0,p2:1});
+  const octokit={graphql:async()=>({node:{__typename:'IssueComment',
+      id:NODE_ID,fullDatabaseId:String(input.reviewCommentId),url:REVIEW_REF,
+      body:witnessBody,lastEditedAt:null,editor:null,
+      issue:{number:219,repository:{nameWithOwner:'kaicreator-mm/tally'}}}}),
+    rest:{issues:{getComment:async()=>({data:{id:input.reviewCommentId,
+        node_id:NODE_ID,html_url:REVIEW_REF,
+        issue_url:'https://api.github.com/repos/kaicreator-mm/tally/issues/219',
+        user:{login:'kaicreator-mm'},created_at:TS,updated_at:TS,
+        body:witnessBody}})},
+      pulls:{get:async()=>({data:{number:input.reviewedPullNumber,state:'open',
+        merged:false,head:{sha:input.reviewedHead,
+          repo:{full_name:'kaicreator-mm/tally'}},
+        base:{sha:input.reviewedBase,ref:'version/v2'}}})},
+      repos:{getCommit:async({ref})=>({data:{sha:ref,commit:{tree:{sha:
+          ref===input.reviewedHead?input.reviewedTree:'f'.repeat(40)}}}}),
+        getBranch:async()=>({data:{commit:{sha:input.sourceSha}}}),
+        // #417 merged-witness reader requires the full client surface up
+        // front; the OPEN current-base fixture never dereferences it.
+        compareCommits:async()=>({data:{ahead_by:0,behind_by:0,
+          merge_base_commit:{sha:input.sourceSha}}})}}};
+  return readMaintenanceReviewWitnessFromClient({octokit,...claims,
+    commentId:input.reviewCommentId,
+    expected:{issueNumber:219,sourceSha:input.sourceSha,
+      candidateDigest:input.candidateDigest,
+      reviewedPullNumber:input.reviewedPullNumber,
+      reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+      reviewedBase:input.reviewedBase}});
+};
+test('#219 Host freeze accepts the real merged C immutable ReviewWitness and records proof',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000002,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  assert.equal(witness.state,'REVIEW_VERIFIED',witness.reason);
+  assert.equal(witness.reviewedAt,'2026-11-13T02:00:00Z');
+  let reads=0,fences=0;
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;return witness;},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>{fences++;return run();}});
+  const draft=await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  assert.equal(draft.state,'DRAFT_PENDING_REVIEW',draft.reason);
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  assert.equal(reads,2);assert.equal(fences,1);
+  assert.equal(ctx.m.createCount(),3,'draft, candidate and proof created');
+  assert.equal(ctx.m.docs.has(MAINTENANCE_CANDIDATE_KEY),true);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_REVIEW_PROOF_KEY),true);
+  assert.equal(ctx.m.docs.get(MAINTENANCE_REVIEW_PROOF_KEY).value.reviewedAt,
+    '2026-11-13T02:00:00Z');
+});
+test('#219 Host freeze completes end-to-end once the C transport carries the witness instant',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000004,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  const h=createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>witness,
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()});
+  await h.hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  const frozen=await h.hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(frozen.state,'RECORDED_COMPLETE',JSON.stringify(frozen));
+  const proof=(await ctx.openStore().then(s=>s.get(MAINTENANCE_REVIEW_PROOF_KEY))).value;
+  assert.equal(proof.reviewedAt,'2026-11-13T02:00:00Z');
+});
+test('#219 Host freeze refuses a witness verdict that changes across the fence',async()=>{
+  const ctx=persisted();
+  const input={...publishInput(),reviewCommentId:6840000003,
+    reviewedPullNumber:278,reviewedHead:'d'.repeat(40),
+    reviewedTree:'e'.repeat(40),reviewedBase:sha};
+  const builder={accepted:true,role:'builder',issueNumber:219,sourceSha:sha,
+    candidateDigest:digest,claimRef:'c:builder',operatorId:'op:builder',
+    writerId:'w:builder',transportActor:'kaicreator-mm'};
+  const reviewer={...builder,role:'reviewer',claimRef:'c:reviewer',
+    operatorId:'op:reviewer',writerId:'w:reviewer'};
+  const witness=await realCWitness(input,{builderClaim:builder,reviewerClaim:reviewer});
+  await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async()=>({ok:true,claim:builder}),
+    verifyFrozenWriteSet:async()=>({ok:true})})
+    .hostPersistMaintenanceDraft({...input,candidate:candidate()});
+  let reads=0;
+  const result=await createMaintenanceHost({openStore:ctx.openStore,env:env(),
+    verifyAcceptedClaim:async(n,role)=>({ok:true,claim:role==='builder'?builder:reviewer}),
+    verifyFrozenWriteSet:async()=>({ok:true}),
+    readReviewWitness:async()=>{reads++;
+      return reads===1?witness:{...witness,p2:7};},
+    readCurrentVersion:async()=>({ok:true,sha}),
+    withVersionFence:async(meta,run)=>run()})
+    .hostFreezeReviewedMaintenanceCandidate(input);
+  assert.equal(result.reason,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+  assert.equal(ctx.m.createCount(),1,'no candidate or proof may land');
+});
+
+test('#219 live publication authority rejects revoked review, role, FSW or version',async()=>{
+  for(const key of ['review','role','fsw','version','fence']){
+    const ctx=await reviewedFrozen();
+    let posts=0;
+    const changes={
+      review:{readReviewWitness:async()=>({state:'REVIEW_UNKNOWN'})},
+      role:{verifyAcceptedClaim:async(_n,role)=>role==='reviewer'?
+        {ok:false,reason:'CLAIM_REVOKED'}:{ok:true}},
+      fsw:{verifyFrozenWriteSet:async()=>({ok:false})},
+      version:{readCurrentVersion:async()=>({ok:true,sha:'b'.repeat(40)})},
+      fence:{withVersionFence:undefined}};
+    const out=await host(ctx,{...publishTransport(302),...changes[key],
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'};}})
+      .hostPublishMaintenanceIssue(publishInput());
+    assert.notEqual(out.state,'MAINTENANCE_ISSUE_PUBLISHED',key);
+    assert.equal(posts,0,key);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false,key);
+    assert.equal(out.taskPass,false);
+  }
+});
+test('#219 publication checks C witness again while fenced, before pending CAS',async()=>{
+  const ctx=await reviewedFrozen();
+  let reads=0,posts=0;
+  const result=await host(ctx,{...publishTransport(302),
+    readReviewWitness:async({commentId,expected})=>{
+      reads++;
+      return reads===1?{state:'REVIEW_VERIFIED',reviewed:true,
+        reviewRef:__test.ISSUE_REF+'#issuecomment-'+commentId,
+        sourceSha:sha,candidateDigest:digest,
+        reviewedHead:expected.reviewedHead,reviewedTree:expected.reviewedTree,
+        reviewedAt:'2026-10-31T09:00:00.000Z',
+        authorized:false,taskPass:false,p0:0,p1:0}:{state:'REVIEW_UNKNOWN'};},
+    publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}},
+  }).hostPublishMaintenanceIssue(publishInput());
+  assert.equal(reads,2);assert.equal(result.state,'NOT_ADMITTED');
+  assert.equal(result.reason,'MAINTENANCE_PUBLICATION_WITNESS_STALE');
+  assert.equal(posts,0);
+  assert.equal(ctx.m.docs.has(MAINTENANCE_PENDING_KEY),false);
+});
+test('#219 pending zero matches or GitHub search error stays UNKNOWN, never POST',async()=>{
+  for(const throwError of [false,true]){
+    const ctx=await reviewedFrozen();
+    await ctx.m.store.put(MAINTENANCE_PENDING_KEY,genuinePending());
+    let posts=0;
+    const result=await host(ctx,{
+      findIssue:async()=>{if(throwError)throw Error('network');
+        return {state:'RECONCILE_COMPLETE',reason:'MAINTENANCE_ISSUE_ABSENT',
+          matches:[]};},
+      readIssue:async()=>issueReadback(302),
+      publishIssue:async()=>{posts++;return {state:'ISSUE_PUBLISHED'}}
+    }).hostPublishMaintenanceIssue(publishInput());
+    assert.equal(result.state,'PUBLICATION_UNKNOWN');
+    assert.equal(result.githubEffect,'UNKNOWN');
+    assert.equal(result.reason,throwError?
+      'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN':
+      'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+    assert.equal(posts,0);
+    assert.equal(ctx.m.docs.has(MAINTENANCE_ISSUE_KEY),false);
+  }
+});
+
+test('#219 shim keeps every reachable lost-ACK reason UNKNOWN and refuses non-token reasons',()=>{
+  // Behavior test of the shipped sealed-boundary validation: the state+effect
+  // shape is the contract, reasons are bounded machine tokens, and a lost
+  // acknowledgment must never be rewritten into a pre-effect refusal.
+  const src=readFileSync(new URL('../selected-business-build/local-codex-shim.mjs',
+    import.meta.url),'utf8');
+  const start=src.indexOf('const MAINTENANCE_ISSUE=219;');
+  const end=src.indexOf('export async function publishMaintenanceIssue');
+  assert.ok(start>=0&&end>start,'missing shim maintenance validation block');
+  const mod=runInNewContext('(function(){'+src.slice(start,end)+
+    ';return {validMaintenanceIssue};})()',
+    {issueRefFor:n=>'https://github.com/kaicreator-mm/tally/issues/'+n,
+      SHA:/^[0-9a-f]{40}$/});
+  const input={issueNumber:219,sourceSha:sha,candidateDigest:digest};
+  const unknownShape=reason=>({state:'PUBLICATION_UNKNOWN',reason,
+    issueRef:__test.ISSUE_REF,sourceSha:sha,candidateDigest:digest,
+    claimGeneration:1,authorized:false,agentLaunch:false,
+    historicalReleaseMutation:false,taskPass:false,releasePass:false,
+    claimAccepted:true,admitted:true,replayFixture:false,
+    githubEffect:'UNKNOWN',issue:null});
+  for(const reason of ['MAINTENANCE_ISSUE_PENDING_RECONCILIATION',
+    'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN','MAINTENANCE_ISSUE_READBACK_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN','GITHUB_PUBLICATION_UNKNOWN',
+    'MAINTENANCE_ISSUE_CREATE_READBACK_MISSING','GITHUB_PUBLISH_UNKNOWN']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),true,reason);
+  }
+  for(const reason of ['local_agent_threw','not a token','A'.repeat(129),'','ok!']){
+    assert.equal(mod.validMaintenanceIssue(input,unknownShape(reason)),false,
+      'non-token reason must be refused: '+JSON.stringify(reason));
+  }
+  for(const reason of ['MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED','MAINTENANCE_FREEZE_STORE_UNAVAILABLE',
+    'MAINTENANCE_ISSUE_DIGEST_MISMATCH','CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH']){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape(reason),
+      state:'NOT_ADMITTED',claimAccepted:false,admitted:false,
+      githubEffect:'NOT_RUN'}),true,reason);
+  }
+  for(const broken of [
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',claimAccepted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',admitted:false},
+    {state:'PUBLICATION_UNKNOWN',reason:'GITHUB_PUBLISH_UNKNOWN',githubEffect:'NOT_RUN'},
+    {state:'NOT_ADMITTED',reason:'MAINTENANCE_FREEZE_STORE_UNAVAILABLE',claimAccepted:true},
+  ]){
+    assert.equal(mod.validMaintenanceIssue(input,{...unknownShape('GITHUB_PUBLISH_UNKNOWN'),...broken}),false,
+      'shape violation must refuse: '+JSON.stringify(broken));
+  }
+});
+
+test('#219 selected K role-env and exact FSW checker reject forged path sets',()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const extract=name=>{
+    const start=src.indexOf('function '+name+'(');
+    const end=src.indexOf('\n}',start);
+    assert.ok(start>=0&&end>start,'missing selected K '+name);
+    return src.slice(start,end+2);
+  };
+  const claimEnv=runInNewContext('('+extract('claimEnv')+')');
+  const cfg={TALLY_CLAIM_SOURCE_SHA:sha};
+  for(const [role,operator] of [['builder','operator:b'],['reviewer','operator:r']]){
+    const prefix='TALLY_TASK_CLAIM_219_'+role.toUpperCase()+'_';
+    Object.assign(cfg,{[prefix+'OPERATOR_ID']:operator,
+      [prefix+'WRITER_ID']:'writer:'+role,[prefix+'COMMENT_ID']:role==='builder'?'11':'12',
+      [prefix+'WRITER_LOGIN']:'kaicreator-mm',
+      [prefix+'DISPATCH_ID']:'dispatch:'+role,
+      [prefix+'REGISTRY_PATH']:'shared:219',
+      [prefix+'WRITESET_SHA256']:'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797'});
+  }
+  const b=claimEnv(cfg,219,'builder'),r=claimEnv(cfg,219,'reviewer');
+  assert.notEqual(b.operatorId,r.operatorId);
+  assert.notEqual(b.writerId,r.writerId);
+  assert.notEqual(b.commentId,r.commentId);
+  assert.equal(b.writerLogin,r.writerLogin,'same GitHub login allowed');
+  assert.equal(b.registryPath,r.registryPath);
+  const paths=[".woodpecker/v2-alm-workspace.yaml",
+    "experiments/v2/maintenance/host-maintenance.mjs",
+    "experiments/v2/maintenance/host-maintenance.test.mjs",
+    "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+    "experiments/v2/selected-business-build/local-codex-shim.mjs",
+    "experiments/v2/selected-business-build/producer.mjs",
+    "packages/tally-engineering-business/src/index.mjs",
+    "packages/tally-engineering-business/test/business-policy.test.mjs",
+    "packages/tally-github-c/src/maintenance-effects.mjs",
+    "packages/tally-github-c/test/maintenance-effects.test.mjs",
+    "web/v2/journey-server.mjs","web/v2/journey-view.html",
+    "web/v2/maintenance-controller.mjs","web/v2/maintenance-controller.test.mjs"].sort();
+  const digest=sha256HexOf(paths);
+  assert.equal(digest,'3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797');
+  const matches=runInNewContext('('+extract('fsDocumentMatches')+')',{createHash});
+  assert.equal(matches(JSON.stringify(paths),paths,digest),true);
+  for(const bogus of [[...paths,'evil.mjs'],[...paths.slice(0,-1),paths[0]],
+    paths.map(x=>x+'-suffix'),[paths[0]]]){
+    assert.equal(matches(JSON.stringify(bogus),paths,digest),false);
+  }
+  assert.equal(matches(JSON.stringify(paths),paths,'f'.repeat(64)),false);
+  assert.match(src,/readGitHubClaimPublicationWitness/);
+  assert.match(src,/MAINTENANCE_ROLE_CLAIM_PACK_UNVERIFIED/);
+});
+test('#219 shared fence preserves failed RELEASED acknowledgement as UNKNOWN',async()=>{
+  const src=readFileSync(new URL('../selected-business-build/bundle-local-codex.mjs',import.meta.url),'utf8');
+  const start=src.indexOf('async function withMaintenanceVersionFence(');
+  const end=src.indexOf('\n}',start);
+  assert.ok(start>0&&end>start);
+  const source=src.slice(start,end+2);
+  const mk=(impl)=>runInNewContext('('+source+')',{
+    withProduct312VersionFence:impl,
+    maintenanceSafeNoEffectReasons:new Set(),
+    product312Unknown:reason=>({state:'UNKNOWN',reason})});
+  const work=async()=>({state:'RECORDED_COMPLETE',
+    reason:'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS'});
+  const bad=await mk(async(_meta,callback)=>{
+    await callback();return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(bad.state,'UNKNOWN');
+  const good=await mk(async(_meta,callback)=>{
+    await callback();return {state:'FROZEN_COMPLETE'};
+  })({sourceSha:sha,operation:'FREEZE_REVIEWED_MAINTENANCE'},work);
+  assert.equal(good.state,'RECORDED_COMPLETE');
 });

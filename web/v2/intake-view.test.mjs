@@ -35,7 +35,7 @@ const reviewed=(snapshot)=>{
     product:{goal:'Ship the workbench',nonGoals:['No raw JSON']},
     l2:{decision:'KEEP_MERGED_L2_ARCHITECTURE',choices:['KEEP_MERGED_L2_ARCHITECTURE']},
     provenance:['157'],note:'draft note'};
-  snapshot.review={state:'REVIEWED',reviewer:'reviewer:ada',
+  snapshot.review={state:'REVIEW_PROPOSED_UNVERIFIED',reviewer:'reviewer:ada',
     at:'2026-10-31T09:06:00.000Z',digest:snapshot.draft.digest,current:true};
   return snapshot;
 };
@@ -67,27 +67,38 @@ test('write mode exposes only typed forms with accessible labels, never raw JSON
   for(const id of labels)assert.ok(ids.includes(id),`label target missing: ${id}`);
   assert.match(html,/type="checkbox"/);assert.match(html,/<select/);
   assert.match(html,/value="157"/);
-  assert.match(html,/Reviewer identity \(must differ from the author\)/);
+  assert.match(html,/Reviewer label \(not a verified Reviewer Claim\)/);
   assert.doesNotMatch(html,/paste.*JSON/i);
   assert.match(html,/no raw JSON/);
   assert.match(html,/data-action="submit-goal"|data-action="confirm-inspect"/);
   assert.match(html,/data-action="admit-project-intake"/);
+  // #312: the freeze form carries only the exact ReviewWitness coordinates;
+  // every one is re-verified Host-side, none is authority in the browser.
+  assert.match(html,/data-action="freeze-draft"/);
+  for(const name of ['reviewCommentId','taskPackBlobSha','writeSetSha256',
+    'reviewedHead','reviewedTree','reviewedBase'])
+    assert.match(html,new RegExp(`name="${name}"`),name);
+  assert.match(html,/re-verified by the selected K\/Host/);
 });
 
-test('draft CANDIDATE, independent REVIEWED and FROZEN states stay visually distinct',()=>{
+test('draft and unverified review proposal stay separate from Host Freeze',()=>{
   const html=renderIntakeWorkspace(reviewed(base()),{mode:'read'});
-  assert.match(html,/CANDIDATE/);assert.match(html,/REVIEWED/);
+  assert.match(html,/CANDIDATE/);assert.match(html,/REVIEW_PROPOSED_UNVERIFIED/);
   assert.match(html,/reviewer:ada/);assert.match(html,/digest current/);
   assert.match(html,/NOT_RUN/);
   const frozen=reviewed(base());
   frozen.frozen={state:'FROZEN',digest:'a'.repeat(64),
-    receiptRef:`receipt:sha256:${'a'.repeat(64)}`,reviewer:'reviewer:ada',
+    receiptRef:`receipt:sha256:${'a'.repeat(64)}`,
+    reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+    reviewer:'reviewer:ada',
     author:'workbench:operator',frozenAt:'2026-10-31T09:07:00.000Z',sourceSha,
-    provenance:['157'],authority:'WORKBENCH_INDEPENDENT_REVIEW; native GitHub freeze authority stays Host-owned (NOT_RUN)'};
+    provenance:['157'],authority:'HOST_RECEIPT_VERIFIED'};
   const frozenHtml=renderIntakeWorkspace(frozen,{mode:'read'});
   assert.match(frozenHtml,/FROZEN/);
   assert.match(frozenHtml,/receipt:sha256:aaaa/);
-  assert.match(frozenHtml,/native GitHub freeze authority stays Host-owned \(NOT_RUN\)/);
+  assert.match(frozenHtml,/HOST_RECEIPT_VERIFIED/);
+  assert.match(frozenHtml,/issues\/312#issuecomment-12345/);
+  assert.match(frozenHtml,/#312 comment/);
 });
 
 test('stale review and blocked state are shown instead of silently passing',()=>{

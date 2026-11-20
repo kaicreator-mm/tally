@@ -3,10 +3,11 @@ import assert from 'node:assert/strict';
 import {createNativeReadRetryFetch} from '../src/read-retry.mjs';
 const response=status=>new Response(JSON.stringify({status}),{status,headers:{'content-type':'application/json'}});
 const config=(answers,extra={})=>{
-  let calls=0;const delays=[];
-  const fetch=createNativeReadRetryFetch({fetchImpl:async()=>{const answer=answers[Math.min(calls++,answers.length-1)];
+  let calls=0;const delays=[];const seen=[];
+  const fetch=createNativeReadRetryFetch({fetchImpl:async(input,options)=>{seen.push({input,options});
+    const answer=answers[Math.min(calls++,answers.length-1)];
     if(answer instanceof Error)throw answer;return answer;},sleep:async ms=>{delays.push(ms);},baseDelayMs:1,maxDelayMs:3,...extra});
-  return {fetch,calls:()=>calls,delays};
+  return {fetch,calls:()=>calls,delays,seen};
 };
 test('500 and 429 reads retry with bounded delay then return the exact response',async()=>{
   const f=config([response(500),response(429),response(200)]);
@@ -18,6 +19,34 @@ test('403 is returned immediately and non-idempotent methods are never retried',
   assert.equal(denied.calls(),1);
   const write=config([response(500),response(200)]);assert.equal((await write.fetch('https://x',{method:'POST'})).status,500);
   assert.equal(write.calls(),1);
+});
+test('Request POST/PATCH input methods bypass HTTP and network retries',async()=>{
+  for(const method of ['POST','PATCH']){
+    const request=new Request('https://api.github.com/write',{method,body:'{}'});
+    const http=config([response(500),response(200)]);
+    assert.equal((await http.fetch(request)).status,500);
+    assert.equal(http.calls(),1);
+    const network=config([new Error('offline'),response(200)]);
+    const networkRequest=new Request('https://api.github.com/write',{method,body:'{}'});
+    await assert.rejects(network.fetch(networkRequest),/offline/);
+    assert.equal(network.calls(),1);
+  }
+});
+test('Request GET/HEAD retry and explicit init.method overrides Request.method',async()=>{
+  const get=config([response(500),response(200)]);
+  assert.equal((await get.fetch(new Request('https://x',{method:'GET'}))).status,200);
+  assert.equal(get.calls(),2);
+  const head=config([response(500),response(200)]);
+  assert.equal((await head.fetch(new Request('https://x',{method:'HEAD'}))).status,200);
+  assert.equal(head.calls(),2);
+  const overrideToGet=config([response(500),response(200)]);
+  const post=new Request('https://x',{method:'POST',body:'{}'});
+  assert.equal((await overrideToGet.fetch(post,{method:'GET'})).status,200);
+  assert.equal(overrideToGet.calls(),2);
+  const overrideToPost=config([response(500),response(200)]);
+  const requestGet=new Request('https://x',{method:'GET'});
+  assert.equal((await overrideToPost.fetch(requestGet,{method:'POST'})).status,500);
+  assert.equal(overrideToPost.calls(),1);
 });
 test('transport exhaustion and HTTP exhaustion remain explicit failures',async()=>{
   const network=config([new Error('offline')]);await assert.rejects(network.fetch('https://x'),/offline/);

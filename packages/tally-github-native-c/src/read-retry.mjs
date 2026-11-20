@@ -26,7 +26,25 @@ export function createNativeReadRetryFetch({fetchImpl=globalThis.fetch,maxAttemp
     throw lastError;
   }
   return async function nativeReadRetryFetch(input,options={}){
-    const method=String(options?.method??'GET').toUpperCase();
+    // Fetch init.method overrides Request.method. When omitted, inspect the
+    // actual input method before defaulting a bare URL/string to GET. Treat
+    // unreadable/non-string method metadata as unknown and fail closed.
+    let method;
+    const explicitMethod=options?.method;
+    if(explicitMethod!==undefined&&explicitMethod!==null){
+      method=String(explicitMethod).toUpperCase();
+    }else if(input!==null&&typeof input==='object'){
+      try{
+        if('method' in input){
+          const inputMethod=input.method;
+          method=typeof inputMethod==='string'?inputMethod.toUpperCase():'UNKNOWN';
+        }else method='GET';
+      }catch{
+        method='UNKNOWN';
+      }
+    }else{
+      method='GET';
+    }
     if(method!=='GET'&&method!=='HEAD')return fetchImpl(input,options);
     const result=nativeReadChain.then(()=>perform(input,options),()=>perform(input,options));
     nativeReadChain=result.catch(()=>{});

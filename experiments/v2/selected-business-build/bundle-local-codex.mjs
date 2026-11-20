@@ -16,6 +16,8 @@ const intakeReadModel=resolve(tally,'packages/tally-github-c/src/project-intake.
 const maintenanceHostModule=resolve(tally,'experiments/v2/maintenance/host-maintenance.mjs');
 const maintenanceEffects=resolve(tally,'packages/tally-github-c/src/maintenance-effects.mjs');
 const releaseHostModule=resolve(tally,'experiments/v2/release/host-release.mjs');
+const versionTaskDagHostModule=resolve(tally,
+  'experiments/v2/selected-business-build/version-task-dag-host.mjs');
 const octokit=resolve(tally,'packages/tally-github-native-c/node_modules/@octokit/rest/dist-src/index.js');
 const claimPath=resolve(tally,'packages/tally-github-native-c/src/task-claim-events.mjs');
 const claimOriginal=readFileSync(claimPath,'utf8');
@@ -29,16 +31,24 @@ import {readGitHubClaimPublicationWitness} from ${JSON.stringify(witness)};
 import {readGitHubNativeTaskSourcePair} from ${JSON.stringify(sourcePair)};
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 import {createLocalCodexHost} from ${JSON.stringify(host)};
+import {createAgentProviderRegistry} from ${JSON.stringify(resolve(tally,'packages/tally-agent-provider/src/index.mjs'))};
+import {createZcodeAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-zcode/src/index.mjs'))};
+import {createDshAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-dsh-adapter/src/index.mjs'))};
+import {createOpenCodeAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-opencode/src/index.mjs'))};
+import {createPiAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-pi/src/index.mjs'))};
+import {createGrokAgentProvider} from ${JSON.stringify(resolve(tally,'packages/tally-provider-grok/src/index.mjs'))};
 import {Octokit} from ${JSON.stringify(octokit)};
 import {createCandidatePublisher} from ${JSON.stringify(candidateHost)};
 import {publishCandidatePullRequestFromClient} from ${JSON.stringify(candidateC)};
-import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake} from ${JSON.stringify(intakeHostModule)};
-import {readProjectIntakeFromClient} from ${JSON.stringify(intakeReadModel)};
+import {createProjectIntakeHost,freezeProductIntake as hostFreezeProductIntake, createProductReviewHost312} from ${JSON.stringify(intakeHostModule)};
+import {readProjectIntakeFromClient,readProductReviewWitnessFromClient} from ${JSON.stringify(intakeReadModel)};
 import {createMaintenanceHost} from ${JSON.stringify(maintenanceHostModule)};
 import {publishMaintenanceIssueFromClient,findMaintenanceIssueFromClient,
-  readMaintenanceIssueFromClient} from ${JSON.stringify(maintenanceEffects)};
+  readMaintenanceIssueFromClient,readMaintenanceReviewWitnessFromClient}
+  from ${JSON.stringify(maintenanceEffects)};
 import {createReleaseHost} from ${JSON.stringify(releaseHostModule)};
-import {createHash} from 'node:crypto';
+import {createVersionTaskDagHost} from ${JSON.stringify(versionTaskDagHostModule)};
+import {createHash,randomUUID} from 'node:crypto';
 const OWNER='kaicreator-mm',REPO='tally';
 // T06n Host-owned task binding map: caller input may select ONLY one of these
 // issue keys; every claim/config value comes from issue-keyed Host env, never
@@ -56,6 +66,18 @@ const TASK_BINDINGS={
   200:{actorRole:'reviewer'},
   203:{actorRole:'builder'},
   210:{actorRole:'builder'},
+  // #264 E1 R91: the current Closeout-E integrator lane. Same sealed L3
+  // candidate note contract as the #172/#196 single Builder (the T06M
+  // consumer's independent readback asserts exactly this one path); every
+  // claim/writeset/source-pair/witness check below binds the attempt to
+  // issue #264's own accepted Claim row and current source SHA. J05 adds the
+  // single-candidate Reviewer lane on the SAME issue under a separate
+  // reviewer-role Claim (TALLY_TASK_CLAIM_264_REVIEWER_* Host pins): one
+  // Builder, one independent Reviewer, never a second Builder and never a
+  // T06N two-candidate Join shortcut.
+  264:{actorRole:'builder',reviewerLane:'single',
+    candidateRelativePath:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'},
+  312:{actorRole:'builder',candidateRelativePath:'experiments/v2/project-intake/host-project.mjs'},
   219:{actorRole:'builder',candidateRelativePath:'experiments/v2/maintenance/host-maintenance.mjs'},
   222:{actorRole:'builder'}
 };
@@ -66,8 +88,11 @@ const writeSetKeyFor=issueNumber=>'tally:v2:task-writeset:'+issueNumber;
 // Host claim configuration: #172 keeps the legacy TALLY_CLAIM_* names; the
 // concurrent Builders #177/#178 and the Reviewer #179 use issue-keyed names,
 // each with its own registry path — never one synthetic shared authority.
-function claimEnv(env,issueNumber){
-  const p=issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
+function claimEnv(env,issueNumber,actorRole='builder'){
+  const roleSuffixed=(issueNumber===312||issueNumber===219)||
+    (actorRole!=='builder'&&TASK_BINDINGS[issueNumber]?.reviewerLane==='single');
+  const p=roleSuffixed?'TALLY_TASK_CLAIM_'+issueNumber+'_'+actorRole.toUpperCase()+'_':
+    issueNumber===172?'TALLY_CLAIM_':'TALLY_TASK_CLAIM_'+issueNumber+'_';
   return {sourceSha:env.TALLY_CLAIM_SOURCE_SHA,
     dispatchId:env[p+'DISPATCH_ID'],operatorId:env[p+'OPERATOR_ID'],
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
@@ -106,8 +131,11 @@ function validClaimRow(row,claim,issueNumber,actorRole,env){
 // native publication witness. Shared by Builder attempts and Reviewer Join.
 async function verifyAcceptedClaim(env,issueNumber,actorRole){
   const binding=TASK_BINDINGS[issueNumber];
-  const claim=claimEnv(env,issueNumber);
-  if(binding?.actorRole!==actorRole||!SHA.test(claim.sourceSha??'')||
+  const claim=claimEnv(env,issueNumber,actorRole);
+  if((binding?.actorRole!==actorRole&&
+      !(issueNumber===312&&actorRole==='reviewer')&&
+      !(issueNumber===219&&actorRole==='reviewer')&&
+      !(actorRole==='reviewer'&&binding?.reviewerLane==='single'))||!SHA.test(claim.sourceSha??'')||
     !ID.test(claim.dispatchId??'')||!ID.test(claim.operatorId??'')||
     !KINDS.has(claim.operatorKind)||!ID.test(claim.writerId??'')||
     !LOGIN.test(claim.writerLogin??'')||!Number.isSafeInteger(claim.commentId)||
@@ -122,6 +150,30 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
   if(!row)return {ok:false,reason:'CLAIM_REGISTRY_RECORD_NOT_FOUND'};
   if(row.value?.phase!=='PUBLISHED_VERIFIED')return {ok:false,reason:'CLAIM_REGISTRY_PUBLICATION_NOT_VERIFIED'};
   if(!validClaimRow(row,claim,issueNumber,actorRole,env))return {ok:false,reason:'CLAIM_REGISTRY_RESERVATION_MISMATCH'};
+  if(issueNumber===312){
+    // Two distinct accepted role Claims must be tied to the exact reviewed
+    // Pack and FSW, not just reuse a same-source historical Claim. If the
+    // native CAS record has no Pack binding, refuse rather than invent it.
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const writeSet=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(pack??'')||!/^[0-9a-f]{64}$/.test(writeSet??'')||
+      claim.registryPath!==env.TALLY_TASK_CLAIM_312_REGISTRY_PATH||
+      row.value.taskPackBlobSha!==pack||
+      row.value.writeSetSha256!==writeSet)
+      return {ok:false,reason:'PRODUCT_REVIEW_ROLE_CLAIM_PACK_UNVERIFIED'};
+  }
+  if(issueNumber===219){
+    // Distinct role-specific CAS rows share the same approved 14-path FSW
+    // and current Pack; a historical row without this provenance fails.
+    const pack=env.TALLY_TASK_CLAIM_219_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_219_WRITESET_SHA256;
+    if(!SHA.test(pack??'')||!DIGEST_219.test(digest??'')||
+       digest!==p219FsDigest||
+       row.value.taskPackBlobSha!==pack||
+       row.value.writeSetSha256!==digest||
+       claim.registryPath!==env.TALLY_TASK_CLAIM_219_REGISTRY_PATH)
+      return {ok:false,reason:'MAINTENANCE_ROLE_CLAIM_PACK_UNVERIFIED'};
+  }
   const token=env.TALLY_GITHUB_READ_TOKEN;
   if(typeof token!=='string'||token.length<8)return {ok:false,reason:'LOCAL_AGENT_UNAVAILABLE'};
   try{
@@ -141,6 +193,12 @@ async function verifyAcceptedClaim(env,issueNumber,actorRole){
       witness.generation!==1||witness.transportActor!==claim.writerLogin)
       return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};
   }catch{return {ok:false,reason:'NATIVE_CLAIM_WITNESS_NOT_VERIFIED'};}
+  if(issueNumber===312||issueNumber===219)return {ok:true,claim:{
+    accepted:true,issueNumber,role:actorRole,sourceSha:claim.sourceSha,
+    taskPackBlobSha:env['TALLY_TASK_CLAIM_'+issueNumber+'_TASK_PACK_BLOB_SHA'],
+    writeSetSha256:env['TALLY_TASK_CLAIM_'+issueNumber+'_WRITESET_SHA256'],
+    claimRef:row.value.commentRef,operatorId:claim.operatorId,
+    writerId:claim.writerId,transportActor:claim.writerLogin}};
   return {ok:true,claim};
 }
 async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
@@ -156,7 +214,93 @@ async function verifyCurrentSourcePair(token,issueNumber,sourceSha){
     return {ok:false,reason:'NATIVE_SOURCE_NOT_CURRENT'};
   return {ok:true,pair};
 }
+const DIGEST_219=/^[a-f0-9]{64}$/;
+const p219FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml",
+  "experiments/v2/maintenance/host-maintenance.mjs",
+  "experiments/v2/maintenance/host-maintenance.test.mjs",
+  "experiments/v2/selected-business-build/bundle-local-codex.mjs",
+  "experiments/v2/selected-business-build/local-codex-shim.mjs",
+  "experiments/v2/selected-business-build/producer.mjs",
+  "packages/tally-engineering-business/src/index.mjs",
+  "packages/tally-engineering-business/test/business-policy.test.mjs",
+  "packages/tally-github-c/src/maintenance-effects.mjs",
+  "packages/tally-github-c/test/maintenance-effects.test.mjs",
+  "web/v2/journey-server.mjs","web/v2/journey-view.html",
+  "web/v2/maintenance-controller.mjs","web/v2/maintenance-controller.test.mjs"].sort());
+const p219FsDigest='3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797';
+const p312FsPaths=Object.freeze([".woodpecker/v2-alm-workspace.yaml","experiments/v2/project-intake/host-project.mjs","experiments/v2/project-intake/host-project.test.mjs","experiments/v2/selected-business-build/bundle-local-codex.mjs","experiments/v2/selected-business-build/local-codex-shim.mjs","experiments/v2/selected-business-build/producer.mjs","packages/tally-engineering-business/src/index.mjs","packages/tally-engineering-business/test/business-policy.test.mjs","packages/tally-github-c/src/project-intake.mjs","packages/tally-github-c/test/project-intake.test.mjs","web/v2/intake-controller.mjs","web/v2/intake-controller.test.mjs","web/v2/intake-view.mjs","web/v2/intake-view.test.mjs","web/v2/journey-server.mjs","web/v2/journey-view.html"]);
+const p312VersionDagKey='tally:v2:version-task-dag:'+
+  createHash('sha256').update('kaicreator-mm/tally#version/v2').digest('hex');
+function fsDocumentMatches(document,paths,digest){
+  if(typeof document!=='string'||!document.length||document.length>65536)return false;
+  let entries;
+  try{
+    const decoded=JSON.parse(document);
+    entries=Array.isArray(decoded)?decoded:decoded?.allowed_write_set;
+  }catch{
+    entries=document.split(String.fromCharCode(10)).map(path=>
+      path.endsWith(String.fromCharCode(13))?path.slice(0,-1):path);
+  }
+  if(!Array.isArray(entries)||entries.length!==paths.length||
+    !entries.every(path=>typeof path==='string'&&path.length>0))return false;
+  const normalized=[...new Set(entries)].sort();
+  return normalized.length===paths.length&&
+    normalized.every((path,index)=>path===paths[index])&&
+    createHash('sha256').update(JSON.stringify(normalized)).digest('hex')===digest;
+}
 async function verifyFrozenWriteSet(env,issueNumber,sourceSha){
+  if(issueNumber===219){
+    const registryPath=env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
+    const pack=env.TALLY_TASK_CLAIM_219_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_219_WRITESET_SHA256;
+    if(!SHA.test(sourceSha??'')||!SHA.test(pack??'')||
+       digest!==p219FsDigest||typeof registryPath!=='string'||!registryPath)
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    let db,row;
+    try{
+      db=await openSqliteCasStore({path:registryPath,busyTimeoutMs:1000});
+      row=await db.get(writeSetKeyFor(219));
+    }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
+    finally{if(db)await db.close();}
+    const v=row?.value;
+    if(!Number.isSafeInteger(row?.revision)||row.revision<0||
+       v?.phase!=='FROZEN_DAG_WRITESET'||
+       v.schema!=='tally/version-task-writeset/v1'||
+       v.repository!==OWNER+'/'+REPO||v.issueNumber!==219||
+       v.sourceSha!==sourceSha||v.versionPackBlobSha!==pack||
+       v.versionTaskDagKey!==p312VersionDagKey||
+       v.writeSetSha256!==digest||
+       !fsDocumentMatches(v.document,p219FsPaths,digest))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
+  }
+  if(issueNumber===312){
+    const registryPath=env.TALLY_TASK_CLAIM_312_REGISTRY_PATH;
+    const pack=env.TALLY_TASK_CLAIM_312_TASK_PACK_BLOB_SHA;
+    const digest=env.TALLY_TASK_CLAIM_312_WRITESET_SHA256;
+    if(!SHA.test(sourceSha??'')||!SHA.test(pack??'')||
+      !/^[a-f0-9]{64}$/.test(digest??'')||
+      typeof registryPath!=='string'||!registryPath)
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    let db,row;
+    try{
+      db=await openSqliteCasStore({path:registryPath,busyTimeoutMs:1000});
+      row=await db.get(writeSetKeyFor(312));
+    }catch{return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};}
+    finally{if(db)await db.close();}
+    const value=row?.value;
+    // The kernel CAS INSERT starts revision at 0 and the E0 FSW row is
+    // create-only, so its steady-state revision is 0 — floor at 0, not 1.
+    if(value?.phase!=='FROZEN_DAG_WRITESET'||value.sourceSha!==sourceSha||
+      (!Number.isSafeInteger(row?.revision)||row.revision<0)||
+      value.schema!=='tally/version-task-writeset/v1'||
+      value.repository!=='kaicreator-mm/tally'||value.issueNumber!==312||
+      value.versionPackBlobSha!==pack||value.versionTaskDagKey!==p312VersionDagKey||
+      value.writeSetSha256!==digest||
+      !fsDocumentMatches(value.document,p312FsPaths,digest))
+      return {ok:false,reason:'DAG_WRITESET_NOT_VERIFIED'};
+    return {ok:true,taskPackBlobSha:pack,writeSetSha256:digest};
+  }
   const claim=claimEnv(env,issueNumber);
   const candidateRelativePath=TASK_BINDINGS[issueNumber].candidateRelativePath;
   if(!claim.writeSetSha256||typeof claim.registryPath!=='string'||!claim.registryPath)
@@ -178,6 +322,57 @@ function attemptWorktreePath(env,attemptId){
   const root=env.TALLY_LOCAL_WORKTREE_ROOT??env.TALLY_LOCAL_REPOSITORY_PATH;
   return root+'/.tally-t06n-worktrees/'+safe;
 }
+// #473 R107: resolve exactly one process-only AgentProvider/1 for this
+// attempt. This is the canonical registry from packages/tally-agent-provider,
+// not a scheduler or an admission authority. Codex never enters a wrapper:
+// its existing selected-chain execution below is byte-for-byte preserved.
+async function resolveAttemptProvider(env,input){
+  let attemptProviders={};
+  if(env.TALLY_AGENT_PROVIDER_ATTEMPTS_JSON){
+    try{attemptProviders=JSON.parse(env.TALLY_AGENT_PROVIDER_ATTEMPTS_JSON);}
+    catch{return {reason:'PROVIDER_CONFIG_INVALID'};}
+    if(!attemptProviders||typeof attemptProviders!=='object'||Array.isArray(attemptProviders))
+      return {reason:'PROVIDER_CONFIG_INVALID'};
+  }
+  const providerId=attemptProviders[input.attemptId]??env.TALLY_V2_AGENT_PROVIDER??'codex';
+  const enabledProviderIds=(env.TALLY_V2_AGENT_PROVIDERS_ENABLED??'codex')
+    .split(',').map(value=>value.trim()).filter(Boolean);
+  if(!/^[a-z][a-z0-9-]{0,63}$/.test(providerId))
+    return {reason:'PROVIDER_ID_INVALID'};
+  if(!enabledProviderIds.includes(providerId))return {reason:'PROVIDER_DISABLED'};
+  if(providerId==='codex')return {providerId,agentProvider:null,providerEnv:null};
+  let configs,environment;
+  try{
+    configs=JSON.parse(env.TALLY_AGENT_PROVIDER_CONFIG_JSON??'{}');
+    environment=JSON.parse(env.TALLY_AGENT_PROVIDER_ENV_JSON??'{}');
+  }catch{return {reason:'PROVIDER_CONFIG_INVALID'};}
+  const config=configs?.[providerId],providerEnv=environment?.[providerId];
+  if(!config||typeof config!=='object'||Array.isArray(config)||
+    !providerEnv||typeof providerEnv!=='object'||Array.isArray(providerEnv))
+    return {reason:'PROVIDER_CONFIG_INVALID'};
+  try{
+    const shared={sandboxCliPath:env.TALLY_CODEX_SANDBOX_PATH,
+      sandboxCodexHome:env.TALLY_CODEX_HOME,gitPath:env.TALLY_GIT_PATH,
+      builderProfile:env.TALLY_BUILDER_PROFILE,builderTemp:env.TALLY_BUILDER_TEMP,
+      emptyGitConfig:env.TALLY_EMPTY_GIT_CONFIG,modelProxy:env.TALLY_MODEL_PROXY,
+      caBundle:env.TALLY_CA_BUNDLE,repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH};
+    let provider;
+    if(providerId==='zcode')provider=createZcodeAgentProvider({config:{...shared,...config,
+      allowedWriteSet:[TASK_BINDINGS[input.issueNumber].candidateRelativePath]}});
+    else if(providerId==='dsh')provider=await createDshAgentProvider({config:{...shared,...config}});
+    else if(providerId==='opencode')provider=createOpenCodeAgentProvider(config);
+    else if(providerId==='pi')provider=createPiAgentProvider(config);
+    else if(providerId==='grok')provider=createGrokAgentProvider(config);
+    else return {reason:'PROVIDER_NOT_INSTALLED'};
+    const registry=createAgentProviderRegistry([provider],{defaultProviderId:'codex'});
+    return {providerId,providerEnv,agentProvider:registry.resolve({providerId,
+      enabledProviderIds,pin:{taskId:String(input.issueNumber),attemptId:input.attemptId,
+        sourceSha:input.sourceSha,providerId}})};
+  }catch(error){
+    return {reason:typeof error?.message==='string'&&
+      /^PROVIDER_[A-Z_]+$/.test(error.message)?error.message:'PROVIDER_CONFIG_INVALID'};
+  }
+}
 export async function runLocalCodexAttempt(input){
   const env=process.env;
   const binding=TASK_BINDINGS[input?.issueNumber];
@@ -192,11 +387,17 @@ export async function runLocalCodexAttempt(input){
   if(!writeSetCheck.ok)return denied(input,writeSetCheck.reason);
   const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,issueNumber,input.sourceSha);
   if(!pairCheck.ok)return denied(input,pairCheck.reason);
+  const provider=await resolveAttemptProvider(env,input);
+  if(provider.reason)return denied(input,provider.reason);
   if(env.TALLY_LOCAL_REPLAY==='1')
-    return {...admitted(input,'REPLAY_COMPLETE','REPLAY_FIXTURE_ONLY',false),replayFixture:true};
+    return {...admitted(input,'REPLAY_COMPLETE','REPLAY_FIXTURE_ONLY',false),
+      ...(provider.providerId==='codex'?{}:{providerId:provider.providerId}),replayFixture:true};
   try{
     return await createLocalCodexHost().runAttempt({issueRef:issueRefFor(issueNumber),
       sourceSha:input.sourceSha,attemptId:input.attemptId,
+      taskId:String(issueNumber),
+      ...(provider.providerId==='codex'?{}:{providerId:provider.providerId,
+        agentProvider:provider.agentProvider,providerEnv:provider.providerEnv}),
       candidateRelativePath:binding.candidateRelativePath,
       worktreePath:env.TALLY_LOCAL_WORKTREE_PATH??attemptWorktreePath(env,input.attemptId),
       hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
@@ -263,6 +464,117 @@ export async function joinReviewedCandidates(input){
       joinedAt:joined.joinedAt,candidates:joined.candidates};
   }catch{return joinDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
 }
+// #264 J05 — single-Builder ReviewDecision provider binding. The lane exists
+// ONLY for an issue whose TASK_BINDING declares reviewerLane:'single': one
+// current Builder candidate, one independently accepted reviewer-role Claim
+// (verified below, never caller-asserted), the exact current source pair and
+// the frozen write-set. Every external fact (builder CAS row, git readback,
+// PR head, exact-SHA CI) is re-derived by the Host effect; this provider only
+// binds trusted Host env pins plus transports. The reviewer must never share
+// the Builder's operator/writer identity (no self-review).
+const SINGLE_REVIEW_DECISIONS=new Set(['ACCEPT','REWORK','DEFER']);
+const singleBase=input=>({issueRef:issueRefFor(input.issueNumber),
+  sourceSha:SHA.test(input?.sourceSha??'')?input.sourceSha:null,
+  decisionId:ATTEMPT.test(input?.decisionId??'')?input.decisionId:null,
+  claimGeneration:1,authorized:false,taskPass:false,releasePass:false});
+const singleDenied=(input,reason)=>({...singleBase(input),state:'NOT_ADMITTED',
+  reason,claimAccepted:false,admitted:false,agentLaunch:false,replayFixture:false,
+  decision:null,decisionRecord:null,taskOutcome:null});
+async function readPullRequestHead(octokit,pullNumber){
+  const response=await octokit.rest.pulls.get({owner:OWNER,repo:REPO,
+    pull_number:pullNumber});
+  const data=response?.data;
+  if(!data||typeof data!=='object')return null;
+  return {state:data.state,headSha:data.head?.sha??null,baseRef:data.base?.ref??null};
+}
+async function readCombinedStatusState(octokit,commit){
+  const response=await octokit.rest.repos.getCombinedStatusForRef(
+    {owner:OWNER,repo:REPO,ref:commit});
+  const data=response?.data;
+  if(!data||typeof data!=='object')return null;
+  // Project the per-context statuses: the Host qualification gate requires
+  // each task-required named context terminal-success at this exact SHA —
+  // {state,totalCount} alone could not distinguish one unrelated green
+  // context from the required set (R103 review P1-03).
+  return {state:data.state,
+    totalCount:Array.isArray(data.statuses)?data.statuses.length:0,
+    contexts:Array.isArray(data.statuses)?data.statuses.map(x=>({
+      context:typeof x?.context==='string'?x.context:null,
+      state:typeof x?.state==='string'?x.state:null})):[]};
+}
+export async function reviewSingleCandidate(input){
+  const env=process.env;
+  const issueNumber=input?.issueNumber;
+  const binding=TASK_BINDINGS[issueNumber];
+  if(input?.sourceRef!==issueRefFor(issueNumber)||!binding||
+    binding.reviewerLane!=='single'||!SHA.test(input.sourceSha??'')||
+    !ATTEMPT.test(input.decisionId??'')||!ATTEMPT.test(input.attemptId??'')||
+    !SHA.test(input.candidateCommit??'')||!SHA.test(input.candidateTree??'')||
+    !SHA.test(input.repairCommit??'')||!SHA.test(input.repairTree??'')||
+    !SINGLE_REVIEW_DECISIONS.has(input.decision??'')||
+    !Number.isSafeInteger(input.prNumber)||input.prNumber<1||
+    input.sourceSha!==env.TALLY_CLAIM_SOURCE_SHA)
+    return singleDenied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+  if(env.TALLY_LOCAL_REPLAY==='1')
+    return {...singleBase(input),state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
+      decision:null,decisionRecord:null,taskOutcome:null};
+  // The Reviewer Claim is verified independently of the Builder Claim; both
+  // must be current, accepted and bound to the exact source SHA.
+  const reviewerCheck=await verifyAcceptedClaim(env,issueNumber,'reviewer');
+  if(!reviewerCheck.ok)return singleDenied(input,reviewerCheck.reason);
+  const builderCheck=await verifyAcceptedClaim(env,issueNumber,'builder');
+  if(!builderCheck.ok)return singleDenied(input,builderCheck.reason);
+  const builderClaim=claimEnv(env,issueNumber,'builder');
+  if(builderClaim.operatorId===reviewerCheck.claim.operatorId||
+    builderClaim.writerId===reviewerCheck.claim.writerId)
+    return singleDenied(input,'REVIEWER_SELF_ASSERTION');
+  const pairCheck=await verifyCurrentSourcePair(env.TALLY_GITHUB_READ_TOKEN,
+    issueNumber,input.sourceSha);
+  if(!pairCheck.ok)return singleDenied(input,pairCheck.reason);
+  const writeSetCheck=await verifyFrozenWriteSet(env,issueNumber,input.sourceSha);
+  if(!writeSetCheck.ok)return singleDenied(input,writeSetCheck.reason);
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    return singleDenied(input,'LOCAL_AGENT_UNAVAILABLE');
+  const builderStorePath=env.TALLY_LOCAL_BUILDER_STORE_PATH;
+  const decisionStorePath=env.TALLY_LOCAL_REVIEW_STORE_PATH??env.TALLY_LOCAL_HOST_STORE_PATH;
+  if(typeof builderStorePath!=='string'||!builderStorePath||
+    typeof decisionStorePath!=='string'||!decisionStorePath)
+    return singleDenied(input,'REVIEW_HOST_STORE_PINS_REQUIRED');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  const reviewer=reviewerCheck.claim;
+  try{
+    const observed=await createLocalCodexHost().reviewSingleCandidate({
+      issueRef:issueRefFor(issueNumber),sourceSha:input.sourceSha,
+      decisionId:input.decisionId,decision:input.decision,
+      attemptId:input.attemptId,candidateCommit:input.candidateCommit,
+      candidateTree:input.candidateTree,repairCommit:input.repairCommit,
+      repairTree:input.repairTree,prNumber:input.prNumber,
+      builderStorePath,decisionStorePath,
+      repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
+      gitPath:env.TALLY_GIT_PATH,
+      reviewRef:typeof input.reviewRef==='string'&&input.reviewRef?
+        input.reviewRef:null,
+      reviewer:{operatorId:reviewer.operatorId,writerId:reviewer.writerId,
+        writerLogin:reviewer.writerLogin,
+        claimRef:issueRefFor(issueNumber)+'#issuecomment-'+reviewer.commentId,
+        commentId:reviewer.commentId},
+      builder:{operatorId:builderClaim.operatorId,writerId:builderClaim.writerId},
+      githubReads:{readPullRequest:n=>readPullRequestHead(octokit,n),
+        readCombinedStatus:sha=>readCombinedStatusState(octokit,sha)}});
+    if(observed.state==='NOT_ADMITTED')return singleDenied(input,observed.reason);
+    if(observed.state==='REVIEW_DECISION_UNKNOWN')
+      return {...singleBase(input),state:observed.state,reason:observed.reason,
+        claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+        reconciliationRequired:true,decision:null,decisionRecord:null,taskOutcome:null};
+    const qualified=observed.taskOutcome?.status==='QUALIFIED_TASK_OUTCOME_PUBLISHED';
+    return {...singleBase(input),state:observed.state,reason:observed.reason,
+      claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:false,
+      decision:observed.decision,decisionRecord:observed.decisionRecord,
+      taskOutcome:observed.taskOutcome,taskPass:qualified===true,releasePass:false};
+  }catch{return singleDenied(input,'ATTEMPT_STATUS_UNKNOWN');}
+}
 export async function publishReviewedCandidate(input){
   const env=process.env,token=env.TALLY_GITHUB_READ_TOKEN;
   const claim=await verifyAcceptedClaim(env,203,'builder');
@@ -322,6 +634,150 @@ export async function freezeProductIntake(input){
     author:input?.author,reviewer:input?.reviewer,frozenAt:input?.frozenAt,
     caseRefDigest:input?.caseRefDigest});
 }
+// #312 selected Host-only Product ReviewWitness. The final Freeze uses the
+// SAME durable version/v2 CAS effect fence as E0's native DAG POST/Freeze.
+// The fence row uses the immutable E0 schema 'tally/version-dag-effect-fence/v1'
+// (packages/tally-github-native-c/src/version-task-dag-write-port.mjs): one key,
+// one schema, both lanes. Incomplete/ambiguous effects keep HELD; a new
+// instance cannot bypass them, and no lane ever expires or reseeds a HELD row.
+const product312FenceKey='tally:v2:version-dag-effect-fence:'+
+  createHash('sha256').update(OWNER+'/'+REPO+'#version/v2').digest('hex');
+const product312Unknown=reason=>({state:'UNKNOWN',reason,issueNumber:312,
+  frozen:false,authorized:false,admitted:false,taskPass:false,releasePass:false});
+const product312SafeNoEffectReasons=new Set([
+  'PRODUCT_REVIEW_WITNESS_UNVERIFIED','PRODUCT_REVIEW_SOURCE_MOVED',
+  'PRODUCT_REVIEW_FREEZE_CONFLICT']);
+const product312Same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+async function withProduct312VersionFence({sourceSha,operation},run){
+  const env=process.env;
+  if(env.TALLY_LOCAL_REPLAY==='1'||sourceSha!==env.TALLY_V2_VERSION_SHA||
+    sourceSha!==env.TALLY_CLAIM_SOURCE_SHA||
+    typeof env.TALLY_VERSION_DAG_REGISTRY_PATH!=='string'||
+    !env.TALLY_VERSION_DAG_REGISTRY_PATH||
+    typeof env.TALLY_VERSION_DAG_WRITER_ID!=='string'||
+    !env.TALLY_VERSION_DAG_WRITER_ID)
+    return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+  let db,reservedRevision=null;
+  try{
+    db=await openSqliteCasStore({path:env.TALLY_VERSION_DAG_REGISTRY_PATH,
+      busyTimeoutMs:1000});
+    const before=await db.get(product312FenceKey);
+    if(before){
+      const v=before.value;
+      // The physical host-node CAS create returns revision 0; a fresh HELD
+      // or RELEASED row legitimately lives at revision 0 (E0 write-port
+      // precedent), so only a non-integer revision is invalid here.
+      if(!Number.isSafeInteger(before.revision)||
+        v?.schema!=='tally/version-dag-effect-fence/v1'||
+        v.repository!==OWNER+'/'+REPO||v.versionId!=='version/v2'||
+        v.sourceSha!==sourceSha||v.phase!=='RELEASED')
+        return product312Unknown('PRODUCT_REVIEW_SHARED_HOST_FENCE_REQUIRED');
+    }
+    const held={schema:'tally/version-dag-effect-fence/v1',phase:'HELD',
+      repository:OWNER+'/'+REPO,versionId:'version/v2',sourceSha,
+      writerId:env.TALLY_VERSION_DAG_WRITER_ID,operation,nonce:randomUUID()};
+    const reservation=await db.put(product312FenceKey,held,
+      before?{mustMatchRevision:before.revision}:{mustBeAbsent:true});
+    if(!Number.isSafeInteger(reservation?.revision))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    reservedRevision=reservation.revision;
+    const proof=await db.get(product312FenceKey);
+    if(proof?.revision!==reservedRevision||!product312Same(proof.value,held))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    let result;
+    try{result=await run();}catch{
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    }
+    // A refusal proven to predate all CAS writes may release the fence.
+    // A write ACK loss or ambiguous state MUST keep it HELD for reconciliation.
+    if(result?.state!=='FROZEN_COMPLETE'&&
+      !(result?.state==='UNKNOWN'&&
+        product312SafeNoEffectReasons.has(result.reason)))
+      return result??product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    const released={...held,phase:'RELEASED',
+      closedStatus:result.state==='FROZEN_COMPLETE'?'FROZEN':result.reason};
+    const ack=await db.put(product312FenceKey,released,
+      {mustMatchRevision:reservedRevision});
+    const final=await db.get(product312FenceKey);
+    if(!Number.isSafeInteger(ack?.revision)||
+      final?.revision!==ack.revision||
+      !product312Same(final.value,released))
+      return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+    return result;
+  }catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+  finally{if(db)await db.close().catch(()=>{});}
+}
+// #219 reuses the SAME shared version/v2 CAS fence primitive as #312. The
+// primitive releases only on a completed effect or a refusal PROVEN to
+// predate every CAS write; anything ambiguous stays HELD for reconciliation.
+// This adapter only translates the #219 result vocabulary onto that contract
+// and restores the original Host result for its caller — the fence row
+// semantics, env pins and release discipline are the shared ones.
+const maintenanceSafeNoEffectReasons=new Set([
+  'MAINTENANCE_REVIEW_WITNESS_CHANGED','MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED',
+  'MAINTENANCE_REVIEW_WRITE_SET_CHANGED','MAINTENANCE_SOURCE_SHA_STALE',
+  'MAINTENANCE_PUBLICATION_ROLE_CHANGED','MAINTENANCE_PUBLICATION_WRITE_SET_STALE',
+  'MAINTENANCE_PUBLICATION_SOURCE_STALE','MAINTENANCE_PUBLICATION_WITNESS_STALE',
+  'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED']);
+async function withMaintenanceVersionFence({sourceSha,operation},run){
+  let original=null;
+  const fenced=await withProduct312VersionFence({sourceSha,operation},async()=>{
+    original=await run();
+    const done=original?.state==='RECORDED_COMPLETE'||
+      original?.state==='MAINTENANCE_ISSUE_PUBLISHED'||
+      original?.state==='REPLAY_COMPLETE';
+    if(done)return {...original,state:'FROZEN_COMPLETE'};
+    if(original?.state==='NOT_ADMITTED'&&
+       maintenanceSafeNoEffectReasons.has(original.reason))
+      return {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CONFLICT'};
+    return original;
+  });
+  // A successful Host operation is not durable success until the shared
+  // HELD -> RELEASED CAS ACK and readback both succeed. Never hide the
+  // primitive's UNKNOWN result behind an earlier optimistic Host return.
+  if(fenced?.state==='FROZEN_COMPLETE'&&
+     ['RECORDED_COMPLETE','MAINTENANCE_ISSUE_PUBLISHED',
+      'REPLAY_COMPLETE'].includes(original?.state))
+    return original;
+  if(fenced?.state==='UNKNOWN'&&
+     fenced.reason==='PRODUCT_REVIEW_FREEZE_CONFLICT'&&
+     original?.state==='NOT_ADMITTED'&&
+     maintenanceSafeNoEffectReasons.has(original.reason))
+    return original;
+  return fenced??product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');
+}
+function product312HostFor(){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const octokit=new Octokit({auth:token,request:{timeout:15000}});
+  return createProductReviewHost312({env,octokit,openStore:openSqliteCasStore,
+    verifyAcceptedClaim:(issue,role)=>verifyAcceptedClaim(env,issue,role),
+    verifyFrozenWriteSet:(issue,sourceSha)=>verifyFrozenWriteSet(env,issue,sourceSha),
+    readCurrentVersion:async()=>{
+      try{
+        const branch=await octokit.rest.repos.getBranch({
+          owner:OWNER,repo:REPO,branch:'version/v2'});
+        return {ok:true,sha:branch?.data?.commit?.sha};
+      }catch{return {ok:false,sha:null};}
+    },
+    withVersionFence:withProduct312VersionFence});
+}
+export async function persistProductDraft312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_DRAFT_INPUT_INVALID');
+  try{return await product312HostFor().persistDraft(input);}
+  catch{return product312Unknown('PRODUCT_DRAFT_CAS_UNKNOWN');}
+}
+export async function freezeProductReview312(input){
+  if(input?.issueNumber!==312||
+    input.sourceRef!==issueRefFor(312))
+    return product312Unknown('PRODUCT_REVIEW_FREEZE_INPUT_INVALID');
+  try{return await product312HostFor().freezeReviewedDraft(input);}
+  catch{return product312Unknown('PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN');}
+}
 // T219 — the authorized native Issue effect lives behind the Host module;
 // these bindings are transports only. The write-scoped token never enters
 // sealed bytes and is read from Host env at call time. The frozen candidate
@@ -342,7 +798,37 @@ function maintenanceHostFor(){
         request:{timeout:15000}}),...publishInput});
     },
     findIssue:args=>findMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
-    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args})});
+    readIssue:args=>readMaintenanceIssueFromClient({octokit:readOctokit(),...args}),
+    // Trusted C ReviewWitness + current version + the shared version CAS
+    // fence: without these the Host methods stay config-invalid fail-closed.
+    readReviewWitness:args=>readMaintenanceReviewWitnessFromClient({
+      octokit:readOctokit(),...args}),
+    readCurrentVersion:async()=>{
+      try{
+        const branch=await readOctokit().rest.repos.getBranch({
+          owner:OWNER,repo:REPO,branch:'version/v2'});
+        return {ok:true,sha:branch?.data?.commit?.sha};
+      }catch{return {ok:false,sha:null};}
+    },
+    withVersionFence:withMaintenanceVersionFence});
+}
+// #219: draft and independently reviewed freeze are separate selected
+// capabilities; never use a typed reviewer name or preseeded direct Host row.
+export async function persistMaintenanceDraft(input){
+  if(input?.issueNumber!==219||input.sourceRef!==issueRefFor(219))
+    return {state:'NOT_ADMITTED',reason:'MAINTENANCE_DRAFT_INPUT_INVALID',
+      issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};
+  try{return await maintenanceHostFor().hostPersistMaintenanceDraft(input);}
+  catch{return {state:'NOT_ADMITTED',reason:'MAINTENANCE_DRAFT_CAS_UNKNOWN',
+    issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};}
+}
+export async function freezeReviewedMaintenanceCandidate(input){
+  if(input?.issueNumber!==219||input.sourceRef!==issueRefFor(219))
+    return {state:'NOT_ADMITTED',reason:'MAINTENANCE_REVIEW_INPUT_INVALID',
+      issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};
+  try{return await maintenanceHostFor().hostFreezeReviewedMaintenanceCandidate(input);}
+  catch{return {state:'NOT_ADMITTED',reason:'MAINTENANCE_REVIEW_FREEZE_UNKNOWN',
+    issueRef:issueRefFor(219),authorized:false,taskPass:false,releasePass:false};}
 }
 export async function publishMaintenanceIssue(input){
   return maintenanceHostFor().hostPublishMaintenanceIssue(input);
@@ -501,10 +987,55 @@ export async function hostReleaseDelivery(input){
   }catch{
     return {state:'NOT_ADMITTED',reason:'HOST_QUALIFICATION_READ_UNKNOWN',
       issueRef:issueRefFor(RELEASE_ISSUE),sourceSha:input.sourceSha,
-      operation:input.operation,claimGeneration:1,claimAccepted:true,
-      admitted:false,authorized:false,agentLaunch:false,replayFixture:false,
-      githubEffect:'NOT_RUN',releasePublished:false,taskPass:false,releasePass:false};
+      operation:input.operation,claimGeneration:1,claimAccepted:true,admitted:false,
+      authorized:false,agentLaunch:false,replayFixture:false,githubEffect:'NOT_RUN',
+      releasePublished:false,taskPass:false,releasePass:false};
   }
+}
+// E0 #284 — version Task DAG write provider binding. All authority stays
+// Host-owned: env-pinned exact version SHA, the dedicated #284 registry, the
+// exclusive writer identity and the write-scoped token are read from Host env
+// at call time and never enter sealed bytes or caller input. The root Claim
+// publication is Host-process-only and is not reachable here.
+function versionTaskDagHostFor(){
+  const env=process.env;
+  const token=env.TALLY_GITHUB_WRITE_TOKEN??env.TALLY_GITHUB_READ_TOKEN;
+  if(typeof token!=='string'||token.length<8)
+    throw Error('GITHUB_PROVIDER_TOKEN_UNAVAILABLE');
+  const hostOctokit=new Octokit({auth:token,request:{timeout:15000}});
+  return createVersionTaskDagHost({env,octokit:hostOctokit,
+    openStore:openSqliteCasStore});
+}
+// Replay lane only (same convention as runLocalCodexAttempt): a replay
+// consumer still crosses the full sealed boundary and the Business projection,
+// but observes only bounded already-present / already-frozen facts. No native
+// GitHub write and no CAS mutation can ever run in this mode.
+function versionTaskDagReplayObservation(operation,input){
+  if(operation==='addNativeTaskDependency')
+    return {status:'NATIVE_EDGE_PRESENT',
+      reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      blockedIssueNumber:input.blockedIssueNumber,
+      blockedByIssueNumber:input.blockedByIssueNumber,dependencyId:1,
+      native:true,githubEffect:'NOT_RUN',writePerformed:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false};
+  return {status:'REPLAY',reason:'IDENTICAL_FREEZE_REPLAY',
+    repository:'kaicreator-mm/tally',versionId:'version/v2',
+    taskPackRef:input.taskPackRef,taskPackBlobSha:input.taskPackBlobSha,
+    blobSha:input.taskPackBlobSha,frozenAt:new Date().toISOString(),
+    taskCount:3,edgeCount:1,writeSetRecordCount:3,githubEffect:'NOT_RUN',
+    dependencyWritesAfterFreeze:'REFUSED',
+    authorized:false,admitted:false,taskPass:false,releasePass:false};
+}
+export async function addNativeTaskDependency(input){
+  if(process.env.TALLY_LOCAL_REPLAY==='1')
+    return versionTaskDagReplayObservation('addNativeTaskDependency',input??{});
+  return versionTaskDagHostFor().addNativeTaskDependency(input);
+}
+export async function freezeVersionTaskDag(input){
+  if(process.env.TALLY_LOCAL_REPLAY==='1')
+    return versionTaskDagReplayObservation('freezeVersionTaskDag',input??{});
+  return versionTaskDagHostFor().freezeVersionTaskDag(input);
 }
 `;
 const result=await build({

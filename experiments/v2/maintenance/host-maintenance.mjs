@@ -12,9 +12,13 @@
  * later independent outcome; quality gain is never inferred and Agents are
  * never ranked. Every deviation fails closed with a bounded reason, a lost
  * GitHub acknowledgment stays UNKNOWN and later reconciles WITHOUT creating a
- * duplicate Issue.
+ * duplicate Issue. A trusted zero-POST recovery holds a one-time, durable
+ * MAY_POST reservation BEFORE any external effect; a replayed old proof can
+ * therefore never authorize a second POST, and the full historical pending
+ * envelope (CAS key/revision/value, source, Issue, marker, title, instant)
+ * is bound before any recovery is admitted.
  */
-import {createHash} from 'node:crypto';
+import {createHash, randomBytes} from 'node:crypto';
 import {projectReport,STATES} from '../../../packages/tally-github-c/src/report-projection.mjs';
 
 const OWNER='kaicreator-mm',REPO='tally',ISSUE=219;
@@ -28,12 +32,30 @@ const RELEASE_TAG=/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/;
 const VERSION=/^v?[0-9]+\.[0-9]+(?:\.[0-9]+)?$/;
 const DECISIONS=new Set(['ADOPTED','REJECTED']);
 export const MAINTENANCE_CANDIDATE_KEY=`tally:v2:maintenance-candidate:${ISSUE}`;
+export const MAINTENANCE_DRAFT_KEY=`tally:v2:maintenance-draft:${ISSUE}`;
+export const MAINTENANCE_REVIEW_PROOF_KEY=`tally:v2:maintenance-review-proof:${ISSUE}`;
 export const MAINTENANCE_ISSUE_KEY=`tally:v2:maintenance-issue:${ISSUE}`;
 export const MAINTENANCE_PENDING_KEY=`tally:v2:maintenance-pending:${ISSUE}`;
+export const MAINTENANCE_RECOVERY_KEY=`tally:v2:maintenance-recovery:${ISSUE}`;
 export const MAINTENANCE_LEARNING_KEY=`tally:v2:maintenance-learning:${ISSUE}`;
 export const MAINTENANCE_CLAIM_KEY=`${OWNER}/${REPO}#${ISSUE}:builder:__default__`;
 const issueUrlFor=n=>`${ISSUE_REF.replace(new RegExp('[0-9]+$',''),'')}${n}`;
 const ISSUE_URL=/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/[1-9][0-9]*$/;
+// #432 (P1-432-B): the deterministic transport input contract, mirrored
+// verbatim from packages/tally-github-c/src/maintenance-effects.mjs
+// (validRequest). The Host validates the exact composed strings BEFORE any
+// pending CAS reservation: a local input-shape refusal must leave zero
+// durable pending rows and must never turn an unattempted POST into UNKNOWN.
+const TRANSPORT_TITLE=/^\S(?:.{0,198}\S)?$/s;
+const TRANSPORT_BODY=/^\S[\s\S]{0,9999}\S$/;
+const TRANSPORT_MARKER=/^tally:maintenance:219:[0-9a-f]{64}$/;
+function validateTransportInput({title,body,marker}={}){
+  if(!TRANSPORT_TITLE.test(title??'')||!TRANSPORT_BODY.test(body??'')||
+     !TRANSPORT_MARKER.test(marker??'')||
+     !String(body??'').includes(String(marker??'')))
+    return Object.freeze({ok:false,reason:'MAINTENANCE_ISSUE_INPUT_INVALID'});
+  return Object.freeze({ok:true,reason:'TRANSPORT_INPUT_VALID'});
+}
 const canonical=value=>Array.isArray(value)?value.map(canonical):
   value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(
     key=>[key,canonical(value[key])])):value;
@@ -88,7 +110,10 @@ export function maintenanceCandidateDigest(candidate){
   return valid?sha256(valid):null;
 }
 function maintenanceTitle(candidate){
-  return `[maintenance] ${candidate.summary.slice(0,160)}`;
+  // #432 (P1-432-A): trim the sliced segment so a whitespace character at the
+  // 160-character cut point can never produce a trailing-whitespace title
+  // that the transport rejects locally before any GitHub POST.
+  return `[maintenance] ${candidate.summary.slice(0,160)}`.trimEnd();
 }
 function maintenanceBody(candidate,candidateDigest){
   const release=candidate.priorRelease?.version??
@@ -258,7 +283,9 @@ async function loadLearning(openStore,registryPath){
  * observed fact only — measuredEffect never becomes a quality gain.
  */
 export function createMaintenanceHost({openStore,verifyAcceptedClaim,
-  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,env=process.env}={}){
+  verifyFrozenWriteSet,publishIssue,findIssue,readIssue,
+  readReviewWitness,readCurrentVersion,withVersionFence,
+  verifyZeroPostAttempt,env=process.env}={}){
   const pin=input=>
     input?.issueNumber===ISSUE&&input.sourceRef===ISSUE_REF&&
     SHA.test(input.sourceSha??'')&&DIGEST.test(input.candidateDigest??'')&&
@@ -266,6 +293,178 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
     typeof env.TALLY_TASK_CLAIM_219_REGISTRY_PATH==='string'&&
     env.TALLY_TASK_CLAIM_219_REGISTRY_PATH;
   return Object.freeze({
+    // Pre-review durable CAS draft; cannot be created by a typed reviewer.
+    async hostPersistMaintenanceDraft(input={}){
+      if(!pin(input))return denied(input,'CLAIM_HOST_PIN_OR_IDENTITY_MISMATCH');
+      if(typeof verifyAcceptedClaim!=='function'||
+         typeof verifyFrozenWriteSet!=='function'||typeof openStore!=='function')
+        return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
+      const candidate=validateMaintenanceCandidate(input.candidate);
+      if(!candidate||sha256(candidate)!==input.candidateDigest)
+        return denied(input,'MAINTENANCE_DRAFT_INVALID');
+      const claim=await verifyAcceptedClaim(ISSUE,'builder');
+      if(claim?.ok!==true)return denied(input,claim?.reason??'CLAIM_UNVERIFIED');
+      const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(fs?.ok!==true)return denied(input,fs?.reason??'DAG_WRITESET_NOT_VERIFIED');
+      const value={phase:'DRAFT_MAINTENANCE_CANDIDATE',issueRef:ISSUE_REF,
+        sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
+        candidate,authorized:false,taskPass:false,releasePass:false};
+      const same=row=>row?.value?.phase===value.phase&&
+        row.value.sourceSha===value.sourceSha&&
+        row.value.candidateDigest===value.candidateDigest&&
+        JSON.stringify(row.value)===JSON.stringify(value);
+      let db;
+      try{
+        db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+        const prior=await db.get(MAINTENANCE_DRAFT_KEY);
+        if(prior&&!same(prior))return denied(input,'MAINTENANCE_DRAFT_CONFLICT');
+        if(!prior)await db.put(MAINTENANCE_DRAFT_KEY,value,{mustBeAbsent:true});
+        const after=await db.get(MAINTENANCE_DRAFT_KEY);
+        if(!same(after))return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');
+        return Object.freeze({...flags,state:'DRAFT_PENDING_REVIEW',
+          reason:prior?'MAINTENANCE_DRAFT_ALREADY_RECORDED':'MAINTENANCE_DRAFT_RECORDED',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          candidateDigest:input.candidateDigest,authorized:false,
+          taskPass:false,releasePass:false});
+      }catch{return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');}
+      finally{if(db)await db.close();}
+    },
+    // Separate C ReviewWitness, independently accepted role Claims and FSW
+    // are reread inside a real selected version CAS fence before creation.
+    async hostFreezeReviewedMaintenanceCandidate(input={}){
+      if(!pin(input)||!Number.isSafeInteger(input.reviewCommentId)||
+         input.reviewCommentId<1||!Number.isSafeInteger(input.reviewedPullNumber)||
+         input.reviewedPullNumber<1||!SHA.test(input.reviewedHead??'')||
+         !SHA.test(input.reviewedTree??'')||
+         input.reviewedBase!==input.sourceSha)
+        return denied(input,'MAINTENANCE_REVIEW_INPUT_INVALID');
+      if(typeof verifyAcceptedClaim!=='function'||
+         typeof verifyFrozenWriteSet!=='function'||
+         typeof readReviewWitness!=='function'||
+         typeof readCurrentVersion!=='function'||
+         typeof withVersionFence!=='function'||typeof openStore!=='function')
+        return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
+      let db,draft;
+      try{
+        db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+        draft=await db.get(MAINTENANCE_DRAFT_KEY);
+      }catch{return denied(input,'MAINTENANCE_DRAFT_CAS_UNKNOWN');}
+      finally{if(db)await db.close();}
+      if(draft?.value?.phase!=='DRAFT_MAINTENANCE_CANDIDATE'||
+         draft.value.sourceSha!==input.sourceSha||
+         draft.value.candidateDigest!==input.candidateDigest||
+         maintenanceCandidateDigest(draft.value.candidate)!==input.candidateDigest)
+        return denied(input,'MAINTENANCE_DRAFT_NOT_VERIFIED');
+      const [b,r]=await Promise.all([
+        verifyAcceptedClaim(ISSUE,'builder'),
+        verifyAcceptedClaim(ISSUE,'reviewer')]);
+      const ok=(c,role)=>c?.ok===true&&c.claim?.accepted===true&&
+        c.claim.role===role&&c.claim.issueNumber===ISSUE&&
+        c.claim.sourceSha===input.sourceSha&&
+        typeof c.claim.claimRef==='string'&&c.claim.claimRef.length>0&&
+        typeof c.claim.operatorId==='string'&&c.claim.operatorId.length>0&&
+        typeof c.claim.writerId==='string'&&c.claim.writerId.length>0&&
+        typeof c.claim.transportActor==='string'&&c.claim.transportActor.length>0;
+      if(!ok(b,'builder')||!ok(r,'reviewer'))
+        return denied(input,'MAINTENANCE_REVIEW_ROLE_CLAIM_UNVERIFIED');
+      if(b.claim.operatorId===r.claim.operatorId||b.claim.writerId===r.claim.writerId)
+        return denied(input,'MAINTENANCE_REVIEW_SAME_PROCESS');
+      const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+      if(fs?.ok!==true)return denied(input,fs?.reason??'DAG_WRITESET_NOT_VERIFIED');
+      const bind=c=>({...c,candidateDigest:draft.value.candidateDigest});
+      const expected={issueNumber:ISSUE,sourceSha:input.sourceSha,
+        candidateDigest:draft.value.candidateDigest,
+        reviewedPullNumber:input.reviewedPullNumber,
+        reviewedHead:input.reviewedHead,reviewedTree:input.reviewedTree,
+        reviewedBase:input.reviewedBase};
+      const args={commentId:input.reviewCommentId,expected,
+        builderClaim:bind(b.claim),reviewerClaim:bind(r.claim)};
+      const ref=ISSUE_REF+'#issuecomment-'+input.reviewCommentId;
+      // The current qualified C transport (#409) returns no reviewedAt yet;
+      // absent is accepted, a present value must still be a real instant.
+      const witnessOk=w=>w?.state==='REVIEW_VERIFIED'&&w.reviewed===true&&
+        w.reviewRef===ref&&w.sourceSha===input.sourceSha&&
+        w.candidateDigest===input.candidateDigest&&
+        w.reviewedHead===input.reviewedHead&&w.reviewedTree===input.reviewedTree&&
+        (w.reviewedAt===undefined||ISO(w.reviewedAt))&&
+        w.taskPass===false&&w.authorized===false;
+      let first;
+      try{first=await readReviewWitness(args);}
+      catch{return denied(input,'MAINTENANCE_REVIEW_WITNESS_UNVERIFIED');}
+      if(!witnessOk(first))return denied(input,'MAINTENANCE_REVIEW_WITNESS_UNVERIFIED');
+      try{
+        const current=await readCurrentVersion();
+        if(current?.ok!==true||current.sha!==input.sourceSha)
+          return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
+      }catch{return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');}
+      try{
+        return await withVersionFence({repository:OWNER+'/'+REPO,
+          versionId:'version/v2',sourceSha:input.sourceSha,
+          operation:'FREEZE_REVIEWED_MAINTENANCE'},async()=>{
+          const second=await readReviewWitness(args);
+          // Full canonical verdict equality across the fence: both reads pin
+          // the same commentId, and any comment mutation flips the C reader's
+          // own edited-provenance gates — stricter than a timestamp compare.
+          if(!witnessOk(second)||JSON.stringify(second)!==JSON.stringify(first))
+            return denied(input,'MAINTENANCE_REVIEW_WITNESS_CHANGED');
+          // A role Claim or FSW may be revoked while the first C read is in
+          // flight. Re-read both under the selected shared version fence,
+          // BEFORE any immutable candidate or proof CAS creation.
+          const [freshBuilder,freshReviewer]=await Promise.all([
+            verifyAcceptedClaim(ISSUE,'builder'),
+            verifyAcceptedClaim(ISSUE,'reviewer')]);
+          const changed=(fresh,original,role)=>!ok(fresh,role)||
+            ['claimRef','operatorId','writerId','transportActor'].some(
+              key=>fresh.claim[key]!==original.claim[key]);
+          if(changed(freshBuilder,b,'builder')||
+             changed(freshReviewer,r,'reviewer')||
+             freshBuilder.claim.operatorId===freshReviewer.claim.operatorId||
+             freshBuilder.claim.writerId===freshReviewer.claim.writerId)
+            return denied(input,'MAINTENANCE_REVIEW_ROLE_CLAIM_CHANGED');
+          const freshWriteSet=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+          if(freshWriteSet?.ok!==true)
+            return denied(input,'MAINTENANCE_REVIEW_WRITE_SET_CHANGED');
+          const current=await readCurrentVersion();
+          if(current?.ok!==true||current.sha!==input.sourceSha)
+            return denied(input,'MAINTENANCE_SOURCE_SHA_STALE');
+          const recorded=await recordMaintenanceCandidate({openStore,
+            registryPath:env.TALLY_TASK_CLAIM_219_REGISTRY_PATH,
+            sourceSha:input.sourceSha,candidate:draft.value.candidate,
+            author:b.claim.operatorId,reviewer:r.claim.operatorId,
+            // Witness-provided instant only — never a Host clock fabrication.
+            // The current qualified C transport omits it: the proof JSON then
+            // carries no reviewedAt key and the publication gate keeps this
+            // fail-closed until the C transport carries the witness instant.
+            reviewedAt:second.reviewedAt});
+          if(recorded?.state!=='RECORDED_COMPLETE')return recorded;
+          // Native Issue publication can consume ONLY this extra proof:
+          // a legacy author/reviewer text-only row is insufficient.
+          const proof={phase:'VERIFIED_MAINTENANCE_REVIEW_PROOF',
+            issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+            candidateDigest:input.candidateDigest,
+            reviewRef:ref,reviewedPullNumber:input.reviewedPullNumber,
+            reviewedHead:input.reviewedHead,
+            reviewedTree:input.reviewedTree,reviewedBase:input.reviewedBase,
+            builderClaimRef:b.claim.claimRef,reviewerClaimRef:r.claim.claimRef,
+            builderOperatorId:b.claim.operatorId,reviewerOperatorId:r.claim.operatorId,
+            reviewedAt:second.reviewedAt,taskPass:false,releasePass:false};
+          let db=null;
+          try{
+            db=await store(openStore,env.TALLY_TASK_CLAIM_219_REGISTRY_PATH);
+            const prior=await db.get(MAINTENANCE_REVIEW_PROOF_KEY);
+            if(prior&&JSON.stringify(prior.value)!==JSON.stringify(proof))
+              return denied(input,'MAINTENANCE_REVIEW_PROOF_CONFLICT');
+            if(!prior)await db.put(MAINTENANCE_REVIEW_PROOF_KEY,proof,
+              {mustBeAbsent:true});
+            const final=await db.get(MAINTENANCE_REVIEW_PROOF_KEY);
+            if(JSON.stringify(final?.value)!==JSON.stringify(proof))
+              return denied(input,'MAINTENANCE_REVIEW_PROOF_CAS_UNKNOWN');
+          }catch{return denied(input,'MAINTENANCE_REVIEW_PROOF_CAS_UNKNOWN');}
+          finally{if(db)await db.close();}
+          return recorded;
+        });
+      }catch{return denied(input,'MAINTENANCE_REVIEW_FREEZE_UNKNOWN');}
+    },
     async hostPublishMaintenanceIssue(input={}){
       if(typeof verifyAcceptedClaim!=='function'||typeof verifyFrozenWriteSet!=='function')
         return denied(input,'MAINTENANCE_HOST_CONFIG_INVALID');
@@ -293,6 +492,98 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
       const candidate=validateMaintenanceCandidate(reviewed.candidate);
       if(!candidate||sha256(candidate)!==input.candidateDigest)
         return denied(input,'MAINTENANCE_REVIEW_DIGEST_MISMATCH');
+      // Migration guard: older rows created by a typed reviewer string have
+      // no trusted C/Host proof and MUST NEVER publish a native Issue.
+      let proofRow;
+      try{
+        opened=await store(openStore,registryPath);
+        proofRow=await opened.get(MAINTENANCE_REVIEW_PROOF_KEY);
+      }catch{return denied(input,'MAINTENANCE_REVIEW_PROOF_UNAVAILABLE');}
+      finally{if(opened)await opened.close();}
+      const proof=proofRow?.value;
+      if(proof?.phase!=='VERIFIED_MAINTENANCE_REVIEW_PROOF'||
+         proof.issueRef!==ISSUE_REF||proof.sourceSha!==input.sourceSha||
+         proof.candidateDigest!==input.candidateDigest||
+         !/^https:\/\/github\.com\/kaicreator-mm\/tally\/issues\/219#issuecomment-[1-9][0-9]*$/.test(proof.reviewRef??'')||
+         !Number.isSafeInteger(proof.reviewedPullNumber)||
+         proof.reviewedPullNumber<1||!SHA.test(proof.reviewedHead??'')||
+         !SHA.test(proof.reviewedTree??'')||
+         proof.reviewedBase!==input.sourceSha||
+         proof.builderOperatorId!==reviewed.review.author||
+         proof.reviewerOperatorId!==reviewed.review.reviewer||
+         !ISO(proof.reviewedAt??'')||
+         proof.taskPass!==false||proof.releasePass!==false)
+        return denied(input,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+      // Freeze-time proof is historical: publication needs fresh authority.
+      if(typeof readReviewWitness!=='function'||
+         typeof readCurrentVersion!=='function'||
+         typeof withVersionFence!=='function')
+        return denied(input,'MAINTENANCE_PUBLICATION_LIVE_AUTHORITY_REQUIRED');
+      const commentId=Number(proof.reviewRef.split('#issuecomment-')[1]);
+      if(!Number.isSafeInteger(commentId)||commentId<1)
+        return denied(input,'MAINTENANCE_TRUSTED_REVIEW_PROOF_MISSING');
+      const expected={issueNumber:ISSUE,sourceSha:input.sourceSha,
+        candidateDigest:input.candidateDigest,
+        reviewedPullNumber:proof.reviewedPullNumber,
+        reviewedHead:proof.reviewedHead,reviewedTree:proof.reviewedTree,
+        reviewedBase:proof.reviewedBase};
+      const roleOk=(c,role)=>c?.ok===true&&c.claim?.accepted===true&&
+        c.claim.role===role&&c.claim.issueNumber===ISSUE&&
+        c.claim.sourceSha===input.sourceSha&&
+        typeof c.claim.claimRef==='string'&&c.claim.claimRef.length>0&&
+        typeof c.claim.operatorId==='string'&&c.claim.operatorId.length>0&&
+        typeof c.claim.writerId==='string'&&c.claim.writerId.length>0&&
+        typeof c.claim.transportActor==='string'&&c.claim.transportActor.length>0;
+      const publishAuthority=async()=>{
+        try{
+          const [b,r]=await Promise.all([
+            verifyAcceptedClaim(ISSUE,'builder'),
+            verifyAcceptedClaim(ISSUE,'reviewer')]);
+          if(!roleOk(b,'builder')||!roleOk(r,'reviewer')||
+             b.claim.claimRef!==proof.builderClaimRef||
+             r.claim.claimRef!==proof.reviewerClaimRef||
+             b.claim.operatorId!==proof.builderOperatorId||
+             r.claim.operatorId!==proof.reviewerOperatorId||
+             b.claim.operatorId===r.claim.operatorId||
+             b.claim.writerId===r.claim.writerId)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_ROLE_CHANGED'};
+          const fs=await verifyFrozenWriteSet(ISSUE,input.sourceSha);
+          if(fs?.ok!==true)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_WRITE_SET_STALE'};
+          const current=await readCurrentVersion();
+          if(current?.ok!==true||current.sha!==input.sourceSha)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_SOURCE_STALE'};
+          const bind=c=>({...c,candidateDigest:input.candidateDigest});
+          const w=await readReviewWitness({commentId,expected,
+            builderClaim:bind(b.claim),reviewerClaim:bind(r.claim)});
+          if(w?.state!=='REVIEW_VERIFIED'||w.reviewed!==true||
+             w.reviewRef!==proof.reviewRef||
+             w.sourceSha!==input.sourceSha||
+             w.candidateDigest!==input.candidateDigest||
+             w.reviewedHead!==proof.reviewedHead||
+             w.reviewedTree!==proof.reviewedTree||
+             w.reviewedAt!==proof.reviewedAt||
+             w.p0!==0||w.p1!==0||
+             w.authorized!==false||w.taskPass!==false)
+            return {ok:false,reason:'MAINTENANCE_PUBLICATION_WITNESS_STALE'};
+          return {ok:true,witness:w,claimRefs:[
+            b.claim.claimRef,r.claim.claimRef]};
+        }catch{return {ok:false,reason:'MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN'};}
+      };
+      const beforeFence=await publishAuthority();
+      if(!beforeFence.ok)return denied(input,beforeFence.reason);
+      try{
+        const fenced=await withVersionFence({repository:OWNER+'/'+REPO,
+          versionId:'version/v2',sourceSha:input.sourceSha,
+          operation:'PUBLISH_MAINTENANCE_ISSUE'},async()=>{
+          const underFence=await publishAuthority();
+          if(!underFence.ok)return denied(input,underFence.reason);
+          if(JSON.stringify(underFence.witness)!==
+             JSON.stringify(beforeFence.witness)||
+             JSON.stringify(underFence.claimRefs)!==
+             JSON.stringify(beforeFence.claimRefs))
+            return denied(input,'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED');
+          // CAS reconciliation and the native POST run inside the shared fence.
       let issueRecord;
       try{
         opened=await store(openStore,registryPath);
@@ -325,6 +616,13 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         return denied(input,'GITHUB_PUBLISH_TRANSPORT_UNAVAILABLE');
       const title=maintenanceTitle(candidate);
       const marker=`tally:maintenance:219:${input.candidateDigest}`;
+      const body=maintenanceBody(candidate,input.candidateDigest);
+      // #432 (P1-432-B): deterministic transport-input validation BEFORE any
+      // pending CAS write. A local shape refusal leaves zero pending rows and
+      // reports NOT_RUN — never a durable PENDING that would later surface as
+      // an UNKNOWN MAY-POST reconciliation.
+      if(!validateTransportInput({title,body,marker}).ok)
+        return denied(input,'MAINTENANCE_ISSUE_INPUT_INVALID');
       // Lost-ACK reconciliation: a previous attempt may have left a pending
       // marker. Search first; never create a second Issue on top of one.
       let pending;
@@ -333,17 +631,50 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
         pending=await opened.get(MAINTENANCE_PENDING_KEY);
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
+      let recoveredAfterZeroPost=false;
+      if(pending!==null&&pending?.value?.phase!=='PENDING_MAINTENANCE_ISSUE')
+        // An unrelated row occupies the pending key: history is never
+        // overwritten and never authorizes an external effect.
+        return denied(input,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
       if(pending?.value?.phase==='PENDING_MAINTENANCE_ISSUE'){
         if(pending.value.candidateDigest!==input.candidateDigest)
           return denied(input,'MAINTENANCE_ISSUE_DIGEST_MISMATCH');
-        const found=await findIssue({marker,title});
+        // #432 R2 (P1-02): bind the FULL historical pending envelope before
+        // any external effect — CAS key, safe-integer revision, exact value
+        // digest, source, Issue, marker, title and pendingAt. The title rule
+        // is versioned and tightly scoped: a modern row carries the exact
+        // canonical title; the only accepted legacy shape is the byte-exact
+        // historical raw `[maintenance] <summary slice 0,160>` whose
+        // trimEnd equals the current canonical title (the genuine #219
+        // 205-char summary left a whitespace at the 160-character cut).
+        // A real CAS row revision is a non-negative safe integer (stores
+        // differ on whether the first create is 0 or 1).
+        if(!Number.isSafeInteger(pending.revision)||pending.revision<0)
+          return denied(input,'MAINTENANCE_PENDING_ENVELOPE_INVALID');
+        const envelopeDigest=sha256(pending.value);
+        const legacyRawTitle=`[maintenance] ${candidate.summary.slice(0,160)}`;
+        const titleOk=pending.value.title===title||
+          (pending.value.title===legacyRawTitle&&
+           legacyRawTitle.trimEnd()===title&&legacyRawTitle!==title);
+        if(pending.value.issueRef!==ISSUE_REF||
+           pending.value.sourceSha!==input.sourceSha||
+           pending.value.marker!==marker||!titleOk||
+           !ISO(pending.value.pendingAt??'')||
+           pending.value.authorized!==false||
+           pending.value.taskPass!==false||pending.value.releasePass!==false)
+          return denied(input,'MAINTENANCE_PENDING_IDENTITY_MISMATCH');
+        let found;
+        try{found=await findIssue({marker,title});}
+        catch{return unknownEffect(input,'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN');}
         if(found?.state==='RECONCILE_CONFLICT')
           return unknownEffect(input,found.reason);
         if(found?.state==='RECONCILE_UNKNOWN')
           return unknownEffect(input,found.reason);
         if(found?.state==='RECONCILE_COMPLETE'&&found.matches.length===1){
           const number=found.matches[0].number;
-          const readback=await readIssue({issueNumber:number,title,marker});
+          let readback;
+          try{readback=await readIssue({issueNumber:number,title,marker});}
+          catch{return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_UNKNOWN');}
           if(readback?.state!=='READBACK_VERIFIED')
             return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_MISMATCH');
           try{
@@ -363,7 +694,109 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
             githubEffect:'PERFORMED_VERIFIED',repository:`${OWNER}/${REPO}`,
             issue:readback.issue,duplicate:false});
         }
-      }
+        // #432 (P1-432-C): a zero-result marker search is NOT evidence that no
+        // POST happened (eventual consistency / a lost ACK both end here).
+        // Recovery of the durable pending row is admitted ONLY through a
+        // Host-provided, evidence-bound zero-POST attestation that binds this
+        // exact candidate/source/marker under the current version fence.
+        // Absence of the marker alone never permits another POST, and a true
+        // MAY-POST/lost-ACK pending stays UNKNOWN with no blind retry.
+        if(!(found?.state==='RECONCILE_COMPLETE'&&found.matches.length===0))
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        // #432 R2 (P1-01): a recovery POST is a NEW attempt B. Before any
+        // external effect it must hold a one-time, durable MAY_POST
+        // reservation. An existing reservation means some attempt already
+        // reached the POST boundary (e.g. a B that created the Issue and
+        // lost its ACK): the old A zero-POST proof is consumed forever and
+        // can NEVER authorize attempt C. Reconcile only.
+        let reservation;
+        try{
+          opened=await store(openStore,registryPath);
+          reservation=await opened.get(MAINTENANCE_RECOVERY_KEY);
+        }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+        finally{if(opened)await opened.close();}
+        if(reservation!==null)
+          return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+        if(typeof verifyZeroPostAttempt!=='function')
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        let attestation;
+        try{
+          attestation=await verifyZeroPostAttempt({issueNumber:ISSUE,
+            issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+            candidateDigest:input.candidateDigest,marker,title,
+            pendingKey:MAINTENANCE_PENDING_KEY,pendingRevision:pending.revision,
+            pendingValueDigest:envelopeDigest});
+        }catch{return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');}
+        // The attestation must be attempt/row-specific: an attempt identity,
+        // an immutable evidenceRef naming the exact pending key, revision
+        // and value digest, and an exact echo of the envelope it claims to
+        // describe. Absent, malformed, stale or borrowed evidence fails
+        // closed — never a `ZERO_POST_ATTEMPT_VERIFIED` string alone.
+        if(!(attestation?.ok===true&&
+           attestation.proof==='ZERO_POST_ATTEMPT_VERIFIED'&&
+           attestation.marker===marker&&
+           attestation.candidateDigest===input.candidateDigest&&
+           attestation.sourceSha===input.sourceSha&&
+           attestation.pendingKey===MAINTENANCE_PENDING_KEY&&
+           attestation.pendingRevision===pending.revision&&
+           attestation.pendingValueDigest===envelopeDigest&&
+           typeof attestation.attemptId==='string'&&
+           /^[A-Za-z0-9][A-Za-z0-9:_-]{7,127}$/.test(attestation.attemptId)&&
+           attestation.evidenceRef===
+             `host-cas:zero-post:${MAINTENANCE_PENDING_KEY}:${pending.revision}:${envelopeDigest}`&&
+           ISO(attestation.attestedAt??'')))
+          return unknownEffect(input,'MAINTENANCE_ISSUE_PENDING_RECONCILIATION');
+        // Reserve attempt B durably BEFORE the POST, create-only; the exact
+        // old A envelope, the consumed proof and the new attempt identity are
+        // frozen into the reservation row and read back byte-for-byte.
+        const attemptId=`attempt:recovery:${randomBytes(16).toString('hex')}`;
+        const reservationValue=Object.freeze({phase:'MAY_POST_RECOVERY',
+          issueRef:ISSUE_REF,sourceSha:input.sourceSha,
+          candidateDigest:input.candidateDigest,marker,title,attemptId,
+          priorAttempt:Object.freeze({attemptId:attestation.attemptId,
+            evidenceRef:attestation.evidenceRef,attestedAt:attestation.attestedAt}),
+          pendingBinding:Object.freeze({key:MAINTENANCE_PENDING_KEY,
+            revision:pending.revision,valueDigest:envelopeDigest}),
+          reservedAt:new Date().toISOString(),authorized:false,
+          taskPass:false,releasePass:false});
+        let reservationConflict=false;
+        try{
+          opened=await store(openStore,registryPath);
+          await opened.put(MAINTENANCE_RECOVERY_KEY,reservationValue,
+            {mustBeAbsent:true});
+          const reserved=await opened.get(MAINTENANCE_RECOVERY_KEY);
+          if(JSON.stringify(reserved?.value)!==JSON.stringify(reservationValue))
+            return unknownEffect(input,
+              'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_UNKNOWN');
+        }catch(error){
+          if(error?.code==='HOST_CAS_CONFLICT')reservationConflict=true;
+          else return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_UNKNOWN');
+        }finally{if(opened){await opened.close();opened=null;}}
+        if(reservationConflict)
+          // A concurrent attempt won the single reservation: CAS uncertainty
+          // stays UNKNOWN and never repeats the GitHub publication.
+          return unknownEffect(input,
+            'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
+        // The reservation proves this recovery attempt holds the only MAY_POST
+        // grant: resume into exactly one verified publication below; the
+        // candidate/digest/proof AND historical pending rows stay untouched.
+        recoveredAfterZeroPost=true;
+      }else{
+      // Fresh attempt A: the pending row is its own durable pre-POST marker.
+      // A leftover reservation without a pending row is an anomalous CAS
+      // state — a previous recovery attempt B may have POSTed and lost its
+      // ACK — so a fresh POST must never start on top of it.
+      let leftover;
+      try{
+        opened=await store(openStore,registryPath);
+        leftover=await opened.get(MAINTENANCE_RECOVERY_KEY);
+      }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
+      finally{if(opened)await opened.close();}
+      if(leftover!==null)
+        return unknownEffect(input,
+          'MAINTENANCE_ISSUE_RECOVERY_RESERVATION_PRESENT');
       try{
         opened=await store(openStore,registryPath);
         await opened.put(MAINTENANCE_PENDING_KEY,Object.freeze({
@@ -374,15 +807,17 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           {mustBeAbsent:true});
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
+      }
       let publishedEffect;
       try{
-        publishedEffect=await publishIssue({title,
-          body:maintenanceBody(candidate,input.candidateDigest),marker});
+        publishedEffect=await publishIssue({title,body,marker});
       }catch{return unknownEffect(input,'GITHUB_PUBLISH_UNKNOWN');}
       if(publishedEffect?.state!=='ISSUE_PUBLISHED')
         return unknownEffect(input,publishedEffect?.reason??'GITHUB_PUBLISH_UNKNOWN');
-      const readback=await readIssue({issueNumber:publishedEffect.issue.number,
-        title,marker});
+      let readback;
+      try{readback=await readIssue({issueNumber:publishedEffect.issue.number,
+        title,marker});}
+      catch{return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_UNKNOWN');}
       if(readback?.state!=='READBACK_VERIFIED')
         return unknownEffect(input,'MAINTENANCE_ISSUE_READBACK_MISMATCH');
       try{
@@ -391,16 +826,29 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
           phase:'PUBLISHED_MAINTENANCE_ISSUE',issueRef:ISSUE_REF,
           sourceSha:input.sourceSha,candidateDigest:input.candidateDigest,
           issue:readback.issue,publishedAt:new Date().toISOString(),
-          reconciled:false,authorized:false,admitted:false,
+          reconciled:recoveredAfterZeroPost,authorized:false,admitted:false,
           taskPass:false,releasePass:false}),{mustBeAbsent:true});
       }catch{return denied(input,'MAINTENANCE_FREEZE_STORE_UNAVAILABLE');}
       finally{if(opened)await opened.close();}
       return Object.freeze({...flags,state:'MAINTENANCE_ISSUE_PUBLISHED',
-        reason:'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
+        reason:recoveredAfterZeroPost?
+          'MAINTENANCE_ISSUE_PUBLISHED_AFTER_ZERO_POST_RECOVERY':
+          'MAINTENANCE_ISSUE_PUBLISHED_AND_READBACK_VERIFIED',
         issueRef:ISSUE_REF,sourceSha:input.sourceSha,
         candidateDigest:input.candidateDigest,claimAccepted:true,admitted:true,
         replayFixture:false,githubEffect:'PERFORMED_VERIFIED',
         repository:`${OWNER}/${REPO}`,issue:readback.issue,duplicate:false});
+        });
+        // A fence entry refusal carries the precise shared-fence blocker
+        // (e.g. the version DAG registry not being admitted yet) — surface
+        // it instead of collapsing it into a generic fence unknown.
+        if(fenced&&fenced.state==='UNKNOWN'&&typeof fenced.reason==='string')
+          return unknownEffect(input,fenced.reason);
+        if(!fenced||!['NOT_ADMITTED','REPLAY_COMPLETE',
+           'PUBLICATION_UNKNOWN','MAINTENANCE_ISSUE_PUBLISHED'].includes(fenced.state))
+          return unknownEffect(input,'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN');
+        return fenced;
+      }catch{return unknownEffect(input,'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN');}
     },
     async hostRecordTaskLearningOutcome(input={}){
       if(typeof verifyAcceptedClaim!=='function')
@@ -517,5 +965,6 @@ export function createMaintenanceHost({openStore,verifyAcceptedClaim,
   });
 }
 export const __test={OWNER,REPO,ISSUE,ISSUE_REF,issueUrlFor,validateMaintenanceCandidate,
-  maintenanceCandidateDigest,maintenanceTitle,maintenanceBody,learningSuggestionsFromReports,
+  maintenanceCandidateDigest,maintenanceTitle,maintenanceBody,validateTransportInput,
+  learningSuggestionsFromReports,
   MAINTENANCE_CLAIM_KEY};

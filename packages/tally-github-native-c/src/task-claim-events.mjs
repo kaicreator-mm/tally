@@ -3,6 +3,23 @@
  * A validated event comment is NOT an accepted CAS Claim: only the independent
  * serialized writer plus current GitHub/Host/K admission can prove that.
  *
+ * #422 claim succession: a canonical, unedited DISPATCH_STATE_CHANGED event
+ * with dispatch_state DONE is observed as a terminal marker. It filters a
+ * historical stale candidate out of fresh admission ONLY when it exactly
+ * binds that candidate: same native Task Issue, same dispatchId, same
+ * protectedClaimKey, same admission_generation, predecessor_claim_comment_id
+ * equal to the candidate's exact comment id, and the candidate's own source
+ * SHA. REST's seconds-granularity created_at===updated_at is not sufficient
+ * for DONE: a second official GraphQL IssueComment observation must bind the
+ * exact REST node/id/body/Issue and prove lastEditedAt/editor are both null.
+ * A DONE binding any other Task, dispatch, key, generation, comment id
+ * or source SHA, an edited or identity-broken DONE, a duplicate DONE
+ * dispatch, a DONE for an unknown dispatch and any non-DONE state change all
+ * stay fail-closed. Filtering is exclusion from fresh-admission candidates
+ * only: it never transfers authority, never constitutes a Claim and never
+ * relaxes any other rule; CAS TERMINAL_VERIFIED proof remains a separate
+ * Host duty before any fresh registry is created.
+ *
  * All outputs are advisory and fail-closed; no effects or credentials leaked.
  */
 import Ajv2020 from 'ajv/dist/2020.js';
@@ -23,13 +40,52 @@ const NAME=/^[A-Za-z0-9_.-]+$/, SHA=/^[a-f0-9]{40}$/, MAX=1000;
 const marker='<!-- ads:github -->';
 const no=(reason)=>Object.freeze({
   status:'UNKNOWN',reason,claimStatus:'NOT_VERIFIED',candidateCount:0,
-  candidates:Object.freeze([]),authorized:false,admitted:false,
-  taskPass:false,releasePass:false
+  candidates:Object.freeze([]),
+  terminalizedHistoricalClaimCount:0,
+  terminalizedHistoricalClaims:Object.freeze([]),
+  authorized:false,admitted:false,taskPass:false,releasePass:false
 });
 const reasonFor=e=>e?.status===401?'GITHUB_UNAUTHENTICATED':
   e?.status===403?'GITHUB_ACCESS_DENIED':
   e?.status===404?'GITHUB_RESOURCE_NOT_FOUND':
   e?.status===429?'GITHUB_RATE_LIMITED':'GITHUB_CLAIM_EVENT_READ_FAILED';
+async function doneEditProvenance({octokit,comment,owner,repo,issueNumber}){
+  if(typeof octokit.graphql!=='function'||
+    typeof comment.node_id!=='string'||
+    !/^[A-Za-z0-9_-]{8,256}$/.test(comment.node_id))
+    return 'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE';
+  let graphComment;
+  try{
+    const result=await octokit.graphql(`query($id: ID!) {
+      node(id: $id) {
+        __typename
+        ... on IssueComment {
+          id
+          fullDatabaseId
+          url
+          body
+          lastEditedAt
+          editor { login }
+          issue { number repository { nameWithOwner } }
+        }
+      }
+    }`,{id:comment.node_id});
+    graphComment=result?.node;
+  }catch{return 'NATIVE_EVENT_EDIT_PROVENANCE_UNAVAILABLE';}
+  // REST Issue comment IDs exceed GraphQL databaseId:Int; fullDatabaseId is
+  // the lossless official identity. Reject rounding and divergent witnesses.
+  const fullId=graphComment?.fullDatabaseId;
+  const observedId=typeof fullId==='string'&&/^[1-9][0-9]*$/.test(fullId)?
+    fullId:Number.isSafeInteger(fullId)&&fullId>0?String(fullId):null;
+  if(graphComment?.__typename!=='IssueComment'||
+    graphComment.id!==comment.node_id||observedId!==String(comment.id)||
+    graphComment.url!==comment.html_url||graphComment.body!==comment.body||
+    graphComment.lastEditedAt!==null||graphComment.editor!==null||
+    graphComment.issue?.number!==issueNumber||
+    graphComment.issue.repository?.nameWithOwner!==owner+'/'+repo)
+    return 'NATIVE_EVENT_EDIT_PROVENANCE_UNVERIFIED';
+  return null;
+}
 function parseCanonicalComment(body){
   if(typeof body!=='string')return {kind:'other'};
   if(body.length>256*1024)return {kind:'bad'};
@@ -57,7 +113,9 @@ function parseCanonicalComment(body){
     Object.keys(envelope).sort().join(',')!=='data,kind,schema'||
     envelope.schema!=='ads/github/v3'||envelope.kind!=='event'||
     !validateEvent(envelope.data))return {kind:'bad'};
-  return {kind:envelope.data.event==='DISPATCH_CLAIMED'?'candidate':'other',
+  return {kind:envelope.data.event==='DISPATCH_CLAIMED'?'candidate':
+    envelope.data.event==='DISPATCH_STATE_CHANGED'&&
+    envelope.data.dispatch_state==='DONE'?'done':'other',
     event:envelope.data};
 }
 /**
@@ -86,7 +144,7 @@ export async function readClaimEventCandidatesFromClient({
       !Number.isSafeInteger(head.id)||typeof head.updated_at!=='string'||
       commit?.data?.sha!==expectedSourceSha)
       return no('NATIVE_ISSUE_OR_SHA_MISMATCH');
-    const seen=new Set(),candidates=[];
+    const seen=new Set(),dones=[],candidates=[];
     let total=0;
     for await(const page of octokit.paginate.iterator(octokit.rest.issues.listComments,
       {...params,per_page:100})){
@@ -97,7 +155,6 @@ export async function readClaimEventCandidatesFromClient({
         const parsed=parseCanonicalComment(c?.body);
         if(parsed.kind==='other')continue;
         if(parsed.kind==='bad')return no('UNVERIFIED_ADS_EVENT_COMMENT');
-        if(parsed.kind!=='candidate')continue;
         if(!Number.isSafeInteger(c.id)||c.id<1||
           c.html_url!==`${issueUrl}#issuecomment-${c.id}`||
           typeof c.created_at!=='string'||c.created_at!==c.updated_at||
@@ -105,13 +162,27 @@ export async function readClaimEventCandidatesFromClient({
           return no('NATIVE_EVENT_IDENTITY_UNVERIFIED');
         const e=parsed.event;
         // ADS event-v2 schema allows task/issue optional for generic events.
-        // For a Tally Task Claim, at least one must bind this native Issue,
-        // and any second asserted pointer must match too.
+        // For a Tally Task Claim or terminal DONE, at least one must bind
+        // this native Issue, and any second asserted pointer must match too.
         if((!e.task&&!e.issue)||
           (e.task&&e.task!==`#${issueNumber}`)||
-          (e.issue&&e.issue!==`#${issueNumber}`)||
-          e.sha!==expectedSourceSha)
+          (e.issue&&e.issue!==`#${issueNumber}`))
           return no('CROSS_TASK_OR_STALE_CLAIM_EVENT');
+        if(parsed.kind==='done'){
+          const editReason=await doneEditProvenance({
+            octokit,comment:c,owner,repo,issueNumber});
+          if(editReason)return no(editReason);
+          if(dones.some(d=>d.dispatchId===e.dispatch_id))
+            return no('DUPLICATE_DISPATCH_CLAIM_EVENT');
+          dones.push(Object.freeze({
+            commentId:c.id,commentRef:c.html_url,dispatchId:e.dispatch_id,
+            protectedClaimKey:e.protected_claim_key??null,
+            claimGeneration:e.admission_generation??null,
+            predecessorCommentId:e.predecessor_claim_comment_id??null,
+            sourceSha:e.sha??null,transportActor:c.user.login,
+            commentBodySha256:createHash('sha256').update(c.body,'utf8').digest('hex')}));
+          continue;
+        }
         if(seen.has(e.dispatch_id))return no('DUPLICATE_DISPATCH_CLAIM_EVENT');
         seen.add(e.dispatch_id);
         candidates.push(Object.freeze({
@@ -129,13 +200,45 @@ export async function readClaimEventCandidatesFromClient({
         }));
       }
     }
+    // #422 reconciliation: a stale candidate (source SHA different from the
+    // current expected SHA) is ignored for fresh admission only when an
+    // exact, unedited DONE binds it; every other stale candidate keeps the
+    // historical whole-scan rejection. A canonical DONE that binds no
+    // candidate at all (wrong predecessor/comment/dispatch/key/generation/
+    // source, or a foreign dispatch) is itself an anomaly and fails the scan
+    // with its own reason. A DONE exactly binding a current-source candidate
+    // is inert: current candidates are never filtered by a DONE, because
+    // native DONE is not a new Claim and not admission.
+    const binds=(d,c)=>d.dispatchId===c.dispatchId&&
+      d.protectedClaimKey!==null&&d.protectedClaimKey===c.protectedClaimKey&&
+      d.claimGeneration!==null&&d.claimGeneration===c.claimGeneration&&
+      Number.isSafeInteger(d.predecessorCommentId)&&
+      d.predecessorCommentId===c.commentId&&
+      typeof d.sourceSha==='string'&&d.sourceSha===c.sourceSha;
+    const fresh=[],terminalized=[];
+    let staleUnbound=false;
+    for(const c of candidates){
+      if(c.sourceSha===expectedSourceSha){fresh.push(c);continue;}
+      const done=dones.find(d=>binds(d,c));
+      if(!done){staleUnbound=true;continue;}
+      terminalized.push(Object.freeze({...c,terminalized:true,
+        terminalizedByDoneCommentId:done.commentId,
+        terminalizedByDoneCommentRef:done.commentRef,
+        terminalizedByDoneBodySha256:done.commentBodySha256,
+        terminalizedByDoneTransportActor:done.transportActor}));
+    }
+    if(dones.some(d=>!candidates.some(c=>binds(d,c))))
+      return no('DISPATCH_DONE_EVENT_UNBOUND_OR_DIVERGENT');
+    if(staleUnbound)return no('CROSS_TASK_OR_STALE_CLAIM_EVENT');
     const final=(await octokit.rest.issues.get(params))?.data;
     if(final?.id!==head.id||final?.number!==issueNumber||
       final?.html_url!==issueUrl||final?.updated_at!==head.updated_at)
       return no('NATIVE_ISSUE_CHANGED_DURING_READ');
     return Object.freeze({
-      ...no(candidates.length?'CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED':'NO_DISPATCH_CLAIM_EVENTS'),
-      candidateCount:candidates.length,candidates:Object.freeze(candidates)
+      ...no(fresh.length?'CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED':'NO_DISPATCH_CLAIM_EVENTS'),
+      candidateCount:fresh.length,candidates:Object.freeze(fresh),
+      terminalizedHistoricalClaimCount:terminalized.length,
+      terminalizedHistoricalClaims:Object.freeze(terminalized)
     });
   }catch(e){return no(reasonFor(e));}
 }

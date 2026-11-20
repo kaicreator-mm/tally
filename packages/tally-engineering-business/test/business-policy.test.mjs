@@ -1,13 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {getPolicy,assessTaskEvidence,assessClaimedTaskAdmission,
+  assessNativeTaskDependencyWrite,projectNativeTaskDependencyWrite,
+  assessVersionTaskDagFreeze,projectVersionTaskDagFreeze,
   projectClaimedTaskAdmission,assessLocalCodexAttempt,projectLocalCodexAttempt,
   assessReviewedCandidateJoin,projectReviewedCandidateJoin,projectNativeTaskEffectiveSnapshot,
+  assessSingleCandidateReview,projectSingleCandidateReview,
   assessCandidatePublication,projectCandidatePublication,assessProductIntakeFreeze,
   projectProductIntakeFreeze,assessProjectIntakeAdmission,projectProjectIntakeAdmission,
+  assessMaintenanceDraftPersist,projectMaintenanceDraftPersist,
+  assessMaintenanceCandidateFreeze,projectMaintenanceCandidateFreeze,
   assessMaintenanceIssuePublication,projectMaintenanceIssuePublication,
   assessTaskLearningOutcome,projectTaskLearningOutcome,
   assessQualifiedReleaseDelivery,projectQualifiedReleaseDelivery,
+  assessProductReviewDraftPersist,projectProductReviewDraftPersist,
+  assessProductReviewWitnessFreeze,projectProductReviewWitnessFreeze,
   ABI_VERSION,PACKAGE_KIND,INTENT_TYPES,EFFECT_TYPES}
   from '../src/index.mjs';
 const good={issueRef:'https://github.com/kaicreator-mm/tally/issues/108',issueNumber:108,sourceSha:'a'.repeat(40),claimRef:'github:claim:108',dependenciesComplete:true};
@@ -26,22 +33,28 @@ const sealedPositive=(input)=>({
 });
 test('real DH public Business ABI identifiers',()=>{
   assert.equal(ABI_VERSION,'v08-business-abi/1');assert.equal(PACKAGE_KIND,'business');
-  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+  assert.deepEqual([...INTENT_TYPES],['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','reviewSingleCandidate','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
   assert.deepEqual([...EFFECT_TYPES],['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+    'effect:tally-reviewer-candidate-join','effect:tally-single-candidate-review','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
-    'effect:tally-qualified-release-delivery']);
+    'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
+    'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
+    'effect:tally-product-review-witness-freeze']);
 });
 test('Policy declares one K-sealed read-only C operation, never external GitHub effect',()=>{
-  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease']);
+  const p=getPolicy();assert.deepEqual(Object.keys(p.intentBindings),['inspectTaskReadiness','admitClaimedTask','runLocalCodexAttempt','joinReviewedCandidates','reviewSingleCandidate','publishReviewedCandidate','freezeProductIntake','admitProjectIntake','persistMaintenanceDraft','freezeReviewedMaintenanceCandidate','publishMaintenanceIssue','recordTaskLearningOutcome','deliverQualifiedRelease','addNativeTaskDependency','freezeVersionTaskDag','persistProductDraft312','freezeProductReview312']);
   assert.deepEqual(Object.keys(p.effectBindings),['effect:tally-readiness-observation',
     'effect:tally-claim-execution-admission','effect:tally-local-codex-attempt',
-    'effect:tally-reviewer-candidate-join','effect:tally-reviewed-candidate-publication',
+    'effect:tally-reviewer-candidate-join','effect:tally-single-candidate-review','effect:tally-reviewed-candidate-publication',
     'effect:tally-product-intake-freeze','effect:tally-project-intake-admission',
+    'effect:tally-maintenance-draft-persist','effect:tally-maintenance-candidate-freeze',
     'effect:tally-maintenance-issue-publication','effect:tally-task-learning-outcome',
-    'effect:tally-qualified-release-delivery']);
+    'effect:tally-qualified-release-delivery','effect:tally-native-task-dependency-write',
+    'effect:tally-version-task-dag-freeze','effect:tally-product-review-draft-persist',
+    'effect:tally-product-review-witness-freeze']);
   assert.ok(!('external' in p.effectBindings['effect:tally-readiness-observation']));
   assert.deepEqual(p.effectBindings['effect:tally-readiness-observation'].resource,
     {key:'tally-source-observation',operation:'tally.observeReadiness'});
@@ -99,7 +112,7 @@ test('all inputFrom projection names are covered by the Rule',()=>{
 test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
   const p=getPolicy();
   assert.equal(p.domainId,'tally-engineering');
-  assert.equal(Object.keys(p.effectBindings).length,10);
+  assert.equal(Object.keys(p.effectBindings).length,17);
   assert.equal(p.workflowDefinition.states[0].transitions[0].targetState,'open');
   assert.equal(p.workflowDefinition.states[0].transitions[1].targetState,'open');
   // T210 intake intents: freeze is an idempotent Host CAS write, admission is
@@ -120,12 +133,19 @@ test('no K, C, Host, HTTP, gh credentials required by pure policy',()=>{
     'admit-claimed-task':'rule:tally-claim-admission',
     'run-local-codex-attempt':'rule:tally-local-codex-attempt',
     'join-reviewed-candidates':'rule:tally-reviewer-candidate-join',
+    'review-single-candidate':'rule:tally-single-candidate-review',
     'publish-reviewed-candidate':'rule:tally-reviewed-candidate-publication',
     'freeze-product-intake':'rule:tally-product-intake-freeze',
     'admit-project-intake':'rule:tally-project-intake-admission',
+    'persist-maintenance-draft':'rule:tally-maintenance-draft-persist',
+    'freeze-maintenance-candidate':'rule:tally-maintenance-candidate-freeze',
     'publish-maintenance-issue':'rule:tally-maintenance-issue-publication',
     'record-task-learning-outcome':'rule:tally-task-learning-outcome',
-    'deliver-qualified-release':'rule:tally-qualified-release-delivery'};
+    'deliver-qualified-release':'rule:tally-qualified-release-delivery',
+    'add-native-task-dependency':'rule:tally-native-task-dependency',
+    'freeze-version-task-dag':'rule:tally-version-task-dag-freeze',
+    'persist-product-draft-312':'rule:tally-product-review-draft-persist',
+    'freeze-product-review-312':'rule:tally-product-review-witness-freeze'};
   assert.deepEqual(Object.keys(ruleByTransition).sort(),
     p.workflowDefinition.states[0].transitions.map(t=>t.transitionKey).sort());
   for(const transition of p.workflowDefinition.states[0].transitions){
@@ -363,6 +383,23 @@ test('T06m real candidate projection preserves exact tree and process without Ta
   assert.equal(x.state,'LOCAL_CANDIDATE_READY');assert.equal(x.agentLaunch,true);
   assert.equal(x.candidateTree,'a'.repeat(40));assert.equal(x.process.pid,123);
   assert.equal(x.authorized,false);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+});
+test('R107 AgentProvider/1 identity crosses replay and candidate projection without Task PASS',()=>{
+  const providerReady={...localReady,providerId:'zcode',process:{...localReady.process,
+    pid:null,builderPrincipal:null,builderSid:null}};
+  const ready=projectLocalCodexAttempt({input:localInput,observation:providerReady,
+    effectId:'provider-ready'});
+  assert.equal(ready.state,'LOCAL_CANDIDATE_READY');
+  assert.equal(ready.providerId,'zcode');
+  assert.equal(ready.process.pid,null);assert.equal(ready.process.builderPrincipal,null);
+  assert.equal(ready.taskPass,false);assert.equal(ready.releasePass,false);
+  const replay=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
+    providerId:'pi',state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+    agentLaunch:false,replayFixture:true},effectId:'provider-replay'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');assert.equal(replay.providerId,'pi');
+  const forged=projectLocalCodexAttempt({input:localInput,observation:{...providerReady,
+    providerId:'not a provider'},effectId:'provider-forged'});
+  assert.equal(forged.state,'NOT_ADMITTED');assert.equal(forged.taskPass,false);
 });
 test('T06m replay, unavailable/confinement and UNKNOWN states remain distinct',()=>{
   const replay=projectLocalCodexAttempt({input:localInput,observation:{...localBase,
@@ -851,6 +888,184 @@ test('#219 publication effect dispatches sealed resource only for qualified inpu
   assert.equal(calls,1);
 });
 
+test('#219 publication projection keeps every reachable lost-ACK reason UNKNOWN',()=>{
+  // The shared version fence and the reconcile/readback paths surface fresh
+  // reason tokens (not a closed enumeration); the boundary contract is the
+  // state+effect shape, so a lost acknowledgment stays PUBLICATION_UNKNOWN.
+  const unknown=(reason)=>({state:'PUBLICATION_UNKNOWN',reason,
+    issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+    sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+    claimAccepted:true,admitted:true,authorized:false,agentLaunch:false,
+    historicalReleaseMutation:false,replayFixture:false,
+    githubEffect:'UNKNOWN',issue:null,taskPass:false,releasePass:false});
+  for(const reason of ['MAINTENANCE_ISSUE_PENDING_RECONCILIATION',
+    'MAINTENANCE_ISSUE_RECONCILE_UNKNOWN','MAINTENANCE_ISSUE_READBACK_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_FENCE_UNKNOWN','GITHUB_PUBLICATION_UNKNOWN',
+    'MAINTENANCE_ISSUE_CREATE_READBACK_MISSING','GITHUB_PUBLISH_UNKNOWN']){
+    const y=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:unknown(reason),effectId:'fx'});
+    assert.equal(y.state,'PUBLICATION_UNKNOWN',reason);
+    assert.equal(y.reason,reason,reason);
+    assert.equal(y.githubEffect,'UNKNOWN',reason);
+    assert.equal(y.admitted,false,reason);assert.equal(y.taskPass,false,reason);
+  }
+  for(const bad of ['local_agent_threw','not a token','A'.repeat(129),'','ok!']){
+    const z=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:unknown(bad),effectId:'fx'});
+    assert.equal(z.admitted,false,JSON.stringify(bad));
+    assert.equal(z.taskPass,false);
+    assert.notEqual(z.reason,bad,'a non-token reason must never cross verbatim');
+  }
+  // Previously unlisted pre-effect refusals keep their precise reason too.
+  for(const reason of ['MAINTENANCE_PUBLICATION_AUTHORITY_UNKNOWN',
+    'MAINTENANCE_PUBLICATION_AUTHORITY_CHANGED','MAINTENANCE_FREEZE_STORE_UNAVAILABLE']){
+    const w=projectMaintenanceIssuePublication({input:maintInput(),
+      observation:{...unknown(reason),state:'NOT_ADMITTED',claimAccepted:false,
+        admitted:false,githubEffect:'NOT_RUN'},effectId:'fx'});
+    assert.equal(w.state,'NOT_ADMITTED',reason);
+    assert.equal(w.reason,reason,reason);
+    assert.equal(w.taskPass,false);
+  }
+});
+
+const draft219Input=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  candidate:{sourceIssueRef:'https://github.com/kaicreator-mm/tally/issues/207',
+    requirementRef:'https://github.com/kaicreator-mm/tally/issues/92',
+    subjectSha:'5'.repeat(40),summary:'Post-release regression against v1.5.5',
+    priorRelease:{version:'v1.5.5',commitSha:'5'.repeat(40),
+      evidenceRef:'https://github.com/kaicreator-mm/tally/releases/tag/v1.5.5'}}});
+const draft219Recorded=()=>({state:'DRAFT_PENDING_REVIEW',
+  reason:'MAINTENANCE_DRAFT_RECORDED',issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),claimGeneration:1,
+  authorized:false,agentLaunch:false,historicalReleaseMutation:false,
+  taskPass:false,releasePass:false});
+const freeze219Input=()=>({issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  reviewCommentId:12345,reviewedPullNumber:409,reviewedHead:'a'.repeat(40),
+  reviewedTree:'b'.repeat(40),reviewedBase:'d'.repeat(40)});
+const freeze219Recorded=()=>({state:'RECORDED_COMPLETE',
+  reason:'INDEPENDENT_CANDIDATE_REVIEW_FROZEN_IN_HOST_CAS',
+  issueRef:'https://github.com/kaicreator-mm/tally/issues/219',
+  sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+  receiptRef:'receipt:sha256:'+'e'.repeat(64),frozen:true,replayFixture:false,
+  claimAccepted:false,admitted:false,authorized:false,agentLaunch:false,
+  historicalReleaseMutation:false,githubEffect:'NOT_RUN',
+  taskPass:false,releasePass:false});
+
+test('#219 draft/freeze screening enforces the exact #219 allowlist and shapes',()=>{
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/210'},{issueNumber:210},
+    {sourceSha:'bad'},{candidateDigest:'zz'},{candidate:null},{candidate:'x'},
+  ]){
+    const x=assessMaintenanceDraftPersist({...draft219Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+    assert.equal(x.admitted,false);
+  }
+  for(const change of [
+    {issueRef:'https://github.com/kaicreator-mm/tally/issues/210'},{issueNumber:210},
+    {reviewCommentId:0},{reviewedPullNumber:'x'},{reviewedHead:'bad'},
+    {reviewedTree:null},{reviewedBase:'a'.repeat(39)},
+  ]){
+    const x=assessMaintenanceCandidateFreeze({...freeze219Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT',JSON.stringify(change));
+    assert.equal(x.admitted,false);
+  }
+  for(const empty of [null,undefined,{},[]]){
+    assert.equal(assessMaintenanceDraftPersist(empty).state,'UNQUALIFIED_INPUT');
+    assert.equal(assessMaintenanceCandidateFreeze(empty).state,'UNQUALIFIED_INPUT');
+  }
+  const okDraft=assessMaintenanceDraftPersist(draft219Input());
+  assert.equal(okDraft.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(okDraft.reason,'REQUIRES_SEALED_MAINTENANCE_DRAFT_PERSIST');
+  const okFreeze=assessMaintenanceCandidateFreeze(freeze219Input());
+  assert.equal(okFreeze.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(okFreeze.reason,'REQUIRES_SEALED_MAINTENANCE_CANDIDATE_FREEZE');
+});
+
+test('#219 draft/freeze projections admit only verified CAS shapes and never authority',()=>{
+  const draft=projectMaintenanceDraftPersist({input:draft219Input(),
+    observation:draft219Recorded(),effectId:'m219-a'});
+  assert.equal(draft.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(draft.frozen,false);
+  assert.equal(draft.githubEffect,'NOT_RUN');
+  assert.equal(draft.authorized,false);assert.equal(draft.admitted,false);
+  assert.equal(draft.taskPass,false);assert.equal(draft.releasePass,false);
+  const frozen=projectMaintenanceCandidateFreeze({input:freeze219Input(),
+    observation:freeze219Recorded(),effectId:'m219-b'});
+  assert.equal(frozen.state,'RECORDED_COMPLETE');assert.equal(frozen.frozen,true);
+  assert.equal(frozen.receiptRef,'receipt:sha256:'+'e'.repeat(64));
+  assert.equal(frozen.githubEffect,'NOT_RUN');
+  assert.equal(frozen.authorized,false);assert.equal(frozen.admitted,false);
+  assert.equal(frozen.taskPass,false);assert.equal(frozen.releasePass,false);
+  for(const change of [
+    {frozen:false},{candidateDigest:'f'.repeat(64)},
+    {receiptRef:'receipt:sha256:'+'f'.repeat(64)},
+    {state:'NOT_RECORDED',reason:'MAINTENANCE_REVIEW_DIGEST_MISMATCH'},
+    {taskPass:true},{authorized:true},{sourceSha:'9'.repeat(40)},
+  ]){
+    const y=projectMaintenanceCandidateFreeze({input:freeze219Input(),
+      observation:{...freeze219Recorded(),...change},effectId:'m219-c'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+  for(const change of [
+    {reason:'MAINTENANCE_DRAFT_CONFLICT'},{candidateDigest:'f'.repeat(64)},
+    {sourceSha:'9'.repeat(40)},{authorized:true},
+  ]){
+    const y=projectMaintenanceDraftPersist({input:draft219Input(),
+      observation:{...draft219Recorded(),...change},effectId:'m219-d'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+  }
+  assert.equal(projectMaintenanceDraftPersist({input:draft219Input(),
+    observation:null,effectId:'m219-e'}).reason,
+    'UNVERIFIED_MAINTENANCE_DRAFT_PERSISTENCE');
+  assert.equal(projectMaintenanceCandidateFreeze({input:freeze219Input(),
+    observation:null,effectId:'m219-f'}).reason,
+    'UNVERIFIED_MAINTENANCE_CANDIDATE_FREEZE');
+});
+
+test('#219 draft/freeze K effects dispatch one sealed call each for qualified input',async()=>{
+  const p=getPolicy();
+  const persist=p.effectBindings['effect:tally-maintenance-draft-persist'];
+  const freeze=p.effectBindings['effect:tally-maintenance-candidate-freeze'];
+  assert.equal(persist.semantics,'idempotent');
+  assert.deepEqual(persist.resource,
+    {key:'tally-local-codex',operation:'tally.persistMaintenanceDraft'});
+  assert.deepEqual(persist.external,{permitTtlMs:3600000,await:'terminal'});
+  assert.equal(freeze.semantics,'idempotent');
+  assert.deepEqual(freeze.resource,
+    {key:'tally-local-codex',operation:'tally.freezeReviewedMaintenanceCandidate'});
+  let calls=[];
+  const makeResources=observation=>({call:async(key,op,arg)=>{
+    calls.push({key,op,arg});
+    return {phase:'terminal',outcome:{ok:true,output:observation}};
+  }});
+  const persisted=await persist.handler({input:draft219Input(),effectId:'m219-g',
+    resources:makeResources(draft219Recorded())});
+  assert.equal(persisted.state,'DRAFT_PENDING_REVIEW');
+  assert.deepEqual(calls,[{key:'tally-local-codex',op:'tally.persistMaintenanceDraft',
+    arg:{sourceRef:'https://github.com/kaicreator-mm/tally/issues/219',
+      issueNumber:219,sourceSha:'d'.repeat(40),candidateDigest:'e'.repeat(64),
+      candidate:draft219Input().candidate,effectId:'m219-g'}}]);
+  calls=[];
+  const frozen=await freeze.handler({input:freeze219Input(),effectId:'m219-h',
+    resources:makeResources(freeze219Recorded())});
+  assert.equal(frozen.state,'RECORDED_COMPLETE');assert.equal(frozen.frozen,true);
+  assert.equal(frozen.taskPass,false);
+  assert.equal(calls[0].op,'tally.freezeReviewedMaintenanceCandidate');
+  assert.equal(calls[0].arg.reviewCommentId,12345);
+  assert.equal(calls[0].arg.reviewedPullNumber,409);
+  // Unqualified input never reaches the sealed seam.
+  calls=[];
+  const refused=await freeze.handler({input:{...freeze219Input(),reviewCommentId:0},
+    effectId:'m219-i',resources:makeResources(freeze219Recorded())});
+  assert.equal(refused.state,'UNQUALIFIED_INPUT');assert.equal(calls.length,0);
+  await assert.rejects(freeze.handler({input:freeze219Input(),effectId:'m219-j',
+    resources:null}),/SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+});
+
 test('#219 publication idempotency key renders within Kernel grammar',()=>{
   const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
   const p=getPolicy();
@@ -859,6 +1074,31 @@ test('#219 publication idempotency key renders within Kernel grammar',()=>{
   const rendered=transition.effectIntents[0].idempotencyKeyFrom.template
     .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(maintInput()[name]??''));
   assert.ok(pattern.test(rendered));assert.ok(!rendered.includes('/'));
+});
+
+test('#219 draft/freeze idempotency keys render within Kernel grammar at worst case',()=>{
+  // Kernel refuses resolved keys outside ^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$
+  // before any journal write; the freeze template must hold for a real
+  // 10-digit GitHub comment id (6511046226), not only short test fixtures.
+  const pattern=/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+  const p=getPolicy();
+  const draftT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='persist-maintenance-draft');
+  const freezeT=p.workflowDefinition.states[0].transitions.find(
+    t=>t.transitionKey==='freeze-maintenance-candidate');
+  const render=(t,vals)=>t.effectIntents[0].idempotencyKeyFrom.template
+    .replace(/\{([A-Za-z0-9_]+)\}/g,(_m,name)=>String(vals[name]??''));
+  const draftRendered=render(draftT,{issueNumber:219,sourceSha:'d'.repeat(40),
+    candidateDigest:'e'.repeat(64)});
+  assert.ok(pattern.test(draftRendered),draftRendered);
+  assert.ok(draftRendered.length<=128,draftRendered.length);
+  assert.ok(!draftRendered.includes('/'));
+  const freezeRendered=render(freezeT,{candidateDigest:'e'.repeat(64),
+    reviewCommentId:6511046226});
+  assert.ok(pattern.test(freezeRendered),freezeRendered);
+  assert.ok(freezeRendered.length<=128,freezeRendered.length+' for a real 10-digit comment id');
+  assert.ok(!freezeRendered.includes('/'));
+  assert.equal(freezeRendered,'maint-freeze:'+'e'.repeat(64)+':6511046226');
 });
 
 test('#219 learning screening requires decision enum and bounded outcome',()=>{
@@ -1128,4 +1368,451 @@ test('#222 release intent binding carries its own single-transition definition',
     'non-idempotent');
   assert.deepEqual(p.effectBindings['effect:tally-qualified-release-delivery'].resource,
     {key:'tally-local-codex',operation:'tally.deliverQualifiedRelease'});
+});
+
+// ---- E0 #284: pre-freeze native dependency write and version DAG freeze ----
+const E0_REF='https://github.com/kaicreator-mm/tally/issues/284';
+const E0_PACK_REF='https://github.com/kaicreator-mm/tally/blob/'+
+  'b3ad8ae7833028999a9c27cac7042037bca6d961'+
+  '/apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json';
+const E0_PACK_SHA='d8b1c8dcfe22fdc27a2ffe151341ac3d3728329d';
+const depInput={issueRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,
+  blockedIssueNumber:312,blockedByIssueNumber:284};
+const freezeInput={issueRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA};
+const depPositive={status:'NATIVE_EDGE_VERIFIED',
+  reason:'OFFICIAL_GITHUB_BLOCKED_BY_READBACK_VERIFIED',
+  repository:'kaicreator-mm/tally',versionId:'version/v2',
+  blockedIssueNumber:312,blockedByIssueNumber:284,dependencyId:284000,
+  native:true,githubEffect:'PERFORMED_VERIFIED',writePerformed:true,
+  authorized:false,admitted:false,taskPass:false,releasePass:false};
+const freezePositive={status:'FROZEN',
+  reason:'FROZEN_VERSION_TASK_DAG_CAS_READBACK_VERIFIED',
+  repository:'kaicreator-mm/tally',versionId:'version/v2',
+  taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,blobSha:E0_PACK_SHA,
+  frozenAt:'2026-11-09T13:00:00.000Z',taskCount:3,edgeCount:1,
+  writeSetRecordCount:3,githubEffect:'NOT_RUN',
+  dependencyWritesAfterFreeze:'REFUSED',
+  authorized:false,admitted:false,taskPass:false,releasePass:false};
+test('E0 dependency advisory pins exact controller identity and refuses malformed edges',()=>{
+  assert.equal(assessNativeTaskDependencyWrite(depInput).state,'OBSERVED_INPUT_ONLY');
+  for(const bad of [null,{},'x',
+    {...depInput,issueRef:'https://github.com/kaicreator-mm/tally/issues/219'},
+    {...depInput,issueNumber:219},
+    {...depInput,sourceSha:'short'},
+    {...depInput,taskPackRef:'https://github.com/kaicreator-mm/tally/blob/main/x.json'},
+    {...depInput,taskPackBlobSha:'deadbeef'},
+    {...depInput,blockedIssueNumber:0},
+    {...depInput,blockedByIssueNumber:'284'},
+    {...depInput,blockedIssueNumber:284},
+  ])
+    assert.equal(assessNativeTaskDependencyWrite(bad).state,'UNQUALIFIED_INPUT');
+});
+test('E0 dependency projection verifies only exact native readback shapes',()=>{
+  const p=projectNativeTaskDependencyWrite({input:depInput,
+    observation:depPositive,effectId:'e0-1'});
+  assert.equal(p.state,'NATIVE_DEPENDENCY_VERIFIED');
+  assert.equal(p.githubEffect,'PERFORMED_VERIFIED');
+  assert.equal(p.native,true);assert.equal(p.admitted,false);
+  assert.equal(p.taskPass,false);assert.equal(p.releasePass,false);
+  const replay=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-2',
+    observation:{status:'NATIVE_EDGE_PRESENT',
+      reason:'NATIVE_EDGE_ALREADY_PRESENT_READBACK',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      blockedIssueNumber:312,blockedByIssueNumber:284,dependencyId:284000,
+      native:true,githubEffect:'NOT_RUN',writePerformed:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(replay.state,'NATIVE_DEPENDENCY_PRESENT');
+  assert.equal(replay.writePerformed,false);
+  const lost=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-3',
+    observation:{status:'UNKNOWN',reason:'NATIVE_WRITE_ACK_LOST',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      githubEffect:'UNKNOWN',reconciliationRequired:true,
+      retryPolicy:'READ_BACK_BEFORE_RETRY_NO_BLIND_POST',
+      blockedIssueNumber:312,blockedByIssueNumber:284,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(lost.state,'WRITE_UNKNOWN');
+  assert.equal(lost.retryPolicy,'READ_BACK_BEFORE_RETRY_NO_BLIND_POST');
+  const blocked=projectNativeTaskDependencyWrite({input:depInput,effectId:'e0-4',
+    observation:{status:'BLOCKED',reason:'VERSION_DAG_ALREADY_FROZEN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      githubEffect:'NOT_RUN',native:false,
+      authorized:false,admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(blocked.state,'NOT_ADMITTED');
+  assert.equal(blocked.reason,'VERSION_DAG_ALREADY_FROZEN');
+  for(const garbage of [null,{},{...depPositive,status:'FORGED'},
+    {...depPositive,blockedIssueNumber:219},
+    {...depPositive,repository:'evil/org'},
+    {...depPositive,taskPass:true}])
+    assert.equal(projectNativeTaskDependencyWrite({input:depInput,
+      observation:garbage,effectId:'e0-x'}).state,'NOT_ADMITTED');
+});
+test('E0 freeze advisory and projection stay fail-closed',()=>{
+  assert.equal(assessVersionTaskDagFreeze(freezeInput).state,'OBSERVED_INPUT_ONLY');
+  assert.equal(assessVersionTaskDagFreeze(null).state,'UNQUALIFIED_INPUT');
+  assert.equal(assessVersionTaskDagFreeze(
+    {...freezeInput,taskPackBlobSha:'zzz'}).state,'UNQUALIFIED_INPUT');
+  const p=projectVersionTaskDagFreeze({input:freezeInput,
+    observation:freezePositive,effectId:'e0-5'});
+  assert.equal(p.state,'VERSION_DAG_FROZEN');
+  assert.equal(p.frozen,true);assert.equal(p.taskPass,false);
+  assert.equal(p.dependencyWritesAfterFreeze,'REFUSED');
+  assert.equal(p.writeSetRecordCount,p.taskCount);
+  const replay=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-6',
+    observation:{...freezePositive,status:'REPLAY',
+      reason:'IDENTICAL_FREEZE_REPLAY'}});
+  assert.equal(replay.state,'VERSION_DAG_FREEZE_REPLAY');
+  const planned=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-7',
+    observation:{status:'BLOCKED',reason:'PLANNED_EDGES_REMAIN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      taskPackBlobSha:E0_PACK_SHA,githubEffect:'NOT_RUN',authorized:false,
+      admitted:false,taskPass:false,releasePass:false}});
+  assert.equal(planned.state,'NOT_FROZEN');
+  assert.equal(planned.reason,'PLANNED_EDGES_REMAIN');
+  const partial=projectVersionTaskDagFreeze({input:freezeInput,effectId:'e0-8',
+    observation:{status:'UNKNOWN',reason:'FREEZE_WRITESET_PARTIAL_UNKNOWN',
+      repository:'kaicreator-mm/tally',versionId:'version/v2',
+      taskPackBlobSha:E0_PACK_SHA,githubEffect:'UNKNOWN',
+      reconciliationRequired:true,authorized:false,admitted:false,
+      taskPass:false,releasePass:false}});
+  assert.equal(partial.state,'FREEZE_UNKNOWN');
+  assert.equal(partial.reconciliationRequired,true);
+  for(const garbage of [null,{},{...freezePositive,status:'FORGED'},
+    {...freezePositive,taskPackBlobSha:'0'.repeat(40)},
+    {...freezePositive,writeSetRecordCount:2},
+    {...freezePositive,dependencyWritesAfterFreeze:'ALLOWED'}])
+    assert.equal(projectVersionTaskDagFreeze({input:freezeInput,
+      observation:garbage,effectId:'e0-x'}).state,'NOT_FROZEN');
+});
+test('E0 effects dispatch through the selected C seam only',async()=>{
+  const p=getPolicy();
+  const dependency=p.effectBindings['effect:tally-native-task-dependency-write'];
+  assert.equal(dependency.semantics,'non-idempotent');
+  assert.deepEqual(dependency.resource,
+    {key:'tally-local-codex',operation:'tally.addNativeTaskDependency'});
+  assert.deepEqual(dependency.external,{permitTtlMs:3600000,await:'terminal'});
+  const freeze=p.effectBindings['effect:tally-version-task-dag-freeze'];
+  assert.equal(freeze.semantics,'idempotent');
+  assert.deepEqual(freeze.resource,
+    {key:'tally-local-codex',operation:'tally.freezeVersionTaskDag'});
+  let calls=[];
+  const makeResources=observation=>({call:async(key,op,arg)=>{
+    calls.push({key,op,arg});return {phase:'terminal',outcome:{ok:true,output:observation}};
+  }});
+  const depResult=await dependency.handler({input:depInput,effectId:'e0-9',
+    resources:makeResources(depPositive)});
+  assert.equal(depResult.state,'NATIVE_DEPENDENCY_VERIFIED');
+  assert.deepEqual(calls,[{key:'tally-local-codex',op:'tally.addNativeTaskDependency',
+    arg:{sourceRef:E0_REF,issueNumber:284,sourceSha:'a'.repeat(40),
+      taskPackRef:E0_PACK_REF,taskPackBlobSha:E0_PACK_SHA,
+      blockedIssueNumber:312,blockedByIssueNumber:284,effectId:'e0-9'}}]);
+  calls=[];
+  const freezeResult=await freeze.handler({input:freezeInput,effectId:'e0-10',
+    resources:makeResources(freezePositive)});
+  assert.equal(freezeResult.state,'VERSION_DAG_FROZEN');
+  assert.equal(calls[0].op,'tally.freezeVersionTaskDag');
+  // Unqualified input never reaches the sealed seam.
+  calls=[];
+  const refused=await dependency.handler({input:{...depInput,blockedIssueNumber:284},
+    effectId:'e0-11',resources:makeResources(depPositive)});
+  assert.equal(refused.state,'UNQUALIFIED_INPUT');assert.equal(calls.length,0);
+  await assert.rejects(dependency.handler({input:depInput,effectId:'e0-12',
+    resources:null}),/SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+});
+
+
+// --- #312 Product ReviewWitness successor: sealed draft persistence + freeze ---
+
+const draft312Input=()=>({sourceSha:'d'.repeat(40),taskPackBlobSha:'e'.repeat(40),
+  writeSetSha256:'f'.repeat(64),
+  draft:{product:{goal:'Ship the Product ReviewWitness successor',
+    nonGoals:['No forged Task PASS']},l2:{decision:'KEEP_MERGED_L2_ARCHITECTURE'},
+    provenance:['157','158']}});
+const draft312Persisted=()=>({state:'DRAFT_PENDING_REVIEW',
+  reason:'HOST_DRAFT_PERSISTED_AND_READ_BACK',issueNumber:312,
+  sourceSha:'d'.repeat(40),taskPackBlobSha:'e'.repeat(40),
+  writeSetSha256:'f'.repeat(64),productDigest:'1'.repeat(64),
+  draftRef:'draft:sha256:'+'1'.repeat(64),authorized:false,admitted:false,
+  taskPass:false,releasePass:false});
+
+test('#312 draft-persist screening refuses stale source and malformed coordinates',()=>{
+  // Draft SHAPE stays Host-validated (PRODUCT_DRAFT_INPUT_INVALID there);
+  // this screen only refuses missing identity/coordinates.
+  for(const change of [{sourceSha:'short'},{taskPackBlobSha:'zz'},
+    {writeSetSha256:'nothex'},{draft:null},{draft:'text'},{draft:[]}]){
+    const x=assessProductReviewDraftPersist({...draft312Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT');
+    assert.equal(x.reason,'MISSING_SOURCE_IDENTITY');
+    assert.equal(x.frozen,false);assert.equal(x.taskPass,false);
+  }
+  const ok=assessProductReviewDraftPersist(draft312Input());
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(ok.reason,'REQUIRES_SEALED_PRODUCT_DRAFT_PERSISTENCE');
+  assert.equal(ok.issueNumber,312);
+  assert.equal(ok.issueRef,'https://github.com/kaicreator-mm/tally/issues/312');
+  assert.equal(ok.frozen,false);
+});
+
+test('#312 draft-persist projection accepts only Host-derived digest bindings',()=>{
+  const x=projectProductReviewDraftPersist({input:draft312Input(),
+    observation:draft312Persisted(),effectId:'p312-a'});
+  assert.equal(x.state,'DRAFT_PENDING_REVIEW');
+  assert.equal(x.draftRef,'draft:sha256:'+'1'.repeat(64));
+  assert.equal(x.frozen,false);assert.equal(x.taskPass,false);
+  assert.equal(x.authorized,false);
+  for(const change of [{state:'UNKNOWN',reason:'PRODUCT_DRAFT_CAS_UNKNOWN'},
+    {productDigest:'2'.repeat(64)},
+    {draftRef:'draft:sha256:'+'2'.repeat(64)},
+    {taskPackBlobSha:'9'.repeat(40)},{sourceSha:'9'.repeat(40)},
+    {authorized:true},{state:'FROZEN_COMPLETE',frozen:true}]){
+    const y=projectProductReviewDraftPersist({input:draft312Input(),
+      observation:{...draft312Persisted(),...change},effectId:'p312-a'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+    if(change.reason)assert.equal(y.reason,change.reason);
+  }
+  assert.equal(projectProductReviewDraftPersist({input:draft312Input(),
+    observation:null,effectId:'p312-a'}).reason,
+    'UNVERIFIED_PRODUCT_DRAFT_PERSISTENCE');
+});
+
+const freeze312Input=()=>({sourceSha:'d'.repeat(40),taskPackBlobSha:'e'.repeat(40),
+  writeSetSha256:'f'.repeat(64),reviewCommentId:12345,
+  reviewedHead:'2'.repeat(40),reviewedTree:'3'.repeat(40),
+  reviewedBase:'4'.repeat(40)});
+const freeze312Positive=()=>({state:'FROZEN_COMPLETE',
+  reason:'SOURCE_BOUND_HOST_CAS_READBACK_VERIFIED',issueNumber:312,
+  sourceSha:'d'.repeat(40),taskPackBlobSha:'e'.repeat(40),
+  writeSetSha256:'f'.repeat(64),productDigest:'1'.repeat(64),
+  draftRef:'draft:sha256:'+'1'.repeat(64),
+  reviewRef:'https://github.com/kaicreator-mm/tally/issues/312#issuecomment-12345',
+  receiptRef:'receipt:sha256:'+'1'.repeat(64),frozen:true,authorized:false,
+  admitted:false,taskPass:false,releasePass:false});
+
+test('#312 witness-freeze screening refuses malformed coordinates before dispatch',()=>{
+  for(const change of [{reviewCommentId:0},{reviewCommentId:'12345'},
+    {reviewedHead:'short'},{reviewedTree:null},{reviewedBase:'x'.repeat(41)},
+    {writeSetSha256:'short'},{sourceSha:'not-a-sha'}]){
+    const x=assessProductReviewWitnessFreeze({...freeze312Input(),...change});
+    assert.equal(x.state,'UNQUALIFIED_INPUT');
+    assert.equal(x.frozen,false);assert.equal(x.taskPass,false);
+  }
+  const ok=assessProductReviewWitnessFreeze(freeze312Input());
+  assert.equal(ok.state,'OBSERVED_INPUT_ONLY');
+  assert.equal(ok.reason,'REQUIRES_SEALED_REVIEW_WITNESS_FREEZE');
+  assert.equal(ok.issueNumber,312);
+});
+
+test('#312 witness-freeze projection accepts only exact-bound FROZEN receipts',()=>{
+  const x=projectProductReviewWitnessFreeze({input:freeze312Input(),
+    observation:freeze312Positive(),effectId:'p312-b'});
+  assert.equal(x.state,'FROZEN_COMPLETE');assert.equal(x.frozen,true);
+  assert.equal(x.receiptRef,'receipt:sha256:'+'1'.repeat(64));
+  assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+  assert.equal(x.authorized,false);assert.equal(x.admitted,false);
+  for(const change of [
+    {state:'UNKNOWN',reason:'PRODUCT_REVIEW_WITNESS_UNVERIFIED'},
+    {state:'UNKNOWN',reason:'PRODUCT_REVIEW_FREEZE_CAS_UNKNOWN'},
+    {frozen:false},{productDigest:'2'.repeat(64)},
+    {receiptRef:'receipt:sha256:'+'2'.repeat(64)},
+    {reviewRef:'https://github.com/other/repo/issues/312#issuecomment-12345'},
+    {taskPackBlobSha:'9'.repeat(40)},{sourceSha:'9'.repeat(40)},
+    {taskPass:true},{authorized:true},
+  ]){
+    const y=projectProductReviewWitnessFreeze({input:freeze312Input(),
+      observation:{...freeze312Positive(),...change},effectId:'p312-b'});
+    assert.equal(y.frozen,false,JSON.stringify(change));
+    assert.equal(y.taskPass,false);
+    if(change.reason)assert.equal(y.reason,change.reason);
+  }
+  assert.equal(projectProductReviewWitnessFreeze({input:freeze312Input(),
+    observation:null,effectId:'p312-b'}).reason,
+    'UNVERIFIED_PRODUCT_REVIEW_FREEZE');
+});
+
+test('#312 K effects screen, dispatch one sealed call each and never grant authority',async()=>{
+  const p=getPolicy();
+  const persist=p.effectBindings['effect:tally-product-review-draft-persist'];
+  const freeze=p.effectBindings['effect:tally-product-review-witness-freeze'];
+  assert.equal(persist.semantics,'idempotent');
+  assert.deepEqual(persist.resource,
+    {key:'tally-local-codex',operation:'tally.persistProductDraft312'});
+  assert.deepEqual(persist.external,{permitTtlMs:3600000,await:'terminal'});
+  assert.equal(freeze.semantics,'idempotent');
+  assert.deepEqual(freeze.resource,
+    {key:'tally-local-codex',operation:'tally.freezeProductReview312'});
+  let calls=[];
+  const makeResources=observation=>({call:async(key,op,arg)=>{
+    calls.push({key,op,arg});
+    return {phase:'terminal',outcome:{ok:true,output:observation}};
+  }});
+  const persisted=await persist.handler({input:draft312Input(),effectId:'p312-c',
+    resources:makeResources(draft312Persisted())});
+  assert.equal(persisted.state,'DRAFT_PENDING_REVIEW');
+  assert.deepEqual(calls,[{key:'tally-local-codex',op:'tally.persistProductDraft312',
+    arg:{sourceRef:'https://github.com/kaicreator-mm/tally/issues/312',
+      issueNumber:312,sourceSha:'d'.repeat(40),taskPackBlobSha:'e'.repeat(40),
+      writeSetSha256:'f'.repeat(64),draft:draft312Input().draft,effectId:'p312-c'}}]);
+  calls=[];
+  const frozen=await freeze.handler({input:freeze312Input(),effectId:'p312-d',
+    resources:makeResources(freeze312Positive())});
+  assert.equal(frozen.state,'FROZEN_COMPLETE');assert.equal(frozen.frozen,true);
+  assert.equal(frozen.taskPass,false);
+  assert.equal(calls[0].op,'tally.freezeProductReview312');
+  assert.equal(calls[0].arg.reviewCommentId,12345);
+  // Unqualified input never reaches the sealed seam; no resources throws.
+  calls=[];
+  const refused=await freeze.handler({input:{...freeze312Input(),reviewCommentId:0},
+    effectId:'p312-e',resources:makeResources(freeze312Positive())});
+  assert.equal(refused.state,'UNQUALIFIED_INPUT');assert.equal(calls.length,0);
+  await assert.rejects(freeze.handler({input:freeze312Input(),effectId:'p312-f',
+    resources:null}),/SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+});
+
+// ---------------------------------------------------------------------------
+// #264 J05 — single-Builder ReviewDecision / qualified Task Outcome intent
+// ---------------------------------------------------------------------------
+const singleReviewInput={issueRef:'https://github.com/kaicreator-mm/tally/issues/264',
+  issueNumber:264,sourceSha:'d'.repeat(40),decisionId:'decision:264:j5:1',decision:'ACCEPT',
+  attemptId:'attempt:264:e1:r91:4',candidateCommit:'023db3aa9a6c30ef5975c6f085ba207ec315cb09',
+  candidateTree:'ff7cd2b35ea65d6c7ab316b963eed4066af455db',
+  repairCommit:'d9fbc0239a8c38daae0c5637451f1e6b10fce983',
+  repairTree:'cb761f739b2fd2bc737f68ad19e4a0b41c63c023',prNumber:466,
+  reviewRef:'https://github.com/kaicreator-mm/tally/pull/466#pullrequestreview-5971578979'};
+const singleReviewBase={issueRef:singleReviewInput.issueRef,
+  sourceSha:singleReviewInput.sourceSha,decisionId:singleReviewInput.decisionId,
+  claimGeneration:1,authorized:false,releasePass:false};
+const singleRecordedObservation={...singleReviewBase,state:'REVIEW_DECISION_RECORDED',
+  reason:'REVIEW_DECISION_CAS_READBACK_VERIFIED',claimAccepted:true,admitted:true,
+  agentLaunch:false,replayFixture:false,decision:'ACCEPT',
+  decisionRecord:{decisionKey:'tally:v2:single-review-decision:'+'e'.repeat(64),
+    revision:0,decision:'ACCEPT',decidedAt:'2026-11-19T12:00:00.000Z',
+    alreadyRecorded:false},
+  taskOutcome:{status:'QUALIFIED_TASK_OUTCOME_PUBLISHED',
+    reason:'SINGLE_CANDIDATE_FULL_CHAIN_CAS_READBACK_VERIFIED',
+    outcomeKey:'tally:v2:single-task-outcome:'+'e'.repeat(64),revision:0,
+    alreadyPublished:false,publication:'PUBLISHED',taskPass:true,releasePass:false},
+  taskPass:true};
+test('J05 single-review intent is idempotent with its own rule and transition',()=>{
+  const p=getPolicy(),e='TALLY_SINGLE_CANDIDATE_REVIEW_REQUESTED';
+  assert.equal(p.intentBindings.reviewSingleCandidate.trigger.eventType,e);
+  assert.equal(p.rules['rule:tally-single-candidate-review'].eventType,e);
+  const definition=p.intentBindings.reviewSingleCandidate.definition;
+  assert.equal(definition.states[0].transitions.length,1);
+  const transition=definition.states[0].transitions[0];
+  assert.equal(transition.effectIntents[0].effectType,'effect:tally-single-candidate-review');
+  assert.deepEqual(transition.effectIntents[0].idempotencyKeyFrom,
+    {template:'single-review:{issueNumber}:{sourceSha}:{decisionId}'});
+  assert.equal(p.effectBindings['effect:tally-single-candidate-review'].semantics,'idempotent');
+  assert.deepEqual(p.effectBindings['effect:tally-single-candidate-review'].external,
+    {permitTtlMs:3600000,await:'terminal'});
+  assert.deepEqual(p.effectBindings['effect:tally-single-candidate-review'].resource,
+    {key:'tally-local-codex',operation:'tally.reviewSingleCandidate'});
+  assert.deepEqual(Object.keys(transition.effectIntents[0].inputFrom),
+    ['issueRef','issueNumber','sourceSha','decisionId','decision','attemptId',
+      'candidateCommit','candidateTree','repairCommit','repairTree','prNumber','reviewRef']);
+  for(const name of Object.keys(transition.effectIntents[0].inputFrom))
+    assert.ok(Object.hasOwn(p.rules['rule:tally-single-candidate-review'].payloadFromInput,name));
+});
+test('J05 input alone never grants Reviewer authority and malformed reviews skip C',async()=>{
+  assert.equal(assessSingleCandidateReview(singleReviewInput).state,'OBSERVED_INPUT_ONLY');
+  for(const value of [null,{},'x',{...singleReviewInput,sourceSha:'bad'},
+    {...singleReviewInput,decisionId:'bad/id'},{...singleReviewInput,decision:'SHIP_IT'},
+    {...singleReviewInput,issueNumber:197},{...singleReviewInput,candidateCommit:'bad'},
+    {...singleReviewInput,repairTree:'bad'},{...singleReviewInput,prNumber:0},
+    {...singleReviewInput,reviewRef:'not-a-url'}])
+    assert.equal(assessSingleCandidateReview(value).state,'UNQUALIFIED_INPUT');
+  let calls=0;
+  const x=await getPolicy().effectBindings['effect:tally-single-candidate-review'].handler({
+    input:{...singleReviewInput,decision:'SHIP_IT'},effectId:'bad-review',
+    resources:{call:async()=>{calls++;}}});
+  assert.equal(calls,0);assert.equal(x.taskPass,false);assert.equal(x.releasePass,false);
+});
+test('J05 recorded decision publishes Task PASS only with the qualified outcome',()=>{
+  const x=projectSingleCandidateReview({input:singleReviewInput,
+    observation:singleRecordedObservation,effectId:'s1'});
+  assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+  assert.equal(x.decision,'ACCEPT');
+  assert.equal(x.taskOutcome.status,'QUALIFIED_TASK_OUTCOME_PUBLISHED');
+  assert.equal(x.taskPass,true);
+  assert.equal(x.authorized,false);assert.equal(x.releasePass,false);
+  // REWORK recorded and every HOLD/UNKNOWN outcome keep taskPass=false.
+  for(const outcome of [
+      {status:'HOLD',reason:'DECISION_REWORK_NOT_TASK_PASS',publication:'HOLD',
+        taskPass:false,releasePass:false},
+      {status:'UNKNOWN',reason:'OUTCOME_ACK_LOST',publication:'HOLD',
+        reconciliationRequired:true,taskPass:false,releasePass:false}]){
+    const observation={...singleRecordedObservation,decision:'REWORK',
+      decisionRecord:{...singleRecordedObservation.decisionRecord,decision:'REWORK'},
+      taskOutcome:outcome,taskPass:false};
+    const y=projectSingleCandidateReview({input:{...singleReviewInput,decision:'REWORK'},
+      observation,effectId:'s2'});
+    assert.equal(y.state,'REVIEW_DECISION_RECORDED');
+    assert.equal(y.taskPass,false);
+    assert.equal(y.taskOutcome.status,outcome.status);
+  }
+});
+test('J05 every denial, UNKNOWN and replay stays distinct and never PASS',()=>{
+  const replay=projectSingleCandidateReview({input:singleReviewInput,observation:{
+    ...singleReviewBase,state:'REPLAY_COMPLETE',reason:'REPLAY_FIXTURE_ONLY',
+    claimAccepted:true,admitted:true,agentLaunch:false,replayFixture:true,
+    decision:null,decisionRecord:null,taskOutcome:null,taskPass:false},effectId:'sr'});
+  assert.equal(replay.state,'REPLAY_COMPLETE');
+  assert.equal(replay.replayFixture,true);assert.equal(replay.taskPass,false);
+  for(const reason of ['REVIEW_INPUT_INVALID','BUILDER_RECORD_NOT_FOUND',
+    'BUILDER_RECORD_NOT_READY','BUILDER_RECORD_STALE','BUILDER_RECORD_MISMATCH',
+    'CANDIDATE_READBACK_MISMATCH','REPAIR_READBACK_MISMATCH','PR_READBACK_MISMATCH',
+    'CI_EXACT_SHA_NOT_VERIFIED','REVIEWER_SELF_ASSERTION','REVIEW_DECISION_CONFLICT',
+    'NATIVE_CLAIM_WITNESS_NOT_VERIFIED']){
+    const x=projectSingleCandidateReview({input:singleReviewInput,observation:{
+      ...singleReviewBase,state:'NOT_ADMITTED',reason,claimAccepted:false,
+      admitted:false,agentLaunch:false,decision:null,decisionRecord:null,
+      taskOutcome:null,taskPass:false},effectId:reason});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.reason,reason);
+    assert.equal(x.admitted,false);assert.equal(x.taskPass,false);
+  }
+  for(const reason of ['REVIEW_DECISION_ACK_LOST','REVIEW_DECISION_READBACK_UNVERIFIED']){
+    const x=projectSingleCandidateReview({input:singleReviewInput,observation:{
+      ...singleReviewBase,state:'REVIEW_DECISION_UNKNOWN',reason,claimAccepted:true,
+      admitted:true,agentLaunch:false,replayFixture:false,reconciliationRequired:true,
+      decision:null,decisionRecord:null,taskOutcome:null,taskPass:false},effectId:reason});
+    assert.equal(x.state,'REVIEW_DECISION_UNKNOWN');assert.equal(x.reason,reason);
+    assert.equal(x.reconciliationRequired,true);assert.equal(x.taskPass,false);
+  }
+});
+test('J05 forged review authority and malformed positives fail closed',()=>{
+  for(const value of [null,{},[],{...singleRecordedObservation,authorized:true},
+    {...singleRecordedObservation,decision:'REWORK'},
+    {...singleRecordedObservation,decisionRecord:{...singleRecordedObservation.decisionRecord,
+      decisionKey:'wrong-prefix'}},
+    {...singleRecordedObservation,decisionRecord:{...singleRecordedObservation.decisionRecord,
+      decidedAt:'not-a-date'}},
+    {...singleRecordedObservation,taskOutcome:{...singleRecordedObservation.taskOutcome,
+      revision:-1}},
+    {...singleRecordedObservation,sourceSha:'f'.repeat(40)},
+    {...singleRecordedObservation,taskOutcome:{...singleRecordedObservation.taskOutcome,
+      status:'HOLD',taskPass:true},taskPass:true}]){
+    const x=projectSingleCandidateReview({input:singleReviewInput,observation:value,
+      effectId:'forged-review'});
+    assert.equal(x.state,'NOT_ADMITTED');assert.equal(x.taskPass,false);
+  }
+});
+test('J05 effect calls only selected C and passes the decision through bounded',async()=>{
+  const effect=getPolicy().effectBindings['effect:tally-single-candidate-review'];
+  await assert.rejects(effect.handler({input:singleReviewInput,effectId:'missing-c'}),
+    /SELECTED_LOCAL_CODEX_CAPABILITY_REQUIRED/);
+  const seen=[];
+  const x=await effect.handler({input:singleReviewInput,effectId:'single-c',resources:{
+    call:async(key,operation,arg)=>{
+      assert.equal(key,'tally-local-codex');
+      assert.equal(operation,'tally.reviewSingleCandidate');
+      seen.push(arg);
+      return {phase:'terminal',externalRef:'test',outcome:{ok:true,output:{
+        ...singleRecordedObservation}}};
+    }}});
+  assert.equal(x.state,'REVIEW_DECISION_RECORDED');
+  assert.equal(x.taskPass,true);
+  assert.deepEqual(seen.map(arg=>arg.decision),['ACCEPT']);
+  assert.equal(seen[0].sourceRef,singleReviewInput.issueRef);
 });

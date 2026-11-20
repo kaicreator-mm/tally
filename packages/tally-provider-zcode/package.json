@@ -1,0 +1,16 @@
+{
+  "name": "@kaicreator/tally-provider-zcode",
+  "version": "0.0.0-v2.1-candidate",
+  "private": true,
+  "type": "module",
+  "description": "Tally v2.1 candidate: ZCode agent CLI as an AgentProvider/1 adapter (ported from #470; default-off)",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

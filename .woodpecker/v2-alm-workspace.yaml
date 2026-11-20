@@ -5,6 +5,7 @@ when:
     path:
       include:
         - 'web/v2/**'
+        - 'apps/tally-web/**'
         - 'packages/tally-engineering-business/**'
         - 'packages/tally-github-c/src/project-intake.mjs'
         - 'packages/tally-github-c/test/project-intake.test.mjs'
@@ -14,6 +15,13 @@ when:
         - 'experiments/v2/maintenance/**'
         - 'experiments/v2/release/**'
         - 'experiments/v2/selected-business-build/**'
+        - 'packages/tally-agent-provider/**'
+        - 'packages/tally-provider-codex/**'
+        - 'packages/tally-provider-zcode/**'
+        - 'packages/tally-provider-dsh-adapter/**'
+        - 'packages/tally-provider-opencode/**'
+        - 'packages/tally-provider-pi/**'
+        - 'packages/tally-provider-grok/**'
         - '.woodpecker/v2-alm-workspace.yaml'
   - event: [pull_request, push, manual]
     branch: [task/tally-i92-k3]
@@ -68,9 +76,17 @@ steps:
       - set -euo pipefail
       - 'echo "WP_STEP=${CI_STEP_NAME:-unknown}/${CI_STEP_NUMBER:-unknown}"'
       - npm --prefix packages/tally-engineering-business install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com ajv@8.17.1
+      # E0/#284: the served Host-mount regression loads the real E0 DAG host
+      # module, whose chain needs native-c's own deps (yaml et al.) — same
+      # resolution pattern this profile already uses for business/ajv and the
+      # native-node24 profile uses for native-c.
+      - npm --prefix packages/tally-github-native-c install --ignore-scripts --no-package-lock --no-save --no-audit --no-fund --registry=https://registry.npmmirror.com
       - files="$(find web/v2 -type f -name '*.test.mjs' -print)"
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs
+      # #473 R107: AgentProvider/1 contract + six adapter suites (node
+      # built-ins only — safe for this lane's minimal install set).
+      - node --test packages/tally-agent-provider/test/*.test.mjs packages/tally-provider-codex/test/*.test.mjs packages/tally-provider-zcode/test/*.test.mjs packages/tally-provider-dsh-adapter/test/*.test.mjs packages/tally-provider-opencode/test/*.test.mjs packages/tally-provider-pi/test/*.test.mjs packages/tally-provider-grok/test/*.test.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"ok": true'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
       - 'grep -q ''"hostExecution": "INJECTED_RUN_SEAM"'' "${TMPDIR:-/tmp}/journey-browser-witness.json"'
@@ -81,6 +97,28 @@ steps:
       - echo TALLY_V2_J06_REAL_BROWSER_GUI_NOT_PROVEN_IN_DOCKER
       - echo TALLY_V2_ALM_WORKSPACE_REAL_GITHUB_PROJECT_EFFECT_NOT_RUN
       - echo TALLY_V2_ALM_WORKSPACE_WINDOWS_OS_ISOLATION_NOT_RUN_IN_DOCKER
+  - name: alm-workspace-tally-web-node24
+    image: bash
+    commands:
+      - set -euo pipefail
+      - 'echo "TALLY_WEB_HEAD=$(git rev-parse HEAD)"'
+      - test "$(node -p 'process.versions.node.split(".")[0]')" = 24
+      # UI lanes (#228-#231, #233-#235): pure-TS model tests run without any
+      # npm install by design (Node >=24 native type stripping).
+      - 'files="$(find apps/tally-web/src -type f -name "*.test.ts" -print)"'
+      - test -n "$files"
+      - node --test $files
+      - node --check web/v2/journey-client.mjs
+      # Build the production bundle the ALM server serves at /app (feature
+      # gate UI-E #232). npm ci installs exactly the committed
+      # package-lock.json (integrity-checked): a floating install once
+      # pulled a bad-mirror-sync rollup build and broke the Linux Vite
+      # build (Woodpecker #833/#834). Still resolves from npmmirror.
+      - npm --prefix apps/tally-web ci --ignore-scripts --no-audit --no-fund --registry=https://registry.npmmirror.com
+      - npm --prefix apps/tally-web rebuild esbuild rollup --registry=https://registry.npmmirror.com
+      - npm --prefix apps/tally-web run build
+      - test -f apps/tally-web/dist/index.html
+      - echo TALLY_V2_TALLY_WEB_BUILD_PASS
   - name: alm-workspace-release-panel-negative
     image: bash
     commands:
