@@ -3,7 +3,7 @@
 # EFFECTS unset); CI proves source tests at the exact authored SHA on Node24.
 when:
   - event: [pull_request, push, manual]
-    branch: [version/v2]
+    branch: [version/v2, main]
     path:
       include:
         - 'packages/tally-github-c/src/release-delivery.mjs'
@@ -47,6 +47,8 @@ steps:
           fi
           echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
           ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        elif git rev-parse -q --verify HEAD^2 >/dev/null 2>&1; then
+          echo "CI_TRAILER_MERGE_COMMIT=SKIP_REFS (two-parent merge commit)"
         else
           git log -1 --format=%B HEAD | grep -qi '^Refs:'
         fi
