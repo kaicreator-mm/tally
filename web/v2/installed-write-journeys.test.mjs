@@ -1020,3 +1020,44 @@ test('new project Claim route requires exact Host and same-origin CSRF, no UI gr
     assert.equal(response.status,503);
   }finally{await absent.close();}
 });
+
+test('selected FSW and Draft PR routes are Host-scoped, CSRF protected',async()=>{
+  const calls=[];
+  const writeSetHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,candidateRelativePath:'health.txt',
+    freeze:async input=>{
+      calls.push(['fsw',input]);return {status:'FROZEN_VERIFIED',
+        writeSetSha256:'f'.repeat(64),authorized:false,admitted:false};
+    }};
+  const candidateHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,publish:async input=>{
+      calls.push(['draft',input]);return {status:'DRAFT_PR_PUBLISHED_VERIFIED',
+        pullNumber:5,pullRef:'https://github.com/org/new/pull/5',
+        authorized:false,taskPass:false,releasePass:false};
+    }};
+  const app=createAlmServer(config,{writeSetHost,candidateHost});
+  const {origin,actionKey}=await app.listen();
+  try{
+    const fsw=await (await fetch(origin+'/api/v2/writeset-host')).json();
+    const draft=await (await fetch(origin+'/api/v2/candidate-host')).json();
+    assert.equal(fsw.connected,true);assert.equal(fsw.issueNumber,27);
+    assert.equal(draft.connected,true);assert.equal(draft.sourceSha,sha);
+    const post=async(path,input,key=actionKey)=>fetch(origin+path,{
+      method:'POST',headers:{origin,'content-type':'application/json',
+        'x-tally-action-key':key},body:JSON.stringify(input)});
+    const correct={issueNumber:27,sourceSha:sha};
+    assert.equal((await post('/api/v2/writeset-freeze',correct,'wrong')).status,403);
+    assert.equal((await post('/api/v2/candidate-publish',correct,'wrong')).status,403);
+    assert.equal((await post('/api/v2/writeset-freeze',
+      {issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal((await post('/api/v2/candidate-publish',
+      {issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal(calls.length,0);
+    const frozen=await (await post('/api/v2/writeset-freeze',correct)).json();
+    assert.equal(frozen.status,'FROZEN_VERIFIED');
+    const published=await (await post('/api/v2/candidate-publish',correct)).json();
+    assert.equal(published.status,'DRAFT_PR_PUBLISHED_VERIFIED');
+    assert.equal(published.taskPass,false);
+    assert.deepEqual(calls,[['fsw',correct],['draft',correct]]);
+  }finally{await app.close();}
+});
