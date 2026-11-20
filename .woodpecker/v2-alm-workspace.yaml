@@ -1,7 +1,7 @@
 # Tally v2 ALM workspace source gate. Windows Codex evidence is Host-local, not Docker OS-isolation evidence.
 when:
   - event: [pull_request, push, manual]
-    branch: [version/v2]
+    branch: [version/v2, main]
     path:
       include:
         - 'web/v2/**'
@@ -23,6 +23,8 @@ when:
         - 'packages/tally-provider-pi/**'
         - 'packages/tally-provider-grok/**'
         - '.woodpecker/v2-alm-workspace.yaml'
+        - '.woodpecker/verify.yaml'
+        - '.woodpecker/README-v2.md'
   - event: [pull_request, push, manual]
     branch: [task/tally-i92-k3]
   - event: [pull_request, push, manual]
@@ -64,6 +66,8 @@ steps:
           fi
           echo "CI_TRAILER_BASE=${base} CI_TRAILER_HEAD=${CI_COMMIT_SHA}"
           ./scripts/check-trailers.sh "$base" "$CI_COMMIT_SHA"
+        elif git rev-parse -q --verify HEAD^2 >/dev/null 2>&1; then
+          echo "CI_TRAILER_MERGE_COMMIT=SKIP_REFS (two-parent merge commit)"
         else
           echo "CI_TRAILER_BASE=HEAD (push/manual: single subject commit)"
           git log -1 --format=%B HEAD | grep -qi '^Refs:'
