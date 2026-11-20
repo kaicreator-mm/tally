@@ -74,3 +74,40 @@ test('legacy explicit operator Host pins remain intact at first boot',async()=>{
     assert.equal(observed.TALLY_V2_REPOSITORY,'org/legacy');
   }finally{await service.close();}
 });
+
+test('Setup can create explicit draft Issue only for selected repo, never Agent',async()=>{
+  const store=state();
+  store.currentSelection={repository:'org/test',ref:'main'};
+  store.projects=[{repository:'org/test',title:'test',versions:[{ref:'main',sha}]}];
+  let created=null;
+  const service=await startFirstRunServer({env:{},catalog:store,
+    createDraft:async input=>{
+      created=input;
+      return {status:'DRAFT_ISSUE_CREATED',issueNumber:18,
+        issueUrl:'https://github.com/org/test/issues/18',
+        taskQualified:false,agentAuthorized:false};
+    },startConfigured:async()=>({
+      address:{origin:'http://127.0.0.1:65532'},close:async()=>{}})});
+  try{
+    const url=service.address.origin;
+    const html=await (await fetch(url+'/setup')).text();
+    const key=/<meta name="tally-setup-key" content="([^"]+)"/.exec(html)?.[1];
+    assert.ok(key);
+    const send=(repository,requestId,tokenKey=key)=>fetch(url+'/api/setup/task-draft',{
+      method:'POST',headers:{'content-type':'application/json',
+        origin:url,'x-tally-setup-key':tokenKey},
+      body:JSON.stringify({repository,ref:'main',title:'Create API',
+        description:'Detailed task',writeToken:'github_pat_TEST_WRITE',
+        requestId})});
+    assert.equal((await send('org/foreign','task-draft-1')).status,422);
+    assert.equal((await send('org/test','task-draft-2','wrong')).status,403);
+    const outcome=await send('org/test','task-draft-3');
+    assert.equal(outcome.status,201);
+    const data=await outcome.json();
+    assert.equal(data.taskQualified,false);
+    assert.equal(data.agentAuthorized,false);
+    assert.equal(created.repository,'org/test');
+    assert.equal(created.expectedSha,sha);
+    assert.equal((await send('org/test','task-draft-3')).status,422);
+  }finally{await service.close();}
+});

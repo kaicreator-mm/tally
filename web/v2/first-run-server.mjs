@@ -5,6 +5,7 @@ import {homedir} from 'node:os';
 import {join} from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {LocalProjectCatalog} from './local-project-catalog.mjs';
+import {createGitHubTaskDraft} from './draft-github-issue.mjs';
 
 const html=String.raw`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -19,6 +20,20 @@ placeholder="kaicreator-mm/tally-reps-test" style="width:100%;padding:8px"></lab
 <input name="token" type="password" autocomplete="new-password" style="width:100%;padding:8px"></label></p>
 <button type="submit">验证连接并保存项目</button></form>
 <hr><h2>已有项目</h2><div id="projects" aria-live="polite"></div>
+<section id="draft-panel" hidden>
+<h2>创建 GitHub 开发任务草稿</h2>
+<p>仅创建当前项目的 GitHub Issue。它尚不是已冻结/已授权的 Tally Task，
+不会自动执行 Agent。</p>
+<form id="draft">
+<label>任务标题<br><input name="title" required minlength="3" maxlength="180"
+style="width:100%;padding:8px"></label>
+<p><label>任务说明<br><textarea name="description" rows="5"
+style="width:100%;padding:8px"></textarea></label></p>
+<p><label>Issues:write Token（一次性使用，不保存）<br>
+<input name="writeToken" type="password" required autocomplete="new-password"
+style="width:100%;padding:8px"></label></p>
+<button type="submit">在当前项目创建 Task 草稿 Issue</button></form>
+<div id="draft-result" aria-live="polite"></div></section>
 <p id="status" role="status" aria-live="polite"></p>
 </main><script type="module" src="/setup-client.mjs"></script></body></html>`;
 const body=async req=>{
@@ -35,7 +50,8 @@ const codeOf=error=>{
   return /^[A-Z][A-Z0-9_]{2,90}$/.test(message)?message:'SETUP_OPERATION_FAILED';
 };
 export async function startFirstRunServer({
-  env=process.env,startConfigured,catalog,port=0
+  env=process.env,startConfigured,catalog,port=0,
+  createDraft=createGitHubTaskDraft
 }={}){
   if(typeof startConfigured!=='function')throw new Error('START_CONFIGURED_REQUIRED');
   const dataDir=env.TALLY_V2_CONFIG_DIR??
@@ -43,6 +59,7 @@ export async function startFirstRunServer({
   const store=catalog??new LocalProjectCatalog({dir:dataDir});
   const key=randomBytes(24).toString('hex');
   let origin='',active=null,activeSource=null,busy=false,lastError=null;
+  const submittedDrafts=new Set();
   const stripPrivileged={...env,TALLY_V2_AGENT_DISPATCH:undefined,
     TALLY_V2_FROZEN_DAG_HOST:undefined,
     TALLY_V2_VERSION_TASK_DAG:undefined,TALLY_V2_RELEASE_DISPATCH:undefined,
@@ -86,7 +103,8 @@ export async function startFirstRunServer({
       return res.end();
     }
     if(req.method==='POST'&&
-      (url.pathname==='/api/setup/add'||url.pathname==='/api/setup/select')){
+      (url.pathname==='/api/setup/add'||url.pathname==='/api/setup/select'||
+       url.pathname==='/api/setup/task-draft')){
       if(req.headers.origin!==origin||req.headers['x-tally-setup-key']!==key||
         req.headers['content-type']?.split(';')[0]!=='application/json')
         return json(403,denial('SETUP_CSRF_OR_ORIGIN'));
@@ -94,6 +112,25 @@ export async function startFirstRunServer({
       busy=true;
       try{
         const input=await body(req);
+        if(url.pathname==='/api/setup/task-draft'){
+          const current=(await store.status()).selected;
+          if(!current||current.repository!==input.repository||
+              current.ref!==input.ref)
+            throw new Error('SELECTED_PROJECT_MISMATCH');
+          if(typeof input.requestId!=='string'||
+              !/^[a-zA-Z0-9-]{8,80}$/.test(input.requestId))
+            throw new Error('INVALID_DRAFT_TASK_INPUT');
+          if(submittedDrafts.has(input.requestId))
+            throw new Error('DUPLICATE_DRAFT_REQUEST');
+          submittedDrafts.add(input.requestId);
+          const selected=await store.select(current);
+          const result=await createDraft({
+            repository:current.repository,ref:current.ref,
+            expectedSha:selected.env.TALLY_V2_VERSION_SHA,
+            title:input.title,description:input.description,
+            writeToken:input.writeToken,requestId:input.requestId});
+          return json(201,result);
+        }
         let status;
         if(url.pathname==='/api/setup/add')
           status=await store.add({repository:input.repository,ref:input.ref,
