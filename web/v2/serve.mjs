@@ -798,6 +798,15 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return observed;
       }catch{return deny('QA_READ_FAILED');}
     },
+    // The only connected Settings capability here is the real local
+    // Project connection manager. Other optional Host settings remain absent.
+    async settings(){
+      if(!env.TALLY_SETUP_URL)return deny('SETTINGS_HOST_NOT_CONFIGURED');
+      return {connected:true,configurationUrl:env.TALLY_SETUP_URL,
+        selectedRepository:settings.repository,selectedRef:settings.versionId,
+        currentSha:settings.expectedSha,
+        agentHostMounted:env.TALLY_V2_AGENT_DISPATCH==='host-mounted'};
+    },
     // #491 J07: the /app Release panel reads the REAL Host qualification
     // (rqState/ownerGrantState/operation permits from Host-pinned
     // registries, exact-source and exact-live-target bound) alongside the
@@ -901,19 +910,20 @@ export async function startUiReadOnlyServer({env=process.env}={}){
 const main=process.argv[1]&&resolve(process.argv[1])===
   fileURLToPath(import.meta.url);
 if(main){
-  startUiReadOnlyServer().then(({address,close})=>{
-    process.stdout.write('TALLY_UI_READ_ONLY='+address.origin+'/app\n');
-    process.stdout.write('TALLY_UI_AGENT_DISPATCH='+
-      (process.env.TALLY_V2_AGENT_DISPATCH==='host-mounted'?
-        'HOST_MOUNTED_SINGLE_CODEX':'DENIED')+'\n');
-    let closing=false;
-    const stop=()=>{
-      if(closing)return;closing=true;
-      void close().then(()=>process.exit(0),()=>process.exit(1));
-    };
-    process.on('SIGINT',stop);process.on('SIGTERM',stop);
-  },error=>{
-    process.stderr.write(formatStartupError(error));
-    process.exitCode=1;
-  });
+  import('./first-run-server.mjs')
+    .then(({startFirstRunServer})=>startFirstRunServer({
+      env:process.env,startConfigured:startUiReadOnlyServer}))
+    .then(({address,close})=>{
+      process.stdout.write('TALLY_UI='+address.appUrl+'\n');
+      process.stdout.write('TALLY_PROJECT_SETUP='+address.origin+'/setup\n');
+      let closing=false;
+      const stop=()=>{
+        if(closing)return;closing=true;
+        void close().then(()=>process.exit(0),()=>process.exit(1));
+      };
+      process.on('SIGINT',stop);process.on('SIGTERM',stop);
+    },error=>{
+      process.stderr.write(formatStartupError(error));
+      process.exitCode=1;
+    });
 }

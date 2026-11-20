@@ -73,6 +73,8 @@ export interface QaResponse{connected:boolean;reason?:string;versionId?:string;
       witness:string|null;evidenceRef:string|null;
       subjectSha:string|null;observedAt:string|null}[];}
 export interface SettingsResponse{connected:boolean;reason?:string;model?:string;
+  configurationUrl?:string;selectedRepository?:string;selectedRef?:string;
+  currentSha?:string;agentHostMounted?:boolean;
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
   readiness?:{versionId:string;

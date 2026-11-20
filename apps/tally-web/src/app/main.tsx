@@ -10,7 +10,7 @@ import { orNotConnected, hostAdapter } from '../adapters/host.ts';
 import type { Catalog } from '../adapters/host.ts';
 
 const router = createRouter({
-  getHash: () => window.location.hash || '#/workbench/inbox',
+  getHash: () => window.location.hash || '#/settings/git-github',
   setHash: (hash) => { window.location.hash = hash; },
   addEventListener: (type, fn) => window.addEventListener(type, fn),
   removeEventListener: (type, fn) => window.removeEventListener(type, fn),

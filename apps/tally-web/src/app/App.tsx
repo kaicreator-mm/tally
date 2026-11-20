@@ -234,6 +234,20 @@ function SettingsRoute(){
   if(settings.state==='loading')return <Skeleton lines={6}/>;
   if(settings.state==='not_connected')
     return <EmptyState title="NOT_CONNECTED" hint={settings.reason??undefined}/>;
+  const selected=settings.data;
+  if(selected?.connected===true&&selected.configurationUrl){
+    return <section aria-label="GitHub 项目配置">
+      <h2>GitHub 项目与连接</h2>
+      <p>当前项目：<strong>{selected.selectedRepository??'未选择'}</strong>
+        {' · '}{selected.selectedRef??'—'}
+        {' · '}{selected.currentSha?.slice(0,12)??'UNKNOWN'}</p>
+      <p><a href={selected.configurationUrl}>添加项目、切换项目、更新 GitHub 凭据</a></p>
+      <p>Agent Host：{selected.agentHostMounted
+        ?'已挂载（仍需独立任务授权）'
+        :'未挂载；配置 GitHub 仅提供读取权限，不会自动授予 Agent 执行权'}</p>
+      <p>其他设置尚未挂载真实 Host，不会展示模拟的已连接状态。</p>
+    </section>;
+  }
   return <SettingsCenter
     snapshot={(settings.data?.snapshot??null) as SettingsSnapshot|null}
     connected={settings.data?.connected===true}/>;
