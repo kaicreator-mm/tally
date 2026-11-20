@@ -31,6 +31,7 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
+import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
 import {createMaintenanceReadHost} from './maintenance-read-host.mjs';
@@ -899,9 +900,8 @@ if(main){
       void close().then(()=>process.exit(0),()=>process.exit(1));
     };
     process.on('SIGINT',stop);process.on('SIGTERM',stop);
-  },()=>{
-    // Errors can include provider credentials; never write raw details.
-    process.stderr.write('TALLY_UI_START_DENIED: invalid selected Host source\n');
+  },error=>{
+    process.stderr.write(formatStartupError(error));
     process.exitCode=1;
   });
 }
