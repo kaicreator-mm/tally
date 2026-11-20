@@ -2,9 +2,12 @@ import {spawn,execFile} from 'node:child_process';
 import {createWriteStream} from 'node:fs';
 import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve,join,dirname} from 'node:path';
+import {readPrebuiltConsumer} from './prebuilt-consumer.mjs';
 import {promisify} from 'node:util';
 const execFileAsync=promisify(execFile);
-const required=['DH','TALLY','TALLY_B','TALLY_GITHUB_READ_TOKEN','TALLY_CLAIM_SOURCE_SHA',
+const prebuiltDir=process.env.TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR??null;
+const required=[...(prebuiltDir?[]:['DH','TALLY','TALLY_B']),
+  'TALLY_GITHUB_READ_TOKEN','TALLY_CLAIM_SOURCE_SHA',
   'TALLY_CLAIM_DISPATCH_ID','TALLY_CLAIM_OPERATOR_ID','TALLY_CLAIM_OPERATOR_KIND',
   'TALLY_CLAIM_WRITER_ID','TALLY_CLAIM_WRITER_LOGIN','TALLY_CLAIM_COMMENT_ID',
   'TALLY_CLAIM_REGISTRY_PATH','TALLY_LOCAL_WRITESET_SHA256','TALLY_LOCAL_ATTEMPT_ID',
@@ -18,6 +21,10 @@ const [nodeMajor,nodeMinor]=process.versions.node.split('.').map(Number);
 if(process.platform!=='win32'||nodeMajor<22||
    (nodeMajor===22&&nodeMinor<16))
   throw new Error('WINDOWS_NODE_22_16_REQUIRED');
+// Validate the immutable BUILD-selected K/Consumer digest BEFORE any
+// Agent process, worktree, hidden fixture or Windows ACL mutation.
+const prebuilt=prebuiltDir?await readPrebuiltConsumer({
+  directory:prebuiltDir,env:process.env}):null;
 const evidence=resolve(process.env.TALLY_LOCAL_EVIDENCE_DIR);
 await mkdir(evidence,{recursive:true});
 await mkdir(dirname(process.env.TALLY_HIDDEN_FIXTURE),{recursive:true});
@@ -45,8 +52,12 @@ const logPath=join(evidence,'consumer.log');
 const env={...process.env,T04B_NATIVE:'1',T06M_LOCAL:'1',TALLY_LOCAL_REPLAY:'0',
   TALLY_LOCAL_REQUIRE_CANDIDATE:'1',TALLY_NATIVE_EXPECTED_SHA:process.env.TALLY_CLAIM_SOURCE_SHA,
   TALLY_LOCAL_RESULT_PATH:resultPath,npm_config_registry:'https://registry.npmmirror.com'};
-const child=spawn('C:\\Program Files\\Git\\bin\\bash.exe',
-  ['experiments/v2/selected-business-build/run-clean.sh'],{cwd:process.env.TALLY,env,windowsHide:true});
+const child=prebuilt?
+  spawn(process.execPath,[prebuilt.script],{
+    cwd:prebuilt.dir,env,windowsHide:true}):
+  spawn('C:\\Program Files\\Git\\bin\\bash.exe',
+    ['experiments/v2/selected-business-build/run-clean.sh'],{
+      cwd:process.env.TALLY,env,windowsHide:true});
 const log=createWriteStream(logPath,{mode:0o600});
 const token=process.env.TALLY_GITHUB_READ_TOKEN;
 const sanitize=chunk=>chunk.toString('utf8').split(token).join('[REDACTED]');

@@ -157,6 +157,19 @@ npm ls --depth=0
 # from real native Claim/CAS/K/Agent effects. Caller must explicitly retain
 # the isolated work directory and later perform the real Host E2E.
 if [[ "${T02B_BUILD_ONLY:-0}" == '1' ]]; then
+  # This is a real selected Builder deployment, not the old demo bundle.
+  [[ "${T04B_NATIVE:-0}" == '1' && "${T06M_LOCAL:-0}" == '1' &&
+     "${T06L_CLAIM:-0}" == '1' ]] || {
+    echo T02B_BUILD_ONLY_REQUIRES_NATIVE_SELECTED_BUILDER_CLAIM; exit 3;
+  }
+  cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/builder-target.mjs" "$tmp/consumer/builder-target.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/prebuilt-consumer.mjs" "$tmp/consumer/prebuilt-consumer.mjs"
+  (
+    cd "$tmp/consumer"
+    node --input-type=module -e "import {writePrebuiltConsumerManifest} from './prebuilt-consumer.mjs'; await writePrebuiltConsumerManifest({dir:process.cwd()});"
+  )
   [[ -s "$tmp/consumer/sealed-app.json" ]] || { echo T02B_BUILD_ONLY_NO_SEALED_APP; exit 3; }
   echo "T02B_BUILD_ONLY_CONSUMER_DIR=$tmp/consumer"
   echo "T02B_BUILD_ONLY_PRODUCER_DIR=$tmp/producer"
