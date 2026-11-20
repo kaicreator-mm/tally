@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {resolveClaimBuildTarget,sealClaimShimTarget} from './claim-target.mjs';
+import {resolveClaimBuildTarget,sealClaimShimTarget,markClaimProviderTarget,assertClaimProviderTarget} from './claim-target.mjs';
 
 const selected={T06L_TARGET_REPOSITORY:'kaicreator-mm/tally-reps-test',
   T06L_TARGET_ISSUE_NUMBER:'123'};
@@ -73,4 +73,22 @@ test('source-pinned BUILD C rechecks exact Issue, SHA and CAS Claim key',async()
     issueNumber:123,sourceSha:sha});
   assert.equal(foreign.state,'NOT_ADMITTED');
   assert.equal(foreign.admitted,false);
+});
+
+test('BUILD catches mismatched external provider target before sealing digest',()=>{
+  const selectedTarget=resolveClaimBuildTarget(selected);
+  const legacyTarget=resolveClaimBuildTarget({});
+  const selectedProvider=Buffer.from(markClaimProviderTarget(
+    'export const accepted=false;',selectedTarget));
+  assert.doesNotThrow(()=>assertClaimProviderTarget(selectedProvider,selectedTarget));
+  assert.throws(()=>assertClaimProviderTarget(selectedProvider,legacyTarget),
+    /T06L_PROVIDER_TARGET_MISMATCH/);
+  assert.throws(()=>assertClaimProviderTarget(Buffer.from('no marker'),selectedTarget),
+    /T06L_PROVIDER_TARGET_MANIFEST_MISSING/);
+  assert.doesNotThrow(()=>assertClaimProviderTarget(
+    Buffer.from('historical provider'),legacyTarget));
+  const tampered=Buffer.from(selectedProvider.toString('utf8').replace(
+    'TALLY_T06L_BUILD_TARGET_V1=','TALLY_T06L_BUILD_TARGET_V1=!!'));
+  assert.throws(()=>assertClaimProviderTarget(tampered,selectedTarget),
+    /T06L_PROVIDER_TARGET_MANIFEST_INVALID/);
 });

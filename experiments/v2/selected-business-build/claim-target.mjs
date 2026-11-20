@@ -39,3 +39,39 @@ export function sealClaimShimTarget(source,target){
     throw new Error('T06L_SHIM_TARGET_UNSEALED');
   return sealed;
 }
+
+const MANIFEST_PREFIX='// TALLY_T06L_BUILD_TARGET_V1=';
+function manifestValue(target){
+  return {repository:target.repository,issueNumber:target.issueNumber,
+    protectedClaimKey:target.protectedClaimKey};
+}
+/** Marker becomes part of the exact provider SHA256; never a runtime grant. */
+export function markClaimProviderTarget(code,target){
+  if(typeof code!=='string'||typeof target?.repository!=='string'||
+     !Number.isSafeInteger(target.issueNumber))
+    throw new TypeError('T06L_PROVIDER_TARGET_INVALID');
+  const encoded=Buffer.from(JSON.stringify(manifestValue(target)),'utf8')
+    .toString('base64');
+  return MANIFEST_PREFIX+encoded+'\n'+code;
+}
+/** Catch a producer/provider target mismatch before BUILD seals an app.
+ * Legacy absence is accepted only for historical #169 fixtures.
+ */
+export function assertClaimProviderTarget(bytes,target){
+  if(!Buffer.isBuffer(bytes))throw new TypeError('T06L_PROVIDER_BYTES_REQUIRED');
+  const firstLine=bytes.toString('utf8',0,512).split('\n')[0];
+  if(!firstLine.startsWith(MANIFEST_PREFIX)){
+    if(target.mode==='HISTORICAL_DEFAULT')return;
+    throw new TypeError('T06L_PROVIDER_TARGET_MANIFEST_MISSING');
+  }
+  let metadata=null;
+  try{
+    const encoded=firstLine.slice(MANIFEST_PREFIX.length);
+    if(!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)||
+       Buffer.from(encoded,'base64').toString('base64')!==encoded)
+      throw new Error('MANIFEST_ENCODING_INVALID');
+    metadata=JSON.parse(Buffer.from(encoded,'base64').toString('utf8'));
+  }catch{throw new TypeError('T06L_PROVIDER_TARGET_MANIFEST_INVALID');}
+  if(JSON.stringify(metadata)!==JSON.stringify(manifestValue(target)))
+    throw new TypeError('T06L_PROVIDER_TARGET_MISMATCH');
+}

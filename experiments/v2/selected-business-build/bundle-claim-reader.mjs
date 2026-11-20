@@ -15,7 +15,7 @@
 import {build} from 'esbuild';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
-import {resolveClaimBuildTarget} from './claim-target.mjs';
+import {resolveClaimBuildTarget,markClaimProviderTarget} from './claim-target.mjs';
 const tally=process.env.TALLY;
 const out=process.env.T06L_C_OUTPUT;
 const importsOut=process.env.T06L_IMPORTS_OUTPUT;
@@ -175,7 +175,7 @@ for(const name of ['process','buffer']){
   if(code.includes('from "'+name+'"')||code.includes("from '"+name+"'"))
     throw Error('NODE_IMPORT_NOT_CANONICALIZED:'+name);
 }
-writeFileSync(out,code);
+writeFileSync(out,markClaimProviderTarget(code,claimTarget));
 writeFileSync(importsOut,JSON.stringify(externals));
 console.log(JSON.stringify({sealedClaimCBytes:Buffer.byteLength(code),
   schemaBytes:claimSchema.length,nativeClaimExternalImports:externals,
