@@ -40,7 +40,7 @@ export function taskActionRequest(catalog:TaskActionCatalog,
      !/^[a-f0-9]{40}$/.test(catalog.source.sourceSha??'')||
      catalog.source.currentness!=='CURRENT'||catalog.source.readback!=='VERIFIED'||
      catalog.versionId!==versionId||action.state!=='ELIGIBLE'||
-     !Number.isSafeInteger(action.taskIssue)||action.taskIssue<1||
+     action.taskIssue===null||!Number.isSafeInteger(action.taskIssue)||action.taskIssue<1||
      catalog.actions?.filter(a=>a.id===action.id&&a.revision===action.revision&&
        a.state==='ELIGIBLE').length!==1)return null;
   return {projectId,versionId,sourceSha:catalog.source.sourceSha,
