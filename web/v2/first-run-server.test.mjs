@@ -74,3 +74,32 @@ test('legacy explicit operator Host pins remain intact at first boot',async()=>{
     assert.equal(observed.TALLY_V2_REPOSITORY,'org/legacy');
   }finally{await service.close();}
 });
+
+test('managed selection preserves operator mount only at the exact same SHA',async()=>{
+  const store=state();
+  const shaOther='b'.repeat(40);
+  let mounted=null;
+  const service=await startFirstRunServer({env:{
+    TALLY_V2_REPOSITORY:'org/test',TALLY_V2_VERSION_REF:'main',
+    TALLY_V2_VERSION_SHA:sha,TALLY_GITHUB_READ_TOKEN:'github_pat_test_ONLY',
+    TALLY_V2_AGENT_DISPATCH:'host-mounted',
+  },catalog:store,startConfigured:async ({env})=>{
+    mounted=env;
+    return {address:{origin:'http://127.0.0.1:65533'},close:async()=>{}};
+  }});
+  try{
+    assert.equal(mounted.TALLY_V2_AGENT_DISPATCH,'host-mounted');
+    const url=service.address.origin;
+    const html=await (await fetch(url+'/setup')).text();
+    const key=/<meta name="tally-setup-key" content="([^"]+)"/.exec(html)?.[1];
+    const add=async repository=>fetch(url+'/api/setup/add',{method:'POST',
+      headers:{'content-type':'application/json',origin:url,
+        'x-tally-setup-key':key},
+      body:JSON.stringify({repository,ref:'main',token:'github_pat_test_ONLY'})});
+    assert.equal((await add('org/test')).status,200);
+    assert.equal(mounted.TALLY_V2_AGENT_DISPATCH,'host-mounted');
+    assert.equal((await add('org/other')).status,200);
+    assert.equal(mounted.TALLY_V2_REPOSITORY,'org/other');
+    assert.equal(mounted.TALLY_V2_AGENT_DISPATCH,undefined);
+  }finally{await service.close();}
+});

@@ -43,17 +43,17 @@ export async function startFirstRunServer({
   const store=catalog??new LocalProjectCatalog({dir:dataDir});
   const key=randomBytes(24).toString('hex');
   let origin='',active=null,activeSource=null,busy=false,lastError=null;
-  const stripPrivileged={...env,TALLY_V2_AGENT_DISPATCH:undefined,
-    TALLY_V2_FROZEN_DAG_HOST:undefined,
-    TALLY_V2_VERSION_TASK_DAG:undefined,TALLY_V2_RELEASE_DISPATCH:undefined,
-    TALLY_V2_RELEASE_QUALIFICATION:undefined,
-    TALLY_V2_MAINTENANCE_READ:undefined};
   const activate=async ({settings,identity,legacy=false})=>{
-    // Only explicit Host operator env may mount previously qualified effects.
-    // Browser-managed project switching always strips privileged Host pins.
-    const next=await startConfigured({env:legacy?
-      {...env,TALLY_SETUP_URL:origin+'/setup'}:
-      {...stripPrivileged,...settings,TALLY_SETUP_URL:origin+'/setup'}});
+    // The selected UI project is NOT itself a Host grant. Preserve existing
+    // operator-pinned effects only for the exact same authorized source;
+    // every other browser selection receives source credentials only.
+    const matchesHostSource=
+      env.TALLY_V2_REPOSITORY===settings.TALLY_V2_REPOSITORY&&
+      env.TALLY_V2_VERSION_REF===settings.TALLY_V2_VERSION_REF&&
+      env.TALLY_V2_VERSION_SHA===settings.TALLY_V2_VERSION_SHA;
+    const next=await startConfigured({env:legacy||matchesHostSource?
+      {...env,...settings,TALLY_SETUP_URL:origin+'/setup'}:
+      {...settings,TALLY_SETUP_URL:origin+'/setup'}});
     const old=active;active=next;activeSource=identity;lastError=null;
     if(old)await old.close().catch(()=>{});
     return next.address.origin+'/app';
