@@ -46,6 +46,16 @@ test('pinned version produces exactly one real Host-selected project/version',as
   assert.deepEqual(response.projects.map(p=>p.id),['org/tally']);
   assert.deepEqual(response.versionsByProject['org/tally'].map(v=>v.id),['version/v2']);
 });
+test('plain main baseline connects catalog only when HEAD is exact',async()=>{
+  const selected={...args(native()),versionId:'main'};
+  const r=await readUiNativeCatalogFromClient(selected);
+  assert.equal(r.connected,true);
+  assert.equal(r.defaultVersionId,'main');
+  assert.deepEqual(r.versionsByProject['org/tally'].map(v=>v.id),['main']);
+  const moved=await readUiNativeCatalogFromClient({
+    ...selected,octokit:native({},'b'.repeat(40))});
+  assert.deepEqual(moved,{connected:false,reason:'VERSION_BRANCH_NOT_PINNED'});
+});
 test('moved GitHub version branch cannot be labelled CURRENT',async()=>{
   const response=await readUiNativeCatalogFromClient(args(native({},'b'.repeat(40))));
   assert.deepEqual(response,{connected:false,reason:'VERSION_BRANCH_NOT_PINNED'});
