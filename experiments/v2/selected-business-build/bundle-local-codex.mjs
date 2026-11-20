@@ -105,7 +105,8 @@ function claimEnv(env,issueNumber,actorRole='builder'){
     operatorKind:env[p+'OPERATOR_KIND'],writerId:env[p+'WRITER_ID'],
     writerLogin:env[p+'WRITER_LOGIN'],commentId:Number(env[p+'COMMENT_ID']),
     registryPath:env[p+'REGISTRY_PATH'],
-    writeSetSha256:issueNumber===172?env.TALLY_LOCAL_WRITESET_SHA256:env[p+'WRITESET_SHA256']};
+    writeSetSha256:(issueNumber===172||issueNumber===SELECTED_BUILDER_ISSUE)?
+      env.TALLY_LOCAL_WRITESET_SHA256:env[p+'WRITESET_SHA256']};
 }
 const SHA=/^[0-9a-f]{40}$/,ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\\[bot\\])?$/;

@@ -42,6 +42,12 @@ export interface TaskDraftsResponse{connected:boolean;reason?:string;
     sourceCurrentness?:'CURRENT'|'STALE';
     nativeWorkflow?:'PLANNED'|'READY'|'NONCANONICAL';
     taskQualified:false;agentAuthorized:false}[];}
+export interface ClaimHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;actionKey?:string;authority?:'HOST_PINNED_ONLY';}
+export interface ClaimPublishResult{status:string;reason?:string;
+  claimPublication?:string;authorized?:boolean;admitted?:boolean;
+  nativeCommentRef?:string;}
 export interface TaskReadyHostResponse{connected:boolean;reason?:string;
   repository?:string;versionId?:string;sourceSha?:string;
   actionKey?:string;authority?:'HOST_PINNED_ONLY';}
@@ -188,6 +194,7 @@ async function postJson<T>(path:string,actionKey:string,
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
+  claimHost:()=>getJson<ClaimHostResponse>('/api/v2/claim-host'),
   taskReadyHost:()=>getJson<TaskReadyHostResponse>('/api/v2/task-ready-host'),
   taskAdmission:(versionId:string,issueNumber:number)=>
     getJson<TaskAdmissionResponse>(
@@ -219,6 +226,21 @@ export const hostAdapter=Object.freeze({
 /** One physical Builder task; only the server-selected Host can authorize.
  * The action key is same-origin CSRF material, not an Agent/Claim grant.
  */
+/** A recorded GitHub Claim still requires independent accepted-CAS/K admission. */
+export async function publishSelectedTaskClaim({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<ClaimPublishResult>{
+  try{
+    const mounted=await hostAdapter.claimHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       mounted.issueNumber!==issueNumber||!mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'CLAIM_HOST_SCOPE_MISMATCH'};
+    return await postJson<ClaimPublishResult>('/api/v2/claim-publish',
+      mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'CLAIM_PUBLICATION_READBACK_UNKNOWN'};}
+}
 export async function transitionSelectedTaskReady({
   issueNumber,repository,versionId,sourceSha
 }:{issueNumber:number;repository:string;versionId:string;

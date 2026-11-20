@@ -648,6 +648,24 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       octokit:new Octokit({auth:writeToken,request:{timeout:15000}}),
       openStore:openSqliteCasStore});
   }
+  // New-project Builder Claim: opt-in trusted single-writer CAS + native
+  // GitHub comment witness; never mounted from browser-supplied config.
+  // Import only under operator Host mount so plain first-run install does
+  // not require the native effect modules at startup.
+  let projectClaimHost=null;
+  if(env.TALLY_V2_CLAIM_DISPATCH==='host-mounted'){
+    const token=env.TALLY_GITHUB_WRITE_TOKEN;
+    if(typeof token!=='string'||token.length<8)
+      throw new TypeError('SELECTED_CLAIM_HOST_WRITE_TOKEN_REQUIRED');
+    const [{Octokit},{openSqliteCasStore},{createProjectClaimHost}]=await Promise.all([
+      import('../../packages/tally-github-native-c'+
+        '/node_modules/@octokit/rest/dist-src/index.js'),
+      import('@kaicreator/domain-harness-host-node'),
+      import('./project-claim-host.mjs')]);
+    projectClaimHost=createProjectClaimHost({settings,env,
+      octokit:new Octokit({auth:token,request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
   // #264 J07: the installed Release Host Consumer seam — the real J07b gate
   // composed from trusted Host pins only. Without the mount every
   // /api/release/actions POST keeps the exact R91 fail-closed controller
@@ -949,7 +967,8 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
-    v2ReadModelHost,taskReadyHost,agentHostMounted:Boolean(installedRun),
+    v2ReadModelHost,taskReadyHost,claimHost:projectClaimHost,
+    agentHostMounted:Boolean(installedRun),
     selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
     selectedAgentProvider:installedRun?
       (env.TALLY_V2_AGENT_PROVIDER??'codex'):'codex',

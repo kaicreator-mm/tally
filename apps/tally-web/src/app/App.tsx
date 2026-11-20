@@ -10,9 +10,9 @@ import {AppShell} from './shell/AppShell.tsx';
 import {findItemByRoute} from './shell/nav-model.ts';
 import {EmptyState,Skeleton} from '../components/ui/States.tsx';
 import {useHost} from '../adapters/useHost.ts';
-import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady} from '../adapters/host.ts';
+import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim} from '../adapters/host.ts';
 import type {Route} from './router.ts';
-import type {TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
+import type {ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
   SettingsResponse,MetadataResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
@@ -124,6 +124,10 @@ function TasksRoute({versionId}:{versionId:string|null}){
   const [selectedId,setSelectedId]=useState<string|null>(null);
   const [starting,setStarting]=useState(false);
   const [lastStart,setLastStart]=useState<{taskId:string;message:string}|null>(null);
+  const [claimPublishing,setClaimPublishing]=useState(false);
+  const [claimResult,setClaimResult]=useState<{
+    issueNumber:number;repository:string;message:string
+  }|null>(null);
   const [readyTransitionBusy,setReadyTransitionBusy]=useState(false);
   const [readyTransitionResult,setReadyTransitionResult]=useState<{
     issueNumber:number;repository:string;message:string
@@ -139,6 +143,8 @@ function TasksRoute({versionId}:{versionId:string|null}){
   // frozen Task DAG. Keep these TWO levels of evidence separate.
   const agentHost=useHost<AgentDispatchResponse>('agent-dispatch',
     adapter=>adapter.agentDispatch(),[versionId]);
+  const claimHost=useHost<ClaimHostResponse>('claim-host',
+    adapter=>adapter.claimHost(),[versionId]);
   const readyHost=useHost<TaskReadyHostResponse>('task-ready-host',
     adapter=>adapter.taskReadyHost(),[versionId]);
   const drafts=useHost<TaskDraftsResponse>('task-drafts',
@@ -171,6 +177,22 @@ function TasksRoute({versionId}:{versionId:string|null}){
       setReadyTransitionResult({issueNumber,repository,
         message:'UNKNOWN · TASK_READY_ACTION_READBACK_UNKNOWN'});
     }finally{setReadyTransitionBusy(false);}
+  };
+  const publishClaim=async(issueNumber:number,sourceSha:string)=>{
+    if(!versionId||claimPublishing||!drafts.data?.repository)return;
+    const repository=drafts.data.repository;
+    setClaimPublishing(true);setClaimResult(null);
+    try{
+      const result=await publishSelectedTaskClaim({
+        issueNumber,repository,versionId,sourceSha});
+      setClaimResult({issueNumber,repository,message:
+        result.status+(result.reason?' · '+result.reason:'')+
+        (result.status==='RECORDED'
+          ?' · 已记录 Native Claim，仍需 K/Agent 执行确认':'')});
+    }catch{
+      setClaimResult({issueNumber,repository,
+        message:'UNKNOWN · CLAIM_PUBLICATION_READBACK_UNKNOWN'});
+    }finally{setClaimPublishing(false);}
   };
   if(tasks.state==='loading')return <Skeleton lines={6}/>;
   if(tasks.state==='not_connected')
@@ -210,6 +232,24 @@ function TasksRoute({versionId}:{versionId:string|null}){
               {readyTransitionResult?.issueNumber===draft.issueNumber&&
                readyTransitionResult.repository===drafts.data?.repository?
                 <span role="status">{' · '}{readyTransitionResult.message}</span>:null}
+              {draft.nativeWorkflow==='READY'&&
+               draft.sourceCurrentness==='CURRENT'&&
+               admissionResult?.issueNumber===draft.issueNumber&&
+               admissionResult?.repository===drafts.data?.repository&&
+               admissionResult?.versionId===versionId&&
+               admissionResult?.stage==='NATIVE_PREFLIGHT_READY'&&
+               claimHost.data?.connected===true&&
+               claimHost.data?.repository===drafts.data?.repository&&
+               claimHost.data?.versionId===versionId&&
+               claimHost.data?.sourceSha===draft.sourceSha&&
+               claimHost.data?.issueNumber===draft.issueNumber?
+                <button type="button" disabled={claimPublishing}
+                  onClick={()=>{void publishClaim(draft.issueNumber,draft.sourceSha);}}>
+                  请求可信 Host 发布 Claim
+                </button>:null}
+              {claimResult?.issueNumber===draft.issueNumber&&
+               claimResult.repository===drafts.data?.repository?
+                <span role="status">{' · '}{claimResult.message}</span>:null}
               {admissionResult?.issueNumber===draft.issueNumber&&
                admissionResult.repository===drafts.data?.repository&&
                admissionResult.versionId===versionId?

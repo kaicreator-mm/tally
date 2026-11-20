@@ -375,7 +375,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
-  v2ReadModelHost,taskReadyHost=null,agentHostMounted=false,
+  v2ReadModelHost,taskReadyHost=null,claimHost=null,agentHostMounted=false,
   selectedAgentTaskIssue=null,selectedAgentProvider='codex',
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
@@ -599,6 +599,36 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // state). No effect path starts here.
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         return send(200,'application/json',json(await readV2Model('catalog','catalog')));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/claim-host'){
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({connected:false,
+            reason:'CLAIM_HOST_ORIGIN_MISMATCH'}));
+        const bound=claimHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:claimHost.repository,
+          versionId:claimHost.versionId,sourceSha:claimHost.sourceSha,
+          issueNumber:claimHost.issueNumber,actionKey,
+          authority:'HOST_PINNED_ONLY'
+        }:{connected:false,reason:'CLAIM_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/claim-publish'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!claimHost||claimHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'CLAIM_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(input?.issueNumber!==claimHost.issueNumber||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'CLAIM_HOST_TASK_SCOPE_MISMATCH'}));
+        const result=await claimHost.publish({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:
+          result.status==='UNKNOWN'?503:200,'application/json',json(result));
       }
       if(req.method==='GET'&&url.pathname==='/api/v2/task-ready-host'){
         if(req.headers.host!==new URL(origin).host)

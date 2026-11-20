@@ -955,3 +955,47 @@ test('non-codex provider start retains the selected sealed Host driver',async()=
     'a non-codex pin must retain the one selected sealed B/K/Host/C driver');
   assert.equal(observed.status,'UNKNOWN','no e2e-result.json was written');
 });
+
+test('new project Claim route requires exact Host and same-origin CSRF, no UI grant',async()=>{
+  let calls=0;
+  const claimHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,publish:async input=>{
+      calls++;assert.deepEqual(input,{issueNumber:27,sourceSha:sha});
+      return {status:'RECORDED',claimPublication:'VERIFIED_PENDING_KERNEL_ADMISSION',
+        admitted:false,authorized:false};
+    }};
+  const app=createAlmServer(config,{claimHost});
+  const {origin,actionKey}=await app.listen();
+  try{
+    const observed=await (await fetch(origin+'/api/v2/claim-host')).json();
+    assert.equal(observed.connected,true);
+    assert.equal(observed.issueNumber,27);
+    assert.equal(observed.actionKey,actionKey);
+    const post=async(input,headers={})=>fetch(origin+'/api/v2/claim-publish',{
+      method:'POST',headers:{'content-type':'application/json',origin,
+        'x-tally-action-key':actionKey,...headers},
+      body:JSON.stringify(input)});
+    assert.equal((await post({issueNumber:27,sourceSha:sha},
+      {'x-tally-action-key':'wrong'})).status,403);
+    assert.equal((await post({issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal(calls,0);
+    const approved=await post({issueNumber:27,sourceSha:sha});
+    assert.equal(approved.status,200);
+    const result=await approved.json();
+    assert.equal(result.status,'RECORDED');
+    assert.equal(result.authorized,false);
+    assert.equal(result.admitted,false);
+    assert.equal(calls,1);
+  }finally{await app.close();}
+  const absent=createAlmServer(config,{});
+  const {origin:missingOrigin,actionKey:missingKey}=await absent.listen();
+  try{
+    const data=await (await fetch(missingOrigin+'/api/v2/claim-host')).json();
+    assert.equal(data.connected,false);
+    const response=await fetch(missingOrigin+'/api/v2/claim-publish',{
+      method:'POST',headers:{'content-type':'application/json',
+        origin:missingOrigin,'x-tally-action-key':missingKey},
+      body:JSON.stringify({issueNumber:27,sourceSha:sha})});
+    assert.equal(response.status,503);
+  }finally{await absent.close();}
+});
