@@ -13,6 +13,15 @@
 
 Tally #286 最新 Owner 顶部已明确：ADS 实践→Tally Engineering Domain Package 不以第三方知识生产项目为先决条件；历史 #286 下方“必须由 DomainForge 提供全部知识”观点已被其最新决议替代。**但 #286 仍为 `DEFERRED/NOT_FROZEN/NO_SOURCE_DISPATCH`**；本库文档只构成该未来 Product/L2 的输入，不自动允许现在实施 Runtime。
 
+### 已识别的跨项目设计不一致：知识作者与正式 BUILD/Package 生产责任
+
+**这是未来消费者必须澄清的接口问题，不是当前系统知识库的文档建设阻塞。**
+
+- [Tally #286 最新 Owner 决议](https://github.com/kaicreator-mm/tally/issues/286)（2026-11-21 顶部）明确：以 ADS 的工程实践/实验和 Tally 的专业知识为软件工程 Domain Package 的直接输入，**不应将第三方独立知识生产项目视为这次知识整理和选定业务需求的必需前置**。
+- 但 [DomainHarness 0.11.2 #1612](https://github.com/kaicreator-mm/domain-harness/issues/1612) 的当前规划同时写有“**生产/编译知识归 DomainForge**”。该版本仍为 `OWNER_ROADMAP_CONFIRMED_PRODUCT_L1_DETAIL_PENDING / L2_NOT_FROZEN / IMPLEMENTATION_NOT_STARTED`。因此**不能说跨项目已经就生产/编译责任达成同一正式 ABI 决议**。
+- 对 Tally v2.1.2 的即时适用解释是：Tally **可以独立建设系统知识库、验证来源并选择希望消费的专业资产**；未来对 DomainHarness 的实际打包/编译/BUILD/Lock 接线，只能在合法 Product/L2 层确认怎样承接这些资产，保持 `ElementRef/FunctionRef` 和最终选定产物真实来源，不假设 Markdown 或私有 JSON 能绕开受权 BUILD。
+- **推荐最小消歧**：明确接口到底接受 Tally 已整理且被批准的 Knowledge/Rule Content 作为编译输入，还是必须调用现有获准的 package producer；这一决定由真实 Tally consumer version 和 DomainHarness 0.11.2 owner 对齐其最终合同。若暂时无法对齐，保持 `CONSUMER_INTERFACE_UNRESOLVED / NOT_CONNECTED`，而不是伪造运行时演示通过，也不在本 PR 中实现另一套编译器或适配层。
+
 ## 2. 与 DomainHarness 0.11.x 当前阶段的精确对接
 
 | 阶段 / 权威 | 本知识库希望被使用的内容 | 当前应承认的事实 |
