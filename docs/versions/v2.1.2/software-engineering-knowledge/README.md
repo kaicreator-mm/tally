@@ -36,6 +36,10 @@
 
 **来源与状态**：问题索引不复制已有 99 个基础专题文件的正文；`K01.md`–`K11.md` 保留为历史导论入口而非第二套权威。引用 [47 项外部来源](external-source-catalog.md) 和 [SWEBOK 对照](disciplinary-coverage.md) 必须按具体 Claim、版本、适用性和反例判断；`SOURCE_CANDIDATE/NOT_QUALIFIED/PROPOSED_NOT_CONNECTED` 不变。
 
+### 首批选定知识的真实来源定位（候选，未取得资格）
+
+[4 条重点 Topic 的 Source→Claim→Counterexample 与最小消费验证准备](selected-source-claims-preflight.md)：精确定位已发布 ADS 的测试发现/实际公开路径、CI 分层和 Agent ACK/旧 HEAD 事实；区别发布标准里的 `SHOULD`、标注 `candidate` 的小节、现行 Validation/Release 权威与合成案例。**只完成来源条款核查，不等于知识/Package/Agent 资格通过**，不提前启动 Deferred 的 #286。
+
 ## 1. 产品与领域范围
 
 ### 1.1 本版本要解决的问题
