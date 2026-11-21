@@ -4,6 +4,21 @@
 
 从业务契约推导能暴露实现错误的 Oracle，并证明测试被发现且真实执行。
 
+## 当前工程问题索引（优先入口）
+
+先根据当前 Task 的**真实问题**命中下表最小 Topic，再阅读与之相关的 [专业方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例](casebook.md)、[来源](sources.md)；不要把九个专题文件全部塞进一次 Agent 上下文。**Topic ID 是文档检索标识，不是新增的 Tally Wire Schema/Task Status。** 跨模块列仅表示引用知识及交接位置，不改变原有工程权威。
+
+| Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
+| --- | --- | --- | --- | --- |
+| `K05.ORACLE` | 业务规则如何成为能发现错误的测试 Oracle？ | Requirement/Invariant/Source | K05→K01 | 没有需求来源不能造 Expected |
+| `K05.TEST_SELECTION` | 需要 Unit、Contract、Integration 还是 E2E？ | 受影响行为/风险/环境 | K05→K08 | 不要求每改动全量 CI |
+| `K05.FALSE_PASS` | CI 绿但测试没发现或仅 Mock？ | 当前 SHA/runner/测试发现/调用入口 | K05→K08 | 0 tests 不代表功能 PASS |
+| `K05.INTEGRATION` | 消费者契约与真实 DB 副作用是否都被证明？ | Consumer/Provider/真实数据依赖 | K05→K02/K08 | Pact/Testcontainers 不等于全产品 E2E |
+| `K05.FLAKY_TEST` | 测试失败是时间不确定性还是实现缺陷？ | 时钟/事件/受权时限 | K05→K06 | 无界重试不能修正 Oracle |
+| `K05.EVALUATION` | Agent 补丁通过基准是否代表用户产品合格？ | Issue/Patch/Test/用户路径 | K05→K11 | SWE-bench PASS 不等于 Release |
+
+**选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
 ## 使用导航
 
 | 文档 | 具体内容与消费时机 |

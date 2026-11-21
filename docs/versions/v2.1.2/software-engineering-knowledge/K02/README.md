@@ -4,6 +4,20 @@
 
 以需求驱动、状态/接口合同、替代方案和失效语义作出可解释的架构决策。
 
+## 当前工程问题索引（优先入口）
+
+先根据当前 Task 的**真实问题**命中下表最小 Topic，再阅读与之相关的 [专业方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例](casebook.md)、[来源](sources.md)；不要把九个专题文件全部塞进一次 Agent 上下文。**Topic ID 是文档检索标识，不是新增的 Tally Wire Schema/Task Status。** 跨模块列仅表示引用知识及交接位置，不改变原有工程权威。
+
+| Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
+| --- | --- | --- | --- | --- |
+| `K02.QUALITY_TRADEOFF` | 两个架构方案如何权衡可靠性与成本？ | 质量场景/目标/替代方案 | K02→K10/K11 | Demo≠生产合格 |
+| `K02.STATE_OWNER` | 跨组件业务状态由谁唯一写入？ | 事务/共享状态/提交点 | K02→K03 | 目录结构不等于数据 Owner |
+| `K02.INTERFACE_CONTRACT` | 多模块应先稳定哪些接口与错误语义？ | 消费者/Schema/错误合同 | K02→K03/K05 | 不能用图代替合同 |
+| `K02.ARCHITECTURE_DEMO` | 何时值得做可证伪 Demo？ | 真实未知/可区分实验 | K02→K05 | 不要对低风险改动强制 ATAM |
+| `K02.ARCHITECTURE_EVOLUTION` | 架构变化如何保护旧接口？ | 现有消费者与版本窗口 | K02→K09 | 不能把破坏性变更叫重构 |
+
+**选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
 ## 使用导航
 
 | 文档 | 具体内容与消费时机 |

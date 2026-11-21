@@ -4,6 +4,20 @@
 
 让源码真正通过项目工具链、测试与集成入口形成可交付制品，区分各步骤的实际状态与版本。
 
+## 当前工程问题索引（优先入口）
+
+先根据当前 Task 的**真实问题**命中下表最小 Topic，再阅读与之相关的 [专业方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例](casebook.md)、[来源](sources.md)；不要把九个专题文件全部塞进一次 Agent 上下文。**Topic ID 是文档检索标识，不是新增的 Tally Wire Schema/Task Status。** 跨模块列仅表示引用知识及交接位置，不改变原有工程权威。
+
+| Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
+| --- | --- | --- | --- | --- |
+| `K08.PIPELINE_STAGES` | 依赖安装、Build、Test、打包结果如何分离？ | Runner 步骤/Exit/源码 SHA | K08→K05/K06 | Install PASS≠Build PASS |
+| `K08.CLONE_EFFICIENCY` | 如何避免多 Workflow 反复完整 Clone？ | Provider 隔离/真实网络日志 | K08→K11 | 只看 YAML 不认定节省比例 |
+| `K08.SOURCE_PROVENANCE` | CI 和 Artifact 具体属于哪个 SHA/环境？ | 源/Config/Runner/Artifact digest | K08→K05 | 旧 CI PASS 不覆盖新 HEAD |
+| `K08.DELIVERY_READINESS` | 用户实际安装启动配置是否可用？ | 真实制品/平台/用户入口 | K08→K10 | PR merge 不等于 Release |
+| `K08.RELEASE_BOUNDARY` | 哪个 Owner 允许冻结/发布制品？ | 当前授权/证据/版本合同 | K08→K09 | Package Candidate≠Release |
+
+**选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
 ## 目录和何时使用
 
 | 知识资源 | 为什么要读 |
@@ -32,4 +46,4 @@
 | Unit PASS 但运行入口未加载修改模块 | K05 指定 public-path 检查，K08 安排真实集成 | 适用 Integration/Host 收据 |
 | 发布制品没有存在/摘要/安装验证 | 将 Release Candidate 与可下载正式包分开 | artifact UNKNOWN/NOT_FOUND |
 
-**选用规则**：不要求每次调用全部 6 篇文档；依据当前任务所需决策选择最小知识切片。K09–K11 是条件性消费，K07/K08 在首批真实工程协作/交付需要时才选用。Tally 既有 Engineering Business/Host 事实源继续有效；本知识库为 `PROPOSED_NOT_CONNECTED`，不是新的知识服务/数据库或独立执行权限。
+**选用规则**：不要求每次调用本模块的全部九份专题文档；依据当前任务所需决策选择最小知识切片。K09–K11 是条件性消费，K07/K08 在首批真实工程协作/交付需要时才选用。Tally 既有 Engineering Business/Host 事实源继续有效；本知识库为 `PROPOSED_NOT_CONNECTED`，不是新的知识服务/数据库或独立执行权限。

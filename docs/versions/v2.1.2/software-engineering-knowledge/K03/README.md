@@ -4,6 +4,20 @@
 
 把已冻结的接口和行为约束变成可维护、可测试、可恢复的当前 Task 实现。
 
+## 当前工程问题索引（优先入口）
+
+先根据当前 Task 的**真实问题**命中下表最小 Topic，再阅读与之相关的 [专业方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例](casebook.md)、[来源](sources.md)；不要把九个专题文件全部塞进一次 Agent 上下文。**Topic ID 是文档检索标识，不是新增的 Tally Wire Schema/Task Status。** 跨模块列仅表示引用知识及交接位置，不改变原有工程权威。
+
+| Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
+| --- | --- | --- | --- | --- |
+| `K03.TASK_DESIGN` | 当前 Task 如何转化为可实现的输入/状态/错误？ | 合法 Task/设计/写集 | K03→K05 | 设计建议不构成 Builder 许可 |
+| `K03.ASYNC_IDEMPOTENCY` | 请求超时或重复时如何保证副作用语义？ | 提交点/重复请求/状态回读 | K03→K10 | 超时不证明未提交 |
+| `K03.ALGORITHM_CHOICE` | 应该选择哪种数据结构与算法？ | 真实数据规模/复杂度/平台 | K03→K11 | 不以大框架解决小问题 |
+| `K03.ERROR_LOGGING` | 错误与日志怎样可行动且保护敏感信息？ | 用户角色/错误类别/恢复路径 | K03→K10 | 堆栈不是用户诊断 |
+| `K03.IMPLEMENTATION_EVIDENCE` | 代码与受影响测试是否在当前 HEAD 真运行？ | 工具链/测试发现/来源 SHA | K03→K05/K08 | 本地 PASS 不等于 Release |
+
+**选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
 ## 使用导航
 
 | 文档 | 具体内容与消费时机 |
