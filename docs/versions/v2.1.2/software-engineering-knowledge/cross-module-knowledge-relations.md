@@ -6,7 +6,7 @@
 
 ## 一、关系的意义
 
-跨模块的专业问题不能在单一 Topic 中完全解释。例如 K03 的幂等实现需要 K01 的业务规则、K02 的状态所有权、K05 的 Oracle 与 K10 的失败恢复语义；各模块保持单一事实/概念定义，其他模块通过关系引用。IS_A/REFINED_BY 表达分类、REQUIRES 表达推理前提、TESTED_BY/FALSIFIED_BY 表达可能的可观察证据、TRADEOFF_WITH 表达条件性备选；任何关系都不自动创建受权 Task/Host/Release 权威。
+跨模块的专业问题不能在单一 Topic 中完全解释。例如 K03 的幂等实现需要 K01 的业务规则、K02 的状态所有权、K05 的 Oracle 与 K10 的失败恢复语义；各模块保持单一事实/概念定义，其他模块通过关系引用。IS_A/REFINED_BY 表达分类与细化，REQUIRES 仅用于确有必要的推理前提，CONTEXT_FOR/SUPPORTS 表达有条件的专业背景，TRADEOFF_WITH 表达需比较的方案。**本表的两端均为课程 Concept ID，并无 Case/Oracle/执行证据节点，因此不以 TESTED_BY、FALSIFIED_BY、EXCLUDES_WHEN 断言测试已实现或条件已判真**。未来如引入明确 Case/Oracle/条件节点，才可按真实适用语义建立这些边；任何关系都不自动创建受权 Task/Host/Release 权威。
 
 ## 二、知识概念关系表
 
@@ -14,46 +14,46 @@
 | --- | --- | --- | --- |
 | K01.F1.1 | CONTEXT_FOR | K02.F4.1 | 先确定真实用户 Need 和质量目标再选架构；技术偏好不是业务要求 |
 | K01.F1.2 | CONTEXT_FOR | K02.F1.2 | 涉众角色/关切决定哪个视图和允许行为需要分析 |
-| K01.F2.2 | REQUIRES | K07.F2.2 | 事实/假设/UNKNOWN 与 Agent 的 SourceSHA/Attempt 溯源分离 |
+| K01.F2.2 | CONTEXT_FOR | K07.F2.2 | 事实/假设/UNKNOWN 的来源判断与 Agent SourceSHA/Attempt 溯源互补；并非需求事实成立的必要条件 |
 | K01.F3.1 | REFINED_BY | K02.F3.1 | 业务聚合与数据状态所有权相互约束 |
 | K01.F3.2 | REFINED_BY | K03.F3.1 | 业务状态机约束并发条件写与实现状态变迁 |
-| K01.F3.3 | TESTED_BY | K05.F1.2 | 业务不变量是 Test Oracle 的语义来源 |
+| K01.F3.3 | SUPPORTS | K05.F1.2 | **已确认且适用**的业务不变量可作为 Oracle 的一种来源；获权行为/合同也可产生 Oracle |
 | K01.F4.2 | SUPPORTS | K05.F1.3 | 需求追溯支撑 V&V 的合同/用户目标分层 |
 | K01.F4.3 | TRADEOFF_WITH | K11.F1.2 | 质量承诺需考虑长期总成本，不只初次编程 |
-| K01.F5.1 | EXCLUDES_WHEN | K03.F3.1 | 同条件业务政策冲突未决时禁止默默实施新状态迁移 |
+| K01.F5.1 | CONTEXT_FOR | K03.F3.1 | 同条件政策冲突未决时，受影响的状态迁移实现要保持 HOLD；不是全部并发操作的通用排除 |
 | K02.F2.1 | REFINED_BY | K03.F2.1 | 系统模块合同约束组件内部编码边界 |
-| K02.F2.2 | TESTED_BY | K05.F3.1 | 公开接口必须由实际消费者/合同验证，而不只类型检查 |
-| K02.F3.1 | REQUIRES | K10.F3.2 | 确认提交点与状态 Owner 才能设计安全重试 |
+| K02.F2.2 | CONTEXT_FOR | K05.F3.1 | 公开接口合同需要按所选消费者和验证层设计实际测试，概念链接不是已执行测试 |
+| K02.F3.1 | CONTEXT_FOR | K10.F3.2 | 状态 Owner 与提交点是评估 **带副作用重试** 安全性的输入，不要求所有状态模型必须采用重试 |
 | K02.F3.2 | REFINED_BY | K03.F3.2 | 一致性语义影响重复、取消和提交后的未知结果 |
-| K02.F3.3 | TESTED_BY | K09.F3.2 | 真实数据库迁移需要旧数据和版本兼容案例 |
+| K02.F3.3 | CONTEXT_FOR | K09.F3.2 | 一致性/状态边界是规划旧数据迁移案例的输入；迁移机制概念本身不是 Test |
 | K02.F4.2 | CONTEXT_FOR | K04.F4.1 | 可证伪架构 Demo 只用于会真正改变选型的未知 |
 | K02.F5.1 | REFINED_BY | K09.F3.1 | 架构版本兼容落地为旧消费者行为保护 |
-| K03.F1.1 | TESTED_BY | K10.F4.3 | Big-O 与实测延迟不等同，需同条件基线 |
+| K03.F1.1 | CONTEXT_FOR | K10.F4.3 | 算法复杂度推导指导性能基线设计，但没有真实负载数据便不能声称已测延迟 |
 | K03.F1.2 | TRADEOFF_WITH | K10.F4.1 | 数据结构选择与真实工作负载、内存/IO 约束共同决定 |
-| K03.F3.1 | TESTED_BY | K05.F2.2 | 并发状态更新通过正反状态测试验证 |
-| K03.F3.2 | FALSIFIED_BY | K10.F3.1 | 重复请求和 ACK 丢失能暴露错误幂等假设 |
+| K03.F3.1 | CONTEXT_FOR | K05.F2.2 | 并发条件写的风险应指导状态转换正反选例；课程概念并非测试收据 |
+| K03.F3.2 | CONTEXT_FOR | K10.F3.1 | 幂等协议设计需考虑重复请求/ACK 丢失和未知副作用，重试理论概念本身不是反例 |
 | K03.F4.2 | OBSERVED_IN | K06.F3.2 | 资源关闭和远端副作用 UNKNOWN 应分别取证 |
 | K03.F5.2 | EXPLAINS | K10.F2.1 | K10 拥有一般日志政策，K03 负责当前任务真实实现 |
 | K04.F2.1 | CONTEXT_FOR | K07.F1.1 | 真正可独立交付的 Task 才适合多 Agent 分工 |
 | K04.F3.1 | CONTEXT_FOR | K07.F4.2 | 真实前置关系与稳定合同决定合理并行 |
 | K04.F3.2 | CONTEXT_FOR | K07.F4.1 | 独立工作树仍可能共享 Schema/生成物写集 |
 | K04.F3.3 | TRADEOFF_WITH | K11.F2.2 | CI/审查/集成等待决定多 Agent 是否更快 |
-| K05.F1.2 | REQUIRES | K01.F3.3 | 没有有权 Rule 的业务预期不能作为正式 Oracle |
+| K05.F1.2 | CONTEXT_FOR | K01.F3.3 | 当存在已接受的相关业务不变量时可以据此生成 Oracle；其他已批准业务行为也可作来源 |
 | K05.F3.1 | CONTEXT_FOR | K08.F3.2 | K05 负责测试目标充分性，K08 负责真实执行来源 |
-| K05.F4.1 | TESTED_BY | K08.F3.3 | Runner exit 0 与零材料测试不能合成目标 PASS |
-| K05.F4.2 | REQUIRES | K09.F2.1 | 旧 Golden 是否仍有效需参照必须保留的业务行为 |
+| K05.F4.1 | CONTEXT_FOR | K08.F3.3 | 测试发现结果的判定要结合 Runner/阶段执行证据；阶段概念本身不验证测试发现 |
+| K05.F4.2 | CONTEXT_FOR | K09.F2.1 | Golden 变更时须对照适用的兼容行为与有权规格，并非任何快照都要求版本演进 |
 | K06.F1.2 | OBSERVED_IN | K08.F3.3 | 区分 Build 首个错误与下游 NOT_RUN |
 | K06.F2.2 | CONTEXT_FOR | K10.F2.2 | 不同故障假设需通过可信日志/链路/状态做安全区分 |
-| K06.F3.2 | REQUIRES | K10.F3.2 | 副作用未知时先回读，不自动重发不可逆操作 |
+| K06.F3.2 | CONTEXT_FOR | K10.F3.2 | 在存在可能不可逆副作用时，未知结果须先合法读回再决定重试；非所有诊断都要重试 |
 | K07.F2.2 | OBSERVED_IN | K08.F1.1 | 旧 Agent SourceSHA/Attempt 不覆盖当前 PR/制品事实 |
-| K07.F3.1 | EXCLUDES_WHEN | K04.F2.3 | 通信 ACK/工具返回不是合法 Claim/任务最终状态 |
+| K07.F3.1 | CONTEXT_FOR | K04.F2.3 | 消息 ACK 不可替代合法 Task 完成判定；Task 概念本身不是排除条件 |
 | K07.F4.1 | TRADEOFF_WITH | K11.F5.2 | 共享写集冲突成本应计入并行收益 |
-| K08.F2.3 | TESTED_BY | K05.F4.1 | 缓存命中须对应当前源码依赖与真实受影响测试 |
-| K08.F4.1 | TESTED_BY | K05.F3.1 | 只有实际选中公开入口才能证明集成有效 |
-| K08.F5.1 | EXCLUDES_WHEN | K09.F3.1 | K09 仅提供兼容建议，不能成为 Release Owner |
-| K09.F3.2 | TESTED_BY | K05.F3.2 | 新空库 PASS 不证明旧数据迁移/恢复 |
+| K08.F2.3 | CONTEXT_FOR | K05.F4.1 | 缓存复用判定应结合实际测试发现、源码与依赖身份；非测试已执行证明 |
+| K08.F4.1 | CONTEXT_FOR | K05.F3.1 | 制品集成应选择实际公开入口与消费者路径测试；测试层概念不是观察结果 |
+| K08.F5.1 | CONTEXT_FOR | K09.F3.1 | 交付决策可咨询旧消费者兼容策略，但 Release Owner 的权限不由 K09 拥有 |
+| K09.F3.2 | CONTEXT_FOR | K05.F3.2 | 迁移验证需要真实旧数据/隔离/恢复设计，环境隔离概念本身并非 Test |
 | K10.F4.2 | TRADEOFF_WITH | K11.F1.2 | 性能微基准收益需与真实用户价值和维护成本比较 |
-| K11.F4.3 | TESTED_BY | K05.F1.3 | 知识辅助 Agent 的实际改进需独立业务 Oracle 而非问答评分 |
+| K11.F4.3 | CONTEXT_FOR | K05.F1.3 | 比较实验需有独立业务 Oracle 与真实 V&V，不得由课程连接宣称实测改进 |
 
 ## 三、从关系到有界专业推理
 
