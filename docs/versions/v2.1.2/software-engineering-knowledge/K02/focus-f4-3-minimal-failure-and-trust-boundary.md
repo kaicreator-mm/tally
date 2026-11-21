@@ -15,7 +15,8 @@
 | 对象与信任边界 | 最小失效/威胁 | 受影响不变量 | 候选防范与可观察反例 |
 | --- | --- | --- | --- |
 | Tenant → API → DB | 客户端伪造资源所有者 | 无权主体不能读写其他租户对象 | 服务端按有权身份验证归属；构造跨租户读/写反例 |
-| Package → 声明的 Extension | 未声明依赖偷偷调用 Host | 组合边界依有权 BUILD 合同确定 | 构建侧检查声明闭包；负例为未声明 Import |
+| Package → 声明的 Extension | 未声明的 Extension Function import 或非合同依赖 | Package 只能引用其实际声明并经 BUILD 确认的 Extension 闭包 | 候选 BUILD 依据相应版本合同拒绝未声明 Function import；不因声明 Extension 而授权额外能力 |
+| Package → HostPort / 外部 Effect | 缺少有权 Host 能力或尝试未授权操作 | 外部能力与真实 Effect 的使用必须经单独的有权 Host/Effect 合同核定 | 分开核对 HostPort 的受权能力、Effect/Actor/Scope 与失败处理；Extension 声明或 BUILD import 检查均不能代签 Host Effect 授权 |
 | Agent 消息 → 状态写入 | 旧 Attempt 交付迟到或重放 | 过期结果不能替代当前任务决议 | 关联 Attempt/SourceSHA，旧消息拒绝晋升 |
 | 缓存/队列 → 不同消费者 | 不同租户或不同 SourceSHA 共用键 | 不能把 A 的结果当 B 的事实 | 区分有效输入与权限范围；断言隔离结果 |
 | 运行进程 → 外部 Effect | 超时与重试导致重复写入 | 未证实幂等时不能重复不可逆效果 | 先通过权威 Effect ID 读回；未知保持 UNKNOWN |
