@@ -5,7 +5,7 @@
  */
 const SHA=/^[0-9a-f]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
 const denial=reason=>({connected:false,reason,rosterCoverage:'UNVERIFIED'});
 const ids=items=>items.map(String);
 const edgeId=(from,to)=>String(from)+'->'+String(to);
@@ -163,7 +163,7 @@ function validClaim(claim,repository,versionId,versionSha,issueNumber,subject,ta
 }
 export function createUiRosterHost({repository,versionId,expectedSha,
   frozenHost,nativeC,claimHost}={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(expectedSha??''))throw TypeError('PINNED_ROSTER_SCOPE_REQUIRED');
   async function roster(scope={}){
     if(scope.projectId!==undefined&&scope.projectId!==repository||
@@ -354,7 +354,7 @@ function frozenHistoricalOk(historical,repository,versionId,freezeBaseSha){
 }
 export function createUiRosterDualEpochHost({repository,versionId,freezeBaseSha,
   dualEpochHost}={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(freezeBaseSha??'')||
      typeof dualEpochHost?.readDualEpoch!=='function')
     throw TypeError('DUAL_EPOCH_ROSTER_SCOPE_REQUIRED');

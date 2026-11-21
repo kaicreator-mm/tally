@@ -24,7 +24,8 @@ export const PACKAGE_KIND='capability';
 export const ABI_VERSION='v08-capability-abi/1';
 export const CAPABILITY_ID='tally-claim-admission';
 export const OPERATIONS=Object.freeze(['tally.admitClaimedTask']);
-const ISSUE='https://github.com/kaicreator-mm/tally/issues/169';
+// Replaced only by the trusted BUILD producer, then sealed by digest.
+const ISSUE='__T06L_TARGET_ISSUE_REF__';
 const SHA=/^[0-9a-f]{40}$/;
 const POSITIVE_REASON='CLAIM_REGISTRY_PUBLICATION_AND_NATIVE_READBACK_VERIFIED';
 const CLAIM_PUBLICATION='REGISTRY_PUBLISHED_VERIFIED_NATIVE_READBACK';
@@ -51,7 +52,7 @@ const allDenied=(value)=>value?.authorized===false&&value?.admitted===false&&
   value?.taskPass===false&&value?.agentLaunch===false&&value?.releasePass===false;
 const noAuthority=(value)=>value?.authorized===false&&value?.taskPass===false&&
   value?.agentLaunch===false&&value?.releasePass===false;
-const claimKey=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#169:builder:__default__$/;
+const CLAIM_KEY='__T06L_TARGET_CLAIM_KEY__';
 
 export async function admitClaimedTask(input) {
   // Provider exceptions (including getters and arbitrary Error.message text)
@@ -63,10 +64,12 @@ export async function admitClaimedTask(input) {
       const positive=
         result.reason===POSITIVE_REASON&&
         result.issueRef===ISSUE&&
+        input?.sourceRef===ISSUE&&
+        input?.sourceSha===result.sourceSha&&
         result.sourceRef===undefined&&
         SHA.test(result.sourceSha??'')&&
         typeof result.protectedClaimKey==='string'&&
-        claimKey.test(result.protectedClaimKey)&&
+        result.protectedClaimKey===CLAIM_KEY&&
         result.generation===1&&
         typeof result.dispatchId==='string'&&result.dispatchId.length>0&&
         result.dispatchId.length<=128&&

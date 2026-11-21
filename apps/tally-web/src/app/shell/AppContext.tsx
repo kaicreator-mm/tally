@@ -1,4 +1,4 @@
-import {createContext,useContext, useMemo,useState,type ReactNode} from 'react';
+import {createContext,useContext, useMemo,useState,useEffect,type ReactNode} from 'react';
 import type {Locale} from '../../i18n/index.ts';
 import {createT,rememberLocale,formatDyn,type StorageLike} from '../../i18n/index.ts';
 
@@ -37,6 +37,14 @@ export function ShellProvider({children,storage,catalog={
   const [locale,setLocaleState]=useState<Locale>('zh-CN');
   const [projectId,setProjectId]=useState<string|null>(null);
   const [versionId,setVersionId]=useState<string|null>(null);
+  useEffect(()=>{
+    if(!projectId&&catalog.projects?.length===1)
+      setProjectId(catalog.projects[0].id);
+    if(projectId&&!versionId){
+      const versions=catalog.versionsByProject?.[projectId]??[];
+      if(versions.length===1)setVersionId(versions[0].id);
+    }
+  },[catalog,projectId,versionId]);
   const value=useMemo<ShellState>(()=>{
     const t=createT(locale);
     return {

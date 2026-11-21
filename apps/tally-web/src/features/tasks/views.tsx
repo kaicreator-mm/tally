@@ -170,10 +170,12 @@ export function TaskBoardView({tasks,onSelectTask,locale='zh'}:
   </div>;
 }
 export function TaskDrawer({task,onClose,locale='zh',projectId,
-  actionCatalog,onAction}:
+  actionCatalog,onAction,agentStart}:
   {task:TaskRecord|null;onClose:()=>void;locale?:'zh'|'en';
    projectId?:string|null;actionCatalog?:TaskActionCatalog|null;
-   onAction?:(request:TaskActionRequest)=>void}){
+   onAction?:(request:TaskActionRequest)=>void;
+   agentStart?:{enabled:boolean;provider:string|null;reason:string;
+     pending:boolean;lastResult:string|null;onStart:()=>void}|null}){
   const zh=locale==='en'?false:true;
   const execution=task?taskExecutionSummary(task):null;
   return <Drawer open={task!==null} onClose={onClose}
@@ -208,7 +210,7 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           taskIssue={canonicalTaskIssueNumber(task.id)??0}
           onDispatch={onAction} locale={locale}/>
       </section>
-      :<section aria-label={zh?'任务可执行操作':'Task actions'}>
+      :agentStart?.enabled?null:<section aria-label={zh?'任务可执行操作':'Task actions'}>
         {/* #448 X11/G4: catalog/projectId 缺省不再是静默死端——诚实说明
             缺什么,不伪造恢复路径、不渲染无 handler 的动作按钮。 */}
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
@@ -222,6 +224,24 @@ export function TaskDrawer({task,onClose,locale='zh',projectId,
           :(zh?'当前未传入项目绑定,无法解析该任务的操作清单。'
              :'No project binding was provided; the task action catalog cannot be resolved.')}/>
       </section>}
+      {agentStart?<section aria-label={zh?'真实 Agent 执行':'Agent execution'}>
+        <strong style={{display:'block',marginBottom:'var(--s2)'}}>
+          {zh?'真实 Agent 执行':'Real Agent execution'}</strong>
+        <p style={{margin:'0 0 8px',fontSize:13}}>
+          {agentStart.enabled
+            ?(zh?'选定 Host 已匹配当前 Task/Claim 与源码 SHA'
+              :'Host matches this Task/Claim and exact SHA')
+            :agentStart.reason}
+        </p>
+        <button type="button" disabled={!agentStart.enabled||agentStart.pending}
+          onClick={agentStart.onStart}>
+          {agentStart.pending?(zh?'执行中…':'Running…'):
+            (zh?'启动选定 Agent':'Start selected Agent')}
+          {agentStart.provider?' · '+agentStart.provider:''}
+        </button>
+        {agentStart.lastResult?<p role="status" aria-live="polite">
+          {agentStart.lastResult}</p>:null}
+      </section>:null}
       <section aria-label={zh?'执行与评审':'execution'}>
         <strong style={{display:'block',marginBottom:'var(--s2)'}}>
           {zh?'执行与评审':'Execution & review'}</strong>

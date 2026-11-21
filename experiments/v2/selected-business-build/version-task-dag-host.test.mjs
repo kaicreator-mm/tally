@@ -280,3 +280,22 @@ test('host configuration is trusted-env-only and closes the store per call',asyn
     blockedIssueNumber:312,blockedByIssueNumber:284});
   assert.equal(ok.stores[0].closed,true,'registry closed after each operation');
 });
+
+test('Host identity follows selected GitHub repository and main branch',()=>{
+  const transports=fakeTransports({});
+  const selected=createVersionTaskDagHost({env:{
+    ...env0,TALLY_V2_REPOSITORY:'org/new-project',
+    TALLY_V2_VERSION_REF:'main',TALLY_VERSION_DAG_WRITER_LOGIN:'operator'},
+    octokit:transports.octokit,openStore:async()=>memoryStore()});
+  assert.equal(selected.repository,'org/new-project');
+  assert.equal(selected.versionId,'main');
+  assert.equal(selected.expectedVersionSha,versionSha);
+  assert.throws(()=>createVersionTaskDagHost({env:{
+    ...env0,TALLY_V2_REPOSITORY:'org/new-project'},
+    octokit:transports.octokit,openStore:async()=>memoryStore()}),
+    /TRUSTED_VERSION_TASK_DAG_SOURCE_REQUIRED/);
+  assert.throws(()=>createVersionTaskDagHost({env:{
+    ...env0,TALLY_V2_REPOSITORY:'org/invalid/extra',
+    TALLY_V2_VERSION_REF:'main'},octokit:transports.octokit,
+    openStore:async()=>memoryStore()}),/TRUSTED_VERSION_TASK_DAG_SOURCE_REQUIRED/);
+});

@@ -31,6 +31,13 @@ import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
+import {readGitHubTaskDrafts} from './task-draft-reader.mjs';
+import {readProjectTaskAdmission} from './task-admission-read.mjs';
+import {createProjectTaskReadyHost} from './project-task-ready-host.mjs';
+import {createProjectWriteSetHost} from './project-writeset-host.mjs';
+import {resolveSelectedAgentClaimPins} from './selected-claim-activation.mjs';
+import {spawn} from 'node:child_process';
+import {formatStartupError} from './startup-error.mjs';
 import {defaultAlmConfig} from './journey-controller.mjs';
 import {createAlmServer} from './journey-server.mjs';
 import {createMaintenanceReadHost} from './maintenance-read-host.mjs';
@@ -44,13 +51,13 @@ import {readInstalledWriteJourneyEnvironment,createInstalledWriteJourneyRunner}
   from './installed-write-journeys.mjs';
 
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
-const REF=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
 const SHA=/^[a-f0-9]{40}$/;
 export function readUiHostEnvironment(env){
   const repository=env.TALLY_V2_REPOSITORY;
   const versionId=env.TALLY_V2_VERSION_REF;
   const expectedSha=env.TALLY_V2_VERSION_SHA;
-  if(!REPO.test(repository??'')||!REF.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
     !SHA.test(expectedSha??'')||
     typeof env.TALLY_GITHUB_READ_TOKEN!=='string'||
     env.TALLY_GITHUB_READ_TOKEN.length<8)
@@ -626,6 +633,71 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       operation==='addNativeTaskDependency'?
         host.addNativeTaskDependency(input):host.freezeVersionTaskDag(input);
   }
+  // New-project native ready transition uses the EXISTING CAS-fenced
+  // planned→ready port. Only trusted, source-pinned Host configuration
+  // may install it; a browser Issues:write token never grants this effect.
+  let taskReadyHost=null;
+  if(env.TALLY_V2_TASK_READY==='host-mounted'){
+    const writeToken=env.TALLY_GITHUB_WRITE_TOKEN;
+    if(typeof writeToken!=='string'||writeToken.length<8)
+      throw new TypeError('TASK_READY_HOST_WRITE_TOKEN_REQUIRED');
+    const {Octokit}=await import('../../packages/tally-github-native-c'+
+      '/node_modules/@octokit/rest/dist-src/index.js');
+    const {openSqliteCasStore}=await import(
+      '@kaicreator/domain-harness-host-node');
+    taskReadyHost=createProjectTaskReadyHost({
+      settings,env,
+      octokit:new Octokit({auth:writeToken,request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
+  // New-project Builder Claim: opt-in trusted single-writer CAS + native
+  // GitHub comment witness; never mounted from browser-supplied config.
+  // Import only under operator Host mount so plain first-run install does
+  // not require the native effect modules at startup.
+  let projectClaimHost=null;
+  if(env.TALLY_V2_CLAIM_DISPATCH==='host-mounted'){
+    const token=env.TALLY_GITHUB_WRITE_TOKEN;
+    if(typeof token!=='string'||token.length<8)
+      throw new TypeError('SELECTED_CLAIM_HOST_WRITE_TOKEN_REQUIRED');
+    const [{Octokit},{openSqliteCasStore},{createProjectClaimHost}]=await Promise.all([
+      import('../../packages/tally-github-native-c'+
+        '/node_modules/@octokit/rest/dist-src/index.js'),
+      import('@kaicreator/domain-harness-host-node'),
+      import('./project-claim-host.mjs')]);
+    projectClaimHost=createProjectClaimHost({settings,env,
+      octokit:new Octokit({auth:token,request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
+  // New-project selected single-file FSW is an explicit Host effect. The
+  // browser can trigger only its BUILD-selected Issue/path; it supplies no
+  // write set, digest, registry path or other authority.
+  let projectWriteSetHost=null;
+  if(env.TALLY_V2_WRITESET_FREEZE==='host-mounted'){
+    if(!projectClaimHost)
+      throw new TypeError('SELECTED_WRITESET_CLAIM_HOST_REQUIRED');
+    const {openSqliteCasStore}=await import(
+      '@kaicreator/domain-harness-host-node');
+    projectWriteSetHost=createProjectWriteSetHost({settings,env,
+      openStore:openSqliteCasStore});
+  }
+  // Selected new-project candidate publication: only a real K CANDIDATE_READY
+  // and independently read-back Git commit may produce an unreviewed Draft PR.
+  // Legacy #203 reviewed-candidate publication is NOT reused or widened.
+  let projectCandidatePublisher=null;
+  if(env.TALLY_V2_CANDIDATE_PUBLISH==='host-mounted'){
+    if(!projectClaimHost)
+      throw new TypeError('SELECTED_CANDIDATE_CLAIM_HOST_REQUIRED');
+    const [{Octokit},{openSqliteCasStore},{createSelectedCandidatePublisher}]=
+      await Promise.all([
+        import('../../packages/tally-github-native-c'+
+          '/node_modules/@octokit/rest/dist-src/index.js'),
+        import('@kaicreator/domain-harness-host-node'),
+        import('./project-candidate-publisher.mjs')]);
+    projectCandidatePublisher=createSelectedCandidatePublisher({settings,env,
+      octokit:new Octokit({auth:env.TALLY_GITHUB_WRITE_TOKEN,
+        request:{timeout:15000}}),
+      openStore:openSqliteCasStore});
+  }
   // #264 J07: the installed Release Host Consumer seam — the real J07b gate
   // composed from trusted Host pins only. Without the mount every
   // /api/release/actions POST keeps the exact R91 fail-closed controller
@@ -685,11 +757,41 @@ export async function startUiReadOnlyServer({env=process.env}={}){
   // fail-closed stub stays: launching UI never grants an executor.
   let installedRun;
   if(env.TALLY_V2_AGENT_DISPATCH==='host-mounted'){
-    const journeySettings=readInstalledWriteJourneyEnvironment(env);
-    if(journeySettings.claim.sourceSha!==settings.expectedSha)
-      throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
-    installedRun=createInstalledWriteJourneyRunner(
-      {settings:journeySettings,env}).run;
+    if(!env.TALLY_V2_AGENT_CLAIM_COMMENT_ID&&projectClaimHost){
+      // Claim can be published from the UI after this server starts.
+      // Validate all OTHER operator pins at boot with a syntax-only stub;
+      // this temporary value is never passed to the real executor/K.
+      const preflight=readInstalledWriteJourneyEnvironment({
+        ...env,TALLY_V2_AGENT_CLAIM_COMMENT_ID:'1',
+        // Syntax-only boot preflight. This value is NEVER forwarded to K:
+        // actual digest comes exclusively from exact frozen CAS on start.
+        ...(env.TALLY_V2_WRITESET_FREEZE==='host-mounted'&&
+          !env.TALLY_V2_AGENT_CLAIM_WRITESET_SHA256?
+          {TALLY_V2_AGENT_CLAIM_WRITESET_SHA256:'0'.repeat(64)}:{})});
+      if(preflight.claim.sourceSha!==settings.expectedSha)
+        throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
+      const {openSqliteCasStore}=await import(
+        '@kaicreator/domain-harness-host-node');
+      installedRun=async kind=>{
+        const derived=await resolveSelectedAgentClaimPins({
+          env,settings,openStore:openSqliteCasStore});
+        if(derived.status!=='HOST_RECEIPT_BOUND_PENDING_K')
+          return {status:'FAIL',reason:derived.reason,
+            exitCode:1,result:null};
+        const active=readInstalledWriteJourneyEnvironment(derived.env);
+        if(active.claim.sourceSha!==settings.expectedSha)
+          return {status:'FAIL',reason:'AGENT_CLAIM_SOURCE_SHA_STALE',
+            exitCode:1,result:null};
+        return createInstalledWriteJourneyRunner({
+          settings:active,env:derived.env}).run(kind);
+      };
+    }else{
+      const journeySettings=readInstalledWriteJourneyEnvironment(env);
+      if(journeySettings.claim.sourceSha!==settings.expectedSha)
+        throw new TypeError('AGENT_CLAIM_SOURCE_SHA_STALE');
+      installedRun=createInstalledWriteJourneyRunner(
+        {settings:journeySettings,env}).run;
+    }
   }
   // #264 E1: real frozen version Task DAG reader — read-only, composed only
   // from the trusted Host env pins validated in readUiHostEnvironment. It
@@ -745,6 +847,37 @@ export async function startUiReadOnlyServer({env=process.env}={}){
         return result;
       }catch{return deny('CATALOG_READ_FAILED');}
     },
+    async taskDrafts(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      try{
+        const initial=await nativeC.catalog();
+        if(initial.connected!==true)
+          return deny(initial.reason??'DRAFT_SOURCE_UNQUALIFIED');
+        const drafts=await readGitHubTaskDrafts({
+          repository:settings.repository,versionId:settings.versionId,
+          sourceSha:settings.expectedSha,token:settings.token});
+        if(drafts.connected!==true)return drafts;
+        const final=await nativeC.catalog();
+        if(final.connected!==true)return deny('DRAFT_SOURCE_DRIFT');
+        return drafts;
+      }catch{return deny('DRAFT_READ_FAILED');}
+    },
+    async taskAdmission(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(!Number.isSafeInteger(scope.issueNumber)||scope.issueNumber<1)
+        return deny('TASK_ADMISSION_ISSUE_INVALID');
+      try{
+        const first=await nativeC.catalog();
+        if(first.connected!==true)return deny(first.reason??'CATALOG_SOURCE_UNQUALIFIED');
+        const status=await readProjectTaskAdmission({
+          repository:settings.repository,versionId:settings.versionId,
+          sourceSha:settings.expectedSha,token:settings.token,
+          issueNumber:scope.issueNumber});
+        const after=await nativeC.catalog();
+        if(after.connected!==true)return deny('TASK_ADMISSION_SOURCE_DRIFT');
+        return status;
+      }catch{return deny('TASK_ADMISSION_READ_FAILED');}
+    },
     async tasks(scope){
       const observed=await readQualifiedRoster(scope);
       if(observed.connected!==true)return observed;
@@ -784,6 +917,27 @@ export async function startUiReadOnlyServer({env=process.env}={}){
           return deny(observed?.reason??'REQUIREMENT_SOURCE_UNQUALIFIED');
         return observed;
       }catch{return deny('REQUIREMENT_READ_FAILED');}
+    },
+    async qa(scope){
+      if(!scopeOk(scope))return deny('PROJECT_VERSION_SCOPE_MISMATCH');
+      if(!settings.qaStatusContext)return deny('QA_STATUS_SOURCE_NOT_CONFIGURED');
+      try{
+        const observed=await nativeC.qa();
+        if(observed?.connected!==true||
+           observed.source?.repository!==settings.repository||
+           observed.versionId!==settings.versionId)
+          return deny(observed?.reason??'QA_SOURCE_UNQUALIFIED');
+        return observed;
+      }catch{return deny('QA_READ_FAILED');}
+    },
+    // The only connected Settings capability here is the real local
+    // Project connection manager. Other optional Host settings remain absent.
+    async settings(){
+      if(!env.TALLY_SETUP_URL)return deny('SETTINGS_HOST_NOT_CONFIGURED');
+      return {connected:true,configurationUrl:env.TALLY_SETUP_URL,
+        selectedRepository:settings.repository,selectedRef:settings.versionId,
+        currentSha:settings.expectedSha,
+        agentHostMounted:env.TALLY_V2_AGENT_DISPATCH==='host-mounted'};
     },
     // #491 J07: the /app Release panel reads the REAL Host qualification
     // (rqState/ownerGrantState/operation permits from Host-pinned
@@ -875,7 +1029,13 @@ export async function startUiReadOnlyServer({env=process.env}={}){
       reason:'UI_READ_ONLY_NO_AGENT_DISPATCH',exitCode:1,result:null})),
     releaseHost:{readReleaseSnapshot},
     ...(maintenanceHost?{maintenanceHost}:{}),
-    v2ReadModelHost,
+    v2ReadModelHost,taskReadyHost,claimHost:projectClaimHost,
+    writeSetHost:projectWriteSetHost,
+    candidateHost:projectCandidatePublisher,
+    agentHostMounted:Boolean(installedRun),
+    selectedAgentTaskIssue:installedRun?Number(env.TALLY_LOCAL_ISSUE_NUMBER):null,
+    selectedAgentProvider:installedRun?
+      (env.TALLY_V2_AGENT_PROVIDER??'codex'):'codex',
     // E0 seam: undefined unless the trusted Host explicitly mounted it above;
     // every other route keeps the exact read-only semantics.
     ...(versionTaskDagSealedDispatch?{versionTaskDagSealedDispatch}:{}),
@@ -888,20 +1048,31 @@ export async function startUiReadOnlyServer({env=process.env}={}){
 const main=process.argv[1]&&resolve(process.argv[1])===
   fileURLToPath(import.meta.url);
 if(main){
-  startUiReadOnlyServer().then(({address,close})=>{
-    process.stdout.write('TALLY_UI_READ_ONLY='+address.origin+'/app\n');
-    process.stdout.write('TALLY_UI_AGENT_DISPATCH='+
-      (process.env.TALLY_V2_AGENT_DISPATCH==='host-mounted'?
-        'HOST_MOUNTED_SINGLE_CODEX':'DENIED')+'\n');
-    let closing=false;
-    const stop=()=>{
-      if(closing)return;closing=true;
-      void close().then(()=>process.exit(0),()=>process.exit(1));
-    };
-    process.on('SIGINT',stop);process.on('SIGTERM',stop);
-  },()=>{
-    // Errors can include provider credentials; never write raw details.
-    process.stderr.write('TALLY_UI_START_DENIED: invalid selected Host source\n');
-    process.exitCode=1;
-  });
+  import('./first-run-server.mjs')
+    .then(({startFirstRunServer})=>startFirstRunServer({
+      env:process.env,startConfigured:startUiReadOnlyServer}))
+    .then(({address,close})=>{
+      process.stdout.write('TALLY_UI='+address.appUrl+'\n');
+      process.stdout.write('TALLY_PROJECT_SETUP='+address.origin+'/setup\n');
+      // Optional Windows convenience only. The URL contains no secret/pin,
+      // and headless CI can disable launching a browser.
+      if(process.platform==='win32'&&process.env.TALLY_V2_OPEN_BROWSER!=='0'
+         &&!process.env.CI){
+        try{
+          const child=spawn('cmd.exe',['/c','start','',address.appUrl],
+            {stdio:'ignore',windowsHide:true,detached:true});
+          child.on('error',()=>{});
+          child.unref();
+        }catch{/* printed URL remains usable */}
+      }
+      let closing=false;
+      const stop=()=>{
+        if(closing)return;closing=true;
+        void close().then(()=>process.exit(0),()=>process.exit(1));
+      };
+      process.on('SIGINT',stop);process.on('SIGTERM',stop);
+    },error=>{
+      process.stderr.write(formatStartupError(error));
+      process.exitCode=1;
+    });
 }

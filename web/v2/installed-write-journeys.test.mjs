@@ -265,6 +265,27 @@ const claimPins={TALLY_V2_AGENT_DISPATCH:'host-mounted',
   TALLY_V2_AGENT_WORKTREE_PATH:'C:/tmp/single-worktree',
   TALLY_V2_AGENT_EVIDENCE_DIR:'C:/tmp/single-evidence'};
 
+test('managed repository path and Tally driver checkout are independent',async()=>{
+  const env={...consumerPins,...claimPins,
+    TALLY_V2_AGENT_SCRIPT_ROOT:'C:/tally-driver',
+    TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH:'C:/project-source'};
+  const settings=readInstalledWriteJourneyEnvironment(env);
+  assert.equal(settings.scriptRoot,'C:/tally-driver');
+  assert.equal(settings.sourceRepositoryPath,'C:/project-source');
+  let script,sourcePath;
+  const runner=createInstalledWriteJourneyRunner({settings,env,
+    spawnE2e:async (path,runnerEnv)=>{
+      script=path;sourcePath=runnerEnv.TALLY_LOCAL_REPOSITORY_PATH;
+      return {code:1,signal:null,startedAt:Date.now(),
+        terminatedAt:Date.now()};
+    }});
+  await runner.run('start');
+  assert.ok(script.startsWith('C:/tally-driver'));
+  assert.equal(sourcePath,'C:/project-source');
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({...env,
+    TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH:'relative/path'}),
+    /AGENT_SCRIPT_OR_SOURCE_REPOSITORY_PATH_INVALID/);
+});
 test('write-journey pin admission admits a complete trusted Host pin set',()=>{
   const settings=readInstalledWriteJourneyEnvironment(
     {...consumerPins,...claimPins});
@@ -298,6 +319,28 @@ test('write-journey pin admission refuses every missing or malformed pin',()=>{
   assert.throws(()=>readInstalledWriteJourneyEnvironment(
     {...consumerPins,...claimPins,TALLY_LOCAL_ISSUE_NUMBER:'zero'}),
     /AGENT_LOCAL_ISSUE_NUMBER_INVALID/);
+});
+
+test('alternate GitHub project cannot run the historical sealed Builder',()=>{
+  const selected={...consumerPins,...claimPins,TALLY_V2_REPOSITORY:'org/new',
+    TALLY_V2_VERSION_REF:'main',TALLY_LOCAL_ISSUE_NUMBER:'27'};
+  assert.throws(()=>readInstalledWriteJourneyEnvironment(selected),
+    /AGENT_BUILDER_TARGET_NOT_SEALED/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,T06M_TARGET_REPOSITORY:'org/new'}),
+    /AGENT_BUILDER_TARGET_PARTIAL/);
+  const targetPins={T06M_TARGET_REPOSITORY:'org/new',
+    T06M_TARGET_VERSION_REF:'main',T06M_TARGET_ISSUE_NUMBER:'27',
+    T06M_TARGET_CANDIDATE_PATH:'src/health.mjs'};
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,...targetPins,T06M_TARGET_ISSUE_NUMBER:'28'}),
+    /AGENT_BUILDER_TARGET_SCOPE_MISMATCH/);
+  assert.throws(()=>readInstalledWriteJourneyEnvironment({
+    ...selected,...targetPins,T06M_TARGET_REPOSITORY:'org/foreign'}),
+    /AGENT_BUILDER_TARGET_SCOPE_MISMATCH/);
+  const result=readInstalledWriteJourneyEnvironment({...selected,...targetPins});
+  assert.equal(result.claim.sourceSha,sha);
+  assert.equal(result.worktreePath,'C:/tmp/single-worktree');
 });
 
 test('write-journey runner: start contract with an injected spawn',async()=>{
@@ -932,4 +975,89 @@ test('non-codex provider start retains the selected sealed Host driver',async()=
   assert.deepEqual(scripts,['local-codex-windows-e2e.mjs'],
     'a non-codex pin must retain the one selected sealed B/K/Host/C driver');
   assert.equal(observed.status,'UNKNOWN','no e2e-result.json was written');
+});
+
+test('new project Claim route requires exact Host and same-origin CSRF, no UI grant',async()=>{
+  let calls=0;
+  const claimHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,publish:async input=>{
+      calls++;assert.deepEqual(input,{issueNumber:27,sourceSha:sha});
+      return {status:'RECORDED',claimPublication:'VERIFIED_PENDING_KERNEL_ADMISSION',
+        admitted:false,authorized:false};
+    }};
+  const app=createAlmServer(config,{claimHost});
+  const {origin,actionKey}=await app.listen();
+  try{
+    const observed=await (await fetch(origin+'/api/v2/claim-host')).json();
+    assert.equal(observed.connected,true);
+    assert.equal(observed.issueNumber,27);
+    assert.equal(observed.actionKey,actionKey);
+    const post=async(input,headers={})=>fetch(origin+'/api/v2/claim-publish',{
+      method:'POST',headers:{'content-type':'application/json',origin,
+        'x-tally-action-key':actionKey,...headers},
+      body:JSON.stringify(input)});
+    assert.equal((await post({issueNumber:27,sourceSha:sha},
+      {'x-tally-action-key':'wrong'})).status,403);
+    assert.equal((await post({issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal(calls,0);
+    const approved=await post({issueNumber:27,sourceSha:sha});
+    assert.equal(approved.status,200);
+    const result=await approved.json();
+    assert.equal(result.status,'RECORDED');
+    assert.equal(result.authorized,false);
+    assert.equal(result.admitted,false);
+    assert.equal(calls,1);
+  }finally{await app.close();}
+  const absent=createAlmServer(config,{});
+  const {origin:missingOrigin,actionKey:missingKey}=await absent.listen();
+  try{
+    const data=await (await fetch(missingOrigin+'/api/v2/claim-host')).json();
+    assert.equal(data.connected,false);
+    const response=await fetch(missingOrigin+'/api/v2/claim-publish',{
+      method:'POST',headers:{'content-type':'application/json',
+        origin:missingOrigin,'x-tally-action-key':missingKey},
+      body:JSON.stringify({issueNumber:27,sourceSha:sha})});
+    assert.equal(response.status,503);
+  }finally{await absent.close();}
+});
+
+test('selected FSW and Draft PR routes are Host-scoped, CSRF protected',async()=>{
+  const calls=[];
+  const writeSetHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,candidateRelativePath:'health.txt',
+    freeze:async input=>{
+      calls.push(['fsw',input]);return {status:'FROZEN_VERIFIED',
+        writeSetSha256:'f'.repeat(64),authorized:false,admitted:false};
+    }};
+  const candidateHost={repository:'org/new',versionId:'main',sourceSha:sha,
+    issueNumber:27,publish:async input=>{
+      calls.push(['draft',input]);return {status:'DRAFT_PR_PUBLISHED_VERIFIED',
+        pullNumber:5,pullRef:'https://github.com/org/new/pull/5',
+        authorized:false,taskPass:false,releasePass:false};
+    }};
+  const app=createAlmServer(config,{writeSetHost,candidateHost});
+  const {origin,actionKey}=await app.listen();
+  try{
+    const fsw=await (await fetch(origin+'/api/v2/writeset-host')).json();
+    const draft=await (await fetch(origin+'/api/v2/candidate-host')).json();
+    assert.equal(fsw.connected,true);assert.equal(fsw.issueNumber,27);
+    assert.equal(draft.connected,true);assert.equal(draft.sourceSha,sha);
+    const post=async(path,input,key=actionKey)=>fetch(origin+path,{
+      method:'POST',headers:{origin,'content-type':'application/json',
+        'x-tally-action-key':key},body:JSON.stringify(input)});
+    const correct={issueNumber:27,sourceSha:sha};
+    assert.equal((await post('/api/v2/writeset-freeze',correct,'wrong')).status,403);
+    assert.equal((await post('/api/v2/candidate-publish',correct,'wrong')).status,403);
+    assert.equal((await post('/api/v2/writeset-freeze',
+      {issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal((await post('/api/v2/candidate-publish',
+      {issueNumber:28,sourceSha:sha})).status,409);
+    assert.equal(calls.length,0);
+    const frozen=await (await post('/api/v2/writeset-freeze',correct)).json();
+    assert.equal(frozen.status,'FROZEN_VERIFIED');
+    const published=await (await post('/api/v2/candidate-publish',correct)).json();
+    assert.equal(published.status,'DRAFT_PR_PUBLISHED_VERIFIED');
+    assert.equal(published.taskPass,false);
+    assert.deepEqual(calls,[['fsw',correct],['draft',correct]]);
+  }finally{await app.close();}
 });

@@ -9,7 +9,7 @@
 
 const SHA=/^[0-9a-f]{40}$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
-const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from './version-ref.mjs';
 const denied=(reason)=>Object.freeze({connected:false,reason});
 // ADS workflow labels are descriptive, not Closure evidence. A closed Issue
 // with state:ready (or a state:done label alone) must not render Task DONE.
@@ -52,7 +52,7 @@ async function verifyBranch(octokit,owner,repo,versionId,expectedSha){
   return b?.data?.commit?.sha===expectedSha&&c?.data?.sha===expectedSha;
 }
 const validInput=(octokit,owner,repo,versionId,expectedSha)=>
-  NAME.test(owner??'')&&NAME.test(repo??'')&&VERSION.test(versionId??'')&&
+  NAME.test(owner??'')&&NAME.test(repo??'')&&isValidVersionRef(versionId??'')&&
   SHA.test(expectedSha??'')&&!!octokit?.rest?.repos?.getBranch&&
   !!octokit?.rest?.repos?.getCommit;
 export async function readUiNativeCatalogFromClient({
@@ -357,7 +357,7 @@ export function createUiNativeSource({token,owner,repo,versionId,
 export async function observeUiNativeVersionHeadFromClient({
   octokit,owner,repo,versionId
 }={}){
-  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!VERSION.test(versionId??'')||
+  if(!NAME.test(owner??'')||!NAME.test(repo??'')||!isValidVersionRef(versionId??'')||
      !octokit?.rest?.repos?.getBranch)
     return denied('INVALID_SELECTED_GITHUB_SOURCE');
   try{

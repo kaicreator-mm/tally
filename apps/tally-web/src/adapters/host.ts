@@ -33,6 +33,43 @@ export interface TaskDto{
   prNumber:number|null;reviewState:string;ciState:string;writeSet:string[];
   requirementRef:string|null;updatedAt:string|null;
 }
+/** Draft Issues are observable, but never frozen/accepted executable Tasks. */
+export interface TaskDraftsResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  coverage?:'LATEST_100_ISSUES_ONLY'|'COMPLETE_SINGLE_PAGE';
+  drafts?:{issueNumber:number;title:string;issueUrl:string;
+    githubIssueState:'open'|'closed';sourceSha:string;
+    sourceCurrentness?:'CURRENT'|'STALE';
+    nativeWorkflow?:'PLANNED'|'READY'|'NONCANONICAL';
+    taskQualified:false;agentAuthorized:false}[];}
+export interface ClaimHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;actionKey?:string;authority?:'HOST_PINNED_ONLY';}
+export interface ClaimPublishResult{status:string;reason?:string;
+  claimPublication?:string;authorized?:boolean;admitted?:boolean;
+  nativeCommentRef?:string;}
+export interface CandidateHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;actionKey?:string;}
+export interface CandidatePublishResult{status:string;reason?:string;
+  pullNumber?:number;pullRef?:string;branch?:string;
+  candidateCommit?:string;authorized?:false;taskPass?:false;}
+export interface WriteSetHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  issueNumber?:number;candidateRelativePath?:string;actionKey?:string;}
+export interface WriteSetFreezeResult{status:string;reason?:string;
+  candidateRelativePath?:string;writeSetSha256?:string;
+  authorized?:false;admitted?:false;}
+export interface TaskReadyHostResponse{connected:boolean;reason?:string;
+  repository?:string;versionId?:string;sourceSha?:string;
+  actionKey?:string;authority?:'HOST_PINNED_ONLY';}
+export interface TaskReadyTransitionResult{status:string;reason?:string;
+  githubEffect?:string;admitted?:false;authorized?:false;}
+export interface TaskAdmissionResponse{connected:boolean;reason?:string;
+  issueNumber?:number;issueUrl?:string;sourceSha?:string;
+  stage?:'STALE_SOURCE'|'BLOCKED'|'NEEDS_CANONICAL_LABELS'|
+    'PLANNED'|'NATIVE_PREFLIGHT_READY';nativeWorkflow?:string;
+  admitted?:false;authorized?:false;agentAuthorized?:false;}
 export interface TasksResponse{
   connected:boolean;reason?:string;model?:string;versionId?:string;
   source?:SourceIdentity;rosterCoverage?:string;dependencyCoverage?:string;
@@ -59,7 +96,22 @@ export interface DagResponse{
   edges:{from:string;to:string;kind:'NATIVE'|'PLANNED'|'UNRESOLVED';
     evidenceRef:string|null;amendedAt:string|null}[];
 }
+export interface RequirementsResponse{connected:boolean;reason?:string;
+  versionId?:string;structureCoverage?:string;freezeCoverage?:string;
+  nodes?:{id:string;kind:'requirement'|'epic'|'story';title:string;
+    parent:string|null;productRevision:number|null;acceptanceRefs:string[];
+    l2Decision:string|null;freezeState:'FROZEN'|'STALE'|'NOT_FROZEN'|'UNKNOWN';
+    updatedAt:string}[];}
+export interface QaResponse{connected:boolean;reason?:string;versionId?:string;
+  ciCoverage?:string;independentCoverage?:string;
+  records?:{layer:'fullRegression'|'hiddenValidation'|'criticalJourneys'|
+      'installedAcceptance';outcome:'PASS'|'FAIL'|'NOT_RUN'|'UNKNOWN';
+      provenance:'REPORTED'|'INDEPENDENT'|'NOT_RUN'|'UNKNOWN';
+      witness:string|null;evidenceRef:string|null;
+      subjectSha:string|null;observedAt:string|null}[];}
 export interface SettingsResponse{connected:boolean;reason?:string;model?:string;
+  configurationUrl?:string;selectedRepository?:string;selectedRef?:string;
+  currentSha?:string;agentHostMounted?:boolean;
   snapshot?:Record<string,unknown>;}
 export interface ReleaseResponse{connected:boolean;
   readiness?:{versionId:string;
@@ -111,6 +163,11 @@ export interface AgentAttemptRecord{
   costUsd:null;model:string|null;provider:string|null;
   role?:'BUILDER'|'REVIEWER'|'REPAIR'|'VALIDATOR'|'ORCHESTRATOR'|'UNKNOWN'|null;
 }
+export interface AgentDispatchResponse{connected:boolean;reason?:string;
+  selectedTaskIssue?:number;sourceSha?:string;provider?:string;
+  authority?:'HOST_PINNED_ONLY';actionKey?:string;}
+export interface AgentRunResult{status:string;reason?:string|null;
+  observedAt?:string|null;exitCode?:number|null;}
 export interface AgentAttemptsResponse{connected:boolean;
   attempts?:AgentAttemptRecord[];
   coverage?:{attemptCount:number;observedRuntime:number;hostReceipts:number;
@@ -149,23 +206,113 @@ async function postJson<T>(path:string,actionKey:string,
 }
 export const hostAdapter=Object.freeze({
   catalog:()=>getJson<Catalog>('/api/v2/catalog'),
+  claimHost:()=>getJson<ClaimHostResponse>('/api/v2/claim-host'),
+  writeSetHost:()=>getJson<WriteSetHostResponse>('/api/v2/writeset-host'),
+  candidateHost:()=>getJson<CandidateHostResponse>('/api/v2/candidate-host'),
+  taskReadyHost:()=>getJson<TaskReadyHostResponse>('/api/v2/task-ready-host'),
+  taskAdmission:(versionId:string,issueNumber:number)=>
+    getJson<TaskAdmissionResponse>(
+      `/api/v2/task-admission?versionId=${encodeURIComponent(versionId)}&issueNumber=${issueNumber}`),
+  taskDrafts:(versionId:string)=>getJson<TaskDraftsResponse>(
+    `/api/v2/task-drafts?versionId=${encodeURIComponent(versionId)}`),
   tasks:(versionId:string)=>getJson<TasksResponse>(
     `/api/v2/tasks?versionId=${encodeURIComponent(versionId)}`),
   dag:(versionId:string)=>getJson<DagResponse>(
     `/api/v2/dag?versionId=${encodeURIComponent(versionId)}`),
   dualEpoch:(versionId:string)=>getJson<DualEpochResponse>(
     `/api/v2/dual-epoch?versionId=${encodeURIComponent(versionId)}`),
+  requirements:(versionId:string)=>getJson<RequirementsResponse>(
+    `/api/v2/requirements?versionId=${encodeURIComponent(versionId)}`),
+  qa:(versionId:string)=>getJson<QaResponse>(
+    `/api/v2/qa?versionId=${encodeURIComponent(versionId)}`),
   settings:()=>getJson<SettingsResponse>('/api/v2/settings'),
   release:(versionId:string)=>getJson<ReleaseResponse>(
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
   metadata:(versionId:string)=>getJson<MetadataResponse>(
     `/api/v2/metadata?versionId=${encodeURIComponent(versionId)}`),
+  agentDispatch:()=>getJson<AgentDispatchResponse>('/api/v2/agent-dispatch'),
   agentAttempts:()=>getJson<AgentAttemptsResponse>('/api/v2/agent-attempts'),
   releaseSnapshot:()=>getJson<ReleaseSnapshotResponse>('/api/release/snapshot'),
 });
 /** #264 E1 R91: the real J07c submission flow. The controller admits only a
  * sourceSha matching its pinned source, so the exact SHA comes from the
  * freshly read evidence snapshot — never from a browser-typed field. */
+/** One physical Builder task; only the server-selected Host can authorize.
+ * The action key is same-origin CSRF material, not an Agent/Claim grant.
+ */
+/** A recorded GitHub Claim still requires independent accepted-CAS/K admission. */
+export async function publishSelectedTaskClaim({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<ClaimPublishResult>{
+  try{
+    const mounted=await hostAdapter.claimHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       mounted.issueNumber!==issueNumber||!mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'CLAIM_HOST_SCOPE_MISMATCH'};
+    return await postJson<ClaimPublishResult>('/api/v2/claim-publish',
+      mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'CLAIM_PUBLICATION_READBACK_UNKNOWN'};}
+}
+/** The write set is sealed by the trusted Host; UI sends no path or digest. */
+/** A Draft PR requires a real K candidate, never an unreviewed release grant. */
+export async function publishSelectedDraftCandidate({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<CandidatePublishResult>{
+  try{
+    const mounted=await hostAdapter.candidateHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       mounted.issueNumber!==issueNumber||!mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'CANDIDATE_HOST_SCOPE_MISMATCH'};
+    return await postJson<CandidatePublishResult>(
+      '/api/v2/candidate-publish',mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'PUBLICATION_UNKNOWN',
+    reason:'DRAFT_PR_PUBLICATION_READBACK_UNKNOWN'};}
+}
+export async function freezeSelectedTaskWriteSet({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<WriteSetFreezeResult>{
+  try{
+    const host=await hostAdapter.writeSetHost();
+    if(host.connected!==true||host.repository!==repository||
+       host.versionId!==versionId||host.sourceSha!==sourceSha||
+       host.issueNumber!==issueNumber||!host.actionKey)
+      return {status:'BLOCKED',reason:host.reason??'WRITESET_HOST_SCOPE_MISMATCH'};
+    return await postJson<WriteSetFreezeResult>(
+      '/api/v2/writeset-freeze',host.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'WRITESET_FREEZE_READBACK_UNKNOWN'};}
+}
+export async function transitionSelectedTaskReady({
+  issueNumber,repository,versionId,sourceSha
+}:{issueNumber:number;repository:string;versionId:string;
+  sourceSha:string}):Promise<TaskReadyTransitionResult>{
+  try{
+    const mounted=await hostAdapter.taskReadyHost();
+    if(mounted.connected!==true||mounted.repository!==repository||
+       mounted.versionId!==versionId||mounted.sourceSha!==sourceSha||
+       !mounted.actionKey)
+      return {status:'BLOCKED',reason:mounted.reason??'TASK_READY_HOST_SCOPE_MISMATCH'};
+    return await postJson<TaskReadyTransitionResult>(
+      '/api/v2/task-ready',mounted.actionKey,{issueNumber,sourceSha});
+  }catch{return {status:'UNKNOWN',reason:'TASK_READY_ACTION_READBACK_UNKNOWN'};}
+}
+export async function startSelectedAgentTask(issueNumber:number,sourceSha:string):
+  Promise<AgentRunResult>{
+  try{
+    const selected=await hostAdapter.agentDispatch();
+    if(!selected.connected||selected.selectedTaskIssue!==issueNumber||
+       selected.sourceSha!==sourceSha||!selected.actionKey)
+      return {status:'DENIED',reason:selected.reason??'HOST_TASK_SCOPE_MISMATCH'};
+    return await postJson<AgentRunResult>('/api/actions',selected.actionKey,
+      {kind:'start',sourceSha:selected.sourceSha});
+  }catch{
+    return {status:'UNKNOWN',reason:'AGENT_ACTION_READBACK_UNKNOWN'};
+  }
+}
 export async function submitReleaseAction(actionKey:string,
   kind:'merge'|'tag'|'publish'):Promise<ReleaseActionResult|{
   status:string;reason:string;transportError?:string}>{

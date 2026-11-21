@@ -9,6 +9,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import {createHash} from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { V10_TARGET_PROFILE, sha256Hex } from '@kaicreator/domain-harness-contracts';
+import {resolveClaimBuildTarget,sealClaimShimTarget,assertClaimProviderTarget} from './claim-target.mjs';
+import {resolveBuilderBuildTarget,sealBuilderShimTarget} from './builder-target.mjs';
 import { buildV10App } from '@kaicreator/domain-harness-build';
 import { V10BuildError } from '@kaicreator/domain-harness-contracts';
 
@@ -45,24 +47,41 @@ let claimBytes=null;
 if(process.env.T06L_CLAIM==='1'){
   const claimFile=fileURLToPath(new URL('./claim-admission-shim.mjs',import.meta.url));
   claimBytes=readFileSync(claimFile,'utf8');
+  const claimTarget=resolveClaimBuildTarget(process.env);
+  claimBytes=sealClaimShimTarget(claimBytes,claimTarget);
   const claimProviderFile=process.env.T06L_PROVIDER_FILE;
   if(!claimProviderFile)throw Error('T06L_PROVIDER_FILE_REQUIRED');
-  const claimProviderSha=createHash('sha256').update(readFileSync(claimProviderFile)).digest('hex');
+  const claimProviderBytes=readFileSync(claimProviderFile);
+  assertClaimProviderTarget(claimProviderBytes,claimTarget);
+  const claimProviderSha=createHash('sha256').update(claimProviderBytes).digest('hex');
   if(!claimBytes.includes('__PROVIDER_SHA256__'))throw Error('T06L_SEALED_PROVIDER_DIGEST_MARKER_MISSING');
   claimBytes=claimBytes.replace('__PROVIDER_SHA256__',claimProviderSha);
   assert.match(claimBytes,/NATIVE_PROVIDER_SHA256='[a-f0-9]{64}'/);
+  assert.ok(claimBytes.includes("const ISSUE='"+claimTarget.issueRef+"'"));
+  assert.ok(claimBytes.includes("const CLAIM_KEY='"+
+    claimTarget.protectedClaimKey+"'"));
+  console.log('T06L_SELECTED_CLAIM_TARGET='+claimTarget.issueRef);
   console.log('T06L_PROVIDER_SHA256='+claimProviderSha);
 }
 let localCodexBytes=null;
 if(process.env.T06M_LOCAL==='1'){
   const localFile=fileURLToPath(new URL('./local-codex-shim.mjs',import.meta.url));
   localCodexBytes=readFileSync(localFile,'utf8');
+  const selectedBuilder=resolveBuilderBuildTarget(process.env);
+  localCodexBytes=sealBuilderShimTarget(localCodexBytes,selectedBuilder);
   const providerFile=process.env.T06M_PROVIDER_FILE;
   if(!providerFile)throw Error('T06M_PROVIDER_FILE_REQUIRED');
   const providerSha=createHash('sha256').update(readFileSync(providerFile)).digest('hex');
   if(!localCodexBytes.includes('__PROVIDER_SHA256__'))throw Error('T06M_SEALED_PROVIDER_DIGEST_MARKER_MISSING');
   localCodexBytes=localCodexBytes.replace('__PROVIDER_SHA256__',providerSha);
   assert.match(localCodexBytes,/NATIVE_PROVIDER_SHA256='[a-f0-9]{64}'/);
+  if(selectedBuilder.mode==='SELECTED_BUILD'){
+    assert.ok(localCodexBytes.includes(
+      'const OWNER='+JSON.stringify(selectedBuilder.owner)+
+      ',REPO='+JSON.stringify(selectedBuilder.repo)+';'));
+    console.log('T06M_SELECTED_BUILDER_TARGET='+selectedBuilder.repository+
+      '#'+selectedBuilder.issueNumber);
+  }
   console.log('T06M_PROVIDER_SHA256='+providerSha);
 }
 

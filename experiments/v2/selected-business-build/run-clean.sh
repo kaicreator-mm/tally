@@ -13,6 +13,10 @@ trap finish EXIT
 : "${DH:?Set DH to exact released DomainHarness git checkout}"
 : "${TALLY:?Set TALLY to exact Tally PR checkout}"
 : "${TALLY_B:?Set TALLY_B to Tally v2 merged B source git checkout}"
+if [[ "${T02B_BUILD_ONLY:-0}" == '1' && "${KEEP_T02B_WORK:-0}" != '1' ]]; then
+  echo T02B_BUILD_ONLY_REQUIRES_KEEP_WORK
+  exit 2
+fi
 DH=$(cd "$DH" && pwd -P)
 TALLY=$(cd "$TALLY" && pwd -P)
 TALLY_B=$(cd "$TALLY_B" && pwd -P)
@@ -42,7 +46,7 @@ fi
 # This integration PR exercises the exact proposed Business bytes, not the
 # old merged B. CI uses GitHub's synthetic PR merge checkout for both paths.
 [[ "$(git -C "$TALLY_B" rev-parse HEAD)" == "$(git -C "$TALLY" rev-parse HEAD)" ]] || { echo T04A_SOURCE_CHECKOUT_MISMATCH; exit 2; }
-[[ "$(node -p 'process.versions.node.split(".")[0]')" == '24' ]] || { echo NODE24_REQUIRED; exit 2; }
+node -e 'const [major,minor]=process.versions.node.split(".").map(Number);if(major<22||(major===22&&minor<16))process.exit(2)' || { echo NODE_22_16_REQUIRED; exit 2; }
 BFILE="$TALLY_B/packages/tally-engineering-business/src/index.mjs"
 [[ -f "$BFILE" && -f "$TALLY/experiments/v2/selected-business-build/producer.mjs" ]]
 tmp=$(mktemp -d)
@@ -65,6 +69,9 @@ done
 echo T02B_TARBALL_SHA256
 sha256sum "$tmp"/packed/*.tgz
 cp "$TALLY/experiments/v2/selected-business-build/producer.mjs" "$tmp/producer/producer.mjs"
+# BUILD imports this helper even when the Claim C lane is disabled.
+cp "$TALLY/experiments/v2/selected-business-build/claim-target.mjs" "$tmp/producer/claim-target.mjs"
+cp "$TALLY/experiments/v2/selected-business-build/builder-target.mjs" "$tmp/producer/builder-target.mjs"
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   # Install ONLY reviewed existing parser/provider dependencies; bundle source,
   # do not rebuild Octokit, GitHub REST, YAML or JCS.
@@ -146,6 +153,30 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   fi
 fi
 npm ls --depth=0
+# New-project installed Host provisioning: separate irreversible BUILD/seal
+# from real native Claim/CAS/K/Agent effects. Caller must explicitly retain
+# the isolated work directory and later perform the real Host E2E.
+if [[ "${T02B_BUILD_ONLY:-0}" == '1' ]]; then
+  # This is a real selected Builder deployment, not the old demo bundle.
+  [[ "${T04B_NATIVE:-0}" == '1' && "${T06M_LOCAL:-0}" == '1' &&
+     "${T06L_CLAIM:-0}" == '1' ]] || {
+    echo T02B_BUILD_ONLY_REQUIRES_NATIVE_SELECTED_BUILDER_CLAIM; exit 3;
+  }
+  cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/builder-target.mjs" "$tmp/consumer/builder-target.mjs"
+  cp "$TALLY/experiments/v2/selected-business-build/prebuilt-consumer.mjs" "$tmp/consumer/prebuilt-consumer.mjs"
+  (
+    cd "$tmp/consumer"
+    node --input-type=module -e "import {writePrebuiltConsumerManifest} from './prebuilt-consumer.mjs'; await writePrebuiltConsumerManifest({dir:process.cwd()});"
+  )
+  [[ -s "$tmp/consumer/sealed-app.json" ]] || { echo T02B_BUILD_ONLY_NO_SEALED_APP; exit 3; }
+  echo "T02B_BUILD_ONLY_CONSUMER_DIR=$tmp/consumer"
+  echo "T02B_BUILD_ONLY_PRODUCER_DIR=$tmp/producer"
+  echo "T02B_BUILD_ONLY_PROVIDERS_DIR=$tmp"
+  echo T02B_BUILD_ONLY_STATUS=BUILT_NOT_HOST_OR_K_VERIFIED
+  exit 0
+fi
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
@@ -192,6 +223,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
         node "$tmp/consumer/consumer-concurrent-codex.mjs"
     else
       cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
+      cp "$TALLY/experiments/v2/selected-business-build/builder-target.mjs" "$tmp/consumer/builder-target.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" node "$tmp/consumer/consumer-local-codex.mjs"
       if [[ "${TALLY_V2_PROVIDER_REPLAY:-0}" == "1" ]]; then
         # #473 R107: prove the SAME sealed B/K/C composition resolves one
@@ -222,6 +254,7 @@ if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
       # A real previously accepted registry can replace the fixture bootstrap
       # via TALLY_CLAIM_REGISTRY_PATH (then seeding is skipped).
       cp "$TALLY/experiments/v2/selected-business-build/consumer-claim-admission.mjs" "$tmp/consumer/consumer-claim-admission.mjs"
+      cp "$TALLY/experiments/v2/selected-business-build/claim-target.mjs" "$tmp/consumer/claim-target.mjs"
       TALLY_GITHUB_READ_TOKEN="$native_token" \
       TALLY_CLAIM_SOURCE_SHA="${TALLY_CLAIM_SOURCE_SHA:-3293aace8a07c2a4f79a75c6539245980f77e2b4}" \
       TALLY_CLAIM_DISPATCH_ID="${TALLY_CLAIM_DISPATCH_ID:-dispatch:169:t06l:kernel:20261030:1}" \

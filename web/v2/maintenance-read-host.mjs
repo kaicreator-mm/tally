@@ -5,6 +5,8 @@
 import {maintenanceCandidateDigest} from
   '../../experiments/v2/maintenance/host-maintenance.mjs';
 
+import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
+
 const SHA=/^[a-f0-9]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+$/;
 const BODY_MARKER=/^maintenance-marker: tally:maintenance:219:([a-f0-9]{64})$/m;
@@ -74,7 +76,7 @@ function markerDigestMatches(defect,owner,repo,tagCommitSha){
 export function createMaintenanceReadHost({octokit,owner,repo,versionId,
   expectedSha,now=()=>new Date().toISOString()}={}){
   if(!REPO.test(owner??'')||!REPO.test(repo??'')||
-      !/^version\/[A-Za-z0-9_.-]+$/.test(versionId??'')||
+      !isValidVersionRef(versionId)||
       !SHA.test(expectedSha??'')||typeof now!=='function'||
       typeof octokit?.rest?.repos?.getBranch!=='function'||
       typeof octokit?.rest?.issues?.get!=='function'||

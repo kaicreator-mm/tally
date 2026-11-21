@@ -85,11 +85,47 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
     throw new TypeError('AGENT_EVIDENCE_DIR_INVALID');
   const timeoutMs=Number(env.TALLY_V2_AGENT_TIMEOUT_MS);
   const missing=CONSUMER_PINS.filter(name=>
+    name==='TALLY_LOCAL_REPOSITORY_PATH'&&
+      env.TALLY_V2_AGENT_SCRIPT_ROOT&&
+      env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH?false:
     typeof env[name]!=='string'||env[name].length===0);
   if(missing.length)throw new TypeError('AGENT_CONSUMER_PINS_MISSING:'+missing.join(','));
+  const scriptRoot=env.TALLY_V2_AGENT_SCRIPT_ROOT??
+    env.TALLY_LOCAL_REPOSITORY_PATH;
+  const sourceRepositoryPath=env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH??
+    env.TALLY_LOCAL_REPOSITORY_PATH;
+  if(!PATH_RE.test(scriptRoot??'')||
+     !PATH_RE.test(sourceRepositoryPath??''))
+    throw new TypeError('AGENT_SCRIPT_OR_SOURCE_REPOSITORY_PATH_INVALID');
   if(!Number.isSafeInteger(Number(env.TALLY_LOCAL_ISSUE_NUMBER))||
      Number(env.TALLY_LOCAL_ISSUE_NUMBER)<1)
     throw new TypeError('AGENT_LOCAL_ISSUE_NUMBER_INVALID');
+  // The historical single-Builder demo is not reusable across projects.
+  // A new selected GitHub repo MUST be compiled into the C/Provider
+  // together with its task, version and frozen candidate path, not merely
+  // chosen in an HTTP request or by the runtime environment.
+  const sourceRepo=env.TALLY_V2_REPOSITORY??'kaicreator-mm/tally';
+  const sourceRef=env.TALLY_V2_VERSION_REF??'version/v2';
+  const pinNames=['T06M_TARGET_REPOSITORY','T06M_TARGET_ISSUE_NUMBER',
+    'T06M_TARGET_VERSION_REF','T06M_TARGET_CANDIDATE_PATH'];
+  const provided=pinNames.filter(name=>env[name]!==undefined);
+  if(provided.length!==0&&provided.length!==pinNames.length)
+    throw new TypeError('AGENT_BUILDER_TARGET_PARTIAL');
+  if(provided.length===0&&
+      (sourceRepo!=='kaicreator-mm/tally'||sourceRef!=='version/v2'))
+    throw new TypeError('AGENT_BUILDER_TARGET_NOT_SEALED');
+  if(provided.length===pinNames.length){
+    if(sourceRepo!==env.T06M_TARGET_REPOSITORY||
+       sourceRef!==env.T06M_TARGET_VERSION_REF||
+       Number(env.TALLY_LOCAL_ISSUE_NUMBER)!==
+         Number(env.T06M_TARGET_ISSUE_NUMBER)||
+       !/^[1-9][0-9]{0,9}$/.test(env.T06M_TARGET_ISSUE_NUMBER??'')||
+       typeof env.T06M_TARGET_CANDIDATE_PATH!=='string'||
+       env.T06M_TARGET_CANDIDATE_PATH.length<3||
+       env.T06M_TARGET_CANDIDATE_PATH.includes('..')||
+       env.T06M_TARGET_CANDIDATE_PATH.startsWith('/'))
+      throw new TypeError('AGENT_BUILDER_TARGET_SCOPE_MISMATCH');
+  }
   // #264 J05: the single-Builder ReviewDecision seam mounts only under its
   // own trusted Host pin; the decision value is the reviewer's expressed
   // judgment pinned by the Host process (authority itself stays with the
@@ -120,7 +156,7 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
       commentId:claim.commentId,
       timeoutMs:Number.isSafeInteger(timeoutMs)&&timeoutMs>=60000&&
         timeoutMs<=30*60*1000?timeoutMs:10*60*1000}),
-    worktreePath,evidenceDir,provider,
+    worktreePath,evidenceDir,provider,scriptRoot,sourceRepositoryPath,
     ...(review?{review}:{})});
 }
 
@@ -166,6 +202,9 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
     TALLY_LOCAL_ATTEMPT_ID:claim.attemptId,
     TALLY_LOCAL_ISSUE_NUMBER:env.TALLY_LOCAL_ISSUE_NUMBER,
     TALLY_LOCAL_WORKTREE_PATH:worktreePath,
+    // K sees the selected managed source repo, not the Tally driver root.
+    TALLY_LOCAL_REPOSITORY_PATH:settings.sourceRepositoryPath??
+      env.TALLY_LOCAL_REPOSITORY_PATH,
     TALLY_LOCAL_EVIDENCE_DIR:evidenceDir});
   const reviewEnv=()=>({...runnerEnv(),
     ...(settings.review?{TALLY_REVIEW_DECISION:settings.review.decision,
@@ -189,7 +228,7 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
       // nothing executed and the observed-runs projection must never render
       // this as an attempt row.
       if(kind==='review-repair'&&settings.review){
-        const script=join(env.TALLY_LOCAL_REPOSITORY_PATH,
+        const script=join(settings.scriptRoot??env.TALLY_LOCAL_REPOSITORY_PATH,
           'experiments','v2','selected-business-build','single-codex-review-e2e.mjs');
         const exit=await spawnE2e(script,reviewEnv(),claim.timeoutMs);
         return observed(kind,exit);
@@ -201,7 +240,7 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
     // driver. The trusted provider pin only substitutes the process-only
     // execution point inside local-codex-host; Claim/FSW/CAS/worktree/grants
     // and candidate readback never fork into a second Host or scheduler.
-    const script=join(env.TALLY_LOCAL_REPOSITORY_PATH,
+    const script=join(settings.scriptRoot??env.TALLY_LOCAL_REPOSITORY_PATH,
       'experiments','v2','selected-business-build','local-codex-windows-e2e.mjs');
     const exit=await spawnE2e(script,runnerEnv(),claim.timeoutMs);
     return observed(kind,exit);

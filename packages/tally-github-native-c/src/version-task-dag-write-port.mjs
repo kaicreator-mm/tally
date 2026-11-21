@@ -23,7 +23,7 @@ import {createHostVersionTaskDagFreezeWriter} from './closeout-roster.mjs';
 const SHA=/^[a-f0-9]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
-const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from './version-ref.mjs';
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
 const DIGEST=/^[0-9a-f]{64}$/;
@@ -145,7 +145,7 @@ export function createVersionTaskDagWritePort({
   octokit,owner,repo,writerAuthority,writeSetDocumentByIssue,
   freezeWriteSetPolicy='ALL_TASKS',now
 }={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(expectedVersionSha??'')||!NAME.test(owner??'')||
      !NAME.test(repo??'')||repository!==owner+'/'+repo||
      typeof store?.get!=='function'||typeof store?.put!=='function'||
@@ -535,7 +535,7 @@ export function createVersionTaskDagWritePort({
 /** Read-only observation: has the version Task DAG already been frozen in
  * this store? Used by Host wiring to advertise the pre-freeze-only window. */
 export async function readVersionTaskDagFreezeState({store,repository,versionId}={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      typeof store?.get!=='function')
     throw new TypeError('TRUSTED_VERSION_TASK_DAG_STATE_READER_REQUIRED');
   const row=await store.get('tally:v2:version-task-dag:'+hash(repository+'#'+versionId));

@@ -8,7 +8,7 @@ const SHA=/^[a-f0-9]{40}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const NAME=/^[A-Za-z0-9_.-]+$/;
 const LOGIN=/^[A-Za-z0-9_.-]+(?:\[bot\])?$/;
-const VERSION=/^version\/[A-Za-z0-9_.-]+$/;
+import {isValidVersionRef} from './version-ref.mjs';
 const ID=/^[A-Za-z0-9][A-Za-z0-9:._/-]{0,127}$/;
 const ROLES=new Set(['builder','reviewer','validator']);
 const KINDS=new Set(['chatgpt-web','codex','claude-code','human','github-actions','woodpecker','other']);
@@ -161,7 +161,7 @@ export function createHostCloseoutClaimReadbackPortFromClient({
   if(!NAME.test(owner??'')||!NAME.test(repo??'')||!LOGIN.test(writerLogin??'')||
      !ID.test(writerId??'')||typeof store?.get!=='function'||
      repository!==owner+'/'+repo||!REPO.test(repository??'')||
-     !VERSION.test(versionId??'')||!SHA.test(expectedVersionSha??''))
+     !isValidVersionRef(versionId??'')||!SHA.test(expectedVersionSha??''))
     throw new TypeError('TRUSTED_CLAIM_READBACK_REQUIRED');
   const native=createHostNativeGitHubClaimReadbackPortFromClient({octokit,owner,repo,writerLogin});
   const notVerified=(a,reason,more={})=>({connected:true,
@@ -435,7 +435,7 @@ export function createHostVersionTaskDagFreezeWriter({
   repository,versionId,expectedVersionSha,store,taskPackReader,nativeRosterReader,
   reviewWitnessReader,ownerApprovalReader,now
 }={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(expectedVersionSha??'')||typeof store?.get!=='function'||
      typeof store?.put!=='function'||typeof taskPackReader!=='function'||
      typeof nativeRosterReader!=='function'||
@@ -546,7 +546,7 @@ export function createHostVersionTaskDagReader({
   repository,versionId,expectedVersionSha,store,taskPackReader,
   nativeRosterReader,reviewWitnessReader,ownerApprovalReader
 }={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(expectedVersionSha??'')||typeof store?.get!=='function'||
      typeof taskPackReader!=='function'||typeof nativeRosterReader!=='function'||
      typeof reviewWitnessReader!=='function'||typeof ownerApprovalReader!=='function')
@@ -760,7 +760,7 @@ export function createHostVersionTaskDagDualEpochReader({
   branchHeadReader,ancestryReader,currentRosterReader,
   edgeAmendments=null,now
 }={}){
-  if(!REPO.test(repository??'')||!VERSION.test(versionId??'')||
+  if(!REPO.test(repository??'')||!isValidVersionRef(versionId??'')||
      !SHA.test(freezeBaseSha??'')||typeof store?.get!=='function'||
      typeof taskPackReader!=='function'||typeof reviewWitnessReader!=='function'||
      typeof ownerApprovalReader!=='function'||

@@ -1,6 +1,7 @@
 /** Same-origin J01–J08 ALM server. Real actions only through journey/intake/release controllers. */
 import http from 'node:http';
 import {randomBytes} from 'node:crypto';
+import {projectAgentDispatchStatus} from './agent-dispatch-status.mjs';
 import {readFile} from 'node:fs/promises';
 import {createJourneyController} from './journey-controller.mjs';
 import {createIntakeController} from './intake-controller.mjs';
@@ -374,7 +375,9 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   // the /api/v2 GET models; absent methods answer NOT_CONNECTED. The guided
   // v2GuidedFormHost stays deliberately unmounted: guided POST keeps its
   // fail-closed admission below.
-  v2ReadModelHost,
+  v2ReadModelHost,taskReadyHost=null,claimHost=null,writeSetHost=null,
+  candidateHost=null,agentHostMounted=false,
+  selectedAgentTaskIssue=null,selectedAgentProvider='codex',
   // E0 #284: Host-mounted version Task DAG seam.
   versionTaskDagSealedDispatch}={}){
   const controller=createJourneyController(config,{run}),
@@ -598,6 +601,134 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       if(req.method==='GET'&&url.pathname==='/api/v2/catalog'){
         return send(200,'application/json',json(await readV2Model('catalog','catalog')));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/claim-host'){
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({connected:false,
+            reason:'CLAIM_HOST_ORIGIN_MISMATCH'}));
+        const bound=claimHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:claimHost.repository,
+          versionId:claimHost.versionId,sourceSha:claimHost.sourceSha,
+          issueNumber:claimHost.issueNumber,actionKey,
+          authority:'HOST_PINNED_ONLY'
+        }:{connected:false,reason:'CLAIM_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/claim-publish'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!claimHost||claimHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'CLAIM_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(input?.issueNumber!==claimHost.issueNumber||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'CLAIM_HOST_TASK_SCOPE_MISMATCH'}));
+        const result=await claimHost.publish({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:
+          result.status==='UNKNOWN'?503:200,'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/candidate-host'){
+        const bound=candidateHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:candidateHost.repository,
+          versionId:candidateHost.versionId,sourceSha:candidateHost.sourceSha,
+          issueNumber:candidateHost.issueNumber,actionKey,
+          authority:'HOST_PINNED_DRAFT_PR_ONLY'
+        }:{connected:false,reason:'CANDIDATE_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/candidate-publish'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!candidateHost||candidateHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'CANDIDATE_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(input?.issueNumber!==candidateHost.issueNumber||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'CANDIDATE_HOST_TASK_SCOPE_MISMATCH'}));
+        const result=await candidateHost.publish({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:
+          result.status==='PUBLICATION_UNKNOWN'?503:200,
+          'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/writeset-host'){
+        const bound=writeSetHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:writeSetHost.repository,
+          versionId:writeSetHost.versionId,sourceSha:writeSetHost.sourceSha,
+          issueNumber:writeSetHost.issueNumber,
+          candidateRelativePath:writeSetHost.candidateRelativePath,
+          actionKey,authority:'HOST_PINNED_ONLY'
+        }:{connected:false,reason:'WRITESET_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/writeset-freeze'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!writeSetHost||writeSetHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'WRITESET_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(input?.issueNumber!==writeSetHost.issueNumber||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'WRITESET_HOST_TASK_SCOPE_MISMATCH'}));
+        const result=await writeSetHost.freeze({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:200,
+          'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-ready-host'){
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({connected:false,
+            reason:'TASK_READY_ORIGIN_MISMATCH'}));
+        const bound=taskReadyHost?.sourceSha===config.currentSourceSha;
+        return send(200,'application/json',json(bound?{
+          connected:true,repository:taskReadyHost.repository,
+          versionId:taskReadyHost.versionId,sourceSha:taskReadyHost.sourceSha,
+          actionKey,authority:'HOST_PINNED_ONLY'
+        }:{connected:false,reason:'TASK_READY_HOST_NOT_MOUNTED'}));
+      }
+      if(req.method==='POST'&&url.pathname==='/api/v2/task-ready'){
+        if(req.headers['x-tally-action-key']!==actionKey||
+           req.headers.origin!==origin)
+          return send(403,'application/json',json({
+            status:'DENIED',reason:'CSRF_OR_ORIGIN'}));
+        if(!taskReadyHost||taskReadyHost.sourceSha!==config.currentSourceSha)
+          return send(503,'application/json',json({
+            status:'BLOCKED',reason:'TASK_READY_HOST_NOT_MOUNTED'}));
+        const input=JSON.parse(await body(req));
+        if(!Number.isSafeInteger(input?.issueNumber)||input.issueNumber<1||
+           input.sourceSha!==config.currentSourceSha)
+          return send(409,'application/json',json({
+            status:'BLOCKED',reason:'TASK_READY_SCOPE_MISMATCH'}));
+        const result=await taskReadyHost.transition({
+          issueNumber:input.issueNumber,sourceSha:input.sourceSha});
+        return send(result.status==='BLOCKED'?409:200,
+          'application/json',json(result));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-admission'){
+        const versionId=url.searchParams.get('versionId');
+        const number=url.searchParams.get('issueNumber')??'';
+        const issueNumber=/^[1-9][0-9]{0,9}$/.test(number)?Number(number):null;
+        return send(200,'application/json',
+          json(await readV2Model('admission','taskAdmission',
+            {versionId,issueNumber})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/task-drafts'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('drafts','taskDrafts',{versionId})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/tasks'){
         const versionId=url.searchParams.get('versionId');
         return send(200,'application/json',json(await readV2Model('tasks','tasks',{versionId})));
@@ -626,6 +757,16 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
         }
         return send(200,'application/json',json(v2Release(url.searchParams.get('versionId'))));
       }
+      if(req.method==='GET'&&url.pathname==='/api/v2/requirements'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('requirements','requirements',{versionId})));
+      }
+      if(req.method==='GET'&&url.pathname==='/api/v2/qa'){
+        const versionId=url.searchParams.get('versionId');
+        return send(200,'application/json',
+          json(await readV2Model('qa','qa',{versionId})));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/settings'){
         return send(200,'application/json',json(await readV2Model('settings','settings')));
       }
@@ -643,7 +784,22 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
       // confirmed-empty history). A timeout renders EXITED_FAIL like the
       // shared AttemptRecord vocabulary allows; the API result keeps the
       // timeout distinction.
+      if(req.method==='GET'&&url.pathname==='/api/v2/agent-dispatch'){
+        // Action key is only returned to the literal localhost origin.
+        // It is CSRF protection, never a substitute for Host Claim authority.
+        if(req.headers.host!==new URL(origin).host)
+          return send(403,'application/json',json({
+            connected:false,reason:'AGENT_ORIGIN_MISMATCH'}));
+        const status=projectAgentDispatchStatus({
+          mounted:agentHostMounted,taskIssueNumber:selectedAgentTaskIssue,
+          sourceSha:config.currentSourceSha,provider:selectedAgentProvider});
+        return send(200,'application/json',json(status.connected?
+          {...status,actionKey}:status));
+      }
       if(req.method==='GET'&&url.pathname==='/api/v2/agent-attempts'){
+        // Attempt history can be read even with no executor installed.
+        // A connected empty history never implies dispatch authority;
+        // /api/v2/agent-dispatch reports the Host mount separately.
         const snapshot=controller.snapshot();
         const latest=snapshot.result;
         // Only a REAL execution (observedAt + evidenceDir, i.e. an actual
