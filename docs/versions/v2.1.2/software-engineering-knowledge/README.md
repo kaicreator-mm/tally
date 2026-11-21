@@ -24,7 +24,7 @@
 - [72 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 24 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） = 223 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 24 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） = 226 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
@@ -48,6 +48,7 @@
 - **R10 专业知识真正可判别的研究准备**：[五项原始出处→命题/反例/资格档案](professional-primary-source-claim-dossiers-r10.md)（C10-01～05）、[六组最小变量对照/12 道题](professional-knowledge-evaluation-fixtures-r10.md)（EV10-01A～06B）、[合法基线/评分/成本评价协议](professional-knowledge-evaluation-protocol-r10.md)、[跨 Kxx 选择、来源当前性和有权停止手册](professional-knowledge-selection-playbook-r10.md)。这些是**R10 四份版本级文档，已在旧 Exact SHA 通过独立文档限定审核（P2×1 新增精确修复）**，不是额外四个高价值 Topic、十二次真实 Agent 测试或已经运行的 DomainHarness Package；165 原 ID/120 A/72 外部来源/48 Concept 关系/Q18/W22 均不变。
 - **R11 真正受权的最小知识消费试验设计**：[一个真实代码任务、两个隔离 Agent A/B、独立 QA/真实 Runner Oracle](professional-live-knowledge-consumption-pilot-design-r11.md)。先以有权 GitHub Issue 固定 Repo/H0、允许写集、独立负例和真实 Agent Execution；B 组只多选择版次固定的 K03/K05/K08/K09 专业知识。单任务只能验收受限真实闭环，不能证明普遍提效或 Tally 生产知识消费者。R11 当前只是设计候选，后续 E1 真实实验需另有合法 Task/Repo/Host 权限；E2 正式 Tally 消费需 #286 未来编号子版本 Product/L2/DAG 决议。
 - **R12 ADS 全流程复杂任务/按阶段知识增强 A/B**：[真实 Node22/TS Monorepo 的多项目可恢复批量导入工程任务与 Stage S0–S6 分阶段 Kxx 注入、受权 GitHub/隐藏 QA/相同 ADS 约束](professional-ads-staged-complex-agent-ab-r12.md)。A/B 两组都有相同 ADS v4.19.0 权威规范，B 只在 L1/L2/L3/验证/维护阶段按阶段收到限量且 pin 住的专业知识；不提前提供全部 Corpus，也不新增生产 Tally/DomainHarness 接入。**R1 本地 Agent 报告尚未在本 GitHub Issue/PR 取得实际收据，R12 没有执行 Agent、QA 或测量**；这一份是待独立审核的设计候选。
+- **R13 R1/R2 失败模式补缺（三篇知识候选，待限定独立审查）**：[K01 公开不透明 ID 与错误语义](K01/advanced-opaque-identifier-contract-and-error-precedence-r13.md)、[K03 本地并发文件持久化收敛](K03/advanced-concurrent-local-file-write-convergence-r13.md)、[K05 不变量驱动的高区分力测试与覆盖账本](K05/advanced-invariant-derived-discriminating-oracles-r13.md)。仅形成可审专业知识正文；R2 #535 原始证据尚未独立复算，不能声称经验自动晋升规则。本分支共 **226 Markdown**（在 R12 的 223 上新增 3），原 165 课程 ID、120 A 和 72 来源候选保持不变；R3 的 #536 语料 pin 暂不改变，审核后再决定是否使用新知识版本。
 - [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、R3 两卷主题关联的 159 点、R4 六篇一对一 F 聚焦正文与 R5 25 点 + R6 53 点 + R7 15 点 + R8 14 点 + R9 13 点 A 进阶原理链接（累计 120 点，R9 旧 Exact SHA 已审，R10 不新增 A）；章节关联不等于 Claim/Rule 资格。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
