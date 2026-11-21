@@ -1,0 +1,278 @@
+{
+  "schema": "tally/task-pack-candidate/v1",
+  "packId": "issue-273-governed-replan-r1",
+  "packRevision": 1,
+  "status": "CANDIDATE_NOT_FROZEN",
+  "repository": "kaicreator-mm/tally",
+  "versionId": "version/v2",
+  "issueNumber": 273,
+  "parentIssue": 259,
+  "scope": "GOVERNANCE_ONLY_NO_SOURCE_ADMISSION",
+  "task": {
+    "title": "Governed Replan with immutable history and accepted-work preservation",
+    "priority": "P0",
+    "observedIssueState": "OPEN",
+    "observedWorkflowLabel": "state:planned",
+    "issueUpdatedAt": "2026-11-04T06:26:16Z",
+    "sourceIssue": "https://github.com/kaicreator-mm/tally/issues/273",
+    "oneWriter": true,
+    "productVectors": [
+      "V03",
+      "V04",
+      "V17",
+      "V44",
+      "V69",
+      "V78"
+    ]
+  },
+  "source": {
+    "sourceBranch": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "rootProductFreeze": "https://github.com/kaicreator-mm/tally/issues/63#issuecomment-6465782232",
+    "l2Freeze": "https://github.com/kaicreator-mm/tally/issues/65#issuecomment-6466641925",
+    "domainHarnessVersion": "0.10.3",
+    "basis": "Existing selected K/Host/Business/Native C, not a second DAG authority"
+  },
+  "writeSet": {
+    "paths": [
+      "apps/tally-web/src/features/replan/model.test.ts",
+      "apps/tally-web/src/features/replan/model.ts",
+      "apps/tally-web/src/features/replan/views.tsx",
+      "packages/tally-engineering-business/src/index.mjs",
+      "packages/tally-engineering-business/src/replan.mjs",
+      "packages/tally-engineering-business/test/business-policy.test.mjs",
+      "packages/tally-engineering-business/test/replan.test.mjs",
+      "web/v2/replan-controller.mjs",
+      "web/v2/replan-controller.test.mjs"
+    ],
+    "count": 9,
+    "digestAlgorithm": "SHA256(JSON.stringify(exactPathsSorted))",
+    "pathsSha256": "845cb2618eebab4f56aa38bd6c0176b2e6b3499d4a01db18150d02f9915d85dd",
+    "normalizedExact": true,
+    "sourceStatus": "CANONICALIZED_OVERLAP_BLOCKED",
+    "claimed": false,
+    "plannedOverlaps": [
+      {
+        "issue": 219,
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "disposition": "SERIAL_AFTER_COMPLETED_SHARED_BUSINESS_WRITER"
+      },
+      {
+        "issue": 284,
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "disposition": "E0_ROOT_FIRST"
+      },
+      {
+        "issue": 276,
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs"
+        ],
+        "disposition": "F_SHARED_ABI_AFTER_REPLAN_OR_NARROW"
+      },
+      {
+        "issue": 203,
+        "paths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "disposition": "HISTORICAL_SOURCE_NOT_REUSABLE_AUTHORITY"
+      }
+    ],
+    "notAllowed": [
+      "web/v2/journey-server.mjs",
+      "web/v2/serve.mjs",
+      "apps/tally-web/src/app/App.tsx",
+      "apps/tally-web/src/adapters/host.ts",
+      ".woodpecker/**",
+      "DomainHarness internals",
+      "Task-meta private storage"
+    ]
+  },
+  "contract": {
+    "domainBusiness": "Tally Business pure PlanRevision/replan diff/preservation projection, no real accepted write side effects",
+    "inputs": [
+      "current frozen Project/Product/L2 source SHA + independent reviews",
+      "current version Task DAG + native issue identities/blocked_by",
+      "Task Attempt/Claim/FSW and immutable completed/accepted work",
+      "Owner proposal and exact scope reason, changed/removed/new candidate Tasks"
+    ],
+    "outputs": [
+      "candidatePlanRevision with unique identity, source pins and immutable predecessor",
+      "added/changed/removed work, accepted/terminal preserved, undone affected/unfinished carry-over",
+      "typed impact matrix: write-set, blockers, source validity, approvals, issue references, forward-only transitions",
+      "stale/conflict/insufficient evidence outcomes with exact reason codes"
+    ],
+    "runtime": "Candidate is advisory. Only a separate current Owner decision and existing selected K→Host CAS + GitHub Native effects may activate it. No background scheduler, workflow runtime, or auto-amend Product/L2.",
+    "consumers": {
+      "B": 261,
+      "E": 264,
+      "afterMaintenance": 219,
+      "domainData": 276
+    }
+  },
+  "dependencies": {
+    "planned": [
+      {
+        "from": 219,
+        "to": 273
+      },
+      {
+        "from": 261,
+        "to": 273
+      },
+      {
+        "from": 273,
+        "to": 264
+      },
+      {
+        "from": 273,
+        "to": 276
+      }
+    ],
+    "status": "PLANNED_ONLY; NEED_OFFICIAL_NATIVE_GITHUB_READBACK",
+    "forwardEffect": "E0 #284 and historic #219 shared writer complete before source Claim; #264 mounts final UI/service only under E Writer"
+  },
+  "tests": {
+    "positive": [
+      "Exact Product/L2/Task DAG and accepted review/Claim evidence produces a deterministic diff and immutable PlanRevision.",
+      "Preserves accepted/terminal Tasks and unchanged unfinished work; supersession explicit.",
+      "Owner-approved current candidate can be activated only through selected K/Host source-bound effect and exact native readback.",
+      "Duplicate read/restart rehydrates revision history without lost accepted work or repeated external effects.",
+      "HTML/React model renders truthful pending/approved/blocked diff and never performs a privileged write."
+    ],
+    "negative": [
+      {
+        "id": "R01",
+        "reason": "OLD_PRODUCT_SHA",
+        "expected": "Stale reviewed Product/PRD/L2 freezes refuse activation"
+      },
+      {
+        "id": "R02",
+        "reason": "MOVED_HEAD",
+        "expected": "Candidate computed at an old source HEAD cannot self-rebase authority"
+      },
+      {
+        "id": "R03",
+        "reason": "CYCLIC_DEPENDENCIES",
+        "expected": "Cycle is rejected with witness and zero mutation"
+      },
+      {
+        "id": "R04",
+        "reason": "ACCEPTED_TASK_DROPPED",
+        "expected": "Previously accepted or terminal Task cannot be silently deleted or rewritten"
+      },
+      {
+        "id": "R05",
+        "reason": "ACTIVE_CLAIM_REASSIGNED",
+        "expected": "Valid Claim/FSW bound to previous Task cannot be copied or reused"
+      },
+      {
+        "id": "R06",
+        "reason": "WRITE_SET_OVERLAP",
+        "expected": "Competing live Writer on Business index/policy or parent worktree is denied/serialized"
+      },
+      {
+        "id": "R07",
+        "reason": "NO_OWNER_DECISION",
+        "expected": "Advisory replan can render but cannot become an accepted DAG revision"
+      },
+      {
+        "id": "R08",
+        "reason": "NO_NEW_TASK_CLAIM",
+        "expected": "No authorized new/revised Task Claim means zero provider/Host effect"
+      },
+      {
+        "id": "R09",
+        "reason": "WRONG_REPO",
+        "expected": "Foreign source scope and GitHub target are rejected before any write"
+      },
+      {
+        "id": "R10",
+        "reason": "DUPLICATE_TASK_ID",
+        "expected": "Duplicate key, WorkUnit alias, or conflicting Task revision is rejected"
+      },
+      {
+        "id": "R11",
+        "reason": "CARRIED_WORK_LOST",
+        "expected": "Unchanged unfinished work is preserved and traceable to prior revision"
+      },
+      {
+        "id": "R12",
+        "reason": "CAS_CONFLICT",
+        "expected": "Revision mismatch or out-of-order update fails closed without overwrite"
+      },
+      {
+        "id": "R13",
+        "reason": "ACK_LOSS",
+        "expected": "Uncertain write is reconciled via exact CAS/native readback; never blind retry"
+      },
+      {
+        "id": "R14",
+        "reason": "REJECTED_CANDIDATE",
+        "expected": "Rejected advisory PlanRevision has no activation and preserves last accepted baseline"
+      },
+      {
+        "id": "R15",
+        "reason": "NO_SELECTED_BUILD_ROUTE",
+        "expected": "Business-only projection does not fabricate a selected K/Host activation"
+      },
+      {
+        "id": "R16",
+        "reason": "RESTART_REPLAY",
+        "expected": "Persisted immutable history reconstructed after restart; no duplicate effect"
+      },
+      {
+        "id": "R17",
+        "reason": "FAKE_REVIEW_PASS",
+        "expected": "Self-report or login inequality alone does not qualify an independent source review"
+      },
+      {
+        "id": "R18",
+        "reason": "UI_AUTHORITY_BYPASS",
+        "expected": "Client/view/form cannot call direct GitHub mutation or force approval state"
+      },
+      {
+        "id": "R19",
+        "reason": "SECRETS_IN_DIFF",
+        "expected": "Owner credentials/hidden tests/raw trace are absent from rendered diff and issue evidence"
+      },
+      {
+        "id": "R20",
+        "reason": "ERROR_TELEMETRY",
+        "expected": "Missing task-meta/metrics stays UNKNOWN and does not block valid replan read"
+      }
+    ],
+    "negativeCount": 20,
+    "verification": [
+      "Syntax preflight (Node >=24 for JavaScript/TypeScript build lane)",
+      "Focused Business/replan/controller and React view/model tests",
+      "git diff --check, exact path count and source SHA",
+      "typecheck and build for affected UI",
+      "applicable Woodpecker only after admitted source JIT",
+      "independent final exact-SHA review P0/P1/P2 with source and selected Host receipts"
+    ]
+  },
+  "admission": {
+    "requiredBeforeImplementation": [
+      "Independent exact-HEAD/TREE/PackBlob review of this docs-only governance Pack.",
+      "Owner receipt bound to reviewed exact PackBlob, current source and exact write-set digest; no repeated conversational authorization.",
+      "Current A/#260 Native DAG edges #219→#273 and #261→#273 from official blocked_by readback.",
+      "Completed or lawfully serial E0/#284, #219 and historical shared Business Writer handoffs; no inherited Claim from historical Task.",
+      "Task-specific current native Claim/FSW (9 exact paths) through selected Host, one Writer and no unresolved competing source authority.",
+      "JIT branch exact parent source, same frozen Task Pack, current native source reviews; no source edits before this point."
+    ],
+    "notYet": "NO_CLAIM_NO_FSW_NO_SOURCE_AUTHORITY",
+    "taskAcceptance": "Installed lawful Replan through #264 current UI and selected K/Host with positive and negative tests; not merely this Pack or a model-only projection"
+  },
+  "disallowed": [
+    "No new K, scheduler, private SQLite or task-meta direct path",
+    "No changes to other Task's claimed write-set or history",
+    "No native edge, CAS/FSW, claim, Freeze, release or version/main merge as a result of this Pack"
+  ]
+}
