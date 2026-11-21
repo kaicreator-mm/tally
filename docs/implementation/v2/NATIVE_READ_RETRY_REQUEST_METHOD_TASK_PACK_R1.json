@@ -1,0 +1,244 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 377,
+  "parentIssue": 211,
+  "phase": "NATIVE_READ_RETRY_REQUEST_METHOD_DEFECT_REPAIR",
+  "relatedHostFenceIssue": 370,
+  "revision": "R1",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "treeSha": "4c3529b612f0e5a80de8f7508cd7d178e8069980"
+  },
+  "packArtifactBranch": {
+    "branch": "task/tally-i377-pack-zcode",
+    "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "purpose": "immutable governance-only defect Task Pack artifact",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "sourceEvidence": {
+    "disposition": "SOURCE_ANALYSIS_REPRODUCED_REAL_WORLD_EFFECT_NOT_OBSERVED",
+    "originalIssue": 211,
+    "originalMergedPr": 215,
+    "originalPrHead": "ce7fb9adbe94c8cfe518f8e7023530682b955d24",
+    "mergeCommit": "e4fb5b175fa837a2b5874ae328fe3f34eac9665a",
+    "sourceBlob": "e6c702d03eac305234d1f91ad81e2739dd2bb10d",
+    "testBlob": "53ea70a3841a6a9ebd52f554470e996d370508f5",
+    "defect": "createNativeReadRetryFetch derives the effective method from options.method or GET and ignores a genuine WHATWG Request input method. Request(POST/PATCH) with empty options can therefore enter the read retry loop on HTTP 429/5xx or a thrown transport error.",
+    "historicalClaim": {
+      "commentId": 6542911259,
+      "closureAuditCommentId": 6718545682,
+      "phase": "PUBLISHED_VERIFIED",
+      "frozenDagWriteSet": "MISSING",
+      "reuseAllowed": false
+    },
+    "boundary": "This is a latent contract defect. No current Octokit caller is asserted to use this input shape and no duplicate real GitHub write is asserted."
+  },
+  "stableUpstream": [
+    {
+      "issue": 211,
+      "pr": 215,
+      "headSha": "ce7fb9adbe94c8cfe518f8e7023530682b955d24",
+      "mergeCommit": "e4fb5b175fa837a2b5874ae328fe3f34eac9665a",
+      "sourceReviewDisposition": "SOURCE_INTEGRATED_OUTCOME_CLOSURE_UNVERIFIED",
+      "dispatchable": false,
+      "note": "Reuse the integrated two files as the defect-repair base only. Do not reuse the historical Claim, backfill its missing FSW, mutate its merged PR or restart its source lane."
+    },
+    {
+      "issue": 212,
+      "pr": 217,
+      "mergeCommit": "4232881c64cdaefe4539a5071da150c1d7c8e320",
+      "sourceReviewDisposition": "SOURCE_INTEGRATED_OUTCOME_CLOSURE_UNVERIFIED",
+      "note": "Existing WorkItem and Claim-event readers are regression consumers only; their four paths are outside this defect write set."
+    },
+    {
+      "issue": 260,
+      "pr": 279,
+      "headSha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
+      "treeSha": "7fdf61ad3ea8e3f45584afd18a4afb699a17ee69",
+      "packBlobSha": "ffdef55b45b9b9fbe0cc998208cb44fe39e59868",
+      "review": "A_SOURCE_DATA_R16_PASS_WITH_P2",
+      "status": "HISTORICAL_48_TASK_AS_OF_CANDIDATE_ONLY",
+      "nextRequiredRefresh": "A/#260 R17 must add #377 as a planned, unclaimed defect Task and independently re-read all live metadata before #377 Claim/source admission."
+    }
+  ],
+  "allowed_write_set": [
+    {
+      "path": "packages/tally-github-native-c/src/read-retry.mjs",
+      "owner": "NATIVE_READ_RETRY_REQUEST_METHOD_DEFECT_REPAIR",
+      "purpose": "Resolve the effective Fetch method from explicit options.method first, otherwise a genuine Request input method, otherwise GET; only GET/HEAD may enter retry."
+    },
+    {
+      "path": "packages/tally-github-native-c/test/read-retry.test.mjs",
+      "owner": "NATIVE_READ_RETRY_REQUEST_METHOD_DEFECT_REPAIR",
+      "purpose": "Add native Request POST/PATCH no-retry negatives and GET/HEAD/override-precedence positive and adversarial coverage."
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_PASS_WITH_HISTORICAL_SUCCESSOR_OVERLAP",
+    "pathCount": 2,
+    "pathsSha256": "58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac",
+    "observedOpenTaskIssueCount": 27,
+    "openTasksWithNormalizedWriteSet": 25,
+    "openTasksWithoutWriteSet": [
+      319,
+      312
+    ],
+    "normalizationDigestMismatches": [],
+    "overlapWithOpenTasks": [
+      {
+        "issue": 211,
+        "paths": [
+          "packages/tally-github-native-c/src/read-retry.mjs",
+          "packages/tally-github-native-c/test/read-retry.test.mjs"
+        ],
+        "classification": "HISTORICAL_SOURCE_INTEGRATED_NON_DISPATCHABLE_SUCCESSOR_OVERLAP",
+        "concurrentSourceWritersAllowed": false,
+        "historicalClaimReuseAllowed": false
+      }
+    ],
+    "overlapPathCount": 2,
+    "otherOverlapPathCount": 0,
+    "candidatePairTreatment": "R16 contains 66 nonzero pairs. If no other live write set changes, adding #377 must add exactly the #211/#377 pair and produce 67 pairs; R17 must recompute rather than hardcode this value.",
+    "note": "Exact-path audit only. The historical overlap is disclosed, not misreported as zero and not concurrent-write authorization. This audit does not admit source writes or create a Claim/FSW/dependency."
+  },
+  "repairContract": {
+    "effectiveMethodPrecedence": [
+      "When options.method is present, normalize and use it because Fetch applies the init override to the resulting Request.",
+      "Otherwise, when input is a genuine WHATWG Request or Request-compatible object with a string method, normalize and use input.method.",
+      "Otherwise default a bare URL/string input to GET.",
+      "Only uppercase GET and HEAD are retryable. POST, PATCH, PUT, DELETE, unknown and every other method must call fetchImpl exactly once and bypass sleep, response cancellation for retry and nativeReadChain."
+    ],
+    "preserve": [
+      "Existing maxAttempts validation, 429/5xx and thrown-transport retry taxonomy, Retry-After handling and bounded delays.",
+      "Existing GET/HEAD response and exhaustion semantics and cross-client serialization of retryable reads.",
+      "Existing native WorkItem, Claim-event, Claim-publication-witness and SourcePair fail-closed behavior; no write API or caller contract expansion.",
+      "No request payload, credential, token or sensitive diagnostic logging."
+    ],
+    "requiredAdversarialTests": [
+      "Request POST plus first HTTP 500: exact response returned and fetchImpl calls=1.",
+      "Request POST plus first thrown network error: same error rejects and fetchImpl calls=1.",
+      "Request PATCH plus first HTTP 500: exact response returned and fetchImpl calls=1.",
+      "Request PATCH plus first thrown network error: same error rejects and fetchImpl calls=1.",
+      "Native Request GET and Request HEAD retry transient HTTP and transport failures within existing bounds.",
+      "Bare/init GET and HEAD retain retry behavior; existing options POST remains single-attempt.",
+      "Explicit options.method overrides Request.method in both safe-to-unsafe and unsafe-to-safe directions, matching actual Fetch precedence.",
+      "Unknown/non-idempotent methods bypass all retries and call fetchImpl exactly once."
+    ]
+  },
+  "versionTaskPackReference": {
+    "path": "apps/tally-web/src/features/dag/version-v2-task-pack.candidate.json",
+    "headSha": "acd91e34d963e39762c14b4e1f2e5cb2403c5e92",
+    "treeSha": "7fdf61ad3ea8e3f45584afd18a4afb699a17ee69",
+    "blobSha": "ffdef55b45b9b9fbe0cc998208cb44fe39e59868",
+    "status": "R16_AS_OF_BASELINE_NOT_FROZEN",
+    "nextRequiredRefresh": "Existing A/#260 Claim/FSW/Writer must produce R17 inside its existing eleven-path write set: 49 Tasks (28 OPEN/21 CLOSED if no unrelated roster change), 49 Claim observations, #377 PLANNED_DEFECT_NO_CLAIM, exact two-path digest, disclosed historical #211 successor overlap, full live pair matrix, and PLANNED-only #211→#377 edge. Re-read all current metadata; no native dependency write."
+  },
+  "plannedEdges": [
+    {
+      "from": 211,
+      "to": 377,
+      "kind": "PLANNED",
+      "reason": "Integrated #211 source is the exact predecessor of this bounded defect repair. This is not #211 Outcome Closure and not a native dependency mutation."
+    }
+  ],
+  "nativeDependencyAudit": {
+    "issue377BlockedBy": [],
+    "issue211BlockedBy": [],
+    "requiredAtAdmission": "Re-read complete native blocked_by and Task metadata. #211→#377 remains PLANNED-only unless a separately reviewed and authorized native dependency operation occurs.",
+    "root284Effect": false,
+    "host370DependencyWrite": false
+  },
+  "hostIdentity": {
+    "task377Claim": {
+      "protectedClaimKey": "kaicreator-mm/tally#377:builder:__default__",
+      "sourceSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "actorRole": "builder",
+      "operatorKind": "other",
+      "operatorId": "zcode:i377:local-builder:1",
+      "dispatchId": "dispatch:377:native-read-retry-request-method:20261108:1",
+      "generation": 1,
+      "registryPath": "_tmp/tally-alm-claims/registry-377.sqlite",
+      "registryRule": "A dedicated per-Task registry is required but is not itself an isolation proof. Only the genuine selected Host may prepare/use it while holding the accepted shared writer/admission fence."
+    },
+    "writerIdentitySource": "Trusted selected-Host configuration only; never caller-supplied exclusiveHostControl, process absence, snapshots, mock witnesses or a raw boolean.",
+    "host370Boundary": "Do not compete with #370 for real Host writes, modify its Pack/source/registry/processes or treat its candidate fence as accepted before exact independent evidence exists."
+  },
+  "authority": {
+    "ownerAuthorization": "The current project conversation explicitly directs Delivery-First execution of #377, including independent Pack preparation, lawful Claim/FSW, bounded repair, validation and independent Exact-SHA review. The exact PackBlob-bound Owner receipt remains a durable gate.",
+    "requiredArtifacts": [
+      "Fresh independent Exact-SHA review of the immutable R1 Pack PR and exact PackBlob.",
+      "Owner receipt bound to exact PackBlob, source base SHA, two-path digest, protected Claim key, generation and dispatch ID.",
+      "Issue #377 normalized exact two-path body block and formal planned Task metadata without any Claim event.",
+      "A/#260 R17 exact-head independent PASS including #377 and the complete refreshed live roster/overlap/dependency audit.",
+      "Accepted #377 Host Claim and exact native comment/CAS readback under the genuine selected Host fence.",
+      "Per-task FROZEN_DAG_WRITESET public CAS write/readback bound to the exact PackBlob, Owner receipt, source base and two-path digest."
+    ],
+    "authorized": false,
+    "admitted": false,
+    "taskPass": false,
+    "releasePass": false
+  },
+  "gates": [
+    "Exact Issue #377 evidence, source base and two-path write set; no historical #211 Claim or missing-FSW reuse.",
+    "Immutable governance-only Pack PR and GitHub Contents API PackBlob; independent Pack review then exact PackBlob-bound Owner receipt.",
+    "Formally add #377 to the current candidate Task DAG through existing A/#260 ownership and obtain independent R17 PASS; keep all dependencies PLANNED-only.",
+    "Before Host admission set #377 to type:task/state:ready only after all prior gates; native preflight must prove OPEN/ready/type:task/dependency CLEAR and zero existing DISPATCH_CLAIMED events.",
+    "The genuine selected Host must hold the accepted shared writer/admission fence across reservation, native publication, exact readback and FROZEN_DAG_WRITESET creation/readback. If #370 has not lawfully supplied this capability, stop with ADMISSION_BLOCK and zero CAS/source writes.",
+    "Only after exact Claim/FSW readback create the separate JIT source branch at version/v2@7ebb1cdd0a79fc82cc938e35f852a80dd8e15332.",
+    "Run Windows Node 24 syntax checks FIRST, then focused adversarial tests, complete native C tests and required existing checks; bind final self-hosted Woodpecker to the final exact implementation HEAD.",
+    "One continuous Builder repairs any in-scope failure without new dispatch; then stop for fresh independent Exact-SHA source review. No merged historical PR mutation or version/main integration."
+  ],
+  "validationPlan": [
+    "Node >=24 node --check on both changed files before any test or CI.",
+    "Focused read-retry tests must fail on the vulnerable source for native Request POST/PATCH retry cases and pass after repair.",
+    "Run the complete packages/tally-github-native-c test suite, including existing WorkItem, Claim-event, publication-witness, SourcePair, publisher and Host fail-closed negatives.",
+    "Run git diff --check and require base→HEAD exactly the two admitted source/test paths.",
+    "Use existing PR/self-hosted Woodpecker profiles only after syntax PASS; do not dispatch unreviewed CI or duplicate historical #211/#212 PASS as fresh evidence.",
+    "Final validation and Woodpecker must bind to one exact implementation SHA; any source repair creates a new SHA requiring fresh final checks and independent review."
+  ],
+  "boundaries": [
+    "No source edit before lawful independent admission and exact Claim/FSW readback.",
+    "No modification of merged PR #215/#217, historical #211/#212 Claims, missing historical FSW or their source branches.",
+    "No #370/#284 real Host write competition, registry deletion/reset/seed, raw SQLite mutation, process termination or unreviewed fence substitute.",
+    "No #203 POST, native dependency write, Task closure, version Freeze, version/v2/main merge, tag, Release or deployment.",
+    "No extra source path, CI profile, new scheduler, new Host authority or generic retry API."
+  ],
+  "sourceJitBranch": {
+    "branch": "task/tally-i377-zcode",
+    "baseRef": "version/v2",
+    "baseSha": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+    "baseTreeSha": "4c3529b612f0e5a80de8f7508cd7d178e8069980",
+    "createOnlyAfter": "PackBlob-bound Owner receipt, A/#260 R17 PASS, accepted #377 Host Claim and per-task FROZEN_DAG_WRITESET readback",
+    "sourceChangesAllowed": true,
+    "mustNotReusePackArtifactBranch": true
+  },
+  "claimBindingRules": {
+    "schema": "tally.native-read-retry-claim-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/NATIVE_READ_RETRY_REQUEST_METHOD_TASK_PACK_R1.json at the final Pack PR HEAD.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final Pack commit after reading the Contents API PackBlob; never self-embed the Pack blob SHA.",
+    "ownerReceiptMustBind": [
+      "exact PackBlob SHA",
+      "source SHA 7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "writeSetSha256 58148dec98a72cf45f6ef3d902a8ea15768a92c615a6b2c0e23c6771ad8686ac",
+      "protectedClaimKey kaicreator-mm/tally#377:builder:__default__",
+      "generation 1",
+      "dispatchId dispatch:377:native-read-retry-request-method:20261108:1"
+    ],
+    "frozenWriteSetMustBind": [
+      "immutable Task Pack blob URL and exact PackBlob SHA",
+      "source SHA and two-path write-set digest",
+      "exact PackBlob-bound Owner approval and A/#260 R17 review references",
+      "protected Claim key, generation and dispatch ID",
+      "original #377 DISPATCH_CLAIMED comment ID/ref and trusted Host writer ID",
+      "frozenAt"
+    ],
+    "nullPackBlobSha": "NON_EXECUTABLE_PLACEHOLDER_ONLY",
+    "registry": "Dedicated _tmp/tally-alm-claims/registry-377.sqlite through public DomainHarness APIs under the genuine selected Host fence; never reuse #211/#203/#319/#370 registries."
+  },
+  "note": "This Pack authorizes no source edit, CI dispatch, CAS write or external effect by itself. It defines one bounded successor defect repair while preserving ADS Claim/CAS/FSW, single-writer, physical Host fencing, independent review and exact-SHA gates."
+}
