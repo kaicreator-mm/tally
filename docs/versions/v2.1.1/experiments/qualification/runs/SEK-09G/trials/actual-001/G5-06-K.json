@@ -1,0 +1,22 @@
+{
+  "qid": "G5-06",
+  "arm": "K",
+  "status": "SUCCESS",
+  "request_sha256": "97e554a7ec84d52ddf182ae50596d58cd0a1d2fcc78bfff17fb0153790eca50c",
+  "retrieval_sha256": "60775dd45906c7b07c481305ee7c9e223da9dbebf9dddf1eecbd5dcc9ba41e00",
+  "started_utc": "2026-11-08T08:32:39.893Z",
+  "answer": "SWEBOK v4.0a does not limit maintenance to just post-delivery. The guide defines maintenance as activities required for cost-effective support of software in operation, performed in both pre-delivery and post-delivery stages. It cites ISO/IEC/IEEE 14764, stating the objective of software maintenance as modifying existing software while preserving its integrity. However, the evidence shows that the ISO text itself is metadata-only and was not independently inspected in this project. Therefore, the scope of maintenance as defined in SWEBOK v4.0a includes pre-delivery activities, not just post-delivery. The limitations noted for SWEBOK v4.0a include it being a guide to the body of knowledge, not the complete body of knowledge, and not all related disciplines being characterized in full.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "34ca52fa45a26beebd03e3d8346db9dac730e767984546303fecce5cd42fb916",
+  "provider_usage": {
+    "completion_tokens": 168,
+    "prompt_tokens": 640,
+    "total_tokens": 808,
+    "prompt_tokens_details": {
+      "cached_tokens": 69
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 30447,
+  "finished_utc": "2026-11-08T08:33:10.342Z"
+}

@@ -1,0 +1,1827 @@
+lane_id: SEK-07E-BUILD-DELIVERY-LANE-0.1.0
+title: Software integration, build, CI/CD and delivery lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#338"
+scope_note: >-
+  Integration, build, CI/CD and delivery vertical-slice lane (SEK-07E) grounded in
+  directly inspected SWEBOK Guide v4.0a KA6 Software Engineering Operations
+  sections (2.1.1 Operations Plan release planning, 2.2 Development and
+  Operational Environments, 3.2 Deployment/Release Engineering, 3.3 Rollback and
+  Data Migration), SWEBOK KA8 Software Configuration Management sections
+  (1.3-1.4 SCM planning incl. the continuous-integration characterization,
+  2.5-2.6 relationships/SBOM and software libraries, 6 with 6.1 Software
+  Building and 6.2 Software Release Management), and the CS2023 Software
+  Engineering knowledge unit SE-Tools: Tools and Environments (build systems,
+  continuous integration, dependency management, release management topics).
+  Configuration-management theory beyond build/integration boundaries,
+  implementation practices, reliability/SRE operations detail, maintenance
+  evolution and planning/estimation stay in their sibling lanes. All knowledge
+  records remain PROPOSED or PENDING_REVIEW; none is ACCEPTED. Source entities
+  are not stored in this lane file; the validation harness derives shared Source
+  records from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - "SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R"
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane view ---
+    - id: se:VIEW-07E-BUILD-DELIVERY-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Integration, build, CI/CD and delivery process view
+      view_kind: PROCESS
+      purpose: >-
+        Represent integration, build, continuous integration/delivery, release
+        engineering and deployment-process knowledge as one connected process
+        region spanning the inspected SWEBOK KA6 Operations and KA8 SCM sections,
+        alongside (not merged into) the CS2023 curriculum lens.
+      coverage_state: PARTIAL
+      limitations:
+        - Coverage is limited to the SWEBOK sections this lane directly inspected; uninspected KA6/KA8 sections are not represented and may not be inferred.
+        - The view is a lane-level organizing lens, not a claim that build/delivery forms one universal process hierarchy.
+        - Curriculum (CS2023 SE-Tools) and professional-BOK (SWEBOK) records remain separate lenses; cross-view relations are explicit RelationshipAssertions, not merged nodes.
+      evidence_refs: []
+
+  taxonomy_nodes:
+    - id: se:NODE-07E-SE-TOOLS-KU
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SE-Tools: Tools and Environments"
+      definition: >-
+        The Tools and Environments knowledge unit of the CS2023 Software
+        Engineering area; the build/CI/delivery-relevant topics this lane relies
+        on are CS Core topic 1 (software configuration management and version
+        control, including configuration in version control, reproducible
+        builds/configuration, branching strategies and merging/rebasing) and KA
+        Core topics 2 and 4 (release management; software process automation:
+        build systems, continuous integration, dependency management).
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-07E-CS2023-TOOLS-KU
+    - id: se:NODE-07E-SWEBOK-KA6-OPERATIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA6 Software Engineering Operations (delivery-side sections)
+      definition: >-
+        The SWEBOK Guide v4.0a Software Engineering Operations knowledge area as
+        represented by the sections this lane directly inspected: operations
+        planning release/version tasks (2.1.1), development and operational
+        environments (2.2), deployment/release engineering (3.2) and rollback
+        with data migration (3.3). The KA's remaining sections are outside this
+        node's evidenced scope.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07E-BUILD-DELIVERY-PROCESS
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+    - id: se:NODE-07E-SWEBOK-KA8-SCM
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA8 Software Configuration Management (build/release sections)
+      definition: >-
+        The SWEBOK Guide v4.0a Software Configuration Management knowledge area
+        as represented by the sections this lane directly inspected: SCM planning
+        including the continuous-integration characterization (1.3-1.4),
+        CI/baseline relationships with the SBOM and software libraries
+        (2.5-2.6), and software release management and delivery with software
+        building (6, 6.1, 6.2). The KA's remaining sections are outside this
+        node's evidenced scope.
+      node_kind: KNOWLEDGE_AREA
+      view_ref: se:VIEW-07E-BUILD-DELIVERY-PROCESS
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+
+  source_locators:
+    # --- shared SourceLocator: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: "Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table"
+      verified_content_summary: "Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- lane CS2023 locator: heading-anchored, registry page anchor only ---
+    - id: se:LOC-07E-CS2023-SE-TOOLS-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Tools: Tools and Environments' (CS Core topic 1 with subtopics 1a-1c; KA Core topics 2-7 including 4a-4c; illustrative learning outcomes 4-6); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; page anchor per registry: SE-Tools unit at PDF page index 178 (one-based PDF page 179); printed page not independently confirmed"
+      verified_content_summary: "Build/CI/delivery-relevant curriculum topics: configuration in version control and reproducible builds/configuration; branching strategies (development vs release branches, trunk-based development); merging/rebasing; release management; software process automation (fast, hermetic, reproducible builds; CI as automated preliminary validation of head/trunk; dependency management, package management, SemVer); learning outcomes on CI as ground truth for shared code state."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- SWEBOK v4.0a KA6 locators (direct PDF inspection 2026-11-07; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, verified against the registry record; PDF page indices are
+    #     0-based, printed pages use the Guide's chapter-page folios) ---
+    - id: se:LOC-07E-SWEBOK-KA6-RELEASE-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 2 Software Engineering Operations Planning, subsection 2.1.1 Operations Plan (release and version planning tasks at the individual request level); PDF page index 156; printed page 6-7"
+      verified_content_summary: "Release/version planning tasks for validated individual requests: identify target availability dates, agree on the content of subsequent releases or versions, identify potential conflicts and develop alternatives, assess the risk of a given release and develop a rollback and data migration plan, inform all stakeholders."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA6-ENVIRONMENTS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 2 Software Engineering Operations Planning, subsection 2.2 Development and Operational Environments; PDF page indices 156-157; printed pages 6-7 to 6-8"
+      verified_content_summary: "Development, testing/QA, preproduction and production environments must be coherent and synchronized with production; DevOps recommends automated environment creation built from a single code repository (single source of truth), leading to infrastructure as code."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 3 Software Engineering Operations Delivery, subsection 3.2 Deployment/Release Engineering; PDF page index 159; printed page 6-10"
+      verified_content_summary: "Deployment (installing a specified version into an environment) vs release (making features available to customers or a segment); manual dev-to-ops hand-off characterized as inefficient; DevOps automation of deployment steps; environment-based vs application-based release strategies; canary release testing; automated rollback; release as a business decision."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA6-ROLLBACK
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 6 Software Engineering Operations, section 3 Software Engineering Operations Delivery, subsection 3.3 Rollback and Data Migration; PDF page indices 159-160; printed pages 6-10 to 6-11"
+      verified_content_summary: "Rollback and data migration return software and its database to a working state; a planned and rehearsed rollback precedes production deployment; DevOps automates the process and automated surveillance can trigger it; both release strategy categories can support rollback."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- SWEBOK v4.0a KA8 locators (same verified PDF, direct inspection 2026-11-07) ---
+    - id: se:LOC-07E-SWEBOK-KA8-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 8 Software Configuration Management, section 1 Management of the SCM Process, subsections 1.3 Planning for SCM (incl. its branching/merging and continuous-integration paragraph) and 1.4 SCM Plan; PDF page indices 186-188; printed pages 8-3 to 8-5"
+      verified_content_summary: "Branching and merging strategies should be carefully planned and communicated because they affect many SCM activities; many development approaches use continuous integration characterized by frequent build-test-deploy cycles, requiring SCM planning accordingly; SCMP subordinate procedures define which branching strategies are used, how frequently builds occur and how often automated tests run."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA8-LIBRARIES
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 8 Software Configuration Management, section 2 Software Configuration Identification, subsections 2.5 Relationships Scheme Definition (incl. the SBOM) and 2.6 Software Libraries; PDF page indices 191-192; printed pages 8-8 to 8-9"
+      verified_content_summary: "SBOM as a formal record of the details and supply-chain relationships of the components used in building software; software libraries as controlled collections whose binary objects carry cryptographic hashes for the physical configuration audit; the definitive media library holds the release baselines deployable to test, stage and production, and release management depends on these libraries."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA8-BUILDING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 8 Software Configuration Management, section 6 Software Release Management and Delivery (section introduction) and subsection 6.1 Software Building; PDF page index 196; printed page 8-13"
+      verified_content_summary: "Software building constructs the correct versions of SCIs with the appropriate configuration data into a package; SCM must usually reproduce previous releases and keep supporting tools and build instructions under control for exact rebuilds; the SBOM listing build artifacts is an important CM output; in CI, building is triggered automatically on commit and its artifacts are deployed through the release management process."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07E-SWEBOK-KA8-RELEASE-MGMT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 8 Software Configuration Management, section 6 Software Release Management and Delivery, subsection 6.2 Software Release Management; PDF page indices 196-197; printed pages 8-13 to 8-14"
+      verified_content_summary: "Release as distributing software and related artifacts outside the development activity; release management as identification, packaging and delivery of product elements; the when-to-release decision informed by problem severity and prior-release fault densities; VDD, release notes, installation/upgrade instructions, distribution tracking and digital-signature integrity; the continuous-delivery pipeline."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    - id: se:EVD-07E-CS2023-TOOLS-KU
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-CS2023-SE-TOOLS-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Tools unit places software configuration management and
+        version control in CS Core topic 1, naming configuration in version
+        control, reproducible builds/configuration, version control branching
+        strategies (development branches vs release branches, trunk-based
+        development) and merging/rebasing strategies as its topics, and places
+        software process automation in KA Core topic 4, naming the value of
+        fast, hermetic, reproducible builds with a comparison of approaches to
+        building a project (4a), continuous integration as the use of automation
+        and automated tests to do preliminary validation that the current
+        head/trunk revision builds and passes basic tests (4b), and dependency
+        management covering updating external/upstream dependencies, package
+        management and SemVer (4c); release management is KA Core topic 2.
+      context: "CS Core topic 1 (subtopics 1a-1c) and KA Core topics 2 and 4 (subtopics 4a-4c) of the SE-Tools: Tools and Environments unit."
+      method: "Read the SE-Tools topic list in the official Body of Knowledge full-text extraction captured on 2026-11-07; heading-anchored locator with the registry-verified SE-Tools page anchor (PDF page index 178)."
+      result: "The build, CI, dependency-management and release-management topic texts were confirmed for the curriculum-scoped claims of this lane."
+      limitations:
+        - "Curriculum topic titles and short descriptions; the unit does not prescribe tool choices or rank approaches."
+      uncertainty:
+        - "The unit's printed page number was not independently confirmed; heading-anchored citation with the registry page anchor is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-CS2023-TOOLS-CORE-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE Core Hours table allocates the Tools and Environments
+        knowledge unit 1 CS Core hour and 3 + 1 (SDF) KA Core hours, making it
+        one of the units carrying joint delivery with another knowledge area
+        (Software Development Fundamentals).
+      context: "Tools and Environments row of the SE Core Hours table within the nine-unit SE area."
+      method: "Read the SE Core Hours table row in the full-text extraction captured on 2026-11-07 (row identical in the SEK-06 verified anchors pack); registry-verified PDF page indices 176-177."
+      result: "The unit's CS Core and KA Core hour allocation, including the joint SDF hour, was confirmed."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-CS2023-TOOLS-OUTCOMES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-CS2023-SE-TOOLS-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The SE-Tools illustrative learning outcomes ask students to understand
+        the use of CI systems as a ground-truth for the state of the team's
+        shared code (build and test success), to describe how available static
+        and dynamic test tools can be integrated into the software development
+        environment, and to describe the issues important in selecting a set of
+        tools for the development of a specific software system, including tools
+        for build automation.
+      context: "Illustrative learning outcomes 4-6 of the SE-Tools: Tools and Environments unit."
+      method: "Read the SE-Tools illustrative learning outcomes in the full-text extraction captured on 2026-11-07; heading-anchored KU locator."
+      result: "The CI ground-truth outcome and the tool-integration/tool-selection outcomes were confirmed."
+      limitations:
+        - "Illustrative outcomes state curriculum expectations, not observed industry practice."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA6-RELEASE-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA6-RELEASE-PLANNING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.1.1 states that once individual requests are
+        received and validated, the release or version planning activity
+        requires operations engineers to identify the target availability dates
+        of individual requests, agree on the content of subsequent releases or
+        versions, identify potential conflicts and develop alternatives, assess
+        the risk of a given release and develop a rollback and data migration
+        plan in case problems arise, and inform all stakeholders.
+      context: "SWEBOK Guide v4.0a Chapter 6 subsection 2.1.1, printed page 6-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07; text extracted at the verified page index and paraphrased originally."
+      result: "The release/version planning task list was confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The section describes the planning activity from the operations engineer's role; it does not prescribe a universal release-planning procedure for all contexts."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA6-ENVIRONMENTS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.2 describes the overall software process as
+        requiring different environments at different stages — typically the
+        development environment, the testing or quality assurance environment,
+        the preproduction environment and the production environment — and
+        states that to build quality into the product and reduce the risks of
+        releasing software in production, engineers must ensure the different
+        environments are coherent and synchronized with the production
+        environment. It reports that DevOps recommends the creation of all the
+        different environments be automated and built from a single code
+        repository, that in mature DevOps organizations environment creation is
+        completely automated and available as a service, and that all
+        environments need to be built from the same code source (single source
+        of truth), which leads to the concept of infrastructure as code.
+      context: "SWEBOK Guide v4.0a Chapter 6 subsection 2.2, printed pages 6-7 to 6-8."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The environment typology, the coherence/synchronization requirement and the single-source automation recommendation were confirmed."
+      limitations:
+        - "The single-repository and automation recommendation is presented by the Guide as a DevOps recommendation, not as a universally mandated practice."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.2 defines deployment as the installation of
+        a specified version of software to a given environment (for example an
+        integration test environment or production) and release as making a
+        feature or set of features available to all customers or a segment of
+        customers. It lists release control activities from ISO/IEC/IEEE 12207
+        (identify and record release requests, identify the software system
+        elements in a release, approval, and tracking releases in their
+        specified environments). It contrasts traditional processes — an
+        application ready for deployment is transferred from a development team
+        to an operations team responsible for deployment that is mostly done
+        manually, which the Guide characterizes as inefficient from both time
+        and quality perspectives — with the DevOps call to automate the
+        deployment steps: packaging the code, generating configuration files,
+        restarting servers, configuring servers and databases, installing the
+        software on the servers, launching execution, and smoke testing. It
+        groups risk-reducing release engineering strategies into
+        environment-based strategies (deploying the new version to a staging
+        environment) and application-based strategies (toggles such as feature
+        toggles enabling or disabling code sections via configuration
+        parameters). It describes the canary release testing technique as a
+        partial, time-limited deployment of a change with an evaluation that
+        helps decide whether to proceed with complete deployment, notes tools
+        that observe newly started software and automatically roll back changes
+        that do not pass the validation period, and states that once the
+        application platform is deployed in the targeted production
+        environment, the decision to make it available to users (release it)
+        becomes a business decision.
+      context: "SWEBOK Guide v4.0a Chapter 6 subsection 3.2, printed page 6-10."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The deployment/release definitions, release control activities, the manual-vs-automated deployment contrast, the two release strategy families, the canary technique and the business-decision framing were confirmed."
+      limitations:
+        - "The section characterizes traditional manual hand-off processes as inefficient without citing quantitative evidence in the inspected text."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA6-ROLLBACK
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA6-ROLLBACK
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.3 describes rollback and data migration as
+        the terms used for the process of returning software and its database
+        to a state where they work properly, and states that software engineers
+        ensure that when a new version of the software and its databases have
+        been modified and deployed to production, they can easily and quickly
+        be rolled back in case the new version causes defects or product
+        degradation; this means a planned and rehearsed rollback is done before
+        a new version is deployed in production. It adds that DevOps processes
+        automate the process, that automated surveillance can trigger rollback
+        and data migration to a previous state so quickly the end user does not
+        notice the problem, and that both release strategy categories
+        (environment-based and application-based, from section 3.2) can be used
+        to support rollback.
+      context: "SWEBOK Guide v4.0a Chapter 6 subsection 3.3, printed pages 6-10 to 6-11."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The rollback definition, the rehearse-before-deploy requirement, the automation/surveillance note and the strategy-category linkage were confirmed."
+      limitations:
+        - "The section describes the generally accepted activity; it does not quantify rollback time budgets or prescribe rehearse frequency."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA8-PLANNING-CI
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA8-PLANNING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA8 section 1.3 directs that branching and merging
+        strategies be carefully planned and communicated because they affect
+        many SCM activities, defining a branch as a set of evolving source file
+        versions and merging as combining different changes to the same file.
+        It notes that the chosen software development life cycle model affects
+        SCM activities — for instance, many software development approaches use
+        continuous integration, which is characterized by frequent
+        build-test-deploy cycles, so SCM activities must be planned
+        accordingly — and section 1.4 records that the SCM plan is a living
+        document whose subordinate procedures define, among day-to-day
+        matters, which branching strategies will be used, how frequently builds
+        will occur, and how often automated tests of all kinds will be run.
+      context: "SWEBOK Guide v4.0a Chapter 8 subsections 1.3 and 1.4, printed pages 8-3 to 8-5."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The branching/merging planning rule, the continuous-integration characterization and the SCMP subordinate-procedure examples were confirmed."
+      limitations:
+        - "The build-test-deploy cycle phrase is the Guide's characterization of CI at planning level; the section does not prescribe specific tooling or pipeline structure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA8-LIBRARIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA8-LIBRARIES
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA8 section 2.5 defines a Software Bill of Materials
+        (SBOM) as a formal record containing the details and supply chain
+        relationships of the CIs used in building software, with SBOM CIs
+        frequently called components — source code, libraries, modules and
+        other artifacts that can be open source or proprietary, free or paid —
+        and notes that relationships between CIs can be tracked in an SBOM.
+        Section 2.6 defines a software library as a controlled collection of
+        source code, scripts, object code, documentation and related artifacts,
+        states that source code is stored in a version control system providing
+        traceability and security for the baselines developed and that multiple
+        development streams are supported in version control systems linked to
+        the binary objects derived during the build process, which are
+        typically stored in a repository that should contain cryptographic
+        hashes used to perform the physical configuration audit. It also states
+        that the definitive media library contains the release baseline(s) of
+        the artifacts that can be deployed to the test, stage and production
+        systems, and that the release management process depends on these
+        software libraries to manage the artifacts deployed.
+      context: "SWEBOK Guide v4.0a Chapter 8 subsections 2.5 and 2.6, printed pages 8-8 to 8-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The SBOM definition, the software library/definitive media library roles and the release-management dependency on libraries were confirmed."
+      limitations:
+        - "The section names library concepts and roles; it does not prescribe a specific repository or artifact-store architecture."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA8-BUILDING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA8-BUILDING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA8 section 6 frames release as distributing software and
+        related artifacts outside the development activity, including internal
+        releases and distribution to customers, and states that when different
+        versions of a software item are available for delivery, re-creating
+        specific versions and packaging the correct materials for version
+        delivery are frequently necessary, with the software library a key
+        element in release and delivery tasks. Section 6.1 defines software
+        building as constructing the correct versions of SCIs, using the
+        appropriate configuration data, into a software package for delivery to
+        a customer or other recipient such as a testing team; build instructions
+        help ensure the proper build steps are taken in the correct sequence;
+        in addition to building for new releases, SCM must usually be able to
+        reproduce previous releases for recovery, testing, maintenance or
+        additional release purposes; and to rebuild an exact copy of a
+        previously built SCI, supporting tools and associated build
+        instructions must be under SCM control to ensure availability of the
+        correct tool versions. It notes that the build process and products are
+        often subject to software quality verification, that build outputs may
+        become records of quality, security or regulatory compliance, and that
+        the SBOM listing the artifacts included in the build is an important CM
+        output. On continuous integration it states that software building is
+        performed automatically when changes to CIs are committed to a source
+        control repository: tools running on a local or cloud-based server
+        monitor the project's source control system and initiate a pipeline of
+        steps undertaken every time a change is committed to a particular
+        branch, configured to retrieve a fresh copy of the complete source code
+        and execute the necessary commands to compile and link the code, often
+        combined with steps to validate coding standards via automated static
+        analysis, execute unit tests, determine code coverage metrics, or
+        extract documentation from the source code, with the resulting
+        artifacts then deployed through the release management process.
+      context: "SWEBOK Guide v4.0a Chapter 8 section 6 introduction and subsection 6.1, printed page 8-13."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The building definition, the reproduction and tool-control requirements, the SBOM-as-build-output note and the commit-triggered pipeline description were confirmed."
+      limitations:
+        - "The pipeline description is a generally accepted characterization, not a mandate of specific pipeline stages for every project."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SWEBOK-KA8-RELEASE-MGMT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-SWEBOK-KA8-RELEASE-MGMT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA8 section 6.2 states that software release management
+        encompasses the identification, packaging and delivery of the elements
+        of a product (for example an executable program, documentation, release
+        notes or configuration data), and that given product changes can occur
+        continually, one concern is determining when to issue a release, with
+        the severity of the problems addressed by the release and measurements
+        of the fault densities of prior releases affecting this decision. The
+        packaging task identifies which product items are to be delivered and
+        selects the correct variants for the product's intended application;
+        the information documenting the physical contents of a release is the
+        version description document (VDD); release notes describe new
+        capabilities, known problems and platform requirements; the package
+        contains installation or upgrade instructions, complicated by users
+        holding versions several releases old; release management may need to
+        track the product's distribution to customers or target systems, and a
+        mechanism to help ensure the released item's integrity (for example a
+        digital signature) can be implemented. On continuous delivery it states
+        that a pipeline is established to build software continuously as
+        described in 6.1, and the resulting build artifacts — executable code
+        and libraries — can be combined into an installation package and
+        deployed into an environment for verification or production use.
+      context: "SWEBOK Guide v4.0a Chapter 8 subsection 6.2, printed pages 8-13 to 8-14."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The release management scope, the when-to-release criteria, the VDD/release-notes/packaging elements, the integrity mechanism and the continuous-delivery pipeline were confirmed."
+      limitations:
+        - "The section describes generally accepted release management activities; fault-density-driven release timing is presented as an influence on the decision, not a formula."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07E-SYNTHESIS-CI-ALIGNMENT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07E-CS2023-SE-TOOLS-KU
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07E): the CS2023 SE-Tools learning outcome that
+        positions CI systems as a ground-truth for the state of the team's
+        shared code (build and test success) and the SWEBOK KA8 description of
+        CI as commit-triggered automated building with compile, link and
+        automated checks align on the same function — automated build-plus-test
+        verification of the current shared head/trunk — even though the two
+        sources express it at different authority levels (curriculum outcome vs
+        professional-BOK process description). This combined reading is not a
+        sentence that appears in either source.
+      context: "Cross-source inference combining one CS2023 learning outcome (outcome 5 of SE-Tools) with the SWEBOK KA8 6.1 continuous-integration description; explicitly a lane-level synthesis."
+      method: "Lane-level comparison of two verified evidence records (se:EVD-07E-CS2023-TOOLS-OUTCOMES and se:EVD-07E-SWEBOK-KA8-BUILDING) from two different permitted sources."
+      result: "Provides the inference trail for the alignment claim se:CLM-07E-CI-ALIGNMENT-SYNTHESIS."
+      limitations:
+        - "Synthesis inference, not a statement in either source."
+        - "Alignment of function does not establish that either source endorses the other's authority level."
+      uncertainty:
+        - "Whether every practice described as CI in industry matches this aligned function is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07E-CONTINUOUS-INTEGRATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Continuous Integration (SWEBOK KA8 / CS2023 dual-anchored sense)
+      definition: >-
+        A working practice in which changes committed to a shared source-control
+        repository automatically trigger building the software and running
+        automated checks: SWEBOK KA8 6.1 describes tools monitoring the
+        repository that initiate a pipeline retrieving a fresh copy of the
+        complete source, compiling and linking, often combined with automated
+        static analysis, unit tests and coverage metrics; CS2023 SE-Tools
+        characterizes CI as the use of automation and automated tests to do
+        preliminary validation that the current head/trunk revision builds and
+        passes basic tests.
+      concept_kind: MECHANISM
+      synonyms:
+        - CI
+      scope_description: "Defined at the fidelity of the two inspected anchors (SWEBOK v4.0a KA8 section 6.1 and CS2023 SE-Tools KA Core topic 4b); not asserted as a single canonical industry definition."
+      applicability: "Teams with a shared source-control repository and automated build capability."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+        - se:EVD-07E-CS2023-TOOLS-KU
+    - id: se:CON-07E-DEPLOYMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Deployment (SWEBOK KA6 sense)
+      definition: >-
+        The installation of a specified version of software to a given
+        environment, such as deploying code into an integration test
+        environment or deploying code in production, as defined in SWEBOK KA6
+        section 3.2.
+      concept_kind: TERM
+      scope_description: "SWEBOK Guide v4.0a KA6 section 3.2 terminology scope; distinct from the release concept recorded separately."
+      applicability: "Environment-oriented delivery discussions anchored in the inspected SWEBOK sections."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+    - id: se:CON-07E-RELEASE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Release (two recorded SWEBOK senses)
+      definition: >-
+        The term release carries two recorded senses in the SWEBOK sections
+        this lane inspected: KA6 section 3.2 — making a feature or set of
+        features available to all customers or a segment of customers, which
+        becomes a business decision once the platform is deployed in the
+        targeted production environment; and KA8 section 6 — distributing
+        software and related artifacts outside the development activity,
+        including internal releases and distribution to customers. Both senses
+        are recorded side by side; this lane does not merge them into one
+        definition.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "Terminological variance preserved across SWEBOK Guide v4.0a KA6 section 3.2 and KA8 section 6; the variance itself is asserted by se:CLM-07E-SWEBOK-RELEASE-TERM-VARIANCE."
+      applicability: "Reading delivery-related SWEBOK-derived records; sense must be disambiguated per context."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+        - se:EVD-07E-SWEBOK-KA8-RELEASE-MGMT
+    - id: se:CON-07E-REPRODUCIBLE-BUILD
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Reproducible build
+      definition: >-
+        A build outcome in which the correct versions of the software
+        configuration items are constructed with the appropriate configuration
+        data such that a specific version can be re-created: SWEBOK KA8 6.1
+        requires the ability to reproduce previous releases and places
+        supporting tools and build instructions under SCM control so an exact
+        copy of a previously built item can be rebuilt; CS2023 SE-Tools names
+        reproducible builds/configuration as a core SCM-and-version-control
+        topic.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "Grounded in SWEBOK Guide v4.0a KA8 section 6.1 and CS2023 SE-Tools CS Core topic 1a; describes the SCM-side re-creation capability, not bit-level build determinism standards."
+      applicability: "Build and release processes that must re-create specific past versions."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+        - se:EVD-07E-CS2023-TOOLS-KU
+    - id: se:CON-07E-SBOM
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Software Bill of Materials (SBOM)
+      definition: >-
+        A formal record containing the details and supply chain relationships
+        of the configuration items (components: source code, libraries,
+        modules and other artifacts, open source or proprietary) used in
+        building software, as defined in SWEBOK KA8 section 2.5; KA8 section
+        6.1 names the SBOM listing the artifacts included in the build as an
+        important configuration management output.
+      concept_kind: TERM
+      synonyms:
+        - SBOM
+      scope_description: "SWEBOK Guide v4.0a KA8 sections 2.5 and 6.1 terminology scope; format standards for SBOMs are outside this lane's inspected sections."
+      applicability: "Build-output inventory and supply-chain traceability discussions anchored in the inspected sections."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-LIBRARIES
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+
+  knowledge_claims:
+    - id: se:CLM-07E-CI-PRELIMINARY-VALIDATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        In the CS2023 SE-Tools unit, continuous integration is taught as the
+        use of automation and automated tests to do preliminary validation
+        that the current head/trunk revision builds and passes basic tests.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE knowledge unit SE-Tools, KA Core topic 4b; a curriculum teaching characterization, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 SE tools curriculum; the curriculum word 'preliminary' bounds the validation depth claimed."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum topic sentence does not define 'basic tests' or a required pipeline structure."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-CI-GROUND-TRUTH
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        A CS2023 illustrative learning outcome for the SE-Tools unit asks
+        students to understand the use of CI systems as a ground-truth for the
+        state of the team's shared code (build and test success).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Tools illustrative learning outcome 5; curriculum expectation scope."
+      applicability: "Interpreting the epistemic role the curriculum assigns to CI systems for shared-code state."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "An illustrative outcome states what students should understand, not that CI ground truth is achieved in industry practice."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-BUILD-SYSTEMS-VALUE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SE-Tools unit presents build systems through the value of
+        fast, hermetic, reproducible builds and asks students to compare and
+        contrast approaches to building a project.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Tools KA Core topic 4a; curriculum topic scope."
+      applicability: "Reading or teaching build-systems content within the CS2023 curriculum."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum names the value attributes without prescribing a specific build technology or ranking approaches."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-DEP-RELEASE-DISTINCTION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.2 distinguishes deployment (the
+        installation of a specified version of software to a given
+        environment) from release (making a feature or set of features
+        available to all customers or a segment of customers), and states that
+        once the application platform is deployed in the targeted production
+        environment, the decision to make it available to users (release it)
+        becomes a business decision.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA6 section 3.2 (printed page 6-10); generally accepted KA content, not a mandate on release governance."
+      applicability: "Delivery-process discussions anchored in the inspected SWEBOK KA6 section."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definitions are quoted sense-by-sense from one section; SWEBOK KA8 uses 'release' with a different emphasis recorded by se:CLM-07E-SWEBOK-RELEASE-TERM-VARIANCE."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-MANUAL-DEPLOY-INEFFICIENT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.2 characterizes traditional delivery
+        processes — an application ready for deployment transferred from a
+        development team to an operations team, with deployment mostly done
+        manually — as inefficient from both time and quality perspectives, and
+        reports the DevOps call to automate the deployment steps (packaging
+        the code, generating configuration files, restarting servers,
+        configuring servers and databases, installing the software, launching
+        execution, and executing smoke testing).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA6 section 3.2 (printed page 6-10); a characterization in the professional BOK of generally accepted content, given without quantitative evidence in the inspected text."
+      applicability: "Assessing manual hand-off deployment processes against the inspected professional-BOK characterization."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The efficiency characterization is the Guide's qualitative statement; this lane adds no empirical evidence for it."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-RELEASE-STRATEGY-FAMILIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.2 groups strategies for reducing software
+        release risk into two main categories — environment-based release
+        strategies (deploying the new version of the application to a staging
+        environment) and application-based release strategies (toggles such as
+        feature toggles that enable or disable code sections via configuration
+        parameters) — and describes canary release testing as a partial and
+        time-limited deployment of a change whose evaluation helps the
+        operations engineer decide whether to proceed with a complete
+        deployment, with tools able to observe newly started software and
+        automatically roll back changes that fail the validation period.
+      claim_kind: TAXONOMY_STATEMENT
+      scope_description: "SWEBOK Guide v4.0a KA6 section 3.2 (printed page 6-10); a two-family grouping plus named techniques as presented in the inspected section."
+      applicability: "Classifying release strategies when reading SWEBOK-anchored delivery records."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "A two-category grouping of the section's own examples; it does not claim exhaustiveness over all industry release techniques."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-ROLLBACK-REHEARSED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 3.3 states that software engineers ensure a
+        newly deployed version and its databases can easily and quickly be
+        rolled back in case the new version causes defects or product
+        degradation, and that a planned and rehearsed rollback is done before
+        a new version of the software is deployed in production; both release
+        strategy categories (environment-based and application-based) can be
+        used to support rollback.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA6 section 3.3 (printed pages 6-10 to 6-11); a generally accepted requirement of the operations delivery activity as presented in the professional BOK."
+      applicability: "Production deployment processes anchored in the inspected SWEBOK section."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section does not specify rehearsal cadence or rollback-time budgets; applicability to systems where rollback is technically impractical is not discussed in the inspected text."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-ENV-SINGLE-SOURCE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.2 describes development, testing/QA,
+        preproduction and production environments that must be coherent and
+        synchronized with the production environment to build quality in and
+        reduce release risk, and reports the DevOps recommendation that the
+        creation of all the different environments be automated and built from
+        a single code repository — all environments built from the same code
+        source (single source of truth) — which leads to the concept of
+        infrastructure as code.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA6 section 2.2 (printed pages 6-7 to 6-8); the single-source/automation element is presented as a DevOps recommendation, the coherence requirement as an engineering must."
+      applicability: "Multi-environment delivery pipelines whose verification environments must track production."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The recommendation is DevOps-scoped within the Guide's presentation; the lane does not claim it as a universal standard."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-BUILD-REPRODUCIBILITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA8 section 6.1 defines software building as constructing
+        the correct versions of SCIs, using the appropriate configuration
+        data, into a software package for delivery, states that SCM must
+        usually be able to reproduce previous releases for recovery, testing,
+        maintenance or additional release purposes, and that rebuilding an
+        exact copy of a previously built SCI requires supporting tools and
+        associated build instructions to be under SCM control to ensure
+        availability of the correct tool versions.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA8 section 6.1 (printed page 8-13); generally accepted SCM content, scoped to the inspected section."
+      applicability: "Build processes whose outputs must be re-creatable for recovery, testing or maintenance."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The Guide says SCM 'must usually' be able to reproduce releases; the inspected text does not enumerate the exceptional cases."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-CI-PIPELINE-TRIGGER
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA8 section 6.1 describes continuous integration as
+        software building performed automatically when changes to CIs are
+        committed to a source control repository: tools running on a local or
+        cloud-based server monitor the source control system and initiate a
+        pipeline of steps undertaken on every commit to a particular branch,
+        configured to retrieve a fresh copy of the complete source code,
+        compile and link, often combined with automated static analysis of
+        coding standards, unit tests, code coverage metrics or documentation
+        extraction, with the resulting artifacts deployed through the release
+        management process.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA8 section 6.1 (printed page 8-13); the Guide's process-level characterization of CI at the build activity."
+      applicability: "Describing CI build pipelines at the fidelity of the inspected professional-BOK section."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The pipeline's 'often combined' steps are presented as common combinations, not mandatory stages."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-RELEASE-MGMT-SCOPE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA8 sections 6 and 6.2 frame release as distributing
+        software and related artifacts outside the development activity
+        (including internal releases and customer distribution) and release
+        management as encompassing the identification, packaging and delivery
+        of product elements, with the when-to-release decision affected by the
+        severity of problems addressed and measurements of fault densities of
+        prior releases, the physical contents documented in a version
+        description document, release notes and installation/upgrade
+        instructions included in the package, distribution tracking where
+        needed, integrity mechanisms such as digital signatures possible, and
+        — in continuous delivery — build artifacts combined into an
+        installation package and deployed into an environment for verification
+        or production use.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a KA8 sections 6 and 6.2 (printed pages 8-13 to 8-14); generally accepted release management content as presented in the inspected sections."
+      applicability: "Scoping release management activities anchored in the inspected SWEBOK KA8 sections."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The named artifacts (VDD, release notes) reflect the section's framing; different organizations may name or merge these artifacts differently."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-SWEBOK-RELEASE-TERM-VARIANCE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The term 'release' carries different emphases in the two SWEBOK
+        chapters inspected by this lane: KA6 section 3.2 ties release to
+        making features available to users or customers (a business decision
+        following deployment), while KA8 section 6 ties release to
+        distributing software and related artifacts outside the development
+        activity, including internal releases; the variance is recorded as-is
+        rather than averaged into a single definition.
+      claim_kind: LIMITATION
+      scope_description: "Lane-level terminological observation grounded in SWEBOK Guide v4.0a KA6 section 3.2 and KA8 section 6; a reading of source usage, not a criticism of either chapter."
+      applicability: "Anyone consuming both SWEBOK-derived deployment and release records from this lane must disambiguate the sense per record."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Only two sections were inspected; SWEBOK's usage of 'release' elsewhere may include further senses not recorded here."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-SBOM-LIBRARY-FOUNDATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA8 defines the SBOM as a formal record of the details
+        and supply chain relationships of the components used in building
+        software, and identifies software libraries — including the definitive
+        media library containing the release baselines deployable to test,
+        stage and production systems — as key elements that the release
+        management and delivery process depends on, with build-derived binary
+        objects stored with cryptographic hashes used to perform the physical
+        configuration audit.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA8 sections 2.5 and 2.6 (printed pages 8-8 to 8-9); generally accepted SCM content as presented in the inspected sections."
+      applicability: "Artifact and dependency inventory practices for delivery anchored in the inspected sections."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The sections name the roles; specific SBOM formats or artifact-store products are outside the inspected text."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-SCM-PLANNING-CI-AWARE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA8 section 1.3 directs that branching and merging
+        strategies be carefully planned and communicated because they affect
+        many SCM activities, notes that many development approaches use
+        continuous integration — characterized by frequent build-test-deploy
+        cycles — so SCM activities must be planned accordingly, and section
+        1.4 records that the SCM plan's subordinate procedures define which
+        branching strategies are used, how frequently builds occur and how
+        often automated tests of all kinds are run.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA8 sections 1.3-1.4 (printed pages 8-3 to 8-5); generally accepted SCM planning content."
+      applicability: "SCM and build planning at team/organization level anchored in the inspected sections."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section assigns planning responsibility without prescribing a specific branching model."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-RELEASE-PLANNING-TASKS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK v4.0a KA6 section 2.1.1 states that once individual requests
+        are received and validated, the release or version planning activity
+        requires operations engineers to identify the target availability
+        dates of individual requests, agree on the content of subsequent
+        releases or versions, identify potential conflicts and develop
+        alternatives, assess the risk of a given release and develop a
+        rollback and data migration plan in case problems arise, and inform
+        all stakeholders.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a KA6 section 2.1.1 (printed page 6-7); the operations-engineer role's release/version planning activity as presented in the inspected section."
+      applicability: "Release and version planning anchored in the inspected SWEBOK section."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The task list is presented for the operations role; projects without a distinct operations role must adapt the responsibility, not the tasks."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07E-CI-ALIGNMENT-SYNTHESIS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        Lane synthesis (SEK-07E): the CS2023 SE-Tools learning outcome on CI
+        as ground truth for the state of the team's shared code and the SWEBOK
+        KA8 commit-triggered pipeline description align on CI's function —
+        automated build-plus-test verification of the current shared
+        head/trunk — while remaining different authority levels (curriculum
+        outcome vs professional-BOK process description).
+      claim_kind: SYNTHESIS
+      scope_description: "Cross-source lane synthesis over two verified evidence records; explicitly not a sentence in either source, and asserted only for the two inspected anchors."
+      applicability: "Supporting the dual anchoring of the CI concept and pipeline practice in this lane; not usable as evidence about industry CI practice."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Functional alignment is a lane-level reading; neither source was reviewed by a human for this lane."
+      uncertainty:
+        - "Alignment does not establish equivalence of authority: the curriculum outcome states a learning expectation, the BOK a process description."
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07E-BUILD-FROM-CONTROLLED-SOURCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Build and deliver from one controlled source
+      statement: >-
+        Integration and delivery outputs should be produced by building the
+        correct versions of the configuration items with the appropriate
+        configuration data from a single controlled code source — with the
+        supporting tools and build instructions under configuration control —
+        so that what is verified is what is delivered and previous releases
+        can be reproduced.
+      rationale: >-
+        SWEBOK KA6 section 2.2 requires environments to be coherent and
+        synchronized with production and reports the DevOps recommendation
+        that environments be automated and built from a single code repository
+        (single source of truth); SWEBOK KA8 section 6.1 defines building as
+        constructing the correct SCI versions with appropriate configuration
+        data, requires the ability to reproduce previous releases, and places
+        supporting tools and build instructions under SCM control for exact
+        rebuilds.
+      scope_description: "Derived within the scope of the inspected SWEBOK KA6 2.2 and KA8 6.1 sections; professional-BOK grounded but not asserted as a universal law of delivery."
+      applicability: "Products delivered through multi-environment pipelines where verification results must transfer to production and past versions may need re-creation."
+      exceptions:
+        - "Deliverables with no expected re-creation need (one-shot disposables) weaken the reproduction element, though the single-source element still applies."
+      limitations:
+        - "No empirical evidence in this lane tests the principle's effect on delivery outcomes (see se:GAP-07E-NO-EMPIRICS)."
+        - "The single-repository automation element is presented in KA6 as a DevOps recommendation; the principle inherits that scoping."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+
+  practices:
+    - id: se:PRA-07E-CI-PIPELINE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Continuous-integration pipeline over the shared source
+      intent: >-
+        Give the team early, automated, ground-truth indication of whether the
+        current shared head/trunk revision builds and passes basic tests.
+      description: >-
+        Run an automated pipeline that is triggered when changes are committed
+        to the shared source-control repository: retrieve a fresh copy of the
+        complete source, compile and link, run the configured automated checks
+        (static analysis of coding standards, unit tests, coverage metrics,
+        documentation extraction as configured), and pass the resulting
+        artifacts to the release management process, recording build and test
+        results as the shared-code ground truth.
+      preconditions:
+        - "A shared source-control repository with monitoring capability."
+        - "An automated build for the project and at least basic automated tests."
+        - "Agreement on which branch/area of the repository triggers the pipeline."
+      steps:
+        - "Monitor the source control system for changes committed to the target branch or area."
+        - "On commit, retrieve a fresh copy of the complete source code."
+        - "Execute the commands to compile and link the code."
+        - "Run the configured automated checks (static analysis, unit tests, coverage, documentation extraction)."
+        - "Record build and test outcomes as the ground-truth state of the shared code; pass resulting artifacts to the release management process."
+      expected_outcomes:
+        - "Every committed change receives automated build-plus-test feedback on a fresh copy of the source."
+        - "The current head/trunk state (build and test success) is visible to the team without manual verification."
+        - "Build artifacts are produced consistently and flow to release management."
+      risks:
+        - "Slow pipelines delay feedback and can discourage frequent integration."
+        - "Non-hermetic builds may pass locally but behave differently in the pipeline (hermeticity is one of the curriculum's named build-systems values)."
+        - "Unstable automated checks erode trust in the ground-truth signal."
+      scope_description: "Operationalizes the SWEBOK KA8 6.1 commit-triggered pipeline description at BOK fidelity, with the CS2023 SE-Tools CI topic and ground-truth outcome as curriculum anchor; not a vendor-specific pipeline recipe."
+      applicability: "Teams with a shared repository and automated build capability; the configured checks scale with project context."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+        - se:EVD-07E-CS2023-TOOLS-KU
+      claim_refs:
+        - se:CLM-07E-CI-PIPELINE-TRIGGER
+        - se:CLM-07E-CI-PRELIMINARY-VALIDATION
+    - id: se:PRA-07E-REHEARSED-ROLLBACK
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Planned and rehearsed rollback before production deployment
+      intent: >-
+        Ensure a production deployment that causes defects or degradation can
+        be quickly and easily returned to a working state.
+      description: >-
+        Before a new version is deployed to production, develop a rollback and
+        data migration plan as part of release risk assessment and rehearse
+        the rollback; where automation is available, let automated surveillance
+        trigger the rollback when the deployed change fails its validation
+        period.
+      preconditions:
+        - "A release or version whose deployment risk has been assessed."
+        - "A defined rollback path (environment-based or application-based release strategy) covering the software and its data."
+        - "Capability to execute and rehearse the rollback before production deployment."
+      steps:
+        - "Assess the risk of the given release during release/version planning."
+        - "Develop the rollback and data migration plan covering the new version and its database changes."
+        - "Rehearse the rollback before deploying the new version to production."
+        - "After deployment, monitor the deployed change through its validation period and trigger the rehearsed rollback when problems arise."
+      expected_outcomes:
+        - "Production incidents from a new version can be answered by a rehearsed, quick return to the previous working state."
+      risks:
+        - "Data migrations without a rehearsed reverse path can make rollback impossible even when the plan exists."
+        - "Unrehearsed rollback plans fail under incident pressure."
+      scope_description: "Operationalizes SWEBOK KA6 sections 3.3 and 2.1.1 at BOK fidelity; the automation element reflects the section's DevOps framing."
+      applicability: "Production deployments whose failure or degradation would require restoring the previous state."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-ROLLBACK
+        - se:EVD-07E-SWEBOK-KA6-RELEASE-PLANNING
+      claim_refs:
+        - se:CLM-07E-ROLLBACK-REHEARSED
+    - id: se:PRA-07E-ENV-AUTOMATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Environment parity through automated single-source builds
+      intent: >-
+        Make development, testing/QA, preproduction and production
+        environments coherent and synchronized so verification results
+        transfer to production.
+      description: >-
+        Define the delivery-path environments (development, testing/QA,
+        preproduction, production), automate their creation, and build them
+        from a single code repository so all environments share the same code
+        source (single source of truth) and stay synchronized with the
+        production environment — the direction SWEBOK KA6 2.2 associates with
+        infrastructure as code.
+      preconditions:
+        - "Identified environment stages along the delivery path."
+        - "Environment definitions that can be expressed and executed as code."
+        - "A single code repository holding environment and product sources."
+      steps:
+        - "Identify the environments needed at the project's stages (development, testing/QA, preproduction, production)."
+        - "Express environment creation as automated, code-controlled definitions."
+        - "Build all environments from the same single code source."
+        - "Keep environments synchronized with the production environment as changes land."
+      expected_outcomes:
+        - "Verification performed in a non-production environment reflects the production environment's configuration."
+        - "Environment drift becomes visible as code divergence rather than undocumented difference."
+      risks:
+        - "Full production parity can be constrained by external systems or licensing not expressible as code."
+        - "Automated environment maintenance itself becomes a deliverable that must be staffed."
+      scope_description: "Operationalizes SWEBOK KA6 section 2.2 at BOK fidelity; the automation/single-source element is the section's DevOps recommendation."
+      applicability: "Multi-environment delivery pipelines; strongest where environment definitions are fully code-expressible."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      claim_refs:
+        - se:CLM-07E-ENV-SINGLE-SOURCE
+
+  patterns:
+    - id: se:PAT-07E-PIPELINE-GATED-DELIVERY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Commit-triggered pipeline with gated artifact promotion
+      problem: >-
+        Changes integrated into a shared source need automated build-and-test
+        verification before their artifacts flow toward delivery, and verified
+        artifacts need to be packaged with their contents documented and
+        deployed into environments consistently.
+      context: >-
+        A multi-developer project with a shared source-control repository and
+        a delivery path of environments (verification and production), as
+        described in the SWEBOK KA8 6.1/6.2 continuous-integration and
+        continuous-delivery pipeline descriptions and the CS2023 SE-Tools
+        build-systems/CI topics.
+      forces:
+        - "Verification freshness: every commit should be checked, not only scheduled integration points."
+        - "Reproducibility: the build must construct correct CI versions with appropriate configuration data so artifacts can be re-created."
+        - "Verification depth versus speed: more checks slow the pipeline while faster feedback favors fewer."
+        - "Artifact provenance: packaged contents must be known and traceable (SBOM, version description documentation)."
+        - "Recovery safety: promotion should preserve a way back (rollback support)."
+      solution: >-
+        Establish a pipeline that is initiated automatically on every commit
+        to the target branch: retrieve a fresh copy of the complete source,
+        build with the appropriate configuration data, run the configured
+        automated checks (static analysis, unit tests, coverage), produce
+        versioned artifacts with their contents documented (for example an
+        SBOM and release documentation), and promote the packaged artifacts
+        into an environment for verification or production use only through
+        the pipeline's gates.
+      consequences:
+        - "The current head/trunk build-and-test state is continuously available as ground truth for the shared code."
+        - "Delivered artifacts carry documented contents and reproducible provenance."
+        - "Promotion decisions and verification results are tied to specific built versions."
+      tradeoffs:
+        - "Pipeline construction and maintenance cost is traded for manual-verification reduction."
+        - "Heavier gate checks increase confidence but delay delivery feedback."
+      scope_description: "Pattern packaging is lane-level structure over the directly inspected SWEBOK KA8 6.1/6.2 pipeline descriptions and the CS2023 SE-Tools CI/build topics; it is not a named pattern in either source."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+        - se:EVD-07E-SWEBOK-KA8-RELEASE-MGMT
+
+  anti_patterns:
+    - id: se:ANT-07E-MANUAL-HANDOFF-DEPLOYMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Manual hand-off deployment
+      symptoms:
+        - "A finished application is transferred from the development team to a separate operations team that performs the deployment."
+        - "Deployment steps are executed mostly by hand rather than through automated steps."
+        - "Deployment outcomes differ run to run and depend on who executes them."
+      causes:
+        - "Organizational separation of development from deployment responsibility."
+        - "Deployment steps (packaging, configuration, server and database setup, installation, launch, smoke testing) not automated."
+      consequences:
+        - "SWEBOK KA6 3.2 characterizes the resulting processes as inefficient from both time and quality perspectives."
+        - "Slow, irregular deployments delay the availability of fixes and features."
+        - "Manual steps introduce variation that undermines verification results obtained earlier in the pipeline."
+      remediation: >-
+        Automate the deployment steps — packaging the code, generating
+        configuration files, restarting servers, configuring servers and
+        databases, installing the software, launching execution and executing
+        smoke testing — as SWEBOK KA6 3.2 reports under DevOps, keeping the
+        deployment executable by the same pipeline that built and verified the
+        artifacts.
+      scope_description: "The counterproductive characterization is directly stated in SWEBOK KA6 section 3.2 (inefficient in time and quality); the anti-pattern packaging (symptoms/causes/remediation structure) is lane-level arrangement of that inspected contrast, not a named anti-pattern in the source."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+
+  decision_models:
+    - id: se:DEC-07E-RELEASE-STRATEGY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "Which release strategy should a team use to reduce the risk of deploying a change to production?"
+      options:
+        - "Environment-based release: deploy the new version to a staging environment before wider release"
+        - "Application-based release: ship with feature toggles that enable or disable code sections via configuration"
+        - "Canary release: partial, time-limited deployment of the change with an evaluation deciding whether to proceed"
+        - "Direct full deployment without a staged strategy"
+      criteria:
+        - "Ability to evaluate the change before complete exposure."
+        - "Rollback support (both strategy categories can support rollback per SWEBOK KA6 3.3)."
+        - "Blast radius if the change misbehaves."
+        - "Infrastructure and environment cost of maintaining the strategy."
+        - "Speed of feedback to the team."
+      constraints:
+        - "A planned and rehearsed rollback must exist before production deployment (SWEBOK KA6 3.3)."
+        - "Release risk is assessed during release/version planning, together with the rollback and data migration plan (SWEBOK KA6 2.1.1)."
+        - "Once deployed to the targeted production environment, making the feature available to users is a business decision (SWEBOK KA6 3.2)."
+      procedure: >-
+        Assess the risk of the given release in release/version planning;
+        classify the candidate approaches into the environment-based and
+        application-based families and weigh them against the criteria
+        (evaluation before full exposure, rollback support, blast radius,
+        cost, feedback speed); select the strategy (or a combination); define
+        the evaluation window and observation for staged exposure; define and
+        rehearse the rollback and data migration plan; obtain the business
+        release decision before making features available to users.
+      tradeoffs:
+        - "Staged strategies reduce risk but add environment or configuration complexity and delay full availability."
+        - "Feature toggles decouple deployment from release but add configuration management burden of their own."
+      scope_description: "Structured from SWEBOK Guide v4.0a KA6 sections 3.2, 3.3 and 2.1.1; a curriculum-free professional-BOK decision aid that structures judgment rather than deciding automatically."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+        - se:EVD-07E-SWEBOK-KA6-ROLLBACK
+        - se:EVD-07E-SWEBOK-KA6-RELEASE-PLANNING
+      claim_refs:
+        - se:CLM-07E-RELEASE-STRATEGY-FAMILIES
+        - se:CLM-07E-ROLLBACK-REHEARSED
+        - se:CLM-07E-RELEASE-PLANNING-TASKS
+
+  coverage_gaps:
+    - id: se:GAP-07E-SWEBOK-BREADTH
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK coverage limited to inspected KA6/K8 sections
+      target_scope_ref: se:VIEW-07E-BUILD-DELIVERY-PROCESS
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane directly inspected and admits content only from SWEBOK
+        Guide v4.0a KA6 sections 2.1.1, 2.2, 3.2 and 3.3 and KA8 sections
+        1.3-1.4, 2.5-2.6, 6, 6.1 and 6.2. The KAs' remaining sections — e.g.
+        KA6 sections 1 (fundamentals, including software installation and
+        scripting), 3.1, 3.4 and 4 (operations control, including change
+        management), and KA8 sections 2.1-2.4, 3 (change control), 4 (status
+        accounting), 5 (auditing) and 7 (SCM tools) — were not inspected for
+        this lane; no content from them may be inferred, and no SWEBOK-derived
+        record in this lane has passed human review.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        SWEBOK-derived records here are content-verified paraphrases of the
+        inspected sections only; the lane is not a complete professional-BOK
+        reference for integration, build, CI/CD or delivery, and uninspected
+        topics remain uncovered.
+      resolution_notes:
+        - "Reinspect the remaining KA6/K8 sections and admit their records under the same locator-verified chain when needed; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
+    - id: se:GAP-07E-REAL-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real build/delivery case evidence
+      target_scope_ref: se:VIEW-07E-BUILD-DELIVERY-PROCESS
+      gap_kind: SOURCE_GAP
+      description: >-
+        No case-class source (CI/CD adoption case study, release-engineering
+        incident report, postmortem or comparable real-world material for
+        integration/build/delivery) is registered in the permitted source
+        registry, and neither SWEBOK nor CS2023 provides real case material
+        usable as Case or Counterexample evidence; the lane therefore contains
+        no Case or Counterexample records, and its pattern and anti-pattern
+        records rest on professional-BOK and curriculum text.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern records lack real-world illustration; the
+        manual-handoff anti-pattern's inefficiency characterization remains a
+        professional-BOK statement rather than an observed outcome measured in
+        this lane.
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public CI/CD or release-engineering postmortems) before promoting these records toward acceptance."
+    - id: se:GAP-07E-NO-EMPIRICS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No empirical evidence for build/CI/delivery practice effectiveness
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: SOURCE_GAP
+      description: >-
+        No empirical evidence class (industry measurement of CI/CD or release
+        practice effectiveness, adoption studies, controlled comparisons) is
+        registered among the permitted sources for this scope. The lane's
+        practice-value statements rest on professional-BOK characterization
+        (SWEBOK) and curriculum expectations (CS2023), not on measured
+        outcomes.
+      severity: LOW
+      coverage_status: OPEN
+      impact: >-
+        Claims in this lane must not be cited as empirical findings about
+        delivery performance; the principle's and practices' effectiveness is
+        untested within the lane's evidence base.
+      resolution_notes:
+        - "Register a peer-reviewed empirical source covering build/CI/CD or delivery practice outcomes and admit evidence under the locator-verified chain before any effectiveness claim is strengthened."
+    # --- shared CoverageGap: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: >-
+        The registered CS2023 permission scope expressly covers educational
+        materials and programs and requires specific permission for other uses.
+        Tally's general software-engineering knowledge graph is not presumed to
+        qualify as an educational material or program; no rights clearance for
+        broader use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: "The lane must not claim that CS2023-derived records are cleared for public redistribution or commercial product embedding until the rights scope is confirmed."
+      resolution_notes:
+        - "Obtain a documented rights determination or specific permission before public redistribution or commercial product embedding; otherwise replace the source or remove the affected records from those uses."
+      evidence_refs: []
+
+  relationship_assertions:
+    # --- canonical claim-to-evidence SUPPORTED_BY traces ---
+    - id: se:REL-07E-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-PRELIMINARY-VALIDATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-CS2023-TOOLS-KU
+      context: "Canonical claim-to-evidence trace for the CI-as-preliminary-validation curriculum claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Tools KA Core topic 4b, which is the exact curriculum topic the claim reports."
+    - id: se:REL-07E-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-GROUND-TRUTH
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-CS2023-TOOLS-OUTCOMES
+      context: "Canonical claim-to-evidence trace for the CI ground-truth learning-outcome claim."
+      rationale: "The evidence record paraphrases SE-Tools illustrative learning outcome 5, the sole curriculum basis for the ground-truth framing."
+    - id: se:REL-07E-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-BUILD-SYSTEMS-VALUE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-CS2023-TOOLS-KU
+      context: "Canonical claim-to-evidence trace for the build-systems value claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Tools KA Core topic 4a, which names fast, hermetic, reproducible builds and the compare/contrast instruction."
+    - id: se:REL-07E-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-DEP-RELEASE-DISTINCTION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "Canonical claim-to-evidence trace for the deployment/release distinction claim."
+      rationale: "The evidence record paraphrases SWEBOK KA6 section 3.2 at its verified locator (PDF page index 159; printed 6-10), which carries both definitions and the business-decision statement."
+    - id: se:REL-07E-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-MANUAL-DEPLOY-INEFFICIENT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "Canonical claim-to-evidence trace for the manual-handoff inefficiency characterization."
+      rationale: "The evidence record paraphrases the same inspected SWEBOK KA6 3.2 passage that contrasts the manual dev-to-ops hand-off with automated deployment steps."
+    - id: se:REL-07E-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-RELEASE-STRATEGY-FAMILIES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "Canonical claim-to-evidence trace for the release-strategy families claim."
+      rationale: "The evidence record paraphrases SWEBOK KA6 3.2's two-category grouping, the staging and feature-toggle examples, the canary technique and the automated-rollback observation."
+    - id: se:REL-07E-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-ROLLBACK-REHEARSED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ROLLBACK
+      context: "Canonical claim-to-evidence trace for the rehearsed-rollback claim."
+      rationale: "The evidence record paraphrases SWEBOK KA6 3.3 at its verified locator (PDF page indices 159-160; printed 6-10 to 6-11), which carries the rehearse-before-deploy requirement and the strategy-category linkage."
+    - id: se:REL-07E-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-ENV-SINGLE-SOURCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      context: "Canonical claim-to-evidence trace for the environment single-source claim."
+      rationale: "The evidence record paraphrases SWEBOK KA6 2.2 at its verified locator (PDF page indices 156-157; printed 6-7 to 6-8), which carries the environment typology, the coherence requirement and the DevOps single-source recommendation."
+    - id: se:REL-07E-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-BUILD-REPRODUCIBILITY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-BUILDING
+      context: "Canonical claim-to-evidence trace for the build reproducibility claim."
+      rationale: "The evidence record paraphrases SWEBOK KA8 6.1 at its verified locator (PDF page index 196; printed 8-13), which defines building and states the reproduction and tool-control requirements."
+    - id: se:REL-07E-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-PIPELINE-TRIGGER
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-BUILDING
+      context: "Canonical claim-to-evidence trace for the CI pipeline-trigger claim."
+      rationale: "The evidence record paraphrases the continuous-integration paragraph of SWEBOK KA8 6.1, which describes the commit-triggered monitoring, fresh-copy compile/link and optional check steps."
+    - id: se:REL-07E-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-RELEASE-MGMT-SCOPE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-RELEASE-MGMT
+      context: "Canonical claim-to-evidence trace for the release-management scope claim."
+      rationale: "The evidence record paraphrases SWEBOK KA8 6 and 6.2 at their verified locator (PDF page indices 196-197; printed 8-13 to 8-14), which carry the identification/packaging/delivery framing and the named artifacts."
+    - id: se:REL-07E-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-SWEBOK-RELEASE-TERM-VARIANCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "First evidential basis of the terminological-variance claim: the KA6 sense."
+      rationale: "The KA6 3.2 evidence records the making-features-available sense of release, one of the two senses the variance claim juxtaposes."
+    - id: se:REL-07E-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-SWEBOK-RELEASE-TERM-VARIANCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-RELEASE-MGMT
+      context: "Second evidential basis of the terminological-variance claim: the KA8 sense."
+      rationale: "The KA8 6 evidence records the distributing-artifacts-outside-development sense of release, the other sense the variance claim juxtaposes."
+    - id: se:REL-07E-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-SBOM-LIBRARY-FOUNDATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-LIBRARIES
+      context: "Canonical claim-to-evidence trace for the SBOM and library foundation claim."
+      rationale: "The evidence record paraphrases SWEBOK KA8 2.5 and 2.6 at their verified locator (PDF page indices 191-192; printed 8-8 to 8-9), which carry the SBOM definition and the library/definitive-media-library roles."
+    - id: se:REL-07E-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-SCM-PLANNING-CI-AWARE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-PLANNING-CI
+      context: "Canonical claim-to-evidence trace for the SCM-planning CI-awareness claim."
+      rationale: "The evidence record paraphrases SWEBOK KA8 1.3-1.4 at their verified locator (PDF page indices 186-188; printed 8-3 to 8-5), which carry the branching-planning rule, the CI characterization and the SCMP procedures."
+    - id: se:REL-07E-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-RELEASE-PLANNING-TASKS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-RELEASE-PLANNING
+      context: "Canonical claim-to-evidence trace for the release-planning tasks claim."
+      rationale: "The evidence record paraphrases SWEBOK KA6 2.1.1 at its verified locator (PDF page index 156; printed 6-7), which lists the release/version planning tasks."
+    - id: se:REL-07E-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-ALIGNMENT-SYNTHESIS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SYNTHESIS-CI-ALIGNMENT
+      context: "Canonical claim-to-evidence trace for the cross-source CI alignment synthesis."
+      rationale: "The synthesis evidence record documents the lane-level comparison of the two verified evidence records that the claim summarizes."
+    - id: se:REL-07E-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07E-BUILD-FROM-CONTROLLED-SOURCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      context: "First evidential basis of the single-controlled-source principle: the environment side."
+      rationale: "The KA6 2.2 evidence carries the environment coherence requirement and the single-source-of-truth recommendation feeding the principle's rationale."
+    - id: se:REL-07E-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07E-BUILD-FROM-CONTROLLED-SOURCE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-BUILDING
+      context: "Second evidential basis of the single-controlled-source principle: the build side."
+      rationale: "The KA8 6.1 evidence carries the correct-versions-with-configuration-data definition and the reproduction/tool-control requirements feeding the principle's rationale."
+    - id: se:REL-07E-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07E-PIPELINE-GATED-DELIVERY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-BUILDING
+      context: "Primary evidential basis of the pipeline-gated delivery pattern."
+      rationale: "The KA8 6.1 evidence describes the commit-triggered build pipeline whose stages the pattern structures; the packaging side is anchored by the separate KA8 6.2 edge."
+    - id: se:REL-07E-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07E-RELEASE-STRATEGY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "Primary evidential basis of the release-strategy decision model."
+      rationale: "The KA6 3.2 evidence supplies the strategy families, the canary technique and the business-decision constraint the decision model is structured from; rollback and planning constraints are anchored by separate edges."
+    - id: se:REL-07E-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-CI-PIPELINE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA8-BUILDING
+      context: "Canonical practice-to-evidence trace for the CI pipeline practice (professional-BOK basis)."
+      rationale: "The KA8 6.1 pipeline description is the procedural basis of the practice's steps; the curriculum anchor is carried by a separate edge."
+    - id: se:REL-07E-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-CI-PIPELINE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-CS2023-TOOLS-KU
+      context: "Curriculum anchor of the CI pipeline practice."
+      rationale: "The CS2023 SE-Tools topic 4b characterization (preliminary validation of head/trunk) bounds the validation depth the practice claims."
+    - id: se:REL-07E-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-REHEARSED-ROLLBACK
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ROLLBACK
+      context: "Canonical practice-to-evidence trace for the rehearsed-rollback practice."
+      rationale: "The KA6 3.3 evidence supplies the rehearse-before-deploy requirement and the surveillance-triggered rollback element the practice operationalizes."
+    - id: se:REL-07E-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-ENV-AUTOMATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      context: "Canonical practice-to-evidence trace for the environment-automation practice."
+      rationale: "The KA6 2.2 evidence supplies the environment typology and the single-source automation recommendation the practice operationalizes."
+    # --- applicability edges ---
+    - id: se:REL-07E-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-PRELIMINARY-VALIDATION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07E-SE-TOOLS-KU
+      qualifiers:
+        - "Curriculum-authority scope: the claim describes KA Core topic 4b of the SE-Tools knowledge unit only."
+        - "Not a professional body-of-knowledge applicability claim."
+      context: "Locating the CI preliminary-validation claim within the curriculum knowledge unit that teaches it."
+      rationale: "The claim is a teaching characterization of this specific CS2023 knowledge unit, so its applicability is bounded by that unit's taxonomy node."
+      evidence_refs:
+        - se:EVD-07E-CS2023-TOOLS-KU
+    - id: se:REL-07E-027
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-DEP-RELEASE-DISTINCTION
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07E-SWEBOK-KA6-OPERATIONS
+      qualifiers:
+        - "Professional-BOK scope: SWEBOK KA6 section 3.2, generally accepted content."
+        - "The claim reports the inspected section's definitions; it is not a universal release-governance mandate."
+      context: "Locating the deployment/release distinction claim within the professional-BOK node it was inspected from."
+      rationale: "The claim's definitions come from SWEBOK KA6 3.2, one of the sections evidenced by the KA6 node in the lane's process view."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+    - id: se:REL-07E-028
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-BUILD-REPRODUCIBILITY
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07E-SWEBOK-KA8-SCM
+      qualifiers:
+        - "Professional-BOK scope: SWEBOK KA8 section 6.1, generally accepted SCM content."
+        - "Applies to build/release reproduction concerns; broader SCM reproduction topics outside the inspected section are not covered."
+      context: "Locating the build-reproducibility claim within the professional-BOK node it was inspected from."
+      rationale: "The claim's requirements come from SWEBOK KA8 6.1, one of the sections evidenced by the KA8 node in the lane's process view."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+    - id: se:REL-07E-029
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-CI-PIPELINE
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07E-SWEBOK-KA8-SCM
+      qualifiers:
+        - "The practice's procedural fidelity is SWEBOK KA8 6.1 (professional-BOK)."
+        - "The curriculum anchor (CS2023 SE-Tools) bounds the claimed validation depth as preliminary; see the separate SUPPORTED_BY edge."
+      context: "Locating the CI pipeline practice within the professional-BOK node whose pipeline description it operationalizes."
+      rationale: "The practice's steps mirror the KA8 6.1 commit-triggered pipeline description, so its declared applicability is the KA8 build/release node of the lane view."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+    # --- structural dependency edges ---
+    - id: se:REL-07E-030
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07E-PIPELINE-GATED-DELIVERY
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07E-CONTINUOUS-INTEGRATION
+      context: "Structural dependency between the pipeline pattern and the continuous-integration concept."
+      rationale: "The pattern's commit-triggered, check-gated structure presupposes the CI mechanism defined in this lane; without that mechanism the pattern degenerates into scheduled manual builds."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+    - id: se:REL-07E-031
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DEC-07E-RELEASE-STRATEGY
+      predicate: DEPENDS_ON
+      object_ref: se:CLM-07E-RELEASE-STRATEGY-FAMILIES
+      context: "Structural dependency between the release-strategy decision model and the strategy-families claim."
+      rationale: "The decision model's options are the two strategy families and named techniques of the inspected KA6 3.2 claim; without that taxonomy the options are ungrounded."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+    # --- implementation edges ---
+    - id: se:REL-07E-032
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-CI-PIPELINE
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07E-CI-PIPELINE-TRIGGER
+      qualifiers:
+        - "Operationalization is at SWEBOK KA8 6.1 fidelity (monitor, fresh copy, compile/link, configured checks)."
+        - "The practice adds record-keeping and outcome framing beyond the section's description."
+      context: "The practice operationalizes the professional-BOK pipeline description."
+      rationale: "The claim states what SWEBOK KA8 6.1 describes; the practice turns that description into an actionable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-BUILDING
+    - id: se:REL-07E-033
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07E-ENV-AUTOMATION
+      predicate: IMPLEMENTS
+      object_ref: se:PRI-07E-BUILD-FROM-CONTROLLED-SOURCE
+      qualifiers:
+        - "The practice implements the environment element of the principle (automated, single-source environments)."
+        - "The build-side element of the principle is implemented by the CI pipeline practice, not this one."
+      context: "The environment-automation practice implements the single-controlled-source principle."
+      rationale: "Automated environments built from one code source are the KA6-grounded half of the principle's single-source rationale; the edge records that operationalization."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+    # --- qualification edge ---
+    - id: se:REL-07E-034
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07E-BUILD-FROM-CONTROLLED-SOURCE
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07E-SWEBOK-KA6-ENVIRONMENTS
+      qualifiers:
+        - "The single-repository automation element is presented in SWEBOK KA6 2.2 as a DevOps recommendation, which limits how strongly the principle's environment half is pushed."
+        - "The coherence requirement is stated by the section as an engineering must; the automation and single-source elements are the recommended means."
+      context: "Qualifying how strongly the principle's environment half is supported within the inspected section."
+      rationale: "The same evidence that supports the principle also shows its environment-side means are DevOps-scoped recommendations rather than unconditional requirements; the edge preserves that asymmetry."
+    # --- cross-concept relation edge ---
+    - id: se:REL-07E-035
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07E-SBOM
+      predicate: RELATED_TO
+      object_ref: se:CON-07E-REPRODUCIBLE-BUILD
+      qualifiers:
+        - "Complementary build-output constructs: the SBOM records what was built (component inventory and supply-chain relationships); reproducible builds re-create what was built."
+        - "Relation is lane-level structuring of two inspected SWEBOK KA8 sections (2.5/2.6 and 6.1); neither section states the linkage."
+      context: "Relating the build-inventory concept to the build-recreation concept."
+      rationale: "An SBOM listing the artifacts included in a build is what makes a claimed rebuild of that release checkable against its original contents, so the two concepts are used together in the inspected build/release sections."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA8-LIBRARIES
+    # --- cross-view edges ---
+    - id: se:REL-07E-036
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07E-SE-TOOLS-KU
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-07E-SWEBOK-KA6-OPERATIONS
+      qualifiers:
+        - "Cross-view mapping between the curriculum lens (VIEW-CS2023-SE) and the lane process view; not a containment or equivalence claim."
+        - "Intersection is limited to the build/CI/release-management topics of the SE-Tools unit and the delivery-side sections of the KA6 node."
+      context: "The curriculum SE-Tools unit intersects the professional-BOK operations delivery topics across the two taxonomy views."
+      rationale: "The SE-Tools unit's release-management, build-systems and CI topics cover ground that SWEBOK treats inside Software Engineering Operations delivery; the edge records that cross-lens intersection explicitly instead of merging the nodes."
+      evidence_refs:
+        - se:EVD-07E-CS2023-TOOLS-KU
+    - id: se:REL-07E-037
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07E-SE-TOOLS-KU
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-07E-SWEBOK-KA8-SCM
+      qualifiers:
+        - "Cross-view mapping between the curriculum lens (VIEW-CS2023-SE) and the lane process view; not a containment or equivalence claim."
+        - "Intersection is limited to the SCM/version-control, reproducible-build and release-management topics of the SE-Tools unit and the build/release sections of the KA8 node."
+      context: "The curriculum SE-Tools unit intersects the professional-BOK SCM build/release topics across the two taxonomy views."
+      rationale: "The SE-Tools unit's configuration-in-version-control, reproducible-builds and release-management topics cover ground that SWEBOK treats inside SCM's software building and release management; the edge records that cross-lens intersection explicitly."
+      evidence_refs:
+        - se:EVD-07E-CS2023-TOOLS-KU
+    # --- provenance edges ---
+    - id: se:REL-07E-038
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07E-MANUAL-HANDOFF-DEPLOYMENT
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+      context: "Provenance of the manual-handoff anti-pattern record."
+      rationale: "The anti-pattern's symptom, consequence and remediation content derive from SWEBOK KA6 3.2's directly inspected contrast between manual dev-to-ops hand-off and automated deployment; the packaging is lane-level arrangement of that passage."
+      evidence_refs:
+        - se:EVD-07E-SWEBOK-KA6-DEPLOY-RELEASE
+    - id: se:REL-07E-039
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07E-CI-ALIGNMENT-SYNTHESIS
+      predicate: DERIVED_FROM
+      object_ref: se:CON-07E-CONTINUOUS-INTEGRATION
+      context: "Provenance of the CI alignment synthesis claim against the dual-anchored CI concept."
+      rationale: "The alignment claim compares two source statements through the CI concept this lane defines from exactly those two sources; the edge records that conceptual derivation path."
+      evidence_refs:
+        - se:EVD-07E-SYNTHESIS-CI-ALIGNMENT

@@ -1,0 +1,205 @@
+catalog_id: SE-KNOWLEDGE-RELATIONSHIP-CATALOG-0.2.0
+status: EXPERIMENTAL_CANDIDATE
+directionality: DIRECTED
+identity: "Each assertion has its own se: CURIE, record_version and lifecycle_status."
+common_requirements:
+  - subject_ref and object_ref resolve to canonical entity ids
+  - predicate is declared in this catalog
+  - context and rationale are non-empty
+  - endpoints satisfy the predicate's subject_classes and object_classes
+  - accepted assertions require evidence_refs unless the object is itself the direct evidence/review resource; any reused evidence must be ACCEPTED, REVIEWED and exactly human-reviewed
+  - an object-carrying-provenance edge must resolve the object's own evidence_refs, or an exact ACCEPT ReviewDecision for the subject
+  - duplicate subject/predicate/object assertions are rejected unless a distinct qualifier/context is recorded
+  - no inverse edge is inferred or materialized automatically
+  - predicate enum meanings map to the exact URI used for rdf:predicate; a literal predicate value is invalid
+predicates:
+  - predicate: DERIVED_FROM
+    meaning: se:DERIVED_FROM
+    subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, CoverageGap]
+    object_classes: [Evidence, KnowledgeClaim, Concept]
+    direction: "subject was derived from object"
+    inverse_semantics: "No automatic inverse; provenance is directional."
+    evidence_required: true
+    qualifiers_required: false
+    cardinality: "0..many"
+  - predicate: SUPPORTED_BY
+    meaning: se:SUPPORTED_BY
+    subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, CoverageGap]
+    object_classes: [Evidence]
+    direction: "subject is supported by object evidence"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: false
+    object_is_evidence: true
+    qualifiers_required: false
+    cardinality: "0..many"
+  - predicate: CONTRADICTED_BY
+    meaning: se:CONTRADICTED_BY
+    subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode]
+    object_classes: [Evidence, KnowledgeClaim, Counterexample]
+    direction: "subject is challenged by object"
+    inverse_semantics: "No automatic inverse; contradiction is contextual and may be asymmetric."
+    evidence_required: false
+    object_carries_provenance: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: QUALIFIED_BY
+    meaning: se:QUALIFIED_BY
+    subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Concept]
+    object_classes: [Evidence, KnowledgeClaim, Case]
+    direction: "object qualifies the scope or applicability of subject"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: false
+    object_carries_provenance: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: APPLIES_TO
+    meaning: se:APPLIES_TO
+    subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, Concept]
+    object_classes: [Domain, Subdomain, TaxonomyNode]
+    direction: "subject applies within object scope"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: DEPENDS_ON
+    meaning: se:DEPENDS_ON
+    subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode]
+    object_classes: [Concept, KnowledgeClaim, Principle, Practice, TaxonomyNode]
+    direction: "subject depends on object"
+    inverse_semantics: "No automatic inverse; dependency is not equivalence."
+    evidence_required: true
+    qualifiers_required: false
+    cardinality: "0..many"
+  - predicate: IMPLEMENTS
+    meaning: se:IMPLEMENTS
+    subject_classes: [Practice, Pattern, DecisionModel]
+    object_classes: [Principle, Concept, KnowledgeClaim, Practice]
+    direction: "subject implements or operationalizes object"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: ILLUSTRATED_BY
+    meaning: se:ILLUSTRATED_BY
+    subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel]
+    object_classes: [Case, Counterexample]
+    direction: "subject is illustrated by object case"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: false
+    object_carries_provenance: true
+    qualifiers_required: false
+    cardinality: "0..many"
+  - predicate: VALIDATED_BY
+    meaning: se:VALIDATED_BY
+    subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel]
+    object_classes: [Evidence, Case, ReviewDecision]
+    direction: "subject has been checked or assessed by object"
+    inverse_semantics: "No automatic inverse; validation does not imply acceptance."
+    evidence_required: false
+    object_carries_provenance: true
+    review_decision_policy: ACTIVE_EXACT_TARGET_ANY_OUTCOME
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: SUPERSEDES
+    meaning: se:SUPERSEDES
+    subject_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode, Source]
+    object_classes: [KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, TaxonomyNode, Source]
+    direction: "subject supersedes object"
+    inverse_semantics: "Inverse is superseded_by; never auto-created."
+    evidence_required: true
+    same_class_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: RELATED_TO
+    meaning: se:RELATED_TO
+    subject_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, Subdomain]
+    object_classes: [Concept, KnowledgeClaim, Principle, Practice, Pattern, AntiPattern, DecisionModel, Case, TaxonomyNode, Subdomain]
+    direction: "subject has a qualified relation to object"
+    inverse_semantics: "No automatic inverse; relation meaning must be qualified."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: PART_OF
+    meaning: se:PART_OF
+    subject_classes: [TaxonomyNode]
+    object_classes: [TaxonomyNode]
+    direction: "subject is a constituent of object within the same TaxonomyView"
+    inverse_semantics: "Inverse is has_part; not materialized automatically. Cross-view mappings use explicit typed relations such as SPECIALIZES, CROSS_CUTS or OVERLAPS."
+    evidence_required: false
+    qualifiers_required: false
+    same_taxonomy_view_required: true
+    cardinality: "0..many"
+  - predicate: SPECIALIZES
+    meaning: se:SPECIALIZES
+    subject_classes: [Subdomain, TaxonomyNode, Concept]
+    object_classes: [Subdomain, TaxonomyNode, Concept]
+    direction: "subject is a specialization of object"
+    inverse_semantics: "Inverse is generalized_by; not materialized automatically."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: CROSS_CUTS
+    meaning: se:CROSS_CUTS
+    subject_classes: [TaxonomyNode, Subdomain, Concept, Practice]
+    object_classes: [TaxonomyNode, Subdomain, Concept, Practice]
+    direction: "subject concerns or intersects object across its primary view"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: OVERLAPS
+    meaning: se:OVERLAPS
+    subject_classes: [TaxonomyNode, Subdomain, Concept]
+    object_classes: [TaxonomyNode, Subdomain, Concept]
+    direction: "subject partially shares scope with object"
+    inverse_semantics: "Semantically symmetric; store one canonical ordered pair with subject_ref lexically less than object_ref; do not infer a second edge."
+    evidence_required: true
+    qualifiers_required: true
+    cardinality: "0..many"
+  - predicate: BOUNDED_BY
+    meaning: se:BOUNDED_BY
+    subject_classes: [Domain, Subdomain, TaxonomyView, TaxonomyNode]
+    object_classes: [Domain, Subdomain, TaxonomyNode, Evidence]
+    direction: "subject boundary is constrained or evidenced by object"
+    inverse_semantics: "No automatic inverse."
+    evidence_required: false
+    object_carries_provenance: true
+    qualifiers_required: true
+    cardinality: "0..many"
+validation:
+  fail_closed:
+    - unknown_predicate
+    - missing_subject
+    - missing_object
+    - dangling_subject_reference
+    - dangling_object_reference
+    - wrong_subject_class
+    - wrong_object_class_for_predicate
+    - missing_required_evidence
+    - missing_required_qualifier
+    - duplicate_identifier
+    - duplicate_alias
+    - accepted_synthetic_record
+    - accepted_without_evidence
+    - supersedes_cycle
+    - part_of_cycle
+    - duplicate_source_locator
+    - duplicate_relationship_signature
+    - overlaps_noncanonical_pair
+    - review_digest_mismatch
+    - accepted_evidence_not_reviewed
+    - accepted_synthetic_evidence
+    - evidence_without_human_review
+    - missing_reviewer_identity
+    - missing_review_policy
+    - missing_review_rationale
+    - evidence_not_accepted
+    - source_locator_not_verified
+    - conflicting_review_decisions
+    - validation_review_does_not_bind_subject
+    - graph_id_collides_with_entity
+    - accepted_pattern_references_unaccepted_case
+  canonical_identifier_pattern: "^se:[A-Z0-9][A-Z0-9._-]*$"
+  evidence_closure:
+    Evidence.source_locator_ref: SourceLocator
+    SourceLocator.source_ref: Source

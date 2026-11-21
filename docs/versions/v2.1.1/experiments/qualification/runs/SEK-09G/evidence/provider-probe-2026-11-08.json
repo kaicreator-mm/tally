@@ -1,0 +1,76 @@
+{
+  "record_kind": "PROVIDER_PROBE",
+  "run_id": "SEK-09G",
+  "issue": "#367",
+  "probe_time_utc": "2026-11-08T00:19:57Z",
+  "operator": "Lane B Writer (tally-i367-k3)",
+  "environment": {
+    "node": "v24.21.0",
+    "python": "3.14.7 (pyyaml 6.0.3)",
+    "platform": "win32 10.0.26300 x64, Git Bash"
+  },
+  "constraint": "Local, non-billable inference only (issue #367 outcome step 2). Paid LLM APIs are out of scope: a DeepSeek key exists in the environment for other test purposes, but using it would bill against a paid API and was therefore NOT used.",
+  "probes": [
+    {
+      "provider": "Ollama",
+      "command": "curl -s -m 4 -o /dev/null -w \"HTTP=%{http_code}\" http://localhost:11434/api/tags",
+      "exit_code": 7,
+      "result": "connection refused (no server on port 11434)"
+    },
+    {
+      "provider": "Ollama",
+      "command": "where ollama",
+      "exit_code": 1,
+      "result": "binary not installed; no model store at ~/.ollama/models"
+    },
+    {
+      "provider": "LM Studio",
+      "command": "curl -s -m 4 -o /dev/null -w \"HTTP=%{http_code}\" http://localhost:1234/v1/models",
+      "exit_code": 7,
+      "result": "connection refused (no local server on port 1234)"
+    },
+    {
+      "provider": "LM Studio",
+      "command": "where lms; ls $LOCALAPPDATA/lm-studio $USERPROFILE/.lmstudio",
+      "exit_code": 1,
+      "result": "CLI/app data not present"
+    },
+    {
+      "provider": "llama.cpp / llamafile",
+      "command": "where llama-server llama-cli llamafile",
+      "exit_code": 1,
+      "result": "no local inference binaries on PATH"
+    },
+    {
+      "provider": "Python inference stacks",
+      "command": "pip list | grep -i -E \"llama|vllm|transformers|torch\"",
+      "exit_code": 1,
+      "result": "no llama-cpp-python / vllm / transformers / torch installed; nothing runnable"
+    },
+    {
+      "provider": "Docker containers",
+      "command": "docker ps --format \"{{.Names}} {{.Image}}\"",
+      "exit_code": 0,
+      "result": "only woodpecker-agent-local, verdaccio-npm-cache, postgres-18 running; no inference container"
+    },
+    {
+      "provider": "Other local OpenAI-compatible servers",
+      "command": "for p in 8080 8000 5000 5001 11435 4891; do curl -s -m 2 http://localhost:$p/v1/models; done",
+      "exit_code": 28,
+      "result": "all common local inference ports unreachable (HTTP=000, curl timeout)"
+    },
+    {
+      "provider": "Hugging Face local model cache",
+      "command": "ls $USERPROFILE/.cache/huggingface",
+      "exit_code": 1,
+      "result": "no cached local models"
+    }
+  ],
+  "conclusion": "PROVIDER_UNAVAILABLE",
+  "details": "No non-billable local inference provider (Ollama, LM Studio, llama.cpp, vLLM, text-generation-webui, or equivalent) is installed, running, or reachable on this machine. Zero model calls were made; no answers, scores, or trial records were produced.",
+  "next_actions": [
+    "Install a local inference runtime with an open-weights model, e.g. Ollama (https://ollama.com) plus a 7B-class model such as qwen2.5:7b or llama3.1:8b, or install LM Studio and load an equivalent GGUF model.",
+    "Re-run this stage's 7 direct + 7 corpus-grounded calls (14 total, repeat=1) against that provider, recording provider/model/revision, parameters, UTC timestamps, request/response/retrieval/input hashes and statuses as required by the SEK-09E preregistration.",
+    "Alternatively, a separately authorized budget decision could permit a paid API; that decision is outside this task's authority and no paid call was made."
+  ]
+}

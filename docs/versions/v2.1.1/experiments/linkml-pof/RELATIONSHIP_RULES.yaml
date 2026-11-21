@@ -1,0 +1,34 @@
+schema_id: https://github.com/kaicreator-mm/tally
+ruleset_id: se-linkml-pof-relationship-rules-0.1.0
+status: EXPERIMENTAL / NOT_ADOPTED
+description: >-
+  Predicate-specific endpoint integrity rules for the narrow SEK-04 proof-of-fit.
+  These rules complement LinkML's structural class-range validation and are not
+  a production relationship ontology.
+rules:
+  - predicate: SUPPORTED_BY
+    subject_class: KnowledgeClaim
+    object_class: Evidence
+    object_slot: object_ref
+    evidence_required: true
+  - predicate: INCLUDES
+    subject_class: KnowledgeClaim
+    object_class: DomainNode
+    object_slot: object_ref
+    evidence_required: true
+validation:
+  fail_closed:
+    - unknown_predicate
+    - missing_subject
+    - missing_object
+    - dangling_subject_reference
+    - dangling_object_reference
+    - wrong_subject_class
+    - wrong_object_class_for_predicate
+    - duplicate_identifier
+  rdf_expectations:
+    object_predicate: rdf:object
+    object_node_kind: URIRef
+    reject_object_literal: true
+    identifier_prefix: se
+    expanded_identifier_base: https://github.com/kaicreator-mm/tally#

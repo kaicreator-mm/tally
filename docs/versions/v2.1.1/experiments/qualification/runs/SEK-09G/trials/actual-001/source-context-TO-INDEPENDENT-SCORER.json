@@ -1,0 +1,237 @@
+{
+  "status": "FROZEN_PINNED_SOURCE_CONTEXT",
+  "items": [
+    {
+      "qid": "G5-01",
+      "question": "In CS2023's requirements curriculum, which functional-requirement description approaches are named, and is one ranked best?",
+      "criteria": "Mentions use cases and user stories; describes method's design/implementation support plus strengths/weaknesses; notes no superiority ranking",
+      "hard_exclusions": "Claims required universal method or empirically proven superiority",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-REQ-FUNCTIONAL-DOC-METHODS",
+          "statement": "In the CS2023 curriculum, functional requirements are to be described using at least one documentation and structuring method (use cases and user stories are the named examples), with explicit attention to how the method supports design and implementation and to the strengths and weaknesses of the specific approach.",
+          "scope": "CS2023 SE knowledge unit SE-Requirements: Product Requirements, KA Core topic 1 (subtopics 1a-1c); a curriculum teaching expectation, not a professional-consensus claim.",
+          "limitations": "The curriculum does not evaluate which method is superior; it requires understanding of support and trade-offs."
+        },
+        "evidence": {
+          "id": "se:EVD-REQ-FUNCTIONAL-REQ-METHODS",
+          "statement": "CS2023 asks students to describe functional requirements using at least one method of documenting and structuring them, giving use cases and user stories as examples, to understand how the chosen method supports design and implementation, and to weigh the strengths and weaknesses of a specific approach.",
+          "limitations": "The curriculum names example methods only; it does not rank use cases against user stories."
+        },
+        "locator": {
+          "id": "se:LOC-CS2023-SE-REQ-KU",
+          "section": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements' (KA Core topics 1-6, Non-core topics 7-9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+        },
+        "source": {
+          "id": "se:SRC-CS2023",
+          "title": "Computer Science Curricula 2023",
+          "limitations": [
+            "Curriculum framework, not a complete professional Software Engineering domain taxonomy",
+            "Knowledge-unit counts do not establish professional-domain completeness"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-02",
+      "question": "Does CS2023 distinguish architectural from detailed design, and specify exact criteria for their boundary?",
+      "criteria": "Two levels of design abstraction are distinguished; detailed boundary criteria not supplied by the cited curriculum item",
+      "hard_exclusions": "Implies ISO 42010 was directly inspected or gives a universal boundary",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-ARC-0001",
+          "statement": "Within the CS2023 SE-Design knowledge unit, architectural design and detailed design are presented as distinct levels of abstraction in software design.",
+          "scope": "CS2023 SE-Design CS Core topic 1a curriculum scope.",
+          "limitations": [
+            "Architecture description as a normative ISO 42010 concept is unavailable in this corpus and is not claimed.",
+            "Example-level curriculum listing; boundary criteria between the levels are not given."
+          ]
+        },
+        "evidence": {
+          "id": "se:EVD-ARC-0001",
+          "statement": "CS2023 SE-Design lists levels of abstraction as a system design topic in CS Core topic 1, giving architectural design and detailed design as its examples.",
+          "limitations": [
+            "Curriculum scope only; not a normative distinction from ISO/IEC/IEEE 42010, which remains metadata-only.",
+            "Example-level curriculum listing; the topic text does not define the levels or their boundary criteria."
+          ]
+        },
+        "locator": {
+          "id": "se:LOC-CS2023-SE-DESIGN-KU",
+          "section": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Design: Software Design' (CS Core topics 1-4, KA Core topics 5-9, Non-core topics 10-13); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+        },
+        "source": {
+          "id": "se:SRC-CS2023",
+          "title": "Computer Science Curricula 2023",
+          "limitations": [
+            "Curriculum framework, not a complete professional Software Engineering domain taxonomy",
+            "Knowledge-unit counts do not establish professional-domain completeness"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-03",
+      "question": "How does the CS2023 SE-Validation unit distinguish verification from validation?",
+      "criteria": "Verification asks whether building right; validation asks whether the right thing is built; explicitly curriculum-scoped",
+      "hard_exclusions": "Asserts professional-standard authority from an uninspected ISO source",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-TVV-0001",
+          "statement": "CS2023's SE-Validation unit defines verification and validation as two distinct questions — verification asks whether the thing is being built right, and validation asks whether the right thing was built — and its learning outcomes expect students to distinguish program validation from verification.",
+          "scope": "CS2023 SE-Validation knowledge unit, CS Core topic 1 and CS Core learning outcome 2.",
+          "limitations": "The two-question formulation distinguishes conformance-checking from fitness-for-purpose; it does not imply that passing tests proves correctness or that validation equals acceptance."
+        },
+        "evidence": {
+          "id": "se:EVD-TVV-0003",
+          "statement": "CS Core topic 1 of the SE-Validation unit distinguishes verification (\"Are we building the thing right?\") from validation (\"Did we build the right thing?\"); illustrative learning outcome 2 expects students to distinguish between program validation and verification.",
+          "limitations": "The two-question formulation is a curriculum teaching device; the source does not elaborate when each question is fully answered."
+        },
+        "locator": {
+          "id": "se:LOC-CS2023-SE-VALIDATION-KU",
+          "section": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Validation: Software Verification and Validation' (CS Core topics 1-5, KA Core topics 6-9, Non-core topics 10-14); heading and topic text verified by full-text extraction of the official PDF on 2026-11-06; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+        },
+        "source": {
+          "id": "se:SRC-CS2023",
+          "title": "Computer Science Curricula 2023",
+          "limitations": [
+            "Curriculum framework, not a complete professional Software Engineering domain taxonomy",
+            "Knowledge-unit counts do not establish professional-domain completeness"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-04",
+      "question": "Does SWEBOK v4.0a's construction definition include verification, tests and debugging, and establish fixed process boundaries?",
+      "criteria": "Construction includes coding, verification, unit/integration testing and debugging; design also occurs there; boundaries vary with lifecycle",
+      "hard_exclusions": "Enforces a single SDLC decomposition",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+          "statement": "SWEBOK Guide v4.0a KA4 defines software construction as the detailed creation and maintenance of software through coding, verification, unit testing, integration testing and debugging; states that much design work is performed during construction; and states that boundaries among design, construction and testing, if any, vary depending on the software life cycle processes used.",
+          "scope": "SWEBOK Guide v4.0a Chapter 4 Introduction (printed page 4-1); generally accepted KA content, not a universal process prescription.",
+          "limitations": "The definition deliberately leaves the design/construction/testing boundary life-cycle dependent; it does not fix one process decomposition."
+        },
+        "evidence": {
+          "id": "se:EVD-07B-SWEBOK-CONSTRUCTION-DEFINITION",
+          "statement": "SWEBOK v4.0a KA4 defines software construction as the detailed creation and maintenance of software through coding, verification, unit testing, integration testing and debugging; states the KA is linked to all other KAs but most strongly to Software Design (much design work is performed during construction) and Software Testing (engineers unit-test and integration-test throughout construction); and notes that boundaries among design, construction and testing, if any, vary depending on the software life cycle processes used in a project.",
+          "limitations": "The Introduction describes linkages between knowledge areas, not measured coupling between activities."
+        },
+        "locator": {
+          "id": "se:LOC-07B-SWEBOK-KA4-INTRO-FUNDAMENTALS",
+          "section": "SWEBOK Guide v4.0a, Chapter 4 Software Construction, Introduction and section 1 Software Construction Fundamentals, including 1.1 Minimizing Complexity, 1.2 Anticipating and Embracing Change, 1.3 Constructing for Verification, 1.4 Reusing Assets and 1.5 Applying Standards in Construction; PDF page indices 98-101; printed pages 4-1 to 4-4"
+        },
+        "source": {
+          "id": "se:SRC-SWEBOK-GUIDE-4-0A",
+          "title": "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a",
+          "limitations": [
+            "A guide to the body of knowledge, not the complete body of knowledge",
+            "Generally accepted knowledge is not a uniform prescription for every project",
+            "Its topic citations are not comprehensive",
+            "Related disciplines are identified but not characterized in full"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-05",
+      "question": "Does CS2023's Software Reliability unit specify a measurement procedure for its reliability quantities?",
+      "criteria": "Mentions probability-of-failure / mean-time-between-failures characterizations; faults cause failures; no measurement procedure in this extracted topic",
+      "hard_exclusions": "Invents a reliability formula or calls the curriculum a normative standard",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-07D-RELIABILITY-PROBABILITY-DEFINITION",
+          "statement": "In the CS2023 curriculum, the concept of reliability is characterized as the probability of failure or the mean time between failures, with faults treated as the cause of failures.",
+          "scope": "CS2023 SE knowledge unit SE-Reliability: Software Reliability, KA Core topic 1; a curriculum-scope characterization, not a professional-standard definition.",
+          "limitations": "The topic names two quantifications without measurement procedure; this claim does not import one."
+        },
+        "evidence": {
+          "id": "se:EVD-07D-CS2023-RELIABILITY-CONCEPT",
+          "statement": "CS2023's first core reliability topic defines the concept of reliability as the probability of failure or the mean time between failures, and treats faults as the cause of failures.",
+          "limitations": "The topic names the two quantifications without elaborating measurement procedure; procedural detail is not in this anchor."
+        },
+        "locator": {
+          "id": "se:LOC-07D-CS2023-SE-RELIABILITY-KU",
+          "section": "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Reliability: Software Reliability' (KA Core topics 1-6, Non-core topics 7-11, Illustrative Learning Outcomes 1-3); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+        },
+        "source": {
+          "id": "se:SRC-CS2023",
+          "title": "Computer Science Curricula 2023",
+          "limitations": [
+            "Curriculum framework, not a complete professional Software Engineering domain taxonomy",
+            "Knowledge-unit counts do not establish professional-domain completeness"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-06",
+      "question": "Is maintenance in SWEBOK v4.0a limited to post-delivery, and was the cited ISO 14764 text inspected here?",
+      "criteria": "Activities occur pre-/post-delivery; cost-effective support for operational software; ISO 14764 objective is reported second-hand by SWEBOK",
+      "hard_exclusions": "Treats project as having inspected ISO 14764 normative text",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-07F-SWEBOK-MAINT-DEFINITION",
+          "statement": "SWEBOK Guide v4.0a defines software maintenance as the totality of activities required to provide cost-effective support for software in operation, performed in pre-delivery and post-delivery stages, and reports the ISO/IEC/IEEE 14764 objective of software maintenance as modifying existing software while preserving its integrity.",
+          "scope": "SWEBOK Guide v4.0a KA7 Introduction and section 1.1; a professional-BOK definition citing ISO/IEC/IEEE 14764, whose text is metadata-only in this project.",
+          "limitations": "The ISO/IEC/IEEE 14764 objective is reported by SWEBOK; the ISO text was not independently inspected."
+        },
+        "evidence": {
+          "id": "se:EVD-07F-SWEBOK-MAINT-DEFINITION",
+          "statement": "SWEBOK Guide v4.0a KA7 defines software maintenance as the totality of activities required to provide cost-effective support for software in operation, with activities performed during a pre-delivery stage (planning for post-delivery operations, maintainability, and logistics support for the transition from development to maintenance) and a post-delivery stage (software surveillance, modification, training, and operating or interfacing with a help desk). Citing ISO/IEC/IEEE 14764, it states the objective of software maintenance as modifying existing software while preserving its integrity, and notes the maintenance phase begins after a warranty or post-implementation support period while maintenance activities occur much earlier.",
+          "limitations": "The ISO/IEC/IEEE 14764 standard itself is registry metadata-only in this project; the objective is cited as SWEBOK reports it, not from the ISO text."
+        },
+        "locator": {
+          "id": "se:LOC-07F-SWEBOK-KA7-MAINT-DEF",
+          "section": "SWEBOK Guide v4.0a, Chapter 7 Software Maintenance, chapter Introduction plus section 1.1 Definitions and Terminology; PDF page indices 166-167; printed pages 7-1 to 7-2"
+        },
+        "source": {
+          "id": "se:SRC-SWEBOK-GUIDE-4-0A",
+          "title": "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a",
+          "limitations": [
+            "A guide to the body of knowledge, not the complete body of knowledge",
+            "Generally accepted knowledge is not a uniform prescription for every project",
+            "Its topic citations are not comprehensive",
+            "Related disciplines are identified but not characterized in full"
+          ]
+        }
+      }
+    },
+    {
+      "qid": "G5-07",
+      "question": "What activities fall under software engineering management according to SWEBOK v4.0a, and does that establish universal consensus?",
+      "criteria": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome; explicitly SWEBOK definition",
+      "hard_exclusions": "Claims industry-wide consensus/regulation not established by corpus",
+      "retrieval": {
+        "claim": {
+          "id": "se:CLM-07G-SWEBOK-SEM-DEFINITION",
+          "statement": "SWEBOK Guide v4.0a KA9 defines software engineering management as the collection of work activities involved with planning, estimating, measuring, controlling, coordinating, leading and managing risk factors for a software project so that software products and engineering services are delivered efficiently, effectively and to the stakeholders' benefit, and treats project management and measurement management together in one knowledge area because of their close relationship.",
+          "scope": "SWEBOK Guide v4.0a Chapter 9 Introduction (printed pages 9-1 and 9-4); a professional-BOK definition claim, not a regulatory definition.",
+          "limitations": "The definition is the Guide's; adopting it here does not assert industry-wide terminological consensus."
+        },
+        "evidence": {
+          "id": "se:EVD-07G-SWEBOK-SEM-INTRO",
+          "statement": "SWEBOK Guide v4.0a KA9 defines software engineering management as the collection of work activities involved with planning, estimating, measuring, controlling, coordinating, leading and managing risk factors for a software project so that software products and engineering services are delivered efficiently, effectively and to the stakeholders' benefit, and treats project management and measurement management together because of their close relationship. The introduction asserts that measurement-informed management is a basic principle of any true engineering discipline — that management without measurement (qualitative and quantitative) suggests a lack of discipline and measurement without management suggests a lack of purpose or context — and adopts working definitions of management (a system of processes and controls to achieve the organization's strategic objectives) and measurement (assigning values and labels to work products, processes, resources and models derived from them). The chapter's breakdown is activity-based, listing seven topics (initiation and scope definition, project planning, project enactment, review and evaluation, closure, measurement, management tools) regardless of SDLC model.",
+          "limitations": [
+            "The Guide's authority limitations apply: generally accepted knowledge, not a uniform prescription.",
+            "The introduction cites an external perception that software is often delivered late, over budget and of poor quality; this lane does not adopt that perception as an empirical finding."
+          ]
+        },
+        "locator": {
+          "id": "se:LOC-07G-SWEBOK-KA9-INTRO",
+          "section": "SWEBOK Guide v4.0a, Chapter 9 Software Engineering Management, Introduction (software engineering management definition; measurement-informed management discussion; working definitions of management and measurement; seven-topic activity-based breakdown incl. Figure 9.1); PDF page indices 201-206; printed pages 9-1 to 9-6"
+        },
+        "source": {
+          "id": "se:SRC-SWEBOK-GUIDE-4-0A",
+          "title": "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a",
+          "limitations": [
+            "A guide to the body of knowledge, not the complete body of knowledge",
+            "Generally accepted knowledge is not a uniform prescription for every project",
+            "Its topic citations are not comprehensive",
+            "Related disciplines are identified but not characterized in full"
+          ]
+        }
+      }
+    }
+  ]
+}

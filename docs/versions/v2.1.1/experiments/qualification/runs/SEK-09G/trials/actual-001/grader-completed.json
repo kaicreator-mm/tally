@@ -1,0 +1,238 @@
+{
+  "reviewer_ref": "kimi-executor independent blind grading agent (no arm-key access)",
+  "reviewer_kind": "INDEPENDENT_MODEL_GRADER",
+  "independent_from_builder": true,
+  "evaluated_at_utc": "2026-11-08T08:39:46Z",
+  "ratings": [
+    {
+      "blind_id": "G5-01-1",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Mentions use cases and user stories", "outcome": "MET" },
+        { "criterion": "describes method's design/implementation support plus strengths/weaknesses", "outcome": "MET" },
+        { "criterion": "notes no superiority ranking", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-01-2",
+      "correctness_0_2": 1,
+      "scope_0_2": 1,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Mentions use cases and user stories", "outcome": "MET" },
+        { "criterion": "describes method's design/implementation support plus strengths/weaknesses", "outcome": "OMITTED" },
+        { "criterion": "notes no superiority ranking", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "User Stories are often considered a popular and effective approach",
+          "reason": "The pinned source context only says CS2023 names use cases and user stories as examples and does not rank them; nothing supports popularity/effectiveness characterizations.",
+          "source_check": "Checked against G5-01 claim/evidence statements and evidence limitation 'it does not rank use cases against user stories' in source-context-TO-INDEPENDENT-SCORER.json."
+        },
+        {
+          "span": "User Stories are generally favored in agile environments due to their simplicity and focus on user needs, while Use Cases are preferred in more structured environments for their detailed and formal nature",
+          "reason": "Agile-vs-traditional preference claims are not present anywhere in the pinned source context for G5-01.",
+          "source_check": "Checked against the full G5-01 retrieval block (claim, evidence, locator, source) in source-context-TO-INDEPENDENT-SCORER.json; no such preference or methodology claims exist."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-02-1",
+      "correctness_0_2": 0,
+      "scope_0_2": 1,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Two levels of design abstraction are distinguished", "outcome": "OMITTED" },
+        { "criterion": "detailed boundary criteria not supplied by the cited curriculum item", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "The document focuses more on the overall process and methodologies rather than delineating specific design phases",
+          "reason": "Unsupported characterization; the pinned context states CS2023 SE-Design lists architectural design and detailed design as examples of levels of abstraction, i.e. it does present two levels.",
+          "source_check": "Checked against G5-02 claim statement 'architectural design and detailed design are presented as distinct levels of abstraction' and evidence 'giving architectural design and detailed design as its examples' in source-context-TO-INDEPENDENT-SCORER.json."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-02-2",
+      "correctness_0_2": 1,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Two levels of design abstraction are distinguished", "outcome": "OMITTED" },
+        { "criterion": "detailed boundary criteria not supplied by the cited curriculum item", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-03-1",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Verification asks whether building right", "outcome": "MET" },
+        { "criterion": "validation asks whether the right thing is built", "outcome": "MET" },
+        { "criterion": "explicitly curriculum-scoped", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-03-2",
+      "correctness_0_2": 2,
+      "scope_0_2": 1,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Verification asks whether building right", "outcome": "MET" },
+        { "criterion": "validation asks whether the right thing is built", "outcome": "MET" },
+        { "criterion": "explicitly curriculum-scoped", "outcome": "OMITTED" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "these definitions are not universally standardized",
+          "reason": "The pinned source context does not discuss whether these definitions are universally standardized or vary by organization; this generalization goes beyond the pinned evidence.",
+          "source_check": "Checked against the full G5-03 retrieval block in source-context-TO-INDEPENDENT-SCORER.json; claim/evidence limitations only cover test-correctness and acceptance nuances, not standardization universality."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-04-1",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Construction includes coding, verification, unit/integration testing and debugging", "outcome": "OMITTED" },
+        { "criterion": "design also occurs there", "outcome": "OMITTED" },
+        { "criterion": "boundaries vary with lifecycle", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-04-2",
+      "correctness_0_2": 0,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Construction includes coding, verification, unit/integration testing and debugging", "outcome": "OMITTED" },
+        { "criterion": "design also occurs there", "outcome": "MET" },
+        { "criterion": "boundaries vary with lifecycle", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "debugging is often treated as a separate phase focusing on fixing errors after the system is operational",
+          "reason": "Directly contradicts the pinned source: SWEBOK v4.0a KA4 defines construction as including debugging; debugging is not described as a post-operational separate phase.",
+          "source_check": "Checked against G5-04 claim statement 'detailed creation and maintenance of software through coding, verification, unit testing, integration testing and debugging' in source-context-TO-INDEPENDENT-SCORER.json."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-05-1",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Mentions probability-of-failure / mean-time-between-failures characterizations", "outcome": "OMITTED" },
+        { "criterion": "faults cause failures", "outcome": "OMITTED" },
+        { "criterion": "no measurement procedure in this extracted topic", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "including models and metrics",
+          "reason": "The pinned source context for G5-05 names only the two quantifications (probability of failure / mean time between failures) and faults causing failures; 'models and metrics' as unit content is not supported.",
+          "source_check": "Checked against G5-05 claim/evidence statements in source-context-TO-INDEPENDENT-SCORER.json; neither mentions models or metrics."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-05-2",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Mentions probability-of-failure / mean-time-between-failures characterizations", "outcome": "MET" },
+        { "criterion": "faults cause failures", "outcome": "MET" },
+        { "criterion": "no measurement procedure in this extracted topic", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-06-1",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Activities occur pre-/post-delivery", "outcome": "MET" },
+        { "criterion": "cost-effective support for operational software", "outcome": "MET" },
+        { "criterion": "ISO 14764 objective is reported second-hand by SWEBOK", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-06-2",
+      "correctness_0_2": 0,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Activities occur pre-/post-delivery", "outcome": "OMITTED" },
+        { "criterion": "cost-effective support for operational software", "outcome": "OMITTED" },
+        { "criterion": "ISO 14764 objective is reported second-hand by SWEBOK", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "SWEBOK v4.0a defines maintenance as activities performed after the software delivery, such as bug fixes, updates, and enhancements",
+          "reason": "Directly contradicts the pinned source: SWEBOK v4.0a defines maintenance as performed in BOTH pre-delivery and post-delivery stages, and as cost-effective support for software in operation, not merely post-delivery bug fixes/updates.",
+          "source_check": "Checked against G5-06 claim 'performed in pre-delivery and post-delivery stages' and evidence describing pre-delivery planning and post-delivery surveillance/modification in source-context-TO-INDEPENDENT-SCORER.json."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-07-1",
+      "correctness_0_2": 1,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome", "outcome": "OMITTED" },
+        { "criterion": "explicitly SWEBOK definition", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [
+        {
+          "span": "planning, scheduling, budgeting, and controlling",
+          "reason": "The pinned SWEBOK v4.0a KA9 definition lists planning, estimating, measuring, controlling, coordinating, leading and managing risk factors; 'scheduling' and 'budgeting' are not in the pinned definition.",
+          "source_check": "Checked against G5-07 claim statement enumerating the SWEBOK management activities in source-context-TO-INDEPENDENT-SCORER.json."
+        },
+        {
+          "span": "ensuring the project stays within scope and meets deadlines",
+          "reason": "Not part of the pinned SWEBOK v4.0a management definition; the pinned outcome is delivering software products and engineering services efficiently, effectively and to stakeholders' benefit.",
+          "source_check": "Checked against G5-07 claim/evidence statements in source-context-TO-INDEPENDENT-SCORER.json; no scope/deadline guarantee formulation exists."
+        }
+      ],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-07-2",
+      "correctness_0_2": 2,
+      "scope_0_2": 2,
+      "traceability_0_2": 1,
+      "criteria_marks": [
+        { "criterion": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome", "outcome": "MET" },
+        { "criterion": "explicitly SWEBOK definition", "outcome": "MET" }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    }
+  ]
+}

@@ -1,0 +1,325 @@
+{
+  "status": "ANSWERS_FROZEN_SCORING_NOT_RUN",
+  "started_utc": "2026-11-08T08:30:22.921Z",
+  "model_requested": "qwen2.5-3b-instruct-q4_k_m.gguf",
+  "provider_endpoint": "http://127.0.0.1:11434/v1/chat/completions",
+  "temperature": 0,
+  "frozen": {
+    "prereg_revision": "83a47d404311d2b1ac0bc06616ddd477bf13af56",
+    "prereg_blob": "5498f830ab7e832e97c9b6a879bf1c1d6d8fddcd",
+    "graph_revision": "9cbf7983c5b47c146bd934f39e10517c3a828b66",
+    "graph_blob": "2d4498dfa5f90bcf57cc81e9c155fb9ede31bf00",
+    "graph_sha256": "21755df44c722c4bdd9fccb28446dd6aa12bbcfad168931344502f37d2aab7a4"
+  },
+  "trials": [
+    {
+      "qid": "G5-07",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "4678c1f3531f5db808e3f04aeb266ccdd89190381d7dac7becf341ca990a6eea",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:30:22.923Z",
+      "answer": "Software Engineering Knowledge Base (SWEBOK) v4.0a defines software engineering management as activities that involve planning, scheduling, budgeting, and controlling the software development process. These activities include managing resources, coordinating with stakeholders, and ensuring the project stays within scope and meets deadlines.\n\nSWEBOK v4.0a does not establish universal consensus on software engineering management. While it provides a comprehensive framework, different organizations and industries may have their own specific practices and methodologies. The document is a guide and may not cover all aspects of management activities universally.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "323d947b14d59c35221b0835ed9007a9caa13f2730db64d8ddd667545d49566e",
+      "provider_usage": {
+        "completion_tokens": 112,
+        "prompt_tokens": 68,
+        "total_tokens": 180,
+        "prompt_tokens_details": {
+          "cached_tokens": 3
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 13416,
+      "finished_utc": "2026-11-08T08:30:36.340Z"
+    },
+    {
+      "qid": "G5-03",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "33e6b6dbbed071b6f4213198d35f0d5ef62c01befcab42dfa3a69bdf1c84f238",
+      "retrieval_sha256": "81c5526e6642cfc35c3d77798a8c434e29b5c736ca04e2805a5efcdeba963d2f",
+      "started_utc": "2026-11-08T08:30:36.347Z",
+      "answer": "The CS2023 SE-Validation unit distinguishes verification from validation as two distinct questions: verification asks whether the thing is being built right, and validation asks whether the right thing was built. The unit's learning outcomes expect students to distinguish program validation from verification. However, the evidence does not prove that passing tests proves correctness or that validation equals acceptance. The two-question formulation is a curriculum teaching device and does not fully elaborate when each question is fully answered.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "8bb94d5dfed5fe7e586c50712abf9ea028f75f6ad92fb5757354fd9b1ad9aaf3",
+      "provider_usage": {
+        "completion_tokens": 94,
+        "prompt_tokens": 473,
+        "total_tokens": 567,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 14394,
+      "finished_utc": "2026-11-08T08:30:50.744Z"
+    },
+    {
+      "qid": "G5-04",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "ee90feba7a49524f4a8a3ce91c4c1feecfd31bd826dcf664c397ed4405249f03",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:30:50.747Z",
+      "answer": "SWEBOK v4.0a (Software Engineering Body of Knowledge) does not explicitly define construction in terms of verification, testing, and debugging as separate activities. The construction phase in SWEBOK is more broadly defined as the process of transforming requirements into a working software system. It encompasses activities such as design, implementation, and integration. Verification and testing are considered part of the construction phase, but debugging is often treated as a separate phase focusing on fixing errors after the system is operational. SWEBOK v4.0a does not establish fixed process boundaries for construction, leaving room for flexibility in how these activities are organized and executed. The document acknowledges that different methodologies and practices may vary in how these activities are integrated and sequenced.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "1f8a321f79877696784d7a1a8338d49a6c06f7afb576dcc1974d29d6488cc792",
+      "provider_usage": {
+        "completion_tokens": 149,
+        "prompt_tokens": 68,
+        "total_tokens": 217,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 18109,
+      "finished_utc": "2026-11-08T08:31:08.857Z"
+    },
+    {
+      "qid": "G5-04",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "d641f38144480f1b7e04b3f4dfc4deb0d6cda00a30128620d5a8e6b38b8e6293",
+      "retrieval_sha256": "8c8215e59c2509294cc9022b2f1d1685c710958c224c9897f21c353d3d506a48",
+      "started_utc": "2026-11-08T08:31:08.861Z",
+      "answer": "SWEBOK v4.0a's construction definition includes verification, tests, and debugging, and acknowledges that boundaries among design, construction, and testing can vary depending on the software life cycle processes used. However, it does not establish fixed process boundaries and does not fix one process decomposition. The definition is life-cycle dependent and leaves the design/construction/testing boundary open. The evidence does not prove that verification, tests, and debugging are the only activities included in construction, nor does it provide a fixed process decomposition for these activities.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "322b1d9c984bfaa99c199e20fb9f82df9a63775d0e4de2cef4d1e841aeeb1190",
+      "provider_usage": {
+        "completion_tokens": 107,
+        "prompt_tokens": 594,
+        "total_tokens": 701,
+        "prompt_tokens_details": {
+          "cached_tokens": 62
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 16588,
+      "finished_utc": "2026-11-08T08:31:25.450Z"
+    },
+    {
+      "qid": "G5-01",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "39cc5b33265b685ddb44af7fb96f791c2a57a08866fb5a374447e1bf0ae4a19a",
+      "retrieval_sha256": "97a41f322044b7974b7ced39a85371873a01476b26534a10376312daf79199b9",
+      "started_utc": "2026-11-08T08:31:25.453Z",
+      "answer": "The curriculum CS2023 requires students to describe functional requirements using at least one documentation and structuring method, with use cases and user stories as examples. It does not rank these methods or evaluate which is superior. The curriculum emphasizes understanding how the chosen method supports design and implementation and the strengths and weaknesses of each approach. However, it does not evaluate which method is superior and does not rank use cases against user stories.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "8d31bf64395a76d2fdc44ace52affe876a4faae28e00862fe9aae6fac818771a",
+      "provider_usage": {
+        "completion_tokens": 86,
+        "prompt_tokens": 485,
+        "total_tokens": 571,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 12998,
+      "finished_utc": "2026-11-08T08:31:38.453Z"
+    },
+    {
+      "qid": "G5-07",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "3269c63ea33b5e3b68d1e889ab670f4319a8906cc9eee2b98f0f77b8f4730288",
+      "retrieval_sha256": "a75b1d6b9b5dc8c5aed7e89b5417db8fccfe55d4b3ef8a27cd4d0e7a11c5ce1e",
+      "started_utc": "2026-11-08T08:31:38.457Z",
+      "answer": "According to SWEBOK v4.0a, software engineering management encompasses activities such as planning, estimating, measuring, controlling, coordinating, leading, and managing risk factors for a software project. These activities aim to deliver software products and engineering services efficiently, effectively, and to the stakeholders' benefit. The guide treats project management and measurement management together in one knowledge area due to their close relationship.\n\nThe definition provided in SWEBOK v4.0a does not establish universal consensus. It is a professional-BOK definition claim and not a regulatory definition. The limitations include that the definition is the Guide's and adopting it here does not assert industry-wide terminological consensus. Additionally, the introduction acknowledges that measurement-informed management is a basic principle of any true engineering discipline, but it does not adopt the perception that software is often delivered late, over budget, and of poor quality as an empirical finding.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "cc12f467a7908dcffdcaf88661ce8e12ecc1b9d2d2b2cbcca01275128b4d90ee",
+      "provider_usage": {
+        "completion_tokens": 181,
+        "prompt_tokens": 713,
+        "total_tokens": 894,
+        "prompt_tokens_details": {
+          "cached_tokens": 62
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 28663,
+      "finished_utc": "2026-11-08T08:32:07.122Z"
+    },
+    {
+      "qid": "G5-02",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "0b4d374bd4645d68e3ac45e794a94601dde6b62d37bd814d1aa2b23bbdca32b1",
+      "retrieval_sha256": "111593b66154b550cb44f2ef0785a14b4a99bf2fd8218f319c329dad57bd447d",
+      "started_utc": "2026-11-08T08:32:07.126Z",
+      "answer": "The CS2023 curriculum does not explicitly distinguish architectural design from detailed design, nor does it specify exact criteria for their boundary. The curriculum only lists these as examples of levels of abstraction in software design, but does not define the levels or their boundary criteria. The evidence shows that while CS2023 includes architectural and detailed design as examples of levels of abstraction, it does not provide a normative distinction or boundary criteria between them. Additionally, the evidence indicates that the curriculum scope is not a normative distinction from ISO/IEC/IEEE 42010, which remains metadata-only.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "e7a7b48179f61c0e1a1632369dae30e63e3ede34190b9dd6dcce4cd26d21c77f",
+      "provider_usage": {
+        "completion_tokens": 124,
+        "prompt_tokens": 461,
+        "total_tokens": 585,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 19074,
+      "finished_utc": "2026-11-08T08:32:26.205Z"
+    },
+    {
+      "qid": "G5-06",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "c657fc2d065677901a10a2555a6efedbbce33be3f189a744be5c99e4ee6d1b66",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:32:26.208Z",
+      "answer": "SWEBOK v4.0a defines maintenance as activities performed after the software delivery, such as bug fixes, updates, and enhancements. However, the scope of maintenance is not explicitly expanded to include activities during the development phase, such as refactoring or improving design.\n\nRegarding the ISO 14764 text, it was cited but not inspected directly in this assessment. The ISO 14764 text provides guidelines for software maintenance, but its specific relevance to SWEBOK v4.0a maintenance definitions was not examined here.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "9caea3df5a874029baec4836d2db5ff790da4b36ce30d2aa6aec817c135b004a",
+      "provider_usage": {
+        "completion_tokens": 112,
+        "prompt_tokens": 75,
+        "total_tokens": 187,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 13678,
+      "finished_utc": "2026-11-08T08:32:39.889Z"
+    },
+    {
+      "qid": "G5-06",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "97e554a7ec84d52ddf182ae50596d58cd0a1d2fcc78bfff17fb0153790eca50c",
+      "retrieval_sha256": "60775dd45906c7b07c481305ee7c9e223da9dbebf9dddf1eecbd5dcc9ba41e00",
+      "started_utc": "2026-11-08T08:32:39.893Z",
+      "answer": "SWEBOK v4.0a does not limit maintenance to just post-delivery. The guide defines maintenance as activities required for cost-effective support of software in operation, performed in both pre-delivery and post-delivery stages. It cites ISO/IEC/IEEE 14764, stating the objective of software maintenance as modifying existing software while preserving its integrity. However, the evidence shows that the ISO text itself is metadata-only and was not independently inspected in this project. Therefore, the scope of maintenance as defined in SWEBOK v4.0a includes pre-delivery activities, not just post-delivery. The limitations noted for SWEBOK v4.0a include it being a guide to the body of knowledge, not the complete body of knowledge, and not all related disciplines being characterized in full.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "34ca52fa45a26beebd03e3d8346db9dac730e767984546303fecce5cd42fb916",
+      "provider_usage": {
+        "completion_tokens": 168,
+        "prompt_tokens": 640,
+        "total_tokens": 808,
+        "prompt_tokens_details": {
+          "cached_tokens": 69
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 30447,
+      "finished_utc": "2026-11-08T08:33:10.342Z"
+    },
+    {
+      "qid": "G5-03",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "90cfe1e19a3ef998a0e75182ad087862f3ddd3c4f0729b6f1d995037a577c6fc",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:33:10.345Z",
+      "answer": "The CS2023 SE-Validation unit distinguishes verification from validation by defining them as follows:\n\n- **Verification** is the process of checking whether the software product meets the specified requirements. It involves checking the correctness of the software's internal structure and behavior, ensuring that the software behaves as intended according to its design and specifications.\n\n- **Validation** is the process of checking whether the software product meets the needs of the stakeholders. It involves checking whether the software meets the requirements of the users and the business, ensuring that the software meets the intended goals and objectives.\n\nThe unit acknowledges that both verification and validation are essential for software quality assurance, but they serve different purposes. Verification focuses on the correctness of the software, while validation focuses on the software's suitability for its intended use. The distinction is important for ensuring that the software not only works correctly but also meets the needs of its users and stakeholders. However, it should be noted that these definitions are not universally standardized, and the exact practices and procedures for verification and validation can vary depending on the organization and context.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "672afbe431fe4503af7f1c86ea776af21ec9ac12cdb9977a8224b074e0a22b14",
+      "provider_usage": {
+        "completion_tokens": 215,
+        "prompt_tokens": 60,
+        "total_tokens": 275,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 27694,
+      "finished_utc": "2026-11-08T08:33:38.041Z"
+    },
+    {
+      "qid": "G5-01",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "efcdffc861fa64f9af81f8a34d029909c7733e3b594db252a32a3f8a57225003",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:33:38.044Z",
+      "answer": "In the CS2023 requirements curriculum, two functional-requirement description approaches are typically named: Use Cases and User Stories. \n\nUser Stories are often considered a popular and effective approach, as they are simple, concise, and focus on the perspective of the user. They are written in a natural language and are often used in agile development methodologies.\n\nUse Cases, on the other hand, are more formal and detailed, describing the system's behavior from the perspective of a user. They are often used in more structured and traditional software development methodologies.\n\nRanking one approach as \"best\" is subjective and depends on the specific context and needs of the project. User Stories are generally favored in agile environments due to their simplicity and focus on user needs, while Use Cases are preferred in more structured environments for their detailed and formal nature.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "35a24e3e7cfb5b8782b90652e83871169ae4d9de19f331da04ba07c57a19ca23",
+      "provider_usage": {
+        "completion_tokens": 167,
+        "prompt_tokens": 69,
+        "total_tokens": 236,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 21152,
+      "finished_utc": "2026-11-08T08:33:59.198Z"
+    },
+    {
+      "qid": "G5-05",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "83333ee1c8d9f44350fc0681afe70d9119c136937c3cd1c9937f2d3a88904d65",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:33:59.201Z",
+      "answer": "CS2023's Software Reliability unit does not specify a measurement procedure for its reliability quantities. The unit focuses on the theoretical aspects and principles of software reliability, including models and metrics, but does not provide detailed procedures for measuring these quantities. The scope is theoretical and the limitations are that it does not cover practical measurement methods or standards. Uncertainty arises from the fact that specific measurement procedures may vary depending on the context and the reliability metrics being used.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "8f5ea9179cf805e2078afffd02c3282f5a1df9234bc655b63050ffffa6d99950",
+      "provider_usage": {
+        "completion_tokens": 93,
+        "prompt_tokens": 63,
+        "total_tokens": 156,
+        "prompt_tokens_details": {
+          "cached_tokens": 38
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 12724,
+      "finished_utc": "2026-11-08T08:34:11.928Z"
+    },
+    {
+      "qid": "G5-05",
+      "arm": "K",
+      "status": "SUCCESS",
+      "request_sha256": "30d24838d9fa271c0eb2fab7dc21777bbc486cee16859d8f62563d5fcb8ffae6",
+      "retrieval_sha256": "489a9bad14255faf7905ef8ea903a8a730770b39d3dc3fc919625cd570cf9bd7",
+      "started_utc": "2026-11-08T08:34:11.932Z",
+      "answer": "The CS2023 Software Reliability unit defines reliability as the probability of failure or the mean time between failures, with faults treated as the cause of failures. However, it does not specify a measurement procedure for these reliability quantities. The claim does not prove that a measurement procedure is provided, only that the reliability concept is defined. The evidence shows that the topic names the two quantifications (probability of failure and mean time between failures) without elaborating on the measurement procedure.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "2be6f15311dc2f0ac8e10966622b2e3833ebdf3d96297c60fdb37704644c6962",
+      "provider_usage": {
+        "completion_tokens": 97,
+        "prompt_tokens": 465,
+        "total_tokens": 562,
+        "prompt_tokens_details": {
+          "cached_tokens": 57
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 17890,
+      "finished_utc": "2026-11-08T08:34:29.825Z"
+    },
+    {
+      "qid": "G5-02",
+      "arm": "D",
+      "status": "SUCCESS",
+      "request_sha256": "b34c9a3ca71f19c3b29594cdd9bf513ffc091ee9705ad951030d473b2ce6fcc1",
+      "retrieval_sha256": null,
+      "started_utc": "2026-11-08T08:34:29.829Z",
+      "answer": "CS2023 does not explicitly distinguish architectural design from detailed design and does not specify exact criteria for their boundary. The document focuses more on the overall process and methodologies rather than delineating specific design phases. Therefore, the scope and criteria for these design phases remain unclear and are not detailed within the CS2023.",
+      "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+      "response_sha256": "52dd93b629f16fed4c1bd70fcfbf18d2113c15b52291e1c4c3088bd934939fd2",
+      "provider_usage": {
+        "completion_tokens": 67,
+        "prompt_tokens": 63,
+        "total_tokens": 130,
+        "prompt_tokens_details": {
+          "cached_tokens": 44
+        }
+      },
+      "system_fingerprint": "b12199-372dc5ca1",
+      "elapsed_ms": 9781,
+      "finished_utc": "2026-11-08T08:34:39.613Z"
+    }
+  ],
+  "finished_utc": "2026-11-08T08:34:39.616Z"
+}

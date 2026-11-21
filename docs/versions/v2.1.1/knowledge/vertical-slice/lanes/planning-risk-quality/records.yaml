@@ -1,0 +1,1739 @@
+lane_id: SEK-07G-PLANNING-RISK-QUALITY-LANE-0.1.0
+title: Engineering Planning, Risk, Quality Management and Technical Decisions lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#340"
+scope_note: >-
+  SEK-07G vertical-slice lane for engineering planning, estimation,
+  scheduling, engineering risk management, quality management/assurance,
+  measurement, technical decision models and governance of engineering
+  trade-offs. Grounded in direct reinspection of SWEBOK Guide v4.0a
+  Chapter 9 Software Engineering Management (Introduction, section 2
+  Software Project Planning incl. 2.3 estimation, 2.5 risk, 2.6 quality,
+  2.7 plan management, and section 6 Software Engineering Measurement) and
+  Chapter 15 Software Engineering Economics (Introduction, section 2 The
+  Engineering Decision-Making Process, section 8 Estimation) from the
+  official hash-verified PDF, plus the CS2023 SE-Teamwork knowledge unit
+  (team processes incl. effort estimation; distributed-team risks) and the
+  SE-Requirements Non-core effort-estimation topic from the heading-anchored
+  SEK-07 research extract. Boundaries: lifecycle/process model definitions
+  stay in lane 07A, implementation practices in 07B, reliability/performance
+  engineering and quality attributes as engineering detail in 07D, delivery
+  mechanics in 07E, technical-debt lifecycle in 07F; quality MODELS stay in
+  07A territory and SWEBOK KA12 (Software Quality) itself was not in this
+  lane's reading plan (recorded as a CoverageGap). No numeric productivity
+  or estimation-accuracy claims are invented; SWEBOK characterizations of
+  external standards (PMBOK Guide, SWX, ISO/IEC/IEEE 15939) are cited only
+  as SWEBOK's secondary statements because no project-management or
+  measurement standard is registered as a source. All knowledge records
+  remain PROPOSED or PENDING_REVIEW; none is ACCEPTED. Source entities are
+  not stored in this lane file; the validation harness derives shared
+  Source records from SOURCE_REGISTRY.yaml.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - "SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R"
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane view: SWEBOK KA9 activity-based planning/risk/quality/measurement lens ---
+    - id: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA9 planning, risk, quality and measurement topic groups
+      view_kind: PROCESS
+      purpose: >-
+        Represent the planning-relevant topic groups of SWEBOK Guide v4.0a
+        Chapter 9 Software Engineering Management (project planning with its
+        estimation, risk, quality and plan-management subsections, plus the
+        software engineering measurement topic) as one activity-based
+        classification lens for this lane, independent of lifecycle-model
+        choice and of the CS2023 curriculum lens.
+      coverage_state: PARTIAL
+      limitations:
+        - Only the four lane-relevant topic groups of KA9's activity-based breakdown are modeled; Initiation and Scope Definition, Software Project Enactment, Review and Evaluation, Closure and SEM Tools are omitted in this lane.
+        - SWEBOK states the activity-based breakdown does not recommend a specific SDLC; nothing in this view prescribes a lifecycle.
+        - The view reflects directly inspected sections only; uninspected KA9/KA15 content is not inferred.
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-SEM-INTRO
+
+  taxonomy_nodes:
+    - id: se:NODE-07G-SEM-PROJECT-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA9 topic: Software Project Planning"
+      definition: >-
+        The Software Project Planning topic of SWEBOK Guide v4.0a KA9: the
+        activities undertaken to prepare for a successful software engineering
+        project from the management perspective, listed in the chapter's
+        activity-based breakdown alongside process planning, determine
+        deliverables, effort/schedule and cost estimation, resource
+        allocation, risk management, quality management and plan management.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-SEM-INTRO
+    - id: se:NODE-07G-SEM-RISK-MANAGEMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA9 subsection 2.5: Risk Management"
+      definition: >-
+        The risk-management subsection of SWEBOK Guide v4.0a KA9 Software
+        Project Planning: identifying risk factors, analyzing probability
+        and potential impact, prioritizing factors and developing mitigation
+        strategies, supported by risk-register data and revisited at
+        intervals across the project life cycle.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+    - id: se:NODE-07G-SEM-QUALITY-MANAGEMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA9 subsection 2.6: Quality Management"
+      definition: >-
+        The quality-management subsection of SWEBOK Guide v4.0a KA9 Software
+        Project Planning: identifying a project's software quality
+        requirements quantitatively and/or qualitatively, setting thresholds
+        for acceptable quality measurements per requirement, and specifying
+        procedures for software quality assurance, verification and
+        validation, reviews and audits during quality planning.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+    - id: se:NODE-07G-SEM-MEASUREMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "SWEBOK KA9 topic 6: Software Engineering Measurement"
+      definition: >-
+        The Software Engineering Measurement topic of SWEBOK Guide v4.0a KA9:
+        development and implementation of measurement programs in software
+        engineering organizations, presented in the chapter as following the
+        ISO/IEC/IEEE 15939 measurement process (establish and sustain
+        commitment, plan, perform, evaluate).
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+    - id: se:NODE-07G-CS2023-SE-TEAMWORK
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: "CS2023 SE-Teamwork: Teamwork"
+      definition: >-
+        The Teamwork knowledge unit of the CS2023 Software Engineering area:
+        CS Core topics on communication, conflict, cooperative programming,
+        roles and responsibilities, team processes (responsibilities for
+        tasks, effort estimation, meeting structure, work schedule) and
+        diversity, with KA Core topics on interfacing with stakeholders as a
+        team and on risks associated with physical, distributed, hybrid and
+        virtual teams.
+      node_kind: KNOWLEDGE_UNIT
+      view_ref: se:VIEW-CS2023-SE
+      evidence_refs:
+        - se:EVD-07G-CS2023-TEAMWORK-PROCESSES
+
+  source_locators:
+    # --- shared SourceLocator: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:LOC-CS2023-SE-KU-TABLE
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-06"
+      source_ref: se:SRC-CS2023
+      locator_type: TABLE
+      locator: Body of Knowledge PDF page indices 176-177; Software Engineering (SE), Core Hours table
+      verified_content_summary: Nine SE knowledge units with CS Core and KA Core hours; Software Verification and Validation carries 1 CS Core and 3 KA Core hours.
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+    # --- SWEBOK v4.0a KA9 locators (direct PDF reinspection 2026-11-07; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages, hash re-verified against the registry record; PDF page indices are
+    #     0-based, printed folios use the Guide's chapter-page numbering) ---
+    - id: se:LOC-07G-SWEBOK-KA9-INTRO
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 9 Software Engineering Management, Introduction (software engineering management definition; measurement-informed management discussion; working definitions of management and measurement; seven-topic activity-based breakdown incl. Figure 9.1); PDF page indices 201-206; printed pages 9-1 to 9-6"
+      verified_content_summary: "SEM defined as planning, estimating, measuring, controlling, coordinating, leading and managing risk for a software project; management without measurement suggests a lack of discipline and measurement without management a lack of purpose or context; seven activity-based topics listed."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-SWEBOK-KA9-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 9 Software Engineering Management, section 2 Software Project Planning, subsection 2.3 Effort, Schedule, and Cost Estimation; PDF page indices 208-209; printed pages 9-8 to 9-9"
+      verified_content_summary: "Estimating software costs characterized as error-prone (human elements and dynamic factors); advice to use multiple estimation approaches and reconcile differences; calibrated models plus bottom-up estimates; iterative negotiation among stakeholders; predictive vs. adaptive scheduling differences."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-SWEBOK-KA9-RISK-QUALITY
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 9 Software Engineering Management, section 2 Software Project Planning, subsections 2.5 Risk Management, 2.6 Quality Management and 2.7 Plan Management; PDF page indices 209-210; printed pages 9-9 to 9-10"
+      verified_content_summary: "Risk vs. uncertainty distinction; identify/analyze/prioritize/mitigate cycle with risk register and periodic revisits; quality requirements identified quantitatively and qualitatively with per-requirement acceptance thresholds and planned SQA/V&V/review/audit procedures; planning magnitude driven partly by the risk of not planning."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-SWEBOK-KA9-MEASUREMENT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 9 Software Engineering Management, section 6 Software Engineering Measurement (6.1 Establish and Sustain Measurement Commitment, 6.2 Plan the Measurement Process, 6.3 Perform the Measurement Process, 6.4 Evaluate Measurement); PDF page indices 214-216; printed pages 9-14 to 9-16"
+      verified_content_summary: "Measurement program presented as following ISO/IEC/IEEE 15939: objectives-driven measurement requirements and committed resources; information needs identified from the organizational unit's goals/constraints/risks/problems; measures selected against criteria such as collection cost and process disruption; procedures integrated into measured processes; evaluation against criteria with lessons learned."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- SWEBOK v4.0a KA15 locators (direct PDF reinspection 2026-11-07, same verified binary) ---
+    - id: se:LOC-07G-SWEBOK-KA15-INTRO
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 15 Software Engineering Economics, Introduction (value-based software engineering; engineering economics question; software technical decisions across the product life cycle; unquantifiable criteria) and Breakdown of Topics incl. Figure 15.1; PDF page indices 287-288; printed pages 15-1 to 15-2"
+      verified_content_summary: "Software engineering must be value-based; economics framed as the science of choice; technical decisions (e.g., reuse a preexisting library vs. develop own) carry business implications; economic perspective applies from pre-project to end-of-life decisions at all levels of technical detail; unquantifiable criteria must also be considered."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-SWEBOK-KA15-DECISION-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 15 Software Engineering Economics, section 2 The Engineering Decision-Making Process (2.1 Process Overview through 2.7 Monitor the Performance of the Selected Alternative); PDF page indices 291-293; printed pages 15-5 to 15-7"
+      verified_content_summary: "Six-step decision process (understand the real problem; identify all reasonable technically feasible solutions; define selection criteria; evaluate each alternative on the same basis and planning horizon; select; monitor performance); effort scaled to consequences of a wrong decision; decision-making-under-risk vs. under-uncertainty technique families; closing the loop on estimates against actual outcomes."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-SWEBOK-KA15-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 15 Software Engineering Economics, section 8 Estimation (8.1 Expert Judgment, 8.2 Analogy, 8.3 Decomposition, 8.4 Parametric, 8.5 Multiple Estimates); PDF page indices 299-302; printed pages 15-13 to 15-16"
+      verified_content_summary: "Estimates as inherently uncertain analytical predictions made to support decisions; Code of Ethics clause 3.09 quoted (realistic quantitative estimates with uncertainty assessment); five general techniques with availability/accuracy trade-offs; multiple-estimate convergence/divergence reading."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- CS2023 heading-anchored lane locators (no invented page numbers) ---
+    - id: se:LOC-07G-CS2023-SE-TEAMWORK-KU
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'Teamwork' (CS Core topics 1-6, KA Core topics 7-8); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "CS Core topics include team processes (responsibilities for tasks, effort estimation, meeting structure, work schedule); KA Core topics include risks associated with physical, distributed, hybrid and virtual teams incl. mitigation and recovery."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07G-CS2023-SE-REQ-EFFORT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Software Engineering (SE), knowledge unit 'SE-Requirements: Product Requirements', Non-core topic 9 Effort estimation (subtopics 9a-9c); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed, page anchor per registry: SE section spans PDF page indices 174-176"
+      verified_content_summary: "Effort estimation taught as learning techniques for better estimating, practicing estimation and comparing to how long tasks take, with the caveat that estimation is quite difficult and students are likely to be way off in many cases."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    - id: se:EVD-07G-SWEBOK-SEM-INTRO
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA9-INTRO
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA9 defines software engineering management as the
+        collection of work activities involved with planning, estimating,
+        measuring, controlling, coordinating, leading and managing risk
+        factors for a software project so that software products and
+        engineering services are delivered efficiently, effectively and to
+        the stakeholders' benefit, and treats project management and
+        measurement management together because of their close relationship.
+        The introduction asserts that measurement-informed management is a
+        basic principle of any true engineering discipline — that management
+        without measurement (qualitative and quantitative) suggests a lack of
+        discipline and measurement without management suggests a lack of
+        purpose or context — and adopts working definitions of management
+        (a system of processes and controls to achieve the organization's
+        strategic objectives) and measurement (assigning values and labels
+        to work products, processes, resources and models derived from them).
+        The chapter's breakdown is activity-based, listing seven topics
+        (initiation and scope definition, project planning, project
+        enactment, review and evaluation, closure, measurement, management
+        tools) regardless of SDLC model.
+      context: "SWEBOK Guide v4.0a Chapter 9 Introduction and Breakdown of Topics, printed pages 9-1 to 9-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07; text extracted at PDF page indices 201-206 and paraphrased originally."
+      result: "The SEM definition, the measurement-informed management framing, the two working definitions and the seven-topic activity-based breakdown were confirmed for the professional-BOK scoped claims, principle and lane view."
+      limitations:
+        - "The Guide's authority limitations apply: generally accepted knowledge, not a uniform prescription."
+        - "The introduction cites an external perception that software is often delivered late, over budget and of poor quality; this lane does not adopt that perception as an empirical finding."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA9-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA9-ESTIMATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 2.3 characterizes estimating costs for
+        software projects as an error-prone process: the effort required
+        depends almost entirely on human elements (individuals' experience
+        and capabilities, team member interactions, development environment
+        culture) and on dynamic environmental factors such as rapid
+        technology evolution, changing and emergent requirements, and the
+        intangible nature of the product. Software project managers should
+        use multiple estimation approaches and reconcile the differences
+        among the estimates. Where data is available, a calibrated
+        estimation model based on historical size and effort data can
+        determine an estimated effort range, and it is best to also use
+        bottom-up estimation based on estimates from those who will
+        accomplish the work. Estimation of effort, schedule and cost is an
+        iterative activity negotiated and revised among affected stakeholders
+        until consensus is reached; predictive SDLC projects typically
+        schedule tasks during planning while adaptive SDLC projects derive
+        overall effort/schedule estimates or constraints differently.
+      context: "SWEBOK Guide v4.0a Chapter 9 section 2.3 (Effort, Schedule, and Cost Estimation), printed pages 9-8 to 9-9."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 208-209; original paraphrase."
+      result: "The error-prone characterization, the multiple-approach-and-reconcile advice and the calibrated-model/bottom-up combination were confirmed for the estimation claim, practice and decision model."
+      limitations:
+        - "The section surveys generally accepted management practice; it does not rank the named approaches' accuracy."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA9-RISK-QUALITY
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 2.5 distinguishes uncertainty (a lack
+        of information) from risk (the effect of uncertainty on objectives,
+        with negative threats or positive opportunities), and presents risk
+        management as identifying risk factors, analyzing the probability
+        and potential impact of each factor, prioritizing factors and
+        developing mitigation strategies that reduce the probability of a
+        negative event and minimize its impact if it becomes a problem.
+        Risk-management data, often kept in a risk register (a document
+        serving as a repository for identified risks and additional
+        information about each, usable for regulatory compliance), represents
+        the project risk profile; assessment methods named include expert
+        judgment, historical data, decision trees and process simulations;
+        project abandonment conditions can be determined with stakeholders.
+        Particular attention should be paid to risks related to software
+        quality requirements such as safety or security, and risk management
+        should be done not only at the beginning of a project but at
+        periodic intervals throughout the project life cycle. Section 2.6
+        adds that software quality requirements for the project and its work
+        products should be identified perhaps both quantitatively and
+        qualitatively, that thresholds for acceptable quality measurements
+        should be set for each quality requirement based on stakeholder
+        needs and expectations, and that procedures for ongoing software
+        quality assurance and quality improvement, verification and
+        validation, reviews and audits should be specified during quality
+        planning. Section 2.7 notes the magnitude of the planning effort and
+        a plan's content should be determined partly by the risk of not
+        developing the plan.
+      context: "SWEBOK Guide v4.0a Chapter 9 sections 2.5 (Risk Management), 2.6 (Quality Management) and 2.7 (Plan Management), printed pages 9-9 to 9-10."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 209-210; original paraphrase."
+      result: "The uncertainty/risk distinction, the risk-management cycle with register and periodic revisits, the quality-planning directions and the plan-magnitude risk rule were confirmed for the risk and quality claims, concepts, nodes and the risk practice."
+      limitations:
+        - "Section 2.6 frames project quality management by reference to the PMBOK Guide's definition, which is itself not a registered source; the characterization cited here is SWEBOK's secondary statement."
+        - "Quality-attribute enumeration in the section is illustrative ('not limited to'); no attribute taxonomy is adopted by this lane."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA9-MEASUREMENT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 6 states that the section follows the
+        ISO/IEC/IEEE 15939 standard, which describes a process to define the
+        activities and tasks necessary to implement a software measurement
+        process. Establishing and sustaining measurement commitment requires
+        measurement requirements guided by organizational objectives, an
+        established scope (organizational unit and temporal scope, e.g. time
+        series to calibrate estimation models), formally communicated team
+        commitment and committed resources (responsibility allocation, funds,
+        training, tools). Planning the measurement process requires
+        characterizing the organizational unit, identifying information
+        needs based on the unit's goals, constraints, risks and problems,
+        selecting measures with clear links to those needs judged against
+        criteria such as cost of collection, degree of process disruption,
+        ease of obtaining accurate consistent data and ease of analysis, and
+        defining data collection, analysis and reporting procedures plus
+        evaluation criteria for information products. Performing the process
+        integrates measurement procedures into the software processes they
+        measure, collects, verifies and stores data, and communicates
+        information products to users and stakeholders; evaluating the
+        measurement process assesses information products and the process
+        against the specified criteria and records lessons learned.
+      context: "SWEBOK Guide v4.0a Chapter 9 section 6 (6.1-6.4 Software Engineering Measurement), printed pages 9-14 to 9-16."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 214-216; original paraphrase."
+      result: "The four-part measurement process, the information-need-driven measure selection with its judging criteria and the ISO/IEC/IEEE 15939 attribution were confirmed for the measurement claim, concept, node and practice."
+      limitations:
+        - "The section characterizes ISO/IEC/IEEE 15939; the standard itself is not a registered source, so its normative text is not cited."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA15-VALUE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA15-INTRO
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA15's introduction takes the position that
+        software engineering must be value-based, because neutral or
+        negative value from an organization's investment in software is not
+        sustainable. It frames economics as the science of choice rather
+        than the science of money, quotes engineering as finding the balance
+        between what is technically feasible and what is economically
+        acceptable, and states that software technical decisions — such as
+        an organization's decision to use a preexisting library or develop
+        its own — may appear easy from a purely technical perspective yet
+        can have serious implications for business viability. The economic
+        perspective applies to decisions across the entire software product
+        life cycle (from the pre-project decision to develop through
+        end-of-life decisions) and at all levels of technical detail
+        (buy-or-build, requirements scope, architecture and design,
+        risk-based testing sufficiency, refactor-versus-redevelop, focus of
+        maintenance). The KA also broadens the traditional financial view:
+        value can derive from unquantifiables like corporate citizenship,
+        employee well-being, environmental friendliness and customer
+        loyalty, so software engineering decisions must also consider
+        relevant unquantifiable criteria.
+      context: "SWEBOK Guide v4.0a Chapter 15 Introduction and Breakdown of Topics, printed pages 15-1 to 15-2."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 287-288; original paraphrase."
+      result: "The value-based position, the technical-decision/business-implication framing and the unquantifiable-criteria rule were confirmed for the value-based claim and the trade-off pattern's context."
+      limitations:
+        - "The introduction's position statement is professional-BOK framing, not an empirical result."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA15-DECISION-PROCESS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA15 section 2 presents the engineering
+        decision-making process as: understand the real problem (e.g., via
+        interrogative techniques and broader context); identify all
+        reasonable technically feasible solutions (the best solution must be
+        in the candidate set before it can be selected; prototyping and peer
+        review help verify feasibility); define the selection criteria
+        (expressed as objectively as possible, accepting unquantifiable
+        criteria; more criteria when the consequences of a wrong decision
+        are greater); evaluate each alternative against the criteria (same
+        basis for comparison, same planning horizon, same kinds of costs and
+        incomes); select the preferred alternative (decision-making-under-
+        risk techniques when probabilities can be assigned — expected value,
+        Monte Carlo, decision trees, value of perfect information — and
+        decision-making-under-uncertainty techniques when they cannot —
+        Laplace, Maximin, Maximax, Hurwicz, Minimax Regret; ranges of
+        estimates, sensitivity analysis and delaying final decisions address
+        estimate inaccuracy); and monitor the performance of the selected
+        alternative, closing the loop on estimates by comparing them to
+        actual outcomes so that estimation improves over time. The time,
+        effort and care spent should scale with the consequences of a wrong
+        decision, and ISO 12207 and ISO 15288 are cited as recommending a
+        decision-management strategy and stakeholder identification for
+        high-consequence decisions.
+      context: "SWEBOK Guide v4.0a Chapter 15 section 2 (2.1-2.7 The Engineering Decision-Making Process), printed pages 15-5 to 15-7."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 291-293; original paraphrase."
+      result: "The six-step process, the consequence-scaled effort rule, the risk/uncertainty technique families and the close-the-loop requirement were confirmed for the decision-process claim, the trade-off pattern, and the close-the-loop principle."
+      limitations:
+        - "The named ISO 12207/15288 recommendations are the Guide's secondary characterization; those standards are metadata-only in the registry and their normative text is not cited."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SWEBOK-KA15-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA15-ESTIMATION
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK Guide v4.0a KA15 section 8 defines an estimate as an
+        analytical prediction of a quantity (a project's size, cost or
+        schedule, among others) and states that software engineers estimate
+        in order to make decisions when critical quantities are unknown —
+        behind every estimate is one or more decisions. Because estimates
+        are predictions, there is a nonzero probability that the actual
+        outcome will differ; all estimates are inherently uncertain, and
+        estimates need not be perfect but only good enough to lead the
+        decision-maker to the right decision. The section quotes the
+        Software Engineering Code of Ethics and Professional Practice
+        clause 3.09 as requiring realistic quantitative estimates of cost,
+        scheduling, personnel, quality and outcomes, with an uncertainty
+        assessment of these estimates. The general techniques are: expert
+        judgment (simplest, always available, least accurate; multiple
+        expert estimates can feed group processes such as Wideband Delphi
+        and Planning Poker); analogy (base the estimate on a similar thing's
+        known actual result adjusted for listed differences; more accurate
+        than expert judgment; requires a suitable analogy with known
+        results); decomposition (bottom-up: break into pieces small enough
+        to estimate, then sum, assuming over- and under-estimates cancel;
+        fails if bottom-level estimates are biased, and cross-cutting
+        factors such as integration and testing must be added); parametric
+        (statistical relationship between the quantity and observable
+        factors; typically most accurate, most defendable and easiest to use
+        once the equation is developed and validated, which requires an
+        adequate base of accurate historical data); and multiple estimates
+        (estimate the same thing with different techniques and possibly
+        different estimators; convergence suggests accuracy, divergence
+        suggests overlooked factors and reestimation).
+      context: "SWEBOK Guide v4.0a Chapter 15 section 8 (8.1-8.5 Estimation), printed pages 15-13 to 15-16."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at PDF page indices 299-302; original paraphrase."
+      result: "The estimate definition, the decisions-not-certainty framing, the inherent-uncertainty statement, the quoted ethics clause and the five techniques with their trade-offs were confirmed for the uncertainty claim, the estimate concept, the decision model and the anti-pattern synthesis."
+      limitations:
+        - "The Code of Ethics clause is quoted by SWEBOK; the Code text itself was not independently inspected by this lane."
+        - "The technique accuracy ordering is the Guide's overview characterization, not an empirical ranking cited from studies."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-CS2023-TEAMWORK-PROCESSES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-CS2023-SE-TEAMWORK-KU
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 Software Engineering knowledge unit Teamwork includes as
+        a CS Core topic (topic 5) team processes — responsibilities for
+        tasks, effort estimation, meeting structure and work schedule — and
+        as a KA Core topic (topic 8) the risks associated with physical,
+        distributed, hybrid and virtual teams, including communication,
+        perception, structure, points of failure, mitigation and recovery.
+        The unit's CS Core also covers effective communication, common
+        causes of team conflict and resolution approaches, cooperative
+        programming (pair programming or swarming, code review,
+        collaboration through version control), roles and responsibilities
+        in a software team, and the importance of team diversity and
+        inclusivity; its KA Core also covers interfacing with stakeholders
+        as a team.
+      context: "CS2023 SE-Teamwork knowledge unit, CS Core topic 5 and KA Core topic 8 (with unit framing); heading-anchored KU locator."
+      method: "Read the Teamwork unit topic list in the official CS2023 Body of Knowledge full-text extraction captured on 2026-11-07 (working extract, not committed); heading-anchored citation with registry page span."
+      result: "The team-processes topic (with its effort-estimation and work-schedule items) and the distributed-team risk topic were confirmed for the curriculum claims and the Teamwork taxonomy node."
+      limitations:
+        - "Curriculum topic names; the unit prescribes no estimation technique or risk-management procedure."
+        - "The KU subsection's printed page was not independently confirmed; the locator is heading-anchored."
+      uncertainty:
+        - "Teamwork-specific records sit at the boundary of engineering management and human-centered teamwork knowledge; the lane admits only the planning/estimation/risk-bearing topics, leaving communication and diversity topics to their cross-referenced curriculum homes."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-CS2023-TEAMWORK-HOURS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-CS2023-SE-KU-TABLE
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE Core Hours table allocates the Teamwork knowledge unit
+        2 CS Core hours delivered jointly with SEP (shown as 2 + 3 SEP) and
+        2 KA Core hours, within the nine-unit SE area whose totals are 6 CS
+        Core and 21 KA Core hours.
+      context: "SE Core Hours table row for Teamwork within the nine-unit SE area."
+      method: "Read the Teamwork row of the Core Hours table in the CS2023 full-text extraction on 2026-11-07 against the registry-verified table locator (PDF page indices 176-177)."
+      result: "Teamwork is confirmed as the unit carrying the SE area's team-process effort-estimation curriculum weight."
+      limitations:
+        - "Curriculum hour allocation; not a measure of professional practice weight."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-CS2023-REQ-EFFORT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-CS2023-SE-REQ-EFFORT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SE-Requirements unit carries effort estimation as a
+        Non-core (elective) topic (topic 9) with three subtopics: learning
+        techniques for better estimating the effort required to complete a
+        task; practicing estimation and comparing it to how long tasks take;
+        and the caveat that effort estimation is quite difficult, so
+        students are likely to be way off in many cases, but seeing the
+        process play out with their own work is valuable.
+      context: "CS2023 SE-Requirements: Product Requirements, Non-core topic 9 (subtopics 9a-9c); heading-anchored locator."
+      method: "Read the SE-Requirements non-core topic list in the CS2023 full-text extraction on 2026-11-07; heading-anchored citation with registry page span."
+      result: "The estimation-difficulty characterization and the practice-and-compare pedagogy were confirmed for the curriculum-scope estimation limitation claim and the close-the-loop principle's curriculum echo."
+      limitations:
+        - "Non-core (elective) status: CS programs need not include this topic."
+        - "Pedagogical framing for students; not a professional estimation procedure."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07G-SYNTHESIS-POINT-ESTIMATE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07G-SWEBOK-KA15-ESTIMATION
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07G): SWEBOK KA15 section 8 establishes that
+        every estimate is an inherently uncertain prediction made to support
+        a decision and that the quoted ethics clause requires an uncertainty
+        assessment alongside quantitative estimates, while SWEBOK KA9
+        section 2.3 establishes that software effort/cost estimation is
+        error-prone and advises multiple approaches with reconciliation. On
+        that combined reading, presenting a single-point early estimate as a
+        firm commitment — no range, no uncertainty assessment, no
+        reconciliation, no later comparison against actuals — discards the
+        uncertainty information both sections treat as constitutive of
+        estimation and invites decisions to be made on precision that does
+        not exist.
+      context: "Cross-section inference combining directly inspected SWEBOK KA15 section 8 and KA9 section 2.3; this is not a sentence that appears in either section."
+      method: "Lane-level comparison of two verified evidence records (se:EVD-07G-SWEBOK-KA15-ESTIMATION, se:EVD-07G-SWEBOK-KA9-ESTIMATION); the locator anchors the primary (KA15 section 8) leg of the synthesis."
+      result: "Provides the inference trail motivating the se:ANT-07G-POINT-ESTIMATE-COMMITMENT record."
+      limitations:
+        - "Synthesis inference, not a statement made by SWEBOK."
+        - "No empirical case evidence in this lane supports the severity of the anti-pattern's consequences."
+      uncertainty:
+        - "Whether real teams that commit to point estimates always incur the listed consequences is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07G-EFFORT-ESTIMATE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Estimate (SWEBOK KA15 section 8 sense)
+      definition: >-
+        An analytical prediction of some quantity — such as a project's
+        size, cost or schedule — made because the actual value cannot be
+        precisely known until the work is done; inherently uncertain and
+        existing to support decisions rather than to be right in itself.
+      concept_kind: TERM
+      synonyms:
+        - effort estimate
+        - cost estimate
+      scope_description: "Defined at the fidelity of SWEBOK Guide v4.0a KA15 section 8; not asserted as a universal metrological definition."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-ESTIMATION
+    - id: se:CON-07G-RISK-VS-UNCERTAINTY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Risk versus uncertainty (SWEBOK KA9 section 2.5 distinction)
+      definition: >-
+        The SWEBOK KA9 distinction that uncertainty results from a lack of
+        information, while risk is the effect of uncertainty on objectives
+        and can carry negative (threats) or positive (opportunities)
+        consequences; risk management operates on this effect, not on
+        ignorance in general.
+      concept_kind: BOUNDARY_CONCEPT
+      synonyms: []
+      scope_description: "Boundary concept as stated in SWEBOK Guide v4.0a KA9 section 2.5; other frameworks may draw the boundary differently."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+    - id: se:CON-07G-RISK-REGISTER
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Risk register
+      definition: >-
+        A document used as a risk-management tool: a repository for all
+        identified risks plus additional information about each, usable
+        among other things to fulfill regulatory compliance, whose data
+        represents the project risk profile.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "As characterized in SWEBOK Guide v4.0a KA9 section 2.5; template and field structure are context-dependent and not specified by the inspected text."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+    - id: se:CON-07G-INFORMATION-NEED
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Information need (measurement process)
+      definition: >-
+        In the SWEBOK KA9 measurement process (following the Guide's
+        characterization of ISO/IEC/IEEE 15939), the needs, derived from an
+        organizational unit's goals, constraints, risks and problems, that
+        measures are selected to address; candidate measures must keep clear
+        links to the identified, prioritized and communicated needs.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "Scoped to SWEBOK Guide v4.0a KA9 section 6.2 as the Guide's characterization of the ISO/IEC/IEEE 15939 concept; the standard's own definitions are not cited."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+
+  knowledge_claims:
+    - id: se:CLM-07G-SWEBOK-SEM-DEFINITION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9 defines software engineering management as
+        the collection of work activities involved with planning,
+        estimating, measuring, controlling, coordinating, leading and
+        managing risk factors for a software project so that software
+        products and engineering services are delivered efficiently,
+        effectively and to the stakeholders' benefit, and treats project
+        management and measurement management together in one knowledge
+        area because of their close relationship.
+      claim_kind: DEFINITION
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 Introduction (printed pages 9-1 and 9-4); a professional-BOK definition claim, not a regulatory definition."
+      applicability: "Interpreting the scope of software engineering management records in this lane; other bodies may delimit the discipline differently."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The definition is the Guide's; adopting it here does not assert industry-wide terminological consensus."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-MEASUREMENT-INFORMED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9's introduction presents measurement-informed
+        management as a basic principle of any true engineering discipline,
+        asserting that management without measurement (qualitative and
+        quantitative) suggests a lack of discipline, that measurement
+        without management suggests a lack of purpose or context, and that
+        software engineers must use both measurement and management to be
+        effective.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 Introduction (printed page 9-4); the Guide's own normative framing, not an empirical finding."
+      applicability: "Management of software engineering work where decisions can be informed by qualitative or quantitative measurement."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The Guide asserts rather than evidences the principle in the inspected sections; no empirical support is cited by this lane."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-MULTI-ESTIMATE-RECONCILE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 2.3 characterizes estimating costs
+        for software projects as error-prone — effort depends almost
+        entirely on human elements and on dynamic factors such as changing
+        and emergent requirements — and advises that software project
+        managers use multiple estimation approaches and reconcile the
+        differences among the estimates, combining (where data is
+        available) calibrated estimation models based on historical size
+        and effort data with bottom-up estimates from those who will
+        accomplish the work, and negotiating estimates iteratively with
+        affected stakeholders until consensus is reached.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 section 2.3 (printed pages 9-8 to 9-9); generally accepted KA content, not a mandate of specific techniques on every project."
+      applicability: "Effort, schedule and cost estimation for software projects; the predictive/adaptive scheduling differences noted by the section apply per SDLC."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section does not rank the named approaches by accuracy or prescribe how to reconcile divergent estimates."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-RISK-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 2.5 presents risk management as
+        identifying risk factors, analyzing the probability and potential
+        impact of each factor, prioritizing factors, and developing
+        mitigation strategies to reduce the probability of a negative event
+        and minimize its impact, with the resulting data (often a risk
+        register) representing the project risk profile; it further states
+        that risk management should be done not only at the beginning of a
+        project but at periodic intervals throughout the project life
+        cycle, and that particular attention should be paid to managing
+        risks related to software quality requirements such as safety or
+        security.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 section 2.5 (printed pages 9-9 to 9-10); generally accepted KA content."
+      applicability: "Software project risk management across SDLCs; named assessment methods (expert judgment, historical data, decision trees, process simulations) are examples, not an exhaustive set."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section names risk-management activities without prescribing a register format or a fixed cadence."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-QUALITY-PLANNING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 2.6 directs that a software
+        project's quality requirements, and those of its associated work
+        products, be identified — perhaps both quantitatively and
+        qualitatively — that thresholds for acceptable quality measurements
+        be set for each software quality requirement based on stakeholder
+        needs and expectations, and that procedures concerned with ongoing
+        software quality assurance and quality improvement, with verifying
+        and validating the deliverable product (for example technical
+        reviews, inspections or demonstrations of completed functionality),
+        be specified during quality planning.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 section 2.6 (printed pages 9-9 to 9-10); the planning-side quality-management direction, explicitly deferring process depth to the Software Quality KA (not inspected by this lane)."
+      applicability: "Quality planning for software projects; the quality-attribute enumeration in the section is illustrative, not a taxonomy."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The section frames project quality management via the PMBOK Guide's definition, cited here only as SWEBOK's secondary characterization."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-MEASUREMENT-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA9 section 6, presented as following ISO/IEC/IEEE
+        15939, describes a software engineering measurement process in four
+        parts: establish and sustain measurement commitment (measurement
+        requirements guided by organizational objectives, defined scope,
+        formal commitment and committed resources); plan the measurement
+        process (characterize the organizational unit, identify information
+        needs derived from its goals, constraints, risks and problems,
+        select measures with clear links to those needs against criteria
+        such as cost of collection and degree of process disruption, define
+        collection/analysis/reporting procedures and evaluation criteria);
+        perform the process (integrate procedures into the measured
+        processes, collect, verify and store data, communicate results);
+        and evaluate the measurement process and its information products
+        against the specified criteria, recording lessons learned.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 9 section 6 (printed pages 9-14 to 9-16); the Guide's characterization of the ISO/IEC/IEEE 15939 process, not the standard's normative text."
+      applicability: "Designing or auditing measurement programs at project, process or work-product level."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "ISO/IEC/IEEE 15939 is not a registered source; the claim's authority is SWEBOK's summary, and the standard's own requirements are out of reach for this lane."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-VALUE-BASED
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA15 takes the position that software engineering
+        must be value-based — neutral or negative value from an
+        organization's software investment is not sustainable — framing
+        engineering economics as the science of choice and engineering as
+        balancing what is technically feasible against what is economically
+        acceptable, stating that apparently easy technical decisions such as
+        reusing a preexisting library versus developing one's own can have
+        serious business-viability implications, and requiring that
+        decisions also consider unquantifiable criteria alongside monetary
+        ones.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 15 Introduction (printed pages 15-1 to 15-2); the KA's stated position, not an empirical finding."
+      applicability: "Governance framing for engineering trade-off decisions across the software product life cycle."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "A position statement of the Guide; the lane does not adopt its implied criticism of value-neutral engineering as fact."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-DECISION-PROCESS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA15 section 2 presents engineering
+        decision-making as a process of understanding the real problem,
+        identifying all reasonable technically feasible solutions, defining
+        the selection criteria, evaluating each alternative against those
+        criteria on the same basis for comparison and planning horizon,
+        selecting the preferred alternative (with decision-making-under-
+        risk techniques when probabilities can be assigned and
+        decision-making-under-uncertainty techniques when they cannot), and
+        monitoring the performance of the selected alternative; the time,
+        effort and care spent should scale with the consequences of a wrong
+        decision, and estimate inaccuracy is addressed with ranges of
+        estimates, sensitivity analysis and delaying final decisions.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 15 section 2 (printed pages 15-5 to 15-7); generally accepted KA content presented as a process, fluid and iterative in practice by the section's own caveat."
+      applicability: "Engineering trade-off and investment decisions from pre-project through end-of-life; technique families apply per assignability of probabilities."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The process is a structuring aid, not an automatic decision-maker; the section notes steps can overlap, iterate and reorder in practice."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-SWEBOK-ESTIMATES-UNCERTAIN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA15 section 8 states that an estimate
+        analytically predicts a quantity; that software engineers estimate
+        in order to make decisions when critical quantities are unknown,
+        so that behind every estimate is one or more decisions; that all
+        estimates are inherently uncertain because there is a nonzero
+        probability the actual outcome will differ; and that estimates
+        need not be perfect, only good enough to lead the decision-maker to
+        the right decision. The section also quotes Software Engineering
+        Code of Ethics clause 3.09 as requiring realistic quantitative
+        estimates of cost, scheduling, personnel, quality and outcomes
+        together with an uncertainty assessment of these estimates.
+      claim_kind: LIMITATION
+      scope_description: "SWEBOK Guide v4.0a Chapter 15 section 8 (printed pages 15-13 to 15-14); a limitation claim about estimation itself, including the Guide's quotation of the Code of Ethics (not an independent inspection of the Code)."
+      applicability: "Any estimate-backed engineering decision; the uncertainty-assessment obligation is quoted professional-ethics guidance."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The clause number and wording are as quoted by SWEBOK; the Code of Ethics text was not separately consulted by this lane."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-CS2023-TEAM-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        In the CS2023 curriculum, the Teamwork knowledge unit of the
+        Software Engineering area carries team processes — responsibilities
+        for tasks, effort estimation, meeting structure and work schedule —
+        as a CS Core topic (topic 5).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Teamwork CS Core topic 5; a curriculum teaching expectation, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 SE curriculum; the topic names no estimation technique."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Curriculum topic enumeration only; CS2023 does not prescribe how teams should estimate."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-CS2023-DISTRIBUTED-TEAM-RISK
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 curriculum places the risks associated with physical,
+        distributed, hybrid and virtual teams — including communication,
+        perception, structure, points of failure, mitigation and recovery —
+        in the Teamwork unit's KA Core (topic 8).
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 SE-Teamwork KA Core topic 8; curriculum scope; team-structure risk specifically, not general engineering risk management."
+      applicability: "Curriculum-grounded awareness of team-distribution risks; the topic names no risk-management procedure."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "KA Core for the SE knowledge area; programs delivering the SE area are expected to cover it, others need not."
+      uncertainty: []
+      review_status: PENDING
+    - id: se:CLM-07G-CS2023-ESTIMATION-DIFFICULT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        CS2023's SE-Requirements unit carries effort estimation as a
+        Non-core (elective) topic and characterizes it as quite difficult —
+        students are likely to be way off in many cases — teaching it
+        through learning estimation techniques and through practicing
+        estimation while comparing the estimates to how long the tasks
+        actually take.
+      claim_kind: LIMITATION
+      scope_description: "CS2023 SE-Requirements Non-core topic 9 (subtopics 9a-9c); curriculum pedagogy scope."
+      applicability: "Curriculum-scope statement about estimation difficulty; not a professional-BOK or empirical accuracy claim."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Non-core (elective) status; a statement about student estimation, not a measurement of industry estimation accuracy."
+      uncertainty: []
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07G-MEASUREMENT-INFORMED-MANAGEMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Pair management with measurement
+      statement: >-
+        The management of software engineering work should be
+        measurement-informed: qualitative and quantitative measurement
+        supplies the information on which management acts, and management
+        supplies the purpose and context that make measurement meaningful;
+        using one without the other signals a discipline gap or a purpose
+        gap.
+      rationale: >-
+        SWEBOK Guide v4.0a KA9's introduction frames measurement-informed
+        management as a basic principle of any true engineering discipline,
+        asserting that management without measurement (qualitative and
+        quantitative) suggests a lack of discipline and measurement without
+        management suggests a lack of purpose or context, and adopts working
+        definitions of both management and measurement.
+      scope_description: "Professional-BOK principle as presented in the SWEBOK Guide v4.0a KA9 introduction (printed page 9-4); not an empirically validated law."
+      applicability: "Software project and organizational management where measurement (qualitative or quantitative) is feasible."
+      exceptions: []
+      limitations:
+        - "The Guide asserts the principle without evidencing it in the inspected sections; no empirical support is cited by this lane."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-SEM-INTRO
+    - id: se:PRI-07G-CLOSE-ESTIMATION-LOOP
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Close the loop on estimates
+      statement: >-
+        Estimates should be compared with the actual outcomes of the work
+        they sized — both to judge the decisions the estimates supported
+        and to refine the estimation techniques that produced them.
+      rationale: >-
+        SWEBOK Guide v4.0a KA15 section 2.7 requires monitoring the
+        performance of the selected alternative and closing the loop on
+        estimates by comparing them to actual outcomes, stating that
+        otherwise no one will ever know if the estimates were good, and
+        that understanding what drives estimate-versus-actual differences
+        helps refine estimation techniques over time; CS2023 teaches the
+        same comparison pedagogically as the effort-estimation subtopic of
+        practicing estimation and comparing it to how long tasks take.
+      scope_description: "Professional-BOK guidance (SWEBOK KA15 section 2.7) with a curriculum echo (CS2023 SE-Requirements Non-core topic 9b); cross-source principle at lane fidelity."
+      applicability: "Any project that bases decisions on estimates and can observe the corresponding actuals."
+      exceptions: []
+      limitations:
+        - "The CS2023 leg rests on a Non-core (elective) topic and is pedagogical."
+        - "The principle presumes access to actual outcome data; where actuals are unobservable the loop cannot close."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+        - se:EVD-07G-CS2023-REQ-EFFORT
+
+  practices:
+    - id: se:PRA-07G-RISK-REGISTER-MAINTENANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Maintain a lifecycle-long risk register
+      intent: >-
+        Keep risk identification, analysis, prioritization and mitigation
+        current across the whole project instead of treating risk
+        management as a one-time startup exercise.
+      description: >-
+        Operate the risk-management cycle presented in SWEBOK KA9 section
+        2.5: identify risk factors (supported by assessment methods such as
+        expert judgment, historical data, decision trees and process
+        simulations), analyze each factor's probability and potential
+        impact, prioritize the factors, develop mitigation strategies that
+        reduce event probability and minimize impact, and record risks
+        with their information in a risk register that can also serve
+        regulatory compliance; agree project abandonment conditions with
+        stakeholders and pay particular attention to risks related to
+        quality requirements such as safety or security.
+      preconditions:
+        - "An agreed risk-management procedure and an owner for the register."
+        - "Access to assessment inputs (expertise, historical data or models) of usable quality."
+      steps:
+        - "Identify risk factors using the assessment methods available in context."
+        - "Analyze each factor's probability and potential impact."
+        - "Prioritize the factors by analysis results."
+        - "Define mitigation strategies (probability reduction and impact minimization) per prioritized factor."
+        - "Record each risk, its analysis and its mitigation status in the risk register."
+        - "Revisit the risk profile and recompute risk exposures at predetermined intervals through the project life cycle, not only at initiation."
+      expected_outcomes:
+        - "A current project risk profile whose data lives in an auditable register."
+        - "Named mitigation owners and strategies for prioritized risks."
+      risks:
+        - "The register goes stale between revisits; periodic revisit discipline is the practice's load-bearing element."
+        - "Assessment quality depends on available expertise and history; simulations and trees inherit their input biases."
+        - "Register paperwork can displace actual mitigation work."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA9 section 2.5 at BOK fidelity; the named assessment methods are the section's examples, not an exhaustive professional procedure."
+      applicability: "Software projects under any SDLC; the revisit cadence is context-dependent."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      claim_refs:
+        - se:CLM-07G-SWEBOK-RISK-LIFECYCLE
+    - id: se:PRA-07G-MULTI-TECHNIQUE-ESTIMATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Estimate with multiple techniques and reconcile
+      intent: >-
+        Counter the inherent uncertainty and error-proneness of software
+        effort/cost estimation by triangulating techniques, investigating
+        divergence and disclosing uncertainty instead of emitting a single
+        number.
+      description: >-
+        Estimate the same quantity with more than one general technique —
+        expert judgment (optionally via group processes), estimation by
+        analogy, bottom-up decomposition, and parametric estimation where a
+        validated equation and historical data exist — possibly with
+        different estimators; examine the estimates for convergence or
+        divergence; on divergence, look for overlooked factors and
+        reestimate toward convergence; express the result as a range with
+        an uncertainty assessment and negotiate revisions with affected
+        stakeholders until consensus is reached.
+      preconditions:
+        - "At least two estimation techniques feasible in context (e.g., a known analogy or historical data for a calibrated model)."
+        - "A decision whose consequences justify the extra estimation effort."
+      steps:
+        - "State the quantity to estimate and the decision it serves."
+        - "Select the techniques feasible from available inputs (experts, analogies, historical data, work breakdown)."
+        - "Produce estimates per technique, applying technique-specific care (difference lists for analogy; cross-cutting allowances for decomposition)."
+        - "Compare the estimates; on divergence, identify overlooked factors and reestimate."
+        - "Express the reconciled result as a range with an uncertainty assessment."
+        - "Record the techniques used and revisit the estimate against actuals when the work completes."
+      expected_outcomes:
+        - "A reconciled estimate with explicit uncertainty, or a documented list of unresolved divergence causes."
+        - "Technique provenance recorded for later estimation improvement."
+      risks:
+        - "Multiple biased techniques can converge on the same wrong value, suggesting false accuracy."
+        - "Group estimation processes can converge on a dominant opinion rather than information."
+        - "The extra effort is wasted on decisions with small consequences."
+      scope_description: "Operationalizes SWEBOK KA15 section 8 (8.1-8.5) together with KA9 section 2.3 (multiple approaches and reconciliation); joining the two sections into one procedure is a lane composition disclosed here, not a procedure printed in either section."
+      applicability: "Estimates feeding significant decisions (scope, staffing, bid/no-bid, go/no-go); the Guide scales effort to the consequences of a wrong decision."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-ESTIMATION
+        - se:EVD-07G-SWEBOK-KA9-ESTIMATION
+      claim_refs:
+        - se:CLM-07G-SWEBOK-MULTI-ESTIMATE-RECONCILE
+        - se:CLM-07G-SWEBOK-ESTIMATES-UNCERTAIN
+    - id: se:PRA-07G-NEEDS-DRIVEN-MEASUREMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Select measures from information needs
+      intent: >-
+        Prevent unfocused or ritual data collection by deriving every
+        measure from explicitly identified information needs of the
+        organizational unit.
+      description: >-
+        Apply the planning part of the SWEBOK KA9 section 6 measurement
+        process: characterize the organizational unit (processes,
+        application domains, technology, interfaces, structure);
+        identify information needs based on the unit's goals, constraints,
+        risks and problems, prioritized and communicated with stakeholders;
+        select candidate measures with clear links to those needs, judged
+        against criteria such as cost of collection, degree of process
+        disruption, ease of obtaining accurate consistent data and ease of
+        analysis and reporting; define data collection, analysis and
+        reporting procedures and evaluation criteria for information
+        products; then integrate the procedures into the processes being
+        measured.
+      preconditions:
+        - "Organizational commitment and resources for measurement (KA9 6.1)."
+        - "Stakeholders able to articulate and prioritize information needs."
+      steps:
+        - "Characterize the organizational unit and its constraints."
+        - "Identify and prioritize information needs from goals, constraints, risks and problems."
+        - "Select measures with clear links to the needs, judging candidates by collection cost, disruption, data accuracy and analysis ease."
+        - "Define collection, analysis and reporting procedures and information-product evaluation criteria."
+        - "Integrate the procedures into the measured processes and communicate results."
+        - "Evaluate information products and the process against the criteria; record lessons learned."
+      expected_outcomes:
+        - "A measurement plan in which every measure traces to a stated information need."
+        - "Evaluation criteria against which information products can be judged."
+      risks:
+        - "Information needs drift as the unit's goals change, silently invalidating the measure set."
+        - "Collection procedures can disrupt the measured processes if disruption was not a selection criterion."
+        - "Measures without committed resources decay into partial, untrustworthy data."
+      scope_description: "Operationalizes SWEBOK Guide v4.0a KA9 section 6 (especially 6.2) as the Guide's characterization of the ISO/IEC/IEEE 15939 process; the standard's normative text is not cited."
+      applicability: "Measurement programs at project, process or work-product level; organizational-unit characterization is context-specific."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+      claim_refs:
+        - se:CLM-07G-SWEBOK-MEASUREMENT-PROCESS
+
+  patterns:
+    - id: se:PAT-07G-MULTI-ATTRIBUTE-TRADEOFF
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Common-basis multi-attribute trade-off evaluation
+      problem: >-
+        Technical alternatives — buy or build, architecture options,
+        refactor versus redevelop, how much risk-based testing is enough —
+        must be compared on money and on non-monetary criteria without
+        smuggling in inconsistent comparisons that predetermine the winner.
+      context: >-
+        An engineering decision, at any level of technical detail, with
+        more than one reasonable technically feasible alternative and
+        selection criteria that cannot all be expressed in money
+        (SWEBOK KA15 sections 2.3-2.6, with the decision examples from the
+        KA15 introduction).
+      forces:
+        - "The best solution must be among the candidates before it can be selected; adding candidates raises the chance but also the cost."
+        - "Too many criteria make the analysis unwieldy; too few fail to differentiate alternatives and can force a suboptimal choice."
+        - "Some criteria (unquantifiables such as well-being or loyalty) resist objective, let alone monetary, expression."
+        - "The greater the consequences of a wrong decision, the more criteria and care are warranted."
+      solution: >-
+        Follow the KA15 section 2 structure: enumerate all reasonable
+        technically feasible solutions (using prototyping and peer review
+        to verify feasibility and to surface more candidates); define the
+        selection criteria as objectively as possible, explicitly carrying
+        unquantifiable criteria; evaluate every alternative against every
+        criterion from the same viewpoint — the same basis for comparison,
+        the same planning horizon, the same kinds of costs and incomes; and
+        select using compensatory techniques that collapse criteria into a
+        single figure of merit (for example additive weighting or the
+        analytic hierarchy process) or non-compensatory techniques that
+        refuse trade-offs (dominance, satisficing, lexicography), recording
+        the selected alternative and its justification when consequences
+        are high, and monitoring the selected alternative's performance
+        afterward.
+      consequences:
+        - "Alternatives are compared on a declared, common basis, making the decision auditable."
+        - "Unquantifiable criteria stay in the decision instead of being silently monetized or dropped."
+        - "High-consequence decisions leave a recorded justification trail."
+      tradeoffs:
+        - "Compensatory techniques let a low score on one criterion be offset by high scores elsewhere, which can mask a fatal weakness; non-compensatory techniques avoid that masking but discard aggregate ordering information."
+        - "Common planning horizons can require arbitrary cut-offs for proposals with different natural lifespans."
+      scope_description: "Structured from SWEBOK Guide v4.0a KA15 sections 2.3-2.6 and 6 (printed pages 15-5 to 15-7, 15-9 to 15-10) at BOK fidelity; the specific technique lists are the Guide's enumeration, not a comparative effectiveness study."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+
+  anti_patterns:
+    - id: se:ANT-07G-POINT-ESTIMATE-COMMITMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Single-point estimate treated as a commitment
+      symptoms:
+        - "An early effort, cost or schedule estimate is communicated as one number with no range and no uncertainty assessment."
+        - "The estimate functions as a promise or target; deviations are treated as failures of execution rather than of prediction."
+        - "Estimates from different techniques or estimators that diverge are averaged or ignored instead of investigated."
+        - "The estimate is never revisited when requirements or scope evolve."
+      causes:
+        - "Conflating an estimate (an uncertain prediction supporting a decision) with a target, bid or commitment."
+        - "Stakeholder or contractual pressure for certainty rewards a single confident number."
+        - "Treating estimation as a one-time initiation artifact rather than an iterative, negotiated activity."
+        - "No comparison of past estimates against actuals, so miscalibration is invisible."
+      consequences:
+        - "Overruns and infeasibility surface late, when correction is most expensive."
+        - "Trust erodes between engineering and stakeholders as 'the number' is missed."
+        - "Schedule and cost pressure is redirected into quality shortcuts, undercutting quality planning."
+        - "Decisions are made on precision that never existed, invalidating their justification."
+      remediation: >-
+        Present estimates with an uncertainty assessment (ranges,
+        sensitivity analysis) as the Code of Ethics clause quoted by SWEBOK
+        KA15 section 8 requires; estimate with multiple techniques and
+        reconcile divergences (KA15 section 8.5, KA9 section 2.3); delay
+        final decisions where estimates diverge (KA15 section 2.6); and
+        close the loop by comparing estimates to actual outcomes (KA15
+        section 2.7).
+      scope_description: "Lane synthesis grounded in directly inspected SWEBOK KA15 section 8 (estimates inherently uncertain; uncertainty assessment required) and KA9 section 2.3 (estimation error-prone; multiple approaches advised); the counterproductive characterization is the lane's inference (see se:EVD-07G-SYNTHESIS-POINT-ESTIMATE), not a statement made by SWEBOK."
+      evidence_refs:
+        - se:EVD-07G-SYNTHESIS-POINT-ESTIMATE
+
+  decision_models:
+    - id: se:DM-07G-ESTIMATION-TECHNIQUE-SELECTION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "Which estimation technique, or combination of techniques, should produce the estimate for a given quantity and the decision it serves?"
+      options:
+        - "Expert judgment alone"
+        - "Expert judgment via a group process (for example Wideband Delphi or Planning Poker)"
+        - "Estimation by analogy against a known similar outcome"
+        - "Decomposition (bottom-up) over a work breakdown"
+        - "Parametric estimation with a calibrated statistical equation"
+        - "Multiple techniques with convergence/divergence reconciliation"
+      criteria:
+        - "Consequences of a wrong decision (higher consequences justify more techniques and effort)."
+        - "Availability of accurate historical data (enables calibrated/parametric estimation)."
+        - "Availability of a suitable analogy with known actual results."
+        - "Availability of estimators or experts."
+        - "Time and effort budget for the estimation activity itself."
+        - "Need for defensibility of the estimate to third parties."
+      constraints:
+        - "Every estimate is inherently uncertain and must carry an uncertainty assessment (Code of Ethics clause 3.09 as quoted in SWEBOK KA15 section 8)."
+        - "Decomposition requires explicit allowances for cross-cutting factors (requirements, integration, testing, documentation work)."
+        - "Parametric estimation presumes a developed and validated equation over an adequate historical data base."
+      procedure: >-
+        State the quantity and the decision it serves; inventory the
+        available inputs (experts, analogies with known results, historical
+        data, work breakdown); shortlist the feasible techniques from
+        SWEBOK KA15 section 8.1-8.4; select a single technique only when
+        the consequences of a wrong decision are small and inputs are rich,
+        otherwise estimate with multiple techniques and examine convergence
+        (agreement suggests accuracy; divergence suggests overlooked
+        factors — investigate and reestimate, per section 8.5 and KA9
+        section 2.3's reconciliation advice); express the result as a range
+        with an uncertainty assessment; record the technique choice and
+        compare against actuals afterward.
+      tradeoffs:
+        - "Expert judgment is always available but least accurate; analogy is quicker and more accurate but needs a known analogue; decomposition is thorough but laborious and fails under correlated bottom-level bias; parametric is most accurate and defendable when validated but expensive to develop."
+      scope_description: "Structured from SWEBOK Guide v4.0a KA15 section 8 (8.1-8.5) plus the multiple-approach reconciliation of KA9 section 2.3; the accuracy ordering among techniques is the Guide's overview characterization, not an independent empirical ranking."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-ESTIMATION
+        - se:EVD-07G-SWEBOK-KA9-ESTIMATION
+      claim_refs:
+        - se:CLM-07G-SWEBOK-ESTIMATES-UNCERTAIN
+
+  coverage_gaps:
+    - id: se:GAP-07G-NO-PM-STANDARD-SOURCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No project-management or measurement standard is registered as a source
+      target_scope_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      gap_kind: SOURCE_GAP
+      description: >-
+        SWEBOK KA9's planning, risk, quality and measurement topics lean on
+        external standards — the PMBOK Guide, its Software Extension (SWX)
+        and ISO/IEC/IEEE 15939 — and KA15 cites ISO 12207 and ISO 15288 for
+        decision-management recommendations. None of these is registered
+        in the Source Registry (the registry's ISO entries are
+        metadata-only, ACCESS_RESTRICTED), so every record in this lane
+        that touches those standards rests on SWEBOK's secondary
+        characterization and cannot cite their normative text.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Quality-management and measurement-process records cannot be traced
+        to primary normative sources; PMBOK/SWX-specific process
+        definitions and the 15939 measurement information model remain out
+        of reach for this lane, and no such standard may be imported
+        ad hoc.
+      resolution_notes:
+        - "Register the PMBOK Guide, SWX and ISO/IEC/IEEE 15939 (or accessible equivalents) via a separate single-writer source task; then re-anchor affected records by direct inspection of the standards."
+        - "Proposed sources are listed in the lane README; registry mutation is deferred per task rules."
+    - id: se:GAP-07G-KA12-QUALITY-UNINSPECTED
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA12 Software Quality not inspected by this lane
+      target_scope_ref: se:NODE-07G-SEM-QUALITY-MANAGEMENT
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane's authorized SWEBOK reading plan covered Chapter 9
+        (Software Engineering Management) and Chapter 15 (Software
+        Engineering Economics), with Chapter 14 optional and unused.
+        SWEBOK Chapter 12 (Software Quality) — the knowledge area that KA9
+        section 2.6 itself defers to for quality-management processes,
+        software quality assurance, verification and validation, reviews
+        and audits — was not inspected, so no quality-management record in
+        this lane is grounded in KA12's own text.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Quality-management coverage is limited to the KA9 planning
+        perspective; the deeper quality-management content of KA12 is
+        uncovered here even though the lane's scope includes quality
+        management (quality models remain lane-07A territory and quality
+        attributes as engineering detail lane-07D territory by design).
+      resolution_notes:
+        - "A lane or follow-up with Chapter 12 in its source plan (chapter starts at 1-based PDF page 246 per the shared page map) should inspect KA12 directly and admit quality-management records with their own locators."
+    - id: se:GAP-07G-NO-REAL-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real planning, risk or quality case evidence
+      target_scope_ref: se:VIEW-07G-SWEBOK-SEM-PLANNING
+      gap_kind: SOURCE_GAP
+      description: >-
+        Neither SWEBOK KA9/KA15 (guides to generally accepted knowledge
+        whose inspected sections contain no case narratives) nor CS2023 (a
+        curriculum) supplies real case material: no incident report,
+        postmortem or project case study touching estimation failure, risk
+        materialization or quality-management outcome is registered for
+        this scope. The lane therefore contains no Case or Counterexample
+        records, and its pattern and anti-pattern records rest on
+        professional-BOK and curriculum text plus one lane-marked
+        synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        Pattern and AntiPattern records lack real-world illustration; the
+        anti-pattern's counterproductive characterization remains a
+        synthesis inference rather than an observed outcome.
+      resolution_notes:
+        - "Register and verify at least one case-class source (for example public project postmortems or retrospectives touching estimation or risk) before promoting these records toward acceptance."
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: >-
+        The registered CS2023 permission scope expressly covers educational
+        materials and programs and requires specific permission for other uses.
+        Tally's general software-engineering knowledge graph is not presumed to
+        qualify as an educational material or program; no rights clearance for
+        broader use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: "The lane must not claim that CS2023-derived records are cleared for public redistribution or commercial product embedding until the rights scope is confirmed."
+      resolution_notes:
+        - "Obtain a documented rights determination or specific permission before public redistribution or commercial product embedding; otherwise replace the source or remove the affected records from those uses."
+      evidence_refs: []
+
+  relationship_assertions:
+    - id: se:REL-07G-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-SEM-DEFINITION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-SEM-INTRO
+      context: "Canonical claim-to-evidence trace for the SEM definition claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 9's introduction at its verified locator (PDF page indices 201-206; printed 9-1 to 9-6), which is the sole basis of the claim."
+    - id: se:REL-07G-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-MEASUREMENT-INFORMED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-SEM-INTRO
+      context: "Canonical claim-to-evidence trace for the measurement-informed management claim."
+      rationale: "The evidence record paraphrases the measurement-informed management passage of the same introduction locator, including the discipline/purpose pairing the claim reports."
+    - id: se:REL-07G-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-MULTI-ESTIMATE-RECONCILE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-ESTIMATION
+      context: "Canonical claim-to-evidence trace for the multiple-estimation-approaches claim."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 2.3 at its verified locator (PDF page indices 208-209; printed 9-8 to 9-9), which carries the error-prone characterization and the reconcile advice."
+    - id: se:REL-07G-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-RISK-LIFECYCLE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      context: "Canonical claim-to-evidence trace for the lifecycle-long risk-management claim."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 2.5 (PDF page indices 209-210; printed 9-9 to 9-10), which states the risk-management cycle, the register and the periodic-revisit rule."
+    - id: se:REL-07G-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-QUALITY-PLANNING
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      context: "Canonical claim-to-evidence trace for the quality-planning claim."
+      rationale: "The same evidence record paraphrases SWEBOK KA9 section 2.6, which directs identification of quality requirements, per-requirement acceptance thresholds and planned SQA/V&V/review/audit procedures."
+    - id: se:REL-07G-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-MEASUREMENT-PROCESS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+      context: "Canonical claim-to-evidence trace for the measurement-process claim."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 6 (PDF page indices 214-216; printed 9-14 to 9-16), which carries the four-part process and the 15939 attribution."
+    - id: se:REL-07G-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-VALUE-BASED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-VALUE
+      context: "Canonical claim-to-evidence trace for the value-based engineering claim."
+      rationale: "The evidence record paraphrases the SWEBOK KA15 introduction (PDF page indices 287-288; printed 15-1 to 15-2), which states the value-based position and the unquantifiable-criteria rule."
+    - id: se:REL-07G-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-DECISION-PROCESS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+      context: "Canonical claim-to-evidence trace for the engineering decision-process claim."
+      rationale: "The evidence record paraphrases SWEBOK KA15 section 2 (PDF page indices 291-293; printed 15-5 to 15-7), which presents the six steps, the consequence-scaled effort rule and the technique families."
+    - id: se:REL-07G-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-SWEBOK-ESTIMATES-UNCERTAIN
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-ESTIMATION
+      context: "Canonical claim-to-evidence trace for the inherent-estimate-uncertainty claim."
+      rationale: "The evidence record paraphrases SWEBOK KA15 section 8 (PDF page indices 299-302; printed 15-13 to 15-16), which states the estimate definition, the decisions framing, inherent uncertainty and the quoted ethics clause."
+    - id: se:REL-07G-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-CS2023-TEAM-ESTIMATION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-CS2023-TEAMWORK-PROCESSES
+      context: "Canonical claim-to-evidence trace for the CS2023 team-processes estimation claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Teamwork CS Core topic 5 from the heading-anchored unit locator, which names team processes with effort estimation and work schedule."
+    - id: se:REL-07G-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-CS2023-DISTRIBUTED-TEAM-RISK
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-CS2023-TEAMWORK-PROCESSES
+      context: "Canonical claim-to-evidence trace for the CS2023 distributed-team risk claim."
+      rationale: "The same evidence record paraphrases CS2023 SE-Teamwork KA Core topic 8, which lists the distribution-mode risks with mitigation and recovery."
+    - id: se:REL-07G-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07G-CS2023-ESTIMATION-DIFFICULT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-CS2023-REQ-EFFORT
+      context: "Canonical claim-to-evidence trace for the CS2023 estimation-difficulty claim."
+      rationale: "The evidence record paraphrases CS2023 SE-Requirements Non-core topic 9 (subtopics 9a-9c), which carries the difficulty caveat and the practice-and-compare pedagogy."
+    - id: se:REL-07G-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07G-MEASUREMENT-INFORMED-MANAGEMENT
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-SEM-INTRO
+      context: "Canonical principle-to-evidence trace for the measurement-informed management principle."
+      rationale: "The principle's rationale is drawn directly from the KA9 introduction's measurement-informed management passage that the evidence record paraphrases."
+    - id: se:REL-07G-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07G-CLOSE-ESTIMATION-LOOP
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+      context: "Primary evidence trace for the close-the-loop principle."
+      rationale: "SWEBOK KA15 section 2.7, carried by this evidence record, states the requirement to compare estimates to actual outcomes and its role in improving estimation over time."
+    - id: se:REL-07G-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07G-CLOSE-ESTIMATION-LOOP
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-CS2023-REQ-EFFORT
+      context: "Curriculum-side evidence trace for the close-the-loop principle."
+      rationale: "CS2023 SE-Requirements Non-core topic 9b, carried by this evidence record, teaches estimation precisely by comparing estimates to how long tasks actually take."
+    - id: se:REL-07G-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07G-CLOSE-ESTIMATION-LOOP
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07G-CS2023-REQ-EFFORT
+      qualifiers:
+        - "The CS2023 leg of the support is a Non-core (elective) topic and is pedagogical, aimed at students."
+        - "The professional weight of the principle rests on the SWEBOK KA15 section 2.7 leg; the curriculum echo qualifies, not grounds, the principle."
+      context: "Qualifying how strongly the curriculum source supports the close-the-loop principle."
+      rationale: "The same evidence record documents both the comparison pedagogy and its Non-core elective status, which bounds how far CS2023 alone carries the principle."
+    - id: se:REL-07G-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07G-MULTI-ATTRIBUTE-TRADEOFF
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-DECISION-PROCESS
+      context: "Canonical pattern-to-evidence trace for the multi-attribute trade-off pattern."
+      rationale: "The pattern's solution structure (candidate enumeration, criteria definition, common-basis evaluation, compensatory/non-compensatory selection) is drawn from the KA15 section 2 process this evidence record paraphrases."
+    - id: se:REL-07G-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07G-ESTIMATION-TECHNIQUE-SELECTION
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-ESTIMATION
+      context: "Primary evidence trace for the estimation-technique decision model."
+      rationale: "The model's options, criteria and trade-offs are structured from the five general techniques and their availability/accuracy characterizations in SWEBOK KA15 section 8."
+    - id: se:REL-07G-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07G-RISK-REGISTER-MAINTENANCE
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07G-SEM-RISK-MANAGEMENT
+      qualifiers:
+        - "Operationalized at SWEBOK KA9 section 2.5 BOK fidelity; the named assessment methods are the section's examples."
+        - "Applies within the lane's SWEBOK SEM planning view; not a claim of applicability to non-software projects."
+      context: "Locating the risk-register practice within the taxonomy node it operationalizes."
+      rationale: "The practice's steps mirror the identify/analyze/prioritize/mitigate cycle and periodic-revisit rule that define the risk-management node."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+    - id: se:REL-07G-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07G-NEEDS-DRIVEN-MEASUREMENT
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07G-SEM-MEASUREMENT
+      qualifiers:
+        - "Operationalizes the planning sub-step (KA9 6.2) of the measurement node's four-part process."
+        - "The 15939 framing is SWEBOK's characterization; the standard's normative text is not cited."
+      context: "Locating the needs-driven measurement practice within the taxonomy node it operationalizes."
+      rationale: "The practice's procedure is the measurement-process planning phase that the measurement node is defined around."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+    - id: se:REL-07G-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07G-MULTI-TECHNIQUE-ESTIMATION
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07G-SWEBOK-MULTI-ESTIMATE-RECONCILE
+      qualifiers:
+        - "The practice operationalizes KA9 section 2.3's multiple-approach-and-reconcile advice, extended with KA15 section 8.5's convergence/divergence reading."
+        - "Joining the two sections into one procedure is a lane composition, disclosed in the practice's scope field."
+      context: "The practice operationalizes the professional-BOK claim it cites."
+      rationale: "The claim states what SWEBOK advises about multiple estimation approaches; the practice turns that advice into a runnable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-ESTIMATION
+    - id: se:REL-07G-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07G-NEEDS-DRIVEN-MEASUREMENT
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07G-SWEBOK-MEASUREMENT-PROCESS
+      qualifiers:
+        - "The practice operationalizes the planning (6.2) and performing (6.3) parts of the four-part process claim."
+        - "The practice adds procedural detail (integration and evaluation steps framed as practice risks) beyond the section's own text."
+      context: "The practice operationalizes the measurement-process claim."
+      rationale: "The claim describes the KA9 section 6 process; the practice makes its measure-selection core executable for a team."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+    - id: se:REL-07G-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07G-ESTIMATION-TECHNIQUE-SELECTION
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07G-EFFORT-ESTIMATE
+      context: "Structural dependency between the technique-selection decision model and the estimate concept."
+      rationale: "The decision model presupposes the KA15 section 8 concept of an estimate as an inherently uncertain prediction made to support a decision; without that concept the model's uncertainty constraint is unmotivated."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA15-ESTIMATION
+    - id: se:REL-07G-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07G-POINT-ESTIMATE-COMMITMENT
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07G-SYNTHESIS-POINT-ESTIMATE
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a SWEBOK sentence; it is derived from the lane synthesis combining KA15 section 8's inherent-uncertainty statements with KA9 section 2.3's error-proneness and reconciliation advice, and the edge records that derivation."
+      evidence_refs:
+        - se:EVD-07G-SYNTHESIS-POINT-ESTIMATE
+    - id: se:REL-07G-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07G-SEM-RISK-MANAGEMENT
+      predicate: PART_OF
+      object_ref: se:NODE-07G-SEM-PROJECT-PLANNING
+      context: "Structuring the lane's SWEBOK SEM view: risk management is subsection 2.5 of Software Project Planning in the same chapter."
+      rationale: "SWEBOK KA9 places Risk Management (2.5) inside the Software Project Planning topic (section 2); both nodes share se:VIEW-07G-SWEBOK-SEM-PLANNING, so containment is expressed within one view."
+    - id: se:REL-07G-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07G-SEM-QUALITY-MANAGEMENT
+      predicate: PART_OF
+      object_ref: se:NODE-07G-SEM-PROJECT-PLANNING
+      context: "Structuring the lane's SWEBOK SEM view: quality management is subsection 2.6 of Software Project Planning in the same chapter."
+      rationale: "SWEBOK KA9 places Quality Management (2.6) inside the Software Project Planning topic (section 2); both nodes share the lane view, and the containment edge keeps the section structure auditable."
+    - id: se:REL-07G-027
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07G-CS2023-SE-TEAMWORK
+      predicate: CROSS_CUTS
+      object_ref: se:NODE-07G-SEM-PROJECT-PLANNING
+      qualifiers:
+        - "Cross-view edge: the Teamwork node lives in the CS2023 curriculum lens (se:VIEW-CS2023-SE) and the planning node in the SWEBOK process lens (se:VIEW-07G-SWEBOK-SEM-PLANNING); the views are not merged."
+        - "The intersection is the Teamwork unit's team-processes topic (effort estimation, work schedule), not the whole unit."
+      context: "Recording that the curriculum's team-processes estimation topic intersects the professional-BOK planning activities without merging the two taxonomies."
+      rationale: "CS2023 teaches effort estimation inside Teamwork while SWEBOK treats estimation inside project planning; the cross-cut edge preserves both placements instead of forcing one hierarchy."
+      evidence_refs:
+        - se:EVD-07G-CS2023-TEAMWORK-PROCESSES
+    - id: se:REL-07G-028
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07G-RISK-VS-UNCERTAINTY
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      context: "Canonical concept-to-evidence trace for the risk-versus-uncertainty boundary concept."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 2.5's distinction between uncertainty as lack of information and risk as the effect of uncertainty on objectives."
+    - id: se:REL-07G-029
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07G-INFORMATION-NEED
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-MEASUREMENT
+      context: "Canonical concept-to-evidence trace for the information-need concept."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 6.2's identification of information needs from the organizational unit's goals, constraints, risks and problems."
+    - id: se:REL-07G-030
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07G-EFFORT-ESTIMATE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA15-ESTIMATION
+      context: "Canonical concept-to-evidence trace for the estimate concept."
+      rationale: "The evidence record paraphrases SWEBOK KA15 section 8's definition of an estimate as an analytical prediction made to support decisions."
+    - id: se:REL-07G-031
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07G-RISK-REGISTER
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07G-SWEBOK-KA9-RISK-QUALITY
+      context: "Canonical concept-to-evidence trace for the risk-register concept."
+      rationale: "The evidence record paraphrases SWEBOK KA9 section 2.5's characterization of the risk register as a repository of identified risks and their information, usable for regulatory compliance."
+    - id: se:REL-07G-032
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07G-NEEDS-DRIVEN-MEASUREMENT
+      predicate: IMPLEMENTS
+      object_ref: se:PRI-07G-MEASUREMENT-INFORMED-MANAGEMENT
+      qualifiers:
+        - "The practice implements the measurement half of the principle while its stakeholder-communication steps carry the management half."
+        - "Implementation fidelity is bounded by the practice's scope: SWEBOK's characterization of the 15939 planning process, not the standard itself."
+      context: "The practice is the lane's concrete realization of the pair-management-with-measurement principle."
+      rationale: "Deriving every measure from an identified information need is exactly how measurement acquires the purpose and context the principle demands, per the KA9 sections both records cite."
+      evidence_refs:
+        - se:EVD-07G-SWEBOK-KA9-MEASUREMENT

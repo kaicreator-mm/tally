@@ -1,0 +1,6 @@
+# SEK-08/SEK-09H generated-graph manifest (deterministic build)
+# build date (fixed): 2026-11-07
+# canonical graph digest (sha256 over sorted N-Triples): 2625a6b336a8a0b392e7eccd13f157e3fb9030e9262836a12ec8afc85eb2d2e8
+# verify with: sha256sum -c manifest.sha256
+f98323118bc3f5212a3c2f2350557286cb18d0f794c26a78101b210dac6e589b  graph.ttl
+e8b9003b1b4c27ce78496a62392a6a2afc7031500f368c1bd90ed737ee6f1f95  graph.jsonld

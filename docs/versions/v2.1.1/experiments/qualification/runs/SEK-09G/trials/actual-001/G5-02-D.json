@@ -1,0 +1,22 @@
+{
+  "qid": "G5-02",
+  "arm": "D",
+  "status": "SUCCESS",
+  "request_sha256": "b34c9a3ca71f19c3b29594cdd9bf513ffc091ee9705ad951030d473b2ce6fcc1",
+  "retrieval_sha256": null,
+  "started_utc": "2026-11-08T08:34:29.829Z",
+  "answer": "CS2023 does not explicitly distinguish architectural design from detailed design and does not specify exact criteria for their boundary. The document focuses more on the overall process and methodologies rather than delineating specific design phases. Therefore, the scope and criteria for these design phases remain unclear and are not detailed within the CS2023.",
+  "model_returned": "/models/qwen2.5-3b-instruct-q4_k_m.gguf",
+  "response_sha256": "52dd93b629f16fed4c1bd70fcfbf18d2113c15b52291e1c4c3088bd934939fd2",
+  "provider_usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 63,
+    "total_tokens": 130,
+    "prompt_tokens_details": {
+      "cached_tokens": 44
+    }
+  },
+  "system_fingerprint": "b12199-372dc5ca1",
+  "elapsed_ms": 9781,
+  "finished_utc": "2026-11-08T08:34:39.613Z"
+}

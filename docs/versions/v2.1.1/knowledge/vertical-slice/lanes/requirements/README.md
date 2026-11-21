@@ -1,0 +1,156 @@
+# Requirements Engineering Lane — SEK-06A
+
+**Lane ID:** `SEK-06A-REQUIREMENTS-LANE-0.1.0`
+**Status:** DRAFT / PENDING HUMAN REVIEW
+**Task:** [#322](https://github.com/kaicreator-mm/tally/issues/322) (SEK-06 vertical-slice lanes)
+**Baseline:** `cf2dbc845bfc2dcbc110ed52e240e79953a4cba9`
+**Integration target:** `wip/v2.1.1-knowledge` (SEK-08 assembles the three lanes by canonical ID)
+
+## Purpose and scope boundary
+
+This lane is the Requirements Engineering depth slice of the SEK-06 knowledge
+vertical. It models the CS2023 Software Engineering knowledge unit
+**SE-Requirements: Product Requirements** (KA Core topics 1-6, Non-core topics
+7-9) and its registry-verified surroundings (SE Overview, SE Core Hours table).
+
+Scope boundary:
+
+- **Curriculum authority plus reinspected professional-BOK anchors.** CS2023
+  records stay scoped to the curriculum; SWEBOK-derived records are scoped to
+  the directly reinspected KA1 sections and are not automatically accepted.
+- **SWEBOK v4.0a identity reconciliation is complete** (SEK-02R #325 merged via
+  PR #326 into this lane's WIP base). The 2026-11-06 P2 repair performed the
+  required content-level reinspection of SWEBOK KA1 sections 2, 5, 6 and 7 and
+  admitted three locators, three evidence records and three claims; no
+  SWEBOK-derived claim is auto-accepted, and the remaining coverage limitation
+  is recorded as `se:GAP-REQ-PROFESSIONAL-BOK-EVIDENCE`.
+- **No invented real cases.** CS2023 carries no real requirements-engineering
+  case material, so this lane contains no Case or Counterexample records; the
+  missing case evidence is recorded as `se:GAP-REQ-REAL-CASE-EVIDENCE`.
+- All knowledge records are `PROPOSED` or `PENDING_REVIEW`; no record is
+  `ACCEPTED`. Evidence records are `EXTRACTED_PENDING_REVIEW`, `synthetic: false`.
+  Knowledge claims are `review_status: PENDING`.
+
+## Authority fit and limits
+
+- CS2023 (`se:SRC-CS2023`) is used strictly within its registry authority:
+  curriculum knowledge-area / knowledge-unit classification and boundary
+  comparison. It is not a professional Software Engineering body of knowledge and
+  not evidence that any taught practice is effective in industry.
+- The SE Overview and Core Hours page anchors are registry-verified (PDF page
+  indices 174-176 and 176-177). The knowledge-unit-level locator
+  `se:LOC-CS2023-SE-REQ-KU` is **heading-anchored**: its unit heading and topic
+  text were verified against a full-text extraction of the official PDF on
+  2026-11-06, but the printed page of the KU subsection was not independently
+  confirmed, so the locator asserts no page number of its own.
+- One evidence record is a lane-marked `SYNTHESIS`
+  (`se:EVD-REQ-SYNTHESIS-QA-DEFERRED`). It combines two verified topic
+  statements from the same knowledge unit; it is explicitly not a curriculum
+  sentence, and the anti-pattern derived from it repeats that boundary.
+- SWEBOK Guide v4.0a (`se:SRC-SWEBOK-GUIDE-4-0A`) is used within its registry
+  authority: a professional body of knowledge whose inspected KA1 sections were
+  reopened directly from the official PDF (SHA-256
+  `0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511`, 411
+  pages) on 2026-11-06. The three SWEBOK locators record exact PDF page indices
+  and printed chapter-page folios. Registry limitations carry through: the Guide
+  is a guide to generally accepted knowledge, not a uniform prescription, and
+  its topic citations are not comprehensive. The PDF/landing-page release-date
+  discrepancy recorded by SEK-02R remains OPEN.
+
+## Rights and access restrictions
+
+The CS2023 report's permission notice grants use of the curriculum guidelines
+for development of educational materials and programs; other use requires
+specific permission (ACM / IEEE-CS / AAAI contacts in
+`authority/source-reviews/CS2023.md`). This lane therefore stores only
+bibliographic metadata, exact locators and concise original paraphrases of the
+verified anchors; short verbatim topic titles appear only where needed for
+locator anchoring. No substantial report text is reproduced, and nothing in this
+lane assumes commercial redistribution or product-embedding rights. The
+unresolved boundary is tracked as a first-class shared CoverageGap record,
+`se:GAP-CS2023-RIGHTS-CLEARANCE` (HIGH / OPEN, identical across SEK-06A/06B/06C
+for SEK-08 deduplication); it stays OPEN until a documented rights determination
+or specific permission exists.
+
+## Record counts
+
+| Collection | Count | Records |
+|---|---|---|
+| domains | 1 | shared `se:DOMAIN-SOFTWARE-ENGINEERING` (verbatim shared snippet) |
+| taxonomy_views | 1 | shared `se:VIEW-CS2023-SE` (verbatim shared snippet) |
+| taxonomy_nodes | 1 | `se:NODE-CS2023-SE-PRODUCT-REQUIREMENTS` |
+| source_locators | 7 | 3 shared verbatim + `se:LOC-CS2023-SE-REQ-KU` (heading-anchored) + 3 SWEBOK KA1 (PDF-page-index + printed-folio verified) |
+| evidence_records | 13 | 9 CS2023 `DIRECT_SOURCE_PARAPHRASE` + 1 `SYNTHESIS` + 3 SWEBOK KA1 `DIRECT_SOURCE_PARAPHRASE` |
+| concepts | 2 | elicitation (TERM), quality attribute (QUALITY_ATTRIBUTE) |
+| knowledge_claims | 8 | 2 DEFINITION, 3 PRACTICE_CLAIM (CS2023); 1 DEFINITION, 2 PRACTICE_CLAIM (SWEBOK KA1) |
+| principles | 1 | `se:PRI-REQ-EXPECT-CHANGE` |
+| practices | 2 | multi-source elicitation, prototype validation |
+| patterns | 1 | user-story-structured functional specification |
+| anti_patterns | 1 | implicit or deferred quality attributes |
+| decision_models | 1 | functional-requirement documentation-method choice |
+| coverage_gaps | 3 | professional-BOK coverage-breadth gap; real-case gap; shared CS2023 rights-clearance gap (HIGH/OPEN) |
+| relationship_assertions | 17 | 10 SUPPORTED_BY, 2 APPLIES_TO, 1 QUALIFIED_BY, 1 DEPENDS_ON, 1 IMPLEMENTS, 1 DERIVED_FROM, 1 RELATED_TO |
+
+Shared records (domain, view, three locators) are copied verbatim from the
+lane-shared snippet pack so that SEK-08 integration can deduplicate them by
+canonical ID across SEK-06A/06B/06C; the sixth shared record, the
+rights-clearance gap `se:GAP-CS2023-RIGHTS-CLEARANCE`, was added by the
+coordinated three-lane correction and is byte-identical across the lanes for
+the same reason. Source entities are **not** stored in this
+file; the validation harness derives them from `authority/SOURCE_REGISTRY.yaml`.
+
+## Known gaps
+
+1. **Professional-BOK coverage-breadth gap.** SWEBOK identity/registry
+   reconciliation is complete and KA1 sections 2, 5, 6 and 7 were reinspected
+   directly, but KA1 sections 1, 3, 4 and 8 remain uninspected in this lane and
+   no SWEBOK-derived record has passed human review
+   (`se:GAP-REQ-PROFESSIONAL-BOK-EVIDENCE`, MEDIUM/OPEN).
+2. **Real-case gap.** No case-class source is registered; pattern and
+   anti-pattern records have no real-world illustration, and the anti-pattern's
+   counterproductive nature is a lane synthesis inference.
+3. **KU locator page limitation.** `se:LOC-CS2023-SE-REQ-KU` is heading-anchored;
+   its printed page was not independently confirmed (the underlying PDF was
+   obtained as extracted text, not as a byte-identical download, so no PDF
+   SHA-256 is recorded either — see the SEK-06A observation note). The SWEBOK
+   locators do not share this limitation: they were verified against the
+   hash-checked official PDF binary.
+4. **Non-core topics.** Prototyping (topic 7) and product evolution (topic 8) are
+   elective in CS2023; records resting on them say so in their scope fields.
+
+## Reproduction
+
+Run from the worktree root (`VENV` is the SEK venv with Python 3.14.7 and
+LinkML 1.12.1):
+
+```bash
+VENV=/c/xDev/kAiCreator/_tmp/i321-repair/venv
+
+# 1. Repository validator self-test (expect SELF_TESTS=66/66)
+cd docs/versions/v2.1.1/knowledge/model && $VENV/Scripts/python.exe validate_knowledge_graph.py --self-test | tail -1
+
+# 2. Lane assembly + graph validation + count minimums + no-ACCEPTED check + LinkML instance validation
+$VENV/Scripts/python.exe /c/xDev/kAiCreator/_tmp/tally-sek06-lanes/scripts/assemble_and_validate.py \
+  /c/xDev/kAiCreator/tally/tally-i322-zcode 06A \
+  docs/versions/v2.1.1/knowledge/vertical-slice/lanes/requirements/records.yaml \
+  /c/xDev/kAiCreator/_tmp/tally-sek06-lanes/validation/06A
+```
+
+Expected key lines: every `COUNT_*` PASS, `GRAPH_VALIDATION=PASS`,
+`NO_ACCEPTED_RECORDS=PASS`, `LINKML_INSTANCE_VALIDATION=PASS`,
+`LANE_VALIDATION=PASS` with `DERIVED_SOURCES=2` (`se:SRC-CS2023`,
+`se:SRC-SWEBOK-GUIDE-4-0A`) after the 2026-11-06 P2 repair (59 lane records,
+17 relationship assertions). The P2-repair exact-tip receipt lives in
+`_tmp/tally-sek06-lanes/validation/06A-p2/`; earlier receipts (06A, 06A-bld2,
+06A-bld3, 06A-r2r, 06A-rb1) are historical and quoted in
+`methods/observations/SEK-06A.md`.
+
+## Review entry point
+
+Reviewers should start at `authority/source-reviews/CS2023.md` and
+`authority/source-reviews/SWEBOK-GUIDE-v4.0a.md`, then trace each
+claim through its `SUPPORTED_BY` edge to the evidence record, its locator and
+the derived source, checking statement fidelity against the verified anchors,
+the curriculum-scope qualifiers (CS2023 records) or the inspected-section
+qualifiers (SWEBOK records), and the rights boundary. Any single record can
+be rejected or qualified without editing unrelated records.

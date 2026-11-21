@@ -1,0 +1,1580 @@
+lane_id: SEK-07C-SECURITY-ENGINEERING-LANE-0.1.0
+title: Software Security Engineering lane records
+status: DRAFT_PENDING_HUMAN_REVIEW
+created: "2026-11-07"
+integration_target: wip/v2.1.1-knowledge
+base_head_sha: 7a70211b4460e4c753c97798670de9f34861d4a4
+parent_issue: "#336"
+scope_note: >-
+  Security Engineering vertical-slice lane (SEK-07C) covering software security
+  engineering across threat/risk analysis, security requirements linkage, secure
+  architecture/design, secure implementation, security verification, vulnerability
+  handling and security assurance, with emphasis on traceable applicability, threat
+  assumptions and lifecycle integration. Grounded in directly inspected sections of
+  SWEBOK Guide v4.0a KA13 Software Security (official PDF SHA-256
+  0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511), NIST SP 800-218
+  v1.1 SSDF (verified PDF SHA-256
+  617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22) and the CS2023
+  Security (SEC) knowledge-area units SEC-Engineering and SEC-Foundations (verified
+  full-text extract of the official Body of Knowledge PDF). Professional guidance
+  (SWEBOK), government recommendation (NIST SSDF) and curriculum framing (CS2023) are
+  kept distinct with no authority inflation; SSDF practices are recorded as risk-based
+  recommendations, not a universal mandatory sequence. Source entities are not stored
+  in this lane file; the validation harness derives shared Source records from
+  SOURCE_REGISTRY.yaml. All knowledge records remain PROPOSED or PENDING_REVIEW; none
+  is ACCEPTED.
+review_policy: "No record is ACCEPTED until a human reviewer verifies source, locator, interpretation, applicability and rights."
+collections:
+  domains:
+    # --- shared Domain: copied verbatim from _tmp/tally-sek07-lanes/shared-snippets-sek07.yaml ---
+    - id: se:DOMAIN-SOFTWARE-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: Software Engineering
+      definition: >-
+        A bounded engineering discipline concerned with the multi-person, multi-version
+        construction and evolution of software, represented here through curriculum,
+        secure-development and related classification views pending professional-BOK
+        reconciliation.
+      scope_inclusions:
+        - curriculum knowledge-unit classification for software engineering
+        - secure-development cross-cutting guidance
+      scope_exclusions:
+        - the entirety of computer science
+        - unreviewed professional body-of-knowledge claims pending lane-level content admission and review
+      boundary_notes:
+        - No single source is treated as a complete ontology of the discipline.
+        - SWEBOK v4.0a identity and registry reconciliation is complete (SEK-02R
+      evidence_refs: []
+
+  taxonomy_views:
+    # --- shared TaxonomyView: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:VIEW-CS2023-SE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 Software Engineering curriculum units
+      view_kind: CURRICULUM
+      purpose: >-
+        Represent the Software Engineering knowledge units of the CS2023 curriculum
+        knowledge model as one classification lens, independent of professional
+        body-of-knowledge taxonomies.
+      coverage_state: PARTIAL
+      limitations:
+        - Curriculum classification is not professional-domain completeness.
+        - Unit scope reflects CS2023 curriculum design for graduate preparation, not a full professional practice taxonomy.
+        - SWEBOK knowledge-area alignment is outside this curriculum view; professional-BOK records live in the lanes that inspected them, not in this CS2023 classification lens.
+      evidence_refs: []
+    # --- lane-local security-engineering view ---
+    - id: se:VIEW-07C-SECURITY-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security engineering lifecycle lens
+      view_kind: SECURITY
+      purpose: >-
+        Organize this lane's admitted security-engineering knowledge (threat/risk-informed
+        security requirements, secure design, secure implementation, security verification
+        and vulnerability handling) as a lifecycle-cross-cutting lens, keeping the
+        professional-BOK (SWEBOK KA13), government-recommendation (NIST SSDF v1.1) and
+        curriculum (CS2023 SEC) provenance distinct per record.
+      coverage_state: PARTIAL
+      limitations:
+        - Covers only the sections directly inspected by this lane; SWEBOK KA13 sections not admitted here remain uncovered.
+        - SSDF practices are risk-based recommendations; this view does not encode a universal mandatory practice sequence.
+        - Curriculum nodes of the CS2023 SEC area are represented as evidence anchors, not as nodes of this view.
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+
+  taxonomy_nodes:
+    - id: se:NODE-07C-SECURITY-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security as a lifecycle-cross-cutting concern
+      definition: >-
+        The lane's organizing node: security requirements, secure design, secure
+        implementation and security verification concerns that span development
+        life cycle stages rather than belonging to a single phase, grounded in the
+        design-security-in framing of SWEBOK KA13 section 1 and the SSDF
+        secure-by-design practice PW.1.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+    - id: se:NODE-07C-SECURITY-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Threat- and risk-informed security requirements
+      definition: >-
+        Security requirements work — elicitation, specification, prioritization and
+        maintenance over time — informed by threats (misuse and abuse cases), threat
+        actors and security risk assessments, kept traceable through development, per
+        SWEBOK KA13 4.1 and SSDF practice PO.1.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+    - id: se:NODE-07C-SECURE-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Secure design and architecture
+      definition: >-
+        Security design concerns — preventing unauthorized disclosure, creation, change,
+        deletion or denial of access, tolerating attacks by limiting damage and failing
+        and recovering securely, access control and cryptographic material handling,
+        threat modeling for mitigation, and security patterns — per SWEBOK KA13 4.2-4.3
+        and SSDF practice PW.1.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-DESIGN
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+    - id: se:NODE-07C-SECURE-IMPLEMENTATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Secure implementation practices
+      definition: >-
+        Construction-time security practices: coding security into software through
+        recommended rules (least-privilege modules, validated assumptions, error-status
+        checking) and protection principles (input validation, default deny, defense in
+        depth), per SWEBOK KA13 4.4 and the CS2023 SEC-Foundations protection-principles
+        topic.
+      node_kind: PRACTICE_GROUP
+      view_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-CONSTRUCTION-RULES
+        - se:EVD-07C-CS2023-SEC-FOUNDATIONS
+    - id: se:NODE-07C-SECURITY-VERIFICATION
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security verification, vulnerability handling and assurance
+      definition: >-
+        Verifying that implemented software meets its security requirements and contains
+        none of the known vulnerabilities (static analysis and authorized dynamic testing),
+        handling residual vulnerabilities (categorized weakness knowledge bases, severity
+        scoring, disclosure processes), and the tool-limit boundary that checking tools
+        cannot find all vulnerabilities — per SWEBOK KA13 4.5-4.6 and 5.1.
+      node_kind: CONCERN
+      view_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+        - se:EVD-07C-SWEBOK-VULNERABILITY-DATABASES
+
+  source_locators:
+    # --- SWEBOK v4.0a KA13 locators (direct content inspection 2026-11-07; official PDF
+    #     SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511,
+    #     411 pages; PDF page indices are 0-based, printed pages use the Guide's
+    #     chapter-page folios 13-1 to 13-10; chapter starts at PDF page index 263) ---
+    - id: se:LOC-07C-SWEBOK-KA13-FUNDAMENTALS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 13 Software Security, section 1 Software Security Fundamentals, including 1.1 Software Security and 1.2 Information Security; PDF page index 263 (one-based 264); printed page 13-1"
+      verified_content_summary: "Design-security-in preferred over post-development patching; every life cycle stage considered; vulnerabilities also introduced via third-party components; security as a product quality characteristic; confidentiality, integrity, availability (plus authenticity, accountability, non-repudiation, reliability); engineers define and maintain security properties through the life cycle."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-SWEBOK-KA13-SECURITY-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 13 Software Security, section 4 Security Engineering for Software Systems, subsection 4.1 Security Requirements; PDF page indices 265-266 (one-based 266-267); printed pages 13-3 to 13-4"
+      verified_content_summary: "Security requirements engineering as elicitation, specification and prioritization considering threats (misuse and abuse cases), threat actors and security risk assessments; lifecycle-model choice may affect activity order; product revision implies revisiting security requirements; traceability through development."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-SWEBOK-KA13-SECURITY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 13 Software Security, section 4 Security Engineering for Software Systems, subsections 4.2 Security Design and 4.3 Security Patterns; PDF page index 266 (one-based 267); printed page 13-4"
+      verified_content_summary: "Preventing unauthorized disclosure, creation, change, deletion or denial of access; tolerating violations by limiting damage, continuing service, failing and recovering securely; access control as fundamental; careful cryptographic algorithm and key management; threat modeling to specify mitigating security design; security pattern as recurring problem plus well-proven generic solution."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-SWEBOK-KA13-CONSTRUCTION-TESTING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 13 Software Security, section 4 Security Engineering for Software Systems, subsections 4.4 Construction for Security and 4.5 Security Testing; PDF page indices 266-267 (one-based 267-268); printed pages 13-4 to 13-5"
+      verified_content_summary: "Coding security into software via recommended rules (smallest privileged modules; validated or documented assumptions; error-status checking); CERT top-10 practices including input validation, least privilege, default deny, defense in depth; security testing dual purpose (requirements met; no known vulnerabilities) via static analysis and authorized dynamic testing."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-SWEBOK-KA13-VULNERABILITY-MANAGEMENT
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-SWEBOK-GUIDE-4-0A
+      locator_type: SECTION
+      locator: "SWEBOK Guide v4.0a, Chapter 13 Software Security, section 4 Security Engineering for Software Systems, subsection 4.6 Vulnerability Management, and section 5 Software Security Tools, subsection 5.1 Security Vulnerability Checking Tools; PDF page indices 267-268 (one-based 268-269); printed pages 13-5 to 13-6"
+      verified_content_summary: "CVE, CWE and CAPEC as shared vulnerability and weakness knowledge bases; CVSS for vulnerability severity; security maintenance with vulnerability disclosure processes; source and binary analysis tools aid detection but cannot find all vulnerabilities."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- NIST SP 800-218 v1.1 locators (direct inspection 2026-11-07; verified PDF
+    #     SHA-256 617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22,
+    #     739,891 bytes, 36 pages; sections chosen do not re-derive the SEK-06C-verified
+    #     locators for PW.7, PW.8, RV.1-RV.3 or Section 1) ---
+    - id: se:LOC-07C-NIST218-PO1
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 v1.1 PDF page indices 13-14 (one-based 14-15); printed pages 5-6; Section 2, Table 1 practice PO.1 (Define Security Requirements for Software Development) and tasks PO.1.1-PO.1.3"
+      verified_content_summary: "Security requirements known at all times so they inform the whole SDLC; internal sources (policies, business objectives, risk management strategy) and external sources (laws, regulations); risk-based architecture and design requirements; requirements communicated to third-party component suppliers including provenance and integrity verification expectations."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-NIST218-PW1
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 v1.1 PDF page index 19 (one-based 20); printed page 11; Section 2, Table 1 practice PW.1 (Design Software to Meet Security Requirements and Mitigate Security Risks) and tasks PW.1.1-PW.1.3"
+      verified_content_summary: "Secure by design: evaluate security requirements and likely operational risks, mitigate in design and architecture, justify relaxations; risk modeling forms include threat modeling, attack modeling and attack surface mapping; track security requirements, risks and design decisions with recorded responses and re-evaluated exceptions."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-NIST218-PW2
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-NIST-SP-800-218-V1-1
+      locator_type: SECTION
+      locator: "NIST SP 800-218 v1.1 PDF page index 20 (one-based 21); printed page 12; Section 2, Table 1 practice PW.2 (Review the Software Design to Verify Compliance with Security Requirements and Risk Information) and task PW.2.1"
+      verified_content_summary: "Design review by a qualified person not involved with the design and/or automated toolchain processes to confirm and enforce meeting all security requirements and satisfactorily addressing identified risks; findings recorded as artifacts."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    # --- CS2023 SEC knowledge-area locators (heading-anchored; verbatim selections in
+    #     the SEK-07 research extract; printed pages not independently confirmed, so no
+    #     page numbers are asserted) ---
+    - id: se:LOC-07C-CS2023-SEC-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Security (SEC) knowledge area, knowledge unit 'SEC-Engineering: Security Analysis, Design, and Engineering' (CS Core topics 1, 3, 4; KA Core topics 5, 6, 9); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed"
+      verified_content_summary: "Security engineering goals of systems remaining dependable despite errors, accidents or malicious adversaries; problem and situational analysis for system security; tradeoff analysis over time, cost, risk tolerance, risk acceptance and return on investment; KA Core adds security requirements, controls, threat and vulnerability analysis, security testing and assessment, and attestation of software products."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+    - id: se:LOC-07C-CS2023-SEC-FOUNDATIONS
+      record_version: 0.1.0
+      lifecycle_status: ACTIVE
+      created_on: "2026-11-07"
+      source_ref: se:SRC-CS2023
+      locator_type: SECTION
+      locator: "Body of Knowledge, Security (SEC) knowledge area, knowledge unit 'SEC-Foundations: Foundational Security' (CS Core topics 1, 5, 6); heading and topic text verified by full-text extraction of the official PDF on 2026-11-07; printed page not independently confirmed"
+      verified_content_summary: "Security mindset with crosscutting concepts including confidentiality, integrity, availability, risk assessment and adversarial thinking; protection principles such as least privilege, open design, fail-safe defaults, defense in depth and zero trust; optimization considerations between security, privacy, performance and other design goals."
+      verification_state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-07"
+
+  evidence_records:
+    # --- SWEBOK v4.0a KA13 evidence (direct inspection 2026-11-07) ---
+    - id: se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 reports a generally accepted belief that it is much better to
+        design security into software than to patch it in after the software is
+        developed, and that designing security in requires considering every development
+        life cycle stage — software requirements, design, construction and testing
+        security — with security also considered during maintenance, where security
+        faults and loopholes can be and often are introduced; the same introduction adds
+        that security vulnerabilities are not only introduced during development but
+        also by third-party components such as libraries, COTS and operating systems.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 1 Software Security Fundamentals (with 1.1/1.2), printed page 13-1."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF (SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511) on 2026-11-07; text extracted at the verified page index and paraphrased originally."
+      result: "The design-in preference, the every-stage scope and the third-party introduction of vulnerabilities were confirmed for the professional-BOK scoped claim."
+      limitations:
+        - "The Guide reports this as a generally accepted belief, not as an empirical finding; no effectiveness evidence is cited by this lane."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-SECURITY-PROPERTIES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-FUNDAMENTALS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 1.1 defines security as a product quality
+        characteristic — the degree to which a product or system protects information
+        and data so that persons or other products have data access appropriate to
+        their types and levels of authorization — and section 1.2 characterizes
+        information security as preserving confidentiality, integrity and availability,
+        with authenticity, accountability, non-repudiation and reliability possibly also
+        involved; it states software engineers should define the security properties of
+        their software and maintain them throughout the software development life cycle.
+      context: "SWEBOK Guide v4.0a Chapter 13 sections 1.1 and 1.2, printed page 13-1."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The security quality-characteristic definition, the CIA property set with named additional properties, and the maintain-throughout-lifecycle expectation were confirmed."
+      limitations:
+        - "The section names the properties without prescribing measurement procedures."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-SECURITY-REQUIREMENTS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.1 characterizes security requirements engineering
+        as including elicitation, specification and prioritization; it considers
+        threats, illustrated by misuse and abuse cases, threat actors, and security
+        risk assessments, and notes that the selection of life cycle models may impact
+        the order of activities and that software product revision implies a need to
+        revisit security requirements. It states that traceability of security
+        requirements throughout the development process is important and that security
+        teams may include specialists in security requirements.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 4.1, printed pages 13-3 to 13-4."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The activity triple, the threat/risk inputs, the lifecycle-order and revisiting qualifications, and the traceability expectation were confirmed."
+      limitations:
+        - "The subsection names methods and considerations without prescribing one elicitation or prioritization technique."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-SECURITY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-SECURITY-DESIGN
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.2 frames security design as concerning how to
+        prevent unauthorized disclosure, creation, change, deletion or denial of access
+        to information and other resources, and how to tolerate security-related attacks
+        or violations by limiting damage, continuing service, speeding repair and
+        recovery, and failing and recovering securely; it names access control a
+        fundamental concept of security, notes that most controls build on
+        cryptographic algorithms and cryptographic material like keys whose selection,
+        creation, distribution and management must be chosen carefully, and describes
+        threat modeling — illustrating how a system is being attacked — as the means by
+        which developers specify a security design for the mitigation.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 4.2, printed page 13-4."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The prevention/tolerance duality, the access-control and cryptography fundamentals, and the threat-modeling-to-design path were confirmed."
+      limitations:
+        - "The subsection describes concerns and a modeling activity; it does not prescribe a specific threat-modeling notation."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-SECURITY-DESIGN
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.3 defines a security pattern as describing a
+        particular recurring security problem that arises in a specific context and
+        presenting a well-proven generic solution.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 4.3, printed page 13-4."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The security-pattern definition (recurring problem in context plus well-proven generic solution) was confirmed."
+      limitations:
+        - "The subsection gives the definition only; cataloguing specific named patterns is outside this lane's admitted content."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-CONSTRUCTION-RULES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-CONSTRUCTION-TESTING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.4 states that, in its current state, software
+        construction security mostly refers to the coding of security into software,
+        achieved by following recommended rules: structure the process so that sections
+        requiring extra privileges are modules as small as possible performing only the
+        tasks that require those privileges; ensure assumptions in the program are
+        validated, or document them for installers and maintainers so they know the
+        assumptions attackers will try to invalidate; ensure the program does not share
+        objects in memory with other programs; and check every function's error status,
+        recovering only when neither the error's cause nor its effects affect security
+        considerations. It also lists the CERT top ten software security practices,
+        which include validating input, heeding compiler warnings, architecting and
+        designing for security policies, keeping it simple, default deny, adhering to
+        least privilege, sanitizing data sent to other software, practicing defense in
+        depth, using effective quality assurance techniques, and adopting a software
+        construction security standard.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 4.4, printed pages 13-4 to 13-5."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The coding-rules enumeration and the CERT top-ten practice list were confirmed for the implementation-practice records."
+      limitations:
+        - "The rules are presented as generally helpful guidance, not as guarantees; the Guide states there are no bulletproof ways to achieve secure software development."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-SECURITY-TESTING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-CONSTRUCTION-TESTING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.5 gives security testing two purposes: ensuring that
+        the implemented software meets the security requirements, and verifying that the
+        software implementation contains none of the known vulnerabilities. Whereas
+        general software testing methods can handle the former, the latter requires
+        security-specific methods: static analysis, conducted on source code or compiled
+        binaries, where automation plays a significant role but the expertise of
+        security professionals is required to properly operate and configure the tools
+        and verify the results; and dynamic testing, typically vulnerability assessment
+        or penetration testing (also called ethical hacking), which should always be
+        conducted within legal boundaries and with proper authorization so as to remain
+        distinguishable from illegal hacking.
+      context: "SWEBOK Guide v4.0a Chapter 13 section 4.5, printed page 13-5."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The dual purpose (requirements compliance and known-vulnerability absence), the static/dynamic method split, the expertise requirement and the authorization boundary were confirmed."
+      limitations:
+        - "The subsection names method families; it does not compare their detection effectiveness."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-SWEBOK-VULNERABILITY-DATABASES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-VULNERABILITY-MANAGEMENT
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        SWEBOK v4.0a KA13 section 4.6 names the Common Vulnerabilities and Exposures
+        (CVE), Common Weakness Enumeration (CWE) and Common Attack Pattern Enumeration
+        and Classification (CAPEC) databases as the shared categorization of common
+        security defects, with the Common Vulnerability Scoring System (CVSS) expressing
+        characteristics and severity of software vulnerabilities; security maintenance
+        encompasses mitigating the effects of vulnerabilities in a system and in the
+        third-party components it uses, often accompanied by a vulnerability disclosure
+        process allowing vulnerabilities to be reported. Section 5.1 adds that security
+        vulnerability checking tools — source code analyzers and binary analysis tools —
+        significantly aid detection but cannot find all vulnerabilities, for example
+        those that manifest only in hard-to-produce software states or unusual
+        circumstances.
+      context: "SWEBOK Guide v4.0a Chapter 13 sections 4.6 and 5.1, printed pages 13-5 to 13-6."
+      method: "Direct inspection of the official SWEBOK v4.0a PDF on 2026-11-07 at the verified page indices; original paraphrase."
+      result: "The knowledge-base names, the disclosure-process pairing and the explicit tool-limitation statement were confirmed."
+      limitations:
+        - "The sources describe the databases' existence and purpose, not their quality or coverage."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- NIST SP 800-218 v1.1 SSDF evidence (direct inspection 2026-11-07) ---
+    - id: se:EVD-07C-NIST-PO1-REQUIREMENTS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-NIST218-PO1
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SSDF v1.1 practice PO.1 recommends ensuring that security requirements for
+        software development are known at all times so they can be taken into account
+        throughout the SDLC and so duplication of effort is minimized, drawing on
+        requirements from internal sources (the organization's policies, business
+        objectives and risk management strategy) and external sources (applicable laws
+        and regulations). Its tasks include identifying and documenting security
+        requirements for development infrastructure and processes and for
+        organization-developed software and maintaining them over time (with examples
+        such as risk-based architecture and design requirements, compliance verification
+        at key SDLC points, and at least annual reviews), and communicating requirements
+        to third parties providing commercial software components, including requiring
+        provenance data and integrity verification mechanisms.
+      context: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PO.1 and tasks PO.1.1-PO.1.3, printed pages 5-6."
+      method: "Direct inspection of the official NIST PDF (SHA-256 617746e553a9e2da49bfbd4eef0dfc3094758a39b869314e4173ac36605cde22) on 2026-11-07; text extracted at the verified page indices and paraphrased originally."
+      result: "The continuous-availability intent, the internal/external source split, the maintenance tasks and the third-party communication task were confirmed."
+      limitations:
+        - "A government recommendation addressed to software producers and acquirers; adoption is risk-based, not mandatory."
+        - "Notional implementation examples are illustrative; none is required by the publication."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-NIST218-PW1
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SSDF v1.1 practice PW.1 recommends designing software to meet security
+        requirements and mitigate security risks: identify and evaluate the security
+        requirements for the software, determine what security risks the software is
+        likely to face during operation and how its design and architecture should
+        mitigate those risks, and justify any cases where risk-based analysis indicates
+        that security requirements should be relaxed or waived; the practice states that
+        addressing security requirements and risks during software design (secure by
+        design) is key for improving software security and also helps improve
+        development efficiency. Task PW.1.1 names threat modeling, attack modeling and
+        attack surface mapping as forms of risk modeling; task PW.1.2 tracks and
+        maintains the software's security requirements, risks and design decisions,
+        recording the response to each risk and the rationales for approved exceptions
+        and periodically re-evaluating them.
+      context: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PW.1 and tasks PW.1.1-PW.1.3, printed page 11."
+      method: "Direct inspection of the official NIST PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The secure-by-design intent, the named risk-modeling forms, and the requirements/risks/design-decision tracking with re-evaluated exceptions were confirmed."
+      limitations:
+        - "A recommendation framed for voluntary adoption; the publication's own ordering note states table order does not imply implementation sequence or relative importance."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-NIST-PW2-DESIGN-REVIEW
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-NIST218-PW2
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        NIST SSDF v1.1 practice PW.2 recommends reviewing the software design to verify
+        compliance with security requirements and risk information so the software will
+        meet the security requirements and satisfactorily address the identified risks.
+        Task PW.2.1 assigns this review to 1) a qualified person (or people) who were
+        not involved with the design and/or 2) automated processes instantiated in the
+        toolchain, to confirm and enforce that the design meets all the security
+        requirements and satisfactorily addresses the identified risk information; the
+        notional examples include having the designer correct failures to meet the
+        requirements, changing the design or the risk response strategy when security
+        requirements cannot be met, and recording design-review findings to serve as
+        artifacts.
+      context: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PW.2 and task PW.2.1, printed page 12."
+      method: "Direct inspection of the official NIST PDF on 2026-11-07 at the verified page index; original paraphrase."
+      result: "The independence condition (not involved with the design), the automated-enforcement alternative and the artifact-recording expectations were confirmed."
+      limitations:
+        - "A recommendation; organizations determine review depth by their own risk context."
+      uncertainty: []
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- CS2023 SEC evidence (verified full-text extract, heading-anchored) ---
+    - id: se:EVD-07C-CS2023-SEC-ENGINEERING
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-CS2023-SEC-ENGINEERING
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SEC-Engineering unit sets the CS Core goal of building systems that
+        remain dependable despite errors, accidents, or malicious adversaries, teaches
+        problem analysis and situational analysis to address system security, and
+        teaches engineering tradeoff analysis based on time, cost, risk tolerance, risk
+        acceptance, return on investment and similar factors. Its KA Core topics add
+        security design and engineering — including functional requirements, security
+        subsystems, information protection, security testing, security assessment and
+        evaluation — security analysis covering security requirements analysis, security
+        controls analysis, threat analysis and vulnerability analysis, and attestation
+        of software products with respect to their specification and adaptiveness.
+      context: "CS2023 Security (SEC) knowledge area, SEC-Engineering knowledge unit, CS Core topics 1/3/4 and KA Core topics 5/6/9; curriculum framing."
+      method: "Heading-anchored reading of the verified full-text extraction of the official CS2023 Body of Knowledge PDF on 2026-11-07; original paraphrase."
+      result: "The security-engineering goal, the problem/situational analysis topics, the tradeoff factors and the KA Core analysis/design/attestation topics were confirmed."
+      limitations:
+        - "Curriculum teaching scope, not a professional-consensus claim; no printed page independently confirmed."
+      uncertainty:
+        - "Printed page numbers of the SEC-Engineering topics were not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    - id: se:EVD-07C-CS2023-SEC-FOUNDATIONS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-CS2023-SEC-FOUNDATIONS
+      evidence_type: DIRECT_SOURCE_PARAPHRASE
+      statement: >-
+        The CS2023 SEC-Foundations unit teaches, as CS Core, developing a security
+        mindset incorporating crosscutting concepts — confidentiality, integrity,
+        availability, risk assessment, systems thinking, adversarial thinking and
+        human-centered thinking — principles and practices of protection such as least
+        privilege, open design, fail-safe defaults, defense in depth and zero trust and
+        how they can be implemented, and optimization considerations between security,
+        privacy, performance and other design goals.
+      context: "CS2023 Security (SEC) knowledge area, SEC-Foundations knowledge unit, CS Core topics 1/5/6; curriculum framing."
+      method: "Heading-anchored reading of the verified full-text extraction of the official CS2023 Body of Knowledge PDF on 2026-11-07; original paraphrase."
+      result: "The security-mindset concept list, the named protection principles and the security/privacy/performance optimization topic were confirmed."
+      limitations:
+        - "Curriculum teaching scope; the topic names principles without prescribing their implementation."
+      uncertainty:
+        - "Printed page numbers of the SEC-Foundations topics were not independently confirmed; heading-anchored citation is used."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+    # --- Lane synthesis evidence (explicitly marked; not a statement of any source) ---
+    - id: se:EVD-07C-SYNTHESIS-AFTERTHOUGHT
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      source_locator_ref: se:LOC-07C-SWEBOK-KA13-FUNDAMENTALS
+      evidence_type: SYNTHESIS
+      statement: >-
+        Lane synthesis (SEK-07C): SWEBOK KA13 section 1 reports designing security in
+        as much better than patching after development, SSDF PW.1 describes
+        secure-by-design attention during design as key for improving software security,
+        and SSDF PO.1 expects security requirements to be known at all times throughout
+        the SDLC; on that combined reading, treating security as a post-development
+        afterthought inverts all three authorities at once — the security-requirements
+        baseline, the threat-informed design record and the requirements-compliance
+        anchor for verification are all missing when security is deferred, which is the
+        defining characteristic of the anti-pattern this lane records. This is not a
+        sentence that appears in any of the three sources.
+      context: "Cross-source inference combining SWEBOK KA13 section 1 with SSDF practices PO.1 and PW.1; lane-marked synthesis."
+      method: "Lane-level comparison of three verified evidence records from two directly inspected sources."
+      result: "Provides the inference trail motivating the se:ANT-07C-SECURITY-AFTERTHOUGHT record."
+      limitations:
+        - "Synthesis inference, not a direct statement of any source."
+        - "No empirical case evidence in this lane supports the severity of the anti-pattern's consequences."
+      uncertainty:
+        - "Whether real teams that defer security always incur the listed consequences is untested in this lane."
+      extraction_status: EXTRACTED_PENDING_REVIEW
+      synthetic: false
+
+  concepts:
+    - id: se:CON-07C-SECURITY-REQUIREMENT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security requirement (SWEBOK/SSDF sense)
+      definition: >-
+        A requirement on software or on its development that originates in security
+        objectives — organization policies, business objectives and risk management
+        strategy, applicable laws and regulations, or threat and risk analysis — and
+        that both SWEBOK KA13 4.1 and SSDF PO.1 expect to be elicited, specified,
+        prioritized, documented, maintained over time and kept traceable rather than
+        assumed.
+      concept_kind: TERM
+      synonyms: []
+      scope_description: "Defined at the intersection of SWEBOK KA13 section 4.1 and SSDF practice PO.1 fidelity; not asserted as a definition from any single authority."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+      claim_refs:
+        - se:CLM-07C-SWEBOK-SECURITY-REQUIREMENTS-SCOPE
+        - se:CLM-07C-NIST-SSDF-REQUIREMENTS-CONTINUOUS
+    - id: se:CON-07C-THREAT-MODEL
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Threat model
+      definition: >-
+        A risk-modeling artifact that illustrates how a system is being attacked or
+        otherwise assesses the security risk facing the software; SSDF PW.1.1 treats
+        threat modeling, attack modeling and attack surface mapping as forms of risk
+        modeling whose results feed the design and architecture mitigations, and SWEBOK
+        KA13 4.2 presents threat modeling as the activity by which developers specify a
+        security design for the mitigation.
+      concept_kind: MECHANISM
+      synonyms:
+        - attack model
+        - attack surface mapping
+      scope_description: "Defined from SWEBOK KA13 4.2 and SSDF PW.1.1 as a design-feeding risk model; no specific notation is asserted."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-DESIGN
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+      claim_refs: []
+    - id: se:CON-07C-SECURITY-PATTERN
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security pattern
+      definition: >-
+        A description of a particular recurring security problem that arises in a
+        specific context together with a well-proven generic solution to it, per SWEBOK
+        v4.0a KA13 section 4.3.
+      concept_kind: ABSTRACTION
+      synonyms: []
+      scope_description: "Professional-BOK definition at SWEBOK KA13 4.3 fidelity; specific pattern catalogs are outside this lane's admitted content."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+      claim_refs: []
+
+  knowledge_claims:
+    - id: se:CLM-07C-SWEBOK-SECURITY-BY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA13 reports a generally accepted belief that it is much
+        better to design security into software than to patch it in after the software
+        is developed, and that designing security in requires considering every
+        development life cycle stage — requirements, design, construction and testing —
+        with security also considered during maintenance, where security faults and
+        loopholes are often introduced, and with vulnerabilities also arising from
+        third-party components.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 13 section 1; a professional-BOK characterization of a generally accepted belief, not an empirical finding."
+      applicability: "Professional-BOK grounding for lifecycle-integrated security; usable as the professional counterpart to the SSDF secure-by-design and curriculum security-mindset records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The Guide itself states there are no bulletproof ways to achieve secure software development."
+        - "No effectiveness evidence is claimed by this lane."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+      review_status: PENDING
+    - id: se:CLM-07C-SWEBOK-SECURITY-PROPERTIES-LIFECYCLE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA13 states that software engineers should define the
+        security properties of their software and maintain them throughout the software
+        development life cycle, characterizing security as a product quality
+        characteristic and information security as preserving confidentiality,
+        integrity and availability, with authenticity, accountability, non-repudiation
+        and reliability possibly also involved.
+      claim_kind: NORMATIVE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 13 sections 1.1-1.2; a professional-BOK 'should' statement, not a compliance requirement."
+      applicability: "Interpreting lifecycle expectations for security properties within SWEBOK-grounded records."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The sections name the properties without operationalizing how to measure or check them."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-PROPERTIES
+      review_status: PENDING
+    - id: se:CLM-07C-SWEBOK-SECURITY-REQUIREMENTS-SCOPE
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA13 characterizes security requirements engineering as
+        elicitation, specification and prioritization informed by threats (illustrated
+        by misuse and abuse cases), threat actors and security risk assessments, holds
+        traceability of security requirements throughout the development process
+        important, notes that the selected life cycle model may impact the order of
+        activities, and expects security requirements to be revisited when the software
+        product is revised.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 13 section 4.1; generally accepted KA content, not a mandated process shape."
+      applicability: "Professional-BOK characterization of the security-requirements activity for the requirements-linkage records in this lane."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The subsection does not prescribe one elicitation or prioritization technique."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+      review_status: PENDING
+    - id: se:CLM-07C-NIST-SSDF-REQUIREMENTS-CONTINUOUS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        NIST SSDF v1.1 practice PO.1 recommends ensuring that security requirements for
+        software development are known at all times so they can be taken into account
+        throughout the SDLC, drawing on internal sources (policies, business objectives,
+        risk management strategy) and external sources (applicable laws and
+        regulations), maintaining them over time, and communicating them to third-party
+        component suppliers including provenance and integrity verification
+        expectations.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PO.1 and tasks PO.1.1-PO.1.3; a risk-based government recommendation, not a mandatory sequence."
+      applicability: "Organizations adopting SSDF-style secure development; practice selection remains risk-based per the publication."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "Notional implementation examples are illustrative; none is required."
+        - "Exception processes exist within the practice itself; requirements may be waived with recorded, periodically reviewed exceptions."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+      review_status: PENDING
+    - id: se:CLM-07C-NIST-SECURE-BY-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        NIST SSDF v1.1 practice PW.1 recommends designing software to meet security
+        requirements and mitigate security risks, describing secure-by-design attention
+        during design as key for improving software security and helpful to development
+        efficiency, naming threat modeling, attack modeling and attack surface mapping
+        as risk modeling forms, and expecting security requirements, risks and design
+        decisions to be tracked with recorded risk responses, mitigation rationales and
+        periodically re-evaluated exceptions, with any requirement relaxation justified
+        by risk-based analysis.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PW.1 and tasks PW.1.1-PW.1.2; a government recommendation, not a mandate."
+      applicability: "Design-stage security work in organizations adopting SSDF-style practices; depth of risk modeling remains risk-based."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The recommendation does not prescribe a modeling notation or a fixed depth of analysis."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+      review_status: PENDING
+    - id: se:CLM-07C-NIST-INDEPENDENT-DESIGN-REVIEW
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        NIST SSDF v1.1 practice PW.2 recommends reviewing the software design to verify
+        compliance with security requirements and risk information, assigning the review
+        to a qualified person (or people) not involved with the design and/or to
+        automated processes instantiated in the toolchain, so that meeting all security
+        requirements and satisfactorily addressing identified risks is confirmed and
+        enforced, with findings recorded as artifacts.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "NIST SP 800-218 v1.1 Section 2, Table 1, practice PW.2 and task PW.2.1; a government recommendation."
+      applicability: "Design assurance in organizations adopting SSDF-style practices; review depth is organization- and risk-specific."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The recommendation does not define 'qualified person'; the publication leaves such terms to adopting organizations."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-NIST-PW2-DESIGN-REVIEW
+      review_status: PENDING
+    - id: se:CLM-07C-SWEBOK-SECURITY-TESTING-PURPOSES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        SWEBOK Guide v4.0a KA13 assigns security testing two purposes — ensuring that
+        the implemented software meets the security requirements, and verifying that
+        the implementation contains none of the known vulnerabilities — with the former
+        addressable by general testing methods and the latter requiring
+        security-specific methods (static analysis of source or binaries, and authorized
+        dynamic testing such as vulnerability assessment or penetration testing)
+        operated with security expertise and within legal boundaries.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "SWEBOK Guide v4.0a Chapter 13 section 4.5; generally accepted KA content, not a comparative effectiveness claim."
+      applicability: "Professional-BOK characterization of security verification; complements the SEK-06C testing-lane records, which cover test-execution practices PW.7/PW.8 rather than the dual-purpose framing."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The subsection does not compare detection effectiveness across methods."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+      review_status: PENDING
+    - id: se:CLM-07C-CS2023-SECURITY-TRADEOFFS
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SEC-Engineering unit teaches, as CS Core, engineering tradeoff
+        analysis for system security based on time, cost, risk tolerance, risk
+        acceptance, return on investment and similar factors, within security
+        engineering goals of building systems that remain dependable despite errors,
+        accidents or malicious adversaries.
+      claim_kind: PRACTICE_CLAIM
+      scope_description: "CS2023 Security knowledge area, SEC-Engineering unit, CS Core topics 1, 3 and 4; a curriculum teaching expectation, not a professional-consensus claim."
+      applicability: "Reading or teaching the CS2023 security curriculum; usable by practitioners only as curriculum guidance."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The curriculum names the tradeoff factors without prescribing a decision procedure."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-CS2023-SEC-ENGINEERING
+      review_status: PENDING
+    - id: se:CLM-07C-CS2023-PROTECTION-PRINCIPLES
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      statement: >-
+        The CS2023 SEC-Foundations unit lists least privilege, open design, fail-safe
+        defaults, defense in depth and zero trust as examples of principles and
+        practices of protection and how they can be implemented, within a security
+        mindset whose crosscutting concepts include confidentiality, integrity,
+        availability, risk assessment and adversarial thinking, and alongside
+        optimization considerations between security, privacy, performance and other
+        design goals.
+      claim_kind: DEFINITION
+      scope_description: "CS2023 Security knowledge area, SEC-Foundations unit, CS Core topics 1, 5 and 6; curriculum terminology scope."
+      applicability: "Terminology mapping within CS2023-grounded records; other frameworks may enumerate protection principles differently."
+      assumptions: []
+      exceptions: []
+      limitations:
+        - "The topic lists principles as examples ('e.g.'); the enumeration is illustrative, not exhaustive."
+      uncertainty: []
+      evidence_refs:
+        - se:EVD-07C-CS2023-SEC-FOUNDATIONS
+      review_status: PENDING
+
+  principles:
+    - id: se:PRI-07C-DESIGN-SECURITY-IN
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Design security in across the lifecycle
+      statement: >-
+        Security should be treated as a design-time concern carried through every
+        development life cycle stage — with defined security requirements and
+        properties, threat-informed design and architecture, and maintained traceability
+        into implementation and verification — rather than something patched in only
+        after development.
+      rationale: >-
+        SWEBOK KA13 section 1 reports the design-in-over-patch preference as a
+        generally accepted belief and requires every life cycle stage to be considered;
+        SSDF PW.1 describes secure-by-design attention during design as key for
+        improving software security, and PO.1 expects security requirements to be known
+        at all times throughout the SDLC; the CS2023 SEC-Foundations security-mindset
+        topic converges on lifecycle-crosscutting security thinking. The three
+        authorities are kept distinct: belief, recommendation and curriculum framing.
+      scope_description: "Grounded in SWEBOK KA13 section 1, SSDF practices PO.1 and PW.1, and CS2023 SEC-Foundations at their respective authority levels; not asserted as an empirical law."
+      applicability: "Software under active development with evolving requirements and a maintainable requirements/design record."
+      exceptions:
+        - "Already-released legacy software where only post-hoc vulnerability management is feasible; the sources' own maintenance and vulnerability-handling provisions cover that path."
+      limitations:
+        - "No empirical effectiveness evidence is cited in this lane; the SWEBOK grounding is explicitly a 'generally accepted belief'."
+        - "Security remains one design goal among others (privacy, performance), to be optimized rather than maximized without tradeoff analysis."
+
+  practices:
+    - id: se:PRA-07C-SECURITY-REQUIREMENTS-BASELINE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Maintained security-requirements baseline
+      intent: >-
+        Keep a documented, current baseline of security requirements that informs every
+        SDLC stage and links requirements to design, implementation and verification.
+      description: >-
+        Identify and document security requirements for the software and its
+        development from internal sources (policies, business objectives, risk
+        management strategy) and external sources (laws, regulations), informed by
+        threat analysis (misuse and abuse cases), maintain them over time, verify
+        compliance at key SDLC points, and communicate them to third-party component
+        suppliers including provenance and integrity expectations — per SSDF PO.1 with
+        the SWEBOK 4.1 activity framing.
+      preconditions:
+        - "Access to internal policy and external regulatory requirement sources."
+        - "A named owner responsible for maintaining the baseline."
+        - "Threat and risk inputs available for elicitation (misuse/abuse cases, risk assessments)."
+      steps:
+        - "Elicit security requirements from internal and external sources, including misuse- and abuse-case threat analysis."
+        - "Document and prioritize the requirements with source provenance."
+        - "Verify compliance with the baseline at key SDLC checkpoints and record results."
+        - "Communicate the requirements to third-party component suppliers, including provenance and integrity verification expectations."
+        - "Review the baseline at least periodically and on major vulnerability or incident events; revisit on software product revision."
+      expected_outcomes:
+        - "A living security-requirements baseline traceable into design, implementation and verification."
+        - "Reduced duplicated requirements effort through a shared, collected-once requirements record."
+      risks:
+        - "The baseline drifts without an owner or periodic review."
+        - "Over-broad baselines are ignored or waived informally."
+        - "Approved exceptions accumulate without periodic re-evaluation."
+      scope_description: "Operationalizes SSDF practice PO.1 (tasks PO.1.1-PO.1.3) and the SWEBOK KA13 4.1 activity framing at recommendation fidelity; not a mandated process."
+      applicability: "Organizations and projects able to maintain a requirements record; practice depth remains risk-based."
+      evidence_refs:
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+        - se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+      claim_refs:
+        - se:CLM-07C-NIST-SSDF-REQUIREMENTS-CONTINUOUS
+        - se:CLM-07C-SWEBOK-SECURITY-REQUIREMENTS-SCOPE
+    - id: se:PRA-07C-THREAT-MODELING-AT-DESIGN
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Design-time threat modeling with recorded risk responses
+      intent: >-
+        Surface likely operational security risks early and drive the design and
+        architecture to mitigate them, with an auditable record of risks and design
+        decisions.
+      description: >-
+        During design, model how the software is likely to be attacked — threat
+        modeling, attack modeling or attack surface mapping — determine how the design
+        and architecture should mitigate the identified risks (including access control
+        and cryptographic material handling), justify and record any relaxation or
+        waiver of security requirements, and periodically re-evaluate approved
+        exceptions — per SSDF PW.1 with the SWEBOK 4.2 design concerns and
+        threat-modeling purpose.
+      preconditions:
+        - "A security-requirements baseline to design against."
+        - "Knowledge of the data types the software will interact with (data classification)."
+        - "Stakeholder capacity to act on identified risks during design."
+      steps:
+        - "Classify the data the software interacts with and identify high-risk areas (sensitive data, identification, authentication, access control, credential management)."
+        - "Build the threat/attack-surface model of how the system is attacked."
+        - "Determine design and architecture mitigations for the identified risks."
+        - "Record the response to each risk, mitigation rationales and any approved requirement exceptions with their justifications."
+        - "Re-evaluate all approved exceptions periodically and after design changes."
+      expected_outcomes:
+        - "A threat-informed security design whose risk responses and design decisions are recorded for later review and maintenance."
+      risks:
+        - "Models go stale after design changes unless re-evaluation is scheduled."
+        - "Unrecorded threat assumptions create false confidence."
+        - "Modeling effort can exceed the value of the decisions it informs."
+      scope_description: "Operationalizes SSDF practice PW.1 (tasks PW.1.1-PW.1.2) and the SWEBOK KA13 4.2 threat-modeling-to-design path at recommendation fidelity."
+      applicability: "Design-stage security work where risks can be modeled before implementation; depth of modeling remains risk-based."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+        - se:EVD-07C-SWEBOK-SECURITY-DESIGN
+      claim_refs:
+        - se:CLM-07C-NIST-SECURE-BY-DESIGN
+    - id: se:PRA-07C-SECURITY-TESTING-DUAL-CHECK
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Dual-purpose security verification
+      intent: >-
+        Verify both that implemented software meets its security requirements and that
+        it contains none of the known vulnerabilities, using expertise-governed static
+        and authorized dynamic methods.
+      description: >-
+        Derive security checks from the security-requirements baseline (general testing
+        methods) and complement them with security-specific methods: static analysis of
+        source code and compiled binaries, and authorized dynamic testing such as
+        vulnerability assessment or penetration testing — operated and configured by
+        security-skilled people, with results verified rather than trusted, and with
+        dynamic testing kept within legal boundaries and proper authorization — per
+        SWEBOK KA13 4.5, triaging findings through the vulnerability knowledge bases
+        named in 4.6.
+      preconditions:
+        - "A security-requirements baseline providing the compliance target."
+        - "Access to static analysis tooling (source and binary) and security expertise to operate it."
+        - "Explicit authorization and legal clearance for dynamic testing."
+      steps:
+        - "Derive requirements-compliance security checks from the baseline."
+        - "Run static analysis on source and compiled binaries; configure tools with security expertise and verify results."
+        - "Conduct authorized dynamic testing (vulnerability assessment, penetration testing) where the risk context warrants."
+        - "Triage findings against known-vulnerability knowledge bases (CVE, CWE, CAPEC) and record severity (e.g., CVSS-style scoring)."
+        - "Feed confirmed findings into vulnerability handling and, where requirements fail, back into the baseline and design record."
+      expected_outcomes:
+        - "Evidence at release that security requirements are met and known vulnerabilities were checked for."
+        - "A recorded trail from requirements to verification results."
+      risks:
+        - "Checking tools cannot find all vulnerabilities (for example those in hard-to-produce states); automation alone yields false confidence."
+        - "Unauthorized dynamic testing is unlawful; authorization boundaries must be explicit."
+        - "Requirements compliance and vulnerability absence are different checks; doing one does not cover the other."
+      scope_description: "Operationalizes the SWEBOK KA13 4.5 dual-purpose framing and 4.6 knowledge bases at professional-BOK fidelity; test-execution mechanics are SEK-06C territory."
+      applicability: "Verification stages of software with a maintained security-requirements baseline."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+        - se:EVD-07C-SWEBOK-VULNERABILITY-DATABASES
+      claim_refs:
+        - se:CLM-07C-SWEBOK-SECURITY-TESTING-PURPOSES
+
+  patterns:
+    - id: se:PAT-07C-SECURITY-PATTERN-REUSE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security-pattern-based design
+      problem: >-
+        Recurring security problems in software design need proven, reviewable
+        solutions rather than ad hoc re-derivation for every project.
+      context: >-
+        Secure design work where prevention and tolerance concerns (unauthorized
+        disclosure or access, damage limitation, failing and recovering securely,
+        access control, cryptographic material handling) must be specified, per the
+        SWEBOK KA13 4.2 design concerns.
+      forces:
+        - "Provenness of a documented solution versus fit to the specific context."
+        - "Reviewability: a named pattern gives reviewers a shared reference."
+        - "Threat specificity: a pattern mitigates the threats it was proven against, not all threats."
+        - "Adoption cost of a pattern catalog versus ad hoc design."
+      solution: >-
+        Express recurring security problems and their well-proven generic solutions as
+        security patterns (recurring problem in a specific context plus well-proven
+        generic solution, per SWEBOK KA13 4.3), and select and adapt documented
+        patterns when specifying the security design, recording the fit decision with
+        the threat model so reviewers can check pattern-to-threat alignment.
+      consequences:
+        - "Design decisions are anchored to documented problem/solution pairs, easing independent design review (SSDF PW.2-style)."
+        - "Selected patterns must still be validated against the software's actual threats; a pattern is not a guarantee."
+      tradeoffs:
+        - "Pattern generality trades against exact context fit; adaptation must be recorded or the pattern's provenness claim breaks."
+      scope_description: "Grounded in the SWEBOK KA13 4.3 security-pattern definition at professional-BOK fidelity; the selection workflow is lane operationalization, not a source-prescribed procedure."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+        - se:EVD-07C-SWEBOK-SECURITY-DESIGN
+
+  anti_patterns:
+    - id: se:ANT-07C-SECURITY-AFTERTHOUGHT
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: Security as a post-development afterthought
+      symptoms:
+        - "No security requirements exist at design time; security work surfaces as patch requests after release."
+        - "Threat assumptions are nowhere recorded, so design changes cannot be checked against them."
+        - "Verification has no security-requirements baseline to verify against; only reactive vulnerability fixes occur."
+      causes:
+        - "Treating security as a separable technical add-on rather than a lifecycle-crosscutting concern."
+        - "Lifecycle stages owned without security linkage between requirements, design, implementation and verification."
+        - "Mistaking patch capacity and incident response for a security practice."
+      consequences:
+        - "Reactive patching replaces design mitigation; the same root causes recur because requirements, risks and design decisions were never recorded."
+        - "Known-vulnerability checking has no requirements anchor, so compliance violations surface late or never."
+        - "Maintenance cost grows as fixes bypass the design rationale that a design-in approach would have provided."
+      remediation: >-
+        Adopt design-in security: maintain a security-requirements baseline through the
+        SDLC, threat-model at design, review the design against requirements and risk
+        information, and treat vulnerability management as the handling of residual
+        risk rather than the primary security mechanism.
+      scope_description: "Lane-level characterization derived by marked synthesis (se:EVD-07C-SYNTHESIS-AFTERTHOUGHT) from SWEBOK KA13 section 1 and SSDF PO.1/PW.1; the sources assert the positive practice, the anti-pattern framing is this lane's inference."
+      evidence_refs:
+        - se:EVD-07C-SYNTHESIS-AFTERTHOUGHT
+
+  decision_models:
+    - id: se:DM-07C-DESIGN-REVIEW-DEPTH
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      decision_question: "How should a software design be reviewed for security, and how deeply, given its risk context?"
+      options:
+        - "Independent qualified-person design review (reviewers not involved with the design)"
+        - "Automated toolchain-enforced design checks"
+        - "Combined independent review plus automated enforcement"
+        - "No formal design review, as a documented and periodically re-evaluated exception"
+      criteria:
+        - "Security risk level of the software and the data it handles."
+        - "Sensitivity of data and security functionality involved (identification, authentication, access control, credential management)."
+        - "Cost and availability of qualified reviewers."
+        - "Feasibility of automating requirement and risk checks in the toolchain."
+        - "Time constraints, risk tolerance, risk acceptance and return on investment (explicit tradeoff analysis)."
+      constraints:
+        - "Where review is performed, it must confirm meeting all security requirements and satisfactorily addressing identified risks (SSDF PW.2.1)."
+        - "Any exception to security requirements must be justified and periodically re-evaluated (SSDF PW.1.2)."
+      procedure: >-
+        Assess the software's security risk profile (data classification and high-risk
+        areas per the PW.1.1 examples), weigh the review options against the criteria
+        using explicit engineering tradeoff analysis (time, cost, risk tolerance, risk
+        acceptance, return on investment, per the CS2023 SEC-Engineering tradeoff
+        topic), select the review depth, record the decision and its rationale, and
+        record the review findings as artifacts.
+      tradeoffs:
+        - "Independent review brings judgment but costs scarce expert time; automated enforcement scales but only checks what it is configured to check; the combined option costs more upfront and covers both gaps."
+      scope_description: "Structured from SSDF practice PW.2 and the CS2023 SEC-Engineering tradeoff topics at their respective authority levels; a decision aid, not an automatic decision."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW2-DESIGN-REVIEW
+        - se:EVD-07C-CS2023-SEC-ENGINEERING
+      claim_refs:
+        - se:CLM-07C-NIST-INDEPENDENT-DESIGN-REVIEW
+        - se:CLM-07C-CS2023-SECURITY-TRADEOFFS
+
+  coverage_gaps:
+    - id: se:GAP-07C-SWEBOK-KA13-UNINSPECTED-SECTIONS
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: SWEBOK KA13 coverage limited to the admitted subsections
+      target_scope_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      gap_kind: SOURCE_GAP
+      description: >-
+        This lane admits SWEBOK KA13 content only for sections 1 (with 1.1, 1.2), 4.1,
+        4.2, 4.3, 4.4, 4.5, 4.6 and 5.1, all directly inspected on 2026-11-07. The
+        remaining KA13 sections — 1.3 Cybersecurity, 2 Security Management and
+        Organization (2.1 SSE-CMM, 2.2 ISMS, 2.3 Agile practice), 3.2 Common Criteria,
+        5.2 Penetration Testing Tools and 6 Domain-Specific Software Security (6.1
+        container/cloud, 6.2 IoT, 6.3 machine-learning-based applications) — were read
+        during extraction but are not represented by locators, evidence or claims, and
+        no SWEBOK-derived record in this lane has passed human review.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        SWEBOK-derived records here are content-verified paraphrases of the admitted
+        subsections only; security management, evaluation criteria and domain-specific
+        security topics stay uncovered by this lane.
+      resolution_notes:
+        - "Admit the remaining KA13 sections under the same locator-verified chain when needed; human ReviewDecision is required before any SWEBOK-derived record advances toward acceptance."
+    - id: se:GAP-07C-NO-CASE-EVIDENCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: No real security-engineering case evidence
+      target_scope_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      gap_kind: SOURCE_GAP
+      description: >-
+        No incident report, postmortem or case-study source is registered for security
+        engineering, and none of the three sources used by this lane (SWEBOK KA13, NIST
+        SP 800-218 v1.1, CS2023 SEC) carries real case material usable as Case or
+        Counterexample evidence; the lane therefore contains no Case or Counterexample
+        records, and its pattern, anti-pattern and practice consequence statements rest
+        on inspected guidance text plus one lane-marked synthesis evidence record.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        The anti-pattern's consequences and the practices' expected outcomes lack
+        real-world illustration; their counterproductive or beneficial character
+        remains inference from guidance rather than observed outcomes.
+      resolution_notes:
+        - "Register and verify at least one case-class source (public incident reports, postmortems or security case studies) before promoting these records toward acceptance."
+    - id: se:GAP-07C-NIST-218A-ABSTRACT-ONLY
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-07"
+      label: NIST SP 800-218A profile remains abstract-verified only
+      target_scope_ref: se:VIEW-07C-SECURITY-ENGINEERING
+      gap_kind: SOURCE_GAP
+      description: >-
+        The registry verifies NIST SP 800-218A (SSDF Community Profile for Generative
+        AI and Dual-Use Foundation Models) at ABSTRACT_VERIFIED state: metadata and
+        abstract only. Its AI-model-specific secure-development practices are not
+        extracted and are not represented by any record in this lane, which is grounded
+        in SP 800-218 v1.1 and non-AI sources.
+      severity: MEDIUM
+      coverage_status: OPEN
+      impact: >-
+        This lane's practices must not be generalized to generative-AI or
+        dual-use-foundation-model development contexts; the companion profile's
+        augmentation of SSDF for those contexts is uncovered.
+      resolution_notes:
+        - "Perform a detailed source review of SP 800-218A (registry state advance required) before representing AI-specific secure-development practices."
+    # --- shared CoverageGap: copied verbatim from shared-snippets-sek07.yaml ---
+    - id: se:GAP-CS2023-RIGHTS-CLEARANCE
+      record_version: 0.1.0
+      lifecycle_status: PROPOSED
+      created_on: "2026-11-06"
+      label: CS2023 permission scope for general software-engineering knowledge reuse is unresolved
+      target_scope_ref: se:DOMAIN-SOFTWARE-ENGINEERING
+      gap_kind: REVIEW_GAP
+      description: >-
+        The registered CS2023 permission scope expressly covers educational
+        materials and programs and requires specific permission for other uses.
+        Tally's general software-engineering knowledge graph is not presumed to
+        qualify as an educational material or program; no rights clearance for
+        broader use is asserted by this lane.
+      severity: HIGH
+      coverage_status: OPEN
+      impact: >-
+        The lane must not claim that CS2023-derived records are cleared for public
+        redistribution or commercial product embedding until the rights scope is
+        confirmed.
+      resolution_notes:
+        - "Obtain a documented rights determination or specific permission before public redistribution or commercial product embedding; otherwise replace the source or remove the affected records from those uses."
+      evidence_refs: []
+
+  relationship_assertions:
+    - id: se:REL-07C-001
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-SWEBOK-SECURITY-BY-DESIGN
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+      context: "Canonical claim-to-evidence trace for the SWEBOK design-security-in claim."
+      rationale: "The evidence record paraphrases SWEBOK Guide v4.0a Chapter 13 section 1 at its verified locator (PDF page index 263; printed 13-1), which is the sole basis of the claim."
+    - id: se:REL-07C-002
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-SWEBOK-SECURITY-PROPERTIES-LIFECYCLE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-PROPERTIES
+      context: "Canonical claim-to-evidence trace for the SWEBOK security-properties claim."
+      rationale: "The evidence record paraphrases SWEBOK KA13 sections 1.1-1.2 at the verified fundamentals locator, which carries the property definitions and the maintain-throughout-lifecycle expectation."
+    - id: se:REL-07C-003
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-SWEBOK-SECURITY-REQUIREMENTS-SCOPE
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-REQUIREMENTS
+      context: "Canonical claim-to-evidence trace for the SWEBOK security-requirements claim."
+      rationale: "The evidence record paraphrases SWEBOK KA13 section 4.1 at its verified locator (PDF page indices 265-266; printed 13-3 to 13-4), which is the sole basis of the claim."
+    - id: se:REL-07C-004
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-NIST-SSDF-REQUIREMENTS-CONTINUOUS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-NIST-PO1-REQUIREMENTS
+      context: "Canonical claim-to-evidence trace for the SSDF PO.1 security-requirements claim."
+      rationale: "The evidence record paraphrases NIST SP 800-218 v1.1 practice PO.1 and tasks PO.1.1-PO.1.3 at the verified locator (PDF page indices 13-14; printed 5-6), which is the sole basis of the claim."
+    - id: se:REL-07C-005
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-NIST-SECURE-BY-DESIGN
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+      context: "Canonical claim-to-evidence trace for the SSDF PW.1 secure-by-design claim."
+      rationale: "The evidence record paraphrases NIST SP 800-218 v1.1 practice PW.1 and tasks PW.1.1-PW.1.2 at the verified locator (PDF page index 19; printed 11), which is the sole basis of the claim."
+    - id: se:REL-07C-006
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-NIST-INDEPENDENT-DESIGN-REVIEW
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-NIST-PW2-DESIGN-REVIEW
+      context: "Canonical claim-to-evidence trace for the SSDF PW.2 design-review claim."
+      rationale: "The evidence record paraphrases NIST SP 800-218 v1.1 practice PW.2 and task PW.2.1 at the verified locator (PDF page index 20; printed 12), which is the sole basis of the claim."
+    - id: se:REL-07C-007
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-SWEBOK-SECURITY-TESTING-PURPOSES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-TESTING
+      context: "Canonical claim-to-evidence trace for the SWEBOK security-testing dual-purpose claim."
+      rationale: "The evidence record paraphrases SWEBOK KA13 section 4.5 within the verified construction-and-testing locator, which carries the dual-purpose framing and the static/dynamic method split."
+    - id: se:REL-07C-008
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-CS2023-SECURITY-TRADEOFFS
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-CS2023-SEC-ENGINEERING
+      context: "Canonical claim-to-evidence trace for the CS2023 SEC-Engineering tradeoff claim."
+      rationale: "The evidence record paraphrases the CS2023 SEC-Engineering CS Core topics 1/3/4 at the heading-anchored verified locator, which is the sole curriculum basis of the claim."
+    - id: se:REL-07C-009
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CLM-07C-CS2023-PROTECTION-PRINCIPLES
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-CS2023-SEC-FOUNDATIONS
+      context: "Canonical claim-to-evidence trace for the CS2023 protection-principles claim."
+      rationale: "The evidence record paraphrases the CS2023 SEC-Foundations CS Core topics 1/5/6 at the heading-anchored verified locator, which is the sole curriculum basis of the claim."
+    - id: se:REL-07C-010
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07C-DESIGN-SECURITY-IN
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+      context: "Primary evidence anchor for the design-security-in principle."
+      rationale: "The SWEBOK KA13 section 1 design-in preference is the professional-BOK anchor from which the principle starts; the SSDF and CS2023 anchors are carried by the principle's rationale text and by separate edges."
+    - id: se:REL-07C-011
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07C-DESIGN-SECURITY-IN
+      predicate: QUALIFIED_BY
+      object_ref: se:EVD-07C-CS2023-SEC-FOUNDATIONS
+      qualifiers:
+        - "Security is one design goal among others; the CS2023 SEC-Foundations optimization topic explicitly balances security against privacy, performance and other design goals."
+        - "The principle therefore presumes tradeoff analysis, not unconditional security maximization."
+      context: "Qualifying the scope of the design-security-in principle against the curriculum's goal-optimization framing."
+      rationale: "The SEC-Foundations optimization-considerations topic shows that even within security education, security is optimized against other design goals, which bounds how strongly the principle should be read."
+    - id: se:REL-07C-012
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRI-07C-DESIGN-SECURITY-IN
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07C-SECURITY-LIFECYCLE
+      qualifiers:
+        - "Applicability scope is this lane's lifecycle-cross-cutting security view, grounded in SWEBOK KA13 section 1 and SSDF PW.1."
+        - "Not asserted as a universal law; the principle's exceptions (already-released legacy software) are recorded on the principle."
+      context: "Locating the design-security-in principle within the lifecycle-cross-cutting taxonomy node it organizes."
+      rationale: "The principle is precisely the lifecycle-integration claim the NODE-07C-SECURITY-LIFECYCLE node stands for, so its declared applicability is that node's scope."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-BY-DESIGN
+    - id: se:REL-07C-013
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-SECURITY-REQUIREMENTS-BASELINE
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07C-SECURITY-REQUIREMENTS
+      qualifiers:
+        - "Operationalizes SSDF PO.1 and the SWEBOK 4.1 activity framing at recommendation fidelity."
+        - "Practice depth (review cadence, verification checkpoints) remains risk-based per the SSDF's own adoption guidance."
+      context: "Locating the security-requirements baseline practice within the requirements concern node it operationalizes."
+      rationale: "The practice's steps derive directly from the SSDF PO.1 tasks and the SWEBOK 4.1 activity triple that define this node's scope."
+      evidence_refs:
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+    - id: se:REL-07C-014
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-THREAT-MODELING-AT-DESIGN
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07C-SECURE-DESIGN
+      qualifiers:
+        - "Operationalizes SSDF PW.1 (tasks PW.1.1-PW.1.2) and the SWEBOK 4.2 threat-modeling-to-design path."
+        - "Applies at design stage; re-evaluation after design change is part of the practice, not a separate lifecycle stage."
+      context: "Locating the threat-modeling practice within the secure-design concern node it operationalizes."
+      rationale: "The practice's steps derive from the risk-modeling forms and tracking requirements that define this node's design-stage scope."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+    - id: se:REL-07C-015
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-SECURITY-TESTING-DUAL-CHECK
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07C-SECURITY-VERIFICATION
+      qualifiers:
+        - "Operationalizes the SWEBOK KA13 4.5 dual-purpose framing at professional-BOK fidelity."
+        - "Covers the security-specific verification framing only; test-execution mechanics belong to the SEK-06C testing lane."
+      context: "Locating the dual-purpose security verification practice within the verification and vulnerability-handling node."
+      rationale: "The practice implements exactly the two verification purposes (requirements compliance, known-vulnerability absence) that define this node."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+    - id: se:REL-07C-016
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-THREAT-MODELING-AT-DESIGN
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07C-NIST-SECURE-BY-DESIGN
+      qualifiers:
+        - "Operationalization is at SSDF recommendation fidelity; modeling depth remains risk-based."
+        - "The practice adds procedural detail (data classification step, exception re-evaluation cadence) beyond the practice-table text."
+      context: "The practice operationalizes the SSDF secure-by-design recommendation."
+      rationale: "The claim states what SSDF PW.1 recommends; the practice turns that recommendation into an actionable procedure with preconditions, steps and risks."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+    - id: se:REL-07C-017
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-SECURITY-TESTING-DUAL-CHECK
+      predicate: IMPLEMENTS
+      object_ref: se:CLM-07C-SWEBOK-SECURITY-TESTING-PURPOSES
+      qualifiers:
+        - "Operationalization at SWEBOK professional-BOK fidelity; the two purposes remain distinct checks in the practice."
+        - "The practice adds a triage step using the 4.6 knowledge bases beyond the claim's text."
+      context: "The practice operationalizes the dual-purpose security testing characterization."
+      rationale: "The claim states the two verification purposes and their method families; the practice structures them into a procedure that keeps the two checks separate."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+    - id: se:REL-07C-018
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:ANT-07C-SECURITY-AFTERTHOUGHT
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07C-SYNTHESIS-AFTERTHOUGHT
+      context: "Provenance of the anti-pattern characterization."
+      rationale: "The anti-pattern's counterproductive framing is not a sentence in any source; it is derived from the lane synthesis combining SWEBOK KA13 section 1 with SSDF PO.1 and PW.1, and the edge records that derivation."
+      evidence_refs:
+        - se:EVD-07C-SYNTHESIS-AFTERTHOUGHT
+    - id: se:REL-07C-019
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07C-SECURITY-PATTERN-REUSE
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+      context: "Provenance of the security-pattern-based design pattern."
+      rationale: "The pattern's core problem/solution structure is the SWEBOK KA13 4.3 security-pattern definition; the selection workflow around it is lane operationalization recorded in the pattern's scope_description."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+    - id: se:REL-07C-020
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07C-DESIGN-REVIEW-DEPTH
+      predicate: SUPPORTED_BY
+      object_ref: se:EVD-07C-NIST-PW2-DESIGN-REVIEW
+      context: "Primary evidence anchor for the design-review decision model."
+      rationale: "The decision model's options and constraints are structured directly from SSDF PW.2's reviewer-independence and enforcement conditions, so the PW.2 evidence anchors it."
+    - id: se:REL-07C-021
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07C-SECURITY-REQUIREMENT
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07C-NIST-PO1-REQUIREMENTS
+      context: "Provenance of the security-requirement concept's defining scope."
+      rationale: "The concept's expectation that requirements be identified, documented, maintained and communicated comes from the SSDF PO.1 evidence; the SWEBOK 4.1 activity framing is carried in the concept's own evidence_refs."
+      evidence_refs:
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+    - id: se:REL-07C-022
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:CON-07C-THREAT-MODEL
+      predicate: DERIVED_FROM
+      object_ref: se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+      context: "Provenance of the threat-model concept's defining scope."
+      rationale: "The concept's characterization as a design-feeding risk model comes from the SSDF PW.1 risk-modeling forms; the SWEBOK 4.2 purpose statement is carried in the concept's own evidence_refs."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW1-SECURE-BY-DESIGN
+    - id: se:REL-07C-023
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07C-SECURITY-VERIFICATION
+      predicate: DEPENDS_ON
+      object_ref: se:NODE-07C-SECURITY-REQUIREMENTS
+      context: "Structural dependency of security verification on the security-requirements concern."
+      rationale: "One of security testing's two purposes is verifying that implemented software meets the security requirements, so the verification concern presupposes the requirements concern it checks against."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-TESTING
+    - id: se:REL-07C-024
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07C-SECURITY-REQUIREMENTS
+      predicate: PART_OF
+      object_ref: se:NODE-07C-SECURITY-LIFECYCLE
+      context: "Containment within the lane's single security-engineering taxonomy view."
+      rationale: "Security requirements work is one lifecycle-cross-cutting concern of the organizing lifecycle node; both nodes share the same view."
+    - id: se:REL-07C-025
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07C-SECURE-DESIGN
+      predicate: PART_OF
+      object_ref: se:NODE-07C-SECURITY-LIFECYCLE
+      context: "Containment within the lane's single security-engineering taxonomy view."
+      rationale: "Secure design is one lifecycle-cross-cutting concern of the organizing lifecycle node; both nodes share the same view."
+    - id: se:REL-07C-026
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07C-SECURE-IMPLEMENTATION
+      predicate: PART_OF
+      object_ref: se:NODE-07C-SECURITY-LIFECYCLE
+      context: "Containment within the lane's single security-engineering taxonomy view."
+      rationale: "Secure implementation is one lifecycle-cross-cutting concern of the organizing lifecycle node; both nodes share the same view."
+    - id: se:REL-07C-027
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:NODE-07C-SECURITY-VERIFICATION
+      predicate: PART_OF
+      object_ref: se:NODE-07C-SECURITY-LIFECYCLE
+      context: "Containment within the lane's single security-engineering taxonomy view."
+      rationale: "Security verification is one lifecycle-cross-cutting concern of the organizing lifecycle node; both nodes share the same view."
+    - id: se:REL-07C-028
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PAT-07C-SECURITY-PATTERN-REUSE
+      predicate: RELATED_TO
+      object_ref: se:CON-07C-THREAT-MODEL
+      qualifiers:
+        - "Complementary relation: the pattern supplies proven solutions while the threat model supplies the threats to check pattern fit against."
+        - "A pattern is not derived from a threat model; the relation is that pattern selection is validated by the threat model."
+      context: "Relating the security-pattern design pattern to the threat-model concept it must be checked against."
+      rationale: "SWEBOK 4.3 gives patterns as well-proven solutions and 4.2 gives threat modeling as the path to a mitigating design; linking the pattern to the concept records that pattern fit is threat-relative."
+      evidence_refs:
+        - se:EVD-07C-SWEBOK-SECURITY-PATTERNS
+    - id: se:REL-07C-029
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:PRA-07C-SECURITY-REQUIREMENTS-BASELINE
+      predicate: DEPENDS_ON
+      object_ref: se:CON-07C-SECURITY-REQUIREMENT
+      context: "Structural dependency between the baseline practice and the security-requirement concept."
+      rationale: "The practice maintains a baseline of exactly the record kind the concept defines; without that definition the baseline's content and maintenance expectations are ungrounded."
+      evidence_refs:
+        - se:EVD-07C-NIST-PO1-REQUIREMENTS
+    - id: se:REL-07C-030
+      record_version: 0.1.0
+      lifecycle_status: PENDING_REVIEW
+      created_on: "2026-11-07"
+      subject_ref: se:DM-07C-DESIGN-REVIEW-DEPTH
+      predicate: APPLIES_TO
+      object_ref: se:NODE-07C-SECURE-DESIGN
+      qualifiers:
+        - "The decision governs review of design-stage artifacts within the secure-design concern's scope."
+        - "Decision aid only; the selected depth remains the organization's risk-based judgment."
+      context: "Locating the design-review depth decision model within the secure-design concern node it serves."
+      rationale: "PW.2 reviews the software design against security requirements and risk information, which is precisely the artifact scope of the secure-design node."
+      evidence_refs:
+        - se:EVD-07C-NIST-PW2-DESIGN-REVIEW

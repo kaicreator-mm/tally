@@ -1,0 +1,300 @@
+{
+  "reviewer_ref": null,
+  "reviewer_kind": null,
+  "independent_from_builder": null,
+  "evaluated_at_utc": null,
+  "ratings": [
+    {
+      "blind_id": "G5-01-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Mentions use cases and user stories",
+          "outcome": null
+        },
+        {
+          "criterion": "describes method's design/implementation support plus strengths/weaknesses",
+          "outcome": null
+        },
+        {
+          "criterion": "notes no superiority ranking",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-01-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Mentions use cases and user stories",
+          "outcome": null
+        },
+        {
+          "criterion": "describes method's design/implementation support plus strengths/weaknesses",
+          "outcome": null
+        },
+        {
+          "criterion": "notes no superiority ranking",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-02-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Two levels of design abstraction are distinguished",
+          "outcome": null
+        },
+        {
+          "criterion": "detailed boundary criteria not supplied by the cited curriculum item",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-02-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Two levels of design abstraction are distinguished",
+          "outcome": null
+        },
+        {
+          "criterion": "detailed boundary criteria not supplied by the cited curriculum item",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-03-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Verification asks whether building right",
+          "outcome": null
+        },
+        {
+          "criterion": "validation asks whether the right thing is built",
+          "outcome": null
+        },
+        {
+          "criterion": "explicitly curriculum-scoped",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-03-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Verification asks whether building right",
+          "outcome": null
+        },
+        {
+          "criterion": "validation asks whether the right thing is built",
+          "outcome": null
+        },
+        {
+          "criterion": "explicitly curriculum-scoped",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-04-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Construction includes coding, verification, unit/integration testing and debugging",
+          "outcome": null
+        },
+        {
+          "criterion": "design also occurs there",
+          "outcome": null
+        },
+        {
+          "criterion": "boundaries vary with lifecycle",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-04-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Construction includes coding, verification, unit/integration testing and debugging",
+          "outcome": null
+        },
+        {
+          "criterion": "design also occurs there",
+          "outcome": null
+        },
+        {
+          "criterion": "boundaries vary with lifecycle",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-05-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Mentions probability-of-failure / mean-time-between-failures characterizations",
+          "outcome": null
+        },
+        {
+          "criterion": "faults cause failures",
+          "outcome": null
+        },
+        {
+          "criterion": "no measurement procedure in this extracted topic",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-05-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Mentions probability-of-failure / mean-time-between-failures characterizations",
+          "outcome": null
+        },
+        {
+          "criterion": "faults cause failures",
+          "outcome": null
+        },
+        {
+          "criterion": "no measurement procedure in this extracted topic",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-06-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Activities occur pre-/post-delivery",
+          "outcome": null
+        },
+        {
+          "criterion": "cost-effective support for operational software",
+          "outcome": null
+        },
+        {
+          "criterion": "ISO 14764 objective is reported second-hand by SWEBOK",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-06-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Activities occur pre-/post-delivery",
+          "outcome": null
+        },
+        {
+          "criterion": "cost-effective support for operational software",
+          "outcome": null
+        },
+        {
+          "criterion": "ISO 14764 objective is reported second-hand by SWEBOK",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-07-1",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome",
+          "outcome": null
+        },
+        {
+          "criterion": "explicitly SWEBOK definition",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    },
+    {
+      "blind_id": "G5-07-2",
+      "correctness_0_2": null,
+      "scope_0_2": null,
+      "traceability_0_2": null,
+      "criteria_marks": [
+        {
+          "criterion": "Planning, estimating, measuring, controlling, coordinating, leading and risk management, stakeholder outcome",
+          "outcome": null
+        },
+        {
+          "criterion": "explicitly SWEBOK definition",
+          "outcome": null
+        }
+      ],
+      "unsupported_assertions": [],
+      "observed_effort_seconds": null
+    }
+  ]
+}

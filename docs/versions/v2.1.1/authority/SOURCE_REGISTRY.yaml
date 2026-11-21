@@ -1,0 +1,487 @@
+registry_id: SE-AUTHORITY-REGISTRY-0.1.0
+status: DRAFT
+as_of: 2026-11-04
+policy_ref: docs/versions/v2.1.1/authority/RESEARCH_FRAMEWORK.md
+sources:
+  - source_id: SE-SRC-SWEBOK-GUIDE-4-0A
+    source_class: PROFESSIONAL_BOK
+    source_role: PRIMARY
+    additional_roles:
+      - SECONDARY
+    role_scope: "Primary for the Guide's own BOK taxonomy; secondary synthesis for broader Software Engineering domain claims."
+    title: "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a"
+    editor: "Hironori Washizaki"
+    organization: "IEEE Computer Society"
+    edition: "Version 4.0a"
+    publication_date: "2026-08"
+    status: RELEASED
+    official_url: "https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf"
+    landing_url: "https://www.computer.org/education/bodies-of-knowledge/software-engineering/resources/"
+    stable_identifier: "ISBN 978-0-7695-0000-3"
+    identifier_note: "ISBN transcribed from the current official PDF copyright page (PDF page index 4; printed page iv); no DOI is asserted."
+    relevant_areas:
+      - "Software Engineering discipline taxonomy"
+      - "Foundations"
+      - "Related-discipline boundaries"
+    authority_fit:
+      - "Consensus-oriented discipline knowledge-area taxonomy"
+      - "Generally accepted knowledge topic map"
+    authority_limitations:
+      - "A guide to the body of knowledge, not the complete body of knowledge"
+      - "Its topic citations are not comprehensive"
+      - "Generally accepted knowledge is not a uniform prescription for every project"
+      - "Related disciplines are identified but not characterized in full"
+    verified_locators:
+      - "Current PDF title page: v4.0a; Released August 2026"
+      - "Official IEEE landing page: 25 September 2025 update identifying the v4.0a release; this differs from the current PDF title-page release statement"
+      - "Copyright and Reprint Permissions: PDF page index 4; printed page iv; copyright © 2014–2025; ISBN 978-0-7695-0000-3"
+      - "Introduction to the Guide, What Is Software Engineering?: printed pages xxxvii-xxxviii"
+      - "Scope/objectives and related disciplines: printed pages xxxviii-xxxix"
+      - "Table I.1, The 18 SWEBOK KAs; Table I.2, Related Disciplines: printed page xxxix"
+      - "Foreword to the 2014 Edition, statement that the Guide does not present the entire body of knowledge: PDF page index 26; printed page xxvi"
+      - "Hierarchical Organization and Depth of Treatment: printed pages xl-xli"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-06"
+      method: "Current official IEEE PDF and official landing/download pages re-opened on 2026-11-06. The PDF title page states Released August 2026 and PDF page index 4 (printed page iv) prints ISBN 978-0-7695-0000-3; the landing page separately records a 25 September 2025 update identifying v4.0a. Preserve this cross-source date discrepancy pending clarification. Current official PDF verified by native download on 2026-11-06 during independent Exact-SHA review: SHA-256 0c9db4da0b2425c58cf778b99131eb31bb6c188e98b67163a549a1366d96e511, 6,015,672 bytes."
+    rights:
+      notice: "The current PDF copyright page permits educational or personal use subject to its stated conditions and requires IEEE permission for commercial reprint/republishing, advertising/promotional use, or new collective works for resale/redistribution. The current official landing page states additional restrictions on copying, sharing, public access and significant commercial reuse."
+      handling: "Do not commit, mirror, publish or redistribute the PDF. Store bibliographic metadata, exact locators and concise original paraphrases only. Do not infer broad commercial or public-redistribution permission; seek IEEE permission where the proposed use exceeds the stated personal/educational conditions."
+    notes: "Primary reference spine candidate for SEK-01; not a frozen Tally ontology. The current official PDF title page states Released August 2026 and its copyright page prints ISBN 978-0-7695-0000-3. The official IEEE landing page still records a 25 September 2025 update identifying v4.0a; the two official artifacts therefore expose a release-date discrepancy that remains open pending clarification. Keep the PDF title-page date and ISBN as exact artifact metadata, preserve the landing-page statement separately, and do not invent a DOI. The canonical source ID remains year-free."
+  - source_id: SE-SRC-CS2023
+    source_class: CURRICULUM_FRAMEWORK
+    source_role: PRIMARY
+    role_scope: "Primary for the CS2023 curriculum model; not a professional Software Engineering BOK."
+    title: "Computer Science Curricula 2023"
+    authors:
+      - "Amruth N. Kumar"
+      - "Rajendra K. Raj"
+      - "Sherif G. Aly"
+      - "Monica D. Anderson"
+      - "Brett A. Becker"
+      - "Richard L. Blumenthal"
+      - "Eric Eaton"
+      - "Susan L. Epstein"
+      - "Michael Goldweber"
+      - "Pankaj Jalote"
+      - "Douglas Lea"
+      - "Michael Oudshoorn"
+      - "Marcelo Pias"
+      - "Susan Reiser"
+      - "Christian Servin"
+      - "Rahul Simha"
+      - "Titus Winters"
+      - "Qiao Xiang"
+    organization: "Association for Computing Machinery; IEEE Computer Society; Association for the Advancement of Artificial Intelligence"
+    edition: "Final report"
+    publication_date: "2023"
+    endorsement_dates:
+      ACM: "2024-01-18"
+      IEEE_CS: "2024-01-22"
+      AAAI: "2024-02-22"
+    status: FINAL_REPORT
+    official_url: "https://csed.acm.org/"
+    knowledge_areas_url: "https://csed.acm.org/knowledge-areas/"
+    doi: "10.1145/3664191"
+    stable_identifier: "DOI 10.1145/3664191"
+    identifier_note: "DOI verified in the official report citation."
+    relevant_areas:
+      - "Computer Science curriculum boundary"
+      - "Software Engineering education"
+      - "Shared foundations and adjacent KAs"
+    authority_fit:
+      - "Curriculum knowledge-area and knowledge-unit classification"
+      - "Boundary comparison between Software Engineering education and wider CS curriculum"
+    verified_facts:
+      - "The CS2023 knowledge model lists 17 Knowledge Areas."
+      - "Software Engineering is one of the 17 Knowledge Areas."
+      - "The Body of Knowledge table lists 9 Knowledge Units for Software Engineering: Teamwork; Tools and Environments; Product Requirements; Software Design; Software Construction; Software Verification and Validation; Refactoring and Code Evolution; Software Reliability; Formal Methods."
+      - "The SE-Tools section includes software configuration management/version control, release management, testing tools and process automation/continuous integration."
+    authority_limitations:
+      - "Curriculum framework, not a complete professional Software Engineering domain taxonomy"
+      - "Knowledge-unit counts do not establish professional-domain completeness"
+    verified_locators:
+      - "Official CS2023 site: Final Report and endorsement dates"
+      - "Body of Knowledge PDF, front-matter Knowledge Areas table: 17-area list and SE row"
+      - "Body of Knowledge PDF, Software Engineering (SE) section, PDF pages 174-177: nine Knowledge Units and Core Hours table (the PDF page index is recorded to avoid printed-page offset ambiguity)"
+      - "Body of Knowledge PDF, Software Engineering section, PDF page index 178 (one-based PDF page 179): SE-Tools unit"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-04"
+      method: "Official CS2023 report pages and Body of Knowledge PDF opened; Knowledge Model definition, 17-KA list, Software Engineering KU list/core-hours table and SE-Tools section inspected."
+    rights:
+      notice: "Permission is granted to use these curriculum guidelines for the development of educational materials and programs. Other use requires specific permission."
+      notice_source: "Official CS2023 report, Copyright and Reprint Permissions notice."
+      permission_scope: "Educational-material and program development."
+      other_use: "Specific permission required."
+      permission_contacts:
+        ACM: "permissions@acm.org"
+        IEEE: "copyrights@ieee.org"
+        AAAI: "info@aaai.org"
+      handling: "Store bibliographic metadata, exact locators and concise original paraphrases only; do not reproduce substantial report text or redistribute beyond the stated permission without obtaining specific permission."
+    notes: "Comparator only; do not replace SWEBOK with CS2023."
+  - source_id: SE-SRC-ISO-IEC-IEEE-12207-2026
+    source_class: NORMATIVE_STANDARD
+    source_role: PRIMARY
+    role_scope: "Primary source for the named normative standard; content remains bibliographic-only in this corpus."
+    title: "Systems and software engineering — Software life cycle processes"
+    organization: "ISO/IEC/IEEE"
+    edition: "Edition 2"
+    publication_date: "2026-04-29"
+    publication_status: PUBLISHED
+    standard_number: "ISO/IEC/IEEE 12207:2026"
+    official_url: "https://www.iso.org/standard/90219.html"
+    stable_identifier: "ISO/IEC/IEEE 12207:2026"
+    relevant_areas:
+      - "Lifecycle/process view"
+      - "Acquisition, development, operation, maintenance and retirement terminology"
+    authority_fit:
+      - "Candidate normative reference for software life-cycle process terminology"
+    authority_limitations:
+      - "Applicability and exact requirements require permitted review of the standard"
+      - "Not a discipline knowledge-area taxonomy"
+      - "No clause-level claim is made in this registry"
+    verified_locators:
+      - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
+    verification:
+      identity: VERIFIED
+      content: NOT_ADMITTED
+      locator: BIBLIOGRAPHIC_METADATA_ONLY
+      state: ACCESS_RESTRICTED
+      accessed_on: "2026-11-04"
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
+    rights:
+      notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
+      handling: "Bibliographic record only. No normative text, clause extracts or generated clause summaries. Any deeper review requires a permitted human-access procedure."
+    notes: "Edition 2 published 2026-04; older 2017 edition is shown as withdrawn on the official page."
+  - source_id: SE-SRC-ISO-IEC-IEEE-15288-2023
+    source_class: NORMATIVE_STANDARD
+    source_role: PRIMARY
+    role_scope: "Primary source for the named normative standard; content remains bibliographic-only in this corpus."
+    title: "Systems and software engineering — System life cycle processes"
+    organization: "ISO/IEC/IEEE"
+    edition: "Edition 2"
+    publication_date: "2023-05-16"
+    publication_status: PUBLISHED
+    standard_number: "ISO/IEC/IEEE 15288:2023"
+    official_url: "https://www.iso.org/standard/81702.html"
+    stable_identifier: "ISO/IEC/IEEE 15288:2023"
+    relevant_areas:
+      - "Systems engineering boundary"
+      - "Software-in-system context"
+    authority_fit:
+      - "Candidate normative reference for system life-cycle process terminology"
+    authority_limitations:
+      - "System-level scope; not a Software Engineering discipline taxonomy"
+      - "No clause-level claim is made in this registry"
+    verified_locators:
+      - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
+    verification:
+      identity: VERIFIED
+      content: NOT_ADMITTED
+      locator: BIBLIOGRAPHIC_METADATA_ONLY
+      state: ACCESS_RESTRICTED
+      accessed_on: "2026-11-04"
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
+    rights:
+      notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
+      handling: "Bibliographic record only; no normative content is copied or prompted into an LLM."
+    notes: "System engineering context; deeper claims remain unverified."
+  - source_id: SE-SRC-ISO-IEC-25010-2023
+    source_class: NORMATIVE_STANDARD
+    source_role: PRIMARY
+    role_scope: "Primary source for the named normative standard; content remains bibliographic-only in this corpus."
+    title: "Systems and software engineering — Systems and software Quality Requirements and Evaluation (SQuaRE) — Product quality model"
+    organization: "ISO/IEC"
+    edition: "Edition 2"
+    publication_date: "2023-11-15"
+    publication_status: PUBLISHED
+    standard_number: "ISO/IEC 25010:2023"
+    official_url: "https://www.iso.org/standard/78176.html"
+    stable_identifier: "ISO/IEC 25010:2023"
+    relevant_areas:
+      - "Product quality view"
+      - "Quality-related requirements and evaluation"
+    authority_fit:
+      - "Candidate normative reference for product quality model terminology"
+    authority_limitations:
+      - "Quality model, not a complete Software Engineering taxonomy or lifecycle process"
+      - "No characteristic names or clause-level claims are transcribed"
+    verified_locators:
+      - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
+    verification:
+      identity: VERIFIED
+      content: NOT_ADMITTED
+      locator: BIBLIOGRAPHIC_METADATA_ONLY
+      state: ACCESS_RESTRICTED
+      accessed_on: "2026-11-04"
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
+    rights:
+      notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
+      handling: "Bibliographic record only; no normative characteristics, clauses or generated summaries are stored."
+    notes: "Older 2011 edition is shown as withdrawn on the official page."
+  - source_id: SE-SRC-ISO-IEC-IEEE-42010-2022
+    source_class: NORMATIVE_STANDARD
+    source_role: PRIMARY
+    role_scope: "Primary source for the named normative standard; content remains bibliographic-only in this corpus."
+    title: "Software, systems and enterprise — Architecture description"
+    organization: "ISO/IEC/IEEE"
+    edition: "Edition 2"
+    publication_date: "2022-11-07"
+    publication_status: PUBLISHED
+    standard_number: "ISO/IEC/IEEE 42010:2022"
+    official_url: "https://www.iso.org/standard/74393.html"
+    stable_identifier: "ISO/IEC/IEEE 42010:2022"
+    relevant_areas:
+      - "Software architecture"
+      - "Architecture description and viewpoint concepts"
+    authority_fit:
+      - "Candidate normative reference for architecture-description terminology"
+    authority_limitations:
+      - "Architecture description requirements are not the whole architecture discipline"
+      - "No clause-level claim is made in this registry"
+    verified_locators:
+      - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
+    verification:
+      identity: VERIFIED
+      content: NOT_ADMITTED
+      locator: BIBLIOGRAPHIC_METADATA_ONLY
+      state: ACCESS_RESTRICTED
+      accessed_on: "2026-11-04"
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
+    rights:
+      notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
+      handling: "Bibliographic record only; no normative text is copied or prompted into an LLM."
+    notes: "Older 2011 edition is shown as withdrawn on the official page."
+  - source_id: SE-SRC-ISO-IEC-IEEE-29119-2-2021
+    source_class: NORMATIVE_STANDARD
+    source_role: PRIMARY
+    role_scope: "Primary source for the named normative standard; content remains bibliographic-only in this corpus."
+    title: "Software and systems engineering — Software testing — Part 2: Test processes"
+    organization: "ISO/IEC/IEEE"
+    edition: "Edition 2"
+    publication_date: "2021-10-28"
+    publication_status: PUBLISHED
+    standard_number: "ISO/IEC/IEEE 29119-2:2021"
+    official_url: "https://www.iso.org/standard/79428.html"
+    stable_identifier: "ISO/IEC/IEEE 29119-2:2021"
+    relevant_areas:
+      - "Software testing"
+      - "Testing process view"
+    authority_fit:
+      - "Candidate normative reference for test-process terminology"
+    authority_limitations:
+      - "Part 2 test processes are not the entire Software Testing knowledge area"
+      - "No clause-level claim is made in this registry"
+    verified_locators:
+      - "Official ISO publication metadata page: title, standard number, edition and publication status/date"
+    verification:
+      identity: VERIFIED
+      content: NOT_ADMITTED
+      locator: BIBLIOGRAPHIC_METADATA_ONLY
+      state: ACCESS_RESTRICTED
+      accessed_on: "2026-11-04"
+      method: "Identity metadata verified. An abstract was visible during discovery but is excluded from corpus evidence under the ISO AI/ML-use notice; no normative text or clauses were extracted or retained."
+    rights:
+      notice: "ISO publication page restricts use of ISO content with AI/ML tools, including prompting, except content specifically made available through ISO Open Data."
+      handling: "Bibliographic record only; no normative text is copied or prompted into an LLM."
+    notes: "Older 2013 edition is shown as withdrawn on the official page."
+  - source_id: SE-SRC-NIST-SP-800-218-V1-1
+    source_class: GOVERNMENT_FRAMEWORK
+    source_role: PRIMARY
+    role_scope: "Primary source for the NIST SP 800-218 v1.1 recommendations and framework content."
+    title: "Secure Software Development Framework (SSDF) Version 1.1: Recommendations for Mitigating the Risk of Software Vulnerabilities"
+    authors:
+      - "Murugiah Souppaya"
+      - "Karen Scarfone"
+      - "Donna Dodson"
+    organization: "National Institute of Standards and Technology (NIST)"
+    edition: "Version 1.1"
+    publication_date: "2022-02-03"
+    publication_status: FINAL
+    report_number: "NIST SP 800-218"
+    doi: "10.6028/NIST.SP.800-218"
+    official_url: "https://csrc.nist.gov/pubs/sp/800/218/final"
+    stable_identifier: "NIST SP 800-218"
+    relevant_areas:
+      - "Software Security"
+      - "Secure software development practices"
+      - "Lifecycle-cross-cutting security"
+    authority_fit:
+      - "Government-published recommended secure-development framework"
+    authority_limitations:
+      - "Recommendation framework, not an ISO/IEC/IEEE International Standard"
+      - "Applicability and currentness must be checked for each security claim"
+    verified_locators:
+      - "NIST publication page: title, authors, date and DOI"
+      - "NIST publication abstract"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: LOCATOR_VERIFIED
+      accessed_on: "2026-11-04"
+      method: "Official NIST PDF inspected for the abstract, audience, introduction, risk-based adoption discussion, Section 2 practice groups/elements and Table 1 ordering note."
+    rights:
+      notice: "Use official NIST citation and verify any third-party components or specific reuse restrictions before reproducing source material."
+      handling: "Prefer original paraphrase, citation and locator; do not copy substantial text."
+    related_source_ids:
+      - "SE-SRC-NIST-SP-800-218A-2024"
+    notes: "Full PDF sections and page locators were reviewed in SEK-03. NIST SP 800-218A (2024) is a separate companion profile for generative AI and dual-use foundation models; it should be used in conjunction with this v1.1 publication, not silently folded into it."
+  - source_id: SE-SRC-NIST-SP-800-218A-2024
+    source_class: GOVERNMENT_FRAMEWORK
+    source_role: PRIMARY
+    role_scope: "Primary source for the SP 800-218A profile; only metadata and abstract are verified."
+    title: "Secure Software Development Practices for Generative AI and Dual-Use Foundation Models: An SSDF Community Profile"
+    authors:
+      - "Harold Booth"
+      - "Murugiah Souppaya"
+      - "Apostol Vassilev"
+      - "Michael Ogata"
+      - "Martin Stanley"
+      - "Karen Scarfone"
+    organization: "National Institute of Standards and Technology (NIST); Cybersecurity and Infrastructure Security Agency (CISA)"
+    edition: "Final"
+    publication_date: "2024-07-26"
+    publication_status: FINAL
+    report_number: "NIST SP 800-218A"
+    doi: "10.6028/NIST.SP.800-218A"
+    official_url: "https://csrc.nist.gov/pubs/sp/800/218/a/final"
+    stable_identifier: "NIST SP 800-218A"
+    related_source_ids:
+      - "SE-SRC-NIST-SP-800-218-V1-1"
+    relevant_areas:
+      - "AI Engineering"
+      - "Software Security"
+      - "Secure development of generative AI and dual-use foundation models"
+    authority_fit:
+      - "Government-published SSDF community profile for AI model and AI system development contexts"
+    authority_limitations:
+      - "Companion profile, not a replacement for SP 800-218 v1.1"
+      - "The current registry verifies official metadata and abstract only; detailed practices are not yet extracted"
+      - "Do not generalize model-development practices to every AI-enabled application without context"
+    verified_locators:
+      - "NIST CSRC publication page: title, authors, publication date and DOI"
+      - "NIST CSRC abstract: scope and relationship to SP 800-218"
+      - "NIST CSRC document history: final publication dated 2024-07-26"
+    verification:
+      identity: VERIFIED
+      content: ABSTRACT_VERIFIED
+      locator: VERIFIED_FOR_ABSTRACT_AND_METADATA
+      state: CONTENT_VERIFIED
+      accessed_on: "2026-11-04"
+      method: "Official NIST CSRC publication page and abstract inspected; full PDF practice content not yet reviewed."
+    rights:
+      notice: "Use official NIST citation; verify any third-party components or specific reuse restrictions before reproducing source material."
+      handling: "Metadata and concise original paraphrase only until detailed source review."
+    notes: "NIST states this profile augments SSDF 1.1 with AI-model-specific practices and should be used in conjunction with SP 800-218."
+  - source_id: SE-SRC-09F-CF-OUTAGE-2025
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored account of Cloudflare's own 2025-06-12 service incident; used only for incident facts the publisher directly reports."
+    title: "Cloudflare service outage June 12, 2025"
+    authors:
+      - "Jeremy Hartman"
+      - "CJ Desai"
+    organization: "Cloudflare"
+    publication_date: "2025-06-12"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://blog.cloudflare.com/cloudflare-service-outage-june-12-2025/"
+    relevant_areas:
+      - "Service availability incident (shared third-party storage dependency)"
+      - "Workers KV and dependent product availability"
+      - "Incident response and remediation planning"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+    verified_locators:
+      - "Official Cloudflare blog incident page: summary/impact opening paragraphs and incident timeline/remediation sections (read on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read during SEK-09F intake and independently re-verified on 2026-11-08; live cloudflare.com was unreachable from the reviewer host, so a 2026-10 archived snapshot of the same official URL was used. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; two of the four integrated locators and two of the five integrated evidence records cite this source. First-party incident assertions (2h28m impact, no data loss, third-party backing provider) are publisher-reported, not independently adjudicated."
+  - source_id: SE-SRC-09F-CF-KV-REDESIGN-2025
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored engineering follow-up on Cloudflare's own Workers KV architecture after the 2025-06-12 incident; used only for design-tradeoff facts the publisher directly states."
+    title: "Redesigning Workers KV for increased availability and faster performance"
+    authors:
+      - "Alex Robinson"
+      - "Tyson Trautmann"
+    organization: "Cloudflare"
+    publication_date: "2025-08-08"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://blog.cloudflare.com/rearchitecting-workers-kv-for-redundancy/"
+    relevant_areas:
+      - "Workers KV architectural redesign (provider redundancy)"
+      - "Post-incident engineering tradeoff account"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+    verified_locators:
+      - "Official Cloudflare blog post: opening postmortem recap and former single-provider dependency / revised storage architecture sections (read on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read during SEK-09F intake and independently re-verified on 2026-11-08; live cloudflare.com was unreachable from the reviewer host, so a 2026-10 archived snapshot of the same official URL was used. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; one locator and one evidence record cite this source. Redesign claims are first-party engineering judgments, not controlled field experiments."
+  - source_id: SE-SRC-09F-GH-POSTMORTEM-2018
+    source_class: EMPIRICAL_CASE
+    source_role: PRIMARY
+    role_scope: "Firsthand publisher-authored post-incident analysis of GitHub's own 2018-10-21 database failover event; used only for incident facts the publisher directly reports."
+    title: "October 21 post-incident analysis"
+    authors:
+      - "Jason Warner"
+    organization: "GitHub"
+    publication_date: "2018-10-30"
+    status: PUBLISHER_FIRST_PARTY_POST
+    official_url: "https://github.blog/news-insights/company-news/oct21-post-incident-analysis/"
+    relevant_areas:
+      - "Database failover and replication divergence incident"
+      - "Consistency-over-availability recovery tradeoff"
+    authority_fit:
+      - "Firsthand organization-authored report of its own service incident or remediation decisions"
+    authority_limitations:
+      - "First-party self-report, not an independently audited causal or cross-vendor generalization"
+      - "Current HTML URL is not an immutable content revision and no raw response SHA256 has been pinned"
+      - "Historical and specific to GitHub's reported MySQL topology of 2018"
+    verified_locators:
+      - "Official GitHub blog post-incident analysis: incident timeline 2018-10-21 22:52 UTC through 2018-10-22 16:24 UTC (read live on 2026-11-08)"
+    verification:
+      identity: VERIFIED
+      content: PARTIAL_CONTENT_VERIFIED
+      locator: VERIFIED_FOR_LISTED_SECTIONS
+      state: CONTENT_PARTIAL_VERIFIED
+      accessed_on: "2026-11-08"
+      method: "Official publisher page read live during SEK-09F intake and independently re-verified live on 2026-11-08. HTML revision and response bytes are not content-hash pinned; do not infer immutable-source provenance."
+    rights:
+      notice: "Publisher retains copyright; the blog post is not an openly licensed document."
+      handling: "Bibliographic references and short original paraphrases only; publisher retains copyright; do not copy substantial incident text or redistribute page content"
+    notes: "Registered by SEK-09H (#368) as canonical identity for the SEK-09F (#365/PR #366) reviewed intake; one locator and two evidence records cite this source. Incident facts (network partition, divergent writes, fail-forward recovery) are publisher-reported."
+source_id_aliases:
+  - alias_id: SE-SRC-SWEBOK-GUIDE-4-0A-2025
+    canonical_source_id: SE-SRC-SWEBOK-GUIDE-4-0A
+    reason: "Initial provisional ID incorrectly encoded 2025 as the release year. The official PDF title page states released August 2026. Preserve the old ID as a non-canonical alias so existing references do not silently break."
