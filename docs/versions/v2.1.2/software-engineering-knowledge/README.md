@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / NOT_REVIEWED / NOT_FROZEN` |
+| Document state | `SOURCE_CANDIDATE / R3_SCOPED_ACCEPT_ON_OLDER_SHA / SYSTEM_CURRICULUM_PENDING_INCREMENTAL_REVIEW / NOT_FROZEN` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,7 +24,7 @@
 - [49 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 26 篇已选重点 Topic + 11 个原始导论 + 7 份版本级文档**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 26 篇已选重点 Topic + 11 个原始导论 + 9 份版本级文档**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
@@ -33,6 +33,8 @@
 - [系统知识架构](systematic-knowledge-architecture.md)：学科/BOK→模块→知识群→Concept/Claim/Method/Rule/Skill/Case/Oracle/Source/Consumer 的关联，条件/冲突/UNKNOWN 和唯一语义所有者。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
+- [跨模块知识概念关系网](cross-module-knowledge-relations.md)：42 条实际概念关系，解释需求、架构、实现、测试、维护、可靠性与决策如何组合推理，但不创建 Native Task Dependency。
+- [领域智能的六个合成查询与可证伪反例](domain-intelligence-use-cases.md)：为未来 DomainHarness/Agent 的 Goal→Concept→Method→Result/UNKNOWN 提供候选评估输入，未运行的实验不得宣称 PASS。
 - [SWEBOK 18 KA 与跨学科对照](disciplinary-coverage.md)：覆盖不限于 26 个已深写专题，也包括计算机/数学/系统工程基础。参考 [SFIA 9 × SWEBOK 技能映射](https://sfia-online.org/en/tools-and-resources/bodies-of-knowledge/swebok-software-engineering-body-of-knowledge)，辅助辨别“知道概念”与“能在真实任务中实践”，不强制新认证。
 
 **知识形态的分离**：系统知识 `FOUNDATION_CANDIDATE` 可持续收集、学习和关联；方法/Topic 可在文档中经过限定审核；生产选用必须另外具备确切 Source/Claim/范围/许可/规则来源、合法 Tally/Harness 消费和可观察实际验证。**不能因为四条 Claim 先行试点，就将未入选的学科基础从知识体系删去**；也不能因 165 个知识点编写完成而声称整个学科已经资格通过。
@@ -103,6 +105,8 @@ software-engineering-knowledge/
 ├── systematic-knowledge-architecture.md # 领域语义与知识关系
 ├── knowledge-coverage-and-growth.md # 完整覆盖和增长路径
 ├── domain-harness-consumption.md # Tally/Harness 消费与权限边界
+├── cross-module-knowledge-relations.md # 42 条概念/关系桥
+├── domain-intelligence-use-cases.md # 六组教学输入与负例
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
