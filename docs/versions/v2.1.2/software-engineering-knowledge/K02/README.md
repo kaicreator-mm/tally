@@ -6,7 +6,7 @@
 
 **系统正文第一卷（R2 文档范围独立 ACCEPT_SCOPED @ ede9d646cb591b8df5179dc6bc11b60668fe968c）**：[学科深化 01：架构质量场景与状态一致性](foundations-deep-dive-01.md)。此章解释术语背后的机制、适用条件、工程取舍与可证伪反例；仍为文档知识候选，不是已合格 Source Claim 或真实 Harness/Agent 功能。
 
-**系统正文第二卷（R3 新增、待增量独立审核）**：[学科深化 02：依赖方向、架构视图与分布式状态](foundations-deep-dive-02.md)。本卷补充基础理论、适用条件、备选技术与可证伪反例；不宣称 165 点均已教材级展开，也不自动取得生产 Source/Consumer 资格。
+**系统正文第二卷（R3 文档范围独立 ACCEPT_SCOPED @ a39a64a82beae103318da3e45bd09b5efed15ad1）**：[学科深化 02：依赖方向、架构视图与分布式状态](foundations-deep-dive-02.md)。本卷补充基础理论、适用条件、备选技术与可证伪反例；不宣称 165 点均已教材级展开，也不自动取得生产 Source/Consumer 资格。
 
 **R4 逐点学科缺口补齐（新写、待增量独立审核）**：[`K02.F4.3` 架构信任边界/失败模式](focus-f4-3-minimal-failure-and-trust-boundary.md)。这些文件是对课程的定点专业深化，包含机制/条件/反例/STOP；并非获权 Source Claim、CI/Host/Package 或产品发布资格。
 
