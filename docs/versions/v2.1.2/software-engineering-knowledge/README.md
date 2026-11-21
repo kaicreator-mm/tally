@@ -13,7 +13,7 @@
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
-**读者定位：** 本版本文档整合 **11 个独立软件工程知识模块的设计**，明确其领域结构、必要交接、优先级、Agent 决策与验证场景。每个模块的**详细知识和完整正反例归其 GitHub Issue 所有**；本文件是跨模块索引、统一领域模型与演进/验收入口，避免维护两份互相漂移的独立知识真相。
+**读者定位：** 本版本包括 **11 份独立模块知识正文（K01.md–K11.md）+ 本总索引 README**。每份知识正文负责该领域的概念、原理、决策程序、Agent Skill、正反/边界案例、Workflow 消费与 ADS 来源；对应 GitHub Issue 负责范围、讨论、变更和验收跟踪。README 负责跨模块关系、版本规则和导航，**不复制各模块完整内容**。目前所有文档都属于设计候选，尚不代表知识合格或生产运行。
 
 > 重要历史：此前 Tally [#287–#296](https://github.com/kaicreator-mm/tally/issues/287) `[SUPERSEDED] [Harness Knowledge] K00–K09` 曾采用**不同的编号与分类**。这里的 K01–K11 仅在 v2.1.2 的当前知识设计范围内定义，不复活旧任务，不继承其已被废弃的生产者假设或任务状态。
 
@@ -45,17 +45,19 @@
 
 | Module | Knowledge module | Priority | Main workflow | 知识重点 | 典型决策与 Skill |
 | --- | --- | --- | --- | --- | --- |
-| [K01](https://github.com/kaicreator-mm/tally/issues/522) | Requirements Engineering & Business Modeling | P0 | L1 / DAG-P | 需求与业务规则、验收条件 | 需求澄清/冲突判定 |
-| [K02](https://github.com/kaicreator-mm/tally/issues/523) | Architecture & System Design | P0 | L2 / DAG-A | 架构驱动、模块/数据/接口设计 | ADR 与方案权衡 |
-| [K03](https://github.com/kaicreator-mm/tally/issues/524) | Detailed Design & Implementation | P0 | L3 / DAG-I | 算法、状态、错误及可维护代码 | 任务级详细设计/合法 Builder |
-| [K04](https://github.com/kaicreator-mm/tally/issues/525) | Task Planning & Decomposition | P0 | L1/L2/L3 | 按复杂度选择 INLINE/WORKLIST/DAG | 分解真实依赖及写集 |
-| [K05](https://github.com/kaicreator-mm/tally/issues/526) | Software Testing & Quality Verification | P0 | L3/Review | Oracle、契约、边界与真实测试层 | 选测试/验证测试是否实际执行 |
-| [K06](https://github.com/kaicreator-mm/tally/issues/527) | Debugging & Root-cause Repair | P0 | L3/Repair | 错误分类、首个失败点、根因与恢复 | 有界诊断/修复 |
-| [K07](https://github.com/kaicreator-mm/tally/issues/528) | Multi-Agent Engineering Collaboration | P0 | All phases | 角色/会话/任务交接、交互通道与共享写冲突 | 合法 Agent Handoff/独立审核 |
-| [K08](https://github.com/kaicreator-mm/tally/issues/529) | Build, Integration & Delivery | P0 | Integration/Delivery | 项目构建、CI、集成/发布产物与证据 | 最小有效 CI + 正式交付核对 |
-| [K09](https://github.com/kaicreator-mm/tally/issues/530) | Software Evolution & Refactoring | P1 | Maintenance | 兼容性、重构、迁移、历史行为保护 | 变更影响/兼容决策 |
-| [K10](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
-| [K11](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
+| [K01](K01.md) · [Issue #522](https://github.com/kaicreator-mm/tally/issues/522) | Requirements Engineering & Business Modeling | P0 | L1 / DAG-P | 需求与业务规则、验收条件 | 需求澄清/冲突判定 |
+| [K02](K02.md) · [Issue #523](https://github.com/kaicreator-mm/tally/issues/523) | Architecture & System Design | P0 | L2 / DAG-A | 架构驱动、模块/数据/接口设计 | ADR 与方案权衡 |
+| [K03](K03.md) · [Issue #524](https://github.com/kaicreator-mm/tally/issues/524) | Detailed Design & Implementation | P0 | L3 / DAG-I | 算法、状态、错误及可维护代码 | 任务级详细设计/合法 Builder |
+| [K04](K04.md) · [Issue #525](https://github.com/kaicreator-mm/tally/issues/525) | Task Planning & Decomposition | P0 | L1/L2/L3 | 按复杂度选择 INLINE/WORKLIST/DAG | 分解真实依赖及写集 |
+| [K05](K05.md) · [Issue #526](https://github.com/kaicreator-mm/tally/issues/526) | Software Testing & Quality Verification | P0 | L3/Review | Oracle、契约、边界与真实测试层 | 选测试/验证测试是否实际执行 |
+| [K06](K06.md) · [Issue #527](https://github.com/kaicreator-mm/tally/issues/527) | Debugging & Root-cause Repair | P0 | L3/Repair | 错误分类、首个失败点、根因与恢复 | 有界诊断/修复 |
+| [K07](K07.md) · [Issue #528](https://github.com/kaicreator-mm/tally/issues/528) | Multi-Agent Engineering Collaboration | P0 | All phases | 角色/会话/任务交接、交互通道与共享写冲突 | 合法 Agent Handoff/独立审核 |
+| [K08](K08.md) · [Issue #529](https://github.com/kaicreator-mm/tally/issues/529) | Build, Integration & Delivery | P0 | Integration/Delivery | 项目构建、CI、集成/发布产物与证据 | 最小有效 CI + 正式交付核对 |
+| [K09](K09.md) · [Issue #530](https://github.com/kaicreator-mm/tally/issues/530) | Software Evolution & Refactoring | P1 | Maintenance | 兼容性、重构、迁移、历史行为保护 | 变更影响/兼容决策 |
+| [K10](K10.md) · [Issue #531](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
+| [K11](K11.md) · [Issue #532](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
+
+**详细文档阅读方式：** 点击上表中的 K01–K11 直接进入相应知识正文。每份都有独立的核心概念表、专业知识章节、三个可执行 Decision Procedures、2–3 个 Agent Skills、完整教学情景、故意错误路线、反模式、可证伪验证矩阵和 ADS 规范引用。**共 11 份约 80–90 KB 文档，不是 11 个简短占位摘要。**
 
 **K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
 
@@ -145,8 +147,9 @@
 
 ### A. 本次 **设计/文档交付**（本 PR 处理）
 
-- [ ] 11 个不同的知识模块 Issue 创建并真实读取，每个都含知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与合格条件。
-- [ ] 一个 v2.1.2 版本 Issue 和一个版本 README，索引 K01–K11 和 ADS/Tally 现有参考来源。
+- [x] 11 个不同的知识模块 Issue 已创建并真实读取；各自明确了知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与资格边界。
+- [x] 每模块一份详细知识正文 K01.md–K11.md，均已写入 Draft 分支并读取检查（概念、专业知识、决策程序、Skill、情景、反例与 ADS 来源）。
+- [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个知识文档、对应 Issue 及 ADS/Tally 现有参考来源。
 - [ ] DOC-only 源码差异核查、Markdown 结构/链接与历史权威边界核对，必要的不同会话独立文档 Review；不对无关运行时代码执行全量 CI。
 - [ ] 通过 GitHub 读取固定候选 HEAD/文档 Blob，记录已完成的是文档，未完成的是合格知识与真实 Runtime。
 
@@ -173,6 +176,6 @@
 - [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/main/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
 - [Tally v2.1 家族索引 #269](https://github.com/kaicreator-mm/tally/issues/269)、[v2.1.2 本版本 #521](https://github.com/kaicreator-mm/tally/issues/521)。
 - [Tally #286 ADS→Tally Domain Package](https://github.com/kaicreator-mm/tally/issues/286)、[v2.1.1 实验 #299](https://github.com/kaicreator-mm/tally/issues/299)、[v2 Engineering Business/Workflow #276](https://github.com/kaicreator-mm/tally/issues/276)、[经验候选循环 #60](https://github.com/kaicreator-mm/tally/issues/60)。
-- 所有 K01–K11 具体知识修订必须回写各自模块 Issue；本 README 同步索引/兼容性而不复制其完整正文。
+- K01.md–K11.md 维护详细知识正文；各自模块 Issue 维护问题、修订与审核状态。任何实质变更应保持文档与 Issue 同步；README 只维护跨模块索引/兼容性，不复制正文。
 
 **最终区分：** `11 MODULE ISSUES PRESENT + DOCUMENT CANDIDATE` ≠ `11 KNOWLEDGE MODULES SOURCE-QUALIFIED` ≠ `TALLY DOMAIN PACKAGE QUALIFIED` ≠ `END-TO-END AGENT SOFTWARE DEVELOPMENT PASS`.
