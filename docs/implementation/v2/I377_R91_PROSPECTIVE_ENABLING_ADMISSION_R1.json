@@ -1,0 +1,150 @@
+{
+  "schema": "tally/i377-prospective-enabling-admission-candidate/v1",
+  "outputLabel": "TALLY_V2_I377_R91_OUTCOME_IMPLEMENTATION",
+  "status": "PROPOSAL_ONLY__INDEPENDENT_SOURCE_PACK_AND_HOST_ADMISSION_REQUIRED",
+  "authorRole": "WEB_GOVERNANCE_PREPARER__NOT_HOST_NOT_INDEPENDENT_REVIEWER",
+  "sourceOfTruth": "GitHub exact native source; selected Host/CAS readbacks required later",
+  "binding": {
+    "repository": "kaicreator-mm/tally",
+    "mainIssues": [
+      392,
+      259
+    ],
+    "taskIssue": 377,
+    "historicalPackPR": 378,
+    "historicalRepairPR": 394,
+    "frozenStructuralPR": 446,
+    "sourceRef": "version/v2",
+    "sourceHead": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "structuralTaskCount": 51,
+    "nativeEdgeCount": 29,
+    "frozenStructuralPackBlob": "8df559d9a84a4c66a12a33818037aecd47f1519f",
+    "writerContractComment": 6983294817,
+    "independentContractReviewComment": 6984755442,
+    "issue377ObservedState": "open/state:planned",
+    "historicalNativePredecessor": {
+      "issue": 211,
+      "state": "closed",
+      "reason": "not_planned",
+      "doesNotConferTaskPass": true
+    }
+  },
+  "explicitSeparation": {
+    "historical394": "MERGED_2_PATH_POST_PATCH_SOURCE_REUSE_ONLY__NO_REWRITE",
+    "historical378": "OLD_2_PATH_BUILDER_GOVERNANCE_PACK__NOT_ZERO_WRITE_ADMISSION",
+    "structuralR80": "IMMUTABLE_VERSION_ONLY_FROZEN__ZERO_PER_TASK_FSW_ROWS__NO_REFREEZE",
+    "prospective377Acceptance": "NEW_FORWARD_ONLY_ZERO_SOURCE_WRITE_PACK_NEEDED__NOT_CREATED_OR_ADOPTED_BY_THIS_PROPOSAL"
+  },
+  "prospectiveTasks": [
+    {
+      "id": "I377-E1",
+      "name": "POST_FREEZE_SINGLE_TASK_EMPTY_FSW_AND_JOINT_ROLE_BINDING",
+      "suggestedExclusiveWriteSet": [
+        "packages/tally-github-native-c/src/task-acceptance-fsw-port.mjs",
+        "packages/tally-github-native-c/test/task-acceptance-fsw-port.test.mjs",
+        "packages/tally-github-native-c/src/task-role-joint-binding-port.mjs",
+        "packages/tally-github-native-c/test/task-role-joint-binding-port.test.mjs"
+      ],
+      "selectedHostWiring": "NOT_INCLUDED__REQUIRES_SEPARATE_EXCLUSIVE_INTEGRATOR_AND_ABI_REVIEW",
+      "contract": [
+        "Exactly one post-freeze task FSW row under canonical tally/version-task-writeset/v1 and stable tally:v2:task-writeset:377; never call freezeVersionTaskDag again",
+        "FSW-only document is exactly UTF8 bytes [] no newline/BOM/whitespace; SHA256 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945; zero path and zero authority",
+        "First create-only CAS mustBeAbsent:true, same qualified shared Host/fence, then exact native get with key/revision/value/epoch/source/Pack; lost ACK stays UNKNOWN with NO second put",
+        "Two separate accepted validator and reviewer Host/CAS Claims must be bound to distinct actual operators, protected keys, generations, dispatches and native refs; DISPATCH_CLAIMED comment ACK is not claim acceptance",
+        "After both Claims, create only one separate immutable companion jointRoleBinding record referencing SAME FSW key/revision/digest, BOTH CAS/native accepted claim refs and exact source/Pack/fence; never append reviewer to FSW",
+        "Neither FSW alone nor join alone is a selected Host/Agent/Task PASS permit; every consumption reconfirms live currentness, revocation and exact trusted readbacks"
+      ],
+      "independentTests": [
+        "POS-ROLE-ORDER-B",
+        "NEG-FSW-CREATE-RACE",
+        "NEG-FSW-EMPTY-SEMANTICS",
+        "NEG-ROLE-LATE",
+        "NEG-ROLE-ALIAS-REVOKE",
+        "NEG-ROLE-COMPETE",
+        "NEG-JOIN-CREATE-RACE",
+        "NEG-CAS-ACK-FSW",
+        "NEG-CAS-ACK-JOIN",
+        "NEG-CLAIM-POST-ACK"
+      ]
+    },
+    {
+      "id": "I377-E2",
+      "name": "QUALIFIED_TASK_OUTCOME_PUBLISHER",
+      "suggestedExclusiveWriteSet": [
+        "packages/tally-github-native-c/src/task-outcome-publisher.mjs",
+        "packages/tally-github-native-c/test/task-outcome-publisher.test.mjs"
+      ],
+      "selectedHostWiring": "NOT_INCLUDED__EXPLICIT_E264_SINGLE_WRITER_INTEGRATION_AFTER_QUALIFICATION",
+      "contract": [
+        "Real selected Host-authorized outcome distinct from DISPATCH_CLAIMED transport ACK, native DONE observation, issue closed and advisory Journey",
+        "Bind both accepted Claim roles, single FSW/JOIN exact readbacks, actual validator evidence, independent reviewer ACCEPT decision, current Task Pack/source/affected ABI/CI, accepted Host effect fence",
+        "REWORK/DEFER/UNKNOWN/transport failure never yield Task PASS or native DONE",
+        "Outcome effect is create-only/idempotency-key bound, no blind repeat after ambiguous ACK; exact trusted persisted readback required before any qualified PASS; terminal native publication is separate permitted effect"
+      ],
+      "independentTests": [
+        "POS-QUALIFIED-OUTCOME",
+        "NEG-MISSING-VALIDATOR",
+        "NEG-MISSING-REVIEW-DECISION",
+        "NEG-ROLE-ALIAS",
+        "NEG-STALE-SOURCE-OR-TRANSPORT",
+        "NEG-OUTCOME-LOST-ACK"
+      ]
+    },
+    {
+      "id": "I377-E3",
+      "name": "AUTHORIZED_PLANNED_TO_READY",
+      "suggestedExclusiveWriteSet": [
+        "packages/tally-github-native-c/src/task-ready-transition-port.mjs",
+        "packages/tally-github-native-c/test/task-ready-transition-port.test.mjs"
+      ],
+      "selectedHostWiring": "NOT_INCLUDED__EXPLICIT_A260_E264_SOURCE_EPOCH_HANDOFF_REQUIRED",
+      "contract": [
+        "Use prospective independently accepted forward-only #377 zero-write scope Pack with selected current source and native responsibility; historical PR378 Pack not eligible",
+        "Require official native blocked_by lookup; #211 closed/not_planned releases only OPEN-edge block, not predecessor Task PASS",
+        "Check issue type, state:planned, exact prior updatedAt and labels, live source epoch/Pack/FSW conflicts, owner/role/effect fence",
+        "Single approved GitHub update + exact native readback/preflight; no second PATCH after lost ACK; GitHub labels cannot supply cross-store linearizable CAS and possible ABA remains explicit UNKNOWN",
+        "state:ready readback never itself creates Claim, FSW, Host authority or Task Outcome"
+      ],
+      "independentTests": [
+        "POS-CANDIDATE-READY",
+        "NEG-NATIVE-BLOCKED-BY",
+        "NEG-LABEL-ABA",
+        "NEG-LOST-LABEL-ACK",
+        "NEG-STALE-UPDATED_AT",
+        "NEG-PLANNED-NOT-CLAIMABLE"
+      ]
+    }
+  ],
+  "governance": {
+    "stage": "REVIEW_REQUESTED_ONLY__NO_TASK_IS_FORMALLY_DISPATCHED",
+    "independence": "Each enabling Task/Pack requires other-conversation non-Writer independent exact Git blob review and individual prospective source Pack / Claim / FSW admission before source writes",
+    "sourceEpoch": "Source S0->S1 and affected transport/ABI impact must be approved before any selected Host effect; immutable 51/29 structural row must not be rewritten",
+    "noSharedHotspotWrites": [
+      "packages/tally-github-native-c/src/version-task-dag-write-port.mjs",
+      "packages/tally-github-native-c/src/task-claim-host-preflight.mjs",
+      "packages/tally-github-native-c/src/task-claim-github-publisher.mjs",
+      "web/v2/serve.mjs",
+      "packages/tally-engineering-business/src/journey.mjs"
+    ],
+    "implementationEvidence": "Node>=24 syntax-first + executable POS/NEG/ERR + real selected Host durable CAS and native GitHub effects + exact SHA Woodpecker and separate independent reviewer",
+    "currentRun": "MODEL_FIXTURE_ONLY__NOT_REAL_HOST__NODE24_AND_CI_NOT_RUN",
+    "allowedPreAdoptionEffects": [
+      "DOCS_ONLY_BRANCH_AND_DRAFT_PR",
+      "GITHUB_COMMENT_HANDOFF",
+      "READ_ONLY_SOURCE_INSPECTION"
+    ],
+    "prohibited": [
+      "NO_SOURCE_WRITE",
+      "NO_HOST_CAS",
+      "NO_FSW_CREATE",
+      "NO_ROLE_CLAIM_CREATE",
+      "NO_NATIVE_LABEL_MUTATION",
+      "NO_OUTCOME_PUBLISH",
+      "NO_SECOND_FREEZE",
+      "NO_SOURCE_PR394_REWRITE",
+      "NO_TASK_PASS",
+      "NO_RELEASE"
+    ]
+  },
+  "executableFixture": "docs/implementation/v2/I377_R91_PROSPECTIVE_ADMISSION_COUNTEREXAMPLES.test.mjs"
+}
