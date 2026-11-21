@@ -49,7 +49,7 @@
 ## 6. 来源、版本与知识资格
 
 - [IREB CPRE syllabus](https://cpre.ireb.org/en/downloads-and-resources/downloads)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
-- [NASA SWE-050 Software Requirements](https://swehb.nasa.gov/spaces/SWEHBVB/pages/32604503/SWE-050%2B-%2BSoftware%2BRequirements)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
+- [NASA Software Engineering Handbook Rev D · SWE-050 Software Requirements](https://swehb.nasa.gov/spaces/SWEHBVD/pages/102695421/SWE-050%2B-%2BSoftware%2BRequirements)：按现行 Ver D 页面引用需求建立、记录和维护的专业参考；**NASA 的项目义务不自动成为 Tally 的强制 Gate**，亦非本教学案例的实际验收收据。
 - [IEEE SWEBOK V4 Topics](https://www.computer.org/education/bodies-of-knowledge/software-engineering/topics)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
 
 **ADS 约束基线**：`kaicreator-mm/ai-development-standard@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`；若与现行项目已生效规范冲突，应以具有权威的原规则为准并说明冲突。历史 ADS #1100、Draft #1384 的统一三阶段 DAG 观点不作为现行强制规则。

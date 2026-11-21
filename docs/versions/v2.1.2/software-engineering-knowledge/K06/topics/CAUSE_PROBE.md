@@ -49,7 +49,7 @@
 ## 6. 来源、版本与知识资格
 
 - [Google SRE Postmortem](https://sre.google/workbook/postmortem-culture/)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
-- [CMU SEI Early Architecture Analysis](https://www.sei.cmu.edu/library/a-playbook-for-early-architecture-analysis/)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
+- [Google SRE · Incident Response](https://sre.google/workbook/incident-response/)：用于故障响应中的事实记录、诊断与恢复次序；**不是对该合成超时案例的实际诊断收据**，也不要求其他项目套用 Google 的组织结构。
 - [ADS Maintenance/EOL/Hotfix](https://github.com/kaicreator-mm/ai-development-standard/blob/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards/MAINTENANCE_EOL_HOTFIX_STANDARD.md)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
 
 **ADS 约束基线**：`kaicreator-mm/ai-development-standard@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`；若与现行项目已生效规范冲突，应以具有权威的原规则为准并说明冲突。历史 ADS #1100、Draft #1384 的统一三阶段 DAG 观点不作为现行强制规则。

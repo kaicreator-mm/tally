@@ -50,6 +50,6 @@
 
 - [ISO/IEC/IEEE 42010:2022](https://www.iso.org/standard/74393.html)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
 - [CMU SEI ATAM](https://www.sei.cmu.edu/library/architecture-tradeoff-analysis-method-collection/)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
-- [SEI Early Architecture Analysis](https://www.sei.cmu.edu/library/a-playbook-for-early-architecture-analysis/)：**参考概念/方法，不是本案例的实际执行收据**；按出版方版本与版权范围使用。
+- [CMU SEI · A Playbook for Early Architecture Analysis](https://www.sei.cmu.edu/library/a-playbook-for-early-architecture-analysis/)：**仅类比早期设计阶段的结构化架构分析方法**，原报告关注 integrability/maintainability 等*开发期*质量属性；它**不是**队列重启恢复、运行期可靠性或故障响应的直接实证依据。本文重启恢复实验应由当前业务合同、运行实际测试和合适的质量属性场景独立支撑。
 
 **ADS 约束基线**：`kaicreator-mm/ai-development-standard@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`；若与现行项目已生效规范冲突，应以具有权威的原规则为准并说明冲突。历史 ADS #1100、Draft #1384 的统一三阶段 DAG 观点不作为现行强制规则。

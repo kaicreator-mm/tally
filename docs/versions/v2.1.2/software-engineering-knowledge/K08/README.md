@@ -14,7 +14,7 @@
 | [`K08.CLONE_EFFICIENCY`](topics/CLONE_EFFICIENCY.md) | 如何避免多 Workflow 反复完整 Clone？ | Provider 隔离/真实网络日志 | K08→K11 | 只看 YAML 不认定节省比例 |
 | `K08.SOURCE_PROVENANCE` | CI 和 Artifact 具体属于哪个 SHA/环境？ | 源/Config/Runner/Artifact digest | K08→K05 | 旧 CI PASS 不覆盖新 HEAD |
 | [`K08.DELIVERY_READINESS`](topics/DELIVERY_READINESS.md) | 用户实际安装启动配置是否可用？ | 真实制品/平台/用户入口 | K08→K10 | PR merge 不等于 Release |
-| `K08.RELEASE_BOUNDARY` | 哪个 Owner 允许冻结/发布制品？ | 当前授权/证据/版本合同 | K08→K09 | Package Candidate≠Release |
+| `K08.RELEASE_BOUNDARY` | 哪个 Owner 允许冻结/发布制品？ | 当前授权/证据/版本合同 | K08 → **现有获授权 Release Owner / [ADS Release Standard](https://github.com/kaicreator-mm/ai-development-standard/blob/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards/RELEASE_STANDARD.md)**；仅涉及旧版本兼容时咨询 K09 | Package Candidate≠Release |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
 
