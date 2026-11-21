@@ -3,6 +3,8 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
+**目前共 47 项外部来源**（原始目录 A01–A43，新增 A44–A47：NASA 需求/交付验证、SEI 早期架构分析及 Fowler 渐进式演进）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+
 ## 来源等级与取舍
 
 - **国际/IEEE 标准**：规范/术语的权威出版来源，但**标准存在**不意味着 Tally 已取得全文使用许可，也不意味着任何软件项目都要通过该标准审核；可依 ISO/IEEE 公告核对范围和版本，不能未经购买复制完整正文。
