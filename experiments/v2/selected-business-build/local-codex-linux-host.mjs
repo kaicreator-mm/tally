@@ -98,6 +98,9 @@ export function createLinuxHostOperations({defaults,exec=nativeExec}={}){
   return {
     ...defaults,
     async probeProvider(config){
+      // A root Host would bypass the intended unprivileged trust boundary.
+      if(typeof process.getuid==='function'&&process.getuid()===0)
+        return {available:false,reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};
       try{linuxSandboxArgs(config);}catch{return {available:false,reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};}
       const bwrap=await run(config.bwrapPath,['--version']);
       // Check real unprivileged user namespace *before* adding a git worktree.
