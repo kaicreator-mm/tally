@@ -48,4 +48,6 @@ A/B 是可能的 flaky 机制；C 不是“偶发不稳定”，而是材料测�
 
 K05 拥有测试目的和 Oracle，K08 只负责真实 Provider/Runner/Artifact 执行事实；所有新增专业测评仍基于现有 Task/Review/Release 权威，不创造新的 CI Gate。
 
+**未知与停止条件**：业务 Oracle 未获批准、测试生成器未覆盖关键权限组合或 Runner 未实际发现目标 suite 时，对相应测试目的输出 `UNKNOWN` 或 `NOT_RUN/STOP_FOR_CLAIM`，而不是因例子/框架看起来正确即给出 PASS。其他已验证且不受影响的测试事实可以保留。
+
 **来源线索**：[A08 ISO 29119](../external-source-catalog.md)、[A14 ISTQB](../external-source-catalog.md)、[A25 Testcontainers](../external-source-catalog.md)、[A50 TLA+ Tools](../external-source-catalog.md)、[A54 ACM SIGSOFT Empirical Standards](../external-source-catalog.md)。
