@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 54 项外部来源**（A01–A49 为此前已审的发现目录；R3 新增 A50–A54：形式规格、数据库并发语义、HTTP 幂等、可复现构建、软件工程实证研究）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 61 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61：架构信任边界、GitHub 审核事实、Node22 Test Runner、Jest Golden、Git 精确差异、服务配置、XDG 配置路径）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -85,6 +85,20 @@
 | A54 | [ACM SIGSOFT Empirical Standards](https://github.com/acmsigsoft/EmpiricalStandards) | 多研究方法各有适用的设计/报告标准，尤其对照实验、案例研究、基准测评；不是一套万能固定实验流程或对 Agent 的强制 Release Gate；文字/代码复用许可需具体核对 | K04 K05 K07 K11 |
 
 **来源检索状态**：上述真实公开链接已在 2026-11-21 检查相关页面/章节的存在与核心范围；仍为 `DISCOVERED_SOURCE_REFERENCE_ONLY / SOURCE_CLAIM_NOT_QUALIFIED / LICENSE_COPYING_NOT_GRANTED`。引用 RFC/项目文档仅用于独立表述的基础原理，新增正式 Rule 或代码依赖仍须按所选任务和真实版本独立核验。
+
+## R4 六项学科缺口的新增专业参考（A55–A61）
+
+| ID | 来源 | 适用学科、限定边界 | 模块 |
+| --- | --- | --- | --- |
+| A55 | [OWASP Threat Modeling Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html) | 数据流、资产和信任边界的研究方法；不等于完成实际应用的安全审查，不开启此前明确延后的安全专项 | K02 K10 |
+| A56 | [GitHub Protected Branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) 与 [Required Status Checks](https://docs.github.com/en/pull-requests/reference/status-checks) | GitHub 可配置状态审查与分支条件；`can configure` 不等于用户仓库已实际启用，不能取代 ADS 当前真实有权 Issue | K04 K06 |
+| A57 | [Node.js **v22.16.0** Test Runner](https://nodejs.org/download/release/v22.16.0/docs/api/test.html) | 仅对应 Node v22.16.0 的测试执行/发现文档；不由 Node26 当前功能推断 Node22 能运行，不意味着实际 CI 发现了目标测试 | K05 K08 |
+| A58 | [Jest Snapshot Testing](https://jestjs.io/docs/snapshot-testing) | Golden/Snapshot 更新须由合法行为 Expected 与代码评审检查；工具能更新输出不自动证明其值正确。项目仅作为独立解释来源，不拷贝许可未核实正文 | K05 |
+| A59 | [Git merge-base](https://git-scm.com/docs/git-merge-base) / [Git diff](https://git-scm.com/docs/git-diff) | 精确历史祖先和文件差异定位方法；不能仅从文件路径自动推出语义影响/全部复核范围 | K06 K09 |
+| A60 | [The Twelve-Factor App: Config](https://www.12factor.net/config) | 服务配置与代码分离及 env vars 方法；不构成所有 GUI 桌面程序必须在启动前设置环境变量的通用约束 | K10 |
+| A61 | [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir/) | 类 Unix 用户配置/数据路径约定；不自动适用于 Windows/macOS 路径、秘密加密存储、或具体产品首次启动合同 | K10 |
+
+**R4 引用边界**：官网链接的存在与可定位范围为 `SOURCE_DISCOVERED_REFERENCE_ONLY`；未执行下载/全文复制授权审批、未获得生产知识 Claim 资格。正式版本切换、版权复用、产品强制 Gate 均需按使用场景核对，不能把开源文档默认等同公有领域。
 
 ## 版本与版权的关键异常
 
