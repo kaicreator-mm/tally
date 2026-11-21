@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 47 项外部来源**（原始目录 A01–A43，新增 A44–A47：NASA 需求/交付验证、SEI 早期架构分析及 Fowler 渐进式演进）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 49 项外部来源**（原始目录 A01–A43，A44–A47：NASA/SEI/Fowler；A48–A49：SFIA 9×SWEBOK 能力映射及 ACM/IEEE-CS/AAAI CS2023 计算机学科基础）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -71,6 +71,8 @@
 | A45 | [NASA Delivery Requirements Verification (SWE-194, Rev D)](https://swehb.nasa.gov/spaces/SWEHBVD/pages/102695529/SWE-194%2B-%2BDelivery%2BRequirements%2BVerification) | Government engineering handbook | NASA mission-specific delivery assurance reference; check current NASA handbook edition for exact clause; do not transplant certification process | K05 K08 |
 | A46 | [CMU SEI A Playbook for Early Architecture Analysis](https://www.sei.cmu.edu/library/a-playbook-for-early-architecture-analysis/) | Research/practice method | Uses quality-attribute scenarios and lightweight architecture analysis, not universal requirement to run a formal ATAM workshop | K02 |
 | A47 | [Martin Fowler Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) | Author-led engineering practice | Incremental legacy modernization; careful about temporary routing and data coexistence; does not imply every refactor needs façade | K02 K09 |
+| A48 | [SFIA 9 × SWEBOK Software Engineering skills mapping](https://sfia-online.org/en/tools-and-resources/bodies-of-knowledge/swebok-software-engineering-body-of-knowledge) | Public competency crosswalk | SFIA 9 (Oct 2024) maps professional competencies to SWEBOK domains; explains levels of practice, not Tally mandatory skill certification | K01–K11 |
+| A49 | [ACM/IEEE-CS/AAAI CS2023 Curricula Report](https://csed.acm.org/wp-content/uploads/2025/11/CS2023-Report.htm) | Computing education BOK | Curriculum knowledge areas in algorithms/data, systems, security, mathematical/statistical and software foundations; education reference, not proof of practical Agent qualification | K02 K03 K05 K10 K11 |
 
 ## 版本与版权的关键异常
 

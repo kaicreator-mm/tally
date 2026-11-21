@@ -4,6 +4,8 @@
 
 选择最小可独立验收的工作单位与真实依赖，使并行收益大于协调成本。
 
+**先了解整个专业学科，再按需选择问题**： [K04 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
+
 ## 当前工程问题索引（优先入口）
 
 先根据当前 Task 的**真实问题**命中下表最小 Topic，再阅读与之相关的 [专业方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例](casebook.md)、[来源](sources.md)；不要把九个专题文件全部塞进一次 Agent 上下文。**Topic ID 是文档检索标识，不是新增的 Tally Wire Schema/Task Status。** 跨模块列仅表示引用知识及交接位置，不改变原有工程权威。
@@ -26,6 +28,7 @@
 
 | 文档 | 具体内容与消费时机 |
 | --- | --- |
+| [systematic-syllabus.md](systematic-syllabus.md) | 本模块系统专业学科：五个知识群、15 个概念/机制/反例 |
 | [disciplinary-foundations.md](disciplinary-foundations.md) | SWEBOK/ISO/专业学科方法与具体 Agent 决策、适用反例 |
 | [external-practices.md](external-practices.md) | 工程实践项目、操作步骤及可证伪任务样例 |
 | [domain-model.md](domain-model.md) | 领域概念、不变量、语义关系与错误解释；第一次判断问题时读 |

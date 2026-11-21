@@ -21,10 +21,21 @@
 
 ## 本版本学科与外部实践导航（2026-11-21）
 
-- [47 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
+- [49 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 26 篇已选重点 Topic + 11 个原始导论 + 3 个版本级索引文件**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 26 篇已选重点 Topic + 11 个原始导论 + 7 份版本级文档**。额外文档数量不等于新建 99 条已合格的知识记录。
+
+## 体系化软件工程领域知识：从学科到底层服务
+
+> **本版本的目标不是只管理四条高价值候选 Claim。** 完整的 **K01–K11 系统知识库**以 SWEBOK/关联学科的专业概念、工程原理、语义关系和实践方法为底座，通过 **11 份系统学科课程（每模块 5 群×3 点，共 165 个基础知识点）** 提供覆盖；原 56 条问题索引和 26 篇深入 Topic 是便于 Agent 按需选用的高价值**投影**，并不限制知识广度。
+
+- [系统知识架构](systematic-knowledge-architecture.md)：学科/BOK→模块→知识群→Concept/Claim/Method/Rule/Skill/Case/Oracle/Source/Consumer 的关联，条件/冲突/UNKNOWN 和唯一语义所有者。
+- [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
+- [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
+- [SWEBOK 18 KA 与跨学科对照](disciplinary-coverage.md)：覆盖不限于 26 个已深写专题，也包括计算机/数学/系统工程基础。参考 [SFIA 9 × SWEBOK 技能映射](https://sfia-online.org/en/tools-and-resources/bodies-of-knowledge/swebok-software-engineering-body-of-knowledge)，辅助辨别“知道概念”与“能在真实任务中实践”，不强制新认证。
+
+**知识形态的分离**：系统知识 `FOUNDATION_CANDIDATE` 可持续收集、学习和关联；方法/Topic 可在文档中经过限定审核；生产选用必须另外具备确切 Source/Claim/范围/许可/规则来源、合法 Tally/Harness 消费和可观察实际验证。**不能因为四条 Claim 先行试点，就将未入选的学科基础从知识体系删去**；也不能因 165 个知识点编写完成而声称整个学科已经资格通过。
 
 ## 以工程问题检索知识（当前首选组织方式）
 
@@ -34,7 +45,7 @@
 
 **职责边界**：K02 跨模块架构/公共合同，K03 Task 内具体实现；K05 测试 Oracle/充分性，K08 Provider/CI/Artifact 的实际执行和证据；K10 通用可靠性/错误/恢复模式，K06 特定事故因果定位，K03 当前合法修复；K09 旧行为兼容/迁移，K01 业务需求；K04 Task 组织、K07 Agent 协作、K11 成本和停止策略为跨阶段方法。
 
-**来源与状态**：问题索引不复制已有 99 个基础专题文件的正文；`K01.md`–`K11.md` 保留为历史导论入口而非第二套权威。引用 [47 项外部来源](external-source-catalog.md) 和 [SWEBOK 对照](disciplinary-coverage.md) 必须按具体 Claim、版本、适用性和反例判断；`SOURCE_CANDIDATE/NOT_QUALIFIED/PROPOSED_NOT_CONNECTED` 不变。
+**来源与状态**：问题索引不复制已有 99 个基础专题文件的正文；`K01.md`–`K11.md` 保留为历史导论入口而非第二套权威。引用 [49 项外部来源](external-source-catalog.md) 和 [SWEBOK 对照](disciplinary-coverage.md) 必须按具体 Claim、版本、适用性和反例判断；`SOURCE_CANDIDATE/NOT_QUALIFIED/PROPOSED_NOT_CONNECTED` 不变。
 
 ### 首批选定知识的真实来源定位（候选，未取得资格）
 
@@ -62,7 +73,7 @@
 1. **代码库理解和逆向分析**：不是本版本独立知识领域；真实 Task 执行仍必须读取必要源码、调用入口和当前证据，不得伪造代码理解。
 2. **软件安全与供应链知识专项**：本版本不编制安全工程大全或供应链风险/扫描 Pipeline；已发布 ADS 的适用权限、敏感数据、依赖质量与安全限制仍有效，不因专项推迟而取消。
 
-不进行全软件工程百科、任意领域 Agent 平台、泛化知识图谱生成器、额外调度器、新 Workflow Engine、独立 Task/Claim/Release 权威，也不把 11 个 Issue 都解释成运行时代码任务。
+体系化建设软件工程专业知识、理论、学科关系与工程技术细目，但不在一次 PR 中穷尽所有教材或复制受版权限制的全文；不开发任意领域 Agent 平台、通用知识编译器、额外调度器、新 Workflow Engine、独立 Task/Claim/Release 权威，也不把 11 个 Issue 都解释成运行时代码任务。
 
 ## 2. 十一个知识模块：唯一工作项索引
 
@@ -80,7 +91,7 @@
 | [K10 知识库](K10/README.md) · [初版导论](K10.md) · [Issue #531](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
 | [K11 知识库](K11/README.md) · [初版导论](K11.md) · [Issue #532](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
 
-**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次知识库保留 **11×9=99 个模块基础文件**，并在实际需求驱动下额外深化 **26 个问题级专题**（不是 26 个已合格知识资产）。
+**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次知识库保留 **11×9=99 个模块基础文件**，再为 11 个模块补充各自系统课程（合计 **165 个基础知识点**），并在实际需求驱动下额外深化 **26 个问题级专题**（不是 26 个已合格知识资产）。
 
 **K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
 
@@ -89,9 +100,13 @@
 ```text
 software-engineering-knowledge/
 ├── README.md               # v2.1.2 跨模块索引
+├── systematic-knowledge-architecture.md # 领域语义与知识关系
+├── knowledge-coverage-and-growth.md # 完整覆盖和增长路径
+├── domain-harness-consumption.md # Tally/Harness 消费与权限边界
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
+    ├── systematic-syllabus.md # 五群×三项系统学科知识主干
     ├── disciplinary-foundations.md # 外部学科/标准与适用机制
     ├── external-practices.md # 外部企业/GitHub 案例与可证伪工程做法
     ├── domain-model.md     # 术语/实体/规则/语义关系
@@ -223,7 +238,7 @@ software-engineering-knowledge/
 
 - [x] 11 个不同的知识模块 Issue 已创建并真实读取；各自明确了知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与资格边界。
 - [x] 11 个知识库目录分别建成，每库 9 个文件（原 7 文件 + 学科基础 + 外部实践），并保留旧 `Kxx.md` 的导论入口。
-- [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个模块目录（99 个基础知识文件 + 26 个重点问题 Topic）、11 个原始导论、对应 Issue 及 ADS/Tally 来源。
+- [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个模块目录（99 个基础知识文件 + 11 份系统课程 + 26 个重点问题 Topic）、11 个原始导论、对应 Issue 及 ADS/Tally 来源。
 - [ ] DOC-only 源码差异核查、Markdown 结构/链接与历史权威边界核对，必要的不同会话独立文档 Review；不对无关运行时代码执行全量 CI。
 - [ ] 通过 GitHub 读取固定候选 HEAD/文档 Blob，记录已完成的是文档，未完成的是合格知识与真实 Runtime。
 
