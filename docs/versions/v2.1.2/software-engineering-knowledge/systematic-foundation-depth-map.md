@@ -1,8 +1,8 @@
-# K01–K11 学科知识正文：R2/R3 两卷与 R4 六点补缺
+# K01–K11 学科知识正文：R2–R6 系统学科与进阶推理
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_R3_R4_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R5_ADVANCED_REASONING_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 新增 4 篇进阶正文与 5 条完整演算，仍待 R5 限定增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文**，不是已投入生产的 Package 或源级合格 Claim。
+> **状态：R2_R3_R4_R5_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R6_SEVEN_ADVANCED_CHAPTERS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇新进阶正文与 7 条完整演算仍待增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -39,7 +39,7 @@
 
 R4 独立审核已对这一文档范围接受；K02.focus 的 Extension Import 与 HostPort/Effect 语义分离已在 R5 独立审核确认修正；此处不授予运行时 Effect 权限。本轮只关闭“没有任何深入正文重点覆盖”的六个导航缺口，不改变其他 159 个知识点仍需持续专业深化、来源核验和实际 Domain Intelligence 消费能力验证的事实。
 
-## R5：四篇深层专业推理与五条完整演算（待增量审核）
+## R5：四篇深层专业推理与五条完整演算（旧 SHA 已审）
 
 与 R2/R3 的学科广度文章、R4 的单点补缺不同，R5 聚焦**已有专业概念的推理深度和错误诊断能力**，不追求一次填充 165 份同样模板：
 
@@ -52,7 +52,25 @@ R4 独立审核已对这一文档范围接受；K02.focus 的 Extension Import �
 
 共 25 个原已存在的学科 ID 在 [165 点台账](foundation-concept-coverage-ledger.md) 中被额外标记 A；其余 140 个知识点没有被自动升级为“已完全深入”或“已得到证实”。同样重要的是 [W01–W05 五条跨模块完整推理演算](professional-reasoning-worked-traces.md)：统一演示怎样处理事实/来源/条件、知识选择、备选机制、最小反例、UNKNOWN/STOP 与真实 Owner。五个 W 是**教学场景**，不与旧 Q01–Q18 合并计数，也不构成实际 Agent Bench/E2E。
 
-**深度判断不应简化为链接数**：一个概念即使有 S+D1+D2+A，仍需对实际命题、适用范围、解释的反例和来源资格独立判断。R5 文件仅是原创专业推导与教学设计，绝不自动创建 Tally 当前 Source Claim 或 DomainHarness ABI。
+**深度判断不应简化为链接数**：一个概念即使有 S+D1+D2+A，仍需对实际命题、适用范围、解释的反例和来源资格独立判断。R5/R6 文件仍是原创专业推导与教学设计，绝不自动创建 Tally 当前 Source Claim 或 DomainHarness ABI。
+
+## R6：七模块原理深化与 W06–W12（待限定独立审核）
+
+R5 的 K01/K03/K05/K11 通过后，R6 将**剩下七个模块**也各自建立一个原创、条件明确、有计算/故障反例和 STOP 的进阶专业章节，完成 11/11 模块的至少一篇进阶学理正文。原有 165 个概念仍保留，不新造平行知识分类。
+
+| 模块 | 进阶正文 | 选中现有课程 ID 数 | 深入推演与反例 |
+| --- | --- | --- | --- |
+| K02 | [质量场景、状态所有权、失效与信任权衡](K02/advanced-architecture-invariants-and-failure-tradeoffs.md) | 7 | 本地事务无法保证外部 Effect；Tenant cacheKey 冲突 |
+| K04 | [Task 偏序、写集冲突与关键路径](K04/advanced-task-graph-critical-path-and-bounded-delivery.md) | 7 | 教学 DAG 理想 8h 下界与资源/合同冲突 |
+| K06 | [根因竞争假设与区分性探针](K06/advanced-incident-causality-and-distinguishing-probes.md) | 7 | CI cache hit 不是缓存缺陷根因的直接证明 |
+| K07 | [Attempt/Source SHA/共享写集与独立复核](K07/advanced-agent-concurrency-provenance-and-review-isolation.md) | 7 | H1 迟到 ACK 不能覆盖 H2 当前授权 |
+| K08 | [Hermetic Build、单次可信源码获取与平台验收](K08/advanced-hermetic-ci-artifact-identity-and-target-host.md) | 8 | 理论 19 × 300MiB = 5,700MiB ≈ 5.57GiB；需真实 Provider 测量 |
+| K09 | [消费者版本合同、数据迁移与不兼容重写](K09/advanced-contract-evolution-migration-and-retirement.md) | 8 | Expand/Contract 条件失效、有损业务状态转移 |
+| K10 | [SLI/SLO、告警燃烧率、未知 Effect 与性能](K10/advanced-reliability-slo-effect-recovery-and-measurement.md) | 9 | 99.9%/100,000 次示例的错误预算，以及重试/熔断风险 |
+
+七篇进阶正文关联 **53 个原知识 ID**，与 R5 25 个 A 合计 **78/165 个 A 进阶导航点**。不是 78 条独立 Source Claim、78 项完全掌握的教材章节或真实运行 Agent。配套 [W06–W12 七条端到端教学推理](professional-reasoning-worked-traces-02.md) 和此前 W01–W05（共 12 条 W）用于检验综合选择知识的能力，仍全部 **SYNTHETIC_NOT_RUN**。
+
+R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Martin Fowler Parallel Change](external-source-catalog.md) 三项公开正式/作者原始来源线索，当前总计 **64 条参考**。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
 
 ## 3. 学科深化要达到的专业标准
 
@@ -62,4 +80,4 @@ R4 独立审核已对这一文档范围接受；K02.focus 的 Extension Import �
 
 ## 4. 下一步与独立审核边界
 
-R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R2/R3/R4 的独立 ACCEPT_SCOPED 对旧 SHA 未变的相应正文/来源/课程可复用；R5 只复审四篇新的深层正文、五条 W 演算、K02 权限边界 P2 和导航增量，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R2/R3/R4/R5 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容及其具体限定范围内可复用；R6 只复审七篇新深层正文、W06–W12、53 处额外知识导航、3 项新增来源线索及必要 R6 导航增量，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
