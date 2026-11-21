@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 49 项外部来源**（原始目录 A01–A43，A44–A47：NASA/SEI/Fowler；A48–A49：SFIA 9×SWEBOK 能力映射及 ACM/IEEE-CS/AAAI CS2023 计算机学科基础）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 54 项外部来源**（A01–A49 为此前已审的发现目录；R3 新增 A50–A54：形式规格、数据库并发语义、HTTP 幂等、可复现构建、软件工程实证研究）。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -73,6 +73,18 @@
 | A47 | [Martin Fowler Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) | Author-led engineering practice | Incremental legacy modernization; careful about temporary routing and data coexistence; does not imply every refactor needs façade | K02 K09 |
 | A48 | [SFIA 9 × SWEBOK Software Engineering skills mapping](https://sfia-online.org/en/tools-and-resources/bodies-of-knowledge/swebok-software-engineering-body-of-knowledge) | Public competency crosswalk | SFIA 9 (Oct 2024) maps professional competencies to SWEBOK domains; explains levels of practice, not Tally mandatory skill certification | K01–K11 |
 | A49 | [ACM/IEEE-CS/AAAI CS2023 Curricula Report](https://csed.acm.org/wp-content/uploads/2025/11/CS2023-Report.htm) | Computing education BOK | Curriculum knowledge areas in algorithms/data, systems, security, mathematical/statistical and software foundations; education reference, not proof of practical Agent qualification | K02 K03 K05 K10 K11 |
+
+## R3 新增的五项基础技术/研究来源（仅做公开资料检索与原创说明）
+
+| ID | 来源 | 适用学科及限制 | 模块 |
+| --- | --- | --- | --- |
+| A50 | [Leslie Lamport 的 TLA+ Tools 资料](https://lamport.azurewebsites.net/tla/tools.html) | 状态迁移/时序性质、模型检验与抽象边界。工具文档不等于已执行 TLC/TLAPS、无形式证明；只做方法引用，不复制原书 | K02 K03 K05 |
+| A51 | [PostgreSQL 18 Transaction Isolation（版本固定）](https://www.postgresql.org/docs/18/transaction-iso.html) | Read Committed、Repeatable Read 与 Serializable 的具体可见性/异常边界；**只针对 PostgreSQL 18**，不推断所有 SQL DB 的实现相同，不从文档声称实际事务已测试 | K02 K03 K09 |
+| A52 | [IETF RFC 9110 HTTP Semantics §9.2.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2) | HTTP method 的 idempotent 语义定义；不能据此推断业务跨服务副作用、应用层 nonce/去重、任意 POST 重试均安全；公开规范只引用不复制全文 | K02 K03 K10 |
+| A53 | [Reproducible Builds 项目定义](https://reproducible-builds.org/docs/definition/) | 规定源、构建环境、构建指令一致时预期逐字节相同的制品；重复成功构建、锁文件存在或缓存命中均不自动满足此定义；项目资料许可按页面具体授权核查 | K08 K09 K11 |
+| A54 | [ACM SIGSOFT Empirical Standards](https://github.com/acmsigsoft/EmpiricalStandards) | 多研究方法各有适用的设计/报告标准，尤其对照实验、案例研究、基准测评；不是一套万能固定实验流程或对 Agent 的强制 Release Gate；文字/代码复用许可需具体核对 | K04 K05 K07 K11 |
+
+**来源检索状态**：上述真实公开链接已在 2026-11-21 检查相关页面/章节的存在与核心范围；仍为 `DISCOVERED_SOURCE_REFERENCE_ONLY / SOURCE_CLAIM_NOT_QUALIFIED / LICENSE_COPYING_NOT_GRANTED`。引用 RFC/项目文档仅用于独立表述的基础原理，新增正式 Rule 或代码依赖仍须按所选任务和真实版本独立核验。
 
 ## 版本与版权的关键异常
 
