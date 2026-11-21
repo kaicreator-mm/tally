@@ -179,7 +179,7 @@ software-engineering-knowledge/
 
 - [x] 11 个不同的知识模块 Issue 已创建并真实读取；各自明确了知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与资格边界。
 - [x] 11 个知识库目录分别建成，每个目录含 README + Domain Model + Methods + Agent Skills + Casebook + Validation + Sources（11×7 文件），并保留旧 `Kxx.md` 的导论入口。
-- [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个知识文档、对应 Issue 及 ADS/Tally 现有参考来源。
+- [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个模块目录（77 个专业知识文件）、11 个原始导论、对应 Issue 及 ADS/Tally 来源。
 - [ ] DOC-only 源码差异核查、Markdown 结构/链接与历史权威边界核对，必要的不同会话独立文档 Review；不对无关运行时代码执行全量 CI。
 - [ ] 通过 GitHub 读取固定候选 HEAD/文档 Blob，记录已完成的是文档，未完成的是合格知识与真实 Runtime。
 
@@ -210,8 +210,8 @@ software-engineering-knowledge/
 1. 从现有 Issue/用户请求获得**当前目标、受权业务约束、真实 Task/版本和下一项需要决定的问题**；不知道的材料事实保持 UNKNOWN。
 2. 判断问题属于 L1 需求、L2 设计、L3 具体实现、验证、修复还是交付；阶段可 INLINE/BOUNDED_WORKLIST/EXPLICIT_DAG，但不得为选知识而机械构造 DAG。
 3. 按问题只引入对应模块的方法：L1→K01/K04，L2→K02/K04，L3→K03/K05，失败→K06，跨 Agent→K07，构建/交付→K08；实际触发旧功能兼容/运行故障/成本权衡时再选择 K09/K10/K11。
-4. 检查选用知识的**来源版本、适用条件、反例和仍未知项**，区分 **ADS 已发布约束**、**知识设计候选**、**Tally #299 的未合格实验观察**。未合格知识可辅助探索，不能成为未经授权的 MUST、Task/Review PASS 或 Release 决定。
-5. 使用对应文档附录 A 的输入/输出示例组织工作，但不创造新的强制 Wire Schema。完成实际执行后记录代码/测试/业务结果的准确来源，由现有权限链判定资格。
+4. 检查选用知识的**来源版本、适用条件、反例和仍未知项**，区分 **ADS 已发布约束**、**知识设计候选**、**Tally #299 的未合格实验观察**。未合格知识只可作为明示的不确定研究候选，不能成为未经授权的 MUST、Task/Review PASS 或 Release 决定。
+5. 优先使用对应模块 `agent-skills.md` 的任务级输入、输出与停止条件；`Kxx.md` 附录 A 只是初版教学示例。不得据此创造新强制 Wire Schema。完成实际执行后记录代码/测试/业务结果的准确来源，由现有权限链判定资格。
 
 **贯穿示例：订单取消需求（仅为教学场景，不代表 Host 已运行）**
 
@@ -234,6 +234,6 @@ software-engineering-knowledge/
 - [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
 - [Tally v2.1 家族索引 #269](https://github.com/kaicreator-mm/tally/issues/269)、[v2.1.2 本版本 #521](https://github.com/kaicreator-mm/tally/issues/521)。
 - [Tally #286 ADS→Tally Domain Package](https://github.com/kaicreator-mm/tally/issues/286)、[v2.1.1 实验 #299](https://github.com/kaicreator-mm/tally/issues/299)、[v2 Engineering Business/Workflow #276](https://github.com/kaicreator-mm/tally/issues/276)、[经验候选循环 #60](https://github.com/kaicreator-mm/tally/issues/60)。
-- K01.md–K11.md 维护详细知识正文；各自模块 Issue 维护问题、修订与审核状态。任何实质变更应保持文档与 Issue 同步；README 只维护跨模块索引/兼容性，不复制正文。
+- `K01/`–`K11/` 分别维护可扩展的知识正文；`K01.md`–`K11.md` 仅作为原始导论与兼容入口；各自模块 Issue 维护问题、修订与审核状态。任何实质变更应保持知识库与 Issue 同步；总 README 只维护跨模块索引和兼容性。
 
 **最终区分：** `11 MODULE ISSUES PRESENT + DOCUMENT CANDIDATE` ≠ `11 KNOWLEDGE MODULES SOURCE-QUALIFIED` ≠ `TALLY DOMAIN PACKAGE QUALIFIED` ≠ `END-TO-END AGENT SOFTWARE DEVELOPMENT PASS`.
