@@ -8,7 +8,7 @@
 
 **系统正文第二卷（R3 文档范围独立 ACCEPT_SCOPED @ a39a64a82beae103318da3e45bd09b5efed15ad1）**：[学科深化 02：依赖方向、架构视图与分布式状态](foundations-deep-dive-02.md)。本卷补充基础理论、适用条件、备选技术与可证伪反例；不宣称 165 点均已教材级展开，也不自动取得生产 Source/Consumer 资格。
 
-**R4 逐点学科缺口补齐（独立 ACCEPT_SCOPED @ 42e7ba8bd883ec79736e25ff7c75bdbda1b738b3，旧 SHA 限定文档资格；R5 的 K02 教学边界 P2 修正待增量复核）**：[`K02.F4.3` 架构信任边界/失败模式](focus-f4-3-minimal-failure-and-trust-boundary.md)。这些文件是对课程的定点专业深化，包含机制/条件/反例/STOP；并非获权 Source Claim、CI/Host/Package 或产品发布资格。
+**R4 逐点学科缺口补齐（独立 ACCEPT_SCOPED @ 42e7ba8bd883ec79736e25ff7c75bdbda1b738b3，旧 SHA 限定文档资格；R5 的 K02 Extension import/HostPort 权限边界已独立限定复核通过）**：[`K02.F4.3` 架构信任边界/失败模式](focus-f4-3-minimal-failure-and-trust-boundary.md)。这些文件是对课程的定点专业深化，包含机制/条件/反例/STOP；并非获权 Source Claim、CI/Host/Package 或产品发布资格。
 
 **R6 进阶原理与专业反例（新增、待限定独立审核）**：[质量场景、分布式状态与故障/信任边界推理](advanced-architecture-invariants-and-failure-tradeoffs.md)。对本模块的选定课程 ID 补充可验证的机制、适用前提、替代选项和否证轨迹；相应 [W06–W12 跨模块完整演算](../professional-reasoning-worked-traces-02.md) 均为教学而非实际运行。无 Source Claim、DomainHarness ABI 或生产 Agent/Host 权限资格。
 
