@@ -98,11 +98,20 @@ export function createLinuxHostOperations({defaults,exec=nativeExec}={}){
     async probeProvider(config){
       try{linuxSandboxArgs(config);}catch{return {available:false,reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};}
       const bwrap=await run(config.bwrapPath,['--version']);
-      const codex=await run(config.cliPath,['--version'],{
+      // Check real unprivileged user namespace *before* adding a git worktree.
+      // Version existence alone cannot prove bwrap is usable on this kernel.
+      const namespace=bwrap.code===0?await run(config.bwrapPath,[
+        '--unshare-user','--uid',BWRAP_UID,'--gid',BWRAP_UID,
+        '--unshare-pid','--ro-bind','/usr','/usr',
+        '--proc','/proc','--dev','/dev','/usr/bin/id','-u']):
+        {code:1,stdout:''};
+      const codex=namespace.code===0?await run(config.cliPath,['--version'],{
         env:{PATH:'/usr/local/bin:/usr/bin:/bin',HOME:config.builderProfile,
-          CODEX_HOME:config.codexHome}});
-      return {available:bwrap.code===0&&codex.code===0&&
-        /^codex(?:-cli)?\s+\d+\./.test(codex.stdout.trim())};
+          CODEX_HOME:config.codexHome}}):{code:1,stdout:''};
+      return {available:bwrap.code===0&&namespace.code===0&&
+        namespace.stdout.trim()===BWRAP_UID&&codex.code===0&&
+        /^codex(?:-cli)?\s+\d+\./.test(codex.stdout.trim()),
+        ...(namespace.code!==0?{reason:'BUILDER_CONFINEMENT_UNAVAILABLE'}:{})};
     },
     async prepareWorktree(config){
       if(config.platform!=='linux')throw Error('LINUX_HOST_PLATFORM_MISMATCH');
