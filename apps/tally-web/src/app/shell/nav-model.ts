@@ -86,15 +86,23 @@ export function selectionFromQuery(catalog:{
     projects:readonly {id:string}[]|null;
     versionsByProject?:Readonly<Record<string,readonly {id:string}[]>>|null;
     defaultVersionId?:string|null;
+    /** Current source actually mounted by the qualified Host. */
+    sourceRepository?:string|null;
   }|null,query:Record<string,unknown>):ShellSelectionSeed{
   const projects=catalog?.projects??[];
   const queryProject=typeof query.projectId==='string'?query.projectId:null;
+  // A catalog may list several projects while only ONE Host is mounted.
+  // A hash-link is navigation state, never permission to switch that Host.
   const projectId=queryProject!==null&&
+    (catalog?.sourceRepository===undefined||
+      queryProject===catalog.sourceRepository)&&
     projects.some(project=>project.id===queryProject)?queryProject:null;
   if(projectId===null)return {projectId:null,versionId:null};
   const versions=catalog?.versionsByProject?.[projectId]??[];
   const queryVersion=typeof query.versionId==='string'?query.versionId:null;
   const versionId=queryVersion!==null&&
+    (catalog?.defaultVersionId===undefined||
+      queryVersion===catalog.defaultVersionId)&&
     versions.some(version=>version.id===queryVersion)?queryVersion:null;
   return {projectId,versionId};
 }
