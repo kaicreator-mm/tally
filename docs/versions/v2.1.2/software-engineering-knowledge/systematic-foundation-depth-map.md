@@ -70,7 +70,7 @@ R5 的 K01/K03/K05/K11 通过后，R6 将**剩下七个模块**也各自建立�
 
 七篇进阶正文关联 **53 个原知识 ID**，与 R5 25 个 A 合计 **78/165 个 A 进阶导航点**。不是 78 条独立 Source Claim、78 项完全掌握的教材章节或真实运行 Agent。配套 [W06–W12 七条端到端教学推理](professional-reasoning-worked-traces-02.md) 和此前 W01–W05（共 12 条 W）用于检验综合选择知识的能力，仍全部 **SYNTHETIC_NOT_RUN**。
 
-R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Danilo Sato Parallel Change（Martin Fowler 网站）](external-source-catalog.md) 三项公开正式/作者原始来源线索，R6 当时为 **64 条参考**，R7 另增三项正式学科参考线索，当前合计 67 条。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
+R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Danilo Sato Parallel Change（Martin Fowler 网站）](external-source-catalog.md) 三项公开正式/作者原始来源线索，R6 当时为 **64 条参考**，R7 另增三项正式学科参考线索，**截至 R7 合计 67 条**；R8 另增 A68–A69，**截至 R8 当前 69 条**。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
 
 ## R7：对剩余 87 个知识点先做真实缺口盘点，再有选择地深化（旧 SHA 已审）
 
