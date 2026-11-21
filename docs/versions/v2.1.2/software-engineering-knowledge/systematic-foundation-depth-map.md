@@ -1,8 +1,8 @@
-# K01–K11 学科知识正文：R2–R6 系统学科与进阶推理
+# K01–K11 学科知识正文：R2–R7 系统学科与进阶推理
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_R3_R4_R5_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R6_SEVEN_ADVANCED_CHAPTERS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇新进阶正文与 7 条完整演算仍待增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文**，不是已投入生产的 Package 或源级合格 Claim。
+> **状态：R2_R3_R4_R5_R6_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R7_SELECTED_15_FOUNDATIONAL_CONCEPTS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 新增的 3 篇基础学理正文和 87 点差距盘点仍待增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -54,7 +54,7 @@ R4 独立审核已对这一文档范围接受；K02.focus 的 Extension Import �
 
 **深度判断不应简化为链接数**：一个概念即使有 S+D1+D2+A，仍需对实际命题、适用范围、解释的反例和来源资格独立判断。R5/R6 文件仍是原创专业推导与教学设计，绝不自动创建 Tally 当前 Source Claim 或 DomainHarness ABI。
 
-## R6：七模块原理深化与 W06–W12（待限定独立审核）
+## R6：七模块原理深化与 W06–W12（旧 SHA 已审）
 
 R5 的 K01/K03/K05/K11 通过后，R6 将**剩下七个模块**也各自建立一个原创、条件明确、有计算/故障反例和 STOP 的进阶专业章节，完成 11/11 模块的至少一篇进阶学理正文。原有 165 个概念仍保留，不新造平行知识分类。
 
@@ -70,7 +70,19 @@ R5 的 K01/K03/K05/K11 通过后，R6 将**剩下七个模块**也各自建立�
 
 七篇进阶正文关联 **53 个原知识 ID**，与 R5 25 个 A 合计 **78/165 个 A 进阶导航点**。不是 78 条独立 Source Claim、78 项完全掌握的教材章节或真实运行 Agent。配套 [W06–W12 七条端到端教学推理](professional-reasoning-worked-traces-02.md) 和此前 W01–W05（共 12 条 W）用于检验综合选择知识的能力，仍全部 **SYNTHETIC_NOT_RUN**。
 
-R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Martin Fowler Parallel Change](external-source-catalog.md) 三项公开正式/作者原始来源线索，当前总计 **64 条参考**。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
+R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Danilo Sato Parallel Change（Martin Fowler 网站）](external-source-catalog.md) 三项公开正式/作者原始来源线索，R6 当时为 **64 条参考**，R7 另增三项正式学科参考线索，当前合计 67 条。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
+
+## R7：对剩余 87 个知识点先做真实缺口盘点，再有选择地深化（待独立审核）
+
+在 R6 旧 SHA 已审知识的基线上，原有 **78/165** 课程点包含额外 A 进阶原理链接，剩余 **87 点没有 A**。本轮并未把 87 点当作无知识，而是对每个原课程 ID 审核其现有 S/D1/D2/F 导航与工程深度要求，在 [87 项真实差距盘点](professional-depth-gap-inventory-r7.md) 分为 **15 项本轮深入、30 项下一优先、42 项随具体任务深化**，不制造同质化文档。
+
+| 学科 | R7 新增专业学理正文 | 本轮新增精确 A 课程点 | 深化的真实理论问题 |
+| --- | --- | --- | --- |
+| K01 | [需求双向追溯、聚合与变更传播](K01/advanced-requirements-traceability-and-change-propagation.md) | 4（F1.1、F3.1、F4.2、F5.3） | 目标≠方案、Goal→Rule→Code→Oracle、业务不变量与语义影响 |
+| K03 | [算法合同、循环不变量、类型与形式证明边界](K03/advanced-algorithm-contracts-types-and-formal-claims.md) | 5（F1.1、F1.2、F1.3、F2.2、F4.3） | 有条件的前/后置与终止、排序前提、静态类型不等于外部 Effect |
+| K05 | [Verification/Validation、测试层与 Oracle 资格](K05/advanced-verification-validation-and-oracle-qualification.md) | 6（F1.3、F2.1、F3.1、F3.2、F4.3、F5.3） | 正确实现错误规格、等价类与高阶反例、Mock/真实环境与 Flaky |
+
+R7 新增 **15 个原课程点的 A 链接**，在旧 78 点上达到 **93/165**，另 **72 个点尚无 A**。这属于专业正文导航与课程内容的增量，**不是 93 条已通过产品证明的 Source Claim、不是 93 个机器形式化定理、也不是实际运行的 15 次 Agent 实验**。新来源 A65–A67（NASA 追溯、Dafny 规格/验证、NIST 组合测试）用于原理定位，未授权复制受限制的规范全文，未启动新的 Tally/Harness Runtime ABI。
 
 ## 3. 学科深化要达到的专业标准
 
@@ -80,4 +92,4 @@ R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Martin Fowler Parall
 
 ## 4. 下一步与独立审核边界
 
-R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R2/R3/R4/R5 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容及其具体限定范围内可复用；R6 只复审七篇新深层正文、W06–W12、53 处额外知识导航、3 项新增来源线索及必要 R6 导航增量，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1–R6 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容和限定范围内可复用；R7 只复审三篇专业基础深化、87 点差距盘点、15 处新 A 链接、A65–A67 来源、新导航及 R6 非阻塞两 P2 的精确修复，不重复审核之前未改的专业正文。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
