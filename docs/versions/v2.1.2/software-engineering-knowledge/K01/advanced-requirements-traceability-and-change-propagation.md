@@ -2,7 +2,7 @@
 
 > [K01 系统课程](systematic-syllabus.md) · [R5 需求证据与业务合同](advanced-knowledge-from-evidence-to-contract.md) · [全库覆盖台账](../foundation-concept-coverage-ledger.md)
 >
-> **R7 ORIGINAL_THEORY_CANDIDATE / NO_REAL_REQUIREMENT_TRACE_VERIFIED / NO_POLICY_ADOPTION。** 主要针对原课程中尚无 A 进阶章节的 K01.F1.1、F1.2、F1.3、F3.1、F4.2、F5.3 六个概念，另连接 K01.F4.3。这里构造的是可审核的专业推理，不是要求所有 Tally Task 强制新建需求矩阵。
+> **R7 ORIGINAL_THEORY_CANDIDATE / NO_REAL_REQUIREMENT_TRACE_VERIFIED / NO_POLICY_ADOPTION。** 本轮**精确优先深化的四个原课程点**为 K01.F1.1（Need/Goal）、K01.F3.1（聚合边界）、K01.F4.2（双向追溯）和 K01.F5.3（变更传播/授权）；K01.F1.2（Stakeholder 冲突）、K01.F1.3（领域语言）、K01.F4.3（质量场景）仅作关联语境，**没有取得本轮新增 A 深文导航或完整逐项资格**。这里构造的是可审核的专业推理，不是要求所有 Tally Task 强制新建需求矩阵。
 
 ## 一、需求为何会在实现时丢失语义
 
