@@ -73,7 +73,7 @@ SoftwareEngineeringDomain
 
 **资格分开记录，不造新 Gate**：文档质量经独立审核 `ACCEPT_SCOPED` 不等于 Source Claim 接受；Source Claim 接受不等于选定 Package/Runtime 正确；真实运行无证据时使用原有效 Validation 的 `NOT_RUN/BLOCKED`，不是自造 `MOCK_SCOPED` 等 Gate。外部教材/开源仓库常只适合形成**方法候选**，不能当当前 ADS 项目的 `MUST`。
 
-**R3 课程可查索引**：[165 点逐项课程—深文章节对应台账](foundation-concept-coverage-ledger.md) 现在让完整课程与 22 篇深度正文保持可核对的关系；仅 S 的 6 项继续作为明确知识缺口。该台账是 Markdown 导航，不定义 DomainHarness 0.11.x 的机器知识 Schema；未来 #286 消费版本合法确定后，才可选定小片段并通过实际 ABI/Source/Task 验证。
+**R3/R4 课程可查索引**：[165 点逐项课程—深文章节对应台账](foundation-concept-coverage-ledger.md) 保留 R3 159 项 D1/D2 关联，并为 R4 六项原仅 S 的课程点添加专属 F 文章，合计 165/165 至少有一个深入正文导航（非同等教材深度）。台账属于 Markdown 导航，不定义 DomainHarness 0.11.x 的机器知识 Schema；未来 #286 消费版本合法确定后，才可选定小片段并通过实际 ABI/Source/Task 验证。
 
 **R4 文档增量**：由 [全 165 点覆盖台账](foundation-concept-coverage-ledger.md) 和 [六点聚焦导航](systematic-foundation-depth-map.md) 为 K02/K04/K05/K06/K10 增加六篇明确教学正文；R3 的 159 点 D1/D2 关联与 R4 六项 F 形成 165 点可导航专题深化，**不是**每点独立合格的 Source Claim 或固定机器领域模型 Schema。 [18 组合成判断练习](domain-intelligence-use-cases.md) 与 [48 条 Concept 关系](cross-module-knowledge-relations.md) 都仍是文档层，绝不把 Case/观察和 Concept 关系混为真正 Agent/Host 运行结果。
 
