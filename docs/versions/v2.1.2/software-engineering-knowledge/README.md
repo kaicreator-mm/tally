@@ -57,7 +57,7 @@
 | [K10](K10.md) · [Issue #531](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
 | [K11](K11.md) · [Issue #532](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
 
-**详细文档阅读方式：** 点击上表中的 K01–K11 直接进入相应知识正文。每份都有独立的核心概念表、专业知识章节、三个可执行 Decision Procedures、2–3 个 Agent Skills、完整教学情景、故意错误路线、反模式、可证伪验证矩阵和 ADS 规范引用。**共 11 份约 80–90 KB 文档，不是 11 个简短占位摘要。**
+**详细文档阅读方式：** 点击上表中的 K01–K11 直接进入相应知识正文。每份都有独立的核心概念表、专业知识章节、三个可执行 Decision Procedures、2–3 个 Agent Skills、完整教学情景、故意错误路线、反模式、可证伪验证矩阵和 ADS 规范引用。**11 份模块正文合计约 8.6 万字符，不是 11 个简短占位摘要。**
 
 **K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
 
