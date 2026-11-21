@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / R1_TO_R8_SCOPED_ACCEPT_ON_PRIOR_EXACT_SHAS / R9_FIVE_ADVANCED_CHAPTERS_REVIEW_PENDING / NOT_FROZEN` |
+| Document state | `SOURCE_CANDIDATE / R1_TO_R9_SCOPED_ACCEPT_ON_PRIOR_EXACT_SHAS / R10_KNOWLEDGE_SELECTION_AND_EVALUATION_REVIEW_PENDING / NOT_FROZEN` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,7 +24,7 @@
 - [72 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 18 份版本级文档（含 W01–W22 演算、R7 缺口分析与 R8/R9 来源适用/资格差距矩阵） = 217 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 22 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产） = 221 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
@@ -41,11 +41,12 @@
 - [R7 原 87 点逐项盘点](professional-depth-gap-inventory-r7.md)：将旧 R6 基线无 A 的 87 点分成 15 本轮、30 下一优先、42 由真实范围驱动；**无 A 不等于基础知识缺失或 Source Claim 不合格**。
 - [R8 五篇高优先级专业深化正文](systematic-foundation-depth-map.md#r8五个实质决策学科领域的高优先级深化旧-sha-已审)：K01 来源与有权 Stakeholder、K02 Extension/Host/State/Consumer 正交边界、K07 Agent 协作与上下文、K08 Provenance/Release/回滚、K11 风险与信息价值，新增 14 个旧课程点 A 链接（R8 已在旧 Exact SHA 独立限定接受）。
 - [W13–W17 五条端到端工程判断教学演算](professional-reasoning-worked-traces-03.md)：合计 W01–W17 共 17 条合成演算，不是实际 Agent/Host 操作。
-- [R8 原始资料与专业命题适用性对照](professional-source-applicability-r8.md)：不将规范、经验研究、GitHub 设置与生产 Rule/许可证/运行资格混淆；A68–A69 为新增两条来源发现，现共 69 条参考。
-- [R9 五篇故障/流程/迁移/可靠性专业深化](systematic-foundation-depth-map.md#r9工程故障证据迁移与可靠性的跨模块深化待独立审核)：K03 错误语义/日志/测试发现、K04 风险自适应流程、K06 最小复现/未知 Effect、K09 配置/数据迁移、K10 背压/P95/真实恢复，精确新增 13 个原知识 ID A 导航（待 R9 审核）。
+- [R8 原始资料与专业命题适用性对照](professional-source-applicability-r8.md)：不将规范、经验研究、GitHub 设置与生产 Rule/许可证/运行资格混淆；A68–A69 是 R8 新增两条来源发现，截至 R8 共 69 条；R9 再增三条，当前共 72 条参考。
+- [R9 五篇故障/流程/迁移/可靠性专业深化](systematic-foundation-depth-map.md#r9工程故障证据迁移与可靠性的跨模块深化旧-sha-已审)：K03 错误语义/日志/测试发现、K04 风险自适应流程、K06 最小复现/未知 Effect、K09 配置/数据迁移、K10 背压/P95/真实恢复，精确新增 13 个原知识 ID A 导航（R9 已在旧 Exact SHA 独立限定接受）。
 - [W18–W22 五条完整合成推理演算](professional-reasoning-worked-traces-04.md)：至此 W01–W22 共 22 个教学推理实例，均未真实运行 Agent/Host/CI。
 - [R9 13 项 Source→Claim→Oracle 准入差距分析](professional-source-to-claim-readiness-r9.md)：逐项列出原理来源与真正生产消费所缺的版本、合法权威、独立 Oracle，属于分析候选，不是已获 Source Claim 资格；A70–A72 三项新发现参考使总来源达到 72。
-- [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、R3 两卷主题关联的 159 点、R4 六篇一对一 F 聚焦正文与 R5 25 点 + R6 53 点 + R7 15 点 + R8 14 点 + R9 13 点 A 进阶原理链接（累计 120 点，R9 新增待审）；章节关联不等于 Claim/Rule 资格。
+- **R10 专业知识真正可判别的研究准备**：[五项原始出处→命题/反例/资格档案](professional-primary-source-claim-dossiers-r10.md)（C10-01～05）、[六组最小变量对照/12 道题](professional-knowledge-evaluation-fixtures-r10.md)（EV10-01A～06B）、[合法基线/评分/成本评价协议](professional-knowledge-evaluation-protocol-r10.md)、[跨 Kxx 选择、来源当前性和有权停止手册](professional-knowledge-selection-playbook-r10.md)。这些是**新增四份版本级文档，待 R10 独立审核**，不是额外四个高价值 Topic、十二次真实 Agent 测试或已经运行的 DomainHarness Package；165 原 ID/120 A/72 外部来源/48 Concept 关系/Q18/W22 均不变。
+- [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、R3 两卷主题关联的 159 点、R4 六篇一对一 F 聚焦正文与 R5 25 点 + R6 53 点 + R7 15 点 + R8 14 点 + R9 13 点 A 进阶原理链接（累计 120 点，R9 旧 Exact SHA 已审，R10 不新增 A）；章节关联不等于 Claim/Rule 资格。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
 - [跨模块知识概念关系网](cross-module-knowledge-relations.md)：48 条实际概念关系（R3 42 条 + R4 6 条已获旧 SHA 限定审核），解释需求、架构、实现、测试、维护、可靠性与决策如何组合推理，但不创建 Native Task Dependency。
@@ -131,6 +132,10 @@ software-engineering-knowledge/
 ├── professional-source-applicability-r8.md # R8 来源、候选命题和失效范围
 ├── professional-reasoning-worked-traces-04.md # R9 W18–W22 合成推理演算
 ├── professional-source-to-claim-readiness-r9.md # R9 来源→主张→Oracle 资格缺口
+├── professional-primary-source-claim-dossiers-r10.md # R10 五条原始出处的命题/反例/资格档案
+├── professional-knowledge-evaluation-fixtures-r10.md # R10 六对十二例最小变形问答
+├── professional-knowledge-evaluation-protocol-r10.md # R10 同模型基线与独立评价办法
+├── professional-knowledge-selection-playbook-r10.md # R10 知识检索/有权来源/停止手册
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
