@@ -110,7 +110,7 @@
 | A63 | [Google SRE Workbook: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) / [Error Budget Policy](https://sre.google/workbook/error-budget-policy/) | 有业务范围的 SLI/SLO、告警燃烧率、多个时间窗口和响应成本；示例阈值/错误预算政策仅属于相应服务上下文，绝不转化为所有桌面 App/CLI 的通用运维门槛 | K10 K11 |
 | A64 | [Danilo Sato, *Parallel Change* (13 May 2014), hosted on Martin Fowler's site](https://martinfowler.com/bliki/ParallelChange.html) / [Pramod Sadalage and Martin Fowler, *Evolutionary Database Design* (May 2016)](https://martinfowler.com/articles/evodb.html) | Expand–Migrate–Contract 适用于存在真实版本重叠/消费者迁移需求的场景；既有业务权限、数据有损变换及明确不兼容重写的版本原则优先于该可选模式 | K09 K02 |
 
-**相关科学与工程适用性**：A62 仅支持可复现构建/缓存因果；A63 仅支持故障观测和目标化告警；A64 仅支持适用条件下的演进机制。A01–A61 原先限定事实、版本与授权边界不变。R6 本轮只是增量 **3 个 discovered source leads**，截至 R6 为 **64 个已编目参考**；R7 另增 A65–A67 三条，**当前共 67 条**；没有任何“新增三条正式 Source Claim / 规范条款已接受 / 生产工具已运行”的推断。
+**相关科学与工程适用性**：A62 仅支持可复现构建/缓存因果；A63 仅支持故障观测和目标化告警；A64 仅支持适用条件下的演进机制。A01–A61 原先限定事实、版本与授权边界不变。R6 本轮只是增量 **3 个 discovered source leads**，截至 R6 为 **64 个已编目参考**；R7 另增 A65–A67 三条，**截至 R7 为 67 条**；R8 又增 A68–A69，**截至 R8 为 69 条**；没有任何“新增三条正式 Source Claim / 规范条款已接受 / 生产工具已运行”的推断。
 
 ## R7 基础理论与追溯的新增原始参考（A65–A67）
 
