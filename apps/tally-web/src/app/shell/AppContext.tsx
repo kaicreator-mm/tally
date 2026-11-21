@@ -9,6 +9,8 @@ export interface VersionSummary{id:string;projectId:string;label:string;ref?:str
 export interface ShellCatalog{
   projects:readonly ProjectSummary[]|null;
   versionsByProject:Readonly<Record<string,readonly VersionSummary[]>>|null;
+  /** Selected version reported by the actual mounted Host, never a UI guess. */
+  defaultVersionId?:string|null;
 }
 export interface ShellState{
   locale:Locale;
@@ -42,7 +44,10 @@ export function ShellProvider({children,storage,catalog={
       setProjectId(catalog.projects[0].id);
     if(projectId&&!versionId){
       const versions=catalog.versionsByProject?.[projectId]??[];
-      if(versions.length===1)setVersionId(versions[0].id);
+      if(catalog.defaultVersionId&&
+         versions.some(row=>row.id===catalog.defaultVersionId))
+        setVersionId(catalog.defaultVersionId);
+      else if(versions.length===1)setVersionId(versions[0].id);
     }
   },[catalog,projectId,versionId]);
   const value=useMemo<ShellState>(()=>{
