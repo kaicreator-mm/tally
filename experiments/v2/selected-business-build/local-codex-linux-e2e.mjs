@@ -22,7 +22,8 @@ const required=['TALLY_GITHUB_READ_TOKEN','TALLY_CLAIM_SOURCE_SHA',
   'TALLY_CLAIM_WRITER_ID','TALLY_CLAIM_WRITER_LOGIN','TALLY_CLAIM_COMMENT_ID',
   'TALLY_CLAIM_REGISTRY_PATH','TALLY_LOCAL_WRITESET_SHA256','TALLY_LOCAL_ATTEMPT_ID',
   'TALLY_LOCAL_REPOSITORY_PATH','TALLY_LOCAL_WORKTREE_PATH','TALLY_CODEX_CLI_PATH',
-  'TALLY_LINUX_BWRAP_PATH','TALLY_BUILDER_PROFILE','TALLY_BUILDER_TEMP',
+  'TALLY_LINUX_BWRAP_PATH','TALLY_BUILDER_PROFILE','TALLY_CODEX_HOME',
+  'TALLY_BUILDER_TEMP',
   'TALLY_EMPTY_GIT_CONFIG','TALLY_OPERATOR_HOME','TALLY_HIDDEN_FIXTURE',
   'TALLY_BUILDER_PRINCIPAL','TALLY_BUILDER_SID','TALLY_VERIFIER_SID',
   'TALLY_LOCAL_EVIDENCE_DIR','T06M_TARGET_REPOSITORY','T06M_TARGET_ISSUE_NUMBER',
@@ -32,7 +33,8 @@ const missing=required.filter(k=>!env[k]);
 if(missing.length)throw Error('LINUX_HOST_PINS_MISSING:'+missing.join(','));
 if(env.TALLY_BUILDER_PRINCIPAL!=='linux-bwrap:65534'||
    env.TALLY_BUILDER_SID!=='linux-uid:65534'||
-   env.TALLY_VERIFIER_SID==='linux-uid:65534')
+   env.TALLY_VERIFIER_SID==='linux-uid:65534'||
+   env.TALLY_CODEX_HOME!==join(env.TALLY_BUILDER_PROFILE,'.codex'))
   throw Error('LINUX_BUILDER_IDENTITY_INVALID');
 const prebuilt=await readPrebuiltConsumer({directory:prebuiltDir,env});
 if(!prebuilt.manifest.runtimeDigests?.['local-codex-linux-host.mjs'])
@@ -42,6 +44,7 @@ await mkdir(evidence,{recursive:true,mode:0o700});
 await mkdir(dirname(env.TALLY_HIDDEN_FIXTURE),{recursive:true,mode:0o700});
 await mkdir(env.TALLY_BUILDER_TEMP,{recursive:true,mode:0o700});
 await mkdir(env.TALLY_BUILDER_PROFILE,{recursive:true,mode:0o700});
+await mkdir(env.TALLY_CODEX_HOME,{recursive:true,mode:0o700});
 await writeFile(env.TALLY_HIDDEN_FIXTURE,'held-out-verifier-canary\n',
   {flag:'wx',mode:0o600}).catch(err=>{if(err.code!=='EEXIST')throw err;});
 await writeFile(env.TALLY_EMPTY_GIT_CONFIG,'',{flag:'wx',mode:0o600})
