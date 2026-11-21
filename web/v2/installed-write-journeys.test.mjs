@@ -1104,4 +1104,8 @@ test('Linux Agent Host is explicit and keeps the sealed target and physical runn
       /AGENT_LINUX_SEALED_TARGET_REQUIRED/);
     assert.throws(()=>readInstalledWriteJourneyEnvironment({
       ...env,TALLY_BUILDER_PRINCIPAL:'root'}),/AGENT_LINUX_SANDBOX_PINS_INVALID/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_V2_AGENT_PROVIDER:'zcode',
+      TALLY_V2_AGENT_PROVIDERS_ENABLED:'codex,zcode'}),
+      /AGENT_LINUX_PROVIDER_UNQUALIFIED/);
   });
