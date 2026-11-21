@@ -12,6 +12,8 @@
 
 **R7 专业基础原理补缺（旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 已获独立 ACCEPT_SCOPED，文档范围）**：[算法前/后条件、类型系统和形式证明局限](advanced-algorithm-contracts-types-and-formal-claims.md)，对本模块既有课程中的 **5 个之前没有进阶 A 的知识点**提出受限规格/推导、专业反例与真正需要的 Oracle；不是被证明的运行时 Claim。详见 [R7 原 87 点差距盘点](../professional-depth-gap-inventory-r7.md)，避免按文件数量推断学科完全合格。
 
+**R9 专业基础及可证伪失效机制（新增待限定独立审核）**：[错误可行动语义、隐私日志与受影响测试真实执行](advanced-error-semantics-observability-and-validation-proof.md)，对原系统课程中 **3 个历史高优先知识点**新增准确 A 专业正文关联；[W18–W22](../professional-reasoning-worked-traces-04.md) 是合成推理，[Source→Claim→Oracle 准入差距](../professional-source-to-claim-readiness-r9.md) 明确保留无真实权限/未运行证据。不是实际 Source Claim、Consumer ABI、Agent/Host/Release 资格。
+
 **先了解整个专业学科，再按需选择问题**： [K03 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
