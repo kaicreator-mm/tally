@@ -37,7 +37,7 @@
 | K06.F4.3 | [补丁精确当前性与复核](K06/focus-f4-3-patch-currentness-and-review.md) | Git 影响闭包、受影响回归、增量证据 |
 | K10.F5.1 | [首次运行与配置策略](K10/focus-f5-1-first-run-post-start-configuration.md) | GUI/CLI/Headless 的启动与权限态 |
 
-R4 独立审核已对这一文档范围接受；R5 对 K02.focus 的 Extension/HostPort 概念微修仍待增量审核。本轮只关闭“没有任何深入正文重点覆盖”的六个导航缺口，不改变其他 159 个知识点仍需持续专业深化、来源核验和实际 Domain Intelligence 消费能力验证的事实。
+R4 独立审核已对这一文档范围接受；K02.focus 的 Extension Import 与 HostPort/Effect 语义分离已在 R5 独立审核确认修正；此处不授予运行时 Effect 权限。本轮只关闭“没有任何深入正文重点覆盖”的六个导航缺口，不改变其他 159 个知识点仍需持续专业深化、来源核验和实际 Domain Intelligence 消费能力验证的事实。
 
 ## R5：四篇深层专业推理与五条完整演算（待增量审核）
 
