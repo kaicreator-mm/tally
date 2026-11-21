@@ -107,10 +107,10 @@ software-engineering-knowledge/
 ├── README.md               # v2.1.2 跨模块索引
 ├── systematic-knowledge-architecture.md # 领域语义与知识关系
 ├── knowledge-coverage-and-growth.md # 完整覆盖和增长路径
-├── foundation-concept-coverage-ledger.md # 165 个课程 ID 对应 D1/D2 正文
-├── systematic-foundation-depth-map.md # 首轮 11 篇深入学科章节与专业缺口
+├── foundation-concept-coverage-ledger.md # 165 个课程 ID 对应 S、D1/D2 或 F 正文
+├── systematic-foundation-depth-map.md # 22 篇两卷系统正文 + 6 篇 R4 聚焦补缺
 ├── domain-harness-consumption.md # Tally/Harness 消费与权限边界
-├── cross-module-knowledge-relations.md # 42 条概念/关系桥
+├── cross-module-knowledge-relations.md # 48 条课程概念关联（文档候选）
 ├── domain-intelligence-use-cases.md # Q01–Q18 十八组教学输入与负例
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
