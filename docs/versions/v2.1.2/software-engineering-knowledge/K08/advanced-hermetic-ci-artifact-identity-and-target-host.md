@@ -14,7 +14,7 @@ Hermetic 并非简单“离线执行”或“固定 Docker image”：如果生�
 
 ## 二、为什么“一次流水线 N 个 Workflow 每个 clone”会放大成本
 
-教学场景：19 个 Workflow，每个都有自己的完整 `clone-exact-sha`，每次 clone 平均传输 300MiB。那么单次管线名义传输可达约 5.7GiB，尚未计 Git retry、checkout 和文件系统 IO。**这是演算，不是当前 Woodpecker 真实日志与带宽测量**；如果 VCS Cache/Provider 已在底层复用对象，实际网络成本不能由步骤数量直接推断。
+教学场景：19 个 Workflow，每个都有自己的完整 `clone-exact-sha`，每次 clone 平均传输 300MiB。那么单次管线名义传输可达 5,700MiB（约 5.57GiB），尚未计 Git retry、checkout 和文件系统 IO。**这是演算，不是当前 Woodpecker 真实日志与带宽测量**；如果 VCS Cache/Provider 已在底层复用对象，实际网络成本不能由步骤数量直接推断。
 
 可能的优化设计：
 - 构建系统/CI Provider 支持**共享可信工作区**时：一次获取精确 SHA 并将只读源码/签名 Workspace Artifact 分发给下游多个 Workflow；
