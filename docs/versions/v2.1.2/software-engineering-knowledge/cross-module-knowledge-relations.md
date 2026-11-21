@@ -32,7 +32,7 @@
 | K03.F1.2 | TRADEOFF_WITH | K10.F4.1 | 数据结构选择与真实工作负载、内存/IO 约束共同决定 |
 | K03.F3.1 | CONTEXT_FOR | K05.F2.2 | 并发条件写的风险应指导状态转换正反选例；课程概念并非测试收据 |
 | K03.F3.2 | CONTEXT_FOR | K10.F3.1 | 幂等协议设计需考虑重复请求/ACK 丢失和未知副作用，重试理论概念本身不是反例 |
-| K03.F4.2 | OBSERVED_IN | K06.F3.2 | 资源关闭和远端副作用 UNKNOWN 应分别取证 |
+| K03.F4.2 | CONTEXT_FOR | K06.F3.2 | 资源关闭和远端副作用 UNKNOWN 应分别取证 |
 | K03.F5.2 | EXPLAINS | K10.F2.1 | K10 拥有一般日志政策，K03 负责当前任务真实实现 |
 | K04.F2.1 | CONTEXT_FOR | K07.F1.1 | 真正可独立交付的 Task 才适合多 Agent 分工 |
 | K04.F3.1 | CONTEXT_FOR | K07.F4.2 | 真实前置关系与稳定合同决定合理并行 |
@@ -42,10 +42,10 @@
 | K05.F3.1 | CONTEXT_FOR | K08.F3.2 | K05 负责测试目标充分性，K08 负责真实执行来源 |
 | K05.F4.1 | CONTEXT_FOR | K08.F3.3 | 测试发现结果的判定要结合 Runner/阶段执行证据；阶段概念本身不验证测试发现 |
 | K05.F4.2 | CONTEXT_FOR | K09.F2.1 | Golden 变更时须对照适用的兼容行为与有权规格，并非任何快照都要求版本演进 |
-| K06.F1.2 | OBSERVED_IN | K08.F3.3 | 区分 Build 首个错误与下游 NOT_RUN |
+| K06.F1.2 | CONTEXT_FOR | K08.F3.3 | 区分 Build 首个错误与下游 NOT_RUN |
 | K06.F2.2 | CONTEXT_FOR | K10.F2.2 | 不同故障假设需通过可信日志/链路/状态做安全区分 |
 | K06.F3.2 | CONTEXT_FOR | K10.F3.2 | 在存在可能不可逆副作用时，未知结果须先合法读回再决定重试；非所有诊断都要重试 |
-| K07.F2.2 | OBSERVED_IN | K08.F1.1 | 旧 Agent SourceSHA/Attempt 不覆盖当前 PR/制品事实 |
+| K07.F2.2 | CONTEXT_FOR | K08.F1.1 | 旧 Agent SourceSHA/Attempt 不覆盖当前 PR/制品事实 |
 | K07.F3.1 | CONTEXT_FOR | K04.F2.3 | 消息 ACK 不可替代合法 Task 完成判定；Task 概念本身不是排除条件 |
 | K07.F4.1 | TRADEOFF_WITH | K11.F5.2 | 共享写集冲突成本应计入并行收益 |
 | K08.F2.3 | CONTEXT_FOR | K05.F4.1 | 缓存复用判定应结合实际测试发现、源码与依赖身份；非测试已执行证明 |
