@@ -170,6 +170,9 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(!/^[a-z][a-z0-9-]{0,63}$/.test(provider)||
      !enabledProviders.includes(provider))
     throw new TypeError('AGENT_PROVIDER_PIN_INVALID');
+  // Other Provider adapters have not proven POSIX sandbox confinement.
+  if(platform==='linux'&&provider!=='codex')
+    throw new TypeError('AGENT_LINUX_PROVIDER_UNQUALIFIED');
   return Object.freeze({platform,claim:Object.freeze({...claim,
       commentId:claim.commentId,
       timeoutMs:Number.isSafeInteger(timeoutMs)&&timeoutMs>=60000&&
