@@ -76,3 +76,34 @@ export function groupKeyOf(item:NavItem):string|null{
     if(group.items.includes(item))return group.key;
   return null;
 }
+/** Deep-link selection restore (R157 #513): the shell itself writes
+ * projectId&versionId into hash links (e.g. Product → Task workbench), so a
+ * multi-project catalog must restore that selection on entry. With 0/1
+ * projects the existing auto-select keeps working; a query naming an unknown
+ * project/version stays fail-closed (no fake selection). */
+export interface ShellSelectionSeed{projectId:string|null;versionId:string|null;}
+export function selectionFromQuery(catalog:{
+    projects:readonly {id:string}[]|null;
+    versionsByProject?:Readonly<Record<string,readonly {id:string}[]>>|null;
+    defaultVersionId?:string|null;
+    /** Current source actually mounted by the qualified Host. */
+    sourceRepository?:string|null;
+  }|null,query:Record<string,unknown>):ShellSelectionSeed{
+  const projects=catalog?.projects??[];
+  const queryProject=typeof query.projectId==='string'?query.projectId:null;
+  // A catalog may list several projects while only ONE Host is mounted.
+  // A hash-link is navigation state, never permission to switch that Host.
+  const projectId=queryProject!==null&&
+    (catalog?.sourceRepository===undefined||
+      queryProject===catalog.sourceRepository)&&
+    projects.some(project=>project.id===queryProject)?queryProject:null;
+  if(projectId===null)return {projectId:null,versionId:null};
+  const versions=catalog?.versionsByProject?.[projectId]??[];
+  const queryVersion=typeof query.versionId==='string'?query.versionId:null;
+  const versionId=queryVersion!==null&&
+    (catalog?.sourceRepository===undefined||
+      catalog?.defaultVersionId===undefined||
+      queryVersion===catalog.defaultVersionId)&&
+    versions.some(version=>version.id===queryVersion)?queryVersion:null;
+  return {projectId,versionId};
+}
