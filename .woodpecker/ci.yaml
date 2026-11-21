@@ -122,6 +122,10 @@ steps:
       - node --check experiments/v2/selected-business-build/local-codex-linux-e2e.mjs
       - node --check experiments/v2/selected-business-build/local-codex-linux-host.mjs
       - node --test experiments/v2/selected-business-build/local-codex-linux-host.test.mjs
+      # One bounded first-run -> Product -> Mock Codex/Git -> release/maintenance
+      # journey. This exercises actual Linux HTTP controllers; no live GitHub
+      # token, model, native keyring or independent Host is implied.
+      - node web/v2/mock-functional-acceptance.mjs
       - 'node web/v2/journey-browser-e2e.mjs --no-browser > "${TMPDIR:-/tmp}/tally-v2-no-browser.json"'
       - |
         grep -q '"ok": true' "${TMPDIR:-/tmp}/tally-v2-no-browser.json"
