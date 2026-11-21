@@ -13,7 +13,7 @@
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
-**读者定位：** 本版本包括 **11 份独立模块知识正文（K01.md–K11.md）+ 本总索引 README**。每份知识正文负责该领域的概念、原理、决策程序、Agent Skill、正反/边界案例、Workflow 消费与 ADS 来源；对应 GitHub Issue 负责范围、讨论、变更和验收跟踪。README 负责跨模块关系、版本规则和导航，**不复制各模块完整内容**。目前所有文档都属于设计候选，尚不代表知识合格或生产运行。
+**读者定位：** 本版本包括 **11 份独立模块知识正文（K01.md–K11.md）+ 本总索引 README**。每份知识正文负责该领域的概念、原理、决策程序、Agent Skill、正反/边界案例、Workflow 消费与 ADS 来源，并提供一个非正式 Wire Schema 的 Agent 调用示例；对应 GitHub Issue 负责范围、讨论、变更和验收跟踪。README 负责跨模块关系、版本规则和导航，**不复制各模块完整内容**。目前所有文档都属于设计候选，尚不代表知识合格或生产运行。
 
 > 重要历史：此前 Tally [#287–#296](https://github.com/kaicreator-mm/tally/issues/287) `[SUPERSEDED] [Harness Knowledge] K00–K09` 曾采用**不同的编号与分类**。这里的 K01–K11 仅在 v2.1.2 的当前知识设计范围内定义，不复活旧任务，不继承其已被废弃的生产者假设或任务状态。
 
@@ -137,7 +137,7 @@
 
 ## 6. 原始证据与现状（不能假装已合格）
 
-- **ADS 已有强规范资产**：`DEVELOPMENT_WORKFLOW.md`, `ARCHITECTURE_DESIGN_STANDARD.md`, `IMPLEMENTATION_QUALITY_STANDARD.md`, `TASK_DECOMPOSITION_STANDARD.md`, `TASK_DAG_GOVERNANCE_STANDARD.md`, `TESTING_STANDARD.md`, `VALIDATION_STANDARD.md`, `CI_EXECUTION_STANDARD.md`, `GITHUB_AGENT_INTERACTION_PROTOCOL.md`, `INCIDENT_RECOVERY_FEEDBACK_STANDARD.md` 等，在 [ADS repository standards](https://github.com/kaicreator-mm/ai-development-standard/tree/main/standards)。各模块 Issue 的 §5 分别列出真实规范所有者。
+- **ADS 已有强规范资产**：`DEVELOPMENT_WORKFLOW.md`, `ARCHITECTURE_DESIGN_STANDARD.md`, `IMPLEMENTATION_QUALITY_STANDARD.md`, `TASK_DECOMPOSITION_STANDARD.md`, `TASK_DAG_GOVERNANCE_STANDARD.md`, `TESTING_STANDARD.md`, `VALIDATION_STANDARD.md`, `CI_EXECUTION_STANDARD.md`, `GITHUB_AGENT_INTERACTION_PROTOCOL.md`, `INCIDENT_RECOVERY_FEEDBACK_STANDARD.md` 等，在 [ADS repository standards](https://github.com/kaicreator-mm/ai-development-standard/tree/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards)。各模块 Issue 的 §5 分别列出真实规范所有者。
 - **ADS 三层图原设计**：[#1100](https://github.com/kaicreator-mm/ai-development-standard/issues/1100)、[#1096](https://github.com/kaicreator-mm/ai-development-standard/issues/1096)、[#1081](https://github.com/kaicreator-mm/ai-development-standard/issues/1081)、[#931](https://github.com/kaicreator-mm/ai-development-standard/issues/931)；新增三级工程扩展 [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 尚未正式版本采纳。
 - **Tally 最小 Business + Workflow**：[Tally #276](https://github.com/kaicreator-mm/tally/issues/276) 的 v2 工作复用了现有 Business/Intent/Workflow Bridge；不等于已包含此 11 模块的独立 Domain Data。
 - **Tally v2.1.1 知识实验**：[Tally #299](https://github.com/kaicreator-mm/tally/issues/299) 在 [WIP exact source](https://github.com/kaicreator-mm/tally/tree/706a3ec33c2ba7ba3b60116471139113edb7a6cb/docs/versions/v2.1.1) 完成实验性知识图谱，但结论是 `EXPERIMENT_WORK_COMPLETED_WITH_LIMITATIONS / KNOWLEDGE_ASSET_NOT_QUALIFIED`。图谱 806 个记录、106 原始 PENDING Claims、11 个 PARTIAL views、29 OPEN Coverage Gaps、0 ACCEPTED ReviewDecision、0 真正的 Counterexample；真实人工 G4 审查没有完成。**不能自动晋升这些内容到本版本的生产 Package**。
@@ -171,9 +171,37 @@
 4. **真实效果验证**：一次完整的面向用户的工程任务，保留有界修复、Review 和必要 Release 证据；对照无辅助 Agent 和知识辅助 Agent 的结果，再决定是否扩大。
 5. **扩展 K09–K11**：对应客户或项目实际需要时再择优进行消费资格工作；保留未来与其他 ADS 规范版本并存的升级路径。
 
+## 9. 最小 Agent 知识选用与真实消费者示例（设计草案）
+
+知识文件中的 Procedure/Skill 只有在**当前任务问题确实需要**时才被选择，不将 11 份文档完整灌入每个 Agent 的上下文。Tally 的 Engineering Business/Workflow 保持真实任务和权限权威，知识模块只提供可追溯的工程决策方法。
+
+**最小知识选用次序**（非新调度器、非强制新 Schema）：
+
+1. 从现有 Issue/用户请求获得**当前目标、受权业务约束、真实 Task/版本和下一项需要决定的问题**；不知道的材料事实保持 UNKNOWN。
+2. 判断问题属于 L1 需求、L2 设计、L3 具体实现、验证、修复还是交付；阶段可 INLINE/BOUNDED_WORKLIST/EXPLICIT_DAG，但不得为选知识而机械构造 DAG。
+3. 按问题只引入对应模块的方法：L1→K01/K04，L2→K02/K04，L3→K03/K05，失败→K06，跨 Agent→K07，构建/交付→K08；实际触发旧功能兼容/运行故障/成本权衡时再选择 K09/K10/K11。
+4. 检查选用知识的**来源版本、适用条件、反例和仍未知项**，区分 **ADS 已发布约束**、**知识设计候选**、**Tally #299 的未合格实验观察**。未合格知识可辅助探索，不能成为未经授权的 MUST、Task/Review PASS 或 Release 决定。
+5. 使用对应文档附录 A 的输入/输出示例组织工作，但不创造新的强制 Wire Schema。完成实际执行后记录代码/测试/业务结果的准确来源，由现有权限链判定资格。
+
+**贯穿示例：订单取消需求（仅为教学场景，不代表 Host 已运行）**
+
+| 步骤 | 选用内容 | Agent 必须产出或保留 | 必须避免的伪结论 |
+| --- | --- | --- | --- |
+| 需求 | K01 + 必要时 K04 | 允许取消的状态、未知退款政策、正反验收及真实来源 | “用户说加按钮”就意味着可取消所有订单 |
+| 架构 | K02 | 状态写入 Owner、对外 API 错误合同及备选设计取舍 | 做了一个 Demo 就自动 L2 Freeze |
+| 实施 | K03 + K04 | 当前 Task 写集内的状态转换、失败/重复调用处理 | 代码提交就等于业务完成 |
+| 验证 | K05 | 从规则导出的测试 Oracle、runner 真实发现/执行、必要 API→DB 负例 | Mock 绿灯等于真实用户 E2E |
+| 修复（按需） | K06 | 首个失败点、可证伪的根因、最小合法修复与当前回归 | 无限重试或复用旧 CI 的错误诊断 |
+| 协作与交付 | K07 + K08 | 精确候选版本、独立 Reviewer 来源、真实集成/打包或明确 NOT_RUN | Agent 交接 ACK 或 PR Merge 自动变 Release |
+| 后续演化（按需） | K09/K10/K11 | 旧行为保护、诊断/恢复以及真实成本/效用反馈 | 无真实测量就声称通用质量提升 |
+
+**已核对的 ADS 基线：** 发布提交 [v4.19.0 `933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`](https://github.com/kaicreator-mm/ai-development-standard/commit/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c)。11 个模块文档内引用的 `standards/` 与 `prompts/` 文件覆盖 **29 个不同源路径，29/29 在此提交真实存在**，且正文链接已由可变 `main` 改为该固定版本。这里只证明文件身份、可访问性及设计范围，**不证明每项知识陈述已完成独立 Source→Claim 审核**。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft PR #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 依旧属于未采纳的后继设计，只有未来经合法采纳后才能改变其规范权威。
+
+---
+
 ## 9. ADS 与 Tally 来源导航
 
-- [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/main/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
+- [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
 - [Tally v2.1 家族索引 #269](https://github.com/kaicreator-mm/tally/issues/269)、[v2.1.2 本版本 #521](https://github.com/kaicreator-mm/tally/issues/521)。
 - [Tally #286 ADS→Tally Domain Package](https://github.com/kaicreator-mm/tally/issues/286)、[v2.1.1 实验 #299](https://github.com/kaicreator-mm/tally/issues/299)、[v2 Engineering Business/Workflow #276](https://github.com/kaicreator-mm/tally/issues/276)、[经验候选循环 #60](https://github.com/kaicreator-mm/tally/issues/60)。
 - K01.md–K11.md 维护详细知识正文；各自模块 Issue 维护问题、修订与审核状态。任何实质变更应保持文档与 Issue 同步；README 只维护跨模块索引/兼容性，不复制正文。
