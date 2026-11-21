@@ -343,6 +343,10 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
         SID.test(config.builderSid??'')))return {...base,state:'AGENT_NOT_EXECUTED',
       reason:'BUILDER_CONFINEMENT_UNAVAILABLE',agentLaunch:false,replayFixture:false,
       candidateTree:null,candidateCommit:null,process:null};
+    if(config.platform==='linux'&&(providerId!=='codex'||agentProvider))
+      return {...base,state:'AGENT_NOT_EXECUTED',reason:'PROVIDER_DISABLED',
+        agentLaunch:false,replayFixture:false,candidateTree:null,
+        candidateCommit:null,process:null};
     if(!PROVIDER_ID.test(providerId)||(providerId!=='codex'&&!ATTEMPT.test(taskId??''))||
       (providerId!=='codex'&&
         (!agentProvider||agentProvider.id!==providerId||
