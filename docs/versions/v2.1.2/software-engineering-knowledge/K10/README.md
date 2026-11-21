@@ -11,12 +11,16 @@
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
 | `K10.FIRST_RUN` | 交互应用与 Headless 启动配置如何区分？ | 应用形态/业务授权/错误输出 | K10→K03/K08 | 不能所有 CLI 都弹设置 UI |
-| `K10.ACTIONABLE_ERROR` | 用户与维护者分别需要哪些错误信息？ | 失败类型/相关 ID/下一步 | K10→K03 | 日志不能泄漏密钥 |
-| `K10.UNKNOWN_EFFECT` | 超时却可能提交的业务操作如何恢复？ | 提交点/幂等键/状态回读 | K10→K06 | 超时≠未执行 |
+| [`K10.ACTIONABLE_ERROR`](topics/ACTIONABLE_ERROR.md) | 用户与维护者分别需要哪些错误信息？ | 失败类型/相关 ID/下一步 | K10→K03 | 日志不能泄漏密钥 |
+| [`K10.UNKNOWN_EFFECT`](topics/UNKNOWN_EFFECT.md) | 超时却可能提交的业务操作如何恢复？ | 提交点/幂等键/状态回读 | K10→K06 | 超时≠未执行 |
 | `K10.INCIDENT_RECOVERY` | 恢复事件如何保留故障历史和验证？ | Incident 事实/恢复/验证 | K10→K06 | Mitigation≠Verification |
-| `K10.PERFORMANCE_BASELINE` | 没有同条件测量怎么判断优化有效？ | 负载/平台/缓存/指标 | K10→K11 | 无基线不能报 3 倍优化 |
+| [`K10.PERFORMANCE_BASELINE`](topics/PERFORMANCE_BASELINE.md) | 没有同条件测量怎么判断优化有效？ | 负载/平台/缓存/指标 | K10→K11 | 无基线不能报 3 倍优化 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前优先深化 3 个对真实工程结果影响较大的专题：[`K10.ACTIONABLE_ERROR`](topics/ACTIONABLE_ERROR.md)、[`K10.UNKNOWN_EFFECT`](topics/UNKNOWN_EFFECT.md)、[`K10.PERFORMANCE_BASELINE`](topics/PERFORMANCE_BASELINE.md)。每篇只解释当前问题的决策机制、反例和来源，其余方法继续直接使用已有九文件知识库；当前文档 Topic 不代表已激活生产知识。
 
 ## 目录和何时使用
 

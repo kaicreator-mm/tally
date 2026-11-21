@@ -10,13 +10,17 @@
 
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
-| `K07.ROLE_SEPARATION` | Reviewer 与 Writer 如何保持真正独立？ | 会话/写入历史/Exact HEAD | K07→K05 | 同账户不必然同会话 |
+| [`K07.ROLE_SEPARATION`](topics/ROLE_SEPARATION.md) | Reviewer 与 Writer 如何保持真正独立？ | 会话/写入历史/Exact HEAD | K07→K05 | 同账户不必然同会话 |
 | `K07.MESSAGE_ACK` | IPC ACK 与 Task/Claim PASS 有何区别？ | Attempt/ArtifactRef/任务事实 | K07→K08 | 通信成功不等于业务成功 |
-| `K07.STALE_RESULT` | 旧 Agent 回包对应过期 HEAD 时怎么办？ | 关联 ID/源版本/当前 Task | K07→K06 | 不能覆盖当前候选 |
+| [`K07.STALE_RESULT`](topics/STALE_RESULT.md) | 旧 Agent 回包对应过期 HEAD 时怎么办？ | 关联 ID/源版本/当前 Task | K07→K06 | 不能覆盖当前候选 |
 | `K07.PARALLEL_ASSIGN` | 什么工作真正值得多 Agent 并行？ | 独立成果/写集/交接成本 | K07→K04/K11 | 剩余 Token 不是并行理由 |
 | `K07.TOOL_EXECUTION` | Transport 与 Executor/权限如何分离？ | 通道、工具权限、外部副作用 | K07→K08 | 不得凭 SDK 例子冒充 Tally API |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前优先深化 2 个对真实工程结果影响较大的专题：[`K07.ROLE_SEPARATION`](topics/ROLE_SEPARATION.md)、[`K07.STALE_RESULT`](topics/STALE_RESULT.md)。每篇只解释当前问题的决策机制、反例和来源，其余方法继续直接使用已有九文件知识库；当前文档 Topic 不代表已激活生产知识。
 
 ## 目录和何时使用
 

@@ -10,13 +10,17 @@
 
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
-| `K08.PIPELINE_STAGES` | 依赖安装、Build、Test、打包结果如何分离？ | Runner 步骤/Exit/源码 SHA | K08→K05/K06 | Install PASS≠Build PASS |
-| `K08.CLONE_EFFICIENCY` | 如何避免多 Workflow 反复完整 Clone？ | Provider 隔离/真实网络日志 | K08→K11 | 只看 YAML 不认定节省比例 |
+| [`K08.PIPELINE_STAGES`](topics/PIPELINE_STAGES.md) | 依赖安装、Build、Test、打包结果如何分离？ | Runner 步骤/Exit/源码 SHA | K08→K05/K06 | Install PASS≠Build PASS |
+| [`K08.CLONE_EFFICIENCY`](topics/CLONE_EFFICIENCY.md) | 如何避免多 Workflow 反复完整 Clone？ | Provider 隔离/真实网络日志 | K08→K11 | 只看 YAML 不认定节省比例 |
 | `K08.SOURCE_PROVENANCE` | CI 和 Artifact 具体属于哪个 SHA/环境？ | 源/Config/Runner/Artifact digest | K08→K05 | 旧 CI PASS 不覆盖新 HEAD |
-| `K08.DELIVERY_READINESS` | 用户实际安装启动配置是否可用？ | 真实制品/平台/用户入口 | K08→K10 | PR merge 不等于 Release |
+| [`K08.DELIVERY_READINESS`](topics/DELIVERY_READINESS.md) | 用户实际安装启动配置是否可用？ | 真实制品/平台/用户入口 | K08→K10 | PR merge 不等于 Release |
 | `K08.RELEASE_BOUNDARY` | 哪个 Owner 允许冻结/发布制品？ | 当前授权/证据/版本合同 | K08→K09 | Package Candidate≠Release |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前优先深化 3 个对真实工程结果影响较大的专题：[`K08.PIPELINE_STAGES`](topics/PIPELINE_STAGES.md)、[`K08.CLONE_EFFICIENCY`](topics/CLONE_EFFICIENCY.md)、[`K08.DELIVERY_READINESS`](topics/DELIVERY_READINESS.md)。每篇只解释当前问题的决策机制、反例和来源，其余方法继续直接使用已有九文件知识库；当前文档 Topic 不代表已激活生产知识。
 
 ## 目录和何时使用
 

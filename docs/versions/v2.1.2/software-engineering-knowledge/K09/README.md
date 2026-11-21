@@ -11,12 +11,16 @@
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
 | `K09.REFACTOR_CONTRACT` | 结构重构是否保持外部行为？ | 旧接口/保留行为/测试 | K09→K05 | 更新 Golden 不掩盖回归 |
-| `K09.API_EVOLUTION` | 新 API 怎样避免破坏旧消费者？ | 兼容窗口/旧新客户 | K09→K02 | 不能无权宣告 Breaking Change |
-| `K09.DATA_MIGRATION` | 数据迁移中断、重启、回滚怎么办？ | 旧数据/升级/恢复路径 | K09→K10 | Fresh install≠Upgrade |
+| [`K09.API_EVOLUTION`](topics/API_EVOLUTION.md) | 新 API 怎样避免破坏旧消费者？ | 兼容窗口/旧新客户 | K09→K02 | 不能无权宣告 Breaking Change |
+| [`K09.DATA_MIGRATION`](topics/DATA_MIGRATION.md) | 数据迁移中断、重启、回滚怎么办？ | 旧数据/升级/恢复路径 | K09→K10 | Fresh install≠Upgrade |
 | `K09.DEPRECATION` | 什么时候能合法移除旧能力？ | 消费者/支持版本/Owner 决议 | K09→K01 | 不假设永久兼容 |
 | `K09.TECH_DEBT` | 技术债是否值得本轮偿还？ | 缺陷复发/演化成本/收益 | K09→K11 | 美观不足不能自动全仓重构 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前优先深化 2 个对真实工程结果影响较大的专题：[`K09.API_EVOLUTION`](topics/API_EVOLUTION.md)、[`K09.DATA_MIGRATION`](topics/DATA_MIGRATION.md)。每篇只解释当前问题的决策机制、反例和来源，其余方法继续直接使用已有九文件知识库；当前文档 Topic 不代表已激活生产知识。
 
 ## 目录和何时使用
 

@@ -10,13 +10,17 @@
 
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
-| `K11.TRADEOFF` | 多个方案如何比较价值/成本/风险？ | 用户结果/备选/真实后果 | K11→K02 | 最少 Token 不等于最优 |
-| `K11.ASSURANCE_FLOOR` | 小 diff 是否仍需高风险测试？ | 影响/不可逆性/现行保证 | K11→K05 | 省成本不能取消强制保护 |
+| [`K11.TRADEOFF`](topics/TRADEOFF.md) | 多个方案如何比较价值/成本/风险？ | 用户结果/备选/真实后果 | K11→K02 | 最少 Token 不等于最优 |
+| [`K11.ASSURANCE_FLOOR`](topics/ASSURANCE_FLOOR.md) | 小 diff 是否仍需高风险测试？ | 影响/不可逆性/现行保证 | K11→K05 | 省成本不能取消强制保护 |
 | `K11.STOP_WORK` | 什么时候停止研究、重复 Review/CI？ | 当前成果/实质新证据 | K11→K04 | 不能无界延长版本 |
 | `K11.PARALLEL_ROI` | 并行 Agent 的协作成本是否高于收益？ | 各写集/合并/Reviewer/时序 | K11→K07 | Agent 数越多未必更快 |
-| `K11.EMPIRICAL_EVAL` | 知识辅助 Agent 是否真的提高软件开发质量？ | 同任务/基线/独立验收/成本 | K11→K05 | 问答胜率≠真实工程提升 |
+| [`K11.EMPIRICAL_EVAL`](topics/EMPIRICAL_EVAL.md) | 知识辅助 Agent 是否真的提高软件开发质量？ | 同任务/基线/独立验收/成本 | K11→K05 | 问答胜率≠真实工程提升 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前优先深化 3 个对真实工程结果影响较大的专题：[`K11.TRADEOFF`](topics/TRADEOFF.md)、[`K11.ASSURANCE_FLOOR`](topics/ASSURANCE_FLOOR.md)、[`K11.EMPIRICAL_EVAL`](topics/EMPIRICAL_EVAL.md)。每篇只解释当前问题的决策机制、反例和来源，其余方法继续直接使用已有九文件知识库；当前文档 Topic 不代表已激活生产知识。
 
 ## 目录和何时使用
 
