@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 64 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61、R6 A62–A64：Bazel Hermeticity、Google SRE SLO 告警、Fowler Parallel Change 等）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 67 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61、R6 A62–A64、R7 A65–A67：NASA Requirements Traceability、Dafny 形式验证和 NIST 组合测试等）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -111,6 +111,18 @@
 | A64 | [Danilo Sato, *Parallel Change* (13 May 2014), hosted on Martin Fowler's site](https://martinfowler.com/bliki/ParallelChange.html) / [Pramod Sadalage and Martin Fowler, *Evolutionary Database Design* (May 2016)](https://martinfowler.com/articles/evodb.html) | Expand–Migrate–Contract 适用于存在真实版本重叠/消费者迁移需求的场景；既有业务权限、数据有损变换及明确不兼容重写的版本原则优先于该可选模式 | K09 K02 |
 
 **相关科学与工程适用性**：A62 仅支持可复现构建/缓存因果；A63 仅支持故障观测和目标化告警；A64 仅支持适用条件下的演进机制。A01–A61 原先限定事实、版本与授权边界不变。R6 本轮只是增量 **3 个 discovered source leads**，当前一共 **64 个已编目参考**；没有任何“新增三条正式 Source Claim / 规范条款已接受 / 生产工具已运行”的推断。
+
+## R7 基础理论与追溯的新增原始参考（A65–A67）
+
+> 本轮仅核对**出版机构网页/出版方原始说明**的出处与适用范围。NASA 规定限 NASA 相应项目和版本，不移植成 Tally 必须执行的合规 Gate；Dafny 官方文档是形式验证工具知识，不代表 Tally 已运行或证明任何代码；NIST 组合测试研究为测试设计原则，不保证任何指定产品系统所有缺陷均被发现。
+
+| ID | 原始来源与版次 | 可以依据的专业内容与失效边界 | 归属 |
+| --- | --- | --- | --- |
+| A65 | [NASA Software Engineering Handbook, Revision D — SWE-052 Bidirectional Traceability](https://swehb.nasa.gov/spaces/SWEHBVD/pages/102695427/SWE-052%2B-%2BBidirectional%2BTraceability) | 有权上层需求→软件需求→设计/测试的可溯源关联思想，正反向影响检查；NASA 具体条款只约束适用的 NASA 项目，Tally 不据此强制所有 Task 建繁复 Trace 矩阵 | K01 K05 K09 |
+| A66 | [Dafny official Language Reference](https://dafny.org/latest/DafnyRef/DafnyRef.html) / [Microsoft Research Dafny](https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/) | 前置/后置条件、不变量、终止度量、形式验证相对给定规格的范围；规格错误、环境交互和外部 Effect 不会自动被数学证明修复；具体 Dafny 版本/Verifier/求解器未运行 | K03 K05 |
+| A67 | [NIST Automated Combinatorial Testing for Software](https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software) / [Frequently Asked Questions](https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software/faqs) | t-way/组合覆盖的适用范围、参数交互与覆盖准则；覆盖率本身不认证业务 Expected/特定平台/远端 Effect，已知更高阶约束仍须专项负例 | K05 K03 |
+
+以上 **3 条只是新的发现来源**，连同 A01–A64 共 67 条参考线索；无实际运行时工具、Product Rule、软件文档复制许可或正式 Source Claim 审核。R7 如需将某条原理变成对 Agent/Package 起效的知识，仍要在目标具体任务中核定来源、版本、适用条件、反例及合法消费者。
 
 ## 版本与版权的关键异常
 
