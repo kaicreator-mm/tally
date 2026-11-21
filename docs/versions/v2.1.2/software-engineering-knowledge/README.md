@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / R3_SCOPED_ACCEPT_ON_OLDER_SHA / SYSTEM_CURRICULUM_PENDING_INCREMENTAL_REVIEW / NOT_FROZEN` |
+| Document state | `SOURCE_CANDIDATE / SYSTEMIC_BOK_R1_SCOPED_ACCEPT_ON_PRIOR_SHA / R2_NEW_DELTA_REVIEW_PENDING / NOT_FROZEN` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,13 +24,14 @@
 - [49 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 26 篇已选重点 Topic + 11 个原始导论 + 9 份版本级文档**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 11 篇首轮学科深化正文 + 26 篇已选重点 Topic + 11 个原始导论 + 10 份版本级文档 = 168 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
 > **本版本的目标不是只管理四条高价值候选 Claim。** 完整的 **K01–K11 系统知识库**以 SWEBOK/关联学科的专业概念、工程原理、语义关系和实践方法为底座，通过 **11 份系统学科课程（每模块 5 群×3 点，共 165 个基础知识点）** 提供覆盖；原 56 条问题索引和 26 篇深入 Topic 是便于 Agent 按需选用的高价值**投影**，并不限制知识广度。
 
 - [系统知识架构](systematic-knowledge-architecture.md)：学科/BOK→模块→知识群→Concept/Claim/Method/Rule/Skill/Case/Oracle/Source/Consumer 的关联，条件/冲突/UNKNOWN 和唯一语义所有者。
+- [K01–K11 第一轮 11 篇系统学科正文与后续基础缺口](systematic-foundation-depth-map.md)：每模块新增一篇解释专业机制、适用条件、方案权衡与可反驳案例的原创学科深化；不是将 165 点均宣称教材级完成或 Source-qualified。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
 - [跨模块知识概念关系网](cross-module-knowledge-relations.md)：42 条实际概念关系，解释需求、架构、实现、测试、维护、可靠性与决策如何组合推理，但不创建 Native Task Dependency。
@@ -93,7 +94,7 @@
 | [K10 知识库](K10/README.md) · [初版导论](K10.md) · [Issue #531](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
 | [K11 知识库](K11/README.md) · [初版导论](K11.md) · [Issue #532](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
 
-**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次知识库保留 **11×9=99 个模块基础文件**，再为 11 个模块补充各自系统课程（合计 **165 个基础知识点**），并在实际需求驱动下额外深化 **26 个问题级专题**（不是 26 个已合格知识资产）。
+**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次知识库保留 **11×9=99 个模块基础文件**，再为 11 个模块补充各自系统课程（合计 **165 个基础知识点**）及首轮 **11 篇系统学科深化正文**，并在实际需求驱动下额外深化 **26 个问题级专题**（不是 26 个已合格知识资产）。
 
 **K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
 
@@ -104,6 +105,7 @@ software-engineering-knowledge/
 ├── README.md               # v2.1.2 跨模块索引
 ├── systematic-knowledge-architecture.md # 领域语义与知识关系
 ├── knowledge-coverage-and-growth.md # 完整覆盖和增长路径
+├── systematic-foundation-depth-map.md # 首轮 11 篇深入学科章节与专业缺口
 ├── domain-harness-consumption.md # Tally/Harness 消费与权限边界
 ├── cross-module-knowledge-relations.md # 42 条概念/关系桥
 ├── domain-intelligence-use-cases.md # 六组教学输入与负例
@@ -111,6 +113,7 @@ software-engineering-knowledge/
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
     ├── systematic-syllabus.md # 五群×三项系统学科知识主干
+    ├── foundations-deep-dive-01.md # 学科深化正文：机制/取舍/正反例，非生产资格
     ├── disciplinary-foundations.md # 外部学科/标准与适用机制
     ├── external-practices.md # 外部企业/GitHub 案例与可证伪工程做法
     ├── domain-model.md     # 术语/实体/规则/语义关系
