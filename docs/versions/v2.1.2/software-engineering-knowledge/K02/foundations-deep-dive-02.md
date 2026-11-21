@@ -40,4 +40,6 @@ Context 视图看系统与环境；组件视图看职责与调用依赖；数据
 
 **可观察教学任务**：要求比较内存 Job 与持久 Job 两种图，明确真实 Owner、提交点、外部 Effect、可运行的中断/重放反例、选定方案要牺牲的质量属性。禁止从模型检验工具可用性推断已形式证明。
 
+**未知与停止条件**：真实业务提交条件、目标数据库隔离级别或外部 Effect 的权威来源缺失时，输出 `UNKNOWN/STOP_FOR_AFFECTED_DECISION`；可以提出形式模型与失败注入候选，但不能将未运行的 TLC/DB 测试写成 PASS。独立技术探索不因此阻塞不受影响的实现。
+
 **来源线索**：[A06 ISO 42010](../external-source-catalog.md)、[A15 SEI ATAM](../external-source-catalog.md)、[A50 TLA+ Tools](../external-source-catalog.md)、[A51 PostgreSQL 18 隔离](../external-source-catalog.md)。若未来要用模型检验，必须另行提供真实 Spec、运行参数和原始反例。
