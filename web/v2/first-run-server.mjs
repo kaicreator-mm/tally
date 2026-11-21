@@ -58,6 +58,17 @@ export async function startFirstRunServer({
   const key=randomBytes(24).toString('hex');
   let origin='',active=null,activeSource=null,busy=false,lastError=null;
   const submittedDrafts=new Set();
+  // The action key is minted by the CURRENT selected ALM loopback server.
+  // It grants only same-origin CSRF protection, not K/Claim/Agent/Release.
+  // All re-entry points (initial add/select, setup status/link, /app redirect)
+  // must use this same URL or a restarted UI silently loses action ability.
+  const installedUrl=address=>{
+    const url=new URL('/app',address.origin);
+    if(typeof address.actionKey==='string'&&
+       /^[a-f0-9]{48}$/.test(address.actionKey))
+      url.searchParams.set('actionKey',address.actionKey);
+    return url.href;
+  };
   const activate=async ({settings,identity,legacy=false})=>{
     // The selected UI project is NOT itself a Host grant. Preserve existing
     // operator-pinned effects only for the exact same authorized source;
@@ -71,12 +82,13 @@ export async function startFirstRunServer({
       {...settings,TALLY_SETUP_URL:origin+'/setup'}});
     const old=active;active=next;activeSource=identity;lastError=null;
     if(old)await old.close().catch(()=>{});
-    return next.address.origin+'/app';
+    return installedUrl(next.address);
   };
   const handleRequest=async(req,res)=>{
     const response=(status,type,data)=>{
       res.writeHead(status,{'content-type':type,'cache-control':'no-store',
-        'x-content-type-options':'nosniff','content-security-policy':
+        'x-content-type-options':'nosniff','referrer-policy':'no-referrer',
+        'content-security-policy':
         "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"});
       res.end(data);
     };
@@ -93,11 +105,12 @@ export async function startFirstRunServer({
         html.replace('<script type="module"',
           '<meta name="tally-setup-key" content="'+key+'"><script type="module"'));
     if(req.method==='GET'&&url.pathname==='/api/setup/status'){
-      return json(200,{...(await store.status()),activeUrl:active?active.address.origin+'/app':null,
+      return json(200,{...(await store.status()),activeUrl:active?installedUrl(active.address):null,
         activeSource,lastError});
     }
     if(req.method==='GET'&&(url.pathname==='/'||url.pathname==='/app')){
-      res.writeHead(302,{location:active?active.address.origin+'/app':'/setup'});
+      res.writeHead(302,{location:active?installedUrl(active.address):'/setup',
+        'referrer-policy':'no-referrer'});
       return res.end();
     }
     if(req.method==='POST'&&

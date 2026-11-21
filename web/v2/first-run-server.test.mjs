@@ -156,3 +156,43 @@ test('corrupt catalog returns bounded 500 instead of crashing loopback server',a
     assert.equal(stillRunning.status,200);
   }finally{await service.close();}
 });
+
+
+test('R156 actual ALM action key survives first-run, setup reentry and source switch',async()=>{
+  const store=state(),keys=['a'.repeat(48),'b'.repeat(48)];
+  let count=0;
+  const service=await startFirstRunServer({env:{},catalog:store,
+    startConfigured:async()=>({address:{
+      origin:'http://127.0.0.1:65530',actionKey:keys[count++]},
+      close:async()=>{}})});
+  try{
+    const origin=service.address.origin;
+    const html=await (await fetch(origin+'/setup')).text();
+    const setupKey=/<meta name="tally-setup-key" content="([^"]+)"/.exec(html)?.[1];
+    assert.ok(setupKey);
+    const selected=async(path,body)=>{
+      const response=await fetch(origin+path,{method:'POST',headers:{
+        origin,'content-type':'application/json','x-tally-setup-key':setupKey},
+        body:JSON.stringify(body)});
+      assert.equal(response.status,200);
+      return response.json();
+    };
+    const first=await selected('/api/setup/add',{
+      repository:'org/first',ref:'main',token:'github_pat_test_TEST_ONLY'});
+    assert.equal(first.activeUrl,'http://127.0.0.1:65530/app?actionKey='+keys[0]);
+    const status1=await (await fetch(origin+'/api/setup/status')).json();
+    assert.equal(status1.activeUrl,first.activeUrl);
+    assert.doesNotMatch(JSON.stringify(status1),/github_pat/);
+    const jump1=await fetch(origin+'/app',{redirect:'manual'});
+    assert.equal(jump1.headers.get('location'),first.activeUrl);
+    assert.equal(jump1.headers.get('referrer-policy'),'no-referrer');
+    const second=await selected('/api/setup/add',{
+      repository:'org/second',ref:'main',token:'github_pat_test_TEST_ONLY'});
+    assert.equal(second.activeUrl,'http://127.0.0.1:65530/app?actionKey='+keys[1]);
+    assert.notEqual(second.activeUrl,first.activeUrl);
+    assert.equal((await (await fetch(origin+'/api/setup/status')).json()).activeUrl,
+      second.activeUrl);
+    assert.equal((await fetch(origin+'/setup')).headers.get('referrer-policy'),
+      'no-referrer');
+  }finally{await service.close();}
+});

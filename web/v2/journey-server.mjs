@@ -411,6 +411,7 @@ export function createAlmServer(config,{run,intakeHost,intakeSealedDispatch,
   const server=http.createServer(async(req,res)=>{
     const origin=`http://127.0.0.1:${server.address().port}`;
     const send=(status,type,value)=>{res.writeHead(status,{'content-type':type,'cache-control':'no-store',
+      'referrer-policy':'no-referrer',
       'content-security-policy':"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'"});
       res.end(value);};
     try{
