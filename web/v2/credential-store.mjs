@@ -38,9 +38,25 @@ export function runCredentialCommand(program,args,input=''){
 }
 function runPowershell(script,input){
   if(process.platform!=='win32')throw new Error('WINDOWS_CREDENTIAL_STORE_REQUIRED');
-  const encoded=Buffer.from(script,'utf16le').toString('base64');
-  return runCredentialCommand('powershell.exe',
-    ['-NoProfile','-NonInteractive','-EncodedCommand',encoded],input);
+  return new Promise((resolve,reject)=>{
+    const encoded=Buffer.from(script,'utf16le').toString('base64');
+    const child=spawn('powershell.exe',['-NoProfile','-NonInteractive',
+      '-EncodedCommand',encoded],{stdio:['pipe','pipe','ignore'],
+      windowsHide:true});
+    const chunks=[];let bytes=0;let done=false;
+    child.on('error',()=>{if(!done){done=true;reject(new Error('CREDENTIAL_STORE_UNAVAILABLE'));}});
+    child.stdout.on('data',chunk=>{
+      bytes+=chunk.length;
+      if(bytes>65536){child.kill();return;}
+      chunks.push(chunk);
+    });
+    child.on('close',code=>{
+      if(done)return;done=true;
+      if(code!==0||bytes>65536)return reject(new Error('CREDENTIAL_STORE_FAILED'));
+      resolve(Buffer.concat(chunks).toString('utf8').trim());
+    });
+    child.stdin.end(input);
+  });
 }
 /** Preserve Windows CurrentUser DPAPI ciphertext, including old credentials. */
 export const windowsDpapi=Object.freeze({
