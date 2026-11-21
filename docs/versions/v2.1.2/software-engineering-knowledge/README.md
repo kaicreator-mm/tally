@@ -1,0 +1,178 @@
+<!-- tally-v212-se-knowledge-version-document-20261121 -->
+# Tally v2.1.2 — Software Engineering Knowledge K01–K11
+## 版本知识设计与领域 Domain Package 组织文档
+
+| 字段 | 取值 |
+| --- | --- |
+| Version | **v2.1.2 — design/documentation candidate** |
+| Version Product Issue | [Tally #521](https://github.com/kaicreator-mm/tally/issues/521) |
+| Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
+| ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
+| Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
+| Document state | `SOURCE_CANDIDATE / NOT_REVIEWED / NOT_FROZEN` |
+| Knowledge qualification | `NOT_QUALIFIED` |
+| Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
+
+**读者定位：** 本版本文档整合 **11 个独立软件工程知识模块的设计**，明确其领域结构、必要交接、优先级、Agent 决策与验证场景。每个模块的**详细知识和完整正反例归其 GitHub Issue 所有**；本文件是跨模块索引、统一领域模型与演进/验收入口，避免维护两份互相漂移的独立知识真相。
+
+> 重要历史：此前 Tally [#287–#296](https://github.com/kaicreator-mm/tally/issues/287) `[SUPERSEDED] [Harness Knowledge] K00–K09` 曾采用**不同的编号与分类**。这里的 K01–K11 仅在 v2.1.2 的当前知识设计范围内定义，不复活旧任务，不继承其已被废弃的生产者假设或任务状态。
+
+## 1. 产品与领域范围
+
+### 1.1 本版本要解决的问题
+
+让 Tally 在真实软件开发工作中，能够选择**适用、可信、可验证**的软件工程知识，辅助 Agent 完成：
+
+```text
+用户需求及业务约束
+  → L1 Requirements + optional DAG-P
+  → L2 Solution Design + optional DAG-A
+  → L3 Detailed Design + Implementation DAG-I
+  → actual build / tests / repair / integration / delivery
+  → real task outcomes and experience feedback
+```
+
+**ADS 的定位是 Agent 开发实验、实践和可复用工程方法来源**；它产出受证据限定的规范、流程、失败/成功案例和研究结果。**Tally 的定位是 Software Engineering Domain App**：其 Engineering Domain Package 组合选定的 Workflow、Knowledge、DecisionProcedure、Skill、Rule、Validation、Case，Engineering Business/Agent 将这些用于实际项目。被开发出的软件在运行时无需依赖 ADS/Tally。**只讨论 ADS 与 Tally**，不增设第三方生产平台或新编译器。
+
+### 1.2 明确暂缓的两个专项
+
+1. **代码库理解和逆向分析**：不是本版本独立知识领域；真实 Task 执行仍必须读取必要源码、调用入口和当前证据，不得伪造代码理解。
+2. **软件安全与供应链知识专项**：本版本不编制安全工程大全或供应链风险/扫描 Pipeline；已发布 ADS 的适用权限、敏感数据、依赖质量与安全限制仍有效，不因专项推迟而取消。
+
+不进行全软件工程百科、任意领域 Agent 平台、泛化知识图谱生成器、额外调度器、新 Workflow Engine、独立 Task/Claim/Release 权威，也不把 11 个 Issue 都解释成运行时代码任务。
+
+## 2. 十一个知识模块：唯一工作项索引
+
+| Module | Knowledge module | Priority | Main workflow | 知识重点 | 典型决策与 Skill |
+| --- | --- | --- | --- | --- | --- |
+| [K01](https://github.com/kaicreator-mm/tally/issues/522) | Requirements Engineering & Business Modeling | P0 | L1 / DAG-P | 需求与业务规则、验收条件 | 需求澄清/冲突判定 |
+| [K02](https://github.com/kaicreator-mm/tally/issues/523) | Architecture & System Design | P0 | L2 / DAG-A | 架构驱动、模块/数据/接口设计 | ADR 与方案权衡 |
+| [K03](https://github.com/kaicreator-mm/tally/issues/524) | Detailed Design & Implementation | P0 | L3 / DAG-I | 算法、状态、错误及可维护代码 | 任务级详细设计/合法 Builder |
+| [K04](https://github.com/kaicreator-mm/tally/issues/525) | Task Planning & Decomposition | P0 | L1/L2/L3 | 按复杂度选择 INLINE/WORKLIST/DAG | 分解真实依赖及写集 |
+| [K05](https://github.com/kaicreator-mm/tally/issues/526) | Software Testing & Quality Verification | P0 | L3/Review | Oracle、契约、边界与真实测试层 | 选测试/验证测试是否实际执行 |
+| [K06](https://github.com/kaicreator-mm/tally/issues/527) | Debugging & Root-cause Repair | P0 | L3/Repair | 错误分类、首个失败点、根因与恢复 | 有界诊断/修复 |
+| [K07](https://github.com/kaicreator-mm/tally/issues/528) | Multi-Agent Engineering Collaboration | P0 | All phases | 角色/会话/任务交接、交互通道与共享写冲突 | 合法 Agent Handoff/独立审核 |
+| [K08](https://github.com/kaicreator-mm/tally/issues/529) | Build, Integration & Delivery | P0 | Integration/Delivery | 项目构建、CI、集成/发布产物与证据 | 最小有效 CI + 正式交付核对 |
+| [K09](https://github.com/kaicreator-mm/tally/issues/530) | Software Evolution & Refactoring | P1 | Maintenance | 兼容性、重构、迁移、历史行为保护 | 变更影响/兼容决策 |
+| [K10](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
+| [K11](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
+
+**K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
+
+## 3. 统一知识建模：Workflow 与可复用知识分开
+
+### 3.1 软件工程 Domain Package 的逻辑资产
+
+| Asset category | 职责 | 来源与执行边界 |
+| --- | --- | --- |
+| **Domain Concepts / Glossary / Relations** | Requirement、Rule、Invariant、Design/ADR、Task、Contract、Test/Oracle、Evidence、Case、Decision/Skill 等概念及可追溯关系 | 不发明第二套 GitHub Task/Review 状态；可复用现有 Tally #276 Domain Data |
+| **Workflow** | L1 需求、L2 方案设计、L3 实现、Review/Verification、Repair、Integration/Delivery、Maintenance 的有界活动/输入输出 | 定义领域工作推进方法，不是 Agent Executor、独立调度引擎或 Effect Permit |
+| **Knowledge / Patterns / Counter-patterns** | 理论/原则/设计取舍、适用边界、正例、反例、失败经验 | 区分规范事实、可复用经验、待证假设，不靠 LLM 自报晋升 |
+| **Decision Procedures** | 具体选择方法：需求是否明确、怎样设计、任务如何拆、选择何种测试、如何根因修复 | 结果是受证据约束的建议；需要业务/权限决策时仍交给原有权威 |
+| **Skills / Templates / Recipes** | 可直接给 Agent 的任务级操作方法、输入输出结构和停止点 | 不是外部写入授权；适用源与版本必须可恢复 |
+| **Rules / Policies / Validation** | 确定性约束、必要证据、准入/独立性及工程质量底线 | 按现行 ADS pinned standard 与 Tally 现有治理，不创建第二个 Gate |
+| **Case / Experience / Evidence** | ADS 真实实验及 Tally 开发结果，保留失败、反例、未测量和版本身份 | 不能将一个案例的 PASS 自动变成跨项目 MUST 规则 |
+
+同一 ADS 文档可提供不同类型资产，但**单一语义拥有唯一知识来源与维护权威**，Workflow 只能引用这些资产，不应把同一套要求复制到每个工作流文件中。
+
+### 3.2 每个知识资产至少应能说明什么
+
+本版本不是强制发明机器 Schema。为便于后续 Tally 筛选，知识资产的可读记录至少能恢复：
+
+- **Identity/Provenance**：模块编号、ADS source/ref/exact revision、是否规范已采纳、原始实验/Review/Case 来源及当前性；
+- **Question & purpose**：它解决哪个真实工程问题、所处范围、Owner 和允许/禁止的决策；
+- **Applicability / boundaries**：场景、前置条件、不适用情况、竞争解释、仍未知的事实；
+- **Method/Procedure**：决策步骤、输入/输出、失败处理、人工决策时机、停止规则；
+- **Positive & negative**：至少一条来源有支撑的典型正例与一条可识别的失效/反例；
+- **Consumer binding**：哪个 Tally Workflow/Business 行为/Agent Skill 能使用，以及使用后能观察到的具体变化；
+- **Qualification**：独立/授权来源审查、相关测试/负例、真实任务结果、版本与残余风险。
+
+没有证据的内容只能记为 **EXPERIMENTAL / PROPOSED / UNKNOWN**；被选择和发布的状态不能由字段值或单个 Agent 自报产生。
+
+## 4. Workflow 组合与跨模块依赖
+
+### L1 — Requirements
+
+- 主要使用 K01（需求与业务规则）、K04（工作深度/研究依赖）、K07（角色/协作）；需要质量/成本权衡时引用 K11。
+- 目标是可验证的 Product/Requirement/Acceptance 基线与显式 UNKNOWN。L1 的研究 DAG-P 只在真实依赖存在时采用。
+
+### L2 — Solution Design
+
+- 主要使用 K02（架构与权衡）、K01（已确认需求）、K04（设计任务 DAG-A）、K07（多设计者交接）。
+- 有旧功能或持久化迁移时引用 K09；若性能、可用性等质量属性是关键驱动，引用 K10。
+- Demo 只能证明原 Demo 的假设；设计/业务冻结仍由现有权威负责。
+
+### L3 — Detailed Design, Coding, Repair
+
+- 主要使用 K03（详细设计/实现）、K04（DAG-I 和原子任务）、K05（测试 Oracle）、K06（根因修复）、K07（Agent 协作）、K08（构建集成）。
+- 实际 Code/Build/Test/Review 证据绑定 exact source、执行环境、当前 Task/Claim 与现有校验/发布标准。
+- 旧代码兼容性/可维护性变更选择 K09，日志/恢复/性能按需要选择 K10。
+
+### Delivery & Improvement
+
+- K08 负责将真实可运行产物、CI/Host/集成/用户关键路径证据组织为交付判断；K06/K09/K10 负责变更或运行反馈；K11 评估交付质量和真实总成本。
+- ADS 从经审查的真实成功/失败实例中继续迭代方法，Tally 在未来任务选择版本化知识；不得使运行中的 Task 被无声更新。
+
+**注意：以上为知识调用/内容的语义依赖，不是 GitHub native Task Dependency。** 三个 DAG 视图分别为 P、A、I；实现 Task 的真实依赖和 Claim 仍由现有 native GitHub/ADS 规范掌握。不为跨阶段每项 Knowledge 创建工作图边。
+
+## 5. 每模块的验收焦点与反例索引
+
+| Module | 实际任务中必须能观察到的正确性/反例 | 详细说明 |
+| --- | --- | --- |
+| K01 | 用明确规则生成可观察验收，而非猜测业务决策 | [模块详细设计 #522](https://github.com/kaicreator-mm/tally/issues/522) |
+| K02 | 证据支持设计选型、失败/权衡清晰，不把 Demo 当生产成功 | [模块详细设计 #523](https://github.com/kaicreator-mm/tally/issues/523) |
+| K03 | 真实变更契约 + 改动测试/构建而非虚假 PASS | [模块详细设计 #524](https://github.com/kaicreator-mm/tally/issues/524) |
+| K04 | 能识别虚假依赖、共享 Writer 冲突和不必要 Issue | [模块详细设计 #525](https://github.com/kaicreator-mm/tally/issues/525) |
+| K05 | 正确区分 Mock、本地、CI、Host、Release 证据 | [模块详细设计 #526](https://github.com/kaicreator-mm/tally/issues/526) |
+| K06 | 真实可复现、根因修复且有回归证据，能停止重复修复 | [模块详细设计 #527](https://github.com/kaicreator-mm/tally/issues/527) |
+| K07 | Git/GitHub 首选但不唯一；ACK ≠ Task/Claim/Review PASS | [模块详细设计 #528](https://github.com/kaicreator-mm/tally/issues/528) |
+| K08 | 真实 build/test/集成/安装证据，成本与失败可诊断 | [模块详细设计 #529](https://github.com/kaicreator-mm/tally/issues/529) |
+| K09 | 不破坏原消费者，迁移失败/回滚有验证 | [模块详细设计 #530](https://github.com/kaicreator-mm/tally/issues/530) |
+| K10 | 真实故障有可操作错误；性能结果有基线 | [模块详细设计 #531](https://github.com/kaicreator-mm/tally/issues/531) |
+| K11 | 避免无价值的多 Agent、过量 CI，同时不降低必要保证 | [模块详细设计 #532](https://github.com/kaicreator-mm/tally/issues/532) |
+
+这些案例用于以后可复用知识的最小可证伪验收，**不是声称已经运行**。如果真实源码、Host、权限或人工源审查条件不具备，应输出 `NOT_RUN / UNKNOWN`，而不是在文档中模拟 `PASS`。
+
+## 6. 原始证据与现状（不能假装已合格）
+
+- **ADS 已有强规范资产**：`DEVELOPMENT_WORKFLOW.md`, `ARCHITECTURE_DESIGN_STANDARD.md`, `IMPLEMENTATION_QUALITY_STANDARD.md`, `TASK_DECOMPOSITION_STANDARD.md`, `TASK_DAG_GOVERNANCE_STANDARD.md`, `TESTING_STANDARD.md`, `VALIDATION_STANDARD.md`, `CI_EXECUTION_STANDARD.md`, `GITHUB_AGENT_INTERACTION_PROTOCOL.md`, `INCIDENT_RECOVERY_FEEDBACK_STANDARD.md` 等，在 [ADS repository standards](https://github.com/kaicreator-mm/ai-development-standard/tree/main/standards)。各模块 Issue 的 §5 分别列出真实规范所有者。
+- **ADS 三层图原设计**：[#1100](https://github.com/kaicreator-mm/ai-development-standard/issues/1100)、[#1096](https://github.com/kaicreator-mm/ai-development-standard/issues/1096)、[#1081](https://github.com/kaicreator-mm/ai-development-standard/issues/1081)、[#931](https://github.com/kaicreator-mm/ai-development-standard/issues/931)；新增三级工程扩展 [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 尚未正式版本采纳。
+- **Tally 最小 Business + Workflow**：[Tally #276](https://github.com/kaicreator-mm/tally/issues/276) 的 v2 工作复用了现有 Business/Intent/Workflow Bridge；不等于已包含此 11 模块的独立 Domain Data。
+- **Tally v2.1.1 知识实验**：[Tally #299](https://github.com/kaicreator-mm/tally/issues/299) 在 [WIP exact source](https://github.com/kaicreator-mm/tally/tree/706a3ec33c2ba7ba3b60116471139113edb7a6cb/docs/versions/v2.1.1) 完成实验性知识图谱，但结论是 `EXPERIMENT_WORK_COMPLETED_WITH_LIMITATIONS / KNOWLEDGE_ASSET_NOT_QUALIFIED`。图谱 806 个记录、106 原始 PENDING Claims、11 个 PARTIAL views、29 OPEN Coverage Gaps、0 ACCEPTED ReviewDecision、0 真正的 Counterexample；真实人工 G4 审查没有完成。**不能自动晋升这些内容到本版本的生产 Package**。
+- **Tally Package 资格候选**：[Tally #286](https://github.com/kaicreator-mm/tally/issues/286) 仍为 deferred planning candidate。任何后续生产知识消费都需要挑选受约束的**少量**合格内容，不能先假设已覆盖 11 个模块。
+
+## 7. 本版本范围与验收分两层，防止伪完成
+
+### A. 本次 **设计/文档交付**（本 PR 处理）
+
+- [ ] 11 个不同的知识模块 Issue 创建并真实读取，每个都含知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与合格条件。
+- [ ] 一个 v2.1.2 版本 Issue 和一个版本 README，索引 K01–K11 和 ADS/Tally 现有参考来源。
+- [ ] DOC-only 源码差异核查、Markdown 结构/链接与历史权威边界核对，必要的不同会话独立文档 Review；不对无关运行时代码执行全量 CI。
+- [ ] 通过 GitHub 读取固定候选 HEAD/文档 Blob，记录已完成的是文档，未完成的是合格知识与真实 Runtime。
+
+### B. **以后合格领域能力与真实 Agent 开发**（尚未授权实施）
+
+- 按 K01–K08 挑选当前真实任务必需的小范围，Source→Knowledge Claim→Rule/Decision/Skill→Workflow 消费→真实代码/测试/Host/Review 的精确引用链。
+- 知识来源与适用条件合格、正反例可证伪、有独立/相应人类来源审查（适用的权威条件）以及合法访问/版权处理。
+- 用真实项目的一个正例 + 至少一个负例/修复路径证明：L1 需求 → L2 设计 → L3 实现/测试/交付闭环；Agent 能区分 UNKNOWN 与已证事实。
+- 以可比较的、预先明确标准的真实编码 Task 评估相对于“直接用 Agent”的需求完成、遗漏、回归、无效测试、修复次数、Review 返工、延迟与成本。**不能用只完成知识图谱问答的实验数据代替编码结果**。
+- K09–K11 按实际项目要求逐步消费，不成为首个 MVP 的无条件阶段阻塞。当前版本文档建设不产生原本没有的 Release/Host/Task 权限。
+
+## 8. 版本实施边界与推荐顺序
+
+**Documentation planning order, not GitHub native blocked-by:**
+
+1. **本轮**：建立版本 #521 与知识 Issue #522–#532、统一版本 README 和文档审查；只证明目录与具体知识设计完整。
+2. **未来实际产品选择**：从 K01/K02/K03/K04/K05/K06 选择能闭环的最小知识/DecisionProcedure/Skill，K07/K08 复用现有工程协作与构建交付能力。
+3. **必要的具体能力缺口**：只有当前 Tally Business/Agent/Domain Package 真实消费者缺少时，才提出最小代码改动、合法 Task DAG/环境/Host 验证；不能仅根据本 Issue 的 TODO 派发 11 个编码 Agent。
+4. **真实效果验证**：一次完整的面向用户的工程任务，保留有界修复、Review 和必要 Release 证据；对照无辅助 Agent 和知识辅助 Agent 的结果，再决定是否扩大。
+5. **扩展 K09–K11**：对应客户或项目实际需要时再择优进行消费资格工作；保留未来与其他 ADS 规范版本并存的升级路径。
+
+## 9. ADS 与 Tally 来源导航
+
+- [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/main/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
+- [Tally v2.1 家族索引 #269](https://github.com/kaicreator-mm/tally/issues/269)、[v2.1.2 本版本 #521](https://github.com/kaicreator-mm/tally/issues/521)。
+- [Tally #286 ADS→Tally Domain Package](https://github.com/kaicreator-mm/tally/issues/286)、[v2.1.1 实验 #299](https://github.com/kaicreator-mm/tally/issues/299)、[v2 Engineering Business/Workflow #276](https://github.com/kaicreator-mm/tally/issues/276)、[经验候选循环 #60](https://github.com/kaicreator-mm/tally/issues/60)。
+- 所有 K01–K11 具体知识修订必须回写各自模块 Issue；本 README 同步索引/兼容性而不复制其完整正文。
+
+**最终区分：** `11 MODULE ISSUES PRESENT + DOCUMENT CANDIDATE` ≠ `11 KNOWLEDGE MODULES SOURCE-QUALIFIED` ≠ `TALLY DOMAIN PACKAGE QUALIFIED` ≠ `END-TO-END AGENT SOFTWARE DEVELOPMENT PASS`.
