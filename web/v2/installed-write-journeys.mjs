@@ -93,7 +93,8 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   const timeoutMs=Number(env.TALLY_V2_AGENT_TIMEOUT_MS);
   const requiredPins=platform==='linux'?
     CONSUMER_PINS.filter(name=>name!=='TALLY_CODEX_SANDBOX_PATH').concat(
-      'TALLY_LINUX_BWRAP_PATH','TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR'):CONSUMER_PINS;
+      'TALLY_LINUX_BWRAP_PATH','TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR',
+      'TALLY_CODEX_HOME'):CONSUMER_PINS;
   const missing=requiredPins.filter(name=>
     name==='TALLY_LOCAL_REPOSITORY_PATH'&&
       env.TALLY_V2_AGENT_SCRIPT_ROOT&&
@@ -104,7 +105,8 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
       (env.TALLY_BUILDER_PRINCIPAL!=='linux-bwrap:65534'||
        env.TALLY_BUILDER_SID!=='linux-uid:65534'||
        env.TALLY_VERIFIER_SID==='linux-uid:65534'||
-       !/^\/usr\/[^\s:]+$/.test(env.TALLY_LINUX_BWRAP_PATH??'')))
+       !/^\/usr\/[^\s:]+$/.test(env.TALLY_LINUX_BWRAP_PATH??'')||
+       env.TALLY_CODEX_HOME!==join(env.TALLY_BUILDER_PROFILE,'.codex')))
     throw new TypeError('AGENT_LINUX_SANDBOX_PINS_INVALID');
   const scriptRoot=env.TALLY_V2_AGENT_SCRIPT_ROOT??
     env.TALLY_LOCAL_REPOSITORY_PATH;
