@@ -8,6 +8,8 @@
 
 | 文档 | 具体内容与消费时机 |
 | --- | --- |
+| [disciplinary-foundations.md](disciplinary-foundations.md) | SWEBOK/ISO/专业学科方法与具体 Agent 决策、适用反例 |
+| [external-practices.md](external-practices.md) | 工程实践项目、操作步骤及可证伪任务样例 |
 | [domain-model.md](domain-model.md) | 领域概念、不变量、语义关系与错误解释；第一次判断问题时读 |
 | [engineering-methods.md](engineering-methods.md) | 工程方法与决策矩阵；需要比较方案/选择手段时读 |
 | [agent-skills.md](agent-skills.md) | Agent Skills、输入输出合同与直接可用提示词；真实 Task 时读 |
