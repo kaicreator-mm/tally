@@ -13,11 +13,18 @@
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
-**读者定位：** 本版本现包含 **11 个模块知识库目录（K01/–K11/，每个目录 7 份文件）+ 1 个跨模块总索引 README**。原 `K01.md`–`K11.md` 只保留初版设计导论与兼容入口；可维护的专业知识位于每个模块目录的领域模型、工程方法/决策程序、Agent Skills、案例库、验证和来源文档。GitHub Issue 管范围、讨论与审核状态。全部仍为知识设计候选，不代表 Tally 生产 Domain Package 已实现或知识合格。
+**读者定位：** 本版本现包含 **11 个模块知识库目录（K01/–K11/，每个目录 9 份文件）+ 1 个跨模块总索引 README，另有外部来源与学科覆盖目录**。原 `K01.md`–`K11.md` 只保留初版设计导论与兼容入口；可维护的专业知识位于每个模块目录的领域模型、工程方法/决策程序、Agent Skills、案例库、验证和来源文档。GitHub Issue 管范围、讨论与审核状态。全部仍为知识设计候选，不代表 Tally 生产 Domain Package 已实现或知识合格。
 
 > 重要历史：此前 Tally [#287–#296](https://github.com/kaicreator-mm/tally/issues/287) `[SUPERSEDED] [Harness Knowledge] K00–K09` 曾采用**不同的编号与分类**。这里的 K01–K11 仅在 v2.1.2 的当前知识设计范围内定义，不复活旧任务，不继承其已被废弃的生产者假设或任务状态。
 
 > **独立审核 R1 的关键限定（P1-02）**：下述统一 `DAG-P/DAG-A/DAG-I` 与 `INLINE/BOUNDED_WORKLIST/EXPLICIT_DAG` 是 `TALLY_V212_PROPOSED_KNOWLEDGE`，来源于 [ADS #1100 历史候选](https://github.com/kaicreator-mm/ai-development-standard/issues/1100)及[仍为 Draft 的 ADS #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384)，**不是**已发布 ADS v4.19.0 的完整强制三图协议。当前有效路径是 L1 可选 Evidence DAG/依赖映射，L2 按现有 Architecture/Research Demo 做有界研究，正式 implementation Task DAG 及 live dependency 归 GitHub 原权威。下文教学示例仅是未来 Tally Domain Package 设计，不授予新任务状态。
+
+## 本版本学科与外部实践导航（2026-11-21）
+
+- [43 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
+- [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
+- **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
+- 当前真实文件形态：**11×9=99 个模块专题文档 + 11 个原始导论 + 本 README、来源目录、学科覆盖图**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 1. 产品与领域范围
 
@@ -59,7 +66,7 @@
 | [K10 知识库](K10/README.md) · [初版导论](K10.md) · [Issue #531](https://github.com/kaicreator-mm/tally/issues/531) | Operability, Reliability & Performance | P1 | Quality/Maintenance | 日志、错误、重试/恢复、性能测量 | 诊断与恢复/性能评估 |
 | [K11 知识库](K11/README.md) · [初版导论](K11.md) · [Issue #532](https://github.com/kaicreator-mm/tally/issues/532) | Engineering Economics & Decision-making | P1 | Cross-phase planning | 成本、风险、交付价值与自适应深度 | 工程方案的总成本比较 |
 
-**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次另外建设了 **11×7=77 个模块知识文件**。
+**知识库阅读方式：** 点击 K01–K11 进入对应目录的 `README.md`，按需读取具体主题，不把全部文件装入 Agent 的工作上下文。每个库有领域模型、工程方法和 3 个已有 Decision Procedures、Agent Skill/直接任务提示词、案例与反例、可证伪验证及固定 ADS 来源。原 11 份合计约 8.6 万字符的导论仍保留作历史设计入口；本次知识库共 **11×9=99 个模块知识文件**（包括每库两份新的学科基础/外部工程实践文件）。
 
 **K01–K08**：优先用于首个真实 Agent 开发垂直切片。**K09–K11**：当前版本同样要整理完知识设计与正反例，但其运行时消费按项目需要推进，不作为首条垂直切片的无条件阻塞。模块编号不是执行顺序，亦不建立自然强制的 K01→K02→…→K11 Task Dependency 链。
 
@@ -71,6 +78,8 @@ software-engineering-knowledge/
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
+    ├── disciplinary-foundations.md # 外部学科/标准与适用机制
+    ├── external-practices.md # 外部企业/GitHub 案例与可证伪工程做法
     ├── domain-model.md     # 术语/实体/规则/语义关系
     ├── engineering-methods.md # 方法、权衡与有界 Decision Procedures
     ├── agent-skills.md     # Agent 输入输出与直接可用的任务提示词
@@ -178,7 +187,7 @@ software-engineering-knowledge/
 ### A. 本次 **设计/文档交付**（本 PR 处理）
 
 - [x] 11 个不同的知识模块 Issue 已创建并真实读取；各自明确了知识范围、决策程序、Skill 输入输出、正反例、来源、目标 Workflow、知识使用与资格边界。
-- [x] 11 个知识库目录分别建成，每个目录含 README + Domain Model + Methods + Agent Skills + Casebook + Validation + Sources（11×7 文件），并保留旧 `Kxx.md` 的导论入口。
+- [x] 11 个知识库目录分别建成，每库 9 个文件（原 7 文件 + 学科基础 + 外部实践），并保留旧 `Kxx.md` 的导论入口。
 - [x] 一个 v2.1.2 版本 Issue 和一个 README，索引 11 个模块目录（77 个专业知识文件）、11 个原始导论、对应 Issue 及 ADS/Tally 来源。
 - [ ] DOC-only 源码差异核查、Markdown 结构/链接与历史权威边界核对，必要的不同会话独立文档 Review；不对无关运行时代码执行全量 CI。
 - [ ] 通过 GitHub 读取固定候选 HEAD/文档 Blob，记录已完成的是文档，未完成的是合格知识与真实 Runtime。
