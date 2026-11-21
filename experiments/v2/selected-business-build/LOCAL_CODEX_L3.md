@@ -62,3 +62,44 @@ Evidence is preserved in `C:\xDev\kAiCreator\_tmp\tally-v2-local-agent\evidence-
 Cancellation is complete only after process-tree termination and reconciliation. Timeout/lost ACK/crash or ambiguous restart is durable UNKNOWN. Missing Claim, stale SHA/generation, blocked dependency, wrong write set, missing/unauthenticated provider and confinement failure all prevent dispatch. Agent output remains an unverified candidate claim. Full regression, Hidden validation, Critical Journeys, Packaging and Release Qualification are separate later gates and are not claimed here.
 
 References: #62, #64, #86, #90, #92, #125, #132, #166, #169, #170, #171, #173, ADS #1241.
+
+---
+
+# J04 Candidate Receipt — attempt `attempt:264:e1:r91:4` (incremental record)
+
+Appended by the original #264 writer as the P1-01 repair ordered by
+independent review #5971022331: the real builder attempt replaced the
+historical #172 T06m L3 contract above with a two-line candidate note. The
+historical document above is restored verbatim from `dff5329e`; this receipt
+is the incremental record of the J04 candidate and does not amend the
+contract.
+
+```ini
+TASK=#264 (E1 Closeout, J04 real local Codex builder)
+ATTEMPT=attempt:264:e1:r91:4
+LEASE=dispatch:264:e1:integration:host:20261119:5 (REUSED, no new claim)
+CLAIM_RECEIPT=https://github.com/kaicreator-mm/tally/issues/264#issuecomment-6996696149
+CLAIM_SOURCE_SHA=dff5329eed76b88b768aa6802fd92e64fbc83881
+CANDIDATE_COMMIT=023db3aa9a6c30ef5975c6f085ba207ec315cb09
+CANDIDATE_TREE=ff7cd2b35ea65d6c7ab316b963eed4066af455db
+CANDIDATE_PARENT=dff5329eed76b88b768aa6802fd92e64fbc83881
+CANDIDATE_REF=refs/tally-candidates/attempt-264-e1-r91-4
+CANDIDATE_PATHS=experiments/v2/selected-business-build/LOCAL_CODEX_L3.md
+HOST_RESULT=LOCAL_CANDIDATE_READY
+REAL_CODEX_PROCESS=EXIT0
+HOST_RECEIPT=https://github.com/kaicreator-mm/tally/issues/264#issuecomment-7002666090
+PR=https://github.com/kaicreator-mm/tally/pull/466
+CI=https://ci.kaicreator.com/repos/12/pipeline/892 (Woodpecker #892, 5/5 SUCCESS, exact SHA 023db3aa)
+INDEPENDENT_REVIEW=https://github.com/kaicreator-mm/tally/pull/466#pullrequestreview-5971022331
+REVIEW_VERDICT=ACCEPT_AS_ATTEMPT_EVIDENCE__REWORK_P1_FOR_MERGE
+P0=0 P1=1 P2=1 (review body P2=0; join comment 7002867494 P2=1)
+TASK_PASS=false
+RELEASE_PASS=false
+RQ_HANDOFF=HOLD
+```
+
+Candidate commit `023db3aa…` and tree `ff7cd2b3…` remain immutable
+builder-execution evidence (host-local candidate ref, PR #466 commit 1,
+Woodpecker #892, independent review anchor). The builder-execution fact is
+accepted as scoped evidence; merge eligibility remains gated on this repair
+plus the sealed prompt contract fix recorded in #264 comment 7002882347.
