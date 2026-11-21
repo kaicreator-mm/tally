@@ -63,3 +63,43 @@ test('read Github HEAD sends private bearer only to exact repo branch URL',async
     token:'github_pat_test_A',fetchImpl:async()=>({ok:false})}),
     /GITHUB_SOURCE_UNAVAILABLE/);
 });
+
+
+test('native vault keeps only opaque refs in persisted project state',async()=>{
+  const {createCredentialStore}=await import('./credential-store.mjs');
+  const id='11111111-2222-4333-8444-555555555555';
+  const token='github_pat_test_credential';
+  const secrets=new Map();
+  const run=async(_exe,args,input)=>{
+    if(args[0]==='store'){secrets.set(args.at(-1),input);return '';}
+    if(args[0]==='lookup')return secrets.get(args.at(-1));
+    throw Error('UNEXPECTED_VAULT_COMMAND');
+  };
+  const native=createCredentialStore({platform:'linux',run,idFactory:()=>id});
+  const dir=await mkdtemp(join(tmpdir(),'tally-keyring-'));
+  try{
+    const catalog=new LocalProjectCatalog({dir,vault:native,readHead:async()=>shaA});
+    await catalog.add({repository:'org/native',ref:'main',token});
+    const project=await readFile(join(dir,'projects.json'),'utf8');
+    const stored=await readFile(catalog.credentialPath('org/native'),'utf8');
+    assert.doesNotMatch(project,/github_pat_test_credential/);
+    assert.equal(stored,'keyring-v1:'+id);
+    assert.doesNotMatch(stored,/github_pat_test_credential/);
+    const reboot=new LocalProjectCatalog({dir,vault:native,readHead:async()=>shaA});
+    const selected=await reboot.select({repository:'org/native',ref:'main'});
+    assert.equal(selected.status.selected.repository,'org/native');
+    assert.equal(selected.env.TALLY_GITHUB_READ_TOKEN,token);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('missing native keyring cannot persist a configured project',async()=>{
+  const dir=await mkdtemp(join(tmpdir(),'tally-denied-keyring-'));
+  try{
+    const vault={seal:async()=>{throw Error('CREDENTIAL_STORE_UNAVAILABLE');},
+      open:async()=>{throw Error('CREDENTIAL_STORE_UNAVAILABLE');}};
+    const catalog=new LocalProjectCatalog({dir,vault,readHead:async()=>shaA});
+    await assert.rejects(catalog.add({repository:'org/native',ref:'main',
+      token:'github_pat_test_credential'}),/CREDENTIAL_STORE_UNAVAILABLE/);
+    assert.deepEqual((await catalog.status()).projects,[]);
+  }finally{await rm(dir,{recursive:true,force:true});}
+});
