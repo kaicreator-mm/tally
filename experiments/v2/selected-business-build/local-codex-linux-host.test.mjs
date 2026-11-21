@@ -85,7 +85,8 @@ test('confinement readback checks namespace UID, workspace and hidden secrets',a
   const root=await mkdtemp(join(tmpdir(),'tally-r152-confinement-'));
   try{
     const x=config(root);
-    x.cliPath='/usr/bin/node';
+    // The CI image need not place node in /usr/bin. Both are mocked here.
+    x.cliPath='/usr/bin/id';
     x.bwrapPath='/usr/bin/id';
     for(const dir of [x.worktreePath,x.builderProfile,x.operatorHome])
       await mkdir(dir,{recursive:true});
