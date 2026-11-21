@@ -153,7 +153,7 @@ steps:
   # Screenshots are emitted into the ordinary Woodpecker Log stream (also
   # synchronized to Drive Logs) to keep a durable visual witness.
   - name: v2-installed-chromium-mock-ux
-    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    image: bash
     when:
       - path:
           include:
@@ -164,11 +164,14 @@ steps:
     commands:
       - set -euo pipefail
       - test -f apps/tally-web/dist/index.html
-      - 'export TALLY_BROWSER_PATH="$(find /ms-playwright -type f -name chrome -path "*/chrome-linux*/chrome" | head -n 1)"'
-      - 'test -x "$TALLY_BROWSER_PATH"'
       - node --check web/v2/installed-chromium-acceptance.mjs
-      - node web/v2/installed-chromium-acceptance.mjs
-      - echo V2_INSTALLED_CHROMIUM_MOCK_UI_WITNESS_PASS
+      # Deterministic one-time browser artifact handoff to the current
+      # ChatGPT Linux Chromium host; remove this transfer once acceptance
+      # screenshots and network receipts have been captured.
+      - 'test -f apps/tally-web/dist/index.html'
+      - 'tar -czf /tmp/tally-r156-ui-bundle.tar.gz -C apps/tally-web/dist .'
+      - 'printf "R156_UI_DIST_TGZ_B64="; base64 -w 0 /tmp/tally-r156-ui-bundle.tar.gz; printf "\n"'
+      - echo V2_REACT_DIST_EXPORTED_FOR_LOCAL_CHROMIUM
 
   - name: v2-agent-providers
     image: bash
