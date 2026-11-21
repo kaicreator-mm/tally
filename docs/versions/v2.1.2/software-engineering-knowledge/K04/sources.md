@@ -18,17 +18,6 @@
 **文档验收：** 术语可理解、具体方法可供 Agent 操作、有正反案例、来源和 Tally 消费点清晰、适用性及不可推断的状态明确。**生产资格**则需要选中知识的独立/适用来源审核、实际代码或业务行为、所需负例、Task/Review/Host 等原始证据和当前 Package 版本。文档合并不产生 Product/L2/DAG Freeze、Task Claim、代码执行授权、Package Qualification 或 Release。
 
 
-## 附录 A · Agent 直接调用的工作示例（非正式 Wire Schema）
-
-**教学输入：** 新功能有 API、UI 和共享 Schema 三类变更；两个 Agent 希望并行。
-- 使用知识：AtomicConcern、BlockedBy、WriteSet、DAG-P/A/I，执行 DP-K04-01/02。
-- 期望产物：API/Schema 的唯一 Owner、UI 消费的稳定合同、真实集成 Task，以及各阶段 `INLINE/WORKLIST/DAG` 选择理由。
-- 反例核对：如果删掉某条 `BLOCKED_BY` 仍可合法执行后项，就不应将它设为硬阻塞。
-- 停止与交接：建议图不制造 GitHub Native Dependency/Claim；接入正式 Task DAG 需现有 Owner 路径。
-
-**来源基线：** 本文 ADS `standards/` / `prompts/` 引用已固定到正式发布的 `v4.19.0@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`，并核查路径确实存在。固定来源只证明**引用身份与可读性**，不等于逐个知识 Claim 已经获得独立资格审核。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 是后继设计候选，不能倒推成为 v4.19.0 已生效规则。此示例用于人工/Agent 推理和 Tally 消费方案，不是要求 Tally 新增这些字段或消息格式。
-
-
 ## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
 
 | 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
@@ -39,17 +28,6 @@
 **历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
-
-## 具体工程主张与 ADS 条款
-
-## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
-
-| 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
-| --- | --- | --- | --- |
-| Task 原子性与真实依赖 | `standards/TASK_DECOMPOSITION_STANDARD.md` → §3 `Primary concern boundary`、§4 `Safe parallelism`、§6 `Dependencies` | 已发布规范 | 正式实施 Task，不是研究证据引用 |
-| 执行 DAG 的当前事实源 | `standards/TASK_DAG_GOVERNANCE_STANDARD.md` → §2 `Planning DAG vs live DAG`、§7 `Native mutation execution` | 已发布规范 | materialized 后 GitHub native dependencies；新 P/A 标签不自动成为该图 |
-
-**历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
 ## 所有权、适用性与扩展时注意事项

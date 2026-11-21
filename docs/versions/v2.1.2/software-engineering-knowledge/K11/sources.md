@@ -21,17 +21,6 @@
 **文档审查完成标准**：信息具可读性、术语区分、方法可执行且有停止条件、真实消费者可定位、案例可证伪、权威来源明确。**生产知识合格标准**：选定知识的适用来源审查、版权及版本范围、反例/负例、实际工程任务消费和所需独立验证均成立。本文件及其 PR 的通过不等于该模块生产知识合格，也不授予 Task/Host/Release 权威。
 
 
-## 附录 A · Agent 直接调用的工作示例（非正式 Wire Schema）
-
-**教学输入：** 一项小幅 UI 变更，有人建议为其派多个 Builder、建立复杂 DAG 并重复全量 CI。
-- 使用知识：Outcome、TotalCost、MarginalValue、AssuranceFloor，执行 DP-K11-01/02。
-- 期望产物：单 Agent INLINE 与多 Agent EXPLICIT_DAG 两方案的真实依赖、交接、Review/CI、返工成本和质量要求对比。
-- 判断：无新风险或真实独立工作时优先最小有效流程；有高后果/真正 Host 验证要求时保留其不可省略部分。
-- 停止与交接：未测量的成本记 `ESTIMATED/UNKNOWN`；不能仅凭模型问答评分或 token 消耗声称质量提升。
-
-**来源基线：** 本文 ADS `standards/` / `prompts/` 引用已固定到正式发布的 `v4.19.0@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`，并核查路径确实存在。固定来源只证明**引用身份与可读性**，不等于逐个知识 Claim 已经获得独立资格审核。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 是后继设计候选，不能倒推成为 v4.19.0 已生效规则。此示例用于人工/Agent 推理和 Tally 消费方案，不是要求 Tally 新增这些字段或消息格式。
-
-
 ## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
 
 | 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
@@ -42,17 +31,6 @@
 **历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
-
-## 审核 R1 补充：关键 Claim 对应具体发布 ADS 条款
-
-## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
-
-| 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
-| --- | --- | --- | --- |
-| 必要保证不得被低成本取代 | `standards/ASSURANCE_PLAN_STANDARD.md` → §11 `Assurance floor versus selected path` | 已发布规范 | 小改动仍保留真实任务保护底线 |
-| 小任务拆分与 Fast Path | `standards/TASK_DECOMPOSITION_STANDARD.md` → §12 `Fast Path`、§13 `Decomposition decision prompts`；`standards/DEVELOPMENT_WORKFLOW.md` → §2.2 `Trunk / Fast Path` | 已发布规范 | 不为减少流程而抹除原有依赖与 Gate |
-
-**历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
 ## 复用/晋升边界

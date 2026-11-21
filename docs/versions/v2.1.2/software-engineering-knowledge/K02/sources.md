@@ -24,28 +24,6 @@
 **本文完成条件**：术语可辨别、方法可复述、正反例可证伪、与 Workflow 消费边界明确、与 ADS 规范没有冲突，并完成文档来源核查。**这不等于** Agent Runtime 实现、全部知识合格或软件 Release。
 
 
-## 附录 A · Agent 直接调用的工作示例（非正式 Wire Schema）
-
-**教学输入：** 用户需要导入较大文件，并能观察进度及重试；系统当前仅同步处理请求。
-- 使用知识：ArchitectureDriver、StateOwnership、InterfaceContract、ADR，执行 DP-K02-01。
-- 比较：同步、进程内队列、持久化队列；显式讨论重启恢复、重复提交、部署复杂度和成本。
-- 期望产物：驱动→候选→选定理由→失败合同→Owner/接口→验证点的 ADR 及未证 UNKNOWN。
-- 停止与交接：无法证明持久化/副作用语义时只声明 Demo 范围，不能宣布 L2 Freeze；选定接口交 K03/K05。
-
-**来源基线：** 本文 ADS `standards/` / `prompts/` 引用已固定到正式发布的 `v4.19.0@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`，并核查路径确实存在。固定来源只证明**引用身份与可读性**，不等于逐个知识 Claim 已经获得独立资格审核。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 是后继设计候选，不能倒推成为 v4.19.0 已生效规则。此示例用于人工/Agent 推理和 Tally 消费方案，不是要求 Tally 新增这些字段或消息格式。
-
-
-## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
-
-| 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
-| --- | --- | --- | --- |
-| 结构/所有权/失败合同 | `standards/ARCHITECTURE_DESIGN_STANDARD.md` → §3 `Required design facts`、§6 `Ownership and contracts` | 已发布规范 | 仅真实结构性变更适用 |
-| 可证伪架构实验 | `standards/ARCHITECTURE_RESEARCH_DEMO_STANDARD.md` → §4 `Every Demo starts with a falsifiable hypothesis`、§9 `Evidence strength` | 已发布有界研究 | Demo 证据不得自动越级为 Production/Release |
-
-**历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
-
-## 具体工程主张与 ADS 条款
-
 ## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
 
 | 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |

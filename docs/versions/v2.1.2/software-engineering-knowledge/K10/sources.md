@@ -19,17 +19,6 @@
 **文档审查完成标准**：信息具可读性、术语区分、方法可执行且有停止条件、真实消费者可定位、案例可证伪、权威来源明确。**生产知识合格标准**：选定知识的适用来源审查、版权及版本范围、反例/负例、实际工程任务消费和所需独立验证均成立。本文件及其 PR 的通过不等于该模块生产知识合格，也不授予 Task/Host/Release 权威。
 
 
-## 附录 A · Agent 直接调用的工作示例（非正式 Wire Schema）
-
-**教学输入：** 一个桌面工具首次启动尚未配置仓库，随后某远程操作超时且结果未知。
-- 使用知识：ActionableError、StartupConfiguration、Idempotency、Timeout、IncidentEvidence，执行 DP-K10-01/02。
-- 期望产物：允许进入配置流程但阻止未授权业务动作；超时返回可操作的安全错误与查询状态/有界重试策略。
-- 验证：测试无配置、错误配置、超时但服务端已提交、重复点击和故障恢复后实际状态。
-- 停止与交接：后台/CLI 配置策略另行按形态选择；没有真实性能基线写 `NOT_MEASURED`，不可虚报倍数。
-
-**来源基线：** 本文 ADS `standards/` / `prompts/` 引用已固定到正式发布的 `v4.19.0@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`，并核查路径确实存在。固定来源只证明**引用身份与可读性**，不等于逐个知识 Claim 已经获得独立资格审核。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 是后继设计候选，不能倒推成为 v4.19.0 已生效规则。此示例用于人工/Agent 推理和 Tally 消费方案，不是要求 Tally 新增这些字段或消息格式。
-
-
 ## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
 
 | 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
@@ -40,17 +29,6 @@
 **历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
-
-## 审核 R1 补充：关键 Claim 对应具体发布 ADS 条款
-
-## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
-
-| 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
-| --- | --- | --- | --- |
-| 首次配置按应用形态 | `standards/CONFIGURATION_SECRETS_STANDARD.md` → §16 `First-run setup`、§16.1–16.2 交互与 headless 例外 | 已发布规范 | 不要求 CLI/容器一律弹配置界面 |
-| 诊断与运行证据 | `standards/IMPLEMENTATION_QUALITY_STANDARD.md` → §12 `Runtime diagnostic logs and actionable failures`；`standards/OBSERVABILITY_RUNTIME_EVIDENCE_STANDARD.md` → §2 `Runtime evidence is a distinct dimension` | 已发布实现/运行观察规范 | Runtime observation != Test/Release PASS |
-
-**历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
 ## 复用/晋升边界

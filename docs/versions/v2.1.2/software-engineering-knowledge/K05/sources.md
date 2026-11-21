@@ -17,17 +17,6 @@
 **文档验收：** 术语可理解、具体方法可供 Agent 操作、有正反案例、来源和 Tally 消费点清晰、适用性及不可推断的状态明确。**生产资格**则需要选中知识的独立/适用来源审核、实际代码或业务行为、所需负例、Task/Review/Host 等原始证据和当前 Package 版本。文档合并不产生 Product/L2/DAG Freeze、Task Claim、代码执行授权、Package Qualification 或 Release。
 
 
-## 附录 A · Agent 直接调用的工作示例（非正式 Wire Schema）
-
-**教学输入：** 订单状态变更的内部 Unit Test 全绿，但 API→DB 真实路径仍存在非法状态写入。
-- 使用知识：TestOracle、Contract、Integration、TestDiscovery，执行 DP-K05-01/03。
-- 期望产物：由业务不变量导出的正例、非法状态拒绝/数据库状态不变负例，以及相关层次的测试矩阵。
-- 验证：先确认实际 runner 发现目标测试，再验证公开入口确实执行新逻辑；记录测试 SHA、环境和失败明细。
-- 停止与交接：只有 Mock 收据时把其**证据适用范围**描述为 `MOCK_ONLY`，不新增 Validation Gate 状态；未调用 Host 时对对应 Gate 使用现有 `NOT_RUN`（若已明确外部阻塞，则按现有权威记 `BLOCKED`），不能发布真实 E2E PASS。
-
-**来源基线：** 本文 ADS `standards/` / `prompts/` 引用已固定到正式发布的 `v4.19.0@933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c`，并核查路径确实存在。固定来源只证明**引用身份与可读性**，不等于逐个知识 Claim 已经获得独立资格审核。ADS [#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)/[Draft #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384) 是后继设计候选，不能倒推成为 v4.19.0 已生效规则。此示例用于人工/Agent 推理和 Tally 消费方案，不是要求 Tally 新增这些字段或消息格式。
-
-
 ## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
 
 | 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
@@ -38,17 +27,6 @@
 **历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
-
-## 具体工程主张与 ADS 条款
-
-## 附录 B · 独立审核 R1 最小 Claim→ADS 条款映射（文档级，不是知识资格）
-
-| 高影响工程主张 | 发布 ADS 的实际来源/节 | 身份 | 适用限制 |
-| --- | --- | --- | --- |
-| 测试分层与真实执行 | `standards/TESTING_STANDARD.md` → §2 `测试层级`、§6.1 `Executed-test discovery`、§6.2 `Selected public path` | 已发布测试规范（子条款可能为 v4.19 候选文本；依实际生效政策） | Mock/Unit 不代表真实 User Critical Journey |
-| 验证 Gate 和身份 | `standards/VALIDATION_STANDARD.md` → §1 `Purpose and states`、§3 `Validation Tuple`、§6 `Exact-SHA evidence and drift` | 已发布 Validation 权威 | 不得创造 `MOCK_ONLY` 作为 Gate State |
-
-**历史/候选与正式规范区分：** 本知识库提出的额外建议（含三阶段图统一命名）仍为 `TALLY_V212_PROPOSED_KNOWLEDGE`。上表只是精确源定位，不代替独立的 Source→Claim 审核，也不会赋予合法实施/Release/Host 资格。
 
 
 ## 所有权、适用性与扩展时注意事项
