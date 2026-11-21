@@ -1,0 +1,285 @@
+{
+  "schema": "tally/v2-scoped-task-pack-candidate/1",
+  "targetFullPackSchema": "tally/version-task-pack/v1",
+  "status": "GOVERNANCE_ONLY_CANDIDATE_NOT_FROZEN",
+  "warning": "Scoped #276 Task/source-pack proposal, NOT a replacement for full 51-Task version/v2 Pack or 37 native edges, NOT a CAS claim/FSW/Owner Freeze or Task PASS.",
+  "outputLabel": "TALLY_V2_I276_CORE15_PACK_DELIVERY",
+  "repository": "kaicreator-mm/tally",
+  "taskIssue": 276,
+  "coordinators": [
+    392,
+    259
+  ],
+  "productScope": "V2_CORE_MVP_SINGLE_PROVIDER_MINIMUM_DOMAIN_PACKAGE",
+  "scopeAmendment": {
+    "source": "https://github.com/kaicreator-mm/tally/issues/276",
+    "r50Comment": "https://github.com/kaicreator-mm/tally/issues/276#issuecomment-6925963472",
+    "currentTaskBodyUpdatedAt": "2026-11-16T19:12:35Z",
+    "previous42PathProposal": "SUPERSEDED_FOR_FUTURE_ADMISSION_NOT_DELETED",
+    "proposed15PathStatus": "CANONICALIZED_OVERLAP_BLOCKED",
+    "dispatchable": false
+  },
+  "source": {
+    "branch": "version/v2",
+    "sha": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "tree": "734272007ce4c2214f4e2bfa1b7bf3fbb2e2ec96",
+    "checkedVia": "GitHub branch and exact file API",
+    "selectedEngineeringB": {
+      "path": "packages/tally-engineering-business/src/index.mjs",
+      "gitBlob": "b369bd1f425f54fc232548e9e992e314ebf2f8f5",
+      "intentCount": 16,
+      "effectCount": 16,
+      "abi": "v08-business-abi/1"
+    },
+    "selectedBuildProducer": {
+      "path": "experiments/v2/selected-business-build/producer.mjs",
+      "gitBlob": "39550767a228a15cf893f3bf8e00c60b0cc01be3"
+    },
+    "historicalR6Pack": {
+      "url": "https://github.com/kaicreator-mm/tally/pull/436",
+      "exactHead": "96ed7f30b60a78b797c50d0e153c0af5047af884",
+      "gitBlob": "05a02fe2141cfec31d7064e3bc12f820b5c1944e",
+      "qualifiedReuse": "IMMUTABLE_HISTORICAL_51_TASK_37_EDGE_REFERENCE_NOT_A_NEW_FREEZE"
+    }
+  },
+  "writeSet": {
+    "encoding": "sorted exact UTF-8 JSON array; JSON.stringify(paths) without whitespace",
+    "count": 15,
+    "sha256": "53eada87d88b1a0a29d6e1cb57fd18d366990b177804902f1d38ed9bef50d4b0",
+    "paths": [
+      "experiments/v2/selected-business-build/consumer-domain-data.mjs",
+      "experiments/v2/selected-business-build/consumer-domain-data.test.mjs",
+      "experiments/v2/selected-business-build/domain-data-compiler.mjs",
+      "experiments/v2/selected-business-build/domain-data-compiler.test.mjs",
+      "experiments/v2/selected-business-build/producer.mjs",
+      "packages/tally-engineering-business/domain/authority/source-authority-map.json",
+      "packages/tally-engineering-business/domain/glossary/engineering-concepts.json",
+      "packages/tally-engineering-business/domain/rules/task-readiness-minimum-evidence.rule.json",
+      "packages/tally-engineering-business/domain/schemas/task-readiness-input.schema.json",
+      "packages/tally-engineering-business/domain/validation/task-readiness-fixtures.json",
+      "packages/tally-engineering-business/domain/workflows/core-mvp-lifecycle-map.json",
+      "packages/tally-engineering-business/src/domain-model/task-readiness.mjs",
+      "packages/tally-engineering-business/src/index.mjs",
+      "packages/tally-engineering-business/test/business-policy.test.mjs",
+      "packages/tally-engineering-business/test/domain-model/task-readiness.test.mjs"
+    ],
+    "F1_NEW_ONLY": {
+      "count": 12,
+      "paths": [
+        "experiments/v2/selected-business-build/consumer-domain-data.mjs",
+        "experiments/v2/selected-business-build/consumer-domain-data.test.mjs",
+        "experiments/v2/selected-business-build/domain-data-compiler.mjs",
+        "experiments/v2/selected-business-build/domain-data-compiler.test.mjs",
+        "packages/tally-engineering-business/domain/authority/source-authority-map.json",
+        "packages/tally-engineering-business/domain/glossary/engineering-concepts.json",
+        "packages/tally-engineering-business/domain/rules/task-readiness-minimum-evidence.rule.json",
+        "packages/tally-engineering-business/domain/schemas/task-readiness-input.schema.json",
+        "packages/tally-engineering-business/domain/validation/task-readiness-fixtures.json",
+        "packages/tally-engineering-business/domain/workflows/core-mvp-lifecycle-map.json",
+        "packages/tally-engineering-business/src/domain-model/task-readiness.mjs",
+        "packages/tally-engineering-business/test/domain-model/task-readiness.test.mjs"
+      ],
+      "stageStatus": "NOT_ADMITTED_NO_SOURCE_EDIT",
+      "purpose": "One minimal domain glossary/authority/schema/rule/fixtures/workflow map; pure private helper/test; closed-world build-time compiler/clean consumer tests; authoring-only workflow map, no second engine"
+    },
+    "F2_SERIAL_SHARED": {
+      "count": 3,
+      "paths": [
+        "experiments/v2/selected-business-build/producer.mjs",
+        "packages/tally-engineering-business/src/index.mjs",
+        "packages/tally-engineering-business/test/business-policy.test.mjs"
+      ],
+      "stageStatus": "NOT_ADMITTED_SHARED_OWNER_RELEASE_REQUIRED",
+      "purpose": "Existing B index readiness injection seam, selected BUILD producer and one ABI/policy regression. No public ABI/16-intent/effect expansion."
+    },
+    "candidateDocumentationPath": "docs/implementation/v2/I276_CORE15_TASK_PACK_CANDIDATE_R1.json",
+    "documentOutside15Explanation": "This single governance-only candidate document is not itself an authorized F source file and grants no implementation write permission."
+  },
+  "liveNativeDependencies": {
+    "sourceEndpoint": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by",
+    "count": 11,
+    "openCount": 7,
+    "closedCount": 4,
+    "records": [
+      {
+        "issueNumber": 261,
+        "state": "OPEN",
+        "updatedAt": "2026-11-16T19:10:00Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 273,
+        "state": "OPEN",
+        "updatedAt": "2026-11-10T06:43:39Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 219,
+        "state": "OPEN",
+        "updatedAt": "2026-11-16T19:09:57Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 262,
+        "state": "OPEN",
+        "updatedAt": "2026-11-16T18:11:04Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 210,
+        "state": "CLOSED",
+        "updatedAt": "2026-11-11T18:05:00Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 208,
+        "state": "OPEN",
+        "updatedAt": "2026-11-04T06:23:31Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 274,
+        "state": "CLOSED",
+        "updatedAt": "2026-11-13T20:33:09Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 203,
+        "state": "CLOSED",
+        "updatedAt": "2026-11-11T18:04:57Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 209,
+        "state": "OPEN",
+        "updatedAt": "2026-11-16T12:25:15Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 275,
+        "state": "CLOSED",
+        "updatedAt": "2026-11-13T20:33:12Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      },
+      {
+        "issueNumber": 260,
+        "state": "OPEN",
+        "updatedAt": "2026-11-11T19:38:17Z",
+        "sourceUrl": "https://api.github.com/repos/kaicreator-mm/tally/issues/276/dependencies/blocked_by"
+      }
+    ],
+    "sourceStatus": "EXACT_OFFICIAL_GITHUB_NATIVE_READBACK",
+    "warning": "An OPEN native predecessor blocks source Task admission; source-merged code on an OPEN issue is not a PASS."
+  },
+  "liveExactPathConflicts": {
+    "source": "Live canonical allowed_write_set in Task #202/#219/#273 body, separately read from GitHub",
+    "openIntersectingTasks": 3,
+    "pairwiseOverlapCount": 7,
+    "distinctOverlapPathCount": 3,
+    "pairs": [
+      {
+        "withTask": 202,
+        "taskState": "OPEN",
+        "sharedPaths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "count": 2
+      },
+      {
+        "withTask": 219,
+        "taskState": "OPEN",
+        "sharedPaths": [
+          "experiments/v2/selected-business-build/producer.mjs",
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "count": 3
+      },
+      {
+        "withTask": 273,
+        "taskState": "OPEN",
+        "sharedPaths": [
+          "packages/tally-engineering-business/src/index.mjs",
+          "packages/tally-engineering-business/test/business-policy.test.mjs"
+        ],
+        "count": 2
+      }
+    ],
+    "decision": "SERIALIZATION_REQUIRED_NO_F2_WRITER_CONCURRENCY",
+    "f1DisjointFromTheseThree": true
+  },
+  "authorityBoundaries": {
+    "sourceOfTruth": "GitHub issue/branch/native dependencies/commit/PR; ADS governance; one selected DomainHarness K and trusted Host/C physical actions",
+    "claim": "NOT_CREATED",
+    "fsw": "NOT_CREATED",
+    "ownerReadback": "NOT_OBTAINED_FOR_THIS_CANDIDATE",
+    "cas": "NOT_TOUCHED",
+    "nativeEffects": "NONE",
+    "taskOutcome": "NOT_PASS",
+    "packFreeze": false,
+    "sourceWriterAuthorized": false,
+    "hostOrSelectedKRun": "NOT_RUN",
+    "testOrCI": "NOT_RUN",
+    "review": "PENDING_OTHER_CONVERSATION_NON_WRITER",
+    "releaseQualification": "HOLD",
+    "integration": "NOT_MERGED",
+    "notEquivalent": [
+      "scope amendment != accepted Task Pack",
+      "review of docs != source Claim/FSW",
+      "Issue CLOSED != Task PASS",
+      "built/compiled advisory != selected Host effect",
+      "same GitHub login != non-independent review"
+    ]
+  },
+  "minimumReadinessRule": {
+    "existingSelectedIntent": "inspectTaskReadiness",
+    "existingPolicyProjection": "assessTaskEvidence",
+    "allowedOutcomeWithoutK": "OBSERVED_INPUT_ONLY/REQUIRES_NATIVE_CLAIM_AND_KERNEL_ADMISSION",
+    "observationalFlags": {
+      "admitted": false,
+      "taskPass": false
+    },
+    "missingSource": "UNQUALIFIED_INPUT/MISSING_SOURCE_IDENTITY",
+    "unverifiedNativeDeps": "UNQUALIFIED_INPUT/DEPENDENCIES_UNVERIFIED",
+    "noHardcodedFallback": true,
+    "compilerSelection": "CLOSED_WORLD_SCHEMA_AND_RULE_INTO_ONE_SELF_CONTAINED_MODULE_SOURCE",
+    "digestBinding": [
+      "inputBusinessSourceSha256",
+      "domainDataManifestSha256",
+      "generatedModuleSourceSha256"
+    ],
+    "unchangedIntentEffects": "16/16",
+    "runtimeLoader": "FORBIDDEN",
+    "workflowEngine": "FORBIDDEN"
+  },
+  "prospectiveVerification": {
+    "status": "NOT_RUN_PLANNED_ONLY",
+    "reusedReferences": [
+      "#276/6925963472 R50 minimum evidence/negative plan",
+      "#277 independent F architecture R4 PASS_WITH_P2, not installed Host proof",
+      "#219 PR #436 R6 full roster/DAG candidate, candidate-not-frozen",
+      "#275 Attempt source at version/v2; #208/#209 source projections"
+    ],
+    "POS": [
+      "Present source identity and separately verified native dependencies yield observed-only readiness, never Task PASS",
+      "Deterministic allowed Rule changes clean selected consumer outcome after legitimate new manifest digest",
+      "Existing 16 B intents/effects and one selected K unchanged"
+    ],
+    "NEG": [
+      "Missing or stale source/claim/FSW/selected Host/manifest is no-effect",
+      "Mismatched/reordered manifest, duplicate IDs or wrong SHA refuses compilation",
+      "Uncompiled or marker-missing selected B does not fall back to a hardcoded pass",
+      "Closed GitHub issue or green docs CI cannot imply accepted Task/Review/Release",
+      "Repair reviewed at old HEAD cannot qualify new HEAD",
+      "Unknown ACK/no durable zero-POST witness must not replay non-idempotent effect"
+    ],
+    "EIntegratorOwns": "Current Host pre-import source/digest gate and real installed UI readback remain #264 work; never add Host/UI source paths to #276."
+  },
+  "nextLegalSteps": [
+    "Different-conversation independent exact-HEAD source-first review of this single governance artifact and 15-path canonical digest",
+    "Integrator/Owner reviews current source, live native DAG, Task scope, serialization and prospective Pack eligibility; no retroactive Claim/FSW",
+    "Only after all native OPEN predecessor dispositions, released conflicting owners, new independently accepted source-bound Pack and genuine current Claim + create-only FSW: stage F1 source implementation and later serialized F2",
+    "E/#264 tests selected Host pre-import and installed full Core MVP; independent Task/Release gates remain separate"
+  ]
+}
