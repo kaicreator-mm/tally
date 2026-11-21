@@ -243,8 +243,9 @@ try{
     'product');
   await poll(()=>located('input[aria-label="产品目标"]'),'Product form');
   await fill('input[aria-label="产品目标"]','Chromium product goal');
-  const btn=async label=>evaluate('(()=>{const b=[...document.querySelectorAll("button")]'+
-    '.find(x=>x.textContent.trim()==='+JSON.stringify(label)+');'+
+  const btn=async label=>evaluate('(()=>{const all=[...document.querySelectorAll("button")];'+
+    'for(const old of all)delete old.dataset.r156Action;'+
+    'const b=all.find(x=>x.textContent.trim()==='+JSON.stringify(label)+');'+
     'if(b){b.dataset.r156Action="1";return !b.disabled}return false;})()');
   assert.equal(await poll(()=>btn('保存需求目标'),'goal button'),true);
   await click('button[data-r156-action]','submit goal');
