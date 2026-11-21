@@ -14,8 +14,59 @@ On Linux the default catalog path is `${XDG_CONFIG_HOME:-$HOME/.config}/tally/v2
 
 The Windows R145 ZIP (and its `better-sqlite3` native binary) is **not** a portable Linux/macOS package. Install/rebuild native dependencies on the target platform; never unpack Windows native `.node` modules as if they were Linux/macOS builds.
 
-## Privileged Agent and Host boundary
+## Selected Agent Host: Linux support candidate (#516 / PR #517)
 
-Cross-platform first-run/project read support does not establish cross-platform *Agent execution*. The v2.0.1 selected physical Codex consumer `local-codex-windows-e2e.mjs` and its Host use Windows SID, ACL and `icacls` to establish privileged isolation. That positive execution qualification is Windows-only. Linux/macOS require an independently validated equivalent isolation-capable Host/driver before exposing a positive `Agent start` result. A browser-selected project, a Secret Service/Keychain credential, or a keyring unit test must never grant Agent/Task/Release authority.
+The existing sealed K/B/C, native GitHub Claim and frozen Write Set admission,
+CAS resource grants, selected Provider, candidate tree/commit readback and
+one-Builder Task semantics are reused. Windows keeps its previously qualified
+SID/ACL/PowerShell execution path unchanged.
 
-Scope of current source tests: injected provider read/write, missing-provider refusal, persisted references, no tokens in helper arguments, and platform configuration directories. Their passing CI is not a physical Linux/macOS keyring/sandbox or full J01-J08 installed acceptance. Official Release remains held by #513 / #512 until those requirements are satisfied.
+For Linux, the newly added `local-codex-linux-host.mjs` uses a **rootless
+bubblewrap** namespace (user UID/GID 65534, PID, IPC and UTS), with exactly
+one writable Git worktree mounted at `/workspace`, a dedicated private Builder
+model-home mounted at `/home/tally-builder`, a separate empty Git config and
+only readonly system runtime/certificate paths. The operator's home, private
+GitHub/SSH credentials, hidden fixture and Host CAS database are **not mounted**.
+A real namespace UID probe is mandatory before a new worktree is allocated.
+The Host then probes filesystem confinement and Codex login inside the
+sandbox before launching. Errors or unavailable namespaces deny execution.
+No unsandboxed fallback exists.
+
+Host-only Linux configuration (not browser-supplied):
+
+- `TALLY_V2_AGENT_PLATFORM=linux`, `TALLY_V2_AGENT_DISPATCH=host-mounted`;
+  all existing exact Claim/FSW/attempt/Task pins remain required.
+- A freshly sealed **Linux-native** `TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR`
+  and complete `T06M_TARGET_REPOSITORY`, `T06M_TARGET_ISSUE_NUMBER`,
+  `T06M_TARGET_VERSION_REF`, `T06M_TARGET_CANDIDATE_PATH` that match
+  the mounted source/Issue; never reuse the earlier Windows R145 prebuild.
+- `TALLY_LINUX_BWRAP_PATH=/usr/bin/bwrap`; `TALLY_CODEX_CLI_PATH` must
+  be an absolute executable path within `/usr` (e.g. `/usr/local/bin/codex`).
+  The host must be a **non-root** user on a Linux kernel allowing rootless
+  user namespaces. The required user namespace is never silently skipped.
+- A dedicated `TALLY_BUILDER_PROFILE` private (0700) directory,
+  `TALLY_CODEX_HOME=$TALLY_BUILDER_PROFILE/.codex` with the *separate* model
+  login, `TALLY_BUILDER_TEMP`, `TALLY_EMPTY_GIT_CONFIG`, and
+  `TALLY_HIDDEN_FIXTURE`. Keep them outside the exact editable worktree and
+  never point Builder home at the operator home itself.
+- `TALLY_BUILDER_PRINCIPAL=linux-bwrap:65534` and legacy sealed-result field
+  `TALLY_BUILDER_SID=linux-uid:65534` are **typed Linux namespace identity
+  markers, not Windows security identifiers**. The verifier marker must differ.
+  Tally intentionally retains the sealed C's process evidence *field name*
+  while refusing to equate Linux UID with a Windows SID.
+- The new Linux physical consumer runs a rebuilt sealed K app plus the **same**
+  candidate/commit validation. `TALLY_GIT_PATH` should be a Linux Git
+  executable; native SQLite and Node packages must be rebuilt for Linux/arch.
+
+The Linux path currently supports the selected **Codex** Builder only. Other
+AgentProviders and the Windows-only single-review consumer are not silently
+promoted to Linux; unsupported positive routes stay fail-closed. A real
+Builder -> candidate -> Draft PR requires one physical Linux Host/Claim
+acceptance, rather than substituting an injected unit-test process. This is
+still **NOT_RUN** until that Host's exact Linux install, namespace, login,
+recompiled Consumer, CAS and GitHub readback receipts exist.
+
+macOS has an OS-native *configuration keyring* adapter but **no qualified
+Agent Host** yet; it is not a v2.0.1 Linux/Windows selected-Builder release
+claim. Full installed UI J01-J08 acceptance (#513) and official Release
+(#512) remain held until the actual required v2.0.1 scope is proven.
