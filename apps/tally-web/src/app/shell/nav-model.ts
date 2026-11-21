@@ -101,7 +101,8 @@ export function selectionFromQuery(catalog:{
   const versions=catalog?.versionsByProject?.[projectId]??[];
   const queryVersion=typeof query.versionId==='string'?query.versionId:null;
   const versionId=queryVersion!==null&&
-    (catalog?.defaultVersionId===undefined||
+    (catalog?.sourceRepository===undefined||
+      catalog?.defaultVersionId===undefined||
       queryVersion===catalog.defaultVersionId)&&
     versions.some(version=>version.id===queryVersion)?queryVersion:null;
   return {projectId,versionId};
