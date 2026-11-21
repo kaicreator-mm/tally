@@ -74,6 +74,20 @@ test('real process exit produces exact candidate and durable restart recovery wi
   });
 });
 
+test('Linux Host disallows alternate provider without the certified bwrap process',async()=>{
+  await withHost(async({host,calls,config})=>{
+    const provider={id:'zcode',probe:async()=>({state:'AVAILABLE'}),
+      execute:async()=>({state:'COMPLETED'}),cancel:async()=>{},
+      reconcile:async()=>null};
+    const result=await host.runAttempt({...config,platform:'linux',
+      providerId:'zcode',agentProvider:provider,taskId:'172'});
+    assert.equal(result.state,'AGENT_NOT_EXECUTED');
+    assert.equal(result.reason,'PROVIDER_DISABLED');
+    assert.equal(result.agentLaunch,false);
+    assert.equal(calls.length,0);
+  });
+});
+
 test('missing/unauthed provider and failed confinement never spawn',async()=>{
   for(const [ops,reason] of [
     [operations({probeProvider:async()=>({available:false})}),'LOCAL_AGENT_UNAVAILABLE'],
