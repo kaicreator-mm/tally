@@ -58,3 +58,16 @@ test('single-project auto-select path is unchanged (no query needed)',()=>{
     {projectId:'only/repo',versionId:'main'}),
     {projectId:'only/repo',versionId:'main'});
 });
+
+test('mounted Host rejects foreign project/version hash even when catalog lists them',()=>{
+  const mounted={...multiProjectCatalog,sourceRepository:'kaicreator-mm/tally'};
+  assert.deepEqual(selectionFromQuery(mounted,
+    {projectId:'mock-owner/project2',versionId:'main'}),
+    {projectId:null,versionId:null});
+  assert.deepEqual(selectionFromQuery(mounted,
+    {projectId:'kaicreator-mm/tally',versionId:'version/r157-dev'}),
+    {projectId:'kaicreator-mm/tally',versionId:null});
+  assert.deepEqual(selectionFromQuery(mounted,
+    {projectId:'kaicreator-mm/tally',versionId:'main'}),
+    {projectId:'kaicreator-mm/tally',versionId:'main'});
+});
