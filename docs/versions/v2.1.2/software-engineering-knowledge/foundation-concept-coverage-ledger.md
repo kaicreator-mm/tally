@@ -1,36 +1,36 @@
-# 软件工程系统知识库：165 个知识点的可审计覆盖台账（R6）
+# 软件工程系统知识库：165 个知识点的可审计覆盖台账（R7）
 
 > [知识库总索引](README.md) · [第一/第二卷学科正文](systematic-foundation-depth-map.md) · [学科结构](knowledge-coverage-and-growth.md)
 >
-> **R3_LEDGER_INDEPENDENT_ACCEPT_SCOPED / R4_SIX_FOCUS_DOCUMENT_ACCEPT_SCOPED / R5_ADVANCED_REASONING_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R6_ADVANCED_THEORY_DELTA_REVIEW_PENDING / NOT_A_MACHINE_ABI / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 本台账是知识维护和导航的文档事实，不是 Rule/Agent Skill 的生产资格。ID、标题来自真实 11 份 `systematic-syllabus.md`；章节覆盖由写作者明确标注的**主题关联范围**建立，不是自动证明某概念已得到完整教材级论证。
+> **R3_LEDGER_INDEPENDENT_ACCEPT_SCOPED / R4_SIX_FOCUS_DOCUMENT_ACCEPT_SCOPED / R5_ADVANCED_REASONING_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R6_ADVANCED_THEORY_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R7_SELECTED_FOUNDATIONAL_DEPTH_REVIEW_PENDING / NOT_A_MACHINE_ABI / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 本台账是知识维护和导航的文档事实，不是 Rule/Agent Skill 的生产资格。ID、标题来自真实 11 份 `systematic-syllabus.md`；章节覆盖由写作者明确标注的**主题关联范围**建立，不是自动证明某概念已得到完整教材级论证。
 
 ## 阅读本表时的五个重要区分
 
 - **S**：每个知识点都已在原系统课程中解释概念、机制与误用，表示课程稿件存在，**不代表规范 Claim 已验收**。
 - **D1/D2**：第一卷/第二卷正文明确讨论或作为主线涉及该知识点；一行带两个链接仍不能宣称该知识有两个独立已证明的 Source Claim。
 - **F**：R4 为原先六个仅有课程解释的点新增**逐项聚焦原创正文**，覆盖对象、方法、适用前提、反例、STOP；R4 旧 Exact SHA 的文档限定审核已接受，R5 如有微修仅审实际差异。
-- **A**：R5 为 K01/K03/K05/K11 的 25 个课程点新增进阶原理/专业证伪正文，已在旧 Exact SHA 独立限定接受；R6 再为 K02/K04/K06/K07/K08/K09/K10 中 53 个已有课程点新增可证伪专业机制正文（**R6 待审**）。总计 78/165 具有额外进阶主题导航；这不是每点教材完整性或正式 Source Claim 认证。
+- **A**：R5 为 K01/K03/K05/K11 的 25 个课程点新增进阶原理/专业证伪正文，已在旧 Exact SHA 独立限定接受；R6 再为 K02/K04/K06/K07/K08/K09/K10 中 53 个已有课程点新增可证伪专业机制正文（**R6 已在旧 Exact SHA 限定接受**）；R7 为 K01/K03/K05 另选 15 个之前无 A 的课程 ID 加入专业深化（**R7 新增待审**）。目前总计 93/165 具有额外进阶主题导航；这不是每点教材完整性或正式 Source Claim 认证。
 - **仅 S**：当前 R4 已没有仅 S 的点，但不能以此证明 165 点达到同等深度。159 个只有 D1/D2 的主题关联深度并未因此变成逐项教材级证明。
 
 ## 全量课程、两卷正文、R4 六篇聚焦与 R5/R6 进阶原理的对应关系
 
 | Knowledge ID | 课程原概念 | 稿件级知识覆盖 |
 | --- | --- | --- |
-| `K01.F1.1` | Need/Goal 与 Solution | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) |
+| `K01.F1.1` | Need/Goal 与 Solution | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-requirements-traceability-and-change-propagation.md) |
 | `K01.F1.2` | Stakeholder 与利益冲突 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [D2](K01/foundations-deep-dive-02.md) |
 | `K01.F1.3` | 业务边界与领域语言 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) |
 | `K01.F2.1` | 访谈/观察/文档三角验证 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) |
 | `K01.F2.2` | 事实/假设/未知分类 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [D2](K01/foundations-deep-dive-02.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
 | `K01.F2.3` | 需求非功能影响 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) |
-| `K01.F3.1` | 实体/值对象/聚合边界 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) |
+| `K01.F3.1` | 实体/值对象/聚合边界 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-requirements-traceability-and-change-propagation.md) |
 | `K01.F3.2` | 状态机/业务事件 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
 | `K01.F3.3` | 业务不变量与可推理约束 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
 | `K01.F4.1` | 功能合同与边界用例 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
-| `K01.F4.2` | 需求可追溯链 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) |
+| `K01.F4.2` | 需求可追溯链 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) · [A](K01/advanced-requirements-traceability-and-change-propagation.md) |
 | `K01.F4.3` | 质量场景/优先级 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) |
 | `K01.F5.1` | 同条件冲突判定 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
 | `K01.F5.2` | 验收与反例 | [S](K01/systematic-syllabus.md) · [D1](K01/foundations-deep-dive-01.md) · [A](K01/advanced-knowledge-from-evidence-to-contract.md) |
-| `K01.F5.3` | 变更影响和冻结权威 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) |
+| `K01.F5.3` | 变更影响和冻结权威 | [S](K01/systematic-syllabus.md) · [D2](K01/foundations-deep-dive-02.md) · [A](K01/advanced-requirements-traceability-and-change-propagation.md) |
 | `K02.F1.1` | 架构与实现的不同抽象层 | [S](K02/systematic-syllabus.md) · [D1](K02/foundations-deep-dive-01.md) |
 | `K02.F1.2` | Stakeholder / Concern / Viewpoint | [S](K02/systematic-syllabus.md) · [D1](K02/foundations-deep-dive-01.md) · [D2](K02/foundations-deep-dive-02.md) · [A](K02/advanced-architecture-invariants-and-failure-tradeoffs.md) |
 | `K02.F1.3` | 架构决策记录 ADR | [S](K02/systematic-syllabus.md) · [D1](K02/foundations-deep-dive-01.md) · [D2](K02/foundations-deep-dive-02.md) |
@@ -46,18 +46,18 @@
 | `K02.F5.1` | 版本/兼容边界 | [S](K02/systematic-syllabus.md) · [D2](K02/foundations-deep-dive-02.md) |
 | `K02.F5.2` | 结构化可维护架构说明 | [S](K02/systematic-syllabus.md) · [D2](K02/foundations-deep-dive-02.md) |
 | `K02.F5.3` | 架构适用性失效与回评 | [S](K02/systematic-syllabus.md) · [D2](K02/foundations-deep-dive-02.md) |
-| `K03.F1.1` | 复杂度/成本模型 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) |
-| `K03.F1.2` | 数据结构与索引 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) |
-| `K03.F1.3` | 算法正确性与边界 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) |
+| `K03.F1.1` | 复杂度/成本模型 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [A](K03/advanced-algorithm-contracts-types-and-formal-claims.md) |
+| `K03.F1.2` | 数据结构与索引 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [A](K03/advanced-algorithm-contracts-types-and-formal-claims.md) |
+| `K03.F1.3` | 算法正确性与边界 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [A](K03/advanced-algorithm-contracts-types-and-formal-claims.md) |
 | `K03.F2.1` | 模块/接口/内聚 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
-| `K03.F2.2` | 类型系统与数据验证 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [D2](K03/foundations-deep-dive-02.md) |
+| `K03.F2.2` | 类型系统与数据验证 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-algorithm-contracts-types-and-formal-claims.md) |
 | `K03.F2.3` | 可读性与可维护性 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
 | `K03.F3.1` | 状态机/条件更新 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-concurrency-idempotency-proof-sketch.md) |
 | `K03.F3.2` | 幂等/重试/取消 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-concurrency-idempotency-proof-sketch.md) |
 | `K03.F3.3` | 异步任务与背压 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-concurrency-idempotency-proof-sketch.md) |
 | `K03.F4.1` | 数据库和事务实现 | [S](K03/systematic-syllabus.md) · [D1](K03/foundations-deep-dive-01.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-concurrency-idempotency-proof-sketch.md) |
 | `K03.F4.2` | 文件/网络/进程资源 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-concurrency-idempotency-proof-sketch.md) |
-| `K03.F4.3` | 依赖/生成代码边界 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
+| `K03.F4.3` | 依赖/生成代码边界 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) · [A](K03/advanced-algorithm-contracts-types-and-formal-claims.md) |
 | `K03.F5.1` | 异常分类和可行动错误 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
 | `K03.F5.2` | 日志与敏感性 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
 | `K03.F5.3` | 真正的编译与受影响测试 | [S](K03/systematic-syllabus.md) · [D2](K03/foundations-deep-dive-02.md) |
@@ -78,19 +78,19 @@
 | `K04.F5.3` | 停止策略与交付首位 | [S](K04/systematic-syllabus.md) · [D2](K04/foundations-deep-dive-02.md) · [A](K04/advanced-task-graph-critical-path-and-bounded-delivery.md) |
 | `K05.F1.1` | 测试与证明的范围 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
 | `K05.F1.2` | 业务来源驱动 Oracle | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
-| `K05.F1.3` | 验证与确认 V&V | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) |
-| `K05.F2.1` | 等价类与边界值 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [D2](K05/foundations-deep-dive-02.md) |
+| `K05.F1.3` | 验证与确认 V&V | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
+| `K05.F2.1` | 等价类与边界值 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
 | `K05.F2.2` | 决策表与状态转换 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
 | `K05.F2.3` | 性质/组合/变异测试 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
-| `K05.F3.1` | Unit/Contract/Integration/E2E | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) |
-| `K05.F3.2` | 依赖环境与隔离 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) |
+| `K05.F3.1` | Unit/Contract/Integration/E2E | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
+| `K05.F3.2` | 依赖环境与隔离 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
 | `K05.F3.3` | Build/Package 与平台 | [S](K05/systematic-syllabus.md) · [F](K05/focus-f3-3-build-package-platform-verification.md) |
 | `K05.F4.1` | 实际发现/执行 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
 | `K05.F4.2` | Snapshot/Golden 和过期证据 | [S](K05/systematic-syllabus.md) · [F](K05/focus-f4-2-golden-snapshot-evidence-freshness.md) |
-| `K05.F4.3` | Flaky 测试与诊断 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) |
+| `K05.F4.3` | Flaky 测试与诊断 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
 | `K05.F5.1` | 风险驱动优先级 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
 | `K05.F5.2` | 覆盖与变异有效性 | [S](K05/systematic-syllabus.md) · [D1](K05/foundations-deep-dive-01.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-oracle-adequacy-and-test-selection.md) |
-| `K05.F5.3` | 测试结果与权威 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) |
+| `K05.F5.3` | 测试结果与权威 | [S](K05/systematic-syllabus.md) · [D2](K05/foundations-deep-dive-02.md) · [A](K05/advanced-verification-validation-and-oracle-qualification.md) |
 | `K06.F1.1` | 现象与原因分离 | [S](K06/systematic-syllabus.md) · [D1](K06/foundations-deep-dive-01.md) · [A](K06/advanced-incident-causality-and-distinguishing-probes.md) |
 | `K06.F1.2` | 第一失败点与失败传播 | [S](K06/systematic-syllabus.md) · [D1](K06/foundations-deep-dive-01.md) · [D2](K06/foundations-deep-dive-02.md) · [A](K06/advanced-incident-causality-and-distinguishing-probes.md) |
 | `K06.F1.3` | 环境/版本同一性 | [S](K06/systematic-syllabus.md) · [D1](K06/foundations-deep-dive-01.md) · [D2](K06/foundations-deep-dive-02.md) · [A](K06/advanced-incident-causality-and-distinguishing-probes.md) |
@@ -219,6 +219,18 @@ R6 七篇新章节均从既有真实课程中选取机制/反例作为研究对�
 
 七模块共 53 项新 A，连同 R5 已有 25 项，一共 **78/165**。另有 [W06–W12 七条完整跨学科演算](professional-reasoning-worked-traces-02.md)，与 W01–W05 一起构成 12 条教学演算而非 Agent 性能跑分。**余下 87 个 ID 没有 A 进阶链接**，仍有基础两卷/Focus 导航，但不能因此判定缺失重要专业课程或已获得完整学理证据。外部参考增加 A62–A64 三条来源线索，不等于资格通过。
 
+## R7：从无 A 的 87 点中优先选择 15 个原理/可靠证据缺口（新增待审）
+
+R6 原有 165 个课程点中 78 个带 A，余下 **87 个无 A**（其中多个已有 Focus 或两卷基础主题）。本轮首先完成 [87 点逐项真实差距盘点与分级](professional-depth-gap-inventory-r7.md)，将其中 15 点纳入三个基础理论深化章节，而非自动制造 87 份相似文章：
+
+| 学科 Owner | 新正文 | 精确新增课程点 | 数量 |
+| --- | --- | --- | --- |
+| K01 | [需求追溯/聚合不变量/变更影响](K01/advanced-requirements-traceability-and-change-propagation.md) | F1.1、F3.1、F4.2、F5.3 | 4 |
+| K03 | [算法前后条件/循环不变量/类型与形式验证边界](K03/advanced-algorithm-contracts-types-and-formal-claims.md) | F1.1、F1.2、F1.3、F2.2、F4.3 | 5 |
+| K05 | [Verification vs Validation / Test 层/Flaky/Oracle 资格](K05/advanced-verification-validation-and-oracle-qualification.md) | F1.3、F2.1、F3.1、F3.2、F4.3、F5.3 | 6 |
+
+**R7=15，新累计 A=93/165，余 72 无 A。** 上表既是读者导航，也是后续受影响差异审核的边界；单个 A 仍只证明正文有专题讨论，不能自动资格认定某领域科学原理已被产品证明。新增参考 A65–A67 是源目录发现而非已合格原始 Claim；其他 Kxx 已审 Source/Focus 不重复改写。
+
 ## 学科完成度只能按正确维度报告
 
 - **S：165/165** 个唯一 ID 的课程概要存在。**D1/D2 文档主题触及：159/165；其余 6/165 有 R4 一点一篇 F 深文；S+D1/D2/F 的导航关联覆盖 165/165。** 这只是有正文引用的覆盖率，不是完整学科掌握或 Source 资格认证。
@@ -226,7 +238,7 @@ R6 七篇新章节均从既有真实课程中选取机制/反例作为研究对�
 - **外部来源目录：61 条发现/适用参考**，不是 61 条合格 Claim；现有 26 Topic 为问题级投影而非全部学科范围。
 - **当前合格 Source/DomainHarness 消费**仍无本轮新增实证；任何 Agent/Host/CI、Product/L2/Release 资格需另行真实验证。
 
-**R5/R6 额外进阶 A 引用：78/165（R5 25 + R6 新增 53）**，并非 78 条已合格 Source Claim。**各模块的主题关联或 R4 聚焦正文覆盖**：K01–K11 均 15/15（其中 K02 1 点、K04 1 点、K05 2 点、K06 1 点、K10 1 点新增 F）；保留 R3 原始 159 点 D1/D2 限定事实，勿将新增 F 计为原两卷本身已涉及。
+**R5/R6/R7 额外进阶 A 引用：93/165（R5 25 + R6 53 + R7 15）**，并非 78 条已合格 Source Claim。**各模块的主题关联或 R4 聚焦正文覆盖**：K01–K11 均 15/15（其中 K02 1 点、K04 1 点、K05 2 点、K06 1 点、K10 1 点新增 F）；保留 R3 原始 159 点 D1/D2 限定事实，勿将新增 F 计为原两卷本身已涉及。
 
 ## 维护规则
 
