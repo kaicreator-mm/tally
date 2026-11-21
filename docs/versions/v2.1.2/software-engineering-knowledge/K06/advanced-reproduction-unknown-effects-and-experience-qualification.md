@@ -8,12 +8,12 @@
 
 一次失败的详细日志通常包含数千条无关信息。最小复现的目标并非越少行越好，而是保留**触发被观察现象所必需的输入、运行环境、状态与执行顺序**，并能重新获得同一类可辨别的失败。
 
-示例：同一个 Source SHA 的 `contract.spec.mjs` 在 A 轮 FAIL、B 轮套件 GREEN。先列出三项互斥原因：
+示例：同一个 Source SHA 的 `contract.spec.mjs` 在 A 轮 FAIL、B 轮套件 GREEN。首先辨别**实际执行/发现**与**Oracle 预期有效性**两个不同维度。以下是需要区分、但并非全部互斥的假设与审查事项：
 - H1：相同 testId 两轮都执行，因共享 DB、种子、时间竞争导致结果振荡；
 - H2：B 轮 Test Discovery 未包含该 testId，因此 B 轮该测试应为 `NOT_RUN`；
-- H3：两轮测试都执行且都引用旧 Expected，但实际差异是有权合同版本已变化；旧结果不能代表当前合同。
+- H3（Oracle 有效性问题，可与 H1 同时成立）：两轮测试都执行且都引用旧 Expected，但当前有权合同版本已经变化；旧 Expected 可以令测试结果**稳定地不具备正确性资格**，它本身不能解释同测试、同条件下的随机红绿。若结果确实振荡，还需独立查输入、时序或环境的变化。
 
-**最短区分步骤**：固定 exact SHA/Runner、打印两个 Attempt 的 testId+run events，再比较隔离资源、输入/Oracle Edition。只有证实两轮实际执行同一测试才可继续调查 H1；单独的稳定旧 Oracle 并不导致同条件随机 Flaky。
+**最短区分步骤**：固定 exact SHA/Runner、打印两个 Attempt 的 testId+run events，再比较隔离资源、输入/Oracle Edition。只有证实两轮实际执行同一测试才可将结果振荡归入 H1 的调查范围；H2 的目标 NOT_RUN 与该目标两轮均运行互斥，但 H1 的实际执行不稳定与 H3 的 Oracle 无效可以共存。单独的稳定旧 Oracle 并不导致同条件随机 Flaky。
 
 ### 可撤销测试与现实 Effect 分开
 
