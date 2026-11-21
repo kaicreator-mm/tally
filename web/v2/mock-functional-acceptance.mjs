@@ -32,7 +32,8 @@ const get=async(origin,path)=>{
 };
 const post=async(origin,path,key,body)=>{
   const r=await fetch(origin+path,{method:'POST',headers:{
-    origin,'content-type':'application/json',...(key?{'x-tally-action-key':key}:{})},
+    origin,'content-type':'application/json',...(key?{
+      [path.startsWith('/api/setup/')?'x-tally-setup-key':'x-tally-action-key']:key}:{})},
     body:JSON.stringify(body)});
   return {http:r.status,result:await r.json()};
 };
