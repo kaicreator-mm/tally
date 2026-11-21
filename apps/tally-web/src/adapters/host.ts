@@ -123,6 +123,19 @@ export interface ReleaseResponse{connected:boolean;
     permits:{operation:string;state:string;sourceSha:string|null;
       grantedAt:string|null}[]|null;
     rqState:string;ownerGrantState:string;advisoryOnly?:boolean};}
+/** The existing real maintenance controller returns a source-pinned
+ * snapshot; no empty-array or fabricated connected state is permitted. */
+export interface MaintenanceSnapshotResponse{
+  snapshot:{
+    status:string;sourceSha:string;
+    candidate?:{state:string;summary:string;sourceIssueRef:string}|null;
+    review?:{state:string;current:boolean}|null;
+    publication?:{state:string;reason?:string;githubEffect?:string}|null;
+    learning?:unknown[];history?:unknown[];
+    authorized:boolean;taskPass:boolean;releasePass:boolean;
+  };
+  lastResult?:{kind?:string;status?:string;reason?:string}|null;
+}
 export interface MetadataResponse{connected:boolean;reason?:string;model?:string;
   versionId:string|null;
   attempts?:unknown[];reports?:unknown[];lineage?:unknown[];
@@ -225,6 +238,7 @@ export const hostAdapter=Object.freeze({
     `/api/v2/requirements?versionId=${encodeURIComponent(versionId)}`),
   qa:(versionId:string)=>getJson<QaResponse>(
     `/api/v2/qa?versionId=${encodeURIComponent(versionId)}`),
+  maintenance:()=>getJson<MaintenanceSnapshotResponse>('/api/maintenance/snapshot'),
   settings:()=>getJson<SettingsResponse>('/api/v2/settings'),
   release:(versionId:string)=>getJson<ReleaseResponse>(
     `/api/v2/release?versionId=${encodeURIComponent(versionId)}`),
