@@ -149,31 +149,6 @@ steps:
       - test -f apps/tally-web/dist/index.html
       - echo V2_REACT_UI_PASS
 
-  # One browser, one built installed React /app, deterministic host/model mocks.
-  # Screenshots are emitted into the ordinary Woodpecker Log stream (also
-  # synchronized to Drive Logs) to keep a durable visual witness.
-  - name: v2-installed-chromium-mock-ux
-    image: bash
-    when:
-      - path:
-          include:
-            - '.woodpecker/ci.yaml'
-            - 'web/v2/installed-chromium-acceptance.mjs'
-            - 'apps/tally-web/**'
-            - 'web/v2/first-run-server.mjs'
-    commands:
-      - set -euo pipefail
-      - test -f apps/tally-web/dist/index.html
-      - node --check web/v2/installed-chromium-acceptance.mjs
-      # Deterministic one-time browser artifact handoff to the current
-      # ChatGPT Linux Chromium host; remove this transfer once acceptance
-      # screenshots and network receipts have been captured.
-      - 'test -f apps/tally-web/dist/index.html'
-      - 'tar -czf /tmp/tally-r156-ui-bundle.tar.gz -C apps/tally-web/dist .'
-      - 'printf "R156_UI_DIST_TGZ_B64="; base64 -w 0 /tmp/tally-r156-ui-bundle.tar.gz; printf "\n"'
-      - echo V2_REACT_DIST_EXPORTED_FOR_LOCAL_CHROMIUM
-      - 'echo R156_ONE_TIME_ARTIFACT_TRANSFER_PENDING; exit 42'
-
   - name: v2-agent-providers
     image: bash
     when:
