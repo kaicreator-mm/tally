@@ -21,6 +21,7 @@ import type {RequirementNode} from '../features/requirements/model.ts';
 import type {QaRecord} from '../features/qa/model.ts';
 import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
+import {ProductWorkspace} from '../features/product/ProductWorkspace.tsx';
 import {QaView} from '../features/qa/views.tsx';
 import {ReleaseView} from '../features/release/views.tsx';
 
@@ -55,7 +56,7 @@ export function App({route,onNavigate,inboxCount=0}:{route:Route;
 function routeBody(key:string,versionId:string|null):React.ReactNode{
   switch(key){
     case 'overview':return <OverviewRoute/>;
-    case 'product':return <RequirementsRoute versionId={versionId}/>;
+    case 'product':return <ProductWorkspace/>;
     case 'tasks':return <TasksRoute versionId={versionId}/>;
     case 'agents':return <AgentsRoute versionId={versionId}/>;
     case 'l2-dag':return <DagRoute versionId={versionId}/>;
