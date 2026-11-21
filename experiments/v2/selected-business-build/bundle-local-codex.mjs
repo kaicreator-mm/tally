@@ -358,6 +358,9 @@ async function resolveAttemptProvider(env,input){
   if(!/^[a-z][a-z0-9-]{0,63}$/.test(providerId))
     return {reason:'PROVIDER_ID_INVALID'};
   if(!enabledProviderIds.includes(providerId))return {reason:'PROVIDER_DISABLED'};
+  // Never let an environment-selected Provider bypass the Linux bwrap driver.
+  if(env.TALLY_V2_AGENT_PLATFORM==='linux'&&providerId!=='codex')
+    return {reason:'PROVIDER_DISABLED'};
   if(providerId==='codex')return {providerId,agentProvider:null,providerEnv:null};
   let configs,environment;
   try{
