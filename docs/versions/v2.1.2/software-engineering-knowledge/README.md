@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / R1_TO_R9_SCOPED_ACCEPT_ON_PRIOR_EXACT_SHAS / R10_KNOWLEDGE_SELECTION_AND_EVALUATION_REVIEW_PENDING / NOT_FROZEN` |
+| Document state | `SOURCE_CANDIDATE / R1_TO_R10_SCOPED_ACCEPT_ON_PRIOR_EXACT_SHAS / R11_BOUNDED_PILOT_DESIGN_REVIEW_PENDING / NOT_FROZEN` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,7 +24,7 @@
 - [72 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 22 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产） = 221 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 23 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一项真实受权知识试验设计） = 222 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
@@ -45,7 +45,8 @@
 - [R9 五篇故障/流程/迁移/可靠性专业深化](systematic-foundation-depth-map.md#r9工程故障证据迁移与可靠性的跨模块深化旧-sha-已审)：K03 错误语义/日志/测试发现、K04 风险自适应流程、K06 最小复现/未知 Effect、K09 配置/数据迁移、K10 背压/P95/真实恢复，精确新增 13 个原知识 ID A 导航（R9 已在旧 Exact SHA 独立限定接受）。
 - [W18–W22 五条完整合成推理演算](professional-reasoning-worked-traces-04.md)：至此 W01–W22 共 22 个教学推理实例，均未真实运行 Agent/Host/CI。
 - [R9 13 项 Source→Claim→Oracle 准入差距分析](professional-source-to-claim-readiness-r9.md)：逐项列出原理来源与真正生产消费所缺的版本、合法权威、独立 Oracle，属于分析候选，不是已获 Source Claim 资格；A70–A72 三项新发现参考使总来源达到 72。
-- **R10 专业知识真正可判别的研究准备**：[五项原始出处→命题/反例/资格档案](professional-primary-source-claim-dossiers-r10.md)（C10-01～05）、[六组最小变量对照/12 道题](professional-knowledge-evaluation-fixtures-r10.md)（EV10-01A～06B）、[合法基线/评分/成本评价协议](professional-knowledge-evaluation-protocol-r10.md)、[跨 Kxx 选择、来源当前性和有权停止手册](professional-knowledge-selection-playbook-r10.md)。这些是**新增四份版本级文档，待 R10 独立审核**，不是额外四个高价值 Topic、十二次真实 Agent 测试或已经运行的 DomainHarness Package；165 原 ID/120 A/72 外部来源/48 Concept 关系/Q18/W22 均不变。
+- **R10 专业知识真正可判别的研究准备**：[五项原始出处→命题/反例/资格档案](professional-primary-source-claim-dossiers-r10.md)（C10-01～05）、[六组最小变量对照/12 道题](professional-knowledge-evaluation-fixtures-r10.md)（EV10-01A～06B）、[合法基线/评分/成本评价协议](professional-knowledge-evaluation-protocol-r10.md)、[跨 Kxx 选择、来源当前性和有权停止手册](professional-knowledge-selection-playbook-r10.md)。这些是**R10 四份版本级文档，已在旧 Exact SHA 通过独立文档限定审核（P2×1 新增精确修复）**，不是额外四个高价值 Topic、十二次真实 Agent 测试或已经运行的 DomainHarness Package；165 原 ID/120 A/72 外部来源/48 Concept 关系/Q18/W22 均不变。
+- **R11 真正受权的最小知识消费试验设计**：[一个真实代码任务、两个隔离 Agent A/B、独立 QA/真实 Runner Oracle](professional-live-knowledge-consumption-pilot-design-r11.md)。先以有权 GitHub Issue 固定 Repo/H0、允许写集、独立负例和真实 Agent Execution；B 组只多选择版次固定的 K03/K05/K08/K09 专业知识。单任务只能验收受限真实闭环，不能证明普遍提效或 Tally 生产知识消费者。R11 当前只是设计候选，后续 E1 真实实验需另有合法 Task/Repo/Host 权限；E2 正式 Tally 消费需 #286 未来编号子版本 Product/L2/DAG 决议。
 - [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、R3 两卷主题关联的 159 点、R4 六篇一对一 F 聚焦正文与 R5 25 点 + R6 53 点 + R7 15 点 + R8 14 点 + R9 13 点 A 进阶原理链接（累计 120 点，R9 旧 Exact SHA 已审，R10 不新增 A）；章节关联不等于 Claim/Rule 资格。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
@@ -136,6 +137,7 @@ software-engineering-knowledge/
 ├── professional-knowledge-evaluation-fixtures-r10.md # R10 六对十二例最小变形问答
 ├── professional-knowledge-evaluation-protocol-r10.md # R10 同模型基线与独立评价办法
 ├── professional-knowledge-selection-playbook-r10.md # R10 知识检索/有权来源/停止手册
+├── professional-live-knowledge-consumption-pilot-design-r11.md # R11 两隔离Agent/真实任务/QA 受权试验设计
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
