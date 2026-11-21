@@ -1,0 +1,298 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 432,
+  "parentIssue": 219,
+  "coordinatorIssues": [
+    392,
+    259
+  ],
+  "phase": "MAINTENANCE_PUBLICATION_PENDING_RECOVERY",
+  "revision": "R1",
+  "observedAt": "2026-11-16",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "e825d155c18677f213ab4636bf2a62b33709deeb",
+    "treeSha": "fd9836afc9d596181c0aa3cd5ed8a91acaf98335",
+    "sourceNote": "Live GitHub version/v2 branch readback; recheck at Pack review/Owner/Claim time"
+  },
+  "packArtifactBranch": {
+    "branch": "task/i432-publication-recovery-pack-web-r1",
+    "baseSha": "e825d155c18677f213ab4636bf2a62b33709deeb",
+    "purpose": "one-file governance-only Pack, no source mutation",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "taskIdentity": {
+    "issueRef": "https://github.com/kaicreator-mm/tally/issues/432",
+    "title": "[v2][P1 Defect] Maintenance title truncation and premature pending CAS block publication",
+    "liveState": "open",
+    "liveLabelsAtObservation": [
+      "type:task",
+      "state:planned"
+    ],
+    "nativeBlockedBy": [],
+    "canonicalClaimEventCount": 0,
+    "rosterDisposition": "OUT_OF_ROSTER_ENABLING_DEFECT_NO_R17_REFREEZE",
+    "ownerDirection": "Original maintenance Writer after fresh claim/FSW; no historical #219 authority reuse",
+    "nativeSubIssues": [],
+    "nativeDependencySource": "https://api.github.com/repos/kaicreator-mm/tally/issues/432/dependencies/blocked_by",
+    "nativeDependencyReadback": "CLEAR (official REST /blocked_by [] and /blocking [] on 2026-11-16)",
+    "canonicalClaimEventReadback": "0 ads/github DISPATCH_CLAIMED on full live #432 comments; preserved no-Claim state as of 2026-11-16; re-read at admission"
+  },
+  "sourceEvidence": {
+    "kind": "SOURCE_FIRST_READ_ONLY",
+    "sourceFileBlobs": {
+      "experiments/v2/maintenance/host-maintenance.mjs": "576038d81f141afcedc4b7c9b7b8297c57486958",
+      "experiments/v2/maintenance/host-maintenance.test.mjs": "57ee2175ea7067baf398419569dfd03d2b0e9d06"
+    },
+    "findings": [
+      {
+        "id": "P1-432-A",
+        "location": "host-maintenance.mjs maintenanceTitle()",
+        "actual": "String slices 160 characters without trimming; summary 160th character may be whitespace and transport rejects.",
+        "required": "deterministic canonical title generation and exact provider shape validation before any pending CAS reservation"
+      },
+      {
+        "id": "P1-432-B",
+        "location": "hostPublishMaintenanceIssue() guarded fence",
+        "actual": "PENDING_MAINTENANCE_ISSUE written before publishIssue validates input, leaving durable pending even on local refusal with zero POST.",
+        "required": "perform deterministic local pre-POST validation and refuse with githubEffect=NOT_RUN before pending CAS; preserve lost-ACK ambiguity after a true POST attempt"
+      },
+      {
+        "id": "P1-432-C",
+        "location": "PENDING_MAINTENANCE_ISSUE reconciliation",
+        "actual": "A zero marker search returns UNKNOWN unconditionally; same genuine pending row cannot resume.",
+        "required": "reviewed durable proof differentiating definitely NO-POST local validation refusal from MAY-POST lost ACK; zero matches alone is never proof of no POST; no direct CAS edit/blind retry"
+      }
+    ],
+    "currentSourceUnmodified": true,
+    "publicationStatus": "PUBLICATION_UNKNOWN",
+    "observedNativePost": "ZERO_REPORTED_NEEDS_INDEPENDENT_ATTESTATION",
+    "nativeIndependentChecks": {
+      "blockedBy": "[] official REST GitHub at #432",
+      "blocking": "[] official REST GitHub at #432",
+      "openTaskBodies": 22,
+      "onlyOtherSharedWriter": 219,
+      "source": "read-only 2026-11-16 GitHub APIs",
+      "transportZeroPost": "original Writer report #432/6911191749 ONLY; not independently verified durable effect"
+    }
+  },
+  "predecessorGovernance": {
+    "issue219": {
+      "maintenanceOriginalSourceSha": "e825d155c18677f213ab4636bf2a62b33709deeb",
+      "acceptedBuilderClaimRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6902869432",
+      "acceptedReviewerClaimRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6902877445",
+      "reviewWitnessRef": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6903133532",
+      "immutableCandidateDigest": "5f121a6fe339fc39549891b5546e2e8db0cc457b896f08b7852fa6951c587252",
+      "currentPublication": "PUBLICATION_UNKNOWN / MAINTENANCE_ISSUE_INPUT_INVALID",
+      "pendingCasPhase": "PENDING_MAINTENANCE_ISSUE",
+      "githubPostCountEvidence": "OWNER_AND_REVIEWER_REPORTED_ZERO; REQUIRES_INDEPENDENT_TRUSTED_REVALIDATION",
+      "releaseEligibility": false
+    },
+    "existingPack431": "R5 current-source candidate source SHA e825d155; source advance after repair requires new #219 Pack/Owner readback",
+    "historicalR17": {
+      "taskIdentities": 51,
+      "nativeEdges": 37,
+      "scope": "historical VERSION_ONLY, no task FSW"
+    }
+  },
+  "allowed_write_set": [
+    {
+      "path": "experiments/v2/maintenance/host-maintenance.mjs",
+      "owner": "ISSUE_432_ORIGINAL_SINGLE_WRITER",
+      "purpose": "Bounded title/input-precheck/reconciliation source fix"
+    },
+    {
+      "path": "experiments/v2/maintenance/host-maintenance.test.mjs",
+      "owner": "ISSUE_432_ORIGINAL_SINGLE_WRITER",
+      "purpose": "RED-first positive/negative and durable physical recovery regressions"
+    }
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "writeSetNormalization": "tally.v2.allowed-write-set-normalization/1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_SERIALIZED_SINGLE_WRITER",
+    "pathCount": 2,
+    "pathsSha256": "6c54ced5863f52359a8cc521839c98c3fa2ce5dc6a35cc1444b56c389fadaa62",
+    "knownOverlaps": [
+      {
+        "issue": 219,
+        "pathCount": 2,
+        "disposition": "SERIALIZED_NO_CONCURRENT_WRITER"
+      }
+    ],
+    "exactFilesOnly": true,
+    "admissionRule": "This is a candidate snapshot, not FSW or Claim approval. Before any Host effect re-read current version SHA, Issue #432 updatedAt, entire 22-or-current active Task roster and all native dependencies; preserve #219 single-Writer serialization. Any newly conflicting writer FAIL_CLOSED.",
+    "openTypeTaskCount": 22,
+    "checkedIssueNumbers": [
+      432,
+      427,
+      422,
+      417,
+      377,
+      276,
+      273,
+      264,
+      263,
+      262,
+      261,
+      260,
+      219,
+      209,
+      208,
+      207,
+      202,
+      200,
+      199,
+      198,
+      197,
+      196
+    ],
+    "nonemptyOverlaps": [
+      {
+        "issueNumber": 219,
+        "pathCount": 2,
+        "paths": [
+          "experiments/v2/maintenance/host-maintenance.mjs",
+          "experiments/v2/maintenance/host-maintenance.test.mjs"
+        ],
+        "disposition": "SERIALIZED_ORIGINAL_MAINTENANCE_WRITER_AFTER_219_PAUSE"
+      }
+    ],
+    "verifiedNoOverlapIssueNumbers": [
+      427,
+      422,
+      417,
+      377,
+      276,
+      273,
+      264,
+      263,
+      262,
+      261,
+      260,
+      209,
+      208,
+      207,
+      202,
+      200,
+      199,
+      198,
+      197,
+      196
+    ],
+    "liveOpenTaskIntersection": "22/22 GitHub open type:task bodies inspected for exact two-path allowed_write_set; only #219 intersects outside #432; no parallel shared-path dispatch",
+    "independentReadback": "GitHub search repo:kaicreator-mm/tally is:issue is:open label:type:task and full issue bodies; #219 two exact path entries; native #432 blocked_by=[]"
+  },
+  "repairContract": {
+    "requiredProperties": [
+      "Exactly one title/body/marker canonicalization across prevalidate, pending row, findIssue, publishIssue, readIssue",
+      "Never emit PENDING when deterministic input is invalid before an external POST possibility",
+      "No native duplicate Issue on empty or eventually-consistent search",
+      "No manual/unguarded replacement of immutable #219 draft, digest, reviewer witness, Claim, FSW or historical CAS",
+      "Pending recovery requires independently reviewable trusted zero-POST evidence bound to same sourceSha/candidateDigest/marker/transport attempt and fence; otherwise remain UNKNOWN",
+      "Keep accepted Builder/Reviewer operator/process independence and current source/ReviewWitness checks",
+      "No extra source files, issue publication, tag or deploy by this Pack"
+    ],
+    "failureMechanisms": [
+      {
+        "id": "P1-432-A",
+        "location": "host-maintenance.mjs maintenanceTitle()",
+        "actual": "String slices 160 characters without trimming; summary 160th character may be whitespace and transport rejects.",
+        "required": "deterministic canonical title generation and exact provider shape validation before any pending CAS reservation"
+      },
+      {
+        "id": "P1-432-B",
+        "location": "hostPublishMaintenanceIssue() guarded fence",
+        "actual": "PENDING_MAINTENANCE_ISSUE written before publishIssue validates input, leaving durable pending even on local refusal with zero POST.",
+        "required": "perform deterministic local pre-POST validation and refuse with githubEffect=NOT_RUN before pending CAS; preserve lost-ACK ambiguity after a true POST attempt"
+      },
+      {
+        "id": "P1-432-C",
+        "location": "PENDING_MAINTENANCE_ISSUE reconciliation",
+        "actual": "A zero marker search returns UNKNOWN unconditionally; same genuine pending row cannot resume.",
+        "required": "reviewed durable proof differentiating definitely NO-POST local validation refusal from MAY-POST lost ACK; zero matches alone is never proof of no POST; no direct CAS edit/blind retry"
+      }
+    ],
+    "candidateDigestToPreserve": "5f121a6fe339fc39549891b5546e2e8db0cc457b896f08b7852fa6951c587252",
+    "localEvidenceRule": "Zero marker matches alone never clears MAY_POST pending row; require trusted durable NO_POST proof, else UNKNOWN",
+    "crossSourceMigration": {
+      "severity": "P1_RELEASE_PATH_FEASIBILITY_UNPROVEN",
+      "historicalSource": "e825d155c18677f213ab4636bf2a62b33709deeb",
+      "problem": "Guarded merge of #432 repair advances version/v2. #219's original accepted role Claims, 14-path FSW, candidate and ReviewWitness all bind the previous source SHA. Existing hostPublishMaintenanceIssue checks live current version equals input.sourceSha; thus a merged repair cannot automatically resume publication using unchanged historical source-bound authority.",
+      "requiredDisposition": "Preserve historical registry/CAS/draft/review as immutable; establish an independently reviewed *new current-source* Pack/Owner/Claim/FSW/review chain or a separately authorized cryptographically source-bound migration contract. Never rewrite old CAS/Claim/ReviewWitness and never publish under stale source. When old Claims prevent new role admissions, perform lawful exact DONE/TERMINAL_VERIFIED termination via reviewed T06d path before successors.",
+      "recoveryGate": "Review dual risk: (1) no duplicate Issue/zero POST evidence and (2) new version source-currentness. A past zero-native-POST assertion does not grant current-source authority.",
+      "negativeTests": [
+        "Advance version/v2 after valid old-source pending: source-stale refusal remains fail-closed without fresh authority",
+        "Pending with no marker but no independent zero-POST proof: no retry or CAS clearing",
+        "Fresh current-source qualification cannot import old source-bound claim/review as current",
+        "Reconcile one real published Issue only by exact marker/title and official GitHub readback"
+      ]
+    }
+  },
+  "admissionPlan": {
+    "orderedGates": [
+      "Distinct-conversation independent Source-First review at the NEW committed PR #433 HEAD and actual PackBlob SHA-1, P0/P1=0, cross-checked to GitHub. Supersedes stale request c3526d... and prior REWORK review 5915960068; neither was an acceptance.",
+      "Refresh live Issue, native edges, Task source, overlap and candidate Pack at current source immediately before authority",
+      "Fresh #432 Builder Claim through genuine Host, dedicated registry and two-path Task FSW with matching immutable Pack; do not consume #219 Claims",
+      "Original single Writer only two admitted paths; test RED-first real bug then focused/adjacent/physical Node24, no skip of critical positive",
+      "One meaningful exact-HEAD Woodpecker qualification, separate transient clone from test failure; no blind CI reruns",
+      "Independent non-Writer new Exact HEAD source review P0/P1=0; guarded version/v2 integration only after acceptance",
+      "Post-merge rebind #219 current-source Pack/Owner/CAS authority and independently run bounded no-duplicate pending reconciliation",
+      "Only after real accepted maintenance publication and installed Core MVP UI/Agent/QA/RQ permit can Release be considered",
+      "Before any post-merge #219 publication, independently prove new current-source Claim/FSW/review eligibility; do not reuse old e825d155 authority or rewrite historical CAS."
+    ],
+    "claimAcceptance": "NOT_VERIFIED",
+    "fswStatus": "NOT_CREATED",
+    "ownerReceipt": "NOT_OBTAINED",
+    "independentPackReview": "NOT_PERFORMED",
+    "registry": "NOT_CREATED",
+    "sourceEditAuthorized": false,
+    "reviewDispositions": {
+      "previousReview": "PR #433 review 5915960068 REWORK P0=0 P1=2 P2=2 at previous actual HEAD bb351a72/blob 3308aa6b; never certify supplied stale blob c3526d",
+      "p101": "Review coordinate must always match new HEAD+blob. New revision requires fresh exact-blob independent review.",
+      "p102": "Fresh native /blocked_by [] and zero canonical Claim, 22-open-Task actual write-set intersections only #219 documented; re-read at admission.",
+      "p2": "Zero-POST Host attestation and cross-SHA migration remain future real Host gates; no invented proof",
+      "currentVerdict": "INDEPENDENT_REVIEW_PENDING_AT_NEW_HEAD"
+    }
+  },
+  "validationPlan": {
+    "cases": [
+      "Long summary with cut-point whitespace: normalized title accepted, exactly one verified Issue and canonical readback",
+      "Invalid title/body/marker: zero CAS pending write and zero GitHub POST, githubEffect=NOT_RUN",
+      "Genuine historical #219-shaped PENDING with authenticated zero-POST preflight-failure witness: bounded recovery; no changed candidate/digest/proof",
+      "Pending with one exact existing Issue: canonical marker/title authenticated readback and zero new POST",
+      "Pending with multiple Issue matches, stale/missing authority, inconclusive search, or no zero-POST proof: UNKNOWN and zero POST",
+      "Pending from true possible POST/lost ACK with zero search results: still UNKNOWN and zero retry",
+      "CAS concurrency across two Host processes: one writer, no duplicate / forged success",
+      "Legacy #219 J219 sealed physical replay and normal successful paths remain green",
+      "Cross-SHA recovery: old-source protected Claim/FSW/review after version/v2 merge cannot authorize publication until lawful successor authority exists"
+    ],
+    "requiredRuntime": "Windows Node >=24 and actual selected Host/SQLite, exact SHA CI",
+    "physicalClaim": "NOT_RUN"
+  },
+  "authority": {
+    "packFrozen": false,
+    "claimAccepted": false,
+    "writeSetFrozen": false,
+    "sourceEditAuthorized": false,
+    "dispatchable": false,
+    "taskPass": false,
+    "releasePass": false,
+    "mainMergeAuthorized": false,
+    "tagAuthorized": false,
+    "deploymentAuthorized": false,
+    "independentPackReview": "NOT_PERFORMED_AT_REVISED_HEAD",
+    "ownerReceipt": "NOT_OBTAINED"
+  },
+  "ciEvidence": {
+    "baseCommit": "e825d155c18677f213ab4636bf2a62b33709deeb",
+    "baseReportedPipeline": 804,
+    "baseReportedStatus": "SUCCESS_PER_392_ISSUE_RECEIPT_NOT_INDEPENDENTLY_RECHECKED_THIS_PACK",
+    "packPipeline": "NOT_CLAIMED",
+    "implementationPipeline": "NOT_RUN"
+  },
+  "completionBoundary": "This one-file docs-only pack is not a freeze or source authority. After independent exact-blob review and accepted #432 original Writer Claim/FSW, only two approved paths may be repaired; require independent new-SHA source review, guarded version/v2 integration, source requalification of #219 and truthful native publication. No Task/RQ PASS, main merge, Tag or deployment. All source/Claim/FSW/CI/Release gates remain unchanged by this documentation-only correction."
+}
