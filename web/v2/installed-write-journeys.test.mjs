@@ -1068,6 +1068,17 @@ test('Linux Agent Host is explicit and keeps the sealed target and physical runn
     const env={...consumerPins,...claimPins,
       TALLY_V2_AGENT_PLATFORM:'linux',TALLY_LINUX_BWRAP_PATH:'/usr/bin/bwrap',
       TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR:'/tmp/tally-linux-selected-consumer',
+      TALLY_CODEX_CLI_PATH:'/usr/local/bin/codex',
+      TALLY_BUILDER_PROFILE:'/tmp/tally-linux-builder',
+      TALLY_CODEX_HOME:'/tmp/tally-linux-builder/.codex',
+      TALLY_BUILDER_TEMP:'/tmp/tally-linux-temp',
+      TALLY_EMPTY_GIT_CONFIG:'/tmp/tally-linux-empty-git',
+      TALLY_OPERATOR_HOME:'/tmp/tally-linux-operator',
+      TALLY_HIDDEN_FIXTURE:'/tmp/tally-linux-operator/hidden',
+      TALLY_LOCAL_REPOSITORY_PATH:'/tmp/tally-linux-source',
+      TALLY_V2_AGENT_WORKTREE_PATH:'/tmp/tally-linux-worktree',
+      TALLY_V2_AGENT_EVIDENCE_DIR:'/tmp/tally-linux-evidence',
+      TALLY_V2_AGENT_SCRIPT_ROOT:'/tmp/tally-linux-driver',
       TALLY_BUILDER_PRINCIPAL:'linux-bwrap:65534',
       TALLY_BUILDER_SID:'linux-uid:65534',
       TALLY_VERIFIER_SID:'linux-uid:65533',
@@ -1089,12 +1100,17 @@ test('Linux Agent Host is explicit and keeps the sealed target and physical runn
     assert.match(called.script,/local-codex-linux-e2e\.mjs$/);
     assert.equal(called.runEnv.TALLY_V2_AGENT_PLATFORM,'linux');
     assert.equal(called.runEnv.TALLY_CLAIM_SOURCE_SHA,sha);
-    assert.equal(called.runEnv.TALLY_LOCAL_WORKTREE_PATH,claimPins.TALLY_V2_AGENT_WORKTREE_PATH);
+    assert.equal(called.runEnv.TALLY_LOCAL_WORKTREE_PATH,env.TALLY_V2_AGENT_WORKTREE_PATH);
     const rework=await runner.run('review-repair');
     assert.equal(rework.status,'UNKNOWN');
     assert.equal(rework.reason,'REVIEW_CONSUMER_NOT_MOUNTED');
     assert.throws(()=>readInstalledWriteJourneyEnvironment({
       ...env,TALLY_LINUX_BWRAP_PATH:undefined}),/AGENT_CONSUMER_PINS_MISSING/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_CODEX_HOME:undefined}),/AGENT_CONSUMER_PINS_MISSING/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_CODEX_HOME:'/tmp/tally-linux-other/.codex'}),
+      /AGENT_LINUX_SANDBOX_PINS_INVALID/);
     assert.throws(()=>readInstalledWriteJourneyEnvironment({
       ...env,TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR:undefined}),
       /AGENT_CONSUMER_PINS_MISSING/);
