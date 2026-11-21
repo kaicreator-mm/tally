@@ -13,6 +13,8 @@ export interface ShellCatalog{
   versionsByProject:Readonly<Record<string,readonly VersionSummary[]>>|null;
   /** Selected version reported by the actual mounted Host, never a UI guess. */
   defaultVersionId?:string|null;
+  /** Actual server-selected repository; a hash URL cannot change Host. */
+  sourceRepository?:string|null;
 }
 export interface ShellState{
   locale:Locale;
@@ -43,16 +45,19 @@ export function ShellProvider({children,storage,catalog={
   const [projectId,setProjectId]=useState<string|null>(null);
   const [versionId,setVersionId]=useState<string|null>(null);
   useEffect(()=>{
-    if(!projectId){
-      // R157 #513: hash links written by the shell carry the full selection
-      // (projectId&versionId). Restore it before any auto-select; unknown
-      // ids stay fail-closed and fall through to the 0/1-project behavior.
-      const seeded=selectionFromQuery(catalog,routeQuery??{});
-      if(seeded.projectId){setProjectId(seeded.projectId);
-        if(seeded.versionId)setVersionId(seeded.versionId);return;}
-      if(catalog.projects?.length===1)
-        setProjectId(catalog.projects[0].id);
+    // A valid deep link may arrive after the shell has mounted (hash change),
+    // not only at first load. Never use it to switch the actual Host source.
+    const seeded=selectionFromQuery(catalog,routeQuery??{});
+    if(seeded.projectId&&(
+      projectId!==seeded.projectId||
+      (seeded.versionId!==null&&versionId!==seeded.versionId))){
+      setProjectId(seeded.projectId);
+      setVersionId(seeded.versionId);
+      return;
     }
+    if(!projectId&&catalog.projects?.length===1)
+      setProjectId(catalog.projects[0].id);
+
     if(projectId&&!versionId){
       const versions=catalog.versionsByProject?.[projectId]??[];
       if(catalog.defaultVersionId&&
