@@ -8,7 +8,7 @@
 
 输入必须包含当前 Goal、业务/代码事实、来源/角色、版本/环境及未知。先识别完整知识库的专业模块、知识群和概念，再按实际风险选 Topic/DecisionProcedure/Rule/Skill/Case；所有条件性结论说明支持/反对来源和 STOP。确定性知识足以解决时不必启动 LLM；只有未来获权且确有材料性未知时使用受限模型生成候选，并且不能替代真实 Host/Task/Review。
 
-## 2. 十二种跨学科查询及预期结果（Q01–Q06 已审，Q07–Q12 为 R3 新增候选）
+## 2. 十八种跨学科查询及预期结果（Q01–Q06 早期已审、Q07–Q12 为 R3 已审、Q13–Q18 为 R4 候选）
 
 ### Q01：订单取消规则冲突
 
@@ -110,6 +110,34 @@
 
 以上六个案例全部为 **TEACHING_SYNTHETIC / NOT_AGENT_RUN / NOT_PRODUCTION_EVALUATION**；不能依它们授予任何 Source Claim、Rule、Product/L2 或 DomainHarness 消费资格。
 
+## 2.2 R4 六种专业补缺的跨模块推理反例（合成教学，Q13–Q18）
+
+### Q13：租户共享缓存的结构性隔离缺陷
+
+**输入**：两个租户存在同名 Task ID，后台通过 `cache[taskId]` 获取结果；单租户测试绿，跨租户顺序访问结果混淆。**知识选择**：[K02.F4.3](K02/focus-f4-3-minimal-failure-and-trust-boundary.md) 信任/状态边界 → K01 Actor/Rule → K05 跨租户 Oracle → K10 隔离恢复。**预期**：说明 ID 身份/缓存作用域、受权主体和可能数据泄露，提出 A/B 顺序和交错反例；缺实际身份合同则 UNKNOWN。**禁止**：以 TypeScript 类型检查成功或 UI 不显示其他租户认定安全。
+
+### Q14：Worker DONE 与合法任务接受不同
+
+**输入**：Agent A 发 DONE，PR 仍 OPEN，受影响合同测试未执行；Reviewer 旧 SHA 的结论无法覆盖当前修改。**知识选择**：[K04.F2.3](K04/focus-f2-3-task-acceptance-and-authority.md) → K07 ACK/Attempt → K05 正反验证 → K06 精确差异。**预期**：区分 Worker 报告、交付、实证与有权决定，保留历史 ACCEPT_SCOPED，当前受影响范围 WAIT/NOT_RUN。**禁止**：把 Agent DONE 或旧 Review 直接写成当前 Release。
+
+### Q15：跨 OS 安装包存在性被 Node 测试误证明
+
+**输入**：Linux 下 Node 单元测试全部通过，Windows 打包步骤未执行，用户请求下载安装器。**知识选择**：[K05.F3.3](K05/focus-f3-3-build-package-platform-verification.md) → K08 Build/Artifact 身份 → K10 首配合同。**预期**：单元/打包/安装/首次运行各自单列证据，对 Windows 包保持 NOT_BUILT/NOT_RUN。**禁止**：以跨平台 JavaScript 测试绿声称 Windows 安装文件可下载。
+
+### Q16：Snapshot 更新将错误输出洗成绿色
+
+**输入**：H2 引入跨租户数据混淆，使 H1 Golden 测试失败；Writer 更新 Golden 后报告测试绿色。**知识选择**：[K05.F4.2](K05/focus-f4-2-golden-snapshot-evidence-freshness.md) → K01 权限规则 → K02 隔离架构。**预期**：识别 Expected Owner 不可由当前错误实现自动赋予，恢复独立租户负例；对确实合法的无语义输出变更可以受控调整。**禁止**：批量更新 Snapshot 就认定回归已修复。
+
+### Q17：修补日志后重新引入旧补丁的错误
+
+**输入**：H1 已针对请求 ID 固定幂等，H2 改变队列的 ID 生成位置；H1 审核与 CI 通过但 H2 真实请求重复扣费可能发生。**知识选择**：[K06.F4.3](K06/focus-f4-3-patch-currentness-and-review.md) → K03 幂等 → K05 当前 Oracle → K08 真实执行记录。**预期**：分析 H1→H2 行为影响闭包，保留不受影响旧证据，对关键新路径安排小范围复测；Effect 未知先合法读回。**禁止**：以“改的是日志”推断无语义影响或复制 H1 PASS。
+
+### Q18：必须设置环境变量才能打开桌面项目
+
+**输入**：桌面工具启动前要求用户手写唯一仓库环境变量，用户希望多项目管理、首次运行后向导、无配置也能打开安全页面；Headless 运行不允许挂起等待 UI。**知识选择**：[K10.F5.1](K10/focus-f5-1-first-run-post-start-configuration.md) → K01 产品入口要求 → K05 真实启动/负例 → K08 目标平台制品。**预期**：区分 GUI 进程启动、配置/授权、业务 READY、Headless 的错误退出；在不同项目 Profile 间安全隔离。**禁止**：以 Twelve-Factor 的服务 env 方法一刀切要求所有桌面 UI 启动前配置，或未配置时默认远端仓库执行 Effect。
+
+**R4 六例均为 SYNTHETIC_TEACHING_CASE_ONLY / REAL_AGENT_HOST_NOT_RUN。** 提供正确推理与错误外推的判别框架，不是 6 次真实领域模型测试，也不授权生产消费。
+
 ## 3. 正式消费前的实际评估维度
 
 | 维度 | 应检查 | 不可代替的事实 |
@@ -121,4 +149,4 @@
 | 来源与权利 | 原始链接/版次/Clause/版权和适用界限 | 目录累计来源数不是 Claim 资格 |
 | 工程收益 | 同任务基线与辅助组的正确性/返工/耗时和成本 | Token 用量和 PR 数不能代替业务结果 |
 
-以上 Q01–Q12 共十二例可成为未来在 #286 合法消费者版本中进行有限评估的候选数据。当前只能证明**知识选择与判断预期已被文档化**，不能证明 Tally/DomainHarness 当前代码真正能返回这些结果。
+以上 Q01–Q18 共十八例可成为未来在 #286 合法消费者版本中进行有限评估的候选数据。当前只能证明**知识选择与判断预期已被文档化**，不能证明 Tally/DomainHarness 当前代码真正能返回这些结果。
