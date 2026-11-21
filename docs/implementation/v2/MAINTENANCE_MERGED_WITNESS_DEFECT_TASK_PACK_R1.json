@@ -1,0 +1,240 @@
+{
+  "schema": "tally/bootstrap-task-pack/v1",
+  "status": "CANDIDATE_NOT_FROZEN",
+  "project": "kaicreator-mm/tally",
+  "issueNumber": 417,
+  "parentIssue": 219,
+  "coordinatorIssues": [
+    392,
+    259
+  ],
+  "phase": "MAINTENANCE_MERGED_WITNESS_DEFECT_REPAIR",
+  "revision": "R1",
+  "observedAt": "2026-11-15T04:09:04.537Z",
+  "version": {
+    "ref": "version/v2",
+    "sourceSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+    "treeSha": "6868938767fe72214958edcaccf59f422e25805f"
+  },
+  "packArtifactBranch": {
+    "branch": "task/tally-i417-r33-pack-zcode",
+    "baseSha": "6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+    "purpose": "immutable governance-only defect Task Pack artifact",
+    "sourceChangesAllowed": false,
+    "mustRemainDocsOnly": true
+  },
+  "sourceEvidence": {
+    "disposition": "SOURCE_ANALYSIS_FAIL_CLOSED_DEFECT_WITH_REAL_REPRO",
+    "defectOrigin": "Isolated during the R30 #219/#410 closeout and recorded as p1Defects[0] P1-MAINTENANCE-MERGED-WITNESS in the #219 R32 Pack candidate (PR #416, blob ce04e5e2ddd329cc6163b2b7dd45dc2e0e1ff24a); Owner direction in the #417 issue body establishes #417 as a separate enabling defect like #412 so the repair never consumes #219’s one-shot protected Claim.",
+    "defectStatement": "readMaintenanceReviewWitnessFromClient (packages/tally-github-c/src/maintenance-effects.mjs) accepts only an OPEN PR (pr.state===\"open\", merged rejected) and requires reviewedBase===sourceSha plus live-branch equality; a valid merged two-parent PR with current-version ancestry is rejected MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT (state REVIEW_UNKNOWN) before Host CAS, so merging #410 would make #219 impossible to qualify.",
+    "repro": {
+      "sourceCase": "MERGED_TWO_PARENT_CURRENT_SOURCE",
+      "observedResult": {
+        "state": "REVIEW_UNKNOWN",
+        "reason": "MAINTENANCE_REVIEW_SOURCE_NOT_CURRENT"
+      },
+      "reproScript": "_tmp/tally-r30-e0-312-native-closeout/repro-219-merged-witness.mjs (lane workspace, not committed)",
+      "reproLog": "_tmp/tally-r30-e0-312-native-closeout/repro-219-merged-witness.log (REPRO_CONFIRMED)",
+      "pr410Comment": "https://github.com/kaicreator-mm/tally/pull/410#issuecomment-6881209286",
+      "issue219Comment": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6881209704",
+      "pr410Head": "3879dbc00b9c129f175904de5e805cc1d06eb994",
+      "pr410Tree": "7e5703fd2b6a837a9fe696cafcb11310b51e3e2d"
+    },
+    "baselineTests": "The existing maintenance-effects baseline suite (8/8 green) covers OPEN provenance only; merged provenance has no coverage."
+  },
+  "stableUpstream": [
+    {
+      "issue": 312,
+      "status": "CLOSED_COMPLETED_state_done",
+      "outcomeReceipt": "issuecomment-6885755818",
+      "note": "Product ReviewWitness completed lawfully; live blocked_by #312 on #219 reads closed."
+    },
+    {
+      "issue": 412,
+      "status": "CLOSED_COMPLETED_state_done",
+      "note": "Dual-role admission enabling repair, merged source-only via PR #414 (= this pack versionBaseSha 6cc52fbb), Woodpecker #758/#760 success; its repaired admission source is reused, not re-run."
+    },
+    {
+      "issue": 284,
+      "status": "CLOSED_COMPLETED_state_done",
+      "note": "E0 closeout; R17 VERSION_ONLY structure reused as history, never refrozen."
+    }
+  ],
+  "allowed_write_set": [
+    "packages/tally-github-c/src/maintenance-effects.mjs",
+    "packages/tally-github-c/test/maintenance-effects.test.mjs"
+  ],
+  "writeSetAudit": {
+    "schema": "tally/task-write-set-audit/v1",
+    "writeSetNormalization": "tally.v2.allowed-write-set-normalization/1",
+    "status": "EXACT_LIVE_AUDIT_CANDIDATE_SERIAL_PRECEDES_219",
+    "pathCount": 2,
+    "pathsSha256": "d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578",
+    "liveRecompute": "sha256(JSON.stringify(paths.trim().sorted.unique)) over the exact allowed_write_set block re-read from the live #417 issue body this lane; recompute MATCH.",
+    "recomputeMatch": true,
+    "overlapWithTask219": {
+      "sharedPathCount": 2,
+      "paths": [
+        "packages/tally-github-c/src/maintenance-effects.mjs",
+        "packages/tally-github-c/test/maintenance-effects.test.mjs"
+      ],
+      "task219PathsSha256": "3454cd57cff58df33b693bdfa4ba56591e993c673b05c7e16972b0b19d826797",
+      "task219PathCount": 14,
+      "disposition": "Both #417 paths are inside #219’s existing 14-path candidate set. Serialization is strict: #417 precedes #219; #219 stays paused (its PR #416 Pack remains CANDIDATE_NOT_FROZEN candidate only) and must rebuild its final current-source Pack/Claim generation after this repair merges. No #219 Claim/FSW is reused or consumed by #417."
+    },
+    "overlapWithTask412": {
+      "sharedPathCount": 0
+    },
+    "otherOverlapsLive": [],
+    "overlapStatement": "Zero overlap with every other live open Task write set this lane (#412 included).",
+    "concurrencyStatement": "No overlap pair may be dispatched concurrently. #417 -> #219 is the required order (planning annotation below; no native edge is created by this Pack)."
+  },
+  "repairContract": {
+    "schema": "tally.v2.maintenance-merged-witness-repair-contract/1",
+    "implementer": "The original #410 Writer only (same-Writer incremental repair; every new SHA goes to a distinct-conversation independent Reviewer per the R30 owner direction).",
+    "scope": "Exactly the 2 allowed_write_set paths. packages/tally-github-c/src/maintenance-effects.mjs and packages/tally-github-c/test/maintenance-effects.test.mjs; no other source, workflow, Pack, UI or Business path.",
+    "pattern": "Reuse the already-reviewed #312 project-intake merged provenance pattern (readProductReviewWitnessFromClient): (a) exact OPEN candidate — pr.state open, not merged, head/tree/base equal, reviewedBase===sourceSha, live version/v2 === sourceSha; or (b) fully proven CLOSED/MERGED two-parent source — official merge commit with exactly two parents, parents[0]===reviewedBase, parents[1]===reviewedHead; current source equals the merge commit or is a GitHub-confirmed ahead descendant (behind_by=0, merge_base_commit===merge commit).",
+    "preservedSemantics": "Preserve the canonical unedited tally.v2.maintenance-review-witness/1 payload and key set, dual-role independence (distinct operatorId/writerId, author!==reviewer on the candidate record), REST+GraphQL unedited verification, publication and lost-ACK protections, and the real Host dual-read of all relevant rows immediately before acquiring and again inside/after the shared version effect fence; edit-between-preflight-and-fence stays fatal; HELD fence blocks every lane.",
+    "rejections": "Squash, rebase, unverifiable compare, wrong parent order, wrong repo/branch/tree/base, stale compare evidence, edited witness, same-process review, missing Builder/Reviewer Claims/FSW, and any unverifiable currentness MUST fail closed.",
+    "tests": "Existing OPEN-only baseline tests remain green unchanged in intent; add a merged two-parent current-source positive and fail-closed negatives (squash, rebase, wrong parents, wrong tree, stale compare, wrong repo/branch, ancestry divergence) plus a real fence re-read regression.",
+    "hostSurfacesMustStayReal": {
+      "statement": "The Host draft/freeze/publish/learning surfaces must remain real: readMaintenanceReviewWitnessFromClient (repair target), createMaintenanceHost, hostPublishMaintenanceIssue, hostRecordTaskLearningOutcome, publishMaintenanceIssue, recordMaintenanceCandidate (REVIEWED_MAINTENANCE_CANDIDATE create-only at tally:v2:maintenance-candidate:219, author!==reviewer, receipt receipt:sha256:<digest>). The repair must not stub, bypass, or fixture-authority any of them; TALLY_LOCAL_REPLAY stays unset for real effects.",
+      "note": "Governance names hostPersistMaintenanceDraft/freezeReviewedMaintenanceCandidate have no existing functions; if dedicated wrappers are ever added they are new code outside this defect’s 2-path scope and require their own independently reviewed route."
+    },
+    "p2Carryover": {
+      "p2A": {
+        "id": "P2-A",
+        "status": "OPEN_CARRIED",
+        "statement": "CAS-only ambiguous freeze UNKNOWN semantics remain; cannot be read as frozen success or definitive no-write. Not closed by this repair."
+      },
+      "p201": {
+        "id": "P2-01",
+        "status": "OPEN_CARRIED",
+        "statement": "Producer business-provides regression guard false-negative remains; narrow guard fix still owed. Not closed by this repair."
+      },
+      "origin": "R30 Source-First review of PR #410 (ACCEPT_SCOPED, P0=0/P1=0/P2=2), readback at issues/392 comment 6879935782."
+    },
+    "sequencing": "Original Writer implements -> independent source review of every new SHA (P0/P1=0) -> focused maintenance-effects suites green (OPEN baselines + new merged positives/negatives) -> official task-check and exact-SHA Woodpecker CI -> only then may PR #410 advance/merge under its own lane rules. After the repair merges, #219 rebuilds its final current-source Pack/Claim generation (#416 remains a Pack candidate only and is neither merged nor authority)."
+  },
+  "versionTaskPackReference": {
+    "r17StructuralFreeze": {
+      "blobSha1": "44da8c5865d4f3ee0258ff9e7c7309c927b47c3e",
+      "blobSha256": "334b2d7c33ce26d27c629a733c5ce2c8da3f6d60024212743a804e8b1d23cdd9",
+      "versionBaseSha": "fdb809c2fe51487eb9610130c634db4bf627f5e4",
+      "status": "REUSED_AS_IMMUTABLE_HISTORY_NOT_REFROZEN; 51/37 roster/edge structure live-verified this lane with zero drift"
+    },
+    "liveStructureAuditThisLane": {
+      "rosterCount": 51,
+      "liveTypeTaskIssueCount": 53,
+      "outOfRosterTypeTaskIssues": [
+        412,
+        417
+      ],
+      "edgesVerified": 37,
+      "edgeDrift": "ZERO",
+      "issue219BlockedBy": [
+        {
+          "issue": 312,
+          "state": "closed"
+        }
+      ],
+      "issue312": "closed/completed"
+    },
+    "issue416Status": "PR #416 (task/tally-i219-r32-pack-zcode @ 66eb63f5424e02502a87c4cb996183013c65ae35, blob ce04e5e2ddd329cc6163b2b7dd45dc2e0e1ff24a) remains a CANDIDATE_NOT_FROZEN Pack candidate; #219’s final generation must be rebuilt from post-repair current source after #417 completes."
+  },
+  "plannedEdges": [
+    {
+      "from": 417,
+      "to": 219,
+      "kind": "PLANNED",
+      "reason": "#417 repair precedes #219’s final current-source generation (strict serialization: shared 2 paths, and #410’s merge changes the source #219 must bind). Planning annotation only: no native blocked_by is created or asserted by this Pack."
+    }
+  ],
+  "nativeDependencyAudit": {
+    "issue417BlockedBy": [],
+    "issue417BlockedByMustRemain": "empty of open blockers at admission time; labels must be exactly type:task + state:ready set only after all prior gates",
+    "issue219BlockedBy": [
+      {
+        "issue": 312,
+        "state": "closed"
+      }
+    ],
+    "issue219Held": "#219 stays state:planned and paused until #417 is independently reviewed, merged and version/v2 has advanced; its one-shot protected Claim/FSW is NOT created or consumed by this defect.",
+    "requiredAtAdmission": "Re-read live blocked_by for #417 (empty) and full native Task structure before any admission."
+  },
+  "authority": {
+    "ownerAuthorization": "The #417 issue body (published by the coordinator per the R30/R32 owner direction lineage) establishes #417 as a separate P1 enabling defect Task like #412; coordinators #392/#259. This Pack candidate is authored by the Pack Writer lane only.",
+    "structuralFreezeClaimed": false,
+    "taskPackFrozen": false,
+    "claimAuthority": false,
+    "hostCasAuthority": false,
+    "taskOutcomePass": false,
+    "statement": "Candidate as-of evidence only. No source edit, Claim, FSW, CAS effect, Freeze, Task PASS, merge, Release or deployment is authorized by this artifact."
+  },
+  "gates": [
+    "Exact Issue #417 evidence, source base 6cc52fbb151d0a0be12ace0972d869c0d5c0c267 and 2-path write set d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578; shared-2 overlap with #219 serialized strictly #417 -> #219; zero overlap with every other live open Task; no #219/#312/#284/#412 Claim or FSW reuse.",
+    "Immutable governance-only Pack PR and GitHub Contents API PackBlob dual identity; independent Pack review then exact PackBlob-bound Owner receipt (Owner receipt is NOT issued by this lane).",
+    "Before Host admission set #417 to state:ready only after all prior gates; native preflight must prove open/type:task/state:ready/dependency CLEAR/zero open blockers.",
+    "The genuine selected Host must hold the accepted shared writer/admission fence across reservation, native publication, exact readback and FROZEN_DAG_WRITESET creation/readback for the #417 Builder Claim; real Host dual-reads before and after the fence. If the fence is not lawfully supplied, stop with ADMISSION_BLOCK and zero CAS/source writes.",
+    "Repair implementation only by the original #410 Writer with per-SHA distinct-conversation independent source review P0/P1=0, focused maintenance-effects suites (OPEN baselines unchanged in intent + merged positives/negatives), official task-check and exact-SHA Woodpecker CI before any #410 merge; #219 final Pack/Claim refresh is a new generation after the repair merges."
+  ],
+  "validationPlan": [
+    {
+      "id": "MERGED_TWO_PARENT_POSITIVE",
+      "detail": "CLOSED/MERGED two-parent current-source case verifies (merge commit parents[0]=reviewedBase, parents[1]=reviewedHead; current source = merge commit or ahead descendant behind_by=0, merge_base=merge). The existing repro script’s scenario flips to REVIEW_VERIFIED."
+    },
+    {
+      "id": "OPEN_CANDIDATE_POSITIVE_UNCHANGED",
+      "detail": "Exact OPEN candidate case stays green: state open, not merged, head/tree/base equal, reviewedBase===sourceSha, live version/v2 === sourceSha."
+    },
+    {
+      "id": "FAIL_CLOSED_NEGATIVES",
+      "detail": "Squash, rebase, wrong parent order, wrong tree, wrong repo/branch, stale compare evidence, ancestry divergence, edited witness, same-process review and missing Claims/FSW each fail closed with the existing denial surface preserved."
+    },
+    {
+      "id": "REST_GRAPHQL_UNEDITED",
+      "detail": "Witness comment verified unedited via REST (created==updated, author) and GraphQL (node binding, fullDatabaseId, lastEditedAt===null, editor===null)."
+    },
+    {
+      "id": "FENCE_DUAL_READ_REGRESSION",
+      "detail": "Real Host re-reads PR/head/tree/base/merge/live immediately before acquiring the shared version effect fence and again inside/after it; edit-between-preflight-and-fence is fatal; HELD fence blocks every lane."
+    },
+    {
+      "id": "HOST_SURFACES_REAL",
+      "detail": "createMaintenanceHost/hostPublishMaintenanceIssue/hostRecordTaskLearningOutcome/publishMaintenanceIssue/recordMaintenanceCandidate semantics unchanged and non-stubbed after the repair; TALLY_LOCAL_REPLAY unset for real effects."
+    },
+    {
+      "id": "INDEPENDENT_REVIEW_AND_CI",
+      "detail": "Every repair SHA independently reviewed (distinct conversation, exact content SHA, P0/P1=0); Node24 focused suites, official task-check and exact-SHA Woodpecker CI green before any merge; CI green is never review or Task PASS."
+    }
+  ],
+  "forbidden": [
+    "No source edit before lawful independent admission and exact Builder Claim/FSW readback.",
+    "No edit outside the exact 2-path write set; no weakening or unrelated modification of existing tests.",
+    "No consumption or mutation of #219’s one-shot protected Claim/FSW; no #219 admission, publication or witness POST by this defect.",
+    "No reuse of #219/#312/#284/#412/#210 Claims/FSW/registries; no mutation of R17 frozen CAS, #312 16-path FSW or any historical row.",
+    "No bypass of preflight, no temporary adapter, no direct CAS seed, no raw SQLite mutation, no registry deletion/reset.",
+    "No same-role claim overwrite, no second dispatch on an already-claimed protected key, no blind POST after lost ACK.",
+    "No squash/rebasemerge-of-record fabrication: witness provenance must use official GitHub two-parent merge facts or fail closed.",
+    "No native dependency write, Task closure, version Freeze, version/v2->main merge, tag, Release or deployment; no claim that P2-A or P2-01 is closed."
+  ],
+  "claimBindingRules": {
+    "schema": "tally.maintenance-merged-witness-pack-binding/v1",
+    "packBlobShaSource": "GitHub Contents API blob SHA for docs/implementation/v2/MAINTENANCE_MERGED_WITNESS_DEFECT_TASK_PACK_R1.json at the final Pack PR HEAD, dual-recorded with its content SHA-256.",
+    "taskPackRefSource": "Construct the immutable GitHub blob URL from the final Pack commit after reading the Contents API PackBlob; never self-embed the Pack blob SHA.",
+    "ownerReceiptMustBind": [
+      "exact PackBlob SHA-1 and content SHA-256",
+      "source SHA 6cc52fbb151d0a0be12ace0972d869c0d5c0c267",
+      "writeSetSha256 d01d11b2983b2e5c351ee8667674abbfa99cd8a63c97e5798210f1f475601578",
+      "protectedClaimKey kaicreator-mm/tally#417:builder:__default__",
+      "generation 1"
+    ],
+    "frozenWriteSetMustBind": [
+      "immutable Task Pack blob URL and exact PackBlob dual hash",
+      "source SHA and 2-path write-set digest",
+      "exact PackBlob-bound Owner approval and independent Pack review references",
+      "protected Claim key and generation"
+    ]
+  },
+  "note": "This Pack authorizes no source edit, CI dispatch, CAS write or external effect by itself. It defines one bounded fail-closed enabling repair that lets a fully proven merged two-parent maintenance source qualify at the real Host while preserving the canonical unedited maintenance witness, dual-role independence, shared-fence dual-read and exact-SHA gates, and while keeping #219 paused for its own post-repair current-source generation."
+}
