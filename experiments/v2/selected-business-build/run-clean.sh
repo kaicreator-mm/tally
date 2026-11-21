@@ -163,6 +163,7 @@ if [[ "${T02B_BUILD_ONLY:-0}" == '1' ]]; then
     echo T02B_BUILD_ONLY_REQUIRES_NATIVE_SELECTED_BUILDER_CLAIM; exit 3;
   }
   cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-linux-host.mjs" "$tmp/consumer/local-codex-linux-host.mjs"
   cp "$TALLY/experiments/v2/selected-business-build/consumer-local-codex.mjs" "$tmp/consumer/consumer-local-codex.mjs"
   cp "$TALLY/experiments/v2/selected-business-build/builder-target.mjs" "$tmp/consumer/builder-target.mjs"
   cp "$TALLY/experiments/v2/selected-business-build/prebuilt-consumer.mjs" "$tmp/consumer/prebuilt-consumer.mjs"
@@ -180,6 +181,7 @@ fi
 if [[ "${T04B_NATIVE:-0}" == "1" ]]; then
   if [[ "${T06M_LOCAL:-0}" == "1" ]]; then
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-host.mjs" "$tmp/consumer/local-codex-host.mjs"
+    cp "$TALLY/experiments/v2/selected-business-build/local-codex-linux-host.mjs" "$tmp/consumer/local-codex-linux-host.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex.test.mjs" "$tmp/consumer/local-codex.test.mjs"
     cp "$TALLY/experiments/v2/selected-business-build/local-codex-readonly.test.mjs" "$tmp/consumer/local-codex-readonly.test.mjs"
     # R107 shim-denial regression reads the producer-sealed shim source.
