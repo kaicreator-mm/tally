@@ -149,6 +149,27 @@ steps:
       - test -f apps/tally-web/dist/index.html
       - echo V2_REACT_UI_PASS
 
+  # One browser, one built installed React /app, deterministic host/model mocks.
+  # Screenshots are emitted into the ordinary Woodpecker Log stream (also
+  # synchronized to Drive Logs) to keep a durable visual witness.
+  - name: v2-installed-chromium-mock-ux
+    image: mcr.microsoft.com/playwright:v1.56.1-noble
+    when:
+      - path:
+          include:
+            - '.woodpecker/ci.yaml'
+            - 'web/v2/installed-chromium-acceptance.mjs'
+            - 'apps/tally-web/**'
+            - 'web/v2/first-run-server.mjs'
+    commands:
+      - set -euo pipefail
+      - test -f apps/tally-web/dist/index.html
+      - 'export TALLY_BROWSER_PATH="$(find /ms-playwright -type f -name chrome -path "*/chrome-linux*/chrome" | head -n 1)"'
+      - 'test -x "$TALLY_BROWSER_PATH"'
+      - node --check web/v2/installed-chromium-acceptance.mjs
+      - node web/v2/installed-chromium-acceptance.mjs
+      - echo V2_INSTALLED_CHROMIUM_MOCK_UI_WITNESS_PASS
+
   - name: v2-agent-providers
     image: bash
     when:
