@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / R2_SYSTEMIC_CHAPTERS_INDEPENDENT_ACCEPT_SCOPED / R3_ADVANCED_FOUNDATIONS_REVIEW_PENDING / NOT_FROZEN` |
+| Document state | `SOURCE_CANDIDATE / R2_R3_TWO_VOLUMES_INDEPENDENT_ACCEPT_SCOPED / R4_SIX_FOCUS_DOCUMENTS_REVIEW_PENDING / NOT_FROZEN` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -21,22 +21,23 @@
 
 ## 本版本学科与外部实践导航（2026-11-21）
 
-- [54 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
+- [61 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 26 篇已选重点 Topic + 11 个原始导论 + 11 份版本级文档 = 180 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 26 篇重点 Topic + 11 个原始导论 + 11 份版本级文档 = 186 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
-> **本版本的目标不是只管理四条高价值候选 Claim。** 完整的 **K01–K11 系统知识库**以 SWEBOK/关联学科的专业概念、工程原理、语义关系和实践方法为底座，通过 **11 份系统学科课程（每模块 5 群×3 点，共 165 个基础知识点）** 提供覆盖，并在两轮中形成 **22 篇专题化基础学科深文**；原 56 条问题索引和 26 篇深入 Topic 是便于 Agent 按需选用的高价值**投影**，并不限制知识广度。
+> **本版本的目标不是只管理四条高价值候选 Claim。** 完整的 **K01–K11 系统知识库**以 SWEBOK/关联学科的专业概念、工程原理、语义关系和实践方法为底座，通过 **11 份系统学科课程（每模块 5 群×3 点，共 165 个基础知识点）** 提供覆盖，并在两轮中形成 **22 篇专题化基础学科深文 + 6 篇聚焦补缺**；原 56 条问题索引和 26 篇深入 Topic 是便于 Agent 按需选用的高价值**投影**，并不限制知识广度。
 
 - [系统知识架构](systematic-knowledge-architecture.md)：学科/BOK→模块→知识群→Concept/Claim/Method/Rule/Skill/Case/Oracle/Source/Consumer 的关联，条件/冲突/UNKNOWN 和唯一语义所有者。
-- [K01–K11 两卷共 22 篇系统学科正文与剩余专业缺口](systematic-foundation-depth-map.md)：每模块两篇侧重点不同的原创专业正文（第一卷已限定独立审核，第二卷待审）；不是将 165 点均宣称教材级完成或 Source-qualified。
-- [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、两卷明确关联的 159 点和 6 个当前仅有课程解释的知识点；章节关联不等于 Claim/Rule 资格。
+- [K01–K11 两卷共 22 篇系统学科正文及 R4 六项补缺](systematic-foundation-depth-map.md)：每模块两篇侧重点不同的原创专业正文（两卷分别已接受文档范围）及 6 篇 R4 聚焦正文（待审）；不是将 165 点均宣称教材级完成或 Source-qualified。
+- [六个原仅课程解释点的 R4 定点深文](systematic-foundation-depth-map.md#r4六点聚焦补缺待独立审核)：K02.F4.3、K04.F2.3、K05.F3.3、K05.F4.2、K06.F4.3、K10.F5.1；R4 未独立审核，不授予 Source/Runtime 资格。
+- [165 个学科知识点逐项覆盖台账](foundation-concept-coverage-ledger.md)：独立记录 165/165 课程点、R3 两卷主题关联的 159 点和 R4 六篇一对一 F 聚焦正文（新链接待审）；章节关联不等于 Claim/Rule 资格。
 - [K01–K11 完整系统课程索引与知识缺口](knowledge-coverage-and-growth.md)：按模块构建系统知识主干，先覆盖专业基础，按需要深入专题，逐步完成源与消费者资格。
 - [Tally Domain Intelligence × DomainHarness 消费边界](domain-harness-consumption.md)：区分 ADS 知识/规范来源、Tally 专业 Domain App/Package 和 DomainHarness 通用执行；准确对应 0.11.0 Foundation、0.11.1 Workflow、0.11.2 领域语义及后续 Agent/Experience 规划，不冒充已实施能力。
-- [跨模块知识概念关系网](cross-module-knowledge-relations.md)：42 条实际概念关系，解释需求、架构、实现、测试、维护、可靠性与决策如何组合推理，但不创建 Native Task Dependency。
-- [领域智能的十二个合成查询与可证伪反例](domain-intelligence-use-cases.md)：为未来 DomainHarness/Agent 的 Goal→Concept→Method→Result/UNKNOWN 提供候选评估输入，未运行的实验不得宣称 PASS。
+- [跨模块知识概念关系网](cross-module-knowledge-relations.md)：48 条实际概念关系（R3 已审 42 条 + R4 新增 6 条待审），解释需求、架构、实现、测试、维护、可靠性与决策如何组合推理，但不创建 Native Task Dependency。
+- [领域智能的十八个合成查询与可证伪反例](domain-intelligence-use-cases.md)：为未来 DomainHarness/Agent 的 Goal→Concept→Method→Result/UNKNOWN 提供候选评估输入，未运行的实验不得宣称 PASS。
 - [SWEBOK 18 KA 与跨学科对照](disciplinary-coverage.md)：覆盖不限于 26 个已深写专题，也包括计算机/数学/系统工程基础。参考 [SFIA 9 × SWEBOK 技能映射](https://sfia-online.org/en/tools-and-resources/bodies-of-knowledge/swebok-software-engineering-body-of-knowledge)，辅助辨别“知道概念”与“能在真实任务中实践”，不强制新认证。
 
 **知识形态的分离**：系统知识 `FOUNDATION_CANDIDATE` 可持续收集、学习和关联；方法/Topic 可在文档中经过限定审核；生产选用必须另外具备确切 Source/Claim/范围/许可/规则来源、合法 Tally/Harness 消费和可观察实际验证。**不能因为四条 Claim 先行试点，就将未入选的学科基础从知识体系删去**；也不能因 165 个知识点编写完成而声称整个学科已经资格通过。
@@ -49,7 +50,7 @@
 
 **职责边界**：K02 跨模块架构/公共合同，K03 Task 内具体实现；K05 测试 Oracle/充分性，K08 Provider/CI/Artifact 的实际执行和证据；K10 通用可靠性/错误/恢复模式，K06 特定事故因果定位，K03 当前合法修复；K09 旧行为兼容/迁移，K01 业务需求；K04 Task 组织、K07 Agent 协作、K11 成本和停止策略为跨阶段方法。
 
-**来源与状态**：问题索引不复制已有 99 个基础专题文件的正文；`K01.md`–`K11.md` 保留为历史导论入口而非第二套权威。引用 [54 项外部来源](external-source-catalog.md) 和 [SWEBOK 对照](disciplinary-coverage.md) 必须按具体 Claim、版本、适用性和反例判断；`SOURCE_CANDIDATE/NOT_QUALIFIED/PROPOSED_NOT_CONNECTED` 不变。
+**来源与状态**：问题索引不复制已有 99 个基础专题文件的正文；`K01.md`–`K11.md` 保留为历史导论入口而非第二套权威。引用 [61 项外部来源](external-source-catalog.md) 和 [SWEBOK 对照](disciplinary-coverage.md) 必须按具体 Claim、版本、适用性和反例判断；`SOURCE_CANDIDATE/NOT_QUALIFIED/PROPOSED_NOT_CONNECTED` 不变。
 
 ### 首批选定知识的真实来源定位（候选，未取得资格）
 
@@ -110,13 +111,14 @@ software-engineering-knowledge/
 ├── systematic-foundation-depth-map.md # 首轮 11 篇深入学科章节与专业缺口
 ├── domain-harness-consumption.md # Tally/Harness 消费与权限边界
 ├── cross-module-knowledge-relations.md # 42 条概念/关系桥
-├── domain-intelligence-use-cases.md # Q01–Q12 十二组教学输入与负例
+├── domain-intelligence-use-cases.md # Q01–Q18 十八组教学输入与负例
 ├── K01.md ... K11.md        # 初版单篇导论：历史兼容入口
 └── K01/ ... K11/
     ├── README.md           # 模块能力边界、问题与选用指南
     ├── systematic-syllabus.md # 五群×三项系统学科知识主干
     ├── foundations-deep-dive-01.md # 第一卷：已按旧 SHA 独立审查的学科正文
-    ├── foundations-deep-dive-02.md # 第二卷：R3 新增基础理论与模型，待限定审核
+    ├── foundations-deep-dive-02.md # 第二卷：R3 已独立接受的文档学科正文
+    └── focus-fx-y-*.md # 仅 K02/K04/K05/K06/K10：R4 六篇聚焦补缺文档，待审核
     ├── disciplinary-foundations.md # 外部学科/标准与适用机制
     ├── external-practices.md # 外部企业/GitHub 案例与可证伪工程做法
     ├── domain-model.md     # 术语/实体/规则/语义关系
