@@ -2,7 +2,7 @@
 
 > [来源目录 A01–A72](external-source-catalog.md) · [165 点学科覆盖](foundation-concept-coverage-ledger.md) · [R9 演算 W18–W22](professional-reasoning-worked-traces-04.md) · [Tally 工程领域候选 #286](https://github.com/kaicreator-mm/tally/issues/286)
 >
-> **R9 CLAIM_READINESS_ANALYSIS_ONLY / ALL_ROWS_NOT_QUALIFIED / NO_COMPILER_ABI / NO_SOURCE_DISPATCH。** 这不是新的 Machine Knowledge Schema，也不要求给每个课程 ID 创建 Native Issue。先具体列出 **R9 十三个已选择知识点**若要成为未来实际 Tally Agent 的专业判断依据，还缺什么**有权原始来源、限定适用和独立 Oracle**。不存在以引用数量自动得到合格 Claim 的规则。
+> **R9 CLAIM_READINESS_ANALYSIS_ONLY / INDEPENDENT_ACCEPT_SCOPED_AT_7adbb13bf4cc00c823f625e0f7d903bc880575ca / ALL_ROWS_NOT_QUALIFIED / NO_COMPILER_ABI / NO_SOURCE_DISPATCH。** 这不是新的 Machine Knowledge Schema，也不要求给每个课程 ID 创建 Native Issue。先具体列出 **R9 十三个已选择知识点**若要成为未来实际 Tally Agent 的专业判断依据，还缺什么**有权原始来源、限定适用和独立 Oracle**。不存在以引用数量自动得到合格 Claim 的规则。
 
 ## 一、知识正文、正式 Rule 和实际执行收据要逐层分开
 
@@ -51,3 +51,7 @@ Published source (author/version/rights)
 即使课程从 107 增加到 120 个 A 关联，也不意味着 LLM 在有 Source 版本冲突、运行能力不足或 Provider 不可见时会自动给出正确答案。真正有用的系统化建设需要**学科位置→前提→领域实体/关系→适用机制→反例→权威条件→实际验证**。当前 11 个模块和 48 条历史 Concept 关系继续作为文档逻辑组织基础；R9 没有新建未经校验的原始规范关系或伪造真实执行图。
 
 与 [W18–W22](professional-reasoning-worked-traces-04.md) 的五个合成例子共同使用时，读者可以逐项判断应如何提出最小有权问题、核对运行测试发现与真实 Actor/Host 状态，并在不可证时停在 UNKNOWN。资格边界严格不变。
+## 五、R10 选择真正可审原始命题并建立变形题（新材料待审核）
+
+R9 的 13 行 Claim 缺口不因此晋升为合格知识。本轮从已有参考目录挑选**五个**版次和定位可核对的 [C10-01～05 来源命题档案](professional-primary-source-claim-dossiers-r10.md)，将其与 [EV10-01A/B～06A/B 六组十二个变形判断](professional-knowledge-evaluation-fixtures-r10.md) 和 [专业知识选择/评分方案](professional-knowledge-evaluation-protocol-r10.md) 链接。真实 Source/Consumer 仍未授权，因而五项候选资格均为 `REFERENCE_ONLY`；没有实际性能/正确性测量或新的 Tally 生产接口。遵循 [#286 最新 Owner 方向](https://github.com/kaicreator-mm/tally/issues/286) 中 ADS→Tally 的设计意图，但 #286 仍 `DEFERRED/NOT_FROZEN/NO_SOURCE_DISPATCH`。
+
