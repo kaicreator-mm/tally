@@ -41,6 +41,7 @@ function Root() {
         projects:catalog.projects??[],
         versionsByProject:catalog.versionsByProject??{},
         defaultVersionId:catalog.defaultVersionId??null,
+        sourceRepository:catalog.source?.repository??null,
       }:{projects:null,versionsByProject:null}}>
       <App route={route} onNavigate={hash => router.navigate(hash)} />
     </ShellProvider>
