@@ -10,6 +10,8 @@
 
 **R5 进阶原理与完整演算（旧 SHA 已独立 ACCEPT_SCOPED @ 041949b409fd7772fd50fac6ad3fef8190ae5f9e，文档范围）**：[知识辅助 Agent 的可比实验与真实工程价值](advanced-empirical-evaluation-and-value-of-knowledge.md)。围绕已有学科原理推导因果、方案比较、明确反例、外部来源和不可假定的权限；不是 Source-qualified Rule/Producer/Agent 的当前实现。
 
+**R8 深化工程判断专业基础（新章待限定独立审核）**：[风险严重度、信息价值、估算和最小必要流程](advanced-decision-risk-value-of-information-and-process-cost.md)，精确连接本模块 **3 个原有高优先级课程 ID**，明确 Source/范围、机制假设、负例与 STOP；[W13–W17](../professional-reasoning-worked-traces-03.md) 展示综合选择，[来源适用矩阵](../professional-source-applicability-r8.md) 仍是引用候选，不构成真实 Runtime/Agent/Host/Release 资格。
+
 **先了解整个专业学科，再按需选择问题**： [K11 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
