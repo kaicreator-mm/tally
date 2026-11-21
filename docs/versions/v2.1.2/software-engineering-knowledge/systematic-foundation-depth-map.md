@@ -1,8 +1,8 @@
-# K01–K11 学科知识正文：R2–R7 系统学科与进阶推理
+# K01–K11 学科知识正文：R2–R8 系统学科与进阶推理
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_R3_R4_R5_R6_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R7_SELECTED_15_FOUNDATIONAL_CONCEPTS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 新增的 3 篇基础学理正文和 87 点差距盘点仍待增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文**，不是已投入生产的 Package 或源级合格 Claim。
+> **状态：R2_R3_R4_R5_R6_R7_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R8_SELECTED_14_PRIORITY_CONCEPTS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 的 3 篇基础学理正文与 87 点差距盘点已在旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 获独立限定接受；R8 新增 5 篇专业决策深化正文与五条 W13–W17 演算仍待增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文 + 5 篇 R8 专业深化正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -72,7 +72,7 @@ R5 的 K01/K03/K05/K11 通过后，R6 将**剩下七个模块**也各自建立�
 
 R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Danilo Sato Parallel Change（Martin Fowler 网站）](external-source-catalog.md) 三项公开正式/作者原始来源线索，R6 当时为 **64 条参考**，R7 另增三项正式学科参考线索，当前合计 67 条。来源可定位/适用不等于版权复制批准、原始 Claim 获权或 Harness Compiler ABI 决议。
 
-## R7：对剩余 87 个知识点先做真实缺口盘点，再有选择地深化（待独立审核）
+## R7：对剩余 87 个知识点先做真实缺口盘点，再有选择地深化（旧 SHA 已审）
 
 在 R6 旧 SHA 已审知识的基线上，原有 **78/165** 课程点包含额外 A 进阶原理链接，剩余 **87 点没有 A**。本轮并未把 87 点当作无知识，而是对每个原课程 ID 审核其现有 S/D1/D2/F 导航与工程深度要求，在 [87 项真实差距盘点](professional-depth-gap-inventory-r7.md) 分为 **15 项本轮深入、30 项下一优先、42 项随具体任务深化**，不制造同质化文档。
 
@@ -84,6 +84,20 @@ R6 仅增 [A62 Bazel Hermeticity / A63 Google SRE SLO / A64 Danilo Sato Parallel
 
 R7 新增 **15 个原课程点的 A 链接**，在旧 78 点上达到 **93/165**，另 **72 个点尚无 A**。这属于专业正文导航与课程内容的增量，**不是 93 条已通过产品证明的 Source Claim、不是 93 个机器形式化定理、也不是实际运行的 15 次 Agent 实验**。新来源 A65–A67（NASA 追溯、Dafny 规格/验证、NIST 组合测试）用于原理定位，未授权复制受限制的规范全文，未启动新的 Tally/Harness Runtime ABI。
 
+## R8：五个实质决策学科领域的高优先级深化（待独立审核）
+
+R8 沿用 R7 已受审的 [87 点差距分流](professional-depth-gap-inventory-r7.md)，从当时 30 个 `NEXT_HIGH_VALUE` 里只选择真正跨层错误机制尚需补足的 **14 个原 ID**。具体学科 Owner、课程关联和论文是：
+
+| 原模块 | R8 原创新专业正文 | 本轮新增 A | 新的可证伪机制与应用边界 |
+| --- | --- | --- | --- |
+| K01 | [Stakeholder 冲突/证据三角核验](K01/advanced-stakeholder-authority-and-triangulated-evidence.md) | F1.2、F2.1（2） | 规范授权与观察证据非同类；旧版/不同 Tenant 不能投票决定真实政策 |
+| K02 | [依赖/Host/数据/Consumer 四种边界](K02/advanced-extension-authority-state-and-consumer-boundaries.md) | F1.3、F2.3、F3.3、F5.1（4） | A→B→C 不代替 A 直接声明；BUILD 合法不等于有权 Host；本地 Commit 非远端 Effect |
+| K07 | [角色/Context/协作成果](K07/advanced-agent-role-context-and-outcome-evaluation.md) | F2.1、F3.3、F5.2（3） | Writer 自审与独立审查不同；最小充分知识和 Token 经济受实际 Oracle 约束 |
+| K08 | [Release Provenance/权限/回滚](K08/advanced-release-provenance-permission-and-rollback.md) | F5.1、F5.2（2） | H1/D1 验证不可冒充 D2 Release；代码回滚不一定恢复数据/真实 Effect |
+| K11 | [估算/风险/信息价值/流程成本](K11/advanced-decision-risk-value-of-information-and-process-cost.md) | F2.1、F3.1、F5.1（3） | 12h 工作量与 8h 理论关键路径不同；高后果低频风险、信息调查的可证伪条件 |
+
+**原 93 A + R8 新增 14 A = 107/165，58 点无 A**，与 R7 历史分流的 `15 + 30 + 42 = 87` 不冲突：R8 从历史 30 中选了 14，剩余 16 加 42 等于 58。本轮同时新增 [W13–W17 五条跨学科真实条件推理教学案例](professional-reasoning-worked-traces-03.md) 与 [原始来源→命题→反例适用矩阵](professional-source-applicability-r8.md)；W01–W17 均为**合成、未运行**，不代表模型成绩。A68 SLSA v1.2 Provenance/A69 DORA 官方度量更新仅是两项原始参考发现，当前 69 条来源尚未取得原始 Claim 或复制全文许可。
+
 ## 3. 学科深化要达到的专业标准
 
 后续每个新增学科章节必须有明确知识 ID/语义 Owner、可理解的原理、输入条件和模型（必要时含公式/状态）、多种可行方案及权衡、具体反例/可观察反驳、出处版本与权利说明、跨模块交接、当前 UNKNOWN 与 STOP。不能用填充式模板代替专业讲解，也不能只更新高价值问题候选而放弃基础理论。
@@ -92,4 +106,4 @@ R7 新增 **15 个原课程点的 A 链接**，在旧 78 点上达到 **93/165**
 
 ## 4. 下一步与独立审核边界
 
-R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1–R6 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容和限定范围内可复用；R7 只复审三篇专业基础深化、87 点差距盘点、15 处新 A 链接、A65–A67 来源、新导航及 R6 非阻塞两 P2 的精确修复，不重复审核之前未改的专业正文。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1–R7 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容和限定范围内可复用；R8 只复审五篇新专业深化正文、W13–W17、来源适用矩阵、14 处新 A 链接、A68–A69 发现及相关导航增量，不重复审核以前未变化的专业正文。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
