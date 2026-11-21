@@ -82,6 +82,12 @@ export function createCredentialStore({platform=process.platform,
           ' -a '+id+' -w '+secret+'\nquit\n';
         await exec('security',['-i'],command);
       }
+      // Interactive security -i can exit 0 even if an earlier command failed.
+      // Verify the native keyring value before persisting a reference.
+      const readback=platform==='linux'?
+        await exec('secret-tool',['lookup','application','tally-v2','credential',id]):
+        await exec('security',['find-generic-password','-s',MAC_SERVICE,'-a',id,'-w']);
+      if(readback!==secret)throw new Error('CREDENTIAL_STORE_UNAVAILABLE');
       return 'keyring-v1:'+id;
     },
     async open(reference){
