@@ -77,7 +77,9 @@ SoftwareEngineeringDomain
 
 **R4 文档增量**：由 [全 165 点覆盖台账](foundation-concept-coverage-ledger.md) 和 [六点聚焦导航](systematic-foundation-depth-map.md) 为 K02/K04/K05/K06/K10 增加六篇明确教学正文；R3 的 159 点 D1/D2 关联与 R4 六项 F 形成 165 点可导航专题深化，**不是**每点独立合格的 Source Claim 或固定机器领域模型 Schema。 [18 组合成判断练习](domain-intelligence-use-cases.md) 与 [48 条 Concept 关系](cross-module-knowledge-relations.md) 都仍是文档层，绝不把 Case/观察和 Concept 关系混为真正 Agent/Host 运行结果。
 
-**R8 跨学科综合判断补充**：K01/K02/K07/K08/K11 五篇 [专业决策深化正文](systematic-foundation-depth-map.md#r8五个实质决策学科领域的高优先级深化待独立审核) 对 14 个原有 NEXT_HIGH_VALUE 课程点追加可验证原理，现有 A **107/165**；[W13–W17](professional-reasoning-worked-traces-03.md) 串联授权 Source、架构依赖、Agent 上下文、Artifact/Release 与风险经济，得到合法 ASK/UNKNOWN/STOP 的教学结果；[来源适用矩阵](professional-source-applicability-r8.md) 分开规范适用性、经验研究、真实项目设置、正式业务 Rule 和工具执行。上述均**尚待 R8 文档独立审核**，不定义新 Schema 或 DomainHarness Consumer ABI。原 48 条 Concept 关系不变，R8 只新增文档导航，不伪造 Native Task/Agent/Host/Effect 成功。
+**R9 知识到领域消费者的资格差距首次逐点明确**：五篇 [K03/K04/K06/K09/K10 专业失效机理深化](systematic-foundation-depth-map.md#r9工程故障证据迁移与可靠性的跨模块深化待独立审核) 对 13 个原 ID 建立明确的 A 学科机制导航，全库 **120/165 A**。它们不直接定义 DomainHarness 0.11.x Kernel/Extension 或机器 Schema；[专业来源→Claim 候选→资格/Oracle 缺口表](professional-source-to-claim-readiness-r9.md) 明确把公开研究、实际授权 Source、真实 Provider/CI、独立 Oracle、Artifact/SourceSHA 的资格阶段拆开。配套 [W18–W22](professional-reasoning-worked-traces-04.md) 仍为**未执行的合成教学**，48 条旧 Concept 关系不变，Tally #286 仍处于 DEFERRED 状态。R9 新章待独立审核，不能被写成已实测软件工程 Domain Agent。
+
+**R8 跨学科综合判断补充**：K01/K02/K07/K08/K11 五篇 [专业决策深化正文](systematic-foundation-depth-map.md#r8五个实质决策学科领域的高优先级深化旧-sha-已审) 对 14 个原有 NEXT_HIGH_VALUE 课程点追加可验证原理，现有 A **107/165**；[W13–W17](professional-reasoning-worked-traces-03.md) 串联授权 Source、架构依赖、Agent 上下文、Artifact/Release 与风险经济，得到合法 ASK/UNKNOWN/STOP 的教学结果；[来源适用矩阵](professional-source-applicability-r8.md) 分开规范适用性、经验研究、真实项目设置、正式业务 Rule 和工具执行。上述均**已在旧 R8 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 获限定独立审核接受**，不定义新 Schema 或 DomainHarness Consumer ABI。原 48 条 Concept 关系不变，R8 只新增文档导航，不伪造 Native Task/Agent/Host/Effect 成功。
 
 **R7 从课程广度转向专业基础的可证伪细节**： [原 87 个无 A 课程点的分级地图](professional-depth-gap-inventory-r7.md) 对“未进入 A 文章导航”与“真正缺少专业知识”严格分开。本轮有选择地用 K01 追溯/变更、K03 算法合同与类型、K05 V&V 和 Oracle 资格三篇原创正文链接 15 个旧课程点，A 合计 **93/165**；仍旧不改变 165 个课程 ID、48 条现有 Concept 边和 W01–W12 的教学案例身份。A 是文档链接，不是机器 Knowledge/Rule/Skill 资格、Runtime 编译证明或真实模型能力实测。
 
@@ -112,4 +114,4 @@ Agent 不需要一次载入全部 K01–K11；通过目标、真实条件和跨�
 
 ## 7. 本版本不声称什么
 
-目前无已验证的 18 KA 每个细目“全部掌握”证明、69 项外部来源仍是发现目录（R3 A50–A54 / R4 A55–A61 / R6 A62–A64 / R7 A65–A67 / R8 A68–A69 均仅用于专业参考），不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
+目前无已验证的 18 KA 每个细目“全部掌握”证明、72 项外部来源仍是发现目录（R3 A50–A54 / R4 A55–A61 / R6 A62–A64 / R7 A65–A67 / R8 A68–A69 / R9 A70–A72 均仅用于专业参考），不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
