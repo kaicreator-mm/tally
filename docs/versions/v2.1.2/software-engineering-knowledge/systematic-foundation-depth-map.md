@@ -2,7 +2,7 @@
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_FIRST_VOLUME_ACCEPT_SCOPED / R3_SECOND_VOLUME_ACCEPT_SCOPED / R4_SIX_POINT_FOCUS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇已获独立文档限定接受；R4 新增 6 篇聚焦补缺文章待审核。共 **22 篇两卷系统深化 + 6 篇聚焦正文**，不是 28 个生产 Package 或已合格的 165 条 Claim。
+> **状态：R2_R3_R4_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R5_ADVANCED_REASONING_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 新增 4 篇进阶正文与 5 条完整演算，仍待 R5 限定增量审核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -26,7 +26,7 @@
 
 **165 个唯一课程 ID 仍是系统纲要，不是 165 篇专业教材。** [逐项覆盖台账](foundation-concept-coverage-ledger.md) 保留 R3 基线：159/165 与两卷学科正文有主题关联，原 6/165 仅 S。R4 为这六项分别新增 F 聚焦正文，形成 **165/165 至少有 D1/D2 或 F 深化正文导航**，但 R4 六项未独立审核；“有正文关联”并不等于 165 条 Source-qualified Claims 或 165 项教材级完整性。26 个问题 Topic 仍是任务入口。
 
-## R4：六点聚焦补缺（待独立审核）
+## R4：六点聚焦补缺（旧 SHA 已审）
 
 | 原基础缺口 | 新增专业正文 | 学科机制 |
 | --- | --- | --- |
@@ -37,7 +37,22 @@
 | K06.F4.3 | [补丁精确当前性与复核](K06/focus-f4-3-patch-currentness-and-review.md) | Git 影响闭包、受影响回归、增量证据 |
 | K10.F5.1 | [首次运行与配置策略](K10/focus-f5-1-first-run-post-start-configuration.md) | GUI/CLI/Headless 的启动与权限态 |
 
-本轮只关闭“没有任何深入正文重点覆盖”的六个导航缺口，不改变其他 159 个知识点仍需持续专业深化、来源核验和实际 Domain Intelligence 消费能力验证的事实。
+R4 独立审核已对这一文档范围接受；R5 对 K02.focus 的 Extension/HostPort 概念微修仍待增量审核。本轮只关闭“没有任何深入正文重点覆盖”的六个导航缺口，不改变其他 159 个知识点仍需持续专业深化、来源核验和实际 Domain Intelligence 消费能力验证的事实。
+
+## R5：四篇深层专业推理与五条完整演算（待增量审核）
+
+与 R2/R3 的学科广度文章、R4 的单点补缺不同，R5 聚焦**已有专业概念的推理深度和错误诊断能力**，不追求一次填充 165 份同样模板：
+
+| 领域 Owner | R5 原创深化正文 | 显式映射课程 ID | 关键专业演算 |
+| --- | --- | --- | --- |
+| K01 需求事实与规范合同 | [证据→合同→状态验收](K01/advanced-knowledge-from-evidence-to-contract.md) | 6 点 | 同条件政策冲突、并发发货/取消反例 |
+| K03 实现与并发语义 | [线性化/幂等/崩溃矩阵](K03/advanced-concurrency-idempotency-proof-sketch.md) | 5 点 | CAS、远端未知副作用、队列重放 |
+| K05 Oracle 与测试充分性 | [独立 Expected/组合覆盖/区分性测试](K05/advanced-oracle-adequacy-and-test-selection.md) | 7 点 | Pairwise 无法覆盖业务三元权限；Mock/发现/验证分离 |
+| K11 真实价值与实证判断 | [受控对照/混杂/总成本](K11/advanced-empirical-evaluation-and-value-of-knowledge.md) | 7 点 | 8/10 vs 6/10 的观察差异不等于因果收益 |
+
+共 25 个原已存在的学科 ID 在 [165 点台账](foundation-concept-coverage-ledger.md) 中被额外标记 A；其余 140 个知识点没有被自动升级为“已完全深入”或“已得到证实”。同样重要的是 [W01–W05 五条跨模块完整推理演算](professional-reasoning-worked-traces.md)：统一演示怎样处理事实/来源/条件、知识选择、备选机制、最小反例、UNKNOWN/STOP 与真实 Owner。五个 W 是**教学场景**，不与旧 Q01–Q18 合并计数，也不构成实际 Agent Bench/E2E。
+
+**深度判断不应简化为链接数**：一个概念即使有 S+D1+D2+A，仍需对实际命题、适用范围、解释的反例和来源资格独立判断。R5 文件仅是原创专业推导与教学设计，绝不自动创建 Tally 当前 Source Claim 或 DomainHarness ABI。
 
 ## 3. 学科深化要达到的专业标准
 
@@ -47,4 +62,4 @@
 
 ## 4. 下一步与独立审核边界
 
-R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R3 独立 ACCEPT_SCOPED 对未变的两卷和基础课程可复用；R4 六点聚焦正文、61 来源中新增 A55–A61、18 案例中新增 Q13–Q18 与关系增量仅做限定审核，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R2/R3/R4 的独立 ACCEPT_SCOPED 对旧 SHA 未变的相应正文/来源/课程可复用；R5 只复审四篇新的深层正文、五条 W 演算、K02 权限边界 P2 和导航增量，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
