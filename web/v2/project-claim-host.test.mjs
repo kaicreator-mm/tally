@@ -165,7 +165,7 @@ function currentNativePair(){
       candidateCount:1,candidates:[{
         sourceSha:sha,dispatchId:'observed-comment-41',
         sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',
-        claimAccepted:false}]}}};
+        claimAccepted:false}]}};
 }
 test('post-publish own role duplicate requires live native pair and exact witness',async()=>{
   const db=store();let reads=0,pairs=0;
