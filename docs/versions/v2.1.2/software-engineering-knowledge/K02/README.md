@@ -10,7 +10,7 @@
 
 **R4 逐点学科缺口补齐（独立 ACCEPT_SCOPED @ 42e7ba8bd883ec79736e25ff7c75bdbda1b738b3，旧 SHA 限定文档资格；R5 的 K02 Extension import/HostPort 权限边界已独立限定复核通过）**：[`K02.F4.3` 架构信任边界/失败模式](focus-f4-3-minimal-failure-and-trust-boundary.md)。这些文件是对课程的定点专业深化，包含机制/条件/反例/STOP；并非获权 Source Claim、CI/Host/Package 或产品发布资格。
 
-**R6 进阶原理与专业反例（新增、待限定独立审核）**：[质量场景、分布式状态与故障/信任边界推理](advanced-architecture-invariants-and-failure-tradeoffs.md)。对本模块的选定课程 ID 补充可验证的机制、适用前提、替代选项和否证轨迹；相应 [W06–W12 跨模块完整演算](../professional-reasoning-worked-traces-02.md) 均为教学而非实际运行。无 Source Claim、DomainHarness ABI 或生产 Agent/Host 权限资格。
+**R6 进阶原理与专业反例（旧 Exact SHA `83ebee092db412b5e38db0376562ee51b0d4f032` 已获独立 ACCEPT_SCOPED，文档范围）**：[质量场景、分布式状态与故障/信任边界推理](advanced-architecture-invariants-and-failure-tradeoffs.md)。对本模块的选定课程 ID 补充可验证的机制、适用前提、替代选项和否证轨迹；相应 [W06–W12 跨模块完整演算](../professional-reasoning-worked-traces-02.md) 均为教学而非实际运行。无 Source Claim、DomainHarness ABI 或生产 Agent/Host 权限资格。
 
 **先了解整个专业学科，再按需选择问题**： [K02 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
