@@ -90,6 +90,14 @@ type v13Config struct {
 	DSHBin      string
 	DSHModel    string
 	DSHProvider string
+	// Grok canary 配置面(v2.1 provider candidate):xAI 官方 Grok CLI 适配器
+	// 缺省禁用,只有显式配置(runtime=grok + canary 开关 + 二进制路径)才可
+	// 构造。GrokModel/GrokPermissionMode 是期望配置(-m/--permission-mode
+	// 透传),与实际生效模型/审批是两个事实(runtimes/grok 身份纪律)。
+	GrokCanary         bool
+	GrokBin            string
+	GrokModel          string
+	GrokPermissionMode string
 	// Profile / Model / Behavior 是 CodegenRun 的归因坐标(§11.2.1/§15.2)。
 	Profile  string
 	Model    string
@@ -102,19 +110,23 @@ type v13Config struct {
 // 内容仓库根(TALLY_CONTENT_REPO)。
 func v13ConfigFromEnv(repo string) v13Config {
 	return v13Config{
-		Repo:         repo,
-		WorktreeRoot: envOr("TALLY_V13_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v13-worktrees")),
-		HoldoutRoot:  os.Getenv("TALLY_V13_HOLDOUT_ROOT"),
-		Runtime:      envOr("TALLY_V13_RUNTIME", "fake"),
-		CodexBin:     os.Getenv("TALLY_V13_CODEX_BIN"),
-		DSHCanary:    os.Getenv("TALLY_DSH_CANARY") == "1",
-		DSHBin:       os.Getenv("TALLY_DSH_BIN"),
-		DSHModel:     os.Getenv("TALLY_DSH_MODEL"),
-		DSHProvider:  os.Getenv("TALLY_DSH_PROVIDER"),
-		Profile:      envOr("TALLY_V13_PROFILE", "default-coding"),
-		Model:        envOr("TALLY_V13_MODEL", "default"),
-		Behavior:     envOr("TALLY_V13_BEHAVIOR", "v1"),
-		EnvName:      envOr("TALLY_V13_ENV", "worker-local"),
+		Repo:               repo,
+		WorktreeRoot:       envOr("TALLY_V13_WORKTREE_ROOT", filepath.Join(os.TempDir(), "tally-v13-worktrees")),
+		HoldoutRoot:        os.Getenv("TALLY_V13_HOLDOUT_ROOT"),
+		Runtime:            envOr("TALLY_V13_RUNTIME", "fake"),
+		CodexBin:           os.Getenv("TALLY_V13_CODEX_BIN"),
+		DSHCanary:          os.Getenv("TALLY_DSH_CANARY") == "1",
+		DSHBin:             os.Getenv("TALLY_DSH_BIN"),
+		DSHModel:           os.Getenv("TALLY_DSH_MODEL"),
+		DSHProvider:        os.Getenv("TALLY_DSH_PROVIDER"),
+		GrokCanary:         os.Getenv("TALLY_GROK_CANARY") == "1",
+		GrokBin:            os.Getenv("TALLY_GROK_BIN"),
+		GrokModel:          os.Getenv("TALLY_GROK_MODEL"),
+		GrokPermissionMode: os.Getenv("TALLY_GROK_PERMISSION_MODE"),
+		Profile:            envOr("TALLY_V13_PROFILE", "default-coding"),
+		Model:              envOr("TALLY_V13_MODEL", "default"),
+		Behavior:           envOr("TALLY_V13_BEHAVIOR", "v1"),
+		EnvName:            envOr("TALLY_V13_ENV", "worker-local"),
 	}
 }
 
