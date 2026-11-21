@@ -71,7 +71,14 @@ export async function startFirstRunServer({
       {...settings,TALLY_SETUP_URL:origin+'/setup'}});
     const old=active;active=next;activeSource=identity;lastError=null;
     if(old)await old.close().catch(()=>{});
-    return next.address.origin+'/app';
+    // The selected ALM server mints an independent same-origin action key.
+    // Carry its *CSRF-only* key to the installed workbench; neither the
+    // Project Setup key nor this key grants a Task/Agent/Release effect.
+    // Tests/legacy servers without a key keep the original read-only URL.
+    const actionKey=next.address.actionKey;
+    const search=typeof actionKey==='string'&&/^[a-f0-9]{48}$/.test(actionKey)
+      ?'?actionKey='+encodeURIComponent(actionKey):'';
+    return next.address.origin+'/app'+search;
   };
   const handleRequest=async(req,res)=>{
     const response=(status,type,data)=>{
