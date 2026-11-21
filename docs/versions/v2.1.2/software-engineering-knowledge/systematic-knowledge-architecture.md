@@ -75,6 +75,8 @@ SoftwareEngineeringDomain
 
 **R3 课程可查索引**：[165 点逐项课程—深文章节对应台账](foundation-concept-coverage-ledger.md) 现在让完整课程与 22 篇深度正文保持可核对的关系；仅 S 的 6 项继续作为明确知识缺口。该台账是 Markdown 导航，不定义 DomainHarness 0.11.x 的机器知识 Schema；未来 #286 消费版本合法确定后，才可选定小片段并通过实际 ABI/Source/Task 验证。
 
+**R4 文档增量**：由 [全 165 点覆盖台账](foundation-concept-coverage-ledger.md) 和 [六点聚焦导航](systematic-foundation-depth-map.md) 为 K02/K04/K05/K06/K10 增加六篇明确教学正文；R3 的 159 点 D1/D2 关联与 R4 六项 F 形成 165 点可导航专题深化，**不是**每点独立合格的 Source Claim 或固定机器领域模型 Schema。 [18 组合成判断练习](domain-intelligence-use-cases.md) 与 [48 条 Concept 关系](cross-module-knowledge-relations.md) 都仍是文档层，绝不把 Case/观察和 Concept 关系混为真正 Agent/Host 运行结果。
+
 ## 5. 同一个问题怎样跨知识而仍保持最小上下文
 
 **示例：软件项目要求新增重启可恢复的批量订单导出，第一次构建失败，另有旧 Agent 迟到消息。**
@@ -102,4 +104,4 @@ Agent 不需要一次载入全部 K01–K11；通过目标、真实条件和跨�
 
 ## 7. 本版本不声称什么
 
-目前无已验证的 18 KA 每个细目“全部掌握”证明、54 项外部来源是发现目录（新增 A50–A54 仅用于 R3 专业参考），不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
+目前无已验证的 18 KA 每个细目“全部掌握”证明、61 项外部来源仍是发现目录（R3 A50–A54 / R4 A55–A61 均仅用于专业参考），不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
