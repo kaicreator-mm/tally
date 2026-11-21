@@ -1,6 +1,6 @@
 # K04 专业深化：风险驱动流程、信息缺口与有界任务决议
 
-> [K04 系统课程](systematic-syllabus.md) · [R6 任务偏序与关键路径](advanced-task-graph-critical-path-and-bounded-delivery.md) · [R4 验收与授权 Focus](focus-f2-3-acceptance-and-authorization.md)
+> [K04 系统课程](systematic-syllabus.md) · [R6 任务偏序与关键路径](advanced-task-graph-critical-path-and-bounded-delivery.md) · [R4 验收与授权 Focus](focus-f2-3-task-acceptance-and-authority.md)
 >
 > **R9 DOCUMENT_CANDIDATE / NO_LIVE_TASKS_OR_AUTHORITIES_CREATED。** 精确深化 **K04.F1.3 复杂度与风险驱动流程**和 **K04.F4.1 事实缺口/研究目标** 两个尚无 A 的课程 ID。**K04.F2.3 验收与授权已有独立接受的 R4 Focus**，这里只交叉引用和构造材料性反例，不为了增加链接重写它。
 
