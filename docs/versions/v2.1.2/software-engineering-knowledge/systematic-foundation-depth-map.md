@@ -132,6 +132,13 @@ R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，
 **E1 是真实受限 Agent/代码执行实验，不是已上线的 Tally Domain Package。** 若 E1 证明有价值，E2 才在未来**编号 v2.1.x 子版本**依据 [#286](https://github.com/kaicreator-mm/tally/issues/286) 正式 Product/L2/DAG 和真实选定 ABI 接入 Engineering B；当前 R11 只设计，不启动 Agent、写入实验仓库、解冻 #286 或变更 Runtime。**222 Markdown / 165 原 ID / 120 A / 6 F / 72 来源 / Q18 / W22 不变**（仅本次新增1份版本级设计文档）。R10 的非阻塞 P2（EV10-06B 同时改变任务类型和并发）已仅修成**并发**单变量，待此轮限定复核。
 
 
+## R12：同一 ADS 规范下的分阶段 Kxx 专业知识对照（新增设计待审）
+
+[完整 R12 ADS 复杂任务分阶段实验](professional-ads-staged-complex-agent-ab-r12.md) 不再单纯增加进阶文章，而将一个有权 Node22/TypeScript Monorepo 多项目可恢复批量导入任务的要求、架构、状态/并发/持久化、错误与故障恢复、真实验证/独立 QA 串成完整生命周期。**A/B 都执行同样的 ADS v4.19.0 有效规范**，B 仅在阶段入口逐次获得少量知识：L1 K01/K11，L2 K02/K09/K10，L3 任务计划 K04/K07，L3 代码 K03/K05（故障时条件触发 K06），Review/QA K05/K08/K10，事后经验 K06/K09/K11。两组均绑定真实 H0、相同 Tool/模型、实际 Test Discovery/Oracle 和总成本；不一次性加载整库、不创造额外强制 Gate。
+
+[#1383](https://github.com/kaicreator-mm/ai-development-standard/issues/1383) 的后继三视图 DAG-P/A/I 仍属设计候选，如选用只可作为**两组一致的实验性流程配置**，不能冒充已发布 v4.19.0 的新强制规范。R1 本地 A/B 实际原始结果仍未从 GitHub 取得，R12 当前只是设计，未运行真实 Agent/Host/CI/QA。**223 Markdown / 165课程 / 120 A /72 来源**（仅新增一份版本级候选文档）。
+
+
 ## 3. 学科深化要达到的专业标准
 
 后续每个新增学科章节必须有明确知识 ID/语义 Owner、可理解的原理、输入条件和模型（必要时含公式/状态）、多种可行方案及权衡、具体反例/可观察反驳、出处版本与权利说明、跨模块交接、当前 UNKNOWN 与 STOP。不能用填充式模板代替专业讲解，也不能只更新高价值问题候选而放弃基础理论。
