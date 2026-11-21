@@ -13,7 +13,7 @@ import {useHost} from '../adapters/useHost.ts';
 import {hostAdapter,startSelectedAgentTask,submitReleaseAction,transitionSelectedTaskReady,publishSelectedTaskClaim,freezeSelectedTaskWriteSet,publishSelectedDraftCandidate} from '../adapters/host.ts';
 import type {Route} from './router.ts';
 import type {CandidateHostResponse,WriteSetHostResponse,ClaimHostResponse,TaskReadyHostResponse,AgentDispatchResponse,Catalog,TaskDraftsResponse,RequirementsResponse,QaResponse,TasksResponse,DagResponse,DualEpochResponse,ReleaseResponse,
-  SettingsResponse,MetadataResponse,AgentAttemptsResponse,
+  SettingsResponse,MetadataResponse,MaintenanceSnapshotResponse,AgentAttemptsResponse,
   ReleaseActionResult} from '../adapters/host.ts';
 import {TasksView,TaskDrawer} from '../features/tasks/views.tsx';
 import {agentStartDecision,draftAgentStartRequest} from '../features/tasks/agent-start-model.ts';
@@ -23,7 +23,7 @@ import {AgentsPanel} from '../features/agents/views.tsx';
 import {RequirementsView} from '../features/requirements/views.tsx';
 import {QaView} from '../features/qa/views.tsx';
 import {ReleaseView} from '../features/release/views.tsx';
-import {MaintenanceView} from '../features/maintenance/views.tsx';
+
 import {MetadataCenter} from '../features/metadata/views.tsx';
 import {SettingsCenter} from '../features/settings/views.tsx';
 import {DagView,DualEpochPanel} from '../features/dag/views.tsx';
@@ -62,8 +62,7 @@ function routeBody(key:string,versionId:string|null):React.ReactNode{
     case 'requirements':return <RequirementsRoute versionId={versionId}/>;
     case 'qa':return <QaRoute versionId={versionId}/>;
     case 'release':return <ReleaseRoute versionId={versionId}/>;
-    case 'maintenance':return <MaintenanceView defects={[]} learnings={[]}
-      connected={false}/>;
+    case 'maintenance':return <MaintenanceRoute/>;
     case 'metadata':return <MetadataRoute versionId={versionId}/>;
     case 'agent-providers':case 'tally-llm':case 'ci':case 'git-github':
     case 'host':case 'storage':case 'security':case 'deployment-env':
@@ -497,6 +496,40 @@ function ReleaseRoute({versionId}:{versionId:string|null}){
           :null}
       </p>
     </>);
+}
+/** J08 uses the existing real backend rather than an always-disconnected
+ * static placeholder. The full interactive controller is already mounted in
+ * the same-origin /diagnostics workbench, so do not build a duplicate Host.
+ */
+function MaintenanceRoute(){
+  const maintenance=useHost<MaintenanceSnapshotResponse>('maintenance',
+    adapter=>adapter.maintenance(),[]);
+  if(maintenance.state==='loading')return <Skeleton lines={4}/>;
+  if(maintenance.state==='not_connected')
+    return <EmptyState title="NOT_CONNECTED"
+      hint={maintenance.reason??'维护服务尚未连接'}/>;
+  const snapshot=maintenance.data?.snapshot;
+  if(snapshot?.status!=='OBSERVED')
+    return <EmptyState title="NOT_CONNECTED" hint="维护数据源未返回有效状态"/>;
+  const actionKey=new URLSearchParams(window.location.search)
+    .get('actionKey')??'';
+  const workspace='/diagnostics'+(actionKey
+    ?'?actionKey='+encodeURIComponent(actionKey):'')+'#maintenance-app';
+  const publication=snapshot.publication;
+  return <section aria-label="真实缺陷维护工作台"
+      style={{display:'grid',gap:'var(--s4)'}}>
+    <p>当前来源 SHA：<code>{snapshot.sourceSha}</code></p>
+    <p>当前候选：{snapshot.candidate
+      ?<><strong>{snapshot.candidate.summary}</strong>
+        {' · '}{snapshot.candidate.state}</>
+      :'尚无缺陷候选'}</p>
+    <p>Review：{snapshot.review?.state??'NOT_RUN'}
+      {' · '}发布：{publication?.state??'NOT_RUN'}
+      {' · '}经验记录：{snapshot.learning?.length??0}</p>
+    <p>这里展示的状态来自真实维护控制器，不意味着已取得
+      Task、GitHub 发布或 Release 权限。</p>
+    <p><a href={workspace}>进入缺陷登记、候选 Review 和下一版本维护工作台</a></p>
+  </section>;
 }
 function MetadataRoute({versionId}:{versionId:string|null}){
   // Both hooks run unconditionally (React hooks order); the frozen-roster
