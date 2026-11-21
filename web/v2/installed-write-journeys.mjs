@@ -93,7 +93,7 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   const timeoutMs=Number(env.TALLY_V2_AGENT_TIMEOUT_MS);
   const requiredPins=platform==='linux'?
     CONSUMER_PINS.filter(name=>name!=='TALLY_CODEX_SANDBOX_PATH').concat(
-      'TALLY_LINUX_BWRAP_PATH'):CONSUMER_PINS;
+      'TALLY_LINUX_BWRAP_PATH','TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR'):CONSUMER_PINS;
   const missing=requiredPins.filter(name=>
     name==='TALLY_LOCAL_REPOSITORY_PATH'&&
       env.TALLY_V2_AGENT_SCRIPT_ROOT&&
@@ -125,6 +125,8 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   const pinNames=['T06M_TARGET_REPOSITORY','T06M_TARGET_ISSUE_NUMBER',
     'T06M_TARGET_VERSION_REF','T06M_TARGET_CANDIDATE_PATH'];
   const provided=pinNames.filter(name=>env[name]!==undefined);
+  if(platform==='linux'&&provided.length!==pinNames.length)
+    throw new TypeError('AGENT_LINUX_SEALED_TARGET_REQUIRED');
   if(provided.length!==0&&provided.length!==pinNames.length)
     throw new TypeError('AGENT_BUILDER_TARGET_PARTIAL');
   if(provided.length===0&&
