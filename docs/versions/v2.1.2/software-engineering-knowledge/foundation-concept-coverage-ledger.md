@@ -1,8 +1,8 @@
-# 软件工程系统知识库：165 个知识点的可审计覆盖台账（R9）
+# 软件工程系统知识库：165 个知识点的可审计覆盖台账（R10 累计）
 
 > [知识库总索引](README.md) · [第一/第二卷学科正文](systematic-foundation-depth-map.md) · [学科结构](knowledge-coverage-and-growth.md)
 >
-> **R3_LEDGER_INDEPENDENT_ACCEPT_SCOPED / R4_SIX_FOCUS_DOCUMENT_ACCEPT_SCOPED / R5_ADVANCED_REASONING_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R6_ADVANCED_THEORY_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R7_SELECTED_FOUNDATIONAL_DEPTH_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R8_14_ADDITIONAL_KNOWLEDGE_ID_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R9_13_ADDITIONAL_KNOWLEDGE_ID_REVIEW_PENDING / NOT_A_MACHINE_ABI / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 本台账是知识维护和导航的文档事实，不是 Rule/Agent Skill 的生产资格。ID、标题来自真实 11 份 `systematic-syllabus.md`；章节覆盖由写作者明确标注的**主题关联范围**建立，不是自动证明某概念已得到完整教材级论证。
+> **R3_LEDGER_INDEPENDENT_ACCEPT_SCOPED / R4_SIX_FOCUS_DOCUMENT_ACCEPT_SCOPED / R5_ADVANCED_REASONING_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R6_ADVANCED_THEORY_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R7_SELECTED_FOUNDATIONAL_DEPTH_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R8_14_ADDITIONAL_KNOWLEDGE_ID_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R9_13_ADDITIONAL_KNOWLEDGE_ID_INDEPENDENT_ACCEPT_SCOPED_PRIOR_SHA / R10_NO_NEW_SYLLABUS_LINKS_REVIEW_PENDING / NOT_A_MACHINE_ABI / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 本台账是知识维护和导航的文档事实，不是 Rule/Agent Skill 的生产资格。ID、标题来自真实 11 份 `systematic-syllabus.md`；章节覆盖由写作者明确标注的**主题关联范围**建立，不是自动证明某概念已得到完整教材级论证。
 
 ## 阅读本表时的五个重要区分
 
@@ -245,7 +245,7 @@ R7 原 `professional-depth-gap-inventory-r7.md` 中的 87 个无 A 清单保留�
 
 **本轮新增 A=14，现有累计 A=107/165，仍有 58 个无 A**。该 58 点中 16 项是原 R7 的 NEXT_HIGH_VALUE 尚未选择、42 项按任务触发继续深入；无 A 仍不等于不存在课程或需要新增强制 Gate。相关 [W13–W17 五条原创完整合成演算](professional-reasoning-worked-traces-03.md) 及 [来源适用矩阵](professional-source-applicability-r8.md) 支持“方法→反例→授权边界”的知识导航，不是实测 Agent 能力或正式 Source Claim。外部参考新增 A68–A69 两条来源发现，总数 69，仍未授予复制或生产资格。
 
-## R9：剩余 16 个历史高优先级点的可证伪机理深化（本轮待审）
+## R9：剩余 16 个历史高优先级点的可证伪机理深化（旧 SHA 已审）
 
 在 R8 旧 SHA 已审的 107 个 A 进阶导航基础上，R9 从原 R7 `NEXT_HIGH_VALUE` 中尚未选择的 **16 个**进一步精确研究 **13 个**；其余 **3 个**仍按有材料需求决定：K01.F4.3 的质量场景已有两卷课程背景，K04.F2.3 已有 R4 的独立 Focus，K07.F4.3 的共享写集/失败恢复已经在 R6 章节具有专业原理支持；不为机械达到 165 个 A 而复制已审知识。
 
@@ -258,6 +258,12 @@ R7 原 `professional-depth-gap-inventory-r7.md` 中的 87 个无 A 清单保留�
 | K10 | [背压/熔断/性能归因/恢复 Oracle](K10/advanced-overload-performance-inference-and-recovery-oracles.md) | F3.3、F4.2、F5.2 | 3 |
 
 新增 **13 个 A**，**目前 120/165 个进阶 A、45 个尚无 A**。剩余 45 包含原 R7 的 3 个高优先但现有深文较充分、42 个按需触发点（已具 syllabus 与两卷/Focus，不能当作 P0/P1 空白）。R9 新增 [W18–W22](professional-reasoning-worked-traces-04.md) 五条**合成且未运行**的跨模块案例，并将 13 个知识点的 [原始参考→Claim 候选→独立 Oracle/权限缺口](professional-source-to-claim-readiness-r9.md) 明确为**不可自动编译的学科资格准备**，不宣称合格 Source Claim、已获得许可证或真实执行。参考目录仅增 A70–A72 三条发现线索，总数 72。
+
+## R10：评价知识选择和正确停止，不新增 A 或课程 ID（新材料待审）
+
+R9 的 120/165 个 A 导航与六篇 Focus 均已在旧 SHA 接受范围内保留；R10 不再因数量而新造 45 篇深文，**本轮新增 A=0 / F=0 / syllabus ID=0**。新增 [C10-01～05 五份原始来源→候选命题档案](professional-primary-source-claim-dossiers-r10.md)、[EV10 六对十二例来源/行为变形题](professional-knowledge-evaluation-fixtures-r10.md)、[可重复的知识辅助与不辅助对照协议](professional-knowledge-evaluation-protocol-r10.md)、[Owner→Source→Oracle→STOP 选择手册](professional-knowledge-selection-playbook-r10.md)。
+
+这些是评估“是否真正会选知识、是否在缺权威/缺证据时正确不放行”的**文档级专业工具**，与原 S/D1/D2/F/A 课程关联正交。档案五个来源来自既有 72 条 Axx 中，不是五条新文献/合格 Source Claim；十二道 EV 题不是新增 W 号或实际运行。**当前仍 165 独立 ID / 120 A / 6 Focus / 45 无 A**，测试与 Agent 真实性仍 `NOT_RUN`。
 
 ## 学科完成度只能按正确维度报告
 
