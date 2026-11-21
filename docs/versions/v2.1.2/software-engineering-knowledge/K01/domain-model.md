@@ -42,7 +42,7 @@ Actor/Role 与状态结合决定操作许可；同一操作在不同业务状态
 | Teaching example | 在给定假设下的可证伪示例 | 真实 Agent/Host/项目结果 |
 | UNKNOWN | 缺少权威来源、当前性或真实验证 | PASS、正式 Product/L2/Task/Release 状态 |
 
-## Agent 使用时的五个提问
+## Agent 使用时的关键提问
 
 1. 谁提出需求、由谁实际使用、真实成功条件是什么？
 2. 哪些业务规则与不变量必须经 Product Owner 确认？

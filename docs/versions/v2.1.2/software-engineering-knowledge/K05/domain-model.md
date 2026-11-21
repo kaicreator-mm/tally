@@ -43,7 +43,7 @@ K05 定义‘应测试什么、怎样判断充分’，K08 负责实际 CI/Build
 | Teaching example | 在给定假设下的可证伪示例 | 真实 Agent/Host/项目结果 |
 | UNKNOWN | 缺少权威来源、当前性或真实验证 | PASS、正式 Product/L2/Task/Release 状态 |
 
-## Agent 使用时的五个提问
+## Agent 使用时的关键提问
 
 1. 哪个来源决定 expected 行为？
 2. 哪些负例和真实消费者能证明目标不变量？

@@ -43,7 +43,7 @@ K06 负责真实故障因果，K03 负责当前 Task 代码修复，K10 提供�
 | Teaching example | 在给定假设下的可证伪示例 | 真实 Agent/Host/项目结果 |
 | UNKNOWN | 缺少权威来源、当前性或真实验证 | PASS、正式 Product/L2/Task/Release 状态 |
 
-## Agent 使用时的五个提问
+## Agent 使用时的关键提问
 
 1. 哪条命令/调用最早失败？
 2. 至少两种根因解释如何用最便宜实验区分？

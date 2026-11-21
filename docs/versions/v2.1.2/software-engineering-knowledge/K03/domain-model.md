@@ -42,7 +42,7 @@ Accepted Contract → Task Design → Implementation/Errors → Affected Test Or
 | Teaching example | 在给定假设下的可证伪示例 | 真实 Agent/Host/项目结果 |
 | UNKNOWN | 缺少权威来源、当前性或真实验证 | PASS、正式 Product/L2/Task/Release 状态 |
 
-## Agent 使用时的五个提问
+## Agent 使用时的关键提问
 
 1. 输入输出、状态、不变量和非法请求行为是什么？
 2. 哪种算法和数据结构足以满足当前规模？

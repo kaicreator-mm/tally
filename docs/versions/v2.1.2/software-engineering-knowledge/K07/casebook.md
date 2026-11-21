@@ -50,13 +50,17 @@
 
 **预期反例：** 删除必要的来源、引入互相矛盾的状态/权限、或仅给 Mock 结果时，合格 Agent 应指出不能作出的结论并保留 UNKNOWN/NOT_RUN。
 
-### C-K07-03 · 远程 Agent 请求超时
+### C-K07-03 · 远程 Agent 超时、迟到回包和旧 HEAD（SYNTHETIC_TEACHING_CASE）
 
-Attempt 状态 UNKNOWN，需要查询外部效果，不能把超时视为未执行。
+**明确输入**：Task #42 的有效 Candidate HEAD 原为 `aaa111`，`Attempt=A17` 的远程 Builder 启动后通信超时；与此同时当前合法 Writer 已将 Task 的 Candidate 更新为 `bbb222`。随后旧 Worker 返回 `ACK/SUCCESS, attempt=A17, source=aaa111`。
 
-**Agent 工作法：** 明确与当前 Task 相关的行为/接口/版本/失败条件，引用 [工程方法矩阵](engineering-methods.md) 选择最小充分 Procedure。若此场景改变了前提、角色或执行环境，就要重新核实有效来源；不将旧正例强行外推。
+**应当执行**：
+1. `ACK` 仅表示 Worker 报告已送达；先确认真实代码/测试 Artifact 是否存在并绑定 `aaa111`。
+2. 读取 GitHub 当前 Task/PR HEAD `bbb222` 与合法 Attempt/Claim 状态，旧消息属于 `STALE_SOURCE`。
+3. 不把旧 Artifact 覆盖新的 Candidate，不将 `A17` 的成功标记为当前 Task/Review/Release PASS。
+4. 若需要复用旧结果，必须重新核对当前接口/差异与适用 Source，按现有 Owner/Reviewer 规则评估；未知外部副作用需要独立回读。
 
-**预期反例：** 删除必要的来源、引入互相矛盾的状态/权限、或仅给 Mock 结果时，合格 Agent 应指出不能作出的结论并保留 UNKNOWN/NOT_RUN。
+**可证伪 Oracle**：系统在此输入下应保持当前 `bbb222` 和既有 Task 状态不变，记录旧结果为 `STALE/UNKNOWN`。若收到 `ACK/SUCCESS` 就更新 Task 为 PASS，则是明确的错误。示例 HEAD/Task/Attempt 为模拟值，非真实项目状态。
 
 ## 使用教学案例的资格边界
 

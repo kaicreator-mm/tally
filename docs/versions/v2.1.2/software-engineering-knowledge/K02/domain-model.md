@@ -42,7 +42,7 @@ Architecture Demo 收据按 E1/E2/E3 限定强度，不能跨越到真实 User J
 | Teaching example | 在给定假设下的可证伪示例 | 真实 Agent/Host/项目结果 |
 | UNKNOWN | 缺少权威来源、当前性或真实验证 | PASS、正式 Product/L2/Task/Release 状态 |
 
-## Agent 使用时的五个提问
+## Agent 使用时的关键提问
 
 1. 真实架构驱动是否支持新增模块或服务？
 2. 接口、数据与状态的唯一写入责任如何定义？
