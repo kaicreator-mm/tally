@@ -77,6 +77,8 @@ SoftwareEngineeringDomain
 
 **R4 文档增量**：由 [全 165 点覆盖台账](foundation-concept-coverage-ledger.md) 和 [六点聚焦导航](systematic-foundation-depth-map.md) 为 K02/K04/K05/K06/K10 增加六篇明确教学正文；R3 的 159 点 D1/D2 关联与 R4 六项 F 形成 165 点可导航专题深化，**不是**每点独立合格的 Source Claim 或固定机器领域模型 Schema。 [18 组合成判断练习](domain-intelligence-use-cases.md) 与 [48 条 Concept 关系](cross-module-knowledge-relations.md) 都仍是文档层，绝不把 Case/观察和 Concept 关系混为真正 Agent/Host 运行结果。
 
+**R5 的专业应用层**：已补充 [W01–W05 五条端到端推理演算](professional-reasoning-worked-traces.md)，其结构是已知事实/来源/授权范围→最小 Knowledge/Concept 选择→机理与备选→可证伪失败序列→独立 Oracle/未运行证据→合法决议或 UNKNOWN。K01/K03/K05/K11 的 [四篇进阶正文](systematic-foundation-depth-map.md) 额外绑定 25 个原课程 ID；这不是新的机器运行时 Schema、不是证明当前 LLM 已能执行这些推理、也不是在 Source→Claim 尚未合法合格时创建第二个标准 Owner。**文档教学案例和真实被观察的 Agent/Host 结果必须分开**。
+
 ## 5. 同一个问题怎样跨知识而仍保持最小上下文
 
 **示例：软件项目要求新增重启可恢复的批量订单导出，第一次构建失败，另有旧 Agent 迟到消息。**
