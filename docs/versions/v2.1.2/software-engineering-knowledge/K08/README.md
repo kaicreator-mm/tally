@@ -4,7 +4,7 @@
 
 让源码真正通过项目工具链、测试与集成入口形成可交付制品，区分各步骤的实际状态与版本。
 
-**系统正文第一卷（R2 新增，尚待增量独立审核）**：[学科深化 01：可复现构建与 CI 执行事实](foundations-deep-dive-01.md)。此章解释术语背后的机制、适用条件、工程取舍与可证伪反例；仍为文档知识候选，不是已合格 Source Claim 或真实 Harness/Agent 功能。
+**系统正文第一卷（R2 文档范围独立 ACCEPT_SCOPED @ ede9d646cb591b8df5179dc6bc11b60668fe968c）**：[学科深化 01：可复现构建与 CI 执行事实](foundations-deep-dive-01.md)。此章解释术语背后的机制、适用条件、工程取舍与可证伪反例；仍为文档知识候选，不是已合格 Source Claim 或真实 Harness/Agent 功能。
 
 **系统正文第二卷（R3 新增、待增量独立审核）**：[学科深化 02：Hermetic Build 与缓存因果](foundations-deep-dive-02.md)。本卷补充基础理论、适用条件、备选技术与可证伪反例；不宣称 165 点均已教材级展开，也不自动取得生产 Source/Consumer 资格。
 
