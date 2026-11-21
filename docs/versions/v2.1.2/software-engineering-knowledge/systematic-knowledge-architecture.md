@@ -79,7 +79,7 @@ SoftwareEngineeringDomain
 
 **R7 从课程广度转向专业基础的可证伪细节**： [原 87 个无 A 课程点的分级地图](professional-depth-gap-inventory-r7.md) 对“未进入 A 文章导航”与“真正缺少专业知识”严格分开。本轮有选择地用 K01 追溯/变更、K03 算法合同与类型、K05 V&V 和 Oracle 资格三篇原创正文链接 15 个旧课程点，A 合计 **93/165**；仍旧不改变 165 个课程 ID、48 条现有 Concept 边和 W01–W12 的教学案例身份。A 是文档链接，不是机器 Knowledge/Rule/Skill 资格、Runtime 编译证明或真实模型能力实测。
 
-**R6 跨模块专业推理补足**：七篇 [K02/K04/K06/K07/K08/K09/K10 原理深文](systematic-foundation-depth-map.md#r6七模块原理深化与-w06w12待限定独立审核) 在已有 11 个模块中另选 53 个原课程点提供 A 专业机制引用；与 R5 的 25 点合计 78 个进阶主题导航。配套 [W06–W12](professional-reasoning-worked-traces-02.md) 展示从有权 Source/Scope、备选方案、反例到 UNKNOWN 的推理链。**它们均是独立写作的知识演算，不是实际运行的七个 Agent 工作或七条新 Native Task DAG 边**。Concept 关系仍为原 48 条，原有语义 Owner、Source Claim 与 Harness 连接边界不变。
+**R6 跨模块专业推理补足**：七篇 [K02/K04/K06/K07/K08/K09/K10 原理深文](systematic-foundation-depth-map.md#r6七模块原理深化与-w06w12旧-sha-已审) 在已有 11 个模块中另选 53 个原课程点提供 A 专业机制引用；与 R5 的 25 点合计 78 个进阶主题导航。配套 [W06–W12](professional-reasoning-worked-traces-02.md) 展示从有权 Source/Scope、备选方案、反例到 UNKNOWN 的推理链。**它们均是独立写作的知识演算，不是实际运行的七个 Agent 工作或七条新 Native Task DAG 边**。Concept 关系仍为原 48 条，原有语义 Owner、Source Claim 与 Harness 连接边界不变。
 
 **R5 的专业应用层**：已补充 [W01–W05 五条端到端推理演算](professional-reasoning-worked-traces.md)，其结构是已知事实/来源/授权范围→最小 Knowledge/Concept 选择→机理与备选→可证伪失败序列→独立 Oracle/未运行证据→合法决议或 UNKNOWN。K01/K03/K05/K11 的 [四篇进阶正文](systematic-foundation-depth-map.md) 额外绑定 25 个原课程 ID；这不是新的机器运行时 Schema、不是证明当前 LLM 已能执行这些推理、也不是在 Source→Claim 尚未合法合格时创建第二个标准 Owner。**文档教学案例和真实被观察的 Agent/Host 结果必须分开**。
 
