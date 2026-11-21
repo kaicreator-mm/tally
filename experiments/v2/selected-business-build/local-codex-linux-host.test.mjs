@@ -89,7 +89,7 @@ test('confinement readback checks namespace UID, workspace and hidden secrets',a
     x.cliPath='/usr/bin';
     x.bwrapPath='/usr/bin';
     for(const dir of [x.worktreePath,x.builderProfile,x.operatorHome])
-      await mkdir(dir,{recursive:true});
+      await mkdir(dir,{recursive:true,mode:0o700});
     await writeFile(x.hiddenFixture,'private',{mode:0o600});
     await writeFile(x.emptyGitConfig,'',{mode:0o600});
     const calls=[];
