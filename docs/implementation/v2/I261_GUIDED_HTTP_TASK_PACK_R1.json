@@ -1,0 +1,217 @@
+{
+  "schema": "tally/scoped-task-pack-candidate/v1",
+  "packId": "tally-v2-i261-guided-http-r1-current-source",
+  "versionId": "version/v2",
+  "repository": "kaicreator-mm/tally",
+  "issueNumber": 261,
+  "parentIssue": 392,
+  "coordinatorIssue": 259,
+  "status": "CANDIDATE_NOT_FROZEN",
+  "scope": "GOVERNANCE_ONLY_NO_SOURCE_OR_HOST_ADMISSION",
+  "authority": {
+    "packFrozen": false,
+    "ownerEffectApproved": false,
+    "claimAccepted": false,
+    "frozenWriteSetExists": false,
+    "hostPhysicalLeaseHeld": false,
+    "sourceMutationAuthorized": false,
+    "taskPass": false,
+    "releaseQualified": false
+  },
+  "source": {
+    "branch": "version/v2",
+    "sha": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "tree": "734272007ce4c2214f4e2bfa1b7bf3fbb2e2ec96",
+    "recheckRequired": "Fresh GitHub source/current Task/Native readback immediately before any future authority/Host action",
+    "references": {
+      "r47SourceAudit": "https://github.com/kaicreator-mm/tally/issues/261#issuecomment-6924886885",
+      "r50WriterHandoff": "https://github.com/kaicreator-mm/tally/issues/261#issuecomment-6926319455",
+      "r54HostStopped": "https://github.com/kaicreator-mm/tally/issues/261#issuecomment-6927891521"
+    },
+    "criticalSourceBlobs": [
+      {
+        "path": "web/v2/guided-form-http.test.mjs",
+        "gitBlob": "5456d7fb9d711ede6d0b4bedf02d26b686321ae0",
+        "meaning": "Current tests demand 404 even with injected host: provisional E-route-absent behavior; cannot be treated as installed guided HTTP proof"
+      },
+      {
+        "path": "web/v2/guided-form-port.mjs",
+        "gitBlob": "465cb98ab3d738773c907dd81dcc95a43de9bfb2",
+        "meaning": "Existing source-qualified guided STEP/SUBMIT port reusable"
+      }
+    ],
+    "historicalPackReference": {
+      "issue": 219,
+      "pr": 436,
+      "blob": "05a02fe2141cfec31d7064e3bc12f820b5c1944e",
+      "authority": "HISTORICAL_DIFFERENT_TASK_ONLY_DO_NOT_BORROW"
+    }
+  },
+  "task": {
+    "title": "Core v2 UI-guided Business-to-selected-Host actionable HTTP",
+    "priority": "P0",
+    "nativeStateAtReadback": "OPEN",
+    "singleWriter": true,
+    "oneSelectedBuilderProviderOnly": true,
+    "approvedCoreUserOutcome": "Product/L2 -> Native Task DAG -> one real Agent -> Review/Repair -> QA/CI -> Release -> basic maintenance",
+    "defer": "v2.1 second Builder, broad agent UX expansion, training/learning measured uplift",
+    "implementationObjective": "Reuse 15 current B paths. If a genuine B delta exists, scope it to 1–2 B-owned guided-form files. E/#264 alone owns actual journey-server routing, serve, App, host adapter, CI and installed integration. Do not replace E route 404 tests with an unconditional PASS before E is present."
+  },
+  "writeSet": {
+    "encoding": "SHA256 of JSON.stringify(15 unique exact sorted paths), UTF-8, no indentation",
+    "paths": [
+      "apps/tally-web/src/features/agents/model.test.ts",
+      "apps/tally-web/src/features/agents/model.ts",
+      "apps/tally-web/src/features/agents/views.tsx",
+      "apps/tally-web/src/features/task-actions/model.test.ts",
+      "apps/tally-web/src/features/task-actions/model.ts",
+      "apps/tally-web/src/features/task-actions/views.tsx",
+      "apps/tally-web/src/features/tasks/model.test.ts",
+      "apps/tally-web/src/features/tasks/model.ts",
+      "apps/tally-web/src/features/tasks/views.tsx",
+      "web/v2/guided-form-http.test.mjs",
+      "web/v2/guided-form-port.mjs",
+      "web/v2/guided-form-port.test.mjs",
+      "web/v2/ui-action-http.test.mjs",
+      "web/v2/ui-action-port.mjs",
+      "web/v2/ui-action-port.test.mjs"
+    ],
+    "count": 15,
+    "pathsSha256": "71f199a056b0d83ea562ccd619af2ef79cd72917ababe28f4dfc448df4f19836",
+    "issueStatus": "CANONICALIZED_NOT_ADMITTED",
+    "dispatchable": false,
+    "nativeExactPathOverlapWith219And264": 0,
+    "boundedProposedDelta": [
+      "web/v2/guided-form-http.test.mjs",
+      "web/v2/guided-form-port.mjs"
+    ],
+    "excludedSharedEPaths": [
+      "web/v2/journey-server.mjs",
+      "web/v2/serve.mjs",
+      "apps/tally-web/src/app/App.tsx",
+      "apps/tally-web/src/adapters/host.ts",
+      ".woodpecker/**"
+    ],
+    "sourceStatus": "NO_NEW_SOURCE_WRITES"
+  },
+  "dependencies": {
+    "nativeReadbackEndpoint": "https://api.github.com/repos/kaicreator-mm/tally/issues/261/dependencies/blocked_by?per_page=100",
+    "atCandidate": {
+      "blockers": [
+        {
+          "issue": 203,
+          "state": "CLOSED"
+        },
+        {
+          "issue": 275,
+          "state": "CLOSED"
+        }
+      ],
+      "openCount": 0
+    },
+    "upstreamQualificationCaveat": {
+      "issue": 219,
+      "nativeState": "CLOSED",
+      "separateIndependentReview": "https://github.com/kaicreator-mm/tally/issues/219#issuecomment-6927712376",
+      "finding": "P1_OWNER_PACK_FREEZE_FIRST_RECORDED_AFTER_PHYSICAL_HOST_EFFECT",
+      "qualification": "HOLD_UNTIL_NONRETROACTIVE_AUTHORIZATION_DISPOSITION__NOT_WAIVED_BY_ISSUE_CLOSE",
+      "handling": "Verify actual pre-effect authority if it exists. If absent record persistent historical noncompliance and lawful prospective boundary; do not backdate, duplicate effects, borrow owner authorization or claim Task PASS."
+    }
+  },
+  "admission": {
+    "packRequires": "Fresh current-source full version Task Pack / live Native edges / exact 15-path digest with E collision gates and original #219 independent P1 treatment",
+    "independentReview": "DISTINCT_CONVERSATION_EXACT_HEAD_AND_BLOB_PENDING",
+    "ownerApproval": "NOT_GRANTED",
+    "hostFrozenPack": "NOT_RUN",
+    "nativeTaskClaim": "NOT_CREATED",
+    "frozenWriteSet": "NOT_CREATED",
+    "hostLease": "RELEASED_AT_R54_GATE_STOP__MUST_NEWLY_ACQUIRE_AT_NEXT_ADMISSION",
+    "preEffectSequence": [
+      "Re-read exact source HEAD/Tree, issue body status, official Native blockers and physical Host lease",
+      "Independent exact-blob Pack review P0/P1=0; resolve scope/write-set overlaps and #219 existing P1 qualification impact",
+      "Bind valid current-source Owner Pack decision BEFORE protected Host/CAS effects (no after-the-fact approvals)",
+      "Run applicable authorized physical Freeze at proper source; verify actual durable Pack status, source binding and first-writer lease",
+      "Create accepted #261 Task Claim and create-only 15-path FSW via selected Host, read them back independently",
+      "Only then source Writer may patch eligible B paths; focused Node>=24 and Woodpecker changed-impact tests; different-conversation exact-HEAD review; qualified integration"
+    ],
+    "stopConditions": [
+      "Any missing/mismatched pre-effect authority, reviewer/source/Owner Pack identity, Claim or FSW",
+      "Current native blocked_by unexpectedly OPEN, source drift, overlapping Writer, unresolved Host lease, wrong selected project or repository",
+      "Current server still lacks E-owned guided HTTP routing: no fabricated installed STEP/SUBMIT PASS",
+      "Historical #219 P1 erroneously treated as cleared by GitHub issue closure",
+      "Lost ACK / Publication UNKNOWN, duplicate transport, non-idempotent attempts, or unqualified reviewer"
+    ]
+  },
+  "contract": {
+    "existingPositivePort": "Existing readGuidedStep/submitGuidedStep qualified B port behavior can be reused if exact ABI unchanged; actual HTTP should be E integration",
+    "tests": [
+      {
+        "id": "B01",
+        "input": "provider absent",
+        "expect": "read/submit fail closed or route absent, no Host dispatch"
+      },
+      {
+        "id": "B02",
+        "input": "qualified injected selected Host + current project/version/source/step/revision",
+        "expect": "correct STEP and SUBMIT values at verified component boundary, never synthetic HTTP success"
+      },
+      {
+        "id": "B03",
+        "input": "wrong repo or selected project, wrong source SHA or moved Head",
+        "expect": "no dispatch, stale/denied"
+      },
+      {
+        "id": "B04",
+        "input": "CSRF missing/wrong Origin/key",
+        "expect": "deny without Host effect"
+      },
+      {
+        "id": "B05",
+        "input": "stale step/revision or invalid field",
+        "expect": "deny without Host effect"
+      },
+      {
+        "id": "B06",
+        "input": "ambiguous ACK, timeout, retry",
+        "expect": "UNKNOWN, zero automatic duplicate POST"
+      },
+      {
+        "id": "B07",
+        "input": "#219 Host leased or #261 source Pack not frozen",
+        "expect": "strict admission denial"
+      },
+      {
+        "id": "B08",
+        "input": "missing HTTP route prior to E integration",
+        "expect": "404 truthful NOT_CONNECTED; no false installed PASS"
+      },
+      {
+        "id": "B09",
+        "input": "new E route legitimately present after authorized E source delivery",
+        "expect": "installed positive STEP/SUBMIT separately proven by #264, not by this Pack"
+      }
+    ],
+    "reuse": [
+      "#261 R47 15-file source/Blob check (9 identical, 6 hardened differences, no bulk #280 replay)",
+      "Windows Node24 old #280 44/44 and 254 pass evidence, historical only",
+      "Existing current-source selected guided-form-port model tests",
+      "Current Woodpecker #813 as source-scoped historical CI, not fresh PR or installed acceptance"
+    ]
+  },
+  "nextLegitimateActions": [
+    "Different-conversation Source-First audit this one new docs-only candidate; report ACCEPT_SCOPED_GOVERNANCE_ONLY or REWORK with P0/P1/P2 and exact Git Blob",
+    "Reconcile R7 #219 independent Pack timing P1 non-retroactively; no duplicate physical maintenance issue",
+    "Only after source-bound valid full Pack and pre-effect Owner authority, dispatch new single Host Writer #261",
+    "After lawful #261 Task outcome, #273 current source reviewed Pack can be considered for admission; #262 C and #276 F have separate gates"
+  ],
+  "explicitNonEffects": [
+    "NO_HOST",
+    "NO_CAS_WRITE",
+    "NO_NEW_CLAIM",
+    "NO_FSW",
+    "NO_SOURCE_CODE_CHANGE",
+    "NO_MAIN_OR_TAG",
+    "NO_TASK_PASS",
+    "NO_RELEASE_QUALIFICATION"
+  ]
+}
