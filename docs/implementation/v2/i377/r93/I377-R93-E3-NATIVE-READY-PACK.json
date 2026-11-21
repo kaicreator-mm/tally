@@ -1,0 +1,107 @@
+{
+  "schema": "tally/i377-r93-prospective-per-task-admission-pack/v1",
+  "disposition": "CANDIDATE_ONLY_NOT_ADMITTED",
+  "repo": "kaicreator-mm/tally",
+  "mainIssues": [
+    392,
+    259
+  ],
+  "taskIssue": 377,
+  "source": {
+    "ref": "version/v2",
+    "observedS0": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "sourceEpoch": "S0_TO_S1_COMPATIBILITY_NOT_ADOPTED",
+    "mustRevalidateBeforeWrite": true
+  },
+  "frozen": {
+    "originalTaskCount": 51,
+    "originalNativeEdgeCount": 29,
+    "versionOnly": true,
+    "packBlob": "8df559d9a84a4c66a12a33818037aecd47f1519f",
+    "mustRemainImmutable": true
+  },
+  "evidence": {
+    "designContractComment": 6983294817,
+    "independentDesignReviewComment": 6984755442,
+    "independentProspectivePlanReviewComment": 6985700071,
+    "prospectivePlanPr": 452,
+    "prospectivePlanHead": "a02b43c66c4309ca3344af502fafd684e43b41fc",
+    "historicalDefectPackPr": 378,
+    "historicalRepairMergedPr": 394
+  },
+  "authority": {
+    "selectedHost": "NOT_PROVEN",
+    "acceptedCurrentTaskPack": "NONE",
+    "nativeTaskAdmission": "NOT_GRANTED",
+    "currentClaim": "NONE",
+    "currentFsw": "NONE",
+    "sourceWritePermission": false,
+    "taskPass": false,
+    "releaseQualification": "HOLD"
+  },
+  "independentReview": {
+    "required": true,
+    "role": "OTHER_CONVERSATION_NON_WRITER",
+    "criterion": "Exact HEAD + exact JSON Blob + source/currentness + single-writer ownership + selected Host authorization"
+  },
+  "admissibleEffectsNow": [
+    "DOCS_ONLY_CANDIDATE_PR",
+    "READ_ONLY_GITHUB_EVIDENCE",
+    "COORDINATOR_COMMENT"
+  ],
+  "forbiddenNow": [
+    "PRODUCTION_SOURCE_WRITE",
+    "HOST_CAS_PUT",
+    "FSW_CREATE",
+    "ROLE_CLAIM_CREATE",
+    "GITHUB_LABEL_PATCH",
+    "NATIVE_TASK_EVENT",
+    "TASK_OUTCOME",
+    "STRUCTURAL_REFREEZE",
+    "RELEASE"
+  ],
+  "packId": "I377-R93-E3",
+  "kind": "FORWARD_ONLY_PLANNED_TO_READY_NATIVE_TRANSITION",
+  "prospectiveIssueNumber": null,
+  "allowedWriteSet": [
+    "packages/tally-github-native-c/src/task-ready-transition-port.mjs",
+    "packages/tally-github-native-c/test/task-ready-transition-port.test.mjs"
+  ],
+  "allowedWriteSetCount": 2,
+  "allowedWriteSetDigestSha256": "3797b188fe28db71b2f07979da7b046369e92c8fce0ff8c7002eba91af00d918",
+  "writeSetOwnership": "PROSPECTIVE_DISJOINT_NEW_PATHS_ONLY",
+  "prerequisites": [
+    "E3 independent current Task/Pack/Claim/FSW/selected Host and GitHub effect authority",
+    "Official current Source Epoch/ABI + frozen 51/29 verification without re-freeze",
+    "E0 zero-write #377 acceptance scope independently adopted before label transition",
+    "Native blocked_by official live read: no open blocker; #211 closed/cancelled is NOT Task PASS"
+  ],
+  "contract": {
+    "targetIssue": 377,
+    "observedIssueAtPackPreparation": "OPEN type:task,state:planned",
+    "precheck": [
+      "official current issue updated_at, labels, state, exact repository/Issue",
+      "native blocked_by and absent unauthorized Claim/FSW",
+      "accepted current Pack/source/Host effect lease and fence",
+      "read state again immediately before one authorized PATCH"
+    ],
+    "write": "exactly ONE authorized GitHub label/state update; no second PATCH after timeout or lost ACK",
+    "postread": "re-read same official issue + updated_at + native dependencies + source and fence; successful readback alone grants no Claim or Outcome",
+    "githubAtomicity": "No GitHub label update is transactionally atomic with Host CAS; ABA and concurrent actor race must return UNKNOWN_PENDING_RECONCILIATION",
+    "forbidden": [
+      "PATCH on updated_at drift",
+      "PATCH with open native blocker",
+      "infer accepted Claim or Task PASS from state:ready",
+      "blind retry on ambiguous ACK"
+    ]
+  },
+  "requiredRunnableTests": [
+    "POS current planned->ready single PATCH/readback",
+    "NEG blocked_by open and stale updated_at/label",
+    "NEG GitHub ABA between preflight and PATCH remains UNKNOWN",
+    "NEG lost ACK single PATCH only, reconciliation separate",
+    "NEG concurrent issuers / claim collision / changed source",
+    "NEG ready readback never authorizes FSW or Task Outcome"
+  ],
+  "selectedHostIntegration": "NOT_INCLUDED; source adapter does not itself acquire selected Host authority"
+}

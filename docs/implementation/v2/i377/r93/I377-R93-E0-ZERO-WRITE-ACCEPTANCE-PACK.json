@@ -1,0 +1,95 @@
+{
+  "schema": "tally/i377-r93-prospective-per-task-admission-pack/v1",
+  "disposition": "CANDIDATE_ONLY_NOT_ADMITTED",
+  "repo": "kaicreator-mm/tally",
+  "mainIssues": [
+    392,
+    259
+  ],
+  "taskIssue": 377,
+  "source": {
+    "ref": "version/v2",
+    "observedS0": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "sourceEpoch": "S0_TO_S1_COMPATIBILITY_NOT_ADOPTED",
+    "mustRevalidateBeforeWrite": true
+  },
+  "frozen": {
+    "originalTaskCount": 51,
+    "originalNativeEdgeCount": 29,
+    "versionOnly": true,
+    "packBlob": "8df559d9a84a4c66a12a33818037aecd47f1519f",
+    "mustRemainImmutable": true
+  },
+  "evidence": {
+    "designContractComment": 6983294817,
+    "independentDesignReviewComment": 6984755442,
+    "independentProspectivePlanReviewComment": 6985700071,
+    "prospectivePlanPr": 452,
+    "prospectivePlanHead": "a02b43c66c4309ca3344af502fafd684e43b41fc",
+    "historicalDefectPackPr": 378,
+    "historicalRepairMergedPr": 394
+  },
+  "authority": {
+    "selectedHost": "NOT_PROVEN",
+    "acceptedCurrentTaskPack": "NONE",
+    "nativeTaskAdmission": "NOT_GRANTED",
+    "currentClaim": "NONE",
+    "currentFsw": "NONE",
+    "sourceWritePermission": false,
+    "taskPass": false,
+    "releaseQualification": "HOLD"
+  },
+  "independentReview": {
+    "required": true,
+    "role": "OTHER_CONVERSATION_NON_WRITER",
+    "criterion": "Exact HEAD + exact JSON Blob + source/currentness + single-writer ownership + selected Host authorization"
+  },
+  "admissibleEffectsNow": [
+    "DOCS_ONLY_CANDIDATE_PR",
+    "READ_ONLY_GITHUB_EVIDENCE",
+    "COORDINATOR_COMMENT"
+  ],
+  "forbiddenNow": [
+    "PRODUCTION_SOURCE_WRITE",
+    "HOST_CAS_PUT",
+    "FSW_CREATE",
+    "ROLE_CLAIM_CREATE",
+    "GITHUB_LABEL_PATCH",
+    "NATIVE_TASK_EVENT",
+    "TASK_OUTCOME",
+    "STRUCTURAL_REFREEZE",
+    "RELEASE"
+  ],
+  "packId": "I377-R93-E0",
+  "kind": "FORWARD_ONLY_ZERO_SOURCE_WRITE_TASK_377_ACCEPTANCE",
+  "canonicalTask": 377,
+  "allowedWriteSet": [],
+  "allowedWriteSetCount": 0,
+  "allowedWriteSetDigestSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "structuralRelationship": "MUST_NOT_REWRITE_R80_51_29; supplemental prospective per-Task acceptance only",
+  "historicalScopeConflict": "Issue #377 historical two-path Builder source scope and PR #378 must NOT be treated as accepted zero-write FSW; separate Pack adoption or lawful scope succession required",
+  "dependency": "E3 ready gate first; native #211 CLOSED/state:cancelled clears open edge only, never gives Task PASS",
+  "binding": {
+    "fswKey": "tally:v2:task-writeset:377",
+    "documentExactUtf8": "[]",
+    "documentSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "sourceWritePathCount": 0,
+    "fswSchema": "tally/version-task-writeset/v1",
+    "postFreezeSchemaAndHostProducer": "NOT_ADOPTED"
+  },
+  "gates": [
+    "Current official Source Epoch/Pack/selected Host/fence and native allowed-role check",
+    "Owner/source acceptance recorded as actual durable authoritative Pack, not this proposal",
+    "Native state planned -> ready only by E3 with official block/readback and no unverified label ABA",
+    "One create-only FSW after ready; create does not authorize role, source effect or Outcome",
+    "Any stale/unknown/transport failure -> HOLD; no rewriting prior freeze or historical Builder Pack"
+  ],
+  "tests": [
+    "exact SHA256(bytes [])",
+    "old two-path Pack REFUSE",
+    "[] LF/BOM/spaced variants REFUSE",
+    "empty FSW has no authority",
+    "S0/S1 source drift HOLD",
+    "CAS ACK loss -> UNKNOWN no second put"
+  ]
+}

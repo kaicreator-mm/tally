@@ -1,0 +1,125 @@
+{
+  "schema": "tally/i377-r93-prospective-per-task-admission-pack/v1",
+  "disposition": "CANDIDATE_ONLY_NOT_ADMITTED",
+  "repo": "kaicreator-mm/tally",
+  "mainIssues": [
+    392,
+    259
+  ],
+  "taskIssue": 377,
+  "source": {
+    "ref": "version/v2",
+    "observedS0": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "sourceEpoch": "S0_TO_S1_COMPATIBILITY_NOT_ADOPTED",
+    "mustRevalidateBeforeWrite": true
+  },
+  "frozen": {
+    "originalTaskCount": 51,
+    "originalNativeEdgeCount": 29,
+    "versionOnly": true,
+    "packBlob": "8df559d9a84a4c66a12a33818037aecd47f1519f",
+    "mustRemainImmutable": true
+  },
+  "evidence": {
+    "designContractComment": 6983294817,
+    "independentDesignReviewComment": 6984755442,
+    "independentProspectivePlanReviewComment": 6985700071,
+    "prospectivePlanPr": 452,
+    "prospectivePlanHead": "a02b43c66c4309ca3344af502fafd684e43b41fc",
+    "historicalDefectPackPr": 378,
+    "historicalRepairMergedPr": 394
+  },
+  "authority": {
+    "selectedHost": "NOT_PROVEN",
+    "acceptedCurrentTaskPack": "NONE",
+    "nativeTaskAdmission": "NOT_GRANTED",
+    "currentClaim": "NONE",
+    "currentFsw": "NONE",
+    "sourceWritePermission": false,
+    "taskPass": false,
+    "releaseQualification": "HOLD"
+  },
+  "independentReview": {
+    "required": true,
+    "role": "OTHER_CONVERSATION_NON_WRITER",
+    "criterion": "Exact HEAD + exact JSON Blob + source/currentness + single-writer ownership + selected Host authorization"
+  },
+  "admissibleEffectsNow": [
+    "DOCS_ONLY_CANDIDATE_PR",
+    "READ_ONLY_GITHUB_EVIDENCE",
+    "COORDINATOR_COMMENT"
+  ],
+  "forbiddenNow": [
+    "PRODUCTION_SOURCE_WRITE",
+    "HOST_CAS_PUT",
+    "FSW_CREATE",
+    "ROLE_CLAIM_CREATE",
+    "GITHUB_LABEL_PATCH",
+    "NATIVE_TASK_EVENT",
+    "TASK_OUTCOME",
+    "STRUCTURAL_REFREEZE",
+    "RELEASE"
+  ],
+  "packId": "I377-R93-E2",
+  "kind": "SELECTED_QUALIFIED_TASK_OUTCOME_PUBLISHER",
+  "prospectiveIssueNumber": null,
+  "allowedWriteSet": [
+    "packages/tally-github-native-c/src/task-outcome-publisher.mjs",
+    "packages/tally-github-native-c/test/task-outcome-publisher.test.mjs"
+  ],
+  "allowedWriteSetCount": 2,
+  "allowedWriteSetDigestSha256": "461ca8826e4359b9a16ec602785467e0c0c9a88f6d9e5c8af62729e4f72e655d",
+  "writeSetOwnership": "PROSPECTIVE_DISJOINT_NEW_PATHS_ONLY",
+  "prerequisites": [
+    "Adopted E2 source Pack, native Task/Claim/FSW selected Host fence",
+    "E1 real FSW exact durable readback and immutable Join with two accepted role Claims",
+    "Selected no-write Validator evidence and independent Reviewer ACCEPT ReviewDecision",
+    "Current Source Epoch + Package/ABI/transport + affected Exact-HEAD CI SUCCESS",
+    "Outcome Host producer & consumer schema and terminal publication authority separately reviewed and installed"
+  ],
+  "contract": {
+    "resultDistinctFrom": [
+      "DISPATCH_CLAIMED_COMMENT_ACK",
+      "NATIVE_ISSUE_CLOSED",
+      "NATIVE_DONE_LABEL",
+      "JOURNEY_PROJECTION",
+      "PR394_SOURCE_REPAIR_GREEN"
+    ],
+    "provenanceMustBind": [
+      "FSW_KEY_REV_VALUE_DIGEST",
+      "JOIN_REV_VALUE",
+      "VALIDATOR_CLAIM_CAS_NATIVE_OPERATOR",
+      "REVIEWER_CLAIM_CAS_NATIVE_OPERATOR",
+      "VALIDATOR_EVIDENCE",
+      "INDEPENDENT_ACCEPT_DECISION",
+      "SOURCE_PACK",
+      "CI",
+      "HOST_FENCE"
+    ],
+    "durableEffect": "one stable idempotency key and create-only CAS/write, exact native Host readback; ACK loss UNKNOWN without blind retry",
+    "failureStates": [
+      "REWORK",
+      "DEFER",
+      "MISSING_EVIDENCE",
+      "STALE_SOURCE",
+      "UNKNOWN_ACK",
+      "REVOKED_ROLE",
+      "UNQUALIFIED_CI"
+    ],
+    "resultOnFailure": {
+      "taskPass": false,
+      "releasePass": false,
+      "publication": "HOLD"
+    }
+  },
+  "requiredRunnableTests": [
+    "POS qualified Outcome exact Host durable CAS + native reconciliation",
+    "NEG Reviewer Claim is not independent ACCEPT decision",
+    "NEG stale/revoked/alias roles; missing validator evidence",
+    "NEG actual CI/source/Pack drift or forbidden Host effect",
+    "NEG race double Outcome create; no second success grant",
+    "NEG Outcome CAS/native lost ACK -> UNKNOWN no blind re-POST",
+    "NEG REWORK/DEFER never Task PASS"
+  ],
+  "selectedHostIntegration": "NOT_INCLUDED; E264 sole integrating writer after legal admission"
+}
