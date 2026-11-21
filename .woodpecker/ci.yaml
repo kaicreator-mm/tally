@@ -116,6 +116,9 @@ steps:
       - test -n "$files"
       - node --test $files packages/tally-engineering-business/test/business-policy.test.mjs packages/tally-github-c/test/project-intake.test.mjs experiments/v2/project-intake/host-project.test.mjs packages/tally-github-c/test/maintenance-effects.test.mjs experiments/v2/maintenance/host-maintenance.test.mjs experiments/v2/release/installed-journey.test.mjs experiments/v2/selected-business-build/version-task-dag-host.test.mjs experiments/v2/selected-business-build/claim-target.test.mjs experiments/v2/selected-business-build/builder-target.test.mjs experiments/v2/selected-business-build/prebuilt-consumer.test.mjs
       # OS-neutral Linux Host contract, without pretending CI has a real model login.
+      - node --check experiments/v2/selected-business-build/local-codex-host.mjs
+      - node --check experiments/v2/selected-business-build/bundle-local-codex.mjs
+      - bash -n experiments/v2/selected-business-build/run-clean.sh
       - node --check experiments/v2/selected-business-build/local-codex-linux-e2e.mjs
       - node --check experiments/v2/selected-business-build/local-codex-linux-host.mjs
       - node --test experiments/v2/selected-business-build/local-codex-linux-host.test.mjs
