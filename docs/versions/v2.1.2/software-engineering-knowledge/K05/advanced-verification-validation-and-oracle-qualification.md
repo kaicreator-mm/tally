@@ -35,18 +35,21 @@ NASA SWE-052 [A65](../external-source-catalog.md) 提供一个受限的高保证
 
 [NIST 组合测试 A67](../external-source-catalog.md) 给出 t-way 的研究方法。参数组合 2-way 覆盖所有二元值对，仍不能保证三维谓词（例如普通用户 + 已关闭订单 + 取消请求）被实际测试；既有高阶业务不变量必须有专门的负例。也不应只为提高数字指标制造同质化测试。
 
-## 四、Flaky：非确定性现象与确定性的 Oracle 缺陷如何区分
+## 四、Flaky 测试、测试未发现与过期 Oracle 是三种不同的因果类型
 
-一个测试在同 SHA、同 Runner 下第一次红、第二次绿：
-- 可能因共享临时数据库状态没有隔离；
-- 可能因事件时序/资源竞争触发真实漏洞；
-- 可能因远端服务限流/网络重试；
-- 可能因当前 Test Discovery 每次不同，失败用例某轮根本没运行；
-- 也可能使用了过期 Snapshot/自我认可的 Expected。
+**A. 同一个测试实际运行且结果振荡（真正的执行不稳定）**：前提是确认同一 `testId` 在两次执行中**都被发现且实际运行**，相同 `SourceSHA`、Runner/测试版本，但出现一次 `FAIL`、一次 `PASS`。竞争假设包括共享数据库未隔离、事件时序/随机性、进程或系统资源竞争、外部依赖延迟/限流、未被固定的时钟或输入。这说明还缺少受控变量，不等于“必然只是测试代码坏”或“系统一定无缺陷”。
 
-处理应该记录 Runner 版本、实际发现集合、随机种子/数据集、时钟/Attempt、Source SHA 和相关资源。**简单 rerun 直到绿并删除首轮失败证据**无法区分这几种机制；但也不应因为一次未知的运行器抖动强制重跑所有无关真实主机测试。
+**B. 测试并未运行而流水线显示 GREEN（发现/选择的假阳性）**：例如 H1 的 `contract.spec.mjs` 被 Runner 发现并失败，H2 的执行因为 Test Glob 配错，实际**没有发现/运行这条测试**，其他测试全部 PASS，Job exit 0。此时正确表述为**测试套件总体 GREEN，但目标测试 `NOT_RUN`**；绝不能将未运行的测试写成“同一测试第二次 PASS”，即使 Commit SHA/Runner 版本相同。两次 Test Discovery 数量、选定用例 ID、实际 run events 可明确区分 A 与 B。
 
-**区分性实验**：同样 SourceSHA 与确定测试发现集合，隔离资源并复现数据竞争；如果隔离后全部通过，还需判断是测试污染还是系统真实共享状态冲突；若 SourceSHA 变了，不能视为同一次可比重复。
+**C. Oracle 稳定但错误（确定性预期缺陷）**：对相同源、相同真实输入/环境和同一错误的 Snapshot/Expected，测试通常稳定地给出错误判断（始终伪 PASS 或伪 FAIL），**单独的过期 Golden 不会使同一个测试随机红绿**。只有当 Oracle 文件、输入数据、选择条件或环境在两次运行中改变时，才能与结果振荡相关；那应报告具体变化，不能把“Golden 旧了”当作无条件 Flaky 原因。独立业务 Source/Expected 核验和 Golden 变更记录可区分 C 与 A。
+
+| 假说 | 必备可观察证据 | 最小反驳/区分探针 | 可报告结果 |
+| --- | --- | --- | --- |
+| A：同一实际测试执行不稳定 | 两次均有相同 testId 的 run + 相反结果 | 固定输入/时钟/种子、隔离共享资源、比较实际执行轨迹 | `EXECUTED_FAIL` / `EXECUTED_PASS` 均留证，根因未证实时 `UNRESOLVED` |
+| B：漏选目标测试 | GREEN 仅来自其他测试，目标 testId 没有 run | 比较两次 Test Discovery manifest、globs、testId 与完整执行清单 | 目标测试 `NOT_RUN`，不能冒充目标 PASS |
+| C：稳定 Oracle 错误 | 测试执行与输入一致但 Expected 有权依据不成立 | 对照当前有权 Rule/Consumer expected，并查 Oracle 版本差异 | `ORACLE_INVALID`（正确性未证实），不能把稳定误判解释成随机波动 |
+
+**诊断顺序**：先确定是否真正两次都执行了**同一个测试**，再查实际输入/执行时序与隔离，最后核验 Expected 的业务来源。记录 `SourceSHA, Runner, Selection/Discovery, testId, run result, Oracle edition, seed, clock, Attempt, environment`，保留第一次红的证据，不靠 rerun-until-green 掩盖。隔离后全绿也只支持该隔离条件下的结果，仍需区分测试状态污染与系统真实共享状态缺陷；没有任何实际测试运行则全部属于教学区分而非真实已观察根因。
 
 ## 五、Evidence Currentness 与资格边界
 
