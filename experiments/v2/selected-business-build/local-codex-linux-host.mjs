@@ -44,11 +44,19 @@ export function linuxSandboxArgs(config){
     throw new Error('LINUX_BUILDER_PRINCIPAL_INVALID');
   const work=resolve(config.worktreePath),home=resolve(config.builderProfile),
     owner=resolve(config.operatorHome),hidden=resolve(config.hiddenFixture);
-  if(inside(work,home)||inside(home,work)||inside(home,owner)||
-     inside(work,owner)||inside(hidden,home)||inside(hidden,work)||home===owner)
+  if(inside(work,home)||inside(home,work)||inside(owner,home)||
+     inside(owner,work)||inside(hidden,home)||inside(hidden,work)||home===owner)
     throw new Error('LINUX_SANDBOX_SCOPE_OVERLAP');
   if(config.codexHome!==join(home,'.codex'))
     throw new Error('LINUX_CODEX_HOME_NOT_PRIVATE');
+  // Arguments/CAS records must never carry proxy usernames or passwords.
+  if(config.modelProxy){
+    try{
+      const u=new URL(config.modelProxy);
+      if(!['http:','https:'].includes(u.protocol)||u.username||u.password)
+        throw Error('PRIVATE_PROXY');
+    }catch{throw new Error('LINUX_MODEL_PROXY_INVALID');}
+  }
   const e=linuxBuilderEnvironment(config);
   return [
     '--unshare-user','--uid',BWRAP_UID,'--gid',BWRAP_UID,
@@ -119,7 +127,7 @@ export function createLinuxHostOperations({defaults,exec=nativeExec}={}){
           realpath(config.worktreePath),realpath(config.builderProfile),
           realpath(config.operatorHome),realpath(config.hiddenFixture),
           realpath(config.cliPath),realpath(config.bwrapPath)]);
-        if(inside(work,operator)||inside(home,operator)||inside(work,home)||
+        if(inside(operator,work)||inside(operator,home)||inside(work,home)||
            inside(hidden,home)||inside(hidden,work)||
            !inside(cli,'/usr')||!inside(bwrap,'/usr'))
           throw Error('PATH_OVERLAP');
