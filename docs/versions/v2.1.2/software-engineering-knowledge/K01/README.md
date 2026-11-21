@@ -12,7 +12,7 @@
 
 **R7 专业基础原理补缺（旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 已获独立 ACCEPT_SCOPED，文档范围）**：[需求双向追溯、领域不变量和变化影响](advanced-requirements-traceability-and-change-propagation.md)，对本模块既有课程中的 **4 个之前没有进阶 A 的知识点**提出受限规格/推导、专业反例与真正需要的 Oracle；不是被证明的运行时 Claim。详见 [R7 原 87 点差距盘点](../professional-depth-gap-inventory-r7.md)，避免按文件数量推断学科完全合格。
 
-**R8 深化工程判断专业基础（新章待限定独立审核）**：[Stakeholder 权威冲突与证据三角核验](advanced-stakeholder-authority-and-triangulated-evidence.md)，精确连接本模块 **2 个原有高优先级课程 ID**，明确 Source/范围、机制假设、负例与 STOP；[W13–W17](../professional-reasoning-worked-traces-03.md) 展示综合选择，[来源适用矩阵](../professional-source-applicability-r8.md) 仍是引用候选，不构成真实 Runtime/Agent/Host/Release 资格。
+**R8 深化工程判断专业基础（旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 已独立 ACCEPT_SCOPED，文档范围）**：[Stakeholder 权威冲突与证据三角核验](advanced-stakeholder-authority-and-triangulated-evidence.md)，精确连接本模块 **2 个原有高优先级课程 ID**，明确 Source/范围、机制假设、负例与 STOP；[W13–W17](../professional-reasoning-worked-traces-03.md) 展示综合选择，[来源适用矩阵](../professional-source-applicability-r8.md) 仍是引用候选，不构成真实 Runtime/Agent/Host/Release 资格。
 
 **先了解整个专业学科，再按需选择问题**： [K01 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
