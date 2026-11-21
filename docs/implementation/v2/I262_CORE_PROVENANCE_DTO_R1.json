@@ -1,0 +1,455 @@
+{
+  "schema": "tally/v2-core-task-provenance-contract/1",
+  "outputLabel": "TALLY_V2_I262_CORE_PROVENANCE_DELIVERY",
+  "status": "GOVERNANCE_ONLY_MACHINE_READABLE_DTO_AND_TEST_VECTORS_NOT_INSTALLED",
+  "repository": "kaicreator-mm/tally",
+  "taskIssue": 262,
+  "coordinators": [
+    392,
+    259
+  ],
+  "source": {
+    "ref": "version/v2",
+    "sha": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "branchReadback": "IDENTICAL"
+  },
+  "nativeDependencyReadback": {
+    "source": "GET /repos/kaicreator-mm/tally/issues/262/dependencies/blocked_by",
+    "records": [
+      {
+        "issueNumber": 219,
+        "state": "closed"
+      },
+      {
+        "issueNumber": 274,
+        "state": "closed"
+      }
+    ],
+    "openCount": 0,
+    "authoritativeness": "NATIVE_EDGE_STATUS_ONLY_NOT_CAS_CLAIM_OR_TASK_PASS",
+    "observationEpoch": "PRE_R54_GOVERNANCE_AMENDMENT__RECHECK_AT_CURRENT_RUNTIME_ADMISSION"
+  },
+  "reviewConstraint": {
+    "issue219HistoricalOutcome": "NATIVE_CLOSED_BUT_R7_FINAL_INDEPENDENT_REVIEW_REWORK_P1_PRE_EFFECT_OWNER_AUTH_SEQUENCE",
+    "ref": "https://github.com/kaicreator-mm/tally/pull/436#pullrequestreview-5926663075",
+    "use": "DO_NOT_PROMOTE_CLOSED_TO_ACCEPTED_TASK_OUTCOME"
+  },
+  "currentSourcePins": [
+    {
+      "name": "nativeTask",
+      "path": "packages/tally-github-native-c/src/task-workitem-source.mjs",
+      "blob": "7ceca3b7bfc9a3ec6e8d7b307fe2b9254240994d"
+    },
+    {
+      "name": "nativeRoster",
+      "path": "packages/tally-github-native-c/src/ui-version-readonly.mjs",
+      "blob": "8f4d3d3916cdd3aa00f1701a090dc747fa7ddaa3"
+    },
+    {
+      "name": "rosterHost",
+      "path": "web/v2/ui-roster-host.mjs",
+      "blob": "2e51540ad14f7c13e608ad9a0856a8315931cc2f"
+    },
+    {
+      "name": "attemptHost",
+      "path": "web/v2/ui-attempt-host.mjs",
+      "blob": "fdd6e5d289cbf22301fc7eabb6a74a0619cbeff3"
+    },
+    {
+      "name": "attemptModel",
+      "path": "packages/tally-engineering-business/src/attempts.mjs",
+      "blob": "2a9b7bca272cb9b17672f41ae099c692ac052ed7"
+    },
+    {
+      "name": "nativeClaim",
+      "path": "packages/tally-github-native-c/src/task-claim-publication-witness.mjs",
+      "blob": "e1f044d11b079cf107d9e067b1e52d532aa33784"
+    },
+    {
+      "name": "claimReadback",
+      "path": "packages/tally-github-native-c/src/task-claim-host-readback-port.mjs",
+      "blob": "39daecbcf4b421e908e27acb4ddce8dec49f18fa"
+    },
+    {
+      "name": "adsReport",
+      "path": "packages/tally-github-c/src/report-projection.mjs",
+      "blob": "8574f224d88c1e8ae2db7a19d9da2e9d7a393968"
+    },
+    {
+      "name": "taskUiModel",
+      "path": "apps/tally-web/src/features/tasks/model.ts",
+      "blob": "d0f7be978453e12ac80cb18f5695a5fa6c26ec47"
+    },
+    {
+      "name": "metadataUiModel",
+      "path": "apps/tally-web/src/features/metadata/model.ts",
+      "blob": "83e9d2e1ef58b110cb9891a81a6f318982a5494e"
+    },
+    {
+      "name": "eServer",
+      "path": "web/v2/journey-server.mjs",
+      "blob": "90002e3bfe976f10047cf15eec0dbbdc07f09dd0"
+    },
+    {
+      "name": "eBoot",
+      "path": "web/v2/serve.mjs",
+      "blob": "22d70d8798af2fc76732e119dd2c6a9cb1a654f0"
+    },
+    {
+      "name": "eApp",
+      "path": "apps/tally-web/src/app/App.tsx",
+      "blob": "d51f6eeb5286afeefd01a67089202e8541974fb7"
+    }
+  ],
+  "dtoFieldContract": {
+    "schema": "tally/v2-task-provenance-dto/1",
+    "required": [
+      "schema",
+      "status",
+      "repository",
+      "versionId",
+      "sourceSha",
+      "taskIssueNumber",
+      "observedAt",
+      "native",
+      "claim",
+      "attempts",
+      "adsReports",
+      "review",
+      "ci",
+      "coverage",
+      "authority"
+    ],
+    "identity": "All joined records require exact repository+versionId+sourceSha+taskIssueNumber, plus AttemptId/PR Head where relevant.",
+    "statuses": [
+      "CURRENT_OBSERVED",
+      "PARTIAL_NOT_CONNECTED",
+      "UNKNOWN",
+      "STALE",
+      "NOT_CONNECTED"
+    ],
+    "nativeFields": [
+      "issueRef",
+      "issueState",
+      "workflowState",
+      "issueUpdatedAt",
+      "dependencySource",
+      "blockedBy",
+      "openBlockers",
+      "nativeReadback",
+      "taskOutcome"
+    ],
+    "claimFields": [
+      "status",
+      "claimRef",
+      "casRef",
+      "fswRef",
+      "accepted"
+    ],
+    "attemptFields": [
+      "status",
+      "attemptCount",
+      "items",
+      "hostRoster"
+    ],
+    "reportFields": [
+      "status",
+      "reportCount",
+      "items",
+      "publisher"
+    ],
+    "reviewFields": [
+      "status",
+      "prHeadSha",
+      "reviewRef",
+      "qualifiedOutcome"
+    ],
+    "ciFields": [
+      "status",
+      "headSha",
+      "runRef",
+      "exactHeadQualified"
+    ],
+    "coverageFields": [
+      "nativeIssue",
+      "nativeDependency",
+      "claim",
+      "attempts",
+      "reports",
+      "review",
+      "ci",
+      "join"
+    ],
+    "authorityFields": {
+      "admitted": false,
+      "authorized": false,
+      "taskPass": false,
+      "releasePass": false,
+      "dispatchAllowed": false,
+      "readOnly": true
+    },
+    "missingSemantics": "Unconnected/not-read collection is null, never []; 0 only after independently verified complete source readback.",
+    "timeSemantics": "No single atomic observedAt timestamp can be fabricated. Historical native example issueUpdatedAt=null after R54 Issue body amendment; actual consumption MUST reread before/after live issue update and source SHA or downgrade STALE.",
+    "reviewSemantics": "Exact PR commit/tree and distinct accepted independent Reviewer; GitHub issue closure, CI green, ADS self-report never qualifies Task.",
+    "ciSemantics": "Compare exact candidate SHA, CI context, run result; old source green = historical-only.",
+    "claimSemantics": "Published native comment != Host accepted CAS Claim; Claim accepted requires independent Host CAS/FSW/Pack proof.",
+    "privacySemantics": "No raw logs, tokens, private SQLite, task-meta, Host secrets, raw Agent conversation or provider credentials."
+  },
+  "currentNativeExample": {
+    "schema": "tally/v2-task-provenance-dto/1",
+    "status": "PARTIAL_NOT_CONNECTED",
+    "repository": "kaicreator-mm/tally",
+    "versionId": "version/v2",
+    "sourceSha": "62f18fd87d5a709f42900e612dcebc02c5c4f365",
+    "taskIssueNumber": 262,
+    "observedAt": null,
+    "native": {
+      "issueRef": "https://github.com/kaicreator-mm/tally/issues/262",
+      "issueState": "open",
+      "workflowState": "state:ready",
+      "issueUpdatedAt": null,
+      "dependencySource": "OFFICIAL_GITHUB_NATIVE_GET_BLOCKED_BY",
+      "blockedBy": [
+        {
+          "issueNumber": 219,
+          "issueState": "closed"
+        },
+        {
+          "issueNumber": 274,
+          "issueState": "closed"
+        }
+      ],
+      "openBlockers": 0,
+      "nativeReadback": "HISTORICAL_DIRECT_REST_OBSERVATION_RECHECK_REQUIRED",
+      "taskOutcome": "NOT_VERIFIED",
+      "issueUpdateGuard": "RE_READ_OFFICIAL_ISSUE_UPDATED_AT_AND_DEPENDENCIES_AT_ACTUAL_CONSUMPTION"
+    },
+    "claim": {
+      "status": "NOT_VERIFIED",
+      "claimRef": null,
+      "casRef": null,
+      "fswRef": null,
+      "accepted": null
+    },
+    "attempts": {
+      "status": "NOT_CONNECTED",
+      "attemptCount": null,
+      "items": null,
+      "hostRoster": "NOT_READ"
+    },
+    "adsReports": {
+      "status": "UNKNOWN",
+      "reportCount": null,
+      "items": null,
+      "publisher": "NOT_VERIFIED"
+    },
+    "review": {
+      "status": "UNKNOWN",
+      "prHeadSha": null,
+      "reviewRef": null,
+      "qualifiedOutcome": "NOT_VERIFIED"
+    },
+    "ci": {
+      "status": "UNKNOWN",
+      "headSha": null,
+      "runRef": null,
+      "exactHeadQualified": false
+    },
+    "coverage": {
+      "nativeIssue": "OBSERVED",
+      "nativeDependency": "OBSERVED",
+      "claim": "NOT_VERIFIED",
+      "attempts": "NOT_CONNECTED",
+      "reports": "UNKNOWN",
+      "review": "UNKNOWN",
+      "ci": "UNKNOWN",
+      "join": "INCOMPLETE"
+    },
+    "authority": {
+      "admitted": false,
+      "authorized": false,
+      "taskPass": false,
+      "releasePass": false,
+      "dispatchAllowed": false,
+      "readOnly": true
+    }
+  },
+  "joiningRules": [
+    "Read pinned version/v2 branch/commit, selected roster and Issue double-read; fail on drift.",
+    "Use native C task-workitem-source for exact issue and complete blocked_by; closed is never Task PASS.",
+    "Use selected Host roster C only when genuinely verified; no direct broad-issues fallback.",
+    "Use native Claim reader for provenance and separate actual Host accepted-CAS/FSW proof; no trust in comment alone.",
+    "Use current B projectTaskAttempts via ui-attempt-host: exact Task/Attempt/Runtime source identity and verified Host roster.",
+    "Use ADS v5 public report projector; no trust in missing publisher, edited/duplicate/foreign/stale reports; separate independent verdict.",
+    "Bind review to present candidate PR exact HEAD/tree and approved Reviewer process; require correction re-review.",
+    "Bind CI Woodpecker/status to exact reviewed commit and context; double-read source before returning one DTO.",
+    "Always set authority.admitted/authorized/taskPass/releasePass/dispatchAllowed false in THIS observer; only selected K/Host and independent Task/RQ authority may change actions."
+  ],
+  "negativeVectors": [
+    {
+      "id": "N01",
+      "input": "Issue CLOSED without qualified Task Outcome",
+      "expected": "CLOSED_UNVERIFIED",
+      "rule": "no Task PASS",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N02",
+      "input": "native DISPATCH_CLAIMED but no Host CAS",
+      "expected": "NOT_VERIFIED",
+      "rule": "comment not Claim acceptance",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N03",
+      "input": "old source/Pack/FSW",
+      "expected": "STALE",
+      "rule": "no old-generation resurrection",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N04",
+      "input": "Host Attempt roster port unavailable",
+      "expected": "NOT_CONNECTED",
+      "rule": "attemptCount=null not zero",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N05",
+      "input": "Host verifies complete empty Attempt roster",
+      "expected": "OBSERVED_EMPTY",
+      "rule": "only qualified empty may be zero",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N06",
+      "input": "ADS public report read missing or empty unqualified",
+      "expected": "UNKNOWN",
+      "rule": "count=null not confirmed 0",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N07",
+      "input": "foreign publisher/repo/task/attempt/subject SHA",
+      "expected": "UNKNOWN",
+      "rule": "no cross-source join",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N08",
+      "input": "duplicate divergent report digest or edited comment",
+      "expected": "UNKNOWN",
+      "rule": "no silent duplicate trust",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N09",
+      "input": "Attempt identity/source mismatch",
+      "expected": "UNKNOWN",
+      "rule": "no foreign attempts",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N10",
+      "input": "Review witness bound to old PR HEAD after repair",
+      "expected": "STALE",
+      "rule": "no old review reuse",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N11",
+      "input": "Woodpecker/GitHub CI success on other commit",
+      "expected": "UNKNOWN",
+      "rule": "exact source/HEAD required",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N12",
+      "input": "401/403/429/5xx or incomplete GitHub pagination",
+      "expected": "NOT_CONNECTED",
+      "rule": "no connected:true empty-success",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N13",
+      "input": "branch/issue/source changed during double read",
+      "expected": "STALE",
+      "rule": "no partial optimistic promotion",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N14",
+      "input": "#219 native CLOSED while R7 independent P1 authorization open",
+      "expected": "OUTCOME_UNVERIFIED",
+      "rule": "native edge satisfied does not prove accepted Task",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N15",
+      "input": "E metadata drops source DTO records and forces []",
+      "expected": "INTEGRATION_FAIL",
+      "rule": "source data not empty",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    },
+    {
+      "id": "N16",
+      "input": "lost ACK or unknown external effect",
+      "expected": "UNKNOWN",
+      "rule": "never issue duplicate POST",
+      "runStatus": "NOT_RUN_SPECIFICATION_ONLY"
+    }
+  ],
+  "currentPackQualification": {
+    "existingVersionPack": {
+      "path": "docs/implementation/v2/TALLY_V2_CORE_MVP_TASK_PACK_R1.json",
+      "blob": "b80b1f4ae4280aedc1e300ab6d0c59a07d132da1",
+      "base": "7ebb1cdd0a79fc82cc938e35f852a80dd8e15332",
+      "status": "STALE_CANDIDATE_NOT_FROZEN"
+    },
+    "r6Pr436": {
+      "head": "96ed7f30b60a78b797c50d0e153c0af5047af884",
+      "blob": "05a02fe2141cfec31d7064e3bc12f820b5c1944e",
+      "scope": "I219_ONLY_CANNOT_BORROW_FOR_I262"
+    },
+    "forI262": "NO_CURRENT_SOURCE_OWNER_FROZEN_ADMISSIBLE_TASK_PACK_PROVEN",
+    "oldTaskWriteSet": "5 Experience-only paths in Issue #262, 69fbd9da1b7b3533a3926ddbe9d2f47d5af6bc7c1dc6787379aa9fb84de0e0c1, not admitted",
+    "conditionalCoreSourceWriteSet": {
+      "paths": [
+        "web/v2/ui-core-provenance-host.mjs",
+        "web/v2/ui-core-provenance-host.test.mjs"
+      ],
+      "count": 2,
+      "sha256SortedJson": "b8de4e30ddd5f3956f4e83a840352941103cda8cfe5831987967ec4b80d68f72",
+      "status": "PROPOSAL_ONLY_NOT_ADMITTED",
+      "codePlan": "One pure read-only DTO composer using existing C/native/Host Attempt/ADS readers plus exact negative tests; ZERO new business effect/API parser."
+    },
+    "requiredBeforeCode": "Replace Issue last canonical 5-path Experience normalization with reviewed exact minimal Core source scope if genuinely needed; refresh current source/Pack and obtain another-conversation independent source/Pack review, effective Owner Freeze, current-source accepted Claim+create-only FSW; respect single physical Host writer.",
+    "thisPR": "ONE governance-only documentation file outside any #262 implementation authoring scope; no source/Claim/FSW/Host/Task mutation"
+  },
+  "ownership": {
+    "C262": "Only a future source-qualified read-only C DTO composer/tests if existing selected-source capability cannot be reused directly.",
+    "E264": "Only sole E Integrator may modify journey-server.mjs, serve.mjs, App.tsx/host.ts to remove fabricated connected:true/forced empty [], connect trusted DTO and stop closed=>done.",
+    "deferredToV21": "Full PR #281 Experience, ADOPT/next-Task usage/learning efficacy, skill promotion, multi-Agent scoring.",
+    "oldPr281": {
+      "head": "4f64a8f183609343a5fb457e3089256e1b872e92",
+      "base": "ad0433f8da6490e46f902cea0d68cf032f3f1b81",
+      "status": "OLD_DRAFT_NOT_CURRENT_SOURCE_NOT_IMPORTED"
+    },
+    "host": "#261 separate physical Writer; no Host/CAS/Claim/FSW/new source from this lane."
+  },
+  "reviewHandoff": {
+    "role": "OTHER_CONVERSATION_NON_WRITER",
+    "verdict": "ACCEPT_SCOPED_GOVERNANCE_ONLY_OR_REWORK",
+    "scope": "Check full JSON at exact Git Blob; 13 source pins, native 2/2, truthful #219 R7 P1 caveat, DTO NULL-vs-zero, 16 fail-closed vectors, 2 proposed path hash, real current Pack absence and C/E isolation.",
+    "tests": "JSON schema/shape and sample invariants are proposal checks, not compiled C or installed Host tests.",
+    "release": "HOLD",
+    "taskPass": "NOT_SIGNED",
+    "note": "R54 Issue body append changes GitHub issue.updated_at; never present prior native sample as current live payload, and do not infer all endpoints share an as-of instant."
+  },
+  "sourceReuseRefs": [
+    "https://github.com/kaicreator-mm/tally/issues/262#issuecomment-6924907998",
+    "https://github.com/kaicreator-mm/tally/issues/195",
+    "https://github.com/kaicreator-mm/tally/issues/275",
+    "https://github.com/kaicreator-mm/tally/pull/436#pullrequestreview-5926663075"
+  ]
+}
