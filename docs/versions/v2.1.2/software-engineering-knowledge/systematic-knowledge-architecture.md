@@ -73,6 +73,8 @@ SoftwareEngineeringDomain
 
 **资格分开记录，不造新 Gate**：文档质量经独立审核 `ACCEPT_SCOPED` 不等于 Source Claim 接受；Source Claim 接受不等于选定 Package/Runtime 正确；真实运行无证据时使用原有效 Validation 的 `NOT_RUN/BLOCKED`，不是自造 `MOCK_SCOPED` 等 Gate。外部教材/开源仓库常只适合形成**方法候选**，不能当当前 ADS 项目的 `MUST`。
 
+**R3 课程可查索引**：[165 点逐项课程—深文章节对应台账](foundation-concept-coverage-ledger.md) 现在让完整课程与 22 篇深度正文保持可核对的关系；仅 S 的 6 项继续作为明确知识缺口。该台账是 Markdown 导航，不定义 DomainHarness 0.11.x 的机器知识 Schema；未来 #286 消费版本合法确定后，才可选定小片段并通过实际 ABI/Source/Task 验证。
+
 ## 5. 同一个问题怎样跨知识而仍保持最小上下文
 
 **示例：软件项目要求新增重启可恢复的批量订单导出，第一次构建失败，另有旧 Agent 迟到消息。**
@@ -100,4 +102,4 @@ Agent 不需要一次载入全部 K01–K11；通过目标、真实条件和跨�
 
 ## 7. 本版本不声称什么
 
-目前无已验证的 18 KA 每个细目“全部掌握”证明、49 项外部来源是发现目录，不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
+目前无已验证的 18 KA 每个细目“全部掌握”证明、54 项外部来源是发现目录（新增 A50–A54 仅用于 R3 专业参考），不能推断存在任何数量的已合格 Claim、无 DomainHarness 0.11.2 编译执行、无真实 selected Domain Package、无模型准确率/提效实测。**系统性知识覆盖设计与专业知识生产可以同步推进，但真实 Runtime 资格仍按合法接口、Source、消费者 Task 和实际观察逐级取得。**
