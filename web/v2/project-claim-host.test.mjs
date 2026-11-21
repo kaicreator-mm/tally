@@ -146,3 +146,87 @@ test('post-publication source or witness drift never records accepted CAS row',a
     assert.equal(persisted.phase,'PENDING_GITHUB_PUBLISH');
   }
 });
+
+const selfClaimBlocked=Object.freeze({
+  connected:true,repository,versionId:'main',issueNumber,
+  issueUrl:issueRef,sourceSha:sha,nativeWorkflow:'READY',
+  stage:'BLOCKED',reason:'NATIVE_CLAIM_ROLE_DUPLICATE_CANDIDATE',
+  admitted:false,authorized:false,agentAuthorized:false
+});
+function currentNativePair(){
+  return {status:'SOURCE_PAIR_OBSERVED',sourceQualified:true,
+    issueRef,sourceSha:sha,claimStatus:'NOT_VERIFIED',
+    admitted:false,authorized:false,
+    workItem:{issueRef,sourceSha:sha,issueState:'open',
+      workflowState:'state:ready',workItemType:'type:task',
+      dependencyState:'CLEAR',openBlockerCount:0,
+      reason:'CLAIM_NOT_VERIFIED'},
+    claimEvents:{reason:'CLAIM_EVENT_CANDIDATES_NOT_CAS_ATTESTED',
+      candidateCount:1,candidates:[{
+        sourceSha:sha,dispatchId:'observed-comment-41',
+        sourceClass:'OBSERVED_COMMENT_SELF_REPORTED_CLAIM',
+        claimAccepted:false}]}}};
+}
+test('post-publish own role duplicate requires live native pair and exact witness',async()=>{
+  const db=store();let reads=0,pairs=0;
+  const host=createProjectClaimHost({settings,env,octokit,
+    openStore:async()=>db,
+    createPublisher:()=>({publishClaim:async()=>({commentId:41})}),
+    readAdmission:async()=>++reads===1?nativePreflight():selfClaimBlocked,
+    readWitness:witness,
+    readNativePair:async req=>{
+      pairs++;
+      assert.deepEqual({owner:req.owner,repo:req.repo,
+        issueNumber:req.issueNumber,sha:req.expectedSourceSha},
+        {owner:'org',repo:'new',issueNumber:27,sha});
+      return currentNativePair();
+    }});
+  const result=await host.publish({issueNumber,sourceSha:sha});
+  assert.equal(result.status,'RECORDED');
+  assert.equal(result.claimPublication,'VERIFIED_PENDING_KERNEL_ADMISSION');
+  assert.equal(pairs,1);
+  assert.equal([...db.rows.values()][0].value.phase,'PUBLISHED_VERIFIED');
+});
+test('post-publish unqualified native BLOCKED reasons cannot promote CAS',async()=>{
+  for(const reason of ['NATIVE_PREFLIGHT_UNAVAILABLE',
+    'NATIVE_ISSUE_NOT_CLAIMABLE','NATIVE_PREFLIGHT_UNQUALIFIED']){
+    const db=store();let reads=0,pairs=0;
+    const host=createProjectClaimHost({settings,env,octokit,
+      openStore:async()=>db,
+      createPublisher:()=>({publishClaim:async()=>({commentId:41})}),
+      readAdmission:async()=>++reads===1?nativePreflight():
+        {...selfClaimBlocked,reason},
+      readWitness:witness,
+      readNativePair:async()=>{pairs++;return currentNativePair();}});
+    const result=await host.publish({issueNumber,sourceSha:sha});
+    assert.equal(result.status,'BLOCKED',reason);
+    assert.equal(result.reason,'GITHUB_CLAIM_READBACK_NOT_VERIFIED',reason);
+    assert.equal(pairs,0,'unrelated BLOCKED must not request fallback');
+    assert.equal([...db.rows.values()][0].value.phase,
+      'PENDING_GITHUB_PUBLISH',reason);
+  }
+});
+test('post-publish own role duplicate refuses incomplete native facts',async()=>{
+  for(const mutate of [
+    p=>({...p,status:'UNKNOWN'}),
+    p=>({...p,workItem:{...p.workItem,issueState:'closed'}}),
+    p=>({...p,workItem:{...p.workItem,dependencyState:'BLOCKED',
+      openBlockerCount:1}}),
+    p=>({...p,claimEvents:{...p.claimEvents,
+      candidates:[{...p.claimEvents.candidates[0],
+        dispatchId:'observed-comment-999'}]}})
+  ]){
+    const db=store();let reads=0;
+    const host=createProjectClaimHost({settings,env,octokit,
+      openStore:async()=>db,
+      createPublisher:()=>({publishClaim:async()=>({commentId:41})}),
+      readAdmission:async()=>++reads===1?nativePreflight():selfClaimBlocked,
+      readWitness:witness,
+      readNativePair:async()=>mutate(currentNativePair())});
+    const result=await host.publish({issueNumber,sourceSha:sha});
+    assert.equal(result.status,'BLOCKED');
+    assert.equal(result.reason,'GITHUB_CLAIM_READBACK_NOT_VERIFIED');
+    assert.equal([...db.rows.values()][0].value.phase,
+      'PENDING_GITHUB_PUBLISH');
+  }
+});
