@@ -1,8 +1,8 @@
-# K01–K11 学科知识正文：R2–R10 系统学科、进阶推理与知识消费判别
+# K01–K11 学科知识正文：R2–R11 专业知识、可证伪评价与受权试验设计
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_R3_R4_R5_R6_R7_R8_R9_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R10_SELECTION_EVALUATION_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 的 3 篇基础学理正文与 87 点差距盘点已在旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 获独立限定接受；R8 的 5 篇专业深化正文与 W13–W17 已在旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 获独立限定接受；R9 的 5 篇正文、W18–W22 及准入差距表已在旧 Exact SHA `7adbb13bf4cc00c823f625e0f7d903bc880575ca` 获独立限定接受（P2×2 已在后续精确 Markdown 变更修复）。R10 不新增专业学科 A 课程点，而转向当前来源、知识选择、可证伪评价和未获生产资格的明确边界。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文 + 5 篇 R8 专业深化正文 + 5 篇 R9 专业深化正文**，不是已投入生产的 Package 或源级合格 Claim。
+> **状态：R2_R3_R4_R5_R6_R7_R8_R9_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R10_SELECTION_EVALUATION_ACCEPT_SCOPED_PRIOR_SHA / R11_LIVE_PILOT_DESIGN_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 的 3 篇基础学理正文与 87 点差距盘点已在旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 获独立限定接受；R8 的 5 篇专业深化正文与 W13–W17 已在旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 获独立限定接受；R9 的 5 篇正文、W18–W22 及准入差距表已在旧 Exact SHA `7adbb13bf4cc00c823f625e0f7d903bc880575ca` 获独立限定接受（P2×2 已在后续精确 Markdown 变更修复）。R10 不新增专业学科 A 课程点，而转向当前来源、知识选择、可证伪评价和未获生产资格的明确边界。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文 + 5 篇 R8 专业深化正文 + 5 篇 R9 专业深化正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -112,7 +112,7 @@ R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，
 
 **R8 已审 A107 + R9 新 A13 = 120/165，剩余 45 点无 A**：原高优先剩 3（其中 K04.F2.3 已有独立接受的 R4 Focus，另外两项已有两卷/R6 对应原理），另 42 点按现有 R7 真实场景触发。新 [W18–W22 完整合成教学演算](professional-reasoning-worked-traces-04.md) 将所有五模块串联成用户请求→Source/条件→错误机制→反例→独立 Oracle/UNKNOWN；[Source→Claim→Oracle 资格差距表](professional-source-to-claim-readiness-r9.md) 对13个选中点逐条明确“参考原理”与“真正生产知识”之间尚缺的有权文档、Consumer ABI 与实际收据。A70 IETF RFC9457、A71 AWS Builders’ Library 重试、A72 Google SRE Cascading/Overload 为新增发现线索，总目录 **72 项**，不是已获许可或合格 Claim。
 
-## R10：从“系统知识存在”到“知识选择能被证伪”（新材料待独立审核）
+## R10：从“系统知识存在”到“知识选择能被证伪”（旧 SHA 已审）
 
 **本轮不再新增 S/D/F/A 链接，不把剩余 45 个无 A 的课程点当作必须填满的缺陷。** R1–R9 既有 **165 原课程 ID、120 A、6 Focus、48 Concept 关系、18 Q、22 W** 按原受审内容保留。R10 专注于“给一个真实工程问题，能否选到最小适用知识、识别有权材料、发现反例，并在未得到真实 Oracle 时停止”四个学科能力：
 
@@ -124,6 +124,13 @@ R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，
 | [最小充分知识选择手册](professional-knowledge-selection-playbook-r10.md) | Goal→Kxx Owner→当前有权 Source→必要机制/反例→有界 Oracle→ASK/UNKNOWN/STOP 的文档方法 | 新 Agent/DomainHarness Wire Schema 或实际选定 Consumer ABI |
 
 **R10 提供的是专业学习与未来真实验证可用的材料，不是生产 Domain Package 或实际评估结果。** [#286](https://github.com/kaicreator-mm/tally/issues/286) 最新 Owner 方向优先：ADS 的版本化软件工程实践来源可以被 Tally 形成选定知识与工作流，但此候选仍 `DEFERRED/NOT_FROZEN/NO_SOURCE_DISPATCH`；不把历史“外部 Producer 必选”描述当当前前置合同。现有 72 个已发现来源仍不是 72 条已合格原始主张；新增五份档案也不增加来源总数。
+
+## R11：最小真实 Agent 知识消费方案——Stage E1 Shadow 与 Stage E2 正式消费者（新设计待审）
+
+[完整 R11 受权试验设计](professional-live-knowledge-consumption-pilot-design-r11.md) 复用 R10 已获独立限定接受的五项原始来源档案、12 条单变量教学题、B0/B3 对照设计和知识选择手册。首轮只选**一个真正可访问的实际代码任务**（测试遗漏/受影响 Consumer 检查），有权 GitHub Issue 固定实际仓库/H0/写集/Owner/QA Oracle；同模型、同工具、同源 H0 的两个隔离 Agent 执行，B 组只注入精确 Corpus SHA+Blob 固定的少量 K03/K05（必要时 K08/K09）专业知识。两组以实际 Node Runner Discovery/Execution、负例、独立 Reviewer、全成本记录判断，而不是用教学题冒充执行证据。
+
+**E1 是真实受限 Agent/代码执行实验，不是已上线的 Tally Domain Package。** 若 E1 证明有价值，E2 才在未来**编号 v2.1.x 子版本**依据 [#286](https://github.com/kaicreator-mm/tally/issues/286) 正式 Product/L2/DAG 和真实选定 ABI 接入 Engineering B；当前 R11 只设计，不启动 Agent、写入实验仓库、解冻 #286 或变更 Runtime。**222 Markdown / 165 原 ID / 120 A / 6 F / 72 来源 / Q18 / W22 不变**（仅本次新增1份版本级设计文档）。R10 的非阻塞 P2（EV10-06B 同时改变任务类型和并发）已仅修成**并发**单变量，待此轮限定复核。
+
 
 ## 3. 学科深化要达到的专业标准
 
