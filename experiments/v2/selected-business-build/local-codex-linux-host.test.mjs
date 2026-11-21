@@ -88,8 +88,8 @@ test('confinement readback checks namespace UID, workspace and hidden secrets',a
     // Mocked exec uses stable system directory paths, not a CI-specific binary.
     x.cliPath='/usr/bin';
     x.bwrapPath='/usr/bin';
-    for(const dir of [x.worktreePath,x.builderProfile,x.operatorHome])
-      await mkdir(dir,{recursive:true,mode:0o700});
+    for(const dir of [x.worktreePath,x.builderProfile,x.codexHome,
+      x.operatorHome])await mkdir(dir,{recursive:true,mode:0o700});
     await writeFile(x.hiddenFixture,'private',{mode:0o600});
     await writeFile(x.emptyGitConfig,'',{mode:0o600});
     const calls=[];
@@ -105,6 +105,10 @@ test('confinement readback checks namespace UID, workspace and hidden secrets',a
     assert.equal(proof.builderSid,'linux-uid:65534');
     assert.ok(calls.some(a=>a.includes(x.hiddenFixture)));
     assert.ok(calls.some(a=>a.includes('login')&&a.includes('status')));
+    await writeFile(x.emptyGitConfig,'[credential]\nhelper=store\n');
+    assert.equal((await ops.proveConfinement(x,x.worktreePath)).verified,false,
+      'a nonempty Git config must never reach the Builder');
+    await writeFile(x.emptyGitConfig,'');
     const failed=createLinuxHostOperations({defaults,
       exec:async()=>{throw Error('user namespace unavailable');}});
     assert.equal((await failed.proveConfinement(x,x.worktreePath)).verified,false);
