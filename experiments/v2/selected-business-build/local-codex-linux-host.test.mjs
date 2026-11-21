@@ -6,6 +6,9 @@ import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+const execFileAsync=promisify(execFile);
 import {
   linuxSandboxArgs,linuxBuilderEnvironment,createLinuxHostOperations,
 } from './local-codex-linux-host.mjs';
@@ -112,5 +115,28 @@ test('confinement readback checks namespace UID, workspace and hidden secrets',a
     const failed=createLinuxHostOperations({defaults,
       exec:async()=>{throw Error('user namespace unavailable');}});
     assert.equal((await failed.proveConfinement(x,x.worktreePath)).verified,false);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+
+test('real Linux git creates exactly one source-pinned detached worktree',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'tally-r152-real-git-'));
+  const repository=join(root,'repository');
+  try{
+    await mkdir(repository);
+    const git=async(...args)=>(await execFileAsync('/usr/bin/git',args)).stdout.trim();
+    await git('init','-q',repository);
+    await git('-C',repository,'-c','user.name=Tally test','-c',
+      'user.email=tally@localhost','commit','-q','--allow-empty','-m','seed');
+    const sourceSha=await git('-C',repository,'rev-parse','HEAD');
+    const setup={...config(root),sourceSha,repositoryPath:repository};
+    const ops=createLinuxHostOperations({defaults});
+    const result=await ops.prepareWorktree(setup);
+    assert.equal(result.baseSha,sourceSha);
+    assert.equal(result.worktreePath,setup.worktreePath);
+    assert.equal(await git('-C',result.worktreePath,'rev-parse','HEAD'),sourceSha);
+    await assert.rejects(ops.prepareWorktree(setup),
+      /CANDIDATE_WORKTREE_UNAVAILABLE/,
+      'a second Agent must not silently reuse the already prepared worktree');
   }finally{await rm(root,{recursive:true,force:true});}
 });
