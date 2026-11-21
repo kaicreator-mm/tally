@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 61 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61：架构信任边界、GitHub 审核事实、Node22 Test Runner、Jest Golden、Git 精确差异、服务配置、XDG 配置路径）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 64 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61、R6 A62–A64：Bazel Hermeticity、Google SRE SLO 告警、Fowler Parallel Change 等）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
