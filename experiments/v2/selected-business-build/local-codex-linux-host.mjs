@@ -12,7 +12,8 @@ const SHA=/^[a-f0-9]{40}$/;
 const PATH=/^\/[^:\0\n\r]{1,300}$/;
 export const LINUX_BUILDER_UID=65534;
 const BWRAP_UID=String(LINUX_BUILDER_UID);
-const safePath=value=>typeof value==='string'&&PATH.test(value)&&isAbsolute(value)&&!value.includes('/../');
+const safePath=value=>typeof value==='string'&&PATH.test(value)&&
+  isAbsolute(value)&&resolve(value)===value;
 const inside=(p,parent)=>p===parent||p.startsWith(parent+sep);
 const nativeExec=async(command,args,options={})=>{
   const result=await execFileAsync(command,args,{timeout:15000,maxBuffer:65536,...options});
@@ -53,7 +54,8 @@ export function linuxSandboxArgs(config){
   if(config.modelProxy){
     try{
       const u=new URL(config.modelProxy);
-      if(!['http:','https:'].includes(u.protocol)||u.username||u.password)
+      if(!['http:','https:'].includes(u.protocol)||u.username||u.password||
+         u.search||u.hash||u.pathname!=='/')
         throw Error('PRIVATE_PROXY');
     }catch{throw new Error('LINUX_MODEL_PROXY_INVALID');}
   }
@@ -142,6 +144,10 @@ export function createLinuxHostOperations({defaults,exec=nativeExec}={}){
           throw Error('PATH_OVERLAP');
         for(const file of [config.worktreePath,config.builderProfile,config.emptyGitConfig])
           await stat(file);
+        // Dedicated login home must not be a public /tmp or shared directory.
+        const profile=await stat(config.builderProfile);
+        if(!profile.isDirectory()||(profile.mode&0o077)!==0)
+          throw Error('BUILDER_PROFILE_NOT_PRIVATE');
       }catch{return {verified:false,reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};}
       const id=await run(config.bwrapPath,[...args,'/usr/bin/id','-u']);
       if(id.code!==0||id.stdout.trim()!==BWRAP_UID)
