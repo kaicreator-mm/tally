@@ -8,6 +8,8 @@
 
 **系统正文第二卷（R3 新增、待增量独立审核）**：[学科深化 02：组合覆盖、变形与状态空间](foundations-deep-dive-02.md)。本卷补充基础理论、适用条件、备选技术与可证伪反例；不宣称 165 点均已教材级展开，也不自动取得生产 Source/Consumer 资格。
 
+**R4 逐点学科缺口补齐（新写、待增量独立审核）**：[`K05.F3.3` Build/Package/平台的验证层](focus-f3-3-build-package-platform-verification.md)；[`K05.F4.2` Golden/Snapshot 权威与时效](focus-f4-2-golden-snapshot-evidence-freshness.md)。这些文件是对课程的定点专业深化，包含机制/条件/反例/STOP；并非获权 Source Claim、CI/Host/Package 或产品发布资格。
+
 **先了解整个专业学科，再按需选择问题**： [K05 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
