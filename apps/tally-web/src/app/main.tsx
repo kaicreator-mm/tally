@@ -39,6 +39,7 @@ function Root() {
       catalog={catalog.connected?{
         projects:catalog.projects??[],
         versionsByProject:catalog.versionsByProject??{},
+        defaultVersionId:catalog.defaultVersionId??null,
       }:{projects:null,versionsByProject:null}}>
       <App route={route} onNavigate={hash => router.navigate(hash)} />
     </ShellProvider>
