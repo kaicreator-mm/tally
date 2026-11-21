@@ -8,6 +8,8 @@
 
 | 知识资源 | 为什么要读 |
 | --- | --- |
+| [disciplinary-foundations.md](disciplinary-foundations.md) | 学科理论、可应用的工程方法与误推断 |
+| [external-practices.md](external-practices.md) | 企业/GitHub 真实工程参考与可证伪案例 |
 | [domain-model.md](domain-model.md) | 区分工程概念、事实来源及容易混淆的语义 |
 | [engineering-methods.md](engineering-methods.md) | 根据具体条件选择方法、方案与有界 Decision Procedure |
 | [agent-skills.md](agent-skills.md) | 供 Tally 选择的 Agent Skill、单次可复制提示词和拒绝条件 |

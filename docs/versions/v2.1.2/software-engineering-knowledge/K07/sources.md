@@ -39,3 +39,23 @@
 - Tally #299 原有 806 条实验图谱记录及 Pending Claim 仍 `KNOWLEDGE_ASSET_NOT_QUALIFIED`，不能整库自动导入。
 - 用户暂缓的逆向分析和安全供应链专项不得悄悄成为当前知识库实施依赖。
 - 真实 Package 消费须由相应版本 Product/L2/Task/Review/Host 权威另行安排；本知识库只提供可追溯方法、示例、反例与预期验证。
+
+## 外部学科与实践资料的具体对照（2026-11-21 新增；未合格候选）
+
+[学科基础与领域方法](disciplinary-foundations.md) · [外部实践与案例](external-practices.md) · [外部总目录](../external-source-catalog.md)。Axx 只代表被发现并链接的来源，不表示已取得版权所有的正文、全文 Clause 资格或生产激活。真正的硬性要求由当前适用 ADS 发布规范和原有工程权限定义。
+
+| 来源 ID | 在 Kxx 中的用途 | 当前知识资格 |
+| --- | --- | --- |
+| [A01](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A03](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A20](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A21](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A23](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A24](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A28](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A29](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A30](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A34](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+| [A40](../external-source-catalog.md) | 作为本模块学科方法、决策步骤或具体反例的外部来源；详见两份专题文档 | `DISCOVERED_NOT_CLAIM_QUALIFIED` |
+
+使用前按当前版本、出版方内容、许可证、对应 Task 适用条件、真实失败反例和必要 Reviewer 核实选定小片段，不批量导入原本未合格的 Tally #299 Claims。
