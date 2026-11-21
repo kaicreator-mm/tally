@@ -108,7 +108,7 @@
 | --- | --- | --- | --- |
 | A62 | [Bazel official Hermeticity](https://docs.bazel.build/versions/main/hermeticity.html) / [remote execution rule restrictions](https://docs.bazel.build/versions/main/remote-execution-rules.html) | 声明构建输入、工具链与环境，使增量/远端缓存按有效输入复用；并不强制 Tally 采用 Bazel，亦不证明 Woodpecker 当前共享工作区或 Clone 语义 | K08 K06 |
 | A63 | [Google SRE Workbook: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) / [Error Budget Policy](https://sre.google/workbook/error-budget-policy/) | 有业务范围的 SLI/SLO、告警燃烧率、多个时间窗口和响应成本；示例阈值/错误预算政策仅属于相应服务上下文，绝不转化为所有桌面 App/CLI 的通用运维门槛 | K10 K11 |
-| A64 | [Martin Fowler: Parallel Change](https://martinfowler.com/bliki/ParallelChange.html) / [Evolutionary Database Design](https://martinfowler.com/articles/evodb.html) | Expand–Migrate–Contract 适用于存在真实版本重叠/消费者迁移需求的场景；既有业务权限、数据有损变换及明确不兼容重写的版本原则优先于该可选模式 | K09 K02 |
+| A64 | [Danilo Sato, *Parallel Change* (13 May 2014), hosted on Martin Fowler's site](https://martinfowler.com/bliki/ParallelChange.html) / [Pramod Sadalage and Martin Fowler, *Evolutionary Database Design* (May 2016)](https://martinfowler.com/articles/evodb.html) | Expand–Migrate–Contract 适用于存在真实版本重叠/消费者迁移需求的场景；既有业务权限、数据有损变换及明确不兼容重写的版本原则优先于该可选模式 | K09 K02 |
 
 **相关科学与工程适用性**：A62 仅支持可复现构建/缓存因果；A63 仅支持故障观测和目标化告警；A64 仅支持适用条件下的演进机制。A01–A61 原先限定事实、版本与授权边界不变。R6 本轮只是增量 **3 个 discovered source leads**，当前一共 **64 个已编目参考**；没有任何“新增三条正式 Source Claim / 规范条款已接受 / 生产工具已运行”的推断。
 
