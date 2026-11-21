@@ -36,6 +36,7 @@ function Root() {
   }, []);
   return (
     <ShellProvider storage={window.localStorage}
+      routeQuery={route.query}
       catalog={catalog.connected?{
         projects:catalog.projects??[],
         versionsByProject:catalog.versionsByProject??{},

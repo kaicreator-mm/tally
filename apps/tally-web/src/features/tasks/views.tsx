@@ -5,8 +5,8 @@
 import {useState} from 'react';
 import type {TaskRecord,TaskFilters,SortKey} from './model.ts';
 import {TASK_STATUSES,STATUS_LABEL,boardColumns,blockerSummary,
-  writeSetConflicts,sortTasks,taskExecutionSummary,taskExecutionTone,
-  TASK_EXECUTION_LABEL} from './model.ts';
+  writeSetConflicts,sortTasks,filterTasks,taskExecutionSummary,
+  taskExecutionTone,TASK_EXECUTION_LABEL} from './model.ts';
 import {Badge} from '../../components/ui/Badge.tsx';
 import {Drawer} from '../../components/ui/Drawer.tsx';
 import {DataTable} from '../../components/ui/DataTable.tsx';
@@ -34,6 +34,10 @@ export function TasksView({tasks,filters,setFilters,onSelectTask,selectedTaskId,
     return <EmptyState title={zh?'请先在右上角选择版本':'Select a version first'}/>;
   }
   const conflicts=writeSetConflicts(tasks);
+  // R157 #513: the filter controls above were wired to state but the row
+  // projections never consumed them (search/status/severity/blocked-only all
+  // dead). filterTasks also enforces strict version isolation.
+  const visibleTasks=sortTasks(filterTasks(tasks,filters,versionId),sort);
   return <div>
     <div style={{display:'flex',gap:'var(--s2)',flexWrap:'wrap',alignItems:'center',
       marginBottom:'var(--s4)'}}>
@@ -85,9 +89,9 @@ export function TasksView({tasks,filters,setFilters,onSelectTask,selectedTaskId,
       {conflicts.length>3?` +${conflicts.length-3}`:''}
     </div>:null}
     {mode==='list'
-      ?<TaskListView tasks={sortTasks(tasks,sort)} onSelectTask={onSelectTask}
+      ?<TaskListView tasks={visibleTasks} onSelectTask={onSelectTask}
           selectedTaskId={selectedTaskId} locale={locale}/>
-      :<TaskBoardView tasks={sortTasks(tasks,sort)} onSelectTask={onSelectTask}
+      :<TaskBoardView tasks={visibleTasks} onSelectTask={onSelectTask}
           locale={locale}/>}
   </div>;
 }

@@ -76,3 +76,25 @@ export function groupKeyOf(item:NavItem):string|null{
     if(group.items.includes(item))return group.key;
   return null;
 }
+/** Deep-link selection restore (R157 #513): the shell itself writes
+ * projectId&versionId into hash links (e.g. Product → Task workbench), so a
+ * multi-project catalog must restore that selection on entry. With 0/1
+ * projects the existing auto-select keeps working; a query naming an unknown
+ * project/version stays fail-closed (no fake selection). */
+export interface ShellSelectionSeed{projectId:string|null;versionId:string|null;}
+export function selectionFromQuery(catalog:{
+    projects:readonly {id:string}[]|null;
+    versionsByProject?:Readonly<Record<string,readonly {id:string}[]>>|null;
+    defaultVersionId?:string|null;
+  }|null,query:Record<string,unknown>):ShellSelectionSeed{
+  const projects=catalog?.projects??[];
+  const queryProject=typeof query.projectId==='string'?query.projectId:null;
+  const projectId=queryProject!==null&&
+    projects.some(project=>project.id===queryProject)?queryProject:null;
+  if(projectId===null)return {projectId:null,versionId:null};
+  const versions=catalog?.versionsByProject?.[projectId]??[];
+  const queryVersion=typeof query.versionId==='string'?query.versionId:null;
+  const versionId=queryVersion!==null&&
+    versions.some(version=>version.id===queryVersion)?queryVersion:null;
+  return {projectId,versionId};
+}
