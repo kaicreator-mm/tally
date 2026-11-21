@@ -1,8 +1,8 @@
-# K01–K11 学科知识正文：R2–R9 系统学科与进阶推理
+# K01–K11 学科知识正文：R2–R10 系统学科、进阶推理与知识消费判别
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：R2_R3_R4_R5_R6_R7_R8_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R9_SELECTED_13_PRIORITY_CONCEPTS_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 的 3 篇基础学理正文与 87 点差距盘点已在旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 获独立限定接受；R8 的 5 篇专业深化正文与 W13–W17 已在旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 获独立限定接受；R9 新增的 5 篇正文、W18–W22 及准入差距表尚待限定复核。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文 + 5 篇 R8 专业深化正文 + 5 篇 R9 专业深化正文**，不是已投入生产的 Package 或源级合格 Claim。
+> **状态：R2_R3_R4_R5_R6_R7_R8_R9_INDEPENDENT_ACCEPT_SCOPED_PRIOR_EXACT_SHAS / R10_SELECTION_EVALUATION_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** R2 第一卷、R3 第二卷各 11 篇、R4 六篇聚焦正文均已获得旧 Exact SHA 的独立文档限定接受；R5 的 4 篇进阶正文和 5 条完整演算已在旧 Exact SHA 完成文档限定接受，R6 的 7 篇进阶正文与 W06–W12 已在旧 Exact SHA 独立限定接受；R7 的 3 篇基础学理正文与 87 点差距盘点已在旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 获独立限定接受；R8 的 5 篇专业深化正文与 W13–W17 已在旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 获独立限定接受；R9 的 5 篇正文、W18–W22 及准入差距表已在旧 Exact SHA `7adbb13bf4cc00c823f625e0f7d903bc880575ca` 获独立限定接受（P2×2 已在后续精确 Markdown 变更修复）。R10 不新增专业学科 A 课程点，而转向当前来源、知识选择、可证伪评价和未获生产资格的明确边界。现有 **22 篇两卷系统深化 + 6 篇 R4 聚焦正文 + 4 篇 R5 深层原理正文 + 7 篇 R6 进阶理论正文 + 3 篇 R7 专项基础理论正文 + 5 篇 R8 专业深化正文 + 5 篇 R9 专业深化正文**，不是已投入生产的 Package 或源级合格 Claim。
 
 ## 1. 双重导航
 
@@ -98,7 +98,7 @@ R8 沿用 R7 已受审的 [87 点差距分流](professional-depth-gap-inventory-
 
 **原 93 A + R8 新增 14 A = 107/165，58 点无 A**，与 R7 历史分流的 `15 + 30 + 42 = 87` 不冲突：R8 从历史 30 中选了 14，剩余 16 加 42 等于 58。本轮同时新增 [W13–W17 五条跨学科真实条件推理教学案例](professional-reasoning-worked-traces-03.md) 与 [原始来源→命题→反例适用矩阵](professional-source-applicability-r8.md)；W01–W17 均为**合成、未运行**，不代表模型成绩。A68 SLSA v1.2 Provenance/A69 DORA 官方度量更新是 R8 两项原始参考发现，**截至 R8 有 69 条参考**；R9 另增三条新来源，**当前 72 条**，均尚未取得原始 Claim 或复制全文许可。
 
-## R9：工程故障、证据、迁移与可靠性的跨模块深化（待独立审核）
+## R9：工程故障、证据、迁移与可靠性的跨模块深化（旧 SHA 已审）
 
 R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，优先补足可重现错误、实际测试证据、版本/配置迁移及负载恢复机制，而不是机械追求 A 数量。
 
@@ -112,6 +112,19 @@ R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，
 
 **R8 已审 A107 + R9 新 A13 = 120/165，剩余 45 点无 A**：原高优先剩 3（其中 K04.F2.3 已有独立接受的 R4 Focus，另外两项已有两卷/R6 对应原理），另 42 点按现有 R7 真实场景触发。新 [W18–W22 完整合成教学演算](professional-reasoning-worked-traces-04.md) 将所有五模块串联成用户请求→Source/条件→错误机制→反例→独立 Oracle/UNKNOWN；[Source→Claim→Oracle 资格差距表](professional-source-to-claim-readiness-r9.md) 对13个选中点逐条明确“参考原理”与“真正生产知识”之间尚缺的有权文档、Consumer ABI 与实际收据。A70 IETF RFC9457、A71 AWS Builders’ Library 重试、A72 Google SRE Cascading/Overload 为新增发现线索，总目录 **72 项**，不是已获许可或合格 Claim。
 
+## R10：从“系统知识存在”到“知识选择能被证伪”（新材料待独立审核）
+
+**本轮不再新增 S/D/F/A 链接，不把剩余 45 个无 A 的课程点当作必须填满的缺陷。** R1–R9 既有 **165 原课程 ID、120 A、6 Focus、48 Concept 关系、18 Q、22 W** 按原受审内容保留。R10 专注于“给一个真实工程问题，能否选到最小适用知识、识别有权材料、发现反例，并在未得到真实 Oracle 时停止”四个学科能力：
+
+| 新研究资产 | 可独立检查的内容 | 不能由此冒充 |
+| --- | --- | --- |
+| [五份原始来源命题档案](professional-primary-source-claim-dossiers-r10.md) | RFC9457 §3.1、Node22.16 TestRunner、PG18 §13.2、SLSA v1.2 Provenance、Git Diff 与 Merge Base；各自出版方/版次/限定主张/反例/缺失合同 | 五条已获许可证/合格 Source Claim |
+| [六组十二例最小变形题](professional-knowledge-evaluation-fixtures-r10.md) | 只变更 Test Discovery、正式 Owner Rule、远端已提交收据、Artifact Digest、项目 Token Scope、性能样本可比性六种决定性证据；要求差异化决议及共同 UNKNOWN | 十二次真实 Agent Benchmark 或新增 W18–W22 |
+| [独立对照评价协议](professional-knowledge-evaluation-protocol-r10.md) | 固定 Goal/模型/工具/权限/Source，比较 Task baseline、Topic-only、Full-corpus、Scoped selection；合法质量底线、所有分派任务分母、错误放行/过度拒绝 | 已测得 Agent 提效、通用 CI 门禁 |
+| [最小充分知识选择手册](professional-knowledge-selection-playbook-r10.md) | Goal→Kxx Owner→当前有权 Source→必要机制/反例→有界 Oracle→ASK/UNKNOWN/STOP 的文档方法 | 新 Agent/DomainHarness Wire Schema 或实际选定 Consumer ABI |
+
+**R10 提供的是专业学习与未来真实验证可用的材料，不是生产 Domain Package 或实际评估结果。** [#286](https://github.com/kaicreator-mm/tally/issues/286) 最新 Owner 方向优先：ADS 的版本化软件工程实践来源可以被 Tally 形成选定知识与工作流，但此候选仍 `DEFERRED/NOT_FROZEN/NO_SOURCE_DISPATCH`；不把历史“外部 Producer 必选”描述当当前前置合同。现有 72 个已发现来源仍不是 72 条已合格原始主张；新增五份档案也不增加来源总数。
+
 ## 3. 学科深化要达到的专业标准
 
 后续每个新增学科章节必须有明确知识 ID/语义 Owner、可理解的原理、输入条件和模型（必要时含公式/状态）、多种可行方案及权衡、具体反例/可观察反驳、出处版本与权利说明、跨模块交接、当前 UNKNOWN 与 STOP。不能用填充式模板代替专业讲解，也不能只更新高价值问题候选而放弃基础理论。
@@ -120,4 +133,4 @@ R9 针对 R8 尚剩的 **16 个历史高优先级**知识点选取 **13 个**，
 
 ## 4. 下一步与独立审核边界
 
-R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1–R8 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容和限定范围内可复用；R9 只复审五篇新专业深化正文、W18–W22、Source→Claim 准入差距、13 处新 A、A70–A72 来源发现与相应导航增量，不重复审核已接受且未变的专业正文。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+R4 六点聚焦后，按覆盖台账与原 18 KA 结构识别其他仍不充分的基础子主题继续深化，不以数量凑文件，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1–R9 的独立 ACCEPT_SCOPED 仅在旧 SHA 未改内容和限定范围内可复用；R10 仅审四份新专业知识选择/评价材料及范围内的导航、R9 两项 P2 精确修复，不重新审 R1–R9 未变的165项学科课程、120条 A 导航或 W01–W22。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
