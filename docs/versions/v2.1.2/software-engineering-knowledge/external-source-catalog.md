@@ -100,6 +100,18 @@
 
 **R4 引用边界**：官网链接的存在与可定位范围为 `SOURCE_DISCOVERED_REFERENCE_ONLY`；未执行下载/全文复制授权审批、未获得生产知识 Claim 资格。正式版本切换、版权复用、产品强制 Gate 均需按使用场景核对，不能把开源文档默认等同公有领域。
 
+## R6 七模块进阶知识的官方公开参考（A62–A64）
+
+> 2026-11-21 查询公开出版方页面并核对主题范围；**发现与适用性核对 ≠ 取得受版权保护内容的复制许可，也 ≠ 任何生产 Source Claim 资格**。不把这些站点的示例阈值、构建工具或迁移流程直接设为 Tally/DomainHarness 的 MUST。
+
+| ID | 官方来源 | 对应专业机制和限制 | 主要模块 |
+| --- | --- | --- | --- |
+| A62 | [Bazel official Hermeticity](https://docs.bazel.build/versions/main/hermeticity.html) / [remote execution rule restrictions](https://docs.bazel.build/versions/main/remote-execution-rules.html) | 声明构建输入、工具链与环境，使增量/远端缓存按有效输入复用；并不强制 Tally 采用 Bazel，亦不证明 Woodpecker 当前共享工作区或 Clone 语义 | K08 K06 |
+| A63 | [Google SRE Workbook: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) / [Error Budget Policy](https://sre.google/workbook/error-budget-policy/) | 有业务范围的 SLI/SLO、告警燃烧率、多个时间窗口和响应成本；示例阈值/错误预算政策仅属于相应服务上下文，绝不转化为所有桌面 App/CLI 的通用运维门槛 | K10 K11 |
+| A64 | [Martin Fowler: Parallel Change](https://martinfowler.com/bliki/ParallelChange.html) / [Evolutionary Database Design](https://martinfowler.com/articles/evodb.html) | Expand–Migrate–Contract 适用于存在真实版本重叠/消费者迁移需求的场景；既有业务权限、数据有损变换及明确不兼容重写的版本原则优先于该可选模式 | K09 K02 |
+
+**相关科学与工程适用性**：A62 仅支持可复现构建/缓存因果；A63 仅支持故障观测和目标化告警；A64 仅支持适用条件下的演进机制。A01–A61 原先限定事实、版本与授权边界不变。R6 本轮只是增量 **3 个 discovered source leads**，当前一共 **64 个已编目参考**；没有任何“新增三条正式 Source Claim / 规范条款已接受 / 生产工具已运行”的推断。
+
 ## 版本与版权的关键异常
 
 1. **IEEE SWEBOK**：组织官网列 18 个领域，2025-09-25 发布标为 **v4.0a** 的小修订；早期 v4.0 目录可能未与小修订完全同步。保存目录/概念映射，不冒充 IEEE 已批准的全文知识重发布。
