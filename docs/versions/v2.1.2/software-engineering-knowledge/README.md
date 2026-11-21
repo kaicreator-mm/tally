@@ -17,6 +17,8 @@
 
 > 重要历史：此前 Tally [#287–#296](https://github.com/kaicreator-mm/tally/issues/287) `[SUPERSEDED] [Harness Knowledge] K00–K09` 曾采用**不同的编号与分类**。这里的 K01–K11 仅在 v2.1.2 的当前知识设计范围内定义，不复活旧任务，不继承其已被废弃的生产者假设或任务状态。
 
+> **独立审核 R1 的关键限定（P1-02）**：下述统一 `DAG-P/DAG-A/DAG-I` 与 `INLINE/BOUNDED_WORKLIST/EXPLICIT_DAG` 是 `TALLY_V212_PROPOSED_KNOWLEDGE`，来源于 [ADS #1100 历史候选](https://github.com/kaicreator-mm/ai-development-standard/issues/1100)及[仍为 Draft 的 ADS #1384](https://github.com/kaicreator-mm/ai-development-standard/pull/1384)，**不是**已发布 ADS v4.19.0 的完整强制三图协议。当前有效路径是 L1 可选 Evidence DAG/依赖映射，L2 按现有 Architecture/Research Demo 做有界研究，正式 implementation Task DAG 及 live dependency 归 GitHub 原权威。下文教学示例仅是未来 Tally Domain Package 设计，不授予新任务状态。
+
 ## 1. 产品与领域范围
 
 ### 1.1 本版本要解决的问题
@@ -90,6 +92,16 @@
 - **Qualification**：独立/授权来源审查、相关测试/负例、真实任务结果、版本与残余风险。
 
 没有证据的内容只能记为 **EXPERIMENTAL / PROPOSED / UNKNOWN**；被选择和发布的状态不能由字段值或单个 Agent 自报产生。
+
+### 3.3 跨模块能力所有权（P2-02）
+
+| 交叉部分 | 唯一知识/执行职责 | 典型消费关系 |
+| --- | --- | --- |
+| K10 vs K03 vs K06 | **K10** 提供通用运行质量/可恢复错误模式；**K03** 将已选模式实现在当前 Task 代码/测试；**K06** 根据具体故障证据判断根因及修复 | K03 引用 K10，不复制普遍可靠性 Rule；K06 不重定义原错误合同 |
+| K05 vs K08 | **K05** 拥有测试 Oracle、测试充分性/有效性选择；**K08** 拥有 Build/CI/Artifact 的执行路线和真实 Provider/版本收据 | K08 按 K05 已确认测试目标执行并提供来源；K05 不代替发布系统 |
+| K01 vs K02 vs K04 | **K01** 拥有需求意义和未决业务问题；**K02** 拥有架构候选/合同；**K04** 只选择任务组织/真实依赖 | P/A 工作图为候选视图；不重复 L1/L2/Task 原始权威 |
+
+以上“拥有”指 **v2.1.2 知识内容归属**，并非创建新的 ADS 规范 Owner 或 Tally 任务状态系统。正式强制规则仍引用适用的已发布 ADS 来源/项目权限。
 
 ## 4. Workflow 组合与跨模块依赖
 
