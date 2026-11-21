@@ -11,12 +11,16 @@
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
 | `K01.GOAL` | 用户的功能请求是否真的表达了业务需要？ | 需求原意/使用者/价值 | K01→K02 | 不要把方案代替需求 |
-| `K01.RULE_CONFLICT` | 两个需求来源对同一状态的处理冲突？ | 来源版本/适用角色/有效规则 | K01→K05 | 无有权来源则 UNKNOWN |
-| `K01.ACCEPTANCE` | 怎样把规则变成可观察的正反验收？ | 角色×状态×动作矩阵 | K01→K05 | 未获批准的期望不能充当 Oracle |
+| [`K01.RULE_CONFLICT`](topics/RULE_CONFLICT.md) | 两个需求来源对同一状态的处理冲突？ | 来源版本/适用角色/有效规则 | K01→K05 | 无有权来源则 UNKNOWN |
+| [`K01.ACCEPTANCE`](topics/ACCEPTANCE.md) | 怎样把规则变成可观察的正反验收？ | 角色×状态×动作矩阵 | K01→K05 | 未获批准的期望不能充当 Oracle |
 | `K01.QUALITY_REQUIREMENT` | 性能/可靠性要求是否有真实可验证场景？ | 质量驱动/使用环境/观察指标 | K01→K02/K10 | 不得伪造 SLO |
 | `K01.CHANGE_IMPACT` | 需求修订影响哪些合同与旧消费者？ | 变更范围/不变约束 | K01→K09 | 不自动扩大所有模块工作 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前已优先深化 2 个容易产生工程误判的专题：[`K01.RULE_CONFLICT`](topics/RULE_CONFLICT.md)、[`K01.ACCEPTANCE`](topics/ACCEPTANCE.md)。其余问题仍可通过上表定位既有 [工程方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例库](casebook.md) 和 [来源](sources.md)，不为凑数量强制拆文件。新增专题仍为设计候选，不是实际 Agent 已完成资格证明。
 
 ## 使用导航
 

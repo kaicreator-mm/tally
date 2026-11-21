@@ -10,14 +10,18 @@
 
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
-| `K05.ORACLE` | 业务规则如何成为能发现错误的测试 Oracle？ | Requirement/Invariant/Source | K05→K01 | 没有需求来源不能造 Expected |
+| [`K05.ORACLE`](topics/ORACLE.md) | 业务规则如何成为能发现错误的测试 Oracle？ | Requirement/Invariant/Source | K05→K01 | 没有需求来源不能造 Expected |
 | `K05.TEST_SELECTION` | 需要 Unit、Contract、Integration 还是 E2E？ | 受影响行为/风险/环境 | K05→K08 | 不要求每改动全量 CI |
-| `K05.FALSE_PASS` | CI 绿但测试没发现或仅 Mock？ | 当前 SHA/runner/测试发现/调用入口 | K05→K08 | 0 tests 不代表功能 PASS |
-| `K05.INTEGRATION` | 消费者契约与真实 DB 副作用是否都被证明？ | Consumer/Provider/真实数据依赖 | K05→K02/K08 | Pact/Testcontainers 不等于全产品 E2E |
+| [`K05.FALSE_PASS`](topics/FALSE_PASS.md) | CI 绿但测试没发现或仅 Mock？ | 当前 SHA/runner/测试发现/调用入口 | K05→K08 | 0 tests 不代表功能 PASS |
+| [`K05.INTEGRATION`](topics/INTEGRATION.md) | 消费者契约与真实 DB 副作用是否都被证明？ | Consumer/Provider/真实数据依赖 | K05→K02/K08 | Pact/Testcontainers 不等于全产品 E2E |
 | `K05.FLAKY_TEST` | 测试失败是时间不确定性还是实现缺陷？ | 时钟/事件/受权时限 | K05→K06 | 无界重试不能修正 Oracle |
 | `K05.EVALUATION` | Agent 补丁通过基准是否代表用户产品合格？ | Issue/Patch/Test/用户路径 | K05→K11 | SWE-bench PASS 不等于 Release |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前已优先深化 3 个容易产生工程误判的专题：[`K05.ORACLE`](topics/ORACLE.md)、[`K05.FALSE_PASS`](topics/FALSE_PASS.md)、[`K05.INTEGRATION`](topics/INTEGRATION.md)。其余问题仍可通过上表定位既有 [工程方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例库](casebook.md) 和 [来源](sources.md)，不为凑数量强制拆文件。新增专题仍为设计候选，不是实际 Agent 已完成资格证明。
 
 ## 使用导航
 

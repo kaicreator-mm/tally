@@ -10,13 +10,17 @@
 
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
-| `K06.FIRST_FAILURE` | 当前执行究竟哪个步骤最早失败？ | 真实日志/阶段/源码 SHA | K06→K08 | 退出码不是根因 |
-| `K06.CAUSE_PROBE` | 如何从多个根因假设找到最小探针？ | 可区分解释/复现/环境 | K06→K03 | 先实验再修复 |
+| [`K06.FIRST_FAILURE`](topics/FIRST_FAILURE.md) | 当前执行究竟哪个步骤最早失败？ | 真实日志/阶段/源码 SHA | K06→K08 | 退出码不是根因 |
+| [`K06.CAUSE_PROBE`](topics/CAUSE_PROBE.md) | 如何从多个根因假设找到最小探针？ | 可区分解释/复现/环境 | K06→K03 | 先实验再修复 |
 | `K06.RETRY_OR_RECOVER` | 网络失败是否可以安全重试？ | 外部副作用/幂等/读回 | K06→K10 | 不可盲重放操作 |
 | `K06.REPAIR_BOUNDS` | 多轮重复失败何时停止/升级？ | 已有尝试/新增证据/Owner | K06→K04 | 不得无限 Agent 循环 |
 | `K06.INCIDENT_LEARNING` | 真实事故如何转化为有效经验候选？ | 故障/恢复/验证/来源 | K06→K11 | 恢复不倒改旧失败 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前已优先深化 2 个容易产生工程误判的专题：[`K06.FIRST_FAILURE`](topics/FIRST_FAILURE.md)、[`K06.CAUSE_PROBE`](topics/CAUSE_PROBE.md)。其余问题仍可通过上表定位既有 [工程方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例库](casebook.md) 和 [来源](sources.md)，不为凑数量强制拆文件。新增专题仍为设计候选，不是实际 Agent 已完成资格证明。
 
 ## 使用导航
 

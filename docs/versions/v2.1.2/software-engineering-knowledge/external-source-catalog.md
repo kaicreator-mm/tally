@@ -61,6 +61,15 @@
 | A42 | [SEBoK Software Engineering related discipline](https://sebokwiki.org/wiki/Guide_to_the_Software_Engineering_Body_of_Knowledge_%28SWEBOK%29) | Related discipline | System/software boundary comparison; latest SEBoK site v2.14, underlying SWEBOK references may be historical | K02 K04 K09 |
 | A43 | [Software Engineering: Standing on the Shoulders of Giants](https://www.swebook.org/) | Open educational project | Open textbook with attributed Creative Commons terms; check exact edition/license before reuse | K01 K02 K03 K05 K08 K09 K11 |
 
+## 本轮追加的学科与实践来源（来源发现，非逐条 Claim 资格）
+
+| ID | 来源 | 类别 | 适用限制 | 对应模块 |
+| --- | --- | --- | --- | --- |
+| A44 | [NASA Software Requirements Validation Handbook (SWE-055, Rev D)](https://swehb.nasa.gov/spaces/SWEHBVD/pages/102695440/SWE-055%2B-%2BRequirements%2BValidation) | Government engineering handbook | Published NASA project high-assurance context; use requirements verifiability/traceability insight, not universal Tally mandatory Gate | K01 K05 |
+| A45 | [NASA Delivery Requirements Verification (SWE-194, Rev D)](https://swehb.nasa.gov/spaces/SWEHBVD/pages/102695529/SWE-194%2B-%2BDelivery%2BRequirements%2BVerification) | Government engineering handbook | NASA mission-specific delivery assurance reference; check current NASA handbook edition for exact clause; do not transplant certification process | K05 K08 |
+| A46 | [CMU SEI A Playbook for Early Architecture Analysis](https://www.sei.cmu.edu/library/a-playbook-for-early-architecture-analysis/) | Research/practice method | Uses quality-attribute scenarios and lightweight architecture analysis, not universal requirement to run a formal ATAM workshop | K02 |
+| A47 | [Martin Fowler Strangler Fig Application](https://martinfowler.com/bliki/StranglerFigApplication.html) | Author-led engineering practice | Incremental legacy modernization; careful about temporary routing and data coexistence; does not imply every refactor needs façade | K02 K09 |
+
 ## 版本与版权的关键异常
 
 1. **IEEE SWEBOK**：组织官网列 18 个领域，2025-09-25 发布标为 **v4.0a** 的小修订；早期 v4.0 目录可能未与小修订完全同步。保存目录/概念映射，不冒充 IEEE 已批准的全文知识重发布。

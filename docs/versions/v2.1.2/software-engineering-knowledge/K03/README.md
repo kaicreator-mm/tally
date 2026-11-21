@@ -11,12 +11,16 @@
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
 | `K03.TASK_DESIGN` | 当前 Task 如何转化为可实现的输入/状态/错误？ | 合法 Task/设计/写集 | K03→K05 | 设计建议不构成 Builder 许可 |
-| `K03.ASYNC_IDEMPOTENCY` | 请求超时或重复时如何保证副作用语义？ | 提交点/重复请求/状态回读 | K03→K10 | 超时不证明未提交 |
-| `K03.ALGORITHM_CHOICE` | 应该选择哪种数据结构与算法？ | 真实数据规模/复杂度/平台 | K03→K11 | 不以大框架解决小问题 |
+| [`K03.ASYNC_IDEMPOTENCY`](topics/ASYNC_IDEMPOTENCY.md) | 请求超时或重复时如何保证副作用语义？ | 提交点/重复请求/状态回读 | K03→K10 | 超时不证明未提交 |
+| [`K03.ALGORITHM_CHOICE`](topics/ALGORITHM_CHOICE.md) | 应该选择哪种数据结构与算法？ | 真实数据规模/复杂度/平台 | K03→K11 | 不以大框架解决小问题 |
 | `K03.ERROR_LOGGING` | 错误与日志怎样可行动且保护敏感信息？ | 用户角色/错误类别/恢复路径 | K03→K10 | 堆栈不是用户诊断 |
 | `K03.IMPLEMENTATION_EVIDENCE` | 代码与受影响测试是否在当前 HEAD 真运行？ | 工具链/测试发现/来源 SHA | K03→K05/K08 | 本地 PASS 不等于 Release |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前已优先深化 2 个容易产生工程误判的专题：[`K03.ASYNC_IDEMPOTENCY`](topics/ASYNC_IDEMPOTENCY.md)、[`K03.ALGORITHM_CHOICE`](topics/ALGORITHM_CHOICE.md)。其余问题仍可通过上表定位既有 [工程方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例库](casebook.md) 和 [来源](sources.md)，不为凑数量强制拆文件。新增专题仍为设计候选，不是实际 Agent 已完成资格证明。
 
 ## 使用导航
 

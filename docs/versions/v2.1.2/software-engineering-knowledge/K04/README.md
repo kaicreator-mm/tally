@@ -11,12 +11,16 @@
 | Topic ID | 当前问题/触发 | 最小必要输入 | 知识交接 | 必须拒绝的错误 |
 | --- | --- | --- | --- | --- |
 | `K04.ATOMIC_TASK` | 工作是否可以由一个任务完整交付？ | 用户结果/代码及测试边界 | K04→K03 | 禁止按文件机械拆 Issue |
-| `K04.REAL_DEPENDENCY` | BLOCKED_BY 是否是不可替代的真实前置？ | 前置产物/反事实分析 | K04→K08 | CONSUMES_EVIDENCE 不是 BLOCKED_BY |
-| `K04.PARALLEL_WRITES` | 多个 Agent 会不会冲突修改共享资源？ | 写集/稳定接口/Owner | K04→K07 | 多工作树不等于独立写集 |
+| [`K04.REAL_DEPENDENCY`](topics/REAL_DEPENDENCY.md) | BLOCKED_BY 是否是不可替代的真实前置？ | 前置产物/反事实分析 | K04→K08 | CONSUMES_EVIDENCE 不是 BLOCKED_BY |
+| [`K04.PARALLEL_WRITES`](topics/PARALLEL_WRITES.md) | 多个 Agent 会不会冲突修改共享资源？ | 写集/稳定接口/Owner | K04→K07 | 多工作树不等于独立写集 |
 | `K04.ADAPTIVE_SHAPE` | 简单 Task 是否需要显式 DAG？ | 复杂度/后果/真正的依赖 | K04→K11 | 三 DAG 统一规范未采纳 |
 | `K04.PLAN_REPAIR` | 范围变动后如何最小重规划？ | 变更的当前事实/影响节点 | K04→K09 | 不全量重开旧任务 |
 
 **选用顺序：** 真实任务/版本/角色 → Topic → 相关 DP/Skill/正反例 → 当前来源/适用条件 → 原有 Validation/Task/Host 资格。文档只提供分析方法和停止条件。模块内容唯一维护在现有专题文件，Topic 行不复制其全文。
+
+## 已深化的问题级专题
+
+当前已优先深化 2 个容易产生工程误判的专题：[`K04.REAL_DEPENDENCY`](topics/REAL_DEPENDENCY.md)、[`K04.PARALLEL_WRITES`](topics/PARALLEL_WRITES.md)。其余问题仍可通过上表定位既有 [工程方法](engineering-methods.md)、[Agent Skills](agent-skills.md)、[案例库](casebook.md) 和 [来源](sources.md)，不为凑数量强制拆文件。新增专题仍为设计候选，不是实际 Agent 已完成资格证明。
 
 ## 使用导航
 
