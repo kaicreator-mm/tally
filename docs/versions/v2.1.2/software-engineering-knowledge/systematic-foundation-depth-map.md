@@ -24,7 +24,7 @@
 | K10 可靠性性能 | [01](K10/foundations-deep-dive-01.md) · Timeout/Effect Unknown | [02](K10/foundations-deep-dive-02.md) · 尾延迟/Little 定律/测量 | 第二卷扩充第一卷尚未展开的学科前提 |
 | K11 经济和决策 | [01](K11/foundations-deep-dive-01.md) · 成本/对照基线 | [02](K11/foundations-deep-dive-02.md) · 统计推断/投资停止 | 第二卷扩充第一卷尚未展开的学科前提 |
 
-**165 个唯一课程 ID 仍是系统纲要，不是 165 篇专业教材。** [逐项覆盖台账](foundation-concept-coverage-ledger.md) 保留 R3 基线：159/165 与两卷学科正文有主题关联，原 6/165 仅 S。R4 为这六项分别新增 F 聚焦正文，形成 **165/165 至少有 D1/D2 或 F 深化正文导航**，但 R4 六项未独立审核；“有正文关联”并不等于 165 条 Source-qualified Claims 或 165 项教材级完整性。26 个问题 Topic 仍是任务入口。
+**165 个唯一课程 ID 仍是系统纲要，不是 165 篇专业教材。** [逐项覆盖台账](foundation-concept-coverage-ledger.md) 保留 R3 基线：159/165 与两卷学科正文有主题关联，原 6/165 仅 S。R4 为这六项分别新增 F 聚焦正文，形成 **165/165 至少有 D1/D2 或 F 深化正文导航**，而 R4 的六篇 Focus 已于旧 Exact SHA `42e7ba8bd883ec79736e25ff7c75bdbda1b738b3` 独立 `ACCEPT_SCOPED`（K02 的 R5 小范围术语修正亦已独审确认）；“有正文关联”并不等于 165 条 Source-qualified Claims 或 165 项教材级完整性。26 个问题 Topic 仍是任务入口。
 
 ## R4：六点聚焦补缺（旧 SHA 已审）
 
