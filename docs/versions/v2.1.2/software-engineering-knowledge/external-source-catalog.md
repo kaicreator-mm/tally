@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 69 项外部来源**（A01–A49 原始目录、R3 A50–A54、R4 A55–A61、R6 A62–A64、R7 A65–A67、R8 A68–A69：SLSA 官方 Build Provenance v1.2 和 DORA 官方度量发展）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 72 项外部来源**（A01–A49 原始目录、R3 A50–A54、R4 A55–A61、R6 A62–A64、R7 A65–A67、R8 A68–A69、R9 A70–A72：IETF RFC 9457、AWS Builders’ Library 重试与 Google SRE 过载）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -133,7 +133,19 @@
 | A68 | [SLSA Build Provenance v1.2（SLSA Framework 官方规范）](https://slsa.dev/spec/v1.2/build-provenance) / [SLSA Build Track v1.2](https://slsa.dev/spec/v1.2/tracks) | Provenance 关联 artifact subject/digest、builder、build definition、resolved dependencies 与信任验证条件；有 provenance metadata 不自动证明签名/可信 builder、材料完整、可复现、安装或 Release 授权，不能将 SLSA Level 当作 Tally 已取得的真实评级 | K08 K02 |
 | A69 | [DORA — A history of DORA's software delivery metrics（2 Jan 2026）](https://dora.dev/insights/dora-metrics-history/) / [Software Delivery Performance Metrics](https://dora.dev/guides/dora-metrics/) | 软件交付 Throughput 与 Instability/Stability 的定义和分期演进；研究聚合关联指标不代表某个 Agent 数量、Token 使用量或单次流程变化的因果性能增益，指标术语与版本需事先确定 | K07 K11 K08 |
 
-**R8 当前总计 69 条已编目外部来源 A01–A69**；A68–A69 都只达到 `DISCOVERED_REFERENCE_ONLY`，而非有权 Source Claim、工具已运行或生产 Rule。2026-11-22 访问原始发布站点的页面索引，仅提供编目与技术范围的引用，不代表逐句规范资格核定。
+**截至 R8 总计 69 条已编目外部来源 A01–A69**；A68–A69 都只达到 `DISCOVERED_REFERENCE_ONLY`，而非有权 Source Claim、工具已运行或生产 Rule。2026-11-22 访问原始发布站点的页面索引，仅提供编目与技术范围的引用，不代表逐句规范资格核定。
+
+## R9：错误语义、重试安全与过载恢复的官方参考（A70–A72）
+
+> 仅对原始标准/出版方的**公开事实与应用边界**作编目。RFC 规范并不授予当前业务 API 自动适用的错误码合同；AWS/Google 工程实践并不是 Tally 每个 CLI、GUI 或后台服务都必须实行的运行 Gate。此处未运行原文示例，也不复制其受限正文。
+
+| ID | 原始出版方与年份 | 候选学科命题及明确失效边界 | 主要模块 |
+| --- | --- | --- | --- |
+| A70 | [IETF RFC 9457: *Problem Details for HTTP APIs*（2023 年 7 月）](https://www.rfc-editor.org/rfc/rfc9457.html) / [IETF 标准状态](https://datatracker.ietf.org/doc/rfc9457/) | HTTP API 可用结构化问题信息表达错误，`type/status/title/detail/instance` 等字段有定义和协议范围；它不自动规定业务是否可安全重试、请求是否成功执行或项目必须使用该格式。公共错误字段亦不得泄漏密钥/租户敏感数据 | K03 K05 K06 |
+| A71 | [Amazon Builders' Library: *Timeouts, retries, and backoff with jitter*](https://builder.aws.com/content/3EumjoZascWd1oZiEgL8ORlv3qE/timeouts-retries-and-backoff-with-jitter) | 超时并非远端未提交证明，重试负载可能放大过载；时间预算、退避、抖动和业务级幂等须依实际操作/Provider 合同决定。AWS 实例不是任何付款/不可逆 Effect 无限重试的授权 | K06 K10 K03 |
+| A72 | [Google Site Reliability Engineering Book: *Addressing Cascading Failures*](https://sre.google/sre-book/addressing-cascading-failures/) / [*Handling Overload*](https://sre.google/sre-book/handling-overload/) | 过载可引发连锁故障；负载削减/队列限制/客户端节流/背压的适用需要真实容量和故障实验。原文针对生产服务，不代表离线桌面应用天然需要 SLO、熔断器或多集群 | K10 K06 K11 |
+
+**R9 当前累计 A01–A72 共 72 条已发现来源**。这里只新增三个可定位来源线索，全部仍为 `DISCOVERED_REFERENCE_ONLY`，没有取得原文全文复制许可、原始条文级 Claim 审查通过、实际 Agent/Host/Effect、受控性能实验或运行时 Rule 资格。R8 旧 A68–A69 不改变，R7 及更早的来源接受边界亦不改变。
 
 ## 版本与版权的关键异常
 
