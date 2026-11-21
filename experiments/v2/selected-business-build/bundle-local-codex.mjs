@@ -358,6 +358,9 @@ async function resolveAttemptProvider(env,input){
   if(!/^[a-z][a-z0-9-]{0,63}$/.test(providerId))
     return {reason:'PROVIDER_ID_INVALID'};
   if(!enabledProviderIds.includes(providerId))return {reason:'PROVIDER_DISABLED'};
+  // Never let an environment-selected Provider bypass the Linux bwrap driver.
+  if(env.TALLY_V2_AGENT_PLATFORM==='linux'&&providerId!=='codex')
+    return {reason:'PROVIDER_DISABLED'};
   if(providerId==='codex')return {providerId,agentProvider:null,providerEnv:null};
   let configs,environment;
   try{
@@ -420,6 +423,8 @@ export async function runLocalCodexAttempt(input){
       worktreePath:env.TALLY_LOCAL_WORKTREE_PATH??attemptWorktreePath(env,input.attemptId),
       hostStorePath:env.TALLY_LOCAL_HOST_STORE_PATH,
       repositoryPath:env.TALLY_LOCAL_REPOSITORY_PATH,
+      platform:env.TALLY_V2_AGENT_PLATFORM==='linux'?'linux':undefined,
+      bwrapPath:env.TALLY_LINUX_BWRAP_PATH,
       cliPath:env.TALLY_CODEX_CLI_PATH,sandboxCliPath:env.TALLY_CODEX_SANDBOX_PATH,
       codexHome:env.TALLY_CODEX_HOME,builderProfile:env.TALLY_BUILDER_PROFILE,
       builderTemp:env.TALLY_BUILDER_TEMP,emptyGitConfig:env.TALLY_EMPTY_GIT_CONFIG,

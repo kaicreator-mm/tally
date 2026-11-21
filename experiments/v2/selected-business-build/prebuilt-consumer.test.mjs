@@ -13,7 +13,8 @@ async function fixture(){
   const dir=await mkdtemp(join(tmpdir(),'tally-prebuilt-test-'));
   await writeFile(join(dir,'sealed-app.json'),'{"appId":"fake-test"}');
   for(const name of ['consumer-local-codex.mjs','builder-target.mjs',
-    'local-codex-host.mjs'])await writeFile(join(dir,name),'export {};');
+    'local-codex-host.mjs','local-codex-linux-host.mjs'])
+    await writeFile(join(dir,name),'export {};');
   return dir;
 }
 test('selected BUILD only writes a source/Issue/SHA/content pin',async()=>{
@@ -26,6 +27,8 @@ test('selected BUILD only writes a source/Issue/SHA/content pin',async()=>{
     assert.equal(manifest.versionId,'main');
     assert.match(manifest.sealedAppSha256,/^[a-f0-9]{64}$/);
     const result=await readPrebuiltConsumer({directory:dir,env});
+    assert.match(result.manifest.runtimeDigests['local-codex-linux-host.mjs'],
+      /^[a-f0-9]{64}$/);
     assert.equal(result.manifest.sealedAppSha256,manifest.sealedAppSha256);
     assert.equal(result.script,join(dir,'consumer-local-codex.mjs'));
   }finally{await rm(dir,{recursive:true,force:true});}
@@ -51,6 +54,10 @@ test('sealed app and runtime script mutations fail before Host launch',async()=>
     await assert.rejects(readPrebuiltConsumer({directory:dir,env}),
       /PREBUILT_CONSUMER_INTEGRITY_MISMATCH/);
     await writeFile(join(dir,'consumer-local-codex.mjs'),'export {};');
+    await writeFile(join(dir,'local-codex-linux-host.mjs'),'// tampered');
+    await assert.rejects(readPrebuiltConsumer({directory:dir,env}),
+      /PREBUILT_CONSUMER_INTEGRITY_MISMATCH/);
+    await writeFile(join(dir,'local-codex-linux-host.mjs'),'export {};');
     await writeFile(join(dir,'sealed-app.json'),'{"appId":"tampered"}');
     await assert.rejects(readPrebuiltConsumer({directory:dir,env}),
       /PREBUILT_CONSUMER_INTEGRITY_MISMATCH/);

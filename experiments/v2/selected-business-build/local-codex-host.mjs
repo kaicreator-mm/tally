@@ -3,6 +3,8 @@ import {createHash} from 'node:crypto';
 import {existsSync} from 'node:fs';
 import {mkdir} from 'node:fs/promises';
 import {dirname,resolve} from 'node:path';
+import {linuxBuilderEnvironment,linuxSandboxArgs,createLinuxHostOperations}
+  from './local-codex-linux-host.mjs';
 import {openSqliteCasStore} from '@kaicreator/domain-harness-host-node';
 
 const SHA=/^[0-9a-f]{40}$/;
@@ -39,6 +41,7 @@ const safeError=code=>Object.assign(new Error(code),{code});
 const iso=now=>new Date(now()).toISOString();
 
 function builderEnvironment(config){
+  if(config.platform==='linux')return linuxBuilderEnvironment(config);
   const root=config.systemRoot??'C:\\Windows';
   const builderProfile=config.builderProfile??'C:\\Users\\CodexSandboxOnline';
   const path=[dirname(config.cliPath),root+'\\System32','C:\\Program Files\\Git\\cmd'].join(';');
@@ -63,6 +66,10 @@ function builderEnvironment(config){
 }
 
 function hostEnvironment(config){
+  if(config.platform==='linux')return {
+    PATH:'/usr/local/bin:/usr/bin:/bin',HOME:config.builderProfile,
+    GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:config.emptyGitConfig,
+    GIT_TERMINAL_PROMPT:'0',GCM_INTERACTIVE:'never'};
   const root=config.systemRoot??'C:\\Windows';
   return {SystemRoot:root,SystemDrive:config.systemDrive??'C:',
     ComSpec:root+'\\System32\\cmd.exe',PATH:root+'\\System32;C:\\Program Files\\Git\\cmd',
@@ -70,8 +77,8 @@ function hostEnvironment(config){
     GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:config.emptyGitConfig,GIT_TERMINAL_PROMPT:'0'};
 }
 
-function spawnCapture(spawnFn,command,args,{cwd,env,input,timeoutMs=15000}={}){
-  const child=spawnFn(command,args,{cwd,env,windowsHide:true,stdio:['pipe','pipe','pipe']});
+function spawnCapture(spawnFn,command,args,{cwd,env,input,timeoutMs=15000,detached=false}={}){
+  const child=spawnFn(command,args,{cwd,env,windowsHide:true,stdio:['pipe','pipe','pipe'],detached});
   let stdout='',stderr='',settled=false;
   const append=(which,chunk)=>{
     const text=chunk.toString('utf8');
@@ -115,7 +122,8 @@ const sandboxPrefix=['-c','sandbox_mode="workspace-write"','-c',
 export function createDefaultOperations(spawnFn){
   const sandbox=(config,command,args,options={})=>short(spawnFn,config.sandboxCliPath,
     [...sandboxPrefix,command,...args],{env:builderEnvironment(config),...options});
-  const git=(config,args,options={})=>short(spawnFn,config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe',
+  const git=(config,args,options={})=>short(spawnFn,config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe'),
     args,{env:builderEnvironment(config),...options});
   async function probeProvider(config){
     console.error('HOST_PROBE_PROVIDER_START');
@@ -185,7 +193,8 @@ export function createDefaultOperations(spawnFn){
     console.error('HOST_PREPARE_WORKTREE_START',config.worktreePath);
     await mkdir(dirname(config.worktreePath),{recursive:true});
     if(existsSync(config.worktreePath))throw safeError('CANDIDATE_WORKTREE_ALREADY_EXISTS');
-    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const gitPath=config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe');
     const added=await short(spawnFn,gitPath,['-C',config.repositoryPath,'worktree','add','--detach',
       config.worktreePath,config.sourceSha],{env:hostEnvironment(config),timeoutMs:60000});
     if(added.code!==0)throw safeError('CANDIDATE_WORKTREE_UNAVAILABLE');
@@ -202,7 +211,8 @@ export function createDefaultOperations(spawnFn){
   }
   async function finalizeCandidate(config){
     const candidatePath=config.candidateRelativePath??CANDIDATE;
-    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const gitPath=config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe');
     const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.worktreePath,...args],
       {env:hostEnvironment(config),...options});
     const [tracked,untracked]=await Promise.all([
@@ -236,7 +246,8 @@ export function createDefaultOperations(spawnFn){
     // Independent git readback of one exact candidate: commit parent, tree and
     // the single changed path are re-derived from the repository, never from
     // Agent-asserted values. Used by the Reviewer Join only.
-    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const gitPath=config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe');
     const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.repositoryPath,...args],
       {env:hostEnvironment(config),...options});
     const commit=candidate.candidateCommit;
@@ -261,7 +272,8 @@ export function createDefaultOperations(spawnFn){
     // {occupied:null} and the caller must fail closed without spawning — a
     // git error may never read as "not occupied" (R103 review P1-02).
     if(config.candidateReplacementAuthorized===true)return {occupied:false};
-    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const gitPath=config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe');
     const candidatePath=config.candidateRelativePath??CANDIDATE;
     const check=await short(spawnFn,gitPath,['-C',config.repositoryPath,'cat-file','-e',
       config.sourceSha+':'+candidatePath],{env:hostEnvironment(config)});
@@ -278,7 +290,8 @@ export function createDefaultOperations(spawnFn){
     // Independent git readback of the repaired candidate PR head: the repair
     // commit must inherit the original candidate (no history rewrite), carry
     // the expected tree and change exactly the frozen single path.
-    const gitPath=config.gitPath??'C:\\Program Files\\Git\\cmd\\git.exe';
+    const gitPath=config.gitPath??(config.platform==='linux'?'/usr/bin/git':
+      'C:\\Program Files\\Git\\cmd\\git.exe');
     const run=(args,options={})=>short(spawnFn,gitPath,['-C',config.repositoryPath,...args],
       {env:hostEnvironment(config),...options});
     const candidatePath=config.candidateRelativePath??CANDIDATE;
@@ -304,12 +317,17 @@ const overlapDenied=(base,reason)=>({...base,state:'NOT_ADMITTED',reason,
 export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(),
   killTree}={}){
   const ops=operations??createDefaultOperations(spawnFn);
-  const terminate=killTree??(async pid=>{
+  const linuxOps=operations?null:createLinuxHostOperations({defaults:ops});
+  const terminate=killTree??(async (pid,config)=>{
+    if(config?.platform==='linux'){
+      try{process.kill(-pid,'SIGKILL');return true;}catch{return false;}
+    }
     const result=await short(spawnFn,'C:\\Windows\\System32\\taskkill.exe',
       ['/PID',String(pid),'/T','/F'],{timeoutMs:15000});
     return result.code===0;
   });
   async function runAttempt(config){
+    const attemptOps=config.platform==='linux'&&linuxOps?linuxOps:ops;
     const providerId=config.providerId??'codex';
     const agentProvider=config.agentProvider??null;
     const taskId=config.taskId??/\/issues\/([1-9][0-9]*)$/.exec(config.issueRef??'')?.[1];
@@ -319,9 +337,16 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       ...(providerId==='codex'?{}:{providerId}),...flags};
     const candidatePath=config.candidateRelativePath??CANDIDATE;
     if(!SHA.test(config.sourceSha??'')||!ATTEMPT.test(config.attemptId??'')||
-      !SID.test(config.builderSid??''))return {...base,state:'AGENT_NOT_EXECUTED',
+      !(config.platform==='linux'?
+        (config.builderSid==='linux-uid:65534'&&
+         config.builderPrincipal==='linux-bwrap:65534'):
+        SID.test(config.builderSid??'')))return {...base,state:'AGENT_NOT_EXECUTED',
       reason:'BUILDER_CONFINEMENT_UNAVAILABLE',agentLaunch:false,replayFixture:false,
       candidateTree:null,candidateCommit:null,process:null};
+    if(config.platform==='linux'&&(providerId!=='codex'||agentProvider))
+      return {...base,state:'AGENT_NOT_EXECUTED',reason:'PROVIDER_DISABLED',
+        agentLaunch:false,replayFixture:false,candidateTree:null,
+        candidateCommit:null,process:null};
     if(!PROVIDER_ID.test(providerId)||(providerId!=='codex'&&!ATTEMPT.test(taskId??''))||
       (providerId!=='codex'&&
         (!agentProvider||agentProvider.id!==providerId||
@@ -407,7 +432,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       };
       const probe=agentProvider?
         await agentProvider.probe({env:config.providerEnv??{}}).catch(()=>null):
-        await ops.probeProvider(config);
+        await attemptOps.probeProvider(config);
       if(agentProvider?probe?.state!=='AVAILABLE':!probe.available)
         return await notExecuted('LOCAL_AGENT_UNAVAILABLE',{providerProbe:probe});
       // Pre-spawn path-occupancy refusal (#264 J04 overwrite lesson): refuse
@@ -417,26 +442,31 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       // bad repository, launch failure, timeout) refuse without spawning;
       // only a proven-absent path (or the separately authorized replacement)
       // may proceed (R103 review P1-02 fail-closed repair).
-      if(ops.candidatePathOccupied){
-        const occupancy=await ops.candidatePathOccupied(config);
+      if(attemptOps.candidatePathOccupied){
+        const occupancy=await attemptOps.candidatePathOccupied(config);
         if(occupancy?.occupied===true)
           return await notExecuted('CANDIDATE_PATH_OCCUPIED');
         if(occupancy==null||typeof occupancy!=='object'||occupancy.occupied==null)
           return await notExecuted('CANDIDATE_PATH_OCCUPANCY_UNKNOWN',
             {occupancyDetail:occupancy?.detail??null});
       }
-      const worktree=await ops.prepareWorktree(config);
+      const worktree=await attemptOps.prepareWorktree(config);
       let current=await store.get(key);revision=current.revision;
       await update({...current.value,worktreePath:worktree.worktreePath,baseSha:worktree.baseSha});
-      const confinement=await ops.proveConfinement(config,worktree.worktreePath);
+      const confinement=await attemptOps.proveConfinement(config,worktree.worktreePath);
       if(!confinement.verified)return await notExecuted(confinement.reason,{confinement});
       const env=builderEnvironment(config);
       const prompt=`Work only in the current disposable Git worktree. Create exactly ${candidatePath} with a short Markdown candidate note containing attempt ${config.attemptId}. Do not modify any other path, do not commit, do not use GitHub or network except the model provider, and stop after writing the file.`;
       const providerEnv=config.providerEnv??{};
       const argv=agentProvider?['AgentProvider/1',providerId]:
-        [config.sandboxCliPath,...sandboxPrefix,config.cliPath,'exec',
-          '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config','--ignore-rules',
-          '--ephemeral','--json','-C',worktree.worktreePath,prompt];
+        config.platform==='linux'?
+          [config.bwrapPath,...linuxSandboxArgs(config),config.cliPath,'exec',
+            '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config',
+            '--ignore-rules','--skip-git-repo-check','--ephemeral','--json',
+            '-C','/workspace',prompt]:
+          [config.sandboxCliPath,...sandboxPrefix,config.cliPath,'exec',
+            '--dangerously-bypass-approvals-and-sandbox','--ignore-user-config','--ignore-rules',
+            '--ephemeral','--json','-C',worktree.worktreePath,prompt];
       current=await store.get(key);revision=current.revision;
       await update({...current.value,phase:'PERMITTED',argv,cwd:worktree.worktreePath,
         envAllowlist:Object.keys(agentProvider?providerEnv:env),
@@ -507,7 +537,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
           return {...base,state:'AGENT_NOT_EXECUTED',reason,agentLaunch:false,
             replayFixture:false,candidateTree:null,candidateCommit:null,process:null};
         }
-        const candidate=await ops.finalizeCandidate(config).catch(error=>({error:error.code}));
+        const candidate=await attemptOps.finalizeCandidate(config).catch(error=>({error:error.code}));
         const process={status:observation.state==='UNKNOWN'?'UNKNOWN':'EXITED',
           // AgentProvider/1 COMPLETED is the normalized successful-process
           // observation. Some adapters (Pi) intentionally omit optional PID /
@@ -547,7 +577,7 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
           process};
       }
       const running=spawnCapture(spawnFn,argv[0],argv.slice(1),{cwd:worktree.worktreePath,env,
-        timeoutMs:0});
+        detached:config.platform==='linux',timeoutMs:0});
       if(!Number.isSafeInteger(running.child.pid)){
         const reason='ATTEMPT_STATUS_UNKNOWN';
         current=await store.get(key);revision=current.revision;
@@ -563,20 +593,20 @@ export function createLocalCodexHost({spawnFn=spawn,operations,now=()=>Date.now(
       await update({...current.value,phase:'RUNNING',process:{status:'RUNNING',...processBase}});
       let timedOut=false,cancelled=false;
       const timeoutMs=config.timeoutMs??300000;
-      const timer=setTimeout(()=>{timedOut=true;terminate(running.child.pid).catch(()=>{});},timeoutMs);
+      const timer=setTimeout(()=>{timedOut=true;terminate(running.child.pid,config).catch(()=>{});},timeoutMs);
       timer.unref?.();
-      const abort=()=>{cancelled=true;terminate(running.child.pid).catch(()=>{});};
+      const abort=()=>{cancelled=true;terminate(running.child.pid,config).catch(()=>{});};
       config.signal?.addEventListener('abort',abort,{once:true});
       const terminal=await running.done;
       clearTimeout(timer);config.signal?.removeEventListener('abort',abort);
       if((timedOut||cancelled)&&terminal.terminatedAt){
-        await terminate(running.child.pid);
+        await terminate(running.child.pid,config);
       }
       // Overlap evidence must use the ACTUAL process lifetime: startedAt is
       // the spawn-ack time captured by spawnCapture, not the earlier attempt
       // reservation/probe time, which would overstate the overlap window.
       const processStartedAt=new Date(terminal.startedAt).toISOString();
-      const candidate=await ops.finalizeCandidate(config).catch(error=>({error:error.code}));
+      const candidate=await attemptOps.finalizeCandidate(config).catch(error=>({error:error.code}));
       const process={status:terminal.spawnError||terminal.probeTimeout?'UNKNOWN':'EXITED',
         exitCode:Number.isSafeInteger(terminal.code)?terminal.code:null,pid:running.child.pid,
         builderPrincipal:confinement.builderPrincipal,builderSid:confinement.builderSid,

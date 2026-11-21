@@ -1,8 +1,7 @@
 /** Unprivileged loopback Setup service; always separate from the Host authority. */
 import http from 'node:http';
 import {randomBytes} from 'node:crypto';
-import {homedir} from 'node:os';
-import {join} from 'node:path';
+import {resolveTallyConfigDir} from './portable-config-dir.mjs';
 import {readFile} from 'node:fs/promises';
 import {LocalProjectCatalog} from './local-project-catalog.mjs';
 import {createGitHubTaskDraft} from './draft-github-issue.mjs';
@@ -12,7 +11,7 @@ const html=String.raw`<!doctype html><html lang="zh-CN"><head><meta charset="utf
 <title>Tally — 配置项目</title></head><body>
 <main style="max-width:700px;margin:2rem auto;padding:1rem;font:16px system-ui">
 <h1>Tally · 项目配置</h1>
-<p>连接 GitHub 仓库和开发分支。SHA 自动从 GitHub 读取；Token 只保存在当前 Windows 用户的加密凭据文件中。</p>
+<p>连接 GitHub 仓库和开发分支。SHA 自动从 GitHub 读取；Token 由当前操作系统的安全凭据存储保护（Windows DPAPI / Linux Secret Service / macOS Keychain），不会明文保存到项目配置文件。</p>
 <form id="add"><label>GitHub 仓库 (owner/repo)<br><input name="repository" required
 placeholder="kaicreator-mm/tally-reps-test" style="width:100%;padding:8px"></label>
 <p><label>开发分支<br><input name="ref" value="main" required></label></p>
@@ -54,8 +53,7 @@ export async function startFirstRunServer({
   createDraft=createGitHubTaskDraft
 }={}){
   if(typeof startConfigured!=='function')throw new Error('START_CONFIGURED_REQUIRED');
-  const dataDir=env.TALLY_V2_CONFIG_DIR??
-    join(env.LOCALAPPDATA??join(homedir(),'.tally'),'Tally','v2');
+  const dataDir=resolveTallyConfigDir({env});
   const store=catalog??new LocalProjectCatalog({dir:dataDir});
   const key=randomBytes(24).toString('hex');
   let origin='',active=null,activeSource=null,busy=false,lastError=null;

@@ -7,7 +7,8 @@ const SHA256=/^[a-f0-9]{64}$/;
 const REPO=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const FILE=/^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*$/;
 const manifestFile='tally-prebuilt-consumer.json';
-const runtimeFiles=['consumer-local-codex.mjs','builder-target.mjs','local-codex-host.mjs'];
+const runtimeFiles=['consumer-local-codex.mjs','builder-target.mjs',
+  'local-codex-host.mjs','local-codex-linux-host.mjs'];
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const fail=reason=>{throw new TypeError(reason);};
 function target(env){

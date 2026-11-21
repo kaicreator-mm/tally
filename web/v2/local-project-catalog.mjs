@@ -2,7 +2,8 @@
 import {mkdir,readFile,rename,writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash,randomUUID} from 'node:crypto';
-import {spawn} from 'node:child_process';
+import {nativeCredentialStore,windowsDpapi} from './credential-store.mjs';
+export {windowsDpapi};
 import {isValidVersionRef} from '../../packages/tally-github-native-c/src/version-ref.mjs';
 
 const REPOSITORY=/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
@@ -16,37 +17,6 @@ const valid=x=>x&&Array.isArray(x.projects)&&x.projects.length<=64&&
   (x.selected===null||x.selected&&REPOSITORY.test(x.selected.repository)&&
     isValidVersionRef(x.selected.ref));
 
-/** Windows DPAPI CurrentUser, encrypted values only ever reach the filesystem. */
-function runPowershell(script,input){
-  if(process.platform!=='win32')throw new Error('WINDOWS_CREDENTIAL_STORE_REQUIRED');
-  return new Promise((resolve,reject)=>{
-    const encoded=Buffer.from(script,'utf16le').toString('base64');
-    const child=spawn('powershell.exe',['-NoProfile','-NonInteractive',
-      '-EncodedCommand',encoded],{stdio:['pipe','pipe','ignore'],
-      windowsHide:true});
-    const chunks=[];let bytes=0;let done=false;
-    child.on('error',()=>{if(!done){done=true;reject(new Error('CREDENTIAL_STORE_UNAVAILABLE'));}});
-    child.stdout.on('data',chunk=>{
-      bytes+=chunk.length;
-      if(bytes>65536){child.kill();return;}
-      chunks.push(chunk);
-    });
-    child.on('close',code=>{
-      if(done)return;done=true;
-      if(code!==0||bytes>65536)return reject(new Error('CREDENTIAL_STORE_FAILED'));
-      resolve(Buffer.concat(chunks).toString('utf8').trim());
-    });
-    child.stdin.end(input);
-  });
-}
-export const windowsDpapi=Object.freeze({
-  seal:secret=>runPowershell(
-    '$v=[Console]::In.ReadToEnd(); $s=ConvertTo-SecureString $v -AsPlainText -Force; ConvertFrom-SecureString $s',
-    secret),
-  open:cipher=>runPowershell(
-    '$v=[Console]::In.ReadToEnd(); $s=ConvertTo-SecureString $v; [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s))',
-    cipher),
-});
 export async function readGithubHead({repository,ref,token,fetchImpl=fetch}){
   if(!REPOSITORY.test(repository)||!isValidVersionRef(ref)||
      typeof token!=='string'||token.length<8)
@@ -68,7 +38,7 @@ export async function readGithubHead({repository,ref,token,fetchImpl=fetch}){
 }
 const empty=()=>({schema:1,projects:[],selected:null});
 export class LocalProjectCatalog{
-  constructor({dir,vault=windowsDpapi,readHead=readGithubHead}={}){
+  constructor({dir,vault=nativeCredentialStore,readHead=readGithubHead}={}){
     if(typeof dir!=='string'||!dir)throw new Error('PROJECT_STORE_DIR_REQUIRED');
     this.dir=dir;this.vault=vault;this.readHead=readHead;
   }
@@ -90,7 +60,8 @@ export class LocalProjectCatalog{
     await rename(temp,join(this.dir,'projects.json'));
   }
   credentialPath(repository){
-    return join(this.dir,'credential-'+safeId(repository)+'.dpapi');
+    return join(this.dir,'credential-'+safeId(repository)+
+      (process.platform==='win32'?'.dpapi':'.keyring'))
   }
   async readToken(repository){
     const secret=await readFile(this.credentialPath(repository),'utf8');

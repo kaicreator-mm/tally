@@ -50,6 +50,13 @@ const CONSUMER_PINS=['TALLY_GITHUB_READ_TOKEN','TALLY_CODEX_CLI_PATH',
 export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(env.TALLY_V2_AGENT_DISPATCH!=='host-mounted')
     throw new TypeError('AGENT_DISPATCH_NOT_HOST_MOUNTED');
+  // An explicit Linux Host contract is needed. Historical Windows pin sets
+  // remain the default, preserving the proven installed Windows path.
+  const platform=env.TALLY_V2_AGENT_PLATFORM??'win32';
+  if(!['win32','linux'].includes(platform))
+    throw new TypeError('AGENT_HOST_PLATFORM_UNSUPPORTED');
+  if(platform==='linux'&&process.platform!=='linux')
+    throw new TypeError('AGENT_HOST_PLATFORM_MISMATCH');
   const claim={
     sourceSha:env.TALLY_V2_AGENT_CLAIM_SOURCE_SHA,
     dispatchId:env.TALLY_V2_AGENT_CLAIM_DISPATCH_ID,
@@ -84,12 +91,23 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(typeof evidenceDir!=='string'||!PATH_RE.test(evidenceDir))
     throw new TypeError('AGENT_EVIDENCE_DIR_INVALID');
   const timeoutMs=Number(env.TALLY_V2_AGENT_TIMEOUT_MS);
-  const missing=CONSUMER_PINS.filter(name=>
+  const requiredPins=platform==='linux'?
+    CONSUMER_PINS.filter(name=>name!=='TALLY_CODEX_SANDBOX_PATH').concat(
+      'TALLY_LINUX_BWRAP_PATH','TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR',
+      'TALLY_CODEX_HOME'):CONSUMER_PINS;
+  const missing=requiredPins.filter(name=>
     name==='TALLY_LOCAL_REPOSITORY_PATH'&&
       env.TALLY_V2_AGENT_SCRIPT_ROOT&&
       env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH?false:
     typeof env[name]!=='string'||env[name].length===0);
   if(missing.length)throw new TypeError('AGENT_CONSUMER_PINS_MISSING:'+missing.join(','));
+  if(platform==='linux'&&
+      (env.TALLY_BUILDER_PRINCIPAL!=='linux-bwrap:65534'||
+       env.TALLY_BUILDER_SID!=='linux-uid:65534'||
+       env.TALLY_VERIFIER_SID==='linux-uid:65534'||
+       !/^\/usr\/[^\s:]+$/.test(env.TALLY_LINUX_BWRAP_PATH??'')||
+       env.TALLY_CODEX_HOME!==join(env.TALLY_BUILDER_PROFILE,'.codex')))
+    throw new TypeError('AGENT_LINUX_SANDBOX_PINS_INVALID');
   const scriptRoot=env.TALLY_V2_AGENT_SCRIPT_ROOT??
     env.TALLY_LOCAL_REPOSITORY_PATH;
   const sourceRepositoryPath=env.TALLY_V2_AGENT_SOURCE_REPOSITORY_PATH??
@@ -109,6 +127,8 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   const pinNames=['T06M_TARGET_REPOSITORY','T06M_TARGET_ISSUE_NUMBER',
     'T06M_TARGET_VERSION_REF','T06M_TARGET_CANDIDATE_PATH'];
   const provided=pinNames.filter(name=>env[name]!==undefined);
+  if(platform==='linux'&&provided.length!==pinNames.length)
+    throw new TypeError('AGENT_LINUX_SEALED_TARGET_REQUIRED');
   if(provided.length!==0&&provided.length!==pinNames.length)
     throw new TypeError('AGENT_BUILDER_TARGET_PARTIAL');
   if(provided.length===0&&
@@ -152,7 +172,10 @@ export function readInstalledWriteJourneyEnvironment(env=process.env){
   if(!/^[a-z][a-z0-9-]{0,63}$/.test(provider)||
      !enabledProviders.includes(provider))
     throw new TypeError('AGENT_PROVIDER_PIN_INVALID');
-  return Object.freeze({claim:Object.freeze({...claim,
+  // Other Provider adapters have not proven POSIX sandbox confinement.
+  if(platform==='linux'&&provider!=='codex')
+    throw new TypeError('AGENT_LINUX_PROVIDER_UNQUALIFIED');
+  return Object.freeze({platform,claim:Object.freeze({...claim,
       commentId:claim.commentId,
       timeoutMs:Number.isSafeInteger(timeoutMs)&&timeoutMs>=60000&&
         timeoutMs<=30*60*1000?timeoutMs:10*60*1000}),
@@ -227,7 +250,7 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
       // exported the review dispatch pins gets the real consumer; otherwise
       // nothing executed and the observed-runs projection must never render
       // this as an attempt row.
-      if(kind==='review-repair'&&settings.review){
+      if(kind==='review-repair'&&settings.review&&settings.platform!=='linux'){
         const script=join(settings.scriptRoot??env.TALLY_LOCAL_REPOSITORY_PATH,
           'experiments','v2','selected-business-build','single-codex-review-e2e.mjs');
         const exit=await spawnE2e(script,reviewEnv(),claim.timeoutMs);
@@ -241,7 +264,8 @@ export function createInstalledWriteJourneyRunner({settings,env=process.env,
     // execution point inside local-codex-host; Claim/FSW/CAS/worktree/grants
     // and candidate readback never fork into a second Host or scheduler.
     const script=join(settings.scriptRoot??env.TALLY_LOCAL_REPOSITORY_PATH,
-      'experiments','v2','selected-business-build','local-codex-windows-e2e.mjs');
+      'experiments','v2','selected-business-build',
+      settings.platform==='linux'?'local-codex-linux-e2e.mjs':'local-codex-windows-e2e.mjs');
     const exit=await spawnE2e(script,runnerEnv(),claim.timeoutMs);
     return observed(kind,exit);
   }});

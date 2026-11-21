@@ -1061,3 +1061,67 @@ test('selected FSW and Draft PR routes are Host-scoped, CSRF protected',async()=
     assert.deepEqual(calls,[['fsw',correct],['draft',correct]]);
   }finally{await app.close();}
 });
+
+
+test('Linux Agent Host is explicit and keeps the sealed target and physical runner',
+  async()=>{
+    const env={...consumerPins,...claimPins,
+      TALLY_V2_AGENT_PLATFORM:'linux',TALLY_LINUX_BWRAP_PATH:'/usr/bin/bwrap',
+      TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR:'/tmp/tally-linux-selected-consumer',
+      TALLY_CODEX_CLI_PATH:'/usr/local/bin/codex',
+      TALLY_BUILDER_PROFILE:'/tmp/tally-linux-builder',
+      TALLY_CODEX_HOME:'/tmp/tally-linux-builder/.codex',
+      TALLY_BUILDER_TEMP:'/tmp/tally-linux-temp',
+      TALLY_EMPTY_GIT_CONFIG:'/tmp/tally-linux-empty-git',
+      TALLY_OPERATOR_HOME:'/tmp/tally-linux-operator',
+      TALLY_HIDDEN_FIXTURE:'/tmp/tally-linux-operator/hidden',
+      TALLY_LOCAL_REPOSITORY_PATH:'/tmp/tally-linux-source',
+      TALLY_V2_AGENT_WORKTREE_PATH:'/tmp/tally-linux-worktree',
+      TALLY_V2_AGENT_EVIDENCE_DIR:'/tmp/tally-linux-evidence',
+      TALLY_V2_AGENT_SCRIPT_ROOT:'/tmp/tally-linux-driver',
+      TALLY_BUILDER_PRINCIPAL:'linux-bwrap:65534',
+      TALLY_BUILDER_SID:'linux-uid:65534',
+      TALLY_VERIFIER_SID:'linux-uid:65533',
+      TALLY_V2_REPOSITORY:'kaicreator-mm/tally',TALLY_V2_VERSION_REF:'version/v2',
+      T06M_TARGET_REPOSITORY:'kaicreator-mm/tally',
+      T06M_TARGET_VERSION_REF:'version/v2',
+      T06M_TARGET_ISSUE_NUMBER:'264',
+      T06M_TARGET_CANDIDATE_PATH:'experiments/v2/selected-business-build/LOCAL_CODEX_L3.md'};
+    const settings=readInstalledWriteJourneyEnvironment(env);
+    assert.equal(settings.platform,'linux');
+    let called=null;
+    const runner=createInstalledWriteJourneyRunner({settings,env,
+      spawnE2e:async (script,runEnv)=>{
+        called={script,runEnv};
+        return {code:1,signal:null,startedAt:Date.now(),terminatedAt:Date.now()};
+      }});
+    const outcome=await runner.run('start');
+    assert.equal(outcome.status,'FAIL');
+    assert.match(called.script,/local-codex-linux-e2e\.mjs$/);
+    assert.equal(called.runEnv.TALLY_V2_AGENT_PLATFORM,'linux');
+    assert.equal(called.runEnv.TALLY_CLAIM_SOURCE_SHA,sha);
+    assert.equal(called.runEnv.TALLY_LOCAL_WORKTREE_PATH,env.TALLY_V2_AGENT_WORKTREE_PATH);
+    const rework=await runner.run('review-repair');
+    assert.equal(rework.status,'UNKNOWN');
+    assert.equal(rework.reason,'REVIEW_CONSUMER_NOT_MOUNTED');
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_LINUX_BWRAP_PATH:undefined}),/AGENT_CONSUMER_PINS_MISSING/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_CODEX_HOME:undefined}),/AGENT_CONSUMER_PINS_MISSING/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_CODEX_HOME:'/tmp/tally-linux-other/.codex'}),
+      /AGENT_LINUX_SANDBOX_PINS_INVALID/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_V2_AGENT_PREBUILT_CONSUMER_DIR:undefined}),
+      /AGENT_CONSUMER_PINS_MISSING/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,T06M_TARGET_REPOSITORY:undefined,T06M_TARGET_VERSION_REF:undefined,
+      T06M_TARGET_CANDIDATE_PATH:undefined,T06M_TARGET_ISSUE_NUMBER:undefined}),
+      /AGENT_LINUX_SEALED_TARGET_REQUIRED/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_BUILDER_PRINCIPAL:'root'}),/AGENT_LINUX_SANDBOX_PINS_INVALID/);
+    assert.throws(()=>readInstalledWriteJourneyEnvironment({
+      ...env,TALLY_V2_AGENT_PROVIDER:'zcode',
+      TALLY_V2_AGENT_PROVIDERS_ENABLED:'codex,zcode'}),
+      /AGENT_LINUX_PROVIDER_UNQUALIFIED/);
+  });
