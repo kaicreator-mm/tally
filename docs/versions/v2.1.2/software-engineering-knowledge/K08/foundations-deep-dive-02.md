@@ -39,4 +39,6 @@
 
 同一源、同一可见命令构建两份包，内容 hash 不同。应按顺序比较真正环境与时间戳/文件次序/动态版本，再检查不同是否影响用户运行、构建可复现范围及修复成本。若无法确定生成产物范围，输出 NOT_ESTABLISHED 而非自动宣称供应链攻击或 Build FAIL。安全/供应链专业专项仍在本版本之外，但既有完整性义务不取消。
 
+**未知与停止条件**：无法确定构建环境或制品 hash 差异原因时，标为 `REPRODUCIBILITY_NOT_ESTABLISHED/UNKNOWN`；若受影响真实消费者测试尚未执行，保持 `NOT_RUN/STOP_FOR_RELEASE_CLAIM`。这只是正确标注证据范围，不引入新的 CI/Release Gate。
+
 **来源线索**：[A20 Microsoft](../external-source-catalog.md)、[A23 GitLab](../external-source-catalog.md)、[A33 DORA](../external-source-catalog.md)、[A45 NASA Delivery](../external-source-catalog.md)、[A53 Reproducible Builds 定义](../external-source-catalog.md)。其专业定义不自动成为 ADS/Tally 所有 PR 的额外 Gate。
