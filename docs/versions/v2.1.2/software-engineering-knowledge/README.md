@@ -199,7 +199,7 @@
 
 ---
 
-## 9. ADS 与 Tally 来源导航
+## 10. ADS 与 Tally 来源导航
 
 - [ADS 标准主库](https://github.com/kaicreator-mm/ai-development-standard/tree/933c4fd3e0e1b9f1a73ed6a9b552077baaf5376c/standards) 与 [#1383 三级分层](https://github.com/kaicreator-mm/ai-development-standard/issues/1383)。
 - [Tally v2.1 家族索引 #269](https://github.com/kaicreator-mm/tally/issues/269)、[v2.1.2 本版本 #521](https://github.com/kaicreator-mm/tally/issues/521)。
