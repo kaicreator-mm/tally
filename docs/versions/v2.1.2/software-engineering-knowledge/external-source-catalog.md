@@ -3,7 +3,7 @@
 
 > [v2.1.2 #521](https://github.com/kaicreator-mm/tally/issues/521) · [K01–K11](README.md)。**SOURCE_DISCOVERY_AND_CROSSWALK_ONLY / NOT_CLAIM_QUALIFIED**。本目录只记录公开可定位的规范摘要、学科体系、企业工程手册、GitHub 工程项目及研究；并不复制它们的专有原文。当前采用来源优先，所有单独的 Knowledge Claim 仍需逐项确认内容、版本、适用性和允许使用方式。
 
-**目前共 67 项外部来源**（A01–A49 早期发现目录、R3 A50–A54、R4 A55–A61、R6 A62–A64、R7 A65–A67：NASA Requirements Traceability、Dafny 形式验证和 NIST 组合测试等）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
+**目前共 69 项外部来源**（A01–A49 原始目录、R3 A50–A54、R4 A55–A61、R6 A62–A64、R7 A65–A67、R8 A68–A69：SLSA 官方 Build Provenance v1.2 和 DORA 官方度量发展）。条目仅表明发现可定位参考资料，不等于已完成原始 Claim/许可证/规范授权。来源路径被发现和分类，不等于其每项技术主张已通过完整 Clauses、版权或适用性审查。
 
 ## 来源等级与取舍
 
@@ -123,6 +123,17 @@
 | A67 | [NIST Automated Combinatorial Testing for Software](https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software) / [Frequently Asked Questions](https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software/faqs) | t-way/组合覆盖的适用范围、参数交互与覆盖准则；覆盖率本身不认证业务 Expected/特定平台/远端 Effect，已知更高阶约束仍须专项负例 | K05 K03 |
 
 以上 **3 条只是新的发现来源**，连同 A01–A64 共 67 条参考线索；无实际运行时工具、Product Rule、软件文档复制许可或正式 Source Claim 审核。R7 如需将某条原理变成对 Agent/Package 起效的知识，仍要在目标具体任务中核定来源、版本、适用条件、反例及合法消费者。
+
+## R8：交付来源与社会技术度量的两条原始参考（A68–A69）
+
+> 仅编目出版方原始公开说明和适用语境，**不复制原文、不推断项目已经实施供应链证明或做过受控实验**。现有 A01–A67 的限定来源不改变。下列专业方法为可供设计比较的参考，不是 Tally 的新 ADS Gate。
+
+| ID | 原始出版方/版本 | 可用学科主张、适用和限制 | 主要模块 |
+| --- | --- | --- | --- |
+| A68 | [SLSA Build Provenance v1.2（SLSA Framework 官方规范）](https://slsa.dev/spec/v1.2/build-provenance) / [SLSA Build Track v1.2](https://slsa.dev/spec/v1.2/tracks) | Provenance 关联 artifact subject/digest、builder、build definition、resolved dependencies 与信任验证条件；有 provenance metadata 不自动证明签名/可信 builder、材料完整、可复现、安装或 Release 授权，不能将 SLSA Level 当作 Tally 已取得的真实评级 | K08 K02 |
+| A69 | [DORA — A history of DORA's software delivery metrics（2 Jan 2026）](https://dora.dev/insights/dora-metrics-history/) / [Software Delivery Performance Metrics](https://dora.dev/guides/dora-metrics/) | 软件交付 Throughput 与 Instability/Stability 的定义和分期演进；研究聚合关联指标不代表某个 Agent 数量、Token 使用量或单次流程变化的因果性能增益，指标术语与版本需事先确定 | K07 K11 K08 |
+
+**R8 当前总计 69 条已编目外部来源 A01–A69**；A68–A69 都只达到 `DISCOVERED_REFERENCE_ONLY`，而非有权 Source Claim、工具已运行或生产 Rule。2026-11-22 访问原始发布站点的页面索引，仅提供编目与技术范围的引用，不代表逐句规范资格核定。
 
 ## 版本与版权的关键异常
 
