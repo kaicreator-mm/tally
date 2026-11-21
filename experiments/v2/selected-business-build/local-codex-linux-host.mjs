@@ -134,20 +134,25 @@ export function createLinuxHostOperations({defaults,exec=nativeExec}={}){
       try{
         if(config.worktreePath!==worktreePath)throw Error('WORKTREE_MISMATCH');
         args=linuxSandboxArgs(config);
-        const [work,home,operator,hidden,cli,bwrap]=await Promise.all([
+        const [work,home,operator,hidden,cli,bwrap,codex,emptyGit]=await Promise.all([
           realpath(config.worktreePath),realpath(config.builderProfile),
           realpath(config.operatorHome),realpath(config.hiddenFixture),
-          realpath(config.cliPath),realpath(config.bwrapPath)]);
+          realpath(config.cliPath),realpath(config.bwrapPath),
+          realpath(config.codexHome),realpath(config.emptyGitConfig)]);
         if(inside(operator,work)||inside(operator,home)||inside(work,home)||
            inside(hidden,home)||inside(hidden,work)||
+           codex!==join(home,'.codex')||inside(emptyGit,work)||
            !inside(cli,'/usr')||!inside(bwrap,'/usr'))
           throw Error('PATH_OVERLAP');
-        for(const file of [config.worktreePath,config.builderProfile,config.emptyGitConfig])
-          await stat(file);
-        // Dedicated login home must not be a public /tmp or shared directory.
-        const profile=await stat(config.builderProfile);
-        if(!profile.isDirectory()||(profile.mode&0o077)!==0)
-          throw Error('BUILDER_PROFILE_NOT_PRIVATE');
+        const [worktree,profile,modelHome,gitConfig]=await Promise.all([
+          stat(config.worktreePath),stat(config.builderProfile),
+          stat(config.codexHome),stat(config.emptyGitConfig)]);
+        // No inherited Git credentials, and no public model home. Require the
+        // checked-out candidate and its native credential directory to exist.
+        if(!worktree.isDirectory()||!profile.isDirectory()||!modelHome.isDirectory()||
+           (profile.mode&0o077)!==0||(modelHome.mode&0o077)!==0||
+           !gitConfig.isFile()||gitConfig.size!==0)
+          throw Error('LINUX_SANDBOX_MOUNT_INVALID');
       }catch{return {verified:false,reason:'BUILDER_CONFINEMENT_UNAVAILABLE'};}
       const id=await run(config.bwrapPath,[...args,'/usr/bin/id','-u']);
       if(id.code!==0||id.stdout.trim()!==BWRAP_UID)
