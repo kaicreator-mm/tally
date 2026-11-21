@@ -1,30 +1,30 @@
-# K01–K11 学科知识正文：第一轮深度覆盖与下一阶段缺口
+# K01–K11 学科知识正文：R2/R3 两卷深度覆盖与未解决基础缺口
 
 > [版本索引](README.md) · [165 点课程](knowledge-coverage-and-growth.md) · [系统架构](systematic-knowledge-architecture.md)
 >
-> **状态：DOCUMENT_BODY_CANDIDATE / NEW_DELTA_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 11 篇新文档是对既有课程的深写，不是 11 个生产 Package 或 165 条完成资格的知识 Claim。
+> **状态：R2_FIRST_VOLUME_INDEPENDENT_ACCEPT_SCOPED / R3_SECOND_VOLUME_REVIEW_PENDING / SOURCE_CLAIM_NOT_QUALIFIED / CONSUMER_NOT_CONNECTED。** 11 篇 R2 正文已在独立审查范围接受，R3 新增第二卷 11 篇仍待增量审核；**两卷共 22 篇原创深度章节**，并非 22 个生产 Package 或 165 条合格知识 Claim。
 
 ## 1. 双重导航
 
 学科学习与持续研究采用 SWEBOK/相关学科 → Kxx → systematic-syllabus → foundations-deep-dive；真实工程任务采用 Goal → Kxx/README 的问题路由 → 必需 Topic/DecisionProcedure/Skill → 学科章节与适用来源。完整学科库与最小 Agent 上下文是不同要求。
 
-## 2. 本轮 11 篇原创学科深化正文
+## 2. 各模块的两卷系统学科深化正文
 
-| 模块 | 深化章节 | 正文专业机制 | 尚待深化的基础学科空白 |
+| 模块 | R2 第一卷（已审文档） | R3 第二卷（本轮候选） | 两卷主题互补性 |
 | --- | --- | --- | --- |
-| K01 需求与业务行为 | [系统深化 01](K01/foundations-deep-dive-01.md) | 状态机、政策谓词、聚合/验收 | 需求采样偏差与可测质量需求 |
-| K02 架构与一致性 | [系统深化 01](K02/foundations-deep-dive-01.md) | 质量场景、状态所有权、恢复性研究 | 依赖倒置与演进式架构 |
-| K03 算法与构造 | [系统深化 01](K03/foundations-deep-dive-01.md) | 数据结构成本、相等性、条件写 | 类型系统、内存与背压 |
-| K04 任务分解 | [系统深化 01](K04/foundations-deep-dive-01.md) | 因果 DAG、写集、关键路径 | 估算不确定性与过程反馈 |
-| K05 测试与验证 | [系统深化 01](K05/foundations-deep-dive-01.md) | Oracle、性质/状态/变异测试 | 组合覆盖与统计模型 |
-| K06 调试与因果 | [系统深化 01](K06/foundations-deep-dive-01.md) | 竞争假设、复现、探针/回归 | 复杂分布式故障时序 |
-| K07 Agent 协作 | [系统深化 01](K07/foundations-deep-dive-01.md) | ACK 与 Task 来源、乱序、写集 | 认知偏差与协作反馈 |
-| K08 构建与交付 | [系统深化 01](K08/foundations-deep-dive-01.md) | 可复现输入、缓存、CI 阶段 | 制品矩阵与部署演进 |
-| K09 软件演进 | [系统深化 01](K09/foundations-deep-dive-01.md) | Expand–Migrate–Contract、旧数据 | 技术债与退役 |
-| K10 可靠性与性能 | [系统深化 01](K10/foundations-deep-dive-01.md) | Timeout、Effect Unknown、背压 | 容量与性能统计 |
-| K11 经济与决策 | [系统深化 01](K11/foundations-deep-dive-01.md) | 同任务对照、成本与独立 Oracle | 统计置信与样本偏差 |
+| K01 需求工程 | [01](K01/foundations-deep-dive-01.md) · 业务 Rule/状态模型 | [02](K01/foundations-deep-dive-02.md) · 需求样本偏差/质量场景 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K02 系统架构 | [01](K02/foundations-deep-dive-01.md) · 质量属性/状态所有权 | [02](K02/foundations-deep-dive-02.md) · 依赖方向/分布式状态 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K03 详细设计 | [01](K03/foundations-deep-dive-01.md) · 算法/结构与一致性 | [02](K03/foundations-deep-dive-02.md) · 类型/取消/背压 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K04 任务工程 | [01](K04/foundations-deep-dive-01.md) · 因果 DAG/资源竞争 | [02](K04/foundations-deep-dive-02.md) · 估算/反馈/停止规则 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K05 软件测试 | [01](K05/foundations-deep-dive-01.md) · Oracle/性质和变异 | [02](K05/foundations-deep-dive-02.md) · 组合覆盖/状态探索 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K06 诊断修复 | [01](K06/foundations-deep-dive-01.md) · 第一失败/竞争假设 | [02](K06/foundations-deep-dive-02.md) · 分布式时间线/事故因果 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K07 多 Agent 协作 | [01](K07/foundations-deep-dive-01.md) · ACK/Attempt/旧 HEAD | [02](K07/foundations-deep-dive-02.md) · 人因/交接/独立审查 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K08 构建交付 | [01](K08/foundations-deep-dive-01.md) · CI 阶段/制品来源 | [02](K08/foundations-deep-dive-02.md) · 可复现构建/缓存因果 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K09 软件演进 | [01](K09/foundations-deep-dive-01.md) · 接口兼容/数据迁移 | [02](K09/foundations-deep-dive-02.md) · 技术债/退役决策 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K10 可靠性性能 | [01](K10/foundations-deep-dive-01.md) · Timeout/Effect Unknown | [02](K10/foundations-deep-dive-02.md) · 尾延迟/Little 定律/测量 | 第二卷扩充第一卷尚未展开的学科前提 |
+| K11 经济和决策 | [01](K11/foundations-deep-dive-01.md) · 成本/对照基线 | [02](K11/foundations-deep-dive-02.md) · 统计推断/投资停止 | 第二卷扩充第一卷尚未展开的学科前提 |
 
-本阶段 **165 个唯一课程 ID 依然是全范围系统纲要**；11 篇新章节覆盖了部分知识群的专业机制，不代表每个知识点拥有独立教材深度。原有 26 个问题 Topic 保持有效；不因为扩写课程而复制 Topic 内容或新建工作流。
+**165 个唯一课程 ID 依然是系统纲要，而非 165 篇专业教材。** R3 另提供 [165 点逐项覆盖台账](foundation-concept-coverage-ledger.md)：每项说明只有课程解释 S、还是被第一卷 D1/第二卷 D2 明确关联。当前 **159/165 有至少一个深入章节主题关联，6/165 仍仅有课程解释**；“章节关联”并不意味着该点获得完整的源级资格或学科证明。原 26 个问题 Topic 继续作为工程任务入口。
 
 ## 3. 学科深化要达到的专业标准
 
@@ -34,4 +34,4 @@
 
 ## 4. 下一步与独立审核边界
 
-按上表的专业基础缺口继续遍历学科群，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R1 的旧 HEAD 文档 ACCEPT_SCOPED 可复用；R2 新章、P2 关系精度修正与导航应做限定增量审核，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
+按覆盖台账中六个仅有 S 的知识点和其余仍不充分的基础子主题继续遍历学科群，不以 26 个热点 Topic 为知识边界。保留唯一 Kxx Owner 与必要跨模块引用，选中生产用途后才对具体条款和真实 Agent/Host 场景逐项核验。R2 的独立 ACCEPT_SCOPED 对未变化的第一卷和课程可复用；R3 新第二卷、六组新增教学查询、来源增量与导航应做限定增量审核，不重复审核未变的教材。Tally #286 仍 DEFERRED；不声明 Harness 已连接、编译器已存在或 CI 实测。
