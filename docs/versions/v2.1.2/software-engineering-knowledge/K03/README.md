@@ -18,6 +18,8 @@
 
 **R14 实现前的有界投影（新候选，未通过独立文档审核）**：[从 K02 的真实可持久状态序列到 K03 实现与 K05 Oracle 的知识交接](../professional-crash-observability-projection-r14.md)，最小 [L2 知识卡](../professional-l2-crash-observability-card-r14.md)。本模块仍负责具体文件/数据库实现机制，不因 R3 的单个文件协议例子强制推广 `wx` 或跨文件 `rename`。
 
+**R15 R4 限定证据的实现/测试交接（新候选，未独立审核）**：[按风险选择 K02/K03/K05 专业知识](../professional-risk-gated-knowledge-selection-r15.md)及 [K05 测试夹具与 Oracle 有效性](../K05/advanced-test-fixture-and-oracle-validity-r15.md)。R4 T2-A 首次 L2 写序列误分类与首次 S5 实现自修正应**分别记账**；测试对同步/异步资源清理、顺序版本错误和时间窗口的未验证面不等于实现已具合格证据。
+
 **先了解整个专业学科，再按需选择问题**： [K03 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
