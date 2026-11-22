@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `SOURCE_CANDIDATE / R1_TO_R10_SCOPED_ACCEPT_ON_PRIOR_EXACT_SHAS / R11_BOUNDED_PILOT_DESIGN_REVIEW_PENDING / R12_ADS_STAGED_COMPLEX_AB_DESIGN_REVIEW_PENDING / NOT_FROZEN` |
+| Document state | `R1_TO_R15_DOCUMENTATION_MERGED_MAIN_9060cbdd / R18_QUALITY_KNOWLEDGE_DRAFT_G1_REVIEW_PENDING / NOT_SOURCE_CLAIM_QUALIFIED` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,7 +24,9 @@
 - [72 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 27 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） + 3 篇 R13 反馈驱动专业正文（K01/K03/K05） + 1 篇 R15 K05 测试夹具专业正文 = 230 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 28 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） + 3 篇 R13 反馈驱动专业正文（K01/K03/K05） + 1 篇 R15 K05 测试夹具专业正文 + 5 篇 R18 K02/K03/K05/K09/K11 质量专业正文 = 236 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+
+**R18 质量导向知识深化（D01–D05 专业候选，待 #551 G1 独立审核）**：[质量风险驱动的最小 Kxx 知识选择](professional-quality-risk-knowledge-selection-r18.md)；新增 [K02 架构质量与可证伪场景](K02/advanced-scenario-driven-architecture-quality-r18.md)、[K03 陌生读者代码可理解性](K03/advanced-code-comprehension-and-abstraction-quality-r18.md)、[K05 质量 Reviewer 校准](K05/advanced-quality-reviewer-calibration-r18.md)、[K09 陌生维护者增量修改](K09/advanced-stranger-maintainer-change-assay-r18.md)、[K11 首次/维护综合成本](K11/advanced-total-quality-cost-and-maintenance-economics-r18.md)。此增量是 **5 专业文档 +1 版本级选择指南**，只补充之前的知识选择/评价缺口；**D06–D10 实验未启动，不能宣称质量收益**。原 K01–K11 的 165 课程知识点、72 参考与原 Source 资格不因目录增加而改变。完整方法与阶段约束见 [#551 Task DAG](https://github.com/kaicreator-mm/tally/issues/551)。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
