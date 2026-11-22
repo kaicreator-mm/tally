@@ -14,7 +14,9 @@
 
 **R8 深化工程判断专业基础（旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 已独立 ACCEPT_SCOPED，文档范围）**：[Extension/Host/状态 Owner/版本合同的正交边界](advanced-extension-authority-state-and-consumer-boundaries.md)，精确连接本模块 **4 个原有高优先级课程 ID**，明确 Source/范围、机制假设、负例与 STOP；[W13–W17](../professional-reasoning-worked-traces-03.md) 展示综合选择，[来源适用矩阵](../professional-source-applicability-r8.md) 仍是引用候选，不构成真实 Runtime/Agent/Host/Release 资格。
 
-**R14 任务级最小知识投影（新候选，未通过独立文档审核）**：[K02/K03/K05 提交状态与故障可观察性跨模块投影](../professional-crash-observability-projection-r14.md)和[仅在真实持久变更风险命中时启用的 L2 知识卡](../professional-l2-crash-observability-card-r14.md)。**K02 独占架构选择/状态 Owner**，K03/K05 按实现/验证交接，不把本卡当强制架构或新 Rule。\n\n**先了解整个专业学科，再按需选择问题**： [K02 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
+**R14 任务级最小知识投影（新候选，未通过独立文档审核）**：[K02/K03/K05 提交状态与故障可观察性跨模块投影](../professional-crash-observability-projection-r14.md)和[仅在真实持久变更风险命中时启用的 L2 知识卡](../professional-l2-crash-observability-card-r14.md)。**K02 独占架构选择/状态 Owner**，K03/K05 按实现/验证交接，不把本卡当强制架构或新 Rule。
+
+**先了解整个专业学科，再按需选择问题**： [K02 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
 
