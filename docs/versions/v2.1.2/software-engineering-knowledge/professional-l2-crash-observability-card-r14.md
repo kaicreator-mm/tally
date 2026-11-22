@@ -1,6 +1,6 @@
 # R14 · L2 决策时最小知识卡：持久状态可观察性
 
-> **PROPOSED / DOCUMENT_CANDIDATE / NOT A RULE / NO RUNTIME QUALIFICATION。** 唯一详细依据：[R14 跨模块论证](professional-crash-observability-projection-r14.md)；学科 Owner 分别为 [K02](K02/advanced-architecture-invariants-and-failure-tradeoffs.md)、[K03](K03/advanced-concurrent-local-file-write-convergence-r13.md)、[K05](K05/advanced-invariant-derived-discriminating-oracles-r13.md)。R3 来源为 [独立复核 #539](https://github.com/kaicreator-mm/tally/issues/539#issuecomment-7076957905)，仅支持可复算的事实与机制假说，不支持知识收益的因果断言。本卡在 R14 独立接受前不应用作正式冻结的实验包。
+> **PROPOSED / DOCUMENT_CANDIDATE / NOT A RULE / NO RUNTIME QUALIFICATION。** 这是任务相关的有限专业知识：K02 负责架构/状态 Owner，K03 负责具体实现，K05 负责可证伪验证。它不替代有权需求或已有发布规范，不保证某个技术方案在所有文件系统上正确。
 
 ## 何时读取？
 
