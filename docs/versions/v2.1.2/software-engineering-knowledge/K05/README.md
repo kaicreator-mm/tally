@@ -18,6 +18,8 @@
 
 **R14 R3 复核反馈的 Oracle 交接（新候选，未通过独立文档审核）**：[持久状态可观察性投影与提交切点反例](../professional-crash-observability-projection-r14.md)及[阶段限定 L2 卡](../professional-l2-crash-observability-card-r14.md)。仅在实际选定故障模型下证明执行过的 Test/Oracle；R3 #539 的六项预登记未测面不得随新文档晋升为 PASS。
 
+**R15 R4 实验及 Windows QA v2 反馈（新文档候选，尚未独立审核）**：[测试夹具生命周期、Oracle 有效性与幸存变异反例](advanced-test-fixture-and-oracle-validity-r15.md)；从实际 R4 冻结/后置诊断中区分**夹具假失败、未覆盖时序与未检出旧版本冲突**，列明原始 S5 QA 仍部分无效、#547 P2×7、非盲复核和未测面。跨模块按风险选用时参阅 [R15 选择指南](../professional-risk-gated-knowledge-selection-r15.md)。**文档只是限定候选，绝不代表测试或产品资格晋升。**
+
 **先了解整个专业学科，再按需选择问题**： [K05 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
