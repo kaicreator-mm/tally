@@ -20,6 +20,8 @@
 
 **R15 R4 限定证据的实现/测试交接（新候选，未独立审核）**：[按风险选择 K02/K03/K05 专业知识](../professional-risk-gated-knowledge-selection-r15.md)及 [K05 测试夹具与 Oracle 有效性](../K05/advanced-test-fixture-and-oracle-validity-r15.md)。R4 T2-A 首次 L2 写序列误分类与首次 S5 实现自修正应**分别记账**；测试对同步/异步资源清理、顺序版本错误和时间窗口的未验证面不等于实现已具合格证据。
 
+**R18 代码可理解性知识（新增候选，G1 独立审核待定）**：[陌生 Reader 的行为解释、导航、抽象成本与隐藏副作用](advanced-code-comprehension-and-abstraction-quality-r18.md)；不以行数、注释量、短函数或静态指标单独判代码可读性。真实维护效用继续交由 [K09](../K09/advanced-stranger-maintainer-change-assay-r18.md) 验证，知识阶段选择参阅 [R18](../professional-quality-risk-knowledge-selection-r18.md)。
+
 **先了解整个专业学科，再按需选择问题**： [K03 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
