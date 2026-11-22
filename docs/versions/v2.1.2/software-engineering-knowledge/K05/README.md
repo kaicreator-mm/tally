@@ -20,6 +20,8 @@
 
 **R15 R4 实验及 Windows QA v2 反馈（新文档候选，尚未独立审核）**：[测试夹具生命周期、Oracle 有效性与幸存变异反例](advanced-test-fixture-and-oracle-validity-r15.md)；从实际 R4 冻结/后置诊断中区分**夹具假失败、未覆盖时序与未检出旧版本冲突**，列明原始 S5 QA 仍部分无效、#547 P2×7、非盲复核和未测面。跨模块按风险选用时参阅 [R15 选择指南](../professional-risk-gated-knowledge-selection-r15.md)。**文档只是限定候选，绝不代表测试或产品资格晋升。**
 
+**R18 质量评价方法（新增候选，G1 独立审核待定）**：[架构/代码 Reviewer 独立校准、双审分歧、正确性与可维护性分层、评价工具自检](advanced-quality-reviewer-calibration-r18.md)。本方法不复写 R4 [原始 QA/变异幸存限制](advanced-test-fixture-and-oracle-validity-r15.md)，也不把 Reviewer 自评或文档篇数当证明。按任务风险选择参阅 [R18](../professional-quality-risk-knowledge-selection-r18.md)。
+
 **先了解整个专业学科，再按需选择问题**： [K05 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
