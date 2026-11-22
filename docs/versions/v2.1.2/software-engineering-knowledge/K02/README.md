@@ -16,6 +16,8 @@
 
 **R14 任务级最小知识投影（新候选，未通过独立文档审核）**：[K02/K03/K05 提交状态与故障可观察性跨模块投影](../professional-crash-observability-projection-r14.md)和[仅在真实持久变更风险命中时启用的 L2 知识卡](../professional-l2-crash-observability-card-r14.md)。**K02 独占架构选择/状态 Owner**，K03/K05 按实现/验证交接，不把本卡当强制架构或新 Rule。
 
+**R15 R4 限定证据的架构阶段知识选择（新候选，未独立审核）**：[按真实持久化/并发/外部 Effect 风险选用 K02→K03→K05](../professional-risk-gated-knowledge-selection-r15.md)；#545 后置非盲源码核对发现 T2-A 首次 L2 的 `CORRUPT`/ `CONFLICT` 误分类确有合同依据，但 n=1/组且原 QA 部分无效，**不能推断知识输入的因果优势**。K02 仍只负责架构、状态 Owner/提交点，不新增默认状态机。
+
 **先了解整个专业学科，再按需选择问题**： [K02 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
