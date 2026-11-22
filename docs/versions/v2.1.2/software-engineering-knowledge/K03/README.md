@@ -14,6 +14,8 @@
 
 **R9 专业基础及可证伪失效机制（新增待限定独立审核）**：[错误可行动语义、隐私日志与受影响测试真实执行](advanced-error-semantics-observability-and-validation-proof.md)，对原系统课程中 **3 个历史高优先知识点**新增准确 A 专业正文关联；[W18–W22](../professional-reasoning-worked-traces-04.md) 是合成推理，[Source→Claim→Oracle 准入差距](../professional-source-to-claim-readiness-r9.md) 明确保留无真实权限/未运行证据。不是实际 Source Claim、Consumer ABI、Agent/Host/Release 资格。
 
+**R13 R1/R2 实验反馈驱动的限定补充（候选、待独立审核）**：[本地文件并发写入、提交收敛、恢复与静止性](advanced-concurrent-local-file-write-convergence-r13.md)。对应 K03.F3.1/F3.2/F4.2，在状态不变量之下明确条件创建、持久化与 ACK 的不同保证、竞争者回读/临时文件资源和跨平台边界；不将 Node `wx` 误称为完整事务或耐掉电保证。Opaque 标识符的合法错误语义仍由 [K01 公开合同](../K01/advanced-opaque-identifier-contract-and-error-precedence-r13.md) 决定。
+
 **先了解整个专业学科，再按需选择问题**： [K03 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）

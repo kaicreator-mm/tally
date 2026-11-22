@@ -14,6 +14,8 @@
 
 **R8 深化工程判断专业基础（旧 Exact SHA `258f5cd6ff8d34a62b99d1f81f5e5a8c0167062d` 已独立 ACCEPT_SCOPED，文档范围）**：[Stakeholder 权威冲突与证据三角核验](advanced-stakeholder-authority-and-triangulated-evidence.md)，精确连接本模块 **2 个原有高优先级课程 ID**，明确 Source/范围、机制假设、负例与 STOP；[W13–W17](../professional-reasoning-worked-traces-03.md) 展示综合选择，[来源适用矩阵](../professional-source-applicability-r8.md) 仍是引用候选，不构成真实 Runtime/Agent/Host/Release 资格。
 
+**R13 R1/R2 实验反馈驱动的限定补充（候选、待独立审核）**：[公开 opaque ID 合同、错误优先级和 L1 需求内部一致性](advanced-opaque-identifier-contract-and-error-precedence-r13.md)。聚焦 K01.F4.1/F5.1 与 K03.F5.1 的交界：区分规范性业务决议和实现生成格式，按受权 scope/错误表/验收反例交叉检查；不能把 R2-Q07 误报为 K03 知识效果。仅为知识原理候选，不是生产合同。
+
 **先了解整个专业学科，再按需选择问题**： [K01 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
