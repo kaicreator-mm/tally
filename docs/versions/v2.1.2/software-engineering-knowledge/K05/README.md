@@ -14,7 +14,9 @@
 
 **R7 专业基础原理补缺（旧 Exact SHA `a307e0fab92ae3b857b5098d16200b339ffda764` 已获独立 ACCEPT_SCOPED，文档范围）**：[V&V/Oracle 来源、测试层次和 Flaky 区分](advanced-verification-validation-and-oracle-qualification.md)，对本模块既有课程中的 **6 个之前没有进阶 A 的知识点**提出受限规格/推导、专业反例与真正需要的 Oracle；不是被证明的运行时 Claim。详见 [R7 原 87 点差距盘点](../professional-depth-gap-inventory-r7.md)，避免按文件数量推断学科完全合格。
 
-**R13 R1/R2 实验反馈驱动的限定补充（候选、待独立审核）**：[从工程不变量推导竞争/旧行为/损坏负例以及 FR×Oracle 直接断言账本](advanced-invariant-derived-discriminating-oracles-r13.md)。对应 K05.F2.3/F5.1/F4.1，避免把更多测试/绿色统计等同于更高区分力；明确 `NOT_INDEPENDENTLY_VERIFIED` 和可复算 Test Discovery。仍未取得 R2 原始 QA 独立复核资格。
+**R13 R1/R2 实验反馈驱动的限定补充（已通过限定独立文档审核；DOCUMENT_CANDIDATE / NOT_SOURCE_CLAIM_QUALIFIED）**：[从工程不变量推导竞争/旧行为/损坏负例以及 FR×Oracle 直接断言账本](advanced-invariant-derived-discriminating-oracles-r13.md)。对应 K05.F2.3/F5.1/F4.1，避免把更多测试/绿色统计等同于更高区分力；明确 `NOT_INDEPENDENTLY_VERIFIED` 和可复算 Test Discovery。仍未取得 R2 原始 QA 独立复核资格。
+
+**R14 R3 复核反馈的 Oracle 交接（新候选，未通过独立文档审核）**：[持久状态可观察性投影与提交切点反例](../professional-crash-observability-projection-r14.md)及[阶段限定 L2 卡](../professional-l2-crash-observability-card-r14.md)。仅在实际选定故障模型下证明执行过的 Test/Oracle；R3 #539 的六项预登记未测面不得随新文档晋升为 PASS。
 
 **先了解整个专业学科，再按需选择问题**： [K05 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
