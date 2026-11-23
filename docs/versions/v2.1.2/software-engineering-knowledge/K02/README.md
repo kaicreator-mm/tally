@@ -18,9 +18,9 @@
 
 **R15 R4 限定证据的架构阶段知识选择（新候选，未独立审核）**：[按真实持久化/并发/外部 Effect 风险选用 K02→K03→K05](../professional-risk-gated-knowledge-selection-r15.md)；#545 后置非盲源码核对发现 T2-A 首次 L2 的 `CORRUPT`/ `CONFLICT` 误分类确有合同依据，但 n=1/组且原 QA 部分无效，**不能推断知识输入的因果优势**。K02 仍只负责架构、状态 Owner/提交点，不新增默认状态机。
 
-**R18 架构质量知识（新增候选，G1 独立审核待定）**：[可证伪质量属性场景、依赖和 Owner 结构缺陷、反过度设计评价](advanced-scenario-driven-architecture-quality-r18.md)；从真实需求/环境/响应衡量结构质量，而非从类、层或 ADR 篇数打分。结合 [跨模块 R18 最小质量知识选择](../professional-quality-risk-knowledge-selection-r18.md)，不改变 K02 的架构 Owner 或已有 Source 资格。
+**R18 架构质量知识（新增候选，G1 已独立接受并合并）**：[可证伪质量属性场景、依赖和 Owner 结构缺陷、反过度设计评价](advanced-scenario-driven-architecture-quality-r18.md)；从真实需求/环境/响应衡量结构质量，而非从类、层或 ADR 篇数打分。结合 [跨模块 R18 最小质量知识选择](../professional-quality-risk-knowledge-selection-r18.md)，不改变 K02 的架构 Owner 或已有 Source 资格。
 
-**R19 工程抽象专题（新知识候选，G-A 独立审核待定）**：[从不变量、变化轴与信息隐藏选择模块职责边界](advanced-engineering-abstraction-boundaries-and-variation-r19.md)。不是接口/模块越多越好；以实际状态 Owner、错误语义和变化隔离反证抽象不足、错误抽象及过度抽象；知识选择参阅 [R19 最小专业入口](../professional-engineering-abstraction-selection-r19.md)。不修改 R18 冻结实验。
+**R19 工程抽象专题（新知识候选，G-A 已独立接受并合并）**：[从不变量、变化轴与信息隐藏选择模块职责边界](advanced-engineering-abstraction-boundaries-and-variation-r19.md)。不是接口/模块越多越好；以实际状态 Owner、错误语义和变化隔离反证抽象不足、错误抽象及过度抽象；知识选择参阅 [R19 最小专业入口](../professional-engineering-abstraction-selection-r19.md)。参见 [R19 工程抽象正反对照案例库](../professional-engineering-abstraction-contrastive-casebook-r19.md)（新增候选，G-A2 待审），不修改 R18 冻结实验。
 
 **先了解整个专业学科，再按需选择问题**： [K02 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 

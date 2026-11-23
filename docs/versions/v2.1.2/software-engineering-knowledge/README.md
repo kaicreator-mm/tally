@@ -9,7 +9,7 @@
 | Parent family index | [Tally v2.1 #269](https://github.com/kaicreator-mm/tally/issues/269) — `INDEX_ONLY` |
 | ADS→Tally transfer and consumer candidate | [Tally #286](https://github.com/kaicreator-mm/tally/issues/286) |
 | Baseline of this documentation PR | `main@54576543cf877bc535bf33b3f39a178dbe80bf5c` |
-| Document state | `R1_TO_R15_DOCUMENTATION_MERGED / R18_D01_TO_D05_G1_ACCEPTED_MERGED_MAIN_8b1dc61 / R18_D06_ACCEPTED_MERGED_FFBF556 / R18_D07_G2_PENDING / R19_ABSTRACTION_KNOWLEDGE_GA_REVIEW_PENDING / NO_EXPERIMENT_OR_SOURCE_CLAIM_QUALIFICATION` |
+| Document state | `R1_TO_R15_DOCUMENTATION_MERGED / R18_D01_TO_D05_G1_ACCEPTED_MERGED_MAIN_8b1dc61 / R18_D06_ACCEPTED_MERGED_FFBF556 / R18_D07_G2_PENDING / R19_ABSTRACTION_KNOWLEDGE_GA_ACCEPTED_MERGED_D0A2408 / R19_CASEBOOK_GA2_REVIEW_PENDING / NO_EXPERIMENT_OR_SOURCE_CLAIM_QUALIFICATION` |
 | Knowledge qualification | `NOT_QUALIFIED` |
 | Package / Host / Agent runtime implementation | `NOT_IN_THIS_DOCUMENT_PR` |
 
@@ -24,13 +24,15 @@
 - [72 个外部权威/学科/工程实践来源目录](external-source-catalog.md)：出版方/维护状态、适用领域、许可/复制风险和规范与研究的区别。
 - [SWEBOK 18 KA × K01–K11 与相关学科映射](disciplinary-coverage.md)：将 18 个学科领域和系统工程、业务分析、质量、实证研究映射到现有 11 个模块；用户明确暂缓的两个专项不建设。
 - **11 个模块目录均已新增** `disciplinary-foundations.md`（可应用的学科知识）和 `external-practices.md`（企业/GitHub 开放实践与有界案例）；模块 `sources.md` 标识出处，`README.md` 提供按问题选用入口。
-- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 31 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） + 3 篇 R13 反馈驱动专业正文（K01/K03/K05） + 1 篇 R15 K05 测试夹具专业正文 + 5 篇 R18 K02/K03/K05/K09/K11 质量专业正文 + 3 篇 R19 K02/K03/K09 工程抽象专业正文 = 242 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
+- 当前真实文件形态：**99 个模块基础文件 + 11 份系统课程 + 22 篇两卷学科深化正文 + 6 篇 R4 定点专业深文 + 4 篇 R5 进阶推理正文 + 7 篇 R6 进阶正文 + 3 篇 R7 进阶学理正文 + 5 篇 R8 专业正文 + 5 篇 R9 专业正文 + 26 篇重点 Topic + 11 个原始导论 + 32 份版本级文档（含 W01–W22 演算、R7 缺口分析、R8/R9 来源适用/资格差距、R10 四项知识选择评价资产、R11 一个试验方案与 R12 一个 ADS 分阶段复杂任务方案） + 3 篇 R13 反馈驱动专业正文（K01/K03/K05） + 1 篇 R15 K05 测试夹具专业正文 + 5 篇 R18 K02/K03/K05/K09/K11 质量专业正文 + 3 篇 R19 K02/K03/K09 工程抽象专业正文 = 243 个 Markdown**。额外文档数量不等于新建 99 条已合格的知识记录。
 
 **R18 质量导向知识深化（D01–D05，G1 已独立 ACCEPT_SCOPED 且合并 main@8b1dc61，仅文档资格）**：[质量风险驱动的最小 Kxx 知识选择](professional-quality-risk-knowledge-selection-r18.md)；新增 [K02 架构质量与可证伪场景](K02/advanced-scenario-driven-architecture-quality-r18.md)、[K03 陌生读者代码可理解性](K03/advanced-code-comprehension-and-abstraction-quality-r18.md)、[K05 质量 Reviewer 校准](K05/advanced-quality-reviewer-calibration-r18.md)、[K09 陌生维护者增量修改](K09/advanced-stranger-maintainer-change-assay-r18.md)、[K11 首次/维护综合成本](K11/advanced-total-quality-cost-and-maintenance-economics-r18.md)。此增量是 **5 专业文档 +1 版本级选择指南**，只补充之前的知识选择/评价缺口；**D06–D10 实验未启动，不能宣称质量收益**。原 K01–K11 的 165 课程知识点、72 参考与原 Source 资格不因目录增加而改变。完整方法与阶段约束见 [#551 Task DAG](https://github.com/kaicreator-mm/tally/issues/551)。
 
 **R18 D06 质量评价协议（独立审核 ACCEPT_SCOPED、main@ffbf556 已合并，D07/G2 仍待资格审核）**：[前瞻性三家族 A/B 对照与样本冻结/泄漏边界](professional-r18-quality-study-preregistration.md)、[架构/代码理解/陌生维护者评价的中立操作量表](professional-r18-quality-evaluator-rubric.md)。公开协议不含 D07 的隐藏题目、参考解、维护需求或 QA 测试；仅在 D07 真实材料隔离并独立通过 G2 后才允许运行 Agent。当前 D06 已审核冻结但尚未运行实验，无任何 R18 Agent 执行与质量收益数据。
 
-**R19 工程抽象能力深化（新研究候选，#554 的 G-A 独立审核待定）**：[工程抽象知识选择及 A/B/C 处理差异](professional-engineering-abstraction-selection-r19.md)；三篇原创专业补充：[K02 从不变量与变化点选择职责边界](K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md)、[K03 内联/Helper/模块/公共接口的抽象粒度决策](K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md)、[K09 用后续变化反证坏抽象](K09/advanced-abstraction-evolution-and-change-locality-r19.md)。这部分**不加入 R18 冻结 B 知识切片**，不包含 R19 隐藏任务/QA/维护变更，也不授权 Tally/DomainHarness 运行时或生产 Source Claim。知识先独立审核，再做有界新实验；不能因新增文章宣称抽象能力已提升。
+**R19 工程抽象能力深化（G-A 已独立接受并合并 main@d0a2408，知识范围）**：[工程抽象知识选择及 A/B/C 处理差异](professional-engineering-abstraction-selection-r19.md)；三篇原创专业补充：[K02 从不变量与变化点选择职责边界](K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md)、[K03 内联/Helper/模块/公共接口的抽象粒度决策](K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md)、[K09 用后续变化反证坏抽象](K09/advanced-abstraction-evolution-and-change-locality-r19.md)。这部分**不加入 R18 冻结 B 知识切片**，不包含 R19 隐藏任务/QA/维护变更，也不授权 Tally/DomainHarness 运行时或生产 Source Claim。知识先独立审核，再做有界新实验；不能因新增文章宣称抽象能力已提升。
+
+**R19 对照案例库（8 例 / 4 对，新增候选，G-A2 独立审核待定）**：[抽象不足、错误共性、无谓模式、真正变化隔离的正反例及反转条件](professional-engineering-abstraction-contrastive-casebook-r19.md)。这是额外候选教学案例，只有审核接受并在 #554 G-B 前冻结实际可见字节后才能纳入 B/C 两组；它不等于 R19 隐藏试题，不得加入 #551 冻结实验。
 
 ## 体系化软件工程领域知识：从学科到底层服务
 
