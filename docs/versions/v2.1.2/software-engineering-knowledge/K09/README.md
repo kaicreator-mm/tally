@@ -14,6 +14,8 @@
 
 **R18 可维护性知识（新增候选，G1 独立审核待定）**：[原始实现冻结后的陌生维护者变更、旧新合同、变化传播与真实成本](advanced-stranger-maintainer-change-assay-r18.md)；区别维护难度的实际观察和作者对自身架构的主观断言。无有权增量需求时不声称已经验证维护收益，跨模块选择参阅 [R18](../professional-quality-risk-knowledge-selection-r18.md)。
 
+**R19 工程抽象专题（新知识候选，G-A 独立审核待定）**：[抽象不足、错误抽象、过度抽象在真实后续变更中的纠正方法](advanced-abstraction-evolution-and-change-locality-r19.md)。用陌生维护者与旧新合同回归验证变化隔离，不以 touched-file 数量判定模块优劣；参阅 [R19 知识选择](../professional-engineering-abstraction-selection-r19.md)。
+
 **先了解整个专业学科，再按需选择问题**： [K09 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
 ## 当前工程问题索引（优先入口）
