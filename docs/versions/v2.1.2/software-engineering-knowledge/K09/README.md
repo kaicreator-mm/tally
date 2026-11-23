@@ -12,9 +12,9 @@
 
 **R9 专业基础及可证伪失效机制（新增待限定独立审核）**：[首次配置/数据语义迁移与回归影响闭包](advanced-configuration-migration-and-evidence-impact-closure.md)，对原系统课程中 **2 个历史高优先知识点**新增准确 A 专业正文关联；[W18–W22](../professional-reasoning-worked-traces-04.md) 是合成推理，[Source→Claim→Oracle 准入差距](../professional-source-to-claim-readiness-r9.md) 明确保留无真实权限/未运行证据。不是实际 Source Claim、Consumer ABI、Agent/Host/Release 资格。
 
-**R18 可维护性知识（新增候选，G1 独立审核待定）**：[原始实现冻结后的陌生维护者变更、旧新合同、变化传播与真实成本](advanced-stranger-maintainer-change-assay-r18.md)；区别维护难度的实际观察和作者对自身架构的主观断言。无有权增量需求时不声称已经验证维护收益，跨模块选择参阅 [R18](../professional-quality-risk-knowledge-selection-r18.md)。
+**R18 可维护性知识（新增候选，G1 已独立接受并合并）**：[原始实现冻结后的陌生维护者变更、旧新合同、变化传播与真实成本](advanced-stranger-maintainer-change-assay-r18.md)；区别维护难度的实际观察和作者对自身架构的主观断言。无有权增量需求时不声称已经验证维护收益，跨模块选择参阅 [R18](../professional-quality-risk-knowledge-selection-r18.md)。
 
-**R19 工程抽象专题（新知识候选，G-A 独立审核待定）**：[抽象不足、错误抽象、过度抽象在真实后续变更中的纠正方法](advanced-abstraction-evolution-and-change-locality-r19.md)。用陌生维护者与旧新合同回归验证变化隔离，不以 touched-file 数量判定模块优劣；参阅 [R19 知识选择](../professional-engineering-abstraction-selection-r19.md)。
+**R19 工程抽象专题（新知识候选，G-A 已独立接受并合并）**：[抽象不足、错误抽象、过度抽象在真实后续变更中的纠正方法](advanced-abstraction-evolution-and-change-locality-r19.md)。用陌生维护者与旧新合同回归验证变化隔离，不以 touched-file 数量判定模块优劣；参阅 [R19 知识选择](../professional-engineering-abstraction-selection-r19.md) 与 [正反对照案例库](../professional-engineering-abstraction-contrastive-casebook-r19.md)（G-A2 待审）。
 
 **先了解整个专业学科，再按需选择问题**： [K09 系统课程：5 个知识群 / 15 个专业知识点](systematic-syllabus.md) 用于完整概念、原理和常见反例的持续积累；下表是每次任务的有界检索入口，并非该模块的全部知识。课程内容尚未得到 Source Claim/Domain Package 生产资格。
 
