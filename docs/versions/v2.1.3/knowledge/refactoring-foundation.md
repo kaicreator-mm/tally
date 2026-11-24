@@ -4,6 +4,10 @@
 >
 > 来源基线：Tally main@c6d2c8404072f38f2bf946a7f77ce0c712621516；原知识在 [v2.1.2 系统知识架构](../../v2.1.2/software-engineering-knowledge/systematic-knowledge-architecture.md)、[课程覆盖台账](../../v2.1.2/software-engineering-knowledge/foundation-concept-coverage-ledger.md)、[概念关系](../../v2.1.2/software-engineering-knowledge/cross-module-knowledge-relations.md)。165 原课程知识点、48 原概念关系、原 Source/Claim 状态均不改变。当前新增的专业推论属于 DOCUMENT_CANDIDATE / ADVISORY，不是新增合格 Claim 或 ADS 强制 Rule。
 
+## 案例库入口
+
+[Software Engineering Casebook](casebook/README.md) 是同一软件工程知识体系的按问题索引视图。第一批 12 个架构案例、16 个模块/功能/代码抽象案例及 12 个原创设计反例，覆盖 19 个已读外部项目的 20 个实际 Git Blob。通过软件类型、功能族、架构机制及粒度选择参考；原 Kxx 定义与专业原理不复制，源观察与推论、实际运行与拟议验证、真实项目与原创案例分别标记。未来继续补真实产品视图、功能多方案对照及历史演进案例，不编写新的业务或 DomainHarness 代码。
+
 ## 1. 稳定知识与易变实现分离
 
 | 层 | 主要内容 | 所有权与变化原因 |
