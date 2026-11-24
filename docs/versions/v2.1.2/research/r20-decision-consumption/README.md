@@ -1,6 +1,6 @@
 # R20 · Decision-time knowledge consumption reference
 
-Status: RESEARCH_REFERENCE / T1_T2_BOUNDED_CALIBRATION / NO_PRODUCT_INTEGRATION. See [#561](https://github.com/kaicreator-mm/tally/issues/561).
+Status: RESEARCH_REFERENCE / T1_T2_PASS_SCOPED / T3_REAL_SOURCE_DELIVERED / T3_TESTED_ORACLES_PASS / T3_PUBLIC_CONTRACT_PARTIAL / T4_MECHANISM_PASS_SCOPED / NO_PRODUCT_INTEGRATION. See [#561](https://github.com/kaicreator-mm/tally/issues/561).
 
 This small, offline Node.js reference consumes caller-assessed decision facts, not natural-language risk recognition. It materializes exact advisory excerpts, not authorized business rules or proof of Agent comprehension. It is not a Tally/DH runtime, SDK, agent loop, or second knowledge owner. No production import or packaging configuration is changed.
 
@@ -41,11 +41,13 @@ Local tested file Git blob IDs:
 - catalog.json: 28c76328d2b590154f73708c3d830e92318271f2
 - example.json: a35555522125cafd109b71960ef8df3007fc2b8f
 
-No production integration, CI or Windows runtime tests run. T3 must validate a genuine bounded authorized code decision using source facts, exact task baseline, first code SHA, authorized falsifier and actual execution; do not repeat R19-F2.
+T1/T2 calibration did not run production integration, CI or Windows runtime tests. The subsequent T3 pilot and its evidence qualifications are recorded below; do not repeat R19-F2.
 
 ## T3/T4 — real source pilot and scoped reference correction
 
 See [T3 frozen task](pilot-claim-manifest/TASK.md), [Builder evidence](pilot-claim-manifest/agent-evidence.md), and [T4 analysis](T4-analysis.md). T3 original candidate remains pinned to `362ca5604845ffaa2ec1664ad27514b6564511d9`; the earlier T1/T2 test and example records above are historical, not overwritten. The T3 source mirror and original evidence are not a production patch.
+
+**T3: REAL_SOURCE_DELIVERED / TESTED_ORACLES_PASS / PUBLIC_CONTRACT_PARTIAL.** Tested long-frame roundtrip and regression oracles pass within their coverage, but [independent review #7145095201](https://github.com/kaicreator-mm/tally/issues/561#issuecomment-7145095201) observed that the entire 28-byte body of a 191-byte provider was decoded within the 4096-byte window, contrary to the frozen prohibition. Parsed but invalid-shaped metadata was classified MISMATCH under the historical interpretation; INVALID versus MISMATCH remains an Owner decision for any later authorized product patch. See T4 analysis for the exact counterexample and evidence limitations. No original code, task, oracle, or result is retrospectively changed. T4 reference mechanism passed scoped independent review; research archive qualification remains subject to the limited document correction review.
 
 Before selecting, optionally run:
 
@@ -60,4 +62,4 @@ Read the compact routing descriptions rather than loading the whole catalog. The
 
 The report JSON contains receiptSha256 and pieces, one entry per delivered ID, each with id, read (YES/NO/UNKNOWN), outcome (APPLIED/ALREADY_ALIGNED/REJECTED/UNKNOWN), and reason. APPLIED/ALREADY_ALIGNED also require textual before/after decisions and read YES; APPLIED means a reported changed decision, not automatically a verified better decision. The new helper checks integrity and internal consistency, not the authenticity of receipt provenance, source authority, or actual reading/quality. No automatic learning or rule promotion.
 
-The eight new tests are synthetic calibration of the helper; they do not demonstrate better selection by a real Agent. T3 receipt reported 3 pieces, 3324 UTF-8 excerpt bytes, and unchanged design; no measured knowledge benefit. Keep historical T3 results unchanged. Production packaging exclusion and real production correction remain outside this PR.
+The eight new tests are synthetic calibration of the helper; they do not demonstrate better selection by a real Agent. T3 receipt reported 3 pieces, 3324 UTF-8 excerpt bytes, and unchanged design; actual source delivery is verified but reading/consumption is reported, and causal knowledge benefit is NOT_ESTABLISHED. No full public contract acceptance is claimed. Keep historical T3 results unchanged. Production packaging exclusion and real production correction remain outside this PR.
