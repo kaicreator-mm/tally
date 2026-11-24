@@ -1,0 +1,77 @@
+{
+  "sourceSha": "874702df43a7563b624b270fb2389c368050408b",
+  "entries": [
+    {
+      "id": "boundary",
+      "path": "K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+      "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+      "start": 21,
+      "end": 25,
+      "text": "| 1. 来源 | 当前有权的 FR、质量属性、用户/消费者和数据来源 | 列出当前必须成立的*不变量*以及支持它的 Source，不补编需求 | `ASK/UNKNOWN`，不创建猜测的领域类型 |\n| 2. 变动 | 哪些行为已经不同，哪些将被授权独立变化 | 对每个变化列出触发、Owner、可能影响的消费者；未来猜测标 `SPECULATIVE` | 未知未来不以“以后可能变”创建公共 API |\n| 3. 共性 | 候选操作是否有相同输入/输出、授权、错误、事务、幂等和清理语义 | 逐项寻找反例；若存在一个不相容的稳定差异，就不强行并入单一公共行为 | `WRONG_ABSTRACTION_RISK` |\n| 4. 隐藏 | 让何种内部选择变化时消费者无需了解/同步修改 | 指定模块 Owner 与允许/禁止的直接依赖；明示要隐藏的内部决策 | 若没有确定的“要隐藏什么”，不要凭模式增加接口 |\n| 5. 备选 | 不抽象 / 局部 helper / 专属模块 / 稳定边界接口 / 可替换策略 | 比较至少两个*实际可行*方案的真实依赖、调试、故障、变更传播和学习成本 | 不以多层架构天然优于简单实现 |",
+      "sha256": "01569174d2a7424ddcee94e8066b1d37f36050650c86b1f75df16ecc47350253"
+    },
+    {
+      "id": "alias",
+      "path": "K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+      "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+      "start": 51,
+      "end": 51,
+      "text": "[R19-F2 研究反馈](../professional-abstraction-empirical-feedback-r19f2.md) 提示：模块是某份内部状态的唯一写入 Owner，**并不自动意味着构造器/方法接收的可变入参已经被复制、冻结或取得排他所有权**。调用者仍持有原对象引用只说明技术上可能写入，不代表合同授权写入。若合同要求快照，应验证外部合法可变写入是否改变已承诺的可观察行为，或是否违反显式独立对象身份/复制义务；不可变共享、满足隔离合同的写时复制也可能正确。应按现行授权合同确认 `COPY_SNAPSHOT`、`SHARED_MUTABLE` 或 `IMMUTABLE_BORROW` 等交接语义，再找可执行反例；**不能默认所有入参都必须深拷贝**。若 Source 未规定，标 `SOURCE_UNSPECIFIED`，不可用隐藏 QA 或审核者个人偏好替 Owner 创造需求。",
+      "sha256": "da87c75c43c938a5e05911e2a41d26d7a7757b223bb7b48c1324d64be359c959"
+    },
+    {
+      "id": "abstraction",
+      "path": "K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md",
+      "blob": "a1e640efb9866f1981a80f43d64c661635d52c64",
+      "start": 19,
+      "end": 24,
+      "text": "| **保持内联** | 逻辑局部、短且无真实复用或独立变化，额外接口不降低认知负担 | 最短行为路径，无隐藏 indirection | 大量散落的同一行为导致修改遗漏 |\n| **局部 private helper** | 同一个 Owner 内多个点共享已证明相同机制，不需要跨包消费者 | 统一算法/校验，保留局部阅读 | 把不同错误/权限隐藏成一个布尔开关 |\n| **领域模块/文件内聚** | 一组不变量、状态/资源生命周期和变化原因由同一 Owner 管理 | 隔离变化，把责任、测试和失败收口 | 仅按动词拆模块导致共享状态失控 |\n| **窄公共接口/契约** | 存在真实异构消费者、稳定替换边界或独立发布/兼容要求 | 隐藏实现细节、减少非必要传播 | 因为一个调用者就引入接口、Adapter、Registry 或额外版本承诺 |\n| **Strategy/可插拔 Provider** | 被授权的动态扩展/替换、多个实现共享同等合同而非只是同名 | 显式合法变化轴，可受控替换 | 两种实现有根本不同的错误/事务/信任语义，被强行统一 |\n",
+      "sha256": "30af3c68a79af7b8f34efba3b3740ef10529f723d76f10cd4378759127b642bb"
+    },
+    {
+      "id": "precision",
+      "path": "K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md",
+      "blob": "a1e640efb9866f1981a80f43d64c661635d52c64",
+      "start": 52,
+      "end": 54,
+      "text": "[R19-F2 研究反馈](../professional-abstraction-empirical-feedback-r19f2.md) 记录了一个跨多个实现的 JS 时间边界反例：输入均为安全整数，并不保证窗口端点计算、下一周期、重试倒计时的**中间运算**不会产生舍入误差。对有明确高精度合法域的任务，应设计接近整数/时间边界的可证伪测试，核对完整表达式范围；根据现行合同选择安全的差值/余数推导、范围限制或 BigInt。缺少精度要求时先向 Source Owner 确认，而不是机械要求更复杂的架构。\n\n这一条属于**行为正确性/输入语义**，不因出现数字 bug 就自动计成 UNDER、WRONG 或 OVER 抽象；若要判为抽象错误，Reviewer 应证明失效与具体抽象决策（例如领域表示、语义合并、共享机制、Owner 边界或抽象粒度）的因果联系。例如局部领域类型把精确整数与近似测量值统一成舍入表示，导致合法精确值不可表达，即使没有跨模块共享也可能是 WRONG；若只是公式或实现 bug，则记录行为缺陷，不自动贴抽象标签。",
+      "sha256": "34a351c9b466c0a8c16a40d36ba0f27ee8776da2d515970eed3caefa4e032809"
+    },
+    {
+      "id": "oracle",
+      "path": "K05/advanced-quality-reviewer-calibration-r18.md",
+      "blob": "8ae8fe2b652407aa300bf60336c0e7930b42b992",
+      "start": 53,
+      "end": 55,
+      "text": "[R19-F2 真实代码测量](../professional-abstraction-empirical-feedback-r19f2.md) 显示，隐藏断言如果要求明文任务未约定的入参所有权或输入合法域，就会把**合理但不同的合同解读**误当组间模型差异。研究开始前需建立 `SOURCE -> INPUT_DOMAIN -> OBSERVABLE_CONTRACT -> ORACLE` 映射，分 `DECLARED / DERIVED / ENGINEERING_HYPOTHESIS`；最后一种不能决定主要 PASS/FAIL。原始结果应保留，事后只能做有标注的敏感性分析。\n\n在另一个数值极值反例上，同根缺陷出现于多份真实代码，但多数 Reviewer 给出 `JUST_ENOUGH`。发现了新反例后应在**不改原始首判**的前提下，对全部相关匿名候选做对等重放，单列 `POST_REVIEW_FALSIFIER`；仅在授权真值已确认、反例可复现且属于原评审职责和覆盖域时，才标 `FALSE_NEGATIVE`，否则记为新观察或 `UNKNOWN`，保留来源与覆盖限制，不能用仲裁后的一个总标签声称没有其它缺陷。",
+      "sha256": "ab529db414bada114e576525d8122d8a7a873c5248ab8cedcad95fa5c880dc17"
+    },
+    {
+      "id": "maintenance",
+      "path": "K09/advanced-abstraction-evolution-and-change-locality-r19.md",
+      "blob": "24ff478fddf6aa0dabbd165f6c3af770b3a5a94f",
+      "start": 45,
+      "end": 47,
+      "text": "[R19-F2 真实维护反馈](../professional-abstraction-empirical-feedback-r19f2.md) 中，12 个陌生维护提交都通过新增需求测试，原冻结旧 QA 未检出新增失败，但十个候选的既有旧测试失败继续存在；这并不等于十个候选均违反已授权功能合同，也不证明未覆盖行为没有回归。故 `NEW_FEATURE_PASS`、`NO_NEW_REGRESSION`（限定于实际运行且有权的测试覆盖）、`ALL_OLD_AND_NEW_PASS` 不是同一指标。维护账本应分别保留 `OLD_AT_FIRST / OLD_AFTER / NEW_BEHAVIOR / FIXED_PREEXISTING_DEFECT / INTRODUCED_REGRESSION / OWNER_TOUCH_SET / MAINTENANCE_COST`；不能从“成功完成维护修改”推出“抽象更优”，也不能把首次既存错误错误计成维护引入的回归。\n\n若某个隐藏旧 Oracle 检查的是公开 Source 未规定的行为，还须另外标 `SOURCE_UNSPECIFIED_ORACLE`，防止对维护效果作错误比较；不要事后修改原研究 QA 和原始通过率。",
+      "sha256": "12e191c706ebdb401fbfd898cfc1c62dd1e82288e6b4bedc8393f8bd3e16c167"
+    },
+    {
+      "id": "effects",
+      "path": "professional-risk-gated-knowledge-selection-r15.md",
+      "blob": "b5281db44c2c222f295404bffd7850dd016ef017",
+      "start": 21,
+      "end": 23,
+      "text": "| **并发写入、可恢复的本地持久状态** | L2：K02 状态 Owner / 崩溃切点；选定方案后 L3：K03 文件/DB 原语；验证：K05 不变量负例 | 实际可持久观察的状态序列、提交点、竞争处理、真实 OS/FS 前提和独立测试 | 条件创建 `wx` ≠ 业务事务；`rename` ≠ 一切介质上的掉电耐久保证 |\n| **外部 Effect / 发送成功但 ACK 丢失** | K02 业务与外部 Effect 的提交边界；K03 有条件回读/恢复；K05 作用数、冲突/UNKNOWN 的反例；需要时 K10 | 明确“权威状态读回”的所有者和事务外副作用表；不能确定的记 UNKNOWN | 本地存储 Commit 不能代表外部接收方 Effect 已提交；超时不能直接报告未发生 |\n| **版本前置条件、跨 Writer 冲突** | K01 真正错误合同 → K02 原子性范围 → K03 并发/回读实现 → K05 顺序旧版本 + 竞争者两类独立 Oracle | `CONFLICT`、`CORRUPT`、`UNKNOWN` 的有权判别和不可变事实 | 文件已存在或被锁占用 ≠ 一定损坏；竞态冲突测试不能替代顺序 `--expect` 测试 |",
+      "sha256": "808d7fc4a43120d53a34a01b1f75c73f1f249903e7aeddaad1c0b0f23c29c6d1"
+    },
+    {
+      "id": "cost",
+      "path": "K11/advanced-total-quality-cost-and-maintenance-economics-r18.md",
+      "blob": "a2259067aaabae733b4bad6682336eebd83d7ecd",
+      "start": 30,
+      "end": 32,
+      "text": "对每个任务同时保存 `INITIAL_QUALITY`、`FIRST_S5_FUNCTIONAL_GATE`、`MAINTENANCE_OLD_NEW_CONTRACT_GATE`、`TOTAL_COST_BY_UNIT`、`HARD_FAILURE` 和 `UNCERTAINTY`。只有在合同质量和关键安全下限可比较时，讨论在质量维度相似下哪个更省成本；若某组破坏有权隔离或数据完整性，即使最省 Token 也必须单列严重失败，而不是经济最优。\n\n**帕累托判断**：一个候选在所有相关已授权质量维度和成本维度都不差，且至少一维严格改善，才可在样本范围内说它在这些指标上占优；不能默认“可读性好 10 分，性能差 10%”可以抵消，除非 Owner 已经明确接受这种权衡。在不同质量目标上互有优劣时，报告 `TRADEOFF_NOT_DOMINANCE`。",
+      "sha256": "a4c1b1978bddd550b27ea22cdd2d516d94857d22415638ccdc68106e8b0ae493"
+    }
+  ]
+}
