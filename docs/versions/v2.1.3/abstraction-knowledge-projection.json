@@ -1,0 +1,397 @@
+{
+  "kind": "TALLY_ENGINEERING_ABSTRACTION_PROJECTION_CANDIDATE",
+  "sourceSha": "3c9241d7a08a39b8a9865b7b7d221339a0f145e3",
+  "qualification": "DESIGN_ONLY_NOT_SOURCE_CLAIM_QUALIFIED_NOT_RULE",
+  "concepts": [
+    {
+      "id": "K01.F2.2",
+      "owner": "K01",
+      "kind": "CONCEPT",
+      "label": "事实/假设/未知分类",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K01/systematic-syllabus.md",
+        "blob": "b9f707fdfb5b14233b4fa07c8e2ba55813b12dca",
+        "lines": [
+          48,
+          54
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K01.F3.3",
+      "owner": "K01",
+      "kind": "CONCEPT",
+      "label": "业务不变量与可推理约束",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K01/systematic-syllabus.md",
+        "blob": "b9f707fdfb5b14233b4fa07c8e2ba55813b12dca",
+        "lines": [
+          83,
+          89
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K01.F4.1",
+      "owner": "K01",
+      "kind": "CONCEPT",
+      "label": "功能合同与边界用例",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K01/systematic-syllabus.md",
+        "blob": "b9f707fdfb5b14233b4fa07c8e2ba55813b12dca",
+        "lines": [
+          94,
+          100
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K01.F5.1",
+      "owner": "K01",
+      "kind": "CONCEPT",
+      "label": "同条件冲突判定",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K01/systematic-syllabus.md",
+        "blob": "b9f707fdfb5b14233b4fa07c8e2ba55813b12dca",
+        "lines": [
+          121,
+          127
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K02.F2.1",
+      "owner": "K02",
+      "kind": "CONCEPT",
+      "label": "模块/组件边界",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md",
+        "blob": "6eb9fac7afb8fc666b50cbc35d1d324f3564a5b7",
+        "lines": [
+          40,
+          46
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K02.F2.2",
+      "owner": "K02",
+      "kind": "CONCEPT",
+      "label": "接口契约与错误语义",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md",
+        "blob": "6eb9fac7afb8fc666b50cbc35d1d324f3564a5b7",
+        "lines": [
+          48,
+          54
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K02.F2.3",
+      "owner": "K02",
+      "kind": "CONCEPT",
+      "label": "依赖方向与扩展点",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md",
+        "blob": "6eb9fac7afb8fc666b50cbc35d1d324f3564a5b7",
+        "lines": [
+          56,
+          62
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K02.F3.1",
+      "owner": "K02",
+      "kind": "CONCEPT",
+      "label": "状态所有权与事务",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md",
+        "blob": "6eb9fac7afb8fc666b50cbc35d1d324f3564a5b7",
+        "lines": [
+          67,
+          73
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K02.F4.2",
+      "owner": "K02",
+      "kind": "CONCEPT",
+      "label": "架构权衡与可证伪 Demo",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md",
+        "blob": "6eb9fac7afb8fc666b50cbc35d1d324f3564a5b7",
+        "lines": [
+          102,
+          108
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K03.F2.1",
+      "owner": "K03",
+      "kind": "CONCEPT",
+      "label": "模块/接口/内聚",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K03/systematic-syllabus.md",
+        "blob": "96aa14f7003c24d1e864e4e92f741a2a4e9dcf7c",
+        "lines": [
+          40,
+          46
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K03.F2.3",
+      "owner": "K03",
+      "kind": "CONCEPT",
+      "label": "可读性与可维护性",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K03/systematic-syllabus.md",
+        "blob": "96aa14f7003c24d1e864e4e92f741a2a4e9dcf7c",
+        "lines": [
+          56,
+          62
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K03.F5.1",
+      "owner": "K03",
+      "kind": "CONCEPT",
+      "label": "异常分类和可行动错误",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K03/systematic-syllabus.md",
+        "blob": "96aa14f7003c24d1e864e4e92f741a2a4e9dcf7c",
+        "lines": [
+          121,
+          127
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K05.F1.1",
+      "owner": "K05",
+      "kind": "CONCEPT",
+      "label": "测试与证明的范围",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/systematic-syllabus.md",
+        "blob": "68d89f9df43dd1e2b6e9a600f63f62032c13b525",
+        "lines": [
+          13,
+          19
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K05.F1.2",
+      "owner": "K05",
+      "kind": "CONCEPT",
+      "label": "业务来源驱动 Oracle",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/systematic-syllabus.md",
+        "blob": "68d89f9df43dd1e2b6e9a600f63f62032c13b525",
+        "lines": [
+          21,
+          27
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K05.F4.1",
+      "owner": "K05",
+      "kind": "CONCEPT",
+      "label": "实际发现/执行",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/systematic-syllabus.md",
+        "blob": "68d89f9df43dd1e2b6e9a600f63f62032c13b525",
+        "lines": [
+          94,
+          100
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "id": "K05.F5.3",
+      "owner": "K05",
+      "kind": "CONCEPT",
+      "label": "测试结果与权威",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/systematic-syllabus.md",
+        "blob": "68d89f9df43dd1e2b6e9a600f63f62032c13b525",
+        "lines": [
+          137,
+          143
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    }
+  ],
+  "relations": [
+    {
+      "from": "K01.F3.3",
+      "predicate": "SUPPORTS",
+      "to": "K05.F1.2",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/cross-module-knowledge-relations.md",
+        "blob": "e9507a51f35a8e12bd0e6e17dc37580c5b52a0dd",
+        "lines": [
+          20,
+          20
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "from": "K02.F2.1",
+      "predicate": "REFINED_BY",
+      "to": "K03.F2.1",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/cross-module-knowledge-relations.md",
+        "blob": "e9507a51f35a8e12bd0e6e17dc37580c5b52a0dd",
+        "lines": [
+          24,
+          24
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    },
+    {
+      "from": "K05.F1.2",
+      "predicate": "CONTEXT_FOR",
+      "to": "K01.F3.3",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/cross-module-knowledge-relations.md",
+        "blob": "e9507a51f35a8e12bd0e6e17dc37580c5b52a0dd",
+        "lines": [
+          41,
+          41
+        ]
+      },
+      "qualification": "DOCUMENT_CANDIDATE"
+    }
+  ],
+  "procedures": [
+    {
+      "id": "DP-K02-R19-01",
+      "owner": "K02",
+      "kind": "DECISION_PROCEDURE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+        "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+        "lines": [
+          17,
+          28
+        ]
+      },
+      "conceptRefs": [
+        "K01.F2.2",
+        "K01.F3.3",
+        "K02.F2.1",
+        "K02.F2.2",
+        "K02.F2.3",
+        "K02.F3.1",
+        "K02.F4.2"
+      ],
+      "qualification": "ADVISORY_CANDIDATE_NOT_RULE"
+    },
+    {
+      "id": "DP-K03-R19-01",
+      "owner": "K03",
+      "kind": "DECISION_PROCEDURE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md",
+        "blob": "a1e640efb9866f1981a80f43d64c661635d52c64",
+        "lines": [
+          7,
+          38
+        ]
+      },
+      "conceptRefs": [
+        "K02.F2.1",
+        "K02.F2.2",
+        "K03.F2.1",
+        "K03.F2.3",
+        "K03.F5.1"
+      ],
+      "qualification": "ADVISORY_CANDIDATE_NOT_RULE"
+    },
+    {
+      "id": "K05.ORACLE",
+      "owner": "K05",
+      "kind": "KNOWLEDGE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/advanced-quality-reviewer-calibration-r18.md",
+        "blob": "8ae8fe2b652407aa300bf60336c0e7930b42b992",
+        "lines": [
+          51,
+          55
+        ]
+      },
+      "conceptRefs": [
+        "K01.F3.3",
+        "K01.F4.1",
+        "K05.F1.1",
+        "K05.F1.2",
+        "K05.F4.1",
+        "K05.F5.3"
+      ],
+      "qualification": "ADVISORY_CANDIDATE_NOT_RULE"
+    }
+  ],
+  "priorGraph": {
+    "sourceSha": "3e94685ca57a4b7258988826697af1c1c3a6b3c8",
+    "path": "docs/versions/v2.1.1/knowledge/generated/graph.jsonld",
+    "blob": "0f6007315fd7352fe6fd218effcfecf672cb4961",
+    "nodeCount": 807,
+    "claimCount": 106,
+    "crosswalk": [
+      {
+        "graphId": "se:CON-07A-ABSTRACTION-LEVELS",
+        "conceptId": "K02.F2.1",
+        "originalStatus": "PROPOSED",
+        "mapping": "RELATED_CONTEXT_NOT_EQUIVALENCE",
+        "qualification": "REFERENCE_ONLY"
+      },
+      {
+        "graphId": "se:CON-ARC-DESIGN-ABSTRACTION-LEVELS",
+        "conceptId": "K02.F2.1",
+        "originalStatus": "PENDING_REVIEW",
+        "mapping": "RELATED_CONTEXT_NOT_EQUIVALENCE",
+        "qualification": "REFERENCE_ONLY"
+      },
+      {
+        "graphId": "se:CON-ARC-COUPLING-COHESION",
+        "conceptId": "K03.F2.1",
+        "originalStatus": "PENDING_REVIEW",
+        "mapping": "RELATED_CONTEXT_NOT_EQUIVALENCE",
+        "qualification": "REFERENCE_ONLY"
+      },
+      {
+        "graphId": "se:CON-ARC-SEPARATION-OF-CONCERNS",
+        "conceptId": "K02.F2.1",
+        "originalStatus": "PENDING_REVIEW",
+        "mapping": "RELATED_CONTEXT_NOT_EQUIVALENCE",
+        "qualification": "REFERENCE_ONLY"
+      }
+    ]
+  },
+  "rules": []
+}
