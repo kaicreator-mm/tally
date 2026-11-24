@@ -1,0 +1,1 @@
+{"decisionId":"example","issue":"#561 synthetic calibration","sourceSha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","stage":"L2","question":"Should configuration be copied?","contract":"CONFIRMED","contractEvidence":"Example contract explicitly promises snapshot behavior.","risks":[{"id":"alias","applicability":"YES","evidence":"Caller retains mutable config reference."}]}
