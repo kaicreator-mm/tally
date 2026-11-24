@@ -214,7 +214,7 @@
       "id": "A27",
       "l1": "A1/A6",
       "scenario": "超限拒绝",
-      "inputIntent": "otherwise well-formed inputs at limit+1 independently: 6 candidates, 65 facts, 129 evidence records, 129 total refs; Validator 65 obligations or 129 observations; repeated refs count",
+      "inputIntent": "otherwise well-formed inputs at limit+1 independently: 6 candidates, 10 dimension records in one candidate, 65 facts, 129 evidence records, 129 total refs; Validator 65 obligations or 129 observations; repeated refs count",
       "expected": "REJECT / INPUT_LIMIT_EXCEEDED; no truncation/partial assessment",
       "status": "DESIGN_ORACLE_NOT_RUN"
     },
@@ -238,7 +238,7 @@
       "id": "A30",
       "l1": "A5",
       "scenario": "缩小合同义务集合",
-      "inputIntent": "known authorized universe has two obligations; caller sends only one green obligation, no evidence of the second",
+      "inputIntent": "known authorized universe has two obligations; caller supplies observations only for one green obligation, no evidence of the second",
       "expected": "first OBSERVED_PASS_SCOPED if independently qualified; second UNKNOWN; aggregate UNKNOWN; use authorized universe",
       "status": "DESIGN_ORACLE_NOT_RUN"
     },
@@ -344,6 +344,14 @@
       "scenario": "声明覆盖范围不足",
       "inputIntent": "sole authorized obligation, verified authorized current passing execution covers only a strict subset of declared scope; no other observations",
       "expected": "UNKNOWN; aggregate UNKNOWN; no scoped PASS for full declared scope",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A44",
+      "l1": "A5",
+      "scenario": "已核对观察内容被替换",
+      "inputIntent": "trusted confirmation for a current executed observation with partial passing coverage; ordinary input reuses the observationId but changes coverage to full (or replaces result/Oracle)",
+      "expected": "modified ordinary observation not qualified; original verified partial coverage remains UNKNOWN; aggregate UNKNOWN; no pass based on ID",
       "status": "DESIGN_ORACLE_NOT_RUN"
     }
   ]
