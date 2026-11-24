@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { resolveClaimBuildTarget, markClaimProviderTarget, assertClaimProviderTarget } from './claim-target.mjs';
+const target = (o, r, issue='1234567890') => resolveClaimBuildTarget({T06L_TARGET_REPOSITORY:'a'.repeat(o)+'/'+'b'.repeat(r),T06L_TARGET_ISSUE_NUMBER:issue});
+const code='export const accepted=false;';
+const marked=t=>Buffer.from(markClaimProviderTarget(code,t),'utf8');
+test('ordinary producer/reader round-trip',()=>{const t=target(12,20);assert.doesNotThrow(()=>assertClaimProviderTarget(marked(t),t));});
+test('long admitted target round-trips',()=>{const t=target(39,100);assert.doesNotThrow(()=>assertClaimProviderTarget(marked(t),t));});
+test('wrong target is rejected',()=>{const t=target(12,20);assert.throws(()=>assertClaimProviderTarget(marked(t),target(12,20,'1234567891')),/T06L_PROVIDER_TARGET_MISMATCH/);});
+test('long wrong target remains a mismatch',()=>{const t=target(39,100);assert.throws(()=>assertClaimProviderTarget(marked(t),target(39,100,'1234567891')),/T06L_PROVIDER_TARGET_MISMATCH/);});
+test('malformed marker and missing selected marker rejected',()=>{const t=target(12,20);assert.throws(()=>assertClaimProviderTarget(Buffer.from('// TALLY_T06L_BUILD_TARGET_V1=!!\n'+code),t),/T06L_PROVIDER_TARGET_MANIFEST_INVALID/);assert.throws(()=>assertClaimProviderTarget(Buffer.from(code),t),/T06L_PROVIDER_TARGET_MANIFEST_MISSING/);});
+test('selected marker must end in LF',()=>{const t=target(12,20);const b=marked(t);assert.throws(()=>assertClaimProviderTarget(b.subarray(0,b.indexOf(10)),t),/T06L_PROVIDER_TARGET_MANIFEST_INVALID/);});
+test('oversize manifest is rejected by writer and reader',()=>{const t=target(2000,2000);assert.throws(()=>markClaimProviderTarget(code,t),/T06L_PROVIDER_TARGET_INVALID/);const b=Buffer.from('// TALLY_T06L_BUILD_TARGET_V1='+ 'A'.repeat(4096)+'\n'+code);assert.throws(()=>assertClaimProviderTarget(b,t),/T06L_PROVIDER_TARGET_MANIFEST_INVALID/);});
+test('historical markerless compatibility preserved; selected body bytes ignored',()=>{const legacy=resolveClaimBuildTarget({});assert.doesNotThrow(()=>assertClaimProviderTarget(Buffer.from(code),legacy));const t=target(12,20);const b=Buffer.concat([marked(t),Buffer.alloc(20000,0xff)]);assert.doesNotThrow(()=>assertClaimProviderTarget(b,t));});
