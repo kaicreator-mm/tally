@@ -48,7 +48,7 @@
 
 ## R19-F2 反馈候选：权威状态 Owner 与输入对象引用所有权需分开判定
 
-[R19-F2 研究反馈](../professional-abstraction-empirical-feedback-r19f2.md) 提示：模块是某份内部状态的唯一写入 Owner，**并不自动意味着构造器/方法接收的可变入参已经被复制、冻结或取得排他所有权**。调用者仍持有原对象引用时，其后续写入可能影响保存该对象的模块。应按现行授权合同确认 `COPY_SNAPSHOT`、`SHARED_MUTABLE` 或 `IMMUTABLE_BORROW` 等交接语义，再找可执行反例；**不能默认所有入参都必须深拷贝**。若 Source 未规定，标 `SOURCE_UNSPECIFIED`，不可用隐藏 QA 或审核者个人偏好替 Owner 创造需求。
+[R19-F2 研究反馈](../professional-abstraction-empirical-feedback-r19f2.md) 提示：模块是某份内部状态的唯一写入 Owner，**并不自动意味着构造器/方法接收的可变入参已经被复制、冻结或取得排他所有权**。调用者仍持有原对象引用只说明技术上可能写入，不代表合同授权写入。若合同要求快照，应验证外部合法可变写入是否改变已承诺的可观察行为，或是否违反显式独立对象身份/复制义务；不可变共享、满足隔离合同的写时复制也可能正确。应按现行授权合同确认 `COPY_SNAPSHOT`、`SHARED_MUTABLE` 或 `IMMUTABLE_BORROW` 等交接语义，再找可执行反例；**不能默认所有入参都必须深拷贝**。若 Source 未规定，标 `SOURCE_UNSPECIFIED`，不可用隐藏 QA 或审核者个人偏好替 Owner 创造需求。
 
 这只是根据真实执行收据提出的知识修订候选；原队列不能反推「额外知识改善或伤害代码抽象」。
 
