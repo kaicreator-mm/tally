@@ -41,6 +41,10 @@ export function sealClaimShimTarget(source,target){
 }
 
 const MANIFEST_PREFIX='// TALLY_T06L_BUILD_TARGET_V1=';
+// A marked frame is prefix + canonical base64 metadata + LF, at most this many
+// bytes including the LF. Writer and reader share the bound; nothing past it is
+// inspected, so body bytes are never decoded for this check.
+const MANIFEST_FRAME_MAX=4096;
 function manifestValue(target){
   return {repository:target.repository,issueNumber:target.issueNumber,
     protectedClaimKey:target.protectedClaimKey};
@@ -52,21 +56,28 @@ export function markClaimProviderTarget(code,target){
     throw new TypeError('T06L_PROVIDER_TARGET_INVALID');
   const encoded=Buffer.from(JSON.stringify(manifestValue(target)),'utf8')
     .toString('base64');
-  return MANIFEST_PREFIX+encoded+'\n'+code;
+  const header=MANIFEST_PREFIX+encoded+'\n';
+  if(Buffer.byteLength(header)>MANIFEST_FRAME_MAX)
+    throw new TypeError('T06L_PROVIDER_TARGET_INVALID');
+  return header+code;
 }
 /** Catch a producer/provider target mismatch before BUILD seals an app.
  * Legacy absence is accepted only for historical #169 fixtures.
+ * Only the first MANIFEST_FRAME_MAX bytes are inspected: a marked header that
+ * is not LF-terminated inside that frame is invalid, never truncated.
  */
 export function assertClaimProviderTarget(bytes,target){
   if(!Buffer.isBuffer(bytes))throw new TypeError('T06L_PROVIDER_BYTES_REQUIRED');
-  const firstLine=bytes.toString('utf8',0,512).split('\n')[0];
-  if(!firstLine.startsWith(MANIFEST_PREFIX)){
+  const frame=bytes.toString('utf8',0,MANIFEST_FRAME_MAX);
+  if(!frame.startsWith(MANIFEST_PREFIX)){
     if(target.mode==='HISTORICAL_DEFAULT')return;
     throw new TypeError('T06L_PROVIDER_TARGET_MANIFEST_MISSING');
   }
   let metadata=null;
   try{
-    const encoded=firstLine.slice(MANIFEST_PREFIX.length);
+    const end=frame.indexOf('\n');
+    if(end<0)throw new Error('MANIFEST_FRAME_UNTERMINATED');
+    const encoded=frame.slice(MANIFEST_PREFIX.length,end);
     if(!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)||
        Buffer.from(encoded,'base64').toString('base64')!==encoded)
       throw new Error('MANIFEST_ENCODING_INVALID');
