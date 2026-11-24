@@ -32,7 +32,7 @@
 
 **R19 工程抽象能力深化（G-A 已独立接受并合并 main@d0a2408，知识范围）**：[工程抽象知识选择及 A/B/C 处理差异](professional-engineering-abstraction-selection-r19.md)；三篇原创专业补充：[K02 从不变量与变化点选择职责边界](K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md)、[K03 内联/Helper/模块/公共接口的抽象粒度决策](K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md)、[K09 用后续变化反证坏抽象](K09/advanced-abstraction-evolution-and-change-locality-r19.md)。这部分**不加入 R18 冻结 B 知识切片**，不包含 R19 隐藏任务/QA/维护变更，也不授权 Tally/DomainHarness 运行时或生产 Source Claim。知识先独立审核，再做有界新实验；不能因新增文章宣称抽象能力已提升。
 
-**R19-F2 真实代码实验反馈（候选；不证明知识提效）**：[输入引用所有权、数值精度、Oracle 合同资格与维护旧失败拆分](professional-abstraction-empirical-feedback-r19f2.md)。根据 [#559 原始运行者结果](https://github.com/kaicreator-mm/tally/issues/559#issuecomment-7141310057) 的 12 次真实编码与维护收据整理；两个有组间区分的 hidden 断言涉及公开 Source 未明确的合同，不能视作有知识组的抽象错误；并记录 Reviewer 数值边界漏检和额外知识成本。**未独立重放 Windows 原始文件、未证实因果收益，且不得改写冻结的 R19/R19-F/R19-F2 结果。**
+**R19-F2 真实代码实验反馈（候选；不证明知识提效）**：[输入引用所有权、数值精度、Oracle 合同资格与维护旧失败拆分](professional-abstraction-empirical-feedback-r19f2.md)。根据 [#559 原始运行者结果](https://github.com/kaicreator-mm/tally/issues/559#issuecomment-7141310057) 的 12 次真实编码与维护收据整理；据 R1 合同分析，两条 hidden 断言涉及公开 Source 未明确的合同：仅限流规则拷贝一条存在组间差异，授权查询负时间断言三组均失败；不能据此判定知识组的抽象错误。并记录数值边界后置反例、Reviewer 检出范围和额外知识成本。**未独立重放 Windows 原始文件、未证实因果收益，且不得改写冻结的 R19/R19-F/R19-F2 结果。**
 
 **R19 对照案例库（8 例 / 4 对，新增候选，G-A2 独立审核待定）**：[抽象不足、错误共性、无谓模式、真正变化隔离的正反例及反转条件](professional-engineering-abstraction-contrastive-casebook-r19.md)。这是额外候选教学案例，只有审核接受并在 #554 G-B 前冻结实际可见字节后才能纳入 B/C 两组；它不等于 R19 隐藏试题，不得加入 #551 冻结实验。
 
