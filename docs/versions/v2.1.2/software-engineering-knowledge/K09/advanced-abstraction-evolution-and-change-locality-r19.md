@@ -42,7 +42,7 @@
 
 ## R19-F2 反馈候选：旧失败、回归与新增需求要分别计量
 
-[R19-F2 真实维护反馈](../professional-abstraction-empirical-feedback-r19f2.md) 中，12 个陌生维护提交都通过新增需求测试，旧行为也没有**新增回归**，但十个首次实现已有的旧测试失败继续存在。故 `NEW_FEATURE_PASS`、`NO_NEW_REGRESSION`、`ALL_OLD_AND_NEW_PASS` 不是同一指标。维护账本应分别保留 `OLD_AT_FIRST / OLD_AFTER / NEW_BEHAVIOR / FIXED_EXISTING_DEFECT / INTRODUCED_REGRESSION / CHANGE_OWNER_TOUCH / COST`；不能从“成功完成维护修改”推出“抽象更优”，也不能把首次既存错误错误计成维护引入的回归。
+[R19-F2 真实维护反馈](../professional-abstraction-empirical-feedback-r19f2.md) 中，12 个陌生维护提交都通过新增需求测试，原冻结旧 QA 未检出新增失败，但十个候选的既有旧测试失败继续存在；这并不等于十个候选均违反已授权功能合同，也不证明未覆盖行为没有回归。故 `NEW_FEATURE_PASS`、`NO_NEW_REGRESSION`（限定于实际运行且有权的测试覆盖）、`ALL_OLD_AND_NEW_PASS` 不是同一指标。维护账本应分别保留 `OLD_AT_FIRST / OLD_AFTER / NEW_BEHAVIOR / FIXED_PREEXISTING_DEFECT / INTRODUCED_REGRESSION / OWNER_TOUCH_SET / MAINTENANCE_COST`；不能从“成功完成维护修改”推出“抽象更优”，也不能把首次既存错误错误计成维护引入的回归。
 
 若某个隐藏旧 Oracle 检查的是公开 Source 未规定的行为，还须另外标 `SOURCE_UNSPECIFIED_ORACLE`，防止对维护效果作错误比较；不要事后修改原研究 QA 和原始通过率。
 
