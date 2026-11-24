@@ -52,7 +52,7 @@
 
 [R19-F2 真实代码测量](../professional-abstraction-empirical-feedback-r19f2.md) 显示，隐藏断言如果要求明文任务未约定的入参所有权或输入合法域，就会把**合理但不同的合同解读**误当组间模型差异。研究开始前需建立 `SOURCE -> INPUT_DOMAIN -> OBSERVABLE_CONTRACT -> ORACLE` 映射，分 `DECLARED / DERIVED / ENGINEERING_HYPOTHESIS`；最后一种不能决定主要 PASS/FAIL。原始结果应保留，事后只能做有标注的敏感性分析。
 
-在另一个数值极值反例上，同根缺陷出现于多份真实代码，但多数 Reviewer 给出 `JUST_ENOUGH`。发现了新反例后应在**不改原始首判**的前提下，对全部相关匿名候选做对等重放，单列 `POST_REVIEW_FALSIFIER`、`FALSE_NEGATIVE` 与其来源限制，不能用仲裁后的一个总标签声称没有其它缺陷。
+在另一个数值极值反例上，同根缺陷出现于多份真实代码，但多数 Reviewer 给出 `JUST_ENOUGH`。发现了新反例后应在**不改原始首判**的前提下，对全部相关匿名候选做对等重放，单列 `POST_REVIEW_FALSIFIER`；仅在授权真值已确认、反例可复现且属于原评审职责和覆盖域时，才标 `FALSE_NEGATIVE`，否则记为新观察或 `UNKNOWN`，保留来源与覆盖限制，不能用仲裁后的一个总标签声称没有其它缺陷。
 
 ## 5. 对过度评估的限制
 
