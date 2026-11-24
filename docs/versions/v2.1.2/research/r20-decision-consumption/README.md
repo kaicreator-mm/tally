@@ -42,3 +42,22 @@ Local tested file Git blob IDs:
 - example.json: a35555522125cafd109b71960ef8df3007fc2b8f
 
 No production integration, CI or Windows runtime tests run. T3 must validate a genuine bounded authorized code decision using source facts, exact task baseline, first code SHA, authorized falsifier and actual execution; do not repeat R19-F2.
+
+## T3/T4 — real source pilot and scoped reference correction
+
+See [T3 frozen task](pilot-claim-manifest/TASK.md), [Builder evidence](pilot-claim-manifest/agent-evidence.md), and [T4 analysis](T4-analysis.md). T3 original candidate remains pinned to `362ca5604845ffaa2ec1664ad27514b6564511d9`; the earlier T1/T2 test and example records above are historical, not overwritten. The T3 source mirror and original evidence are not a production patch.
+
+Before selecting, optionally run:
+
+```sh
+node route-guide.mjs --describe
+node selector.mjs context.json > receipt.json
+node route-guide.mjs --record receipt.json report.json
+node --test route-guide.test.mjs
+```
+
+Read the compact routing descriptions rather than loading the whole catalog. The guide describes when a route applies and when it does not, but the caller still determines actual facts/applicability and the existing selector still owns stage and budget decisions. The guide does not infer risks, change historical selector or catalog bytes, or prevent a caller from choosing an inapplicable label. It is an optional refinement, not an ADS gate.
+
+The report JSON contains receiptSha256 and pieces, one entry per delivered ID, each with id, read (YES/NO/UNKNOWN), outcome (APPLIED/ALREADY_ALIGNED/REJECTED/UNKNOWN), and reason. APPLIED/ALREADY_ALIGNED also require textual before/after decisions and read YES; APPLIED means a reported changed decision, not automatically a verified better decision. The new helper checks integrity and internal consistency, not the authenticity of receipt provenance, source authority, or actual reading/quality. No automatic learning or rule promotion.
+
+The eight new tests are synthetic calibration of the helper; they do not demonstrate better selection by a real Agent. T3 receipt reported 3 pieces, 3324 UTF-8 excerpt bytes, and unchanged design; no measured knowledge benefit. Keep historical T3 results unchanged. Production packaging exclusion and real production correction remain outside this PR.
