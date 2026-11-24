@@ -48,6 +48,12 @@
 
 **最小结论结构**：`Task/Scenario/Code_SHA/Reviewer_ID/BlindFlag/Finding_ID/ExpectedSource/Falsifier/ActualEvidence/Verdict/Disagreement/NotTested/Cost`。评分器不变，独立性和错误维度必须可重算；缺乏经授权的源真值就不能凭多数投票直接创造 Source Claim。
 
+## R19-F2 反馈候选：先确认 Oracle 有权，再统计 Reviewer 发现率
+
+[R19-F2 真实代码测量](../professional-abstraction-empirical-feedback-r19f2.md) 显示，隐藏断言如果要求明文任务未约定的入参所有权或输入合法域，就会把**合理但不同的合同解读**误当组间模型差异。研究开始前需建立 `SOURCE -> INPUT_DOMAIN -> OBSERVABLE_CONTRACT -> ORACLE` 映射，分 `DECLARED / DERIVED / ENGINEERING_HYPOTHESIS`；最后一种不能决定主要 PASS/FAIL。原始结果应保留，事后只能做有标注的敏感性分析。
+
+在另一个数值极值反例上，同根缺陷出现于多份真实代码，但多数 Reviewer 给出 `JUST_ENOUGH`。发现了新反例后应在**不改原始首判**的前提下，对全部相关匿名候选做对等重放，单列 `POST_REVIEW_FALSIFIER`；仅在授权真值已确认、反例可复现且属于原评审职责和覆盖域时，才标 `FALSE_NEGATIVE`，否则记为新观察或 `UNKNOWN`，保留来源与覆盖限制，不能用仲裁后的一个总标签声称没有其它缺陷。
+
 ## 5. 对过度评估的限制
 
 一个文档链接修正或已明确的局部 bug 不必启用双 Reviewer/复杂 ATAM。只有真正研究**知识增量对软件质量的影响**且 Reviewer 判断成为实验主要终点时，才需要上述独立与校准方案。所有实验组应有相同公开质量目标、预算和 Reviewer 标准；只改变额外 Kxx 知识内容。本篇没有自动启动本地 Agent 或新增 ADS 强制审核门。
