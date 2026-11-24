@@ -1,0 +1,358 @@
+{
+  "kind": "TALLY_V213_FORWARD_ACCEPTANCE_CANDIDATES",
+  "qualification": "DESIGN_ONLY_NOT_EXECUTED",
+  "cases": [
+    {
+      "id": "A01",
+      "l1": "A1",
+      "scenario": "缺有权合同",
+      "inputIntent": "contract=MISSING",
+      "expected": "ASK; no recommendation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A02",
+      "l1": "A1",
+      "scenario": "材料证据冲突",
+      "inputIntent": "same subject/current revision, incompatible confirmed observations",
+      "expected": "UNKNOWN; conflict evidence retained; no unconditional recommendation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A03",
+      "l1": "A1/A6",
+      "scenario": "旧 SHA 证据",
+      "inputIntent": "decision entry has only otherwise applicable evidence bound to an older SHA; no material conflict",
+      "expected": "UNKNOWN / STALE_EVIDENCE; never current recommendation or PASS",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A04",
+      "l1": "A2",
+      "scenario": "相同正则但保留空白与规范化语义不同",
+      "inputIntent": "business merge contradicts POSTCONDITION; independent pure helper keeps callers' differences",
+      "expected": "merge EXCLUDED; helper evaluated separately, not blanket excluded",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A05",
+      "l1": "A2",
+      "scenario": "相同算法不同错误/权限/Owner",
+      "inputIntent": "one material dimension NO; repeat independently for all nine applicable dimensions",
+      "expected": "each incompatible proposed merge EXCLUDED with precise evidence; no false equivalence",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A06",
+      "l1": "A2/A6",
+      "scenario": "未确认语义维度",
+      "inputIntent": "material compatibility UNKNOWN or unsubstantiated omission",
+      "expected": "NEEDS_EVIDENCE; no supported merge",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A07",
+      "l1": "A3",
+      "scenario": "同 Owner 同不变量共同变化，多个实际维护位置",
+      "inputIntent": "known compatible shared mechanism and preserved public contract",
+      "expected": "PRIVATE_SHARED SUPPORTED, advisory not unique optimum",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A08",
+      "l1": "A3",
+      "scenario": "仅两段语法相同",
+      "inputIntent": "no proved shared invariant or change axis",
+      "expected": "no supported shared abstraction; missing facts visible",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A09",
+      "l1": "A3/A4",
+      "scenario": "只因未来可能插件化而新增公开接口",
+      "inputIntent": "new public boundary and new strategy, relevant need facts all verified NO, no existing compatibility obligation, other required facts confirmed",
+      "expected": "both NOT_SUPPORTED; not hard Rule",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A10",
+      "l1": "A3/A4",
+      "scenario": "现有公开 API 无新增扩展需求",
+      "inputIntent": "existing compatibility obligation YES",
+      "expected": "do not recommend removing API merely because new need NO",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A11",
+      "l1": "A4",
+      "scenario": "真实异构消费者、稳定替换需求",
+      "inputIntent": "genuine heterogeneous consumers need a stable public contract; preservation of authorized behavior confirmed",
+      "expected": "PUBLIC_CONTRACT SUPPORTED; compare viable alternative",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A12",
+      "l1": "A4",
+      "scenario": "合法动态扩展需求但失败语义不相容",
+      "inputIntent": "strategy would force incompatible failure semantics",
+      "expected": "EXCLUDED despite extension need",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A13",
+      "l1": "A3/A4",
+      "scenario": "现有局部实现，无实质未决问题",
+      "inputIntent": "known current contract preserved and no independent change",
+      "expected": "KEEP_EXISTING; no extra interface",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A14",
+      "l1": "A4",
+      "scenario": "两个同样可行但成本不同的方案",
+      "inputIntent": "private shared vs module both supported, unresolved tradeoff",
+      "expected": "TRADEOFF; no fabricated optimum",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A15",
+      "l1": "A5",
+      "scenario": "测试 exit 0 但目标未执行",
+      "inputIntent": "verified receipt confirms target test was not executed despite runner exit 0; sole authorized obligation",
+      "expected": "obligation NOT_RUN; aggregate INCOMPLETE",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A16",
+      "l1": "A5",
+      "scenario": "未授权预期",
+      "inputIntent": "authorized obligation, but only ENGINEERING_HYPOTHESIS or DERIVED without verified derivation, no other eligible Oracle",
+      "expected": "obligation UNKNOWN; aggregate UNKNOWN; no primary pass/fail",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A17",
+      "l1": "A5",
+      "scenario": "R20 原始短 Provider 反例",
+      "inputIntent": "frozen 8/8 public probes; exact observed 191-byte whole-body decode contradicts TASK L9–10; historical metadata classification unresolved",
+      "expected": "qualified failing obligation OBSERVED_FAIL; aggregate PUBLIC_CONTRACT_PARTIAL_OR_FAILED; no retroactive change or permission claim",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A18",
+      "l1": "A5/A6",
+      "scenario": "部分覆盖、异 SHA/候选证据及合格反例",
+      "inputIntent": "three separate authorized obligations: incomplete qualified current pass coverage; only same-subject stale observation; separate current verified authorized counterexample, no conflicts",
+      "expected": "respectively UNKNOWN, STALE, OBSERVED_FAIL; aggregate PUBLIC_CONTRACT_PARTIAL_OR_FAILED",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A19",
+      "l1": "A5",
+      "scenario": "所有明确义务具有合格执行及范围证据",
+      "inputIntent": "nonempty authorized universe verified complete, each obligation bound to current subject/SHA, qualified DECLARED or checked DERIVED Oracle, verified discovered/executed result and adequate scope, no eligible conflicting/failing observation",
+      "expected": "all OBSERVED_PASS_SCOPED; aggregate TESTED_CONTRACTS_PASS_SCOPED only; not global PASS",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A20",
+      "l1": "A6/A7",
+      "scenario": "实际 SDK query 预算不足",
+      "inputIntent": "real BoundedQueryElement.complete=false; workflow budget adequate",
+      "expected": "UNKNOWN / QUERY_INCOMPLETE; no inference from partial/empty data",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A21",
+      "l1": "A6/A7",
+      "scenario": "实际 SDK workflow 预算耗尽",
+      "inputIntent": "valid request, actual SDK maxCalls exhausted before invokeOutcome",
+      "expected": "FAILED / WORKFLOW_CALL_BUDGET; skipped subsequent validator; no renewed root",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A22",
+      "l1": "A6",
+      "scenario": "同事实重复运行",
+      "inputIntent": "same stable input and selected source revision",
+      "expected": "identical assessment, no time/random/network dependence",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A23",
+      "l1": "A1/A6",
+      "scenario": "不合法输入和未绑定证据",
+      "inputIntent": "otherwise valid bounded request, duplicate candidate ID or repeated dimension on same candidate (separate probes)",
+      "expected": "REJECT / DUPLICATE_ID; no partial business evaluation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A24",
+      "l1": "A6/A7",
+      "scenario": "真实源码消费",
+      "inputIntent": "separately authorized new code decision, pinned contract/actual facts/code, actual SDK invocation",
+      "expected": "record decision and observable behavior/falsifier; no causal gain claim; no new multi-Agent experiment",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A25",
+      "l1": "A1/A6",
+      "scenario": "非法结构与身份",
+      "inputIntent": "otherwise valid request, wrong type/missing required identity/invalid SHA format (separate probes)",
+      "expected": "REJECT / INVALID_INPUT; no business evaluation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A26",
+      "l1": "A1/A6",
+      "scenario": "不支持的枚举",
+      "inputIntent": "otherwise valid request with unsupported candidate kind, fact value or dimension (separate probes)",
+      "expected": "REJECT / UNSUPPORTED_ENUM",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A27",
+      "l1": "A1/A6",
+      "scenario": "超限拒绝",
+      "inputIntent": "otherwise well-formed inputs at limit+1 independently: 6 candidates, 10 dimension records in one candidate, 65 facts, 129 evidence records, 129 total refs; Validator 65 obligations or 129 observations; repeated refs count",
+      "expected": "REJECT / INPUT_LIMIT_EXCEEDED; no truncation/partial assessment",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A28",
+      "l1": "A1/A6",
+      "scenario": "引用悬空或跨主体",
+      "inputIntent": "otherwise valid request with dangling evidenceRef or verified binding to another candidate/obligation (separate probes)",
+      "expected": "REJECT / EVIDENCE_REFERENCE_INVALID; no evaluation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A29",
+      "l1": "A5",
+      "scenario": "合格证据与自报对照",
+      "inputIntent": "same authorized universe and otherwise identical all-green A19 observation fields, but no trusted confirmation; ordinary observations even claim VERIFIED_OBSERVATION",
+      "expected": "all UNKNOWN; aggregate UNKNOWN; cannot self-promote",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A30",
+      "l1": "A5",
+      "scenario": "缩小合同义务集合",
+      "inputIntent": "known authorized universe has two obligations; caller supplies observations only for one green obligation, no evidence of the second",
+      "expected": "first OBSERVED_PASS_SCOPED if independently qualified; second UNKNOWN; aggregate UNKNOWN; use authorized universe",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A31",
+      "l1": "A5",
+      "scenario": "未确认完整或空义务集合",
+      "inputIntent": "all supplied observations green but universe not confirmed complete; separately empty authorized set",
+      "expected": "aggregate UNKNOWN in both; never vacuous PASS",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A32",
+      "l1": "A5",
+      "scenario": "同范围合格证据冲突",
+      "inputIntent": "two separately verified contradictory observations same obligation/current subject and same coverage, unresolved; sole obligation",
+      "expected": "CONFLICT; aggregate UNKNOWN; neither last observation nor count decides",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A33",
+      "l1": "A4",
+      "scenario": "稳定公共接口不需要 Strategy",
+      "inputIntent": "two real consumers require stable common API; replacement/dynamic variation need confirmed NO; both candidate types preserve contract, no existing strategy obligation",
+      "expected": "PUBLIC_CONTRACT SUPPORTED; new STRATEGY NOT_SUPPORTED",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A34",
+      "l1": "A4",
+      "scenario": "有权替换需求且合同相容",
+      "inputIntent": "actual authorized multiple implementation replacement axis and verified common contract, including error/authority/state/cleanup; other facts adequate",
+      "expected": "STRATEGY SUPPORTED; advisory only",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A35",
+      "l1": "A5",
+      "scenario": "仅自报反例",
+      "inputIntent": "authorized universe and Oracle, current apparent failing execution but no independent/authorized verification; sole observation",
+      "expected": "obligation UNKNOWN; aggregate UNKNOWN; no OBSERVED_FAIL",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A36",
+      "l1": "A5",
+      "scenario": "不明是否运行",
+      "inputIntent": "authorized obligation, no verified evidence of execution or nonexecution; sole obligation",
+      "expected": "obligation UNKNOWN; aggregate UNKNOWN; not NOT_RUN",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A37",
+      "l1": "A1/A6",
+      "scenario": "超限与重复同时出现",
+      "inputIntent": "top-level shape/identity valid, collection beyond limit and repeated ID",
+      "expected": "REJECT / INPUT_LIMIT_EXCEEDED; no partial business evaluation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A38",
+      "l1": "A1/A6",
+      "scenario": "候选业务上限边界",
+      "inputIntent": "5 candidates, at most 9 distinct dimensions each, exactly 64 facts, 128 evidence records and total refs, otherwise valid qualified input",
+      "expected": "not INPUT_LIMIT_EXCEEDED; evaluate actual facts within SDK budget",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A39",
+      "l1": "A5",
+      "scenario": "合格反例与未确认全量合同",
+      "inputIntent": "one independently verified authorized current counterexample, obligation universe not confirmed complete; no contradictory qualified evidence in same scope",
+      "expected": "OBSERVED_FAIL; aggregate PUBLIC_CONTRACT_PARTIAL_OR_FAILED; completeness gap retained",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A40",
+      "l1": "A5",
+      "scenario": "自报矛盾不能覆盖合格观察",
+      "inputIntent": "same authorized sole obligation; A19 verified scoped pass plus unverified self-reported failure",
+      "expected": "retain qualified OBSERVED_PASS_SCOPED and self-report qualification; aggregate TESTED_CONTRACTS_PASS_SCOPED",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A41",
+      "l1": "A5",
+      "scenario": "仅旧版本观察",
+      "inputIntent": "complete authorized universe with sole obligation; only verified observation belongs to older SHA of same candidate",
+      "expected": "STALE; aggregate INCOMPLETE; no current pass",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A42",
+      "l1": "A1",
+      "scenario": "仅自报合同获权",
+      "inputIntent": "request claims CONFIRMED and current SHA, but no trusted source confirmation; no confirmed conflict/staleness",
+      "expected": "UNKNOWN / EVIDENCE_UNQUALIFIED; no recommendation",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A43",
+      "l1": "A5",
+      "scenario": "声明覆盖范围不足",
+      "inputIntent": "sole authorized obligation, verified authorized current passing execution covers only a strict subset of declared scope; no other observations",
+      "expected": "UNKNOWN; aggregate UNKNOWN; no scoped PASS for full declared scope",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    },
+    {
+      "id": "A44",
+      "l1": "A5",
+      "scenario": "已核对观察内容被替换",
+      "inputIntent": "trusted confirmation for a current executed observation with partial passing coverage; ordinary input reuses the observationId but changes coverage to full (or replaces result/Oracle)",
+      "expected": "modified ordinary observation not qualified; original verified partial coverage remains UNKNOWN; aggregate UNKNOWN; no pass based on ID",
+      "status": "DESIGN_ORACLE_NOT_RUN"
+    }
+  ]
+}
