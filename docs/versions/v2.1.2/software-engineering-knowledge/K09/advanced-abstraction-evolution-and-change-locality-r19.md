@@ -40,6 +40,12 @@
 
 另一个反例：新增一个合法输出格式需要修改五个消费者，因为内部格式化枚举被跨模块读写。这是潜在的封装泄漏；但若五个模块都是被批准的实际输出消费者，改动五处可能不可避免。必须检查**修改是否由谁应该负责**，不能把五这个数字本身定义为缺陷。
 
+## R19-F2 反馈候选：旧失败、回归与新增需求要分别计量
+
+[R19-F2 真实维护反馈](../professional-abstraction-empirical-feedback-r19f2.md) 中，12 个陌生维护提交都通过新增需求测试，旧行为也没有**新增回归**，但十个首次实现已有的旧测试失败继续存在。故 `NEW_FEATURE_PASS`、`NO_NEW_REGRESSION`、`ALL_OLD_AND_NEW_PASS` 不是同一指标。维护账本应分别保留 `OLD_AT_FIRST / OLD_AFTER / NEW_BEHAVIOR / FIXED_EXISTING_DEFECT / INTRODUCED_REGRESSION / CHANGE_OWNER_TOUCH / COST`；不能从“成功完成维护修改”推出“抽象更优”，也不能把首次既存错误错误计成维护引入的回归。
+
+若某个隐藏旧 Oracle 检查的是公开 Source 未规定的行为，还须另外标 `SOURCE_UNSPECIFIED_ORACLE`，防止对维护效果作错误比较；不要事后修改原研究 QA 和原始通过率。
+
 ## 五、结论的效力边界
 
 - K02 的模块信息隐藏是一种设计假设；K03 的恰当抽象粒度是一种实施选择；**K09 只在真实后续变化和有效回归测试中才可能支持“维护收益”的经验性结论**。
