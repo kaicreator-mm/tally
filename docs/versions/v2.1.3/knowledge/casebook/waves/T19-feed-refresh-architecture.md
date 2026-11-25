@@ -12,9 +12,9 @@
 
 ### 1. 功能、数据和接口视图（源码观察）
 
-单条 refreshFeed 从请求读取 userID/feedID，检查 FeedExists，再直接调用 reader/handler.RefreshFeed；失败返回 ServerError，正常返回 NoContent。批量 refreshAllFeeds 获取 userID，构造 BatchBuilder，设置错误阈值、排除 disabled、next_check 已到期、用户条件，FetchJobs 后启动 goroutine 执行 pool.Push 并返回 NoContent（S01 L53–95）。同一 HTTP 204 对应不同完成点：前者等待 RefreshFeed 返回；后者仅证明代码已启动异步推送路径，不证明每个 job 已被 worker 接收、成功刷新或持久排队。名称 all 并非全部订阅无条件刷新。userID 取自 request 的方式和路由鉴权不是本次证明对象。
+单条 refreshFeed 从请求读取 userID/feedID，检查 FeedExists，再直接调用 reader/handler.RefreshFeed；失败返回 ServerError，正常返回 NoContent。批量 refreshAllFeeds 获取 userID，构造 BatchBuilder，传入错误阈值（仅正值启用）、排除 disabled、next_check 已到期、用户条件，FetchJobs 后启动 goroutine 执行 pool.Push 并返回 NoContent（S01 L53–95）。同一 HTTP 204 对应不同完成点：前者等待 RefreshFeed 返回；后者仅证明代码已启动异步推送路径，不证明每个 job 已被 worker 接收、成功刷新或持久排队。名称 all 并非全部订阅无条件刷新。userID 取自 request 的方式和路由鉴权不是本次证明对象。
 
-BatchBuilder 实际 SELECT id,user_id FROM feeds；条件拼接并用参数绑定用户、错误阈值等；仅 limit>0 时 ORDER BY next_check_at ASC 与 LIMIT。上述批量入口未设置 batch size，不能用 builder 支持 limit 推断该入口有总待办上限。FetchJobs 将结果追加 JobList（S02 L14–89）。Pool 内含无缓冲 chan model.Job，NewPool 启动指定数量 goroutine，Push 逐项发送（S03 L12–35）。Worker.Run 循环接收，调用同一 RefreshFeed，按结果记录可选指标和错误日志（S04 L18–56）。无缓冲 channel 可使发送者等待接收，但异步入口可产生多个阻塞的 producer；并发 worker 上限不等于总排队/内存/网络请求上限。未核全局关停、取消、重试、跨进程调度，亦不声称并发刷新已去重。
+BatchBuilder 实际 SELECT id,user_id FROM feeds；条件拼接并用参数绑定用户、错误阈值等；仅 limit>0 时 ORDER BY next_check_at ASC 与 LIMIT。上述批量入口未设置 batch size，不能用 builder 支持 limit 推断该入口有总待办上限。FetchJobs 将结果追加 JobList（S02 L14–89）；Query 或 Scan 错误显式返回，但 rows.Next 结束后未检查 rows.Err，若迭代中途发生终止错误，可能返回部分列表及 nil error，继而触发异步推送并返回 204；未复现实例，不以 nil error 单独证明扫描完整。Pool 内含无缓冲 chan model.Job，NewPool 启动指定数量 goroutine，Push 逐项发送（S03 L12–35）。Worker.Run 循环接收，调用同一 RefreshFeed，按结果记录可选指标和错误日志（S04 L18–56）。无缓冲 channel 可使发送者等待接收，但异步入口可产生多个阻塞的 producer；并发 worker 上限不等于总排队/内存/网络请求上限。未核全局关停、取消、重试、跨进程调度，亦不声称并发刷新已去重。
 
 ### 2. 组件与依赖视图（真实调用关系，非建议分布式拓扑）
 
@@ -67,7 +67,7 @@ S08 L270–327 的每条事务可能已经成功提交，后续条目失败时�
 
 | 场景 | 需要观察的证据 |
 |---|---|
-| 单条成功、批量立即返回 | HTTP 完成点与 worker 真正完成分别记录；批量排除未到期/disabled/超错误阈值 |
+| 单条成功、批量立即返回 | HTTP 完成点与 worker 真正完成分别记录；批量排除未到期/disabled，正错误阈值才排除达到或超过阈值的订阅；对照零/负值与正值；模拟 rows.Next 中途失败，核实列表、HTTP 结果与 worker 实际处理，不以 nil error 证明完整 |
 | 并发 producer 与有限 worker | 测在 worker 忙时 Push 阻塞、总 producer 数及待办内存，非只测线程数 |
 | 内容未修改与强制刷新 | 观察是否执行 parse/processor/entry write；下一次检查时间及缓存头变化 |
 | 条目 1 提交，条目 2 写失败 | 查实际 DB 条目、handler 错误与元数据；不可用 error 推断零写入 |
