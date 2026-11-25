@@ -4,7 +4,7 @@
 
 ## T12-C01 · 业务模块划分：技术分层、功能模块与独立服务
 
-**分类：** Web/ERP/SaaS · L1–L3。**知识：** K02.F2.1 K02.F4.2 K09.F4.1。**参考：** [T03-C01](T03-business-and-collaboration-architecture.md)、[T03-C03](T03-business-and-collaboration-architecture.md)、[T02-C02](T02-interactive-tools-and-computation.md)、[AR-010](../architecture-cases.md)。
+**分类：** Web/ERP/SaaS · L1–L3。**知识：** K02.F2.1。**参考：** [T03-C01](T03-business-and-collaboration-architecture.md)、[T03-C03](T03-business-and-collaboration-architecture.md)、[T02-C02](T02-interactive-tools-and-computation.md)、[AR-010](../architecture-cases.md)。**关系：** 条件启发；逻辑模块与部署边界。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 一个销售与库存系统，共用数据库；两个小团队，订单成立时要求库存/账务合同一致，独立部署未获权。
 - **可比较方案：** A：同一应用按路由/模型/视图组织，适合简单业务和少量维护者。B：同进程按销售、库存、财务划分功能模块，各自拥有状态与窄依赖，协调操作明确事务边界。C：独立服务，各自数据与发布边界，必须另行定义跨服务失败、补偿或一致性。
@@ -13,7 +13,7 @@
 
 ## T12-C02 · 多个客户端消费同一数据：派生视图与独立状态
 
-**分类：** GUI/移动/协同 · L2–L4。**知识：** K02.F3.1 K03.F3.1 K03.F4.2。**参考：** [T02-C01](T02-interactive-tools-and-computation.md)、[T02-C03](T02-interactive-tools-and-computation.md)、[T08-C04](T08-platform-functions.md)。
+**分类：** GUI/移动/协同 · L2–L4。**知识：** K02.F3.1。**参考：** [T02-C01](T02-interactive-tools-and-computation.md)、[T02-C03](T02-interactive-tools-and-computation.md)、[T08-C04](T08-platform-functions.md)。**关系：** 条件启发；业务模型与派生视图 Owner。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 编辑器有列表、详情、第二个窗口；业务对象统一保存，编辑表单可以有未提交草稿。
 - **可比较方案：** A：每视图直接读取共享模型，局部草稿留组件，低复杂度。B：单一业务数据源加可观察的派生状态，通知多个视图；UI store 管共享 UI 意图而非独立业务真值。C：离线设备有独立可写副本，另定版本/冲突与同步。
@@ -22,7 +22,7 @@
 
 ## T12-C03 · 任务协调：直接调用、工作清单、持久 DAG
 
-**分类：** 工作流/Agent/批处理 · L2–L4。**知识：** K04.F3.1 K03.F3.3 K10.F3.2。**参考：** [T04-C02](T04-intelligence-and-infrastructure-architecture.md)、[T08-C01](T08-platform-functions.md)、[AR-009](../architecture-cases.md)、[AR-012](../architecture-cases.md)。
+**分类：** 工作流/Agent/批处理 · L2–L4。**知识：** K04.F3.1。**参考：** [T04-C02](T04-intelligence-and-infrastructure-architecture.md)、[T08-C01](T08-platform-functions.md)、[AR-009](../architecture-cases.md)、[AR-012](../architecture-cases.md)。**关系：** 条件启发；真实任务因果依赖。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 导出报表需读取、计算、写文件；目前三步顺序，未来可能多报表并行，尚无跨进程恢复授权。
 - **可比较方案：** A：直接函数序列，错误立即返回，资源作用域明确。B：有限 worklist，真正存在独立任务时并行、共享预算与取消。C：持久 DAG 或队列，记录任务身份、依赖、执行/ACK、恢复及外部效果。
@@ -31,7 +31,7 @@
 
 ## T12-C04 · 缓存：允许重复计算还是需要完成屏障
 
-**分类：** 缓存/并发/初始化 · L3–L5。**知识：** K03.F3.1 K10.F3.2 K11.F2.2。**参考：** [T05-C06](T05-common-function-abstractions.md)、[T09-C08](T09-code-abstraction-cases.md)、[T11-C02](T11-real-evolution-cases.md)。
+**分类：** 缓存/并发/初始化 · L3–L5。**知识：** K03.F3.1。**参考：** [T05-C06](T05-common-function-abstractions.md)、[T09-C08](T09-code-abstraction-cases.md)、[T11-C02](T11-real-evolution-cases.md)。**关系：** 条件启发；缓存和初始化完成状态。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 服务读取昂贵的只读元数据；两个请求可能同时 miss。另有一次性连接建立动作，失败后允许重试。
 - **可比较方案：** A：普通缓存或重复计算，结果无害且成本可接受；B：每键受控加载，明确阻塞/失效与错误；C：有等待屏障的状态机，区分未开始/进行中/已就绪/失败可重试，拥有连接资源。
@@ -40,16 +40,16 @@
 
 ## T12-C05 · 数据查询：扫描、索引和独立服务
 
-**分类：** 搜索/检索/业务查询 · L2–L5。**知识：** K03.F1.1 K05.F1.2 K02.F2.2。**参考：** [T09-C01](T09-code-abstraction-cases.md)、[T04-C03](T04-intelligence-and-infrastructure-architecture.md)、[T04-C04](T04-intelligence-and-infrastructure-architecture.md)、[T06-C05](T06-data-file-network-functions.md)。
+**分类：** 搜索/检索/业务查询 · L2–L5。**知识：** K03.F1.2。**参考：** [T09-C01](T09-code-abstraction-cases.md)、[T04-C03](T04-intelligence-and-infrastructure-architecture.md)、[T04-C04](T04-intelligence-and-infrastructure-architecture.md)、[T06-C05](T06-data-file-network-functions.md)。**关系：** 条件启发；直接扫描与索引选择。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 用户需按标题查本地 200 条记录，另一个版本需全文排名并支持多租户千万文档。两个场景的实际规模和权限合同不同。
 - **可比较方案：** A：直接遍历，首匹配/全匹配/分页分别定义。B：嵌入全文索引，索引版本、排名、top-k 与更新策略独立。C：独立搜索服务，实际索引/租户约束、许可与隔离。
 - **选择、排除与条件反转：** 200 条且无全文需求先 A；真实全文质量/负载需求出现时 B；多进程访问、独立容量与租户边界才考虑 C。数据量是教学假设，不是性能阈值。
-- **独立验证意图（NOT_RUN）：** 空命中、超预算、排序并列、源版本变化、跨租户条件、截断与全量；未扫描完整时保留不完整，不编造延迟。
+- **独立验证意图（NOT_RUN）：** 空命中、k=0、超预算、排序并列、源版本变化、跨租户条件、截断与全量；禁止越权记录返回、泄漏或占据授权 top-k。共享索引统计/时延强非干扰仅在明确合同下验证，不能由过滤入口推断；未扫描完整时保留不完整，不编造延迟。
 
 ## T12-C06 · 资源清理：固定作用域、动态栈和独立共享 Owner
 
-**分类：** 通用库/文件/网络 · L3–L5。**知识：** K03.F4.1 K03.F4.2 K10.F5.1。**参考：** [T05-C09](T05-common-function-abstractions.md)、[T05-C10](T05-common-function-abstractions.md)、[T08-C05](T08-platform-functions.md)、[T09-C08](T09-code-abstraction-cases.md)。
+**分类：** 通用库/文件/网络 · L3–L5。**知识：** K03.F4.2。**参考：** [T05-C09](T05-common-function-abstractions.md)、[T05-C10](T05-common-function-abstractions.md)、[T08-C05](T08-platform-functions.md)、[T09-C08](T09-code-abstraction-cases.md)。**关系：** 条件启发；文件和借用连接资源。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 任务需要动态打开多个输入文件，借用应用共享 DB pool，生成临时输出；第二个文件可能打开失败。
 - **可比较方案：** A：固定资源用语言作用域/defer，获取后立即登记。B：未知数量/嵌套资源用动态退出栈，按实际依赖逆序释放。C：跨任务共享资源由独立 Owner 管生命周期，任务只归还借用或关闭自己取得的句柄。
@@ -58,7 +58,7 @@
 
 ## T12-C07 · 输入验证：语法、结构与有权业务条件
 
-**分类：** API/表单/数据导入 · L3–L5。**知识：** K01.F3.3 K03.F5.1 K05.F1.2。**参考：** [T05-C04](T05-common-function-abstractions.md)、[T05-C05](T05-common-function-abstractions.md)、[T07-C07](T07-business-functions.md)、[T07-C02](T07-business-functions.md)。
+**分类：** API/表单/数据导入 · L3–L5。**知识：** K03.F2.2。**参考：** [T05-C04](T05-common-function-abstractions.md)、[T05-C05](T05-common-function-abstractions.md)、[T07-C07](T07-business-functions.md)、[T07-C02](T07-business-functions.md)。**关系：** 条件启发；结构与业务校验的区别。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 导入订单 JSON，允许旧版可选字段；数量合法性由订单政策，商品/租户归属及当前库存来自受权系统。
 - **可比较方案：** A：少量可信内部参数用窄检查。B：外部格式入口解析、明确未知字段/转换规则，再结构验证。C：在实际业务执行点检查当前授权和状态，必要时事务内重新确认。
@@ -67,7 +67,7 @@
 
 ## T12-C08 · 错误与日志：原因保留、公开错误与观测
 
-**分类：** 服务/CLI/库 · L3–L5。**知识：** K03.F5.1 K06.F2.2 K10.F2.1。**参考：** [T05-C02](T05-common-function-abstractions.md)、[T05-C03](T05-common-function-abstractions.md)、[T09-C10](T09-code-abstraction-cases.md)、[AB-006](../abstraction-cases.md)。
+**分类：** 服务/CLI/库 · L3–L5。**知识：** K03.F5.1。**参考：** [T05-C02](T05-common-function-abstractions.md)、[T05-C03](T05-common-function-abstractions.md)、[T09-C10](T09-code-abstraction-cases.md)、[AB-006](../abstraction-cases.md)。**关系：** 条件启发；原因包装与公开错误。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 文件转换库被 CLI 和 Web 消费；底层可能部分写入、权限不足或读取失败，用户不应看到凭据。
 - **可比较方案：** A：纯函数直接窄错误，不必全局异常类。B：I/O 层包装原始原因、保留进度/副作用状态，在入口映射用户错误。C：多输出诊断使用结构化记录和独立 sink/filter；业务审计另按其权威合同。
@@ -76,7 +76,7 @@
 
 ## T12-C09 · 排序与优先队列：数据结构匹配观察合同
 
-**分类：** 通用算法/调度 · L4–L5。**知识：** K03.F1.1 K03.F1.2 K03.F2.1。**参考：** [T09-C03](T09-code-abstraction-cases.md)、[T09-C06](T09-code-abstraction-cases.md)、[T08-C01](T08-platform-functions.md)。
+**分类：** 通用算法/调度 · L4–L5。**知识：** K03.F1.2。**参考：** [T09-C03](T09-code-abstraction-cases.md)、[T09-C06](T09-code-abstraction-cases.md)、[T08-C01](T08-platform-functions.md)。**关系：** 条件启发；排序与堆结构选择。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** UI 需要按时间显示全部 50 条任务，并保持同时间的输入顺序；另有不断插入任务且每轮取最早到期项的调度器。
 - **可比较方案：** A：稳定排序，适合完整展示与确定并列合同。B：最小堆，频繁插入/取最早；并列策略需在 key 中明确。C：如必须支持任意按 ID 更新或取消，再评估索引堆/其他结构。
@@ -85,16 +85,16 @@
 
 ## T12-C10 · 外部通知与持久业务结果：错误是否代表无效果
 
-**分类：** 协同/支付/多输出 · L3–L5。**知识：** K02.F3.1 K03.F3.2 K10.F3.2。**参考：** [T03-C06](T03-business-and-collaboration-architecture.md)、[T07-C04](T07-business-functions.md)、[T07-C09](T07-business-functions.md)、[T09-C10](T09-code-abstraction-cases.md)。
+**分类：** 协同/支付/多输出 · L3–L5。**知识：** K10.F3.2。**参考：** [T03-C06](T03-business-and-collaboration-architecture.md)、[T07-C04](T07-business-functions.md)、[T07-C09](T07-business-functions.md)、[T09-C10](T09-code-abstraction-cases.md)。**关系：** 条件启发；外部效果及重复投递。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 用户修改业务状态后需要邮件和实时消息，其中一个通道可能失败；产品要求业务已提交不能被误报未执行，但通知可重试。
 - **可比较方案：** A：提交后同步通知并分开返回业务/通知结果，适合允许失败的简单提醒。B：事务内写可恢复的投递意图，再异步投递（设计候选），明确去重与查询。C：若业务本身依赖外部效果成功，建立业务待确认状态与有权对账/补偿。
-- **选择、排除与条件反转：** 当前有可靠通知需求才 B；若提醒尽力即可 A；外部效果决定业务成立才 C。多 sink 写入和事件发送不自动原子；签名验证也不证明业务已结算。
+- **选择、排除与条件反转：** 当前有可靠通知需求才 B；若提醒尽力即可 A；外部效果决定业务成立才 C。多 sink 写入和事件发送不自动原子；签名验证也不证明业务已结算。确认已生效则读回不重写；确认未生效、无遗留在途且仍获权才新 attempt；未知写效果需证实身份、payload、版本、去重范围/有效期、并发约束和授权，否则对账或停止，次数上限不证明安全。
 - **独立验证意图（NOT_RUN）：** 提交后丢响应、第一通道成功第二失败、重复消息、通知消费者权限、补偿未知；需要独立业务状态观察。这里 outbox 为原创方案，不宣称参考项目使用。
 
 ## T12-C11 · 公共 API：直接替换、过渡 facade 与兼容分支
 
-**分类：** 库/框架/产品升级 · L2–L5。**知识：** K09.F3.1 K09.F4.1 K08.F4.1。**参考：** [T11-C03](T11-real-evolution-cases.md)、[T11-C04](T11-real-evolution-cases.md)、[T11-C05](T11-real-evolution-cases.md)、[T11-C06](T11-real-evolution-cases.md)、[T08-C07](T08-platform-functions.md)。
+**分类：** 库/框架/产品升级 · L2–L5。**知识：** K09.F3.1。**参考：** [T11-C03](T11-real-evolution-cases.md)、[T11-C04](T11-real-evolution-cases.md)、[T11-C05](T11-real-evolution-cases.md)、[T11-C06](T11-real-evolution-cases.md)、[T08-C07](T08-platform-functions.md)。**关系：** 条件启发；受支持消费者和 API 兼容。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 库的新接口需要严格验证；旧接口存在两个真实受支持消费者，旧输入的一部分与新业务合同不兼容。
 - **可比较方案：** A：若已明确撤销旧支持，直接替换且按新合同验证。B：旧 facade 委托新实现，仅在合法语义可保持时，明确弃用窗口。C：旧/新逻辑隔离并按明确版本或启动设置分派，保留旧行为直到可退役；成本为双路径。
@@ -103,11 +103,11 @@
 
 ## T12-C12 · 接口抽象：静态组合、能力接口与动态插件
 
-**分类：** 工具/IDE/协议库 · L3–L5。**知识：** K02.F2.3 K03.F2.1 K02.F2.2。**参考：** [T02-C02](T02-interactive-tools-and-computation.md)、[T09-C05](T09-code-abstraction-cases.md)、[T09-C07](T09-code-abstraction-cases.md)、[T08-C02](T08-platform-functions.md)、[AB-009](../abstraction-cases.md)。
+**分类：** 工具/IDE/协议库 · L3–L5。**知识：** K02.F2.3。**参考：** [T02-C02](T02-interactive-tools-and-computation.md)、[T09-C05](T09-code-abstraction-cases.md)、[T09-C07](T09-code-abstraction-cases.md)、[T08-C02](T08-platform-functions.md)、[AB-009](../abstraction-cases.md)。**关系：** 条件启发；静态组合与动态扩展点。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 工具有两种内部输出格式，均为纯转换；另一产品允许第三方发布独立扩展且部分需要系统资源。
 - **可比较方案：** A：直接函数或参数化纯 helper，静态组合；B：真实多实现共享窄接口，可选能力明确，不强制 unsupported 行为；C：动态发现、加载与版本/能力约束，高风险扩展再加进程隔离。
-- **选择、排除与条件反转：** 内部固定格式 A（真实共同合同才共享）；消费者需替换或独立变化 B；有独立发布和动态选择 C。插件元数据并非权限凭据，不能为未来假想扩展提前架设平台。
+- **选择、排除与条件反转：** 内部固定格式 A（真实共同合同才共享）；消费者需替换或独立变化 B；有独立发布和动态选择 C。插件元数据并非权限凭据，独立进程也非安全沙箱保证；真实 OS 权限、IPC 授权、资源限额和可信边界须按风险验证，不能为未来假想扩展提前架设平台。
 - **独立验证意图（NOT_RUN）：** 不同格式边界、未知能力、独立版本、加载失败、第三方副作用、卸载；检查旧消费者及合法输出，不以 registry 数量衡量可扩展性。
 
 ## 交接
