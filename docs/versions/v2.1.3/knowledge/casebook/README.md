@@ -7,7 +7,10 @@
 [Task DAG #567](https://github.com/kaicreator-mm/tally/issues/567) 是任务状态权威。原 R7 首批 40 条不改编号；后续独立分区累计新增，不混淆初始清单。当前：
 - [T00 基线与覆盖缺口](waves/T00-baseline-and-coverage.md)：实际核对 40 个原 ID、20 个来源文件/19 个项目、165 个 Kxx 原知识 ID。
 - [T02 交互式软件、开发工具、科学计算](waves/T02-interactive-tools-and-computation.md)：8 条真实来源参考，6 个项目/10 个实际文件；含 Android 移动架构、CAD 文档与视图、游戏场景树、编译 pass 与分析缓存、数组视图、CLI 与库边界。源观察或项目文档，验证建议 NOT_RUN。
-- 截至本增量总计 48 个案例（36 条真实来源参考、12 条原创）、30 个来源文件/25 个不同外部项目。仍为知识候选，未完成独立综合审核。其余任务逐分区交付；T13 统一多轴索引，不在每一小批重复重写现有索引。
+- [T01 专业理论 A/B](waves/T01-theory-ab.md)：六项专业机制补深，复用原 Kxx 与真实 R6 反例；不计为新项目案例。
+- [T03 业务与协同架构](waves/T03-business-and-collaboration-architecture.md)：8 条真实参考、9 个来源文件；Web/ERP/电商/协同/CMS。
+- [T04 AI 与基础设施架构](waves/T04-intelligence-and-infrastructure-architecture.md)：9 条真实参考、8 个来源文件；模型调度、Agent 状态、搜索、数据库、分布式、RTOS/IoT。
+- 截至本增量总计 65 个案例（53 条真实来源参考、12 条原创）、47 个来源文件/37 个不同外部项目，另有 T01 六项理论补深。仍为知识候选，未完成独立综合审核。T13 统一多轴索引。
 
 ## 第一批可读案例
 
