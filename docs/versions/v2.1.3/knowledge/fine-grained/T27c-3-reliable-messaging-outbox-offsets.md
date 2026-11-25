@@ -47,12 +47,17 @@ Java KafkaConsumer 4.1.2 的 position 随 poll 取得记录推进，committed po
 
 ## 4. Kafka 内事务与外部事务不可混淆
 
-在 Kafka topic→处理→Kafka topic 的选定场景，可用 transactional producer，消费输入、产生输出，将相应 group offsets 通过 sendOffsetsToTransaction 纳入同一 Kafka transaction；输出消费者使用 read_committed，故 abort 的输出不会作为已提交记录交付，offset 也不晋升。abort 后应用须重新获取并定位已提交进度，不假定本地 poll 游标自动倒退；处理异常按 API 当前事务状态、错误种类和组资格确定恢复，不一律 abort/retry。transactional.id 对逻辑生产者稳定且活跃实例不得任意共用；具体 fencing/超时/配置与实际版本核验。commitTransaction 超时不证明 broker 未提交。此机制并不包含独立 SQL/HTTP 效果。
+在 Kafka topic→处理→Kafka topic 的选定场景，可用 transactional producer，消费输入、产生输出，将相应 group offsets 通过 sendOffsetsToTransaction 纳入同一 Kafka transaction；此例处理的是已提交输入：输入消费者 isolation.level=read_committed，enable.auto.commit=false，禁止独立 commitSync/commitAsync；由同一事务 producer 使用该实际消费者的 consumer.groupMetadata() 与合法连续完成前缀的 next offset（及适用 leader epoch），不得用旧组资格替代。输出消费者也使用 read_committed，故 abort 的输出不会作为已提交记录交付，事务 offset 也不晋升。abort 后应用须重新获取并定位已提交进度，不假定本地 poll 游标自动倒退；处理异常按 API 当前事务状态、错误种类和组资格确定恢复，不一律 abort/retry。transactional.id 对逻辑生产者稳定且活跃实例不得任意共用；具体 fencing/超时/配置与实际版本核验。commitTransaction 超时或中断不证明 broker 未提交；按 4.1.2 API 可重试同一 commit，不可切换 abort 等不同操作（提交可能进行中），不重试则关闭 producer，后续按真实事务状态恢复。此机制并不包含独立 SQL/HTTP 效果。
 
 外部事务 DB 可选择把投影结果和恢复 offset 同一目标事务存储（自管恢复位置与 seek/分配、fence、重建均须设计），或者本例的事务 Inbox + 后置 Kafka offset。前者不自动处理多组或同 ID 不同 offset；后者允许重复交付，但要求业务效果去重。两者均不由“Kafka exactly-once”名义证明。选用时按重放需求、保留/恢复、外部资源支持、吞吐/复杂度及实际故障边界评价；不强制所有项目使用 outbox 或 Kafka。
+
+### P2-R4B-01 · 两个独立负例（NOT_RUN）
+
+- 已提交输入恢复位置40，取到40后若独立 auto/manual commit 41，而输出事务 abort，则重启可能跳过40且无已提交输出。正确路径只经 sendOffsetsToTransaction 提交当前组合法进度；独立观察 abort 后真实 group offset 仍40、输出无已提交结果，重置游标后合法重处理，并观察最终输出与进度共同提交。
+- 上游事务写 E8 后 abort；若输入 read_uncommitted 可能读到 E8 并在下游成功提交 Y，即使输出 read_committed 仍看到 Y。此例要求只处理已提交输入，故核上游实际事务状态、输入不交付已 abort 记录、无 Y；对照上游正常提交且其它前提合法，才允许派生 Y 并按事务推进进度。区分输入隔离与输出隔离，不以结果数量或配置字面代替权威记录。上述仅 Kafka 内部管道，不外推 SQL/HTTP。
 
 ## 5. 验证与来源
 
 独立 Oracle 取源事务前后、outbox eventId/key/version、实际 broker topic/partition/offset/确认、目标 Inbox/投影事务、group commit/重启位置；对照故障矩阵、两分区与不同 group、offset 间隙及先完成高 offset、不同业务版本乱序、重放超出保留、旧消费者、授权变化。实际负荷下核积压、处理速率、暂停及恢复，见 [T33b-1](T33b-1-performance-queueing-capacity.md)；未测不称可靠性 SLA。协议与 schema 演进另见 [T25c-3](T25c-3-protocol-capability-negotiation.md)。
 
-2026-11-26 实际读取官方 [Kafka 4.1 Design](https://kafka.apache.org/41/design/design/) Message Delivery Semantics L321–350；[KafkaConsumer 4.1.2 API](https://kafka.apache.org/41/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html) L25–51、78–123（position/group/poll/manual offsets）；[KafkaProducer 4.1.2 API](https://kafka.apache.org/41/javadoc/org/apache/kafka/clients/producer/KafkaProducer.html) L32–78、207–209 及 commitTransaction 方法说明；[Producer Configs 4.1](https://kafka.apache.org/41/configuration/producer-configs/) L199–202、676–709、1063–1065。以上为版本化官方文档实际阅读范围，不是源码全量核验。Debezium 3.4 文档打开返回403，不作为已读证据；Outbox/Inbox 及数值/失败矩阵为本文原创教学推导，不宣称 Debezium 实现或运行。所有 Oracle NOT_RUN；DA-05 扩展目标候选待独审；既有真实案例和资格不增加。
+2026-11-26 实际读取官方 [Kafka 4.1 Design](https://kafka.apache.org/41/design/design/) Message Delivery Semantics L321–350，P2 补读 Using Transactions L359–364；[KafkaConsumer 4.1.2 API](https://kafka.apache.org/41/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html) L25–51、78–123（position/group/poll/manual offsets）；[KafkaProducer 4.1.2 API](https://kafka.apache.org/41/javadoc/org/apache/kafka/clients/producer/KafkaProducer.html) L32–78、207–209 及 P2 补读 sendOffsetsToTransaction L306–311、commitTransaction L331–333；[Producer Configs 4.1](https://kafka.apache.org/41/configuration/producer-configs/) L199–202、676–709、1063–1065。以上为版本化官方文档实际阅读范围，不是源码全量核验。Debezium 3.4 文档打开返回403，不作为已读证据；Outbox/Inbox 及数值/失败矩阵为本文原创教学推导，不宣称 Debezium 实现或运行。所有 Oracle NOT_RUN；DA-05 扩展目标候选待独审；既有真实案例和资格不增加。
