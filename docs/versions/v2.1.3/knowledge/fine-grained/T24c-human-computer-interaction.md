@@ -1,6 +1,6 @@
 # T24c · 用户任务、交互合同与可访问的纠错
 
-归属 K01 用户目标、K02 交互合同、K03 实现、K05 评价；#586 / T23 HC01–04 CORE。复用 [T24a](T24a-requirements-discovery-negotiation.md)、[K03 错误语义](../../../v2.1.2/software-engineering-knowledge/K03/advanced-error-semantics-observability-and-validation-proof.md)、[T07-C07 表单](../casebook/waves/T07-business-functions.md#t07-c07--表单绑定状态校验流水与业务规则)。后者是既有源案例解释（未重新运行），不是可用性证据。本文案例、测量及 Oracle 为原创教学 NOT_RUN。
+归属 K01 用户目标、K02 交互合同、K03 实现、K05 评价；#586 / T23 HC01–04 CORE。复用 [T24a](T24a-requirements-discovery-negotiation.md)、[K03 错误语义](../../../v2.1.2/software-engineering-knowledge/K03/advanced-error-semantics-observability-and-validation-proof.md)、[T07-C07 表单](../casebook/waves/T07-business-functions.md)。后者是既有源案例解释（未重新运行），不是可用性证据。本文案例、测量及 Oracle 为原创教学 NOT_RUN。
 
 ## 1. 任务和心理模型不是界面组件
 
