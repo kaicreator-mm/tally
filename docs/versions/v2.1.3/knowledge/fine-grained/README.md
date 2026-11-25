@@ -20,9 +20,9 @@
 
 两篇均获限定接受；教学例与 Oracle NOT_RUN。原已接受四篇中的两篇仅改三项 P2，不重审全部；T24a/T24c 正文不变。
 
-## 第三组专业正文及流协议修正（#563/#588 延续）
+## 第三组专业正文及流协议修正（#591）
 
-基线 d382b0091fee6989777421d5ce48280f11624a2f；[候选原稿](https://github.com/kaicreator-mm/tally/issues/563#issuecomment-7167352369)，[第二批独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694)，[实际 main 内容核验](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167297467)。本批限定写入 PR #590；未创建新的独立 Task（接口持续失败），使用 #563 任务记录与 #588 延续追踪。P2-FG-04 已补入 T27b-2 §3.1（流背压/终止、严格增量解码、取消与 Oracle），待独审，不提前关闭。
+基线 d382b0091fee6989777421d5ce48280f11624a2f；[候选原稿](https://github.com/kaicreator-mm/tally/issues/563#issuecomment-7167352369)，[第二批独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694)，[实际 main 内容核验](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167297467)。本批限定写入 PR #590；此前新建 Task 接口失败，现已恢复并创建 [#591](https://github.com/kaicreator-mm/tally/issues/591)，关联 #563 原稿、#588 延续记录与现有 PR #590，不重复建 PR。P2-FG-04 已补入 T27b-2 §3.1（流背压/终止、严格增量解码、取消与 Oracle），待独审，不提前关闭。
 
 | 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
 |---|---|---|
