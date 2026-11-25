@@ -4,6 +4,8 @@
 
 ## 后续有限增量
 
+- [T17 真实业务功能抽象：订单状态、政策与模块扩展](waves/T17-business-function-abstraction.md)：#572，三个实际业务功能参考、四个新来源及一个既有来源扩读；待独立审核，行为 NOT_RUN。
+
 - [T16 跨语言抽象：作用域退出、所有权与失败合同](waves/T16-cross-language-scope-exit.md)：#570，Java/C++/Rust 三条源码参考与同问题跨语言对照；待独立审核，行为 NOT_RUN。
 
 - [T15 TypeScript/JavaScript 抽象合同与选择对照](waves/T15-ts-js-abstraction-contrasts.md)：#568，四条新源码参考、正反例与独立的增量索引；NOT_RUN，待独立审核。下列 T13 目录及数值仍是首期冻结历史快照，最终状态见 [#567 closeout](https://github.com/kaicreator-mm/tally/issues/567#issuecomment-7157423397)。
