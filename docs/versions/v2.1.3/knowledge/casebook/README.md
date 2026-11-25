@@ -6,7 +6,7 @@
 
 - [知识体系总入口与阶段资格](waves/T22-current-knowledge-entry.md)：知识选择、验收链、剩余缺口与停止条件。
 - [142 条统一案例目录](waves/T22-current-case-catalog.md)：按类型/粒度、功能、质量约束、资格、知识关系与来源选择。
-- [165 个原知识点的当前反向索引](waves/T22-current-knowledge-index.md)：164 条关系（127 机制、37 条件），保留原定义。
+- [165 个原知识点的当前反向索引](waves/T22-current-knowledge-index.md)：164 条关系（129 机制、35 条件），保留原定义。
 - [143 个唯一来源 Blob 登记](waves/T22-current-source-ledger.md)：实际版本身份、登记定位及独立读取资格。
 - [分阶段综合工程判断](waves/T21-cross-subject-judgment.md)：三组原创综合推演，59 个原知识点；不是实际执行或新案例计数。
 
