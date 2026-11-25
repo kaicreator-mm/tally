@@ -34,7 +34,7 @@ RFC 9110 §9.2 区分 safe（请求语义主要是读取）与 idempotent（相�
 
 RFC 9110 §13.1.1 If-Match 使用 strong entity-tag 比较；修改选定表示时可避免基于旧表示的覆盖。教学客户端 A、B 均读 tag "v1"；A PUT 带 If-Match 成功，资源变为 tag "v2"；B 若发送不匹配的 "v1"，源服务端不得执行该请求方法，可返回412；对已应用变更的规范例外可能返回2xx。前提服务端真实执行条件判断与变更的并发合同、选定 representation 与域正确，不能仅在客户端比一次 tag 后无条件写入。ETag 不天然是跨资源业务版本号、哈希或全局事务锁；仅有 tag 也不能证明其他资源未变。读回/错误码依据实际 API。
 
-HTTP 响应区分 200（按方法语义成功）、201（创建资源）、202（受理但处理未完成）及错误类别；202 并不保证最终成功。即使返回2xx，客户端仍需检查实际媒体类型、完整响应、合法数据形状及业务合同；解析失败不能用 HTTP 状态单独作为成果证据。分页/条件缓存、重定向、代理、中间件和认证的详细规则须另读对应协议。未实现 HTTP parser，不把此节当完整 HTTP 手册。
+HTTP 响应区分 200（按方法语义成功）、201（创建资源）、202（受理但处理未完成）及错误类别；202 并不保证最终成功。即使返回2xx，客户端仍需按该方法/状态的合同检查响应完整性；若合同有响应内容，再核媒体类型和合法数据形状（204 等无内容响应不要求 JSON body），以及业务合同；解析失败不能用 HTTP 状态单独作为成果证据。分页/条件缓存、重定向、代理、中间件和认证的详细规则须另读对应协议。未实现 HTTP parser，不把此节当完整 HTTP 手册。
 
 ## 5. 期限、连接池、容量与诊断
 
@@ -46,4 +46,4 @@ HTTP 响应区分 200（按方法语义成功）、201（创建资源）、202�
 
 Oracle（NOT_RUN）：任意分块及两帧合并；帧中截断/超长/非法编码；响应 ID 错配；接纳后断连且远端分别提交或未提交；If-Match 两客户端受控交错；202 后最终拒绝；连接池耗尽/慢消费者/总期限用尽。独立核逻辑结果、真实提交及资源终态，外部效果无权威证据则 UNKNOWN。对比新连接与复用、端到端延迟与负载，未测不报性能。
 
-2026-11-26 实际读 [RFC 9293 §2.2](https://www.rfc-editor.org/rfc/rfc9293.html#section-2.2) TCP byte-stream/reliability/duplex/liveness 和 Linux [tcp(7)](https://man7.org/linux/man-pages/man7/tcp.7.html) DESCRIPTION。实际读 [RFC 9110 §9.2.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2) 幂等/重试及 [§13.1.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1) If-Match；其他一般网络/HTTP 状态及工程设计为原创综合，非全规范重读。协议例、错误表与验证意图 DOCUMENT_CANDIDATE，未执行，不新增合格 Claim。
+2026-11-26 实际读 [RFC 9293 §2.2](https://www.rfc-editor.org/rfc/rfc9293.html#section-2.2) TCP byte-stream/reliability/duplex/liveness 和 Linux [tcp(7)](https://man7.org/linux/man-pages/man7/tcp.7.html) DESCRIPTION。实际读 [RFC 9110 §9.2.2](https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2) 幂等/重试、§9.2.1 safe、§15.3.1–3/§15.3.5 成功状态及 [§13.1.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-13.1.1) If-Match；其他一般网络基础及工程设计为原创综合，非全规范重读。协议例、错误表与验证意图 DOCUMENT_CANDIDATE，未执行，不新增合格 Claim。
