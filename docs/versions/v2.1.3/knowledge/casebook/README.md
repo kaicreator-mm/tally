@@ -4,6 +4,8 @@
 
 ## 后续有限增量
 
+- [T18 同功能的不同架构：同步、进程内异步、数据库队列](waves/T18-job-architecture-contrasts.md)：#574，三个真实执行路径、十个新增来源、共同需求的合同及成本比较；待独立审核，行为 NOT_RUN。
+
 - [T17 真实业务功能抽象：订单状态、政策与模块扩展](waves/T17-business-function-abstraction.md)：#572，三个实际业务功能参考、四个新来源及一个既有来源扩读；待独立审核，行为 NOT_RUN。
 
 - [T16 跨语言抽象：作用域退出、所有权与失败合同](waves/T16-cross-language-scope-exit.md)：#570，Java/C++/Rust 三条源码参考与同问题跨语言对照；待独立审核，行为 NOT_RUN。
