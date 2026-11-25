@@ -24,7 +24,17 @@ model_id -> model_name
 ```
 单表会重复 project_name/model_name，更新模型名可能需要改许多行；删除最后一条登记可能丢失设备或项目事实，不能独立录入尚未登记设备。
 
-1NF 关注每个属性的适当原子域与关系表示，不等于禁止所有数组类型（SQL 物理/类型设计另议）。2NF 排除非主属性依赖候选键的一部分；3NF 对每个非平凡 X→a，要求 X 是超键或 a 是某候选键组成属性；BCNF 更强，要求非平凡决定因素 X 为超键。以上为一般关系理论定义及原创建模推导，并不表示 PostgreSQL 自动检查范式。先拆出 Project、Device、Model 与 ProjectDevice；按键连接可重建合法登记关系，且上述依赖局部可表达。一般分解须检查无损连接与依赖保持，不能按“每字段一表”机械拆分。
+1NF 关注每个属性的适当原子域与关系表示，不等于禁止所有数组类型（SQL 物理/类型设计另议）。2NF 在 1NF 基础上要求每个非主属性（不属于任何候选键）完全依赖每个候选键，即不依赖其真子集；3NF 对依赖闭包中的每个非平凡 X→a（a 为单属性），要求 X 是超键或 a 是某候选键组成属性；BCNF 更强，要求依赖闭包中每个非平凡 X→Y 的 X 为超键。以上为一般关系理论定义及原创建模推导，并不表示 PostgreSQL 自动检查范式。设 p=project_id、d=device_id、pn=project_name、m=model_id、mn=model_name。只依据给定 FD，(p,d)+ 覆盖全部 R，p/d 不出现在非平凡 FD 的右侧，因此任何键必须含二者；唯一候选键为 (p,d)。p→pn、d→m 是部分依赖，m→mn 是传递依赖。分解为：
+
+| 步骤 | 两个关系的属性交集 | 无损依据（交集决定一侧全属性） |
+|---|---|---|
+| 拆 Model(m,mn) 与 R1(p,d,pn,m,role) | m | m→mn |
+| 拆 Device(d,m) 与 R2(p,d,pn,role) | d | d→m |
+| 拆 Project(p,pn) 与 ProjectDevice(p,d,role) | p | p→pn |
+
+对满足给定 FD 的 R，每一步二元连接无损；逐步连接可恢复原 R。每个原 FD 均落在某一子关系中，投影依赖的并集蕴含原 FD（其闭包也因此保持）；并非单凭无损就能推导依赖保持。更广概念模型的 vendor_id、serial 等属性不在 R 中，恢复 R 时应投影至原列；独立尚未登记的设备/项目也不是原登记行。不能将此推导套到未声明的其他业务依赖。
+
+反例（课程 LOCATION 依赖的教学改写）：L(city,street,zipcode)，假设 (city,street)→zipcode、zipcode→city。候选键为 (city,street) 与 (zipcode,street)，所有属性均属某候选键，故满足 3NF；zipcode 非超键，违反 BCNF。拆为 Z(zipcode,city)、S(street,zipcode)，交集 zipcode 决定 Z，故无损。但若 Z={(z1,c),(z2,c)}、S={(s,z1),(s,z2)}，两表各自满足投影 FD，连接后同一 (c,s) 对应两个 zipcode，违反原 FD。说明不能仅凭各表局部约束保持该依赖；该局部合法但全局非法实例并不反驳对原合法 R 的无损性。实际设计需选择保留 3NF/增加跨表约束或重新确认业务事实。无损和依赖保持分别审查，示例 NOT_RUN。
 
 反范式是有意保存派生值/快照：例如历史订单上的商品名/成交价可能是不可变历史事实，不等同当前商品名；若只是缓存当前值，则必须规定来源、刷新/写入责任和不一致窗口。冗余不一定错误，是否保留取决于真实语义与实际读写成本。
 
@@ -72,7 +82,7 @@ LEFT JOIN project_device pd
 
 逻辑正确性与物理成本分开。B-tree 常适合有序比较、范围、相等访问，但引擎会根据选择率、行数、成本估计、数据分布及统计等选择扫描/连接方式；索引增加空间、写入/更新维护成本。唯一索引可作为数据库约束的一部分，但普通索引不是业务唯一保证。
 
-例：ProjectDevice 主键 (project_id, device_id) 便于按 project_id 查找；如果经常按 device_id 查其项目或删除设备，候选另建 device_id 索引。不能仅凭“复合索引第一列规则”断言所有版本绝不使用后列或必然快；实测目标版本查询计划。按 role 这种低选择率字段未必有益，组合索引、部分索引的适用性取决于条件与数据。
+例：ProjectDevice 主键 (project_id, device_id) 便于按 project_id 查找；如果经常按 device_id 查其项目或删除设备，候选另建 device_id 索引。不能仅凭“复合索引第一列规则”断言所有版本绝不使用后列或必然快；实测目标版本查询计划。低基数表示不同值较少；谓词选择率表示匹配行占比（此处按匹配比例定义，低值意味着匹配较少）。role 值少且常见 role 谓词匹配很大比例时，普通单列索引未必有益；稀有 role、组合索引或部分索引可能不同。应看目标引擎实际统计、计划及读写成本，未测不承诺性能。
 
 计划阅读顺序：核 SQL 与结果范围→估计/实际行数（统计与分布）→扫描方法、过滤位置、连接方法→排序/内存/IO→比较相同负荷的尾延迟及写入。EXPLAIN 给计划及估算，EXPLAIN ANALYZE 会实际执行；涉及修改时不要在生产或无权限对象上直接运行，即使回滚也不保证外部效果撤销。未运行此例，不给性能数字。
 
@@ -104,4 +114,4 @@ PostgreSQL 18 文档：Read Uncommitted 实际按 Read Committed；Read Committe
 
 ## 8. 来源与证据限制
 
-实读 2026-11-25 PostgreSQL 18 官方 [§5.5 Constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)、[§9.1 Logical Operators](https://www.postgresql.org/docs/18/functions-logical.html)、[§9.2 Comparison](https://www.postgresql.org/docs/18/functions-comparison.html)、[§7.2 Table Expressions](https://www.postgresql.org/docs/18/queries-table-expressions.html)（qualified joins / WHERE）、[§14.1 Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)（计划结点、估算及实际观察）、[§13.2 Transaction Isolation](https://www.postgresql.org/docs/18/transaction-iso.html)（Read Committed/Repeatable Read/Serializable）。范式理论参考 University of Wollongong CSCI235 Autumn 2026 [Database normalization](https://documents.uow.edu.au/~jrg/.snapshot/daily.2026-11-04_0010/235/slides/03databasenormalization/03databasenormalization.html)（实际读 2NF L322–324、3NF L724–731、BCNF 分解相关段；原创建模例与一般无损/依赖保持判断为教学推导）。Wilfrid Laurier University Normalization 页面直开限校园访问，不算已核正文。索引具体版本选型依据实际计划，未连接数据库。所有示例、选择与反例为 DOCUMENT_CANDIDATE，非新 source-qualified Claim 或产品测试。
+实读 2026-11-25 PostgreSQL 18 官方 [§5.5 Constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)、[§9.1 Logical Operators](https://www.postgresql.org/docs/18/functions-logical.html)、[§9.2 Comparison](https://www.postgresql.org/docs/18/functions-comparison.html)、[§7.2 Table Expressions](https://www.postgresql.org/docs/18/queries-table-expressions.html)（qualified joins / WHERE）、[§14.1 Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)（计划结点、估算及实际观察）、[§13.2 Transaction Isolation](https://www.postgresql.org/docs/18/transaction-iso.html)（Read Committed/Repeatable Read/Serializable）。范式理论参考 University of Wollongong CSCI235 Autumn 2026 [Database normalization](https://documents.uow.edu.au/~jrg/.snapshot/daily.2026-11-04_0010/235/slides/03databasenormalization/03databasenormalization.html)（原写作者读取相关段；首批独审固定快照直开 cache miss，另核 [课程实际正文](https://documents.uow.edu.au/~jrg/235/slides/03databasenormalization/03databasenormalization.html) 与索引正文；本次复用该审核证据，不宣称重读快照完整字节。LOCATION 依赖与上述投影反例为纸面推导）。Wilfrid Laurier University Normalization 页面直开限校园访问，不算已核正文。索引具体版本选型依据实际计划，未连接数据库。所有示例、选择与反例为 DOCUMENT_CANDIDATE，非新 source-qualified Claim 或产品测试。
