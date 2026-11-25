@@ -22,6 +22,20 @@ etcd v3.6 默认 KV 操作的实时顺序与持久承诺见 API guarantees；可
 
 例：r=10 快照，r=11 同时改 A、B，r=12 只改其它 scope。应用11的一半后崩溃，若已写 checkpoint=11，恢复从12将漏另一半。原子投影+checkpoint 或可独立证明的幂等重放修复这一类失败。若 r+1 已压缩，重新获得完整一致快照及新 revision 再追增量；不把缺口当没有变更。恢复灾难快照是新逻辑集群，不能沿用旧集群 revision 身份；etcd v3.6 文档提供 revision bump/mark-compacted 使旧 watch 失效的恢复方式，实际 bump 必须覆盖已暴露的最大 revision 范围；它不重建遗失写入，不证明业务外部 Effect 一致。
 
+### 3.1 实际消息、分页与 checkpoint 边界（FG13）
+
+限定一个 watch 覆盖整个投影的键范围，不滤除投影所需的 PUT/DELETE，且禁用 raw WatchCreateRequest.fragment（或使用已经按实际协议完整重组并验证的客户端）。第一份默认线性化 Range 取得 r 与 cluster_id；分页使用相同 cluster_id、固定原始 r、同一 range_end 和按字节键升序的独占续页起点（例如最后键后追加 0x00 字节作为下一包含下界），检查 more、次序和范围；后续请求明确带 revision=r。ResponseHeader.revision 是生成响应时的 store revision，可能大于历史查询 r，绝不能用它更新基线。所有页完整才原子发布；遇 ErrCompacted 或身份变化废弃未完成基线，重建，不拼接不同快照。新快照发布后以 r+1 inclusive 建立 watch，期间历史压缩则同样重建。
+
+对绑定同一 cluster/stream/watch_id 的正常事件批，按 Event.kv.mod_revision（DELETE 为删除 revision，而非 prev_kv 的旧 revision）划分 revision，完整组保持事件顺序并原子应用该组及持久 checkpoint；不能用普通响应 header 当前 revision 代替已应用组的 revision。created ACK 仅建立 watch 身份，canceled/compaction 是控制状态，不是已应用历史或进度。真正的进度通知仅在确认同一 watcher 的所有截至该 revision 的必要事件已完整处理并持久化后才可原子推进无变更 checkpoint；不把所有空响应当进度。若允许 fragment，必须按该 watcher 及客户端协议完成重组后才分组提交，不将单个 raw response 当完整 revision；中途断线丢弃未完成组并从最后持久 checkpoint+1 重连，不跳到 fragment header。本文不规定某 SDK 的重组实现；未验证的 raw 分片路径应拒绝或禁用。
+
+纸面反例与 Oracle（NOT_RUN）：
+- r=10，创建 watch 时 header=14，但历史11..14尚未应用；若 ACK 后记 checkpoint14 并断线，重连15会漏历史。正确保持10，重放11起；以权威 r14 快照核整个投影及持久 checkpoint，而非回调计数。
+- revision11同时写A、B；只收到A的分片即断线，不能发布半组或记11；重连11取得完整组后原子应用，核A/B同时可见及最终 checkpoint。
+- r10中键A、C，第一页A；此后r11插入B且修改C，第二页仍以r10读C旧值、无B，即使header=11；随后watch从11得到B及C更新。若第二页改查r11却记基线11，会混合版本并跳过A的潜在更新。
+- 若另行设计多个watch，A侧进度到14、B侧仅11，不能把14作为整个投影已应用边界；需分别记录同scope进度、证明各流覆盖与无缺口，并缓冲至共同完整水位才发布跨范围原子视图。共同水位本身不是聚合完整性的全部证明；本章不实现多watch合并器。
+
+实读 etcd v3.6 [API](https://etcd.io/docs/v3.6/learning/api/) ResponseHeader/KeyValue/Range/Watch（L850–889、928–951、1105–1150）与 [API reference](https://etcd.io/docs/v3.6/dev-guide/api_reference_v3/) WatchCreateRequest fragment、WatchResponse、Event（L1554、1575–1588）；原 API guarantees 的完整 revision 保证须结合实际消息边界。以上为限定投影合同和原创反例，非已运行 etcd/SDK。
+
 ## 4. 租约、fencing 与远端效果
 
 租约的失效由协调服务判定，不会撤销暂停中的旧进程已经持有的连接或即将发送的请求。教学：A 获 token=41 后暂停，租约失效，B 获42并向受保护资源写入；A 恢复。仅检查 A 的本地时间或协调服务中的新 owner，无法与远端最终写原子绑定。可选 fencing：资源以持久高水位拒绝小于已接受 token 的写；同一 token 的重放仍需操作身份及效果合同。token 必须来自可信、单调且适用同一资源/epoch 的发放者，资源在同一原子操作内检查并更新高水位和数据。只有 B 已在资源上建立42的 fence 后才能保证 A 的41在该资源被拒绝；若 B 尚未到达，单靠高水位不保证租约刚失效即撤权。严格实时撤权需要更强的共同权威合同。灾难恢复若重置 token 序列，需新 epoch 及有权资源切换，不可直接重复41。不可校验 token 的外部 API 不获得此保证；参见 CON 的未知效果与授权重放。租约不等于永久身份、恰好一次或分布式事务。
