@@ -53,10 +53,10 @@
 
 ## 来源登记（固定版本 ref 与实际读取 Blob）
 
-- **T15-S01** [sindresorhus/p-limit/index.js](https://github.com/sindresorhus/p-limit/blob/v6.2.0/index.js) · v6.2.0 · Blob 22b1e8717d7509cf2c1f56c95bc53beb3b94ec7b · L1–100（实际完整文件）；队列、许可、settle、公开属性。
-- **T15-S02** [microsoft/vscode/src/vs/base/common/lifecycle.ts](https://github.com/microsoft/vscode/blob/1.96.0/src/vs/base/common/lifecycle.ts) · 1.96.0 · Blob 4cc2d172bf4f61b6f00d06b761551adf7a0ec8a3 · 实际读取 L200–340 中 IDisposable、dispose、combinedDisposable；不推断其他成员实现。
-- **T15-S03** [colinhacks/zod/src/types.ts](https://github.com/colinhacks/zod/blob/v3.24.1/src/types.ts) · v3.24.1 · Blob 98281ff2f08c8ceff026e8ed1733cf07e083589f · 实际读取 L1–160、L155–280 中 handleResult、SafeParseReturnType、ZodType._parseSync/_parseAsync/parse/safeParse。
-- **T15-S04** [reduxjs/redux/src/combineReducers.ts](https://github.com/reduxjs/redux/blob/v5.0.1/src/combineReducers.ts) · v5.0.1 · Blob 5d99a8b585591506b7adc5d5aa2d860d80d7c91f · 实际读取 L1–160、L155–205 中 assertReducerShape、combineReducers/combination。
+- **T15-S01** [sindresorhus/p-limit/index.js](https://github.com/sindresorhus/p-limit/blob/v6.2.0/index.js) · v6.2.0 · Blob 22b1e8717d7509cf2c1f56c95bc53beb3b94ec7b · L1–104（实际完整读取）；队列、许可、settle、公开属性。
+- **T15-S02** [microsoft/vscode/src/vs/base/common/lifecycle.ts](https://github.com/microsoft/vscode/blob/1.96.0/src/vs/base/common/lifecycle.ts) · 1.96.0 · Blob 4cc2d172bf4f61b6f00d06b761551adf7a0ec8a3 · L269–339（实际读取范围内） IDisposable、dispose、combinedDisposable；不推断其他成员实现。
+- **T15-S03** [colinhacks/zod/src/types.ts](https://github.com/colinhacks/zod/blob/v3.24.1/src/types.ts) · v3.24.1 · Blob 98281ff2f08c8ceff026e8ed1733cf07e083589f · L92–115、154–185、228–266：handleResult、SafeParseReturnType、ZodType._parseSync/_parseAsync/parse/safeParse。
+- **T15-S04** [reduxjs/redux/src/combineReducers.ts](https://github.com/reduxjs/redux/blob/v5.0.1/src/combineReducers.ts) · v5.0.1 · Blob 5d99a8b585591506b7adc5d5aa2d860d80d7c91f · L62–201：assertReducerShape、combineReducers/combination。
 
 专业定义锚点（原 Kxx 未修改）：[K02.F2.2 L48 / F3.1 L67](https://github.com/kaicreator-mm/tally/blob/772eb6819a30a4fb248c6c60d24e08bb02a00c19/docs/versions/v2.1.2/software-engineering-knowledge/K02/systematic-syllabus.md#L48) · [K03.F2.1 L40 / F2.2 L48 / F3.3 L83 / F4.2 L102](https://github.com/kaicreator-mm/tally/blob/772eb6819a30a4fb248c6c60d24e08bb02a00c19/docs/versions/v2.1.2/software-engineering-knowledge/K03/systematic-syllabus.md#L40)。
 
