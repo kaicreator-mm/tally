@@ -4,6 +4,8 @@
 
 ## 后续有限增量
 
+- [T20 真实重构历史：简化、迁移与合同修复](waves/T20-historical-abstraction.md)：#578，三个历史案例、七个源码版本及三个实际提交；含 T19 非阻断 P2 限定修正，待独立审核，行为 NOT_RUN。
+
 - [T19 完整子系统架构：Miniflux 订阅刷新](waves/T19-feed-refresh-architecture.md)：#576，一个集成源码案例、九个新增来源、六个分析视图；含 T18 非阻断 P2 限定修正，待独立审核，行为 NOT_RUN。
 
 - [T18 同功能的不同架构：同步、进程内异步、数据库队列](waves/T18-job-architecture-contrasts.md)：#574，三个真实执行路径、十个新增来源、共同需求的合同及成本比较；待独立审核，行为 NOT_RUN。
