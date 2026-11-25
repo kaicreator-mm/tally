@@ -4,7 +4,7 @@
 
 ## 1. 复用优先：已存在的专业观察与新增问题
 
-实际重新读取原 [架构案例 AR](../casebook/architecture-cases.md)、[T02](../casebook/waves/T02-interactive-tools-and-computation.md)、[T03](../casebook/waves/T03-business-and-collaboration-architecture.md)、[T04](../casebook/waves/T04-intelligence-and-infrastructure-architecture.md)、[T18](../casebook/waves/T18-job-architecture-contrasts.md)、[T19](../casebook/waves/T19-feed-refresh-architecture.md) 与 T26a-1。它们已提供层、模块、扩展宿主、依赖调度、事件处理和真实任务结构；不重复定义或增记这些案例。下表只复用既有资格的局部源观察/项目文档，具体原始版本与 Blob 见各自原登记。
+实际重新读取原 [架构案例 AR](../casebook/architecture-cases.md)、[T02](../casebook/waves/T02-interactive-tools-and-computation.md)、[T03](../casebook/waves/T03-business-and-collaboration-architecture.md)、[T04](../casebook/waves/T04-intelligence-and-infrastructure-architecture.md)、[T18](../casebook/waves/T18-job-architecture-contrasts.md)、[T19](../casebook/waves/T19-feed-refresh-architecture.md) 、[DE](../casebook/derived-design-cases.md)、[T06](../casebook/waves/T06-data-file-network-functions.md) 与 T26a-1。它们已提供层、模块、扩展宿主、依赖调度、事件处理和真实任务结构；不重复定义或增记这些案例。下表只复用既有资格的局部源观察/项目文档，具体原始版本与 Blob 见各自原登记。
 
 | 已有证据 | 可借鉴的专业判断 | 不可扩大的结论 |
 |---|---|---|
@@ -18,7 +18,7 @@ R4-A 新增问题：给同一合法系统需求，如何比较内部职责组织
 
 ## 2. 同一个有权教学合同（D0）
 
-教学系统供两个租户导入、规范化、发布文档供本租户搜索。当前只支持两种固定格式，文档有明确大小与资源预算上限，内容和版本元数据均存于同一个事务数据库（无外部对象写入、无付款）。输入格式适配不改变有权字段语义；只有权威验证通过才能发布。合法提交可在持久受理后提前返回任务身份；一旦受理，进程重启不应使其丢失，允许返回明确失败、待处理或已发布。请求超出有权容量时拒绝而非虚假受理。任务只能操作实际有权租户，查询/发布/重试均按当前执行/查询合同确认身份；本例明确撤销编辑权限后尚未提交的发布不得成功，已经发生的合法发布不会因撤权而自动删除。
+教学系统供两个租户导入、规范化、发布文档供本租户搜索。当前只支持两种固定格式，文档有明确大小与资源预算上限，内容和版本元数据均存于同一个事务数据库（无外部对象写入、无付款）。输入格式适配不改变有权字段语义；只有权威验证通过才能发布。必须支持合法提交在持久受理后提前返回任务身份的路径；一旦受理，进程重启不应使其丢失，允许返回明确失败、待处理或已发布。请求超出有权容量时拒绝而非虚假受理。任务只能操作实际有权租户，查询/发布/重试均按当前执行/查询合同确认身份；本例明确撤销编辑权限后尚未提交的发布不得成功，已经发生的合法发布不会因撤权而自动删除。
 
 Q1：同一 tenant/docId/baseVersion 的并发发布不得使两个互相冲突的新版本都从同一 base 成为当前版本；内容与当前指针、成功任务结果、供索引读取的持久变更记录在共同事务提交。重复同作用域、同操作ID和规范输入只读已有结果（仍须当前查询权）；同 ID 改输入拒绝。Q2：受理后重启，待办与最终状态可查询；中途准备内容不等于发布，失去响应需核权威记录；旧 worker 不能提交过期版本。Q3：搜索允许显示标明版本/陈旧的结果，但不能返回未获权内容；索引不得成为当前发布/授权的权威。Q4：增加一种合法格式不得改变旧格式与业务不变量；不同格式只有确有相同规范值语义才共享。Q5：处理/积压/内存有界；实际阈值、流量、恢复时间和分位数尚未给出，故不能宣称任何候选已满足性能 SLA。Q1–Q4 为本例必需合同，Q5 须在实际获权预算下证实。
 
@@ -68,7 +68,7 @@ Search API -> authorized current scope + index result (version)
 | D 形式/发布/索引独立服务、各自 DB 和事件 | 索引本已派生，可以独立持有投影；但若把内容、当前版本、任务成功写入不同 DB 后逐个发事件，不再满足 D0 同一原子提交，暂拒。格式服务可计算但不能获得发布写权；超时/版本/负载需额外合同 | 有真实独立团队/资源需求，保留发布权威共同事务或取得新的明确业务合同并重新证明跨域一致性；不自动以 saga 替代原合同 |
 | E 以动态插件机制替代固定格式适配 | 仅两种已知固定格式、无外部独立发布，动态扫描/任意 hook 增加不必要能力和风险；不能把 plugin 返回“valid”当权威校验 | 实际第三方发布、版本和运行位置需求出现，明确插件输入输出/版本/拒绝、能力最小化、真实隔离、终止与资源预算，核心仍验证及提交 |
 
-不把候选 B 写成唯一正确设计：满足同一合同的其它实现可接受。这里选择 B 为待验证的最小教学基线；Q5 未知，无法排序实际吞吐/成本。两种架构若都未满足硬约束，不能因某种更容易测试而宣布其合格。B 现有文档适配也可以先用直接函数，只有第二种格式的独立变化合同明确才引入 port。真实部署演进参考 [T32a-1](T32a-1-maintenance-refactoring-replacement.md) 与 [T32b-1](T32b-1-data-migration-and-mixed-consumers.md)。
+不把候选 B 写成唯一正确设计：满足同一合同的其它实现可接受。这里选择 B 为待验证的最小教学基线；Q5 未知，无法排序实际吞吐/成本。两种架构若都未满足硬约束，不能因某种更容易测试而宣布其合格。B 的固定格式适配也可以先用直接函数；只有真实独立变化、替换或消费者边界需要时才引入 port。真实部署演进参考 [T32a-1](T32a-1-maintenance-refactoring-replacement.md) 与 [T32b-1](T32b-1-data-migration-and-mixed-consumers.md)。
 
 ## 5. 处理链、提交与失败的实质推理
 
