@@ -24,22 +24,34 @@ Linux CLOCK_REALTIME 代表可调墙钟；手动校时等可能产生不连续�
 教学 deadline（同一 clock 域，固定有限预算）：
 ```text
 deadline = now_monotonic() + budget
-while attempt_allowed:
+last = NO_ATTEMPT
+for attempt in finite_attempts:
     remaining = deadline - now_monotonic()
-    if remaining <= 0: stop_waiting()
-    perform_next_step(timeout <= remaining)
-    if completed: return actual_result
-    if retry_allowed: bounded_delay_within_remaining_budget()
+    if remaining <= 0:
+        return waiting_timeout(last)  // preserve known/unknown Effect
+    last = perform_next_step(timeout <= remaining)
+    if completed(last):
+        return observed_result(last)  // late completion not on-time
+    if not retry_allowed(last) or no_attempt_left:
+        return terminal_attempt_result(last)
+    remaining = deadline - now_monotonic()
+    if remaining <= 0:
+        return waiting_timeout(last)
+    delay = min(authorized_backoff, remaining)
+    if delay > 0:
+        wait(delay)
+    // next iteration recomputes remaining before any work
+return terminal_attempt_result(last)
 ```
-每次重试不得重新取得完整 budget；执行下一步前重新计算剩余量。伪代码不是能强制停止所有阻塞调用的实现；目标 API 必须真正支持 timeout/取消，达到期限只说明等待边界，实际任务、资源、远端结果另按 T27c-1、T25c-2 确认。例：在5秒预算中，第1阶段消耗3秒，第2阶段最多剩2秒（未计其他开销）；若墙钟此时向后调一分钟，使用 realtime 差会误延长等待。若设备 suspend，MONOTONIC 是否满足“5秒后必过期”取决于业务是清醒时间还是实际经过时间。
+每次重试不得重新取得完整 budget；每个实际调用与 backoff 前重新计算剩余量，等待后再核验。超时结果保留最后已观察状态，Effect 无权威证据为 UNKNOWN；不得返回确定未执行。已收到真实迟到结果需保留，但不能报按期完成。无重试或次数用尽时明确最后观察与未收敛状态。伪代码不是能强制停止所有阻塞调用的实现；目标 API 必须真正支持 timeout/取消，达到期限只说明等待边界，实际任务、资源、远端结果另按 T27c-1、T25c-2 确认。例：在5秒预算中，第1阶段消耗3秒，第2阶段最多剩2秒（未计其他开销）；若第2阶段再耗2秒仍未完成，剩余0，不得启动第3阶段或正时长 backoff（NOT_RUN 反例）。若墙钟此时向后调一分钟，使用 realtime 差会误延长等待。若设备 suspend，MONOTONIC 是否满足“5秒后必过期”取决于业务是清醒时间还是实际经过时间。
 
 ## 3. 时区、夏令转换与日历算术
 
 Python3.11 zoneinfo 基于 IANA 时区数据，默认读取系统数据或 tzdata 包。实际版本与数据来源要记录，用户在不同环境看到的未来计划可能不同。naive datetime 不带明确时区语义；仅附加 tzinfo 并不自动验证当地时间真实存在，也不同于从明确瞬间转换时区。PEP495 把时钟回拨形成的重复区间称 fold，前跳缺失区间称 gap。教学取官方例 America/Los_Angeles 2020-11-01 01:00，fold=0 对应 -07:00（08:00 UTC），fold=1 对应 -08:00（09:00 UTC）；两者本地文字相同但瞬间不同。对前跳 gap 的当地时间，不能用 fold 自动创造实际存在的时刻。需要明确业务策略：拒绝、询问选择、移动到合法时间等；不能自行设定。
 
-校验教学：对输入的 local date-time 与已确定 zone，构造候选 offsets/fold，分别转 UTC 后再转回 zone，检查本地字段与候选瞬间；去重实际瞬间，0候选为 gap、1为唯一、2为歧义（适用所述 Python zoneinfo/PEP495 两候选模型，不推广任意时间库）。保存选择、zone、offset 及必要时规则数据版本。Python3.11 的 datetime 相等比较在两个 aware 对象共享同一 tzinfo 时忽略 fold；减法也忽略该共同 tzinfo 而按本地字段计算。上述两个01:00 若共享同一 ZoneInfo 对象，直接比较可相等、减法可为0；转成 UTC 后比较/相减才反映这两个不同瞬间的一小时差值（教学推导 NOT_RUN）。需要实际经过时间时先转换成适当统一瞬间或使用 monotonic 观测，不能以相同本地字符串为身份。历史事件的解释与未来用户计划的再计算策略分开。
+校验教学：对输入的 local date-time 与已确定 zone，构造候选 offsets/fold，分别转 UTC 后再转回 zone，检查本地字段与候选瞬间；以转换后的 UTC 瞬间键去重（不能用同 tzinfo 的本地 datetime 相等去重），0候选为 gap、1为唯一、2为歧义（适用所述 Python zoneinfo/PEP495 两候选模型，不推广任意时间库）。例如 LA 2020-03-08 02:30，两个 fold 候选转 UTC 再转回分别为03:30和01:30，均不匹配，零候选。保存选择、zone、offset 及必要时规则数据版本。Python3.11 的 datetime 相等比较在两个 aware 对象共享同一 tzinfo 时忽略 fold；减法也忽略该共同 tzinfo 而按本地字段计算。上述两个01:00 若共享同一 ZoneInfo 对象，直接比较可相等、减法可为0；转成 UTC 后比较/相减才反映这两个不同瞬间的一小时差值（教学推导 NOT_RUN）。需要实际经过时间时先转换成适当统一瞬间或使用 monotonic 观测，不能以相同本地字符串为身份。历史事件的解释与未来用户计划的再计算策略分开。
 
-日历算术：每个日历日不总是24小时；每月不等于固定30天。若规则为每月最后一天，应按年月历法求最后有效日；若为每隔720小时，应按 duration，二者可不同。教学约定：1月31日加一个月，业务可能要求2月末、拒绝、向后溢出或保留原计划日供未来月份计算；没有授权不得自动选择。跨 DST 每天当地09:00 与固定24小时间隔也不同。日期范围查询优先按实际合同使用半开区间 [start,end)：相邻区间共享边界但不重复计入；当地自然日先按 zone 计算两端瞬间，不能假设 UTC start+86400秒始终是当地下一日。闰秒、POSIX epoch 与 UTC/TAI 等时间尺度的严格转换留具体领域，不声称所有库能表达闰秒。
+日历算术：每个日历日不总是24小时；每月不等于固定30天。若规则为每月最后一天，应按年月历法求最后有效日；若为每隔720小时，应按 duration，二者可不同。教学约定：1月31日加一个月，业务可能要求2月末、拒绝、向后溢出或保留原计划日供未来月份计算；没有授权不得自动选择。跨 DST 每天当地09:00 与固定24小时间隔也不同。例如 Python3.11 同一 LA ZoneInfo 下 2020-03-07 09:00 加 timedelta(days=1) 得3月8日09:00，UTC 分别17:00和16:00，相差23小时（按该历史规则，纸面 NOT_RUN）。日期范围查询优先按实际合同使用半开区间 [start,end)：相邻区间共享边界但不重复计入；当地自然日先按 zone 计算两端瞬间，不能假设 UTC start+86400秒始终是当地下一日。闰秒、POSIX epoch 与 UTC/TAI 等时间尺度的严格转换留具体领域，不声称所有库能表达闰秒。
 
 ## 4. 业务有效期、观察历史与事件顺序
 
@@ -56,7 +68,7 @@ Python3.11 zoneinfo 基于 IANA 时区数据，默认读取系统数据或 tzdat
 | 教学反例（NOT_RUN） | 独立预期 |
 |---|---|
 | 墙钟向前/后跳、系统 suspend | 期限使用正确时钟域；不误报资源收敛 |
-| 两次 retry 与跨阶段 | 总预算受控，按实际调用停止边界验证 |
+| 两次 retry 与跨阶段，5s预算3s+2s未完成 | 不再调用下一步或正时长 backoff；区分等待已停止与任务未收敛 |
 | fold 两个01:00、gap 不存在时刻 | 区分两个真实瞬间与零候选；选择策略须获权 |
 | 1月31日、闰年2月、自然日跨 DST | 按明确日历合同，不能默默固定30天/24小时 |
 | 追溯更正与未来生效 | 同一有效时点、不同观察版本的独立期望 |
