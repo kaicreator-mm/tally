@@ -6,7 +6,7 @@
 
 - 人类学习：从 [原课程及两卷地图](../../v2.1.2/software-engineering-knowledge/systematic-foundation-depth-map.md) 进入主题，先概念/前置、再机制/推导、例/反例、进一步深文及来源。以实际目标选深度，不要求所有章同样形式化。
 - LLM/工程决策：从可辨识问题词（中/英文同义和含义区别）进入 [T22 当前入口](casebook/waves/T22-current-knowledge-entry.md)、[R10 选知手册](../../v2.1.2/software-engineering-knowledge/professional-knowledge-selection-playbook-r10.md) 或 T23 盘点组；读最少必要权威正文，再按事实补选择条件、真实版本、失败边界、Oracle 和未知。知识不授予业务/源码/执行权限。
-- 术语导航非自动合并：幂等/idempotence 与去重/deduplication 不同；原子性/atomicity 与 durability 不同；timeout 与 failed 不同；回滚/rollback 与补偿/compensation 不同；测试预言/test oracle 与 observation 不同；build cache 与运行时 cache 不同。版本化细节追原规范或源；历史正文及独立资格通过固定 SHA 引用。以下四个路径均核实际段落，未做全文检索成功率试验。
+- 术语导航非自动合并：幂等/idempotence 与去重/deduplication 不同；原子性/atomicity 与 durability 不同；timeout 与 failed 不同；回滚/rollback 与补偿/compensation 不同；测试预言/test oracle 与 observation 不同；build cache 与运行时 cache 不同。版本化细节追原规范或源；历史正文及独立资格通过固定 SHA 引用。R1 的以下四个路径均核实际段落，未做全文检索成功率试验。
 
 ## 2. 实际阅读路径
 
@@ -28,9 +28,9 @@
 ### N04 · 软件重构：是否需要迁移旧数据和兼容旧版本？
 
 - 人类：[K09 D1 重构与迁移 L7–37](https://github.com/kaicreator-mm/tally/blob/383358955d117d155e2b3b2fc4cd7886e77f71b9/docs/versions/v2.1.2/software-engineering-knowledge/K09/foundations-deep-dive-01.md#L7) → [K09 兼容方向及迁移 L7–29](https://github.com/kaicreator-mm/tally/blob/383358955d117d155e2b3b2fc4cd7886e77f71b9/docs/versions/v2.1.2/software-engineering-knowledge/K09/advanced-contract-evolution-migration-and-retirement.md#L7) → [K11 投资与风险 L25–29](https://github.com/kaicreator-mm/tally/blob/383358955d117d155e2b3b2fc4cd7886e77f71b9/docs/versions/v2.1.2/software-engineering-knowledge/K11/foundations-deep-dive-02.md#L25-L29) → [K05 V&V L16–29](https://github.com/kaicreator-mm/tally/blob/383358955d117d155e2b3b2fc4cd7886e77f71b9/docs/versions/v2.1.2/software-engineering-knowledge/K05/advanced-verification-validation-and-oracle-qualification.md#L16)。实际读到受支持消费者、非兼容重写例外、姓名拆分不可逆、旧状态不能自动变退款成功。原理并非 Tally 当前版本必须迁移所有历史接口。
-- 决策入口：refactor / migration / compatibility / deprecation / rollback；区分保留行为、纠错、增强及明确重写；确定真实消费者、方向、数据历史、并存窗口与允许停机。无共存时可能直接迁移；有重叠时比较 expand/migrate/contract；不允许旧版兼容时只验证新获权合同，仍需评估真实数据处置。反例：代码回滚不恢复字段、状态重命名改变真实业务事实。Oracle 是旧/新支持路径和数据副作用（NOT_RUN）。缺真实授权或状态映射则 UNKNOWN。组 OP/RE/QA/FD，O03/O05。
+- 决策入口：refactor / migration / compatibility / deprecation / rollback；区分保留行为、纠错、增强及明确重写；确定真实消费者、方向、数据历史、并存窗口与允许停机。无共存时可能直接迁移；有重叠时比较 expand/migrate/contract；不允许旧版兼容时只验证新获权合同，仍需评估真实数据处置。反例：代码回滚不恢复字段、状态重命名改变真实业务事实。Oracle 是旧/新支持路径和数据副作用（NOT_RUN）。缺真实授权或状态映射则 UNKNOWN。组 OP/RE/QA/FD，O03/O05。停止继续研究另见 [K11 D2 L31–39](https://github.com/kaicreator-mm/tally/blob/383358955d117d155e2b3b2fc4cd7886e77f71b9/docs/versions/v2.1.2/software-engineering-knowledge/K11/foundations-deep-dive-02.md#L31-L39)，不把停止表当经济模型。
 
-四条路径均存在定义或机制、实际选择条件、反例、Owner 与固定正文；这是静态文档可达性样本，不代表所有问题可检索或 LLM 性能。下一次增加 HCI/数据/采购等薄弱组路径时要从实际新读正文生成，而非凭目录。
+R1 的四条路径均存在定义或机制、实际选择条件、反例、Owner 与固定正文；这是静态文档可达性样本，不代表所有问题可检索或 LLM 性能。下一次增加 HCI/数据/采购等薄弱组路径时要从实际新读正文生成，而非凭目录。
 
 ### N05 · 表单错误、焦点与文本输入（HCI）
 
