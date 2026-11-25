@@ -10,13 +10,27 @@
 |---|---|---|---|
 | R4-A · FM-02 | H / K02，K03/K05/K11 | 同一有权小系统需求，对比模块化单体/分层或端口、事件/流水线、插件/服务真实变体；画真实调用/数据/部署与故障域，明确何时组合、何时避免。反例：拆服务破坏原事务、隐式插件引入未获权能力。 | T26a/T35、C18/C19；先读实际 T02/T03/T04、相关架构 Topic 与原资料。不是模式大全，不强制微服务。 |
 | R4-B · FM-07、DA-05 | H / K03 协议及实现、K02 状态边界、K09 版本、K05/K10 | 针对明确生产者/消费者与版本，选择一类实际 broker/持久投递合同：消息身份、顺序/分区、ACK 与 offset、重复及重放、outbox 与本地事务、幂等消费的崩溃矩阵；混合版本的协议/能力协商、拒绝和转换。独立 Oracle 区分本地提交后未投递、投递后未 ACK、重复处理、旧消费者未知字段、未支持能力；不许全局 exactly-once 结论。 | T25c-2/T27c-2/T32b/T28a-2、CON、C18；须实际读具体协议/服务端及客户端版本，不能以相似名字代替保证。 |
-| R4-C · DA-07 | H / K02 数据语义与 owner、K09 演进、K10 恢复、K01/K05 | 数据身份、版本、质量与来源血缘；来源删除/墓碑传播、备份及保留责任，离线冲突时选择拒绝/协调/获权合并；重放、晚到、身份复用及已删除值复活反例。独立核权威记录、版本、保留状态、投影和恢复结果；未获权的删除政策标 UNKNOWN。 | T32b/T33a/T27c-2、MIG；先查已有数据主题与具体真实同步/迁移例。行业保留期限、隐私法规不自行定义。 |
+| R4-C · DA-07 | H / K02 数据语义与 owner、K09 演进、K10 恢复、K01/K05 | 数据身份、版本、质量与来源血缘；来源删除/墓碑传播、备份及保留责任，离线冲突时选择拒绝/协调/获权合并；重放、晚到、身份复用及已删除值复活反例。独立核权威记录、版本、保留状态、投影和恢复结果；未获权的删除政策标 UNKNOWN。 | T32b/T33a/T27c-2、MIG；首读 [T06-C02](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md#L14-L22)、[DE-002](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/derived-design-cases.md#L15-L23)、[T02-C01](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L5-L14)，不重写当前集合/历史快照/manifest/离线读边界；具体血缘、墓碑、冲突与恢复见下文。行业保留期限、隐私法规不自行定义。 |
 | R4-D · OP-02、OP-04 | H / K08 主责制品与分发、K09 消费者演进、K10/K05 | D1 实际依赖约束/解析、锁、peer/optional、workspace/monorepo、生成及装包；不同环境解析与实际加载对照。D2 真实渐进部署/回退、canary/flag 的选中版本、权限、路由、状态兼容、停止与恢复；失败条件不以重启成功代替。 | T31a-1/2、T28a-2、REL、EVO、T32a/b；按实际 Node 版本及第二生态需要选择，不强制统一版本策略、容器或在线部署。 |
 | R4-E · QA-06 | H / K06，K05/K03/K10 | 定向选择真实缺陷族及可复查定位链：bisect 的 good/bad/skip 与前提、trace 的相关/因果、内存/锁/查询计划可区分探针。至少一个实际历史修复/测试差异和错误假设；源码读证与未运行严格分开。 | T29a、K06 原深文、REC、T27b-1；先查真实案例库，避免增加重复源码案例，实际运行另准入。 |
 | R4-F · FM-05、FD-02 | M（精确数值和资源危害可升级 H）/ K03，K01/K05 | 选实际语言版本对比绑定/值/引用/所有权/泛型/异常；精确整数、定点/decimal、舍入时点与累计误差，Unicode locale/collation/BiDi、文本与身份区别。用精确数值/文本边界、别名、部分获取/异常清理反例。 | T25b-1/2、T27a/c、T16、R19-F2；先核已有语言专文，按实际语言工具链选择，领域舍入/单位政策属权威。 |
-| R4-G · RE-02、RE-03 | H / K02/K03/K01，K05/K09/K10 | 以现有机制为引用，增加有限代表性复杂功能组合：G3 断点下载/大流 staging 与恢复，G4 缓存范围/失效与异步 UI；B3 多资源/部分效果/对账，B4 审批或预约与长导出权限。每个组合须明确实际有权合同、最小替代、失败窗、独立正反 Oracle 和合法变更后的影响。 | T35 G1/G2/B1/B2、C05/C07/C08/C17/C19/C20；B 类只在获得具体政策或明示教学假设时建，不重复通用定义。未选变体仍 UNKNOWN。 |
+| R4-G · RE-02、RE-03 | H / K02/K03/K01，K05/K09/K10 | 以现有机制为引用，增加有限代表性复杂功能组合：G3 断点下载/大流 staging 与恢复，G4 缓存范围/失效与异步 UI；B3 多资源/部分效果/对账，B4 审批或预约与长导出权限。每个组合须明确实际有权合同、最小替代、失败窗、独立正反 Oracle 和合法变更后的影响。 | T35 G1/G2/B1/B2、C05/C07/C08/C17/C19/C20；首读 [T06-C01](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md#L5-L13)、[T06-C04–06](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md#L32-L58)、[DE-001–008](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/derived-design-cases.md#L5-L83)、[T02-C06](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L55-L64)、[T03-C03/C05](https://github.com/kaicreator-mm/tally/blob/ded5b89f1c29081f53d6b0b60fe35c4f13a1e6e6/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L25-L53)；逐项复用，delta 见下文。B 类只在获得具体政策或明示教学假设时建，不重复通用定义；未选变体仍 OPEN。 |
 
 A–G 的主组共11且互不重复：FM-02、FM-05、FM-07、DA-05、DA-07、QA-06、OP-02、OP-04、FD-02、RE-02、RE-03。R1 的 DA-05/OP-04 原有限问题仍充分；R3 的 D 是扩展目标。其它已充分子目标无需被重新写作。
+
+### R3-RV-01 修订：C/G 写作前的复用与 delta（#618）
+
+关联 [独审发现](https://github.com/kaicreator-mm/tally/pull/617#issuecomment-7175399512)；原分类与11组归属不改。实际补读见 [台账](T23-R3-detail-reassessment.md#r3-rv-01-补读收据618待独立复审)，T06/T02/T03 是局部已登记源码或项目文档观察，DE 是教学推导 NOT_RUN，不相互升级。
+
+| 后续子目标 | 已有有限充分解释（直接引用） | 仅允许准入的剩余具体目标 |
+|---|---|---|
+| C · DA-07 | T06-C02 / DE-002：同步可变集合与历史备份，manifest 不证明一致快照，未知写效果需读回；T02-C01：本地数据流及离线读不证明多 writer | 实际血缘与质量责任、版本/墓碑与多端冲突政策，删除传播/旧设备复活及恢复历史语义；选定具体合同及来源，分别验证权威/投影/历史，不重复通用快照教学。 |
+| G3 · RE-02 | DE-001 与 T06-C01 已有 DownloadJob/源身份/已验证片段/offset 选择；DE-003、T06-C04/C06 已有百万行分批、业务校验/字段映射/进度、提交后进度前崩溃、流完整与 close 合同 | 选实际协议版本的 source validator/range/已验证块及不支持时行为；具体持久 staging/checkpoint/commit 崩溃矩阵、全批原子发布与允许部分成功的不同合同；不重复原 DE 的抽象结构。 |
+| G4 · RE-02 | T02-C06 分析缓存/失效；T06-C05、DE-005/007 搜索范围、截断、授权缓存；DE-006 配置激活；DE-008 通知/审计；T06-C06 流关闭；T35 G2 UI 版本投影 | 选定实际权限/版本变化与缓存失效的交错、异步反馈和读回；跨进程关闭、异常和安全日志等未选变体保持 OPEN，不以一例宣布 RE-02 全完成。 |
+| B3 · RE-03 | T03-C03/C05 库存/财务步骤及支付正交状态；DE-004 独立订单/退货与窄金额共享；T35 B1 有限单资源事务和退款意图 | 实际多资源/部分数量与部分外部效果、对账的权限与状态边界；先有权合同或明确教学假设，独立失败及变化反例，不复制订单/退货原则。 |
+| B4 · RE-03 | DE-005/007/008 资源/动作授权、缓存/搜索/通知/审计；T06-C05 搜索范围；T35 B2 固定审批/报表 | 选择具体多级/委派审批、时段冲突或长导出权限变化，核真实授权版本与输出；未选变体保持 OPEN，不以一次组合关闭 RE-03。 |
+
+R3-RV-01 仍 OPEN，待 #618 的限定复审通过并记录关闭，方可准入受影响 C/G 写作；此修订本身不授权 C/G 写作，不需要额外全库 gate。R4-A/B/D/E/F 的独立不受影响范围可按既有准入推进。
 
 ## 2. 五个 U 的范围分流（不混入11组）
 
