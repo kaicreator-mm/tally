@@ -218,7 +218,20 @@ R4-C/D/E/F 六篇及 P2-R4B-01 在 [#622 closeout](https://github.com/kaicreator
 | RE-02 / G3、G4 K02/K03/K01/K05/K09/K10 | [T35-3 复杂通用功能组合](T35-3-complex-general-function-composition.md) | RFC9110 Range/If-Range、PG18 COPY、持久片段与 staging/checkpoint/原子发布 vs 部分成功；RFC9111 cache 与权限epoch/数据generation/UI sequence、撤权与迟到结果 |
 | RE-03 / B3、B4 K01/K02/K03/K05/K09/K10 | [T35-4 复杂业务功能组合](T35-4-complex-business-function-composition.md) | 多SKU原子预留/部分履约与取消、Stripe API v1 部分退款/幂等窗口/UNKNOWN及对账；委派时段/实际actor/版本、长导出同快照与逐块披露准入 |
 
-44篇已接受 +2篇候选。当前派生 S49/D2/U5；四个具体子目标分别独审，RE-02/RE-03 的限定 D 目标须独立确认才可晋升，非整个功能族完成。跨进程关闭/安全日志、其它下载协议/平台、预约冲突、跨支付方/结算及未选政策/产品变体保持 OPEN/UNKNOWN，专项 U 不晋升。全部为公开原创教学及 Oracle NOT_RUN，未运行或增加 qualified Claim/Case；不作为隐藏实验题，不自动产生业务 Rule。T36 仍待另行设计和独审。
+R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](https://github.com/kaicreator-mm/tally/issues/624#issuecomment-7176986822) 限定接受并合入 7f5160b3ec4b29138d4f21e9bcc6ff21459090a3（0/0/0）。46篇已接受，当前派生 S51/D0/U5，原 R3 S40/D11/U5 历史不回填；非整个功能族完成。跨进程关闭/安全日志、其它下载协议/平台、预约冲突、跨支付方/结算及未选政策/产品变体保持 OPEN/UNKNOWN，专项 U 不晋升。全部为公开原创教学及 Oracle NOT_RUN，未运行或增加 qualified Claim/Case；不作为隐藏实验题，不自动产生业务 Rule。T36 已另行准入设计候选，见下节，仍未冻结。
+
+## T36 语义整合与阶段消费设计（#626）
+
+输入 7f5160b3ec4b29138d4f21e9bcc6ff21459090a3。沿用原165 ID、48关系、T22案例/来源与 #564 投影；46篇入口保留原语义拥有者。本批仅有界设计，非整库语义单元化。
+
+| 阅读入口 | 作用 |
+|---|---|
+| [T36-A/B 语义引用与关系合同](../consumption/semantic-reference-contract.md) | 区分语义身份/定位/Owner/资格，关系方向及适用性，禁止候选自动晋升 Rule |
+| [实际定位 pilot](../consumption/pilot-references.json) | 13条选定引用、12条候选导航关系、10个原文文件；3原ID+10局部导航键，非新全局图谱或 SDK ABI |
+| [T36-C 阶段消费设计](../consumption/staged-consumption-design.md) | 发现、条件选择、事实与交接、预算/不完整、停止；原专业阶段及 Task 权威不变 |
+| [T36-D 公开推演与独立评价](../consumption/evaluation-and-worked-traces.md) | 3组公开合成任务、8种变形、6层观察；全部 NOT_RUN，非隐藏题/独立执行报告 |
+
+#565 R5 全部2P1/2P2 OPEN/HOLD，#286 DEFERRED，A24/T4 NOT_RUN/HOLD；不 dispatch 实施、Agent 或实验。本设计批次独审前不冻结，原资格/计数不变。
 
 ## 阅读路径与边界
 
