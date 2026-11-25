@@ -10,7 +10,7 @@
 
 ## 2. 一次 read/write 不等于整个任务完成
 
-Linux read(2) 成功返回实际字节数，正长度请求返回 0 表示 EOF；短读本身不错误。非阻塞资源可能返回暂时不可读错误；信号中断、设备错误等需按 API 处理。write(2) 可能只写一部分；返回成功数不是请求长度，也不等于持久落盘。Node 22.17.0 fs.write 的回执含 bytesWritten，文档警告不要无等待地并发调用同一文件写入。
+Linux 普通文件或具有相应 EOF 合同的字节流，read(2) 成功返回实际字节数，正长度请求返回 0 可表示 EOF；特殊设备/消息边界须核实际合同。短读本身不错误。非阻塞资源可能返回暂时不可读错误；信号中断、设备错误等需按 API 处理。write(2) 可能只写一部分；返回成功数不是请求长度，也不等于持久落盘。Node 22.17.0 fs.write 的回执含 bytesWritten，文档警告不要无等待地并发调用同一文件写入。
 
 教学写循环（blocking、独占顺序句柄、有限缓冲、无 append 定位需求）：
 ```text
@@ -24,13 +24,57 @@ while offset < len(buffer):
     else:
         offset += n
 ```
-offset 是 buffer 已处理量，不一定是底层文件定位参数；有位置写入时须另计算目标文件偏移。若写了 3/8 字节，再写剩余 5 字节，不能从头重送 8（可能重复）；后续 ENOSPC 时保留已写进度。对 readExactly(N) 循环累计；提前 EOF 是截断错误，若是任意长度流 EOF 可为合法结束。每次读取使用实际返回长度，不把缓冲尾部残留数据交给解析器。零长度请求不能判 EOF。超时/取消仍可能已产生部分效果；停止后按实际句柄/流完成合同释放资源并处理错误。
+offset 是 buffer 已处理量，不一定是底层文件定位参数；有位置写入时须另计算目标文件偏移。若写了 3/8 字节，再写剩余 5 字节，不能从头重送 8（可能重复）；后续 ENOSPC 时保留已确认进度；某些 IO 错误（例如 direct IO）仍可能修改目标区域，不能把未确认字节判为未修改。对 readExactly(N) 循环累计；提前 EOF 是截断错误，若是任意长度流 EOF 可为合法结束。每次读取使用实际返回长度，不把缓冲尾部残留数据交给解析器。零长度请求不能判 EOF。超时/取消仍可能已产生部分效果；停止后按实际句柄/流完成合同释放资源并处理错误。
 
 ## 3. 流、分帧、解析与背压
 
 字节块不等于业务记录。UTF-8 的 U+00E9 字节 C3 A9 若跨两次读取，逐块独立解码可误产生替代字符；应在流结束前维护增量解码状态。JSON 单值解析、完整文档解析、连续 JSON 值、换行分帧是不同合同。CSV 字段可含经引号转义的换行，简单 split newline 不等于 CSV 解析（格式需实际契约）。先确定格式、编码、分帧、EOF、未知字段、输入/单记录/总数据限额以及错误是否允许部分处理。T05 已解释读取一个值不证明整个流合法。
 
 三层进度：传输字节、合法解析记录、业务已提交记录。上传 100% 只能描述计量范围；不能自动证明已验证、已入库或已持久。生产者速率持续高于消费者时，有限缓冲需有等待、拒绝、丢弃或持久排队的真实合同；不能只把输入分块却将所有记录积攒在数组里。小有界配置可一次读并完整验证；大文件选增量处理、控制内存、限制并行与输出顺序。流的 flush/end/close 也不能直接代替文件 sync，具体由 API 和介质决定。
+
+### 3.1 Node 22.17.0 背压协议及终止边界（FG-04）
+
+以 Node.js 22.17.0 的标准 Readable/Writable、单生产者和独占本地临时目标为例。write(chunk) 正常接纳当前块却返回 false 时，它不是拒绝或未写：生产者停止发送后续块，不能重送当前块。等待 drain 仅是恢复发送的条件；错误、提前 close、取消、期限都是不同终态，不能只等 drain。写入返回值还不能证明该块已成功写到底层或持久化。highWaterMark 是反馈阈值，object mode 按对象数、通常字节流按字节数；单块可能大于阈值，Transform/Duplex 两侧各有缓冲，外部任务、解析器、驱动、生产者也可能缓存，因此不是总内存硬上限。限制输入总量、块大小、未完成任务及解析器状态，不能依靠一个阈值解决内存约束。
+
+| 事件/状态 | 观察意义 | 不能推出 |
+|---|---|---|
+| write 正常返回 false | 当前块接纳，后续生产应等待 | 当前块被拒、应重发 |
+| drain | 可按流合同恢复后续写 | 所有业务记录已提交 |
+| readable end | 已消费至读取结束 | 所有数据语法、预期长度均正确 |
+| writable finish | end 调用后写端数据已交给其底层处理合同 | 文件 fsync、目录持久或远端业务提交 |
+| close | 对应流/资源关闭事件 | 一定正常完成 |
+| error / 提前 close | 失败，按错误与实际进度处理 | 数据必然没有修改 |
+
+对于标准一次性流，优先使用 pipeline 连接生产、变换及消费，错误和关闭传播由实际 API 管理。不要每次 write false 后另建不受终态管理的监听器。以下是严格 UTF-8 字节流到文本变换的教学路径（目标为已获权的临时文件，额外输入大小限制、目录准备、权限和后续 sync/rename 由原 §4 负责）：
+```js
+import { pipeline } from 'node:stream/promises';
+import { TextDecoder } from 'node:util';
+
+// source: byte chunks; tmpSink: owned writable accepting UTF-8 text
+await pipeline(source, async function* (chunks, { signal }) {
+  const decoder = new TextDecoder('utf-8', { fatal: true });
+  for await (const chunk of chunks) {
+    signal.throwIfAborted();
+    const text = decoder.decode(chunk, { stream: true });
+    if (text !== '') yield text;
+  }
+  signal.throwIfAborted();
+  const tail = decoder.decode();
+  if (tail !== '') yield tail;
+}, tmpSink, { signal: controller.signal });
+// Separate authorized sync/publication/verification step; no publish on rejection.
+```
+前提 Node build 支持 fatal 选项；若不支持则不可宣称严格拒绝解码错误，先验证能力。若内容有 BOM/字节保真要求，须另定义 BOM 处理及是否允许文本转码；此例不是原始字节复制。块跨编码边界由 decoder 保留状态，最后 decode 检查残缺尾部；仅在整个 pipeline 成功后才进入发布候选步骤。pipeline 的 signal 取消销毁相关流，但自定义生成器或外部工作必须处理 signal，否则可能无法结束；不能认为 abort 调用返回等于全部资源关闭。仅取消 finished 的等待并不会自动销毁流；资源 Owner 需发出适当取消并等待实际终态，处理提前 close 的 ERR_STREAM_PREMATURE_CLOSE 和清理异常。finished 监听器清理策略按实际文档；不要复用状态未知或已失败的流。期限耗尽而清理无法确认时标 UNKNOWN / 未收敛并阻止非法发布，不假装已停止。
+
+| 候选 Oracle（NOT_RUN） | 预期 |
+|---|---|
+| 慢 sink 使 write false | 每块只接纳一次；生产暂停/恢复；总内存预算需独立测而非 highWaterMark 宣称 |
+| false 后 error 或未 end 的提前 close | 失败收据，不无限等 drain，不进入替换目标步骤 |
+| 消费者断开/abort、生成器等待外部工作 | 协作取消、任务与句柄终态可观察；未确认时保留未知 |
+| C3/A9 跨块；C3 后 EOF | 前者产出 é，后者严格解码失败；不发布旧目标的替换 |
+| finish 后文件 sync 失败 | 流完成事实保留，但不宣称持久或业务成功 |
+
+实际资料定位（2026-11-25）：Node22.17.0 [stream](https://nodejs.org/download/release/v22.17.0/docs/api/stream.html) Buffering、writable.write/drain、pipeline async generator/abort、finished/early close、end；[util](https://nodejs.org/download/release/v22.17.0/docs/api/util.html) TextDecoder constructor/decode fatal/stream。Linux read 普通文件 EOF 与特殊设备合同区分，write 已确认进度不保证其余字节未修改；原 #588 独审明确提醒跨挂载点 EXDEV。教学未执行，不新增合格 Claim。
 
 ## 4. 原子替换与断电持久性
 
