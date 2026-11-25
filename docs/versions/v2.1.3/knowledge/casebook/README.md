@@ -10,7 +10,11 @@
 - [T01 专业理论 A/B](waves/T01-theory-ab.md)：六项专业机制补深，复用原 Kxx 与真实 R6 反例；不计为新项目案例。
 - [T03 业务与协同架构](waves/T03-business-and-collaboration-architecture.md)：8 条真实参考、9 个来源文件；Web/ERP/电商/协同/CMS。
 - [T04 AI 与基础设施架构](waves/T04-intelligence-and-infrastructure-architecture.md)：9 条真实参考、8 个来源文件；模型调度、Agent 状态、搜索、数据库、分布式、RTOS/IoT。
-- 截至本增量总计 65 个案例（53 条真实来源参考、12 条原创）、47 个来源文件/37 个不同外部项目，另有 T01 六项理论补深。仍为知识候选，未完成独立综合审核。T13 统一多轴索引。
+- [T05 通用功能抽象](waves/T05-common-function-abstractions.md)：10 条、11 新源，配置/日志/错误/序列化/验证/缓存/查询/并发/资源。
+- [T06 数据、文件、网络](waves/T06-data-file-network-functions.md)：6 条、6 新源，六功能族，复用 T04/T05 已登记来源。
+- [T07 业务功能](waves/T07-business-functions.md)：9 条、9 新源，身份、租户、支付、库存、表单、报表、审计等。
+- [T08 平台功能](waves/T08-platform-functions.md)：7 条、7 新源，调度、插件、IPC、UI、生命周期、设备、迁移。
+- 截至本增量总计 97 个案例（85 条真实来源参考、12 条原创）、80 个登记来源文件/49 个不同外部项目，另有 T01 六项理论补深。仍为知识候选，验证建议 NOT_RUN，未完成独立综合审核。T13 统一多轴索引。
 
 ## 第一批可读案例
 
