@@ -1,6 +1,6 @@
 # T13 · Agent 选知演算（8 组实际只读阅读）
 
-[#567](https://github.com/kaicreator-mm/tally/issues/567)；修正正文基线 41dad33035beab0eef1a1fffe3796d9fe71394db；目录读取基线 462133c8f8fcc48e77cf452084fd55c46d5d1919。原八组演算保持历史身份，本轮按 T14 两份独立意见复核并修正知识选择与验证意图。执行者为本轮知识整理者，在当前会话实际读取全目录与以下候选正文、T01/T10 理论索引，再进行人工工程推演。八组需求均为明确的教学约束，不是当前用户项目授权、实际 Agent 自动检索、LLM 因果试验、运行验证或最优性证明。结果为 READ_ONLY_SELECTION_COMPLETED / DESIGN_CANDIDATE；所有行为 Oracle NOT_RUN。每次只读有限相关知识，不要求全库注入。未执行任何外部程序或新增实现。
+[#567](https://github.com/kaicreator-mm/tally/issues/567)；修正正文基线 0912b894270fb2f26e2cf44164a4c2b5f725b6f7；目录读取基线 9a29c70ef9245a9aed87e693654d0f35b6ca8df6。原八组演算保持历史身份，本轮按 T14 两份独立意见复核并修正知识选择与验证意图。执行者为本轮知识整理者，在当前会话实际读取全目录与以下候选正文、T01/T10 理论索引，再进行人工工程推演。八组需求均为明确的教学约束，不是当前用户项目授权、实际 Agent 自动检索、LLM 因果试验、运行验证或最优性证明。结果为 READ_ONLY_SELECTION_COMPLETED / DESIGN_CANDIDATE；所有行为 Oracle NOT_RUN。每次只读有限相关知识，不要求全库注入。未执行任何外部程序或新增实现。
 
 ## 阅读方法（不是运行时算法）
 
@@ -10,7 +10,7 @@
 
 - **情境（教学假设）：** 本地 CLI 单次导出，读取→聚合→写文件；没有跨进程恢复要求，失败后不发布不完整输出。
 - **入口轴：** 任务调度/恢复/复杂度，L2–L4。
-- **实际读取案例：** [T12-C03](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L23)、[T04-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L15)、[T05-C08](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L68)。
+- **实际读取案例：** [T12-C03](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L23)、[T04-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L15)、[T05-C08](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L68)。
 - **专业知识：** T10 C3/C4；K04.F1.3、K04.F3.1（流程条件启发）、K03.F3.2（取消合同）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** T04-C02 的状态图具有局部更新、checkpoint 和中断能力，但当前没有恢复需求；T05-C08 明确取消信号不等待完成；T12-C03 提供直接调用与持久 DAG 的条件差异。
 - **选择及拒绝（本轮推演）：** 采用直接顺序组合，写入临时文件后按产品合同提交；失败保留可行动错误，取消时等待所拥有资源清理。拒绝持久状态图和通用调度平台，因尚无实际需求。
@@ -21,7 +21,7 @@
 
 - **情境（教学假设）：** 桌面导入功能由用户选择任意数量输入文件，借用应用共享数据库连接池；第二个文件打开失败，其他窗口仍需数据库。
 - **入口轴：** 资源/所有权/部分失败，L3–L5。
-- **实际读取案例：** [T12-C06](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L50)、[T05-C09](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L77)、[T05-C10](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L86)、[T08-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L37)、[T09-C08](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L68)。
+- **实际读取案例：** [T12-C06](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L50)、[T05-C09](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L77)、[T05-C10](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L86)、[T08-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L37)、[T09-C08](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L68)。
 - **专业知识：** T10 C1/C2；K03.F4.2（资源关闭）、K03.F3.1（激活状态）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** ExitStack 动态登记、Go Closer 重复行为不普遍保证；对象池可丢弃项而连接池管理稀缺连接；Home Assistant 配置与加载状态独立；Once 的完成屏障不适合失败重试。
 - **选择及拒绝（本轮推演）：** 动态输入清理登记在各次成功取得后；获取器内部部分成功但未交付，由获取器清理或明确移交句柄和责任。固定输出用作用域；借用 Conn/Rows 按合同 Close/归还，应用 DB pool 不关闭。若启动失败可重试，显式状态和实际资源记录，不套用 Once 永久完成或全局 Exit 强制去重。
@@ -32,9 +32,9 @@
 
 - **情境（教学假设）：** 电商订单需实际支付确认才履约，webhook 可能重复或迟到；支付请求响应可能丢失。
 - **入口轴：** 支付/状态/外部副作用，L3–L5。
-- **实际读取案例：** [T03-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L45)、[T07-C04](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L29)、[T03-C06](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L55)、[T09-C10](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L86)、[T12-C10](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L86)。
-- **专业知识：** T01 B1/B2、T10 C3；K01.F3.2（业务状态）、K02.F3.2（事件与一致性）、K10.F3.2（恢复）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
-- **源观察到的区分（来自案例正文）：** Saleor 分列订单/授权/扣款状态，不证明任意组合均合法；Stripe webhook 先验签不证明业务记账；Mattermost 业务变更后发通知；MultiWriter 前一 sink 可能已写。
+- **实际读取案例：** [T03-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L45)、[T07-C04](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L29)、[T03-C06](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L55)、[T09-C10](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L86)、[T12-C10](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L86)。
+- **专业知识：** T01 B1/B2、T10 C3；K01.F3.2（业务状态）、K02.F4.3（验签接收边界）、K02.F3.2（由业务合同决定的条件启发）、K10.F3.2（恢复）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
+- **源观察到的区分（来自案例正文）：** Saleor 分列订单/授权/扣款状态，不证明任意组合均合法；Stripe webhook 先验签不证明业务记账或一致性协议；Mattermost 业务变更后发通知；MultiWriter 前一 sink 可能已写。
 - **选择及拒绝（本轮推演）：** 订单 Owner 保留支付待确认与履约义务；签名和事件身份独立核实，按同一受权支付身份查询实际效果。确认已生效则读回不重复写；确认未生效、无在途且仍获权时可开始新 attempt；未知/在途效果仅在已证实身份、版本、payload、去重范围和有效期、并发和授权合同足以防重复时重放，否则对账、受权人工处置或停止。重试预算不是安全证明。拒绝用 timeout/事件接收/单 success 断言扣款或未扣款；可靠通知不是付款成立证据。
 - **反转及尚缺事实：** 无外部支付的本地单步业务可单一状态；真实要求通知可靠才选择持久投递意图。支付对账 API、账务授权未给定，不设计具体重试/财务政策。
 - **验证意图（NOT_RUN）：** 重复/迟到事件、错订单/金额、响应丢失、独立履约失败；实际远端状态无法核实则 UNKNOWN，不重复收费。
@@ -43,7 +43,7 @@
 
 - **情境（教学假设）：** 一个多租户搜索接口限制本轮最多读取一定文档、返回 top-k，查询可能超时；调用者请求判断整个授权范围内是否存在记录。
 - **入口轴：** 搜索/授权/完整性，L3–L5。
-- **实际读取案例：** [T12-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L41)、[T04-C03](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L25)、[T04-C04](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L35)、[T06-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md#L37)、[T07-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L13)。
+- **实际读取案例：** [T12-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L41)、[T04-C03](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L25)、[T04-C04](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T04-intelligence-and-infrastructure-architecture.md#L35)、[T06-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md#L37)、[T07-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L13)。
 - **专业知识：** T01 B1/B2、T10 C4；K05.F1.2（验证意图）、K02.F2.2（结果合同）、K02.F4.3（授权威胁）、K03.F1.2（索引）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** Meilisearch 将租户规则加入查询 filter，申请许可；Lucene top-n 和 collector 是不同合同，有 timeout/partial 字段；Django 权限接口带 user/perm/obj 但不保证对象级实现。
 - **选择及拒绝（本轮推演）：** 在实际授权范围内过滤并区分返回集合、匹配集合、扫描/版本及截断。未完成扫描且无命中返回范围未知/不完整，不声称全域不存在；真正小范围可直接有界扫描。拒绝只在最终结果过滤越权项或 top-k 为空当全集空。
@@ -54,7 +54,7 @@
 
 - **情境（教学假设）：** 两个真实支持的旧消费者接受非字典输入转换，新接口要求严格类型，尚未获权撤销旧支持。
 - **入口轴：** 兼容/API/合法输入域，L5/L6。
-- **实际读取案例：** [T12-C11](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L95)、[T11-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T11-real-evolution-cases.md#L45)、[T11-C06](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T11-real-evolution-cases.md#L55)、[T05-C04](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L32)。
+- **实际读取案例：** [T12-C11](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L95)、[T11-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T11-real-evolution-cases.md#L45)、[T11-C06](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T11-real-evolution-cases.md#L55)、[T05-C04](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L32)。
 - **专业知识：** T01 A2、T10 D1/D2；K09.F3.1（版本兼容）、K09.F4.1（真实受支持消费者，条件）、K03.F2.2（输入验证）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** Pydantic 的旧 parse_obj 在 V2 转发新入口且迁移指南列相等语义变化；Go ServeMux 隔离旧路由，用启动级开关；Go 流解码与结构政策分离。
 - **选择及拒绝（本轮推演）：** 先复核两个消费者实际合法输入与结果，能等价适配的共同纯机制可共用；若新旧政策不等价，保持窄版本入口和政策边界，不宣称简单 wrapper 完成兼容。禁止未经授权删除旧合同。
@@ -65,7 +65,7 @@
 
 - **情境（教学假设）：** 一个 CLI 有固定 CSV/JSON 输出，转换是纯函数，当前没有第三方、独立发布、动态加载或资源访问需求。
 - **入口轴：** 接口/复用/扩展，L3–L5。
-- **实际读取案例：** [T12-C12](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L104)、[T09-C07](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L59)、[T08-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L13)、[T02-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L15)。
+- **实际读取案例：** [T12-C12](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L104)、[T09-C07](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T09-code-abstraction-cases.md#L59)、[T08-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L13)、[T02-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L15)。
 - **专业知识：** T01 A1/A2、T10 D2；K02.F2.3、K03.F2.1、K02.F2.2（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** Go HandlerFunc 表明小函数可适配真实窄接口；Python EntryPoint 动态导入有真实加载行为；Now in Android 的 api/impl 对应真实跨模块导航，不是全部私有函数公共化。
 - **选择及拒绝（本轮推演）：** 固定格式直接分派，只有共同输入/输出语义的纯机制才提取私有 helper；不引入注册器、依赖注入、动态插件或独立公开接口。
@@ -76,18 +76,18 @@
 
 - **情境（教学假设）：** 同一文档的列表/详情/第二窗口允许未提交草稿，业务内容只有一个本地文件/数据库权威；不需要设备离线写入。
 - **入口轴：** GUI/状态/视图/所有权，L2–L4。
-- **实际读取案例：** [T12-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L14)、[T02-C03](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L25)、[T02-C01](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L5)、[T08-C04](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L29)。
+- **实际读取案例：** [T12-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L14)、[T02-C03](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L25)、[T02-C01](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T02-interactive-tools-and-computation.md#L5)、[T08-C04](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md#L29)。
 - **专业知识：** T01 A1/A3；K02.F3.1（业务模型 Owner）、K03.F3.1（状态转移）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** FreeCAD GUI Document 持有 App Document 并响应信号；Android 架构文档有本地持久数据源与派生 UI；Redux reducer 更新后通知 listener，不能当事务账本。
 - **选择及拒绝（本轮推演）：** 共享文档 Owner，窗口保留局部草稿与派生展示，真实提交后通知所有窗口；简单直接观察即可，不强制 Redux 或离线双写数据库。
-- **反转及尚缺事实：** 窗口极少且同步直接读取足够可更简化；跨设备离线写入才增版本与冲突策略。
-- **验证意图（NOT_RUN）：** 两窗口同一对象、未提交草稿取消、旧响应、关闭窗口不删除模型、并发更新。FreeCAD 整体 undo 与同步语义未由头文件证明。
+- **反转及尚缺事实：** 无并发写或确证安全串行、每次根据当前状态重新计算/校验时可简化；实际同机或跨设备多写竞争、陈旧草稿与业务冲突合同决定是否采用版本/CAS、锁、重读或合法合并。串行物理写不自动防止陈旧草稿覆盖；跨设备离线独立写入仅是更复杂情形。
+- **验证意图（NOT_RUN）：** 两窗口同一对象、未提交草稿取消、旧响应、关闭窗口不删除模型、并发更新。负例：A/B 均基于 v1，A 提交 v2 后 B 无条件提交 v1 派生草稿导致丢失更新；正例：按冲突合同拒绝陈旧提交并重读或合法合并；无竞争且始终使用当前状态则不额外引入复杂协调。以上仅教学推演，NOT_RUN。FreeCAD 整体 undo 与同步语义未由头文件证明。
 
 ## W08 · 结构验证能否直接授权更新订单
 
 - **情境（教学假设）：** HTTP 导入接口接受版本化 JSON，用户可更新自己的租户订单，跨字段数量政策和库存必须依据当前业务状态。
 - **入口轴：** 输入校验/资源授权/状态，L4–L5。
-- **实际读取案例：** [T12-C07](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L59)、[T05-C04](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L32)、[T07-C02](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L13)、[T03-C05](https://github.com/kaicreator-mm/tally/blob/41dad33035beab0eef1a1fffe3796d9fe71394db/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L45)。
+- **实际读取案例：** [T12-C07](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T12-comparative-design-cases.md#L59)、[T05-C04](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md#L32)、[T07-C02](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md#L13)、[T03-C05](https://github.com/kaicreator-mm/tally/blob/0912b894270fb2f26e2cf44164a4c2b5f725b6f7/docs/versions/v2.1.3/knowledge/casebook/waves/T03-business-and-collaboration-architecture.md#L45)。
 - **专业知识：** T01 A2/B1；K03.F2.2（类型与结构）、K02.F4.3（实际授权边界）、K05.F1.2（验证意图）（[T01](T01-theory-ab.md)、[T10](T10-theory-cd.md)、[原知识反向索引](T13-knowledge-and-coverage.md)）。
 - **源观察到的区分（来自案例正文）：** Go Decoder 只读取下一值且可拒未知字段；Django 权限接口的 obj 参数不保证后端实现；Saleor 独立订单和支付状态提醒实际业务不变量。
 - **选择及拒绝（本轮推演）：** 解析与完整输入/形状合同在入口；真实主体资源绑定和当前订单政策由受权业务执行点负责，必要时事务内重新确认。共享校验机制不能统一订单合法性和授权政策。
@@ -105,6 +105,17 @@
 | 首次配置 vs 普通激活/租户 | K10.F5.1 | DE-006 | T04-C09、T08-C05、T07-C03 | 只有首次启动、配置与授权条件启发。普通加载为 K03.F3.1，租户选择为 K02.F4.3；配置记录存在不证明首次使用门禁。 |
 | 结构验证 vs 异常分类 | K03.F2.2 | T05-C04、T05-C05、T07-C07、T11-C04、T12-C07 | T05-C03、T12-C08 | 外部 JSON、动态类型与跨字段结构必须运行时验证；错误包装按 K03.F5.1 查询，不因都返回错误等同验证。 |
 | 版本兼容 vs 渐进迁移 | K09.F3.1 | T11-C02、T11-C03、T11-C05、T11-C06、T12-C11 | T10-D2 | API 新旧合同与消费者是兼容问题；D2 的一般影响集合/经济比较不标 K09.F2.2，真正 Strangler 需实际旧新入口、切换和退役条件，不由版本变化自动推出。 |
+
+## R2 剩余关系的四个限定只读反证（R3 作者修正）
+
+沿用独立 R2 所核对的固定来源及其范围；本轮读取修正正文和目录/反向索引进行作者条件判断，不重新执行外部软件或认定独立验收。
+
+| 观察范围 | 正向机制或启发 | 不允许推出 |
+|---|---|---|
+| T05-C01 / T05-S01 查值、优先级及遮蔽 | K02.F2.2 机制关联 | 查值成功证明激活、资源所有权或提交 |
+| T07-C04 / T07-S04 验签及事件构造 | K02.F4.3 机制关联 | 验签成功证明支付记账、幂等或乱序处理 |
+| T07-C09 / T07-S08/S09 日志字段与发送接口 | K02.F3.2 仅条件启发；业务确需一致性协议时另设计 | 两个 API 的存在证明共同状态、可靠投递或一致性 |
+| AR-008 / S13 主/渲染职责 | K02.F2.1 机制关联 | 进程分工证明成功、失败、取消下的资源清理 |
 
 ## 结论与边界
 
