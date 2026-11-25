@@ -100,7 +100,7 @@
 - **T09-S04**：[python/cpython/Lib/functools.py](https://github.com/python/cpython/blob/v3.13.0/Lib/functools.py) · ref `v3.13.0` · Blob `d04957c555295e41ed221f856bbf5a5a45e0dd6f` · L821–838。
 - **T09-S05**：[python/cpython/Lib/heapq.py](https://github.com/python/cpython/blob/v3.13.0/Lib/heapq.py) · ref `v3.13.0` · Blob `2fd9d1ff4bf827b4c919253be98a7ee0c3f7b829` · L132–153。
 - **T09-S06**：[golang/go/src/net/http/server.go](https://github.com/golang/go/blob/go1.23.4/src/net/http/server.go) · ref `go1.23.4` · Blob `1ff72a04550c42b1fdb0579a6b2ae373cbb2dadf` · L88–106,2212–2221。
-- **T09-S07**：[golang/go/src/sync/once.go](https://github.com/golang/go/blob/go1.23.4/src/sync/once.go) · ref `go1.23.4` · Blob `168c7bbdd38f61957644de6de568117ddf6d76df` · L17–36,47–65。
+- **T09-S07**：[golang/go/src/sync/once.go](https://github.com/golang/go/blob/go1.23.4/src/sync/once.go) · ref `go1.23.4` · Blob `168c7bbdd38f61957644de6de568117ddf6d76df` · L17–36,46–78。
 - **T09-S08**：[python/cpython/Lib/collections/__init__.py](https://github.com/python/cpython/blob/v3.13.0/Lib/collections/__init__.py) · ref `v3.13.0` · Blob `d06d84cbdfcc364883d1e4a6439b33a5028e7957` · L986–1003,1010–1023。
 - **T09-S09**：[golang/go/src/encoding/hex/hex.go](https://github.com/golang/go/blob/go1.23.4/src/encoding/hex/hex.go) · ref `go1.23.4` · Blob `ba9cc0f967f611de291020f2981bf47c17a1749a` · L83–103。
 - **T09-S10**：[golang/go/src/io/multi.go](https://github.com/golang/go/blob/go1.23.4/src/io/multi.go) · ref `go1.23.4` · Blob `07a9afffda38272d264a47af01afb37b827236c7` · L79–95,123–137。
