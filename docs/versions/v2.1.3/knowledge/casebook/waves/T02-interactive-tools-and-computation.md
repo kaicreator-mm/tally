@@ -4,7 +4,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C01 · Now in Android：离线优先的移动应用架构
 
-**类型/粒度：** 移动 Android / L1（项目文档视图）。**功能/机制：** 单向数据流、持久数据、同步、UI 状态。**专业知识：** K02.F2.1 K02.F3.1 K03.F3.3 K10.F3.2。**来源：** T02-S01、T02-S02（见下文）。
+**类型/粒度：** 移动 Android / L1（项目文档视图）。**功能/机制：** 单向数据流、持久数据、同步、UI 状态。**知识：** K02.F3.1。**来源：** T02-S01、T02-S02（见下文）。**关系：** 机制关联；本地持久源与 UI 派生。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** 项目文档明确 UI、domain、data 三层；事件向下、数据向上。For You 屏幕启动后先等用户与新闻数据流，处于 Loading；WorkManager 同步任务通过 repository 和网络接口将远端数据更新到 Room，再由 DAO 数据流通知上层。用户兴趣数据来自本地 DataStore。文档明确该架构不是与 Clean Architecture 术语完全等价。
 - **职责、依赖、状态/资源视图（分析）：** 视图：UI/ViewModel ← domain/use case ← repository ← 持久数据源；用户事件向下；后台 sync → network → repository → local DB → 数据流。Local 数据的实际写入与界面状态派生由不同职责负责，持久数据不应复制到多个 ViewModel 作为独立权威。
@@ -14,7 +14,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C02 · Now in Android：按功能分模块与导航 API
 
-**类型/粒度：** 移动/多团队模块化 / L2–L3。**功能/机制：** app 组合、feature API/impl、core、依赖方向。**专业知识：** K02.F2.1 K02.F2.3 K03.F2.1 K04.F3.2 K09.F4.1。**来源：** T02-S02（见下文）。
+**类型/粒度：** 移动/多团队模块化 / L2–L3。**功能/机制：** app 组合、feature API/impl、core、依赖方向。**知识：** K02.F2.3。**来源：** T02-S02（见下文）。**关系：** 机制关联；feature API/impl 依赖方向。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** 项目模块化文档把 app 定义为组装和导航入口，feature 负责单一界面能力，api 子模块包含导航 key、impl 包含其余实现；feature impl 可依赖其他 feature api 而不是 impl；core 不依赖 feature/app。只有一个 feature 使用的类留在该模块。
 - **职责、依赖、状态/资源视图（分析）：** 参考结构：app → feature-impl；feature-impl A → feature-api B；feature → 所需 core；core 只依赖下层 core。API 是真实跨模块导航合同，而不是把全部业务方法提前公共化。
@@ -24,7 +24,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C03 · FreeCAD：业务文档模型与多窗口视图
 
-**类型/粒度：** 桌面/CAD / L2–L3。**功能/机制：** 文档模型、GUI 投影、重计算、事务与撤销。**专业知识：** K02.F2.1 K02.F3.1 K03.F4.2 K09.F2.1。**来源：** T02-S03、T02-S04（见下文）。
+**类型/粒度：** 桌面/CAD / L2–L3。**功能/机制：** 文档模型、GUI 投影、重计算、事务与撤销。**知识：** K02.F3.1。**来源：** T02-S03、T02-S04（见下文）。**关系：** 机制关联；文档模型权威与视图。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** App::Document 声明对象添加、recompute、事务 open/commit/abort；Gui::Document 构造接收 App::Document，头文件说明 GUI 文档负责文档窗口及未保存关闭提示，并声明响应对象新增、属性变化、Undo/Redo、recompute 等信号的槽。
 - **职责、依赖、状态/资源视图（分析）：** 参考：App Document（模型和事务）→ 模型变更信号 → GUI Document（视图协调）→ ViewProvider/窗口；GUI 用户操作通过模型合同改变文档，不让每个窗口拥有独立模型真值。这里只说明文档子系统声明，不推断整个 CAD 几何内核/实际 undo 原子性。
@@ -34,7 +34,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C04 · Godot：场景树、节点组合与运行循环
 
-**类型/粒度：** 游戏引擎 / L2–L3。**功能/机制：** 对象组合树、生命周期、Parent/Owner 区分。**专业知识：** K02.F2.1 K02.F3.1 K03.F4.1 K03.F4.2 K10.F3.3。**来源：** T02-S05、T02-S06（见下文）。
+**类型/粒度：** 游戏引擎 / L2–L3。**功能/机制：** 对象组合树、生命周期、Parent/Owner 区分。**知识：** K02.F2.1。**来源：** T02-S05、T02-S06（见下文）。**关系：** 机制关联；场景树组件与职责。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** Node 声明父子增删、查询、独立 set_owner/get_owner 和进入/退出、ready、物理/普通处理通知；SceneTree 继承 MainLoop，拥有根 Window，声明 initialize、physics_process、process、finalize。声明显示节点组合关系、Owner 及运行阶段分别表达，但不独自证明实际通知顺序或序列化所有权语义。
 - **职责、依赖、状态/资源视图（分析）：** 参考：SceneTree 调度运行周期，Node 组合组织行为；Parent 表达结构，Owner 是另一种需明确的领域关系；生命周期由协调者与资源拥有者共同确定。
@@ -44,7 +44,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C05 · LLVM：按 IR 粒度组合编译处理
 
-**类型/粒度：** 编译器/代码分析 / L2–L3。**功能/机制：** Pass、IR 层级、适配、组合。**专业知识：** K02.F2.1 K02.F2.3 K03.F2.1 K03.F1.3。**来源：** T02-S07（见下文）。
+**类型/粒度：** 编译器/代码分析 / L2–L3。**功能/机制：** Pass、IR 层级、适配、组合。**知识：** K03.F2.1。**来源：** T02-S07（见下文）。**关系：** 机制关联；IR pass 与适配职责。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** New Pass Manager 文档明确 Module → 可选 CGSCC → Function → Loop 层级；不同层级通过相应 adaptor 组合，一个特定粒度的 manager 本身可作为同粒度 pass。
 - **职责、依赖、状态/资源视图（分析）：** 参考：输入 IR → 相应粒度 pass 或组合 pass manager → 输出或变更 IR。模块级和函数级的适用范围不同，适配器显式组织上下层，不把所有变换强制成无类型的通用 process(object)。
@@ -54,7 +54,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C06 · LLVM：分析缓存与跨层依赖的复杂度
 
-**类型/粒度：** 编译器/静态分析 / L3–L5。**功能/机制：** 分析结果缓存、有效性、跨范围依赖。**专业知识：** K03.F1.1 K02.F2.2 K08.F2.3 K11.F2.2。**来源：** T02-S07（见下文）。
+**类型/粒度：** 编译器/静态分析 / L3–L5。**功能/机制：** 分析结果缓存、有效性、跨范围依赖。**知识：** K03.F1.1。**来源：** T02-S07（见下文）。**关系：** 机制关联；跨层分析缓存成本取舍。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** 文档描述分析 manager 按 IR 计算/缓存结果，有效时复用；跨层代理允许特定访问，内层不能随意重新计算外层分析。原作者解释可能导致二次复杂度及妨碍未来并行。
 - **职责、依赖、状态/资源视图（分析）：** 分析结果以对象/范围及当前有效性为依据；修改 IR 后要确认结果仍适用，而不是用同名字复用旧结果。共享机制为缓存，失效条件仍归分析合同。
@@ -64,7 +64,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C07 · NumPy：数据缓冲与数组视图
 
-**类型/粒度：** 科学计算/数组库 / L3–L5。**功能/机制：** 数据布局、元数据、别名、资源生命周期。**专业知识：** K03.F1.2 K02.F3.1 K03.F4.1 K03.F4.2。**来源：** T02-S08（见下文）。
+**类型/粒度：** 科学计算/数组库 / L3–L5。**功能/机制：** 数据布局、元数据、别名、资源生命周期。**知识：** K03.F1.2。**来源：** T02-S08（见下文）。**关系：** 机制关联；数组数据表示与共享 buffer。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** 内部结构文档区分数据 buffer 与描述元素大小、偏移、shape、stride、byte order、只读和 dtype 等元数据；许多 slice/transpose 通过新视图共享底层数据，独立副本需要相应 copy，视图存在时底层缓冲仍保有引用。
 - **职责、依赖、状态/资源视图（分析）：** 参考：Memory buffer 是实际数据资源，ArrayView 是解释与访问视图；形状/布局变化不必等同复制，但共享内存的可写性、生命周期、别名须有显式合同。
@@ -74,7 +74,7 @@ Task DAG [#567](https://github.com/kaicreator-mm/tally/issues/567)；T00 基线�
 
 ## T02-C08 · ripgrep：CLI 入口与可复用搜索能力
 
-**类型/粒度：** 开发工具/搜索 CLI / L2–L4。**功能/机制：** 入口适配、库 facade、模式分派与退出语义。**专业知识：** K02.F2.1 K02.F2.2 K03.F2.1 K03.F5.1 K09.F4.1。**来源：** T02-S09、T02-S10（见下文）。
+**类型/粒度：** 开发工具/搜索 CLI / L2–L4。**功能/机制：** 入口适配、库 facade、模式分派与退出语义。**知识：** K02.F2.1。**来源：** T02-S09、T02-S10（见下文）。**关系：** 机制关联；CLI 入口与库职责。验证意图另见正文，NOT_RUN。
 
 - **来源实际支持：** main 解析参数后进入 run，区分特殊命令、搜索/文件模式及单线程/并行，按匹配和错误决定退出码；BrokenPipe 有特定处理。grep library facade 实际重导出 matcher、printer、regex、searcher 等 crate。
 - **职责、依赖、状态/资源视图（分析）：** 参考：CLI 参数/退出码/管道处理归入口；核心搜索能力按匹配、搜索、输出等真实库边界组合。CLI 错误处理不应成为所有库消费者的业务策略。
