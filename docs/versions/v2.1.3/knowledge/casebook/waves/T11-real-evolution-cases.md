@@ -4,7 +4,7 @@
 
 ## T11-C01 · Go slices：删除操作补足资源引用清理
 
-**分类：** L6 · 资源与表示合同修正。**知识：** K03.F4.2 K09.F2.1 K05.F1.2。**来源：** T11-S01/S02/S03；T09-C02。
+**分类：** L6 · 资源与表示合同修正。**知识：** K09.F1.1。**来源：** T11-S01/S02/S03；T09-C02。**关系：** 机制关联；资源合同修正区别纯重构。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 1.21.13 的 Delete/ DeleteFunc 直接缩短 slice，注释允许尾部元素未改变，并建议调用方按需清零。
 - **新版本实际观察：** 1.22.0 的 Delete 使用长度受限的三索引切片做边界检查、保存旧长度、原地移动并 clear 已废弃尾部；DeleteFunc 同样 clear。测试 TestDeleteClearTail 与 TestDeleteFuncClearTail 明确要求废弃引用清空且原 len 之外的元素不变。
@@ -14,7 +14,7 @@
 
 ## T11-C02 · CPython cached_property：移除跨实例共享锁
 
-**分类：** L6 · 并发合同与锁粒度变化。**知识：** K03.F3.1 K10.F3.2 K09.F3.1。**来源：** T11-S04/S05/S06。
+**分类：** L6 · 并发合同与锁粒度变化。**知识：** K09.F3.1。**来源：** T11-S04/S05/S06。**关系：** 机制关联；并发行为兼容边界。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 3.11.0 descriptor 持有 RLock；miss 后加锁、二次检查，再计算并缓存。
 - **新版本实际观察：** 3.12.0 删除 descriptor 锁和二次检查，miss 后直接计算写入。文档说明多线程下同实例 getter 可能重复执行，后完成者可能覆盖缓存。
@@ -24,7 +24,7 @@
 
 ## T11-C03 · Django：退役 pytz 兼容路径和 is_dst 参数
 
-**分类：** L6 · 已声明废止的兼容接口退役。**知识：** K09.F3.1 K09.F4.1 K01.F3.3。**来源：** T11-S07/S08/S09。
+**分类：** L6 · 已声明废止的兼容接口退役。**知识：** K09.F3.1。**来源：** T11-S07/S08/S09。**关系：** 机制关联；旧 API 退役。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 4.2 make_aware 含 is_dst 参数及 deprecation warning；pytz 分支 localize，其他分支检查 naive 后 replace。
 - **新版本实际观察：** 5.0 函数仅保留 value/timezone、naive 检查及 replace；release notes 明列 USE_DEPRECATED_PYTZ、pytz 支持、is_dst 参数移除。
@@ -34,7 +34,7 @@
 
 ## T11-C04 · Redux 4→5：动作类型由建议变为运行时约束
 
-**分类：** L6 · 输入合同收紧与生态兼容。**知识：** K01.F3.3 K03.F5.1 K09.F3.1。**来源：** T11-S10/S11；T08-S05。
+**分类：** L6 · 输入合同收紧与生态兼容。**知识：** K03.F2.2。**来源：** T11-S10/S11；T08-S05。**关系：** 机制关联；运行时输入类型约束。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 4.2.1 dispatch 在 plain object 检查后拒绝 undefined type，未在该入口强制 string。
 - **新版本实际观察：** 5.0.1 同入口新增 typeof action.type !== 'string' 拒绝；迁移指南指出旧代码可能使用 Symbol，推荐字符串以支持可序列化与可读历史。T08-S05 已登记 5.0.1 src/createStore.ts Blob e5f3b6d7bad1208ee74b11dece2e3634b4d3acf8，本轮重读 L271–296。
@@ -44,7 +44,7 @@
 
 ## T11-C05 · Pydantic：API 迁移与验证/数据加载边界
 
-**分类：** L6 · 公共接口演进及过渡 facade。**知识：** K02.F2.2 K03.F5.1 K09.F3.1。**来源：** T11-S12/S13；T05-S05。
+**分类：** L6 · 公共接口演进及过渡 facade。**知识：** K09.F3.1。**来源：** T11-S12/S13；T05-S05。**关系：** 机制关联；API 迁移与语义兼容。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 1.10.15 parse_obj 对非 dict 尝试 dict(obj)，失败包装 ValidationError，最后 cls(**obj)。
 - **新版本实际观察：** 2.10.4 parse_obj 发出弃用警告并转发 model_validate；model_validate 支持 strict/from_attributes/context。迁移文档列重命名表、parse_raw/parse_file 退役方向及 from_attributes 替代 from_orm，并指出模型相等合同改变。T05-S05 同 Blob ca5a4529e9e398ccce2606acebfda1673f55185d，本轮重读 L603–629,1215–1223。
@@ -54,7 +54,7 @@
 
 ## T11-C06 · Go ServeMux：路由表达能力扩展和旧行为隔离
 
-**分类：** L6 · 算法/结构替换与启动级兼容开关。**知识：** K02.F2.1 K02.F2.2 K09.F4.1。**来源：** T11-S14/S15/S16。
+**分类：** L6 · 算法/结构替换与启动级兼容开关。**知识：** K09.F3.1。**来源：** T11-S14/S15/S16。**关系：** 机制关联；新旧路由行为开关。验证意图另见正文，NOT_RUN。
 
 - **旧版本实际观察：** 1.21.13 ServeMux 有 map、按长度排序的 entries 与 hosts 标记；Handler 处理 CONNECT、路径清理后匹配。
 - **新版本实际观察：** 1.22.0 使用 routingNode/routingIndex/patterns，并保留 mux121；支持方法/host/path/wildcard，非法 pattern 可 panic，URL segment 解码合同改变。Handler 根据 use121 分派；servemux121.go 保留旧结构，init 只在启动时读取 httpmuxgo121。
