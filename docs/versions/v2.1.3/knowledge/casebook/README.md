@@ -4,6 +4,8 @@
 
 ## 后续有限增量
 
+- [T21 跨专业知识综合工程判断](waves/T21-cross-subject-judgment.md)：#580，三组跨 K01–K11 的分阶段原创推演（不增加案例/来源数）；含 T20 非阻断 P2 限定修正，待独立审核，行为 NOT_RUN。
+
 - [T20 真实重构历史：简化、迁移与合同修复](waves/T20-historical-abstraction.md)：#578，三个历史案例、七个源码版本及三个实际提交；含 T19 非阻断 P2 限定修正，待独立审核，行为 NOT_RUN。
 
 - [T19 完整子系统架构：Miniflux 订阅刷新](waves/T19-feed-refresh-architecture.md)：#576，一个集成源码案例、九个新增来源、六个分析视图；含 T18 非阻断 P2 限定修正，待独立审核，行为 NOT_RUN。
