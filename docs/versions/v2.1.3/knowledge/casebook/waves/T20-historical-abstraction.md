@@ -8,7 +8,7 @@
 |---|---|---|---|
 | T20-C01 / L4 | pytest 内部 helper → 直接边界判断 | K03.F2.3 机制：去除因异常控制流所需的额外函数和解释；K03.F2.1 条件：是否保留函数应依据真实独立职责 | T20-S01/S02, H01 |
 | T20-C02 / L4 | HTTPX 旧 app shortcut → 显式 transport | K02.F2.2 机制：弃用、兼容窗口与后续接口删除；K02.F2.3 机制：明确既有 transport 选择扩展边界 | T20-S03–S05, H02 |
-| T20-C03 / L4 | p-limit 包装函数补回 clearQueue | K02.F2.2 机制：运行时、类型、文档和测试合同同步；K03.F3.3 机制：未开始调用的队列清理与已运行任务区别 | T20-S06/S07, H03 |
+| T20-C03 / L4 | p-limit 包装函数补回 clearQueue | K02.F2.2 机制：运行时、类型、文档和测试合同同步；K03.F3.3 机制：仍排队未获许可项的清理与已出队获许可项（含尚未调用用户函数）的区别 | T20-S06/S07, H03 |
 
 ## T20-C01 · 删除内部抽象：pytest
 
@@ -28,11 +28,11 @@
 
 ## T20-C03 · 增加必要抽象能力：p-limit
 
-**真实历史：** H03 #109 标题明确修复 limitFunction 的 queue clearing。父提交 S06 与子提交 S07 都有 pLimit 的 rejectOnClear 选项，默认 false；clearQueue 在 false 时清队列，在 true 时逐个 dequeue 并 reject AbortSignal.abort().reason（L3–14,77–90）。旧 limitFunction 创建私有 limit 仅返回调用闭包（L117–121），没有对外暴露 clearQueue；新实现保留闭包调用路径，增加该闭包的 clearQueue 属性指向已有 limit.clearQueue，再返回闭包（L117–126）。没有另建清理实现。H03 实际 patch 同时改变 index.d.ts 返回类型为函数与 Pick<LimitFunction,'clearQueue'> 的交叉类型，index.test-d.ts 增加调用的类型断言，readme 增加未开始调用的清理与 rejectOnClear 合同，test.js 新增运行一个任务、另一个待办、调用 wrapper.clearQueue、等待运行完成并断言待办拒绝 AbortError 的测试。实际 compare 五文件 +28/-2。测试源码存在不等于测试通过。这里是后续历史版本，不把新选项或 wrapper 修复归给此前 T15-C01 的 v6.2.0。
+**真实历史：** H03 #109 标题明确修复 limitFunction 的 queue clearing。父提交 S06 与子提交 S07 都有 pLimit 的 rejectOnClear 选项，默认 false；clearQueue 在 false 时清队列，在 true 时逐个 dequeue 并 reject AbortSignal.abort().reason（L3–14,77–90）。旧 limitFunction 创建私有 limit 仅返回调用闭包（L117–121），没有对外暴露 clearQueue；新实现保留闭包调用路径，增加该闭包的 clearQueue 属性指向已有 limit.clearQueue，再返回闭包（L117–126）。没有另建清理实现。H03 实际 patch 同时改变 index.d.ts 返回类型为函数与 Pick<LimitFunction,'clearQueue'> 的交叉类型，index.test-d.ts 增加调用的类型断言，readme 增加未开始调用的清理与 rejectOnClear 合同（文档措辞须按实际队列边界解读），test.js 新增并发 1 下两次调用、同步 wrapper.clearQueue、等待第一个 Promise 完成并断言第二个拒绝 AbortError 的测试；runningPromise 变量名不证明清理时用户函数已经开始。S06/S07 L19–24 先增加 activeCount 并出队，L50–63 的 run 实际为 internalResolve，之后 .then 才调用 L32–47 的用户函数；clearQueue L77–90 仅操作仍在队列中的未获许可项，不能撤回已出队获许可但用户函数尚未开始的调用。实际 compare 五文件 +28/-2。测试源码存在不等于测试通过。这里是后续历史版本，不把新选项或 wrapper 修复归给此前 T15-C01 的 v6.2.0。
 
-**选择与代价（推论）：** 包装层需保留真实使用者所需的操作能力，而不是仅复制最常用调用形态；如果队列属于包装对象且用户需要清理，直接委托已有能力比重新实现队列管理合理。仍需保留“不取消已经运行任务”和默认清理后 pending Promise 可能一直未完成的边界（README patch 明示）；增加方法不等于解决所有取消、背压或持久性问题。反过来，如果调用者合同仅允许提交且清理责任在其他 owner，盲目暴露底层全部方法可能破坏隔离；需要最小权限与职责判断。实际结构增加一个必要方法及类型/文档/测试变更，不提供维护耗时或性能收益实测。
+**选择与代价（推论）：** 包装层需保留真实使用者所需的操作能力，而不是仅复制最常用调用形态；如果队列属于包装对象且用户需要清理，直接委托已有能力比重新实现队列管理合理。仍需保留不取消已出队获许可项（包括已运行及尚未实际调用用户函数的项）和默认清理后被丢弃的排队项 Promise 可能一直未完成的边界（实际源码及 README patch）；增加方法不等于解决所有取消、背压或持久性问题。反过来，如果调用者合同仅允许提交且清理责任在其他 owner，盲目暴露底层全部方法可能破坏隔离；需要最小权限与职责判断。实际结构增加一个必要方法及类型/文档/测试变更，不提供维护耗时或性能收益实测。
 
-**反例/Oracle：** 老 wrapper 无 clearQueue，新 wrapper 的方法可调用；两个 wrapper 之间不应误清彼此待办；rejectOnClear=true 时待办拒绝且已开始任务完成，false 时不把清理当作 Promise settlement；类型入口与实际运行行为一致；不取消运行中任务。NOT_RUN。
+**反例/Oracle：** 老 wrapper 无 clearQueue，新 wrapper 的方法可调用；两个 wrapper 之间不应误清彼此待办；并发 1 时同一同步调用栈内连续提交两次后清理：从源码推导第一项已出队获许可但用户函数尚未调用，之后仍可执行，第二项仍排队才被清理；以可观察调用标记和 Promise 结果核对该差异，rejectOnClear=true 时第二项拒绝，false 时不能把清理当作 Promise settlement；类型入口与实际运行行为一致；已运行项不被清理。NOT_RUN，未实际复现该微任务时序。
 
 ## 历史证据与决策准则（原创综合，不增加案例）
 
