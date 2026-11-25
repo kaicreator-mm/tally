@@ -6,7 +6,11 @@
 
 ## 案例库入口
 
-[Software Engineering Casebook](casebook/README.md) 是同一软件工程知识体系的按问题索引视图。[T22 当前统一入口](casebook/waves/T22-current-knowledge-entry.md) 汇总已合入 T00–T21 的 142 个案例、143 个唯一来源文件 Blob、165 个原知识点与164条案例知识关系，并提供按类型/功能/质量约束选择的目录、反向索引及实际资格。T22 待限定独立审核；原定义及 Source/Claim 资格不变，源观察、原创分析、运行证据与拟议验证分开。原40条初始案例及后续增量保持历史身份。所有外部项目运行和新综合推演的 Oracle NOT_RUN；不编写新的业务或 DomainHarness 代码。
+[Software Engineering Casebook](casebook/README.md) 是同一软件工程知识体系的按问题索引视图。[T22 当前统一入口](casebook/waves/T22-current-knowledge-entry.md) 汇总已合入 T00–T21 的 142 个案例、143 个唯一来源文件 Blob、165 个原知识点与164条案例知识关系，并提供按类型/功能/质量约束选择的目录、反向索引及实际资格。T22 已在 [#582 closeout](https://github.com/kaicreator-mm/tally/issues/582#issuecomment-7164517356) 限定接受并合入（历史入口保留当时的候选措辞）；原定义及 Source/Claim 资格不变，源观察、原创分析、运行证据与拟议验证分开。原40条初始案例及后续增量保持历史身份。所有外部项目运行和新综合推演的 Oracle NOT_RUN；不编写新的业务或 DomainHarness 代码。
+
+## 第三批细粒度知识建设（T23-R1 候选）
+
+用户要求持续扩展知识；T15–T22 仅完成第二批限定验收，不是全域建设终止。[盘点合同](T23-inventory-contract.md) · [56组初始细节目录](T23-detail-inventory.md) · [语义归属及重复处理](T23-semantic-ownership.md) · [阅读路径与建设子流](T23-reading-paths-and-waves.md)。基线 383358955d117d155e2b3b2fc4cd7886e77f71b9；[#584](https://github.com/kaicreator-mm/tally/issues/584) 实际有界盘点候选，待独立审核，未冻结最终分类或派发 T24–T36，不把候选组计入既有知识点或案例。旧 T22 入口仍是实际已接受的知识索引，129机制/35条件共164关系不变。
 
 ## 1. 稳定知识与易变实现分离
 
