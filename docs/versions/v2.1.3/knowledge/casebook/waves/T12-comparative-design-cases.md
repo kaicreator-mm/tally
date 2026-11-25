@@ -22,7 +22,7 @@
 
 ## T12-C03 · 任务协调：直接调用、工作清单、持久 DAG
 
-**分类：** 工作流/Agent/批处理 · L2–L4。**知识：** K04.F3.1。**参考：** [T04-C02](T04-intelligence-and-infrastructure-architecture.md)、[T08-C01](T08-platform-functions.md)、[AR-009](../architecture-cases.md)、[AR-012](../architecture-cases.md)。**关系：** 条件启发；真实任务因果依赖。验证意图另见正文，NOT_RUN。
+**分类：** 工作流/Agent/批处理 · L2–L4。**知识：** K04.F1.3 K04.F3.1。**参考：** [T04-C02](T04-intelligence-and-infrastructure-architecture.md)、[T08-C01](T08-platform-functions.md)、[AR-009](../architecture-cases.md)、[AR-012](../architecture-cases.md)。**关系：** 条件启发；按真实任务复杂度、因果依赖选择适量协调；应用执行图不直接证明软件工程 Task 依赖。验证意图另见正文，NOT_RUN。
 
 - **教学情境与约束：** 导出报表需读取、计算、写文件；目前三步顺序，未来可能多报表并行，尚无跨进程恢复授权。
 - **可比较方案：** A：直接函数序列，错误立即返回，资源作用域明确。B：有限 worklist，真正存在独立任务时并行、共享预算与取消。C：持久 DAG 或队列，记录任务身份、依赖、执行/ACK、恢复及外部效果。
