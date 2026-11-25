@@ -6,7 +6,7 @@
 
 ## 案例库入口
 
-[Software Engineering Casebook](casebook/README.md) 是同一软件工程知识体系的按问题索引视图。第一批 12 个架构案例、16 个模块/功能/代码抽象案例及 12 个原创设计反例，覆盖 19 个已读外部项目的 20 个实际 Git Blob。通过软件类型、功能族、架构机制及粒度选择参考；原 Kxx 定义与专业原理不复制，源观察与推论、实际运行与拟议验证、真实项目与原创案例分别标记。未来继续补真实产品视图、功能多方案对照及历史演进案例，不编写新的业务或 DomainHarness 代码。
+[Software Engineering Casebook](casebook/README.md) 是同一软件工程知识体系的按问题索引视图。[T22 当前统一入口](casebook/waves/T22-current-knowledge-entry.md) 汇总已合入 T00–T21 的 142 个案例、143 个唯一来源文件 Blob、165 个原知识点与164条案例知识关系，并提供按类型/功能/质量约束选择的目录、反向索引及实际资格。T22 待限定独立审核；原定义及 Source/Claim 资格不变，源观察、原创分析、运行证据与拟议验证分开。原40条初始案例及后续增量保持历史身份。所有外部项目运行和新综合推演的 Oracle NOT_RUN；不编写新的业务或 DomainHarness 代码。
 
 ## 1. 稳定知识与易变实现分离
 
