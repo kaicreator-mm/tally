@@ -179,7 +179,7 @@
 | R4-A / T26a-2 K02/K03/K01/K05/K10/K11 | [架构风格的组合、替代与边界变化](T26a-2-architecture-style-composition.md) | 同一 D0 合同；模块/处理流/运行连接/部署与扩展四维，五种候选及并发/故障/维护反转；既有案例复用，教学 NOT_RUN |
 | R3-RV-01 | [56组台账补读](../T23-R3-detail-reassessment.md)；[C/G 修订计划](../T23-R3-residual-depth-plan.md) | T06/DE/T02/T03 精确复用，已充分子目标与 delta 分开，待独审；不提前关闭 P2 或写作 C/G |
 
-R4-A 与 R3-RV-01 已在 [#618 closeout](https://github.com/kaicreator-mm/tally/issues/618#issuecomment-7175669731) 限定接受并合入（0/0/1 新 P2）。36篇已接受；FM-02 限定 D→S，当前派生 S41/D10/U5，历史 R3 S40/D11/U5 不回填。P2-R4A-01 OPEN，下一批提交独立许可/撤权 Oracle。FG01–14 保持关闭，历史资格不变。
+R4-A 与 R3-RV-01 已在 [#618 closeout](https://github.com/kaicreator-mm/tally/issues/618#issuecomment-7175669731) 限定接受并合入（0/0/1 新 P2）。36篇已接受；FM-02 限定 D→S，当前派生 S41/D10/U5，历史 R3 S40/D11/U5 不回填。P2-R4A-01 已在 [#618 closeout](https://github.com/kaicreator-mm/tally/issues/618#issuecomment-7176228523) 限定关闭，#618 已关闭。FG01–14 保持关闭，历史资格不变。
 
 ## R4-B 可靠消息及协议协商（#620）
 
@@ -191,10 +191,26 @@ R4-A 与 R3-RV-01 已在 [#618 closeout](https://github.com/kaicreator-mm/tally/
 | FM-07 / T25c-3 K03/K02/K09/K01/K05 | [协议版本、能力协商与混合消费者](T25c-3-protocol-capability-negotiation.md) | Kafka ApiVersions、连接范围、认证与实际能力、业务 schema/未知必需字段/中转/离线重放 |
 | P2-R4A-01 | T26a-2 两条限定 Oracle | 文档版本相同但旧执行许可、prepare 后权限撤销，真实权威前后状态；待独审关闭 |
 
-36篇已接受 + 2篇候选；两个 D 扩展目标仍待独审。原 R3 历史统计及身份不变；当前 S41/D10/U5，R4B 不提前晋升。所有教学及 Oracle NOT_RUN，无新合格 Claim/Case。C/G 复用整改已关闭但写作另准入。
+R4-B 两篇已在 [#620 closeout](https://github.com/kaicreator-mm/tally/issues/620#issuecomment-7176229334) 限定接受并合入 d318c8b2e968355ad2ccc83133bc9a6c8782e775（0/0/1 新 P2）；DA-05/FM-07 限定 D→S，38篇已接受。原 R3 历史统计及身份不变；当前派生 S43/D8/U5。P2-R4B-01 OPEN，下一批修正。所有教学及 Oracle NOT_RUN，无新合格 Claim/Case。C/G 复用整改已关闭但写作另准入。
+
+## R4-C/D/E/F 批量专业深度建设（#622）
+
+输入 d318c8b2e968355ad2ccc83133bc9a6c8782e775；[R4B 独审](https://github.com/kaicreator-mm/tally/pull/621#issuecomment-7176105161)，[关闭](https://github.com/kaicreator-mm/tally/issues/620#issuecomment-7176229334)。Owner 要求批量推进；按 R3-RV-01 已关闭后的实际复用边界，六个限定知识目标和 P2 分别裁定，同批有限独审。原 R3 盘点/计划为历史记录；其中 OPEN 措辞的实际处置以上述收据及 [#616 closeout](https://github.com/kaicreator-mm/tally/issues/616#issuecomment-7175668874) 为准，不回填历史。
+
+| 主组 / 归属 | 新增正文 | 阅读问题与证据边界 |
+|---|---|---|
+| DA-07 / K02/K09/K10/K01/K05 | [T32b-2 数据生命周期、血缘、删除传播与离线冲突](T32b-2-data-lineage-conflict-tombstones.md) | CouchDB 3.5 局部冲突机制、OpenLineage object model；中心权威三方合并、generation/tombstone、恢复/质量证据；教学 |
+| OP-02 / K08/K03/K09/K05 | [T31a-3 依赖约束、解析图与真实安装制品](T31a-3-dependency-resolution-installed-package.md) | npm v11 peer/optional/workspace/lock/pack；同宿主约束和真实隔离消费者 |
+| OP-04 / K08/K09/K10/K05 | [T31a-4 渐进部署、版本路由、Feature Flag 与恢复](T31a-4-progressive-delivery-routing-flags.md) | Kubernetes v1.34/OpenFeature 在线规范限定，制品/路由/功能/数据，比例、停止、回退 |
+| QA-06 / K06/K05/K03/K10 | [T29a-2 可区分的诊断探针与历史缺陷定位](T29a-2-diagnostic-probes-and-bisection.md) | 原 CPython 修复/测试差异复用，Git bisect 2.52 与 Go1.25 pprof，竞争根因与具体 probe |
+| FM-05 / K03/K05/K02 | [T25b-3 跨语言值、所有权、泛型约束与失败语义](T25b-3-cross-language-ownership-generics.md) | Go spec 页面标 go1.27/Rust Book，T16 真实语义复用，alias/borrow/constraint/error/退出 |
+| FD-02 / K03/K01/K05/K02 | [T25b-4 精确数值运算、Locale 排序与双向文本](T25b-4-exact-numbers-locale-bidi.md) | Python3.13.18 decimal、Unicode17 UTS10 rev53/UAX9 rev51；中间舍入、排序与身份、逻辑与显示 |
+| P2-R4B-01 | T27c-3 §4 及独立负例 | read_committed 输入、禁止独立 offset commit、groupMetadata、commit 超时/中断、上游 abort 与错进度反例；待独审 |
+
+38篇已接受 + 6篇候选；当前派生 S43/D8/U5，六个 D 尚未独审；不提前晋升。所有教学与 Oracle NOT_RUN，无新合格 Claim/Case、实际部署、CI、Agent 或实验。R4-G 的 RE02/RE03 尚未写作，G3/G4/B3/B4 依实际已接受机制及有权合同另准入；未选变体保留 OPEN，不因为六篇正文就声明两个组合组已关闭。T36 另行整合及消费设计。
 
 ## 阅读路径与边界
 
-以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；API版本/能力协商/混合消费者 → T25c-3；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；架构风格组合/流水线/事件/插件/服务 → T26a-2；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；迁移/混合版本/回退 → T32b-1；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；消息投递/offset/outbox/inbox → T27c-3；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1；成本现值/估算/转换值 → T34a-1；维护/行为保持/替换/弃用 → T32a-1；排队/容量/负载模型/测量遗漏 → T33b-1；运营准备/燃烧率/事故协同/支持 → T33c-1；研究方法/因果/阶段化输入/污染 → T34b-1；工程度量/独立评价/维护及人因 → T34b-2；配置/导入/任务/查询/同步组合 → T35-1；订单/库存/退款/审批/报表组合 → T35-2。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
+以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；跨语言所有权/泛型/错误 → T25b-3；精确数值/locale/BiDi → T25b-4；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；bisect/heap/锁/trace 诊断 → T29a-2；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；API版本/能力协商/混合消费者 → T25c-3；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；架构风格组合/流水线/事件/插件/服务 → T26a-2；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；依赖解析/真实包 → T31a-3；部署/路由/flag → T31a-4；迁移/混合版本/回退 → T32b-1；数据血缘/冲突/墓碑/恢复 → T32b-2；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；消息投递/offset/outbox/inbox → T27c-3；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1；成本现值/估算/转换值 → T34a-1；维护/行为保持/替换/弃用 → T32a-1；排队/容量/负载模型/测量遗漏 → T33b-1；运营准备/燃烧率/事故协同/支持 → T33c-1；研究方法/因果/阶段化输入/污染 → T34b-1；工程度量/独立评价/维护及人因 → T34b-2；配置/导入/任务/查询/同步组合 → T35-1；订单/库存/退款/审批/报表组合 → T35-2。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
 
 T23 的 S23/D28/U5 是历史分组盘点，并非本次完成率；本轮不自动提升任何分组为全覆盖。专业正文可持续扩充，后续 T25b 其余语言/locale/时间尺度细节、T25c 其余 OS/分布式专题、T27c 其余专题、T28a/T28b/T28c 后续专题、T29 后续缺陷族、T30a/T30b 后续专业实践、T31a 后续生成及SCM专题、T32a/b 后续维护及迁移专题、T33a/b/c 后续性能/运营/可靠性专题、T34a/b 后续经济及实证专题等仍需另行有限准入。此次不增加运行时、SDK、CI、Agent、实验或产品发布。#565 HOLD、#286 DEFERRED。
