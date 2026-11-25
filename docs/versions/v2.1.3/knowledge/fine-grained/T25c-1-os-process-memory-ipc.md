@@ -10,7 +10,7 @@
 
 ## 2. Linux 进程启动与终止合同
 
-fork 创建子进程；父/子分别继续，返回值区分父、子和失败。Linux 通常以 copy-on-write 避免立即复制全部私有页；双方对私有映射的写入可触发实际页复制，显式共享映射例外。多线程程序 fork 后子进程只保留调用线程，却可能继承其他线程持有的锁状态；不能任意运行依赖那些锁的代码，应使用适当高层 spawn 或遵循实际 fork/exec 安全约束。execve 成功替换当前程序映像而非产生新 PID；不返回原调用，失败需报告。继承环境、工作目录、文件描述符与身份有各自合同。
+fork 创建子进程；父/子分别继续，返回值区分父、子和失败。Linux 通常以 copy-on-write 避免立即复制全部私有页；双方对私有映射的写入可触发实际页复制，显式共享映射例外。多线程程序 fork 后子进程只保留调用线程，却可能继承其他线程持有的锁状态；Linux 多线程 fork 后，在子进程至 execve 的窗口只可调用 async-signal-safe 函数；不能运行一般分配器、stdio/日志、锁或任意语言 runtime。优先使用合适高层 spawn，其内部实现及失败合同按实际 API 核查。execve 成功替换当前程序映像而非产生新 PID；不返回原调用，失败需报告。继承环境、工作目录、文件描述符与身份有各自合同。
 
 教学子进程启动协议：
 - 先确定可执行文件绝对身份、参数数组、工作目录、必要环境、输入输出与资源预算。不要为普通参数拼接 shell 命令；若确需 shell，需独立语法与信任边界。
@@ -21,18 +21,20 @@ fork 创建子进程；父/子分别继续，返回值区分父、子和失败�
 
 教学例：转换器启动成功，已打印 progress=100%，退出码非零。若合同要求完整输出验证及成功退出，不得发布结果；若有部分成功合同，需分开记录。退出0也只证明程序报告成功，不保证目标文件合法或持久。对进程组/后代所有权、PID 复用与强制退出，应按实际 supervisor API 验证对象身份，避免把超时转为对无关进程的终止操作。
 
+对于必须直接 fork/exec 的 Linux 实现，候选启动错误通道：父在 fork 前建立带 CLOEXEC 的独占错误 pipe；child 关闭无用端，仅用受支持的 async-signal-safe 操作准备描述符，execve 失败时保存 errno、向错误通道写固定有界记录并 _exit，父核错误记录/截断/通道关闭及 waitpid；成功 exec 自动关闭其错误写端。EOF 仅表示无更多写者且读尽，若 child 在报错前异常死亡也可能无记录，不能单靠 EOF 证明 exec/ready 成功；高层 spawn 也要区分同步异常、异步启动错误及正常退出。父须并行消费 stdout/stderr、关闭多余端、回收已创建 child，并区分两流实际终态；其他继承者可能延迟 EOF，超限未收敛要记录未知。本例不是完整 spawn 实现，信号/短写/错误记录编码与预算需按实际 API 设计。
+
 ## 3. 描述符、打开对象与 IPC
 
-Linux 描述符是进程描述符表中的索引；打开文件描述（open file description）持有文件偏移及状态标志。fork 后父子复制对应描述符，但可引用同一打开文件描述，因此共享文件偏移；独立 open 同一路径则通常得到不同打开文件描述。关闭其中一个引用未必释放底层对象的全部引用。execve 默认保留未标 close-on-exec 的描述符。与 T27b-2 的路径/句柄区别不同，本节关注继承和共享的生命周期。
+Linux 描述符是进程描述符表中的索引；打开文件描述（open file description）持有文件偏移及状态标志。fork 后父子复制对应描述符，但可引用同一打开文件描述，因此共享文件偏移；独立 open 同一路径则通常得到不同打开文件描述。关闭其中一个引用未必释放底层对象的全部引用。execve 默认保留未标 close-on-exec 的描述符。FD_CLOEXEC 是描述符标志，在成功 exec 时关闭，不阻止 fork 继承。多线程中 open 后另行 fcntl 设置可能被其他线程的 fork+exec 插入而泄漏描述符；应在支持的 API 创建时原子设置（Linux open O_CLOEXEC、pipe2 O_CLOEXEC 等），只给明确需要继承的端点设置相应映射。与 T27b-2 的路径/句柄区别不同，本节关注继承和共享的生命周期。
 
 | IPC | 传递机制 | 合同与选择 |
 |---|---|---|
-| pipe/FIFO | 单向字节流 | 简单父子输入输出；有限容量，无消息边界，关闭所有写端才会读到 EOF |
+| pipe/FIFO | 单向字节流 | 简单父子输入输出；有限容量，无消息边界，关闭所有写端且缓冲读尽后，正长度 read 才返回 EOF |
 | socket | 连接或消息端点 | 双向/跨主机能力取决于类型；指定 framing、权限和协议 |
 | 共享内存 | 映射同一数据区 | 大数据复用候选；同步、表示版本、所有权、崩溃恢复另行设计 |
 | 消息队列 | 实际队列 API 定义消息与容量 | 适用于有消息语义；是否持久、顺序、ACK 由具体系统决定 |
 
-反例：父进程启动 child，保留 stdout pipe 的写端，再等待 EOF。即使 child 正常结束，父仍持有写端，读者可能一直等待；必须关闭无用引用。另一个反例：child 大量写 stdout/stderr，父先等待退出却不消费输出；有限管道满后 child 阻塞写入，父等待退出，形成阻塞环。应在等待时并行消费必要输出或重定向到有界合同目标，处理双方结束、错误和上限。仅加大 pipe 容量不证明死锁消失。Linux pipe(7) 的 PIPE_BUF 原子写约束与 pipe 总容量不同；多个 writer 也不能凭任意长度写入推导记录边界。实际流协议见 T27b-2。
+反例：父进程启动 child，保留 stdout pipe 的写端，再等待 EOF。即使 child 正常结束，父仍持有写端，读者可能一直等待；必须关闭无用引用。另一个反例：child 大量写 stdout/stderr，父先等待退出却不消费输出；有限管道满后 child 阻塞写入，父等待退出，形成阻塞环。应在等待时并行消费必要输出或重定向到有界合同目标，处理双方结束、错误和上限。仅加大 pipe 容量不证明死锁消失。Linux pipe(7) 的 PIPE_BUF 原子写约束与 pipe 总容量不同；普通字节 pipe 在 n≤PIPE_BUF 时，blocking 写可等待后原子写入全部 n 字节，nonblocking 若空间不足则 EAGAIN，否则写全部（仍需处理其他 API 错误）；n>PIPE_BUF 不保证不交错。无读端的 write 产生 SIGPIPE，若忽略该信号则 EPIPE。多个 writer 也不能凭任意长度写入推导记录边界。实际流协议见 T27b-2。
 
 ## 4. 虚拟内存、页与映射
 
@@ -49,10 +51,11 @@ CPU cache/TLB、空间与时间局部性、页大小、上下文切换、IO 等�
 | child 修改私有变量，父读取 | 只在私有、无显式共享的合同下隔离；对共享映射另核 |
 | fork 后父子共同读取同一打开文件描述 | 按共享偏移合同核实际字节；不假定各自从0开始 |
 | 父持有无用 pipe 写端、输出填满 | 独立验证 EOF/回收、双流消费与有界退出 |
-| child spawn/exec 失败、非零退出、信号终止 | 分别报告启动与退出、输出/业务结果；不误判成功 |
+| 并发创建非继承 FD 与 spawn | 独立检查 exec 后实际 FD 对象身份；非获权端不得泄漏，FD 编号复用不等于对象相同 |
+| child spawn/exec 失败、非零退出、信号终止 | 分别核错误通道/截断、waitpid 回收、双流终态、业务结果；不误判成功 |
 | 共享映射并发写/截短 | 同步协议和映射故障分开，不能证明持久；仅隔离测试 |
 | 大文件高 RSS 或任务变慢 | 区分驻留/共享、分配增长、缺页、CPU/IO，使用实际工作负荷比较 |
 
 ## 6. 原始资料与范围
 
-2026-11-26 实际阅读 Linux man-pages [fork(2)](https://man7.org/linux/man-pages/man2/fork.2.html) DESCRIPTION/NOTES（私有内存、继承打开文件描述、COW）、[execve(2)](https://man7.org/linux/man-pages/man2/execve.2.html) DESCRIPTION（替换程序/描述符继承）、[waitpid(2)](https://man7.org/linux/man-pages/man2/waitpid.2.html) 状态宏与 NOTES zombie、[pipe(7)](https://man7.org/linux/man-pages/man7/pipe.7.html) 字节流/端点/容量、[mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html) MAP_SHARED/PRIVATE 与 SIGBUS。在线文档而非目标 kernel/硬件执行证明；一般虚拟内存/缓存成本、选择及故障例为原创工程综合 DOCUMENT_CANDIDATE。具体调度、Windows Job Object/IPC、Linux cgroup、共享内存内存序/设备持久化等留专题。
+2026-11-26 实际阅读 Linux man-pages [fork(2)](https://man7.org/linux/man-pages/man2/fork.2.html) DESCRIPTION/NOTES（私有内存、继承打开文件描述、COW）、[execve(2)](https://man7.org/linux/man-pages/man2/execve.2.html) DESCRIPTION（替换程序/描述符继承）、[waitpid(2)](https://man7.org/linux/man-pages/man2/waitpid.2.html) 状态宏与 NOTES zombie、[pipe(7)](https://man7.org/linux/man-pages/man7/pipe.7.html) 字节流/端点/容量、[mmap(2)](https://man7.org/linux/man-pages/man2/mmap.2.html) MAP_SHARED/PRIVATE 与 SIGBUS。FG08 实读补充 [open(2)](https://man7.org/linux/man-pages/man2/open.2.html) O_CLOEXEC、[pipe2(2)](https://man7.org/linux/man-pages/man2/pipe.2.html) O_CLOEXEC、[signal-safety(7)](https://man7.org/linux/man-pages/man7/signal-safety.7.html) async-signal-safe 函数范围；错误通道是原创候选，NOT_RUN。在线文档而非目标 kernel/硬件执行证明；一般虚拟内存/缓存成本、选择及故障例为原创工程综合 DOCUMENT_CANDIDATE。具体调度、Windows Job Object/IPC、Linux cgroup、共享内存内存序/设备持久化等留专题。
