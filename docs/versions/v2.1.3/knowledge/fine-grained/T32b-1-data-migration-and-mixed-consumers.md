@@ -21,20 +21,26 @@
 | Switch | 经获权验证切换读/写权威；仍支持旧者时明确反向投影及可表达值域，不能暗中开放1501ms |
 | Contract | 全部已声明支持旧路径不再需要后，评估回退、备份/队列中旧数据、保留规则，方可删除旧字段/桥接 |
 
-具体回填反例：读 row_version=7、duration_seconds=2；合法并发写把秒改为3、version=8，并同步 ms=3000。回填若无条件写2000即覆盖新事实。候选条件 UPDATE job SET duration_ms=2000 WHERE id=:id AND row_version=7 AND duration_ms IS NULL（仅填尚未初始化的投影；合法写入同步版本/新值），检查受影响行。若0行可能已被同步、已删或冲突，必须核当前权威状态，不能记为已迁移。若回填动作也改变被消费者依赖的版本语义，应按合同更新版本；本例假设它仅补内部投影、不改变逻辑业务版本。批次提交、断点与重新扫描需核并发新增/更新及删除，不以游标到末尾宣称全部完成。跨两个独立库的双写没有同事务保证，需要额外权威、可靠传播和对账设计，本文不新建分布式协议。
+具体回填反例：读 row_version=7、duration_seconds=2；合法并发写把秒改为3、version=8，并同步 ms=3000。回填若无条件写2000即覆盖新事实。候选条件 UPDATE job SET duration_ms=2000 WHERE id=:id AND row_version=7 AND duration_ms IS NULL（仅填尚未初始化的投影；合法写入同步版本/新值），检查受影响行。PostgreSQL18 READ COMMITTED 下，若 v8 已提交且无其他变化，UPDATE 的 WHERE 在新行版本上重新检查（或语句快照已看到 v8），预期0行；0行也可能已同步/已删/冲突，须独立读回。若 REPEATABLE READ 或 SERIALIZABLE 长事务先观察 v7、随后其他事务提交 v8，再尝试修改该行，则可能遇 serialization failure（SQLSTATE 40001），不是统一的0行。回滚整个事务，获权且预算允许时从新快照重试整个事务，禁止继续使用旧投影或将失败批次记为成功。若回填动作也改变被消费者依赖的版本语义，应按合同更新版本；本例假设它仅补内部投影、不改变逻辑业务版本。批次提交、断点与重新扫描需核并发新增/更新及删除，不以游标到末尾宣称全部完成。跨两个独立库的双写没有同事务保证，需要额外权威、可靠传播和对账设计，本文不新建分布式协议。
 
 ## 3. PostgreSQL 18 约束阶段与锁
 
 在上述秒字段权威、范围检查及一致性写入桥接真实成立后，可按实际数据库能力逐步约束新列。教学 CHECK：
 ```sql
+-- prerequisite: all legitimate ongoing writers already maintain the projection
+BEGIN;
 ALTER TABLE job ADD CONSTRAINT duration_ms_present
   CHECK (duration_ms IS NOT NULL) NOT VALID;
--- only after all ongoing writes meet this check;
--- correct existing missing rows according to authoritative mapping
+COMMIT;
+-- repair existing rows in bounded, separately committed transactions
+BEGIN;
 ALTER TABLE job VALIDATE CONSTRAINT duration_ms_present;
+COMMIT;
+BEGIN;
 ALTER TABLE job ALTER COLUMN duration_ms SET NOT NULL;
+COMMIT;
 ```
-这不是可直接生产执行的脚本；实际 DDL 顺序、桥接与业务权限由迁移方案确定。PostgreSQL 18 NOT VALID 可用于该版本支持的外键、CHECK 和 not-null 约束，跳过初始全表验证但仍约束后续写入；VALIDATE CONSTRAINT 扫描既有行，验证使用 SHARE UPDATE EXCLUSIVE 锁，ADD CHECK 通常需 ACCESS EXCLUSIVE；存在可证明无 NULL 的有效 CHECK 时 SET NOT NULL 可省通常的扫描（同命令未删除该约束）。不能把“不扫描”当“不锁”或“无停机”；锁等待、表重写、WAL/磁盘、并发请求与回退均需按真实负载评估。只验证 NOT NULL 不证明数值映射正确；还需独立范围、单位与全量对应检查。若旧合法 writer 无法保证新列非空，不可提前引入此检查造成拒绝旧合同。删除旧列是实际数据/依赖变更，CASCADE 不能作为默认修复。
+这不是可直接生产执行的脚本；实际 DDL 顺序、桥接与业务权限由迁移方案确定。PostgreSQL 18 NOT VALID 可用于该版本支持的外键、CHECK 和 not-null 约束，跳过初始全表验证但仍约束后续写入；VALIDATE CONSTRAINT 扫描既有行，验证使用 SHARE UPDATE EXCLUSIVE 锁，ADD CHECK 通常需 ACCESS EXCLUSIVE；存在可证明无 NULL 的有效 CHECK 时 SET NOT NULL 可省通常的扫描（同命令未删除该约束）。锁通常持有至事务结束：若框架将 ADD、回填、VALIDATE、SET NOT NULL 包在同一事务，ADD 取得的 ACCESS EXCLUSIVE 会保留，阻塞普通 SELECT/写入，后续较低锁不会自动降级。先短事务提交 ADD，再分批修复、独立提交 VALIDATE、最后短事务 SET NOT NULL（有效 CHECK 仍存在）；各阶段之间后续写仍受已生效约束。实际检查迁移工具事务包装、锁等待预算、失败回滚与重试策略；不能把“不扫描”当“不锁”或“无停机”；锁等待、表重写、WAL/磁盘、并发请求与回退均需按真实负载评估。只验证 NOT NULL 不证明数值映射正确；还需独立范围、单位与全量对应检查。若旧合法 writer 无法保证新列非空，不可提前引入此检查造成拒绝旧合同。删除旧列是实际数据/依赖变更，CASCADE 不能作为默认修复。
 
 ## 4. 消息与持久格式的版本兼容
 
@@ -52,10 +58,11 @@ Proto3 二进制 unknown fields 通常保留于消息解析/重新序列化；�
 
 | 教学反例（NOT_RUN） | 独立预期 |
 |---|---|
-| 回填版本7后并发改8 | 不能覆盖3000ms，0行需读回或重试 |
+| 回填版本7后并发改8 | 两会话固定交错：RC 预期0行并独立读回；RR/Serializable 旧快照可能40001，整个事务回滚后有界重试；均不得覆盖3000ms/报部分成功 |
 | 旧 writer 绕过桥接/回填批次中断 | 拒绝提前切换；按持久记录恢复及对账 |
 | NOT VALID 后旧行违规/新行违规 | 旧行尚未全局证明；新违规写受约束拒绝；验证全量及实际锁风险 |
+| 单事务 ADD→VALIDATE 对比分段提交 | 受控双会话在 ADD 后、VALIDATE 期间核 pg_locks 真实关系/模式及另一会话普通 SELECT、合法 UPDATE 的等待或结果；单事务保留高级锁，分段提交后不由已结束 ADD 事务继续持锁；验证期间仍可能有其他锁冲突，独立设置等待预算，不假定必然无阻塞 |
 | int64 大于旧范围、unknown field 经 JSON | 分别检查解析/值域/中转保真；不宣称自动兼容 |
 | 1501ms 新写后代码回退 | 检查有权回退政策，不无损时拒绝自动逆变换 |
 
-2026-11-26 实读 PostgreSQL [18 ALTER TABLE](https://www.postgresql.org/docs/18/sql-altertable.html) SET NOT NULL、ADD/VALIDATE CONSTRAINT/Notes 及 [5.7 Modifying Tables](https://www.postgresql.org/docs/18/ddl-alter.html) 列变更；[Protobuf proto3 Language Guide](https://protobuf.dev/programming-guides/proto3/) Updating A Message Type、Unknown Fields/Retaining Unknown Fields（在线指南，未验证具体 protoc/runtime 版本）。实际 DB/锁、消息编解码、迁移脚本与恢复均未执行；所有流程/SQL/反例为原创工程综合 DOCUMENT_CANDIDATE，不新增合格 Claim。具体 CDC、多库切换、线上迁移工具、备份恢复与数据保留政策留专题。
+2026-11-26 实读 PostgreSQL [18 ALTER TABLE](https://www.postgresql.org/docs/18/sql-altertable.html) SET NOT NULL、ADD/VALIDATE CONSTRAINT/Notes 及 [5.7 Modifying Tables](https://www.postgresql.org/docs/18/ddl-alter.html) 列变更；[Protobuf proto3 Language Guide](https://protobuf.dev/programming-guides/proto3/) Updating A Message Type、Unknown Fields/Retaining Unknown Fields（在线指南，未验证具体 protoc/runtime 版本）。实际 DB/锁、消息编解码、迁移脚本与恢复均未执行；所有流程/SQL/反例为原创工程综合 DOCUMENT_CANDIDATE，不新增合格 Claim。FG11 补充来源：独审实际核 [PostgreSQL18 显式锁](https://www.postgresql.org/docs/18/explicit-locking.html) §13.3（锁持续期及冲突表）、[事务隔离](https://www.postgresql.org/docs/18/transaction-iso.html) §13.2（RC 更新重检、RR/Serializable 并发失败与整事务重试）、ALTER TABLE Notes（先提交 ADD 再 VALIDATE）；复用该审核证据，本次不声称数据库已执行。具体 CDC、多库切换、线上迁移工具、备份恢复与数据保留政策留专题。

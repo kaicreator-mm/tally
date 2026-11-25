@@ -1,6 +1,6 @@
 # 第三批细粒度软件工程知识 · 专业正文入口
 
-[#586](https://github.com/kaicreator-mm/tally/issues/586)，基线 `daba091d8d9249c8a2f0100c0bae2c5464929750`。T23 已限定接受 [#584 closeout](https://github.com/kaicreator-mm/tally/issues/584#issuecomment-7166217999)，四个有限写作范围已获准入。第一组四篇已在 [#586 closeout](https://github.com/kaicreator-mm/tally/issues/586#issuecomment-7166574037) 限定接受并合入（0/0/3）；第二组及三项限定修正已获 [#588 独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694) 限定接受（0/0/1），实际 main 内容已核实，PR #589 元数据已恢复为 closed/merged（[#588 reconciliation](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7170371776)）；第三组已在 [#591 closeout](https://github.com/kaicreator-mm/tally/issues/591#issuecomment-7169778993) 限定接受并合入（0/0/1）；第四组已在 [#592 closeout](https://github.com/kaicreator-mm/tally/issues/592#issuecomment-7170367545) 限定接受并合入（0/0/2）；第五组已在 [#594 closeout](https://github.com/kaicreator-mm/tally/issues/594#issuecomment-7170892606) 限定接受并合入（0/0/2）；第六组已在 [#596 closeout](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171454299) 限定接受并合入（0/0/1）；第七组为候选，待独审；不是新的平行课程体系或合格 Source Claim。保留 K01–K11、165 历史课程 ID、48 概念关系与 T22 142 Case/143 Blob/164 关联（129 M/35 C）原始身份及资格。
+[#586](https://github.com/kaicreator-mm/tally/issues/586)，基线 `daba091d8d9249c8a2f0100c0bae2c5464929750`。T23 已限定接受 [#584 closeout](https://github.com/kaicreator-mm/tally/issues/584#issuecomment-7166217999)，四个有限写作范围已获准入。第一组四篇已在 [#586 closeout](https://github.com/kaicreator-mm/tally/issues/586#issuecomment-7166574037) 限定接受并合入（0/0/3）；第二组及三项限定修正已获 [#588 独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694) 限定接受（0/0/1），实际 main 内容已核实，PR #589 元数据已恢复为 closed/merged（[#588 reconciliation](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7170371776)）；第三组已在 [#591 closeout](https://github.com/kaicreator-mm/tally/issues/591#issuecomment-7169778993) 限定接受并合入（0/0/1）；第四组已在 [#592 closeout](https://github.com/kaicreator-mm/tally/issues/592#issuecomment-7170367545) 限定接受并合入（0/0/2）；第五组已在 [#594 closeout](https://github.com/kaicreator-mm/tally/issues/594#issuecomment-7170892606) 限定接受并合入（0/0/2）；第六组已在 [#596 closeout](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171454299) 限定接受并合入（0/0/1）；第七组已在 [#598 closeout](https://github.com/kaicreator-mm/tally/issues/598#issuecomment-7172122515) 限定接受并合入（0/0/1）；第八组为候选，待独审；不是新的平行课程体系或合格 Source Claim。保留 K01–K11、165 历史课程 ID、48 概念关系与 T22 142 Case/143 Blob/164 关联（129 M/35 C）原始身份及资格。
 
 | 子任务 / 归属 | 正文及阅读问题 | 新增深化 | 既有知识复用 |
 |---|---|---|---|
@@ -67,7 +67,7 @@
 
 ## 第七组专业正文与 FG10 修订（#598）
 
-基线 d25bbcd086caeb5490ba58472efb2038c7e50df8；[第六批独审](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171229939)。FG10 在 T26a-1 补 Q3 跨网点权限、Q4 旧格式/消费者独立 Oracle 与逐变体质量验证，待独审。
+基线 d25bbcd086caeb5490ba58472efb2038c7e50df8；[第六批独审](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171229939)。FG10 在 T26a-1 补 Q3 跨网点权限、Q4 旧格式/消费者独立 Oracle 与逐变体质量验证，已由第七批独审限定关闭。
 
 | 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
 |---|---|---|
@@ -75,10 +75,22 @@
 | T31a-2 K08/K04/K09/K07 | [配置管理、基线与合并审核](T31a-2-configuration-management-baselines.md) | OP01；配置识别、变更、核算/审核，Git 对象/index/三方合并与语义冲突；非新项目强制流程 |
 | T32b-1 K09/K02/K03/K05/K08 | [数据迁移与混合版本消费者](T32b-1-data-migration-and-mixed-consumers.md) | RE02/RE03；并发回填、PostgreSQL18 约束/锁、proto3 二进制演进、对账/回退/退役；非实际迁移执行 |
 
-三篇候选与 FG10 一起独审；教学与 Oracle NOT_RUN，旧 Claim/Case 资格不变。
+三篇获限定接受，FG10 已关闭；FG11 转入第八组。教学与 Oracle NOT_RUN，旧 Claim/Case 资格不变。
+
+## 第八组专业正文与 FG11 修订（#600）
+
+基线 b01223cffe8be7995c4df54df5a3dbc4e2c2aa1c；[第七批独审](https://github.com/kaicreator-mm/tally/issues/598#issuecomment-7171788140)。FG11 在 T32b-1 补 PostgreSQL18 DDL 分阶段事务提交、实际锁持续期、RC/RR/Serializable 回填区别及双会话 Oracle，待独审。
+
+| 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
+|---|---|---|
+| T25a-1 K03/K04/K05 | [离散数学：逻辑、关系、图与归纳](T25a-1-discrete-logic-relations-graphs.md) | 量词/集合/等价及偏序/拓扑/归纳，基础纸面推导；非完整离散数学课程 |
+| T27d-1 K03/K10/K05 | [数据结构、算法成本与实际工程选型](T27d-1-data-structures-cost-selection.md) | 数组摊还、哈希、堆双索引、图/外存成本，非特定 runtime 性能实测 |
+| T25d-1 K11/K10/K05 | [概率、统计测量与工程证据](T25d-1-probability-statistics-engineering-measurement.md) | 概率/相关/样本分母/配对区间/区组、零失败上界，非真实实验或完整统计课程 |
+
+三篇候选与 FG11 一起独审。所有教学及 Oracle NOT_RUN；旧 Claim/Case 资格不变。
 
 ## 阅读路径与边界
 
-以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；迁移/混合版本/回退 → T32b-1。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
+以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；迁移/混合版本/回退 → T32b-1；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
 
 T23 的 S23/D28/U5 是历史分组盘点，并非本次完成率；本轮不自动提升任何分组为全覆盖。专业正文可持续扩充，后续 T25b 其余语言/locale/时间尺度细节、T25c 其余 OS/分布式专题、T27c 其余专题、T28a-2/T28b 后续专题/T28c、T29 后续缺陷族、T30b 后续专业实践、T31a 后续生成及SCM专题、T32b 后续迁移专题等仍需另行有限准入。此次不增加运行时、SDK、CI、Agent、实验或产品发布。#565 HOLD、#286 DEFERRED。
