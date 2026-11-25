@@ -30,7 +30,7 @@ model_id -> model_name
 
 ## 3. 约束不是仅在 UI 校验
 
-PostgreSQL 18 教学 DDL（假设 vendor_id 非空，但厂商表暂未建；若是实际引用须加 FK）：
+PostgreSQL 18 教学 DDL（只演示上述模型的登记/身份约束子集，省略 Model/model_id；vendor_id 非空，但厂商表暂未建，实际引用须加 FK）：
 ```sql
 CREATE TABLE project (
   project_id bigint PRIMARY KEY,
@@ -104,4 +104,4 @@ PostgreSQL 18 文档：Read Uncommitted 实际按 Read Committed；Read Committe
 
 ## 8. 来源与证据限制
 
-实读 2026-11-25 PostgreSQL 18 官方 [§5.5 Constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)、[§9.1 Logical Operators](https://www.postgresql.org/docs/18/functions-logical.html)、[§9.2 Comparison](https://www.postgresql.org/docs/18/functions-comparison.html)、[§7.2 Table Expressions](https://www.postgresql.org/docs/18/queries-table-expressions.html)（qualified joins / WHERE）、[§14.1 Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)（计划结点、估算及实际观察）、[§13.2 Transaction Isolation](https://www.postgresql.org/docs/18/transaction-iso.html)（Read Committed/Repeatable Read/Serializable）。范式理论采用原创教学解释及显式依赖推导；Wilfrid Laurier University Normalization 页面搜索索引可见但打开限校园访问，非已核正文；进一步标准化理论来源留后续深读。索引具体版本选型依据实际计划，未连接数据库。所有示例、选择与反例为 DOCUMENT_CANDIDATE，非新 source-qualified Claim 或产品测试。
+实读 2026-11-25 PostgreSQL 18 官方 [§5.5 Constraints](https://www.postgresql.org/docs/18/ddl-constraints.html)、[§9.1 Logical Operators](https://www.postgresql.org/docs/18/functions-logical.html)、[§9.2 Comparison](https://www.postgresql.org/docs/18/functions-comparison.html)、[§7.2 Table Expressions](https://www.postgresql.org/docs/18/queries-table-expressions.html)（qualified joins / WHERE）、[§14.1 Using EXPLAIN](https://www.postgresql.org/docs/18/using-explain.html)（计划结点、估算及实际观察）、[§13.2 Transaction Isolation](https://www.postgresql.org/docs/18/transaction-iso.html)（Read Committed/Repeatable Read/Serializable）。范式理论参考 University of Wollongong CSCI235 Autumn 2026 [Database normalization](https://documents.uow.edu.au/~jrg/.snapshot/daily.2026-11-04_0010/235/slides/03databasenormalization/03databasenormalization.html)（实际读 2NF L322–324、3NF L724–731、BCNF 分解相关段；原创建模例与一般无损/依赖保持判断为教学推导）。Wilfrid Laurier University Normalization 页面直开限校园访问，不算已核正文。索引具体版本选型依据实际计划，未连接数据库。所有示例、选择与反例为 DOCUMENT_CANDIDATE，非新 source-qualified Claim 或产品测试。
