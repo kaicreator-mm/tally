@@ -57,7 +57,7 @@
 | 工程事实 | 实际源码、环境、执行/Artifact、Observation 的真实绑定及观察范围 | 引用测试、代码或工具返回不等于全部合同 PASS |
 | 评价 | 独立 Oracle、执行结果、覆盖/缺失/冲突及成本 | 知识被检索/注入不等于被正确采用，不等于效用提升 |
 
-任务事实仍为 YES/NO/UNKNOWN/CONFLICT 等原语义（缺失与不适用独立，按实际合同确认），不建立第二权威账本。输入自报事实或证据链接必须由既有受权边界核对内容及范围；同 observationId 换内容不能继承确认，完整义务集合不能由待评价者删除。现有 #565 R5 的 omitted conflict、FAIL+NOT_RUN、prior contract version 三个已知问题仍 OPEN/HOLD，本设计不声称修正源代码或已有 Validator。
+任务事实仍为 YES/NO/UNKNOWN/CONFLICT 等原语义（缺失与不适用独立，按实际合同确认），不建立第二权威账本。输入自报事实或证据链接必须由既有受权边界核对内容及范围；同 observationId 换内容不能继承确认，完整义务集合不能由待评价者删除。现有 #565 R5 的全部 2 P1/2 P2 保持 OPEN/HOLD（[#565 R6](https://github.com/kaicreator-mm/tally/pull/565#issuecomment-7146968848)）；其中 R6 已复现 omitted conflict、FAIL+NOT_RUN、prior contract version 三个问题，不将这三个当完整发现清单。本设计不声称修正源代码或已有 Validator。
 
 ## 5. 本批实际产物及停止边界
 
