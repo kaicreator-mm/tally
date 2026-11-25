@@ -2,6 +2,10 @@
 
 > 属于 [v2.1.3 重构知识基础](../refactoring-foundation.md)，复用 v2.1.2 K01–K11 专业知识 Owner，而非新知识引擎/Domain Package。用户要求按软件类型、功能、模块、代码抽象等组织大量真实和原创案例。案例是设计参考而非通用规范；所有具体实现均待当前项目有权合同与实际验证决定。
 
+## 后续有限增量
+
+- [T15 TypeScript/JavaScript 抽象合同与选择对照](waves/T15-ts-js-abstraction-contrasts.md)：#568，四条新源码参考、正反例与独立的增量索引；NOT_RUN，待独立审核。下列 T13 目录及数值仍是首期冻结历史快照，最终状态见 [#567 closeout](https://github.com/kaicreator-mm/tally/issues/567#issuecomment-7157423397)。
+
 ## 当前统一知识入口（T13）
 
 - [125 条案例多轴目录](waves/T13-case-catalog.md)：按软件类型、功能/机制、粒度、质量目标、约束、知识及来源选择；每条定位固定内容基线。
