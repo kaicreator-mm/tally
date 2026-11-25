@@ -191,7 +191,7 @@ R4-A 与 R3-RV-01 已在 [#618 closeout](https://github.com/kaicreator-mm/tally/
 | FM-07 / T25c-3 K03/K02/K09/K01/K05 | [协议版本、能力协商与混合消费者](T25c-3-protocol-capability-negotiation.md) | Kafka ApiVersions、连接范围、认证与实际能力、业务 schema/未知必需字段/中转/离线重放 |
 | P2-R4A-01 | T26a-2 两条限定 Oracle | 文档版本相同但旧执行许可、prepare 后权限撤销，真实权威前后状态；待独审关闭 |
 
-R4-B 两篇已在 [#620 closeout](https://github.com/kaicreator-mm/tally/issues/620#issuecomment-7176229334) 限定接受并合入 d318c8b2e968355ad2ccc83133bc9a6c8782e775（0/0/1 新 P2）；DA-05/FM-07 限定 D→S，38篇已接受。原 R3 历史统计及身份不变；当前派生 S43/D8/U5。P2-R4B-01 OPEN，下一批修正。所有教学及 Oracle NOT_RUN，无新合格 Claim/Case。C/G 复用整改已关闭但写作另准入。
+R4-B 两篇已在 [#620 closeout](https://github.com/kaicreator-mm/tally/issues/620#issuecomment-7176229334) 限定接受并合入 d318c8b2e968355ad2ccc83133bc9a6c8782e775（0/0/1 新 P2）；DA-05/FM-07 限定 D→S，38篇已接受。原 R3 历史统计及身份不变；当前派生 S43/D8/U5。P2-R4B-01 已在 [#620 closeout](https://github.com/kaicreator-mm/tally/issues/620#issuecomment-7176664867) 限定关闭，#620 已关闭。所有教学及 Oracle NOT_RUN，无新合格 Claim/Case。C/G 复用整改已关闭但写作另准入。
 
 ## R4-C/D/E/F 批量专业深度建设（#622）
 
@@ -207,10 +207,21 @@ R4-B 两篇已在 [#620 closeout](https://github.com/kaicreator-mm/tally/issues/
 | FD-02 / K03/K01/K05/K02 | [T25b-4 精确数值运算、Locale 排序与双向文本](T25b-4-exact-numbers-locale-bidi.md) | Python3.13.18 decimal、Unicode17 UTS10 rev53/UAX9 rev51；中间舍入、排序与身份、逻辑与显示 |
 | P2-R4B-01 | T27c-3 §4 及独立负例 | read_committed 输入、禁止独立 offset commit、groupMetadata、commit 超时/中断、上游 abort 与错进度反例；待独审 |
 
-38篇已接受 + 6篇候选；当前派生 S43/D8/U5，六个 D 尚未独审；不提前晋升。所有教学与 Oracle NOT_RUN，无新合格 Claim/Case、实际部署、CI、Agent 或实验。R4-G 的 RE02/RE03 尚未写作，G3/G4/B3/B4 依实际已接受机制及有权合同另准入；未选变体保留 OPEN，不因为六篇正文就声明两个组合组已关闭。T36 另行整合及消费设计。
+R4-C/D/E/F 六篇及 P2-R4B-01 在 [#622 closeout](https://github.com/kaicreator-mm/tally/issues/622#issuecomment-7176665795) 限定接受并合入 5ac801aabca792dbcc468de46a2cfcf66ed8ef24（0/0/0）；44篇已接受，六个限定 D→S，当前派生 S49/D2/U5，原 R3 历史不回填。#620/#622 已关闭。所有教学与 Oracle NOT_RUN，无新合格 Claim/Case、实际部署、CI、Agent 或实验。RE02/RE03 为剩余 D；下一批按复用校准后的具体范围推进。T36 另行整合及消费设计。
+
+## R4-G 复杂通用与业务功能组合（#624）
+
+基线 5ac801aabca792dbcc468de46a2cfcf66ed8ef24；[R4-C/D/E/F 独审](https://github.com/kaicreator-mm/tally/pull/623#issuecomment-7176597497)。R3-RV-01 已限定关闭，按 [修订残余计划](../T23-R3-residual-depth-plan.md) 的 G3/G4/B3/B4 准入。现有 G1/G2/B1/B2、T06、DE001–008、T02-C06、T03-C03/C05、T07/T17/T19/T20 等保留语义归属及证据资格；本批仅深化选定组合。
+
+| 子目标 / 归属 | 实际新增正文 | 阅读问题与证据边界 |
+|---|---|---|
+| RE-02 / G3、G4 K02/K03/K01/K05/K09/K10 | [T35-3 复杂通用功能组合](T35-3-complex-general-function-composition.md) | RFC9110 Range/If-Range、PG18 COPY、持久片段与 staging/checkpoint/原子发布 vs 部分成功；RFC9111 cache 与权限epoch/数据generation/UI sequence、撤权与迟到结果 |
+| RE-03 / B3、B4 K01/K02/K03/K05/K09/K10 | [T35-4 复杂业务功能组合](T35-4-complex-business-function-composition.md) | 多SKU原子预留/部分履约与取消、Stripe API v1 部分退款/幂等窗口/UNKNOWN及对账；委派时段/实际actor/版本、长导出同快照与逐块披露准入 |
+
+44篇已接受 +2篇候选。当前派生 S49/D2/U5；四个具体子目标分别独审，RE-02/RE-03 的限定 D 目标须独立确认才可晋升，非整个功能族完成。跨进程关闭/安全日志、其它下载协议/平台、预约冲突、跨支付方/结算及未选政策/产品变体保持 OPEN/UNKNOWN，专项 U 不晋升。全部为公开原创教学及 Oracle NOT_RUN，未运行或增加 qualified Claim/Case；不作为隐藏实验题，不自动产生业务 Rule。T36 仍待另行设计和独审。
 
 ## 阅读路径与边界
 
-以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；跨语言所有权/泛型/错误 → T25b-3；精确数值/locale/BiDi → T25b-4；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；bisect/heap/锁/trace 诊断 → T29a-2；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；API版本/能力协商/混合消费者 → T25c-3；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；架构风格组合/流水线/事件/插件/服务 → T26a-2；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；依赖解析/真实包 → T31a-3；部署/路由/flag → T31a-4；迁移/混合版本/回退 → T32b-1；数据血缘/冲突/墓碑/恢复 → T32b-2；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；消息投递/offset/outbox/inbox → T27c-3；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1；成本现值/估算/转换值 → T34a-1；维护/行为保持/替换/弃用 → T32a-1；排队/容量/负载模型/测量遗漏 → T33b-1；运营准备/燃烧率/事故协同/支持 → T33c-1；研究方法/因果/阶段化输入/污染 → T34b-1；工程度量/独立评价/维护及人因 → T34b-2；配置/导入/任务/查询/同步组合 → T35-1；订单/库存/退款/审批/报表组合 → T35-2。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
+以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；跨语言所有权/泛型/错误 → T25b-3；精确数值/locale/BiDi → T25b-4；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；bisect/heap/锁/trace 诊断 → T29a-2；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；API版本/能力协商/混合消费者 → T25c-3；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；架构风格组合/流水线/事件/插件/服务 → T26a-2；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；依赖解析/真实包 → T31a-3；部署/路由/flag → T31a-4；迁移/混合版本/回退 → T32b-1；数据血缘/冲突/墓碑/恢复 → T32b-2；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；消息投递/offset/outbox/inbox → T27c-3；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1；成本现值/估算/转换值 → T34a-1；维护/行为保持/替换/弃用 → T32a-1；排队/容量/负载模型/测量遗漏 → T33b-1；运营准备/燃烧率/事故协同/支持 → T33c-1；研究方法/因果/阶段化输入/污染 → T34b-1；工程度量/独立评价/维护及人因 → T34b-2；配置/导入/任务/查询/同步组合 → T35-1；复杂下载导入/权限缓存/异步交错 → T35-3；订单/库存/退款/审批/报表组合 → T35-2；多资源/部分效果/委派审批/长导出 → T35-4。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
 
 T23 的 S23/D28/U5 是历史分组盘点，并非本次完成率；本轮不自动提升任何分组为全覆盖。专业正文可持续扩充，后续 T25b 其余语言/locale/时间尺度细节、T25c 其余 OS/分布式专题、T27c 其余专题、T28a/T28b/T28c 后续专题、T29 后续缺陷族、T30a/T30b 后续专业实践、T31a 后续生成及SCM专题、T32a/b 后续维护及迁移专题、T33a/b/c 后续性能/运营/可靠性专题、T34a/b 后续经济及实证专题等仍需另行有限准入。此次不增加运行时、SDK、CI、Agent、实验或产品发布。#565 HOLD、#286 DEFERRED。
