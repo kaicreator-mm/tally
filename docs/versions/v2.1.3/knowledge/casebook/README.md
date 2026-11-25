@@ -4,6 +4,8 @@
 
 ## 后续有限增量
 
+- [T16 跨语言抽象：作用域退出、所有权与失败合同](waves/T16-cross-language-scope-exit.md)：#570，Java/C++/Rust 三条源码参考与同问题跨语言对照；待独立审核，行为 NOT_RUN。
+
 - [T15 TypeScript/JavaScript 抽象合同与选择对照](waves/T15-ts-js-abstraction-contrasts.md)：#568，四条新源码参考、正反例与独立的增量索引；NOT_RUN，待独立审核。下列 T13 目录及数值仍是首期冻结历史快照，最终状态见 [#567 closeout](https://github.com/kaicreator-mm/tally/issues/567#issuecomment-7157423397)。
 
 ## 当前统一知识入口（T13）
