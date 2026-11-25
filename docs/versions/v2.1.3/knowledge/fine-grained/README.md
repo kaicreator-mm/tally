@@ -1,6 +1,6 @@
 # 第三批细粒度软件工程知识 · 专业正文入口
 
-[#586](https://github.com/kaicreator-mm/tally/issues/586)，基线 `daba091d8d9249c8a2f0100c0bae2c5464929750`。T23 已限定接受 [#584 closeout](https://github.com/kaicreator-mm/tally/issues/584#issuecomment-7166217999)，四个有限写作范围已获准入。第一组四篇已在 [#586 closeout](https://github.com/kaicreator-mm/tally/issues/586#issuecomment-7166574037) 限定接受并合入（0/0/3）；第二组及三项限定修正已获 [#588 独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694) 限定接受（0/0/1），实际 main 内容已核实，PR #589 元数据已恢复为 closed/merged（[#588 reconciliation](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7170371776)）；第三组已在 [#591 closeout](https://github.com/kaicreator-mm/tally/issues/591#issuecomment-7169778993) 限定接受并合入（0/0/1）；第四组已在 [#592 closeout](https://github.com/kaicreator-mm/tally/issues/592#issuecomment-7170367545) 限定接受并合入（0/0/2）；第五组已在 [#594 closeout](https://github.com/kaicreator-mm/tally/issues/594#issuecomment-7170892606) 限定接受并合入（0/0/2）；第六组已在 [#596 closeout](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171454299) 限定接受并合入（0/0/1）；第七组已在 [#598 closeout](https://github.com/kaicreator-mm/tally/issues/598#issuecomment-7172122515) 限定接受并合入（0/0/1）；第八组已在 [#600 closeout](https://github.com/kaicreator-mm/tally/issues/600#issuecomment-7172639924) 限定接受并合入（0/0/1）；第九组已在 [#602 closeout](https://github.com/kaicreator-mm/tally/issues/602#issuecomment-7172876519) 限定接受并合入（0/0/1）；第十组为候选，待独审；不是新的平行课程体系或合格 Source Claim。保留 K01–K11、165 历史课程 ID、48 概念关系与 T22 142 Case/143 Blob/164 关联（129 M/35 C）原始身份及资格。
+[#586](https://github.com/kaicreator-mm/tally/issues/586)，基线 `daba091d8d9249c8a2f0100c0bae2c5464929750`。T23 已限定接受 [#584 closeout](https://github.com/kaicreator-mm/tally/issues/584#issuecomment-7166217999)，四个有限写作范围已获准入。第一组四篇已在 [#586 closeout](https://github.com/kaicreator-mm/tally/issues/586#issuecomment-7166574037) 限定接受并合入（0/0/3）；第二组及三项限定修正已获 [#588 独审](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7167193694) 限定接受（0/0/1），实际 main 内容已核实，PR #589 元数据已恢复为 closed/merged（[#588 reconciliation](https://github.com/kaicreator-mm/tally/issues/588#issuecomment-7170371776)）；第三组已在 [#591 closeout](https://github.com/kaicreator-mm/tally/issues/591#issuecomment-7169778993) 限定接受并合入（0/0/1）；第四组已在 [#592 closeout](https://github.com/kaicreator-mm/tally/issues/592#issuecomment-7170367545) 限定接受并合入（0/0/2）；第五组已在 [#594 closeout](https://github.com/kaicreator-mm/tally/issues/594#issuecomment-7170892606) 限定接受并合入（0/0/2）；第六组已在 [#596 closeout](https://github.com/kaicreator-mm/tally/issues/596#issuecomment-7171454299) 限定接受并合入（0/0/1）；第七组已在 [#598 closeout](https://github.com/kaicreator-mm/tally/issues/598#issuecomment-7172122515) 限定接受并合入（0/0/1）；第八组已在 [#600 closeout](https://github.com/kaicreator-mm/tally/issues/600#issuecomment-7172639924) 限定接受并合入（0/0/1）；第九组已在 [#602 closeout](https://github.com/kaicreator-mm/tally/issues/602#issuecomment-7172876519) 限定接受并合入（0/0/1）；第十组已在 [#604 closeout](https://github.com/kaicreator-mm/tally/issues/604#issuecomment-7173126458) 限定接受并合入（0/0/1）；第十一组为候选，待独审；不是新的平行课程体系或合格 Source Claim。保留 K01–K11、165 历史课程 ID、48 概念关系与 T22 142 Case/143 Blob/164 关联（129 M/35 C）原始身份及资格。
 
 | 子任务 / 归属 | 正文及阅读问题 | 新增深化 | 既有知识复用 |
 |---|---|---|---|
@@ -102,17 +102,28 @@
 
 ## 第十组专业正文与 FG13 修订（#604）
 
-基线 9cabcd61289a88cd794b78ad4b6236cbbabfa9b4；[第九批独审](https://github.com/kaicreator-mm/tally/issues/602#issuecomment-7172779103)。FG13 在 T27c-2 §3.1 补实际 Watch 分片、事件与响应 revision、固定分页及 checkpoint、单范围 watch 和多 watch 水位边界，待独审。
+基线 9cabcd61289a88cd794b78ad4b6236cbbabfa9b4；[第九批独审](https://github.com/kaicreator-mm/tally/issues/602#issuecomment-7172779103)。FG13 在 T27c-2 §3.1 补实际 Watch 分片、事件与响应 revision、固定分页及 checkpoint、单范围 watch 和多 watch 水位边界，已由第十批独审限定关闭。
 
 | 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
 |---|---|---|
 | T24b-1 K01/K02/K03/K05 | [业务规则、决策表与领域约束的可反驳合同](T24b-1-business-rule-decision-contracts.md) | 规则覆盖/冲突、UNKNOWN、单位/版本、提交边界；Camunda 8 hit policy 限定，非完整 DMN 或真实业务政策 |
 | T28c-1 K05/K01/K02/K10/K11 | [产品质量目标、质量保证与评价范围](T28c-1-product-quality-assurance-evaluation.md) | 质量目标、保证与控制、分母、完整过程及证据聚合；ISO25010:2023 摘要/WCAG-EM 2.0 Group Note，非认证或真实测试 |
 
-两篇候选与 FG13 一起独审。教学与 Oracle NOT_RUN，无新合格 Claim/Case。
+两篇获限定接受，FG13 已关闭；FG14 转入第十一组。教学与 Oracle NOT_RUN，无新合格 Claim/Case。
+
+## 第十一组专业正文与 FG14 修订（#606）
+
+基线 f0915fe5500b3ff0e78adc83fdc8be09cecc614c；[第十批独审](https://github.com/kaicreator-mm/tally/issues/604#issuecomment-7173019679)。FG14 在 T28c-1 §4.1 补固定 WCAG-EM 2.0 Note 结构化/随机样本反馈、默认及常用/关键过程分支、迭代与记录、明确符合性声明限制，待独审。
+
+| 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
+|---|---|---|
+| T33a-1 K10/K02/K05/K06/K09 | [可靠性模型、故障分析与业务恢复目标](T33a-1-reliability-fault-analysis-recovery.md) | DA07/OP06/08；任务可靠度/可用性、串并联和共同原因、FMEA/FTA割集、RTO/RPO及真实恢复；非正式安全分析或演练 |
+| T30a-1 K04/K01/K02/K11/K05/K09 | [生命周期决策、软件获取及供应商退出](T30a-1-lifecycle-acquisition-supplier-exit.md) | SY05/PR01；生命周期反馈、自研/采购/复用/外包、SLA及验收/移交/退出；NASA Ver D限定参考，非合同范本 |
+
+两篇候选与 FG14 一起独审。教学与 Oracle NOT_RUN，无新合格 Claim/Case。
 
 ## 阅读路径与边界
 
-以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；迁移/混合版本/回退 → T32b-1；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
+以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；迁移/混合版本/回退 → T32b-1；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。
 
-T23 的 S23/D28/U5 是历史分组盘点，并非本次完成率；本轮不自动提升任何分组为全覆盖。专业正文可持续扩充，后续 T25b 其余语言/locale/时间尺度细节、T25c 其余 OS/分布式专题、T27c 其余专题、T28a/T28b/T28c 后续专题、T29 后续缺陷族、T30b 后续专业实践、T31a 后续生成及SCM专题、T32b 后续迁移专题等仍需另行有限准入。此次不增加运行时、SDK、CI、Agent、实验或产品发布。#565 HOLD、#286 DEFERRED。
+T23 的 S23/D28/U5 是历史分组盘点，并非本次完成率；本轮不自动提升任何分组为全覆盖。专业正文可持续扩充，后续 T25b 其余语言/locale/时间尺度细节、T25c 其余 OS/分布式专题、T27c 其余专题、T28a/T28b/T28c 后续专题、T29 后续缺陷族、T30a/T30b 后续专业实践、T31a 后续生成及SCM专题、T32b 后续迁移专题、T33a/c 后续运营及可靠性专题等仍需另行有限准入。此次不增加运行时、SDK、CI、Agent、实验或产品发布。#565 HOLD、#286 DEFERRED。
