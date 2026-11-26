@@ -23,7 +23,7 @@
 | PRECISION | 数值保真或locale排序身份两子问题，按实际用途读L5–14或L15–20，不要求共同加载 |
 | CAPACITY | 观察边界、工作量守恒、条件排队模型、瓶颈与负载试验 |
 
-原 P37-REPRESENTATION、P37-MIGRATION、P37-RECOVERY、P36-COMMIT/STAGING/EFFECT/OFFSET/CACHE 与 R2 的依赖、错误/资源、所有权引用保留；本批补实际适用机制，不复制其决定。尤其本地事务不定义远端效果、FENCE不改原保护提交合同、WATCH不改原缓存权限边界、LIFETIME不替换p-limit既有局部观察。原PG18、Go内存模型2022-06-06、Python3.11、etcd v3.6、CouchDB3.5、OpenLineage1.55.0、Linux时钟、Python3.13.18 decimal及Unicode17/K6等是原文限定来源和教学，不表示本批重新访问全部官方资料、真实依赖版本或已运行产品。
+原 P37-REPRESENTATION、P37-MIGRATION、P37-RECOVERY、P36-COMMIT/STAGING/EFFECT/OFFSET/CACHE 与 R2 的依赖、错误/资源、所有权引用保留；本批补实际适用机制，不复制其决定。尤其本地事务不定义远端效果、FENCE不改原保护提交合同、WATCH不改原缓存权限边界、LIFETIME不替换p-limit既有局部观察。原PG18、Go内存模型2022-06-06、Python3.11、etcd v3.6、CouchDB3.5、OpenLineage1.55.0、Linux时钟、Python3.13.18 decimal及Unicode17/k6等是原文限定来源和教学，不表示本批重新访问全部官方资料、真实依赖版本或已运行产品。
 
 ## 2. 公开选择推演与反转（NOT_RUN）
 
