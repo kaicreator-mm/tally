@@ -1,0 +1,799 @@
+{
+  "kind": "T37_BOUNDED_ADVISORY_REFERENCE_EXTENSION",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "c301498b79bb320e5d610bac56dc53e4d500627b",
+  "scope": "8 existing public composition reading views and 9 historical Case reading views; local keys, not new cases or mechanism identities; each context edge conditional, not required set or executable workflow",
+  "priorReferences": [
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/pilot-references.json",
+      "blob": "646019f5dc366392fea67ccb6571e843b7e5b895"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r1.json",
+      "blob": "8638a747969b6938ffa5ca18c2e1699ea8263b5b"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r2.json",
+      "blob": "fc2a2f45efb5ef7e16e5f857a816b4ba57892fdb"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r3.json",
+      "blob": "dab519d69b4b494fb1d820d6836d9b6ec19cec81"
+    }
+  ],
+  "records": [
+    {
+      "key": "P37R4-G1",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-1-general-function-knowledge-composition.md",
+        "blob": "083ae2e411c7a2d69898ea72571e406b63802af1",
+        "lines": [
+          21,
+          32
+        ]
+      },
+      "purpose": "本地导入与配置激活的组合判断",
+      "when": "有交互配置激活、受限本地输入及整批导入需求",
+      "materialFacts": "真实目标/激活身份、合法输入/编码/上限、唯一性、整批或部分合同、切换及实际消费者",
+      "counterexampleOrLimit": "配置存在不等于激活；逐行CRUD破坏整批原子性；合法部分成功是不同合同",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-G2",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-1-general-function-knowledge-composition.md",
+        "blob": "083ae2e411c7a2d69898ea72571e406b63802af1",
+        "lines": [
+          33,
+          49
+        ]
+      },
+      "purpose": "异步刷新、受理、完成、版本及投影组合",
+      "when": "真实单/批刷新，可能要求持久受理或异步投影",
+      "materialFacts": "当前租户/授权、受理与完成合同、源版本、实际外部读取效果、容量/恢复和数据陈旧政策",
+      "counterexampleOrLimit": "goroutine返回不是耐久受理；旧Worker不能覆盖新结果；收到不等于已应用；短同步不必持久队列",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-G3",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+        "lines": [
+          5,
+          44
+        ]
+      },
+      "purpose": "跨重启下载、记录恢复和原子发布组合",
+      "when": "真实HTTP单range/固定representation及大CSV恢复、原子或获权部分成功",
+      "materialFacts": "任务身份、可信验证器/字节完整性、实际持久receipt、parser版本/记录序号、staging事务、真实消费者、当前grant/base",
+      "counterexampleOrLimit": "200不append；416不证明完成；字节块非CSV记录；PG COPY不是领域验收；c非法不得切换g1；短小文件可直接处理",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-G4",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+        "lines": [
+          45,
+          72
+        ]
+      },
+      "purpose": "权限、缓存与异步呈现的组合选择",
+      "when": "真实多租户权限变化且有缓存或异步查询；仅披露另核输出合同",
+      "materialFacts": "当前授权范围/epoch及实际输出准入顺序、数据generation与获权陈旧、查询/会话/sequence、实际缓存成本",
+      "counterexampleOrLimit": "权限不可陈旧；撤权后无新披露；旧填充/旧UI不可覆盖；no-store不保证删除；无缓存无需缓存机制",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-B1",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-2-business-function-knowledge-composition.md",
+        "blob": "02eba8247e89710357a2665ff40449f7aeba787f",
+        "lines": [
+          18,
+          59
+        ]
+      },
+      "purpose": "单资源订单预留、取消与退款意图的组合选择",
+      "when": "真实有权未发货订单、共同库存权威及实际付款事实",
+      "materialFacts": "租户/订单/SKU/活动预留身份、可用量不变量、当前资格/付款、稳定操作ID、共同写集、真实Provider合同",
+      "counterexampleOrLimit": "3+4不能同占5；取消与退款完成不同；付款UNKNOWN阻断依赖动作；通用changeStatus非完整业务合同",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-B2",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-2-business-function-knowledge-composition.md",
+        "blob": "02eba8247e89710357a2665ff40449f7aeba787f",
+        "lines": [
+          60,
+          77
+        ]
+      },
+      "purpose": "固定审批与授权报表的不同责任及交接",
+      "when": "真实审批及获权可见报告，允许明确标陈旧快照",
+      "materialFacts": "实际审批主体/状态/当前权限、报告scope/快照/币种、输入合同及阶段独立预期",
+      "counterexampleOrLimit": "已批准不等于当前用户可批准；A报告30非70；旧快照不是当前批准依据；无多级需求不建流程引擎",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-B3",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-4-complex-business-function-composition.md",
+        "blob": "903d9d7f170ae87f752d7b1025fab01d27fd703b",
+        "lines": [
+          5,
+          47
+        ]
+      },
+      "purpose": "多资源原子预留、部分履约与部分退款对账",
+      "when": "真实多行全部预留合同、部分履约/取消、同capture可退额度",
+      "materialFacts": "实际租户/资源/行身份、共同权威/数量和式、精确货币政策、稳定退款意图及S/P、真实Provider状态/幂等窗口/对账",
+      "counterexampleOrLimit": "第二SKU不足不得残留第一SKU预留；取消不增加在手；UNKNOWN保留额度；同金额不证明退款身份；跨权威另论证",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-B4",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "COMPOSITION_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-4-complex-business-function-composition.md",
+        "blob": "903d9d7f170ae87f752d7b1025fab01d27fd703b",
+        "lines": [
+          48,
+          83
+        ]
+      },
+      "purpose": "限期委派审批与长导出授权/快照/交付",
+      "when": "真实委派审批或长导出，分别选相关子范围L50–61/L62–83",
+      "materialFacts": "实际主体、grant/版本/时间/阶段和提交保护；或当前字段scope/epoch、真实快照/制品、chunk准入与撤权顺序",
+      "counterexampleOrLimit": "11:59:59准备不保证12:00提交；v7批准非v8；READY非交付许可；旧制品撤权后无新准入，合法历史不可追回",
+      "sourceQualification": "既有T35公开合成教学组合；假定业务政策非真实授权、Oracle NOT_RUN；不新建Case或机制身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-CONFIG-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T05-common-function-abstractions.md",
+        "blob": "10cd5cb2003c5ab524b38a71f306a167da5f1574",
+        "lines": [
+          5,
+          13
+        ]
+      },
+      "purpose": "T05-C01 Viper来源优先级的已登记局部观察",
+      "when": "实际多来源配置解析或激活设计",
+      "materialFacts": "真实来源/版本、优先级、空值/缺失、实际运行激活与资源合同；读原T05-S01来源登记",
+      "counterexampleOrLimit": "查值机制不证明热更新或已激活；不把查值结果当实际生效回执",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-UI-LIFECYCLE-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T08-platform-functions.md",
+        "blob": "1656be94dc3eb1764e7bfa09aa5fb6bb962b38c0",
+        "lines": [
+          29,
+          44
+        ]
+      },
+      "purpose": "T08-C04/C05 UI状态通知或配置资源生命周期的局部对照",
+      "when": "真实共享UI状态或集成激活/卸载，按实际问题分别读两段",
+      "materialFacts": "实际Redux或Home Assistant版本及原来源登记、当前消费者、资源取得/释放、真实状态Owner",
+      "counterexampleOrLimit": "store非领域持久事务；NOT_LOADED early return不能证明所有卸载幂等或释放链完整",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-TRANSFER-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md",
+        "blob": "88d5dfaa76af76ac5bf0eb846241ceffcbf79e27",
+        "lines": [
+          5,
+          12
+        ]
+      },
+      "purpose": "T06-C01 libcurl/aria2偏移及恢复身份局部观察",
+      "when": "真实传输恢复选择，核实际协议及版本",
+      "materialFacts": "实际协议/representation、offset、恢复元数据/版本、已验证片段；读T06-S01/S02",
+      "counterexampleOrLimit": "不同协议不可共用相同续传保证；长度/offset不是源身份，不从BitTorrent InfoHash推HTTP完整性",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-CSV-SEARCH-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T06-data-file-network-functions.md",
+        "blob": "88d5dfaa76af76ac5bf0eb846241ceffcbf79e27",
+        "lines": [
+          29,
+          44
+        ]
+      },
+      "purpose": "T06-C04 CSV映射或T06-C05搜索范围的局部观察",
+      "when": "真实CSV读写或搜索结果范围/排序/权限，按问题分别读",
+      "materialFacts": "实际库及协议版本、字段策略/业务提交或scope/排序/top-k/分页；读原T06-S05/T04-S03/S04",
+      "counterexampleOrLimit": "CSV parse不证明业务提交；权限非排名因素；top-k非全集；空/部分结果不证明授权全集空",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-JOB-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T18-job-architecture-contrasts.md",
+        "blob": "bf9034826b3e93ce4f21c239d755506a6406ad48",
+        "lines": [
+          13,
+          55
+        ]
+      },
+      "purpose": "T18-C01/C02/C03同步、内存异步和持久队列对照",
+      "when": "真实等待/延期/持久受理/恢复合同需选择执行机制",
+      "materialFacts": "真实Rails/adapter版本、实际队列配置、允许丢失/重复、事务连接/时序、回执及资源；读原来源登记",
+      "counterexampleOrLimit": "Inline无延期；Async有限线程非有限backlog且pending重启丢失；持久队列认领非外部效果原子或完整恢复保证",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-REFRESH-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T19-feed-refresh-architecture.md",
+        "blob": "bae2f3113aadbd00f1072e548969e6905d7089cc",
+        "lines": [
+          13,
+          78
+        ]
+      },
+      "purpose": "T19-C01 Miniflux实际刷新调用、完成点与失败窗口",
+      "when": "真实单/批刷新及有限worker、查询迭代/部分提交的对照",
+      "materialFacts": "实际v2.2.3来源登记、真实完成与持久性合同、worker/producer、写集及外部推送",
+      "counterexampleOrLimit": "同204不同完成点；可能部分扫描/提交，未复现；无缓冲通道非总预算；局部源码不证全系统CAS/ACL",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-AUTH-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md",
+        "blob": "951899954cc76f8ceae15698d246c70ae3d1e07c",
+        "lines": [
+          13,
+          28
+        ]
+      },
+      "purpose": "T07-C02/C03主体动作资源及租户绑定局部观察",
+      "when": "真实权限或多租户连接/后台隔离设计",
+      "materialFacts": "实际身份/权限/资源及当前范围、tenant绑定/连接生命周期、全部入口、实际版本及来源登记",
+      "counterexampleOrLimit": "接口has_perm不证明对象权限；schema路由非完整授权；未知租户仅可有权公共资源",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-PAY-STOCK-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md",
+        "blob": "951899954cc76f8ceae15698d246c70ae3d1e07c",
+        "lines": [
+          29,
+          52
+        ]
+      },
+      "purpose": "T07-C04/C05/C06支付接收、对账及库存状态局部对照",
+      "when": "实际支付事件、账务差额或库存调拨；只读相关子段",
+      "materialFacts": "真实Provider/事件/支付和币种身份、当前政策、业务账务与库存状态、真实版本及来源登记",
+      "counterexampleOrLimit": "签名不证明结算/业务去重；ERPNext局部动作非全事务；在途/实物/价值非同一状态",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R4-FORM-REPORT-CASE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T07-business-functions.md",
+        "blob": "951899954cc76f8ceae15698d246c70ae3d1e07c",
+        "lines": [
+          53,
+          76
+        ]
+      },
+      "purpose": "T07-C07/C08/C09表单、报表及审计/通知局部对照",
+      "when": "真实表单校验、报告实时/预生成、审计或通知，按子问题选段",
+      "materialFacts": "实际字段/跨字段/业务执行合同、报告scope/版本、真实审计与外部效果、实际版本及来源登记",
+      "counterexampleOrLimit": "未绑定非合法命令；报表入口不证所有行权限；普通日志非防篡改审计，邮件接口非可靠投递",
+      "sourceQualification": "既有Case的局部实际源码/文档观察与原创条件启发；实际Case及来源登记不变，未重读全部上游，Oracle NOT_RUN；不提升原资格",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    }
+  ],
+  "relations": [
+    {
+      "from": "P37R4-G1",
+      "to": "P36-POLICY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际写许可、目标配置激活及整批/部分合同",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G1",
+        "P36-POLICY"
+      ]
+    },
+    {
+      "from": "P37R4-G1",
+      "to": "P37R3-TRANSACTION",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实整批本地权威提交与唯一约束",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G1",
+        "P37R3-TRANSACTION"
+      ]
+    },
+    {
+      "from": "P37R4-G1",
+      "to": "P37R4-CONFIG-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "多来源解析需要Viper局部对照；激活另证",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G1",
+        "P37R4-CONFIG-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G1",
+      "to": "P37R4-UI-LIFECYCLE-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实交互首次配置或资源切换时参考C05；UI共享才C04",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G1",
+        "P37R4-UI-LIFECYCLE-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G1",
+      "to": "P37R4-CSV-SEARCH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实CSV映射和缺失/额外列问题仅选C04",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G1",
+        "P37R4-CSV-SEARCH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G2",
+      "to": "P37R3-LIFETIME",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实持久受理/容量/取消及任务完成",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G2",
+        "P37R3-LIFETIME"
+      ]
+    },
+    {
+      "from": "P37R4-G2",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际权威刷新提交要求当前版本和许可",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G2",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P37R4-G2",
+      "to": "P37R3-WATCH",
+      "predicate": "CONTEXT_FOR",
+      "when": "仅实际采用etcd v3.6增量投影才核具体协议",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G2",
+        "P37R3-WATCH"
+      ]
+    },
+    {
+      "from": "P37R4-G2",
+      "to": "P37R4-JOB-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实同步/内存/持久任务边界需要比较",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G2",
+        "P37R4-JOB-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G2",
+      "to": "P37R4-REFRESH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实单批刷新/迭代/完成点的局部案例",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G2",
+        "P37R4-REFRESH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P36-RANGE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实HTTP单range固定表示续传",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P36-RANGE"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P36-DURABILITY",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实跨重启字节和文件receipt",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P36-DURABILITY"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P36-STAGING",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实跨重启记录进度及原子代际发布",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P36-STAGING"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实当前grant/base及发布指针/结果/变更共同提交",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P37R4-TRANSFER-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "仅适用实际协议时读历史offset/恢复观察",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P37R4-TRANSFER-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G3",
+      "to": "P37R4-CSV-SEARCH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "CSV记录映射与业务提交，仅选C04",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G3",
+        "P37R4-CSV-SEARCH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G4",
+      "to": "P36-CACHE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实缓存或异步UI及当前受保护披露",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G4",
+        "P36-CACHE"
+      ]
+    },
+    {
+      "from": "P37R4-G4",
+      "to": "P37R3-QUERY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际授权后过滤、排序及聚合/分页合同",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G4",
+        "P37R3-QUERY"
+      ]
+    },
+    {
+      "from": "P37R4-G4",
+      "to": "P37R4-CSV-SEARCH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际搜索top-k/部分结果，仅选C05",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G4",
+        "P37R4-CSV-SEARCH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G4",
+      "to": "P37R4-AUTH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实身份/租户权限及当前scope",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G4",
+        "P37R4-AUTH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-G4",
+      "to": "P37R4-UI-LIFECYCLE-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际共享UI状态才读C04，不从store推授权",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-G4",
+        "P37R4-UI-LIFECYCLE-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B1",
+      "to": "P37R3-TRANSACTION",
+      "predicate": "CONTEXT_FOR",
+      "when": "共同权威下预留及取消联合写集",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B1",
+        "P37R3-TRANSACTION"
+      ]
+    },
+    {
+      "from": "P37R4-B1",
+      "to": "P36-EFFECT",
+      "predicate": "CONTEXT_FOR",
+      "when": "仅确认付款且真实外部退款才核稳定意图与UNKNOWN",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B1",
+        "P36-EFFECT"
+      ]
+    },
+    {
+      "from": "P37R4-B1",
+      "to": "P37R2-BUSINESS-CASES",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际状态谓词/取消/扩展选择时读T17对应片段",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B1",
+        "P37R2-BUSINESS-CASES"
+      ]
+    },
+    {
+      "from": "P37R4-B1",
+      "to": "P37R4-PAY-STOCK-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际库存/退款问题分别读原局部Case",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B1",
+        "P37R4-PAY-STOCK-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B2",
+      "to": "P36-POLICY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际审批规则和当前许可",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B2",
+        "P36-POLICY"
+      ]
+    },
+    {
+      "from": "P37R4-B2",
+      "to": "P37R3-QUERY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际报告聚合/身份和快照结果",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B2",
+        "P37R3-QUERY"
+      ]
+    },
+    {
+      "from": "P37R4-B2",
+      "to": "P37R4-FORM-REPORT-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "表单或报表按C07/C08选，通知/审计仅真实需求时",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B2",
+        "P37R4-FORM-REPORT-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B2",
+      "to": "P37R4-AUTH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "审批和报告的实际主体/范围不同",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B2",
+        "P37R4-AUTH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B3",
+      "to": "P37R3-TRANSACTION",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际多资源共同权威下的原子预留及取消",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B3",
+        "P37R3-TRANSACTION"
+      ]
+    },
+    {
+      "from": "P37R4-B3",
+      "to": "P37R3-PRECISION",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际金额比例和舍入合同，仅选数值段",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B3",
+        "P37R3-PRECISION"
+      ]
+    },
+    {
+      "from": "P37R4-B3",
+      "to": "P36-EFFECT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实外部退款与未决额度/权威状态",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B3",
+        "P36-EFFECT"
+      ]
+    },
+    {
+      "from": "P37R4-B3",
+      "to": "P37R4-PAY-STOCK-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "支付事件/对账/库存状态选择对应局部Case",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B3",
+        "P37R4-PAY-STOCK-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P36-POLICY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际委派授予/过期/版本与审批资格",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P36-POLICY"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实审批当前授权和版本/阶段提交",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P36-EXPORT",
+      "predicate": "CONTEXT_FOR",
+      "when": "仅真实长导出保护每chunk披露",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P36-EXPORT"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P37R3-DEADLINE",
+      "predicate": "CONTEXT_FOR",
+      "when": "仅实际任务期限/时间域相关；业务有效期另读原时钟正文适用段，不以monotonic代替权威业务时间",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P37R3-DEADLINE"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P37R4-AUTH-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实委派/报告身份、资源范围及租户绑定",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P37R4-AUTH-CASE"
+      ]
+    },
+    {
+      "from": "P37R4-B4",
+      "to": "P37R4-FORM-REPORT-CASE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实表单/预生成报告/审计按对应子段选",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R4-B4",
+        "P37R4-FORM-REPORT-CASE"
+      ]
+    }
+  ],
+  "rules": [],
+  "execution": "NOT_RUN"
+}
