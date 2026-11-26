@@ -1,0 +1,660 @@
+{
+  "kind": "T37_R5_CUMULATIVE_STATIC_CENSUS_NOT_SEMANTIC_COVERAGE",
+  "repository": "kaicreator-mm/tally",
+  "assessmentCommit": "edbe97e099c52f88144f07e5747fe2888a314593",
+  "scope": "derived mechanical census of previously independently accepted views, not canonical knowledge, retrieval recall, behavior or qualification",
+  "referenceInputs": [
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/pilot-references.json",
+      "blob": "646019f5dc366392fea67ccb6571e843b7e5b895",
+      "corpusCommit": "7f5160b3ec4b29138d4f21e9bcc6ff21459090a3",
+      "records": 13,
+      "relations": 12
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r1.json",
+      "blob": "8638a747969b6938ffa5ca18c2e1699ea8263b5b",
+      "corpusCommit": "f0358f8454a6f57b17e741ae5c03db760a4ee15e",
+      "records": 11,
+      "relations": 7
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r2.json",
+      "blob": "fc2a2f45efb5ef7e16e5f857a816b4ba57892fdb",
+      "corpusCommit": "33406ba1f1081dd57593a0e645b81885fff55b3b",
+      "records": 12,
+      "relations": 12
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r3.json",
+      "blob": "dab519d69b4b494fb1d820d6836d9b6ec19cec81",
+      "corpusCommit": "748d53fba2166fb9e1654b73cef684083959ee56",
+      "records": 14,
+      "relations": 16
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r4.json",
+      "blob": "6e70161357b18585d66d27c8719844df3d677fc2",
+      "corpusCommit": "c301498b79bb320e5d610bac56dc53e4d500627b",
+      "records": 17,
+      "relations": 39
+    }
+  ],
+  "discoveryInputs": [
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/chapter-discovery-01.json",
+      "blob": "8ace0b0554ce30ea7059ec123a902611d7534951",
+      "entries": 12,
+      "headings": 85
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/chapter-discovery-02.json",
+      "blob": "b9c129f5c482d8dd5605c158561982bdef381d8d",
+      "entries": 12,
+      "headings": 67
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/chapter-discovery-03.json",
+      "blob": "f278bacf556a1216d3176df4c77a4115ef966808",
+      "entries": 12,
+      "headings": 65
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/chapter-discovery-04.json",
+      "blob": "d6f5805435847c67cdfc277b43982e295cb18221",
+      "entries": 10,
+      "headings": 48
+    }
+  ],
+  "checks": {
+    "uniqueKeys": 67,
+    "uniqueDirectedPredicateEdges": 86,
+    "allEndpointsAndBasis": true,
+    "allPriorReferencesMatch": true,
+    "allRulesEmptyAndNotRun": true,
+    "sourcePathCount": 41,
+    "chapterPaths": 29,
+    "casePaths": 8,
+    "legacyPaths": 4,
+    "discoveryChapters": 46,
+    "discoveryHeadings": 265,
+    "chapterWithDirectReference": 29,
+    "chapterDiscoveryOnly": 17,
+    "netSourceDiff": {
+      "earliestCorpus": "7f5160b3ec4b29138d4f21e9bcc6ff21459090a3",
+      "head": "edbe97e099c52f88144f07e5747fe2888a314593",
+      "ahead": 31,
+      "behind": 0,
+      "changedFiles": 17,
+      "referencedPathsChanged": [],
+      "discoveryChapterPathsChanged": [],
+      "limit": "net tree diff, not per-commit replay; frozen original source ranges checked in earlier independent reviews; no new full upstream read"
+    }
+  },
+  "counts": {
+    "identityKind": {
+      "EXISTING_ID_REFERENCE": 3,
+      "LOCAL_NAVIGATION_KEY": 64
+    },
+    "owner": {
+      "K01": 8,
+      "K02": 23,
+      "K03": 21,
+      "K04": 1,
+      "K05": 2,
+      "K06": 1,
+      "K07": 1,
+      "K08": 2,
+      "K09": 5,
+      "K10": 2,
+      "K11": 1
+    },
+    "kind": {
+      "CASE_REFERENCE": 11,
+      "COMPOSITION_REFERENCE": 8,
+      "DECISION_PROCEDURE": 2,
+      "MECHANISM": 13,
+      "METHOD": 18,
+      "MODEL_REFERENCE": 13,
+      "PRINCIPLE": 1,
+      "TOPIC_REFERENCE": 1
+    },
+    "predicate": {
+      "CONTEXT_FOR": 84,
+      "SUPPORTS": 2
+    }
+  },
+  "chapterRows": [
+    {
+      "chapter": "T24a-requirements-discovery-negotiation",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24a-requirements-discovery-negotiation.md",
+      "blob": "28d723ed85692c0daf9aede02960eaa0f9bddff0",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P37-ELICIT"
+      ]
+    },
+    {
+      "chapter": "T24c-human-computer-interaction",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24c-human-computer-interaction.md",
+      "blob": "b5dc06f0411a3f0ce3cc6f939e3d4ed31e93152a",
+      "headingCount": 7,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T27a-detailed-design-representation",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27a-detailed-design-representation.md",
+      "blob": "0e1e0bd6db29c7d73626d1a502a08f0ca845e83a",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P37-REPRESENTATION",
+        "P37R2-COHESION",
+        "P37R2-ERROR-RESOURCE"
+      ]
+    },
+    {
+      "chapter": "T27b-1-relational-data-and-transactions",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+      "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b",
+      "headingCount": 8,
+      "directReferenceKeys": [
+        "P37R3-RELATIONAL",
+        "P37R3-CONSTRAINT",
+        "P37R3-QUERY",
+        "P37R3-TRANSACTION"
+      ]
+    },
+    {
+      "chapter": "T25b-1-language-value-and-text-semantics",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-1-language-value-and-text-semantics.md",
+      "blob": "ddab94c92d9fdfe727fba9fc6bf1054161d602d3",
+      "headingCount": 7,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T27b-2-file-stream-and-durability",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-2-file-stream-and-durability.md",
+      "blob": "9be743c9c6fe87e276b3867860fef9a28c217a79",
+      "headingCount": 9,
+      "directReferenceKeys": [
+        "P36-DURABILITY"
+      ]
+    },
+    {
+      "chapter": "T27c-1-concurrency-task-lifetime",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-1-concurrency-task-lifetime.md",
+      "blob": "8fb9513b0bca07e4f81bb0750ff905c3ca87c755",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P37R3-SYNC",
+        "P37R3-LIFETIME"
+      ]
+    },
+    {
+      "chapter": "T28a-1-test-design-stateful-isolation",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28a-1-test-design-stateful-isolation.md",
+      "blob": "bb36f1179f3e3754ba10aa3e878735a7ded461b0",
+      "headingCount": 8,
+      "directReferenceKeys": [
+        "P37-TESTMODEL"
+      ]
+    },
+    {
+      "chapter": "T28b-1-static-analysis-and-verification",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28b-1-static-analysis-and-verification.md",
+      "blob": "5fdee46d03328961550aeba486af6ef192550f4f",
+      "headingCount": 6,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T29a-1-historical-defect-repair-reasoning",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T29a-1-historical-defect-repair-reasoning.md",
+      "blob": "b193186bc6a280a73a50fc0a512ec8a427528f4b",
+      "headingCount": 8,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T25c-1-os-process-memory-ipc",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-1-os-process-memory-ipc.md",
+      "blob": "886d44bec7756479dde4363820265907bd640297",
+      "headingCount": 6,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T25c-2-network-transport-and-protocol",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-2-network-transport-and-protocol.md",
+      "blob": "02b4539856c20627929f2933a587dc4cc57dbfd7",
+      "headingCount": 6,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T25b-2-time-clock-calendar-semantics",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-2-time-clock-calendar-semantics.md",
+      "blob": "195c4e65baadcaa404a34350a4f797ae02f65012",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P37R3-DEADLINE"
+      ]
+    },
+    {
+      "chapter": "T26a-1-architecture-scenarios-views-variability",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-1-architecture-scenarios-views-variability.md",
+      "blob": "3c54c847382c366823dbc1f062ebda588c78bddb",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37-SCENARIO",
+        "P37R2-VARIATION"
+      ]
+    },
+    {
+      "chapter": "T30b-1-professional-communication-and-responsibility",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T30b-1-professional-communication-and-responsibility.md",
+      "blob": "197671f729c3def0171b439a9173d953912dc4a6",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P37-RESPONSIBILITY"
+      ]
+    },
+    {
+      "chapter": "T31a-1-compilation-linking-abi",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-1-compilation-linking-abi.md",
+      "blob": "1d14c4dc944935594f336fcb4a2635dba6c9638f",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T31a-2-configuration-management-baselines",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-2-configuration-management-baselines.md",
+      "blob": "9b733b482dcd9f39e68e2c23a3a04afdad0a6ab9",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T32b-1-data-migration-and-mixed-consumers",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32b-1-data-migration-and-mixed-consumers.md",
+      "blob": "3de3dbef241028da46484e1db9db44ebd9556c83",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P37-MIGRATION"
+      ]
+    },
+    {
+      "chapter": "T25a-1-discrete-logic-relations-graphs",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25a-1-discrete-logic-relations-graphs.md",
+      "blob": "f02de2e31fc17fc65d0d49fbae4c6aef7a6f5d8c",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T27d-1-data-structures-cost-selection",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27d-1-data-structures-cost-selection.md",
+      "blob": "aa0cb4135244975d76d6ea49bd2e3140c788b902",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P37R3-HEAP"
+      ]
+    },
+    {
+      "chapter": "T25d-1-probability-statistics-engineering-measurement",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25d-1-probability-statistics-engineering-measurement.md",
+      "blob": "201b62433a98d698d9828f4b10830775834cea1f",
+      "headingCount": 6,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T27c-2-distributed-consistency-coordination-recovery",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-2-distributed-consistency-coordination-recovery.md",
+      "blob": "941bb0e11a631bcd5b06860c03e0225be40a03d2",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P37R3-CONSISTENCY",
+        "P37R3-WATCH",
+        "P37R3-FENCE"
+      ]
+    },
+    {
+      "chapter": "T28a-2-consumer-contracts-installed-artifacts",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28a-2-consumer-contracts-installed-artifacts.md",
+      "blob": "b6f19c2e9324ec430ad18df3ac20e3561507c0e0",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37-INSTALLED"
+      ]
+    },
+    {
+      "chapter": "T24b-1-business-rule-decision-contracts",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24b-1-business-rule-decision-contracts.md",
+      "blob": "fdb4bd53b58f5ab432d34253a75e562f0ae29df2",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P36-POLICY"
+      ]
+    },
+    {
+      "chapter": "T28c-1-product-quality-assurance-evaluation",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28c-1-product-quality-assurance-evaluation.md",
+      "blob": "1cb9897bc05fb6f3bac16672d15008a9a4f0bbbb",
+      "headingCount": 7,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T33a-1-reliability-fault-analysis-recovery",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33a-1-reliability-fault-analysis-recovery.md",
+      "blob": "16bcfa4b2cd718fbfc3a000cb9d3430f59091520",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37-RECOVERY"
+      ]
+    },
+    {
+      "chapter": "T30a-1-lifecycle-acquisition-supplier-exit",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T30a-1-lifecycle-acquisition-supplier-exit.md",
+      "blob": "9da6e241d4c765afc6071c4dd150ee2b5b370005",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37-LIFECYCLE"
+      ]
+    },
+    {
+      "chapter": "T34a-1-engineering-economics-estimation-sensitivity",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34a-1-engineering-economics-estimation-sensitivity.md",
+      "blob": "fa020cbc34bf3cd5dca9f33985a1cbeece532593",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37-COST"
+      ]
+    },
+    {
+      "chapter": "T32a-1-maintenance-refactoring-replacement",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32a-1-maintenance-refactoring-replacement.md",
+      "blob": "8341a1afe4bb75efe3909c21e5c41de26ad5d567",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P36-MAINT",
+        "P37R2-REPLACEMENT"
+      ]
+    },
+    {
+      "chapter": "T33b-1-performance-queueing-capacity",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33b-1-performance-queueing-capacity.md",
+      "blob": "585e865092ede14f371a704e70ec96771ae3ca67",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37R3-CAPACITY"
+      ]
+    },
+    {
+      "chapter": "T33c-1-operations-incident-service-support",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33c-1-operations-incident-service-support.md",
+      "blob": "f03d446d576885677d0e74418a94d4dd73d224b0",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T34b-1-empirical-research-design-causal-evidence",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34b-1-empirical-research-design-causal-evidence.md",
+      "blob": "efd25d53d2fbdccb306c2175c4d6f42b19db2458",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T34b-2-engineering-measurement-human-factors",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34b-2-engineering-measurement-human-factors.md",
+      "blob": "f8d125f188b37b3aabb2fa20cae276083099ff91",
+      "headingCount": 5,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T35-1-general-function-knowledge-composition",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-1-general-function-knowledge-composition.md",
+      "blob": "083ae2e411c7a2d69898ea72571e406b63802af1",
+      "headingCount": 5,
+      "directReferenceKeys": [
+        "P37R4-G1",
+        "P37R4-G2"
+      ]
+    },
+    {
+      "chapter": "T35-2-business-function-knowledge-composition",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-2-business-function-knowledge-composition.md",
+      "blob": "02eba8247e89710357a2665ff40449f7aeba787f",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P37R4-B1",
+        "P37R4-B2"
+      ]
+    },
+    {
+      "chapter": "T26a-2-architecture-style-composition",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-2-architecture-style-composition.md",
+      "blob": "d1021bebefb894f99a4e343ca24cdcfc46acc54d",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P36-COMMIT",
+        "P37R2-STYLE"
+      ]
+    },
+    {
+      "chapter": "T27c-3-reliable-messaging-outbox-offsets",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-3-reliable-messaging-outbox-offsets.md",
+      "blob": "973fb2b186a5e76b5fe08dfa15e8c6b2544bcac8",
+      "headingCount": 6,
+      "directReferenceKeys": [
+        "P36-OFFSET",
+        "P36-EFFECT"
+      ]
+    },
+    {
+      "chapter": "T25c-3-protocol-capability-negotiation",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-3-protocol-capability-negotiation.md",
+      "blob": "2c4642bcf64624ccacd7474fab5a629dc6caaeba",
+      "headingCount": 6,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T32b-2-data-lineage-conflict-tombstones",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32b-2-data-lineage-conflict-tombstones.md",
+      "blob": "84d9e54c91fb7c5e11af9f325ab237c78127d792",
+      "headingCount": 4,
+      "directReferenceKeys": [
+        "P37R3-LINEAGE"
+      ]
+    },
+    {
+      "chapter": "T31a-3-dependency-resolution-installed-package",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-3-dependency-resolution-installed-package.md",
+      "blob": "4c85255c6c9d1aae759d04032d24b1b305c56782",
+      "headingCount": 3,
+      "directReferenceKeys": [
+        "P37R2-DEPENDENCY"
+      ]
+    },
+    {
+      "chapter": "T31a-4-progressive-delivery-routing-flags",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-4-progressive-delivery-routing-flags.md",
+      "blob": "c8cfe40badda39b4cda64326e2750c21f9589c7c",
+      "headingCount": 3,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T29a-2-diagnostic-probes-and-bisection",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T29a-2-diagnostic-probes-and-bisection.md",
+      "blob": "aae05a83b5d7d3f9e6e61b3bb704be5ff6044a7f",
+      "headingCount": 4,
+      "directReferenceKeys": [
+        "P37-BISECT"
+      ]
+    },
+    {
+      "chapter": "T25b-3-cross-language-ownership-generics",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-3-cross-language-ownership-generics.md",
+      "blob": "6bbca0205cfd904e81e45ddbd4311c9e1501af09",
+      "headingCount": 4,
+      "directReferenceKeys": []
+    },
+    {
+      "chapter": "T25b-4-exact-numbers-locale-bidi",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-4-exact-numbers-locale-bidi.md",
+      "blob": "b7cad18c0201941f038b51ceb66aee9a6dbe2ed9",
+      "headingCount": 4,
+      "directReferenceKeys": [
+        "P37R3-PRECISION"
+      ]
+    },
+    {
+      "chapter": "T35-3-complex-general-function-composition",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+      "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P36-RANGE",
+        "P36-STAGING",
+        "P36-CACHE",
+        "P37R4-G3",
+        "P37R4-G4"
+      ]
+    },
+    {
+      "chapter": "T35-4-complex-business-function-composition",
+      "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-4-complex-business-function-composition.md",
+      "blob": "903d9d7f170ae87f752d7b1025fab01d27fd703b",
+      "headingCount": 7,
+      "directReferenceKeys": [
+        "P36-EXPORT",
+        "P37R4-B3",
+        "P37R4-B4"
+      ]
+    }
+  ],
+  "overlaps": [
+    {
+      "first": "P36-RANGE",
+      "second": "P37R4-G3",
+      "firstRange": [
+        9,
+        24
+      ],
+      "secondRange": [
+        5,
+        44
+      ],
+      "kind": "PARTIAL_OR_CONTAINED_RANGE_OVERLAP"
+    },
+    {
+      "first": "P36-STAGING",
+      "second": "P37R4-G3",
+      "firstRange": [
+        25,
+        44
+      ],
+      "secondRange": [
+        5,
+        44
+      ],
+      "kind": "PARTIAL_OR_CONTAINED_RANGE_OVERLAP"
+    },
+    {
+      "first": "P36-CACHE",
+      "second": "P37R4-G4",
+      "firstRange": [
+        45,
+        72
+      ],
+      "secondRange": [
+        45,
+        72
+      ],
+      "kind": "EXACT_RANGE_OVERLAP"
+    },
+    {
+      "first": "P36-EXPORT",
+      "second": "P37R4-B4",
+      "firstRange": [
+        62,
+        83
+      ],
+      "secondRange": [
+        48,
+        83
+      ],
+      "kind": "PARTIAL_OR_CONTAINED_RANGE_OVERLAP"
+    }
+  ],
+  "weakComponents": [
+    [
+      "DP-K02-R19-01",
+      "DP-K03-R19-01",
+      "K05.ORACLE",
+      "P36-CACHE",
+      "P36-COMMIT",
+      "P36-DURABILITY",
+      "P36-EFFECT",
+      "P36-EXPORT",
+      "P36-MAINT",
+      "P36-OFFSET",
+      "P36-POLICY",
+      "P36-RANGE",
+      "P36-STAGING",
+      "P37-INSTALLED",
+      "P37-MIGRATION",
+      "P37-RECOVERY",
+      "P37-REPRESENTATION",
+      "P37-TESTMODEL",
+      "P37R2-ADR",
+      "P37R2-BOUNDARIES",
+      "P37R2-BUSINESS-CASES",
+      "P37R2-COHESION",
+      "P37R2-DEPENDENCY",
+      "P37R2-ERROR-RESOURCE",
+      "P37R2-HISTORY-CASES",
+      "P37R2-INPUT-OWNERSHIP",
+      "P37R2-REPLACEMENT",
+      "P37R2-SMELL",
+      "P37R3-CAPACITY",
+      "P37R3-CONSISTENCY",
+      "P37R3-CONSTRAINT",
+      "P37R3-DEADLINE",
+      "P37R3-FENCE",
+      "P37R3-HEAP",
+      "P37R3-LIFETIME",
+      "P37R3-LINEAGE",
+      "P37R3-PRECISION",
+      "P37R3-QUERY",
+      "P37R3-RELATIONAL",
+      "P37R3-SYNC",
+      "P37R3-TRANSACTION",
+      "P37R3-WATCH",
+      "P37R4-AUTH-CASE",
+      "P37R4-B1",
+      "P37R4-B2",
+      "P37R4-B3",
+      "P37R4-B4",
+      "P37R4-CONFIG-CASE",
+      "P37R4-CSV-SEARCH-CASE",
+      "P37R4-FORM-REPORT-CASE",
+      "P37R4-G1",
+      "P37R4-G2",
+      "P37R4-G3",
+      "P37R4-G4",
+      "P37R4-JOB-CASE",
+      "P37R4-PAY-STOCK-CASE",
+      "P37R4-REFRESH-CASE",
+      "P37R4-TRANSFER-CASE",
+      "P37R4-UI-LIFECYCLE-CASE"
+    ],
+    [
+      "P37-COST",
+      "P37-ELICIT",
+      "P37-LIFECYCLE",
+      "P37-SCENARIO",
+      "P37R2-STYLE",
+      "P37R2-VARIATION"
+    ],
+    [
+      "P37-BISECT",
+      "P37-RESPONSIBILITY"
+    ]
+  ],
+  "execution": "NOT_RUN",
+  "rules": []
+}
