@@ -1,0 +1,510 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "f0358f8454a6f57b17e741ae5c03db760a4ee15e",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "9bdae2a3655c28af66b645f96456489522356854"
+  },
+  "range": [
+    13,
+    24
+  ],
+  "scope": "mechanical discovery metadata only, not semantic unit or qualification census; original index owns navigation and source text owns meaning",
+  "entries": [
+    {
+      "chapter": "T25b-2-time-clock-calendar-semantics",
+      "title": "T25b-2 · 时间语义：时钟、期限、日历与业务生效",
+      "ownersFromIndex": [
+        "K03",
+        "K01",
+        "K02",
+        "K06",
+        "K10"
+      ],
+      "routeLabel": "时间、时钟、日历与生效",
+      "indexLine": 53,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-2-time-clock-calendar-semantics.md",
+        "blob": "195c4e65baadcaa404a34350a4f797ae02f65012"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 不同时间对象"
+        },
+        {
+          "line": 18,
+          "heading": "2. 时钟选择、精度与期限"
+        },
+        {
+          "line": 48,
+          "heading": "3. 时区、夏令转换与日历算术"
+        },
+        {
+          "line": 56,
+          "heading": "4. 业务有效期、观察历史与事件顺序"
+        },
+        {
+          "line": 62,
+          "heading": "5. 调度、重复执行与恢复"
+        },
+        {
+          "line": 66,
+          "heading": "6. Oracle 与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T26a-1-architecture-scenarios-views-variability",
+      "title": "T26a-1 · 架构场景、视图、质量权衡与产品线可变性",
+      "ownersFromIndex": [
+        "K02",
+        "K01",
+        "K11",
+        "K05"
+      ],
+      "routeLabel": "架构场景、视图、质量权衡与产品线可变性",
+      "indexLine": 63,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-1-architecture-scenarios-views-variability.md",
+        "blob": "3c54c847382c366823dbc1f062ebda588c78bddb"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从模糊质量要求到可比较的结构"
+        },
+        {
+          "line": 19,
+          "heading": "2. 视图之间必须可追溯，而非一张万能图"
+        },
+        {
+          "line": 33,
+          "heading": "3. ATAM 启发的实际分析而非认证清单"
+        },
+        {
+          "line": 48,
+          "heading": "4. 产品线、共性与可变性"
+        },
+        {
+          "line": 63,
+          "heading": "5. 验证与材料边界"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T30b-1-professional-communication-and-responsibility",
+      "title": "T30b-1 · 软件工程专业责任、技术沟通与知识交接",
+      "ownersFromIndex": [
+        "K07",
+        "K06",
+        "K01",
+        "K11"
+      ],
+      "routeLabel": "专业责任、技术沟通与知识交接",
+      "indexLine": 64,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T30b-1-professional-communication-and-responsibility.md",
+        "blob": "197671f729c3def0171b439a9173d953912dc4a6"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 专业责任和独立判断的实际冲突"
+        },
+        {
+          "line": 17,
+          "heading": "2. 技术写作先确定读者和任务"
+        },
+        {
+          "line": 31,
+          "heading": "3. 事实、假设、预测与承诺的报告"
+        },
+        {
+          "line": 44,
+          "heading": "4. 协商与代码评审：把争议缩到真实问题"
+        },
+        {
+          "line": 56,
+          "heading": "5. 知识转移、接手验证与团队学习"
+        },
+        {
+          "line": 64,
+          "heading": "6. 可检验的专业实践与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T31a-1-compilation-linking-abi",
+      "title": "T31a-1 · 编译、链接、加载、ABI 与依赖身份",
+      "ownersFromIndex": [
+        "K08",
+        "K03",
+        "K02"
+      ],
+      "routeLabel": "编译、链接、加载、ABI 与依赖身份",
+      "indexLine": 74,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-1-compilation-linking-abi.md",
+        "blob": "1d14c4dc944935594f336fcb4a2635dba6c9638f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 生成链中的不同成功事实"
+        },
+        {
+          "line": 20,
+          "heading": "2. 符号、链接与依赖边界"
+        },
+        {
+          "line": 26,
+          "heading": "3. API、ABI、行为合同是三个层面"
+        },
+        {
+          "line": 34,
+          "heading": "4. 解析、版本、生成及发布身份"
+        },
+        {
+          "line": 40,
+          "heading": "5. 独立 Oracle（NOT_RUN）及资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T31a-2-configuration-management-baselines",
+      "title": "T31a-2 · 软件配置管理：基线、变更控制、状态核算和合并审核",
+      "ownersFromIndex": [
+        "K08",
+        "K04",
+        "K09",
+        "K07"
+      ],
+      "routeLabel": "配置管理、基线与合并审核",
+      "indexLine": 75,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-2-configuration-management-baselines.md",
+        "blob": "9b733b482dcd9f39e68e2c23a3a04afdad0a6ab9"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 配置项、基线与变更"
+        },
+        {
+          "line": 18,
+          "heading": "2. Git 对象与可变引用"
+        },
+        {
+          "line": 24,
+          "heading": "3. 三方合并与语义冲突"
+        },
+        {
+          "line": 30,
+          "heading": "4. 状态核算与实际审核收据"
+        },
+        {
+          "line": 45,
+          "heading": "5. 独立验证与资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T32b-1-data-migration-and-mixed-consumers",
+      "title": "T32b-1 · 数据迁移、混合版本消费者与兼容性边界",
+      "ownersFromIndex": [
+        "K09",
+        "K02",
+        "K03",
+        "K05",
+        "K08"
+      ],
+      "routeLabel": "数据迁移与混合版本消费者",
+      "indexLine": 76,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32b-1-data-migration-and-mixed-consumers.md",
+        "blob": "3de3dbef241028da46484e1db9db44ebd9556c83"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先确定变换与真实消费者"
+        },
+        {
+          "line": 11,
+          "heading": "2. Expand–Migrate–Contract 的并发机制"
+        },
+        {
+          "line": 26,
+          "heading": "3. PostgreSQL 18 约束阶段与锁"
+        },
+        {
+          "line": 45,
+          "heading": "4. 消息与持久格式的版本兼容"
+        },
+        {
+          "line": 51,
+          "heading": "5. 校验、恢复与退役"
+        },
+        {
+          "line": 57,
+          "heading": "6. Oracle 与资料边界"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25a-1-discrete-logic-relations-graphs",
+      "title": "T25a-1 · 离散数学：逻辑、关系、图与归纳",
+      "ownersFromIndex": [
+        "K03",
+        "K04",
+        "K05"
+      ],
+      "routeLabel": "离散数学：逻辑、关系、图与归纳",
+      "indexLine": 86,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25a-1-discrete-logic-relations-graphs.md",
+        "blob": "f02de2e31fc17fc65d0d49fbae4c6aef7a6f5d8c"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 命题、谓词及量词"
+        },
+        {
+          "line": 13,
+          "heading": "2. 集合、函数、关系"
+        },
+        {
+          "line": 27,
+          "heading": "3. 图、闭包与依赖"
+        },
+        {
+          "line": 35,
+          "heading": "4. 证明、归纳与工程边界"
+        },
+        {
+          "line": 39,
+          "heading": "5. 独立反例与资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27d-1-data-structures-cost-selection",
+      "title": "T27d-1 · 数据结构、算法成本与实际工程选型",
+      "ownersFromIndex": [
+        "K03",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "数据结构、算法成本与实际工程选型",
+      "indexLine": 87,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27d-1-data-structures-cost-selection.md",
+        "blob": "aa0cb4135244975d76d6ea49bd2e3140c788b902"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先确定操作合同及工作负荷"
+        },
+        {
+          "line": 20,
+          "heading": "2. 动态数组：摊还证明与空间代价"
+        },
+        {
+          "line": 24,
+          "heading": "3. 哈希与有序索引"
+        },
+        {
+          "line": 28,
+          "heading": "4. 堆、优先队列与双索引不变量"
+        },
+        {
+          "line": 34,
+          "heading": "4.1 任意位置删除及双索引修复（FG12）"
+        },
+        {
+          "line": 42,
+          "heading": "5. 图表示、遍历与外存"
+        },
+        {
+          "line": 46,
+          "heading": "6. 独立测试与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25d-1-probability-statistics-engineering-measurement",
+      "title": "T25d-1 · 概率、统计测量与工程证据",
+      "ownersFromIndex": [
+        "K11",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "概率、统计测量与工程证据",
+      "indexLine": 88,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25d-1-probability-statistics-engineering-measurement.md",
+        "blob": "201b62433a98d698d9828f4b10830775834cea1f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 概率、条件与风险"
+        },
+        {
+          "line": 11,
+          "heading": "2. 测量对象、样本和分母"
+        },
+        {
+          "line": 24,
+          "heading": "3. 配对、区组与因果边界"
+        },
+        {
+          "line": 30,
+          "heading": "4. 偏差、错误率与有限证据"
+        },
+        {
+          "line": 34,
+          "heading": "5. 工程测量与决策"
+        },
+        {
+          "line": 40,
+          "heading": "6. 来源与边界"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27c-2-distributed-consistency-coordination-recovery",
+      "title": "T27c-2 · 分布式一致性、协调与恢复边界",
+      "ownersFromIndex": [
+        "K03",
+        "K10",
+        "K02",
+        "K05"
+      ],
+      "routeLabel": "分布式一致性、协调与恢复边界",
+      "indexLine": 98,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-2-distributed-consistency-coordination-recovery.md",
+        "blob": "941bb0e11a631bcd5b06860c03e0225be40a03d2"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从可观察合同选择一致性，而非从拓扑选择"
+        },
+        {
+          "line": 11,
+          "heading": "2. 多数集合与复制状态机"
+        },
+        {
+          "line": 17,
+          "heading": "3. 读、Watch 与版本化投影"
+        },
+        {
+          "line": 25,
+          "heading": "3.1 实际消息、分页与 checkpoint 边界（FG13）"
+        },
+        {
+          "line": 39,
+          "heading": "4. 租约、fencing 与远端效果"
+        },
+        {
+          "line": 43,
+          "heading": "5. 有界故障验证"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T28a-2-consumer-contracts-installed-artifacts",
+      "title": "T28a-2 · 真实消费者、接口合同与安装制品验证",
+      "ownersFromIndex": [
+        "K05",
+        "K08",
+        "K03",
+        "K02"
+      ],
+      "routeLabel": "真实消费者、接口合同与安装制品验证",
+      "indexLine": 99,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28a-2-consumer-contracts-installed-artifacts.md",
+        "blob": "b6f19c2e9324ec430ad18df3ac20e3561507c0e0"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 按失败机制分配验证责任"
+        },
+        {
+          "line": 18,
+          "heading": "2. 消费者驱动交互合同"
+        },
+        {
+          "line": 26,
+          "heading": "3. 演进方向、组合和未覆盖状态"
+        },
+        {
+          "line": 40,
+          "heading": "4. 安装制品与源码测试的边界"
+        },
+        {
+          "line": 50,
+          "heading": "5. 区分性测试设计及结果资格"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T24b-1-business-rule-decision-contracts",
+      "title": "T24b-1 · 业务规则、决策表与领域约束的可反驳合同",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05"
+      ],
+      "routeLabel": "业务规则、决策表与领域约束的可反驳合同",
+      "indexLine": 109,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24b-1-business-rule-decision-contracts.md",
+        "blob": "fdb4bd53b58f5ab432d34253a75e562f0ae29df2"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 将陈述变成有权、可判定的事实"
+        },
+        {
+          "line": 11,
+          "heading": "2. 决策表：匹配集合、覆盖及冲突"
+        },
+        {
+          "line": 27,
+          "heading": "3. UNKNOWN 与版本、例外的选择"
+        },
+        {
+          "line": 33,
+          "heading": "4. 决策与状态提交不可混同"
+        },
+        {
+          "line": 37,
+          "heading": "5. 正反例、来源与 Oracle"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
