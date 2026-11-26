@@ -239,7 +239,11 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 
 ## T37-R2 · 工程抽象与合法变化选择（#630）
 
-输入 33406ba1f1081dd57593a0e645b81885fff55b3b。[R2范围及公开推演](../consumption/T37-r2-abstraction-references.md)、[12条新增决策引用及12条导航边](../consumption/decision-references-r2.json)：结构坏味道、输入所有权、依赖/授权/状态/版本四边界、ADR、内聚及替换、错误/资源、变体、架构组合、包依赖、维护替换及 T17/T20 已有Case局部观察。原DP与所有权不变，候选研究反馈/历史Case资格不晋升；24条已接受+12条待独审，19条已接受+12条候选导航关系，非原48概念关系增量。四类公开推演 NOT_RUN；无实际消费者、模型、生产Rule/ABI或发布。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+输入 33406ba1f1081dd57593a0e645b81885fff55b3b。[R2范围及公开推演](../consumption/T37-r2-abstraction-references.md)、[12条新增决策引用及12条导航边](../consumption/decision-references-r2.json)：结构坏味道、输入所有权、依赖/授权/状态/版本四边界、ADR、内聚及替换、错误/资源、变体、架构组合、包依赖、维护替换及 T17/T20 已有Case局部观察。原DP与所有权不变，候选研究反馈/历史Case资格不晋升；12条引用及12条边均在 [#630 收尾](https://github.com/kaicreator-mm/tally/issues/630#issuecomment-7187281671) 限定接受并合入 748d53fba2166fb9e1654b73cef684083959ee56（0/0/0）；36条已接受引用、31条条件导航关系，非原48概念关系增量。四类公开推演 NOT_RUN；无实际消费者、模型、生产Rule/ABI或发布。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T37-R3 · 数据、状态、并发及失败恢复选择（#632）
+
+输入 748d53fba2166fb9e1654b73cef684083959ee56。[R3范围及公开推演](../consumption/T37-r3-state-concurrency-references.md)、[14条新增决策引用及16条导航边](../consumption/decision-references-r3.json)：关系设计、约束、查询、事务、同步、任务生命周期、一致性、etcd投影、fencing、血缘/冲突/墓碑、堆双索引、时钟/期限、精确数值或locale排序、容量与测量。按实际问题选取，不将事务、锁、租约、权限、外部效果等同，旧知识所有权/资格不晋升。36条已接受+14条待独审，31条已接受+16条候选导航关系；四类公开推演 NOT_RUN，非全库语义覆盖或实际工程验证。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## 阅读路径与边界
 
