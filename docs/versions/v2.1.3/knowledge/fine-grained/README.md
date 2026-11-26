@@ -255,11 +255,15 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 
 ## T38-K1 · 最小知识正确性验证（#638）
 
-T37-R5 G0 经 [#637 独审](https://github.com/kaicreator-mm/tally/pull/637#issuecomment-7189293972) 及 [#636 收尾](https://github.com/kaicreator-mm/tally/issues/636#issuecomment-7189830743) 已限定接受。根据 [最新Owner方向](https://github.com/kaicreator-mm/tally/issues/563#issuecomment-7190227558)，当前仍为 KNOWLEDGE_CONSTRUCTION，不转入 Package/SDK/产品实施；原G1–G4保留历史规划并暂停。[最小知识验证](../validation/T38-K1-knowledge-validation.md)、[单文件见证](../validation/T38-K1-witness.mjs)：实际4组有限机制正反例（抽象、所有权、表示不变量、逻辑竞态）及1组纸面Oracle资格推导，Node内置assert，无依赖/Package/DomainHarness，非模型或产品效果测量。源资格保持，验证反馈仅用于知识正确性/合理性；[#639 独审](https://github.com/kaicreator-mm/tally/pull/639#issuecomment-7190379741) ACCEPT_SCOPED 0/0/1，已合入 a0e9900a873bf0ab1b88d41ef12fa60ff90af048，K1-RV-01 非阻塞术语勘误在K2，原字节/收据保留。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+T37-R5 G0 经 [#637 独审](https://github.com/kaicreator-mm/tally/pull/637#issuecomment-7189293972) 及 [#636 收尾](https://github.com/kaicreator-mm/tally/issues/636#issuecomment-7189830743) 已限定接受。根据 [最新Owner方向](https://github.com/kaicreator-mm/tally/issues/563#issuecomment-7190227558)，当前仍为 KNOWLEDGE_CONSTRUCTION，不转入 Package/SDK/产品实施；原G1–G4保留历史规划并暂停。[最小知识验证](../validation/T38-K1-knowledge-validation.md)、[单文件见证](../validation/T38-K1-witness.mjs)：实际4组有限机制正反例（抽象、所有权、表示不变量、逻辑竞态）及1组纸面Oracle资格推导，Node内置assert，无依赖/Package/DomainHarness，非模型或产品效果测量。源资格保持，验证反馈仅用于知识正确性/合理性；[#639 独审](https://github.com/kaicreator-mm/tally/pull/639#issuecomment-7190379741) ACCEPT_SCOPED 0/0/1，已合入 a0e9900a873bf0ab1b88d41ef12fa60ff90af048，K1-RV-01 已在K2限定关闭，[#638收尾](https://github.com/kaicreator-mm/tally/issues/638#issuecomment-7191010702)，原字节/收据保留。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## T38-K2 · 关系、事务与一致性知识核验（#640）
 
-[最小知识验证及K1勘误](../validation/T38-K2-knowledge-validation.md)、[53行单文件见证](../validation/T38-K2-witness.py)：实际SQLite 3.46.1固定输入3组（约束、查询、顺序条件扣减），3组纸面独立推导（FD/范式、写偏斜、线性化/多数/fencing），非PG18隔离或真实分布式执行。K1原证据不改，AF定义域勘误待独审。原专业正文/资格、67/86、46/265、S51/D0/U5保持；无Package/DH/SDK/产品实施，不将有限见证晋升为全库知识验证。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+[最小知识验证及K1勘误](../validation/T38-K2-knowledge-validation.md)、[53行单文件见证](../validation/T38-K2-witness.py)：实际SQLite 3.46.1固定输入3组（约束、查询、顺序条件扣减），3组纸面独立推导（FD/范式、写偏斜、线性化/多数/fencing），非PG18隔离或真实分布式执行。K1原证据不改，AF定义域勘误已关闭；[#641独审](https://github.com/kaicreator-mm/tally/pull/641#issuecomment-7190897414) ACCEPT_SCOPED 0/0/1，已合入 078078eac2ac7c14473ffb49310e26d58f7086cb，K2-RV-01 SQLite输入域非阻塞勘误在K3。原专业正文/资格、67/86、46/265、S51/D0/U5保持；无Package/DH/SDK/产品实施，不将有限见证晋升为全库知识验证。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T38-K3 · 生命周期、可靠效果及恢复知识核验（#642）
+
+[最小知识验证及K2勘误](../validation/T38-K3-knowledge-validation.md)、[83行单文件见证](../validation/T38-K3-witness.py)：实际Python3.13.5/SQLite3.46.1三组固定见证（普通/STRICT类型域，等待超时/TaskGroup清理，同DB回滚及重复/冲突），消息进度/Kafka事务、期限/容量/RTO/RPO、文件/协议/导入恢复三组条件推导，真实目标执行NOT_RUN。K2原证据保持，输入域勘误待独审。不把局部DB或协作任务观察外推为并发/持久/远端保证。原专业正文、资格、67/86、46/265、S51/D0/U5保持；仍KNOWLEDGE_CONSTRUCTION，无Package/DH/SDK或产品实施。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## 阅读路径与边界
 
