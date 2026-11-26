@@ -24,7 +24,7 @@
 | S14 [internal/database/migrations.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/database/migrations.go) | `8285038efa62d60d7a8bdd0215026dfb5b261585` | 12–23,66–92,220–234,376–402,785–803 | 实际初始化与后续选定索引迁移；非最终 schema 审计 |
 | S15 [internal/model/entry.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/model/entry.go) | `db4958ca5478d93f4708ef37894c5f617c0859a1` | 10–40,70–80 | 状态、默认排序、实体及更新请求 |
 | S16 [internal/http/response/json/json.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/http/response/json/json.go) | `8e99681a623d2e945cd8ca8e52b5307ddbc11158` | 18–41,50–113,157–173 | JSON 响应、204、400/500/401 |
-| S17 [internal/http/response/builder.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/http/response/builder.go) | `db89654a1b641b59a93be96e2821d1c8f75f6c36` | 23–49,80–110,166–169 | 响应状态/写 header，默认200 |
+| S17 [internal/http/response/builder.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/http/response/builder.go) | `db89654a1b641b59a93be96e2821d1c8f75f6c36` | 23–49,76–110,147–150 | 响应状态/写 header，默认200 |
 | S18 [internal/validator/entry_test.go](https://github.com/miniflux/v2/blob/da951164d52e7e4f987c50a64f1d1be01e6e90e5/internal/validator/entry_test.go) | `035b49cdee26610800fc6c8609bd04d58d9708f9` | 12–60 | 已有 validator 测试断言；只读未执行 |
 
 ## 专业组合与停止条件
