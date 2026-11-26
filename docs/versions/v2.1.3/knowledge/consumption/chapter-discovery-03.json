@@ -1,0 +1,521 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "f0358f8454a6f57b17e741ae5c03db760a4ee15e",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "9bdae2a3655c28af66b645f96456489522356854"
+  },
+  "range": [
+    25,
+    36
+  ],
+  "scope": "mechanical discovery metadata only, not semantic unit or qualification census; original index owns navigation and source text owns meaning",
+  "entries": [
+    {
+      "chapter": "T28c-1-product-quality-assurance-evaluation",
+      "title": "T28c-1 · 产品质量目标、质量保证与评价范围",
+      "ownersFromIndex": [
+        "K05",
+        "K01",
+        "K02",
+        "K10",
+        "K11"
+      ],
+      "routeLabel": "产品质量目标、质量保证与评价范围",
+      "indexLine": 110,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28c-1-product-quality-assurance-evaluation.md",
+        "blob": "1cb9897bc05fb6f3bac16672d15008a9a4f0bbbb"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 质量对象、需求与评价问题"
+        },
+        {
+          "line": 18,
+          "heading": "2. 保证、控制和独立评价的分工"
+        },
+        {
+          "line": 24,
+          "heading": "3. 从质量目标导出可执行评价合同"
+        },
+        {
+          "line": 36,
+          "heading": "4. 风险驱动抽样与可访问性完整过程"
+        },
+        {
+          "line": 42,
+          "heading": "4.1 代表性抽样的反馈闭环（FG14）"
+        },
+        {
+          "line": 54,
+          "heading": "5. 质量证据聚合和变更后的有效性"
+        },
+        {
+          "line": 60,
+          "heading": "6. 区分性反例与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T33a-1-reliability-fault-analysis-recovery",
+      "title": "T33a-1 · 可靠性模型、故障分析与业务恢复目标",
+      "ownersFromIndex": [
+        "K10",
+        "K02",
+        "K05",
+        "K06",
+        "K09"
+      ],
+      "routeLabel": "可靠性模型、故障分析与业务恢复目标",
+      "indexLine": 120,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33a-1-reliability-fault-analysis-recovery.md",
+        "blob": "16bcfa4b2cd718fbfc3a000cb9d3430f59091520"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先定义服务失败，再选择模型"
+        },
+        {
+          "line": 11,
+          "heading": "2. 串并联系统、共同原因与假设"
+        },
+        {
+          "line": 17,
+          "heading": "3. 自底向上与自顶向下分析"
+        },
+        {
+          "line": 32,
+          "heading": "4. RTO、RPO 与真正的恢复完成"
+        },
+        {
+          "line": 38,
+          "heading": "5. 区分性反例及资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T30a-1-lifecycle-acquisition-supplier-exit",
+      "title": "T30a-1 · 生命周期决策、软件获取及供应商退出",
+      "ownersFromIndex": [
+        "K04",
+        "K01",
+        "K02",
+        "K11",
+        "K05",
+        "K09"
+      ],
+      "routeLabel": "生命周期决策、软件获取及供应商退出",
+      "indexLine": 121,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T30a-1-lifecycle-acquisition-supplier-exit.md",
+        "blob": "9da6e241d4c765afc6071c4dd150ee2b5b370005"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 生命周期的决策与反馈"
+        },
+        {
+          "line": 11,
+          "heading": "2. 自研、购买、外包、复用的可比较边界"
+        },
+        {
+          "line": 24,
+          "heading": "3. 将供应商能力变成可验收的交付合同"
+        },
+        {
+          "line": 30,
+          "heading": "4. 监控、验收、运行移交及退出"
+        },
+        {
+          "line": 42,
+          "heading": "5. 学习反例与独立 Oracle"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T34a-1-engineering-economics-estimation-sensitivity",
+      "title": "T34a-1 · 工程经济：可比较现金流、估算与决策敏感性",
+      "ownersFromIndex": [
+        "K11",
+        "K04",
+        "K01",
+        "K02",
+        "K05",
+        "K09"
+      ],
+      "routeLabel": "工程经济：可比较现金流、估算与决策敏感性",
+      "indexLine": 131,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34a-1-engineering-economics-estimation-sensitivity.md",
+        "blob": "fa020cbc34bf3cd5dca9f33985a1cbeece532593"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先统一决策目标、时间窗和成本边界"
+        },
+        {
+          "line": 11,
+          "heading": "2. 从工作估算到现金流"
+        },
+        {
+          "line": 23,
+          "heading": "3. 生命周期现值与转换阈值"
+        },
+        {
+          "line": 35,
+          "heading": "4. 费用、风险与证据的增量决策"
+        },
+        {
+          "line": 41,
+          "heading": "5. 正反案例与独立 Oracle"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T32a-1-maintenance-refactoring-replacement",
+      "title": "T32a-1 · 软件维护、行为保持的重构与渐进替换",
+      "ownersFromIndex": [
+        "K09",
+        "K03",
+        "K02",
+        "K05",
+        "K06",
+        "K11"
+      ],
+      "routeLabel": "软件维护、行为保持的重构与渐进替换",
+      "indexLine": 132,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32a-1-maintenance-refactoring-replacement.md",
+        "blob": "8341a1afe4bb75efe3909c21e5c41de26ad5d567"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从维护意图到受影响边界"
+        },
+        {
+          "line": 11,
+          "heading": "2. 可观察行为、基线与渐进重构"
+        },
+        {
+          "line": 19,
+          "heading": "3. 渐进替换不是永久兼容层"
+        },
+        {
+          "line": 33,
+          "heading": "4. 弃用、迁移与清理的可观察证据"
+        },
+        {
+          "line": 39,
+          "heading": "5. 区分性反例与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T33b-1-performance-queueing-capacity",
+      "title": "T33b-1 · 性能工程：排队模型、容量规划与负载测量",
+      "ownersFromIndex": [
+        "K10",
+        "K03",
+        "K02",
+        "K05",
+        "K11"
+      ],
+      "routeLabel": "性能工程：排队模型、容量规划与负载测量",
+      "indexLine": 142,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33b-1-performance-queueing-capacity.md",
+        "blob": "585e865092ede14f371a704e70ec96771ae3ca67"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先建立统一观察边界和工作量守恒"
+        },
+        {
+          "line": 11,
+          "heading": "2. M/M/1：为什么接近饱和时延迟非线性增长"
+        },
+        {
+          "line": 24,
+          "heading": "3. 资源需求与容量瓶颈"
+        },
+        {
+          "line": 30,
+          "heading": "4. 负载模型、测量遗漏与实际试验设计"
+        },
+        {
+          "line": 38,
+          "heading": "5. 反例、独立 Oracle 与资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T33c-1-operations-incident-service-support",
+      "title": "T33c-1 · 运营准备、错误预算、事故协同与服务支持",
+      "ownersFromIndex": [
+        "K10",
+        "K06",
+        "K08",
+        "K04",
+        "K05"
+      ],
+      "routeLabel": "运营准备、错误预算、事故协同与服务支持",
+      "indexLine": 143,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T33c-1-operations-incident-service-support.md",
+        "blob": "f03d446d576885677d0e74418a94d4dd73d224b0"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 运行责任与准备证据"
+        },
+        {
+          "line": 17,
+          "heading": "2. 错误预算燃烧率的可复算合同"
+        },
+        {
+          "line": 25,
+          "heading": "3. 事故的发现、指挥与沟通"
+        },
+        {
+          "line": 37,
+          "heading": "4. Runbook 与长期支持的执行合同"
+        },
+        {
+          "line": 43,
+          "heading": "5. 复盘、改善及独立 Oracle"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T34b-1-empirical-research-design-causal-evidence",
+      "title": "T34b-1 · 实证软件工程：研究设计、因果识别与可复查证据",
+      "ownersFromIndex": [
+        "K11",
+        "K04",
+        "K05",
+        "K07",
+        "K03"
+      ],
+      "routeLabel": "实证软件工程：研究设计、因果识别与可复查证据",
+      "indexLine": 153,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34b-1-empirical-research-design-causal-evidence.md",
+        "blob": "efd25d53d2fbdccb306c2175c4d6f42b19db2458"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 研究问题决定方法，不以单一实验形式替代专业判断"
+        },
+        {
+          "line": 18,
+          "heading": "2. 把知识干预分解成可识别条件"
+        },
+        {
+          "line": 30,
+          "heading": "3. 从分配到真实执行：阶段、污染与可比性"
+        },
+        {
+          "line": 38,
+          "heading": "4. 从资料到结论的效度与可复查链"
+        },
+        {
+          "line": 51,
+          "heading": "5. 区分性 Oracle 与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T34b-2-engineering-measurement-human-factors",
+      "title": "T34b-2 · 工程度量、人因与独立制品评价",
+      "ownersFromIndex": [
+        "K11",
+        "K07",
+        "K05",
+        "K03",
+        "K09"
+      ],
+      "routeLabel": "工程度量、人因与独立制品评价",
+      "indexLine": 154,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T34b-2-engineering-measurement-human-factors.md",
+        "blob": "f8d125f188b37b3aabb2fa20cae276083099ff91"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从构念到观察事实：不要把代理指标当目标"
+        },
+        {
+          "line": 20,
+          "heading": "2. 独立评价真实架构与代码：观察合同及判别规则"
+        },
+        {
+          "line": 33,
+          "heading": "3. 一致性不是有效性：如何检查人工及 LLM 评价"
+        },
+        {
+          "line": 45,
+          "heading": "4. 维护实验与人因数据的完整解释"
+        },
+        {
+          "line": 53,
+          "heading": "5. 区分性 Oracle 与资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-1-general-function-knowledge-composition",
+      "title": "T35-1 · 通用功能族的跨领域知识组合：配置、导入、任务、查询与同步",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K11"
+      ],
+      "routeLabel": "通用功能族的跨领域知识组合",
+      "indexLine": 164,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-1-general-function-knowledge-composition.md",
+        "blob": "083ae2e411c7a2d69898ea72571e406b63802af1"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从实际问题选择知识，不按目录逐章注入"
+        },
+        {
+          "line": 21,
+          "heading": "2. 组合演练 G1：本地导入工具与运行配置"
+        },
+        {
+          "line": 33,
+          "heading": "3. 组合演练 G2：异步刷新、查询与版本化投影"
+        },
+        {
+          "line": 50,
+          "heading": "4. 可供人及 LLM 的阶段性交接实例"
+        },
+        {
+          "line": 62,
+          "heading": "5. 参考与限制"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-2-business-function-knowledge-composition",
+      "title": "T35-2 · 业务功能族的跨领域知识组合：订单、库存、退款与授权",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05",
+        "K04",
+        "K06",
+        "K11"
+      ],
+      "routeLabel": "业务功能族的跨领域知识组合",
+      "indexLine": 165,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-2-business-function-knowledge-composition.md",
+        "blob": "02eba8247e89710357a2665ff40449f7aeba787f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 业务功能族的知识选择入口"
+        },
+        {
+          "line": 18,
+          "heading": "2. 组合演练 B1：订单预留及取消的最小语义模型"
+        },
+        {
+          "line": 30,
+          "heading": "3. 从业务不变量推导结构，而非按表/动词建框架"
+        },
+        {
+          "line": 48,
+          "heading": "4. 外部退款、重放和审计的组合边界"
+        },
+        {
+          "line": 60,
+          "heading": "5. 变体 B2：审批与报表不是同一个业务操作"
+        },
+        {
+          "line": 66,
+          "heading": "6. 跨阶段交接与可反驳评价"
+        },
+        {
+          "line": 78,
+          "heading": "7. 参考与限制"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T26a-2-architecture-style-composition",
+      "title": "T26a-2 · 架构风格的组合、替代与边界变化：同一文档发布系统",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K05",
+        "K10",
+        "K11"
+      ],
+      "routeLabel": "架构风格的组合、替代与边界变化",
+      "indexLine": 179,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-2-architecture-style-composition.md",
+        "blob": "d1021bebefb894f99a4e343ca24cdcfc46acc54d"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 复用优先：已存在的专业观察与新增问题"
+        },
+        {
+          "line": 19,
+          "heading": "2. 同一个有权教学合同（D0）"
+        },
+        {
+          "line": 27,
+          "heading": "3. 用四个正交维度比较并组合架构"
+        },
+        {
+          "line": 61,
+          "heading": "4. 同一 D0 下的可反驳候选"
+        },
+        {
+          "line": 73,
+          "heading": "5. 处理链、提交与失败的实质推理"
+        },
+        {
+          "line": 93,
+          "heading": "6. 来源及限定"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
