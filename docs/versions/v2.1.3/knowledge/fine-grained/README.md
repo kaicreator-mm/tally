@@ -231,11 +231,15 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 | [T36-C 阶段消费设计](../consumption/staged-consumption-design.md) | 发现、条件选择、事实与交接、预算/不完整、停止；原专业阶段及 Task 权威不变 |
 | [T36-D 公开推演与独立评价](../consumption/evaluation-and-worked-traces.md) | 3组公开合成任务、8种变形、6层观察；全部 NOT_RUN，非隐藏题/独立执行报告 |
 
-#565 R5 全部2P1/2P2 OPEN/HOLD，#286 DEFERRED，A24/T4 NOT_RUN/HOLD；不 dispatch 实施、Agent 或实验。T36 设计已在 [#626 收据](https://github.com/kaicreator-mm/tally/issues/626#issuecomment-7185974134) 限定接受并合入 f0358f8454a6f57b17e741ae5c03db760a4ee15e（0/0/2）；P2-T36-01/02 OPEN_NONBLOCKING，#626 保持开放。受影响的两引用不得在修正独审前作充分消费输入或扩展/冻结；设计接受不冻结生产 ABI，原资格/计数不变。
+#565 R5 全部2P1/2P2 OPEN/HOLD，#286 DEFERRED，A24/T4 NOT_RUN/HOLD；不 dispatch 实施、Agent 或实验。T36 设计已在 [#626 收据](https://github.com/kaicreator-mm/tally/issues/626#issuecomment-7185974134) 限定接受并合入 f0358f8454a6f57b17e741ae5c03db760a4ee15e（0/0/2）；当时 P2-T36-01/02 OPEN_NONBLOCKING；后经 [#626 关闭收据](https://github.com/kaicreator-mm/tally/issues/626#issuecomment-7186888329) 限定关闭，#626 已关闭。设计接受不冻结生产 ABI，原资格/计数不变。
 
 ## T37-R1 · 发现入口及有限决策引用扩展（#628）
 
-输入 f0358f8454a6f57b17e741ae5c03db760a4ee15e；[T36 独审](https://github.com/kaicreator-mm/tally/pull/627#issuecomment-7185602142)。[本批合同、范围与公开推演](../consumption/T37-r1-reference-expansion.md)：发现投影 [1–12](../consumption/chapter-discovery-01.json)、[13–24](../consumption/chapter-discovery-02.json)、[25–36](../consumption/chapter-discovery-03.json)、[37–46](../consumption/chapter-discovery-04.json) 覆盖46篇已接受正文及265个标题定位；逐文件实际获取并机械提取，不能把标题当自足语义。新增 [11条实质决策引用](../consumption/decision-references-r1.json)，每个Kxx一条限定入口、7条候选导航关系，均待独审，非新的概念/Claim/Case。原13条pilot引用保留，P2-T36-01/02 的限定修正见 [pilot](../consumption/pilot-references.json)、[阶段设计](../consumption/staged-consumption-design.md) 及 [公开反例](../consumption/evaluation-and-worked-traces.md)，未独立关闭。24条候选/已审范围合计不是全库语义覆盖；19条导航边非原48概念关系增量。无模型执行或产品接线，#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+输入 f0358f8454a6f57b17e741ae5c03db760a4ee15e；[T36 独审](https://github.com/kaicreator-mm/tally/pull/627#issuecomment-7185602142)。[本批合同、范围与公开推演](../consumption/T37-r1-reference-expansion.md)：发现投影 [1–12](../consumption/chapter-discovery-01.json)、[13–24](../consumption/chapter-discovery-02.json)、[25–36](../consumption/chapter-discovery-03.json)、[37–46](../consumption/chapter-discovery-04.json) 覆盖46篇已接受正文及265个标题定位；逐文件实际获取并机械提取，不能把标题当自足语义。新增 [11条实质决策引用](../consumption/decision-references-r1.json)，每个Kxx一条限定入口、7条候选导航关系，均已在 [#628 收尾](https://github.com/kaicreator-mm/tally/issues/628#issuecomment-7186889556) 限定接受并合入 33406ba1f1081dd57593a0e645b81885fff55b3b（0/0/0），非新的概念/Claim/Case。原13条pilot引用保留，P2-T36-01/02 的限定修正见 [pilot](../consumption/pilot-references.json)、[阶段设计](../consumption/staged-consumption-design.md) 及 [公开反例](../consumption/evaluation-and-worked-traces.md)，已独立限定关闭。24条已接受引用不是全库语义覆盖；19条导航边非原48概念关系增量。无模型执行或产品接线，#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T37-R2 · 工程抽象与合法变化选择（#630）
+
+输入 33406ba1f1081dd57593a0e645b81885fff55b3b。[R2范围及公开推演](../consumption/T37-r2-abstraction-references.md)、[12条新增决策引用及12条导航边](../consumption/decision-references-r2.json)：结构坏味道、输入所有权、依赖/授权/状态/版本四边界、ADR、内聚及替换、错误/资源、变体、架构组合、包依赖、维护替换及 T17/T20 已有Case局部观察。原DP与所有权不变，候选研究反馈/历史Case资格不晋升；24条已接受+12条待独审，19条已接受+12条候选导航关系，非原48概念关系增量。四类公开推演 NOT_RUN；无实际消费者、模型、生产Rule/ABI或发布。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## 阅读路径与边界
 

@@ -1,0 +1,394 @@
+{
+  "kind": "T37_BOUNDED_ADVISORY_REFERENCE_EXTENSION",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "33406ba1f1081dd57593a0e645b81885fff55b3b",
+  "scope": "12 local navigation references for concrete abstraction decisions; prior DP/Case IDs preserved, sourceQualification explicit; not canonical ontology or entire abstraction coverage",
+  "priorReferences": [
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/pilot-references.json",
+      "blob": "646019f5dc366392fea67ccb6571e843b7e5b895"
+    },
+    {
+      "path": "docs/versions/v2.1.3/knowledge/consumption/decision-references-r1.json",
+      "blob": "8638a747969b6938ffa5ca18c2e1699ea8263b5b"
+    }
+  ],
+  "records": [
+    {
+      "key": "P37R2-SMELL",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+        "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+        "lines": [
+          36,
+          48
+        ]
+      },
+      "purpose": "结构坏味道需要具体缺陷证据",
+      "when": "实际审查某个合并、拆分或间接层的必要性",
+      "materialFacts": "真实合同/代码、共同或不同变化、重复维护或跨层开销、事务不变量",
+      "counterexampleOrLimit": "类数、mode分支、重复代码只提供候选；不能因单一职责拆出不可恢复半提交",
+      "sourceQualification": "既有专业分析；不新增抽象缺陷分类",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-INPUT-OWNERSHIP",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+        "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+        "lines": [
+          49,
+          54
+        ]
+      },
+      "purpose": "权威状态Owner与可变入参引用所有权分别确认",
+      "when": "真实候选接收可变对象且可能保留引用或承诺快照",
+      "materialFacts": "实际COPY_SNAPSHOT/SHARED_MUTABLE/IMMUTABLE_BORROW合同，调用者可合法写入与可观察影响、对象身份",
+      "counterexampleOrLimit": "唯一写Owner不证明复制/冻结；不能默认深复制；Source未规定则SOURCE_UNSPECIFIED",
+      "sourceQualification": "原R19-F2研究反馈候选；不得升级为已证实效用或强制Rule",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-BOUNDARIES",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-extension-authority-state-and-consumer-boundaries.md",
+        "blob": "eb189c8a2abe1e9d002069fa9b79756cde72005c",
+        "lines": [
+          5,
+          25
+        ]
+      },
+      "purpose": "依赖声明、业务授权、状态权威、消费者合同四边界",
+      "when": "实际扩展或跨模块调用有依赖、权限、持久状态或版本要求",
+      "materialFacts": "真实项目直接依赖合同、Actor/Tenant/Operation/Host scope、提交边界、支持消费者版本",
+      "counterexampleOrLimit": "A→B→C不自动授权A调用C；声明C不授权外部Effect；本地提交不证明远端结果",
+      "sourceQualification": "原R8 DOCUMENT_CANDIDATE；BUILD为当时文档示例，不定义现行DH生成/SDK运行合同",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-ADR",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-extension-authority-state-and-consumer-boundaries.md",
+        "blob": "eb189c8a2abe1e9d002069fa9b79756cde72005c",
+        "lines": [
+          39,
+          56
+        ]
+      },
+      "purpose": "可反驳的架构决策、触发复议与实际兼容政策",
+      "when": "真实结构选择需要留下决策依据或新约束可能推翻旧决定",
+      "materialFacts": "有权决策者、实际候选、假设/反例/影响、复议条件、支持消费者和重叠期",
+      "counterexampleOrLimit": "旧ADR通过不证明当前适用；无真实新约束不必废弃；不强制所有版本兼容；教学数字非实测",
+      "sourceQualification": "原R8文档候选；不定义新的ADR强制流程或产品ABI",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-COHESION",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27a-detailed-design-representation.md",
+        "blob": "0e1e0bd6db29c7d73626d1a502a08f0ca845e83a",
+        "lines": [
+          5,
+          17
+        ]
+      },
+      "purpose": "内聚、耦合、组合与行为替换边界",
+      "when": "实际函数/模块/对象或公共接口划分与替换判断",
+      "materialFacts": "消费者、前后置/frame、错误/生命周期、共同变化、跨对象不变量与真实依赖",
+      "counterexampleOrLimit": "接口签名相同不证明可替换；子对象各自合法不保证整体RI；同一事务多步可有内聚性",
+      "sourceQualification": "原正文补充表示及行为组合；粒度选择仍由原DP-K03-R19-01拥有",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-ERROR-RESOURCE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27a-detailed-design-representation.md",
+        "blob": "0e1e0bd6db29c7d73626d1a502a08f0ca845e83a",
+        "lines": [
+          50,
+          71
+        ]
+      },
+      "purpose": "错误语义、资源取得和退出责任",
+      "when": "候选封装改变缺失/null、错误集合或资源所有权/清理行为",
+      "materialFacts": "真实领域输入/失败合同、语言异常机制、获取成功记录、释放责任、取消与远端效果",
+      "counterexampleOrLimit": "缺失不等于null；未取得B不能释放B；finally可能掩盖主失败；取消不保证效果未发生",
+      "sourceQualification": "原结构示意，具体语言合同需实际核验",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-VARIATION",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-1-architecture-scenarios-views-variability.md",
+        "blob": "3c54c847382c366823dbc1f062ebda588c78bddb",
+        "lines": [
+          48,
+          62
+        ]
+      },
+      "purpose": "真实产品线变化轴、绑定时机和合法组合",
+      "when": "有多个真实产品/消费者、独立变化及共享稳定合同",
+      "materialFacts": "实际feature requires/excludes、Owner、组合时机、版本、支持范围及共同不变量",
+      "counterexampleOrLimit": "五个合法组合仅满足假定feature约束，仍须核完整业务合同；不以可修改flag绕过审批",
+      "sourceQualification": "原教学合成，非真实产品配置政策",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-STYLE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-2-architecture-style-composition.md",
+        "blob": "d1021bebefb894f99a4e343ca24cdcfc46acc54d",
+        "lines": [
+          19,
+          72
+        ]
+      },
+      "purpose": "架构四个正交维度及同合同候选比较",
+      "when": "实际架构组织、运行连接、控制流、部署或扩展方式需选择",
+      "materialFacts": "真实Q1–Q5、状态权威/原子写集、持久受理、权限、容量、消费者及独立部署需要",
+      "counterexampleOrLimit": "单体、内部层、pipeline、事件可组合；分库可能破坏共同提交；固定格式不必动态插件；Q5未测",
+      "sourceQualification": "D0为原公开教学，候选B非唯一解，无实测吞吐",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-DEPENDENCY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K08",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-3-dependency-resolution-installed-package.md",
+        "blob": "4c85255c6c9d1aae759d04032d24b1b305c56782",
+        "lines": [
+          5,
+          16
+        ]
+      },
+      "purpose": "真实依赖约束、声明图与加载图的区别",
+      "when": "实际npm v11包/Workspace/peer/optional依赖且有跨包消费",
+      "materialFacts": "调用者身份、依赖声明/约束/host实例、真实解析和加载位置、目标平台与工具配置",
+      "counterexampleOrLimit": "传递解析和hoist不证明直接依赖声明；同宿主版本冲突不以分散安装或忽略peer解决；optional失败不证明能力可用",
+      "sourceQualification": "具体npm版本文档及合成有限约束；不推广所有包管理器",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-REPLACEMENT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K09",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32a-1-maintenance-refactoring-replacement.md",
+        "blob": "8341a1afe4bb75efe3909c21e5c41de26ad5d567",
+        "lines": [
+          19,
+          38
+        ]
+      },
+      "purpose": "渐进替换、唯一获权写者与退役",
+      "when": "真实旧新组件/消费者需要共存或实际切换",
+      "materialFacts": "原支持合同、可独立切换单位、写者与效果、状态兼容、消费者迁移/回退证据及退役许可",
+      "counterexampleOrLimit": "并行比较不能双写真实意图；新状态不兼容不能仅关开关回退；零引用/访问不证明可删除；无共存需求可直接替换",
+      "sourceQualification": "原方法及公开教学，不默认永久兼容层",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-BUSINESS-CASES",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T17-business-function-abstraction.md",
+        "blob": "e2951e0032fabfab9dcfddfde654cb1ed65c41f8",
+        "lines": [
+          13,
+          36
+        ]
+      },
+      "purpose": "读取已有T17-C01/C02/C03局部业务抽象观察与对照",
+      "when": "实际业务状态配置、资格谓词/命令或附加模块扩展选择",
+      "materialFacts": "真实业务合同、执行许可/状态变化、独立扩展消费者；读取原Case及其来源登记核版本",
+      "counterexampleOrLimit": "Oscar跳过不合格行不能套全量原子合同；Saleor谓词非执行授权；Odoo扩展点非所有业务需插件",
+      "sourceQualification": "既有三个Case的局部观察/原创反例；未重读全部上游；Oracle NOT_RUN；不新增Case身份",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P37R2-HISTORY-CASES",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K09",
+      "kind": "CASE_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/casebook/waves/T20-historical-abstraction.md",
+        "blob": "046eaccc667af327d3931d155ad9b36a6e34756b",
+        "lines": [
+          13,
+          46
+        ]
+      },
+      "purpose": "读取已有T20-C01/C02/C03的删除、收敛、补充委托选择",
+      "when": "真实抽象是否应删除、迁移公共入口或恢复包装能力",
+      "materialFacts": "真实支持消费者、局部源码变化/版本、已有机制、错误/效果合同；读取原Case及来源登记核版本",
+      "counterexampleOrLimit": "pytest内部helper删除非普遍inline；HTTPX公共入口迁移有消费者成本；p-limit仅清仍排队项、非所有取消",
+      "sourceQualification": "既有三个真实历史Case观察；原创Oracle NOT_RUN；没有维护收益实测或新增Case",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    }
+  ],
+  "relations": [
+    {
+      "from": "DP-K02-R19-01",
+      "to": "P37R2-SMELL",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际边界候选被指为欠抽象/错误抽象/过度抽象时须取得真实证据",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "DP-K02-R19-01",
+        "P37R2-SMELL"
+      ]
+    },
+    {
+      "from": "P37R2-INPUT-OWNERSHIP",
+      "to": "P37-REPRESENTATION",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实入参别名/快照合同影响表示不变量和frame；候选反馈不新增义务",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-INPUT-OWNERSHIP",
+        "P37-REPRESENTATION"
+      ]
+    },
+    {
+      "from": "P37R2-BOUNDARIES",
+      "to": "P37R2-DEPENDENCY",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际采用npm包时需对照真实依赖声明、解析与加载；不推导业务授权",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-BOUNDARIES",
+        "P37R2-DEPENDENCY"
+      ]
+    },
+    {
+      "from": "P37R2-BOUNDARIES",
+      "to": "P37R2-ADR",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实依赖/授权/状态/消费者边界变化可能触发架构复议",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-BOUNDARIES",
+        "P37R2-ADR"
+      ]
+    },
+    {
+      "from": "P37R2-COHESION",
+      "to": "DP-K03-R19-01",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际候选的内聚、耦合与行为合同为粒度选择提供约束",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-COHESION",
+        "DP-K03-R19-01"
+      ]
+    },
+    {
+      "from": "P37R2-ERROR-RESOURCE",
+      "to": "P37-TESTMODEL",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实错误、部分取得与清理义务用于独立测试选择，非固定异常规则",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-ERROR-RESOURCE",
+        "P37-TESTMODEL"
+      ]
+    },
+    {
+      "from": "P37R2-VARIATION",
+      "to": "P37R2-STYLE",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实合法变化轴和绑定时机影响架构扩展方式；没有变体则不强制产品线",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-VARIATION",
+        "P37R2-STYLE"
+      ]
+    },
+    {
+      "from": "P37-SCENARIO",
+      "to": "P37R2-STYLE",
+      "predicate": "CONTEXT_FOR",
+      "when": "同一有权可观察质量目标约束架构候选比较",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37-SCENARIO",
+        "P37R2-STYLE"
+      ]
+    },
+    {
+      "from": "P37R2-DEPENDENCY",
+      "to": "P37-INSTALLED",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际包公开消费及解析风险需要验证真正安装的制品",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-DEPENDENCY",
+        "P37-INSTALLED"
+      ]
+    },
+    {
+      "from": "P36-MAINT",
+      "to": "P37R2-REPLACEMENT",
+      "predicate": "CONTEXT_FOR",
+      "when": "合法行为与变更明确且存在实际旧新共存需要才选择渐进替换",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-MAINT",
+        "P37R2-REPLACEMENT"
+      ]
+    },
+    {
+      "from": "P37R2-BUSINESS-CASES",
+      "to": "P37R2-COHESION",
+      "predicate": "CONTEXT_FOR",
+      "when": "实际相似业务结构时可比较已有局部机制及反例，不把Case政策复制为当前Rule",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-BUSINESS-CASES",
+        "P37R2-COHESION"
+      ]
+    },
+    {
+      "from": "P37R2-HISTORY-CASES",
+      "to": "P37R2-REPLACEMENT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实公共入口收敛或旧消费者迁移时参考历史差异；内部helper不自动需要迁移",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P37R2-HISTORY-CASES",
+        "P37R2-REPLACEMENT"
+      ]
+    }
+  ],
+  "rules": [],
+  "execution": "NOT_RUN"
+}
