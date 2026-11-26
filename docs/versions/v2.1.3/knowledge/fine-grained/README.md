@@ -243,7 +243,11 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 
 ## T37-R3 · 数据、状态、并发及失败恢复选择（#632）
 
-输入 748d53fba2166fb9e1654b73cef684083959ee56。[R3范围及公开推演](../consumption/T37-r3-state-concurrency-references.md)、[14条新增决策引用及16条导航边](../consumption/decision-references-r3.json)：关系设计、约束、查询、事务、同步、任务生命周期、一致性、etcd投影、fencing、血缘/冲突/墓碑、堆双索引、时钟/期限、精确数值或locale排序、容量与测量。按实际问题选取，不将事务、锁、租约、权限、外部效果等同，旧知识所有权/资格不晋升。36条已接受+14条待独审，31条已接受+16条候选导航关系；四类公开推演 NOT_RUN，非全库语义覆盖或实际工程验证。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+输入 748d53fba2166fb9e1654b73cef684083959ee56。[R3范围及公开推演](../consumption/T37-r3-state-concurrency-references.md)、[14条新增决策引用及16条导航边](../consumption/decision-references-r3.json)：关系设计、约束、查询、事务、同步、任务生命周期、一致性、etcd投影、fencing、血缘/冲突/墓碑、堆双索引、时钟/期限、精确数值或locale排序、容量与测量。按实际问题选取，不将事务、锁、租约、权限、外部效果等同，旧知识所有权/资格不晋升。14条引用及16条边均在 [#632 收尾](https://github.com/kaicreator-mm/tally/issues/632#issuecomment-7187724951) 限定接受并合入 c301498b79bb320e5d610bac56dc53e4d500627b（0/0/0）；50条已接受引用、47条条件导航关系；四类公开推演 NOT_RUN，非全库语义覆盖或实际工程验证。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T37-R4 · 通用与业务功能组合及案例阅读入口（#634）
+
+输入 c301498b79bb320e5d610bac56dc53e4d500627b。[R4阶段选择及公开反例](../consumption/T37-r4-function-composition.md)、[17条新增引用及39条条件导航](../consumption/decision-references-r4.json)：8组已有G1–G4/B1–B4教学组合阅读入口，9个历史Case阅读视图（18个既有Case，不新计数），按实际合同、阶段及风险关联原有专业机制和案例。不是新知识Owner、固定必读集合、通用业务框架或新Case/Rule。50已接受+17候选引用、47已接受+39候选导航边；46章/265定位、S51/D0/U5及原资格不改。公开教学NOT_RUN；R5综合核对前不声称全库语义完成或实际消费。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## 阅读路径与边界
 
