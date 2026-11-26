@@ -136,10 +136,10 @@
           47
         ]
       },
-      "purpose": "本地事务Outbox/Inbox与外部UNKNOWN",
-      "when": "实际跨事务可重复消息或不可确认外部效果",
-      "materialFacts": "真实权威/业务身份、目标事务、Provider重试/读回合同",
-      "counterexampleOrLimit": "独立SQL/HTTP不因Kafka事务或ACK原子；不盲重试",
+      "purpose": "本地事务Outbox/Inbox与外部UNKNOWN（非Kafka内事务协议）",
+      "when": "实际跨事务可重复消息或不可确认外部效果；不以存在Kafka为必要前提",
+      "materialFacts": "真实权威/业务身份；若选本地Outbox/Inbox则核实际事务与去重；若外部效果则核Provider稳定意图、幂等窗口/权威读回或获权补偿",
+      "counterexampleOrLimit": "外部邮件/付款不与本地Inbox同一事务；ACK或本地登记不证明远端成功，UNKNOWN不得盲重试；Kafka内事务专门比较另读T27c-3 L48–58，仅实际采用时",
       "qualification": "ADVISORY_REFERENCE_NOT_RULE"
     },
     {
@@ -208,14 +208,14 @@
         "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
         "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
         "lines": [
-          49,
+          45,
           72
         ]
       },
       "purpose": "授权epoch、数据generation与UI请求",
-      "when": "多租户授权变化、派生缓存和异步呈现",
-      "materialFacts": "当前scope/epoch、数据版本、真实披露准入、请求身份",
-      "counterexampleOrLimit": "晚到旧权限/旧UI不能覆盖；缓存不是权威",
+      "when": "实际授权变化及查询缓存或异步呈现；仅通用披露/长导出时按实际输出合同选P36-EXPORT等，不要求缓存或UI",
+      "materialFacts": "当前scope/epoch及披露准入与撤权的受保护顺序；若实际采用缓存才核数据generation/获权陈旧上限及旧填充；若存在异步UI才核请求/session身份",
+      "counterexampleOrLimit": "先读授权后无保护发送不能满足撤权合同；本例数据最多一代且标陈旧、权限不得陈旧；旧缓存填充或旧UI不得覆盖当前状态；无缓存不免披露授权",
       "qualification": "ADVISORY_REFERENCE_NOT_RULE"
     },
     {
@@ -361,7 +361,7 @@
       "from": "P36-POLICY",
       "to": "P36-CACHE",
       "predicate": "CONTEXT_FOR",
-      "when": "当前读取/披露权限变化",
+      "when": "当前读取/披露权限变化且有查询缓存或异步呈现问题；纯披露按真实输出合同",
       "qualification": "CANDIDATE_NAVIGATION",
       "basis": [
         "P36-POLICY",
@@ -372,7 +372,7 @@
       "from": "P36-CACHE",
       "to": "P36-EXPORT",
       "predicate": "CONTEXT_FOR",
-      "when": "有长流披露和当前授权条件",
+      "when": "实际长流披露需当前授权；可从通用披露问题直接进入EXPORT，不要求存在缓存或UI",
       "qualification": "CANDIDATE_NAVIGATION",
       "basis": [
         "P36-CACHE",

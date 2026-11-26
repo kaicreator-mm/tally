@@ -45,7 +45,7 @@
 pilot 的13条导航记录分为三个相关但不强制互相加载的路径：
 - 抽象与维护：两个原DP、K05.ORACLE、P36-POLICY、P36-MAINT。真实共享的机制与不同业务政策分开；确认源合同和候选语义再比较，不预设答案。
 - 下载/导入：P36-RANGE、P36-DURABILITY、P36-STAGING、P36-COMMIT；只在实际跨重启、HTTP 续传、持久 staging 等条件成立时选择。若只有短本地输入，无需 Kafka、HTTP range、持久下载。
-- 外部效果/权限：P36-EFFECT 与实际 broker 才选 P36-OFFSET；P36-CACHE 与 P36-EXPORT 依真实查询/交付、权限变更合同选择，P36-POLICY、P36-COMMIT 作为有条件关联。不能因为全是异步任务就共享政策、事务或安全重试。
+- 外部效果/权限：P36-EFFECT 仅为本地 Outbox/Inbox 与外部 UNKNOWN，普通邮件/付款不要求 Kafka。实际采用 Kafka 消费进度才选 P36-OFFSET；若比较 Kafka 内事务与独立 SQL/HTTP，另读 [T27c-3 §4 完整限定范围](https://github.com/kaicreator-mm/tally/blob/7f5160b3ec4b29138d4f21e9bcc6ff21459090a3/docs/versions/v2.1.3/knowledge/fine-grained/T27c-3-reliable-messaging-outbox-offsets.md#L48-L58)（原 blob 973fb2b186a5e76b5fe08dfa15e8c6b2544bcac8），不是普通外部 UNKNOWN 的必读。P36-CACHE 核实际查询缓存/异步 UI 条件，并包含 L45–72 的受保护披露合同；纯长导出可以直接选择 P36-POLICY/P36-EXPORT，不要求加载缓存、UI 或 Kafka。P36-COMMIT 仅在真实写侧提交条件有关时选择。不能因为全是异步任务就共享政策、事务或安全重试。
 
 每个路径仅提供现有正文定位和候选判断提示；导航边 CONTEXT_FOR/SUPPORTS 不必遍历到闭包。公共问题先使用覆盖已有专业知识的入口，再按具体风险深入；领域专项 HC-04、DA-08、RE-04 和未选变体仍可触发有界新研究，RE-05 暂缓、RE-06 排除维持；最低授权、隔离、保密和完整性仍有效。遇到未知协议/平台，不能套用 pilot 的具体结论或把 U 转为 S。
 
