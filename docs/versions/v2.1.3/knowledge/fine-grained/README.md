@@ -263,7 +263,11 @@ T37-R5 G0 经 [#637 独审](https://github.com/kaicreator-mm/tally/pull/637#issu
 
 ## T38-K3 · 生命周期、可靠效果及恢复知识核验（#642）
 
-[最小知识验证及K2勘误](../validation/T38-K3-knowledge-validation.md)、[83行单文件见证](../validation/T38-K3-witness.py)：实际Python3.13.5/SQLite3.46.1三组固定见证（普通/STRICT类型域，等待超时/TaskGroup清理，同DB回滚及重复/冲突），消息进度/Kafka事务、期限/容量/RTO/RPO、文件/协议/导入恢复三组条件推导，真实目标执行NOT_RUN。K2原证据保持，输入域勘误待独审。不把局部DB或协作任务观察外推为并发/持久/远端保证。原专业正文、资格、67/86、46/265、S51/D0/U5保持；仍KNOWLEDGE_CONSTRUCTION，无Package/DH/SDK或产品实施。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+[最小知识验证及K2勘误](../validation/T38-K3-knowledge-validation.md)、[83行单文件见证](../validation/T38-K3-witness.py)：实际Python3.13.5/SQLite3.46.1三组固定见证（普通/STRICT类型域，等待超时/TaskGroup清理，同DB回滚及重复/冲突），消息进度/Kafka事务、期限/容量/RTO/RPO、文件/协议/导入恢复三组条件推导，真实目标执行NOT_RUN。K2原证据保持，输入域勘误已由[#643独审](https://github.com/kaicreator-mm/tally/pull/643#issuecomment-7191421210) ACCEPT_SCOPED 0/0/0/0 限定接受并合入 8b4594b1a27852c294a379e345bf6f59451c7545，K2-RV-01 已关闭，[#642收尾](https://github.com/kaicreator-mm/tally/issues/642#issuecomment-7191709172)。不把局部DB或协作任务观察外推为并发/持久/远端保证。原专业正文、资格、67/86、46/265、S51/D0/U5保持；仍KNOWLEDGE_CONSTRUCTION，无Package/DH/SDK或产品实施。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
+## T38-K4 · 业务规则、精确金额与复杂功能组合（#644）
+
+[最小知识核验](../validation/T38-K4-knowledge-validation.md)、[66行单文件见证](../validation/T38-K4-witness.py)：实际Python3.13.5/SQLite3.46.1三个固定机制（决策表已知域/部分事实补全、Decimal舍入/精度、两行局部更新回滚与错误部分提交），三组纸面业务推导（库存与退款对账、授权版本与委派、快照及分块披露）。真实DMN/PG/Stripe/导出/授权系统NOT_RUN。无原章或旧见证修改、无新Case/Claim/Rule或资格晋升；独审待完成。仍KNOWLEDGE_CONSTRUCTION；#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
 ## 阅读路径与边界
 
