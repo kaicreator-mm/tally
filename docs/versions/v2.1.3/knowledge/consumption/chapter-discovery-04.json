@@ -1,0 +1,404 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "f0358f8454a6f57b17e741ae5c03db760a4ee15e",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "9bdae2a3655c28af66b645f96456489522356854"
+  },
+  "range": [
+    37,
+    46
+  ],
+  "scope": "mechanical discovery metadata only, not semantic unit or qualification census; original index owns navigation and source text owns meaning",
+  "entries": [
+    {
+      "chapter": "T27c-3-reliable-messaging-outbox-offsets",
+      "title": "T27c-3 · 可靠消息、分区进度、Outbox 与消费事务",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K09",
+        "K05",
+        "K10"
+      ],
+      "routeLabel": "可靠消息、分区进度、Outbox 与消费事务",
+      "indexLine": 190,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-3-reliable-messaging-outbox-offsets.md",
+        "blob": "973fb2b186a5e76b5fe08dfa15e8c6b2544bcac8"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先选语义，再选消息基础设施"
+        },
+        {
+          "line": 22,
+          "heading": "2. 纸面消费进度与并行间隙"
+        },
+        {
+          "line": 28,
+          "heading": "3. 同一业务事务 Outbox 与消费 Inbox（原创教学）"
+        },
+        {
+          "line": 48,
+          "heading": "4. Kafka 内事务与外部事务不可混淆"
+        },
+        {
+          "line": 54,
+          "heading": "P2-R4B-01 · 两个独立负例（NOT_RUN）"
+        },
+        {
+          "line": 59,
+          "heading": "5. 验证与来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25c-3-protocol-capability-negotiation",
+      "title": "T25c-3 · 协议版本、能力协商与混合消费者",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K09",
+        "K01",
+        "K05"
+      ],
+      "routeLabel": "协议版本、能力协商与混合消费者",
+      "indexLine": 191,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-3-protocol-capability-negotiation.md",
+        "blob": "2c4642bcf64624ccacd7474fab5a629dc6caaeba"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 五种版本与能力不能互相替代"
+        },
+        {
+          "line": 17,
+          "heading": "2. 实际 Kafka 4.1 协议协商"
+        },
+        {
+          "line": 30,
+          "heading": "3. 应用消息演进：把 broker 与 payload 分开"
+        },
+        {
+          "line": 44,
+          "heading": "4. 兼容方向、转换损失与可反驳演算"
+        },
+        {
+          "line": 50,
+          "heading": "5. 独立区分性 Oracle（NOT_RUN）"
+        },
+        {
+          "line": 63,
+          "heading": "6. 实际资料与限制"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T32b-2-data-lineage-conflict-tombstones",
+      "title": "T32b-2 · 数据生命周期、血缘、删除传播与离线冲突",
+      "ownersFromIndex": [
+        "K02",
+        "K09",
+        "K10",
+        "K01",
+        "K05"
+      ],
+      "routeLabel": "T32b-2 数据生命周期、血缘、删除传播与离线冲突",
+      "indexLine": 202,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32b-2-data-lineage-conflict-tombstones.md",
+        "blob": "84d9e54c91fb7c5e11af9f325ab237c78127d792"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 身份、来源与质量是不同事实"
+        },
+        {
+          "line": 13,
+          "heading": "2. 真实冲突机制及其限制"
+        },
+        {
+          "line": 17,
+          "heading": "3. 具体教学冲突与删除政策"
+        },
+        {
+          "line": 25,
+          "heading": "4. 恢复与独立验证（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T31a-3-dependency-resolution-installed-package",
+      "title": "T31a-3 · 依赖约束、解析图与真实安装制品",
+      "ownersFromIndex": [
+        "K08",
+        "K03",
+        "K09",
+        "K05"
+      ],
+      "routeLabel": "T31a-3 依赖约束、解析图与真实安装制品",
+      "indexLine": 203,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-3-dependency-resolution-installed-package.md",
+        "blob": "4c85255c6c9d1aae759d04032d24b1b305c56782"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 区分声明图、解析图、安装位置和实际加载图"
+        },
+        {
+          "line": 11,
+          "heading": "2. Workspace 链接与实际包消费者"
+        },
+        {
+          "line": 17,
+          "heading": "3. 制品选择和身份闭包"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T31a-4-progressive-delivery-routing-flags",
+      "title": "T31a-4 · 渐进部署、版本路由、Feature Flag 与恢复",
+      "ownersFromIndex": [
+        "K08",
+        "K09",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "T31a-4 渐进部署、版本路由、Feature Flag 与恢复",
+      "indexLine": 204,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T31a-4-progressive-delivery-routing-flags.md",
+        "blob": "c8cfe40badda39b4cda64326e2750c21f9589c7c"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 四类独立变化"
+        },
+        {
+          "line": 11,
+          "heading": "2. 教学部署合同"
+        },
+        {
+          "line": 17,
+          "heading": "3. 观察与停止条件"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T29a-2-diagnostic-probes-and-bisection",
+      "title": "T29a-2 · 可区分的诊断探针与历史缺陷定位",
+      "ownersFromIndex": [
+        "K06",
+        "K05",
+        "K03",
+        "K10"
+      ],
+      "routeLabel": "T29a-2 可区分的诊断探针与历史缺陷定位",
+      "indexLine": 205,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T29a-2-diagnostic-probes-and-bisection.md",
+        "blob": "aae05a83b5d7d3f9e6e61b3bb704be5ff6044a7f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 固定观察量和竞争假设"
+        },
+        {
+          "line": 9,
+          "heading": "2. 真实历史复用：CPython 迭代协议"
+        },
+        {
+          "line": 15,
+          "heading": "3. 可复查的 bisect"
+        },
+        {
+          "line": 21,
+          "heading": "4. 性能/并发诊断：观察量不能互换"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25b-3-cross-language-ownership-generics",
+      "title": "T25b-3 · 跨语言值、所有权、泛型约束与失败语义",
+      "ownersFromIndex": [
+        "K03",
+        "K05",
+        "K02"
+      ],
+      "routeLabel": "T25b-3 跨语言值、所有权、泛型约束与失败语义",
+      "indexLine": 206,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-3-cross-language-ownership-generics.md",
+        "blob": "6bbca0205cfd904e81e45ddbd4311c9e1501af09"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 业务责任不等于语言所有权"
+        },
+        {
+          "line": 26,
+          "heading": "2. 泛型表达关系，而非业务等价"
+        },
+        {
+          "line": 30,
+          "heading": "3. 求值、异常、清理与跨边界"
+        },
+        {
+          "line": 36,
+          "heading": "4. 独立 Oracle（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25b-4-exact-numbers-locale-bidi",
+      "title": "T25b-4 · 精确数值运算、Locale 排序与双向文本",
+      "ownersFromIndex": [
+        "K03",
+        "K01",
+        "K05",
+        "K02"
+      ],
+      "routeLabel": "T25b-4 精确数值运算、Locale 排序与双向文本",
+      "indexLine": 207,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-4-exact-numbers-locale-bidi.md",
+        "blob": "b7cad18c0201941f038b51ceb66aee9a6dbe2ed9"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 精确表示仍须定义运算及舍入合同"
+        },
+        {
+          "line": 15,
+          "heading": "2. Locale 排序不是身份相等"
+        },
+        {
+          "line": 21,
+          "heading": "3. 双向文本：逻辑顺序与显示顺序"
+        },
+        {
+          "line": 25,
+          "heading": "4. 独立验证（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-3-complex-general-function-composition",
+      "title": "T35-3 · 复杂通用功能组合：可恢复下载与导入、权限缓存与异步交互",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K05",
+        "K09",
+        "K10"
+      ],
+      "routeLabel": "T35-3 复杂通用功能组合",
+      "indexLine": 218,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. G3：可恢复的大文件下载与导入"
+        },
+        {
+          "line": 9,
+          "heading": "1.1 实际协议与下载状态"
+        },
+        {
+          "line": 25,
+          "heading": "1.2 数据导入：块进度不是记录进度"
+        },
+        {
+          "line": 45,
+          "heading": "2. G4：权限、缓存失效和异步 UI 的交错"
+        },
+        {
+          "line": 49,
+          "heading": "2.1 HTTP 缓存与应用缓存的不同合同"
+        },
+        {
+          "line": 55,
+          "heading": "2.2 同一交错中区分三种版本"
+        },
+        {
+          "line": 73,
+          "heading": "3. 来源、归属与剩余范围"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T35-4-complex-business-function-composition",
+      "title": "T35-4 · 复杂业务功能组合：多资源、部分效果、委派审批与长导出",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05",
+        "K09",
+        "K10"
+      ],
+      "routeLabel": "T35-4 复杂业务功能组合",
+      "indexLine": 219,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-4-complex-business-function-composition.md",
+        "blob": "903d9d7f170ae87f752d7b1025fab01d27fd703b"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. B3：多 SKU 预留、部分履约、部分退款与对账"
+        },
+        {
+          "line": 7,
+          "heading": "1.1 同一权威下的多资源不变量"
+        },
+        {
+          "line": 23,
+          "heading": "1.2 实际部分退款协议与本地额度控制"
+        },
+        {
+          "line": 48,
+          "heading": "2. B4：有期限委派审批与长时间导出"
+        },
+        {
+          "line": 50,
+          "heading": "2.1 明确有限审批合同"
+        },
+        {
+          "line": 62,
+          "heading": "2.2 长导出：授权、数据快照、制品与交付分别负责"
+        },
+        {
+          "line": 84,
+          "heading": "3. 来源与限定结论"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
