@@ -1,0 +1,578 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "f0358f8454a6f57b17e741ae5c03db760a4ee15e",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "9bdae2a3655c28af66b645f96456489522356854"
+  },
+  "range": [
+    1,
+    12
+  ],
+  "scope": "mechanical discovery metadata only, not semantic unit or qualification census; original index owns navigation and source text owns meaning",
+  "entries": [
+    {
+      "chapter": "T24a-requirements-discovery-negotiation",
+      "title": "T24a · 需求获取、协商与系统责任分配",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K05",
+        "K11"
+      ],
+      "routeLabel": "需求获取、协商与系统责任分配：如何选择调查方法、解决冲突、分配责任和验收？",
+      "indexLine": 7,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24a-requirements-discovery-negotiation.md",
+        "blob": "28d723ed85692c0daf9aede02960eaa0f9bddff0"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从调查问题到需求"
+        },
+        {
+          "line": 20,
+          "heading": "2. 分析、分类和边界"
+        },
+        {
+          "line": 33,
+          "heading": "3. 协商而非投票"
+        },
+        {
+          "line": 41,
+          "heading": "4. 优先级、可行性、最小验证"
+        },
+        {
+          "line": 47,
+          "heading": "5. 分配系统责任与验收"
+        },
+        {
+          "line": 59,
+          "heading": "6. 使用与反例练习"
+        },
+        {
+          "line": 66,
+          "heading": "7. 来源与边界"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T24c-human-computer-interaction",
+      "title": "T24c · 用户任务、交互合同与可访问的纠错",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05"
+      ],
+      "routeLabel": "用户任务、交互合同与可访问纠错：用户怎样理解状态和恢复错误？",
+      "indexLine": 8,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24c-human-computer-interaction.md",
+        "blob": "b5dc06f0411a3f0ce3cc6f939e3d4ed31e93152a"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 任务和心理模型不是界面组件"
+        },
+        {
+          "line": 19,
+          "heading": "2. 信息架构与交互选择"
+        },
+        {
+          "line": 33,
+          "heading": "3. 交互状态与异步反馈"
+        },
+        {
+          "line": 46,
+          "heading": "4. 输入和错误恢复"
+        },
+        {
+          "line": 61,
+          "heading": "5. 可访问性与文本"
+        },
+        {
+          "line": 72,
+          "heading": "6. 可用性验证与反例"
+        },
+        {
+          "line": 86,
+          "heading": "7. 来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27a-detailed-design-representation",
+      "title": "T27a · 详细设计：表示、修改边界、内聚与语义变化",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K05"
+      ],
+      "routeLabel": "详细设计：表示、修改边界、内聚与语义变化：什么必须被一个边界保护？",
+      "indexLine": 9,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27a-detailed-design-representation.md",
+        "blob": "0e1e0bd6db29c7d73626d1a502a08f0ca845e83a"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 设计从行为和数据责任开始"
+        },
+        {
+          "line": 18,
+          "heading": "2. 抽象值与表示不变量"
+        },
+        {
+          "line": 31,
+          "heading": "3. 修改范围（frame condition）与别名"
+        },
+        {
+          "line": 50,
+          "heading": "4. 行为合同与错误边界"
+        },
+        {
+          "line": 56,
+          "heading": "5. 资源与控制流"
+        },
+        {
+          "line": 72,
+          "heading": "6. 设计评审的实际判断"
+        },
+        {
+          "line": 84,
+          "heading": "7. 来源"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27b-1-relational-data-and-transactions",
+      "title": "T27b-1 · 关系数据设计、查询语义与事务隔离",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K05"
+      ],
+      "routeLabel": "关系数据设计、查询语义与事务隔离：约束、查询范围和并发正确性怎样保证？",
+      "indexLine": 10,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-1-relational-data-and-transactions.md",
+        "blob": "dfa2626af54fa2a77ab1e78e6e8d93e467ed2b7b"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从概念到逻辑再到物理模型"
+        },
+        {
+          "line": 16,
+          "heading": "2. 函数依赖、范式与数据冗余"
+        },
+        {
+          "line": 41,
+          "heading": "3. 约束不是仅在 UI 校验"
+        },
+        {
+          "line": 66,
+          "heading": "4. NULL、连接与结果合同"
+        },
+        {
+          "line": 81,
+          "heading": "5. 索引与查询计划"
+        },
+        {
+          "line": 89,
+          "heading": "6. 事务合同与并发异常"
+        },
+        {
+          "line": 103,
+          "heading": "7. 独立验证矩阵"
+        },
+        {
+          "line": 115,
+          "heading": "8. 来源与证据限制"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25b-1-language-value-and-text-semantics",
+      "title": "T25b-1 · 编程语言语义、数值和文本表示",
+      "ownersFromIndex": [
+        "K03",
+        "K01",
+        "K05"
+      ],
+      "routeLabel": "编程语言语义、数值和文本表示",
+      "indexLine": 18,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25b-1-language-value-and-text-semantics.md",
+        "blob": "ddab94c92d9fdfe727fba9fc6bf1054161d602d3"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 名称、绑定、作用域和求值"
+        },
+        {
+          "line": 28,
+          "heading": "2. 闭包、对象身份及共享"
+        },
+        {
+          "line": 46,
+          "heading": "3. 类型与跨边界表示"
+        },
+        {
+          "line": 50,
+          "heading": "4. 数值表示和精度"
+        },
+        {
+          "line": 63,
+          "heading": "5. 文本：字节、代码单位、标量、用户感知字符"
+        },
+        {
+          "line": 78,
+          "heading": "6. 典型问题与独立反例"
+        },
+        {
+          "line": 89,
+          "heading": "7. 来源及范围"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27b-2-file-stream-and-durability",
+      "title": "T27b-2 · 文件、流、部分 IO、可见性及持久性",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K09",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "文件、流、部分 IO、可见性及持久性",
+      "indexLine": 19,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-2-file-stream-and-durability.md",
+        "blob": "9be743c9c6fe87e276b3867860fef9a28c217a79"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 名称、打开对象和数据"
+        },
+        {
+          "line": 11,
+          "heading": "2. 一次 read/write 不等于整个任务完成"
+        },
+        {
+          "line": 29,
+          "heading": "3. 流、分帧、解析与背压"
+        },
+        {
+          "line": 35,
+          "heading": "3.1 Node 22.17.0 背压协议及终止边界（FG-04）"
+        },
+        {
+          "line": 79,
+          "heading": "4. 原子替换与断电持久性"
+        },
+        {
+          "line": 102,
+          "heading": "5. 竞争、锁和版本"
+        },
+        {
+          "line": 106,
+          "heading": "6. 导入导出：提交范围及恢复"
+        },
+        {
+          "line": 115,
+          "heading": "7. 独立验证矩阵（NOT_RUN）"
+        },
+        {
+          "line": 129,
+          "heading": "8. 来源与限制"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T27c-1-concurrency-task-lifetime",
+      "title": "T27c-1 · 并发、异步、状态所有权和任务生命周期",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "并发、异步、状态所有权和任务生命周期",
+      "indexLine": 29,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-1-concurrency-task-lifetime.md",
+        "blob": "8fb9513b0bca07e4f81bb0750ff905c3ca87c755"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 并发和并行的不同问题"
+        },
+        {
+          "line": 8,
+          "heading": "2. Happens-before 与发布"
+        },
+        {
+          "line": 22,
+          "heading": "3. 同步机制选择与故障模型"
+        },
+        {
+          "line": 34,
+          "heading": "4. 准入、容量和任务状态"
+        },
+        {
+          "line": 37,
+          "heading": "5. 结构化生命周期、取消与收敛"
+        },
+        {
+          "line": 42,
+          "heading": "6. 教学反例和 Oracle（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T28a-1-test-design-stateful-isolation",
+      "title": "T28a-1 · 测试选择、状态模型、生成式验证与隔离",
+      "ownersFromIndex": [
+        "K05",
+        "K01",
+        "K03",
+        "K06"
+      ],
+      "routeLabel": "测试选择、状态模型、生成式验证与隔离",
+      "indexLine": 30,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28a-1-test-design-stateful-isolation.md",
+        "blob": "bb36f1179f3e3754ba10aa3e878735a7ded461b0"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先写故障模型，再选测试"
+        },
+        {
+          "line": 17,
+          "heading": "2. 组合测试、边界和状态路径"
+        },
+        {
+          "line": 20,
+          "heading": "3. 性质、变形、差分与状态模型"
+        },
+        {
+          "line": 25,
+          "heading": "3.1 成员、记录身份、持久基数与 Effect 的不同 Oracle（FG-05）"
+        },
+        {
+          "line": 37,
+          "heading": "4. Fuzz 与失败归类"
+        },
+        {
+          "line": 40,
+          "heading": "5. Fixture 生命周期与依赖替身"
+        },
+        {
+          "line": 44,
+          "heading": "6. 时钟、随机、并发与发现"
+        },
+        {
+          "line": 47,
+          "heading": "7. 资料及后续"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T28b-1-static-analysis-and-verification",
+      "title": "T28b-1 · 静态分析、抽象解释及形式验证的范围",
+      "ownersFromIndex": [
+        "K05",
+        "K03"
+      ],
+      "routeLabel": "静态分析、抽象解释及形式验证",
+      "indexLine": 40,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T28b-1-static-analysis-and-verification.md",
+        "blob": "5fdee46d03328961550aeba486af6ef192550f4f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从程序文本到可分析模型"
+        },
+        {
+          "line": 11,
+          "heading": "2. 格、传递函数与固定点"
+        },
+        {
+          "line": 27,
+          "heading": "3. 资源与路径条件"
+        },
+        {
+          "line": 33,
+          "heading": "4. 抽象解释、符号执行、求解和模型检查的区别"
+        },
+        {
+          "line": 48,
+          "heading": "5. 选择分析深度与实际诊断"
+        },
+        {
+          "line": 54,
+          "heading": "6. 资料与资格"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T29a-1-historical-defect-repair-reasoning",
+      "title": "T29a-1 · 真实缺陷与修复：局部语义、跨组件合同及回归",
+      "ownersFromIndex": [
+        "K06",
+        "K05",
+        "K03"
+      ],
+      "routeLabel": "真实缺陷与修复",
+      "indexLine": 41,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T29a-1-historical-defect-repair-reasoning.md",
+        "blob": "b193186bc6a280a73a50fc0a512ec8a427528f4b"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 如何读历史缺陷而非仅复述修复摘要"
+        },
+        {
+          "line": 9,
+          "heading": "2. D01 CPython 生成器表达式多次调用迭代协议"
+        },
+        {
+          "line": 11,
+          "heading": "证据"
+        },
+        {
+          "line": 25,
+          "heading": "机制与工程判断"
+        },
+        {
+          "line": 31,
+          "heading": "3. D02 pytest / pytest-xdist 提前停止、fixture 重复生命周期"
+        },
+        {
+          "line": 33,
+          "heading": "证据链"
+        },
+        {
+          "line": 40,
+          "heading": "机制与判断"
+        },
+        {
+          "line": 48,
+          "heading": "4. 可迁移的故障类型与反例选择"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25c-1-os-process-memory-ipc",
+      "title": "T25c-1 · 操作系统基础：进程、地址空间、IPC 与资源所有权",
+      "ownersFromIndex": [
+        "K03",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "操作系统：进程、地址空间、IPC",
+      "indexLine": 51,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-1-os-process-memory-ipc.md",
+        "blob": "886d44bec7756479dde4363820265907bd640297"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 程序、进程、线程与资源范围"
+        },
+        {
+          "line": 11,
+          "heading": "2. Linux 进程启动与终止合同"
+        },
+        {
+          "line": 26,
+          "heading": "3. 描述符、打开对象与 IPC"
+        },
+        {
+          "line": 39,
+          "heading": "4. 虚拟内存、页与映射"
+        },
+        {
+          "line": 47,
+          "heading": "5. 可观察证据与反例"
+        },
+        {
+          "line": 59,
+          "heading": "6. 原始资料与范围"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T25c-2-network-transport-and-protocol",
+      "title": "T25c-2 · 网络通信：传输语义、协议分帧与应用结果",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "网络传输与应用协议",
+      "indexLine": 52,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T25c-2-network-transport-and-protocol.md",
+        "blob": "02b4539856c20627929f2933a587dc4cc57dbfd7"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 端点与分层的实际边界"
+        },
+        {
+          "line": 11,
+          "heading": "2. 应用协议：分帧、状态及版本"
+        },
+        {
+          "line": 19,
+          "heading": "3. 发送、确认、结果及故障边界"
+        },
+        {
+          "line": 31,
+          "heading": "4. HTTP 方法、条件请求与响应合同"
+        },
+        {
+          "line": 39,
+          "heading": "5. 期限、连接池、容量与诊断"
+        },
+        {
+          "line": 45,
+          "heading": "6. 独立反例与资料"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
