@@ -253,6 +253,19 @@ R4-G 四个具体子目标及 RE-02/RE-03 限定 D→S 已在 [#624 closeout](ht
 
 输入 edbe97e099c52f88144f07e5747fe2888a314593。[实际静态盘点](../consumption/T37-r5-static-census.json)、[累计评估](../consumption/T37-r5-cumulative-assessment.md)、[产品差距与准入](../consumption/T37-r5-product-readiness.md)：67引用/86边，46章/265发现，41不同源文件（29正文/8案例/4原知识），17正文仅发现、4对范围重叠、弱连通分量59/6/2。非全库语义覆盖或实际检索率；不再按数量盲目扩展，真实任务触发定向补证。原#564 A1–A7及#565实际代码只读核对，既有四项缺陷均OPEN。G0综合独审待完成，G1恢复原修正授权HOLD、G2修正复审/G3 A24实际新消费NOT_RUN/HOLD、G4生产迁移另行准入。无新增引用/Case/Claim/Rule，原S51/D0/U5及历史资格不改。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD，R6 NO_NEW_SOURCE_IMPLEMENTATION 仍有效。
 
+## T39 · 定向专业知识增量（#646 / #648）
+
+四篇实际正文经 [#646 独审](https://github.com/kaicreator-mm/tally/issues/646#issuecomment-7193491131) ACCEPT_SCOPED（0/0/0/0），[合并收据](https://github.com/kaicreator-mm/tally/issues/646#issuecomment-7194405897) 确认 #647 @ 5c4f221ffb786b59a09019acbf708aae2a79755c 五个 Blob 不变。详见 [范围台账](../T39-R1-R4-targeted-knowledge-batch.md)。控制者已拆分正文合并及最终索引/台账增量（#648）；原台账中“待合入”的历史记录保留。
+
+| 子任务 / 归属 | 实际新增正文 | 阅读问题及边界 |
+|---|---|---|
+| T35-5 K01/K02/K03/K05/K09/K10 | [预约、时段资源容量与原子改约](T35-5-appointment-interval-capacity-composition.md) | RE-03 B5；半开区间/真实资源身份/分时容量、排斥约束、占位/改约；PG18 DDL NOT_RUN |
+| T35-6 K03/K02/K10/K05 | [跨进程资源所有权、监督与异常退出](T35-6-process-supervision-and-shutdown-composition.md) | RE-02 G5；pidfd/cgroup/Job Objects、受控集合、监督失效与实际收敛；平台目标 NOT_RUN |
+| T35-7 K06/K10/K07/K01/K03/K05 | [可行动诊断、安全日志与业务审计事实](T35-7-diagnostic-logging-audit-composition.md) | RE-02 G6；诊断/遥测/审计、关联身份、秘密边界及记录失败；不重开RE-05；目标 NOT_RUN |
+| T35-8 K01/K02/K03/K05/K10 | [多支付方、结算与跨权威对账](T35-8-multi-provider-settlement-reconciliation.md) | RE-03 B6；独立渠道、UNKNOWN切换、退款与结算余额/银行逐键对账；实际资金流 NOT_RUN |
+
+原46篇的发现元数据、265定位、67决策引用/86边属于历史T37快照；本批已接受正文50篇（46+4），本轮机械定位增量见 [chapter-discovery-05](../consumption/chapter-discovery-05.json)。不增加决策引用、导航边、qualified Case/Claim/Rule，不重新判定S51/D0/U5或全库覆盖。阅读前核实际正文及业务合同。所有目标执行NOT_RUN；K4 #645仍有独立门禁。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
+
 ## T38-K1 · 最小知识正确性验证（#638）
 
 T37-R5 G0 经 [#637 独审](https://github.com/kaicreator-mm/tally/pull/637#issuecomment-7189293972) 及 [#636 收尾](https://github.com/kaicreator-mm/tally/issues/636#issuecomment-7189830743) 已限定接受。根据 [最新Owner方向](https://github.com/kaicreator-mm/tally/issues/563#issuecomment-7190227558)，当前仍为 KNOWLEDGE_CONSTRUCTION，不转入 Package/SDK/产品实施；原G1–G4保留历史规划并暂停。[最小知识验证](../validation/T38-K1-knowledge-validation.md)、[单文件见证](../validation/T38-K1-witness.mjs)：实际4组有限机制正反例（抽象、所有权、表示不变量、逻辑竞态）及1组纸面Oracle资格推导，Node内置assert，无依赖/Package/DomainHarness，非模型或产品效果测量。源资格保持，验证反馈仅用于知识正确性/合理性；[#639 独审](https://github.com/kaicreator-mm/tally/pull/639#issuecomment-7190379741) ACCEPT_SCOPED 0/0/1，已合入 a0e9900a873bf0ab1b88d41ef12fa60ff90af048，K1-RV-01 已在K2限定关闭，[#638收尾](https://github.com/kaicreator-mm/tally/issues/638#issuecomment-7191010702)，原字节/收据保留。#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
