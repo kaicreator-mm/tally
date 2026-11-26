@@ -1,0 +1,396 @@
+{
+  "kind": "T36_BOUNDED_ADVISORY_REFERENCE_PILOT",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "7f5160b3ec4b29138d4f21e9bcc6ff21459090a3",
+  "qualification": "DESIGN_CANDIDATE_NOT_WIRE_SCHEMA_NOT_EXECUTABLE",
+  "scope": "13 selected navigation records; not whole-corpus semantic index; original IDs and source qualifications unchanged",
+  "legacyProjection": {
+    "path": "docs/versions/v2.1.3/abstraction-knowledge-projection.json",
+    "blob": "f9657c07a72c134e6d21e6aa7523b9982ffb327f"
+  },
+  "records": [
+    {
+      "key": "DP-K02-R19-01",
+      "identityKind": "EXISTING_ID_REFERENCE",
+      "owner": "K02",
+      "kind": "DECISION_PROCEDURE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K02/advanced-engineering-abstraction-boundaries-and-variation-r19.md",
+        "blob": "17c7dabe9ca7c2478dfb182231b3ab96e2eb7cbc",
+        "lines": [
+          17,
+          28
+        ]
+      },
+      "purpose": "抽象边界六问",
+      "when": "有候选合并/分割且需判断业务Owner和变化轴",
+      "materialFacts": "真实合同、Owner、变更、消费者",
+      "counterexampleOrLimit": "同名同结构但授权/事务不相容；无需独立变化不强制接口",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "DP-K03-R19-01",
+      "identityKind": "EXISTING_ID_REFERENCE",
+      "owner": "K03",
+      "kind": "DECISION_PROCEDURE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K03/advanced-abstraction-level-selection-and-semantic-reuse-r19.md",
+        "blob": "a1e640efb9866f1981a80f43d64c661635d52c64",
+        "lines": [
+          7,
+          38
+        ]
+      },
+      "purpose": "九维语义与最小抽象",
+      "when": "实际实现候选、语义重复或维护差异",
+      "materialFacts": "前后置、不变量、错误、效果、Owner、清理、消费者版本、变化轴",
+      "counterexampleOrLimit": "语法重复不证明同义；真实稳定同义可用私有 helper",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "K05.ORACLE",
+      "identityKind": "EXISTING_ID_REFERENCE",
+      "owner": "K05",
+      "kind": "TOPIC_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.2/software-engineering-knowledge/K05/advanced-quality-reviewer-calibration-r18.md",
+        "blob": "8ae8fe2b652407aa300bf60336c0e7930b42b992",
+        "lines": [
+          51,
+          55
+        ]
+      },
+      "purpose": "Oracle 合同与反例资格（原 Topic 的局部阅读入口）",
+      "when": "需要独立判定行为或隐藏反例资格",
+      "materialFacts": "有权输入域/合同、Oracle 推导、观察范围",
+      "counterexampleOrLimit": "研究假设不作主要PASS/FAIL；事后反例不改原首判",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-POLICY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T24b-1-business-rule-decision-contracts.md",
+        "blob": "fdb4bd53b58f5ab432d34253a75e562f0ae29df2",
+        "lines": [
+          27,
+          36
+        ]
+      },
+      "purpose": "政策版本、未知与受保护提交",
+      "when": "业务决策依赖时间、当前授权、版本或状态",
+      "materialFacts": "有权规则、适用区间、实际状态和提交条件",
+      "counterexampleOrLimit": "旧规则/缺授权不自动采用；决策不是提交",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-DURABILITY",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27b-2-file-stream-and-durability.md",
+        "blob": "9be743c9c6fe87e276b3867860fef9a28c217a79",
+        "lines": [
+          79,
+          101
+        ]
+      },
+      "purpose": "原子替换、文件与目录耐久",
+      "when": "本地文件落盘/重启/掉电恢复",
+      "materialFacts": "实际文件系统、句柄、sync/rename语义、故障模型",
+      "counterexampleOrLimit": "仅rename/close不证明断电持久；旧句柄可能不变",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-OFFSET",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-3-reliable-messaging-outbox-offsets.md",
+        "blob": "973fb2b186a5e76b5fe08dfa15e8c6b2544bcac8",
+        "lines": [
+          22,
+          27
+        ]
+      },
+      "purpose": "分区连续完成前缀与消费恢复",
+      "when": "选定Kafka4.1/Java4.1.2消费者合同且需进度/再平衡",
+      "materialFacts": "实际分区记录、已完成效果、当前组资格",
+      "counterexampleOrLimit": "最高已完成offset不能跨过未决记录",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-EFFECT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T27c-3-reliable-messaging-outbox-offsets.md",
+        "blob": "973fb2b186a5e76b5fe08dfa15e8c6b2544bcac8",
+        "lines": [
+          28,
+          47
+        ]
+      },
+      "purpose": "本地事务Outbox/Inbox与外部UNKNOWN",
+      "when": "实际跨事务可重复消息或不可确认外部效果",
+      "materialFacts": "真实权威/业务身份、目标事务、Provider重试/读回合同",
+      "counterexampleOrLimit": "独立SQL/HTTP不因Kafka事务或ACK原子；不盲重试",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-COMMIT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T26a-2-architecture-style-composition.md",
+        "blob": "d1021bebefb894f99a4e343ca24cdcfc46acc54d",
+        "lines": [
+          73,
+          92
+        ]
+      },
+      "purpose": "业务版本、当前执行许可及写侧撤权",
+      "when": "设计或审查受保护的权威提交",
+      "materialFacts": "真实版本、当前grant、提交点、原子写集",
+      "counterexampleOrLimit": "旧worker即使base未变也不能提交；at-most-one不足",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-RANGE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K03",
+      "kind": "MECHANISM",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+        "lines": [
+          9,
+          24
+        ]
+      },
+      "purpose": "HTTP续传与验证片段",
+      "when": "实际HTTP单range、固定representation且跨请求恢复",
+      "materialFacts": "强验证器/获权内容身份、字节域、range、独立完整性",
+      "counterexampleOrLimit": "200不能append，416不证明完成；其它协议另核",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-STAGING",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+        "lines": [
+          25,
+          44
+        ]
+      },
+      "purpose": "批导入持久checkpoint与原子可见性",
+      "when": "大流/跨重启且存在明确原子或部分成功合同",
+      "materialFacts": "真实记录身份、parser、事务、目标generation、消费者及授权",
+      "counterexampleOrLimit": "进度或staging不代表发布；不同合同不能偷换",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-CACHE",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K02",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-3-complex-general-function-composition.md",
+        "blob": "6d3d81acd9fa952ebc3f06e1af9d5e4250822f89",
+        "lines": [
+          49,
+          72
+        ]
+      },
+      "purpose": "授权epoch、数据generation与UI请求",
+      "when": "多租户授权变化、派生缓存和异步呈现",
+      "materialFacts": "当前scope/epoch、数据版本、真实披露准入、请求身份",
+      "counterexampleOrLimit": "晚到旧权限/旧UI不能覆盖；缓存不是权威",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-MAINT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K09",
+      "kind": "METHOD",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T32a-1-maintenance-refactoring-replacement.md",
+        "blob": "8341a1afe4bb75efe3909c21e5c41de26ad5d567",
+        "lines": [
+          11,
+          18
+        ]
+      },
+      "purpose": "维护的可观察行为与基线",
+      "when": "已有支持消费者或明确获权变更",
+      "materialFacts": "当前支持合同、合法/非法域、实际消费者/基线",
+      "counterexampleOrLimit": "旧缺陷不变成合法Oracle；内部重构不授权行为变化",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    },
+    {
+      "key": "P36-EXPORT",
+      "identityKind": "LOCAL_NAVIGATION_KEY",
+      "owner": "K01",
+      "kind": "MODEL_REFERENCE",
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T35-4-complex-business-function-composition.md",
+        "blob": "903d9d7f170ae87f752d7b1025fab01d27fd703b",
+        "lines": [
+          62,
+          83
+        ]
+      },
+      "purpose": "长导出的快照、当前授权与交付准入",
+      "when": "实际长导出且权限可能变化",
+      "materialFacts": "获权快照/字段范围、真实交付准入与撤权顺序、制品身份",
+      "counterexampleOrLimit": "READY不等于交付授权；旧合法已准入数据不能追回",
+      "qualification": "ADVISORY_REFERENCE_NOT_RULE"
+    }
+  ],
+  "relations": [
+    {
+      "from": "DP-K02-R19-01",
+      "to": "DP-K03-R19-01",
+      "predicate": "CONTEXT_FOR",
+      "when": "需将架构边界具体化为实现候选",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "DP-K02-R19-01",
+        "DP-K03-R19-01"
+      ]
+    },
+    {
+      "from": "P36-POLICY",
+      "to": "DP-K02-R19-01",
+      "predicate": "CONTEXT_FOR",
+      "when": "有权政策差异决定合并边界",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-POLICY",
+        "DP-K02-R19-01"
+      ]
+    },
+    {
+      "from": "DP-K03-R19-01",
+      "to": "K05.ORACLE",
+      "predicate": "CONTEXT_FOR",
+      "when": "需要验证拟议共享/保留语义的实际反例",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "DP-K03-R19-01",
+        "K05.ORACLE"
+      ]
+    },
+    {
+      "from": "P36-POLICY",
+      "to": "P36-COMMIT",
+      "predicate": "CONTEXT_FOR",
+      "when": "状态动作依赖当前授权和版本",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-POLICY",
+        "P36-COMMIT"
+      ]
+    },
+    {
+      "from": "P36-DURABILITY",
+      "to": "P36-RANGE",
+      "predicate": "SUPPORTS",
+      "when": "需要跨重启保存合法片段",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-DURABILITY",
+        "P36-RANGE"
+      ]
+    },
+    {
+      "from": "P36-RANGE",
+      "to": "P36-STAGING",
+      "predicate": "CONTEXT_FOR",
+      "when": "固定源文件用于恢复导入",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-RANGE",
+        "P36-STAGING"
+      ]
+    },
+    {
+      "from": "P36-COMMIT",
+      "to": "P36-STAGING",
+      "predicate": "SUPPORTS",
+      "when": "发布需要实际许可和原子权威切换",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-COMMIT",
+        "P36-STAGING"
+      ]
+    },
+    {
+      "from": "P36-COMMIT",
+      "to": "P36-EFFECT",
+      "predicate": "CONTEXT_FOR",
+      "when": "真实提交产生待投递事件",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-COMMIT",
+        "P36-EFFECT"
+      ]
+    },
+    {
+      "from": "P36-EFFECT",
+      "to": "P36-OFFSET",
+      "predicate": "CONTEXT_FOR",
+      "when": "选用Kafka且实际目的地进度依赖已提交效果",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-EFFECT",
+        "P36-OFFSET"
+      ]
+    },
+    {
+      "from": "P36-POLICY",
+      "to": "P36-CACHE",
+      "predicate": "CONTEXT_FOR",
+      "when": "当前读取/披露权限变化",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-POLICY",
+        "P36-CACHE"
+      ]
+    },
+    {
+      "from": "P36-CACHE",
+      "to": "P36-EXPORT",
+      "predicate": "CONTEXT_FOR",
+      "when": "有长流披露和当前授权条件",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-CACHE",
+        "P36-EXPORT"
+      ]
+    },
+    {
+      "from": "P36-MAINT",
+      "to": "DP-K03-R19-01",
+      "predicate": "CONTEXT_FOR",
+      "when": "需保护实际支持消费者和合法变更",
+      "qualification": "CANDIDATE_NAVIGATION",
+      "basis": [
+        "P36-MAINT",
+        "DP-K03-R19-01"
+      ]
+    }
+  ],
+  "rules": [],
+  "execution": "NOT_RUN"
+}
