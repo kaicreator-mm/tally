@@ -20,7 +20,7 @@
 
 ## 3. 实际可重复执行收据
 
-单文件 [T38-K1-witness.mjs](T38-K1-witness.mjs)，43行左右（以实际文件为准），只有Node内置 assert。实际临时目录执行：
+单文件 [T38-K1-witness.mjs](T38-K1-witness.mjs)，55行（含空行，末尾换行），只有Node内置 assert。实际临时目录执行：
 
 ```sh
 node --version
