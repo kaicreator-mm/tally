@@ -282,6 +282,30 @@ T37-R5 G0 经 [#637 独审](https://github.com/kaicreator-mm/tally/pull/637#issu
 
 [最小知识核验](../validation/T38-K4-knowledge-validation.md)、[66行单文件见证](../validation/T38-K4-witness.py)：实际Python3.13.5/SQLite3.46.1三个固定机制（决策表已知域/部分事实补全、Decimal舍入/精度、两行局部更新回滚与错误部分提交），三组纸面业务推导（库存与退款对账、授权版本与委派、快照及分块披露）。真实DMN/PG/Stripe/导出/授权系统NOT_RUN。无原章或旧见证修改、无新Case/Claim/Rule或资格晋升；独审待完成。仍KNOWLEDGE_CONSTRUCTION；#565 HOLD、#286 DEFERRED、A24/T4 NOT_RUN/HOLD。
 
+
+## T47 · T40–T46 累计正文发现与收敛（#666）
+
+截至 T46 合并实际64篇正式接受正文，旧发现50篇/284定位。下列16条包含14篇已接受正文及2篇T41待独立接受候选；T40-RV-01、T46-RV-01修正亦待本批限定独审。不将候选计为正式接受。见 [T47收敛与条件组合](../T47-knowledge-convergence.md)；历史发现01–05保持原冻结快照，新增 [06](../consumption/chapter-discovery-06.json)、[07](../consumption/chapter-discovery-07.json)、[08](../consumption/chapter-discovery-08.json) 为机械定位候选，资格仍须读取实际正文。67/86历史决策引用与导航边不晋升，不增加合格Case/Claim/Rule。
+
+| 子任务 / 归属 | 正文 | 阅读问题及边界 |
+|---|---|---|
+| T40-R1 K01/K02/K03/K05 | [操作合同组合与职责推导](T40-R1-contract-composition-responsibility.md) | 前后态、读写依赖、共同不变量与提交权威；目标NOT_RUN |
+| T40-R2 K01/K02/K03/K09/K05 | [领域状态、历史与表示精化](T40-R2-state-history-representation-refinement.md) | 观察充分性、有效/记录版本、权威事件与投影；目标NOT_RUN |
+| T40-R3 K03/K01/K02/K10/K05 | [多约束问题建模与算法选型](T40-R3-constrained-problem-algorithm-selection.md) | 硬约束/目标、匹配、费用、时段及在线选择；目标NOT_RUN |
+| T40-R4 K02/K03/K09/K01/K05 | [公共能力与消费者合同演化](T40-R4-capability-evolution-consumer-contracts.md) | 变化轴、最小接口；T40-RV-01修正候选；目标NOT_RUN |
+| T41-R1 K02/K03/K01/K10/K05 | [分析数据粒度与聚合合同](T41-R1-analytical-grain-aggregation-contracts.md) | 粒度/连接/加性、历史维度；待独审；目标NOT_RUN |
+| T41-R2 K03/K02/K10/K01/K05 | [流处理事件时间与一致性](T41-R2-stream-event-time-watermark-consistency.md) | 窗口、水位、迟到修订与效果；待独审；目标NOT_RUN |
+| T42-R1 K03/K02/K01/K10/K05 | [搜索排序、完整性及分页](T42-R1-search-ranking-completeness-pagination.md) | 词频/长度、候选、权限与快照；目标NOT_RUN |
+| T42-R2 K03/K02/K01/K05/K10/K11 | [混合检索及相关性评价](T42-R2-hybrid-retrieval-relevance-evaluation.md) | 距离、候选覆盖、融合、独立相关集合；目标NOT_RUN |
+| T43-R1 K02/K03/K01/K10/K05 | [数据模型、存储及分区选择](T43-R1-data-model-storage-partition-selection.md) | 逻辑/物理/部署轴、热点、归并、放大；目标NOT_RUN |
+| T43-R2 K03/K02/K01/K10/K05 | [增量转换及重算等价性](T43-R2-incremental-transformation-rebuild-equivalence.md) | 撤旧加新、辅助状态、连接及一致发布；目标NOT_RUN |
+| T44-R1 K02/K03/K01/K05/K10 | [Web事件、布局及几何](T44-R1-web-events-layout-geometry.md) | 传播、取消、布局约束及实际命中；目标NOT_RUN |
+| T44-R2 K02/K03/K01/K10/K05 | [平台生命周期与状态恢复](T44-R2-platform-lifecycle-state-restoration.md) | 界面/业务/资源所有权、恢复与UNKNOWN；目标NOT_RUN |
+| T45-R1 K04/K02/K03/K01/K05/K10 | [动态工作流义务与版本](T45-R1-dynamic-workflow-obligations-and-revision.md) | 插入/跳过/子图、条件、历史与终止；目标NOT_RUN |
+| T45-R2 K04/K03/K01/K02/K05/K10 | [多约束调度与重规划](T45-R2-multiconstraint-scheduling-replanning.md) | 资源、依赖、下界、承诺与目标；目标NOT_RUN |
+| T46-R1 K01/K02/K03/K05/K06/K09/K10 | [真实产品客户端阅读状态路径](T46-R1-miniflux-real-client-read-status-path.md) | 固定上游源码，有限API读写再观察；目标NOT_RUN |
+| T46-R2 K02/K03/K01/K05/K06/K08/K09/K10 | [真实路径的跨层维护推导](T46-R2-cross-layer-maintenance-contract-reasoning.md) | 假设变更，批量原子性、时间、分页；目标NOT_RUN |
+
 ## 阅读路径与边界
 
 以任务检索：需求冲突/验收 → T24a；表单/焦点/输入/用户任务 → T24c；抽象/内聚/表示/alias/frame → T27a；外键/范式/NULL/join/isolation → T27b-1；绑定/数值/Unicode → T25b-1；跨语言所有权/泛型/错误 → T25b-3；精确数值/locale/BiDi → T25b-4；文件/流/持久性 → T27b-2；竞态/锁/准入/取消 → T27c-1；测试选择/模型/隔离 → T28a-1；控制流/抽象解释/形式验证 → T28b-1；真实缺陷/修复/跨组件回归 → T29a-1；bisect/heap/锁/trace 诊断 → T29a-2；进程/IPC/映射 → T25c-1；网络分帧/ACK/HTTP 条件 → T25c-2；API版本/能力协商/混合消费者 → T25c-3；时钟/时区/期限/生效 → T25b-2；架构场景/权衡/产品线 → T26a-1；架构风格组合/流水线/事件/插件/服务 → T26a-2；专业责任/写作/评审/交接 → T30b-1；生成/ABI/加载 → T31a-1；SCM/合并/基线 → T31a-2；依赖解析/真实包 → T31a-3；部署/路由/flag → T31a-4；迁移/混合版本/回退 → T32b-1；数据血缘/冲突/墓碑/恢复 → T32b-2；逻辑/关系/图/归纳 → T25a-1；数组/哈希/堆/图成本 → T27d-1；概率/测量/统计推断 → T25d-1；多数/分区/watch/fencing → T27c-2；消息投递/offset/outbox/inbox → T27c-3；真实消费者/合同/已安装制品 → T28a-2；规则表/冲突/版本/业务约束 → T24b-1；质量目标/保证/完整过程/评价 → T28c-1；可靠性/共同故障/割集/RTO/RPO → T33a-1；自研/采购/供应商验收/退出 → T30a-1；成本现值/估算/转换值 → T34a-1；维护/行为保持/替换/弃用 → T32a-1；排队/容量/负载模型/测量遗漏 → T33b-1；运营准备/燃烧率/事故协同/支持 → T33c-1；研究方法/因果/阶段化输入/污染 → T34b-1；工程度量/独立评价/维护及人因 → T34b-2；配置/导入/任务/查询/同步组合 → T35-1；复杂下载导入/权限缓存/异步交错 → T35-3；订单/库存/退款/审批/报表组合 → T35-2；多资源/部分效果/委派审批/长导出 → T35-4。需要先选业务目标和真实权限再选择技术；各文档有来源、反例与拟议 Oracle。实际原始资料定位见各章末尾；旧项目案例只复用历史证据，不重新宣称上游源码已核或已运行。新增示例均原创教学 NOT_RUN；外部规范/课程按版本与范围使用，不能转换为获权业务规则。T24c 使用实际读取的 UAX29 rev47 而非未可靠打开的 rev49；未验证任何运行时支持。T27b-1 仅 PostgreSQL 18 具体引擎行为；范式课程来源有实际阅读范围。未读或未验证部分明确保留。

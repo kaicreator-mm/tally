@@ -1,0 +1,267 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "6df6fb1f91b2fdc06f9656d8d3e05988e5b268e9",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "06fd9efc967676fdc156e6ad838c867d3b3bd409"
+  },
+  "range": [
+    61,
+    66
+  ],
+  "scope": "T47 mechanical discovery candidate; becomes accepted only on exact-head grouped independent acceptance and merge. Prior 50/284 preserved. No semantic or qualification census; read actual section before selection.",
+  "entries": [
+    {
+      "chapter": "T44-R1-web-events-layout-geometry",
+      "title": "T44-R1 · Web 事件传播、布局约束及实际可交互区域",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K05",
+        "K10"
+      ],
+      "routeLabel": "Web事件、布局及几何",
+      "indexLine": 302,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T44-R1-web-events-layout-geometry.md",
+        "blob": "0981ede81dc4613a052e65e564d52dcee23c4e48"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 平台事件、应用意图和业务效果分离"
+        },
+        {
+          "line": 20,
+          "heading": "2. 事件委托、动态身份与监听所有权"
+        },
+        {
+          "line": 26,
+          "heading": "3. 布局：尺寸分配不是比例常数"
+        },
+        {
+          "line": 32,
+          "heading": "4. 观察几何与命中：坐标空间及版本"
+        },
+        {
+          "line": 40,
+          "heading": "5. 条件选择与有限评价（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T44-R2-platform-lifecycle-state-restoration",
+      "title": "T44-R2 · 应用平台生命周期、状态保留及恢复职责",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "平台生命周期与状态恢复",
+      "indexLine": 303,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T44-R2-platform-lifecycle-state-restoration.md",
+        "blob": "79e6f00ecaad1a0626e8207734eff3e0384a9c21"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 界面实例、进程和业务任务具有不同生命期"
+        },
+        {
+          "line": 20,
+          "heading": "2. 以具体交错选择保存与恢复策略"
+        },
+        {
+          "line": 26,
+          "heading": "3. 受理与回执丢失不依赖界面恢复"
+        },
+        {
+          "line": 32,
+          "heading": "4. 生命周期资源的可反驳不变量"
+        },
+        {
+          "line": 38,
+          "heading": "5. 独立纸面检查（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T45-R1-dynamic-workflow-obligations-and-revision",
+      "title": "T45-R1 · 动态工作流修改、条件依赖及执行资格",
+      "ownersFromIndex": [
+        "K04",
+        "K02",
+        "K03",
+        "K01",
+        "K05",
+        "K10"
+      ],
+      "routeLabel": "动态工作流义务与版本",
+      "indexLine": 304,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T45-R1-dynamic-workflow-obligations-and-revision.md",
+        "blob": "53fad23df60ee9cd0eb8effb7d541bb4e470fe81"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 计划、事实、资格及业务效果不能互相替换"
+        },
+        {
+          "line": 11,
+          "heading": "2. 用义务而非节点名称解释插入、跳过与替代"
+        },
+        {
+          "line": 24,
+          "heading": "3. 局部图修改的充要图条件与实际发布"
+        },
+        {
+          "line": 32,
+          "heading": "4. 子工作流的边界与终止"
+        },
+        {
+          "line": 38,
+          "heading": "5. 独立验证与最小机制（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T45-R2-multiconstraint-scheduling-replanning",
+      "title": "T45-R2 · 多约束资源调度、可行性下界及重规划",
+      "ownersFromIndex": [
+        "K04",
+        "K03",
+        "K01",
+        "K02",
+        "K05",
+        "K10"
+      ],
+      "routeLabel": "多约束调度与重规划",
+      "indexLine": 305,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T45-R2-multiconstraint-scheduling-replanning.md",
+        "blob": "09c0e2ec95880a67618259daf746f927e48909c2"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 明确模型及独立可行性"
+        },
+        {
+          "line": 11,
+          "heading": "2. 关键路径、资源下界和可达到计划"
+        },
+        {
+          "line": 21,
+          "heading": "3. 动态到达、不可移动承诺与合法重规划"
+        },
+        {
+          "line": 27,
+          "heading": "4. 多目标、变动成本及局部算法选择"
+        },
+        {
+          "line": 33,
+          "heading": "5. 纸面 Oracle（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T46-R1-miniflux-real-client-read-status-path",
+      "title": "T46-R1 · 真实产品的完整有限用户路径：Miniflux 阅读状态",
+      "ownersFromIndex": [
+        "K01",
+        "K02",
+        "K03",
+        "K05",
+        "K06",
+        "K09",
+        "K10"
+      ],
+      "routeLabel": "真实产品客户端阅读状态路径",
+      "indexLine": 306,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T46-R1-miniflux-real-client-read-status-path.md",
+        "blob": "dc633516a4466b4d4a7f5f4167a84483090d0635"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 产品需求和架构的不同证据"
+        },
+        {
+          "line": 20,
+          "heading": "2. 正常查询：调用参数到实际数据库和消费结果"
+        },
+        {
+          "line": 28,
+          "heading": "3. 身份与变更：同步提交及其真实结果资格"
+        },
+        {
+          "line": 34,
+          "heading": "4. 从实际机制推导完整有限用户任务（原创固定数据，NOT_RUN）"
+        },
+        {
+          "line": 51,
+          "heading": "5. 真实验证边界与未核范围"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T46-R2-cross-layer-maintenance-contract-reasoning",
+      "title": "T46-R2 · 从真实跨层路径推导设计、验证和维护变化",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K05",
+        "K06",
+        "K08",
+        "K09",
+        "K10"
+      ],
+      "routeLabel": "真实路径的跨层维护推导",
+      "indexLine": 307,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T46-R2-cross-layer-maintenance-contract-reasoning.md",
+        "blob": "1a9695393fb12247a834549f24a6309869e3ad3a"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从跨层事实确定哪些抽象应当共享"
+        },
+        {
+          "line": 11,
+          "heading": "2. 维护问题 A：从“至少更新一条”到“全部请求身份成功”"
+        },
+        {
+          "line": 19,
+          "heading": "3. 维护问题 B：重复操作、时间与真实变化"
+        },
+        {
+          "line": 25,
+          "heading": "4. 维护问题 C：查询完整性、稳定排序和容量"
+        },
+        {
+          "line": 31,
+          "heading": "5. 将专业知识组合成实际工程判断，而非固定检查表"
+        },
+        {
+          "line": 44,
+          "heading": "6. 收敛边界（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}

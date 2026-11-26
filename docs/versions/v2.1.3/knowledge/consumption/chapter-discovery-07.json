@@ -1,0 +1,241 @@
+{
+  "kind": "T37_ACCEPTED_CHAPTER_DISCOVERY_ROUTES",
+  "repository": "kaicreator-mm/tally",
+  "corpusCommit": "6df6fb1f91b2fdc06f9656d8d3e05988e5b268e9",
+  "sourceIndex": {
+    "path": "docs/versions/v2.1.3/knowledge/fine-grained/README.md",
+    "blob": "06fd9efc967676fdc156e6ad838c867d3b3bd409"
+  },
+  "range": [
+    55,
+    60
+  ],
+  "scope": "T47 mechanical discovery candidate; becomes accepted only on exact-head grouped independent acceptance and merge. T41 two content candidates and T40-RV-01 require their own explicit disposition; prior 50/284 preserved. No semantic or qualification census; read actual section before selection.",
+  "entries": [
+    {
+      "chapter": "T41-R1-analytical-grain-aggregation-contracts",
+      "title": "T41-R1 · 分析型数据的事实粒度、聚合合同及版本",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "分析数据粒度与聚合合同",
+      "indexLine": 296,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T41-R1-analytical-grain-aggregation-contracts.md",
+        "blob": "c857e2c1c0cb034873a3b4fdd51544055dfdc970"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先定义一行事实代表什么"
+        },
+        {
+          "line": 11,
+          "heading": "2. 聚合的可组合性和丢失的信息"
+        },
+        {
+          "line": 17,
+          "heading": "3. 从版本与负载选择存储和更新方式"
+        },
+        {
+          "line": 25,
+          "heading": "4. 有界判断与反例（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T41-R2-stream-event-time-watermark-consistency",
+      "title": "T41-R2 · 流式分析的事件时间、水位、迟到与结果一致性",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K10",
+        "K01",
+        "K05"
+      ],
+      "routeLabel": "流处理事件时间与一致性",
+      "indexLine": 297,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T41-R2-stream-event-time-watermark-consistency.md",
+        "blob": "5405213dd69cc9dca7a941f6efdb1f8f0da7775f"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 为什么事件时间与处理时间必须分开"
+        },
+        {
+          "line": 11,
+          "heading": "2. 独立纸面时间线及输出合同"
+        },
+        {
+          "line": 26,
+          "heading": "3. 累积结果与增量结果不能混用"
+        },
+        {
+          "line": 32,
+          "heading": "4. 恢复、资源与适用条件"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T42-R1-search-ranking-completeness-pagination",
+      "title": "T42-R1 · 搜索的匹配、相关性、候选完整性与稳定分页",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K01",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "搜索排序、完整性及分页",
+      "indexLine": 298,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T42-R1-search-ranking-completeness-pagination.md",
+        "blob": "07717501681d46bf38768f906fea539471658df3"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 从查询合同分离匹配、排序与覆盖"
+        },
+        {
+          "line": 11,
+          "heading": "2. 倒排结构与相关性不是相同事实"
+        },
+        {
+          "line": 19,
+          "heading": "3. 精确 top-k 与有预算候选的不同资格"
+        },
+        {
+          "line": 25,
+          "heading": "4. 分页：唯一排序键与稳定观察集合是两个条件"
+        },
+        {
+          "line": 31,
+          "heading": "5. 选择及可反驳评价（纸面 NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T42-R2-hybrid-retrieval-relevance-evaluation",
+      "title": "T42-R2 · 混合检索、候选融合及独立相关性评价",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K01",
+        "K05",
+        "K10",
+        "K11"
+      ],
+      "routeLabel": "混合检索及相关性评价",
+      "indexLine": 299,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T42-R2-hybrid-retrieval-relevance-evaluation.md",
+        "blob": "52724f8f56c53e365ddb66e7fe02766fdf98a393"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 语义目标、向量距离和近似算法三个不同问题"
+        },
+        {
+          "line": 11,
+          "heading": "2. 多路候选融合不等于证据完整"
+        },
+        {
+          "line": 27,
+          "heading": "3. 由实际信息需求选评价指标"
+        },
+        {
+          "line": 40,
+          "heading": "4. 从失败定位到最小改进"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T43-R1-data-model-storage-partition-selection",
+      "title": "T43-R1 · 数据模型、物理存储及分区的条件选择",
+      "ownersFromIndex": [
+        "K02",
+        "K03",
+        "K01",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "数据模型、存储及分区选择",
+      "indexLine": 300,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T43-R1-data-model-storage-partition-selection.md",
+        "blob": "49145b21c915e6c05b95c22074600c585958202c"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 先确定权威事实、查询和共同写约束"
+        },
+        {
+          "line": 19,
+          "heading": "2. 内嵌、引用与复制的实际反转"
+        },
+        {
+          "line": 25,
+          "heading": "3. 分区键、热点及全局查询合同"
+        },
+        {
+          "line": 33,
+          "heading": "4. 物理组织、读写放大与预算"
+        },
+        {
+          "line": 41,
+          "heading": "5. 最小选择及限定核验（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    },
+    {
+      "chapter": "T43-R2-incremental-transformation-rebuild-equivalence",
+      "title": "T43-R2 · 增量计算、变更传播及完整重算等价性",
+      "ownersFromIndex": [
+        "K03",
+        "K02",
+        "K01",
+        "K10",
+        "K05"
+      ],
+      "routeLabel": "增量转换及重算等价性",
+      "indexLine": 301,
+      "source": {
+        "path": "docs/versions/v2.1.3/knowledge/fine-grained/T43-R2-incremental-transformation-rebuild-equivalence.md",
+        "blob": "336cf3eaa88b0fe91015a81c0e7f23361f8d6af5"
+      },
+      "headings": [
+        {
+          "line": 5,
+          "heading": "1. 明确要保持的数学关系"
+        },
+        {
+          "line": 13,
+          "heading": "2. 聚合和连接为什么需要辅助状态"
+        },
+        {
+          "line": 19,
+          "heading": "3. 版本、发布及恢复边界"
+        },
+        {
+          "line": 27,
+          "heading": "4. 何时增量值得引入（NOT_RUN）"
+        }
+      ],
+      "qualification": "DISCOVERY_ONLY_READ_ACTUAL_SECTION_BEFORE_SELECTION"
+    }
+  ]
+}
